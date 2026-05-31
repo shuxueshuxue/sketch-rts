@@ -4,6 +4,7 @@ import {
   pointerLockButtonLabel,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
+  shouldSuppressPointerLockMouseDefault,
 } from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
@@ -44,5 +45,15 @@ describe("pointer lock virtual mouse", () => {
     expect(shouldSuppressCanvasPointerGesture("pointerdown", 0, 1)).toBe(false);
     expect(shouldSuppressCanvasPointerGesture("pointerup", 0, 0)).toBe(false);
     expect(shouldSuppressCanvasPointerGesture("pointermove", -1, 2)).toBe(false);
+  });
+
+  it("suppresses right-button document events while pointer lock owns the canvas", () => {
+    for (const type of ["pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "mousemove", "contextmenu"]) {
+      expect(shouldSuppressPointerLockMouseDefault(type, 2, 2)).toBe(true);
+    }
+    expect(shouldSuppressPointerLockMouseDefault("mousemove", -1, 2)).toBe(true);
+    expect(shouldSuppressPointerLockMouseDefault("pointermove", -1, 0)).toBe(false);
+    expect(shouldSuppressPointerLockMouseDefault("mousedown", 0, 1)).toBe(false);
+    expect(shouldSuppressPointerLockMouseDefault("keydown", 2, 2)).toBe(false);
   });
 });

@@ -41,6 +41,11 @@ export function shouldSuppressCanvasPointerGesture(eventType: string, button: nu
   return button === 2 || (buttons & 2) !== 0;
 }
 
+export function shouldSuppressPointerLockMouseDefault(eventType: string, button: number, buttons: number) {
+  if (!["pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "mousemove", "contextmenu"].includes(eventType)) return false;
+  return button === 2 || (buttons & 2) !== 0;
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }

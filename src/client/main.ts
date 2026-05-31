@@ -1,7 +1,13 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
-import { moveVirtualPointer, pointerLockButtonLabel, shouldSuppressCanvasMouseDefault, shouldSuppressCanvasPointerGesture } from "./pointer-lock";
+import {
+  moveVirtualPointer,
+  pointerLockButtonLabel,
+  shouldSuppressCanvasMouseDefault,
+  shouldSuppressCanvasPointerGesture,
+  shouldSuppressPointerLockMouseDefault,
+} from "./pointer-lock";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
@@ -174,6 +180,13 @@ document.addEventListener("pointerlockerror", () => {
   pointerLockFallbackOnError = false;
   handlePointerLockFailure(fallbackToFieldClick);
 });
+document.addEventListener("pointerdown", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("pointerup", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("pointermove", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("mousedown", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
+document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockButton.addEventListener("click", armPointerLock);
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
@@ -757,6 +770,11 @@ function suppressCanvasPointerGestureDefault(event: PointerEvent) {
   rightPointerGestureActive = false;
   ignoreNextRightMouseUp = true;
   onMouseUp(event);
+}
+
+function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEvent) {
+  if (document.pointerLockElement !== canvas) return;
+  if (shouldSuppressPointerLockMouseDefault(event.type, event.button, event.buttons)) event.preventDefault();
 }
 
 function onKeyDown(event: KeyboardEvent) {
