@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
+  pointerLockGateBody,
+  pointerLockGateTitle,
   pointerLockButtonLabel,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
@@ -28,6 +30,13 @@ describe("pointer lock virtual mouse", () => {
     expect(pointerLockButtonLabel({ locked: true, armed: true })).toBe("Mouse Locked");
   });
 
+  it("describes the pointer-lock gate differently for Edge", () => {
+    expect(pointerLockGateTitle(false)).toBe("Lock mouse to keep playing");
+    expect(pointerLockGateBody(false)).toContain("camera movement");
+    expect(pointerLockGateTitle(true)).toBe("Edge setup needed");
+    expect(pointerLockGateBody(true)).toContain("Enable Mouse Gesture");
+  });
+
   it("centers the virtual pointer overlay on the locked pointer point", () => {
     expect(virtualPointerTransform({ x: 100.4, y: 80.6 }, 18)).toBe("translate(91px, 72px)");
     expect(virtualPointerTransform({ x: 9, y: 9 }, 18)).toBe("translate(0px, 0px)");
@@ -39,7 +48,6 @@ describe("pointer lock virtual mouse", () => {
     expect(isMicrosoftEdgeUserAgent("", [{ brand: "Microsoft Edge" }])).toBe(true);
     expect(isMicrosoftEdgeUserAgent("Mozilla/5.0 Chrome/126.0.0.0", [{ brand: "Chromium" }])).toBe(false);
   });
-
 
   it("suppresses browser gestures on battlefield mouse events", () => {
     for (const type of ["mousedown", "mouseup", "mousemove", "contextmenu", "auxclick", "dragstart"]) {

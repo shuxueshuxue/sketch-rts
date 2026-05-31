@@ -4,6 +4,8 @@ import { edgeScrollDelta } from "./edge-scroll";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
+  pointerLockGateBody as pointerLockGateBodyText,
+  pointerLockGateTitle as pointerLockGateTitleText,
   pointerLockButtonLabel,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
@@ -29,6 +31,7 @@ type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPla
 type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 const CURRENT_ROOM_STORAGE_KEY = "sketch-rts-current-room";
+const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
 
 const app = requireElement<HTMLDivElement>("#app");
 
@@ -90,6 +93,13 @@ app.innerHTML = `
     <div class="selection-chip" data-selection>Nothing selected</div>
     <div class="command-dock hidden" data-command-dock></div>
     <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
+    <div class="pointer-lock-gate hidden" data-pointer-lock-gate role="dialog" aria-modal="true" aria-labelledby="pointer-lock-gate-title">
+      <div class="pointer-lock-panel">
+        <h2 id="pointer-lock-gate-title" data-pointer-lock-gate-title>Lock mouse to keep playing</h2>
+        <p data-pointer-lock-gate-body>This match uses mouse lock for camera movement and right-click commands.</p>
+        <button type="button" data-pointer-lock-gate-action>Lock mouse to play</button>
+      </div>
+    </div>
   </div>
 `;
 
@@ -107,6 +117,10 @@ const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const pointerLockButton = requireElement<HTMLButtonElement>("[data-pointer-lock]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
+const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
+const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
+const pointerLockGateBody = requireElement<HTMLParagraphElement>("[data-pointer-lock-gate-body]");
+const pointerLockGateAction = requireElement<HTMLButtonElement>("[data-pointer-lock-gate-action]");
 const ctx = requireCanvasContext(canvas);
 
 let snapshot: GameSnapshot | undefined;
@@ -121,7 +135,6 @@ let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
 let pointerLockArmed = false;
 let pointerLockFallbackOnError = false;
-let edgePointerLockWarningShown = false;
 let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
@@ -133,6 +146,7 @@ let menuView: MenuView = "home";
 let selectedMapId: MapId = "verdantCrossroads";
 let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
+let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
 const commandButtons: CommandButton[] = [
@@ -191,6 +205,7 @@ document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { 
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockButton.addEventListener("click", armPointerLock);
+pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
@@ -500,6 +515,10 @@ async function selectRoomMap(mapId: MapId) {
 
 async function startCurrentRoom() {
   if (!currentRoom) return;
+  if (hasSeenPointerLockGuide()) {
+    const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
+    await requestPointerLock(point, { fallbackToFieldClick: true });
+  }
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
   currentRoomId = currentRoom.id;
   saveCurrentRoomId(currentRoom.id);
@@ -512,6 +531,7 @@ async function startCurrentRoom() {
   shell.classList.remove("menu-open");
   mainMenu.classList.add("hidden");
   startRoomPolling();
+  syncPointerLockGate();
 }
 
 async function createReplayRoom(room: RoomState) {
@@ -694,12 +714,13 @@ function frame() {
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
+  syncPointerLockGate();
   requestAnimationFrame(frame);
 }
 
 async function armPointerLock() {
-  if (shouldWarnAboutEdgeMouseGesture()) {
-    showEdgeMouseGestureWarning();
+  if (shouldShowPointerLockGuide()) {
+    showPointerLockGate("guide");
     return;
   }
   if (document.pointerLockElement === canvas) {
@@ -713,18 +734,59 @@ async function armPointerLock() {
   await requestPointerLock(point, { fallbackToFieldClick: true });
 }
 
-function shouldWarnAboutEdgeMouseGesture() {
+function isEdgeBrowser() {
   const brands =
     "userAgentData" in navigator ? (navigator.userAgentData as { brands?: { brand: string }[] } | undefined)?.brands : undefined;
-  return isMicrosoftEdgeUserAgent(navigator.userAgent, brands) && !edgePointerLockWarningShown;
+  return isMicrosoftEdgeUserAgent(navigator.userAgent, brands);
 }
 
-function showEdgeMouseGestureWarning() {
-  edgePointerLockWarningShown = true;
-  pointerLockButton.textContent = "Try Lock Mouse";
-  pointerLockButton.setAttribute("aria-pressed", "false");
-  statusLabel.innerHTML =
-    '<span class="error">Microsoft Edge Mouse Gesture can override right-button drag even after mouse lock. Open <code>edge://settings/appearance</code>, turn off <strong>Enable Mouse Gesture</strong>, then click Try Lock Mouse.</span>';
+function hasSeenPointerLockGuide() {
+  return localStorage.getItem(POINTER_LOCK_GUIDE_STORAGE_KEY) === "seen";
+}
+
+function shouldShowPointerLockGuide() {
+  return !hasSeenPointerLockGuide();
+}
+
+function markPointerLockGuideSeen() {
+  localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY, "seen");
+}
+
+function syncPointerLockGate() {
+  if (menuOpen || !snapshot || document.pointerLockElement === canvas) {
+    hidePointerLockGate();
+    return;
+  }
+  showPointerLockGate(shouldShowPointerLockGuide() ? "guide" : "required");
+}
+
+function showPointerLockGate(kind: "guide" | "required") {
+  pointerLockGateKind = kind;
+  const edge = isEdgeBrowser();
+  pointerLockGate.classList.remove("hidden");
+  pointerLockGateTitle.textContent = kind === "guide" ? "Before you play" : pointerLockGateTitleText(edge);
+  pointerLockGateBody.innerHTML =
+    kind === "guide"
+      ? [
+          "Sketch RTS playtest build. Credit: shuxueshuxue.",
+          "Mouse lock keeps camera movement and right-click commands inside the battlefield. Press Escape any time to release it.",
+          edge ? "Microsoft Edge users: turn off <strong>Enable Mouse Gesture</strong> in <code>edge://settings/appearance</code> before playing." : "",
+        ]
+          .filter(Boolean)
+          .join("<br>")
+      : pointerLockGateBodyText(edge);
+  pointerLockGateAction.textContent = edge && kind === "guide" ? "I turned it off, lock mouse" : "Lock mouse to play";
+}
+
+function hidePointerLockGate() {
+  pointerLockGate.classList.add("hidden");
+}
+
+async function requestRequiredPointerLock() {
+  if (pointerLockGateKind === "guide") markPointerLockGuideSeen();
+  const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
+  await requestPointerLock(point, { fallbackToFieldClick: true });
+  syncPointerLockGate();
 }
 
 async function requestPointerLock(point: Point, options: { fallbackToFieldClick: boolean }) {
@@ -753,12 +815,14 @@ function syncPointerLockState() {
   pointerLockButton.textContent = pointerLockButtonLabel({ locked, armed: pointerLockArmed });
   pointerLockButton.setAttribute("aria-pressed", String(locked || pointerLockArmed));
   if (locked) {
+    hidePointerLockGate();
     pointerLockArmed = false;
     pointerLockFallbackOnError = false;
     statusLabel.textContent = "Mouse locked. Move normally; Escape releases the cursor.";
     return;
   }
   virtualMouse = undefined;
+  syncPointerLockGate();
 }
 
 function handlePointerLockFailure(fallbackToFieldClick: boolean, error?: unknown) {

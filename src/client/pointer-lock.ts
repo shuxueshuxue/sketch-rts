@@ -33,6 +33,16 @@ export function pointerLockButtonLabel(state: PointerLockButtonState) {
   return "Lock Mouse";
 }
 
+export function pointerLockGateTitle(isEdge: boolean) {
+  return isEdge ? "Edge setup needed" : "Lock mouse to keep playing";
+}
+
+export function pointerLockGateBody(isEdge: boolean) {
+  return isEdge
+    ? "Microsoft Edge Mouse Gesture can override right-button drag. Turn off Enable Mouse Gesture in edge://settings/appearance, then lock the mouse."
+    : "This match uses mouse lock for camera movement and right-click commands. Press Escape any time to release it.";
+}
+
 export function virtualPointerTransform(point: PointerLockPoint, size: number) {
   const offset = size / 2;
   return `translate(${Math.round(point.x - offset)}px, ${Math.round(point.y - offset)}px)`;

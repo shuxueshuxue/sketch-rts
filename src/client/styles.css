@@ -390,7 +390,8 @@ button {
 .top-strip,
 .selection-chip,
 .command-dock,
-.status-line {
+.status-line,
+.pointer-lock-panel {
   position: absolute;
   border: 1px solid rgba(59, 72, 50, 0.28);
   background: rgba(255, 250, 226, 0.86);
@@ -444,6 +445,51 @@ button {
   border-color: rgba(35, 49, 38, 0.54);
   background: rgba(49, 95, 135, 0.14);
   color: #243126;
+}
+
+.pointer-lock-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  background: rgba(35, 49, 38, 0.18);
+  pointer-events: auto;
+}
+
+.pointer-lock-panel {
+  position: static;
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  gap: 12px;
+  border-radius: 7px;
+  padding: 18px;
+}
+
+.pointer-lock-panel h2 {
+  margin: 0;
+  color: #233126;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.pointer-lock-panel p {
+  margin: 0;
+  color: rgba(35, 49, 38, 0.86);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.42;
+}
+
+.pointer-lock-panel button {
+  justify-self: start;
+  border: 1px solid rgba(49, 95, 135, 0.42);
+  border-radius: 5px;
+  background: #315f87;
+  color: #fffbe3;
+  padding: 8px 11px;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .selection-chip {
