@@ -1,12 +1,13 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
+import { gameShellMarkup } from "./game-shell";
+import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
-  pointerLockGateBody as pointerLockGateBodyText,
-  pointerLockGateTitle as pointerLockGateTitleText,
-  pointerLockButtonLabel,
+  pointerLockRequiredBody,
+  pointerLockRequiredTitle,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
@@ -74,34 +75,7 @@ const SPELL_COMMANDS = [
 ] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 
-app.innerHTML = `
-  <div class="game-shell menu-open">
-    <canvas class="game-canvas"></canvas>
-    <div class="main-menu" data-main-menu>
-      <div class="menu-title" data-menu-title>Sketch RTS</div>
-      <div class="menu-status" data-menu-status>Connecting to match server...</div>
-      <div class="map-list" data-map-list></div>
-    </div>
-    <div class="top-strip">
-      <div class="brand">Sketch RTS</div>
-      <div class="resource-readout">Gold: <span data-gold>?</span></div>
-      <div class="supply-readout">Supply: <span data-supply>?</span></div>
-      <div data-map-readout>Map: 4096 x 4096</div>
-      <button class="pointer-lock-button" data-pointer-lock type="button">Lock Mouse</button>
-    </div>
-    <div class="status-line" data-status>Connecting to match...</div>
-    <div class="selection-chip" data-selection>Nothing selected</div>
-    <div class="command-dock hidden" data-command-dock></div>
-    <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
-    <div class="pointer-lock-gate hidden" data-pointer-lock-gate role="dialog" aria-modal="true" aria-labelledby="pointer-lock-gate-title">
-      <div class="pointer-lock-panel">
-        <h2 id="pointer-lock-gate-title" data-pointer-lock-gate-title>Lock mouse to keep playing</h2>
-        <p data-pointer-lock-gate-body>This match uses mouse lock for camera movement and right-click commands.</p>
-        <button type="button" data-pointer-lock-gate-action>Lock mouse to play</button>
-      </div>
-    </div>
-  </div>
-`;
+app.innerHTML = gameShellMarkup;
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
@@ -115,7 +89,6 @@ const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
-const pointerLockButton = requireElement<HTMLButtonElement>("[data-pointer-lock]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
@@ -204,7 +177,6 @@ document.addEventListener("mousedown", suppressPointerLockDocumentMouseDefault, 
 document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
-pointerLockButton.addEventListener("click", armPointerLock);
 pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
@@ -383,7 +355,7 @@ function renderProfileMenu() {
 
 async function renderRoomBrowser() {
   menuStatus.textContent = "Rooms hosted by this server.";
-  const rooms = await requestJson<{ rooms: RoomState[] }>("/api/rooms");
+  const rooms = await requestJson<{ rooms: RoomState[] }>(`/api/rooms?userId=${encodeURIComponent(localUser.id)}`);
   const items = rooms.rooms.map((room) =>
     menuButton(room.name, `${room.mapId} - ${room.status} - ${activeSlotCount(room)} slots`, "data-room-id", async () => {
       currentRoom = await requestJson<RoomState>(`/api/rooms/${room.id}/join`, { user: localUser });
@@ -718,22 +690,6 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
-async function armPointerLock() {
-  if (shouldShowPointerLockGuide()) {
-    showPointerLockGate("guide");
-    return;
-  }
-  if (document.pointerLockElement === canvas) {
-    document.exitPointerLock();
-    return;
-  }
-  const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
-  pointerLockButton.textContent = "Locking...";
-  pointerLockButton.setAttribute("aria-pressed", "true");
-  statusLabel.textContent = "Requesting Pointer Lock...";
-  await requestPointerLock(point, { fallbackToFieldClick: true });
-}
-
 function isEdgeBrowser() {
   const brands =
     "userAgentData" in navigator ? (navigator.userAgentData as { brands?: { brand: string }[] } | undefined)?.brands : undefined;
@@ -764,7 +720,7 @@ function showPointerLockGate(kind: "guide" | "required") {
   pointerLockGateKind = kind;
   const edge = isEdgeBrowser();
   pointerLockGate.classList.remove("hidden");
-  pointerLockGateTitle.textContent = kind === "guide" ? "Before you play" : pointerLockGateTitleText(edge);
+  pointerLockGateTitle.textContent = kind === "guide" ? "Before you play" : pointerLockRequiredTitle();
   pointerLockGateBody.innerHTML =
     kind === "guide"
       ? [
@@ -774,8 +730,8 @@ function showPointerLockGate(kind: "guide" | "required") {
         ]
           .filter(Boolean)
           .join("<br>")
-      : pointerLockGateBodyText(edge);
-  pointerLockGateAction.textContent = edge && kind === "guide" ? "I turned it off, lock mouse" : "Lock mouse to play";
+      : pointerLockRequiredBody();
+  pointerLockGateAction.textContent = kind === "guide" ? (edge ? "I turned it off, lock mouse" : "Lock mouse to play") : "Continue";
 }
 
 function hidePointerLockGate() {
@@ -812,8 +768,6 @@ async function requestPointerLockFromEvent(event: MouseEvent) {
 function syncPointerLockState() {
   const locked = document.pointerLockElement === canvas;
   shell.classList.toggle("pointer-locked", locked);
-  pointerLockButton.textContent = pointerLockButtonLabel({ locked, armed: pointerLockArmed });
-  pointerLockButton.setAttribute("aria-pressed", String(locked || pointerLockArmed));
   if (locked) {
     hidePointerLockGate();
     pointerLockArmed = false;
@@ -828,15 +782,11 @@ function syncPointerLockState() {
 function handlePointerLockFailure(fallbackToFieldClick: boolean, error?: unknown) {
   if (fallbackToFieldClick) {
     pointerLockArmed = true;
-    pointerLockButton.textContent = pointerLockButtonLabel({ locked: false, armed: true });
-    pointerLockButton.setAttribute("aria-pressed", "true");
     statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
     return;
   }
   pointerLockArmed = false;
-  pointerLockButton.textContent = pointerLockButtonLabel({ locked: false, armed: false });
-  pointerLockButton.setAttribute("aria-pressed", "false");
-  const message = error instanceof Error ? `Pointer lock failed: ${error.message}` : "Pointer lock failed. Click Lock Mouse again from the game screen.";
+  const message = error instanceof Error ? `Pointer lock failed: ${error.message}` : "Pointer lock failed. Use the continue prompt to try again.";
   showInvalidCommand(message);
 }
 
@@ -938,13 +888,12 @@ function onMouseDown(event: MouseEvent) {
   if (!snapshot) return;
   const mini = minimapRect();
   if (commandMode) return;
-  if (isInside(point, minimapViewportRect(mini))) {
+  if (shouldDragMinimap(event.button, point, mini)) {
     draggingMinimapViewport = true;
     centerCameraFromMinimap(point);
     return;
   }
-  if (isInside(point, mini)) {
-    centerCameraFromMinimap(point);
+  if (isInsideRect(point, mini)) {
     return;
   }
   if (event.button === 0) {
@@ -1006,6 +955,12 @@ function onMouseUp(event: MouseEvent) {
 
 function issueContextCommand(point: Point) {
   if (!snapshot) return;
+  const mini = minimapRect();
+  issueContextCommandAtWorld(isInsideRect(point, mini) ? minimapPointToWorld(point, mini, snapshot.map) : screenToWorld(point));
+}
+
+function issueContextCommandAtWorld(world: Point) {
+  if (!snapshot) return;
   const selectedUnits = selectedPlayerUnits();
   const unitIds = selectedUnits.map((unit) => unit.id);
   if (unitIds.length === 0) {
@@ -1013,7 +968,6 @@ function issueContextCommand(point: Point) {
     return;
   }
 
-  const world = screenToWorld(point);
   const resource = hitResource(world);
   const target = hitAttackTarget(world);
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
@@ -2508,7 +2462,7 @@ function updateCamera() {
 }
 
 function edgeScrollPoint() {
-  if (!lastMouse || draggingMinimapViewport || isInside(lastMouse, minimapRect())) return undefined;
+  if (!lastMouse || draggingMinimapViewport || isInsideRect(lastMouse, minimapRect())) return undefined;
   // @@@edge-scroll-ui - UI overlays near the viewport edge should not make the camera drift.
   return document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
 }
@@ -2566,26 +2520,16 @@ function minimapRect(): ScreenRect {
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
   if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
-  return {
-    x: rect.x + (camera.x / snapshot.map.width) * rect.width,
-    y: rect.y + (camera.y / snapshot.map.height) * rect.height,
-    width: Math.max(12, (canvas.width / snapshot.map.width) * rect.width),
-    height: Math.max(12, (canvas.height / snapshot.map.height) * rect.height),
-  };
+  return minimapViewportRectFor(rect, camera, { width: canvas.width, height: canvas.height }, snapshot.map);
 }
 
 function centerCameraFromMinimap(point: Point) {
   if (!snapshot) return;
   const rect = minimapRect();
-  const x = ((point.x - rect.x) / rect.width) * snapshot.map.width;
-  const y = ((point.y - rect.y) / rect.height) * snapshot.map.height;
-  camera.x = x - canvas.width / 2;
-  camera.y = y - canvas.height / 2;
+  const world = minimapPointToWorld(point, rect, snapshot.map);
+  camera.x = world.x - canvas.width / 2;
+  camera.y = world.y - canvas.height / 2;
   clampCamera();
-}
-
-function isInside(point: Point, rect: ScreenRect) {
-  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
 }
 
 function hitResource(world: Point) {

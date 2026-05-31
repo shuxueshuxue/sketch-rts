@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { gameShellMarkup } from "./game-shell";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
-  pointerLockGateBody,
-  pointerLockGateTitle,
-  pointerLockButtonLabel,
+  pointerLockRequiredBody,
+  pointerLockRequiredTitle,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
@@ -12,6 +12,12 @@ import {
 } from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
+  it("keeps pointer lock behind the blocking gate instead of a top-strip button", () => {
+    expect(gameShellMarkup).not.toContain("data-pointer-lock ");
+    expect(gameShellMarkup).toContain("data-pointer-lock-gate");
+    expect(gameShellMarkup).toContain("data-pointer-lock-gate-action");
+  });
+
   it("moves by relative deltas and stays inside the viewport", () => {
     const viewport = { width: 1280, height: 800 };
 
@@ -24,17 +30,10 @@ describe("pointer lock virtual mouse", () => {
     expect(moveVirtualPointer(undefined, { x: 10, y: -20 }, { width: 1280, height: 800 })).toEqual({ x: 650, y: 380 });
   });
 
-  it("labels the one-click capture states", () => {
-    expect(pointerLockButtonLabel({ locked: false, armed: false })).toBe("Lock Mouse");
-    expect(pointerLockButtonLabel({ locked: false, armed: true })).toBe("Click Field");
-    expect(pointerLockButtonLabel({ locked: true, armed: true })).toBe("Mouse Locked");
-  });
-
-  it("describes the pointer-lock gate differently for Edge", () => {
-    expect(pointerLockGateTitle(false)).toBe("Lock mouse to keep playing");
-    expect(pointerLockGateBody(false)).toContain("camera movement");
-    expect(pointerLockGateTitle(true)).toBe("Edge setup needed");
-    expect(pointerLockGateBody(true)).toContain("Enable Mouse Gesture");
+  it("keeps repeated pointer-lock interruptions as a simple continue prompt", () => {
+    expect(pointerLockRequiredTitle()).toBe("Continue game");
+    expect(pointerLockRequiredBody()).toContain("Mouse lock is paused");
+    expect(pointerLockRequiredBody()).not.toContain("Edge");
   });
 
   it("centers the virtual pointer overlay on the locked pointer point", () => {

@@ -155,7 +155,7 @@ async page => {
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-create-room]", { timeout: 5000 });
-  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 0, "private room leaked into public Rooms UI");
+  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "owned private room was not visible in Rooms UI");
   await page.locator("[data-back-home]").click();
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
 

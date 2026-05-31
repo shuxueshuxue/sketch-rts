@@ -1,6 +1,5 @@
 export type PointerLockPoint = { x: number; y: number };
 export type PointerLockViewport = { width: number; height: number };
-export type PointerLockButtonState = { locked: boolean; armed: boolean };
 export type UserAgentBrand = { brand: string };
 
 const SUPPRESSED_CANVAS_MOUSE_EVENTS = new Set([
@@ -27,20 +26,12 @@ export function moveVirtualPointer(
   };
 }
 
-export function pointerLockButtonLabel(state: PointerLockButtonState) {
-  if (state.locked) return "Mouse Locked";
-  if (state.armed) return "Click Field";
-  return "Lock Mouse";
+export function pointerLockRequiredTitle() {
+  return "Continue game";
 }
 
-export function pointerLockGateTitle(isEdge: boolean) {
-  return isEdge ? "Edge setup needed" : "Lock mouse to keep playing";
-}
-
-export function pointerLockGateBody(isEdge: boolean) {
-  return isEdge
-    ? "Microsoft Edge Mouse Gesture can override right-button drag. Turn off Enable Mouse Gesture in edge://settings/appearance, then lock the mouse."
-    : "This match uses mouse lock for camera movement and right-click commands. Press Escape any time to release it.";
+export function pointerLockRequiredBody() {
+  return "Mouse lock is paused. Continue when you're ready; Escape releases it again.";
 }
 
 export function virtualPointerTransform(point: PointerLockPoint, size: number) {

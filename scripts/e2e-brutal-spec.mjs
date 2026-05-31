@@ -346,23 +346,27 @@ async page => {
     "virtual pointer is not above HUD UI: " + JSON.stringify(virtualPointerOverlayProof),
   );
   const beforePointerLockClickState = await page.evaluate(() => ({
-    hasButton: !!document.querySelector("[data-pointer-lock]"),
-    button: document.querySelector("[data-pointer-lock]")?.textContent,
+    hasTopStripButton: !!document.querySelector("[data-pointer-lock]"),
+    hasGate: !!document.querySelector("[data-pointer-lock-gate]"),
+    gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
+    action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
     locked: document.pointerLockElement === document.querySelector("canvas"),
   }));
-  must(beforePointerLockClickState.hasButton, "Pointer Lock button is missing from the game UI");
-  await page.locator("[data-pointer-lock]").click();
+  must(!beforePointerLockClickState.hasTopStripButton, "Pointer Lock top-strip button should not exist in the game UI");
+  must(beforePointerLockClickState.hasGate, "Pointer lock gate is missing from the game UI");
+  await page.locator("[data-pointer-lock-gate-action]").click();
   let pointerLockStateAfterButton = null;
   for (let i = 0; i < 50; i += 1) {
     pointerLockStateAfterButton = await page.evaluate(() => ({
       locked: document.pointerLockElement === document.querySelector("canvas"),
       pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-      button: document.querySelector("[data-pointer-lock]")?.textContent,
+      gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
+      action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
       status: document.querySelector("[data-status]")?.textContent,
     }));
     if (
       pointerLockStateAfterButton.locked ||
-      pointerLockStateAfterButton.button?.includes("Click Field") ||
+      pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click") ||
       pointerLockStateAfterButton.status?.includes("Pointer lock failed")
     ) {
       break;
@@ -371,18 +375,18 @@ async page => {
   }
   must(
     pointerLockStateAfterButton.locked ||
-      pointerLockStateAfterButton.button?.includes("Click Field") ||
+      pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click") ||
       pointerLockStateAfterButton.status?.includes("Pointer lock failed"),
-    "Pointer Lock button did not attempt immediate capture or expose a fallback: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
+    "Pointer lock gate did not attempt immediate capture or expose a fallback: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
   );
   let pointerLockStateAfterFieldClick = null;
-  if (!pointerLockStateAfterButton.locked && pointerLockStateAfterButton.button?.includes("Click Field")) {
+  if (!pointerLockStateAfterButton.locked && pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click")) {
     await page.mouse.click(640, 400);
     for (let i = 0; i < 50; i += 1) {
       pointerLockStateAfterFieldClick = await page.evaluate(() => ({
         locked: document.pointerLockElement === document.querySelector("canvas"),
         pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-        button: document.querySelector("[data-pointer-lock]")?.textContent,
+        gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
         status: document.querySelector("[data-status]")?.textContent,
       }));
       if (pointerLockStateAfterFieldClick.locked || pointerLockStateAfterFieldClick.status?.includes("Pointer lock failed")) break;
@@ -392,13 +396,14 @@ async page => {
   const pointerLockState = await page.evaluate(() => ({
     locked: document.pointerLockElement === document.querySelector("canvas"),
     pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-    button: document.querySelector("[data-pointer-lock]")?.textContent,
+    hasTopStripButton: !!document.querySelector("[data-pointer-lock]"),
+    gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
     status: document.querySelector("[data-status]")?.textContent,
   }));
   let beforePointerLockEdgePatch = null;
   let afterPointerLockEdgePatch = null;
   if (pointerLockState.locked) {
-    must(pointerLockState.button?.includes("Mouse Locked"), "Pointer Lock button did not reflect locked state");
+    must(pointerLockState.hasTopStripButton === false, "Pointer Lock top-strip button reappeared after locking");
     beforePointerLockEdgePatch = await canvasPatch(640, 400, 240, 160);
     await page.mouse.move(1276, 400);
     await sleep(360);
@@ -410,7 +415,7 @@ async page => {
     must(
       pointerLockState.status?.includes("Pointer lock failed") ||
         pointerLockState.status?.includes("Browser needs one battlefield click") ||
-        pointerLockState.button?.includes("Click Field"),
+        pointerLockState.gateHidden === false,
       "Pointer Lock neither activated nor failed visibly: " +
         JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton, pointerLockStateAfterFieldClick, pointerLockState }),
     );

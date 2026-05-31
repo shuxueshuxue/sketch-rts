@@ -424,29 +424,6 @@ button {
   font-weight: 700;
 }
 
-.pointer-lock-button {
-  width: 88px;
-  min-height: 28px;
-  border: 1px solid rgba(49, 95, 135, 0.42);
-  border-radius: 5px;
-  background: rgba(255, 250, 226, 0.78);
-  color: #315f87;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.pointer-lock-button:hover,
-.pointer-lock-button:focus-visible {
-  outline: none;
-  background: rgba(232, 241, 220, 0.96);
-}
-
-.pointer-lock-button[aria-pressed="true"] {
-  border-color: rgba(35, 49, 38, 0.54);
-  background: rgba(49, 95, 135, 0.14);
-  color: #243126;
-}
-
 .pointer-lock-gate {
   position: absolute;
   inset: 0;
