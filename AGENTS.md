@@ -15,6 +15,22 @@
 - While a sidecar playtest server is intentionally running, process cleanup checks should distinguish it from accidental background CPU burners.
 - LAN HTTP browsers may not expose `crypto.randomUUID()`. Local identity generation must support `crypto.getRandomValues()` as the compatible path and fail loudly only when no browser crypto source exists.
 
+## Worktree Collaboration
+
+- Treat `main` as the integration trunk and shared source of truth. Do not use it as a long-running personal workspace once multiple agents are active.
+- Each agent gets one named worktree and one branch for its current lane. Recommended shape:
+  - AI/system lane: branch `codex/ai-v2-gauntlet`, worktree `../sketch-rts-ai`
+  - UI/sidecar lane: branch `codex/ui-sidecar`, worktree `../sketch-rts-ui`
+- Worktree lane ownership should be semantic, not territorial. A UI lane may touch `src/client/**`, styles, visual tests, and sidecar docs; the AI lane may touch sim/AI/SDK/tests/spec ledgers. If a change needs both surfaces, stop and coordinate before editing the same files.
+- Start every lane from current `origin/main`, then rebase or recreate from `origin/main` before opening a PR. Do not merge another lane by copying files across worktrees.
+- Run `npm ci` once inside a fresh worktree before starting dev servers or tests; `node_modules/` is intentionally not shared through git.
+- Each worktree owns its own dev server port. Recommended defaults:
+  - AI/system dev server: `PORT=5173`
+  - UI/sidecar dev server: `PORT=5174`
+  - User LAN sidecar build: `PORT=34573`
+- When reporting a running server, include the worktree path, branch, port, and whether it is dev or production. This keeps process cleanup honest.
+- Never run two agents in the same worktree. If a helper needs to inspect without editing, say so explicitly and keep it read-only.
+
 ## Replay, Save, And SDK Truth
 
 - Debug replay is command-log infrastructure, not a visual recording. Record ordinary browser commands, SDK-agent commands, and internal-AI commands after they are emitted by the shared policy modules.

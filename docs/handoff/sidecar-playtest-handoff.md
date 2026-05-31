@@ -5,12 +5,48 @@
 ## 当前状态
 
 - 项目名：`sketch-rts`
-- 本地工作目录：`/Users/lexicalmathical/Documents/draft`
+- 集成工作目录：`/Users/lexicalmathical/Documents/draft`
+- GitHub repo：`https://github.com/shuxueshuxue/sketch-rts`
 - 主程序：纯 TypeScript，Express + Vite，前后端一体。
 - 旁路试玩服务器是有意保留的进程，不是需要随手清掉的测试残留。
 - 当前推荐旁路端口：`34573`
 - 当前推荐本地 URL：`http://127.0.0.1:34573/`
 - 当前推荐局域网 URL 形式：`http://<LAN-IP>:34573/`
+
+## Worktree 协作设计
+
+`main` 只做集成真相，不作为任何 agent 的长期工作区。每条工作线使用自己的 branch + worktree，避免 UI polish 和 AI/SDK 系统改造互相踩文件、端口、后台进程。
+
+推荐布局：
+
+```bash
+# 在集成目录执行
+git fetch origin
+git worktree add ../sketch-rts-ai -b codex/ai-v2-gauntlet origin/main
+git worktree add ../sketch-rts-ui -b codex/ui-sidecar origin/main
+cd ../sketch-rts-ai && npm ci
+cd ../sketch-rts-ui && npm ci
+```
+
+推荐职责：
+
+- `../sketch-rts-ai` / `codex/ai-v2-gauntlet`：AI v2 gauntlet、sim、SDK、save/replay、系统测试、spec ledger。
+- `../sketch-rts-ui` / `codex/ui-sidecar`：主菜单、房间 UI、命令面板、Pointer Lock、视觉反馈、小地图、旁路试玩体验。
+- `/Users/lexicalmathical/Documents/draft` / `main`：只做同步、审查、最终集成、必要文档真相更新。
+
+推荐端口：
+
+- AI/system dev：`PORT=5173 npm run dev`
+- UI/sidecar dev：`PORT=5174 npm run dev`
+- 用户 LAN 旁路生产试玩：`NODE_ENV=production HOST=0.0.0.0 PORT=34573 npm run server`
+
+规则：
+
+- 不要让两个 agent 在同一个 worktree 里写代码。
+- 任何正在运行的服务器都要能回答四件事：来自哪个 worktree、哪个 branch、哪个 port、dev 还是 production。
+- UI agent 不要直接改 AI policy/sim/SDK 语义；AI agent 不要顺手重排 UI。需要跨界时先合并或协调。
+- 每条 lane 合入前先从 `origin/main` 更新，并用本 lane 的验收命令证明没有把自己的表面跑绿建立在旧集成状态上。
+- 不要靠从另一个 worktree 手动复制文件来“合并”；用 commit、PR、merge/rebase 保持历史可审。
 
 ## 旁路部署命令
 
@@ -66,9 +102,11 @@ ps -axo pid,ppid,pcpu,pmem,command | rg 'src/server/index|tsx scripts|vitest|pla
 
 不要清理的通常是：
 
-- 用户正在玩的 `HOST=0.0.0.0 PORT=34573 npm run server`
+- 用户正在玩的 `NODE_ENV=production HOST=0.0.0.0 PORT=34573 npm run server`
 
 如果用户明确说“关掉旁路/关掉服务器”，再杀对应 PID。
+
+清理或汇报进程时，把 worktree 和 port 一起说清楚。只看到 `src/server/index.ts` 不足以判断它是不是该杀；先用命令行参数、cwd、端口和当前用户请求判断。
 
 ## UI 接手边界
 
@@ -97,4 +135,3 @@ ps -axo pid,ppid,pcpu,pmem,command | rg 'src/server/index|tsx scripts|vitest|pla
 - 目前失败事实是 v2 在扩张/野怪/佣兵图上经济和兵力被两个 v1 滚起，不是可以靠一句“调参”糊过去的问题。
 
 接手 UI 的 agent 不需要解决这个红灯，但不要把当前项目描述成“全 spec 已通过”。
-
