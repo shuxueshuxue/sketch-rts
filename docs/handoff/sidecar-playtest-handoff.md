@@ -20,18 +20,18 @@
 推荐布局：
 
 ```bash
-# 在集成目录执行
+# 在 /Users/lexicalmathical/Documents/draft 执行
 git fetch origin
-git worktree add ../sketch-rts-ai -b codex/ai-v2-gauntlet origin/main
-git worktree add ../sketch-rts-ui -b codex/ui-sidecar origin/main
-cd ../sketch-rts-ai && npm ci
-cd ../sketch-rts-ui && npm ci
+git worktree add .worktrees/ai-v2-gauntlet -b codex/ai-v2-gauntlet origin/main
+git worktree add .worktrees/ui-sidecar -b codex/ui-sidecar origin/main
+cd .worktrees/ai-v2-gauntlet && npm ci
+cd ../ui-sidecar && npm ci
 ```
 
 推荐职责：
 
-- `../sketch-rts-ai` / `codex/ai-v2-gauntlet`：AI v2 gauntlet、sim、SDK、save/replay、系统测试、spec ledger。
-- `../sketch-rts-ui` / `codex/ui-sidecar`：主菜单、房间 UI、命令面板、Pointer Lock、视觉反馈、小地图、旁路试玩体验。
+- `.worktrees/ai-v2-gauntlet` / `codex/ai-v2-gauntlet`：AI v2 gauntlet、sim、SDK、save/replay、系统测试、spec ledger。
+- `.worktrees/ui-sidecar` / `codex/ui-sidecar`：主菜单、房间 UI、命令面板、Pointer Lock、视觉反馈、小地图、旁路试玩体验。
 - `/Users/lexicalmathical/Documents/draft` / `main`：只做同步、审查、最终集成、必要文档真相更新。
 
 推荐端口：

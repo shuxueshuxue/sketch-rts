@@ -19,8 +19,8 @@
 
 - Treat `main` as the integration trunk and shared source of truth. Do not use it as a long-running personal workspace once multiple agents are active.
 - Each agent gets one named worktree and one branch for its current lane. Recommended shape:
-  - AI/system lane: branch `codex/ai-v2-gauntlet`, worktree `../sketch-rts-ai`
-  - UI/sidecar lane: branch `codex/ui-sidecar`, worktree `../sketch-rts-ui`
+  - AI/system lane: branch `codex/ai-v2-gauntlet`, worktree `.worktrees/ai-v2-gauntlet`
+  - UI/sidecar lane: branch `codex/ui-sidecar`, worktree `.worktrees/ui-sidecar`
 - Worktree lane ownership should be semantic, not territorial. A UI lane may touch `src/client/**`, styles, visual tests, and sidecar docs; the AI lane may touch sim/AI/SDK/tests/spec ledgers. If a change needs both surfaces, stop and coordinate before editing the same files.
 - Start every lane from current `origin/main`, then rebase or recreate from `origin/main` before opening a PR. Do not merge another lane by copying files across worktrees.
 - Run `npm ci` once inside a fresh worktree before starting dev servers or tests; `node_modules/` is intentionally not shared through git.
