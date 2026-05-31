@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
 import type { LocalUserProfile } from "./types";
 
 const host: LocalUserProfile = { id: "user-host", name: "Host" };
@@ -24,6 +24,59 @@ describe("room model", () => {
     expect(setup.options.players).toEqual(["player", "enemy", "player-4"]);
     expect(setup.options.aiPlayers).toEqual(["player-4"]);
     expect(setup.options.teams).toMatchObject({ player: "north", enemy: "north", "player-4": "south" });
+  });
+
+  it("lets the same local user rejoin their claimed slot without requiring an open slot", () => {
+    const room = createRoom({ id: "room-rejoin", host, slotCount: 2 });
+
+    const rejoined = joinFirstOpenSlot(room, host);
+
+    expect(rejoined).toEqual(room);
+    expect(rejoined.slots.find((slot) => slot.userId === host.id)?.playerId).toBe("player");
+  });
+
+  it("creates private or public rooms with requested human and computer slot counts", () => {
+    const room = createRoom({ id: "room-counts", host, mapId: "bareDuel", visibility: "private", humanCount: 3, aiCount: 2 });
+
+    expect(room.visibility).toBe("private");
+    expect(room.mapId).toBe("bareDuel");
+    expect(room.slots).toHaveLength(5);
+    expect(room.slots.filter((slot) => slot.controller === "human")).toHaveLength(1);
+    expect(room.slots.filter((slot) => slot.controller === "open")).toHaveLength(2);
+    expect(room.slots.filter((slot) => slot.controller === "ai")).toHaveLength(2);
+    expect(room.slots[0]).toMatchObject({ controller: "human", userId: host.id, ready: true });
+  });
+
+  it("defaults all-human rooms to startable teams after every human slot is claimed", () => {
+    let room = createRoom({ id: "room-all-human", host, humanCount: 2, aiCount: 0 });
+
+    room = joinFirstOpenSlot(room, guest);
+    room = updateRoomSlot(room, "slot-2", { ready: true });
+
+    expect(room.slots.map((slot) => slot.team)).toEqual(["north", "south"]);
+    expect(canStartRoom(room)).toBe(true);
+  });
+
+  it("keeps private rooms out of the public lobby while preserving owner visibility", () => {
+    const privateRoom = createRoom({ id: "room-private", host, visibility: "private" });
+    const publicRoom = createRoom({ id: "room-public", host: guest, visibility: "public" });
+
+    expect(lobbyVisibleRooms([privateRoom, publicRoom]).map((room) => room.id)).toEqual(["room-public"]);
+    expect(lobbyVisibleRooms([privateRoom, publicRoom], host.id).map((room) => room.id)).toEqual(["room-private", "room-public"]);
+  });
+
+  it("does not keep open or closed placeholder names when a slot becomes AI", () => {
+    let room = createRoom({ id: "room-slot-name", host });
+
+    room = updateRoomSlot(room, "slot-2", { controller: "open" });
+    expect(room.slots[1]?.name).toBe("Open");
+    room = updateRoomSlot(room, "slot-2", { controller: "ai" });
+    expect(room.slots[1]).toMatchObject({ controller: "ai", name: "AI", ready: true });
+
+    room = updateRoomSlot(room, "slot-2", { controller: "closed" });
+    expect(room.slots[1]?.name).toBe("Closed");
+    room = updateRoomSlot(room, "slot-2", { controller: "ai" });
+    expect(room.slots[1]).toMatchObject({ controller: "ai", name: "AI", ready: true });
   });
 
   it("keeps 15 SDK-driven human slots distinct from 15 internal AI slots", () => {

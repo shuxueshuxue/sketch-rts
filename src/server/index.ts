@@ -9,7 +9,7 @@ import { createAiRuntime, runPresetAiRuntime } from "../shared/ai-runtime";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createGame, issueCommand, snapshotGame, stepGame } from "../shared/sim";
-import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
+import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
 
@@ -64,8 +64,9 @@ app.get("/api/snapshot", (_request, response) => {
   response.json(snapshotGame(game));
 });
 
-app.get("/api/rooms", (_request, response) => {
-  response.json({ rooms: roomHost.listRooms() });
+app.get("/api/rooms", (request, response) => {
+  const viewerUserId = typeof request.query.userId === "string" ? request.query.userId : undefined;
+  response.json({ rooms: roomHost.listRooms(viewerUserId) });
 });
 
 app.post("/api/rooms", (request, response) => {
@@ -82,6 +83,18 @@ app.post("/api/rooms", (request, response) => {
     response.status(400).json({ error: "slotCount must be an integer between 2 and 30" });
     return;
   }
+  if (body.humanCount !== undefined && (!Number.isInteger(body.humanCount) || Number(body.humanCount) < 1 || Number(body.humanCount) > 30)) {
+    response.status(400).json({ error: "humanCount must be an integer between 1 and 30" });
+    return;
+  }
+  if (body.aiCount !== undefined && (!Number.isInteger(body.aiCount) || Number(body.aiCount) < 0 || Number(body.aiCount) > 29)) {
+    response.status(400).json({ error: "aiCount must be an integer between 0 and 29" });
+    return;
+  }
+  if (body.visibility !== undefined && !isRoomVisibility(body.visibility)) {
+    response.status(400).json({ error: "visibility must be private or public" });
+    return;
+  }
   try {
     const room = roomHost.createRoom({
       id: typeof body.id === "string" ? body.id : `room-${randomUUID()}`,
@@ -89,6 +102,9 @@ app.post("/api/rooms", (request, response) => {
       ...(typeof body.name === "string" ? { name: body.name } : {}),
       ...(isMapId(body.mapId) ? { mapId: body.mapId } : {}),
       ...(typeof body.slotCount === "number" ? { slotCount: body.slotCount } : {}),
+      ...(typeof body.humanCount === "number" ? { humanCount: body.humanCount } : {}),
+      ...(typeof body.aiCount === "number" ? { aiCount: body.aiCount } : {}),
+      ...(isRoomVisibility(body.visibility) ? { visibility: body.visibility } : {}),
     });
     response.json(room);
   } catch (error) {
@@ -682,6 +698,10 @@ function isAiVersionMap(value: unknown): value is GameSetupOptions["aiVersions"]
 
 function isMapId(value: unknown): value is MapId {
   return typeof value === "string" && MAP_SCENARIOS.some((scenario) => scenario.id === value);
+}
+
+function isRoomVisibility(value: unknown): value is RoomVisibility {
+  return value === "private" || value === "public";
 }
 
 function isLocalUserProfile(value: unknown): value is LocalUserProfile {

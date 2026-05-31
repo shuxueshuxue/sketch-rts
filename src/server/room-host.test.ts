@@ -25,6 +25,15 @@ describe("server room host", () => {
     expect(host.listRooms()[0]?.status).toBe("inMatch");
   });
 
+  it("lists only public lobby rooms unless a viewer owns a private room", () => {
+    const host = createRoomHost();
+    host.createRoom({ id: "room-private", host: hostUser, visibility: "private" });
+    host.createRoom({ id: "room-public", host: guestUser, visibility: "public" });
+
+    expect(host.listRooms().map((room) => room.id)).toEqual(["room-public"]);
+    expect(host.listRooms(hostUser.id).map((room) => room.id)).toEqual(["room-private", "room-public"]);
+  });
+
   it("routes commands by explicit player id so SDK agents can play human slots", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-commands", host: hostUser, slotCount: 2 });

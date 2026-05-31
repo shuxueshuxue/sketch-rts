@@ -1,6 +1,6 @@
 import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
-import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, SlotController, TrainableUnitKind } from "../shared/types";
+import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, TrainableUnitKind } from "../shared/types";
 import { planPresetAiCommands } from "./ai-policy";
 import type { AiScriptVersion } from "./ai-policy";
 
@@ -25,6 +25,9 @@ export type CreateRoomRequest = {
   name?: string;
   mapId?: MapId;
   slotCount?: number;
+  humanCount?: number;
+  aiCount?: number;
+  visibility?: RoomVisibility;
 };
 
 export type GrandStressRoomRequest = {
@@ -158,8 +161,9 @@ export class SketchRtsSdk {
     return this.postJson("/api/tick", { ticks });
   }
 
-  async listRooms(): Promise<RoomState[]> {
-    const result = await this.getJson<{ rooms: RoomState[] }>("/api/rooms");
+  async listRooms(options: { userId?: string } = {}): Promise<RoomState[]> {
+    const query = options.userId ? `?userId=${encodeURIComponent(options.userId)}` : "";
+    const result = await this.getJson<{ rooms: RoomState[] }>(`/api/rooms${query}`);
     return result.rooms;
   }
 
