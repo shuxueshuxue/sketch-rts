@@ -1,0 +1,761 @@
+import express from "express";
+import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { WebSocketServer, type WebSocket } from "ws";
+import { createServer as createViteServer } from "vite";
+import { createAiRuntime, runPresetAiRuntime } from "../shared/ai-runtime";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { MAP_SCENARIOS } from "../shared/map";
+import { createGame, issueCommand, snapshotGame, stepGame } from "../shared/sim";
+import type { GameCommand, GameSetupOptions, LocalUserProfile, MapId, PlayerId, RaceId, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
+import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
+import { createRoomHost } from "./room-host";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(__dirname, "../..");
+const port = Number(process.env.PORT ?? 5173);
+const host = bindHostFromEnv(process.env);
+const sessionAutoTick = process.env.SESSION_AUTOTICK !== "0";
+const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
+const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({ noServer: true });
+let game = createGame();
+let gameAiRuntime = createAiRuntime(["enemy"]);
+const roomHost = createRoomHost();
+
+app.use(express.json({ limit: "64kb" }));
+
+server.on("upgrade", (request, socket, head) => {
+  if (request.url !== "/ws") {
+    socket.destroy();
+    return;
+  }
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
+
+wss.on("connection", (ws) => {
+  send(ws, { type: "snapshot", snapshot: snapshotGame(game) });
+  ws.on("message", (raw) => {
+    try {
+      const command = parseCommand(raw.toString());
+      runSessionCommand(command);
+    } catch (error) {
+      send(ws, { type: "error", message: error instanceof Error ? error.message : String(error) });
+    }
+  });
+});
+
+app.get("/api/catalog", (_request, response) => {
+  response.json({
+    units: Object.keys(UNIT_DEFS),
+    buildings: Object.keys(BUILDING_DEFS),
+    races: Object.values(RACE_DEFS),
+    maps: MAP_SCENARIOS,
+  });
+});
+
+app.get("/api/snapshot", (_request, response) => {
+  response.json(snapshotGame(game));
+});
+
+app.get("/api/rooms", (_request, response) => {
+  response.json({ rooms: roomHost.listRooms() });
+});
+
+app.post("/api/rooms", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!isLocalUserProfile(body.host)) {
+    response.status(400).json({ error: "Malformed host profile" });
+    return;
+  }
+  if (body.mapId !== undefined && !isMapId(body.mapId)) {
+    response.status(400).json({ error: "Unknown map id" });
+    return;
+  }
+  if (body.slotCount !== undefined && (!Number.isInteger(body.slotCount) || Number(body.slotCount) < 2 || Number(body.slotCount) > 30)) {
+    response.status(400).json({ error: "slotCount must be an integer between 2 and 30" });
+    return;
+  }
+  try {
+    const room = roomHost.createRoom({
+      id: typeof body.id === "string" ? body.id : `room-${randomUUID()}`,
+      host: body.host,
+      ...(typeof body.name === "string" ? { name: body.name } : {}),
+      ...(isMapId(body.mapId) ? { mapId: body.mapId } : {}),
+      ...(typeof body.slotCount === "number" ? { slotCount: body.slotCount } : {}),
+    });
+    response.json(room);
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/grand-thirty", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!isLocalUserProfile(body.host)) {
+    response.status(400).json({ error: "Malformed host profile" });
+    return;
+  }
+  try {
+    const humanCount = body.humanCount === undefined ? undefined : Number(body.humanCount);
+    const aiCount = body.aiCount === undefined ? undefined : Number(body.aiCount);
+    if (humanCount !== undefined && !Number.isInteger(humanCount)) {
+      response.status(400).json({ error: "humanCount must be an integer" });
+      return;
+    }
+    if (aiCount !== undefined && !Number.isInteger(aiCount)) {
+      response.status(400).json({ error: "aiCount must be an integer" });
+      return;
+    }
+    response.json(
+      roomHost.createGrandThirtyRoom(typeof body.id === "string" ? body.id : `room-${randomUUID()}`, body.host, {
+        ...(humanCount !== undefined ? { humanCount } : {}),
+        ...(aiCount !== undefined ? { aiCount } : {}),
+      }),
+    );
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/rooms/:roomId", (request, response) => {
+  try {
+    response.json(roomHost.getRoom(request.params.roomId));
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/join", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!isLocalUserProfile(body.user)) {
+    response.status(400).json({ error: "Malformed user profile" });
+    return;
+  }
+  try {
+    response.json(roomHost.joinRoom(request.params.roomId, body.user));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/leave", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (typeof body.userId !== "string") {
+    response.status(400).json({ error: "Malformed user id" });
+    return;
+  }
+  try {
+    response.json(roomHost.leaveRoom(request.params.roomId, body.userId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
+  const patch = parseSlotPatch(request.body);
+  if (!patch) {
+    response.status(400).json({ error: "Malformed slot patch" });
+    return;
+  }
+  try {
+    response.json(roomHost.updateSlot(request.params.roomId, request.params.slotId, patch));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/map", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!isMapId(body.mapId)) {
+    response.status(400).json({ error: "Unknown map id" });
+    return;
+  }
+  try {
+    response.json(roomHost.updateMap(request.params.roomId, body.mapId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/start", (request, response) => {
+  try {
+    response.json(roomHost.startRoom(request.params.roomId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/reset", (request, response) => {
+  const body = request.body as { mapId?: unknown; options?: unknown };
+  if (!isMapId(body.mapId)) {
+    response.status(400).json({ error: "Unknown map id" });
+    return;
+  }
+  const options = parseGameSetupOptions(body.options);
+  if (!options) {
+    response.status(400).json({ error: "Malformed game setup options" });
+    return;
+  }
+  try {
+    response.json(roomHost.resetRoom(request.params.roomId, body.mapId, options));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/rooms/:roomId/snapshot", (request, response) => {
+  try {
+    response.json(roomHost.snapshot(request.params.roomId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/command", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!isPlayerId(body.playerId) || !isCommand(body.command)) {
+    response.status(400).json({ error: "Malformed room command" });
+    return;
+  }
+  try {
+    response.json(roomHost.commandRoom(request.params.roomId, body.playerId, body.command));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/commands", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!Array.isArray(body.commands) || !body.commands.every(isRoomCommandEnvelope)) {
+    response.status(400).json({ error: "Malformed room command batch" });
+    return;
+  }
+  try {
+    response.json(roomHost.commandRooms(request.params.roomId, body.commands));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/tick", (request, response) => {
+  const requestedTicks = (request.body as { ticks?: unknown }).ticks;
+  if (!isTickCount(requestedTicks)) {
+    response.status(400).json({ error: "ticks must be an integer between 1 and 20000" });
+    return;
+  }
+  try {
+    response.json(roomHost.tickRoom(request.params.roomId, requestedTicks));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/command-tick", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!Array.isArray(body.commands) || !body.commands.every(isRoomCommandEnvelope) || !isTickCount(body.ticks)) {
+    response.status(400).json({ error: "Malformed room command-tick batch" });
+    return;
+  }
+  try {
+    response.json(roomHost.commandTickRoom(request.params.roomId, body.commands, body.ticks));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/rooms/:roomId/result", (request, response) => {
+  try {
+    const room = roomHost.getRoom(request.params.roomId);
+    if (room.status !== "ended" || !room.result) {
+      response.status(404).json({ error: "Room has no result yet" });
+      return;
+    }
+    response.json(room.result);
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/save", (request, response) => {
+  const input = parseSaveInput(request.body);
+  if (!input) {
+    response.status(400).json({ error: "Malformed savegame input" });
+    return;
+  }
+  try {
+    response.json(roomHost.saveRoom(request.params.roomId, input));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/debug-replay", (request, response) => {
+  const input = parseSaveInput(request.body);
+  if (!input) {
+    response.status(400).json({ error: "Malformed debug replay input" });
+    return;
+  }
+  try {
+    response.json(roomHost.enableDebugReplay(request.params.roomId, input));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/rooms/:roomId/debug-replay", (request, response) => {
+  try {
+    response.json(roomHost.readDebugReplay(request.params.roomId));
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/rooms/:roomId/debug-replay/ticks/:tick", (request, response) => {
+  const tick = Number(request.params.tick);
+  if (!Number.isInteger(tick) || tick < 0) {
+    response.status(400).json({ error: "tick must be a non-negative integer" });
+    return;
+  }
+  try {
+    response.json(roomHost.replayDebugToTick(request.params.roomId, tick));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/debug-replay/ticks/:tick/save", (request, response) => {
+  const tick = Number(request.params.tick);
+  const input = parseSaveInput(request.body);
+  if (!Number.isInteger(tick) || tick < 0) {
+    response.status(400).json({ error: "tick must be a non-negative integer" });
+    return;
+  }
+  if (!input) {
+    response.status(400).json({ error: "Malformed replay frame save input" });
+    return;
+  }
+  try {
+    response.json(roomHost.extractDebugReplayFrameSave(request.params.roomId, tick, input));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/savegames", (_request, response) => {
+  response.json({ saves: roomHost.listSaves() });
+});
+
+app.get("/api/savegames/:saveId", (request, response) => {
+  try {
+    response.json(roomHost.readSave(request.params.saveId));
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/savegames/:saveId/continue", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (body.roomId !== undefined && typeof body.roomId !== "string") {
+    response.status(400).json({ error: "Malformed room id" });
+    return;
+  }
+  try {
+    response.json(roomHost.continueSave(request.params.saveId, undefined, typeof body.roomId === "string" ? { roomId: body.roomId } : {}));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/reset", (request, response) => {
+  const body = request.body as { mapId?: unknown; options?: unknown };
+  const mapId = body.mapId;
+  if (!isMapId(mapId)) {
+    response.status(400).json({ error: "Unknown map id" });
+    return;
+  }
+  const options = parseGameSetupOptions(body.options);
+  if (!options) {
+    response.status(400).json({ error: "Malformed game setup options" });
+    return;
+  }
+  game = createGame(mapId, options);
+  gameAiRuntime = createAiRuntime(options.aiPlayers ?? ["enemy"], options.aiVersions ? { versions: options.aiVersions } : {});
+  broadcastSnapshot();
+  response.json(snapshotGame(game));
+});
+
+app.post("/api/command", (request, response) => {
+  if (!isCommand(request.body)) {
+    response.status(400).json({ error: "Malformed command" });
+    return;
+  }
+  try {
+    runSessionCommand(request.body);
+    response.json(snapshotGame(game));
+  } catch (error) {
+    response.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post("/api/tick", (request, response) => {
+  const requestedTicks = (request.body as { ticks?: unknown }).ticks;
+  if (!isTickCount(requestedTicks)) {
+    response.status(400).json({ error: "ticks must be an integer between 1 and 20000" });
+    return;
+  }
+  const ticks = requestedTicks;
+  const started = performance.now();
+  const cpuStarted = process.cpuUsage();
+  const memoryStarted = process.memoryUsage();
+  for (let i = 0; i < ticks; i += 1) {
+    runPresetAiRuntime(game, gameAiRuntime);
+    stepGame(game);
+  }
+  const elapsedMs = performance.now() - started;
+  const cpu = process.cpuUsage(cpuStarted);
+  const memory = process.memoryUsage();
+  response.json({
+    ticks,
+    elapsedMs,
+    cpuMs: (cpu.user + cpu.system) / 1000,
+    memory: {
+      rssBytes: memory.rss,
+      heapUsedBytes: memory.heapUsed,
+      heapDeltaBytes: memory.heapUsed - memoryStarted.heapUsed,
+    },
+    snapshot: snapshotGame(game),
+  });
+});
+
+setInterval(() => {
+  if (sessionAutoTick) {
+    runPresetAiRuntime(game, gameAiRuntime);
+    stepGame(game);
+  }
+  if (roomAutoTick) roomHost.tickActiveRooms();
+}, 50);
+
+setInterval(() => {
+  broadcastSnapshot();
+}, 100);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(root, "dist")));
+  app.get("*", (_request, response) => {
+    response.sendFile(path.join(root, "dist/index.html"));
+  });
+} else {
+  const vite = await createViteServer({
+    root,
+    server: { middlewareMode: true, hmr: { port: viteHmrPort(port) } },
+    appType: "spa",
+  });
+  app.use(vite.middlewares);
+}
+
+server.listen(port, host, () => {
+  console.log(`Sketch RTS listening on ${publicListenUrl(host, port)}`);
+});
+
+function send(ws: WebSocket, payload: unknown) {
+  ws.send(JSON.stringify(payload));
+}
+
+function broadcastSnapshot() {
+  const frame = JSON.stringify({ type: "snapshot", snapshot: snapshotGame(game) });
+  for (const client of wss.clients) {
+    if (client.readyState === client.OPEN) client.send(frame);
+  }
+}
+
+function runSessionCommand(command: GameCommand) {
+  if (command.type === "startMap") {
+    game = createGame(command.mapId);
+    gameAiRuntime = createAiRuntime(["enemy"]);
+    broadcastSnapshot();
+    return;
+  }
+  issueCommand(game, command);
+}
+
+function parseCommand(raw: string): GameCommand {
+  const value = JSON.parse(raw) as unknown;
+  if (!isCommand(value)) {
+    throw new Error(`Malformed command: ${raw}`);
+  }
+  return value;
+}
+
+function isCommand(value: unknown): value is GameCommand {
+  if (!value || typeof value !== "object") return false;
+  const command = value as Record<string, unknown>;
+  if (command.type === "startMap") {
+    return isMapId(command.mapId);
+  }
+  if (command.type === "move") {
+    return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
+  }
+  if (command.type === "attackMove") {
+    return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
+  }
+  if (command.type === "attack") {
+    return isStringArray(command.unitIds) && typeof command.targetId === "string";
+  }
+  if (command.type === "mine") {
+    return isStringArray(command.unitIds) && typeof command.resourceId === "string";
+  }
+  if (command.type === "build") {
+    return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
+  }
+  if (command.type === "train") {
+    return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
+  }
+  if (command.type === "hire") {
+    return typeof command.campId === "string";
+  }
+  if (command.type === "cast") {
+    return (
+      typeof command.unitId === "string" &&
+      (command.ability === "heal" || command.ability === "summon" || command.ability === "curse") &&
+      (command.targetId === undefined || typeof command.targetId === "string") &&
+      (command.x === undefined || isNumber(command.x)) &&
+      (command.y === undefined || isNumber(command.y))
+    );
+  }
+  return false;
+}
+
+function isRoomCommandEnvelope(value: unknown): value is { playerId: PlayerId; command: GameCommand } {
+  if (!value || typeof value !== "object") return false;
+  const envelope = value as Record<string, unknown>;
+  return isPlayerId(envelope.playerId) && isCommand(envelope.command);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isBuildableBuilding(value: unknown) {
+  return typeof value === "string" && (BUILDABLE_BUILDING_KINDS as readonly string[]).includes(value);
+}
+
+function isTrainableUnit(value: unknown) {
+  return typeof value === "string" && (TRAINABLE_UNIT_KINDS as readonly string[]).includes(value);
+}
+
+function parseGameSetupOptions(value: unknown): GameSetupOptions | undefined {
+  if (value === undefined) return {};
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  const options: GameSetupOptions = {};
+  if (source.players !== undefined) {
+    if (!isPlayerArray(source.players)) return undefined;
+    options.players = source.players;
+  }
+  if (source.aiPlayers !== undefined) {
+    if (!isPlayerArray(source.aiPlayers)) return undefined;
+    options.aiPlayers = source.aiPlayers;
+  }
+  if (source.aiVersions !== undefined) {
+    if (!isAiVersionMap(source.aiVersions)) return undefined;
+    options.aiVersions = source.aiVersions;
+  }
+  if (source.teams !== undefined) {
+    if (!isTeamMap(source.teams)) return undefined;
+    options.teams = source.teams;
+  }
+  if (source.races !== undefined) {
+    if (!isRaceMap(source.races)) return undefined;
+    options.races = source.races;
+  }
+  if (source.scenario !== undefined) {
+    const scenario = parseScenarioOverride(source.scenario);
+    if (!scenario) return undefined;
+    options.scenario = scenario;
+  }
+  return options;
+}
+
+function parseScenarioOverride(value: unknown): ScenarioOverride | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  const scenario: ScenarioOverride = {};
+  if (source.addResources !== undefined) {
+    if (!Array.isArray(source.addResources) || !source.addResources.every(isResourceSeed)) return undefined;
+    scenario.addResources = source.addResources;
+  }
+  if (source.addMercenaryCamps !== undefined) {
+    if (!Array.isArray(source.addMercenaryCamps) || !source.addMercenaryCamps.every(isMercenaryCampSeed)) return undefined;
+    scenario.addMercenaryCamps = source.addMercenaryCamps;
+  }
+  if (source.addUnits !== undefined) {
+    if (!Array.isArray(source.addUnits) || !source.addUnits.every(isUnitSeed)) return undefined;
+    scenario.addUnits = source.addUnits;
+  }
+  if (source.addBuildings !== undefined) {
+    if (!Array.isArray(source.addBuildings) || !source.addBuildings.every(isBuildingSeed)) return undefined;
+    scenario.addBuildings = source.addBuildings;
+  }
+  if (source.addLandmarks !== undefined) {
+    if (!Array.isArray(source.addLandmarks) || !source.addLandmarks.every(isLandmarkSeed)) return undefined;
+    scenario.addLandmarks = source.addLandmarks;
+  }
+  return scenario;
+}
+
+function isPlayerArray(value: unknown): value is PlayerId[] {
+  return Array.isArray(value) && value.every(isPlayerId);
+}
+
+function isPlayerId(value: unknown): value is PlayerId {
+  return typeof value === "string" && /^[a-zA-Z0-9_-]{1,48}$/.test(value);
+}
+
+function isTeamMap(value: unknown): value is Partial<Record<PlayerId, string>> {
+  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, team]) => isPlayerId(owner) && typeof team === "string");
+}
+
+function isRaceMap(value: unknown): value is Partial<Record<PlayerId, RaceId>> {
+  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, race]) => isPlayerId(owner) && typeof race === "string" && (RACE_IDS as readonly string[]).includes(race));
+}
+
+function isAiVersionMap(value: unknown): value is GameSetupOptions["aiVersions"] {
+  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2"));
+}
+
+function isMapId(value: unknown): value is MapId {
+  return typeof value === "string" && MAP_SCENARIOS.some((scenario) => scenario.id === value);
+}
+
+function isLocalUserProfile(value: unknown): value is LocalUserProfile {
+  if (!value || typeof value !== "object") return false;
+  const profile = value as Record<string, unknown>;
+  return typeof profile.id === "string" && profile.id.length > 0 && typeof profile.name === "string" && profile.name.length > 0;
+}
+
+function parseSlotPatch(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  const patch: { controller?: SlotController; team?: string; race?: RaceId; ready?: boolean; name?: string; userId?: string | undefined } = {};
+  if (source.controller !== undefined) {
+    if (source.controller !== "human" && source.controller !== "ai" && source.controller !== "open" && source.controller !== "closed") return undefined;
+    patch.controller = source.controller;
+  }
+  if (source.team !== undefined) {
+    if (typeof source.team !== "string" || source.team.length === 0) return undefined;
+    patch.team = source.team;
+  }
+  if (source.race !== undefined) {
+    if (typeof source.race !== "string" || !(RACE_IDS as readonly string[]).includes(source.race)) return undefined;
+    patch.race = source.race as RaceId;
+  }
+  if (source.ready !== undefined) {
+    if (typeof source.ready !== "boolean") return undefined;
+    patch.ready = source.ready;
+  }
+  if (source.name !== undefined) {
+    if (typeof source.name !== "string" || source.name.length === 0) return undefined;
+    patch.name = source.name;
+  }
+  if ("userId" in source) {
+    if (source.userId !== undefined && typeof source.userId !== "string") return undefined;
+    patch.userId = source.userId;
+  }
+  return patch;
+}
+
+function parseSaveInput(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  if (typeof source.id !== "string" || source.id.length === 0) return undefined;
+  if (source.label !== undefined && typeof source.label !== "string") return undefined;
+  return {
+    id: source.id,
+    ...(typeof source.label === "string" ? { label: source.label } : {}),
+  };
+}
+
+function isTickCount(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 20000;
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isResourceSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  return typeof seed.id === "string" && seed.kind === "goldMine" && isNumber(seed.x) && isNumber(seed.y) && isPositiveInteger(seed.amount);
+}
+
+function isMercenaryCampSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  return (
+    typeof seed.id === "string" &&
+    isNumber(seed.x) &&
+    isNumber(seed.y) &&
+    isPositiveNumber(seed.radius) &&
+    seed.hireKind === "mercenary" &&
+    isPositiveInteger(seed.cost) &&
+    isPositiveInteger(seed.stock) &&
+    isPositiveInteger(seed.cooldown) &&
+    isNonNegativeInteger(seed.cooldownRemaining)
+  );
+}
+
+function isUnitSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  if (!(typeof seed.id === "string" && isOwner(seed.owner) && isUnitKind(seed.kind) && isNumber(seed.x) && isNumber(seed.y))) return false;
+  const kind = seed.kind;
+  const hp = seed.hp;
+  return hp === undefined || (isPositiveNumber(hp) && hp <= UNIT_DEFS[kind].hp);
+}
+
+function isBuildingSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  return typeof seed.id === "string" && isPlayerId(seed.owner) && isBuildableBuilding(seed.kind) && isNumber(seed.x) && isNumber(seed.y) && (seed.complete === undefined || typeof seed.complete === "boolean");
+}
+
+function isLandmarkSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  return typeof seed.id === "string" && isLandmarkKind(seed.kind) && isNumber(seed.x) && isNumber(seed.y) && isPositiveNumber(seed.size) && isNumber(seed.rotation);
+}
+
+function isOwner(value: unknown) {
+  return isPlayerId(value) || value === "neutral";
+}
+
+function isUnitKind(value: unknown): value is UnitKind {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(UNIT_DEFS, value);
+}
+
+function isLandmarkKind(value: unknown) {
+  return value === "grove" || value === "ridge" || value === "ruin" || value === "ditch" || value === "road" || value === "campMark" || value === "mineScar" || value === "bannerStone";
+}
+
+function isPositiveNumber(value: unknown): value is number {
+  return isNumber(value) && value > 0;
+}
+
+function isPositiveInteger(value: unknown) {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function isNonNegativeInteger(value: unknown) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}

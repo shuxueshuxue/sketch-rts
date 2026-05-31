@@ -1,0 +1,2252 @@
+import "./styles.css";
+import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
+import { edgeScrollDelta } from "./edge-scroll";
+import { moveVirtualPointer, pointerLockButtonLabel, shouldSuppressCanvasMouseDefault } from "./pointer-lock";
+import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
+import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
+import { newUserId } from "./user-profile";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { MAP_SCENARIOS } from "../shared/map";
+import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect } from "../shared/types";
+import type { MapId } from "../shared/types";
+
+type Point = { x: number; y: number };
+type ScreenRect = { x: number; y: number; width: number; height: number };
+type BuildPlacement = { workerId: string; buildingKind: BuildingKind };
+type SpellTargeting = { casterId: string; ability: AbilityKind };
+type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting };
+type MenuView = "home" | "profile" | "rooms" | "setup" | "results";
+
+const app = requireElement<HTMLDivElement>("#app");
+
+type CommandButton = {
+  element: HTMLButtonElement;
+  hotkey: string;
+  isAvailable: () => boolean;
+  run: () => void;
+};
+
+const BUILD_COMMANDS = [
+  { kind: "townHall", icon: "⌂", hotkey: "h" },
+  { kind: "barracks", icon: "▱", hotkey: "b" },
+  { kind: "archeryRange", icon: "⌁", hotkey: "r" },
+  { kind: "stables", icon: "⌂", hotkey: "s" },
+  { kind: "sanctum", icon: "✣", hotkey: "c" },
+  { kind: "workshop", icon: "⚙", hotkey: "o" },
+  { kind: "defenseTower", icon: "⌖", hotkey: "t" },
+  { kind: "farm", icon: "⌗", hotkey: "e" },
+] satisfies { kind: BuildingKind; icon: string; hotkey: string }[];
+
+const TRAIN_COMMANDS = [
+  { kind: "worker", icon: "⌘", hotkey: "w" },
+  { kind: "footman", icon: "△", hotkey: "f" },
+  { kind: "archer", icon: "⋉", hotkey: "a" },
+  { kind: "raider", icon: "◇", hotkey: "r" },
+  { kind: "lancer", icon: "↗", hotkey: "l" },
+  { kind: "knight", icon: "♜", hotkey: "k" },
+  { kind: "priest", icon: "+", hotkey: "p" },
+  { kind: "summoner", icon: "◎", hotkey: "u" },
+  { kind: "witch", icon: "☾", hotkey: "c" },
+  { kind: "golem", icon: "▣", hotkey: "g" },
+] satisfies { kind: TrainableUnitKind; icon: string; hotkey: string }[];
+
+const SPELL_COMMANDS = [
+  { ability: "heal", icon: "+", hotkey: "h" },
+  { ability: "summon", icon: "◎", hotkey: "u" },
+  { ability: "curse", icon: "☾", hotkey: "c" },
+] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
+const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
+
+app.innerHTML = `
+  <div class="game-shell menu-open">
+    <canvas class="game-canvas"></canvas>
+    <div class="main-menu" data-main-menu>
+      <div class="menu-title" data-menu-title>Sketch RTS</div>
+      <div class="menu-status" data-menu-status>Connecting to match server...</div>
+      <div class="map-list" data-map-list></div>
+    </div>
+    <div class="top-strip">
+      <div class="brand">Sketch RTS</div>
+      <div class="resource-readout">Gold: <span data-gold>?</span></div>
+      <div class="supply-readout">Supply: <span data-supply>?</span></div>
+      <div data-map-readout>Map: 4096 x 4096</div>
+      <button class="pointer-lock-button" data-pointer-lock type="button">Lock Mouse</button>
+    </div>
+    <div class="status-line" data-status>Connecting to match...</div>
+    <div class="selection-chip" data-selection>Nothing selected</div>
+    <div class="command-dock hidden" data-command-dock></div>
+    <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
+  </div>
+`;
+
+const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
+const shell = requireElement<HTMLDivElement>(".game-shell");
+const mainMenu = requireElement<HTMLDivElement>("[data-main-menu]");
+const menuTitle = requireElement<HTMLDivElement>("[data-menu-title]");
+const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
+const mapList = requireElement<HTMLDivElement>("[data-map-list]");
+const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
+const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
+const statusLabel = requireElement<HTMLDivElement>("[data-status]");
+const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
+const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
+const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
+const pointerLockButton = requireElement<HTMLButtonElement>("[data-pointer-lock]");
+const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
+const ctx = requireCanvasContext(canvas);
+
+let snapshot: GameSnapshot | undefined;
+let currentRoom: RoomState | undefined;
+let currentRoomId: string | undefined;
+let roomPollTimer: number | undefined;
+let localPlayerId: PlayerId = "player";
+let localUser = loadLocalUserProfile();
+let selectedIds = new Set<string>();
+let selectedCampId: string | undefined;
+let camera = { x: 560, y: 560 };
+let virtualMouse: Point | undefined;
+let pointerLockArmed = false;
+let pointerLockFallbackOnError = false;
+let selectionStart: Point | undefined;
+let selectionEnd: Point | undefined;
+let lastMouse: Point | undefined;
+let draggingMinimapViewport = false;
+let menuOpen = true;
+let menuView: MenuView = "home";
+let selectedMapId: MapId = "verdantCrossroads";
+let commandMode: CommandMode | undefined;
+let buildPaletteOpen = false;
+const keys = new Set<string>();
+const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+const commandButtons: CommandButton[] = [
+  createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode),
+  createCommandButton("Build", "⌘", "b", canOpenBuildPalette, openBuildPalette),
+  ...BUILD_COMMANDS.map((command) =>
+    createCommandButton(`Build ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind)),
+  ),
+  ...TRAIN_COMMANDS.map((command) =>
+    createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind)),
+  ),
+  ...SPELL_COMMANDS.map((command) =>
+    createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability)),
+  ),
+  createCommandButton("Hire Mercenary", HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary),
+];
+
+socket.addEventListener("open", () => {
+  menuStatus.textContent = "Server online.";
+  statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
+  renderMainMenu();
+});
+
+socket.addEventListener("message", (event) => {
+  const message = JSON.parse(event.data as string) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
+  if (message.type === "error") {
+    statusLabel.innerHTML = `<span class="error">${escapeHtml(message.message)}</span>`;
+    return;
+  }
+  if (currentRoomId) return;
+  snapshot = message.snapshot;
+  pruneSelection();
+  updateHud();
+});
+
+socket.addEventListener("close", () => {
+  menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+  statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+});
+
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("keydown", onKeyDown);
+window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
+document.addEventListener("pointerlockchange", syncPointerLockState);
+document.addEventListener("pointerlockerror", () => {
+  if (pointerLockArmed && !pointerLockFallbackOnError) return;
+  const fallbackToFieldClick = pointerLockFallbackOnError;
+  pointerLockFallbackOnError = false;
+  handlePointerLockFailure(fallbackToFieldClick);
+});
+pointerLockButton.addEventListener("click", armPointerLock);
+canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
+canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
+canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
+canvas.addEventListener("mousedown", onMouseDown);
+canvas.addEventListener("mousemove", onMouseMove);
+canvas.addEventListener("mouseup", onMouseUp);
+
+renderMainMenu();
+resizeCanvas();
+requestAnimationFrame(frame);
+
+function createCommandButton(label: string, icon: string, hotkey: string, isAvailable: () => boolean, run: () => void): CommandButton {
+  const element = document.createElement("button");
+  element.className = "command-button";
+  element.type = "button";
+  element.dataset.commandLabel = label;
+  element.dataset.hotkey = hotkey.toUpperCase();
+  element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
+  element.title = `${label} (${hotkey.toUpperCase()})`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  element.addEventListener("click", run);
+  commandDock.append(element);
+  return { element, hotkey, isAvailable, run };
+}
+
+function renderMainMenu() {
+  menuTitle.textContent =
+    menuView === "home" ? "Sketch RTS" : menuView === "profile" ? "Profile" : menuView === "rooms" ? "LAN Rooms" : menuView === "results" ? "Match Results" : "Room Setup";
+  if (menuView === "profile") {
+    renderProfileMenu();
+    return;
+  }
+  if (menuView === "results") {
+    renderResultsMenu();
+    return;
+  }
+  if (menuView === "rooms") {
+    void renderRoomBrowser();
+    return;
+  }
+  if (menuView === "setup") {
+    renderRoomSetup();
+    return;
+  }
+  menuStatus.textContent = `Signed in as ${localUser.name}.`;
+  mapList.replaceChildren(
+    menuButton("Single / Local Game", "Create a room locally. Fill empty seats with AI or humans, then start.", "data-create-local-room", () => void createLocalRoom()),
+    menuButton("LAN Rooms", "Browse rooms on this server. Same room logic as single-player.", "data-open-room-browser", () => {
+      menuView = "rooms";
+      renderMainMenu();
+    }),
+    menuButton("Profile", `Player id ${localUser.id.slice(0, 8)}...`, "data-open-profile", () => {
+      menuView = "profile";
+      renderMainMenu();
+    }),
+  );
+}
+
+function renderProfileMenu() {
+  menuStatus.textContent = "Local browser identity for LAN rooms.";
+  const form = document.createElement("form");
+  form.className = "profile-form";
+  form.dataset.profileForm = "true";
+  form.innerHTML = `
+    <label>Display name<input name="name" value="${escapeHtml(localUser.name)}" /></label>
+    <div class="profile-id">User id ${escapeHtml(localUser.id)}</div>
+    <div class="menu-actions">
+      <button type="submit">Save</button>
+      <button type="button" data-regenerate-user>Regenerate id</button>
+      <button type="button" data-back-home>Back</button>
+    </div>
+  `;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const name = String(data.get("name") ?? "").trim();
+    if (!name) {
+      menuStatus.innerHTML = `<span class="error">Name cannot be empty.</span>`;
+      return;
+    }
+    localUser = { ...localUser, name };
+    saveLocalUserProfile(localUser);
+    menuView = "home";
+    renderMainMenu();
+  });
+  form.querySelector("[data-regenerate-user]")?.addEventListener("click", () => {
+    localUser = { id: newUserId(), name: localUser.name };
+    saveLocalUserProfile(localUser);
+    renderMainMenu();
+  });
+  form.querySelector("[data-back-home]")?.addEventListener("click", () => {
+    menuView = "home";
+    renderMainMenu();
+  });
+  mapList.replaceChildren(form);
+}
+
+async function renderRoomBrowser() {
+  menuStatus.textContent = "Rooms hosted by this server.";
+  const rooms = await requestJson<{ rooms: RoomState[] }>("/api/rooms");
+  const items = rooms.rooms.map((room) =>
+    menuButton(room.name, `${room.mapId} - ${room.status} - ${activeSlotCount(room)} slots`, "data-room-id", async () => {
+      currentRoom = await requestJson<RoomState>(`/api/rooms/${room.id}/join`, { user: localUser });
+      localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? localPlayerId;
+      menuView = "setup";
+      renderMainMenu();
+    }, room.id),
+  );
+  mapList.replaceChildren(
+    menuButton("Create Room", "Start a new LAN/local room.", "data-create-room", () => void createLocalRoom()),
+    ...items,
+    menuButton("Back", "Return to the main menu.", "data-back-home", () => {
+      menuView = "home";
+      renderMainMenu();
+    }),
+  );
+}
+
+function renderRoomSetup() {
+  if (!currentRoom) {
+    menuStatus.textContent = "No room selected.";
+    mapList.replaceChildren(menuButton("Create Room", "Create a local room first.", "data-create-local-room", () => void createLocalRoom()));
+    return;
+  }
+  selectedMapId = currentRoom.mapId;
+  menuStatus.textContent = `${currentRoom.name} - ${currentRoom.status}`;
+  const setup = document.createElement("div");
+  setup.className = "room-setup";
+  setup.dataset.roomSetup = currentRoom.id;
+  setup.innerHTML = `
+    <div class="room-section-title">Map</div>
+    <div class="room-map-grid"></div>
+    <div class="room-section-title">Slots</div>
+    <div class="slot-list"></div>
+    <div class="menu-actions">
+      <button type="button" data-start-room>Start Match</button>
+      <button type="button" data-close-room>Back</button>
+    </div>
+  `;
+  const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
+  mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
+  const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
+  slotList.replaceChildren(...currentRoom.slots.map(slotRow));
+  setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
+  setup.querySelector("[data-close-room]")?.addEventListener("click", () => {
+    menuView = "home";
+    renderMainMenu();
+  });
+  mapList.replaceChildren(setup);
+}
+
+function renderResultsMenu() {
+  const result = currentRoom?.result;
+  if (!currentRoom || !result) {
+    menuStatus.textContent = "No completed match selected.";
+    mapList.replaceChildren(menuButton("Back Home", "Return to the main menu.", "data-return-home", returnHome));
+    return;
+  }
+
+  menuStatus.textContent = `${currentRoom.name} finished at tick ${result.endedAtTick ?? "?"}.`;
+  const rows = result.slots.map((slot) => {
+    const kills = result.stats.unitsKilled[slot.playerId] ?? 0;
+    const losses = result.stats.unitsLost[slot.playerId] ?? 0;
+    const spent = result.stats.goldSpent[slot.playerId] ?? 0;
+    const buildings = result.stats.buildingsDestroyed[slot.playerId] ?? 0;
+    return `
+      <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
+        <span>${escapeHtml(slot.name)}</span>
+        <span>${escapeHtml(slot.controller)}</span>
+        <span>${escapeHtml(slot.team)}</span>
+        <span>${escapeHtml(slot.race)}</span>
+        <span>${kills}/${losses}</span>
+        <span>${spent}</span>
+        <span>${buildings}</span>
+      </div>
+    `;
+  });
+  const panel = document.createElement("div");
+  panel.className = "results-panel";
+  panel.dataset.resultsScreen = currentRoom.id;
+  panel.innerHTML = `
+    <div class="result-winner" data-result-winner>Winner: ${escapeHtml(result.winner ?? "Draw")}</div>
+    <div class="result-head">
+      <span>Player</span><span>Ctrl</span><span>Team</span><span>Race</span><span>K/L</span><span>Gold</span><span>Bldg</span>
+    </div>
+    <div class="result-list">${rows.join("")}</div>
+    <div class="menu-actions">
+      <button type="button" data-rematch>Rematch</button>
+      <button type="button" data-return-home>Home</button>
+    </div>
+  `;
+  const completedRoom = currentRoom;
+  panel.querySelector("[data-rematch]")?.addEventListener("click", () => void createReplayRoom(completedRoom));
+  panel.querySelector("[data-return-home]")?.addEventListener("click", returnHome);
+  mapList.replaceChildren(panel);
+}
+
+async function createLocalRoom() {
+  currentRoom = await requestJson<RoomState>("/api/rooms", {
+    id: `room-${Date.now().toString(36)}`,
+    host: localUser,
+    name: `${localUser.name}'s Room`,
+    mapId: selectedMapId,
+    slotCount: 2,
+  });
+  localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
+  menuView = "setup";
+  renderMainMenu();
+}
+
+async function selectRoomMap(mapId: MapId) {
+  selectedMapId = mapId;
+  if (currentRoom) currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/map`, { mapId });
+  renderMainMenu();
+}
+
+async function startCurrentRoom() {
+  if (!currentRoom) return;
+  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
+  currentRoomId = currentRoom.id;
+  localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
+  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
+  camera = { x: 0, y: 0 };
+  selectedIds = new Set();
+  selectedCampId = undefined;
+  menuOpen = false;
+  shell.classList.remove("menu-open");
+  mainMenu.classList.add("hidden");
+  startRoomPolling();
+}
+
+async function createReplayRoom(room: RoomState) {
+  selectedMapId = room.mapId;
+  await createLocalRoom();
+}
+
+function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
+  const button = document.createElement("button");
+  button.className = "map-button";
+  button.type = "button";
+  button.setAttribute(dataName, dataValue);
+  button.innerHTML = `
+    <span class="map-button-name">${escapeHtml(label)}</span>
+    <span class="map-button-note">${escapeHtml(note)}</span>
+  `;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function mapChoiceButton(mapId: MapId) {
+  const scenario = MAP_SCENARIOS.find((candidate) => candidate.id === mapId)!;
+  const button = document.createElement("button");
+  button.className = `map-button ${selectedMapId === scenario.id ? "selected" : ""}`;
+  button.type = "button";
+  button.dataset.mapId = scenario.id;
+  button.setAttribute("aria-label", `Choose ${scenario.name}`);
+  button.innerHTML = `
+    <span class="map-button-name">${escapeHtml(scenario.name)}</span>
+    <span class="map-button-note">${escapeHtml(scenario.note)}</span>
+    <span class="map-button-tags">${scenario.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
+  `;
+  button.addEventListener("click", () => void selectRoomMap(scenario.id));
+  return button;
+}
+
+function slotRow(slot: RoomState["slots"][number]) {
+  const row = document.createElement("div");
+  row.className = "slot-row";
+  row.dataset.slotId = slot.id;
+  row.innerHTML = `
+    <span class="slot-name">${escapeHtml(slot.name)}</span>
+    <span>${escapeHtml(slot.controller)}</span>
+    <span>${escapeHtml(slot.team)}</span>
+    <span>${escapeHtml(slot.race)}</span>
+    <span>${slot.ready ? "ready" : "not ready"}</span>
+  `;
+  return row;
+}
+
+function activeSlotCount(room: RoomState) {
+  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
+}
+
+function slotForUser(room: RoomState, userId: string) {
+  return room.slots.find((slot) => slot.userId === userId);
+}
+
+function returnHome() {
+  currentRoom = undefined;
+  currentRoomId = undefined;
+  selectedIds = new Set();
+  selectedCampId = undefined;
+  commandMode = undefined;
+  buildPaletteOpen = false;
+  menuView = "home";
+  renderMainMenu();
+}
+
+function startRoomPolling() {
+  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  roomPollTimer = window.setInterval(() => {
+    if (!currentRoomId || menuOpen) return;
+    void refreshRoomSnapshot();
+  }, 120);
+}
+
+async function refreshRoomSnapshot() {
+  if (!currentRoomId) return;
+  const room = await requestJson<RoomState>(`/api/rooms/${currentRoomId}`);
+  if (room.status === "ended" && room.result) {
+    openResults(room);
+    return;
+  }
+  currentRoom = room;
+  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/snapshot`);
+  pruneSelection();
+  updateHud();
+}
+
+function openResults(room: RoomState) {
+  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  currentRoom = room;
+  currentRoomId = undefined;
+  selectedIds = new Set();
+  selectedCampId = undefined;
+  commandMode = undefined;
+  buildPaletteOpen = false;
+  menuOpen = true;
+  shell.classList.add("menu-open");
+  mainMenu.classList.remove("hidden");
+  menuView = "results";
+  renderMainMenu();
+  updateHud();
+}
+
+async function requestJson<T>(path: string, body?: unknown): Promise<T> {
+  const init: RequestInit =
+    body === undefined
+      ? { method: "GET" }
+      : {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        };
+  const response = await fetch(path, init);
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<T>;
+}
+
+function frame() {
+  updateCamera();
+  draw();
+  syncVirtualPointerOverlay();
+  requestAnimationFrame(frame);
+}
+
+async function armPointerLock() {
+  if (document.pointerLockElement === canvas) {
+    document.exitPointerLock();
+    return;
+  }
+  const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
+  pointerLockButton.textContent = "Locking...";
+  pointerLockButton.setAttribute("aria-pressed", "true");
+  statusLabel.textContent = "Requesting Pointer Lock...";
+  await requestPointerLock(point, { fallbackToFieldClick: true });
+}
+
+async function requestPointerLock(point: Point, options: { fallbackToFieldClick: boolean }) {
+  pointerLockArmed = false;
+  pointerLockFallbackOnError = options.fallbackToFieldClick;
+  lastMouse = point;
+  virtualMouse = point;
+  try {
+    await canvas.requestPointerLock();
+  } catch (error) {
+    const fallbackToFieldClick = pointerLockFallbackOnError;
+    pointerLockFallbackOnError = false;
+    handlePointerLockFailure(fallbackToFieldClick, error);
+  }
+}
+
+async function requestPointerLockFromEvent(event: MouseEvent) {
+  if (document.pointerLockElement === canvas) return;
+  const point = mousePoint(event);
+  await requestPointerLock(point, { fallbackToFieldClick: false });
+}
+
+function syncPointerLockState() {
+  const locked = document.pointerLockElement === canvas;
+  shell.classList.toggle("pointer-locked", locked);
+  pointerLockButton.textContent = pointerLockButtonLabel({ locked, armed: pointerLockArmed });
+  pointerLockButton.setAttribute("aria-pressed", String(locked || pointerLockArmed));
+  if (locked) {
+    pointerLockArmed = false;
+    pointerLockFallbackOnError = false;
+    statusLabel.textContent = "Mouse locked. Move normally; Escape releases the cursor.";
+    return;
+  }
+  virtualMouse = undefined;
+}
+
+function handlePointerLockFailure(fallbackToFieldClick: boolean, error?: unknown) {
+  if (fallbackToFieldClick) {
+    pointerLockArmed = true;
+    pointerLockButton.textContent = pointerLockButtonLabel({ locked: false, armed: true });
+    pointerLockButton.setAttribute("aria-pressed", "true");
+    statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
+    return;
+  }
+  pointerLockArmed = false;
+  pointerLockButton.textContent = pointerLockButtonLabel({ locked: false, armed: false });
+  pointerLockButton.setAttribute("aria-pressed", "false");
+  const message = error instanceof Error ? `Pointer lock failed: ${error.message}` : "Pointer lock failed. Click Lock Mouse again from the game screen.";
+  showInvalidCommand(message);
+}
+
+function suppressCanvasMouseDefault(event: Event) {
+  if (shouldSuppressCanvasMouseDefault(event.type)) event.preventDefault();
+}
+
+function onKeyDown(event: KeyboardEvent) {
+  const key = event.key.toLowerCase();
+  if (menuOpen) {
+    const mapIndex = Number(key) - 1;
+    const scenario = MAP_SCENARIOS[mapIndex];
+    if (scenario && menuView === "setup") {
+      event.preventDefault();
+      void selectRoomMap(scenario.id);
+    }
+    return;
+  }
+  if (event.repeat) return;
+  if (key === "escape" && commandMode) {
+    event.preventDefault();
+    cancelCommandMode();
+    return;
+  }
+  if (key === "escape" && buildPaletteOpen) {
+    event.preventDefault();
+    closeBuildPalette("Build menu closed.");
+    return;
+  }
+
+  // @@@command-hotkeys - Command card hotkeys win before WASD camera keys.
+  const command = commandButtons.find((button) => button.hotkey === key && button.isAvailable());
+  if (command) {
+    event.preventDefault();
+    command.run();
+    return;
+  }
+  if (key === "a") {
+    event.preventDefault();
+    showInvalidCommand("Attack-move needs selected units.");
+    return;
+  }
+  if (key === "b") {
+    event.preventDefault();
+    showInvalidCommand("Build needs a selected worker.");
+    return;
+  }
+  keys.add(key);
+}
+
+function sendCommand(command: GameCommand) {
+  if (currentRoomId) {
+    void requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/command`, { playerId: localPlayerId, command })
+      .then((nextSnapshot) => {
+        snapshot = nextSnapshot;
+        pruneSelection();
+        updateHud();
+      })
+      .catch((error) => showInvalidCommand(`Command failed: ${error instanceof Error ? error.message : String(error)}`));
+    return;
+  }
+  if (socket.readyState !== WebSocket.OPEN) {
+    showInvalidCommand("Command failed: socket is not open.");
+    return;
+  }
+  socket.send(JSON.stringify(command));
+}
+
+function showInvalidCommand(message: string) {
+  statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+}
+
+function onMouseDown(event: MouseEvent) {
+  suppressCanvasMouseDefault(event);
+  if (pointerLockArmed && event.button === 0) {
+    void requestPointerLockFromEvent(event);
+    return;
+  }
+  const point = inputPoint(event);
+  lastMouse = point;
+  if (!snapshot) return;
+  const mini = minimapRect();
+  if (commandMode) return;
+  if (isInside(point, minimapViewportRect(mini))) {
+    draggingMinimapViewport = true;
+    centerCameraFromMinimap(point);
+    return;
+  }
+  if (isInside(point, mini)) {
+    centerCameraFromMinimap(point);
+    return;
+  }
+  if (event.button === 0) {
+    selectionStart = point;
+    selectionEnd = point;
+  }
+}
+
+function onMouseMove(event: MouseEvent) {
+  suppressCanvasMouseDefault(event);
+  const previousMouse = lastMouse;
+  const point = inputPoint(event);
+  if (event.buttons === 4 && previousMouse && document.pointerLockElement !== canvas) {
+    camera.x -= point.x - previousMouse.x;
+    camera.y -= point.y - previousMouse.y;
+    clampCamera();
+  }
+  if (draggingMinimapViewport) {
+    centerCameraFromMinimap(point);
+  }
+  lastMouse = point;
+  if (selectionStart) selectionEnd = point;
+}
+
+function onMouseUp(event: MouseEvent) {
+  suppressCanvasMouseDefault(event);
+  const point = inputPoint(event);
+  draggingMinimapViewport = false;
+  if (!snapshot) return;
+  if (commandMode) {
+    if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
+    else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point);
+    else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
+    else if (event.button === 2) cancelCommandMode();
+    selectionStart = undefined;
+    selectionEnd = undefined;
+    return;
+  }
+  if (event.button === 2) {
+    issueContextCommand(point);
+    return;
+  }
+  if (event.button !== 0 || !selectionStart) return;
+
+  const dragDistance = Math.hypot(point.x - selectionStart.x, point.y - selectionStart.y);
+  if (dragDistance > 8 && selectionEnd) {
+    selectUnitsInBox(selectionStart, selectionEnd);
+  } else {
+    selectSingle(point);
+  }
+  selectionStart = undefined;
+  selectionEnd = undefined;
+  updateHud();
+}
+
+function issueContextCommand(point: Point) {
+  if (!snapshot) return;
+  const selectedUnits = selectedPlayerUnits();
+  const unitIds = selectedUnits.map((unit) => unit.id);
+  if (unitIds.length === 0) {
+    showInvalidCommand("Select a unit before issuing orders.");
+    return;
+  }
+
+  const world = screenToWorld(point);
+  const resource = hitResource(world);
+  const target = hitAttackTarget(world);
+  if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
+    sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id });
+    statusLabel.textContent = "Workers ordered to mine gold.";
+    return;
+  }
+  if (target) {
+    sendCommand({ type: "attack", unitIds, targetId: target.id });
+    statusLabel.textContent = target.owner === "neutral" ? "Attack order issued on wildlings." : "Attack order issued.";
+    return;
+  }
+  sendCommand({ type: "move", unitIds, x: world.x, y: world.y });
+  statusLabel.textContent = "Move order issued.";
+}
+
+function canAttackMove() {
+  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().length > 0;
+}
+
+function canOpenBuildPalette() {
+  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().some((unit) => unit.kind === "worker");
+}
+
+function canBuild(kind: BuildingKind) {
+  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && selectedPlayerUnits().some((unit) => unit.kind === "worker");
+}
+
+function canTrain(unitKind: TrainableUnitKind) {
+  return !commandMode && !buildPaletteOpen && selectedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+}
+
+function canCast(ability: AbilityKind) {
+  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+}
+
+function canHireMercenary() {
+  const camp = selectedMercenaryCamp();
+  const player = currentPlayerState();
+  return Boolean(!commandMode && !buildPaletteOpen && camp && player && camp.stock > 0 && camp.cooldownRemaining === 0 && player.gold >= camp.cost && player.supplyUsed + UNIT_DEFS[camp.hireKind].supplyUsed <= player.supplyCap);
+}
+
+function openBuildPalette() {
+  if (!canOpenBuildPalette()) {
+    showInvalidCommand("Build needs a selected worker.");
+    return;
+  }
+  buildPaletteOpen = true;
+  statusLabel.textContent = "Build menu opened. Choose a structure hotkey or command button.";
+  updateHud();
+}
+
+function beginAttackMoveMode() {
+  if (!canAttackMove()) {
+    showInvalidCommand("Attack-move needs selected units.");
+    return;
+  }
+  commandMode = { type: "attackMove" };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent = "Attack-move mode. Left-click ground to advance and fight, right-click or Escape to cancel.";
+  updateHud();
+}
+
+function beginBuildPlacement(buildingKind: BuildingKind) {
+  if (!snapshot) return;
+  const worker = selectedPlayerUnits().find((unit) => unit.kind === "worker");
+  if (!worker) {
+    showInvalidCommand("Build needs a selected worker.");
+    return;
+  }
+  buildPaletteOpen = false;
+  commandMode = { type: "build", placement: { workerId: worker.id, buildingKind } };
+  shell.classList.add("placement-active");
+  shell.classList.remove("targeting-active");
+  statusLabel.textContent = `Choose a ${labelKind(buildingKind)} location. Left-click to place, right-click or Escape to cancel.`;
+  updateHud();
+}
+
+function beginSpellTargeting(ability: AbilityKind) {
+  const caster = selectedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  if (!caster) {
+    showInvalidCommand(`${labelKind(ability)} needs a ready caster.`);
+    return;
+  }
+  commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent =
+    ability === "summon"
+      ? "Summon mode. Left-click nearby ground, right-click or Escape to cancel."
+      : `${labelKind(ability)} mode. Left-click a valid unit target, right-click or Escape to cancel.`;
+  updateHud();
+}
+
+function confirmBuildPlacement(point: Point) {
+  if (!commandMode || commandMode.type !== "build") return;
+  const world = screenToWorld(point);
+  sendCommand({ type: "build", unitId: commandMode.placement.workerId, buildingKind: commandMode.placement.buildingKind, x: world.x, y: world.y });
+  statusLabel.textContent = `${labelKind(commandMode.placement.buildingKind)} foundation placed.`;
+  clearCommandModeClasses();
+  commandMode = undefined;
+  updateHud();
+}
+
+function issueAttackMoveAt(point: Point) {
+  if (!commandMode || commandMode.type !== "attackMove") return;
+  const unitIds = selectedPlayerUnits().map((unit) => unit.id);
+  if (unitIds.length === 0) {
+    showInvalidCommand("Attack-move needs selected units.");
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+  const world = screenToWorld(point);
+  sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y });
+  statusLabel.textContent = "Attack-move order issued.";
+  clearCommandModeClasses();
+  commandMode = undefined;
+  updateHud();
+}
+
+function issueSpellAt(point: Point) {
+  if (!commandMode || commandMode.type !== "spell") return;
+  const { ability, casterId } = commandMode.targeting;
+  const world = screenToWorld(point);
+  if (ability === "summon") {
+    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y });
+    statusLabel.textContent = "Summon order issued.";
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+
+  const target =
+    ability === "heal"
+      ? hitUnit(world, (unit) => unit.owner === localPlayerId)
+      : hitUnit(world, (unit) => unit.owner !== localPlayerId);
+  if (!target) {
+    showInvalidCommand(`${labelKind(ability)} needs a valid unit target.`);
+    return;
+  }
+  sendCommand({ type: "cast", unitId: casterId, ability, targetId: target.id });
+  statusLabel.textContent = `${labelKind(ability)} order issued.`;
+  clearCommandModeClasses();
+  commandMode = undefined;
+  updateHud();
+}
+
+function cancelCommandMode() {
+  const canceled = commandMode?.type;
+  commandMode = undefined;
+  clearCommandModeClasses();
+  statusLabel.textContent =
+    canceled === "attackMove" ? "Attack-move canceled." : canceled === "spell" ? "Spell targeting canceled." : "Build placement canceled.";
+  updateHud();
+}
+
+function clearCommandModeClasses() {
+  shell.classList.remove("placement-active", "targeting-active");
+}
+
+function closeBuildPalette(message?: string) {
+  buildPaletteOpen = false;
+  if (message) statusLabel.textContent = message;
+  updateHud();
+}
+
+function train(unitKind: TrainableUnitKind) {
+  const building = selectedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
+  if (!building) {
+    showInvalidCommand(`${labelKind(unitKind)} needs a selected production building.`);
+    return;
+  }
+  sendCommand({ type: "train", buildingId: building.id, unitKind });
+  statusLabel.textContent = `${labelKind(unitKind)} queued.`;
+}
+
+function hireMercenary() {
+  const camp = selectedMercenaryCamp();
+  if (!camp) {
+    showInvalidCommand("Hire needs a selected mercenary camp.");
+    return;
+  }
+  sendCommand({ type: "hire", campId: camp.id });
+  statusLabel.textContent = "Mercenary hired.";
+}
+
+function selectUnitsInBox(start: Point, end: Point) {
+  if (!snapshot) return;
+  const left = Math.min(start.x, end.x);
+  const right = Math.max(start.x, end.x);
+  const top = Math.min(start.y, end.y);
+  const bottom = Math.max(start.y, end.y);
+  selectedIds = new Set(
+    snapshot.units
+      .filter((unit) => unit.owner === localPlayerId)
+      .filter((unit) => {
+        const screen = worldToScreen(unit);
+        return screen.x >= left && screen.x <= right && screen.y >= top && screen.y <= bottom;
+      })
+      .map((unit) => unit.id),
+  );
+  selectedCampId = undefined;
+  buildPaletteOpen = false;
+}
+
+function selectSingle(point: Point) {
+  const world = screenToWorld(point);
+  const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
+  if (unit) {
+    selectedIds = new Set([unit.id]);
+    selectedCampId = undefined;
+    buildPaletteOpen = false;
+    return;
+  }
+  const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
+  if (building) {
+    selectedIds = new Set([building.id]);
+    selectedCampId = undefined;
+    buildPaletteOpen = false;
+    return;
+  }
+  const camp = hitMercenaryCamp(world);
+  selectedIds = new Set();
+  selectedCampId = camp?.id;
+  buildPaletteOpen = false;
+}
+
+function selectedPlayerUnits() {
+  return snapshot?.units.filter((unit) => unit.owner === localPlayerId && selectedIds.has(unit.id)) ?? [];
+}
+
+function selectedPlayerBuildings() {
+  return snapshot?.buildings.filter((building) => building.owner === localPlayerId && selectedIds.has(building.id)) ?? [];
+}
+
+function selectedMercenaryCamp() {
+  return snapshot?.mercenaryCamps.find((camp) => camp.id === selectedCampId);
+}
+
+function currentPlayerState() {
+  return snapshot?.players[localPlayerId];
+}
+
+function pruneSelection() {
+  if (!snapshot) return;
+  const liveIds = new Set([...snapshot.units.map((unit) => unit.id), ...snapshot.buildings.map((building) => building.id)]);
+  selectedIds = new Set([...selectedIds].filter((id) => liveIds.has(id)));
+  if (selectedCampId && !snapshot.mercenaryCamps.some((camp) => camp.id === selectedCampId)) selectedCampId = undefined;
+  if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
+    commandMode = undefined;
+    clearCommandModeClasses();
+  }
+  if (buildPaletteOpen && !selectedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
+}
+
+function updateHud() {
+  if (!snapshot) return;
+  const player = currentPlayerState();
+  goldLabel.textContent = String(player?.gold ?? "?");
+  supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
+  mapReadout.textContent = `Map: ${snapshot.map.width} x ${snapshot.map.height}`;
+  const units = selectedPlayerUnits();
+  const buildings = selectedPlayerBuildings();
+  const camp = selectedMercenaryCamp();
+  if (units.length > 0) {
+    const workers = units.filter((unit) => unit.kind === "worker").length;
+    const fighters = units.filter((unit) => unit.kind !== "worker").length;
+    selectionLabel.textContent = `${units.length} selected - ${workers} worker, ${fighters} fighter`;
+  } else if (buildings[0]) {
+    selectionLabel.textContent = `${labelBuilding(buildings[0])}${buildings[0].complete ? "" : " under construction"}`;
+  } else if (camp) {
+    selectionLabel.textContent = `Mercenary Camp - ${camp.stock} stock${camp.cooldownRemaining > 0 ? " restocking" : ""}`;
+  } else {
+    selectionLabel.textContent = "Nothing selected";
+  }
+  let visibleCount = 0;
+  for (const button of commandButtons) {
+    const available = button.isAvailable();
+    button.element.hidden = !available;
+    button.element.disabled = !available;
+    if (available) visibleCount += 1;
+  }
+  commandDock.classList.toggle("hidden", visibleCount === 0);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (menuOpen) {
+    drawMenuBackdrop(performance.now());
+    return;
+  }
+  drawPaperMap();
+  if (!snapshot) {
+    ctx.fillStyle = "#243126";
+    ctx.font = "24px ui-rounded, system-ui";
+    ctx.fillText("Connecting to Sketch RTS...", 32, 48);
+    return;
+  }
+  const presentationMarks = createMapPresentation(snapshot);
+  drawLandmarks(snapshot.map.landmarks);
+  drawWildlingCampPowerMarks(presentationMarks);
+  drawResources(snapshot.resources);
+  drawMercenaryCamps(snapshot.mercenaryCamps);
+  drawBuildings(snapshot.buildings);
+  drawUnits(snapshot.units);
+  drawEffects(snapshot.effects);
+  drawBuildPlacementPreview();
+  drawAttackMovePreview();
+  drawSpellPreview();
+  drawSelectionBox();
+  drawMinimap(presentationMarks);
+}
+
+function drawMenuBackdrop(now: number) {
+  ctx.fillStyle = "#f6f1d8";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const t = now / 1000;
+  const stride = 170;
+  ctx.lineWidth = 1;
+  for (let x = -80; x < canvas.width + stride; x += stride) {
+    for (let y = -60; y < canvas.height + stride; y += stride) {
+      const wave = Math.sin(t * 0.45 + x * 0.009 + y * 0.007);
+      ctx.strokeStyle = `rgba(62, 91, 57, ${0.08 + Math.max(0, wave) * 0.06})`;
+      ctx.beginPath();
+      ctx.moveTo(x + 12, y + 72 + wave * 8);
+      ctx.quadraticCurveTo(x + 58, y + 38, x + 112, y + 82 - wave * 7);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(123, 101, 66, 0.12)";
+      ctx.beginPath();
+      ctx.moveTo(x + 104, y + 112);
+      ctx.lineTo(x + 134, y + 96 + wave * 6);
+      ctx.lineTo(x + 158, y + 116);
+      ctx.stroke();
+    }
+  }
+
+  drawMenuRoute(t, canvas.width * 0.12, canvas.height * 0.72, canvas.width * 0.88, canvas.height * 0.28);
+  drawMenuMine(canvas.width * 0.28, canvas.height * 0.28, t);
+  drawMenuCamp(canvas.width * 0.72, canvas.height * 0.68, t);
+  drawMenuSquad(canvas.width * 0.18 + ((t * 34) % (canvas.width * 0.64)), canvas.height * 0.7 - Math.sin(t * 1.3) * 18, "#315f87", t);
+  drawMenuSquad(canvas.width * 0.82 - ((t * 28) % (canvas.width * 0.58)), canvas.height * 0.32 + Math.sin(t * 1.1) * 16, "#963c36", t + 1.7);
+
+  ctx.strokeStyle = "rgba(36, 49, 38, 0.18)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
+}
+
+function drawMenuRoute(t: number, x1: number, y1: number, x2: number, y2: number) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(78, 67, 48, 0.28)";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([22, 16]);
+  ctx.lineDashOffset = -t * 16;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.bezierCurveTo(canvas.width * 0.42, canvas.height * 0.58, canvas.width * 0.56, canvas.height * 0.42, x2, y2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMenuMine(x: number, y: number, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(t * 0.7) * 0.03);
+  ctx.strokeStyle = "#8a6418";
+  ctx.fillStyle = "rgba(242, 208, 92, 0.34)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-36, 26);
+  ctx.lineTo(-18, -22);
+  ctx.lineTo(8, 18);
+  ctx.lineTo(30, -28);
+  ctx.lineTo(44, 24);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMenuCamp(x: number, y: number, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "#704a33";
+  ctx.fillStyle = "rgba(255, 250, 226, 0.5)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(0, 6, 62 + Math.sin(t * 1.1) * 3, 28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-34, 24);
+  ctx.lineTo(0, -44);
+  ctx.lineTo(34, 24);
+  ctx.moveTo(-18, 24);
+  ctx.lineTo(-18, -10);
+  ctx.moveTo(18, 24);
+  ctx.lineTo(18, -10);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMenuSquad(x: number, y: number, color: string, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = "rgba(255, 250, 226, 0.68)";
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < 5; i += 1) {
+    const ox = (i - 2) * 24;
+    const oy = Math.sin(t * 4 + i) * 5;
+    ctx.beginPath();
+    ctx.ellipse(ox, oy + 16, 13, 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox, oy - 16);
+    ctx.lineTo(ox + 12, oy + 12);
+    ctx.lineTo(ox - 12, oy + 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox + 10, oy - 4);
+    ctx.lineTo(ox + 24, oy - 14 + Math.sin(t * 5 + i) * 3);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPaperMap() {
+  ctx.fillStyle = "#f6f1d8";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (const stroke of generateTerrainLinework({ mapId: snapshot?.map.id ?? selectedMapId, camera, width: canvas.width, height: canvas.height })) {
+    drawTextureStroke(stroke);
+  }
+}
+
+function drawTextureStroke(stroke: TextureStroke) {
+  if (stroke.points.length === 0) return;
+  ctx.strokeStyle = stroke.color;
+  ctx.lineWidth = stroke.width;
+  ctx.beginPath();
+  ctx.moveTo(stroke.points[0]!.x, stroke.points[0]!.y);
+  for (const point of stroke.points.slice(1)) ctx.lineTo(point.x, point.y);
+  ctx.stroke();
+}
+
+function drawLandmarks(landmarks: TerrainLandmark[]) {
+  for (const landmark of landmarks) {
+    const point = worldToScreen(landmark);
+    if (!nearScreen(point, landmark.size + 80)) continue;
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(landmark.rotation);
+    ctx.lineWidth = 2;
+    if (landmark.kind === "road") {
+      ctx.strokeStyle = "rgba(123, 101, 66, 0.28)";
+      ctx.setLineDash([18, 14]);
+      ctx.beginPath();
+      ctx.moveTo(-landmark.size / 2, 0);
+      ctx.quadraticCurveTo(0, -landmark.size / 8, landmark.size / 2, 0);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (landmark.kind === "grove") {
+      ctx.strokeStyle = "rgba(64, 108, 66, 0.34)";
+      for (let i = 0; i < 9; i += 1) {
+        const angle = (i / 9) * Math.PI * 2;
+        const x = Math.cos(angle) * landmark.size * 0.28;
+        const y = Math.sin(angle) * landmark.size * 0.18;
+        ctx.beginPath();
+        ctx.arc(x, y, 16 + (i % 3) * 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (landmark.kind === "ridge") {
+      ctx.strokeStyle = "rgba(84, 90, 68, 0.36)";
+      for (let i = -2; i <= 2; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(-landmark.size / 2, i * 18);
+        ctx.lineTo(-landmark.size / 4, i * 18 - 18);
+        ctx.lineTo(0, i * 18 + 10);
+        ctx.lineTo(landmark.size / 3, i * 18 - 14);
+        ctx.lineTo(landmark.size / 2, i * 18 + 8);
+        ctx.stroke();
+      }
+    } else if (landmark.kind === "ruin") {
+      ctx.strokeStyle = "rgba(81, 73, 61, 0.42)";
+      ctx.strokeRect(-landmark.size * 0.22, -landmark.size * 0.18, landmark.size * 0.28, landmark.size * 0.22);
+      ctx.strokeRect(landmark.size * 0.02, landmark.size * 0.02, landmark.size * 0.22, landmark.size * 0.2);
+      ctx.beginPath();
+      ctx.moveTo(-landmark.size * 0.35, landmark.size * 0.22);
+      ctx.lineTo(landmark.size * 0.38, -landmark.size * 0.25);
+      ctx.stroke();
+    } else if (landmark.kind === "ditch") {
+      ctx.strokeStyle = "rgba(54, 100, 112, 0.28)";
+      ctx.beginPath();
+      ctx.moveTo(-landmark.size / 2, 0);
+      ctx.bezierCurveTo(-landmark.size / 4, 42, landmark.size / 4, -42, landmark.size / 2, 0);
+      ctx.stroke();
+    } else if (landmark.kind === "campMark") {
+      ctx.strokeStyle = "rgba(112, 74, 51, 0.34)";
+      ctx.beginPath();
+      ctx.arc(0, 0, landmark.size * 0.24, 0, Math.PI * 2);
+      ctx.moveTo(-landmark.size * 0.2, -landmark.size * 0.2);
+      ctx.lineTo(landmark.size * 0.2, landmark.size * 0.2);
+      ctx.moveTo(landmark.size * 0.2, -landmark.size * 0.2);
+      ctx.lineTo(-landmark.size * 0.2, landmark.size * 0.2);
+      ctx.stroke();
+    } else if (landmark.kind === "mineScar") {
+      ctx.strokeStyle = "rgba(184, 133, 31, 0.3)";
+      for (let i = 0; i < 4; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(-landmark.size * 0.3 + i * 26, landmark.size * 0.22);
+        ctx.lineTo(-landmark.size * 0.18 + i * 26, -landmark.size * 0.2);
+        ctx.stroke();
+      }
+    } else {
+      ctx.strokeStyle = "rgba(46, 58, 47, 0.4)";
+      ctx.strokeRect(-18, -18, 36, 36);
+      ctx.beginPath();
+      ctx.moveTo(0, -landmark.size * 0.32);
+      ctx.lineTo(0, landmark.size * 0.32);
+      ctx.moveTo(-landmark.size * 0.22, -landmark.size * 0.12);
+      ctx.lineTo(landmark.size * 0.22, -landmark.size * 0.12);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawWildlingCampPowerMarks(marks: MapPresentationMark[]) {
+  for (const mark of marks) {
+    if (mark.category !== "wildlingCamp") continue;
+    const point = worldToScreen(mark);
+    if (!nearScreen(point, mark.radius + 40)) continue;
+    const ink = campBandInk(mark.powerBand);
+    ctx.save();
+    ctx.strokeStyle = ink;
+    ctx.fillStyle = `${ink}18`;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash(mark.powerBand === "red" ? [] : [7, 5]);
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y + 12, mark.radius, mark.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 3; i += 1) {
+      const angle = -Math.PI / 2 + i * Math.PI * 0.33;
+      ctx.beginPath();
+      ctx.moveTo(point.x + Math.cos(angle) * mark.radius * 0.45, point.y + 12 + Math.sin(angle) * mark.radius * 0.18);
+      ctx.lineTo(point.x + Math.cos(angle) * mark.radius * 0.82, point.y + 12 + Math.sin(angle) * mark.radius * 0.32);
+      ctx.stroke();
+    }
+    ctx.font = "11px ui-monospace, monospace";
+    ctx.fillStyle = ink;
+    ctx.fillText(String(mark.power ?? 0), point.x - 7, point.y + 16);
+    ctx.restore();
+  }
+}
+
+function drawResources(resources: ResourceNode[]) {
+  for (const resource of resources) {
+    const point = worldToScreen(resource);
+    if (!nearScreen(point, 80)) continue;
+    ctx.strokeStyle = "#b9861b";
+    ctx.fillStyle = "#dcae30";
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 5; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(point.x - 26 + i * 12, point.y + 22);
+      ctx.lineTo(point.x - 14 + i * 12, point.y - 20);
+      ctx.stroke();
+    }
+    ctx.font = "12px ui-monospace, monospace";
+    ctx.fillText(`${Math.ceil(resource.amount)}`, point.x - 22, point.y + 42);
+  }
+}
+
+function drawMercenaryCamps(camps: MercenaryCamp[]) {
+  for (const camp of camps) {
+    const point = worldToScreen(camp);
+    if (!nearScreen(point, 110)) continue;
+    ctx.strokeStyle = "#704a33";
+    ctx.fillStyle = "rgba(255, 250, 226, 0.62)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, camp.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    if (selectedCampId === camp.id) drawSelectionHalo(point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#704a33");
+    ctx.beginPath();
+    ctx.moveTo(point.x - 30, point.y + 24);
+    ctx.lineTo(point.x, point.y - 34);
+    ctx.lineTo(point.x + 30, point.y + 24);
+    ctx.moveTo(point.x - 18, point.y + 24);
+    ctx.lineTo(point.x - 18, point.y - 6);
+    ctx.moveTo(point.x + 18, point.y + 24);
+    ctx.lineTo(point.x + 18, point.y - 6);
+    ctx.stroke();
+    ctx.font = "11px ui-monospace, monospace";
+    ctx.fillStyle = "#704a33";
+    ctx.fillText(`merc ${camp.stock}`, point.x - 24, point.y + 48);
+    if (camp.cooldownRemaining > 0) drawProgress(point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
+  }
+}
+
+function drawBuildings(buildings: Building[]) {
+  for (const building of buildings) {
+    const shake = hitFeedbackOffset(building, building.radius);
+    const point = worldToScreen({ x: building.x + shake.x, y: building.y + shake.y });
+    if (!nearScreen(point, 120)) continue;
+    ctx.strokeStyle = ownerInk(building.owner);
+    ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
+    ctx.lineWidth = selectedIds.has(building.id) ? 4 : 2;
+    const size = building.kind === "townHall" ? 76 : 58;
+    if (selectedIds.has(building.id)) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
+    drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
+    drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
+    if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
+    if (building.complete && building.queue[0]) drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind);
+  }
+}
+
+function drawBuildingGlyph(glyph: BuildingGlyph, point: Point, size: number) {
+  drawBuildingFrame(glyph, point, size);
+  for (const mark of glyph.marks) drawBuildingMark(mark, point, size);
+}
+
+function drawBuildingFrame(glyph: BuildingGlyph, point: Point, size: number) {
+  const half = size / 2;
+  ctx.beginPath();
+  if (glyph.frame === "town-hall") {
+    ctx.moveTo(point.x - half, point.y - half * 0.1);
+    ctx.lineTo(point.x, point.y - half);
+    ctx.lineTo(point.x + half, point.y - half * 0.1);
+    ctx.lineTo(point.x + half * 0.78, point.y + half);
+    ctx.lineTo(point.x - half * 0.78, point.y + half);
+  } else if (glyph.frame === "barracks-yard") {
+    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
+    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
+    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
+  } else if (glyph.frame === "archery-range") {
+    ctx.moveTo(point.x - half, point.y + half * 0.58);
+    ctx.lineTo(point.x - half * 0.65, point.y - half * 0.65);
+    ctx.quadraticCurveTo(point.x, point.y - half, point.x + half * 0.65, point.y - half * 0.65);
+    ctx.lineTo(point.x + half, point.y + half * 0.58);
+  } else if (glyph.frame === "stables-gate") {
+    ctx.rect(point.x - half, point.y - half * 0.5, size, size * 0.82);
+    ctx.moveTo(point.x - half, point.y - half * 0.5);
+    ctx.lineTo(point.x, point.y - half);
+    ctx.lineTo(point.x + half, point.y - half * 0.5);
+  } else if (glyph.frame === "sanctum-dome") {
+    ctx.arc(point.x, point.y, half * 0.86, Math.PI, Math.PI * 2);
+    ctx.lineTo(point.x + half * 0.86, point.y + half * 0.62);
+    ctx.lineTo(point.x - half * 0.86, point.y + half * 0.62);
+  } else if (glyph.frame === "workshop-gear") {
+    for (let i = 0; i < 12; i += 1) {
+      const angle = (i / 12) * Math.PI * 2;
+      const radius = i % 2 === 0 ? half * 0.94 : half * 0.72;
+      const x = point.x + Math.cos(angle) * radius;
+      const y = point.y + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+  } else if (glyph.frame === "tower-spire") {
+    ctx.moveTo(point.x, point.y - half);
+    ctx.lineTo(point.x + half * 0.5, point.y - half * 0.18);
+    ctx.lineTo(point.x + half * 0.38, point.y + half);
+    ctx.lineTo(point.x - half * 0.38, point.y + half);
+    ctx.lineTo(point.x - half * 0.5, point.y - half * 0.18);
+  } else {
+    ctx.rect(point.x - half * 0.9, point.y - half * 0.45, size * 0.9, size * 0.72);
+    ctx.moveTo(point.x - half * 0.9, point.y - half * 0.1);
+    ctx.lineTo(point.x + half * 0.9, point.y - half * 0.1);
+    ctx.moveTo(point.x, point.y - half * 0.45);
+    ctx.lineTo(point.x, point.y + half * 0.27);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function drawBuildingMark(mark: BuildingGlyphMark, point: Point, size: number) {
+  const half = size / 2;
+  ctx.beginPath();
+  if (mark === "roof") {
+    ctx.moveTo(point.x - half * 0.64, point.y - half * 0.05);
+    ctx.lineTo(point.x, point.y - half * 0.44);
+    ctx.lineTo(point.x + half * 0.64, point.y - half * 0.05);
+  } else if (mark === "banner") {
+    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.62);
+    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.12);
+    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.36);
+    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.5);
+  } else if (mark === "door") {
+    ctx.rect(point.x - half * 0.18, point.y + half * 0.2, half * 0.36, half * 0.38);
+  } else if (mark === "crossedBlades") {
+    ctx.moveTo(point.x - half * 0.45, point.y + half * 0.22);
+    ctx.lineTo(point.x + half * 0.42, point.y - half * 0.42);
+    ctx.moveTo(point.x + half * 0.45, point.y + half * 0.22);
+    ctx.lineTo(point.x - half * 0.42, point.y - half * 0.42);
+  } else if (mark === "target") {
+    ctx.arc(point.x, point.y - half * 0.08, half * 0.28, 0, Math.PI * 2);
+    ctx.moveTo(point.x - half * 0.34, point.y - half * 0.08);
+    ctx.lineTo(point.x + half * 0.34, point.y - half * 0.08);
+    ctx.moveTo(point.x, point.y - half * 0.42);
+    ctx.lineTo(point.x, point.y + half * 0.26);
+  } else if (mark === "bowRack") {
+    ctx.arc(point.x - half * 0.45, point.y, half * 0.28, -Math.PI / 2, Math.PI / 2);
+    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.28);
+    ctx.lineTo(point.x - half * 0.45, point.y + half * 0.28);
+  } else if (mark === "horseshoe") {
+    ctx.arc(point.x, point.y, half * 0.28, Math.PI * 0.18, Math.PI * 0.82, true);
+    ctx.moveTo(point.x - half * 0.27, point.y);
+    ctx.lineTo(point.x - half * 0.27, point.y + half * 0.28);
+    ctx.moveTo(point.x + half * 0.27, point.y);
+    ctx.lineTo(point.x + half * 0.27, point.y + half * 0.28);
+  } else if (mark === "rail") {
+    ctx.moveTo(point.x - half * 0.6, point.y + half * 0.18);
+    ctx.lineTo(point.x + half * 0.6, point.y + half * 0.18);
+    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
+    ctx.lineTo(point.x + half * 0.5, point.y + half * 0.36);
+  } else if (mark === "moonRune") {
+    ctx.arc(point.x - half * 0.05, point.y - half * 0.08, half * 0.24, Math.PI * 0.55, Math.PI * 1.55);
+    ctx.arc(point.x + half * 0.08, point.y - half * 0.08, half * 0.18, Math.PI * 1.55, Math.PI * 0.55, true);
+  } else if (mark === "sparkRune") {
+    ctx.moveTo(point.x + half * 0.43, point.y - half * 0.4);
+    ctx.lineTo(point.x + half * 0.43, point.y - half * 0.12);
+    ctx.moveTo(point.x + half * 0.29, point.y - half * 0.26);
+    ctx.lineTo(point.x + half * 0.57, point.y - half * 0.26);
+  } else if (mark === "cog") {
+    ctx.arc(point.x, point.y, half * 0.24, 0, Math.PI * 2);
+    ctx.moveTo(point.x - half * 0.34, point.y);
+    ctx.lineTo(point.x + half * 0.34, point.y);
+    ctx.moveTo(point.x, point.y - half * 0.34);
+    ctx.lineTo(point.x, point.y + half * 0.34);
+  } else if (mark === "hammer") {
+    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
+    ctx.lineTo(point.x + half * 0.3, point.y - half * 0.34);
+    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.48);
+    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.16);
+  } else if (mark === "arrowSlit") {
+    ctx.rect(point.x - half * 0.08, point.y - half * 0.18, half * 0.16, half * 0.52);
+  } else if (mark === "watchEye") {
+    ctx.ellipse(point.x, point.y - half * 0.34, half * 0.24, half * 0.12, 0, 0, Math.PI * 2);
+    ctx.moveTo(point.x, point.y - half * 0.46);
+    ctx.lineTo(point.x, point.y - half * 0.22);
+  } else if (mark === "furrows") {
+    for (let i = -2; i <= 2; i += 1) {
+      ctx.moveTo(point.x + i * half * 0.18, point.y - half * 0.38);
+      ctx.lineTo(point.x + i * half * 0.18, point.y + half * 0.25);
+    }
+  } else {
+    ctx.moveTo(point.x - half * 0.32, point.y - half * 0.42);
+    ctx.lineTo(point.x, point.y - half * 0.16);
+    ctx.lineTo(point.x + half * 0.32, point.y - half * 0.42);
+    ctx.moveTo(point.x, point.y - half * 0.16);
+    ctx.lineTo(point.x, point.y + half * 0.24);
+  }
+  ctx.stroke();
+}
+
+function drawUnits(units: Unit[]) {
+  for (const unit of units) {
+    const shake = hitFeedbackOffset(unit, unit.radius);
+    const point = worldToScreen({ x: unit.x + shake.x, y: unit.y + shake.y });
+    if (!nearScreen(point, 60)) continue;
+    ctx.strokeStyle = ownerInk(unit.owner);
+    ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
+    ctx.lineWidth = selectedIds.has(unit.id) ? 4 : 2;
+    if (selectedIds.has(unit.id)) {
+      ctx.beginPath();
+      ctx.ellipse(point.x, point.y + 12, 22, 10, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    drawUnitGlyph(UNIT_GLYPHS[unit.kind], point);
+    if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
+    if (unit.level > 1) drawLevelStar(point.x + 20, point.y - 20, unit.level);
+    drawHp(point.x, point.y - 28, unit.hp, unit.maxHp);
+  }
+}
+
+function drawUnitGlyph(glyph: UnitGlyph, point: Point) {
+  drawGlyphSilhouette(glyph, point);
+  for (const mark of glyph.marks) drawGlyphMark(mark, point);
+}
+
+function drawGlyphSilhouette(glyph: UnitGlyph, point: Point) {
+  ctx.beginPath();
+  if (glyph.silhouette === "worker-apron") {
+    ctx.moveTo(point.x - 11, point.y - 15);
+    ctx.lineTo(point.x + 9, point.y - 13);
+    ctx.lineTo(point.x + 16, point.y + 14);
+    ctx.lineTo(point.x - 13, point.y + 16);
+    ctx.lineTo(point.x - 17, point.y - 5);
+  } else if (glyph.silhouette === "shield-triangle") {
+    ctx.moveTo(point.x, point.y - 20);
+    ctx.lineTo(point.x + 17, point.y + 15);
+    ctx.lineTo(point.x - 17, point.y + 15);
+  } else if (glyph.silhouette === "bow-crest") {
+    ctx.moveTo(point.x - 14, point.y - 16);
+    ctx.quadraticCurveTo(point.x + 18, point.y - 18, point.x + 14, point.y + 15);
+    ctx.quadraticCurveTo(point.x - 10, point.y + 20, point.x - 16, point.y - 4);
+  } else if (glyph.silhouette === "raider-kite") {
+    ctx.moveTo(point.x, point.y - 20);
+    ctx.lineTo(point.x + 18, point.y - 2);
+    ctx.lineTo(point.x + 7, point.y + 19);
+    ctx.lineTo(point.x - 15, point.y + 10);
+    ctx.lineTo(point.x - 18, point.y - 7);
+  } else if (glyph.silhouette === "lancer-pennant") {
+    ctx.moveTo(point.x - 15, point.y - 14);
+    ctx.lineTo(point.x + 17, point.y - 9);
+    ctx.lineTo(point.x + 8, point.y + 16);
+    ctx.lineTo(point.x - 18, point.y + 13);
+  } else if (glyph.silhouette === "knight-helm") {
+    ctx.arc(point.x, point.y - 2, 17, Math.PI * 0.95, Math.PI * 2.05);
+    ctx.lineTo(point.x + 15, point.y + 17);
+    ctx.lineTo(point.x - 15, point.y + 17);
+  } else if (glyph.silhouette === "priest-medallion") {
+    ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
+  } else if (glyph.silhouette === "summoner-ring") {
+    ctx.ellipse(point.x, point.y, 17, 13, 0.2, 0, Math.PI * 2);
+  } else if (glyph.silhouette === "witch-crescent") {
+    ctx.arc(point.x + 4, point.y, 17, Math.PI * 0.52, Math.PI * 1.58);
+    ctx.quadraticCurveTo(point.x - 15, point.y, point.x + 4, point.y - 17);
+  } else if (glyph.silhouette === "golem-block") {
+    ctx.rect(point.x - 17, point.y - 17, 34, 34);
+  } else if (glyph.silhouette === "spirit-wisp") {
+    ctx.moveTo(point.x, point.y - 18);
+    ctx.quadraticCurveTo(point.x + 18, point.y - 4, point.x + 4, point.y + 18);
+    ctx.quadraticCurveTo(point.x - 18, point.y + 4, point.x, point.y - 18);
+  } else if (glyph.silhouette === "mercenary-badge") {
+    ctx.moveTo(point.x, point.y - 19);
+    ctx.lineTo(point.x + 16, point.y - 3);
+    ctx.lineTo(point.x + 8, point.y + 18);
+    ctx.lineTo(point.x - 12, point.y + 14);
+    ctx.lineTo(point.x - 16, point.y - 6);
+  } else {
+    ctx.moveTo(point.x - 15, point.y - 15);
+    ctx.lineTo(point.x + 15, point.y + 15);
+    ctx.moveTo(point.x + 15, point.y - 15);
+    ctx.lineTo(point.x - 15, point.y + 15);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function drawGlyphMark(mark: GlyphMark, point: Point) {
+  ctx.beginPath();
+  if (mark === "pick") {
+    ctx.moveTo(point.x - 18, point.y - 11);
+    ctx.lineTo(point.x + 9, point.y + 15);
+    ctx.moveTo(point.x - 20, point.y - 9);
+    ctx.quadraticCurveTo(point.x - 8, point.y - 24, point.x + 4, point.y - 15);
+  } else if (mark === "satchel") {
+    ctx.rect(point.x - 19, point.y + 3, 10, 9);
+    ctx.moveTo(point.x - 17, point.y + 3);
+    ctx.quadraticCurveTo(point.x - 14, point.y - 4, point.x - 11, point.y + 3);
+  } else if (mark === "shieldBar") {
+    ctx.moveTo(point.x - 10, point.y + 2);
+    ctx.lineTo(point.x + 10, point.y + 2);
+    ctx.moveTo(point.x, point.y - 14);
+    ctx.lineTo(point.x, point.y + 13);
+  } else if (mark === "shortSword") {
+    ctx.moveTo(point.x + 10, point.y - 15);
+    ctx.lineTo(point.x + 22, point.y - 24);
+    ctx.moveTo(point.x + 11, point.y - 14);
+    ctx.lineTo(point.x + 17, point.y - 8);
+  } else if (mark === "bow") {
+    ctx.arc(point.x + 14, point.y, 16, -Math.PI / 2, Math.PI / 2);
+    ctx.moveTo(point.x + 14, point.y - 16);
+    ctx.lineTo(point.x + 14, point.y + 16);
+  } else if (mark === "arrow") {
+    ctx.moveTo(point.x - 18, point.y + 2);
+    ctx.lineTo(point.x + 17, point.y - 8);
+    ctx.moveTo(point.x + 17, point.y - 8);
+    ctx.lineTo(point.x + 9, point.y - 11);
+    ctx.moveTo(point.x + 17, point.y - 8);
+    ctx.lineTo(point.x + 11, point.y - 2);
+  } else if (mark === "reins") {
+    ctx.moveTo(point.x - 13, point.y - 5);
+    ctx.quadraticCurveTo(point.x + 2, point.y - 18, point.x + 16, point.y - 1);
+  } else if (mark === "spur") {
+    ctx.moveTo(point.x - 7, point.y + 18);
+    ctx.lineTo(point.x - 16, point.y + 25);
+    ctx.lineTo(point.x - 9, point.y + 23);
+  } else if (mark === "longSpear") {
+    ctx.moveTo(point.x - 20, point.y + 17);
+    ctx.lineTo(point.x + 24, point.y - 22);
+  } else if (mark === "flag") {
+    ctx.moveTo(point.x + 7, point.y - 19);
+    ctx.lineTo(point.x + 22, point.y - 16);
+    ctx.lineTo(point.x + 10, point.y - 7);
+  } else if (mark === "visor") {
+    ctx.moveTo(point.x - 12, point.y - 5);
+    ctx.lineTo(point.x + 12, point.y - 5);
+    ctx.moveTo(point.x - 8, point.y);
+    ctx.lineTo(point.x + 9, point.y);
+  } else if (mark === "towerShield") {
+    ctx.rect(point.x - 20, point.y - 4, 10, 18);
+    ctx.moveTo(point.x - 20, point.y + 3);
+    ctx.lineTo(point.x - 10, point.y + 3);
+  } else if (mark === "halo") {
+    ctx.ellipse(point.x, point.y - 19, 15, 5, 0, 0, Math.PI * 2);
+  } else if (mark === "cross") {
+    ctx.moveTo(point.x - 10, point.y);
+    ctx.lineTo(point.x + 10, point.y);
+    ctx.moveTo(point.x, point.y - 10);
+    ctx.lineTo(point.x, point.y + 10);
+  } else if (mark === "outerRing") {
+    ctx.ellipse(point.x, point.y, 22, 17, -0.2, 0, Math.PI * 2);
+  } else if (mark === "innerSigil") {
+    ctx.moveTo(point.x, point.y - 9);
+    ctx.lineTo(point.x + 8, point.y + 6);
+    ctx.lineTo(point.x - 8, point.y + 6);
+    ctx.closePath();
+  } else if (mark === "crescent") {
+    ctx.arc(point.x - 2, point.y - 1, 16, Math.PI * 0.65, Math.PI * 1.55);
+    ctx.arc(point.x + 5, point.y - 1, 12, Math.PI * 1.55, Math.PI * 0.65, true);
+  } else if (mark === "curseSlash") {
+    ctx.moveTo(point.x - 15, point.y + 14);
+    ctx.lineTo(point.x + 16, point.y - 15);
+  } else if (mark === "rune") {
+    ctx.moveTo(point.x - 6, point.y - 8);
+    ctx.lineTo(point.x + 8, point.y - 8);
+    ctx.lineTo(point.x - 2, point.y + 9);
+    ctx.lineTo(point.x + 10, point.y + 9);
+  } else if (mark === "blockSeams") {
+    ctx.moveTo(point.x - 17, point.y - 2);
+    ctx.lineTo(point.x + 17, point.y - 2);
+    ctx.moveTo(point.x - 3, point.y - 17);
+    ctx.lineTo(point.x - 3, point.y + 17);
+  } else if (mark === "tail") {
+    ctx.moveTo(point.x - 5, point.y + 13);
+    ctx.quadraticCurveTo(point.x - 27, point.y + 24, point.x - 13, point.y + 34);
+  } else if (mark === "spark") {
+    ctx.moveTo(point.x + 18, point.y - 17);
+    ctx.lineTo(point.x + 18, point.y - 5);
+    ctx.moveTo(point.x + 12, point.y - 11);
+    ctx.lineTo(point.x + 24, point.y - 11);
+  } else if (mark === "coinSlash") {
+    ctx.arc(point.x + 13, point.y + 11, 5, 0, Math.PI * 2);
+    ctx.moveTo(point.x + 9, point.y + 15);
+    ctx.lineTo(point.x + 17, point.y + 7);
+  } else if (mark === "scar") {
+    ctx.moveTo(point.x - 11, point.y - 8);
+    ctx.lineTo(point.x + 10, point.y + 10);
+  } else {
+    ctx.moveTo(point.x - 18, point.y - 4);
+    ctx.lineTo(point.x, point.y - 20);
+    ctx.lineTo(point.x + 18, point.y - 4);
+    ctx.moveTo(point.x, point.y - 20);
+    ctx.lineTo(point.x, point.y + 16);
+  }
+  ctx.stroke();
+}
+
+function drawSelectionHalo(x: number, y: number, rx: number, ry: number, color: string) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255, 250, 226, 0.8)";
+  ctx.beginPath();
+  ctx.ellipse(x - 2, y - 3, rx * 0.82, ry * 0.7, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCarriedGold(x: number, y: number) {
+  ctx.save();
+  ctx.strokeStyle = "#8a6418";
+  ctx.fillStyle = "#f2d05c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y - 24);
+  ctx.lineTo(x + 2, y - 34);
+  ctx.lineTo(x + 10, y - 23);
+  ctx.lineTo(x + 1, y - 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLevelStar(x: number, y: number, level: number) {
+  ctx.save();
+  ctx.fillStyle = "#f2d05c";
+  ctx.strokeStyle = "#8a6418";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i += 1) {
+    const radius = i % 2 === 0 ? 7 : 3.2;
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+    const px = x + Math.cos(angle) * radius;
+    const py = y + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#243126";
+  ctx.font = "8px ui-monospace, monospace";
+  ctx.fillText(String(level), x - 2.5, y + 3);
+  ctx.restore();
+}
+
+function drawEffects(effects: WorldEffect[]) {
+  for (const effect of effects) {
+    if (effect.type === "projectile" && hasEffectVector(effect)) {
+      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
+      const to = worldToScreen({ x: effect.toX, y: effect.toY });
+      if (!nearScreen(to, 90) && !nearScreen(from, 90)) continue;
+      const progress = 1 - effect.remaining / effect.duration;
+      const head = {
+        x: from.x + (to.x - from.x) * progress,
+        y: from.y + (to.y - from.y) * progress,
+      };
+      ctx.strokeStyle = "#243126";
+      ctx.fillStyle = "#f2d05c";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(head.x, head.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      continue;
+    }
+
+    if (effect.type === "melee" && hasEffectVector(effect)) {
+      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
+      const to = worldToScreen({ x: effect.toX, y: effect.toY });
+      const thrust = 0.45 + Math.sin((1 - effect.remaining / effect.duration) * Math.PI) * 0.35;
+      const tip = {
+        x: from.x + (to.x - from.x) * thrust,
+        y: from.y + (to.y - from.y) * thrust,
+      };
+      ctx.strokeStyle = "#243126";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.stroke();
+      continue;
+    }
+
+    const point = worldToScreen(effect);
+    if (!nearScreen(point, 90)) continue;
+    const age = effect.remaining / effect.duration;
+    const radius = 9 + (1 - age) * 22;
+
+    if (effect.type === "hit") {
+      ctx.strokeStyle = "#9b2f2f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(point.x - radius, point.y);
+      ctx.lineTo(point.x + radius, point.y);
+      ctx.moveTo(point.x, point.y - radius);
+      ctx.lineTo(point.x, point.y + radius);
+      ctx.stroke();
+      continue;
+    }
+
+    if (effect.type === "attackTarget") {
+      const pulse = 0.55 + Math.sin(effect.remaining * 0.9) * 0.22;
+      ctx.strokeStyle = `rgba(155, 47, 47, ${pulse})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(point.x, point.y + 10, radius * 1.15, radius * 0.5, 0, 0, Math.PI * 2);
+      ctx.moveTo(point.x - radius * 1.25, point.y + 10);
+      ctx.lineTo(point.x - radius * 0.45, point.y + 10);
+      ctx.moveTo(point.x + radius * 0.45, point.y + 10);
+      ctx.lineTo(point.x + radius * 1.25, point.y + 10);
+      ctx.stroke();
+      continue;
+    }
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle =
+      effect.type === "heal"
+        ? "#5d8b4c"
+        : effect.type === "summon"
+          ? "#5f578f"
+          : effect.type === "curse"
+            ? "#7f3a70"
+            : effect.type === "build"
+              ? "#315f87"
+              : effect.type === "mine"
+                ? "#b9861b"
+              : effect.type === "attack"
+                ? "#9b2f2f"
+                : "#243126";
+    ctx.setLineDash(effect.type === "build" ? [6, 5] : []);
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawBuildPlacementPreview() {
+  if (!commandMode || commandMode.type !== "build" || !lastMouse) return;
+  const def = BUILDING_DEFS[commandMode.placement.buildingKind];
+  const point = lastMouse;
+  const size = 58;
+  ctx.save();
+  ctx.strokeStyle = "#315f87";
+  ctx.fillStyle = "rgba(49, 95, 135, 0.08)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + size / 2 - 3, def.radius, def.radius * 0.36, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+  ctx.strokeRect(point.x - size / 2, point.y - size / 2, size, size);
+  ctx.beginPath();
+  ctx.moveTo(point.x - size / 2, point.y - size / 2);
+  ctx.lineTo(point.x + size / 2, point.y + size / 2);
+  ctx.moveTo(point.x + size / 2, point.y - size / 2);
+  ctx.lineTo(point.x - size / 2, point.y + size / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#315f87";
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.fillText(`${commandMode.placement.buildingKind} ${def.cost}g`, point.x - 34, point.y + size / 2 + 22);
+  ctx.restore();
+}
+
+function drawAttackMovePreview() {
+  if (!commandMode || commandMode.type !== "attackMove" || !lastMouse) return;
+  const point = lastMouse;
+  ctx.save();
+  ctx.strokeStyle = "rgba(155, 47, 47, 0.72)";
+  ctx.fillStyle = "rgba(155, 47, 47, 0.08)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(point.x - 32, point.y);
+  ctx.lineTo(point.x + 32, point.y);
+  ctx.moveTo(point.x, point.y - 32);
+  ctx.lineTo(point.x, point.y + 32);
+  ctx.stroke();
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.fillStyle = "#9b2f2f";
+  ctx.fillText("A-move", point.x - 20, point.y + 44);
+  ctx.restore();
+}
+
+function drawSpellPreview() {
+  if (!commandMode || commandMode.type !== "spell" || !lastMouse) return;
+  const point = lastMouse;
+  const ability = commandMode.targeting.ability;
+  ctx.save();
+  ctx.strokeStyle = ability === "heal" ? "#5d8b4c" : ability === "summon" ? "#5f578f" : "#7f3a70";
+  ctx.fillStyle = ability === "heal" ? "rgba(93, 139, 76, 0.08)" : ability === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, ability === "summon" ? 28 : 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  if (ability === "heal") {
+    ctx.moveTo(point.x - 16, point.y);
+    ctx.lineTo(point.x + 16, point.y);
+    ctx.moveTo(point.x, point.y - 16);
+    ctx.lineTo(point.x, point.y + 16);
+  } else if (ability === "summon") {
+    ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+    ctx.moveTo(point.x - 23, point.y + 14);
+    ctx.lineTo(point.x + 23, point.y + 14);
+  } else {
+    ctx.moveTo(point.x - 14, point.y - 14);
+    ctx.lineTo(point.x + 14, point.y + 14);
+    ctx.moveTo(point.x + 14, point.y - 14);
+    ctx.lineTo(point.x - 14, point.y + 14);
+  }
+  ctx.stroke();
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.fillStyle = ability === "heal" ? "#5d8b4c" : ability === "summon" ? "#5f578f" : "#7f3a70";
+  ctx.fillText(labelKind(ability), point.x - 20, point.y + 44);
+  ctx.restore();
+}
+
+function drawSelectionBox() {
+  if (!selectionStart || !selectionEnd) return;
+  const left = Math.min(selectionStart.x, selectionEnd.x);
+  const top = Math.min(selectionStart.y, selectionEnd.y);
+  const width = Math.abs(selectionEnd.x - selectionStart.x);
+  const height = Math.abs(selectionEnd.y - selectionStart.y);
+  ctx.fillStyle = "rgba(49, 95, 135, 0.08)";
+  ctx.strokeStyle = "#315f87";
+  ctx.setLineDash([6, 5]);
+  ctx.fillRect(left, top, width, height);
+  ctx.strokeRect(left, top, width, height);
+  ctx.setLineDash([]);
+}
+
+function drawMinimap(marks: MapPresentationMark[]) {
+  if (!snapshot) return;
+  const rect = minimapRect();
+  ctx.fillStyle = "rgba(255, 250, 226, 0.9)";
+  ctx.strokeStyle = "rgba(47, 61, 42, 0.44)";
+  ctx.lineWidth = 2;
+  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+  ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+  for (const mark of marks) {
+    const point = projectWorldToRect(mark, snapshot.map, rect);
+    if (mark.category === "terrain") {
+      drawMiniTerrainMark(mark, point);
+    } else if (mark.category === "goldMine") {
+      ctx.fillStyle = "#c4921e";
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y - 3);
+      ctx.lineTo(point.x + 3, point.y);
+      ctx.lineTo(point.x, point.y + 3);
+      ctx.lineTo(point.x - 3, point.y);
+      ctx.closePath();
+      ctx.fill();
+    } else if (mark.category === "mercenaryCamp") {
+      ctx.strokeStyle = "#704a33";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (mark.category === "wildlingCamp") {
+      ctx.strokeStyle = campBandInk(mark.powerBand);
+      ctx.lineWidth = mark.powerBand === "red" ? 2.4 : 1.7;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, mark.powerBand === "red" ? 4.8 : mark.powerBand === "orange" ? 4 : 3.2, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (mark.category === "building") {
+      ctx.fillStyle = ownerInk(mark.owner);
+      ctx.fillRect(point.x - 3, point.y - 3, 6, 6);
+    } else {
+      ctx.fillStyle = ownerInk(mark.owner);
+      const size = mark.owner === "neutral" ? 2.2 : 3;
+      ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+    }
+  }
+  ctx.strokeStyle = "#243126";
+  ctx.lineWidth = 1;
+  const viewport = minimapViewportRect(rect);
+  ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+  ctx.fillStyle = "#243126";
+  ctx.font = "12px ui-monospace, monospace";
+  ctx.fillText("minimap", rect.x + 8, rect.y + 16);
+}
+
+function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {
+  ctx.save();
+  ctx.lineWidth = 1;
+  if (mark.kind === "road") {
+    ctx.strokeStyle = "rgba(123, 101, 66, 0.62)";
+    ctx.beginPath();
+    ctx.moveTo(point.x - 4, point.y);
+    ctx.lineTo(point.x + 4, point.y);
+    ctx.stroke();
+  } else if (mark.kind === "grove") {
+    ctx.strokeStyle = "rgba(64, 108, 66, 0.62)";
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 2.3, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (mark.kind === "ridge") {
+    ctx.strokeStyle = "rgba(84, 90, 68, 0.62)";
+    ctx.beginPath();
+    ctx.moveTo(point.x - 3, point.y + 2);
+    ctx.lineTo(point.x, point.y - 2);
+    ctx.lineTo(point.x + 3, point.y + 2);
+    ctx.stroke();
+  } else if (mark.kind === "ditch") {
+    ctx.strokeStyle = "rgba(54, 100, 112, 0.62)";
+    ctx.beginPath();
+    ctx.moveTo(point.x - 3, point.y);
+    ctx.quadraticCurveTo(point.x, point.y + 2, point.x + 3, point.y);
+    ctx.stroke();
+  } else if (mark.kind === "mineScar") {
+    ctx.fillStyle = "rgba(184, 133, 31, 0.58)";
+    ctx.fillRect(point.x - 1.5, point.y - 1.5, 3, 3);
+  } else {
+    ctx.fillStyle = "rgba(47, 61, 42, 0.48)";
+    ctx.fillRect(point.x - 1.2, point.y - 1.2, 2.4, 2.4);
+  }
+  ctx.restore();
+}
+
+function drawHp(x: number, y: number, hp: number, maxHp: number) {
+  const width = 34;
+  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
+  ctx.fillRect(x - width / 2, y, width, 4);
+  ctx.fillStyle = hp / maxHp > 0.45 ? "#5d8b4c" : "#a23d34";
+  ctx.fillRect(x - width / 2, y, width * Math.max(0, hp / maxHp), 4);
+}
+
+function drawProgress(x: number, y: number, ratio: number) {
+  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
+  ctx.fillRect(x - 28, y, 56, 5);
+  ctx.fillStyle = "#315f87";
+  ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
+}
+
+function drawTrainingProgress(x: number, y: number, remaining: number, unitKind: TrainableUnitKind) {
+  const total = UNIT_DEFS[unitKind].trainTime;
+  drawProgress(x, y, 1 - remaining / total);
+  ctx.fillStyle = "#315f87";
+  ctx.font = "9px ui-monospace, monospace";
+  ctx.fillText(labelKind(unitKind), x - 27, y + 16);
+}
+
+function hitFeedbackOffset(entity: Unit | Building, scale: number): Point {
+  if (!snapshot) return { x: 0, y: 0 };
+  const hit = snapshot.effects.find((effect) => effect.type === "hit" && distance(effect, entity) <= scale + 8);
+  if (!hit) return { x: 0, y: 0 };
+  const pulse = Math.sin(hit.remaining * 1.7) * Math.max(2, scale * 0.18);
+  return { x: pulse, y: -pulse * 0.35 };
+}
+
+function hasEffectVector(effect: WorldEffect): effect is WorldEffect & Required<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY">> {
+  return (
+    typeof effect.fromX === "number" &&
+    typeof effect.fromY === "number" &&
+    typeof effect.toX === "number" &&
+    typeof effect.toY === "number"
+  );
+}
+
+function updateCamera() {
+  if (menuOpen) return;
+  const speed = keys.has("shift") ? 24 : 14;
+  if (keys.has("arrowleft") || keys.has("a")) camera.x -= speed;
+  if (keys.has("arrowright") || keys.has("d")) camera.x += speed;
+  if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;
+  if (keys.has("arrowdown") || keys.has("s")) camera.y += speed;
+  const edge = edgeScrollDelta(edgeScrollPoint(), { width: canvas.width, height: canvas.height });
+  camera.x += edge.x;
+  camera.y += edge.y;
+  clampCamera();
+}
+
+function edgeScrollPoint() {
+  if (!lastMouse || draggingMinimapViewport || isInside(lastMouse, minimapRect())) return undefined;
+  // @@@edge-scroll-ui - UI overlays near the viewport edge should not make the camera drift.
+  return document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+}
+
+function clampCamera() {
+  if (!snapshot) return;
+  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width, camera.x));
+  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height, camera.y));
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.width = `${window.innerWidth}px`;
+  canvas.style.height = `${window.innerHeight}px`;
+}
+
+function mousePoint(event: MouseEvent): Point {
+  const rect = canvas.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function inputPoint(event: MouseEvent): Point {
+  if (document.pointerLockElement !== canvas) return mousePoint(event);
+  const movement = event.type === "mousemove" ? { x: event.movementX, y: event.movementY } : { x: 0, y: 0 };
+  virtualMouse = moveVirtualPointer(virtualMouse, movement, { width: canvas.width, height: canvas.height });
+  return virtualMouse;
+}
+
+function syncVirtualPointerOverlay() {
+  if (document.pointerLockElement !== canvas || !virtualMouse) {
+    virtualPointerElement.classList.add("hidden");
+    return;
+  }
+  virtualPointerElement.classList.remove("hidden");
+  virtualPointerElement.style.transform = `translate(${Math.round(virtualMouse.x)}px, ${Math.round(virtualMouse.y)}px)`;
+}
+
+function screenToWorld(point: Point): Point {
+  return { x: point.x + camera.x, y: point.y + camera.y };
+}
+
+function worldToScreen(point: Point): Point {
+  return { x: point.x - camera.x, y: point.y - camera.y };
+}
+
+function nearScreen(point: Point, pad: number) {
+  return point.x >= -pad && point.y >= -pad && point.x <= canvas.width + pad && point.y <= canvas.height + pad;
+}
+
+function minimapRect(): ScreenRect {
+  const size = Math.min(220, Math.max(150, Math.floor(Math.min(canvas.width, canvas.height) * 0.24)));
+  return { x: canvas.width - size - 12, y: canvas.height - size - 12, width: size, height: size };
+}
+
+function minimapViewportRect(rect = minimapRect()): ScreenRect {
+  if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
+  return {
+    x: rect.x + (camera.x / snapshot.map.width) * rect.width,
+    y: rect.y + (camera.y / snapshot.map.height) * rect.height,
+    width: Math.max(12, (canvas.width / snapshot.map.width) * rect.width),
+    height: Math.max(12, (canvas.height / snapshot.map.height) * rect.height),
+  };
+}
+
+function centerCameraFromMinimap(point: Point) {
+  if (!snapshot) return;
+  const rect = minimapRect();
+  const x = ((point.x - rect.x) / rect.width) * snapshot.map.width;
+  const y = ((point.y - rect.y) / rect.height) * snapshot.map.height;
+  camera.x = x - canvas.width / 2;
+  camera.y = y - canvas.height / 2;
+  clampCamera();
+}
+
+function isInside(point: Point, rect: ScreenRect) {
+  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+}
+
+function hitResource(world: Point) {
+  return snapshot?.resources.find((resource) => distance(resource, world) < 68);
+}
+
+function hitMercenaryCamp(world: Point) {
+  return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
+}
+
+function hitAttackTarget(world: Point) {
+  return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId);
+}
+
+function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
+  return snapshot?.units.find((unit) => predicate(unit) && distance(unit, world) < 34);
+}
+
+function hitBuilding(world: Point, predicate: (building: Building) => boolean) {
+  return snapshot?.buildings.find((building) => predicate(building) && distance(building, world) < (building.kind === "townHall" ? 58 : 46));
+}
+
+function labelBuilding(building: Building) {
+  return labelKind(building.kind);
+}
+
+function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind) {
+  return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+}
+
+function distance(a: Point, b: Point) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function campBandInk(band: WildlingPowerBand | undefined) {
+  if (band === "red") return "#9b2f2f";
+  if (band === "orange") return "#b97927";
+  return "#5d8b4c";
+}
+
+function ownerInk(owner: Owner | undefined) {
+  if (owner === "player") return "#315f87";
+  if (owner === "enemy") return "#963c36";
+  if (owner === "enemy2") return "#7f3a70";
+  if (!owner || owner === "neutral") return "#704a33";
+  const palette = ["#315f87", "#963c36", "#7f3a70", "#5d8b4c", "#b97927", "#596a8c", "#8d5a46", "#2f766f"];
+  let hash = 0;
+  for (const char of owner) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return palette[hash % palette.length]!;
+}
+
+function loadLocalUserProfile(): LocalUserProfile {
+  const stored = window.localStorage.getItem("sketch-rts-user");
+  if (stored) {
+    const parsed = JSON.parse(stored) as Partial<LocalUserProfile>;
+    if (typeof parsed.id === "string" && typeof parsed.name === "string" && parsed.id && parsed.name) return { id: parsed.id, name: parsed.name };
+  }
+  const profile = { id: newUserId(), name: `Player ${Math.floor(1000 + Math.random() * 9000)}` };
+  saveLocalUserProfile(profile);
+  return profile;
+}
+
+function saveLocalUserProfile(profile: LocalUserProfile) {
+  window.localStorage.setItem("sketch-rts-user", JSON.stringify(profile));
+}
+
+function escapeHtml(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+function requireElement<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Missing required element ${selector}`);
+  return element;
+}
+
+function requireCanvasContext(target: HTMLCanvasElement) {
+  const context = target.getContext("2d");
+  if (!context) throw new Error("Canvas 2D context is unavailable");
+  return context;
+}

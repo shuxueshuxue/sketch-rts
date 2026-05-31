@@ -1,0 +1,38 @@
+{
+  "name": "sketch-rts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server/index.ts",
+    "dev:lan": "HOST=0.0.0.0 tsx src/server/index.ts",
+    "server": "tsx src/server/index.ts",
+    "test": "vitest",
+    "test:ai-matrix": "tsx scripts/ai-matrix.ts",
+    "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",
+    "test:sdk-ai-ab": "vitest --run src/sdk/ai-ab-test.test.ts",
+    "test:sdk-ai-policy": "vitest --run src/sdk/ai-policy.test.ts",
+    "test:sdk-agent-player": "tsx scripts/sdk-agent-player.ts",
+    "test:sdk-agent-15v15": "tsx scripts/sdk-agent-15v15.ts",
+    "test:sdk-smoke": "tsx scripts/sdk-smoke.ts",
+    "test:sdk-savegame": "tsx scripts/sdk-savegame.ts",
+    "test:e2e-room-flow": "node scripts/e2e-room-flow.mjs",
+    "test:e2e-brutal": "node scripts/e2e-brutal-spec.mjs",
+    "test:yatu": "node scripts/yatu-player-loop.mjs",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "express": "^4.19.2",
+    "vite": "^6.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
