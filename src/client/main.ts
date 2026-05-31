@@ -8,6 +8,7 @@ import {
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
+  virtualPointerTransform,
 } from "./pointer-lock";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
@@ -2479,7 +2480,7 @@ function syncVirtualPointerOverlay() {
     return;
   }
   virtualPointerElement.classList.remove("hidden");
-  virtualPointerElement.style.transform = `translate(${Math.round(virtualMouse.x)}px, ${Math.round(virtualMouse.y)}px)`;
+  virtualPointerElement.style.transform = virtualPointerTransform(virtualMouse, 18);
 }
 
 function screenToWorld(point: Point): Point {

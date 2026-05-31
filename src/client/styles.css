@@ -57,8 +57,8 @@ button {
   position: absolute;
   top: 0;
   left: 0;
-  width: 28px;
-  height: 30px;
+  width: 18px;
+  height: 18px;
   z-index: 1000;
   pointer-events: none;
   filter: drop-shadow(0 2px 0 rgba(36, 49, 38, 0.16));
@@ -68,25 +68,20 @@ button {
   position: absolute;
   inset: 0;
   content: "";
-  background: rgba(255, 250, 226, 0.92);
-  clip-path: polygon(0 0, 23px 8px, 10px 13px, 5px 29px, 0 27px, 3px 13px);
-  filter:
-    drop-shadow(1px 0 0 #243126)
-    drop-shadow(-1px 0 0 #243126)
-    drop-shadow(0 1px 0 #243126)
-    drop-shadow(0 -1px 0 #243126);
+  border: 2px solid #243126;
+  border-radius: 50%;
+  background: rgba(255, 250, 226, 0.42);
 }
 
 .virtual-pointer::after {
   position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid #243126;
+  top: 7px;
+  left: 7px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   content: "";
-  background: rgba(255, 250, 226, 0.6);
+  background: #243126;
 }
 
 .main-menu {

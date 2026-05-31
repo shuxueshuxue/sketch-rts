@@ -33,6 +33,11 @@ export function pointerLockButtonLabel(state: PointerLockButtonState) {
   return "Lock Mouse";
 }
 
+export function virtualPointerTransform(point: PointerLockPoint, size: number) {
+  const offset = size / 2;
+  return `translate(${Math.round(point.x - offset)}px, ${Math.round(point.y - offset)}px)`;
+}
+
 export function isMicrosoftEdgeUserAgent(userAgent: string, brands: UserAgentBrand[] = []) {
   return /\bEdg\//.test(userAgent) || brands.some((brand) => brand.brand.toLowerCase().includes("microsoft edge"));
 }

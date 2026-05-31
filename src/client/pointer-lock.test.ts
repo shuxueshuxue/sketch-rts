@@ -6,6 +6,7 @@ import {
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
+  virtualPointerTransform,
 } from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
@@ -25,6 +26,11 @@ describe("pointer lock virtual mouse", () => {
     expect(pointerLockButtonLabel({ locked: false, armed: false })).toBe("Lock Mouse");
     expect(pointerLockButtonLabel({ locked: false, armed: true })).toBe("Click Field");
     expect(pointerLockButtonLabel({ locked: true, armed: true })).toBe("Mouse Locked");
+  });
+
+  it("centers the virtual pointer overlay on the locked pointer point", () => {
+    expect(virtualPointerTransform({ x: 100.4, y: 80.6 }, 18)).toBe("translate(91px, 72px)");
+    expect(virtualPointerTransform({ x: 9, y: 9 }, 18)).toBe("translate(0px, 0px)");
   });
 
   it("detects Microsoft Edge without classifying Chrome as Edge", () => {
