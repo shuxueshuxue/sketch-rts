@@ -93,7 +93,7 @@ button {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(280px, 420px);
+  grid-template-columns: minmax(280px, min(720px, calc(100vw - 40px)));
   align-content: center;
   justify-content: start;
   gap: 14px;
@@ -180,6 +180,7 @@ button {
 }
 
 .profile-form,
+.create-game-form,
 .room-setup,
 .results-panel {
   display: grid;
@@ -187,7 +188,41 @@ button {
   pointer-events: auto;
 }
 
-.profile-form label {
+.room-setup {
+  width: min(720px, calc(100vw - 40px));
+  max-height: min(72vh, 680px);
+  grid-template-rows: auto auto auto minmax(180px, 1fr) auto;
+  overflow: hidden;
+}
+
+.room-setup .map-button {
+  padding: 7px 9px;
+}
+
+.room-setup .map-button-note,
+.room-setup .map-button-tags {
+  display: none;
+}
+
+.room-setup .room-map-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.room-setup .slot-list {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.room-setup .menu-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 6px;
+  background: linear-gradient(rgba(245, 240, 216, 0), rgba(245, 240, 216, 0.96) 28%);
+}
+
+.profile-form label,
+.create-game-form label {
   display: grid;
   gap: 5px;
   max-width: 360px;
@@ -196,13 +231,33 @@ button {
   font-weight: 900;
 }
 
-.profile-form input {
+.profile-form input,
+.create-game-form input,
+.create-game-form select {
   border: 1px solid rgba(45, 61, 43, 0.36);
   border-radius: 5px;
   background: rgba(255, 250, 226, 0.92);
   color: #233126;
   padding: 8px 9px;
   font: inherit;
+}
+
+.create-count-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 360px;
+}
+
+.checkbox-row {
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-row input {
+  width: auto;
 }
 
 .profile-id,
@@ -252,7 +307,7 @@ button {
 
 .slot-row {
   display: grid;
-  grid-template-columns: 1fr repeat(4, auto);
+  grid-template-columns: minmax(90px, 1fr) repeat(4, auto);
   gap: 8px;
   align-items: center;
   border: 1px solid rgba(45, 61, 43, 0.24);
@@ -262,6 +317,22 @@ button {
   font-family: ui-monospace, monospace;
   font-size: 11px;
   font-weight: 800;
+}
+
+.slot-row select {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 250, 226, 0.9);
+  color: #233126;
+  font: inherit;
+}
+
+.slot-ready {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .slot-name {

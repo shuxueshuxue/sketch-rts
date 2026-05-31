@@ -1,13 +1,15 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
-import { moveVirtualPointer, pointerLockButtonLabel, shouldSuppressCanvasMouseDefault } from "./pointer-lock";
+import { moveVirtualPointer, pointerLockButtonLabel, shouldSuppressCanvasMouseDefault, shouldSuppressCanvasPointerGesture } from "./pointer-lock";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
+import { trainingQueueCountText } from "./training-queue";
 import { newUserId } from "./user-profile";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
+import { canStartRoom } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -16,7 +18,9 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type BuildPlacement = { workerId: string; buildingKind: BuildingKind };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting };
-type MenuView = "home" | "profile" | "rooms" | "setup" | "results";
+type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
+
+const CURRENT_ROOM_STORAGE_KEY = "sketch-rts-current-room";
 
 const app = requireElement<HTMLDivElement>("#app");
 
@@ -113,6 +117,8 @@ let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
 let draggingMinimapViewport = false;
+let rightPointerGestureActive = false;
+let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
 let selectedMapId: MapId = "verdantCrossroads";
@@ -172,6 +178,11 @@ pointerLockButton.addEventListener("click", armPointerLock);
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
+canvas.addEventListener("selectstart", suppressCanvasMouseDefault);
+canvas.addEventListener("pointermove", suppressCanvasMouseDefault);
+canvas.addEventListener("pointercancel", suppressCanvasMouseDefault);
+canvas.addEventListener("pointerdown", suppressCanvasPointerGestureDefault);
+canvas.addEventListener("pointerup", suppressCanvasPointerGestureDefault);
 canvas.addEventListener("mousedown", onMouseDown);
 canvas.addEventListener("mousemove", onMouseMove);
 canvas.addEventListener("mouseup", onMouseUp);
@@ -196,7 +207,17 @@ function createCommandButton(label: string, icon: string, hotkey: string, isAvai
 
 function renderMainMenu() {
   menuTitle.textContent =
-    menuView === "home" ? "Sketch RTS" : menuView === "profile" ? "Profile" : menuView === "rooms" ? "LAN Rooms" : menuView === "results" ? "Match Results" : "Room Setup";
+    menuView === "home"
+      ? "Sketch RTS"
+      : menuView === "profile"
+        ? "Profile"
+        : menuView === "rooms"
+          ? "Rooms"
+          : menuView === "create"
+            ? "Create Game"
+            : menuView === "results"
+              ? "Match Results"
+              : "Room Setup";
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -209,14 +230,25 @@ function renderMainMenu() {
     void renderRoomBrowser();
     return;
   }
+  if (menuView === "create") {
+    renderCreateGameMenu();
+    return;
+  }
   if (menuView === "setup") {
     renderRoomSetup();
     return;
   }
   menuStatus.textContent = `Signed in as ${localUser.name}.`;
+  const resumeRoomId = loadCurrentRoomId();
   mapList.replaceChildren(
-    menuButton("Single / Local Game", "Create a room locally. Fill empty seats with AI or humans, then start.", "data-create-local-room", () => void createLocalRoom()),
-    menuButton("LAN Rooms", "Browse rooms on this server. Same room logic as single-player.", "data-open-room-browser", () => {
+    ...(resumeRoomId
+      ? [menuButton("Resume Room", `Return to ${resumeRoomId}.`, "data-resume-room", () => void resumeStoredRoom(), resumeRoomId)]
+      : []),
+    menuButton("Create Game", "Choose map, player count, computer count, and private/public visibility.", "data-create-game", () => {
+      menuView = "create";
+      renderMainMenu();
+    }),
+    menuButton("Rooms", "Browse public rooms on this server.", "data-open-room-browser", () => {
       menuView = "rooms";
       renderMainMenu();
     }),
@@ -225,6 +257,58 @@ function renderMainMenu() {
       renderMainMenu();
     }),
   );
+}
+
+function renderCreateGameMenu() {
+  menuStatus.textContent = "One room flow for private local games and public LAN games.";
+  const form = document.createElement("form");
+  form.className = "create-game-form";
+  form.dataset.createGameForm = "true";
+  form.innerHTML = `
+    <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
+    <label>Map
+      <select name="mapId">
+        ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)}</option>`).join("")}
+      </select>
+    </label>
+    <div class="create-count-grid">
+      <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
+      <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+    </div>
+    <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> Private room</label>
+    <div class="menu-actions">
+      <button type="submit" data-submit-create-game>Create Room</button>
+      <button type="button" data-back-home>Back</button>
+    </div>
+  `;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const mapId = String(data.get("mapId"));
+    const humanCount = Number(data.get("humanCount"));
+    const aiCount = Number(data.get("aiCount"));
+    const name = String(data.get("name") ?? "").trim() || `${localUser.name}'s Room`;
+    if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > 30) {
+      menuStatus.innerHTML = `<span class="error">Rooms need 2-30 total slots and at least one human player.</span>`;
+      return;
+    }
+    if (!MAP_SCENARIOS.some((scenario) => scenario.id === mapId)) {
+      menuStatus.innerHTML = `<span class="error">Choose a known map.</span>`;
+      return;
+    }
+    void createConfiguredRoom({
+      name,
+      mapId: mapId as MapId,
+      humanCount,
+      aiCount,
+      visibility: data.get("privateRoom") === "on" ? "private" : "public",
+    });
+  });
+  form.querySelector("[data-back-home]")?.addEventListener("click", () => {
+    menuView = "home";
+    renderMainMenu();
+  });
+  mapList.replaceChildren(form);
 }
 
 function renderProfileMenu() {
@@ -272,13 +356,17 @@ async function renderRoomBrowser() {
   const items = rooms.rooms.map((room) =>
     menuButton(room.name, `${room.mapId} - ${room.status} - ${activeSlotCount(room)} slots`, "data-room-id", async () => {
       currentRoom = await requestJson<RoomState>(`/api/rooms/${room.id}/join`, { user: localUser });
+      saveCurrentRoomId(currentRoom.id);
       localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? localPlayerId;
       menuView = "setup";
       renderMainMenu();
     }, room.id),
   );
   mapList.replaceChildren(
-    menuButton("Create Room", "Start a new LAN/local room.", "data-create-room", () => void createLocalRoom()),
+    menuButton("Create Room", "Create a private or public game room.", "data-create-room", () => {
+      menuView = "create";
+      renderMainMenu();
+    }),
     ...items,
     menuButton("Back", "Return to the main menu.", "data-back-home", () => {
       menuView = "home";
@@ -290,11 +378,14 @@ async function renderRoomBrowser() {
 function renderRoomSetup() {
   if (!currentRoom) {
     menuStatus.textContent = "No room selected.";
-    mapList.replaceChildren(menuButton("Create Room", "Create a local room first.", "data-create-local-room", () => void createLocalRoom()));
+    mapList.replaceChildren(menuButton("Create Room", "Create a private or public game room.", "data-create-game", () => {
+      menuView = "create";
+      renderMainMenu();
+    }));
     return;
   }
   selectedMapId = currentRoom.mapId;
-  menuStatus.textContent = `${currentRoom.name} - ${currentRoom.status}`;
+  menuStatus.textContent = `${currentRoom.name} - ${currentRoom.visibility} - ${currentRoom.status}`;
   const setup = document.createElement("div");
   setup.className = "room-setup";
   setup.dataset.roomSetup = currentRoom.id;
@@ -308,6 +399,9 @@ function renderRoomSetup() {
       <button type="button" data-close-room>Back</button>
     </div>
   `;
+  const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
+  startButton.disabled = !canStartRoom(currentRoom);
+  startButton.title = startButton.disabled ? "Fill open slots, keep at least two active slots on two teams, and ready human players." : "Start match";
   const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
@@ -367,13 +461,16 @@ function renderResultsMenu() {
 }
 
 async function createLocalRoom() {
+  await createConfiguredRoom({ name: `${localUser.name}'s Room`, mapId: selectedMapId, humanCount: 1, aiCount: 1, visibility: "private" });
+}
+
+async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
   currentRoom = await requestJson<RoomState>("/api/rooms", {
     id: `room-${Date.now().toString(36)}`,
     host: localUser,
-    name: `${localUser.name}'s Room`,
-    mapId: selectedMapId,
-    slotCount: 2,
+    ...input,
   });
+  saveCurrentRoomId(currentRoom.id);
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   menuView = "setup";
   renderMainMenu();
@@ -389,6 +486,7 @@ async function startCurrentRoom() {
   if (!currentRoom) return;
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
   currentRoomId = currentRoom.id;
+  saveCurrentRoomId(currentRoom.id);
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
   camera = { x: 0, y: 0 };
@@ -438,14 +536,42 @@ function slotRow(slot: RoomState["slots"][number]) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
+  const controllerOptions = ["human", "ai", "open", "closed"]
+    .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${controller}</option>`)
+    .join("");
+  const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${race}</option>`).join("");
   row.innerHTML = `
     <span class="slot-name">${escapeHtml(slot.name)}</span>
-    <span>${escapeHtml(slot.controller)}</span>
-    <span>${escapeHtml(slot.team)}</span>
-    <span>${escapeHtml(slot.race)}</span>
-    <span>${slot.ready ? "ready" : "not ready"}</span>
+    <select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>
+    <select data-slot-team aria-label="Slot team">
+      ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${team}</option>`).join("")}
+    </select>
+    <select data-slot-race aria-label="Slot race">${raceOptions}</select>
+    <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ready</label>
   `;
+  row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
+    const controller = (event.currentTarget as HTMLSelectElement).value;
+    void updateCurrentRoomSlot(slot.id, {
+      controller,
+      ...(controller === "human" ? { userId: localUser.id, name: localUser.name, ready: true } : {}),
+    });
+  });
+  row.querySelector<HTMLSelectElement>("[data-slot-team]")?.addEventListener("change", (event) => {
+    void updateCurrentRoomSlot(slot.id, { team: (event.currentTarget as HTMLSelectElement).value });
+  });
+  row.querySelector<HTMLSelectElement>("[data-slot-race]")?.addEventListener("change", (event) => {
+    void updateCurrentRoomSlot(slot.id, { race: (event.currentTarget as HTMLSelectElement).value });
+  });
+  row.querySelector<HTMLInputElement>("[data-slot-ready]")?.addEventListener("change", (event) => {
+    void updateCurrentRoomSlot(slot.id, { ready: (event.currentTarget as HTMLInputElement).checked });
+  });
   return row;
+}
+
+async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unknown>) {
+  if (!currentRoom) return;
+  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slots/${slotId}`, patch);
+  renderMainMenu();
 }
 
 function activeSlotCount(room: RoomState) {
@@ -459,12 +585,42 @@ function slotForUser(room: RoomState, userId: string) {
 function returnHome() {
   currentRoom = undefined;
   currentRoomId = undefined;
+  clearCurrentRoomId();
   selectedIds = new Set();
   selectedCampId = undefined;
   commandMode = undefined;
   buildPaletteOpen = false;
   menuView = "home";
   renderMainMenu();
+}
+
+async function resumeStoredRoom() {
+  const roomId = loadCurrentRoomId();
+  if (!roomId) return;
+  try {
+    const room = await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
+    currentRoom = room;
+    localPlayerId = slotForUser(room, localUser.id)?.playerId ?? localPlayerId;
+    if (room.status === "ended" && room.result) {
+      openResults(room);
+      return;
+    }
+    if (room.status === "inMatch") {
+      currentRoomId = room.id;
+      snapshot = await requestJson<GameSnapshot>(`/api/rooms/${room.id}/snapshot`);
+      menuOpen = false;
+      shell.classList.remove("menu-open");
+      mainMenu.classList.add("hidden");
+      startRoomPolling();
+      return;
+    }
+    menuView = "setup";
+    renderMainMenu();
+  } catch (error) {
+    clearCurrentRoomId();
+    menuStatus.innerHTML = `<span class="error">Could not resume room: ${escapeHtml(error instanceof Error ? error.message : String(error))}</span>`;
+    renderMainMenu();
+  }
 }
 
 function startRoomPolling() {
@@ -590,6 +746,19 @@ function suppressCanvasMouseDefault(event: Event) {
   if (shouldSuppressCanvasMouseDefault(event.type)) event.preventDefault();
 }
 
+function suppressCanvasPointerGestureDefault(event: PointerEvent) {
+  if (!shouldSuppressCanvasPointerGesture(event.type, event.button, event.buttons)) return;
+  event.preventDefault();
+  if (event.type === "pointerdown") {
+    rightPointerGestureActive = true;
+    return;
+  }
+  if (!rightPointerGestureActive) return;
+  rightPointerGestureActive = false;
+  ignoreNextRightMouseUp = true;
+  onMouseUp(event);
+}
+
 function onKeyDown(event: KeyboardEvent) {
   const key = event.key.toLowerCase();
   if (menuOpen) {
@@ -699,6 +868,10 @@ function onMouseMove(event: MouseEvent) {
 
 function onMouseUp(event: MouseEvent) {
   suppressCanvasMouseDefault(event);
+  if (event.button === 2 && ignoreNextRightMouseUp && event.type === "mouseup") {
+    ignoreNextRightMouseUp = false;
+    return;
+  }
   const point = inputPoint(event);
   draggingMinimapViewport = false;
   if (!snapshot) return;
@@ -1378,7 +1551,9 @@ function drawBuildings(buildings: Building[]) {
     drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
     drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
     if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
-    if (building.complete && building.queue[0]) drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind);
+    if (building.complete && building.queue[0]) {
+      drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
+    }
   }
 }
 
@@ -2190,12 +2365,13 @@ function drawProgress(x: number, y: number, ratio: number) {
   ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
 }
 
-function drawTrainingProgress(x: number, y: number, remaining: number, unitKind: TrainableUnitKind) {
+function drawTrainingProgress(x: number, y: number, remaining: number, unitKind: TrainableUnitKind, queueLength: number) {
   const total = UNIT_DEFS[unitKind].trainTime;
   drawProgress(x, y, 1 - remaining / total);
   ctx.fillStyle = "#315f87";
   ctx.font = "9px ui-monospace, monospace";
-  ctx.fillText(labelKind(unitKind), x - 27, y + 16);
+  const countText = trainingQueueCountText(queueLength);
+  ctx.fillText(`${labelKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
 }
 
 function hitFeedbackOffset(entity: Unit | Building, scale: number): Point {
@@ -2371,6 +2547,18 @@ function loadLocalUserProfile(): LocalUserProfile {
 
 function saveLocalUserProfile(profile: LocalUserProfile) {
   window.localStorage.setItem("sketch-rts-user", JSON.stringify(profile));
+}
+
+function loadCurrentRoomId() {
+  return window.localStorage.getItem(CURRENT_ROOM_STORAGE_KEY) ?? undefined;
+}
+
+function saveCurrentRoomId(roomId: string) {
+  window.localStorage.setItem(CURRENT_ROOM_STORAGE_KEY, roomId);
+}
+
+function clearCurrentRoomId() {
+  window.localStorage.removeItem(CURRENT_ROOM_STORAGE_KEY);
 }
 
 function escapeHtml(value: string) {
