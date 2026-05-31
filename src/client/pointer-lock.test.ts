@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { moveVirtualPointer, pointerLockButtonLabel, shouldSuppressCanvasMouseDefault } from "./pointer-lock";
+import {
+  moveVirtualPointer,
+  pointerLockButtonLabel,
+  shouldSuppressCanvasMouseDefault,
+  shouldSuppressCanvasPointerGesture,
+} from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
   it("moves by relative deltas and stays inside the viewport", () => {
@@ -24,7 +29,20 @@ describe("pointer lock virtual mouse", () => {
     for (const type of ["mousedown", "mouseup", "mousemove", "contextmenu", "auxclick", "dragstart"]) {
       expect(shouldSuppressCanvasMouseDefault(type)).toBe(true);
     }
+    for (const type of ["pointermove", "pointercancel", "selectstart"]) {
+      expect(shouldSuppressCanvasMouseDefault(type)).toBe(true);
+    }
+    expect(shouldSuppressCanvasMouseDefault("pointerdown")).toBe(false);
+    expect(shouldSuppressCanvasMouseDefault("pointerup")).toBe(false);
     expect(shouldSuppressCanvasMouseDefault("click")).toBe(false);
     expect(shouldSuppressCanvasMouseDefault("keydown")).toBe(false);
+  });
+
+  it("suppresses right-button pointer gesture arming without blocking left clicks", () => {
+    expect(shouldSuppressCanvasPointerGesture("pointerdown", 2, 2)).toBe(true);
+    expect(shouldSuppressCanvasPointerGesture("pointerup", 2, 0)).toBe(true);
+    expect(shouldSuppressCanvasPointerGesture("pointerdown", 0, 1)).toBe(false);
+    expect(shouldSuppressCanvasPointerGesture("pointerup", 0, 0)).toBe(false);
+    expect(shouldSuppressCanvasPointerGesture("pointermove", -1, 2)).toBe(false);
   });
 });

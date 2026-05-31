@@ -2,7 +2,17 @@ export type PointerLockPoint = { x: number; y: number };
 export type PointerLockViewport = { width: number; height: number };
 export type PointerLockButtonState = { locked: boolean; armed: boolean };
 
-const SUPPRESSED_CANVAS_MOUSE_EVENTS = new Set(["mousedown", "mouseup", "mousemove", "contextmenu", "auxclick", "dragstart"]);
+const SUPPRESSED_CANVAS_MOUSE_EVENTS = new Set([
+  "mousedown",
+  "mouseup",
+  "mousemove",
+  "contextmenu",
+  "auxclick",
+  "dragstart",
+  "pointermove",
+  "pointercancel",
+  "selectstart",
+]);
 
 export function moveVirtualPointer(
   current: PointerLockPoint | undefined,
@@ -24,6 +34,11 @@ export function pointerLockButtonLabel(state: PointerLockButtonState) {
 
 export function shouldSuppressCanvasMouseDefault(eventType: string) {
   return SUPPRESSED_CANVAS_MOUSE_EVENTS.has(eventType);
+}
+
+export function shouldSuppressCanvasPointerGesture(eventType: string, button: number, buttons: number) {
+  if (eventType !== "pointerdown" && eventType !== "pointerup") return false;
+  return button === 2 || (buttons & 2) !== 0;
 }
 
 function clamp(value: number, min: number, max: number) {
