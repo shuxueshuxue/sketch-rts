@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
   pointerLockButtonLabel,
   shouldSuppressCanvasMouseDefault,
@@ -25,6 +26,14 @@ describe("pointer lock virtual mouse", () => {
     expect(pointerLockButtonLabel({ locked: false, armed: true })).toBe("Click Field");
     expect(pointerLockButtonLabel({ locked: true, armed: true })).toBe("Mouse Locked");
   });
+
+  it("detects Microsoft Edge without classifying Chrome as Edge", () => {
+    expect(isMicrosoftEdgeUserAgent("Mozilla/5.0 Edg/126.0.0.0")).toBe(true);
+    expect(isMicrosoftEdgeUserAgent("Mozilla/5.0 Chrome/126.0.0.0 Safari/537.36")).toBe(false);
+    expect(isMicrosoftEdgeUserAgent("", [{ brand: "Microsoft Edge" }])).toBe(true);
+    expect(isMicrosoftEdgeUserAgent("Mozilla/5.0 Chrome/126.0.0.0", [{ brand: "Chromium" }])).toBe(false);
+  });
+
 
   it("suppresses browser gestures on battlefield mouse events", () => {
     for (const type of ["mousedown", "mouseup", "mousemove", "contextmenu", "auxclick", "dragstart"]) {

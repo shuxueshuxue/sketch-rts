@@ -2,6 +2,7 @@ import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
 import {
+  isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
   pointerLockButtonLabel,
   shouldSuppressCanvasMouseDefault,
@@ -119,6 +120,7 @@ let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
 let pointerLockArmed = false;
 let pointerLockFallbackOnError = false;
+let edgePointerLockWarningShown = false;
 let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
@@ -695,6 +697,10 @@ function frame() {
 }
 
 async function armPointerLock() {
+  if (shouldWarnAboutEdgeMouseGesture()) {
+    showEdgeMouseGestureWarning();
+    return;
+  }
   if (document.pointerLockElement === canvas) {
     document.exitPointerLock();
     return;
@@ -704,6 +710,20 @@ async function armPointerLock() {
   pointerLockButton.setAttribute("aria-pressed", "true");
   statusLabel.textContent = "Requesting Pointer Lock...";
   await requestPointerLock(point, { fallbackToFieldClick: true });
+}
+
+function shouldWarnAboutEdgeMouseGesture() {
+  const brands =
+    "userAgentData" in navigator ? (navigator.userAgentData as { brands?: { brand: string }[] } | undefined)?.brands : undefined;
+  return isMicrosoftEdgeUserAgent(navigator.userAgent, brands) && !edgePointerLockWarningShown;
+}
+
+function showEdgeMouseGestureWarning() {
+  edgePointerLockWarningShown = true;
+  pointerLockButton.textContent = "Try Lock Mouse";
+  pointerLockButton.setAttribute("aria-pressed", "false");
+  statusLabel.innerHTML =
+    '<span class="error">Microsoft Edge Mouse Gesture can override right-button drag even after mouse lock. Open <code>edge://settings/appearance</code>, turn off <strong>Enable Mouse Gesture</strong>, then click Try Lock Mouse.</span>';
 }
 
 async function requestPointerLock(point: Point, options: { fallbackToFieldClick: boolean }) {

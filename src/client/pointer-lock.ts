@@ -1,6 +1,7 @@
 export type PointerLockPoint = { x: number; y: number };
 export type PointerLockViewport = { width: number; height: number };
 export type PointerLockButtonState = { locked: boolean; armed: boolean };
+export type UserAgentBrand = { brand: string };
 
 const SUPPRESSED_CANVAS_MOUSE_EVENTS = new Set([
   "mousedown",
@@ -30,6 +31,10 @@ export function pointerLockButtonLabel(state: PointerLockButtonState) {
   if (state.locked) return "Mouse Locked";
   if (state.armed) return "Click Field";
   return "Lock Mouse";
+}
+
+export function isMicrosoftEdgeUserAgent(userAgent: string, brands: UserAgentBrand[] = []) {
+  return /\bEdg\//.test(userAgent) || brands.some((brand) => brand.brand.toLowerCase().includes("microsoft edge"));
 }
 
 export function shouldSuppressCanvasMouseDefault(eventType: string) {
