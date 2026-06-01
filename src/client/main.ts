@@ -2,6 +2,7 @@ import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
+import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
@@ -13,6 +14,7 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
+import { RESEARCH_COMMANDS, researchCommandButtonsForSelection } from "./research-controls";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
@@ -21,7 +23,7 @@ import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "..
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
 import { canStartRoom } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect, WorldItem } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldEffect, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -33,6 +35,7 @@ type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 const CURRENT_ROOM_STORAGE_KEY = "sketch-rts-current-room";
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
+const MAX_ROOM_SLOTS = 30;
 
 const app = requireElement<HTMLDivElement>("#app");
 
@@ -89,6 +92,7 @@ const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
+const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
@@ -130,6 +134,9 @@ const commandButtons: CommandButton[] = [
   ),
   ...TRAIN_COMMANDS.map((command) =>
     createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind)),
+  ),
+  ...RESEARCH_COMMANDS.map((command) =>
+    createCommandButton(`Research ${command.label}`, command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind)),
   ),
   ...SPELL_COMMANDS.map((command) =>
     createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability)),
@@ -209,6 +216,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, isAvai
 }
 
 function renderMainMenu() {
+  mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
     menuView === "home"
       ? "Sketch RTS"
@@ -268,15 +276,18 @@ function renderCreateGameMenu() {
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
   form.innerHTML = `
-    <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
-    <label>Map
-      <select name="mapId">
-        ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)}</option>`).join("")}
-      </select>
-    </label>
-    <div class="create-count-grid">
-      <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
-      <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+    <div class="create-game-grid">
+      <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
+      <label>Map
+        <select name="mapId">
+          ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)} - ${escapeHtml(mapCapacityLabel(scenario.id))}</option>`).join("")}
+        </select>
+      </label>
+      <div class="create-count-grid">
+        <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
+        <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+      </div>
+      <div class="create-slot-total" data-create-slot-total>2 total slots</div>
     </div>
     <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> Private room</label>
     <div class="menu-actions">
@@ -307,6 +318,15 @@ function renderCreateGameMenu() {
       visibility: data.get("privateRoom") === "on" ? "private" : "public",
     });
   });
+  const refreshSlotTotal = () => {
+    const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
+    const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
+    const total = humanCount + aiCount;
+    const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
+    totalLabel.textContent = Number.isInteger(total) ? `${total} total slots` : "Choose slot counts";
+    totalLabel.classList.toggle("error", !Number.isInteger(humanCount) || !Number.isInteger(aiCount) || total < 2 || total > MAX_ROOM_SLOTS || humanCount < 1 || aiCount < 0);
+  };
+  form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
     menuView = "home";
     renderMainMenu();
@@ -393,10 +413,30 @@ function renderRoomSetup() {
   setup.className = "room-setup";
   setup.dataset.roomSetup = currentRoom.id;
   setup.innerHTML = `
-    <div class="room-section-title">Map</div>
-    <div class="room-map-grid"></div>
-    <div class="room-section-title">Slots</div>
-    <div class="slot-list"></div>
+    <div class="room-setup-header">
+      <div>
+        <div class="room-section-title">Room</div>
+        <div class="room-setup-name">${escapeHtml(currentRoom.name)}</div>
+      </div>
+      <div class="room-setup-controls">
+        <label>Humans<input data-room-human-count type="number" min="1" max="${MAX_ROOM_SLOTS}" value="${humanSeatCount(currentRoom)}" /></label>
+        <label>AI<input data-room-ai-count type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="${aiSeatCount(currentRoom)}" /></label>
+        <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(currentRoom))}</div>
+      </div>
+    </div>
+    <div class="room-setup-layout">
+      <section class="room-map-pane" aria-label="Map list">
+        <div class="room-section-title">Maps</div>
+        <div class="room-map-grid"></div>
+      </section>
+      <section class="room-slot-pane" aria-label="Player slots">
+        <div class="slot-pane-head">
+          <div class="room-section-title">Slots</div>
+          <div class="slot-capacity">${currentRoom.slots.length}/${MAX_ROOM_SLOTS}</div>
+        </div>
+        <div class="slot-list"></div>
+      </section>
+    </div>
     <div class="menu-actions">
       <button type="button" data-start-room>Start Match</button>
       <button type="button" data-close-room>Back</button>
@@ -409,6 +449,7 @@ function renderRoomSetup() {
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...currentRoom.slots.map(slotRow));
+  setup.querySelectorAll<HTMLInputElement>("[data-room-human-count], [data-room-ai-count]").forEach((input) => input.addEventListener("input", () => void updateCurrentRoomSlotCounts(setup)));
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => {
     menuView = "home";
@@ -534,13 +575,13 @@ function mapChoiceButton(mapId: MapId) {
   button.innerHTML = `
     <span class="map-button-name">${escapeHtml(scenario.name)}</span>
     <span class="map-button-note">${escapeHtml(scenario.note)}</span>
-    <span class="map-button-tags">${scenario.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
+    <span class="map-button-tags">${[mapCapacityLabel(scenario.id), ...scenario.tags].map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
   `;
   button.addEventListener("click", () => void selectRoomMap(scenario.id));
   return button;
 }
 
-function slotRow(slot: RoomState["slots"][number]) {
+function slotRow(slot: RoomState["slots"][number], index: number) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
@@ -549,6 +590,7 @@ function slotRow(slot: RoomState["slots"][number]) {
     .join("");
   const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${race}</option>`).join("");
   row.innerHTML = `
+    <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     <select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>
     <select data-slot-team aria-label="Slot team">
@@ -582,8 +624,37 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
   renderMainMenu();
 }
 
+async function updateCurrentRoomSlotCounts(setup: HTMLElement) {
+  if (!currentRoom) return;
+  const humanCount = Number(setup.querySelector<HTMLInputElement>("[data-room-human-count]")?.value);
+  const aiCount = Number(setup.querySelector<HTMLInputElement>("[data-room-ai-count]")?.value);
+  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
+  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slot-counts`, { humanCount, aiCount });
+  renderMainMenu();
+}
+
 function activeSlotCount(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
+}
+
+function humanSeatCount(room: RoomState) {
+  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length;
+}
+
+function aiSeatCount(room: RoomState) {
+  return room.slots.filter((slot) => slot.controller === "ai").length;
+}
+
+function slotSummaryText(room: RoomState) {
+  const tally = room.slots.reduce(
+    (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
+    { human: 0, ai: 0, open: 0, closed: 0 },
+  );
+  return `${room.slots.length} total · ${humanSeatCount(room)} human seats · ${tally.human} claimed · ${tally.ai} AI · ${tally.open} open · ${tally.closed} closed`;
+}
+
+function mapCapacityLabel(mapId: MapId) {
+  return mapId === "grandThirty" ? "up to 30" : "2-30 configurable";
 }
 
 function slotForUser(room: RoomState, userId: string) {
@@ -654,6 +725,7 @@ async function refreshRoomSnapshot() {
 
 function openResults(room: RoomState) {
   if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
   selectedIds = new Set();
@@ -666,6 +738,13 @@ function openResults(room: RoomState) {
   menuView = "results";
   renderMainMenu();
   updateHud();
+}
+
+function releasePointerLockForMenu() {
+  if (document.pointerLockElement === canvas) document.exitPointerLock();
+  pointerLockArmed = false;
+  pointerLockFallbackOnError = false;
+  virtualMouse = undefined;
 }
 
 async function requestJson<T>(path: string, body?: unknown): Promise<T> {
@@ -834,6 +913,10 @@ function onKeyDown(event: KeyboardEvent) {
     closeBuildPalette("Build menu closed.");
     return;
   }
+  if (/^[1-6]$/.test(key) && useInventoryItem(Number(key) - 1)) {
+    event.preventDefault();
+    return;
+  }
 
   // @@@command-hotkeys - Command card hotkeys win before WASD camera keys.
   const command = commandButtons.find((button) => button.hotkey === key && button.isAvailable());
@@ -969,7 +1052,18 @@ function issueContextCommandAtWorld(world: Point) {
   }
 
   const resource = hitResource(world);
+  const item = hitGroundItem(world);
   const target = hitAttackTarget(world);
+  if (item) {
+    const command = pickupItemCommand(selectedUnits, item);
+    if (!command) {
+      showInvalidCommand("Select a unit before picking up items.");
+      return;
+    }
+    sendCommand(command);
+    statusLabel.textContent = `${itemLabel(item.kind)} pickup ordered.`;
+    return;
+  }
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
     sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id });
     statusLabel.textContent = "Workers ordered to mine gold.";
@@ -998,6 +1092,10 @@ function canBuild(kind: BuildingKind) {
 
 function canTrain(unitKind: TrainableUnitKind) {
   return !commandMode && !buildPaletteOpen && selectedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+}
+
+function canResearch(upgradeKind: UpgradeKind) {
+  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
 }
 
 function canCast(ability: AbilityKind) {
@@ -1158,6 +1256,16 @@ function train(unitKind: TrainableUnitKind) {
   statusLabel.textContent = `${labelKind(unitKind)} queued.`;
 }
 
+function research(upgradeKind: UpgradeKind) {
+  const command = researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
+  if (!command) {
+    showInvalidCommand(`${labelKind(upgradeKind)} needs a selected research building.`);
+    return;
+  }
+  sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind });
+  statusLabel.textContent = `${command.label} started.`;
+}
+
 function hireMercenary() {
   const camp = selectedMercenaryCamp();
   if (!camp) {
@@ -1273,6 +1381,68 @@ function updateHud() {
     if (available) visibleCount += 1;
   }
   commandDock.classList.toggle("hidden", visibleCount === 0);
+  renderItemDock();
+}
+
+function renderItemDock() {
+  if (!snapshot || menuOpen) {
+    itemDock.classList.add("hidden");
+    itemDock.replaceChildren();
+    return;
+  }
+  const entries = carriedItemsForSelection(snapshot, selectedPlayerUnits()).slice(0, 6);
+  itemDock.classList.toggle("hidden", entries.length === 0);
+  itemDock.replaceChildren(
+    ...entries.map(({ item, carrier }, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "item-button";
+      button.dataset.itemId = item.id;
+      button.title = `${itemLabel(item.kind)} (${itemHotkey(index)})`;
+      button.setAttribute("aria-label", button.title);
+      button.disabled = item.cooldownRemaining > 0;
+      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>`;
+      button.addEventListener("click", () => useCarriedItem(item.id));
+      button.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        dropCarriedItem(item.id, carrier.id);
+      });
+      return button;
+    }),
+  );
+}
+
+function useInventoryItem(index: number) {
+  if (!snapshot) return false;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits())[index];
+  if (!entry) return false;
+  useCarriedItem(entry.item.id);
+  return true;
+}
+
+function useCarriedItem(itemId: string) {
+  if (!snapshot) return;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item }) => item.id === itemId);
+  if (!entry) return;
+  const command = useItemCommand(snapshot, localPlayerId, entry.item, entry.carrier);
+  if (!command) {
+    showInvalidCommand(entry.item.kind === "flameCloak" ? "Flame Cloak is passive." : `${itemLabel(entry.item.kind)} has no valid target.`);
+    return;
+  }
+  sendCommand(command);
+  statusLabel.textContent = `${itemLabel(entry.item.kind)} used.`;
+}
+
+function dropCarriedItem(itemId: string, carrierId: string) {
+  if (!snapshot) return;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  if (!entry) return;
+  sendCommand(dropItemCommand(entry.item, entry.carrier));
+  statusLabel.textContent = `${itemLabel(entry.item.kind)} dropped.`;
+}
+
+function itemIcon(kind: WorldItem["kind"]) {
+  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : "✦";
 }
 
 function draw() {
@@ -2540,6 +2710,10 @@ function hitMercenaryCamp(world: Point) {
   return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
 }
 
+function hitGroundItem(world: Point) {
+  return snapshot?.items.find((item) => !item.carrierId && distance(item, world) < 34);
+}
+
 function hitAttackTarget(world: Point) {
   return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId);
 }
@@ -2556,7 +2730,7 @@ function labelBuilding(building: Building) {
   return labelKind(building.kind);
 }
 
-function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind) {
+function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind) {
   return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 }
 

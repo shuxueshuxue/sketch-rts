@@ -483,6 +483,10 @@ function updateUnits(game: Game) {
       updateMineOrder(game, unit);
       continue;
     }
+    if (unit.order.type === "pickupItem") {
+      updatePickupItemOrder(game, unit);
+      continue;
+    }
     if (unit.kind !== "worker") {
       const target = nearestEnemyTarget(game, unit, AUTO_ACQUIRE_RANGE);
       if (target) unit.order = { type: "attack", targetId: target.id };
@@ -674,13 +678,36 @@ function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: 
   return game.units.some((unit) => unit.owner === owner && distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
 }
 
+function updatePickupItemOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "pickupItem") return;
+  const itemId = unit.order.itemId;
+  const item = game.items.find((candidate) => candidate.id === itemId);
+  if (!item || item.carrierId) {
+    unit.order = { type: "idle" };
+    return;
+  }
+  if (distance(unit, item) > ITEM_PICKUP_RANGE) {
+    moveToward(unit, item.x, item.y, game.map);
+    return;
+  }
+  attachItemToUnit(item, unit);
+  unit.order = { type: "idle" };
+}
+
 function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string) {
   const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
   if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
   const item = game.items.find((candidate) => candidate.id === itemId);
   if (!item) throw new Error(`Unknown item ${itemId}`);
   if (item.carrierId) throw new Error(`${item.id} is already carried`);
-  if (distance(unit, item) > ITEM_PICKUP_RANGE) throw new Error(`${item.id} is too far away`);
+  if (distance(unit, item) > ITEM_PICKUP_RANGE) {
+    unit.order = { type: "pickupItem", itemId };
+    return;
+  }
+  attachItemToUnit(item, unit);
+}
+
+function attachItemToUnit(item: WorldItem, unit: Unit) {
   item.carrierId = unit.id;
   item.x = unit.x;
   item.y = unit.y;

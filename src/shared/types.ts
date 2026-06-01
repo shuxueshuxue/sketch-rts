@@ -64,7 +64,8 @@ export type UnitOrder =
   | { type: "move"; x: number; y: number }
   | { type: "attackMove"; x: number; y: number; targetId?: string }
   | { type: "attack"; targetId: string }
-  | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number };
+  | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
+  | { type: "pickupItem"; itemId: string };
 
 export type Unit = {
   id: string;

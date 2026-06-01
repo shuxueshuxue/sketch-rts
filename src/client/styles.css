@@ -96,6 +96,12 @@ button {
   pointer-events: none;
 }
 
+.main-menu[data-menu-view="setup"] {
+  grid-template-columns: minmax(900px, min(1500px, calc(100vw - 88px)));
+  align-content: start;
+  padding: clamp(18px, 4vw, 52px);
+}
+
 .menu-title {
   color: #233126;
   font-size: clamp(44px, 8vw, 92px);
@@ -183,28 +189,38 @@ button {
   pointer-events: auto;
 }
 
+.create-game-grid {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+}
+
 .room-setup {
-  width: min(720px, calc(100vw - 40px));
-  max-height: min(72vh, 680px);
-  grid-template-rows: auto auto auto minmax(180px, 1fr) auto;
+  width: min(1500px, calc(100vw - 88px));
+  height: min(72vh, 720px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
 }
 
 .room-setup .map-button {
-  padding: 7px 9px;
+  padding: 8px 10px;
 }
 
-.room-setup .map-button-note,
-.room-setup .map-button-tags {
-  display: none;
+.room-setup .map-button-note {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .room-setup .room-map-grid {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: 1fr;
+  max-height: none;
+  min-height: 0;
 }
 
 .room-setup .slot-list {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  min-height: 0;
   overflow: auto;
   padding-right: 3px;
 }
@@ -214,6 +230,107 @@ button {
   bottom: 0;
   padding-top: 6px;
   background: linear-gradient(rgba(245, 240, 216, 0), rgba(245, 240, 216, 0.96) 28%);
+}
+
+.room-setup-header,
+.room-setup-layout,
+.room-map-pane,
+.room-slot-pane,
+.slot-pane-head {
+  min-width: 0;
+}
+
+.room-setup-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.room-setup-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: end;
+  gap: 8px;
+}
+
+.room-setup-controls label {
+  display: grid;
+  gap: 3px;
+  color: rgba(35, 49, 38, 0.72);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.room-setup-controls input {
+  width: 58px;
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 250, 226, 0.9);
+  color: #233126;
+  font: inherit;
+  padding: 3px 6px;
+}
+
+.room-setup-name {
+  overflow: hidden;
+  color: #233126;
+  font-size: 18px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-slot-summary,
+.slot-capacity,
+.create-slot-total {
+  color: rgba(35, 49, 38, 0.78);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.room-slot-summary {
+  min-width: 360px;
+  padding-bottom: 5px;
+  text-align: right;
+}
+
+.room-setup-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(520px, 0.58fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.room-map-pane,
+.room-slot-pane {
+  display: grid;
+  min-height: 0;
+  border: 1px solid rgba(45, 61, 43, 0.24);
+  border-radius: 7px;
+  background: rgba(255, 250, 226, 0.42);
+  padding: 10px;
+}
+
+.room-map-pane {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.room-slot-pane {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.slot-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
 }
 
 .profile-form label,
@@ -302,7 +419,7 @@ button {
 
 .slot-row {
   display: grid;
-  grid-template-columns: minmax(90px, 1fr) repeat(4, auto);
+  grid-template-columns: 24px minmax(110px, 1fr) 96px 88px 88px auto;
   gap: 8px;
   align-items: center;
   border: 1px solid rgba(45, 61, 43, 0.24);
@@ -314,7 +431,13 @@ button {
   font-weight: 800;
 }
 
+.slot-index {
+  color: rgba(35, 49, 38, 0.56);
+  text-align: right;
+}
+
 .slot-row select {
+  width: 100%;
   min-height: 28px;
   border: 1px solid rgba(45, 61, 43, 0.28);
   border-radius: 4px;
@@ -336,6 +459,28 @@ button {
   font-family: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+  .main-menu[data-menu-view="setup"] {
+    grid-template-columns: minmax(280px, calc(100vw - 32px));
+    padding: 18px 16px;
+  }
+
+  .room-setup {
+    width: calc(100vw - 32px);
+    height: min(78vh, 760px);
+  }
+
+  .room-setup-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(180px, 0.44fr) minmax(260px, 0.56fr);
+  }
+
+  .slot-row {
+    grid-template-columns: 22px minmax(96px, 1fr) 82px 76px 76px auto;
+    gap: 6px;
+  }
 }
 
 .results-panel {
@@ -383,6 +528,7 @@ button {
 .menu-open .top-strip,
 .menu-open .selection-chip,
 .menu-open .command-dock,
+.menu-open .item-dock,
 .menu-open .status-line {
   display: none;
 }
@@ -390,6 +536,7 @@ button {
 .top-strip,
 .selection-chip,
 .command-dock,
+.item-dock,
 .status-line,
 .pointer-lock-panel {
   position: absolute;
@@ -488,10 +635,20 @@ button {
   border-radius: 6px;
 }
 
+.item-dock {
+  left: 12px;
+  bottom: 94px;
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 6px;
+}
+
 .hidden {
   display: none;
 }
 
+.item-button,
 .command-button {
   position: relative;
   border: 1px solid rgba(45, 61, 43, 0.34);
@@ -503,6 +660,17 @@ button {
   padding: 0;
   text-align: center;
   box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.1);
+}
+
+.item-button:disabled {
+  opacity: 0.48;
+}
+
+.item-icon {
+  display: block;
+  font-size: 19px;
+  line-height: 34px;
+  font-weight: 900;
 }
 
 .command-icon {

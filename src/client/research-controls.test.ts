@@ -1,0 +1,44 @@
+import { describe, expect, it } from "vitest";
+import { researchCommandButtonsForSelection } from "./research-controls";
+import type { Building, PlayerState } from "../shared/types";
+
+const barracks: Building = {
+  id: "barracks-1",
+  owner: "player",
+  kind: "barracks",
+  x: 0,
+  y: 0,
+  hp: 620,
+  maxHp: 620,
+  radius: 40,
+  complete: true,
+  buildProgress: 0,
+  buildTime: 0,
+  attackDamage: 0,
+  attackRange: 0,
+  attackCooldown: 1,
+  cooldown: 0,
+  rallyX: 0,
+  rallyY: 0,
+  queue: [],
+  researchQueue: [],
+};
+
+const player: PlayerState = {
+  race: "grove",
+  gold: 500,
+  supplyUsed: 3,
+  supplyCap: 10,
+  upgrades: { weaponTraining: 0, reinforcedPlating: 0 },
+};
+
+describe("research controls", () => {
+  it("shows research buttons for an eligible selected barracks", () => {
+    const commands = researchCommandButtonsForSelection([barracks], player);
+
+    expect(commands).toEqual([
+      { label: "Weapon Training", icon: "⚔", hotkey: "w", upgradeKind: "weaponTraining", buildingId: "barracks-1" },
+      { label: "Reinforced Plating", icon: "▣", hotkey: "p", upgradeKind: "reinforcedPlating", buildingId: "barracks-1" },
+    ]);
+  });
+});

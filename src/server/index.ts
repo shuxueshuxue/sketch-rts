@@ -200,6 +200,23 @@ app.post("/api/rooms/:roomId/map", (request, response) => {
   }
 });
 
+app.post("/api/rooms/:roomId/slot-counts", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (!Number.isInteger(body.humanCount) || Number(body.humanCount) < 1 || Number(body.humanCount) > 30) {
+    response.status(400).json({ error: "humanCount must be an integer between 1 and 30" });
+    return;
+  }
+  if (!Number.isInteger(body.aiCount) || Number(body.aiCount) < 0 || Number(body.aiCount) > 29) {
+    response.status(400).json({ error: "aiCount must be an integer between 0 and 29" });
+    return;
+  }
+  try {
+    response.json(roomHost.resizeSlots(request.params.roomId, Number(body.humanCount), Number(body.aiCount)));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
 app.post("/api/rooms/:roomId/start", (request, response) => {
   try {
     response.json(roomHost.startRoom(request.params.roomId));
