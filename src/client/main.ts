@@ -2359,17 +2359,7 @@ function drawEffects(effects: WorldEffect[]) {
         x: from.x + (to.x - from.x) * progress,
         y: from.y + (to.y - from.y) * progress,
       };
-      ctx.strokeStyle = "#243126";
-      ctx.fillStyle = "#f2d05c";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(head.x, head.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(head.x, head.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      drawProjectileTrail(from, to, head, progress, effect.remaining / effect.duration);
       continue;
     }
 
@@ -2444,6 +2434,72 @@ function drawEffects(effects: WorldEffect[]) {
     ctx.stroke();
     ctx.setLineDash([]);
   }
+}
+
+// @@@projectile-trail - Ranged attacks should read as short fading motion, not a source-to-target debug line.
+function drawProjectileTrail(from: Point, to: Point, head: Point, progress: number, life: number) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const ux = dx / length;
+  const uy = dy / length;
+  const trailLength = Math.min(92, Math.max(24, length * 0.42));
+  const tail = {
+    x: head.x - ux * trailLength,
+    y: head.y - uy * trailLength,
+  };
+  const flightGlow = Math.sin(progress * Math.PI);
+  const alpha = Math.max(0.22, Math.min(0.95, 0.24 + flightGlow * 0.62 + life * 0.12));
+  const cool = { r: 49, g: 95, b: 135 };
+  const ember = mixRgb({ r: 190, g: 62, b: 55 }, { r: 226, g: 129, b: 52 }, progress);
+  const hot = mixRgb({ r: 96, g: 139, b: 166 }, { r: 242, g: 208, b: 92 }, Math.min(1, progress * 1.18));
+  const gradient = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+  gradient.addColorStop(0, rgba(cool, 0));
+  gradient.addColorStop(0.34, rgba(cool, alpha * 0.28));
+  gradient.addColorStop(0.72, rgba(ember, alpha * 0.68));
+  gradient.addColorStop(1, rgba(hot, alpha));
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.shadowColor = rgba(ember, alpha * 0.58);
+  ctx.shadowBlur = 8;
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(tail.x, tail.y);
+  ctx.lineTo(head.x, head.y);
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = rgba({ r: 255, g: 251, b: 227 }, alpha * 0.62);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tail.x + ux * trailLength * 0.52, tail.y + uy * trailLength * 0.52);
+  ctx.lineTo(head.x, head.y);
+  ctx.stroke();
+
+  ctx.fillStyle = rgba(hot, alpha);
+  ctx.strokeStyle = rgba({ r: 36, g: 49, b: 38 }, alpha * 0.55);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(head.x, head.y, 4.6, 3.2, Math.atan2(dy, dx), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function mixRgb(from: { r: number; g: number; b: number }, to: { r: number; g: number; b: number }, amount: number) {
+  const clamped = Math.max(0, Math.min(1, amount));
+  return {
+    r: Math.round(from.r + (to.r - from.r) * clamped),
+    g: Math.round(from.g + (to.g - from.g) * clamped),
+    b: Math.round(from.b + (to.b - from.b) * clamped),
+  };
+}
+
+function rgba(color: { r: number; g: number; b: number }, alpha: number) {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${Math.max(0, Math.min(1, alpha))})`;
 }
 
 function drawBuildPlacementPreview() {
