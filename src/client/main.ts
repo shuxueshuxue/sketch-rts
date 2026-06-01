@@ -2,6 +2,7 @@ import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
+import { buildSelectionGroups, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
@@ -17,7 +18,7 @@ import {
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
-import { trainingQueueCountText } from "./training-queue";
+import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
@@ -107,6 +108,7 @@ let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
+let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
@@ -549,6 +551,7 @@ async function startCurrentRoom() {
   snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
+  focusedSelectionId = undefined;
   selectedCampId = undefined;
   menuOpen = false;
   shell.classList.remove("menu-open");
@@ -681,6 +684,7 @@ async function closeCurrentRoom() {
   currentRoom = undefined;
   currentRoomId = undefined;
   selectedIds = new Set();
+  focusedSelectionId = undefined;
   selectedCampId = undefined;
   menuView = "rooms";
   renderMainMenu();
@@ -733,6 +737,7 @@ function returnHome() {
   currentRoom = undefined;
   currentRoomId = undefined;
   selectedIds = new Set();
+  focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
   buildPaletteOpen = false;
@@ -794,6 +799,7 @@ function openResults(room: RoomState) {
   currentRoom = room;
   currentRoomId = undefined;
   selectedIds = new Set();
+  focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
   buildPaletteOpen = false;
@@ -1120,9 +1126,9 @@ function issueContextCommandAtWorld(world: Point) {
   const item = hitGroundItem(world);
   const target = hitAttackTarget(world);
   if (item) {
-    const command = pickupItemCommand(selectedUnits, item);
+    const command = pickupItemCommand(focusedPlayerUnits(), item);
     if (!command) {
-      showInvalidCommand("Select a unit before picking up items.");
+      showInvalidCommand("Focus a unit before picking up items.");
       return;
     }
     sendCommand(command);
@@ -1148,23 +1154,23 @@ function canAttackMove() {
 }
 
 function canOpenBuildPalette() {
-  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && !buildPaletteOpen && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canBuild(kind: BuildingKind) {
-  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && selectedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canTrain(unitKind: TrainableUnitKind) {
-  return !commandMode && !buildPaletteOpen && selectedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  return !commandMode && !buildPaletteOpen && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
-  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
+  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
 }
 
 function canCast(ability: AbilityKind) {
-  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  return !commandMode && !buildPaletteOpen && focusedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
 }
 
 function canHireMercenary() {
@@ -1207,7 +1213,7 @@ function beginAttackMoveMode() {
 
 function beginBuildPlacement(buildingKind: BuildingKind) {
   if (!snapshot) return;
-  const worker = selectedPlayerUnits().find((unit) => unit.kind === "worker");
+  const worker = focusedPlayerUnits().find((unit) => unit.kind === "worker");
   if (!worker) {
     showInvalidCommand("Build needs a selected worker.");
     return;
@@ -1221,7 +1227,7 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
 }
 
 function beginSpellTargeting(ability: AbilityKind) {
-  const caster = selectedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
   if (!caster) {
     showInvalidCommand(`${labelKind(ability)} needs a ready caster.`);
     return;
@@ -1312,7 +1318,7 @@ function closeBuildPalette(message?: string) {
 }
 
 function train(unitKind: TrainableUnitKind) {
-  const building = selectedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
+  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
   if (!building) {
     showInvalidCommand(`${labelKind(unitKind)} needs a selected production building.`);
     return;
@@ -1322,7 +1328,7 @@ function train(unitKind: TrainableUnitKind) {
 }
 
 function research(upgradeKind: UpgradeKind) {
-  const command = researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
+  const command = researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
   if (!command) {
     showInvalidCommand(`${labelKind(upgradeKind)} needs a selected research building.`);
     return;
@@ -1360,6 +1366,7 @@ function selectUnitsInBox(start: Point, end: Point) {
       })
       .map((unit) => unit.id),
   );
+  focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   selectedCampId = undefined;
   buildPaletteOpen = false;
 }
@@ -1369,6 +1376,7 @@ function selectSingle(point: Point) {
   const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
   if (unit) {
     selectedIds = new Set([unit.id]);
+    focusedSelectionId = unit.id;
     selectedCampId = undefined;
     buildPaletteOpen = false;
     return;
@@ -1376,12 +1384,14 @@ function selectSingle(point: Point) {
   const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
   if (building) {
     selectedIds = new Set([building.id]);
+    focusedSelectionId = building.id;
     selectedCampId = undefined;
     buildPaletteOpen = false;
     return;
   }
   const camp = hitMercenaryCamp(world);
   selectedIds = new Set();
+  focusedSelectionId = undefined;
   selectedCampId = camp?.id;
   buildPaletteOpen = false;
 }
@@ -1392,6 +1402,16 @@ function selectedPlayerUnits() {
 
 function selectedPlayerBuildings() {
   return snapshot?.buildings.filter((building) => building.owner === localPlayerId && selectedIds.has(building.id)) ?? [];
+}
+
+function focusedPlayerUnits() {
+  if (!snapshot) return [];
+  return focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).units;
+}
+
+function focusedPlayerBuildings() {
+  if (!snapshot) return [];
+  return focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).buildings;
 }
 
 function selectedMercenaryCamp() {
@@ -1410,12 +1430,13 @@ function pruneSelection() {
   if (!snapshot) return;
   const liveIds = new Set([...snapshot.units.map((unit) => unit.id), ...snapshot.buildings.map((building) => building.id)]);
   selectedIds = new Set([...selectedIds].filter((id) => liveIds.has(id)));
+  focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   if (selectedCampId && !snapshot.mercenaryCamps.some((camp) => camp.id === selectedCampId)) selectedCampId = undefined;
   if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
   }
-  if (buildPaletteOpen && !selectedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
+  if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
 }
 
 function updateHud() {
@@ -1424,15 +1445,11 @@ function updateHud() {
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
   mapReadout.textContent = `Map: ${snapshot.map.width} x ${snapshot.map.height}`;
-  const units = selectedPlayerUnits();
-  const buildings = selectedPlayerBuildings();
+  const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
-  if (units.length > 0) {
-    const workers = units.filter((unit) => unit.kind === "worker").length;
-    const fighters = units.filter((unit) => unit.kind !== "worker").length;
-    selectionLabel.textContent = `${units.length} selected - ${workers} worker, ${fighters} fighter`;
-  } else if (buildings[0]) {
-    selectionLabel.textContent = `${labelBuilding(buildings[0])}${buildings[0].complete ? "" : " under construction"}`;
+  const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
+  if (groups.length > 0) {
+    renderSelectionGroups(groups);
   } else if (camp) {
     selectionLabel.textContent = `Mercenary Camp - ${camp.stock} stock${camp.cooldownRemaining > 0 ? " restocking" : ""}`;
   } else {
@@ -1445,13 +1462,164 @@ function updateHud() {
     button.element.disabled = !available;
     if (available) visibleCount += 1;
   }
-  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
-  for (const progress of researchProgressButtonsForSelection(buildings, player)) {
+  commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
+  for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {
+    commandDock.append(renderTrainingProgressButton(progress));
+    visibleCount += 1;
+  }
+  for (const progress of researchProgressButtonsForSelection(focusedBuildings, player)) {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
   }
   commandDock.classList.toggle("hidden", visibleCount === 0);
   renderItemDock();
+}
+
+function renderSelectionGroups(groups: SelectionGroup[]) {
+  selectionLabel.replaceChildren(
+    ...groups.map((group) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
+      button.dataset.selectionGroup = group.id;
+      button.title = selectionGroupTitle(group);
+      button.setAttribute("aria-label", button.title);
+      const canvas = document.createElement("canvas");
+      canvas.width = 34;
+      canvas.height = 34;
+      canvas.className = "selection-model-canvas";
+      const count = document.createElement("span");
+      count.className = "selection-model-count";
+      count.textContent = `x${group.count}`;
+      button.append(canvas, count);
+      button.addEventListener("click", () => {
+        focusedSelectionId = group.ids[0];
+        buildPaletteOpen = false;
+        updateHud();
+      });
+      drawSelectionModel(canvas, group);
+      return button;
+    }),
+  );
+}
+
+function selectionGroupTitle(group: SelectionGroup) {
+  const label = labelAnyKind(group.kind);
+  return `${label} x${group.count}${group.focused ? " - current" : ""}`;
+}
+
+function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
+  const mini = requireCanvasContext(canvas);
+  mini.clearRect(0, 0, canvas.width, canvas.height);
+  mini.save();
+  mini.translate(canvas.width / 2, canvas.height / 2 + 1);
+  mini.scale(group.entityType === "building" ? 0.42 : 0.54, group.entityType === "building" ? 0.42 : 0.54);
+  mini.lineCap = "round";
+  mini.lineJoin = "round";
+  mini.strokeStyle = group.focused ? "#315f87" : "rgba(36, 49, 38, 0.62)";
+  mini.fillStyle = group.focused ? "#fffbe7" : "rgba(255, 250, 226, 0.66)";
+  mini.lineWidth = group.focused ? 3.4 : 2.4;
+  if (group.entityType === "unit") drawMiniUnitModel(mini, UNIT_GLYPHS[group.kind]);
+  else drawMiniBuildingModel(mini, BUILDING_GLYPHS[group.kind]);
+  mini.restore();
+}
+
+function drawMiniUnitModel(mini: CanvasRenderingContext2D, glyph: UnitGlyph) {
+  mini.beginPath();
+  if (glyph.silhouette === "worker-apron") {
+    mini.moveTo(-11, -15);
+    mini.lineTo(9, -13);
+    mini.lineTo(16, 14);
+    mini.lineTo(-13, 16);
+    mini.lineTo(-17, -5);
+  } else if (glyph.silhouette === "shield-triangle") {
+    mini.moveTo(0, -20);
+    mini.lineTo(17, 15);
+    mini.lineTo(-17, 15);
+  } else if (glyph.silhouette === "bow-crest") {
+    mini.moveTo(-14, -16);
+    mini.quadraticCurveTo(18, -18, 14, 15);
+    mini.quadraticCurveTo(-10, 20, -16, -4);
+  } else if (glyph.silhouette === "raider-kite") {
+    mini.moveTo(0, -20);
+    mini.lineTo(18, -2);
+    mini.lineTo(7, 19);
+    mini.lineTo(-15, 10);
+    mini.lineTo(-18, -7);
+  } else if (glyph.silhouette === "lancer-pennant") {
+    mini.moveTo(-15, -14);
+    mini.lineTo(17, -9);
+    mini.lineTo(8, 16);
+    mini.lineTo(-18, 13);
+  } else if (glyph.silhouette === "knight-helm") {
+    mini.arc(0, -2, 17, Math.PI * 0.95, Math.PI * 2.05);
+    mini.lineTo(15, 17);
+    mini.lineTo(-15, 17);
+  } else if (glyph.silhouette === "priest-medallion") {
+    mini.arc(0, 0, 14, 0, Math.PI * 2);
+  } else if (glyph.silhouette === "summoner-ring") {
+    mini.ellipse(0, 0, 17, 13, 0.2, 0, Math.PI * 2);
+  } else if (glyph.silhouette === "witch-crescent") {
+    mini.arc(4, 0, 17, Math.PI * 0.52, Math.PI * 1.58);
+    mini.quadraticCurveTo(-15, 0, 4, -17);
+  } else if (glyph.silhouette === "golem-block") {
+    mini.rect(-17, -17, 34, 34);
+  } else if (glyph.silhouette === "spirit-wisp") {
+    mini.moveTo(0, -18);
+    mini.quadraticCurveTo(18, -4, 4, 18);
+    mini.quadraticCurveTo(-18, 4, 0, -18);
+  } else if (glyph.silhouette === "mercenary-badge") {
+    mini.moveTo(0, -19);
+    mini.lineTo(16, -3);
+    mini.lineTo(8, 18);
+    mini.lineTo(-12, 14);
+    mini.lineTo(-16, -6);
+  } else {
+    mini.moveTo(-15, -15);
+    mini.lineTo(15, 15);
+    mini.moveTo(15, -15);
+    mini.lineTo(-15, 15);
+  }
+  mini.closePath();
+  mini.fill();
+  mini.stroke();
+}
+
+function drawMiniBuildingModel(mini: CanvasRenderingContext2D, glyph: BuildingGlyph) {
+  mini.beginPath();
+  if (glyph.frame === "town-hall") {
+    mini.moveTo(-26, -2);
+    mini.lineTo(0, -24);
+    mini.lineTo(26, -2);
+    mini.lineTo(21, 24);
+    mini.lineTo(-21, 24);
+  } else if (glyph.frame === "tower-spire") {
+    mini.moveTo(0, -27);
+    mini.lineTo(16, -7);
+    mini.lineTo(12, 25);
+    mini.lineTo(-12, 25);
+    mini.lineTo(-16, -7);
+  } else if (glyph.frame === "moon-well") {
+    mini.ellipse(0, 6, 22, 13, 0, 0, Math.PI * 2);
+    mini.moveTo(-18, 2);
+    mini.quadraticCurveTo(0, -24, 18, 2);
+  } else if (glyph.frame === "workshop-gear") {
+    for (let i = 0; i < 12; i += 1) {
+      const angle = (i / 12) * Math.PI * 2;
+      const radius = i % 2 === 0 ? 25 : 18;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) mini.moveTo(x, y);
+      else mini.lineTo(x, y);
+    }
+  } else {
+    mini.rect(-24, -17, 48, 36);
+    mini.moveTo(-20, 19);
+    mini.lineTo(20, 19);
+  }
+  mini.closePath();
+  mini.fill();
+  mini.stroke();
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -1474,13 +1642,33 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   return button;
 }
 
+function renderTrainingProgressButton(progress: TrainingProgressButton) {
+  const percent = Math.floor(progress.progress * 100);
+  const label = `${progress.status === "training" ? "Training" : "Queued"} ${labelKind(progress.unitKind)}`;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.disabled = true;
+  button.className = "command-button research-progress-button";
+  button.dataset.trainingProgress = progress.unitKind;
+  button.dataset.commandLabel = label;
+  button.title = `${label} - ${percent}%`;
+  button.setAttribute("aria-label", button.title);
+  button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
+  button.innerHTML = `
+    <span class="research-progress-fill"></span>
+    <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
+    <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
+  `;
+  return button;
+}
+
 function renderItemDock() {
   if (!snapshot || menuOpen) {
     itemDock.classList.add("hidden");
     itemDock.replaceChildren();
     return;
   }
-  const entries = carriedItemsForSelection(snapshot, selectedPlayerUnits()).slice(0, 6);
+  const entries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
   itemDock.classList.toggle("hidden", entries.length === 0);
   itemDock.replaceChildren(
     ...entries.map(({ item, carrier }, index) => {
@@ -1505,7 +1693,7 @@ function renderItemDock() {
 
 function useInventoryItem(index: number) {
   if (!snapshot) return false;
-  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits())[index];
+  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits())[index];
   if (!entry) return false;
   useCarriedItem(entry.item.id);
   return true;
@@ -1513,7 +1701,7 @@ function useInventoryItem(index: number) {
 
 function useCarriedItem(itemId: string) {
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item }) => item.id === itemId);
+  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
   if (!entry) return;
   if (entry.item.kind === "flameCloak") {
     showInvalidCommand("Flame Cloak is passive.");
@@ -1534,7 +1722,7 @@ function useCarriedItem(itemId: string) {
 
 function dropCarriedItem(itemId: string, carrierId: string) {
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
   sendCommand(dropItemCommand(entry.item, entry.carrier));
   statusLabel.textContent = `${itemLabel(entry.item.kind)} dropped.`;
@@ -1542,6 +1730,10 @@ function dropCarriedItem(itemId: string, carrierId: string) {
 
 function itemIcon(kind: WorldItem["kind"]) {
   return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : "✦";
+}
+
+function trainIcon(kind: TrainableUnitKind) {
+  return TRAIN_COMMANDS.find((command) => command.kind === kind)?.icon ?? "△";
 }
 
 function draw() {
@@ -2917,6 +3109,10 @@ function labelBuilding(building: Building) {
 }
 
 function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind) {
+  return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+}
+
+function labelAnyKind(kind: string) {
   return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 }
 
