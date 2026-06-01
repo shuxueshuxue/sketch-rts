@@ -108,6 +108,10 @@ button {
   padding: clamp(18px, 4vw, 52px);
 }
 
+.main-menu[data-menu-view="home"] {
+  grid-template-columns: minmax(280px, min(420px, calc(100vw - 40px)));
+}
+
 .menu-title {
   color: #233126;
   font-size: clamp(44px, 8vw, 92px);

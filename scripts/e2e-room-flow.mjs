@@ -110,6 +110,13 @@ async page => {
   must((await page.locator("[data-resume-room]").count()) === 0, "home should not expose resume-room shortcut");
   must((await page.locator("[data-create-local-room]").count()) === 0, "home still exposes old single/local creation entry");
   must((await page.locator("[data-map-id]").count()) === 0, "home exposes direct map picker instead of hierarchy");
+  const homeButtonProof = await page.locator("[data-open-room-browser], [data-open-profile]").evaluateAll((buttons) =>
+    buttons.map((button) => ({ label: button.textContent ?? "", width: button.getBoundingClientRect().width })),
+  );
+  must(
+    homeButtonProof.length === 2 && homeButtonProof.every((button) => button.width <= 430),
+    "home menu buttons should stay compact: " + JSON.stringify(homeButtonProof),
+  );
 
   const initialProfile = await page.evaluate(() => JSON.parse(localStorage.getItem("sketch-rts-user")));
   must(initialProfile.id && initialProfile.name, "localStorage profile was not created");
