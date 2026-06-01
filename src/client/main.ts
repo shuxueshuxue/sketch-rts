@@ -103,6 +103,7 @@ let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
 let roomPollTimer: number | undefined;
+let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
@@ -455,6 +456,11 @@ function renderRoomSetup() {
     renderMainMenu();
   });
   mapList.replaceChildren(setup);
+  if (pendingRoomMapScrollTop !== undefined) {
+    // @@@preserve-map-list-scroll - Map selection swaps this DOM subtree; keep the user's scroll position stable.
+    mapGrid.scrollTop = pendingRoomMapScrollTop;
+    pendingRoomMapScrollTop = undefined;
+  }
 }
 
 function renderResultsMenu() {
@@ -520,6 +526,7 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
 
 async function selectRoomMap(mapId: MapId) {
   selectedMapId = mapId;
+  pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
   if (currentRoom) currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/map`, { mapId });
   renderMainMenu();
 }

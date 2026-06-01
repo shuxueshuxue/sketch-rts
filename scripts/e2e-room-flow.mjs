@@ -176,6 +176,26 @@ async page => {
   }, roomSetupId);
   must(privateRoomProof.visibility === "private", "private checkbox did not create a private room: " + JSON.stringify(privateRoomProof));
   must(privateRoomProof.mapId === "wildMarches", "create form did not use selected map: " + JSON.stringify(privateRoomProof));
+  const mapScrollBeforeClick = await page.evaluate(() => {
+    const grid = document.querySelector(".room-map-grid");
+    if (!grid) throw new Error("map grid missing");
+    grid.scrollTop = Math.floor(grid.scrollHeight * 0.55);
+    const rect = grid.getBoundingClientRect();
+    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + Math.min(rect.height - 20, 120))?.closest("[data-map-id]");
+    if (!target) throw new Error("no visible map button after scrolling");
+    return { before: grid.scrollTop, mapId: target.getAttribute("data-map-id") };
+  });
+  must(mapScrollBeforeClick.before > 0 && mapScrollBeforeClick.mapId, "map list did not scroll before click: " + JSON.stringify(mapScrollBeforeClick));
+  await page.locator("[data-map-id='" + mapScrollBeforeClick.mapId + "']").click();
+  await page.waitForFunction(async ({ roomId, mapId }) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return room.mapId === mapId;
+  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
+  const mapScrollAfterClick = await page.evaluate(() => document.querySelector(".room-map-grid")?.scrollTop ?? -1);
+  must(
+    Math.abs(mapScrollAfterClick - mapScrollBeforeClick.before) <= 2,
+    "clicking a map should not move the map list scrollbar: " + JSON.stringify({ mapScrollBeforeClick, mapScrollAfterClick }),
+  );
   const privateLobbyProof = await page.evaluate(async (roomId) => {
     const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
     const publicLobby = await (await fetch("/api/rooms")).json();
@@ -249,10 +269,10 @@ async page => {
 
   await page.locator("[data-start-room]").click();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
-  await page.waitForFunction(async (roomId) => {
+  await page.waitForFunction(async ({ roomId, mapId }) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return room.status === "inMatch" && room.mapId === "wildMarches";
-  }, roomSetupId, { timeout: 5000 });
+    return room.status === "inMatch" && room.mapId === mapId;
+  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
   await page.reload();
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
   await page.locator("[data-open-room-browser]").click();
@@ -264,7 +284,7 @@ async page => {
     const res = await fetch("/api/rooms/" + roomId + "/snapshot");
     return res.json();
   }, roomSetupId);
-  must(snapshot.map.id === "wildMarches", "room start did not use selected map");
+  must(snapshot.map.id === mapScrollBeforeClick.mapId, "room start did not use selected map");
   must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
   const researchProof = await page.evaluate(async (roomId) => {
     const reset = await fetch("/api/rooms/" + roomId + "/reset", {
@@ -482,6 +502,7 @@ async page => {
     profileId: persistedProfile.id,
     roomSetupId,
     map: snapshot.map.id,
+    mapScrollProof: { before: mapScrollBeforeClick.before, after: mapScrollAfterClick, mapId: mapScrollBeforeClick.mapId },
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,
