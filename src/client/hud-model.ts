@@ -49,6 +49,20 @@ export function focusedSelectionEntities(snapshot: GameSnapshot, focusedSelectio
   return { units, buildings };
 }
 
+export function cycleFocusedSelectionId(
+  snapshot: GameSnapshot,
+  selectedIds: Set<string>,
+  focusedSelectionId: string | undefined,
+  owner: PlayerId,
+  direction: 1 | -1,
+) {
+  const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, owner);
+  if (groups.length <= 1) return focusedSelectionId;
+  const currentIndex = Math.max(0, groups.findIndex((group) => group.focused));
+  const nextIndex = (currentIndex + direction + groups.length) % groups.length;
+  return groups[nextIndex]?.ids[0] ?? focusedSelectionId;
+}
+
 function selectableSelectionEntities(snapshot: GameSnapshot, selectedIds: Set<string>, owner: PlayerId): (Unit | Building)[] {
   return [
     ...snapshot.units.filter((unit) => unit.owner === owner && selectedIds.has(unit.id)),

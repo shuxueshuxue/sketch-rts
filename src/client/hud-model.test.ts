@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSelectionGroups, focusedSelectionEntities, resolveFocusedSelectionId } from "./hud-model";
+import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId } from "./hud-model";
 import type { Building, GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 const player: PlayerState = {
@@ -48,6 +48,18 @@ describe("hud selection model", () => {
     expect(focusedSelectionEntities(snapshot, "worker-1", "player").units.map((candidate) => candidate.id)).toEqual(["worker-1"]);
     expect(focusedSelectionEntities(snapshot, "barracks-1", "player").buildings.map((candidate) => candidate.id)).toEqual(["barracks-1"]);
     expect(focusedSelectionEntities(snapshot, "archer-1", "enemy").units).toEqual([]);
+  });
+
+  it("cycles the focused selection group forward and backward like RTS tab selection", () => {
+    const snapshot = snapshotWith({
+      units: [unit("worker-1", "worker"), unit("worker-2", "worker"), unit("archer-1", "archer")],
+      buildings: [building("barracks-1", "barracks")],
+    });
+    const selectedIds = new Set(["worker-1", "worker-2", "archer-1", "barracks-1"]);
+
+    expect(cycleFocusedSelectionId(snapshot, selectedIds, "worker-1", "player", 1)).toBe("archer-1");
+    expect(cycleFocusedSelectionId(snapshot, selectedIds, "archer-1", "player", 1)).toBe("barracks-1");
+    expect(cycleFocusedSelectionId(snapshot, selectedIds, "worker-1", "player", -1)).toBe("barracks-1");
   });
 });
 

@@ -3,7 +3,7 @@ import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./b
 import { pruneControlGroups, recallControlGroup, replaceControlGroup, type ControlGroups } from "./control-groups";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
-import { buildSelectionGroups, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
+import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
@@ -1080,6 +1080,11 @@ function onKeyDown(event: KeyboardEvent) {
     closeBuildPalette("Build menu closed.");
     return;
   }
+  if (key === "tab") {
+    event.preventDefault();
+    cycleFocusedSelection(event.shiftKey ? -1 : 1);
+    return;
+  }
   if (handleGameplayKeyIntent(event)) {
     event.preventDefault();
     return;
@@ -1601,6 +1606,15 @@ function selectControlGroup(slot: number) {
   selectedCampId = undefined;
   buildPaletteOpen = false;
   statusLabel.textContent = `Group ${slot} selected.`;
+  updateHud();
+}
+
+function cycleFocusedSelection(direction: 1 | -1) {
+  if (!snapshot || selectedIds.size === 0) return;
+  const nextFocus = cycleFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId, direction);
+  if (!nextFocus || nextFocus === focusedSelectionId) return;
+  focusedSelectionId = nextFocus;
+  buildPaletteOpen = false;
   updateHud();
 }
 
