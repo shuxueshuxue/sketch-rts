@@ -6,12 +6,6 @@ export function replaceControlGroup(groups: ControlGroups, slot: number, selecte
   groups[slot] = ids;
 }
 
-export function addSelectionToControlGroup(groups: ControlGroups, slot: number, selectedIds: Set<string>) {
-  const ids = [...selectedIds];
-  if (ids.length === 0) return;
-  groups[slot] = [...new Set([...(groups[slot] ?? []), ...ids])];
-}
-
 export function recallControlGroup(groups: ControlGroups, slot: number, liveIds: Set<string>) {
   return (groups[slot] ?? []).filter((id) => liveIds.has(id));
 }

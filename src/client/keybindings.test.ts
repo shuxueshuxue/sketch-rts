@@ -3,8 +3,8 @@ import { gameplayKeyIntent } from "./keybindings";
 
 describe("gameplay keybindings", () => {
   it("uses classic control group bindings without stealing unassigned inventory digits", () => {
-    expect(gameplayKeyIntent(key("1", "Digit1", { ctrlKey: true }), context())).toEqual({ type: "controlGroupReplace", slot: 1 });
-    expect(gameplayKeyIntent(key("!", "Digit1", { shiftKey: true }), context())).toEqual({ type: "controlGroupAdd", slot: 1 });
+    expect(gameplayKeyIntent(key("!", "Digit1", { shiftKey: true }), context())).toEqual({ type: "controlGroupReplace", slot: 1 });
+    expect(gameplayKeyIntent(key("1", "Digit1", { ctrlKey: true }), context())).toEqual({ type: "none" });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ controlGroups: new Set([1]), inventorySlots: 1 }))).toEqual({ type: "controlGroupRecall", slot: 1 });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ inventorySlots: 1 }))).toEqual({ type: "inventoryUse", index: 0 });
   });

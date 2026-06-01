@@ -6,7 +6,6 @@ export type GameplayKeyContext = {
 
 export type GameplayKeyIntent =
   | { type: "controlGroupReplace"; slot: number }
-  | { type: "controlGroupAdd"; slot: number }
   | { type: "controlGroupRecall"; slot: number }
   | { type: "inventoryUse"; index: number }
   | { type: "commandHotkey"; hotkey: string }
@@ -15,8 +14,7 @@ export type GameplayKeyIntent =
 export function gameplayKeyIntent(event: KeyboardEvent, context: GameplayKeyContext): GameplayKeyIntent {
   const digit = digitSlot(event);
   if (event.metaKey || event.altKey) return { type: "none" };
-  if (digit && event.ctrlKey && !event.shiftKey) return { type: "controlGroupReplace", slot: digit };
-  if (digit && event.shiftKey && !event.ctrlKey) return { type: "controlGroupAdd", slot: digit };
+  if (digit && event.shiftKey && !event.ctrlKey) return { type: "controlGroupReplace", slot: digit };
   if (event.ctrlKey && event.shiftKey) return { type: "none" };
   if (event.ctrlKey || event.shiftKey) return { type: "none" };
   if (digit && context.controlGroups.has(digit)) return { type: "controlGroupRecall", slot: digit };

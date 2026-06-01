@@ -1,6 +1,6 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
-import { addSelectionToControlGroup, pruneControlGroups, recallControlGroup, replaceControlGroup, type ControlGroups } from "./control-groups";
+import { pruneControlGroups, recallControlGroup, replaceControlGroup, type ControlGroups } from "./control-groups";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
@@ -1582,15 +1582,6 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
     }
     replaceControlGroup(controlGroups, intent.slot, selectedIds);
     statusLabel.textContent = `Group ${intent.slot} set.`;
-    return true;
-  }
-  if (intent.type === "controlGroupAdd") {
-    if (selectedIds.size === 0) {
-      showInvalidCommand(`Group ${intent.slot} needs a selection.`);
-      return true;
-    }
-    addSelectionToControlGroup(controlGroups, intent.slot, selectedIds);
-    statusLabel.textContent = `Group ${intent.slot} extended.`;
     return true;
   }
   selectControlGroup(intent.slot);
