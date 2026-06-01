@@ -62,10 +62,16 @@ export type WorldEffect = {
 export type UnitOrder =
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
+  | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string }
   | { type: "attack"; targetId: string }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "pickupItem"; itemId: string };
+
+export type RallyTarget =
+  | { type: "point" }
+  | { type: "resource"; resourceId: string }
+  | { type: "unit"; unitId: string };
 
 export type Unit = {
   id: string;
@@ -107,6 +113,7 @@ export type Building = {
   cooldown: number;
   rallyX: number;
   rallyY: number;
+  rallyTarget?: RallyTarget;
   queue: TrainingJob[];
   researchQueue: ResearchJob[];
 };
@@ -265,6 +272,7 @@ export type GameCommand =
   | { type: "attack"; unitIds: string[]; targetId: string }
   | { type: "mine"; unitIds: string[]; resourceId: string }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
+  | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }

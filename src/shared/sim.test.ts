@@ -390,6 +390,55 @@ describe("sketch RTS simulation", () => {
     expect(barracks.queue).toHaveLength(0);
   });
 
+  it("orders newly trained units to the building rally point", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const barracks = createBuilding("building-player-rally-barracks", "player", "barracks", 900, 900, true);
+    game.buildings.push(barracks);
+    game.players.player.gold = 5000;
+
+    issueCommand(game, { type: "setRally", buildingIds: [barracks.id], x: 1280, y: 1040 });
+    issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
+    stepMany(game, UNIT_DEFS.footman.trainTime);
+
+    const footman = game.units.find((unit) => unit.owner === "player" && unit.kind === "footman");
+    expect(footman?.order).toEqual({ type: "move", x: 1280, y: 1040 });
+  });
+
+  it("orders workers trained from a mine rally to start mining", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    const mine = game.resources.find((resource) => resource.id === "gold-player-main")!;
+    const existingWorkerIds = new Set(game.units.filter((unit) => unit.owner === "player" && unit.kind === "worker").map((unit) => unit.id));
+    game.players.player.gold = 5000;
+
+    issueCommand(game, { type: "setRally", buildingIds: [townHall.id], x: mine.x, y: mine.y, target: { type: "resource", resourceId: mine.id } });
+    issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" });
+    stepMany(game, UNIT_DEFS.worker.trainTime);
+
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker" && !existingWorkerIds.has(unit.id));
+    expect(worker?.order).toEqual({ type: "mine", resourceId: mine.id, phase: "toMine", timer: 0 });
+  });
+
+  it("orders units trained from a unit rally to follow that friendly unit", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const barracks = createBuilding("building-player-follow-barracks", "player", "barracks", 900, 900, true);
+    const target = game.spawnUnit("player", "footman", 1220, 920);
+    game.buildings.push(barracks);
+    game.players.player.gold = 5000;
+
+    issueCommand(game, { type: "setRally", buildingIds: [barracks.id], x: target.x, y: target.y, target: { type: "unit", unitId: target.id } });
+    issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
+    stepMany(game, UNIT_DEFS.footman.trainTime);
+    const follower = game.units.find((unit) => unit.owner === "player" && unit.kind === "footman" && unit.id !== target.id)!;
+    const before = distance(follower, target);
+
+    target.x += 160;
+    stepMany(game, 12);
+
+    expect(follower.order).toEqual({ type: "follow", targetId: target.id });
+    expect(distance(follower, target)).toBeLessThan(before + 160);
+  });
+
   it("counts queued training jobs against the supply cap", () => {
     const game = createGame();
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;

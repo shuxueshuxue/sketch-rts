@@ -1208,6 +1208,11 @@ function issueContextCommand(point: Point) {
 function issueContextCommandAtWorld(world: Point) {
   if (!snapshot) return;
   const selectedUnits = selectedPlayerUnits();
+  const rallyBuildings = selectedPlayerRallyBuildings();
+  if (selectedUnits.length === 0 && rallyBuildings.length > 0) {
+    issueRallyCommandAtWorld(world, rallyBuildings);
+    return;
+  }
   const unitIds = selectedUnits.map((unit) => unit.id);
   if (unitIds.length === 0) {
     showInvalidCommand("Select a unit before issuing orders.");
@@ -1239,6 +1244,24 @@ function issueContextCommandAtWorld(world: Point) {
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y });
   statusLabel.textContent = "Move order issued.";
+}
+
+function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
+  if (!snapshot) return;
+  const friendlyUnit = hitUnit(world, (unit) => unit.owner === localPlayerId);
+  if (friendlyUnit) {
+    sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: friendlyUnit.x, y: friendlyUnit.y, target: { type: "unit", unitId: friendlyUnit.id } });
+    statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set to follow ${labelAnyKind(friendlyUnit.kind)}.`;
+    return;
+  }
+  const resource = hitResource(world);
+  if (resource) {
+    sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: resource.x, y: resource.y, target: { type: "resource", resourceId: resource.id } });
+    statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set to gold mine.`;
+    return;
+  }
+  sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: world.x, y: world.y, target: { type: "point" } });
+  statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set.`;
 }
 
 function canAttackMove() {
@@ -1494,6 +1517,10 @@ function selectedPlayerUnits() {
 
 function selectedPlayerBuildings() {
   return snapshot?.buildings.filter((building) => building.owner === localPlayerId && selectedIds.has(building.id)) ?? [];
+}
+
+function selectedPlayerRallyBuildings() {
+  return selectedPlayerBuildings().filter((building) => BUILDING_DEFS[building.kind].trains.length > 0);
 }
 
 function focusedPlayerUnits() {
@@ -2171,12 +2198,39 @@ function drawBuildings(buildings: Building[]) {
     const size = building.kind === "townHall" ? 76 : 58;
     if (selectedIds.has(building.id)) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
     drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
+    if (selectedIds.has(building.id) && BUILDING_DEFS[building.kind].trains.length > 0) drawBuildingRally(building, point);
     drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
     if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
       drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
     }
   }
+}
+
+function drawBuildingRally(building: Building, from: Point) {
+  const to = worldToScreen({ x: building.rallyX, y: building.rallyY });
+  if (!nearScreen(from, 80) && !nearScreen(to, 80)) return;
+  const ink = building.rallyTarget?.type === "resource" ? "#b9861b" : building.rallyTarget?.type === "unit" ? "#5d8b4c" : "#315f87";
+  ctx.save();
+  ctx.strokeStyle = ink;
+  ctx.fillStyle = ink;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(to.x, to.y, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y - 16);
+  ctx.lineTo(to.x, to.y + 8);
+  ctx.lineTo(to.x + 15, to.y - 8);
+  ctx.lineTo(to.x, to.y - 8);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawBuildingGlyph(glyph: BuildingGlyph, point: Point, size: number) {
@@ -3182,7 +3236,7 @@ function centerCameraFromMinimap(point: Point) {
 }
 
 function hitResource(world: Point) {
-  return snapshot?.resources.find((resource) => distance(resource, world) < 68);
+  return snapshot?.resources.find((resource) => distance(resource, world) < 84);
 }
 
 function hitMercenaryCamp(world: Point) {

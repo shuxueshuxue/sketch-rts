@@ -560,6 +560,9 @@ function isCommand(value: unknown): value is GameCommand {
   if (command.type === "build") {
     return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   }
+  if (command.type === "setRally") {
+    return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
+  }
   if (command.type === "train") {
     return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   }
@@ -604,6 +607,15 @@ function isRoomCommandEnvelope(value: unknown): value is { playerId: PlayerId; c
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isRallyTarget(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const target = value as Record<string, unknown>;
+  if (target.type === "point") return true;
+  if (target.type === "resource") return typeof target.resourceId === "string";
+  if (target.type === "unit") return typeof target.unitId === "string";
+  return false;
 }
 
 function isNumber(value: unknown): value is number {
