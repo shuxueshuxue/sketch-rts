@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
 import type { LocalUserProfile } from "./types";
 
 const host: LocalUserProfile = { id: "user-host", name: "Host" };
@@ -45,6 +45,19 @@ describe("room model", () => {
     expect(room.slots.filter((slot) => slot.controller === "open")).toHaveLength(2);
     expect(room.slots.filter((slot) => slot.controller === "ai")).toHaveLength(2);
     expect(room.slots[0]).toMatchObject({ controller: "human", userId: host.id, ready: true });
+  });
+
+  it("resizes an open room from the setup screen without tying slot count to the map", () => {
+    let room = createRoom({ id: "room-resize", host, mapId: "grandThirty" });
+
+    room = resizeRoomSlots(room, 4, 3);
+
+    expect(room.mapId).toBe("grandThirty");
+    expect(room.slots).toHaveLength(7);
+    expect(room.slots[0]).toMatchObject({ controller: "human", userId: host.id, name: "Host" });
+    expect(room.slots.slice(1, 4).map((slot) => slot.controller)).toEqual(["open", "open", "open"]);
+    expect(room.slots.slice(4).map((slot) => slot.controller)).toEqual(["ai", "ai", "ai"]);
+    expect(room.slots.map((slot) => slot.playerId)).toEqual(["player", "enemy", "enemy2", "player-4", "player-5", "player-6", "player-7"]);
   });
 
   it("defaults all-human rooms to startable teams after every human slot is claimed", () => {

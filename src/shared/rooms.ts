@@ -64,6 +64,50 @@ export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
   return { ...room, mapId };
 }
 
+export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: number): RoomState {
+  if (room.status !== "open") throw new Error("Cannot edit slots after match start");
+  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > 30) {
+    throw new Error("Rooms require 2 to 30 total slots and at least one human slot");
+  }
+
+  const slotCount = humanCount + aiCount;
+  const slots = Array.from({ length: slotCount }, (_, index): RoomSlot => {
+    const existing = room.slots[index];
+    const isHost = index === 0;
+    const isHumanSeat = index < humanCount;
+    const base = {
+      id: `slot-${index + 1}`,
+      playerId: defaultPlayerId(index),
+      team: existing?.team ?? defaultTeam(index),
+      race: existing?.race ?? (index % 2 === 0 ? "grove" : "ember"),
+    } satisfies Pick<RoomSlot, "id" | "playerId" | "team" | "race">;
+
+    if (isHost) {
+      return normalizeSlot({
+        ...base,
+        controller: "human",
+        ...(existing?.userId ? { userId: existing.userId } : {}),
+        name: existing?.name && existing.name !== "Open" && existing.name !== "Closed" && existing.name !== "AI" ? existing.name : "Player",
+        ready: existing?.ready ?? true,
+      });
+    }
+    if (isHumanSeat) {
+      return normalizeSlot(
+        existing?.controller === "human"
+          ? { ...base, controller: "human", ...(existing.userId ? { userId: existing.userId } : {}), name: existing.name, ready: existing.ready }
+          : { ...base, controller: "open", name: "Open", ready: false },
+      );
+    }
+    return normalizeSlot({
+      ...base,
+      controller: "ai",
+      name: existing?.controller === "ai" && existing.name !== "AI" ? existing.name : `AI ${index - humanCount + 1}`,
+      ready: true,
+    });
+  });
+  return { ...room, slots };
+}
+
 export function joinFirstOpenSlot(room: RoomState, user: LocalUserProfile): RoomState {
   const ownedSlot = room.slots.find((candidate) => candidate.controller === "human" && candidate.userId === user.id);
   if (ownedSlot) return room;

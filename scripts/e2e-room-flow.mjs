@@ -134,6 +134,27 @@ async page => {
   const roomSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
   must(roomSetupId, "room setup did not expose room id");
   must((await page.locator("[data-map-id='wildMarches']").count()) === 1, "room setup missing map selection");
+  const roomSetupLayoutProof = await page.evaluate(() => {
+    const setup = document.querySelector("[data-room-setup]");
+    const layout = document.querySelector(".room-setup-layout");
+    const mapPane = document.querySelector(".room-map-pane");
+    const slotPane = document.querySelector(".room-slot-pane");
+    const selectedMap = document.querySelector("[data-map-id='wildMarches']");
+    const layoutRect = layout?.getBoundingClientRect();
+    const mapRect = mapPane?.getBoundingClientRect();
+    const slotRect = slotPane?.getBoundingClientRect();
+    return {
+      setupWidth: setup?.getBoundingClientRect().width ?? 0,
+      mapLeft: mapRect?.left ?? 0,
+      slotLeft: slotRect?.left ?? 0,
+      sideBySide: Boolean(layoutRect && mapRect && slotRect && slotRect.left > mapRect.right + 8),
+      selectedMapText: selectedMap?.textContent ?? "",
+      slotSummary: document.querySelector("[data-slot-summary]")?.textContent ?? "",
+    };
+  });
+  must(roomSetupLayoutProof.sideBySide, "room setup should place maps in a left pane and slots in a right pane: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.selectedMapText.includes("2-30 configurable"), "selected map did not explain configurable slot capacity: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.slotSummary.includes("2 total") && roomSetupLayoutProof.slotSummary.includes("1 AI"), "slot summary did not expose current room composition: " + JSON.stringify(roomSetupLayoutProof));
   const privateRoomProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
@@ -303,6 +324,24 @@ async page => {
       sameMapSmallProof.aiSeats === 3,
     "small same-map room did not keep requested human/computer counts: " + JSON.stringify(sameMapSmallProof),
   );
+  await page.locator("[data-room-human-count]").fill("3");
+  await page.locator("[data-room-ai-count]").fill("3");
+  await page.waitForFunction(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return room.slots.length === 6 && room.slots.filter((slot) => slot.controller === "ai").length === 3;
+  }, sameMapSmallRoomId, { timeout: 5000 });
+  const setupResizeProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return {
+      mapId: room.mapId,
+      slotCount: room.slots.length,
+      summary: document.querySelector("[data-slot-summary]")?.textContent ?? "",
+    };
+  }, sameMapSmallRoomId);
+  must(
+    setupResizeProof.mapId === "bareDuel" && setupResizeProof.slotCount === 6 && setupResizeProof.summary.includes("6 total"),
+    "room setup count controls did not resize the current room independently from map choice: " + JSON.stringify(setupResizeProof),
+  );
   await page.locator("[data-close-room]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
   await page.locator("[data-create-game]").click();
@@ -316,28 +355,37 @@ async page => {
   const grandSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
   const layoutProof = await page.evaluate(async (roomId) => {
     const setup = document.querySelector("[data-room-setup]");
+    const layout = document.querySelector(".room-setup-layout");
+    const mapPane = document.querySelector(".room-map-pane");
+    const slotPane = document.querySelector(".room-slot-pane");
     const slotList = document.querySelector(".slot-list");
     const rows = [...document.querySelectorAll(".slot-row")];
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     const setupRect = setup.getBoundingClientRect();
+    const layoutRect = layout.getBoundingClientRect();
+    const mapRect = mapPane.getBoundingClientRect();
+    const slotPaneRect = slotPane.getBoundingClientRect();
     const slotRect = slotList.getBoundingClientRect();
     const rowRects = rows.map((row) => row.getBoundingClientRect());
-    const columns = new Set(rowRects.map((rect) => Math.round(rect.left))).size;
     return {
       roomVisibility: room.visibility,
       slotCount: room.slots.length,
       rowCount: rows.length,
-      columns,
+      sideBySide: slotPaneRect.left > mapRect.right + 8,
+      layoutWidth: layoutRect.width,
       setupHeight: setupRect.height,
       slotListHeight: slotRect.height,
       slotListScrollable: slotList.scrollHeight > slotList.clientHeight,
       viewportHeight: window.innerHeight,
       overflowsViewport: setupRect.bottom > window.innerHeight,
+      grandMapText: document.querySelector("[data-map-id='grandThirty']")?.textContent ?? "",
     };
   }, grandSetupId);
   must(layoutProof.roomVisibility === "public", "public checkbox did not create public room: " + JSON.stringify(layoutProof));
   must(layoutProof.slotCount === 30 && layoutProof.rowCount === 30, "30-slot setup did not render every slot: " + JSON.stringify(layoutProof));
-  must(layoutProof.columns >= 2, "30-slot setup is still a single long column: " + JSON.stringify(layoutProof));
+  must(layoutProof.sideBySide, "30-slot setup should keep map and slot panes side by side: " + JSON.stringify(layoutProof));
+  must(layoutProof.slotListScrollable, "30-slot setup should scroll inside the slot pane: " + JSON.stringify(layoutProof));
+  must(layoutProof.grandMapText.includes("up to 30"), "grand map capacity is not visible in the map list: " + JSON.stringify(layoutProof));
   must(!layoutProof.overflowsViewport, "30-slot setup overflows the viewport instead of scrolling internally: " + JSON.stringify(layoutProof));
   await page.screenshot({ path: ".playwright-cli/room-flow-30-slot-setup.png", fullPage: false });
 
@@ -354,6 +402,7 @@ async page => {
     privateLobbyProof,
     slotEditProof,
     sameMapSmallProof,
+    setupResizeProof,
     layoutProof,
   });
 }

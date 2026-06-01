@@ -1,4 +1,4 @@
-import { createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, leaveUserSlot, lobbyVisibleRooms, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type GrandStressRoomOptions, type SlotPatch } from "../shared/rooms";
+import { createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, leaveUserSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type GrandStressRoomOptions, type SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../shared/ai-runtime";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
@@ -106,6 +106,12 @@ export function createRoomHost() {
     updateMap(roomId: string, mapId: RoomState["mapId"]): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = updateRoomMap(hosted.room, mapId);
+      return hosted.room;
+    },
+
+    resizeSlots(roomId: string, humanCount: number, aiCount: number): RoomState {
+      const hosted = getHosted(roomId);
+      hosted.room = resizeRoomSlots(hosted.room, humanCount, aiCount);
       return hosted.room;
     },
 

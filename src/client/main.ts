@@ -34,6 +34,7 @@ type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 const CURRENT_ROOM_STORAGE_KEY = "sketch-rts-current-room";
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
+const MAX_ROOM_SLOTS = 30;
 
 const app = requireElement<HTMLDivElement>("#app");
 
@@ -211,6 +212,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, isAvai
 }
 
 function renderMainMenu() {
+  mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
     menuView === "home"
       ? "Sketch RTS"
@@ -270,15 +272,18 @@ function renderCreateGameMenu() {
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
   form.innerHTML = `
-    <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
-    <label>Map
-      <select name="mapId">
-        ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)}</option>`).join("")}
-      </select>
-    </label>
-    <div class="create-count-grid">
-      <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
-      <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+    <div class="create-game-grid">
+      <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
+      <label>Map
+        <select name="mapId">
+          ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)} - ${escapeHtml(mapCapacityLabel(scenario.id))}</option>`).join("")}
+        </select>
+      </label>
+      <div class="create-count-grid">
+        <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
+        <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+      </div>
+      <div class="create-slot-total" data-create-slot-total>2 total slots</div>
     </div>
     <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> Private room</label>
     <div class="menu-actions">
@@ -309,6 +314,15 @@ function renderCreateGameMenu() {
       visibility: data.get("privateRoom") === "on" ? "private" : "public",
     });
   });
+  const refreshSlotTotal = () => {
+    const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
+    const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
+    const total = humanCount + aiCount;
+    const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
+    totalLabel.textContent = Number.isInteger(total) ? `${total} total slots` : "Choose slot counts";
+    totalLabel.classList.toggle("error", !Number.isInteger(humanCount) || !Number.isInteger(aiCount) || total < 2 || total > MAX_ROOM_SLOTS || humanCount < 1 || aiCount < 0);
+  };
+  form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
     menuView = "home";
     renderMainMenu();
@@ -395,10 +409,30 @@ function renderRoomSetup() {
   setup.className = "room-setup";
   setup.dataset.roomSetup = currentRoom.id;
   setup.innerHTML = `
-    <div class="room-section-title">Map</div>
-    <div class="room-map-grid"></div>
-    <div class="room-section-title">Slots</div>
-    <div class="slot-list"></div>
+    <div class="room-setup-header">
+      <div>
+        <div class="room-section-title">Room</div>
+        <div class="room-setup-name">${escapeHtml(currentRoom.name)}</div>
+      </div>
+      <div class="room-setup-controls">
+        <label>Humans<input data-room-human-count type="number" min="1" max="${MAX_ROOM_SLOTS}" value="${humanSeatCount(currentRoom)}" /></label>
+        <label>AI<input data-room-ai-count type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="${aiSeatCount(currentRoom)}" /></label>
+        <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(currentRoom))}</div>
+      </div>
+    </div>
+    <div class="room-setup-layout">
+      <section class="room-map-pane" aria-label="Map list">
+        <div class="room-section-title">Maps</div>
+        <div class="room-map-grid"></div>
+      </section>
+      <section class="room-slot-pane" aria-label="Player slots">
+        <div class="slot-pane-head">
+          <div class="room-section-title">Slots</div>
+          <div class="slot-capacity">${currentRoom.slots.length}/${MAX_ROOM_SLOTS}</div>
+        </div>
+        <div class="slot-list"></div>
+      </section>
+    </div>
     <div class="menu-actions">
       <button type="button" data-start-room>Start Match</button>
       <button type="button" data-close-room>Back</button>
@@ -411,6 +445,7 @@ function renderRoomSetup() {
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...currentRoom.slots.map(slotRow));
+  setup.querySelectorAll<HTMLInputElement>("[data-room-human-count], [data-room-ai-count]").forEach((input) => input.addEventListener("input", () => void updateCurrentRoomSlotCounts(setup)));
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => {
     menuView = "home";
@@ -536,13 +571,13 @@ function mapChoiceButton(mapId: MapId) {
   button.innerHTML = `
     <span class="map-button-name">${escapeHtml(scenario.name)}</span>
     <span class="map-button-note">${escapeHtml(scenario.note)}</span>
-    <span class="map-button-tags">${scenario.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
+    <span class="map-button-tags">${[mapCapacityLabel(scenario.id), ...scenario.tags].map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
   `;
   button.addEventListener("click", () => void selectRoomMap(scenario.id));
   return button;
 }
 
-function slotRow(slot: RoomState["slots"][number]) {
+function slotRow(slot: RoomState["slots"][number], index: number) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
@@ -551,6 +586,7 @@ function slotRow(slot: RoomState["slots"][number]) {
     .join("");
   const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${race}</option>`).join("");
   row.innerHTML = `
+    <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     <select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>
     <select data-slot-team aria-label="Slot team">
@@ -584,8 +620,37 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
   renderMainMenu();
 }
 
+async function updateCurrentRoomSlotCounts(setup: HTMLElement) {
+  if (!currentRoom) return;
+  const humanCount = Number(setup.querySelector<HTMLInputElement>("[data-room-human-count]")?.value);
+  const aiCount = Number(setup.querySelector<HTMLInputElement>("[data-room-ai-count]")?.value);
+  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
+  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slot-counts`, { humanCount, aiCount });
+  renderMainMenu();
+}
+
 function activeSlotCount(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
+}
+
+function humanSeatCount(room: RoomState) {
+  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length;
+}
+
+function aiSeatCount(room: RoomState) {
+  return room.slots.filter((slot) => slot.controller === "ai").length;
+}
+
+function slotSummaryText(room: RoomState) {
+  const tally = room.slots.reduce(
+    (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
+    { human: 0, ai: 0, open: 0, closed: 0 },
+  );
+  return `${room.slots.length} total · ${humanSeatCount(room)} human seats · ${tally.human} claimed · ${tally.ai} AI · ${tally.open} open · ${tally.closed} closed`;
+}
+
+function mapCapacityLabel(mapId: MapId) {
+  return mapId === "grandThirty" ? "up to 30" : "2-30 configurable";
 }
 
 function slotForUser(room: RoomState, userId: string) {
