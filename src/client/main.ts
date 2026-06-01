@@ -1,9 +1,11 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
+import { addSelectionToControlGroup, pruneControlGroups, recallControlGroup, replaceControlGroup, type ControlGroups } from "./control-groups";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
+import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
@@ -21,6 +23,7 @@ import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
+import { applySelectionPick, selectInScreenBox, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
@@ -113,6 +116,7 @@ let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
+const controlGroups: ControlGroups = {};
 let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
 let pointerLockArmed = false;
@@ -1076,18 +1080,11 @@ function onKeyDown(event: KeyboardEvent) {
     closeBuildPalette("Build menu closed.");
     return;
   }
-  if (/^[1-6]$/.test(key) && useInventoryItem(Number(key) - 1)) {
+  if (handleGameplayKeyIntent(event)) {
     event.preventDefault();
     return;
   }
 
-  // @@@command-hotkeys - Command card hotkeys win before WASD camera keys.
-  const command = commandButtons.find((button) => button.hotkey === key && button.isAvailable());
-  if (command) {
-    event.preventDefault();
-    command.run();
-    return;
-  }
   if (key === "a") {
     event.preventDefault();
     showInvalidCommand("Attack-move needs selected units.");
@@ -1190,9 +1187,9 @@ function onMouseUp(event: MouseEvent) {
 
   const dragDistance = Math.hypot(point.x - selectionStart.x, point.y - selectionStart.y);
   if (dragDistance > 8 && selectionEnd) {
-    selectUnitsInBox(selectionStart, selectionEnd);
+    selectUnitsInBox(selectionStart, selectionEnd, event.shiftKey);
   } else {
-    selectSingle(point);
+    selectSingle(point, event.shiftKey);
   }
   selectionStart = undefined;
   selectionEnd = undefined;
@@ -1466,44 +1463,36 @@ function hireMercenary() {
   statusLabel.textContent = "Mercenary hired.";
 }
 
-function selectUnitsInBox(start: Point, end: Point) {
+function selectUnitsInBox(start: Point, end: Point, additive = false) {
   if (!snapshot) return;
-  const left = Math.min(start.x, end.x);
-  const right = Math.max(start.x, end.x);
-  const top = Math.min(start.y, end.y);
-  const bottom = Math.max(start.y, end.y);
-  selectedIds = new Set(
-    snapshot.units
-      .filter((unit) => unit.owner === localPlayerId)
-      .filter((unit) => {
-        const screen = worldToScreen(unit);
-        return screen.x >= left && screen.x <= right && screen.y >= top && screen.y <= bottom;
-      })
-      .map((unit) => unit.id),
-  );
-  focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
-  selectedCampId = undefined;
-  buildPaletteOpen = false;
+  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive);
+  selectedIds = result.selectedIds;
+  focusedSelectionId = result.focusedSelectionId;
+  if (selectedIds.size > 0 || !additive) selectedCampId = undefined;
+  if (selectedIds.size > 0 || !additive) buildPaletteOpen = false;
 }
 
-function selectSingle(point: Point) {
+function selectSingle(point: Point, additive = false) {
   const world = screenToWorld(point);
   const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
   if (unit) {
-    selectedIds = new Set([unit.id]);
-    focusedSelectionId = unit.id;
+    const result = applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
+    selectedIds = result.selectedIds;
+    focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
     buildPaletteOpen = false;
     return;
   }
   const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
   if (building) {
-    selectedIds = new Set([building.id]);
-    focusedSelectionId = building.id;
+    const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
+    selectedIds = result.selectedIds;
+    focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
     buildPaletteOpen = false;
     return;
   }
+  if (additive) return;
   const camp = hitMercenaryCamp(world);
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -1545,17 +1534,83 @@ function currentPlayerState() {
   return snapshot?.players[localPlayerId];
 }
 
+function selectionRect(start: Point, end: Point): SelectionScreenRect {
+  return {
+    left: Math.min(start.x, end.x),
+    right: Math.max(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    bottom: Math.max(start.y, end.y),
+  };
+}
+
 function pruneSelection() {
   if (!snapshot) return;
-  const liveIds = new Set([...snapshot.units.map((unit) => unit.id), ...snapshot.buildings.map((building) => building.id)]);
+  const liveIds = liveSelectionIds();
   selectedIds = new Set([...selectedIds].filter((id) => liveIds.has(id)));
   focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
+  pruneControlGroups(controlGroups, liveIds);
   if (selectedCampId && !snapshot.mercenaryCamps.some((camp) => camp.id === selectedCampId)) selectedCampId = undefined;
   if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
   }
   if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
+}
+
+function liveSelectionIds() {
+  return new Set([...(snapshot?.units.map((unit) => unit.id) ?? []), ...(snapshot?.buildings.map((building) => building.id) ?? [])]);
+}
+
+function handleGameplayKeyIntent(event: KeyboardEvent) {
+  if (!snapshot) return false;
+  const intent = gameplayKeyIntent(event, {
+    controlGroups: new Set(Object.keys(controlGroups).map(Number)),
+    inventorySlots: carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6).length,
+    commandHotkeys: new Set(commandButtons.filter((button) => button.isAvailable()).map((button) => button.hotkey)),
+  });
+  if (intent.type === "none") return false;
+  if (intent.type === "inventoryUse") return useInventoryItem(intent.index);
+  if (intent.type === "commandHotkey") {
+    const command = commandButtons.find((button) => button.hotkey === intent.hotkey && button.isAvailable());
+    command?.run();
+    return Boolean(command);
+  }
+  if (intent.type === "controlGroupReplace") {
+    if (selectedIds.size === 0) {
+      showInvalidCommand(`Group ${intent.slot} needs a selection.`);
+      return true;
+    }
+    replaceControlGroup(controlGroups, intent.slot, selectedIds);
+    statusLabel.textContent = `Group ${intent.slot} set.`;
+    return true;
+  }
+  if (intent.type === "controlGroupAdd") {
+    if (selectedIds.size === 0) {
+      showInvalidCommand(`Group ${intent.slot} needs a selection.`);
+      return true;
+    }
+    addSelectionToControlGroup(controlGroups, intent.slot, selectedIds);
+    statusLabel.textContent = `Group ${intent.slot} extended.`;
+    return true;
+  }
+  selectControlGroup(intent.slot);
+  return true;
+}
+
+function selectControlGroup(slot: number) {
+  if (!snapshot) return;
+  const ids = recallControlGroup(controlGroups, slot, liveSelectionIds());
+  if (ids.length === 0) {
+    delete controlGroups[slot];
+    showInvalidCommand(`Group ${slot} is empty.`);
+    return;
+  }
+  selectedIds = new Set(ids);
+  focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
+  selectedCampId = undefined;
+  buildPaletteOpen = false;
+  statusLabel.textContent = `Group ${slot} selected.`;
+  updateHud();
 }
 
 function updateHud() {
