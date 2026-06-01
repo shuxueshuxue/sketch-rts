@@ -24,6 +24,17 @@ describe("terrain texture linework", () => {
     expect(sample("verdantCrossroads")).toBe(sample("verdantCrossroads"));
     expect(new Set([sample("verdantCrossroads"), sample("bareDuel"), sample("wildMarches")]).size).toBe(3);
   });
+
+  it("generates deterministic sparse linework for rich official maps without hand-authored recipes", () => {
+    const strokes = generateTerrainLinework({ mapId: "sundialReach", camera: { x: 640, y: 480 }, ...VIEWPORT });
+    const coverage = estimateTextureInkCoverage(strokes, VIEWPORT.width, VIEWPORT.height);
+
+    expect(strokes.length).toBeGreaterThan(6);
+    expect(strokes.length).toBeLessThan(55);
+    expect(coverage).toBeGreaterThan(0.002);
+    expect(coverage).toBeLessThan(0.03);
+    expect(hashStrokes(strokes)).toBe(hashStrokes(generateTerrainLinework({ mapId: "sundialReach", camera: { x: 640, y: 480 }, ...VIEWPORT })));
+  });
 });
 
 function hashStrokes(strokes: ReturnType<typeof generateTerrainLinework>) {

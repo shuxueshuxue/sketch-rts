@@ -8,7 +8,7 @@ import { newUserId } from "./user-profile";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -35,6 +35,7 @@ const BUILD_COMMANDS = [
   { kind: "sanctum", icon: "✣", hotkey: "c" },
   { kind: "workshop", icon: "⚙", hotkey: "o" },
   { kind: "defenseTower", icon: "⌖", hotkey: "t" },
+  { kind: "moonWell", icon: "◐", hotkey: "m" },
   { kind: "farm", icon: "⌗", hotkey: "e" },
 ] satisfies { kind: BuildingKind; icon: string; hotkey: string }[];
 
@@ -776,7 +777,17 @@ function canCast(ability: AbilityKind) {
 function canHireMercenary() {
   const camp = selectedMercenaryCamp();
   const player = currentPlayerState();
-  return Boolean(!commandMode && !buildPaletteOpen && camp && player && camp.stock > 0 && camp.cooldownRemaining === 0 && player.gold >= camp.cost && player.supplyUsed + UNIT_DEFS[camp.hireKind].supplyUsed <= player.supplyCap);
+  return Boolean(
+    !commandMode &&
+      !buildPaletteOpen &&
+      camp &&
+      player &&
+      camp.stock > 0 &&
+      camp.cooldownRemaining === 0 &&
+      player.gold >= camp.cost &&
+      player.supplyUsed + UNIT_DEFS[camp.hireKind].supplyUsed <= player.supplyCap &&
+      friendlyUnitAtMercenaryCamp(camp),
+  );
 }
 
 function openBuildPalette() {
@@ -923,6 +934,10 @@ function hireMercenary() {
     showInvalidCommand("Hire needs a selected mercenary camp.");
     return;
   }
+  if (!canHireMercenary()) {
+    showInvalidCommand("Move a unit to the mercenary camp before hiring.");
+    return;
+  }
   sendCommand({ type: "hire", campId: camp.id });
   statusLabel.textContent = "Mercenary hired.";
 }
@@ -978,6 +993,10 @@ function selectedPlayerBuildings() {
 
 function selectedMercenaryCamp() {
   return snapshot?.mercenaryCamps.find((camp) => camp.id === selectedCampId);
+}
+
+function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
+  return Boolean(snapshot?.units.some((unit) => unit.owner === localPlayerId && distance(unit, camp) <= camp.radius + unit.radius + 100));
 }
 
 function currentPlayerState() {
@@ -1044,8 +1063,10 @@ function draw() {
   drawWildlingCampPowerMarks(presentationMarks);
   drawResources(snapshot.resources);
   drawMercenaryCamps(snapshot.mercenaryCamps);
+  drawItems(snapshot.items);
   drawBuildings(snapshot.buildings);
   drawUnits(snapshot.units);
+  drawCarriedItems(snapshot.items);
   drawEffects(snapshot.effects);
   drawBuildPlacementPreview();
   drawAttackMovePreview();
@@ -1408,6 +1429,12 @@ function drawBuildingFrame(glyph: BuildingGlyph, point: Point, size: number) {
     ctx.lineTo(point.x + half * 0.38, point.y + half);
     ctx.lineTo(point.x - half * 0.38, point.y + half);
     ctx.lineTo(point.x - half * 0.5, point.y - half * 0.18);
+  } else if (glyph.frame === "moon-well") {
+    ctx.ellipse(point.x, point.y + half * 0.13, half * 0.76, half * 0.43, 0, 0, Math.PI * 2);
+    ctx.moveTo(point.x - half * 0.58, point.y + half * 0.02);
+    ctx.quadraticCurveTo(point.x, point.y - half * 0.72, point.x + half * 0.58, point.y + half * 0.02);
+    ctx.moveTo(point.x - half * 0.44, point.y + half * 0.22);
+    ctx.lineTo(point.x + half * 0.44, point.y + half * 0.22);
   } else {
     ctx.rect(point.x - half * 0.9, point.y - half * 0.45, size * 0.9, size * 0.72);
     ctx.moveTo(point.x - half * 0.9, point.y - half * 0.1);
@@ -1515,8 +1542,26 @@ function drawUnits(units: Unit[]) {
     }
     drawUnitGlyph(UNIT_GLYPHS[unit.kind], point);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
-    if (unit.level > 1) drawLevelStar(point.x + 20, point.y - 20, unit.level);
+    if (unit.level > 0) drawLevelStar(point.x + 20, point.y - 20, unit.level);
     drawHp(point.x, point.y - 28, unit.hp, unit.maxHp);
+  }
+}
+
+function drawItems(items: WorldItem[]) {
+  for (const item of items) {
+    if (item.carrierId) continue;
+    const point = worldToScreen(item);
+    if (!nearScreen(point, 42)) continue;
+    drawItemGlyph(item, point, performance.now(), false);
+  }
+}
+
+function drawCarriedItems(items: WorldItem[]) {
+  for (const item of items) {
+    if (!item.carrierId) continue;
+    const point = worldToScreen(item);
+    if (!nearScreen(point, 60)) continue;
+    drawItemGlyph(item, { x: point.x + 12, y: point.y - 34 }, performance.now(), true);
   }
 }
 
@@ -1723,6 +1768,90 @@ function drawCarriedGold(x: number, y: number) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawItemGlyph(item: WorldItem, point: Point, now: number, carried: boolean) {
+  const bob = carried ? Math.sin(now / 180 + point.x * 0.03) * 2.5 : 0;
+  const x = point.x;
+  const y = point.y + bob;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  if (item.kind === "lightningRod") {
+    ctx.strokeStyle = "#315f87";
+    ctx.fillStyle = "#9ed8ff";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(x - 3, y + 9);
+    ctx.lineTo(x + 6, y - 11);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + 3, y - 13);
+    ctx.lineTo(x + 11, y - 6);
+    ctx.lineTo(x + 6, y - 6);
+    ctx.lineTo(x + 12, y + 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 6, y - 11, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else if (item.kind === "stormStaff") {
+    ctx.strokeStyle = "#596073";
+    ctx.fillStyle = "#d6d4f2";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y + 9);
+    ctx.lineTo(x + 5, y - 10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 6, y - 11, 5, 0.15, Math.PI * 1.8);
+    ctx.stroke();
+  } else if (item.kind === "flameCloak") {
+    ctx.strokeStyle = "#963c36";
+    ctx.fillStyle = "rgba(242, 137, 75, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y + 8);
+    ctx.quadraticCurveTo(x - 13, y - 4, x - 4, y - 12);
+    ctx.quadraticCurveTo(x + 12, y - 4, x + 7, y + 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (item.kind === "guardianScroll") {
+    ctx.strokeStyle = "#704a33";
+    ctx.fillStyle = "#fff6d0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(x - 8, y - 6, 16, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 5, y - 2);
+    ctx.lineTo(x + 5, y - 2);
+    ctx.moveTo(x - 4, y + 3);
+    ctx.lineTo(x + 4, y + 3);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#8a6418";
+    ctx.fillStyle = "#f2d05c";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 10);
+    ctx.lineTo(x + 8, y);
+    ctx.lineTo(x, y + 10);
+    ctx.lineTo(x - 8, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  if (carried) {
+    ctx.strokeStyle = "rgba(49, 95, 135, 0.36)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 13, 10, 3.2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -1990,6 +2119,15 @@ function drawMinimap(marks: MapPresentationMark[]) {
       const size = mark.owner === "neutral" ? 2.2 : 3;
       ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
     }
+  }
+  for (const item of snapshot.items) {
+    const point = projectWorldToRect(item, snapshot.map, rect);
+    ctx.strokeStyle = item.kind === "lightningRod" || item.kind === "stormStaff" ? "#315f87" : item.kind === "flameCloak" ? "#963c36" : "#8a6418";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(point.x - 2.5, point.y + 2.5);
+    ctx.lineTo(point.x + 2.5, point.y - 2.5);
+    ctx.stroke();
   }
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;

@@ -1,6 +1,8 @@
+import type { MAP_IDS } from "./map-ids";
+
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
-export type MapId = "verdantCrossroads" | "bareDuel" | "openClaims" | "campRush" | "wildMarches" | "grandThirty";
+export type MapId = (typeof MAP_IDS)[number];
 export type RaceId = "grove" | "ember";
 export type UnitKind =
   | "worker"
@@ -8,6 +10,8 @@ export type UnitKind =
   | "archer"
   | "raider"
   | "lancer"
+  | "groveWarden"
+  | "emberRavager"
   | "knight"
   | "priest"
   | "summoner"
@@ -15,6 +19,8 @@ export type UnitKind =
   | "golem"
   | "spirit"
   | "mercenary"
+  | "contractArcher"
+  | "fieldMedic"
   | "wildling"
   | "mossGnawer"
   | "thornSlinger"
@@ -23,19 +29,22 @@ export type UnitKind =
   | "gladeWitch"
   | "ancientStag";
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
-export type TrainableUnitKind = Exclude<UnitKind, "spirit" | "mercenary" | WildlingUnitKind>;
-export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "farm";
+export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
+export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind | WildlingUnitKind>;
+export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "farm";
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse";
+export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook";
+export type UpgradeKind = "weaponTraining" | "reinforcedPlating";
 
 export type UnitStatusEffect = {
-  type: "curse";
+  type: "curse" | "guardian";
   remaining: number;
 };
 
 export type WorldEffect = {
   id: string;
-  type: "heal" | "summon" | "curse" | "move" | "mine" | "attack" | "attackTarget" | "build" | "projectile" | "melee" | "hit";
+  type: "heal" | "summon" | "curse" | "move" | "mine" | "attack" | "attackTarget" | "build" | "projectile" | "melee" | "hit" | "chainLightning" | "guardianField" | "flameBurn" | "storm";
   x: number;
   y: number;
   remaining: number;
@@ -44,6 +53,10 @@ export type WorldEffect = {
   fromY?: number;
   toX?: number;
   toY?: number;
+  owner?: Owner;
+  damage?: number;
+  radius?: number;
+  tickEvery?: number;
 };
 
 export type UnitOrder =
@@ -94,10 +107,17 @@ export type Building = {
   rallyX: number;
   rallyY: number;
   queue: TrainingJob[];
+  researchQueue: ResearchJob[];
 };
 
 export type TrainingJob = {
   unitKind: TrainableUnitKind;
+  remaining: number;
+};
+
+export type ResearchJob = {
+  upgradeKind: UpgradeKind;
+  targetLevel: number;
   remaining: number;
 };
 
@@ -107,6 +127,7 @@ export type ResourceNode = {
   x: number;
   y: number;
   amount: number;
+  harvestCooldownRemaining?: number;
 };
 
 export type MercenaryCamp = {
@@ -114,10 +135,19 @@ export type MercenaryCamp = {
   x: number;
   y: number;
   radius: number;
-  hireKind: "mercenary";
+  hireKind: MercenaryUnitKind;
   cost: number;
   stock: number;
   cooldown: number;
+  cooldownRemaining: number;
+};
+
+export type WorldItem = {
+  id: string;
+  kind: ItemKind;
+  x: number;
+  y: number;
+  carrierId?: string;
   cooldownRemaining: number;
 };
 
@@ -126,7 +156,10 @@ export type PlayerState = {
   gold: number;
   supplyUsed: number;
   supplyCap: number;
+  upgrades: UpgradeLevels;
 };
+
+export type UpgradeLevels = Record<UpgradeKind, number>;
 
 export type PlayerStateMap = Record<PlayerId, PlayerState> & {
   player: PlayerState;
@@ -165,6 +198,7 @@ export type ScenarioUnitSeed = {
   x: number;
   y: number;
   hp?: number;
+  order?: UnitOrder;
 };
 
 export type ScenarioBuildingSeed = {
@@ -177,8 +211,14 @@ export type ScenarioBuildingSeed = {
 };
 
 export type ScenarioOverride = {
+  replaceDefaultUnits?: boolean;
+  replaceDefaultBuildings?: boolean;
+  replaceDefaultResources?: boolean;
+  replaceDefaultMercenaryCamps?: boolean;
+  replaceDefaultLandmarks?: boolean;
   addResources?: ResourceNode[];
   addMercenaryCamps?: MercenaryCamp[];
+  addItems?: WorldItem[];
   addUnits?: ScenarioUnitSeed[];
   addBuildings?: ScenarioBuildingSeed[];
   addLandmarks?: TerrainLandmark[];
@@ -225,8 +265,12 @@ export type GameCommand =
   | { type: "mine"; unitIds: string[]; resourceId: string }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
+  | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
-  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number };
+  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
+  | { type: "pickupItem"; unitId: string; itemId: string }
+  | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
+  | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
 export type GameSnapshot = {
   tick: number;
@@ -237,6 +281,7 @@ export type GameSnapshot = {
   buildings: Building[];
   resources: ResourceNode[];
   mercenaryCamps: MercenaryCamp[];
+  items: WorldItem[];
   effects: WorldEffect[];
 };
 

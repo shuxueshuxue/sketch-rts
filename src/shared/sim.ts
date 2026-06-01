@@ -1,7 +1,8 @@
-import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS } from "./catalog";
 import {
   createBuilding,
   createInitialBuildings,
+  createInitialItems,
   createInitialMercenaryCamps,
   createInitialResources,
   createInitialUnits,
@@ -10,7 +11,8 @@ import {
   DEFAULT_MAP_ID,
   trainTimeFor,
 } from "./map";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, WorldEffect } from "./types";
+import { seconds } from "./time";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -40,8 +42,26 @@ type SpatialIndex<T extends SpatialEntity> = {
 const BUILD_RANGE = 46;
 const MINE_RANGE = 44;
 const TOWN_HALL_DROP_RANGE = 74;
-const GOLD_PER_TRIP = 70;
-const GATHER_TICKS = 70;
+const GOLD_PER_TRIP = 10;
+const GATHER_DURATION = seconds(5);
+const GOLD_MINE_ENTRY_COOLDOWN = seconds(1.6);
+const LOW_UPKEEP_SUPPLY = 51;
+const HIGH_UPKEEP_SUPPLY = 81;
+const LOW_UPKEEP_GOLD_RATE = 0.7;
+const HIGH_UPKEEP_GOLD_RATE = 0.4;
+const VETERANCY_STEP = 0.25;
+const ITEM_PICKUP_RANGE = 72;
+const CURSE_DURATION = seconds(18);
+const GUARDIAN_SCROLL_DURATION = seconds(7);
+const GUARDIAN_SCROLL_COOLDOWN = seconds(45);
+const LIGHTNING_ROD_COOLDOWN = seconds(18);
+const STORM_STAFF_DURATION = seconds(4.8);
+const STORM_STAFF_TICK_INTERVAL = seconds(1.2);
+const STORM_STAFF_COOLDOWN = seconds(27);
+const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
+const FLAME_CLOAK_COOLDOWN = seconds(2);
+const MOON_WELL_HEAL_AMOUNT = 5;
+const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const AUTO_ACQUIRE_RANGE = 230;
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
 const DEFAULT_TEAMS: Record<string, string> = { player: "player", enemy: "enemy", enemy2: "enemy2" };
@@ -57,16 +77,12 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     tick: 0,
     match: createMatchState(activePlayers),
     map: createMap(mapId),
-    players: Object.fromEntries(
-      [...new Set([...activePlayers, "player", "enemy", "enemy2"])].map((owner, index) => [
-        owner,
-        { race: options.races?.[owner] ?? DEFAULT_RACES[owner] ?? (index % 2 === 0 ? "grove" : "ember"), gold: owner === "player" ? 500 : 620, supplyUsed: 0, supplyCap: 0 },
-      ]),
-    ) as PlayerStateMap,
-    units: createInitialUnits(mapId, activePlayers),
-    buildings: createInitialBuildings(activePlayers, mapId),
-    resources: createInitialResources(mapId, activePlayers),
+    players: createPlayerStates(activePlayers, options),
+    units: createInitialUnits(mapId, activePlayers, teams),
+    buildings: createInitialBuildings(activePlayers, mapId, teams),
+    resources: createInitialResources(mapId, activePlayers, teams),
     mercenaryCamps: createInitialMercenaryCamps(mapId),
+    items: createInitialItems(mapId),
     effects: [],
     nextId: RUNTIME_ID_START,
     activePlayers,
@@ -74,6 +90,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number) {
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, x, y);
       this.nextId += 1;
+      applyUnitUpgrades(this, unit);
       this.units.push(unit);
       return unit;
     },
@@ -104,6 +121,24 @@ function createMatchState(players: PlayerId[]): MatchState {
   };
 }
 
+function createPlayerStates(activePlayers: PlayerId[], options: CreateGameOptions): PlayerStateMap {
+  const players = {} as PlayerStateMap;
+  for (const [index, owner] of [...new Set([...activePlayers, "player", "enemy", "enemy2"])].entries()) {
+    players[owner] = {
+      race: options.races?.[owner] ?? DEFAULT_RACES[owner] ?? (index % 2 === 0 ? "grove" : "ember"),
+      gold: 500,
+      supplyUsed: 0,
+      supplyCap: 0,
+      upgrades: createEmptyUpgradeLevels(),
+    };
+  }
+  return players;
+}
+
+function createEmptyUpgradeLevels() {
+  return Object.fromEntries(UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, 0])) as PlayerState["upgrades"];
+}
+
 function zeroPlayerRecord(players: PlayerId[]) {
   return Object.fromEntries([...new Set([...players, "player", "enemy", "enemy2"])].map((owner) => [owner, 0])) as PlayerNumberMap;
 }
@@ -119,11 +154,17 @@ function addThirdPlayerStart(game: Game) {
 }
 
 function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
+  if (scenario.replaceDefaultUnits) game.units = [];
+  if (scenario.replaceDefaultBuildings) game.buildings = [];
+  if (scenario.replaceDefaultResources) game.resources = [];
+  if (scenario.replaceDefaultMercenaryCamps) game.mercenaryCamps = [];
+  if (scenario.replaceDefaultLandmarks) game.map.landmarks = [];
   const ids = new Set([
     ...game.units.map((unit) => unit.id),
     ...game.buildings.map((building) => building.id),
     ...game.resources.map((resource) => resource.id),
     ...game.mercenaryCamps.map((camp) => camp.id),
+    ...game.items.map((item) => item.id),
     ...game.map.landmarks.map((landmark) => landmark.id),
   ]);
   const claimId = (id: string) => {
@@ -139,13 +180,19 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     claimId(camp.id);
     game.mercenaryCamps.push({ ...camp });
   }
+  for (const item of scenario.addItems ?? []) {
+    claimId(item.id);
+    game.items.push({ ...item });
+  }
   for (const seed of scenario.addUnits ?? []) {
     claimId(seed.id);
     const unit = createUnit(seed.id, seed.owner, seed.kind, seed.x, seed.y);
+    applyUnitUpgrades(game, unit);
     if (seed.hp !== undefined) {
       if (!Number.isFinite(seed.hp) || seed.hp <= 0 || seed.hp > unit.maxHp) throw new Error(`Invalid scenario hp for ${seed.id}`);
       unit.hp = seed.hp;
     }
+    if (seed.order) unit.order = { ...seed.order };
     game.units.push(unit);
   }
   for (const seed of scenario.addBuildings ?? []) {
@@ -206,6 +253,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   if (command.type === "build") {
     const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
     if (!worker) throw new Error(`Unknown ${owner} worker ${command.unitId}`);
+    if (!RACE_DEFS[playerState(game, owner).race].buildableBuildings.includes(command.buildingKind)) throw new Error(`${playerState(game, owner).race} race cannot build ${command.buildingKind}`);
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
     const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
     game.nextId += 1;
@@ -225,6 +273,28 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "research") {
+    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
+    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+    queueResearch(game, building, command.upgradeKind);
+    return;
+  }
+
+  if (command.type === "pickupItem") {
+    pickupItem(game, owner, command.unitId, command.itemId);
+    return;
+  }
+
+  if (command.type === "dropItem") {
+    dropItem(game, owner, command.unitId, command.itemId, command.x, command.y);
+    return;
+  }
+
+  if (command.type === "useItem") {
+    useItem(game, owner, command.unitId, command.itemId, command.targetId, command.x, command.y);
+    return;
+  }
+
   const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
   if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
   queueTraining(game, building, command.unitKind);
@@ -237,6 +307,8 @@ export function stepGame(game: Game) {
   updateUnitStatusEffects(game);
   updateConstruction(game);
   updateTraining(game);
+  updateResearch(game);
+  updateResources(game);
   updateMercenaryCamps(game);
   game.unitSpatial = createSpatialIndex(game.units, 320);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
@@ -246,6 +318,8 @@ export function stepGame(game: Game) {
     game.buildingSpatialCount = game.buildings.length;
   }
   game.entityById = createEntityIndex(game);
+  updateItems(game);
+  updateMoonWellHealing(game);
   updateTowerAttacks(game);
   updateUnits(game);
   separateUnits(game);
@@ -270,11 +344,16 @@ export function snapshotGame(game: Game): GameSnapshot {
       },
     },
     map: game.map,
-    players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player }])) as PlayerStateMap,
+    players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
     units: game.units.map((unit) => ({ ...unit, order: { ...unit.order } })),
-    buildings: game.buildings.map((building) => ({ ...building, queue: building.queue.map((job) => ({ ...job })) })),
+    buildings: game.buildings.map((building) => ({
+      ...building,
+      queue: building.queue.map((job) => ({ ...job })),
+      researchQueue: building.researchQueue.map((job) => ({ ...job })),
+    })),
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
+    items: game.items.map((item) => ({ ...item })),
     effects: game.effects.map((effect) => ({ ...effect })),
   };
 }
@@ -310,6 +389,18 @@ function updateTraining(game: Game) {
   }
 }
 
+function updateResearch(game: Game) {
+  for (const building of game.buildings) {
+    if (!building.complete || building.researchQueue.length === 0) continue;
+    const job = building.researchQueue[0];
+    if (!job) continue;
+    job.remaining -= 1;
+    if (job.remaining > 0) continue;
+    building.researchQueue.shift();
+    completeResearch(game, building.owner, job.upgradeKind, job.targetLevel);
+  }
+}
+
 function updateTowerAttacks(game: Game) {
   for (const building of game.buildings) {
     if (!building.complete || building.attackDamage <= 0) continue;
@@ -322,9 +413,53 @@ function updateTowerAttacks(game: Game) {
   }
 }
 
+function updateMoonWellHealing(game: Game) {
+  for (const building of game.buildings) {
+    if (!building.complete || building.kind !== "moonWell") continue;
+    building.cooldown = Math.max(0, building.cooldown - 1);
+    if (building.cooldown > 0) continue;
+    const target = mostWoundedSoldierNear(game, building);
+    if (!target) continue;
+    target.hp = Math.min(target.maxHp, target.hp + MOON_WELL_HEAL_AMOUNT);
+    building.cooldown = building.attackCooldown;
+    addEffect(game, "heal", target.x, target.y, MOON_WELL_HEAL_EFFECT_DURATION, { fromX: building.x, fromY: building.y, toX: target.x, toY: target.y });
+  }
+}
+
+function mostWoundedSoldierNear(game: Game, building: Building) {
+  let target: Unit | undefined;
+  let targetScore = 0;
+  forEachNearbyUnit(game, building, building.attackRange, (unit) => {
+    if (unit.owner !== building.owner || unit.kind === "worker" || unit.hp >= unit.maxHp || distance(unit, building) > building.attackRange) return;
+    const score = (unit.maxHp - unit.hp) * 2 + (1 - unit.hp / Math.max(1, unit.maxHp)) * 80;
+    if (score <= targetScore) return;
+    target = unit;
+    targetScore = score;
+  });
+  return target;
+}
+
 function updateMercenaryCamps(game: Game) {
   for (const camp of game.mercenaryCamps) {
     camp.cooldownRemaining = Math.max(0, camp.cooldownRemaining - 1);
+  }
+}
+
+function updateItems(game: Game) {
+  for (const item of game.items) {
+    item.cooldownRemaining = Math.max(0, item.cooldownRemaining - 1);
+    const carrier = carrierFor(game, item);
+    if (!carrier) continue;
+    item.x = carrier.x;
+    item.y = carrier.y;
+    if (item.kind === "flameCloak") applyFlameCloak(game, carrier, item);
+    if (carrier.owner === "neutral") activateNeutralItem(game, carrier, item);
+  }
+}
+
+function updateResources(game: Game) {
+  for (const resource of game.resources) {
+    resource.harvestCooldownRemaining = Math.max(0, (resource.harvestCooldownRemaining ?? 0) - 1);
   }
 }
 
@@ -424,7 +559,9 @@ function updateMineOrder(game: Game, unit: Unit) {
       moveToward(unit, resource.x, resource.y, game.map);
       return;
     }
-    unit.order = { ...order, phase: "gather", timer: GATHER_TICKS };
+    if ((resource.harvestCooldownRemaining ?? 0) > 0) return;
+    resource.harvestCooldownRemaining = GOLD_MINE_ENTRY_COOLDOWN;
+    unit.order = { ...order, phase: "gather", timer: GATHER_DURATION };
     return;
   }
 
@@ -448,15 +585,23 @@ function updateMineOrder(game: Game, unit: Unit) {
     return;
   }
   if (isPlayerId(unit.owner)) {
-    playerState(game, unit.owner).gold += unit.carryingGold;
+    const player = playerState(game, unit.owner);
+    player.gold += upkeepGoldIncome(unit.carryingGold, player.supplyUsed);
   }
   unit.carryingGold = 0;
   unit.order = { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 };
 }
 
+function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
+  if (supplyUsed >= HIGH_UPKEEP_SUPPLY) return Math.floor(carriedGold * HIGH_UPKEEP_GOLD_RATE);
+  if (supplyUsed >= LOW_UPKEEP_SUPPLY) return Math.floor(carriedGold * LOW_UPKEEP_GOLD_RATE);
+  return carriedGold;
+}
+
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
   if (!building.complete) throw new Error(`Cannot train from incomplete ${building.kind}`);
   if (!BUILDING_DEFS[building.kind].trains.includes(unitKind)) throw new Error(`${building.kind} cannot train ${unitKind}`);
+  if (!RACE_DEFS[playerState(game, building.owner).race].trainableUnits.includes(unitKind)) throw new Error(`${playerState(game, building.owner).race} race cannot train ${unitKind}`);
   if (projectedSupplyUsed(game, building.owner) + UNIT_DEFS[unitKind].supplyUsed > playerState(game, building.owner).supplyCap) {
     throw new Error(`Need more supply to train ${unitKind}`);
   }
@@ -465,11 +610,55 @@ function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKi
   updateSupplyState(game);
 }
 
+function queueResearch(game: Game, building: Building, upgradeKind: UpgradeKind) {
+  if (!building.complete) throw new Error(`Cannot research from incomplete ${building.kind}`);
+  const upgrade = UPGRADE_DEFS[upgradeKind];
+  if (!upgrade) throw new Error(`Unknown upgrade ${upgradeKind}`);
+  if (!RACE_DEFS[playerState(game, building.owner).race].upgrades.includes(upgradeKind)) throw new Error(`${playerState(game, building.owner).race} race cannot research ${upgradeKind}`);
+  if (upgrade.buildingKind !== building.kind || !BUILDING_DEFS[building.kind].researches.includes(upgradeKind)) {
+    throw new Error(`${building.kind} cannot research ${upgradeKind}`);
+  }
+  const player = playerState(game, building.owner);
+  const currentLevel = player.upgrades[upgradeKind] ?? 0;
+  if (currentLevel >= MAX_UPGRADE_LEVEL) throw new Error(`${upgradeKind} already at max level`);
+  if (building.researchQueue.some((job) => job.upgradeKind === upgradeKind)) throw new Error(`${upgradeKind} is already queued`);
+  const targetLevel = currentLevel + 1;
+  const level = upgrade.levels[targetLevel - 1];
+  if (!level) throw new Error(`${upgradeKind} missing level ${targetLevel}`);
+  spendGold(game, building.owner, level.cost);
+  building.researchQueue.push({ upgradeKind, targetLevel, remaining: level.researchTime });
+}
+
+function completeResearch(game: Game, owner: PlayerId, upgradeKind: UpgradeKind, targetLevel: number) {
+  const player = playerState(game, owner);
+  const currentLevel = player.upgrades[upgradeKind] ?? 0;
+  if (targetLevel <= currentLevel) return;
+  if (targetLevel !== currentLevel + 1) throw new Error(`${upgradeKind} research completed out of order`);
+  player.upgrades[upgradeKind] = targetLevel;
+  for (const unit of game.units.filter((candidate) => candidate.owner === owner)) {
+    applyUpgradeLevelToUnit(game, unit, upgradeKind, targetLevel);
+  }
+}
+
+function applyUnitUpgrades(game: Game, unit: Unit) {
+  if (!isPlayerId(unit.owner)) return;
+  applyDerivedUnitStats(game, unit);
+}
+
+function applyUpgradeLevelToUnit(game: Game, unit: Unit, upgradeKind: UpgradeKind, level: number) {
+  const upgrade = UPGRADE_DEFS[upgradeKind];
+  const levelDef = upgrade.levels[level - 1];
+  if (!levelDef) throw new Error(`${upgradeKind} missing level ${level}`);
+  if (!upgrade.affectedUnitKinds.includes(unit.kind as TrainableUnitKind)) return;
+  applyDerivedUnitStats(game, unit);
+}
+
 function hireMercenary(game: Game, owner: PlayerId, campId: string) {
   const camp = game.mercenaryCamps.find((candidate) => candidate.id === campId);
   if (!camp) throw new Error(`Unknown mercenary camp ${campId}`);
   if (camp.stock <= 0) throw new Error(`${camp.id} has no mercenary stock`);
   if (camp.cooldownRemaining > 0) throw new Error(`${camp.id} is restocking`);
+  if (!hasFriendlyUnitAtMercenaryCamp(game, owner, camp)) throw new Error(`${camp.id} needs a friendly unit nearby before hiring`);
   if (!canSupply(game, owner, camp.hireKind)) throw new Error(`Need more supply to hire ${camp.hireKind}`);
   spendGold(game, owner, camp.cost);
   camp.stock -= 1;
@@ -479,6 +668,46 @@ function hireMercenary(game: Game, owner: PlayerId, campId: string) {
   addEffect(game, "summon", camp.x, camp.y, 34);
   updateSupplyState(game);
   return mercenary;
+}
+
+function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
+  return game.units.some((unit) => unit.owner === owner && distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
+}
+
+function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string) {
+  const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
+  if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
+  const item = game.items.find((candidate) => candidate.id === itemId);
+  if (!item) throw new Error(`Unknown item ${itemId}`);
+  if (item.carrierId) throw new Error(`${item.id} is already carried`);
+  if (distance(unit, item) > ITEM_PICKUP_RANGE) throw new Error(`${item.id} is too far away`);
+  item.carrierId = unit.id;
+  item.x = unit.x;
+  item.y = unit.y;
+}
+
+function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x: number, y: number) {
+  const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
+  if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
+  const item = carriedItem(game, unit, itemId);
+  delete item.carrierId;
+  item.x = clamp(x, 0, game.map.width);
+  item.y = clamp(y, 0, game.map.height);
+}
+
+function useItem(
+  game: Game,
+  owner: PlayerId,
+  unitId: string,
+  itemId: string,
+  targetId: string | undefined,
+  x: number | undefined,
+  y: number | undefined,
+) {
+  const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
+  if (!unit) throw new Error(`Unknown ${owner} item user ${unitId}`);
+  const item = carriedItem(game, unit, itemId);
+  activateItem(game, unit, item, targetId, x, y);
 }
 
 function castAbility(
@@ -529,14 +758,137 @@ function applySummon(game: Game, caster: Unit, x: number, y: number) {
 function applyCurse(game: Game, caster: Unit, target: Unit) {
   if (distance(caster, target) > 280) return;
   target.effects = target.effects.filter((effect) => effect.type !== "curse");
-  target.effects.push({ type: "curse", remaining: 360 });
+  target.effects.push({ type: "curse", remaining: CURSE_DURATION });
   caster.cooldown = 150;
   addEffect(game, "curse", target.x, target.y, 46);
 }
 
+function carriedItem(game: Game, unit: Unit, itemId: string) {
+  const item = game.items.find((candidate) => candidate.id === itemId);
+  if (!item) throw new Error(`Unknown item ${itemId}`);
+  if (item.carrierId !== unit.id) throw new Error(`${unit.id} is not carrying ${item.id}`);
+  return item;
+}
+
+function carrierFor(game: Game, item: WorldItem) {
+  return item.carrierId ? game.units.find((unit) => unit.id === item.carrierId) : undefined;
+}
+
+function activateNeutralItem(game: Game, carrier: Unit, item: WorldItem) {
+  // @@@neutral-treasure-rule - Camps can weaponize carried treasure, except scrolls that are explicitly inert on monsters.
+  if (item.kind === "guardianScroll" || item.kind === "experienceBook" || item.cooldownRemaining > 0) return;
+  const target = nearestEnemyInRange(game, carrier, item.kind === "stormStaff" ? 280 : 240);
+  if (!target) return;
+  activateItem(game, carrier, item, target.id, target.x, target.y);
+}
+
+function activateItem(
+  game: Game,
+  carrier: Unit,
+  item: WorldItem,
+  targetId: string | undefined,
+  x: number | undefined,
+  y: number | undefined,
+) {
+  if (item.cooldownRemaining > 0) return;
+  if (item.kind === "lightningRod") {
+    const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, carrier.owner, unit.owner)) : undefined;
+    if (!target || distance(carrier, target) > 280) return;
+    applyChainLightning(game, carrier, item, target);
+    return;
+  }
+  if (item.kind === "stormStaff") {
+    const point = targetId ? game.units.find((unit) => unit.id === targetId) : isNumber(x) && isNumber(y) ? { x, y } : undefined;
+    if (!point || distance(carrier, point) > 320) return;
+    applyStormStaff(game, carrier, item, point.x, point.y);
+    return;
+  }
+  if (item.kind === "guardianScroll") {
+    if (carrier.owner === "neutral") return;
+    forEachNearbyUnit(game, carrier, 280, (unit) => {
+      if (distance(unit, carrier) > 280 || areEnemyOwners(game, carrier.owner, unit.owner)) return;
+      unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
+      unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL_DURATION });
+    });
+    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION);
+    item.cooldownRemaining = GUARDIAN_SCROLL_COOLDOWN;
+    return;
+  }
+  if (item.kind === "experienceBook") {
+    if (carrier.owner === "neutral") return;
+    carrier.xp += 160;
+    applyXpLevel(game, carrier);
+    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+  }
+}
+
+function applyChainLightning(game: Game, carrier: Unit, item: WorldItem, firstTarget: Unit) {
+  const struck = new Set<string>();
+  let current = firstTarget;
+  let damage = 84;
+  for (let bounce = 0; bounce < 3; bounce += 1) {
+    struck.add(current.id);
+    applyAttackDamage(game, carrier, current, damage, 240);
+    addEffect(game, "chainLightning", current.x, current.y, 28, { fromX: carrier.x, fromY: carrier.y, toX: current.x, toY: current.y });
+    const next = nearestChainTarget(game, carrier, current, struck, 170);
+    if (!next) break;
+    current = next;
+    damage = Math.max(18, Math.round(damage * 0.68));
+  }
+  item.cooldownRemaining = LIGHTNING_ROD_COOLDOWN;
+}
+
+function nearestChainTarget(game: Game, carrier: Unit, from: Unit, struck: Set<string>, range: number) {
+  const limit = range * range;
+  let best: Unit | undefined;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  forEachNearbyUnit(game, from, range, (candidate) => {
+    if (struck.has(candidate.id) || !areEnemyOwners(game, carrier.owner, candidate.owner)) return;
+    const candidateDistance = distanceSquared(from, candidate);
+    if (candidateDistance > limit || candidateDistance >= bestDistance) return;
+    best = candidate;
+    bestDistance = candidateDistance;
+  });
+  return best;
+}
+
+function applyStormStaff(game: Game, carrier: Unit, item: WorldItem, x: number, y: number) {
+  forEachNearbyUnit(game, { x, y }, 145, (target) => {
+    if (distance(target, { x, y }) > 145 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
+    applyAttackDamage(game, carrier, target, 24, 260);
+  });
+  addEffect(game, "storm", x, y, STORM_STAFF_DURATION, { owner: carrier.owner, damage: 6, radius: 145, tickEvery: STORM_STAFF_TICK_INTERVAL });
+  item.cooldownRemaining = STORM_STAFF_COOLDOWN;
+}
+
+function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
+  if (item.cooldownRemaining > 0) return;
+  let burned = false;
+  forEachNearbyUnit(game, carrier, 90, (target) => {
+    if (distance(target, carrier) > 90 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
+    applyAttackDamage(game, carrier, target, 12, 70);
+    burned = true;
+  });
+  if (!burned) return;
+  addEffect(game, "flameBurn", carrier.x, carrier.y, FLAME_CLOAK_VISUAL_DURATION);
+  item.cooldownRemaining = FLAME_CLOAK_COOLDOWN;
+}
+
 function updateWorldEffects(game: Game) {
-  for (const effect of game.effects) effect.remaining -= 1;
+  for (const effect of game.effects) {
+    applyWorldEffectTick(game, effect);
+    effect.remaining -= 1;
+  }
   game.effects = game.effects.filter((effect) => effect.remaining > 0);
+}
+
+function applyWorldEffectTick(game: Game, effect: WorldEffect) {
+  if (effect.type !== "storm" || !effect.owner || !effect.damage || !effect.radius || !effect.tickEvery) return;
+  if (effect.remaining !== effect.duration && effect.remaining % effect.tickEvery !== 0) return;
+  forEachNearbyUnit(game, effect, effect.radius, (target) => {
+    if (distance(target, effect) > effect.radius! || !areEnemyOwners(game, effect.owner!, target.owner)) return;
+    applyAttackDamage(game, { owner: effect.owner!, x: effect.x, y: effect.y } as Building, target, effect.damage!, 260);
+  });
 }
 
 function updateUnitStatusEffects(game: Game) {
@@ -547,6 +899,7 @@ function updateUnitStatusEffects(game: Game) {
 }
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
+  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return;
   const hpBefore = target.hp;
   target.hp -= damage;
   if (hpBefore > 0 && target.hp <= 0) {
@@ -567,11 +920,12 @@ function recordKill(game: Game, attacker: Unit | Building, target: Unit | Buildi
   if (isUnit(attacker) && isUnit(target)) {
     attacker.kills += 1;
     awardKillXp(game, attacker, target);
-    if (isPlayerId(attacker.owner) && attacker.kind === "mercenary" && areEnemyOwners(game, attacker.owner, target.owner)) {
+    if (isPlayerId(attacker.owner) && isMercenaryUnitKind(attacker.kind) && areEnemyOwners(game, attacker.owner, target.owner)) {
       incrementStat(game.match.stats.mercenaryKills, attacker.owner, 1);
     }
     if (isPlayerId(attacker.owner) && target.owner === "neutral") {
       incrementStat(game.match.stats.neutralUnitsKilled, attacker.owner, 1);
+      awardNeutralGoldBounty(game, attacker.owner, target);
     }
   }
   if (!isUnit(target) && isPlayerId(attackerOwner)) {
@@ -586,7 +940,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY">,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;
@@ -599,12 +953,55 @@ function isUnit(entity: Unit | Building): entity is Unit {
 function awardKillXp(game: Game, attacker: Unit, target: Unit) {
   if (attacker.owner === "neutral" || !areEnemyOwners(game, attacker.owner, target.owner)) return;
   attacker.xp += UNIT_DEFS[target.kind].xpReward;
-  if (attacker.level === 1 && attacker.xp >= 20) {
-    attacker.level = 2;
-    attacker.maxHp += Math.min(12, Math.ceil(UNIT_DEFS[attacker.kind].hp * 0.07));
-    attacker.hp = Math.min(attacker.maxHp, attacker.hp + 10);
-    attacker.attackDamage += 1;
+  applyXpLevel(game, attacker);
+}
+
+function awardNeutralGoldBounty(game: Game, owner: PlayerId, target: Unit) {
+  const bounty = UNIT_DEFS[target.kind].goldBounty ?? 0;
+  if (bounty <= 0) return;
+  playerState(game, owner).gold += bounty;
+}
+
+function starLevelForXp(xp: number) {
+  if (xp >= XP_STAR_THRESHOLDS[2]!) return 3;
+  if (xp >= XP_STAR_THRESHOLDS[1]!) return 2;
+  if (xp >= XP_STAR_THRESHOLDS[0]!) return 1;
+  return 0;
+}
+
+function applyXpLevel(game: Game, unit: Unit) {
+  const nextLevel = starLevelForXp(unit.xp);
+  if (nextLevel <= unit.level) return;
+  unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
+  applyDerivedUnitStats(game, unit);
+}
+
+function applyDerivedUnitStats(game: Game, unit: Unit) {
+  const previousMaxHp = unit.maxHp;
+  const base = nonStarUnitStats(game, unit);
+  const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_STEP;
+  unit.attackDamage = Math.round(base.attackDamage * multiplier);
+  unit.maxHp = Math.round(base.maxHp * multiplier);
+  unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
+}
+
+function nonStarUnitStats(game: Game, unit: Unit) {
+  const stats = UNIT_DEFS[unit.kind];
+  let attackDamage = stats.attackDamage;
+  let maxHp = stats.hp;
+  if (!isPlayerId(unit.owner)) return { attackDamage, maxHp };
+  const upgrades = playerState(game, unit.owner).upgrades;
+  for (const upgradeKind of UPGRADE_KINDS) {
+    const upgrade = UPGRADE_DEFS[upgradeKind];
+    if (!upgrade.affectedUnitKinds.includes(unit.kind as TrainableUnitKind)) continue;
+    for (let level = 0; level < (upgrades[upgradeKind] ?? 0); level += 1) {
+      const levelDef = upgrade.levels[level];
+      if (!levelDef) throw new Error(`${upgradeKind} missing level ${level + 1}`);
+      attackDamage += levelDef.attackBonus;
+      maxHp += levelDef.maxHpBonus;
+    }
   }
+  return { attackDamage, maxHp };
 }
 
 function updateSupplyState(game: Game) {
@@ -657,6 +1054,10 @@ function incrementStat(record: Record<string, number>, owner: Owner, amount: num
 
 function canSupply(game: Game, owner: PlayerId, unitKind: UnitKind) {
   return projectedSupplyUsed(game, owner) + UNIT_DEFS[unitKind].supplyUsed <= playerState(game, owner).supplyCap;
+}
+
+function isMercenaryUnitKind(kind: Unit["kind"]) {
+  return (MERCENARY_UNIT_KINDS as readonly string[]).includes(kind);
 }
 
 function combatUnits(game: Game, owner: PlayerId) {
@@ -730,7 +1131,7 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
 
 function targetPriorityScore(target: Unit | Building, distanceSq: number) {
   const distancePenalty = Math.sqrt(distanceSq) * 0.9;
-  return targetPriorityBase(target) - distancePenalty;
+  return targetPriorityBase(target) + targetThreatBonus(target) - distancePenalty;
 }
 
 function targetPriorityBase(target: Unit | Building) {
@@ -738,6 +1139,12 @@ function targetPriorityBase(target: Unit | Building) {
   if (target.kind === "defenseTower") return 360;
   if (target.kind === "townHall") return 120;
   return 220;
+}
+
+function targetThreatBonus(target: Unit | Building) {
+  if (!isUnit(target)) return 0;
+  const missingHp = Math.max(0, target.maxHp - target.hp);
+  return missingHp * 1.4 + target.attackDamage * 2 + (target.attackRange > 100 ? 20 : 0);
 }
 
 function findTarget(game: Game, targetId: string): Unit | Building | undefined {
@@ -748,9 +1155,23 @@ function removeDead(game: Game) {
   const deadUnits = game.units.filter((unit) => unit.hp <= 0);
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
+  dropItemsFromDeadUnits(game, deadUnits);
   game.units = game.units.filter((unit) => unit.hp > 0);
   game.buildings = game.buildings.filter((building) => building.hp > 0);
   if (deadUnits.length > 0 || deadBuildings.length > 0) updateSupplyState(game);
+}
+
+function dropItemsFromDeadUnits(game: Game, deadUnits: Unit[]) {
+  if (deadUnits.length === 0) return;
+  const deadById = new Map(deadUnits.map((unit) => [unit.id, unit]));
+  for (const item of game.items) {
+    if (!item.carrierId) continue;
+    const dead = deadById.get(item.carrierId);
+    if (!dead) continue;
+    delete item.carrierId;
+    item.x = dead.x;
+    item.y = dead.y;
+  }
 }
 
 function updateVictory(game: Game) {

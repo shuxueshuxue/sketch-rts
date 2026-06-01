@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
 import { createAiRuntime, runPresetAiRuntime } from "../shared/ai-runtime";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createGame, issueCommand, snapshotGame, stepGame } from "../shared/sim";
-import type { GameCommand, GameSetupOptions, LocalUserProfile, MapId, PlayerId, RaceId, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
+import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
 
@@ -22,6 +22,7 @@ const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
+const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook"] satisfies ItemKind[];
 let game = createGame();
 let gameAiRuntime = createAiRuntime(["enemy"]);
 const roomHost = createRoomHost();
@@ -516,6 +517,9 @@ function isCommand(value: unknown): value is GameCommand {
   if (command.type === "train") {
     return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   }
+  if (command.type === "research") {
+    return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
+  }
   if (command.type === "hire") {
     return typeof command.campId === "string";
   }
@@ -523,6 +527,21 @@ function isCommand(value: unknown): value is GameCommand {
     return (
       typeof command.unitId === "string" &&
       (command.ability === "heal" || command.ability === "summon" || command.ability === "curse") &&
+      (command.targetId === undefined || typeof command.targetId === "string") &&
+      (command.x === undefined || isNumber(command.x)) &&
+      (command.y === undefined || isNumber(command.y))
+    );
+  }
+  if (command.type === "pickupItem") {
+    return typeof command.unitId === "string" && typeof command.itemId === "string";
+  }
+  if (command.type === "dropItem") {
+    return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
+  }
+  if (command.type === "useItem") {
+    return (
+      typeof command.unitId === "string" &&
+      typeof command.itemId === "string" &&
       (command.targetId === undefined || typeof command.targetId === "string") &&
       (command.x === undefined || isNumber(command.x)) &&
       (command.y === undefined || isNumber(command.y))
@@ -551,6 +570,10 @@ function isBuildableBuilding(value: unknown) {
 
 function isTrainableUnit(value: unknown) {
   return typeof value === "string" && (TRAINABLE_UNIT_KINDS as readonly string[]).includes(value);
+}
+
+function isUpgradeKind(value: unknown) {
+  return typeof value === "string" && (UPGRADE_KINDS as readonly string[]).includes(value);
 }
 
 function parseGameSetupOptions(value: unknown): GameSetupOptions | undefined {
@@ -590,6 +613,26 @@ function parseScenarioOverride(value: unknown): ScenarioOverride | undefined {
   if (!value || typeof value !== "object") return undefined;
   const source = value as Record<string, unknown>;
   const scenario: ScenarioOverride = {};
+  if (source.replaceDefaultUnits !== undefined) {
+    if (typeof source.replaceDefaultUnits !== "boolean") return undefined;
+    scenario.replaceDefaultUnits = source.replaceDefaultUnits;
+  }
+  if (source.replaceDefaultBuildings !== undefined) {
+    if (typeof source.replaceDefaultBuildings !== "boolean") return undefined;
+    scenario.replaceDefaultBuildings = source.replaceDefaultBuildings;
+  }
+  if (source.replaceDefaultResources !== undefined) {
+    if (typeof source.replaceDefaultResources !== "boolean") return undefined;
+    scenario.replaceDefaultResources = source.replaceDefaultResources;
+  }
+  if (source.replaceDefaultMercenaryCamps !== undefined) {
+    if (typeof source.replaceDefaultMercenaryCamps !== "boolean") return undefined;
+    scenario.replaceDefaultMercenaryCamps = source.replaceDefaultMercenaryCamps;
+  }
+  if (source.replaceDefaultLandmarks !== undefined) {
+    if (typeof source.replaceDefaultLandmarks !== "boolean") return undefined;
+    scenario.replaceDefaultLandmarks = source.replaceDefaultLandmarks;
+  }
   if (source.addResources !== undefined) {
     if (!Array.isArray(source.addResources) || !source.addResources.every(isResourceSeed)) return undefined;
     scenario.addResources = source.addResources;
@@ -597,6 +640,10 @@ function parseScenarioOverride(value: unknown): ScenarioOverride | undefined {
   if (source.addMercenaryCamps !== undefined) {
     if (!Array.isArray(source.addMercenaryCamps) || !source.addMercenaryCamps.every(isMercenaryCampSeed)) return undefined;
     scenario.addMercenaryCamps = source.addMercenaryCamps;
+  }
+  if (source.addItems !== undefined) {
+    if (!Array.isArray(source.addItems) || !source.addItems.every(isItemSeed)) return undefined;
+    scenario.addItems = source.addItems;
   }
   if (source.addUnits !== undefined) {
     if (!Array.isArray(source.addUnits) || !source.addUnits.every(isUnitSeed)) return undefined;
@@ -707,10 +754,24 @@ function isMercenaryCampSeed(value: unknown) {
     isNumber(seed.x) &&
     isNumber(seed.y) &&
     isPositiveNumber(seed.radius) &&
-    seed.hireKind === "mercenary" &&
+    typeof seed.hireKind === "string" &&
+    (MERCENARY_UNIT_KINDS as readonly string[]).includes(seed.hireKind) &&
     isPositiveInteger(seed.cost) &&
     isPositiveInteger(seed.stock) &&
     isPositiveInteger(seed.cooldown) &&
+    isNonNegativeInteger(seed.cooldownRemaining)
+  );
+}
+
+function isItemSeed(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const seed = value as Record<string, unknown>;
+  return (
+    typeof seed.id === "string" &&
+    isItemKind(seed.kind) &&
+    isNumber(seed.x) &&
+    isNumber(seed.y) &&
+    (seed.carrierId === undefined || typeof seed.carrierId === "string") &&
     isNonNegativeInteger(seed.cooldownRemaining)
   );
 }
@@ -742,6 +803,10 @@ function isOwner(value: unknown) {
 
 function isUnitKind(value: unknown): value is UnitKind {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(UNIT_DEFS, value);
+}
+
+function isItemKind(value: unknown): value is ItemKind {
+  return typeof value === "string" && (ITEM_KINDS as readonly string[]).includes(value);
 }
 
 function isLandmarkKind(value: unknown) {

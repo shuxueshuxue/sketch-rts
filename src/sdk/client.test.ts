@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { seconds } from "../shared/time";
 import { SketchRtsSdk } from "./client";
 
 describe("SketchRtsSdk", () => {
@@ -77,7 +78,7 @@ describe("SketchRtsSdk", () => {
     await sdk.reset("bareDuel", {
       scenario: {
         addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
-        addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: 90, cooldownRemaining: 0 }],
+        addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
         addUnits: [
           { id: "unit-agent-wildling", owner: "neutral", kind: "wildling", x: 1600, y: 1460 },
           { id: "unit-agent-wounded", owner: "enemy", kind: "footman", x: 1660, y: 1460, hp: 37 },
@@ -96,7 +97,7 @@ describe("SketchRtsSdk", () => {
           options: {
             scenario: {
               addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
-              addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: 90, cooldownRemaining: 0 }],
+              addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
               addUnits: [
                 { id: "unit-agent-wildling", owner: "neutral", kind: "wildling", x: 1600, y: 1460 },
                 { id: "unit-agent-wounded", owner: "enemy", kind: "footman", x: 1660, y: 1460, hp: 37 },

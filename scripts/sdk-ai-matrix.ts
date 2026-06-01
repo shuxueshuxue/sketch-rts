@@ -27,8 +27,8 @@ const port = Number(process.env.SDK_AI_MATRIX_PORT ?? 5175);
 const baseUrl = `http://127.0.0.1:${port}`;
 const sdk = new SketchRtsSdk(baseUrl);
 const MAX_TICKS = 36_000;
-const DUEL_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "ember" };
-const THREE_PLAYER_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "ember", enemy2: "grove" };
+const DUEL_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove" };
+const THREE_PLAYER_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove", enemy2: "grove" };
 const cases: SdkMatrixCase[] = [
   {
     name: "sdk 1v1 no-expansion no-neutral",

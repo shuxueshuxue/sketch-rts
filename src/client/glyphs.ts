@@ -48,6 +48,8 @@ export type GlyphMark =
 export const UNIT_GLYPHS: Record<UnitKind, UnitGlyph> = {
   worker: { silhouette: "worker-apron", marks: ["pick", "satchel", "coinSlash"] },
   footman: { silhouette: "shield-triangle", marks: ["shieldBar", "shortSword", "scar"] },
+  groveWarden: { silhouette: "shield-triangle", marks: ["shieldBar", "halo", "longSpear"] },
+  emberRavager: { silhouette: "raider-kite", marks: ["shortSword", "spark", "scar"] },
   archer: { silhouette: "bow-crest", marks: ["bow", "arrow", "satchel"] },
   raider: { silhouette: "raider-kite", marks: ["reins", "spur", "shortSword"] },
   lancer: { silhouette: "lancer-pennant", marks: ["longSpear", "flag", "shieldBar"] },
@@ -58,6 +60,8 @@ export const UNIT_GLYPHS: Record<UnitKind, UnitGlyph> = {
   golem: { silhouette: "golem-block", marks: ["rune", "blockSeams", "scar"] },
   spirit: { silhouette: "spirit-wisp", marks: ["tail", "spark", "halo"] },
   mercenary: { silhouette: "mercenary-badge", marks: ["coinSlash", "shortSword", "scar"] },
+  contractArcher: { silhouette: "mercenary-badge", marks: ["coinSlash", "bow", "arrow"] },
+  fieldMedic: { silhouette: "mercenary-badge", marks: ["coinSlash", "halo", "cross"] },
   wildling: { silhouette: "wildling-thorns", marks: ["thornFork", "scar", "curseSlash"] },
   mossGnawer: { silhouette: "wildling-thorns", marks: ["thornFork", "scar", "shortSword"] },
   thornSlinger: { silhouette: "wildling-thorns", marks: ["thornFork", "bow", "arrow"] },

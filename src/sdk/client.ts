@@ -1,6 +1,8 @@
 import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
-import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, SlotController } from "../shared/types";
+import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, SlotController, TrainableUnitKind } from "../shared/types";
+import { planPresetAiCommands } from "./ai-policy";
+import type { AiScriptVersion } from "./ai-policy";
 
 export type SketchRtsCatalog = {
   units: string[];
@@ -65,6 +67,42 @@ export type FastForwardUntilResult = {
   samples: FastForwardResult[];
 };
 
+export type SceneRunStep =
+  | { type: "command"; command: GameCommand }
+  | { type: "commands"; commands: GameCommand[] }
+  | { type: "tick"; ticks: number; label?: string };
+
+export type SceneRunSample = FastForwardResult & {
+  label: string;
+};
+
+export type SceneRunOptions = {
+  mapId: MapId;
+  setup?: GameSetupOptions;
+  steps: SceneRunStep[];
+};
+
+export type SceneRunResult = {
+  initial: GameSnapshot;
+  snapshot: GameSnapshot;
+  samples: SceneRunSample[];
+};
+
+export type GoldSaturationProbeOptions = {
+  workerCounts: number[];
+  ticks: number;
+};
+
+export type SdkAgentOptions = {
+  owner: PlayerId;
+  version?: AiScriptVersion;
+  teams?: Partial<Record<PlayerId, string>>;
+};
+
+export type SdkAgentStep = FastForwardResult & {
+  commands: GameCommand[];
+};
+
 export class SketchRtsSdk {
   constructor(private readonly baseUrl: string, private readonly fetcher: typeof fetch = fetch) {}
 
@@ -82,6 +120,38 @@ export class SketchRtsSdk {
 
   async command(command: GameCommand): Promise<GameSnapshot> {
     return this.postJson("/api/command", command);
+  }
+
+  async mine(unitIds: string[], resourceId: string): Promise<GameSnapshot> {
+    return this.command({ type: "mine", unitIds, resourceId });
+  }
+
+  async move(unitIds: string[], x: number, y: number): Promise<GameSnapshot> {
+    return this.command({ type: "move", unitIds, x, y });
+  }
+
+  async attackMove(unitIds: string[], x: number, y: number): Promise<GameSnapshot> {
+    return this.command({ type: "attackMove", unitIds, x, y });
+  }
+
+  async attack(unitIds: string[], targetId: string): Promise<GameSnapshot> {
+    return this.command({ type: "attack", unitIds, targetId });
+  }
+
+  async build(unitId: string, buildingKind: BuildingKind, x: number, y: number): Promise<GameSnapshot> {
+    return this.command({ type: "build", unitId, buildingKind, x, y });
+  }
+
+  async train(buildingId: string, unitKind: TrainableUnitKind): Promise<GameSnapshot> {
+    return this.command({ type: "train", buildingId, unitKind });
+  }
+
+  async hire(campId: string): Promise<GameSnapshot> {
+    return this.command({ type: "hire", campId });
+  }
+
+  async cast(unitId: string, ability: AbilityKind, target: { targetId: string } | { x: number; y: number }): Promise<GameSnapshot> {
+    return this.command({ type: "cast", unitId, ability, ...target });
   }
 
   async fastForward(ticks: number): Promise<FastForwardResult> {
@@ -210,6 +280,55 @@ export class SketchRtsSdk {
     throw new Error(`Tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
   }
 
+  async stepPresetAgent(options: SdkAgentOptions, ticks: number): Promise<SdkAgentStep> {
+    const snapshot = await this.snapshot();
+    const policyOptions: { version?: AiScriptVersion; teams?: Partial<Record<PlayerId, string>> } = {};
+    if (options.version !== undefined) policyOptions.version = options.version;
+    if (options.teams !== undefined) policyOptions.teams = options.teams;
+    const commands = planPresetAiCommands(snapshot, options.owner, policyOptions);
+    for (const command of commands) await this.command(command);
+    const tick = await this.fastForward(ticks);
+    return { ...tick, commands };
+  }
+
+  async runScene(options: SceneRunOptions): Promise<SceneRunResult> {
+    const initial = await this.reset(options.mapId, options.setup);
+    let snapshot = initial;
+    const samples: SceneRunSample[] = [];
+    for (const [index, step] of options.steps.entries()) {
+      if (step.type === "command") {
+        snapshot = await this.command(step.command);
+        continue;
+      }
+      if (step.type === "commands") {
+        for (const command of step.commands) snapshot = await this.command(command);
+        continue;
+      }
+      const sample = await this.fastForward(step.ticks);
+      snapshot = sample.snapshot;
+      samples.push({ ...sample, label: step.label ?? `tick-${index + 1}` });
+    }
+    return { initial, snapshot, samples };
+  }
+
+  async goldSaturationProbe(options: GoldSaturationProbeOptions): Promise<Record<number, number>> {
+    const incomes: Record<number, number> = {};
+    for (const workerCount of options.workerCounts) {
+      const setup = goldSaturationSetup(workerCount);
+      const workerIds = Array.from({ length: workerCount }, (_, index) => `gold-sdk-worker-${index + 1}`);
+      const result = await this.runScene({
+        mapId: "bareDuel",
+        setup,
+        steps: [
+          { type: "command", command: { type: "mine", unitIds: workerIds, resourceId: "gold-sdk-saturation" } },
+          { type: "tick", ticks: options.ticks, label: `${workerCount}-workers` },
+        ],
+      });
+      incomes[workerCount] = result.snapshot.players.player.gold;
+    }
+    return incomes;
+  }
+
   private async getJson<T>(path: string): Promise<T> {
     const response = await this.fetcher(`${this.baseUrl}${path}`);
     if (!response.ok) throw new Error(`GET ${path} failed: ${response.status}`);
@@ -225,4 +344,22 @@ export class SketchRtsSdk {
     if (!response.ok) throw new Error(`POST ${path} failed: ${response.status}`);
     return response.json() as Promise<T>;
   }
+}
+
+function goldSaturationSetup(workerCount: number): GameSetupOptions {
+  return {
+    aiPlayers: [],
+    scenario: {
+      replaceDefaultUnits: true,
+      replaceDefaultResources: true,
+      addResources: [{ id: "gold-sdk-saturation", kind: "goldMine", x: 620, y: 520, amount: 100_000 }],
+      addUnits: Array.from({ length: workerCount }, (_, index) => ({
+        id: `gold-sdk-worker-${index + 1}`,
+        owner: "player" as const,
+        kind: "worker" as const,
+        x: 620 + index * 3,
+        y: 520 + index * 3,
+      })),
+    },
+  };
 }

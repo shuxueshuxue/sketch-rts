@@ -22,8 +22,8 @@ type ExpansionOwnerProof = {
 type ExpansionProof = Record<PlayerId, ExpansionOwnerProof>;
 
 const MAX_TICKS = 36_000;
-const DUEL_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "ember" };
-const THREE_PLAYER_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "ember", enemy2: "grove" };
+const DUEL_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove" };
+const THREE_PLAYER_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove", enemy2: "grove" };
 const cases: MatrixCase[] = [
   {
     name: "1v1 no-expansion no-neutral",

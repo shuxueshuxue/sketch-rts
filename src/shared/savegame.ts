@@ -1,5 +1,6 @@
 import { createGame, type Game } from "./sim";
-import type { AiScriptVersion, GameSnapshot, PlayerId, RoomState } from "./types";
+import { UPGRADE_KINDS } from "./catalog";
+import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
 
 export const SAVEGAME_SCHEMA_VERSION = 1;
 
@@ -57,11 +58,12 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
   game.tick = save.snapshot.tick;
   game.match = clone(save.snapshot.match);
   game.map = clone(save.snapshot.map);
-  game.players = clone(save.snapshot.players);
+  game.players = normalizeSavedPlayers(save.snapshot.players);
   game.units = clone(save.snapshot.units);
   game.buildings = clone(save.snapshot.buildings);
   game.resources = clone(save.snapshot.resources);
   game.mercenaryCamps = clone(save.snapshot.mercenaryCamps);
+  game.items = clone(save.snapshot.items);
   game.effects = clone(save.snapshot.effects);
   game.nextId = save.runtime.nextId;
   game.activePlayers = [...save.runtime.activePlayers];
@@ -80,4 +82,24 @@ export function assertSaveGame(save: SaveGameRecord) {
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function normalizeSavedPlayers(players: PlayerStateMap): PlayerStateMap {
+  const cloned = clone(players);
+  for (const player of Object.values(cloned)) {
+    player.upgrades = normalizeUpgradeLevels(player.upgrades);
+  }
+  return cloned;
+}
+
+function normalizeUpgradeLevels(upgrades: unknown): UpgradeLevels {
+  if (Array.isArray(upgrades)) {
+    return Object.fromEntries(UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, upgrades.includes(upgradeKind) ? 1 : 0])) as UpgradeLevels;
+  }
+  if (upgrades && typeof upgrades === "object") {
+    return Object.fromEntries(
+      UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, Math.max(0, Math.min(3, Number((upgrades as Partial<Record<string, unknown>>)[upgradeKind] ?? 0)))]),
+    ) as UpgradeLevels;
+  }
+  return Object.fromEntries(UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, 0])) as UpgradeLevels;
 }

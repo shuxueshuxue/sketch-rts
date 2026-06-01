@@ -1,4 +1,4 @@
-import { AI_SCRIPT_VERSIONS, planAiCommandsFromScripts, SKETCH_RTS_PRESET_AI_STACK, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./ai-policy";
+import { AI_SCRIPT_VERSIONS, planAiCommandEntriesFromScripts, SKETCH_RTS_PRESET_AI_STACK, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./ai-policy";
 import { issuePlayerCommand, snapshotGame, type Game } from "./sim";
 import type { GameCommand, PlayerId } from "./types";
 
@@ -12,7 +12,7 @@ export type AiRuntimeState = {
 };
 
 export type AiRuntimeResult = {
-  commands: { playerId: PlayerId; command: GameCommand }[];
+  commands: { playerId: PlayerId; scriptId: string; command: GameCommand }[];
 };
 
 export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: number; scripts?: AiScript[]; version?: AiScriptVersion; versions?: Partial<Record<PlayerId, AiScriptVersion>> } = {}): AiRuntimeState {
@@ -44,16 +44,21 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
     runtime.lastThink[owner] = game.tick;
     const version = runtime.versions[owner] ?? runtime.version;
     const scripts = runtime.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
-    for (const command of planAiCommandsFromScripts(snapshot, owner, scripts, { teams: game.teams, version, ...options })) {
-      planned.push({ playerId: owner, command });
+    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams: game.teams, version, ...options })) {
+      planned.push({ playerId: owner, scriptId: entry.scriptId, command: entry.command });
     }
   }
 
   const hiredCampIds = new Set<string>();
+  const pickedItemIds = new Set<string>();
   for (const entry of planned) {
     if (entry.command.type === "hire") {
       if (hiredCampIds.has(entry.command.campId)) continue;
       hiredCampIds.add(entry.command.campId);
+    }
+    if (entry.command.type === "pickupItem") {
+      if (pickedItemIds.has(entry.command.itemId)) continue;
+      pickedItemIds.add(entry.command.itemId);
     }
     issuePlayerCommand(game, entry.playerId, entry.command);
     issued.push(entry);

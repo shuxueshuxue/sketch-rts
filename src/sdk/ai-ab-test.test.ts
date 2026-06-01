@@ -11,6 +11,9 @@ describe("SDK AI behavior A/B runner", () => {
       .townHall("v2", 500, 500, { id: "v2-main" })
       .townHall("v2", 1350, 620, { id: "v2-natural" })
       .tower("v2", 1370, 760, { id: "v2-natural-tower" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "stables", 740, 660, { id: "v2-stables" })
       .worker("v2", 450, 500)
       .townHall("v1", 3300, 3300, { id: "v1-main" })
       .townHall("v1", 2800, 3000, { id: "v1-natural" })
@@ -32,7 +35,9 @@ describe("SDK AI behavior A/B runner", () => {
       maxTicks: 2,
       thinkInterval: 1,
       prepare(game) {
-        game.buildings = game.buildings.filter((building) => ["v2-main", "v2-natural", "v2-natural-tower", "v1-main", "v1-natural", "v1-third"].includes(building.id));
+        game.buildings = game.buildings.filter((building) =>
+          ["v2-main", "v2-natural", "v2-natural-tower", "v2-barracks", "v2-archery", "v2-stables", "v1-main", "v1-natural", "v1-third"].includes(building.id),
+        );
         game.resources = game.resources.filter((resource) => ["v2-main-mine", "v2-natural-mine", "v2-third-mine", "v1-main-mine", "v1-natural-mine", "v1-third-mine"].includes(resource.id));
         game.units = game.units.filter((unit) => unit.id.startsWith("scene-"));
         if (!game.players["v2"]) throw new Error("missing v2 player");

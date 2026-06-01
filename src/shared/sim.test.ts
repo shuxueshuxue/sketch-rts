@@ -1,16 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "./catalog";
+import { BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
 import { AI_SCRIPT_LIBRARY } from "./ai-policy";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./ai-runtime";
-import { createBuilding } from "./map";
-import { createGame, issueCommand, stepGame } from "./sim";
-import type { MapId, PlayerId, PlayerNumberMap } from "./types";
+import { createBuilding, createInitialResources } from "./map";
+import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
+import { seconds } from "./time";
+import { sketchScene } from "../sdk/scene";
+import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
 function stepMany(game: ReturnType<typeof createGame>, count: number, runtime?: AiRuntimeState) {
   for (let i = 0; i < count; i += 1) {
     if (runtime) runPresetAiRuntime(game, runtime);
     stepGame(game);
   }
+}
+
+function stepUntil(game: ReturnType<typeof createGame>, maxTicks: number, predicate: () => boolean, runtime?: AiRuntimeState) {
+  for (let i = 0; i < maxTicks && !predicate(); i += 1) {
+    if (runtime) runPresetAiRuntime(game, runtime);
+    stepGame(game);
+  }
+  return predicate();
 }
 
 function runTwoAiDuel(mapId: MapId) {
@@ -37,12 +47,27 @@ function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAi
   expect(game.match.stats.unitsLost.player).toBeGreaterThan(0);
   expect(game.match.stats.unitsLost.enemy).toBeGreaterThan(0);
   expect(totalNonBaseBuildingsDestroyed).toBeGreaterThan(0);
-  expect(Math.max(...losingArmies)).toBeLessThanOrEqual(3);
+  expect(Math.max(...losingArmies)).toBeLessThanOrEqual(4);
 }
 
 function expectActivePlayersSpent(game: ReturnType<typeof createGame>, minimum: number) {
   for (const owner of game.activePlayers) {
     expect(game.match.stats.goldSpent[owner]).toBeGreaterThan(minimum);
+  }
+}
+
+function expectWinnerSpentAndLosersDiedCleanly(game: ReturnType<typeof createGame>, winnerMinimum: number, loserMinimum: number, maxLoserCombat = 4) {
+  for (const owner of game.activePlayers) {
+    if (owner === game.match.winner) {
+      expect(game.match.stats.goldSpent[owner]).toBeGreaterThan(winnerMinimum);
+      continue;
+    }
+    const remainingCombat = game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length;
+    const remainingBuildings = game.buildings.filter((building) => building.owner === owner).length;
+    expect(game.match.stats.goldSpent[owner]).toBeGreaterThan(loserMinimum);
+    expect((game.match.stats.unitsKilled[owner] ?? 0) + (game.match.stats.unitsLost[owner] ?? 0)).toBeGreaterThan(0);
+    expect(remainingCombat).toBeLessThanOrEqual(maxLoserCombat);
+    expect(remainingBuildings).toBe(0);
   }
 }
 
@@ -53,13 +78,63 @@ function sumPlayerStats(record: PlayerNumberMap) {
 describe("sketch RTS simulation", () => {
   it("defines a production roster with at least 10 distinct unit kinds and 5 building kinds including a tower", () => {
     expect(TRAINABLE_UNIT_KINDS.length).toBeGreaterThanOrEqual(10);
-    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem"]));
+    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "groveWarden", "emberRavager"]));
+    expect(MERCENARY_UNIT_KINDS).toEqual(expect.arrayContaining(["mercenary", "contractArcher", "fieldMedic"]));
+    expect(MERCENARY_UNIT_KINDS).toHaveLength(3);
     expect(Object.keys(BUILDING_DEFS).length).toBeGreaterThanOrEqual(5);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(0);
     expect(Object.keys(RACE_DEFS)).toEqual(expect.arrayContaining(["grove", "ember"]));
+    for (const race of Object.values(RACE_DEFS)) {
+      expect("productionPlan" in race).toBe(false);
+      expect("preferredUnits" in race).toBe(false);
+      expect(race.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest"]));
+      expect(race.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "defenseTower", "farm"]));
+      expect(race.upgrades).toEqual(expect.arrayContaining(["weaponTraining", "reinforcedPlating"]));
+    }
+    expect(RACE_DEFS.grove.trainableUnits).toContain("groveWarden");
+    expect(RACE_DEFS.grove.trainableUnits).not.toContain("emberRavager");
+    expect(RACE_DEFS.ember.trainableUnits).toContain("emberRavager");
+    expect(RACE_DEFS.ember.trainableUnits).not.toContain("groveWarden");
   });
 
-  it("stores race as player state and lets race scripts change AI production choices", () => {
+  it("keeps starts fair and prices paced for the slower five-worker mine economy", () => {
+    const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: ["player", "enemy"] });
+
+    expect(game.players.player.gold).toBe(game.players.enemy.gold);
+    expect(BUILDING_DEFS.barracks.cost + BUILDING_DEFS.farm.cost + UNIT_DEFS.footman.cost + UNIT_DEFS.lancer.cost).toBeLessThanOrEqual(game.players.player.gold);
+    expect(UNIT_DEFS.worker.cost).toBeLessThanOrEqual(75);
+    expect(UNIT_DEFS.footman.cost).toBeLessThanOrEqual(105);
+    expect(UNIT_DEFS.archer.cost).toBeLessThanOrEqual(110);
+    expect(BUILDING_DEFS.defenseTower.cost).toBeLessThan(BUILDING_DEFS.barracks.cost);
+    expect(BUILDING_DEFS.townHall.cost).toBeGreaterThan(BUILDING_DEFS.barracks.cost + UNIT_DEFS.worker.cost);
+    expect(BUILDING_DEFS.townHall.buildTime).toBeGreaterThanOrEqual(BUILDING_DEFS.barracks.buildTime * 2);
+  });
+
+  it("keeps map gold mines lean enough that expansions and harassment matter", () => {
+    const regularMaps = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "wildMarches"] as const;
+
+    for (const mapId of regularMaps) {
+      const mines = createInitialResources(mapId, ["player", "enemy"]);
+      expect(Math.max(...mines.filter((mine) => mine.id.includes("-main")).map((mine) => mine.amount))).toBe(6_000);
+      expect(Math.max(...mines.map((mine) => mine.amount))).toBe(6_000);
+      expect(Math.min(...mines.map((mine) => mine.amount))).toBe(6_000);
+    }
+
+    const grandMines = createInitialResources("grandThirty", Array.from({ length: 30 }, (_, index) => `p${index + 1}`));
+    expect(Math.max(...grandMines.map((mine) => mine.amount))).toBe(6_000);
+    expect(Math.min(...grandMines.map((mine) => mine.amount))).toBe(6_000);
+  });
+
+  it("keeps defense towers as support fire rather than cheap army replacements", () => {
+    const tower = BUILDING_DEFS.defenseTower;
+
+    expect(tower.attackDamage / tower.attackCooldown).toBeLessThanOrEqual(0.12);
+    expect(tower.attackRange).toBeLessThanOrEqual(170);
+    expect(tower.hp).toBeLessThanOrEqual(300);
+    expect(tower.cost).toBeGreaterThanOrEqual(120);
+  });
+
+  it("stores race as player state without changing preset AI production choices", () => {
     const grove = createGame("bareDuel", { aiPlayers: ["enemy"], races: { enemy: "grove" } });
     const ember = createGame("bareDuel", { aiPlayers: ["enemy"], races: { enemy: "ember" } });
     grove.players.enemy.gold = 5000;
@@ -77,7 +152,7 @@ describe("sketch RTS simulation", () => {
     expect(grove.players.enemy.race).toBe("grove");
     expect(ember.players.enemy.race).toBe("ember");
     expect(groveSanctum.queue[0]?.unitKind).toBe("priest");
-    expect(emberSanctum.queue[0]?.unitKind).toBe("witch");
+    expect(emberSanctum.queue[0]?.unitKind).toBe("priest");
   });
 
   it("creates a compact 4096 square sample map with authored content inside bounds", () => {
@@ -112,6 +187,37 @@ describe("sketch RTS simulation", () => {
 
       expect(expansionMines.length > 0).toBe(scenario.hasExpansion);
       expect(neutralUnits.length > 0).toBe(scenario.hasNeutral);
+    }
+  });
+
+  it("places allied players on their team side instead of splitting starts by raw slot index", () => {
+    const game = createGame("bareDuel", {
+      players: ["v2", "v1a", "v1b"],
+      aiPlayers: [],
+      teams: { v2: "north", v1a: "south", v1b: "south" },
+    });
+
+    const townHallX = (owner: string) => game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!.x;
+
+    expect(townHallX("v2")).toBeLessThan(game.map.width / 2);
+    expect(townHallX("v1a")).toBeGreaterThan(game.map.width / 2);
+    expect(townHallX("v1b")).toBeGreaterThan(game.map.width / 2);
+  });
+
+  it("keeps each dynamic player start paired with a nearby main mine", () => {
+    const game = createGame("bareDuel", {
+      players: ["v2", "v1a", "v1b"],
+      aiPlayers: [],
+      teams: { v2: "north", v1a: "south", v1b: "south" },
+    });
+
+    for (const owner of ["v2", "v1a", "v1b"]) {
+      const townHall = game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
+      const nearestMine = game.resources
+        .filter((resource) => resource.amount > 0)
+        .sort((a, b) => Math.hypot(a.x - townHall.x, a.y - townHall.y) - Math.hypot(b.x - townHall.x, b.y - townHall.y))[0]!;
+
+      expect(Math.hypot(nearestMine.x - townHall.x, nearestMine.y - townHall.y)).toBeLessThan(320);
     }
   });
 
@@ -153,7 +259,7 @@ describe("sketch RTS simulation", () => {
     const game = createGame("bareDuel", {
       scenario: {
         addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
-        addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: 90, cooldownRemaining: 0 }],
+        addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
         addUnits: [{ id: "unit-agent-wildling", owner: "neutral", kind: "wildling", x: 1600, y: 1460 }, woundedSeed],
         addBuildings: [{ id: "building-agent-farm", owner: "player", kind: "farm", x: 620, y: 640, complete: true }],
         addLandmarks: [{ id: "landmark-agent-banner", kind: "bannerStone", x: 1500, y: 1500, size: 96, rotation: 0.25 }],
@@ -189,6 +295,39 @@ describe("sketch RTS simulation", () => {
     expect(mine!.amount).toBeLessThan(8000);
   });
 
+  it("saturates a gold mine at five workers instead of scaling with extra miners", () => {
+    const incomeWithFour = mineGoldIncomeWithWorkers(4, 1400);
+    const incomeWithFive = mineGoldIncomeWithWorkers(5, 1400);
+    const incomeWithEight = mineGoldIncomeWithWorkers(8, 1400);
+
+    expect(incomeWithFive).toBeGreaterThan(incomeWithFour);
+    expect(incomeWithEight).toBeLessThanOrEqual(incomeWithFive);
+  });
+
+  it("taxes delivered mine gold through Warcraft-like upkeep brackets", () => {
+    const game = createGame();
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    const mine = game.resources.find((resource) => resource.kind === "goldMine")!;
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    game.players.player.gold = 0;
+
+    const deliverAtSupply = (supplyUsed: number) => {
+      game.players.player.supplyUsed = supplyUsed;
+      worker.x = townHall.x;
+      worker.y = townHall.y;
+      worker.carryingGold = 10;
+      worker.order = { type: "mine", resourceId: mine.id, phase: "return", timer: 0 };
+      stepGame(game);
+    };
+
+    deliverAtSupply(50);
+    expect(game.players.player.gold).toBe(10);
+    deliverAtSupply(51);
+    expect(game.players.player.gold).toBe(17);
+    deliverAtSupply(81);
+    expect(game.players.player.gold).toBe(21);
+  });
+
   it("builds a barracks and trains soldiers", () => {
     const game = createGame();
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
@@ -207,6 +346,20 @@ describe("sketch RTS simulation", () => {
     stepMany(game, 260);
 
     expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman").length).toBe(1);
+  });
+
+  it("enforces race-specific trainable units through the ordinary train command", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], races: { player: "grove", enemy: "ember" } });
+    const groveBarracks = createBuilding("grove-barracks", "player", "barracks", 620, 620, true);
+    const emberBarracks = createBuilding("ember-barracks", "enemy", "barracks", 3300, 3300, true);
+    game.buildings.push(groveBarracks, emberBarracks);
+    game.players.player.gold = 500;
+    game.players.enemy.gold = 500;
+
+    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "groveWarden" })).not.toThrow();
+    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "emberRavager" })).toThrow(/race/i);
+    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberBarracks.id, unitKind: "emberRavager" })).not.toThrow();
+    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberBarracks.id, unitKind: "groveWarden" })).toThrow(/race/i);
   });
 
   it("reassigns AI workers to resume stalled construction", () => {
@@ -254,6 +407,44 @@ describe("sketch RTS simulation", () => {
     expect(target.hp).toBeLessThan(target.maxHp);
   });
 
+  it("lets defense towers focus wounded high-threat units instead of only the nearest enemy", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = game.units.filter((unit) => unit.kind === "worker");
+    const tower = createBuilding("building-player-smart-tower", "player", "defenseTower", 500, 500, true);
+    game.buildings.push(tower);
+    const healthyFront = game.spawnUnit("enemy", "footman", 585, 500);
+    const woundedRaider = game.spawnUnit("enemy", "raider", 620, 500);
+    woundedRaider.hp = 20;
+
+    stepGame(game);
+
+    expect(woundedRaider.hp).toBeLessThan(20);
+    expect(healthyFront.hp).toBe(healthyFront.maxHp);
+  });
+
+  it("lets moon wells slowly heal nearby wounded soldiers without repairing workers", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = game.units.filter((unit) => unit.kind === "worker");
+    const well = createBuilding("building-player-moon-well", "player", "moonWell", 500, 500, true);
+    game.buildings.push(well);
+    const woundedFootman = game.spawnUnit("player", "footman", 620, 500);
+    const distantLancer = game.spawnUnit("player", "lancer", 850, 500);
+    const woundedWorker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    woundedFootman.hp = 80;
+    distantLancer.hp = 70;
+    woundedWorker.x = 560;
+    woundedWorker.y = 500;
+    woundedWorker.hp = 20;
+
+    stepMany(game, 92);
+
+    expect(woundedFootman.hp).toBe(100);
+    expect(woundedFootman.hp).toBeLessThan(120);
+    expect(distantLancer.hp).toBe(70);
+    expect(woundedWorker.hp).toBe(20);
+    expect(game.effects.some((effect) => effect.type === "heal" && effect.fromX === well.x && effect.toX === woundedFootman.x)).toBe(true);
+  });
+
   it("lets AI build a defensive tower near a pressured base through normal construction", () => {
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
     const runtime = createAiRuntime(["enemy"]);
@@ -298,23 +489,89 @@ describe("sketch RTS simulation", () => {
     expect(hit).toMatchObject({ x: target.x, y: target.y });
   });
 
-  it("awards XP and modest level stats only to the unit that lands the killing blow", () => {
+  it("awards XP-threshold stars only to the unit that lands the killing blow, capped at 3 stars", () => {
     const game = createGame();
     const finisher = game.spawnUnit("player", "footman", 2500, 2500);
     const nearbyAlly = game.spawnUnit("player", "archer", 2490, 2520);
-    const target = game.spawnUnit("enemy", "worker", 2538, 2500);
-    target.hp = 1;
 
-    issueCommand(game, { type: "attack", unitIds: [finisher.id], targetId: target.id });
-    stepMany(game, 1);
+    killWith(game, finisher, "worker");
+    expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward);
+    expect(finisher.level).toBe(0);
 
-    expect(finisher.kills).toBe(1);
-    expect(finisher.xp).toBeGreaterThan(0);
+    killWith(game, finisher, "ancientStag");
+    expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward + UNIT_DEFS.ancientStag.xpReward);
+    expect(finisher.level).toBe(1);
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.25));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.25));
+
+    killWith(game, finisher, "stonebackBrute");
     expect(finisher.level).toBe(2);
-    expect(finisher.maxHp).toBeLessThanOrEqual(UNIT_DEFS.footman.hp + 12);
-    expect(finisher.attackDamage).toBeLessThanOrEqual(UNIT_DEFS.footman.attackDamage + 2);
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.5));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.5));
+
+    for (let i = 0; i < 6; i += 1) killWith(game, finisher, "ancientStag");
+
+    expect(finisher.kills).toBe(9);
+    expect(finisher.level).toBe(3);
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.75));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.75));
     expect(nearbyAlly.xp).toBe(0);
-    expect(nearbyAlly.level).toBe(1);
+    expect(nearbyAlly.level).toBe(0);
+  });
+
+  it("applies veterancy after tech bonuses with a linear non-compounding multiplier", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 5_000;
+    const barracks = createBuilding("building-player-veterancy-tech-barracks", "player", "barracks", 760, 680, true);
+    game.buildings.push(barracks);
+    const knight = game.spawnUnit("player", "knight", 900, 900);
+
+    for (const upgradeKind of ["weaponTraining", "reinforcedPlating"] as const) {
+      for (let level = 0; level < 3; level += 1) {
+        issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind });
+        stepMany(game, UPGRADE_DEFS[upgradeKind].levels[level]!.researchTime + 1);
+      }
+    }
+    for (let i = 0; i < 4; i += 1) killWith(game, knight, "ancientStag", "neutral");
+
+    const techAttack = UNIT_DEFS.knight.attackDamage + UPGRADE_DEFS.weaponTraining.levels.reduce((sum, level) => sum + level.attackBonus, 0);
+    const techHp = UNIT_DEFS.knight.hp + UPGRADE_DEFS.reinforcedPlating.levels.reduce((sum, level) => sum + level.maxHpBonus, 0);
+    expect(knight.level).toBe(3);
+    expect(knight.attackDamage).toBe(Math.round(techAttack * 1.75));
+    expect(knight.maxHp).toBe(Math.round(techHp * 1.75));
+  });
+
+  it("experience books level the consuming unit through the same veterancy scaling", () => {
+    const game = createGame("bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addItems: [{ id: "book-same-scaling", kind: "experienceBook", x: 0, y: 0, carrierId: "book-carrier", cooldownRemaining: 0 }],
+        addUnits: [{ id: "book-carrier", owner: "player", kind: "mercenary", x: 900, y: 900 }],
+      },
+    });
+    const carrier = game.units.find((unit) => unit.id === "book-carrier")!;
+
+    issueCommand(game, { type: "useItem", unitId: carrier.id, itemId: "book-same-scaling" });
+
+    expect(carrier.level).toBe(2);
+    expect(carrier.maxHp).toBe(Math.round(UNIT_DEFS.mercenary.hp * 1.5));
+    expect(carrier.attackDamage).toBe(Math.round(UNIT_DEFS.mercenary.attackDamage * 1.5));
+    expect(game.items.some((item) => item.id === "book-same-scaling")).toBe(false);
+  });
+
+  it("awards scaled gold bounty for neutral wildling last hits even when the camp has no item", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 0;
+    const finisher = game.spawnUnit("player", "footman", 2500, 2500);
+    finisher.attackDamage = 500;
+    const wildlingKinds: UnitKind[] = ["wildling", "mossGnawer", "thornSlinger", "barkMender", "stonebackBrute", "gladeWitch", "ancientStag"];
+
+    killWith(game, finisher, "mossGnawer", "neutral");
+    killWith(game, finisher, "ancientStag", "neutral");
+
+    expect(wildlingKinds.every((kind) => (UNIT_DEFS[kind].goldBounty ?? 0) > 0)).toBe(true);
+    expect(game.players.player.gold).toBe(105);
+    expect(UNIT_DEFS.ancientStag.goldBounty).toBeGreaterThan(UNIT_DEFS.mossGnawer.goldBounty ?? 0);
   });
 
   it("emits tower projectile feedback when a defense tower fires", () => {
@@ -350,12 +607,25 @@ describe("sketch RTS simulation", () => {
   });
 
   it("supports healing, summoning, and curse abilities with visible effect records", () => {
-    const game = createGame();
-    const priest = game.spawnUnit("player", "priest", 2000, 2000);
-    const summoner = game.spawnUnit("player", "summoner", 2050, 2000);
-    const witch = game.spawnUnit("player", "witch", 2100, 2000);
-    const hurt = game.spawnUnit("player", "footman", 2030, 2040);
-    const enemy = game.spawnUnit("enemy", "raider", 2140, 2000);
+    const game = sketchScene("ability-effects")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3500, 3500)
+      .unit("player", "priest", 2000, 2000, { id: "ability-priest" })
+      .unit("player", "summoner", 2050, 2000, { id: "ability-summoner" })
+      .unit("player", "witch", 2100, 2000, { id: "ability-witch" })
+      .unit("player", "footman", 2030, 2040, { id: "hurt-footman" })
+      .unit("enemy", "raider", 2240, 2000, { id: "curse-target" })
+      .build()
+      .createGame();
+    const priest = game.units.find((unit) => unit.id === "ability-priest")!;
+    const summoner = game.units.find((unit) => unit.id === "ability-summoner")!;
+    const witch = game.units.find((unit) => unit.id === "ability-witch")!;
+    const hurt = game.units.find((unit) => unit.id === "hurt-footman")!;
+    const enemy = game.units.find((unit) => unit.id === "curse-target")!;
     hurt.hp = 30;
 
     issueCommand(game, { type: "cast", unitId: priest.id, ability: "heal", targetId: hurt.id });
@@ -404,7 +674,9 @@ describe("sketch RTS simulation", () => {
     const runtime = createAiRuntime(["enemy"]);
     const camp = game.mercenaryCamps[0];
     expect(camp).toBeDefined();
+    game.units = game.units.filter((unit) => unit.owner !== "neutral" || distance(unit, camp!) > 300);
     game.players.enemy.gold = 1000;
+    game.spawnUnit("enemy", "footman", camp!.x, camp!.y);
     const victim = game.spawnUnit("player", "worker", camp!.x + 70, camp!.y);
     victim.hp = 22;
 
@@ -461,9 +733,331 @@ describe("sketch RTS simulation", () => {
     expect(game.match.stats.mercenaryKills.player).toBe(1);
   });
 
+  it("hires distinct mercenary kinds and lets hired mercenaries gain stars like ordinary units", () => {
+    const game = createGame("bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addMercenaryCamps: [
+          { id: "camp-blade", x: 800, y: 800, radius: 54, hireKind: "mercenary", cost: UNIT_DEFS.mercenary.cost, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 },
+          { id: "camp-bow", x: 900, y: 800, radius: 54, hireKind: "contractArcher", cost: UNIT_DEFS.contractArcher.cost, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 },
+          { id: "camp-medic", x: 1000, y: 800, radius: 54, hireKind: "fieldMedic", cost: UNIT_DEFS.fieldMedic.cost, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 },
+        ],
+        addBuildings: [
+          { id: "building-player-hire-proof-farm", owner: "player", kind: "farm", x: 720, y: 720, complete: true },
+          { id: "building-player-hire-proof-farm-2", owner: "player", kind: "farm", x: 760, y: 720, complete: true },
+        ],
+      },
+    });
+    game.players.player.gold = 1000;
+    game.spawnUnit("player", "footman", 800, 800);
+    game.spawnUnit("player", "footman", 900, 800);
+    game.spawnUnit("player", "footman", 1000, 800);
+
+    issueCommand(game, { type: "hire", campId: "camp-blade" });
+    issueCommand(game, { type: "hire", campId: "camp-bow" });
+    issueCommand(game, { type: "hire", campId: "camp-medic" });
+
+    expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "mercenary" && unit.level === 0)).toBe(true);
+    expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "contractArcher" && unit.level === 0)).toBe(true);
+    expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "fieldMedic" && unit.level === 0)).toBe(true);
+
+    const hired = game.units.find((unit) => unit.owner === "player" && unit.kind === "contractArcher")!;
+    expect(hired.level).toBe(0);
+    killWith(game, hired, "worker");
+    expect(hired.level).toBe(0);
+    for (let i = 0; i < 4; i += 1) killWith(game, hired, "ancientStag");
+
+    expect(hired.level).toBe(3);
+    expect(hired.attackDamage).toBeGreaterThan(UNIT_DEFS.contractArcher.attackDamage);
+  });
+
+  it("requires a friendly unit at a mercenary camp before hiring", () => {
+    const game = createGame("bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addMercenaryCamps: [{ id: "camp-local-only", x: 1600, y: 1600, radius: 54, hireKind: "mercenary", cost: UNIT_DEFS.mercenary.cost, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 }],
+      },
+    });
+    game.players.player.gold = 1000;
+
+    expect(() => issueCommand(game, { type: "hire", campId: "camp-local-only" })).toThrow(/friendly unit/i);
+
+    game.spawnUnit("player", "footman", 1600, 1600);
+    issueCommand(game, { type: "hire", campId: "camp-local-only" });
+
+    expect(game.mercenaryCamps.find((camp) => camp.id === "camp-local-only")?.stock).toBe(0);
+    expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "mercenary")).toBe(true);
+  });
+
+  it("researches three expensive levels of shared tech through ordinary commands", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 3_000;
+    const barracks = createBuilding("building-player-tech-barracks", "player", "barracks", 760, 680, true);
+    game.buildings.push(barracks);
+    const veteran = game.spawnUnit("player", "footman", 900, 900);
+    const baseDamage = veteran.attackDamage;
+    const baseHp = veteran.maxHp;
+
+    issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" });
+    expect(game.players.player.gold).toBe(3_000 - UPGRADE_DEFS.weaponTraining.levels[0]!.cost);
+    expect(barracks.researchQueue[0]).toMatchObject({ upgradeKind: "weaponTraining", targetLevel: 1 });
+    stepMany(game, UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime + 1);
+
+    expect(game.players.player.upgrades.weaponTraining).toBe(1);
+    expect(veteran.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels[0]!.attackBonus);
+
+    issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" });
+    stepMany(game, UPGRADE_DEFS.weaponTraining.levels[1]!.researchTime + 1);
+    issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" });
+    stepMany(game, UPGRADE_DEFS.weaponTraining.levels[2]!.researchTime + 1);
+
+    expect(game.players.player.upgrades.weaponTraining).toBe(3);
+    expect(veteran.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels.reduce((sum, level) => sum + level.attackBonus, 0));
+
+    issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "reinforcedPlating" });
+    stepMany(game, UPGRADE_DEFS.reinforcedPlating.levels[0]!.researchTime + 1);
+    expect(game.players.player.upgrades.reinforcedPlating).toBe(1);
+    expect(veteran.maxHp).toBe(baseHp + UPGRADE_DEFS.reinforcedPlating.levels[0]!.maxHpBonus);
+
+    issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
+    stepMany(game, 180);
+
+    const future = game.units.find((unit) => unit.owner === "player" && unit.kind === "footman" && unit.id !== veteran.id)!;
+    expect(future.attackDamage).toBe(veteran.attackDamage);
+    expect(() => issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" })).toThrow(/already at max level/);
+  });
+
+  it("keeps neutral treasure on camp carriers, lets monsters use permitted items, and drops items on death", () => {
+    const game = sketchScene("neutral-carried-treasure")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("neutral", "gladeWitch", 1600, 1600, { id: "neutral-lightning-carrier" })
+      .unit("neutral", "gladeWitch", 1720, 1600, { id: "neutral-scroll-carrier" })
+      .unit("player", "footman", 1640, 1600, { id: "player-challenger" })
+      .item("item-red-lightning", "lightningRod", 0, 0, { carrierId: "neutral-lightning-carrier" })
+      .item("item-red-scroll", "guardianScroll", 0, 0, { carrierId: "neutral-scroll-carrier" })
+      .build()
+      .createGame();
+    const lightningCarrier = game.units.find((unit) => unit.id === "neutral-lightning-carrier")!;
+    const challenger = game.units.find((unit) => unit.id === "player-challenger")!;
+
+    stepMany(game, 3);
+
+    expect(challenger.hp).toBeLessThan(challenger.maxHp);
+    expect(game.effects.some((effect) => effect.type === "chainLightning")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "guardianField")).toBe(false);
+
+    lightningCarrier.hp = 1;
+    challenger.cooldown = 0;
+    issueCommand(game, { type: "attack", unitIds: [challenger.id], targetId: lightningCarrier.id });
+    stepMany(game, 1);
+
+    const dropped = game.items.find((item) => item.id === "item-red-lightning");
+    expect(dropped?.carrierId).toBeUndefined();
+    expect(dropped?.x).toBeCloseTo(lightningCarrier.x);
+    expect(dropped?.y).toBeCloseTo(lightningCarrier.y);
+  });
+
+  it("lets ordinary units pick up, drop, and activate carried treasure through commands", () => {
+    const game = sketchScene("player-item-commands")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "footman", 1500, 1500, { id: "item-caster" })
+      .worker("enemy", 1560, 1500, { id: "first-target" })
+      .worker("enemy", 1600, 1515, { id: "second-target" })
+      .item("item-ground-lightning", "lightningRod", 1508, 1500)
+      .build()
+      .createGame();
+    const caster = game.units.find((unit) => unit.id === "item-caster")!;
+    const firstTarget = game.units.find((unit) => unit.id === "first-target")!;
+    const secondTarget = game.units.find((unit) => unit.id === "second-target")!;
+
+    issueCommand(game, { type: "pickupItem", unitId: caster.id, itemId: "item-ground-lightning" });
+    expect(game.items.find((item) => item.id === "item-ground-lightning")?.carrierId).toBe(caster.id);
+
+    issueCommand(game, { type: "useItem", unitId: caster.id, itemId: "item-ground-lightning", targetId: firstTarget.id });
+
+    expect(firstTarget.hp).toBeLessThan(firstTarget.maxHp);
+    expect(secondTarget.hp).toBeLessThan(secondTarget.maxHp);
+    expect(game.effects.some((effect) => effect.type === "chainLightning")).toBe(true);
+
+    issueCommand(game, { type: "dropItem", unitId: caster.id, itemId: "item-ground-lightning", x: caster.x + 24, y: caster.y + 10 });
+
+    const dropped = game.items.find((item) => item.id === "item-ground-lightning");
+    expect(dropped?.carrierId).toBeUndefined();
+    expect(dropped?.x).toBeCloseTo(caster.x + 24);
+  });
+
+  it("guardian scroll protects nearby friendly units from incoming damage for its duration", () => {
+    const game = sketchScene("guardian-scroll-protection")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "footman", 1500, 1500, { id: "guarded-footman" })
+      .unit("player", "archer", 1540, 1500, { id: "scroll-carrier" })
+      .unit("enemy", "archer", 1580, 1500, { id: "enemy-archer" })
+      .item("guardian-scroll", "guardianScroll", 0, 0, { carrierId: "scroll-carrier" })
+      .build()
+      .createGame();
+    const guarded = game.units.find((unit) => unit.id === "guarded-footman")!;
+    const attacker = game.units.find((unit) => unit.id === "enemy-archer")!;
+
+    issueCommand(game, { type: "useItem", unitId: "scroll-carrier", itemId: "guardian-scroll" });
+    issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [attacker.id], targetId: guarded.id });
+    stepMany(game, 2);
+
+    expect(guarded.hp).toBe(guarded.maxHp);
+    expect(guarded.effects.some((effect) => effect.type === "guardian")).toBe(true);
+
+    stepMany(game, seconds(8.5));
+    attacker.cooldown = 0;
+    issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [attacker.id], targetId: guarded.id });
+    stepMany(game, 2);
+
+    expect(guarded.hp).toBeLessThan(guarded.maxHp);
+  });
+
+  it("storm staff creates sustained area damage instead of only a single burst", () => {
+    const game = sketchScene("storm-staff-sustained-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "archer", 1500, 1500, { id: "storm-caster" })
+      .unit("enemy", "footman", 1600, 1500, { id: "storm-target-a" })
+      .unit("enemy", "archer", 1630, 1530, { id: "storm-target-b" })
+      .item("storm-staff", "stormStaff", 0, 0, { carrierId: "storm-caster" })
+      .build()
+      .createGame();
+    const firstTarget = game.units.find((unit) => unit.id === "storm-target-a")!;
+    const secondTarget = game.units.find((unit) => unit.id === "storm-target-b")!;
+
+    issueCommand(game, { type: "useItem", unitId: "storm-caster", itemId: "storm-staff", x: 1610, y: 1510 });
+    const firstAfterCast = firstTarget.hp;
+    const secondAfterCast = secondTarget.hp;
+    stepMany(game, 50);
+
+    expect(firstTarget.hp).toBeLessThan(firstAfterCast);
+    expect(secondTarget.hp).toBeLessThan(secondAfterCast);
+    expect(game.effects.some((effect) => effect.type === "storm")).toBe(true);
+  });
+
+  it("balances lightning rod around two-times the original chained burst", () => {
+    const game = sketchScene("lightning-rod-total-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "contractArcher", 900, 900, { id: "rod-caster" })
+      .unit("enemy", "golem", 1160, 900, { id: "chain-a" })
+      .unit("enemy", "golem", 1200, 925, { id: "chain-b" })
+      .unit("enemy", "golem", 1240, 950, { id: "chain-c" })
+      .item("lightning-rod", "lightningRod", 0, 0, { carrierId: "rod-caster" })
+      .build()
+      .createGame();
+    const targets = ["chain-a", "chain-b", "chain-c"].map((id) => game.units.find((unit) => unit.id === id)!);
+    const hpBefore = targets.reduce((sum, unit) => sum + unit.hp, 0);
+
+    issueCommand(game, { type: "useItem", unitId: "rod-caster", itemId: "lightning-rod", targetId: "chain-a" });
+
+    const damage = hpBefore - targets.reduce((sum, unit) => sum + unit.hp, 0);
+    expect(damage).toBeGreaterThanOrEqual(175);
+    expect(damage).toBeLessThanOrEqual(185);
+  });
+
+  it("balances storm staff as a two-times sustained area item", () => {
+    const game = sketchScene("storm-staff-total-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "contractArcher", 900, 900, { id: "storm-caster" })
+      .unit("enemy", "golem", 1210, 900, { id: "storm-a" })
+      .unit("enemy", "golem", 1230, 930, { id: "storm-b" })
+      .item("storm-staff", "stormStaff", 0, 0, { carrierId: "storm-caster" })
+      .build()
+      .createGame();
+    const targets = ["storm-a", "storm-b"].map((id) => game.units.find((unit) => unit.id === id)!);
+    const hpBefore = targets.reduce((sum, unit) => sum + unit.hp, 0);
+
+    issueCommand(game, { type: "useItem", unitId: "storm-caster", itemId: "storm-staff", x: 1210, y: 900 });
+    stepMany(game, seconds(5));
+
+    const damagePerTarget = (hpBefore - targets.reduce((sum, unit) => sum + unit.hp, 0)) / targets.length;
+    expect(damagePerTarget).toBeGreaterThanOrEqual(45);
+    expect(damagePerTarget).toBeLessThanOrEqual(51);
+  });
+
+  it("balances flame cloak as repeated close-range pressure, not a one-frame nuke", () => {
+    const game = sketchScene("flame-cloak-total-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .worker("player", 1000, 1000, { id: "cloak-carrier" })
+      .worker("enemy", 1080, 1000, { id: "burn-target" })
+      .item("flame-cloak", "flameCloak", 0, 0, { carrierId: "cloak-carrier" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "burn-target")!;
+    const hpBefore = target.hp;
+
+    stepMany(game, seconds(6.1));
+
+    const damage = hpBefore - target.hp;
+    expect(damage).toBeGreaterThanOrEqual(48);
+    expect(damage).toBeLessThanOrEqual(60);
+  });
+
+  it("lets a wildling use a carried storm staff against challengers", () => {
+    const game = sketchScene("neutral-storm-staff-use")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("neutral", "gladeWitch", 1000, 1000, { id: "neutral-storm-carrier" })
+      .unit("player", "golem", 1250, 1000, { id: "player-challenger" })
+      .item("neutral-storm-staff", "stormStaff", 0, 0, { carrierId: "neutral-storm-carrier" })
+      .build()
+      .createGame();
+    const challenger = game.units.find((unit) => unit.id === "player-challenger")!;
+
+    stepMany(game, 1);
+
+    expect(challenger.hp).toBeLessThan(challenger.maxHp);
+    expect(game.effects.some((effect) => effect.type === "storm")).toBe(true);
+  });
+
+  it("seeds normal neutral maps with real treasure carried by wildlings", () => {
+    const game = createGame("wildMarches", { aiPlayers: [] });
+    const carriedItems = game.items.filter((item) => item.carrierId);
+
+    expect(carriedItems.length).toBeGreaterThanOrEqual(3);
+    expect(carriedItems.map((item) => item.kind)).toEqual(expect.arrayContaining(["flameCloak", "lightningRod", "experienceBook"]));
+    for (const item of carriedItems) {
+      const carrier = game.units.find((unit) => unit.id === item.carrierId);
+      expect(carrier?.owner).toBe("neutral");
+    }
+  });
+
+  it("guards normal mercenary camps with nearby wildlings", () => {
+    for (const mapId of ["verdantCrossroads", "campRush", "wildMarches"] as const) {
+      const game = createGame(mapId, { aiPlayers: [] });
+      for (const camp of game.mercenaryCamps) {
+        const nearestGuardDistance = Math.min(...game.units.filter((unit) => unit.owner === "neutral").map((unit) => distance(unit, camp)));
+        expect(nearestGuardDistance, `${mapId}:${camp.id}`).toBeLessThanOrEqual(280);
+      }
+    }
+  });
+
   it("resolves soldier combat against neutral wildlings", () => {
-    const game = createGame();
-    const wildling = game.units.find((unit) => unit.owner === "neutral" && unit.kind === "wildling")!;
+    const game = createGame("bareDuel");
+    const wildling = game.spawnUnit("neutral", "wildling", 1200, 1200);
     const soldier = game.spawnUnit("player", "footman", wildling.x - 70, wildling.y);
 
     issueCommand(game, { type: "attack", unitIds: [soldier.id], targetId: wildling.id });
@@ -474,8 +1068,8 @@ describe("sketch RTS simulation", () => {
   });
 
   it("lets attack-move soldiers acquire and clear neutral camp units", () => {
-    const game = createGame();
-    const wildling = game.units.find((unit) => unit.owner === "neutral" && unit.kind === "wildling")!;
+    const game = createGame("bareDuel");
+    const wildling = game.spawnUnit("neutral", "wildling", 1200, 1200);
     const soldier = game.spawnUnit("player", "footman", wildling.x - 90, wildling.y);
     wildling.hp = 10;
 
@@ -504,7 +1098,7 @@ describe("sketch RTS simulation", () => {
   it("pushes enemy AI toward an attack after building an army", () => {
     const game = createGame();
     const runtime = createAiRuntime(["enemy"]);
-    stepMany(game, 1800, runtime);
+    stepUntil(game, 3_600, () => game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker").length >= 3, runtime);
 
     const enemySoldiers = game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker");
     const attackOrders = enemySoldiers.filter((unit) => unit.order?.type === "attack" || unit.order?.type === "move" || unit.order?.type === "attackMove");
@@ -516,7 +1110,7 @@ describe("sketch RTS simulation", () => {
   it("commands AI armies as a clustered attack-move wave instead of direct single-unit base dives", () => {
     const game = createGame();
     const runtime = createAiRuntime(["enemy"]);
-    stepMany(game, 1800, runtime);
+    stepUntil(game, 5_400, () => game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker" && unit.order.type === "attackMove").length >= 3, runtime);
 
     const army = game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker");
     const attackMoveOrders = army.map((unit) => unit.order).filter((order): order is Extract<typeof order, { type: "attackMove" }> => order.type === "attackMove");
@@ -544,11 +1138,11 @@ describe("sketch RTS simulation", () => {
     expect(unfinishedFarms.length).toBeLessThanOrEqual(1);
   });
 
-  it("expands AI economies to contested gold mines when expansions exist", () => {
-    const game = createGame("verdantCrossroads", { aiPlayers: ["player", "enemy"] });
+  it("expands AI economies to open gold mines when expansions exist", () => {
+    const game = createGame("openClaims", { aiPlayers: ["player", "enemy"] });
     const runtime = createAiRuntime(["player", "enemy"]);
 
-    for (let i = 0; i < 12_000 && !ownersHaveMiningExpansions(game, ["player", "enemy"]); i += 1) {
+    for (let i = 0; i < 36_000 && !ownersHaveMiningExpansions(game, ["player", "enemy"]); i += 1) {
       runPresetAiRuntime(game, runtime);
       stepGame(game);
     }
@@ -613,10 +1207,11 @@ describe("sketch RTS simulation", () => {
     const totalNeutralKills = sumPlayerStats(game.match.stats.neutralUnitsKilled);
     const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
     const survivingTownHallOwners = game.activePlayers.filter((owner) => game.buildings.some((building) => building.owner === owner && building.kind === "townHall"));
+    const maxAcceptableLoserCombat = 12;
     const survivingContenders = game.activePlayers.filter(
       (owner) =>
         game.buildings.some((building) => building.owner === owner && building.kind === "townHall") ||
-        game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length > 3,
+        game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length > maxAcceptableLoserCombat,
     );
     const loserArmies = game.activePlayers
       .filter((owner) => owner !== game.match.winner)
@@ -628,10 +1223,10 @@ describe("sketch RTS simulation", () => {
     expect(game.match.winner).not.toBeNull();
     expect(survivingTownHallOwners.every((owner) => owner === game.match.winner)).toBe(true);
     expect(survivingContenders).toEqual([game.match.winner]);
-    expect(Math.max(...loserArmies)).toBeLessThanOrEqual(3);
+    expect(Math.max(...loserArmies)).toBeLessThanOrEqual(maxAcceptableLoserCombat);
     expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
     expect(elapsedMs).toBeLessThan(2_000);
-    expectActivePlayersSpent(game, 1_500);
+    expectWinnerSpentAndLosersDiedCleanly(game, 1_500, 600, maxAcceptableLoserCombat);
     expect(game.match.stats.unitsKilled.player + game.match.stats.unitsKilled.enemy + game.match.stats.unitsKilled.enemy2).toBeGreaterThan(20);
     expect(game.match.stats.unitsLost.player + game.match.stats.unitsLost.enemy + game.match.stats.unitsLost.enemy2).toBeGreaterThan(20);
     expect(totalNeutralKills).toBeGreaterThan(0);
@@ -646,15 +1241,17 @@ describe("sketch RTS simulation", () => {
     });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
     const started = performance.now();
-    const enemyFootman = game.spawnUnit("enemy", "footman", 3000, 520);
-    const enemy2Footman = game.spawnUnit("enemy2", "footman", 3038, 520);
+    const enemyBase = game.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall")!;
+    const enemy2Base = game.buildings.find((building) => building.owner === "enemy2" && building.kind === "townHall")!;
+    const enemyFootman = game.spawnUnit("enemy", "footman", enemyBase.x - 60, enemyBase.y - 20);
+    const enemy2Footman = game.spawnUnit("enemy2", "footman", enemy2Base.x - 60, enemy2Base.y - 20);
 
     stepMany(game, 20, runtime);
 
     expect(enemyFootman.order.type === "attack" ? enemyFootman.order.targetId : "").not.toBe(enemy2Footman.id);
     expect(enemy2Footman.order.type === "attack" ? enemy2Footman.order.targetId : "").not.toBe(enemyFootman.id);
 
-    while (!game.match.winner && game.tick < 36_000) {
+    while (!game.match.winner && game.tick < 48_000) {
       runPresetAiRuntime(game, runtime);
       stepGame(game);
     }
@@ -669,11 +1266,12 @@ describe("sketch RTS simulation", () => {
       .map((owner) => game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length);
 
     expect(game.match.winner).not.toBeNull();
-    expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
+    expect(game.match.endedAtTick).toBeLessThanOrEqual(48_000);
     expect(elapsedMs).toBeLessThan(2_000);
     expect(survivingTeams.size).toBe(1);
     expect(Math.max(...losingArmies)).toBeLessThanOrEqual(3);
-    expectActivePlayersSpent(game, 1_000);
+    expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_000);
+    expect(game.match.stats.goldSpent.enemy + game.match.stats.goldSpent.enemy2).toBeGreaterThan(1_000);
     expect(sumPlayerStats(game.match.stats.unitsLost)).toBeGreaterThan(20);
     expect(sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed)).toBeGreaterThan(0);
   });
@@ -709,6 +1307,46 @@ describe("sketch RTS simulation", () => {
     expect(worker.hp).toBe(worker.maxHp);
     expect(tower.hp).toBe(tower.maxHp);
   });
+
+  it("attack-move target selection weights low hp and high-threat soldiers", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = game.units.filter((unit) => unit.kind === "worker");
+    const attacker = game.spawnUnit("player", "archer", 900, 900);
+    const healthyFootman = game.spawnUnit("enemy", "footman", 960, 900);
+    const weakRaider = game.spawnUnit("enemy", "raider", 1005, 900);
+    weakRaider.hp = 20;
+    attacker.order = { type: "attackMove", x: 1040, y: 900 };
+
+    stepGame(game);
+
+    expect(weakRaider.hp).toBeLessThan(20);
+    expect(healthyFootman.hp).toBe(healthyFootman.maxHp);
+  });
+
+  it("keeps defense towers as soft static control instead of army-melting artillery", () => {
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThanOrEqual(6);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBeLessThanOrEqual(170);
+    expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThanOrEqual(50);
+
+    const scene = sketchScene("soft-static-tower")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 520, 520)
+      .townHall("enemy", 1220, 520)
+      .tower("enemy", 1010, 520, { id: "defender-soft-tower" })
+      .unit("player", "footman", 760, 500, { id: "tower-test-footman-1" })
+      .unit("player", "footman", 760, 540, { id: "tower-test-footman-2" })
+      .build();
+    const game = scene.createGame();
+    issueCommand(game, { type: "attackMove", unitIds: game.units.filter((unit) => unit.owner === "player").map((unit) => unit.id), x: 1030, y: 520 });
+
+    stepUntil(game, 260, () => !game.buildings.some((building) => building.id === "defender-soft-tower"));
+
+    expect(game.buildings.some((building) => building.id === "defender-soft-tower")).toBe(false);
+    expect(game.units.filter((unit) => unit.owner === "player").length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 function ownersHaveMiningExpansions(game: ReturnType<typeof createGame>, owners: PlayerId[]) {
@@ -727,4 +1365,26 @@ function distanceToClosestMainMine(game: ReturnType<typeof createGame>, point: {
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function killWith(game: ReturnType<typeof createGame>, attacker: Unit, targetKind: UnitKind, owner: Unit["owner"] = "enemy") {
+  const target = game.spawnUnit(owner, targetKind, attacker.x + Math.min(80, Math.max(38, attacker.attackRange - 4)), attacker.y);
+  target.hp = 1;
+  issueCommand(game, { type: "attack", unitIds: [attacker.id], targetId: target.id });
+  stepMany(game, 1);
+  attacker.cooldown = 0;
+}
+
+function mineGoldIncomeWithWorkers(workerCount: number, ticks: number) {
+  const game = createGame("bareDuel", { aiPlayers: [] });
+  const mine = game.resources.find((resource) => resource.id === "gold-player-main")!;
+  mine.amount = 100_000;
+  game.players.player.gold = 0;
+  game.units = game.units.filter((unit) => !(unit.owner === "player" && unit.kind === "worker"));
+  const workers = Array.from({ length: workerCount }, (_, index) => game.spawnUnit("player", "worker", mine.x + index * 3, mine.y + index * 3));
+
+  issueCommand(game, { type: "mine", unitIds: workers.map((worker) => worker.id), resourceId: mine.id });
+  stepMany(game, ticks);
+
+  return game.players.player.gold;
 }

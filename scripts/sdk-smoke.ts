@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { SketchRtsSdk } from "../src/sdk/client";
+import { seconds } from "../src/shared/time";
 
 const port = Number(process.env.SDK_SMOKE_PORT ?? 5174);
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -34,7 +35,7 @@ try {
     aiPlayers: [],
     scenario: {
       addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
-      addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: 90, cooldownRemaining: 0 }],
+      addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
       addUnits: [
         { id: "unit-agent-wildling", owner: "neutral", kind: "wildling", x: 1600, y: 1460 },
         { id: "unit-agent-wounded", owner: "enemy", kind: "footman", x: 1660, y: 1460, hp: 37 },

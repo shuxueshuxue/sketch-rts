@@ -2,7 +2,8 @@ import { createDebugReplayTrace, type DebugReplayTrace } from "../shared/replay"
 import { createRoom } from "../shared/rooms";
 import { createSaveGameRecord, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import { createGame, type Game } from "../shared/sim";
-import type { BuildingKind, GameSetupOptions, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, TerrainLandmark, UnitKind } from "../shared/types";
+import { seconds } from "../shared/time";
+import type { BuildingKind, GameSetupOptions, ItemKind, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, TerrainLandmark, UnitKind, UnitOrder, WorldItem } from "../shared/types";
 
 type ScenePlayerOptions = {
   team?: string;
@@ -13,6 +14,7 @@ type ScenePlayerOptions = {
 type SceneUnitOptions = {
   id?: string;
   hp?: number;
+  order?: UnitOrder;
 };
 
 type SceneBuildingOptions = {
@@ -20,7 +22,10 @@ type SceneBuildingOptions = {
   complete?: boolean;
 };
 
-type SceneMercenaryOptions = Partial<Omit<MercenaryCamp, "id" | "x" | "y">>;
+type SceneMercenaryOptions = Partial<Omit<MercenaryCamp, "id" | "x" | "y" | "cooldown">> & {
+  cooldownSeconds?: number;
+};
+type SceneItemOptions = Partial<Omit<WorldItem, "id" | "kind" | "x" | "y">>;
 
 export function sketchScene(id: string) {
   return new SceneBuilder(id);
@@ -48,6 +53,15 @@ export class SceneBuilder {
     return this;
   }
 
+  replaceDefaults() {
+    this.scenario.replaceDefaultUnits = true;
+    this.scenario.replaceDefaultBuildings = true;
+    this.scenario.replaceDefaultResources = true;
+    this.scenario.replaceDefaultMercenaryCamps = true;
+    this.scenario.replaceDefaultLandmarks = true;
+    return this;
+  }
+
   unit(owner: Owner, kind: UnitKind, x: number, y: number, options: SceneUnitOptions = {}) {
     this.scenario.addUnits = [
       ...(this.scenario.addUnits ?? []),
@@ -58,6 +72,7 @@ export class SceneBuilder {
         x,
         y,
         ...(options.hp !== undefined ? { hp: options.hp } : {}),
+        ...(options.order ? { order: options.order } : {}),
       },
     ];
     return this;
@@ -106,7 +121,22 @@ export class SceneBuilder {
         hireKind: options.hireKind ?? "mercenary",
         cost: options.cost ?? 220,
         stock: options.stock ?? 2,
-        cooldown: options.cooldown ?? 420,
+        cooldown: seconds(options.cooldownSeconds ?? 21),
+        cooldownRemaining: options.cooldownRemaining ?? 0,
+      },
+    ];
+    return this;
+  }
+
+  item(id: string, kind: ItemKind, x: number, y: number, options: SceneItemOptions = {}) {
+    this.scenario.addItems = [
+      ...(this.scenario.addItems ?? []),
+      {
+        id,
+        kind,
+        x,
+        y,
+        ...(options.carrierId ? { carrierId: options.carrierId } : {}),
         cooldownRemaining: options.cooldownRemaining ?? 0,
       },
     ];
