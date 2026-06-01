@@ -304,6 +304,7 @@ export type RoomSlot = {
 };
 
 export type RoomStatus = "open" | "starting" | "inMatch" | "ended" | "closed";
+export type RoomVisibility = "private" | "public";
 
 export type RoomResult = {
   winner: PlayerId | null;
@@ -316,6 +317,7 @@ export type RoomState = {
   id: string;
   name: string;
   hostUserId: string;
+  visibility: RoomVisibility;
   mapId: MapId;
   status: RoomStatus;
   slots: RoomSlot[];

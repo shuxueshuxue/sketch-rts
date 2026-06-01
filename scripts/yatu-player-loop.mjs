@@ -5,7 +5,7 @@ import path from "node:path";
 
 const port = Number(process.env.PORT ?? 5173);
 const baseUrl = `http://127.0.0.1:${port}`;
-const session = `sketch-rts-yatu-${Date.now()}`;
+const session = `rts-yt-${Date.now().toString(36)}`;
 const playwrightCli = process.env.PLAYWRIGHT_CLI ?? "playwright-cli";
 
 let server;
@@ -138,8 +138,10 @@ async page => {
     }, { roomId: activeRoomId, playerId, command });
   };
   const startLocalRoom = async (mapId) => {
-    await page.waitForSelector("[data-create-local-room]", { timeout: 5000 });
-    await page.click("[data-create-local-room]");
+    await page.waitForSelector("[data-create-game]", { timeout: 5000 });
+    await page.click("[data-create-game]");
+    await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+    await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
     activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
     must(activeRoomId, "room setup did not expose room id");
@@ -244,7 +246,7 @@ async page => {
     return state;
   };
 
-  await page.waitForSelector("[data-create-local-room]");
+  await page.waitForSelector("[data-create-game]");
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
   await sleep(260);
   const menuBackdropB = await canvasPatch(640, 400, 180, 120);
@@ -818,6 +820,61 @@ async page => {
   }
   must(new Set(Object.values(allUnitGlyphPatches).map((patch) => patch.hash)).size === allUnitKinds.length, "full roster glyph gallery was not visually distinct");
 
+  const stackReset = await resetScenario({
+    mapId: "bareDuel",
+    options: {
+      aiPlayers: [],
+      scenario: {
+        addBuildings: [
+          { id: "building-yatu-stack-barracks", owner: "player", kind: "barracks", x: 820, y: 760, complete: true },
+          { id: "building-yatu-stack-farm-a", owner: "player", kind: "farm", x: 730, y: 840, complete: true },
+          { id: "building-yatu-stack-farm-b", owner: "player", kind: "farm", x: 910, y: 840, complete: true },
+        ],
+      },
+    },
+  });
+  const stackWorkers = stackReset.units.filter((unit) => unit.owner === "player" && unit.kind === "worker");
+  const stackMine = stackReset.resources.find((resource) => resource.kind === "goldMine");
+  must(stackWorkers.length > 0 && stackMine, "stacked training proof did not start with workers and a mine");
+  await roomCommand("player", { type: "mine", unitIds: stackWorkers.map((unit) => unit.id), resourceId: stackMine.id });
+  let fundedStack = await snapshot();
+  for (let i = 0; i < 80 && fundedStack.players.player.gold < 600; i += 1) {
+    await tick(20);
+    fundedStack = await snapshot();
+  }
+  must(fundedStack.players.player.gold >= 600, "stacked training proof did not gather enough gold for five footmen: " + fundedStack.players.player.gold);
+  const stackBarracks = fundedStack.buildings.find((building) => building.id === "building-yatu-stack-barracks");
+  must(stackBarracks, "stacked training proof missing completed barracks");
+  const stackCamera = await centerCameraOnWorld(stackBarracks);
+  const stackBarracksScreen = screenFromCamera(stackCamera, stackBarracks);
+  await page.mouse.click(stackBarracksScreen.x, stackBarracksScreen.y + 42);
+  await waitFor("stack barracks selection", async () => ((await text("[data-selection]")) ?? "").includes("Barracks"));
+  await mustCommandDock("stack barracks selection", ["Train Footman"], ["F"]);
+  for (let i = 0; i < 5; i += 1) {
+    await page.keyboard.press("f");
+    await statusIncludes("Footman queued.");
+  }
+  const stackedQueued = await snapshot();
+  const stackedQueuedBarracks = stackedQueued.buildings.find((building) => building.id === stackBarracks.id);
+  must(
+    stackedQueuedBarracks?.queue.length === 5 && stackedQueuedBarracks.queue.every((job) => job.unitKind === "footman"),
+    "five real hotkey presses did not stack five footmen on one barracks: " + JSON.stringify(stackedQueuedBarracks?.queue),
+  );
+  await tick(181);
+  const stackedAfterOne = await snapshot();
+  const stackedAfterOneBarracks = stackedAfterOne.buildings.find((building) => building.id === stackBarracks.id);
+  const stackedFootmen = stackedAfterOne.units.filter((unit) => unit.owner === "player" && unit.kind === "footman");
+  must(
+    stackedFootmen.length === 1 && stackedAfterOneBarracks?.queue.length === 4,
+    "stacked queue did not produce serially after the first footman: " +
+      JSON.stringify({ footmen: stackedFootmen.length, queueLength: stackedAfterOneBarracks?.queue.length }),
+  );
+  const stackedTrainingProof = {
+    queued: stackedQueuedBarracks.queue.map((job) => job.unitKind),
+    remainingAfterFirst: stackedAfterOneBarracks.queue.length,
+    completedAfterFirst: stackedFootmen.length,
+  };
+
   const proof = {
     ok: true,
     map: afterAttackMove.map.id,
@@ -870,6 +927,7 @@ async page => {
     neutralKillDelta: neutralKillsAfter - neutralKillsBefore,
     hiredMercenaryCount: hiredMercenaries.length,
     mercenaryStockDelta: stockBefore - (hiredCamp?.stock ?? stockBefore),
+    stackedTrainingProof,
   };
   must(consoleIssues.length === 0, "browser console produced warnings/errors: " + JSON.stringify(consoleIssues));
   await page.evaluate((proof) => {

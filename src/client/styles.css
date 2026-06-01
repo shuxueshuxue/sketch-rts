@@ -57,8 +57,8 @@ button {
   position: absolute;
   top: 0;
   left: 0;
-  width: 28px;
-  height: 30px;
+  width: 18px;
+  height: 18px;
   z-index: 1000;
   pointer-events: none;
   filter: drop-shadow(0 2px 0 rgba(36, 49, 38, 0.16));
@@ -68,32 +68,27 @@ button {
   position: absolute;
   inset: 0;
   content: "";
-  background: rgba(255, 250, 226, 0.92);
-  clip-path: polygon(0 0, 23px 8px, 10px 13px, 5px 29px, 0 27px, 3px 13px);
-  filter:
-    drop-shadow(1px 0 0 #243126)
-    drop-shadow(-1px 0 0 #243126)
-    drop-shadow(0 1px 0 #243126)
-    drop-shadow(0 -1px 0 #243126);
+  border: 2px solid #243126;
+  border-radius: 50%;
+  background: rgba(255, 250, 226, 0.42);
 }
 
 .virtual-pointer::after {
   position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid #243126;
+  top: 7px;
+  left: 7px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   content: "";
-  background: rgba(255, 250, 226, 0.6);
+  background: #243126;
 }
 
 .main-menu {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(280px, 420px);
+  grid-template-columns: minmax(280px, min(720px, calc(100vw - 40px)));
   align-content: center;
   justify-content: start;
   gap: 14px;
@@ -180,6 +175,7 @@ button {
 }
 
 .profile-form,
+.create-game-form,
 .room-setup,
 .results-panel {
   display: grid;
@@ -187,7 +183,41 @@ button {
   pointer-events: auto;
 }
 
-.profile-form label {
+.room-setup {
+  width: min(720px, calc(100vw - 40px));
+  max-height: min(72vh, 680px);
+  grid-template-rows: auto auto auto minmax(180px, 1fr) auto;
+  overflow: hidden;
+}
+
+.room-setup .map-button {
+  padding: 7px 9px;
+}
+
+.room-setup .map-button-note,
+.room-setup .map-button-tags {
+  display: none;
+}
+
+.room-setup .room-map-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.room-setup .slot-list {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.room-setup .menu-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 6px;
+  background: linear-gradient(rgba(245, 240, 216, 0), rgba(245, 240, 216, 0.96) 28%);
+}
+
+.profile-form label,
+.create-game-form label {
   display: grid;
   gap: 5px;
   max-width: 360px;
@@ -196,13 +226,33 @@ button {
   font-weight: 900;
 }
 
-.profile-form input {
+.profile-form input,
+.create-game-form input,
+.create-game-form select {
   border: 1px solid rgba(45, 61, 43, 0.36);
   border-radius: 5px;
   background: rgba(255, 250, 226, 0.92);
   color: #233126;
   padding: 8px 9px;
   font: inherit;
+}
+
+.create-count-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 360px;
+}
+
+.checkbox-row {
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-row input {
+  width: auto;
 }
 
 .profile-id,
@@ -252,7 +302,7 @@ button {
 
 .slot-row {
   display: grid;
-  grid-template-columns: 1fr repeat(4, auto);
+  grid-template-columns: minmax(90px, 1fr) repeat(4, auto);
   gap: 8px;
   align-items: center;
   border: 1px solid rgba(45, 61, 43, 0.24);
@@ -262,6 +312,22 @@ button {
   font-family: ui-monospace, monospace;
   font-size: 11px;
   font-weight: 800;
+}
+
+.slot-row select {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 250, 226, 0.9);
+  color: #233126;
+  font: inherit;
+}
+
+.slot-ready {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .slot-name {
@@ -324,7 +390,8 @@ button {
 .top-strip,
 .selection-chip,
 .command-dock,
-.status-line {
+.status-line,
+.pointer-lock-panel {
   position: absolute;
   border: 1px solid rgba(59, 72, 50, 0.28);
   background: rgba(255, 250, 226, 0.86);
@@ -357,27 +424,49 @@ button {
   font-weight: 700;
 }
 
-.pointer-lock-button {
-  width: 88px;
-  min-height: 28px;
+.pointer-lock-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  background: rgba(35, 49, 38, 0.18);
+  pointer-events: auto;
+}
+
+.pointer-lock-panel {
+  position: static;
+  display: grid;
+  width: min(420px, calc(100vw - 32px));
+  gap: 12px;
+  border-radius: 7px;
+  padding: 18px;
+}
+
+.pointer-lock-panel h2 {
+  margin: 0;
+  color: #233126;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.pointer-lock-panel p {
+  margin: 0;
+  color: rgba(35, 49, 38, 0.86);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.42;
+}
+
+.pointer-lock-panel button {
+  justify-self: start;
   border: 1px solid rgba(49, 95, 135, 0.42);
   border-radius: 5px;
-  background: rgba(255, 250, 226, 0.78);
-  color: #315f87;
-  font-size: 12px;
+  background: #315f87;
+  color: #fffbe3;
+  padding: 8px 11px;
+  font-size: 13px;
   font-weight: 900;
-}
-
-.pointer-lock-button:hover,
-.pointer-lock-button:focus-visible {
-  outline: none;
-  background: rgba(232, 241, 220, 0.96);
-}
-
-.pointer-lock-button[aria-pressed="true"] {
-  border-color: rgba(35, 49, 38, 0.54);
-  background: rgba(49, 95, 135, 0.14);
-  color: #243126;
 }
 
 .selection-chip {

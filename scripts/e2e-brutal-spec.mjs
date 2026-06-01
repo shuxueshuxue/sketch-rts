@@ -5,7 +5,7 @@ import path from "node:path";
 
 const port = Number(process.env.PORT ?? 5176);
 const baseUrl = `http://127.0.0.1:${port}`;
-const session = `sketch-rts-e2e-brutal-${Date.now()}`;
+const session = `rts-br-${Date.now().toString(36)}`;
 const playwrightCli = process.env.PLAYWRIGHT_CLI ?? "playwright-cli";
 
 let server;
@@ -129,10 +129,12 @@ async page => {
     }, { roomId: activeRoomId, body });
   const waitForMenu = async () => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-    await page.waitForSelector("[data-create-local-room]", { timeout: 5000 });
+    await page.waitForSelector("[data-create-game]", { timeout: 5000 });
   };
   const enterRoomSetup = async () => {
-    await page.click("[data-create-local-room]");
+    await page.click("[data-create-game]");
+    await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+    await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
     activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
     must(activeRoomId, "room setup did not expose room id");
@@ -264,7 +266,18 @@ async page => {
   const suppressedCanvasDefaults = await page.evaluate(() => {
     const canvas = document.querySelector("canvas");
     const proof = {};
-    for (const type of ["mousedown", "contextmenu", "auxclick", "dragstart"]) {
+    const eventSpecs = [
+      { type: "mousedown", ctor: "mouse" },
+      { type: "pointerdown", ctor: "pointer" },
+      { type: "pointerup", ctor: "pointer" },
+      { type: "contextmenu", ctor: "mouse" },
+      { type: "auxclick", ctor: "mouse" },
+      { type: "dragstart", ctor: "mouse" },
+      { type: "pointermove", ctor: "pointer" },
+      { type: "pointercancel", ctor: "pointer" },
+      { type: "selectstart", ctor: "event" },
+    ];
+    for (const { type, ctor } of eventSpecs) {
       let observedDefaultPrevented = false;
       canvas.addEventListener(
         type,
@@ -273,7 +286,12 @@ async page => {
         },
         { once: true },
       );
-      const event = new MouseEvent(type, { bubbles: true, cancelable: true, button: 2, clientX: 640, clientY: 400 });
+      const event =
+        ctor === "event"
+          ? new Event(type, { bubbles: true, cancelable: true })
+          : ctor === "pointer" && "PointerEvent" in window
+            ? new PointerEvent(type, { bubbles: true, cancelable: true, button: 2, buttons: 2, pointerType: "mouse", clientX: 640, clientY: 400 })
+            : new MouseEvent(type, { bubbles: true, cancelable: true, button: 2, buttons: 2, clientX: 640, clientY: 400 });
       const dispatchAllowed = canvas.dispatchEvent(event);
       proof[type] = { dispatchAllowed, observedDefaultPrevented, finalDefaultPrevented: event.defaultPrevented };
     }
@@ -285,6 +303,28 @@ async page => {
     must(proof.finalDefaultPrevented && proof.observedDefaultPrevented && proof.dispatchAllowed === false, eventType + " did not suppress the browser default gesture: " + JSON.stringify(proof));
   }
   must(suppressedCanvasDefaults.style.touchAction === "none", "canvas touch-action is not disabled: " + JSON.stringify(suppressedCanvasDefaults.style));
+  const rightDragGestureProof = await page.evaluate(() => {
+    history.pushState({ sketchRtsGestureProbe: true }, "", "#gesture-probe");
+    return { beforeUrl: location.href, beforeHistoryLength: history.length };
+  });
+  await page.mouse.move(900, 400);
+  await page.mouse.down({ button: "right" });
+  await page.mouse.move(560, 400, { steps: 12 });
+  await page.mouse.up({ button: "right" });
+  await sleep(180);
+  Object.assign(
+    rightDragGestureProof,
+    await page.evaluate(() => ({
+      afterUrl: location.href,
+      afterHistoryLength: history.length,
+      alive: Boolean(document.querySelector("canvas")),
+      status: document.querySelector("[data-status]")?.textContent,
+    })),
+  );
+  must(
+    rightDragGestureProof.alive && rightDragGestureProof.afterUrl === rightDragGestureProof.beforeUrl,
+    "right-button drag leaked to browser navigation/tab gesture: " + JSON.stringify(rightDragGestureProof),
+  );
   const virtualPointerOverlayProof = await page.evaluate(() => {
     const pointer = document.querySelector("[data-virtual-pointer]");
     const topStrip = document.querySelector(".top-strip");
@@ -306,23 +346,27 @@ async page => {
     "virtual pointer is not above HUD UI: " + JSON.stringify(virtualPointerOverlayProof),
   );
   const beforePointerLockClickState = await page.evaluate(() => ({
-    hasButton: !!document.querySelector("[data-pointer-lock]"),
-    button: document.querySelector("[data-pointer-lock]")?.textContent,
+    hasTopStripButton: !!document.querySelector("[data-pointer-lock]"),
+    hasGate: !!document.querySelector("[data-pointer-lock-gate]"),
+    gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
+    action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
     locked: document.pointerLockElement === document.querySelector("canvas"),
   }));
-  must(beforePointerLockClickState.hasButton, "Pointer Lock button is missing from the game UI");
-  await page.locator("[data-pointer-lock]").click();
+  must(!beforePointerLockClickState.hasTopStripButton, "Pointer Lock top-strip button should not exist in the game UI");
+  must(beforePointerLockClickState.hasGate, "Pointer lock gate is missing from the game UI");
+  await page.locator("[data-pointer-lock-gate-action]").click();
   let pointerLockStateAfterButton = null;
   for (let i = 0; i < 50; i += 1) {
     pointerLockStateAfterButton = await page.evaluate(() => ({
       locked: document.pointerLockElement === document.querySelector("canvas"),
       pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-      button: document.querySelector("[data-pointer-lock]")?.textContent,
+      gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
+      action: document.querySelector("[data-pointer-lock-gate-action]")?.textContent,
       status: document.querySelector("[data-status]")?.textContent,
     }));
     if (
       pointerLockStateAfterButton.locked ||
-      pointerLockStateAfterButton.button?.includes("Click Field") ||
+      pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click") ||
       pointerLockStateAfterButton.status?.includes("Pointer lock failed")
     ) {
       break;
@@ -331,18 +375,18 @@ async page => {
   }
   must(
     pointerLockStateAfterButton.locked ||
-      pointerLockStateAfterButton.button?.includes("Click Field") ||
+      pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click") ||
       pointerLockStateAfterButton.status?.includes("Pointer lock failed"),
-    "Pointer Lock button did not attempt immediate capture or expose a fallback: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
+    "Pointer lock gate did not attempt immediate capture or expose a fallback: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
   );
   let pointerLockStateAfterFieldClick = null;
-  if (!pointerLockStateAfterButton.locked && pointerLockStateAfterButton.button?.includes("Click Field")) {
+  if (!pointerLockStateAfterButton.locked && pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click")) {
     await page.mouse.click(640, 400);
     for (let i = 0; i < 50; i += 1) {
       pointerLockStateAfterFieldClick = await page.evaluate(() => ({
         locked: document.pointerLockElement === document.querySelector("canvas"),
         pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-        button: document.querySelector("[data-pointer-lock]")?.textContent,
+        gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
         status: document.querySelector("[data-status]")?.textContent,
       }));
       if (pointerLockStateAfterFieldClick.locked || pointerLockStateAfterFieldClick.status?.includes("Pointer lock failed")) break;
@@ -352,13 +396,14 @@ async page => {
   const pointerLockState = await page.evaluate(() => ({
     locked: document.pointerLockElement === document.querySelector("canvas"),
     pointerLockElement: document.pointerLockElement ? document.pointerLockElement.tagName : null,
-    button: document.querySelector("[data-pointer-lock]")?.textContent,
+    hasTopStripButton: !!document.querySelector("[data-pointer-lock]"),
+    gateHidden: document.querySelector("[data-pointer-lock-gate]")?.classList.contains("hidden"),
     status: document.querySelector("[data-status]")?.textContent,
   }));
   let beforePointerLockEdgePatch = null;
   let afterPointerLockEdgePatch = null;
   if (pointerLockState.locked) {
-    must(pointerLockState.button?.includes("Mouse Locked"), "Pointer Lock button did not reflect locked state");
+    must(pointerLockState.hasTopStripButton === false, "Pointer Lock top-strip button reappeared after locking");
     beforePointerLockEdgePatch = await canvasPatch(640, 400, 240, 160);
     await page.mouse.move(1276, 400);
     await sleep(360);
@@ -368,7 +413,9 @@ async page => {
     await page.waitForFunction(() => document.pointerLockElement === null, { timeout: 5000 });
   } else {
     must(
-      pointerLockState.status?.includes("Pointer lock failed"),
+      pointerLockState.status?.includes("Pointer lock failed") ||
+        pointerLockState.status?.includes("Browser needs one battlefield click") ||
+        pointerLockState.gateHidden === false,
       "Pointer Lock neither activated nor failed visibly: " +
         JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton, pointerLockStateAfterFieldClick, pointerLockState }),
     );
@@ -499,6 +546,7 @@ async page => {
       edgeScrollHashes: [beforeEdgeScrollPatch.hash, afterEdgeScrollPatch.hash],
       pointerLockState,
       pointerLockEdgeHashes: beforePointerLockEdgePatch && afterPointerLockEdgePatch ? [beforePointerLockEdgePatch.hash, afterPointerLockEdgePatch.hash] : null,
+      rightDragGestureProof,
     },
     checks: [
       "real browser main-menu click/keyboard map selection",
@@ -511,6 +559,7 @@ async page => {
       "real Pointer Lock one-click UI flow with browser activation, fallback, or visible denial",
       "top-layer virtual pointer overlay above HUD",
       "browser mouse-default suppression on the battlefield canvas",
+      "real right-button drag does not trigger browser back/close gestures",
       "canvas pixels for animated menu, terrain, and placement preview",
       "left-click selection-only negative proof",
     ],

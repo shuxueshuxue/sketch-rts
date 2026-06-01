@@ -5,3 +5,4 @@ coverage/
 .env
 .superpowers/
 .worktrees/
+.playwright-cli/

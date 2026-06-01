@@ -111,6 +111,20 @@ describe("SketchRtsSdk", () => {
     ]);
   });
 
+  it("can request the viewer-scoped room list for private room ownership", async () => {
+    const calls: string[] = [];
+    const fetcher: typeof fetch = async (input) => {
+      const url = new URL(String(input));
+      calls.push(`${url.pathname}${url.search}`);
+      return json({ rooms: [] });
+    };
+    const sdk = new SketchRtsSdk("http://game.test", fetcher);
+
+    await sdk.listRooms({ userId: "user 1" });
+
+    expect(calls).toEqual(["/api/rooms?userId=user%201"]);
+  });
+
   it("runs guarded full-match speed control through SDK tick chunks", async () => {
     const calls: unknown[] = [];
     let currentTick = 0;
@@ -223,7 +237,7 @@ describe("SketchRtsSdk", () => {
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
-    await sdk.createRoom({ id: "room-1", host: { id: "user-1", name: "Host" }, slotCount: 2 });
+    await sdk.createRoom({ id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 3 });
     await sdk.updateRoomSlot("room-1", "slot-2", { controller: "ai", team: "south" });
     await sdk.startRoom("room-1");
     await sdk.resetRoom("room-1", "bareDuel", { aiPlayers: [] });
@@ -242,7 +256,7 @@ describe("SketchRtsSdk", () => {
     await sdk.continueSavegame("save-1", { roomId: "room-resumed" });
 
     expect(calls).toEqual([
-      { path: "/api/rooms", method: "POST", body: { id: "room-1", host: { id: "user-1", name: "Host" }, slotCount: 2 } },
+      { path: "/api/rooms", method: "POST", body: { id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 3 } },
       { path: "/api/rooms/room-1/slots/slot-2", method: "POST", body: { controller: "ai", team: "south" } },
       { path: "/api/rooms/room-1/start", method: "POST", body: {} },
       { path: "/api/rooms/room-1/reset", method: "POST", body: { mapId: "bareDuel", options: { aiPlayers: [] } } },

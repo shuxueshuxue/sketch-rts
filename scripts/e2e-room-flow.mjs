@@ -5,7 +5,7 @@ import path from "node:path";
 
 const port = Number(process.env.ROOM_FLOW_PORT ?? 5178);
 const baseUrl = `http://127.0.0.1:${port}`;
-const session = `sketch-rts-room-flow-${Date.now()}`;
+const session = `rts-rf-${Date.now().toString(36)}`;
 const playwrightCli = process.env.PLAYWRIGHT_CLI ?? "playwright-cli";
 let server;
 
@@ -104,7 +104,8 @@ async page => {
       { x, y, width, height },
     );
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-  must((await page.locator("[data-create-local-room]").count()) === 1, "home missing single/local room entry");
+  must((await page.locator("[data-create-game]").count()) === 1, "home missing single create-game entry");
+  must((await page.locator("[data-create-local-room]").count()) === 0, "home still exposes old single/local creation entry");
   must((await page.locator("[data-map-id]").count()) === 0, "home exposes direct map picker instead of hierarchy");
 
   const initialProfile = await page.evaluate(() => JSON.parse(localStorage.getItem("sketch-rts-user")));
@@ -124,24 +125,98 @@ async page => {
   const backdropB = await canvasPatch(640, 400, 180, 120);
   must(backdropA.hash !== backdropB.hash, "main menu background did not animate");
 
-  await page.locator("[data-create-local-room]").click();
+  await page.locator("[data-create-game]").click();
+  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  must((await page.locator("[data-create-game-form] input[name='privateRoom']").isChecked()) === true, "new rooms should default to private/local shape");
+  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("wildMarches");
+  await page.locator("[data-submit-create-game]").click();
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
   const roomSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
   must(roomSetupId, "room setup did not expose room id");
   must((await page.locator("[data-map-id='wildMarches']").count()) === 1, "room setup missing map selection");
-  await page.locator("[data-map-id='wildMarches']").click();
+  const privateRoomProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
+  }, roomSetupId);
+  must(privateRoomProof.visibility === "private", "private checkbox did not create a private room: " + JSON.stringify(privateRoomProof));
+  must(privateRoomProof.mapId === "wildMarches", "create form did not use selected map: " + JSON.stringify(privateRoomProof));
+  const privateLobbyProof = await page.evaluate(async (roomId) => {
+    const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
+    const publicLobby = await (await fetch("/api/rooms")).json();
+    const ownerLobby = await (await fetch("/api/rooms?userId=" + encodeURIComponent(profile.id))).json();
+    return {
+      listedPublicly: publicLobby.rooms.some((room) => room.id === roomId),
+      listedForOwner: ownerLobby.rooms.some((room) => room.id === roomId),
+    };
+  }, roomSetupId);
+  must(!privateLobbyProof.listedPublicly, "private room leaked into public room API list: " + JSON.stringify(privateLobbyProof));
+  must(privateLobbyProof.listedForOwner, "private room was not visible to its owning user query: " + JSON.stringify(privateLobbyProof));
+  await page.locator("[data-close-room]").click();
+  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-create-room]", { timeout: 5000 });
+  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "owned private room was not visible in Rooms UI");
+  await page.locator("[data-back-home]").click();
+  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
+
+  await page.reload();
+  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
+  await page.locator("[data-resume-room]").click();
+  await page.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 5000 });
+  const rejoinedRoomProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
+    return { ownedSlots: room.slots.filter((slot) => slot.userId === profile.id).map((slot) => slot.playerId) };
+  }, roomSetupId);
+  must(rejoinedRoomProof.ownedSlots.length === 1, "refresh/resume did not rejoin the user's claimed slot: " + JSON.stringify(rejoinedRoomProof));
+
+  await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("open");
+  await page.waitForFunction(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return room.slots.find((slot) => slot.id === "slot-2")?.controller === "open";
+  }, roomSetupId, { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("closed");
+  await page.waitForFunction(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return room.slots.find((slot) => slot.id === "slot-2")?.controller === "closed";
+  }, roomSetupId, { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("ai");
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("west");
+  await page.locator("[data-slot-id='slot-2'] [data-slot-race]").selectOption("grove");
+  await page.locator("[data-slot-id='slot-1'] [data-slot-race]").selectOption("ember");
+  await page.locator("[data-slot-id='slot-1'] [data-slot-ready]").uncheck();
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === true, null, { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-1'] [data-slot-ready]").check();
+  const slotEditProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return {
+      startEnabled: !document.querySelector("[data-start-room]")?.disabled,
+      host: room.slots.find((slot) => slot.id === "slot-1"),
+      ai: room.slots.find((slot) => slot.id === "slot-2"),
+    };
+  }, roomSetupId);
+  must(
+    slotEditProof.startEnabled &&
+      slotEditProof.host?.controller === "human" &&
+      slotEditProof.host?.ready === true &&
+      slotEditProof.host?.race === "ember" &&
+      slotEditProof.ai?.controller === "ai" &&
+      slotEditProof.ai?.name === "AI" &&
+      slotEditProof.ai?.team === "west" &&
+      slotEditProof.ai?.race === "grove",
+    "slot controls did not update controller/team/race/ready through the UI: " + JSON.stringify(slotEditProof),
+  );
+
   await page.locator("[data-start-room]").click();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
-  await page.waitForFunction(async () => {
-    const rooms = await (await fetch("/api/rooms")).json();
-    return rooms.rooms.some((room) => room.status === "inMatch" && room.mapId === "wildMarches");
-  }, null, { timeout: 5000 });
-  const snapshot = await page.evaluate(async () => {
-    const rooms = await (await fetch("/api/rooms")).json();
-    const room = rooms.rooms.find((candidate) => candidate.status === "inMatch" && candidate.mapId === "wildMarches");
-    const res = await fetch("/api/rooms/" + room.id + "/snapshot");
+  await page.waitForFunction(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return room.status === "inMatch" && room.mapId === "wildMarches";
+  }, roomSetupId, { timeout: 5000 });
+  const snapshot = await page.evaluate(async (roomId) => {
+    const res = await fetch("/api/rooms/" + roomId + "/snapshot");
     return res.json();
-  });
+  }, roomSetupId);
   must(snapshot.map.id === "wildMarches", "room start did not use selected map");
   must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
 
@@ -186,6 +261,70 @@ async page => {
   must((await page.locator("[data-rematch]").count()) === 1, "results screen missing rematch action");
   must((await page.locator("[data-return-home]").count()) === 1, "results screen missing home action");
 
+  await page.locator("[data-return-home]").click();
+  await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
+  await page.locator("[data-create-game]").click();
+  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("bareDuel");
+  await page.locator("[data-create-game-form] input[name='humanCount']").fill("2");
+  await page.locator("[data-create-game-form] input[name='aiCount']").fill("3");
+  await page.locator("[data-submit-create-game]").click();
+  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
+  const sameMapSmallRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  const sameMapSmallProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return {
+      mapId: room.mapId,
+      slotCount: room.slots.length,
+      humanSeats: room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length,
+      aiSeats: room.slots.filter((slot) => slot.controller === "ai").length,
+    };
+  }, sameMapSmallRoomId);
+  must(
+    sameMapSmallProof.mapId === "bareDuel" &&
+      sameMapSmallProof.slotCount === 5 &&
+      sameMapSmallProof.humanSeats === 2 &&
+      sameMapSmallProof.aiSeats === 3,
+    "small same-map room did not keep requested human/computer counts: " + JSON.stringify(sameMapSmallProof),
+  );
+  await page.locator("[data-close-room]").click();
+  await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
+  await page.locator("[data-create-game]").click();
+  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  await page.locator("[data-create-game-form] input[name='privateRoom']").uncheck();
+  await page.locator("[data-create-game-form] input[name='humanCount']").fill("15");
+  await page.locator("[data-create-game-form] input[name='aiCount']").fill("15");
+  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("bareDuel");
+  await page.locator("[data-submit-create-game]").click();
+  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
+  const grandSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  const layoutProof = await page.evaluate(async (roomId) => {
+    const setup = document.querySelector("[data-room-setup]");
+    const slotList = document.querySelector(".slot-list");
+    const rows = [...document.querySelectorAll(".slot-row")];
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    const setupRect = setup.getBoundingClientRect();
+    const slotRect = slotList.getBoundingClientRect();
+    const rowRects = rows.map((row) => row.getBoundingClientRect());
+    const columns = new Set(rowRects.map((rect) => Math.round(rect.left))).size;
+    return {
+      roomVisibility: room.visibility,
+      slotCount: room.slots.length,
+      rowCount: rows.length,
+      columns,
+      setupHeight: setupRect.height,
+      slotListHeight: slotRect.height,
+      slotListScrollable: slotList.scrollHeight > slotList.clientHeight,
+      viewportHeight: window.innerHeight,
+      overflowsViewport: setupRect.bottom > window.innerHeight,
+    };
+  }, grandSetupId);
+  must(layoutProof.roomVisibility === "public", "public checkbox did not create public room: " + JSON.stringify(layoutProof));
+  must(layoutProof.slotCount === 30 && layoutProof.rowCount === 30, "30-slot setup did not render every slot: " + JSON.stringify(layoutProof));
+  must(layoutProof.columns >= 2, "30-slot setup is still a single long column: " + JSON.stringify(layoutProof));
+  must(!layoutProof.overflowsViewport, "30-slot setup overflows the viewport instead of scrolling internally: " + JSON.stringify(layoutProof));
+  await page.screenshot({ path: ".playwright-cli/room-flow-30-slot-setup.png", fullPage: false });
+
   await page.evaluate((proof) => {
     window.__sketchRtsRoomFlowProof = proof;
   }, {
@@ -196,6 +335,10 @@ async page => {
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,
+    privateLobbyProof,
+    slotEditProof,
+    sameMapSmallProof,
+    layoutProof,
   });
 }
 `;

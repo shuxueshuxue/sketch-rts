@@ -362,6 +362,48 @@ describe("sketch RTS simulation", () => {
     expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberBarracks.id, unitKind: "groveWarden" })).toThrow(/race/i);
   });
 
+  it("stacks repeated training commands on one building but produces units serially", () => {
+    const game = createGame();
+    const barracks = createBuilding("building-player-stack-barracks", "player", "barracks", 900, 900, true);
+    game.buildings.push(barracks);
+    for (let i = 0; i < 4; i += 1) {
+      game.buildings.push(createBuilding(`building-player-stack-farm-${i}`, "player", "farm", 820 + i * 45, 1040, true));
+    }
+    game.players.player.gold = 5000;
+    game.players.player.supplyCap = 30;
+
+    for (let i = 0; i < 5; i += 1) {
+      issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
+    }
+
+    expect(barracks.queue.map((job) => job.unitKind)).toEqual(["footman", "footman", "footman", "footman", "footman"]);
+    expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman")).toHaveLength(0);
+
+    stepMany(game, UNIT_DEFS.footman.trainTime);
+
+    expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman")).toHaveLength(1);
+    expect(barracks.queue).toHaveLength(4);
+
+    stepMany(game, UNIT_DEFS.footman.trainTime * 4);
+
+    expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman")).toHaveLength(5);
+    expect(barracks.queue).toHaveLength(0);
+  });
+
+  it("counts queued training jobs against the supply cap", () => {
+    const game = createGame();
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    for (let i = 0; i < 6; i += 1) {
+      game.spawnUnit("player", "worker", townHall.x + 90 + i * 8, townHall.y + 90);
+    }
+    game.players.player.gold = 5000;
+
+    issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" });
+
+    expect(townHall.queue).toHaveLength(1);
+    expect(() => issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" })).toThrow(/supply/i);
+  });
+
   it("reassigns AI workers to resume stalled construction", () => {
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
     const runtime = createAiRuntime(["enemy"]);

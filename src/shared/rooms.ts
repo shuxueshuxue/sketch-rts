@@ -1,4 +1,4 @@
-import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState } from "./types";
+import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
 
 export type CreateRoomInput = {
   id: string;
@@ -6,6 +6,9 @@ export type CreateRoomInput = {
   name?: string;
   mapId?: MapId;
   slotCount?: number;
+  humanCount?: number;
+  aiCount?: number;
+  visibility?: RoomVisibility;
 };
 
 export type GrandStressRoomOptions = {
@@ -18,24 +21,30 @@ type EditableRoomSlot = Omit<RoomSlot, "userId"> & { userId?: string | undefined
 export type SlotPatch = Partial<Pick<RoomSlot, "controller" | "team" | "race" | "ready" | "name">> & { userId?: string | undefined };
 
 export function createRoom(input: CreateRoomInput): RoomState {
-  const slotCount = input.slotCount ?? 2;
+  const humanCount = input.humanCount ?? 1;
+  const aiCount = input.aiCount ?? Math.max(1, (input.slotCount ?? 2) - humanCount);
+  const slotCount = input.humanCount !== undefined || input.aiCount !== undefined ? humanCount + aiCount : (input.slotCount ?? 2);
+  if (humanCount < 1 || aiCount < 0 || slotCount < 2 || slotCount > 30) throw new Error("Rooms require 2 to 30 total slots and at least one human slot");
   const slots = Array.from({ length: slotCount }, (_, index): RoomSlot => {
     const playerId = defaultPlayerId(index);
+    const isHost = index === 0;
+    const isHumanSeat = index < humanCount;
     return normalizeSlot({
       id: `slot-${index + 1}`,
       playerId,
-      controller: index === 0 ? "human" : "ai",
-      ...(index === 0 ? { userId: input.host.id } : {}),
-      name: index === 0 ? input.host.name : `AI ${index}`,
-      team: index === 0 ? "north" : "south",
+      controller: isHost ? "human" : isHumanSeat ? "open" : "ai",
+      ...(isHost ? { userId: input.host.id } : {}),
+      name: isHost ? input.host.name : isHumanSeat ? "Open" : `AI ${index - humanCount + 1}`,
+      team: defaultTeam(index),
       race: index % 2 === 0 ? "grove" : "ember",
-      ready: index === 0,
+      ready: isHost,
     });
   });
   return {
     id: input.id,
     name: input.name ?? `${input.host.name}'s Room`,
     hostUserId: input.host.id,
+    visibility: input.visibility ?? "public",
     mapId: input.mapId ?? "verdantCrossroads",
     status: "open",
     slots,
@@ -56,6 +65,8 @@ export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
 }
 
 export function joinFirstOpenSlot(room: RoomState, user: LocalUserProfile): RoomState {
+  const ownedSlot = room.slots.find((candidate) => candidate.controller === "human" && candidate.userId === user.id);
+  if (ownedSlot) return room;
   const slot = room.slots.find((candidate) => candidate.controller === "open");
   if (!slot) throw new Error("Room has no open slots");
   return updateRoomSlot(room, slot.id, { controller: "human", userId: user.id, name: user.name, ready: false });
@@ -113,6 +124,10 @@ export function activeRoomSlots(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai");
 }
 
+export function lobbyVisibleRooms(rooms: RoomState[], viewerUserId?: string): RoomState[] {
+  return rooms.filter((room) => room.visibility === "public" || Boolean(viewerUserId && room.slots.some((slot) => slot.userId === viewerUserId)));
+}
+
 export function createGrandThirtyRoom(id: string, host: LocalUserProfile, options: GrandStressRoomOptions = {}): RoomState {
   const humanCount = options.humanCount ?? 15;
   const aiCount = options.aiCount ?? 15;
@@ -147,6 +162,7 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
     id,
     name: `Grand Thirty ${humanCount}v${aiCount}`,
     hostUserId: host.id,
+    visibility: "public",
     mapId: "grandThirty",
     status: "open",
     slots: [...humans, ...ais],
@@ -154,7 +170,7 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
 }
 
 function normalizeSlot(slot: EditableRoomSlot): RoomSlot {
-  if (slot.controller === "ai") return withoutUserId({ ...slot, ready: true, name: slot.name || "AI" });
+  if (slot.controller === "ai") return withoutUserId({ ...slot, ready: true, name: slot.name && slot.name !== "Open" && slot.name !== "Closed" ? slot.name : "AI" });
   if (slot.controller === "closed") return withoutUserId({ ...slot, name: "Closed", ready: false });
   if (slot.controller === "open") return withoutUserId({ ...slot, name: "Open", ready: false });
   const base = withoutUserId({ ...slot, ready: Boolean(slot.ready), name: slot.name || "Player" });
@@ -171,4 +187,8 @@ function defaultPlayerId(index: number): PlayerId {
   if (index === 1) return "enemy";
   if (index === 2) return "enemy2";
   return `player-${index + 1}`;
+}
+
+function defaultTeam(index: number): RoomSlot["team"] {
+  return index % 2 === 0 ? "north" : "south";
 }
