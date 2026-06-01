@@ -741,8 +741,20 @@ button {
   box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.1);
 }
 
-.item-button:disabled {
-  opacity: 0.48;
+.item-button-cooldown {
+  opacity: 0.72;
+}
+
+.item-cooldown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: rgba(36, 49, 38, 0.48);
+  color: #fbf7df;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .research-progress-button:disabled {

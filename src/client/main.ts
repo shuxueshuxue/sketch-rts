@@ -1488,10 +1488,11 @@ function renderItemDock() {
       button.type = "button";
       button.className = "item-button";
       button.dataset.itemId = item.id;
-      button.title = `${itemLabel(item.kind)} (${itemHotkey(index)})`;
+      const cooldownText = item.cooldownRemaining > 0 ? ` - recharging ${item.cooldownRemaining}` : "";
+      button.title = `${itemLabel(item.kind)} (${itemHotkey(index)})${cooldownText}`;
       button.setAttribute("aria-label", button.title);
-      button.disabled = item.cooldownRemaining > 0;
-      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>`;
+      button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
+      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
       button.addEventListener("click", () => useCarriedItem(item.id));
       button.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -1514,9 +1515,17 @@ function useCarriedItem(itemId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item }) => item.id === itemId);
   if (!entry) return;
+  if (entry.item.kind === "flameCloak") {
+    showInvalidCommand("Flame Cloak is passive.");
+    return;
+  }
+  if (entry.item.cooldownRemaining > 0) {
+    showInvalidCommand(`${itemLabel(entry.item.kind)} is recharging.`);
+    return;
+  }
   const command = useItemCommand(snapshot, localPlayerId, entry.item, entry.carrier);
   if (!command) {
-    showInvalidCommand(entry.item.kind === "flameCloak" ? "Flame Cloak is passive." : `${itemLabel(entry.item.kind)} has no valid target.`);
+    showInvalidCommand(`${itemLabel(entry.item.kind)} has no valid target.`);
     return;
   }
   sendCommand(command);
