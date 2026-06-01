@@ -387,7 +387,7 @@ async function renderRoomBrowser() {
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
-  const visibleRooms = rooms.rooms.filter((room) => room.status !== "ended" && (room.status !== "inMatch" || slotForUser(room, localUser.id)));
+  const visibleRooms = rooms.rooms.filter((room) => room.status !== "ended" && room.status !== "closed" && (room.status !== "inMatch" || slotForUser(room, localUser.id)));
   list.replaceChildren(
     ...(visibleRooms.length > 0
       ? visibleRooms.map((room) =>
@@ -418,11 +418,6 @@ function renderRoomSetup() {
         <div class="room-section-title">Room</div>
         <div class="room-setup-name">${escapeHtml(currentRoom.name)}</div>
       </div>
-      <div class="room-setup-controls">
-        <label>Humans<input data-room-human-count type="number" min="1" max="${MAX_ROOM_SLOTS}" value="${humanSeatCount(currentRoom)}" /></label>
-        <label>AI<input data-room-ai-count type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="${aiSeatCount(currentRoom)}" /></label>
-        <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(currentRoom))}</div>
-      </div>
     </div>
     <div class="room-setup-layout">
       <section class="room-map-pane" aria-label="Map list">
@@ -431,15 +426,23 @@ function renderRoomSetup() {
       </section>
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
-          <div class="room-section-title">Slots</div>
-          <div class="slot-capacity">${currentRoom.slots.length}/${MAX_ROOM_SLOTS}</div>
+          <div>
+            <div class="room-section-title">Slots</div>
+            <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(currentRoom))}</div>
+          </div>
+          <div class="slot-actions">
+            <button type="button" data-add-player-slot ${currentRoom.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Player</button>
+            <button type="button" data-add-ai-slot ${currentRoom.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Computer</button>
+            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(currentRoom) ? "" : "disabled"}>Remove Slot</button>
+            <button type="button" class="danger-button" data-close-room ${currentRoom.hostUserId === localUser.id ? "" : "disabled"}>Close Room</button>
+          </div>
         </div>
         <div class="slot-list"></div>
       </section>
     </div>
     <div class="menu-actions">
       <button type="button" data-start-room>Start Match</button>
-      <button type="button" data-close-room>Back</button>
+      <button type="button" data-back-room-browser>Back to Rooms</button>
     </div>
   `;
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
@@ -449,10 +452,13 @@ function renderRoomSetup() {
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...currentRoom.slots.map(slotRow));
-  setup.querySelectorAll<HTMLInputElement>("[data-room-human-count], [data-room-ai-count]").forEach((input) => input.addEventListener("input", () => void updateCurrentRoomSlotCounts(setup)));
+  setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
+  setup.querySelector("[data-add-ai-slot]")?.addEventListener("click", () => void addAiRoomSlot());
+  setup.querySelector("[data-remove-slot]")?.addEventListener("click", () => void removeLastRoomSlot());
+  setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
-  setup.querySelector("[data-close-room]")?.addEventListener("click", () => {
-    menuView = "home";
+  setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
+    menuView = "rooms";
     renderMainMenu();
   });
   mapList.replaceChildren(setup);
@@ -589,14 +595,18 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
-  const controllerOptions = ["human", "ai", "open", "closed"]
+  const controllerOptions = ["ai", "open", "closed"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${controller}</option>`)
     .join("");
   const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${race}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
-    <select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>
+    ${
+      slot.controller === "human"
+        ? `<span class="slot-controller-badge" data-slot-controller-status>human</span>`
+        : `<select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>`
+    }
     <select data-slot-team aria-label="Slot team">
       ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${team}</option>`).join("")}
     </select>
@@ -605,10 +615,7 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
     const controller = (event.currentTarget as HTMLSelectElement).value;
-    void updateCurrentRoomSlot(slot.id, {
-      controller,
-      ...(controller === "human" ? { userId: localUser.id, name: localUser.name, ready: true } : {}),
-    });
+    void updateCurrentRoomSlot(slot.id, { controller });
   });
   row.querySelector<HTMLSelectElement>("[data-slot-team]")?.addEventListener("change", (event) => {
     void updateCurrentRoomSlot(slot.id, { team: (event.currentTarget as HTMLSelectElement).value });
@@ -628,12 +635,54 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
   renderMainMenu();
 }
 
-async function updateCurrentRoomSlotCounts(setup: HTMLElement) {
+async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
   if (!currentRoom) return;
-  const humanCount = Number(setup.querySelector<HTMLInputElement>("[data-room-human-count]")?.value);
-  const aiCount = Number(setup.querySelector<HTMLInputElement>("[data-room-ai-count]")?.value);
   if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slot-counts`, { humanCount, aiCount });
+  renderMainMenu();
+}
+
+async function addPlayerRoomSlot() {
+  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
+  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) + 1, aiSeatCount(currentRoom));
+}
+
+async function addAiRoomSlot() {
+  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
+  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) + 1);
+}
+
+async function removeLastRoomSlot() {
+  if (!currentRoom || !canRemoveLastRoomSlot(currentRoom)) return;
+  const last = currentRoom.slots.at(-1);
+  if (!last) return;
+  if (last.controller === "ai") {
+    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) - 1);
+    return;
+  }
+  if (last.controller === "closed") {
+    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom));
+    return;
+  }
+  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) - 1, aiSeatCount(currentRoom));
+}
+
+function canRemoveLastRoomSlot(room: RoomState) {
+  const last = room.slots.at(-1);
+  if (!last || room.slots.length <= 2 || last.controller === "human") return false;
+  if (last.controller === "ai") return aiSeatCount(room) > 0;
+  if (last.controller === "closed") return humanSeatCount(room) + aiSeatCount(room) >= 2;
+  return humanSeatCount(room) > 1;
+}
+
+async function closeCurrentRoom() {
+  if (!currentRoom) return;
+  await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/close`, { userId: localUser.id });
+  currentRoom = undefined;
+  currentRoomId = undefined;
+  selectedIds = new Set();
+  selectedCampId = undefined;
+  menuView = "rooms";
   renderMainMenu();
 }
 
@@ -654,7 +703,9 @@ function slotSummaryText(room: RoomState) {
     (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
     { human: 0, ai: 0, open: 0, closed: 0 },
   );
-  return `${room.slots.length} total · ${humanSeatCount(room)} human seats · ${tally.human} claimed · ${tally.ai} AI · ${tally.open} open · ${tally.closed} closed`;
+  const openText = tally.open > 0 ? ` · ${tally.open} open` : "";
+  const closedText = tally.closed > 0 ? ` · ${tally.closed} closed` : "";
+  return `${room.slots.length}/${MAX_ROOM_SLOTS} · ${tally.human} claimed · ${tally.ai} AI${openText}${closedText}`;
 }
 
 function roomBrowserNote(room: RoomState) {

@@ -299,35 +299,6 @@ button {
   gap: 12px;
 }
 
-.room-setup-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: end;
-  gap: 8px;
-}
-
-.room-setup-controls label {
-  display: grid;
-  gap: 3px;
-  color: rgba(35, 49, 38, 0.72);
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.room-setup-controls input {
-  width: 58px;
-  min-height: 28px;
-  border: 1px solid rgba(45, 61, 43, 0.28);
-  border-radius: 4px;
-  background: rgba(255, 250, 226, 0.9);
-  color: #233126;
-  font: inherit;
-  padding: 3px 6px;
-}
-
 .room-setup-name {
   overflow: hidden;
   color: #233126;
@@ -347,9 +318,7 @@ button {
 }
 
 .room-slot-summary {
-  min-width: 360px;
-  padding-bottom: 5px;
-  text-align: right;
+  margin-top: 2px;
 }
 
 .room-setup-layout {
@@ -363,10 +332,6 @@ button {
 .room-slot-pane {
   display: grid;
   min-height: 0;
-  border: 1px solid rgba(45, 61, 43, 0.24);
-  border-radius: 7px;
-  background: rgba(255, 250, 226, 0.42);
-  padding: 10px;
 }
 
 .room-map-pane {
@@ -379,10 +344,47 @@ button {
 
 .slot-pane-head {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 7px;
+  border-bottom: 1px solid rgba(45, 61, 43, 0.18);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 6px;
+}
+
+.slot-actions button {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 250, 226, 0.86);
+  color: #315f87;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.slot-actions button:hover,
+.slot-actions button:focus-visible {
+  outline: none;
+  background: rgba(232, 241, 220, 0.96);
+}
+
+.slot-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.slot-actions .danger-button {
+  border-color: rgba(155, 47, 47, 0.32);
+  color: #8d2d2d;
 }
 
 .profile-form label,
@@ -462,11 +464,15 @@ button {
   gap: 7px;
   overflow: auto;
   padding-right: 3px;
+  scrollbar-gutter: stable;
 }
 
 .slot-list {
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 5px;
+  scrollbar-gutter: stable;
 }
 
 .slot-row {
@@ -496,6 +502,19 @@ button {
   background: rgba(255, 250, 226, 0.9);
   color: #233126;
   font: inherit;
+}
+
+.slot-controller-badge {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.18);
+  border-radius: 4px;
+  background: rgba(232, 241, 220, 0.72);
+  color: rgba(35, 49, 38, 0.76);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  text-transform: lowercase;
 }
 
 .slot-ready {

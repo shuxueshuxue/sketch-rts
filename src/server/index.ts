@@ -174,6 +174,19 @@ app.post("/api/rooms/:roomId/leave", (request, response) => {
   }
 });
 
+app.post("/api/rooms/:roomId/close", (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  if (typeof body.userId !== "string") {
+    response.status(400).json({ error: "Malformed user id" });
+    return;
+  }
+  try {
+    response.json(roomHost.closeRoom(request.params.roomId, body.userId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
 app.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
   const patch = parseSlotPatch(request.body);
   if (!patch) {
