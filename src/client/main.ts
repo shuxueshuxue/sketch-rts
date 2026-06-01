@@ -14,7 +14,7 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
-import { RESEARCH_COMMANDS, researchCommandButtonsForSelection } from "./research-controls";
+import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
@@ -1394,8 +1394,33 @@ function updateHud() {
     button.element.disabled = !available;
     if (available) visibleCount += 1;
   }
+  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
+  for (const progress of researchProgressButtonsForSelection(buildings, player)) {
+    commandDock.append(renderResearchProgressButton(progress));
+    visibleCount += 1;
+  }
   commandDock.classList.toggle("hidden", visibleCount === 0);
   renderItemDock();
+}
+
+function renderResearchProgressButton(progress: ResearchProgressButton) {
+  const percent = Math.floor(progress.progress * 100);
+  const label = `${progress.status === "researching" ? "Researching" : "Queued"} ${progress.label} ${romanLevel(progress.targetLevel)}`;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.disabled = true;
+  button.className = "command-button research-progress-button";
+  button.dataset.researchProgress = progress.upgradeKind;
+  button.dataset.commandLabel = label;
+  button.title = `${label} - ${percent}%`;
+  button.setAttribute("aria-label", button.title);
+  button.style.setProperty("--research-progress", `${progress.status === "researching" ? Math.max(6, percent) : percent}%`);
+  button.innerHTML = `
+    <span class="research-progress-fill"></span>
+    <span class="command-icon">${escapeHtml(progress.icon)}</span>
+    <span class="research-progress-text">${progress.status === "researching" ? percent : "Q"}</span>
+  `;
+  return button;
 }
 
 function renderItemDock() {
@@ -1951,6 +1976,7 @@ function drawUnits(units: Unit[]) {
     ctx.strokeStyle = ownerInk(unit.owner);
     ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
     ctx.lineWidth = selectedIds.has(unit.id) ? 4 : 2;
+    if (hasCarriedItem(unit, "flameCloak")) drawFlameCloakAura(point, performance.now(), unit.radius);
     if (selectedIds.has(unit.id)) {
       ctx.beginPath();
       ctx.ellipse(point.x, point.y + 12, 22, 10, 0, 0, Math.PI * 2);
@@ -1961,6 +1987,34 @@ function drawUnits(units: Unit[]) {
     if (unit.level > 0) drawLevelStar(point.x + 20, point.y - 20, unit.level);
     drawHp(point.x, point.y - 28, unit.hp, unit.maxHp);
   }
+}
+
+function hasCarriedItem(unit: Unit, kind: WorldItem["kind"]) {
+  return snapshot?.items.some((item) => item.kind === kind && item.carrierId === unit.id) ?? false;
+}
+
+function drawFlameCloakAura(point: Point, now: number, radius: number) {
+  const pulse = 0.55 + Math.sin(now / 140) * 0.14;
+  ctx.save();
+  ctx.strokeStyle = `rgba(150, 60, 54, ${pulse})`;
+  ctx.fillStyle = "rgba(242, 137, 75, 0.12)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + 13, radius + 14, (radius + 14) * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(242, 137, 75, 0.72)";
+  for (let index = 0; index < 5; index += 1) {
+    const angle = now / 260 + index * 1.26;
+    const x = point.x + Math.cos(angle) * (radius + 8);
+    const y = point.y + 13 + Math.sin(angle) * (radius * 0.34);
+    ctx.beginPath();
+    ctx.moveTo(x, y + 5);
+    ctx.quadraticCurveTo(x - 5, y - 3, x + 1, y - 11);
+    ctx.quadraticCurveTo(x + 6, y - 3, x + 3, y + 5);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawItems(items: WorldItem[]) {
@@ -2379,9 +2433,11 @@ function drawEffects(effects: WorldEffect[]) {
               ? "#315f87"
               : effect.type === "mine"
                 ? "#b9861b"
-              : effect.type === "attack"
-                ? "#9b2f2f"
-                : "#243126";
+                : effect.type === "attack" || effect.type === "flameBurn"
+                  ? "#9b2f2f"
+                  : effect.type === "projectile" || effect.type === "storm" || effect.type === "chainLightning"
+                    ? "#315f87"
+                    : "#243126";
     ctx.setLineDash(effect.type === "build" ? [6, 5] : []);
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
@@ -2746,6 +2802,10 @@ function labelBuilding(building: Building) {
 
 function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind) {
   return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+}
+
+function romanLevel(level: number) {
+  return level === 1 ? "I" : level === 2 ? "II" : level === 3 ? "III" : String(level);
 }
 
 function distance(a: Point, b: Point) {

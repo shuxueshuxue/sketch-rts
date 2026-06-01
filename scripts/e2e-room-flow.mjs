@@ -349,6 +349,23 @@ async page => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
     return snapshot.buildings.find((building) => building.id === "ui-research-barracks")?.researchQueue?.[0]?.upgradeKind === "weaponTraining";
   }, roomSetupId, { timeout: 5000 });
+  const researchProgressProof = await page.waitForFunction(() => {
+    const button = document.querySelector("[data-research-progress='weaponTraining']");
+    if (!button) return false;
+    const fill = button.querySelector(".research-progress-fill");
+    return {
+      title: button.getAttribute("title"),
+      disabled: button.disabled,
+      progressWidth: fill ? getComputedStyle(fill).width : "",
+    };
+  }, null, { timeout: 5000 });
+  const researchProgressState = await researchProgressProof.jsonValue();
+  must(
+    researchProgressState.disabled === true &&
+      researchProgressState.title?.includes("Researching Weapon Training") &&
+      researchProgressState.progressWidth !== "0px",
+    "research progress button did not replace the clicked research command: " + JSON.stringify(researchProgressState),
+  );
   await page.evaluate(() => {
     const canvas = document.querySelector("canvas");
     let locked = true;

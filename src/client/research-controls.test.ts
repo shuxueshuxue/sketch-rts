@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { researchCommandButtonsForSelection } from "./research-controls";
+import { researchCommandButtonsForSelection, researchProgressButtonsForSelection } from "./research-controls";
 import type { Building, PlayerState } from "../shared/types";
 
 const barracks: Building = {
@@ -40,5 +40,32 @@ describe("research controls", () => {
       { label: "Weapon Training", icon: "⚔", hotkey: "w", upgradeKind: "weaponTraining", buildingId: "barracks-1" },
       { label: "Reinforced Plating", icon: "▣", hotkey: "p", upgradeKind: "reinforcedPlating", buildingId: "barracks-1" },
     ]);
+  });
+
+  it("keeps selected building research visible as progress buttons", () => {
+    const commands = researchProgressButtonsForSelection([
+      {
+        ...barracks,
+        researchQueue: [
+          { upgradeKind: "weaponTraining", targetLevel: 1, remaining: 100 },
+          { upgradeKind: "reinforcedPlating", targetLevel: 1, remaining: 810 },
+        ],
+      },
+    ], player);
+
+    expect(commands[0]).toMatchObject({
+      label: "Weapon Training",
+      upgradeKind: "weaponTraining",
+      buildingId: "barracks-1",
+      targetLevel: 1,
+      status: "researching",
+    });
+    expect(commands[0]?.progress).toBeGreaterThan(0);
+    expect(commands[1]).toMatchObject({
+      label: "Reinforced Plating",
+      upgradeKind: "reinforcedPlating",
+      status: "queued",
+      progress: 0,
+    });
   });
 });

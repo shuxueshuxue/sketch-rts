@@ -726,6 +726,30 @@ button {
   opacity: 0.48;
 }
 
+.research-progress-button:disabled {
+  opacity: 1;
+}
+
+.research-progress-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--research-progress);
+  height: 4px;
+  border-radius: 0 0 0 4px;
+  background: #315f87;
+}
+
+.research-progress-text {
+  position: absolute;
+  right: 3px;
+  bottom: 6px;
+  color: #315f87;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 900;
+}
+
 .item-icon {
   display: block;
   font-size: 19px;
