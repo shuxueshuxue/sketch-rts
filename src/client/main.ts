@@ -18,6 +18,7 @@ import {
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
+import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
@@ -42,6 +43,7 @@ const app = requireElement<HTMLDivElement>("#app");
 type CommandButton = {
   element: HTMLButtonElement;
   hotkey: string;
+  tooltip: () => GameplayTooltip;
   isAvailable: () => boolean;
   run: () => void;
 };
@@ -93,6 +95,7 @@ const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
+const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
@@ -129,21 +132,39 @@ let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
 const commandButtons: CommandButton[] = [
-  createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode),
-  createCommandButton("Build", "⌘", "b", canOpenBuildPalette, openBuildPalette),
+  createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
+    title: "Attack Move",
+    body: "Selected units move toward a point and fight enemies they meet along the way.",
+    stats: ["Uses all selected units"],
+    requirements: ["Needs at least one selected unit."],
+    hotkey: "A",
+  })),
+  createCommandButton("Build", "⌘", "b", canOpenBuildPalette, openBuildPalette, () => ({
+    title: "Build",
+    body: "Open the worker construction palette.",
+    stats: ["Worker command"],
+    requirements: ["Focus a worker."],
+    hotkey: "B",
+  })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(`Build ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind)),
+    createCommandButton(`Build ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey)),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind)),
+    createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey)),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
-    createCommandButton(`Research ${command.label}`, command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind)),
+    createCommandButton(`Research ${command.label}`, command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability)),
+    createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey)),
   ),
-  createCommandButton("Hire Mercenary", HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary),
+  createCommandButton("Hire Mercenary", HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary, () => ({
+    title: "Hire Mercenary",
+    body: "Recruit the mercenary currently offered by the selected camp.",
+    stats: ["Uses camp stock", "Instant recruit"],
+    requirements: ["A friendly unit must stand near the camp."],
+    hotkey: HIRE_COMMAND.hotkey.toUpperCase(),
+  })),
 ];
 
 socket.addEventListener("open", () => {
@@ -172,6 +193,11 @@ socket.addEventListener("close", () => {
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
+document.addEventListener("pointerover", showTooltipFromEvent, true);
+document.addEventListener("pointermove", moveTooltipFromEvent, true);
+document.addEventListener("pointerout", hideTooltipFromEvent, true);
+document.addEventListener("focusin", showTooltipFromEvent, true);
+document.addEventListener("focusout", hideTooltipFromEvent, true);
 document.addEventListener("pointerlockchange", syncPointerLockState);
 document.addEventListener("pointerlockerror", () => {
   if (pointerLockArmed && !pointerLockFallbackOnError) return;
@@ -203,18 +229,84 @@ renderMainMenu();
 resizeCanvas();
 requestAnimationFrame(frame);
 
-function createCommandButton(label: string, icon: string, hotkey: string, isAvailable: () => boolean, run: () => void): CommandButton {
+function createCommandButton(label: string, icon: string, hotkey: string, isAvailable: () => boolean, run: () => void, tooltip: () => GameplayTooltip): CommandButton {
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
   element.dataset.commandLabel = label;
   element.dataset.hotkey = hotkey.toUpperCase();
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
-  element.title = `${label} (${hotkey.toUpperCase()})`;
+  applyTooltip(element, tooltip());
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   element.addEventListener("click", run);
   commandDock.append(element);
-  return { element, hotkey, isAvailable, run };
+  return { element, hotkey, tooltip, isAvailable, run };
+}
+
+function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
+  const dataset = formatTooltipDataset(tooltip);
+  element.dataset.tooltipTitle = dataset.title;
+  element.dataset.tooltipBody = dataset.body;
+  element.dataset.tooltipStats = dataset.stats;
+  element.dataset.tooltipRequirements = dataset.requirements;
+  element.dataset.tooltipHotkey = dataset.hotkey;
+}
+
+function showTooltipFromEvent(event: Event) {
+  const target = tooltipTarget(event.target);
+  if (!target) return;
+  renderTooltip(target);
+  positionTooltip(target, event);
+}
+
+function moveTooltipFromEvent(event: Event) {
+  if (tooltipLayer.classList.contains("hidden")) return;
+  const target = tooltipTarget(event.target);
+  if (!target) return;
+  positionTooltip(target, event);
+}
+
+function hideTooltipFromEvent(event: Event) {
+  if (!tooltipTarget(event.target)) return;
+  tooltipLayer.classList.add("hidden");
+}
+
+function tooltipTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return undefined;
+  const element = target.closest<HTMLElement>("[data-tooltip-title]");
+  return element?.dataset.tooltipTitle ? element : undefined;
+}
+
+function renderTooltip(target: HTMLElement) {
+  const stats = splitTooltipList(target.dataset.tooltipStats);
+  const requirements = splitTooltipList(target.dataset.tooltipRequirements);
+  const hotkey = target.dataset.tooltipHotkey;
+  tooltipLayer.innerHTML = `
+    <div class="tooltip-title">${escapeHtml(target.dataset.tooltipTitle ?? "")}${hotkey ? `<span>${escapeHtml(hotkey)}</span>` : ""}</div>
+    ${target.dataset.tooltipBody ? `<div class="tooltip-body">${escapeHtml(target.dataset.tooltipBody)}</div>` : ""}
+    ${stats.length > 0 ? `<div class="tooltip-stats">${stats.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
+    ${requirements.length > 0 ? `<div class="tooltip-requirements">${requirements.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
+  `;
+  tooltipLayer.classList.remove("hidden");
+}
+
+function positionTooltip(target: HTMLElement, event: Event) {
+  const source = event instanceof PointerEvent || event instanceof MouseEvent
+    ? { x: event.clientX + 14, y: event.clientY + 16 }
+    : tooltipAnchor(target);
+  const rect = tooltipLayer.getBoundingClientRect();
+  const x = Math.min(window.innerWidth - rect.width - 10, Math.max(10, source.x));
+  const y = Math.min(window.innerHeight - rect.height - 10, Math.max(10, source.y));
+  tooltipLayer.style.transform = `translate(${x}px, ${y}px)`;
+}
+
+function tooltipAnchor(target: HTMLElement) {
+  const rect = target.getBoundingClientRect();
+  return { x: rect.left + rect.width + 10, y: rect.top };
+}
+
+function splitTooltipList(value: string | undefined) {
+  return value ? value.split("|").filter(Boolean) : [];
 }
 
 function renderMainMenu() {
@@ -1460,6 +1552,7 @@ function updateHud() {
     const available = button.isAvailable();
     button.element.hidden = !available;
     button.element.disabled = !available;
+    applyTooltip(button.element, button.tooltip());
     if (available) visibleCount += 1;
   }
   commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
@@ -1482,8 +1575,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       button.type = "button";
       button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
       button.dataset.selectionGroup = group.id;
-      button.title = selectionGroupTitle(group);
-      button.setAttribute("aria-label", button.title);
+      button.setAttribute("aria-label", selectionGroupTitle(group));
       const canvas = document.createElement("canvas");
       canvas.width = 34;
       canvas.height = 34;
@@ -1627,12 +1719,18 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   const label = `${progress.status === "researching" ? "Researching" : "Queued"} ${progress.label} ${romanLevel(progress.targetLevel)}`;
   const button = document.createElement("button");
   button.type = "button";
-  button.disabled = true;
+  button.tabIndex = -1;
   button.className = "command-button research-progress-button";
+  button.setAttribute("aria-disabled", "true");
   button.dataset.researchProgress = progress.upgradeKind;
   button.dataset.commandLabel = label;
-  button.title = `${label} - ${percent}%`;
-  button.setAttribute("aria-label", button.title);
+  button.setAttribute("aria-label", `${label} - ${percent}%`);
+  const tooltip = upgradeTooltip(progress.upgradeKind, undefined, progress.targetLevel - 1);
+  applyTooltip(button, {
+    ...tooltip,
+    title: label,
+    stats: [`${percent}% complete`, ...tooltip.stats],
+  });
   button.style.setProperty("--research-progress", `${progress.status === "researching" ? Math.max(6, percent) : percent}%`);
   button.innerHTML = `
     <span class="research-progress-fill"></span>
@@ -1647,12 +1745,18 @@ function renderTrainingProgressButton(progress: TrainingProgressButton) {
   const label = `${progress.status === "training" ? "Training" : "Queued"} ${labelKind(progress.unitKind)}`;
   const button = document.createElement("button");
   button.type = "button";
-  button.disabled = true;
+  button.tabIndex = -1;
   button.className = "command-button research-progress-button";
+  button.setAttribute("aria-disabled", "true");
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
-  button.title = `${label} - ${percent}%`;
-  button.setAttribute("aria-label", button.title);
+  button.setAttribute("aria-label", `${label} - ${percent}%`);
+  const tooltip = unitTooltip(progress.unitKind);
+  applyTooltip(button, {
+    ...tooltip,
+    title: label,
+    stats: [`${percent}% complete`, ...tooltip.stats],
+  });
   button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
   button.innerHTML = `
     <span class="research-progress-fill"></span>
@@ -1677,8 +1781,8 @@ function renderItemDock() {
       button.className = "item-button";
       button.dataset.itemId = item.id;
       const cooldownText = item.cooldownRemaining > 0 ? ` - recharging ${item.cooldownRemaining}` : "";
-      button.title = `${itemLabel(item.kind)} (${itemHotkey(index)})${cooldownText}`;
-      button.setAttribute("aria-label", button.title);
+      button.setAttribute("aria-label", `${itemLabel(item.kind)} (${itemHotkey(index)})${cooldownText}`);
+      applyTooltip(button, itemTooltip(item.kind, itemHotkey(index)));
       button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
       button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
       button.addEventListener("click", () => useCarriedItem(item.id));
@@ -2913,9 +3017,6 @@ function drawMinimap(marks: MapPresentationMark[]) {
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
-  ctx.fillStyle = "#243126";
-  ctx.font = "12px ui-monospace, monospace";
-  ctx.fillText("minimap", rect.x + 8, rect.y + 16);
 }
 
 function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {

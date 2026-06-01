@@ -810,7 +810,7 @@ button {
   font-weight: 800;
 }
 
-.research-progress-button:disabled {
+.research-progress-button[aria-disabled="true"] {
   opacity: 1;
 }
 
@@ -864,6 +864,60 @@ button {
 .command-button:disabled {
   color: #8f947f;
   background: rgba(246, 241, 214, 0.72);
+}
+
+.tooltip-layer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  max-width: min(320px, calc(100vw - 20px));
+  padding: 9px 10px;
+  border: 1px solid rgba(36, 49, 38, 0.32);
+  border-radius: 6px;
+  background: rgba(255, 251, 231, 0.98);
+  color: #243126;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  box-shadow: 0 8px 18px rgba(36, 49, 38, 0.14);
+}
+
+.tooltip-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-weight: 900;
+}
+
+.tooltip-title span {
+  min-width: 16px;
+  border-radius: 2px;
+  background: rgba(36, 49, 38, 0.78);
+  color: #fffbe7;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 12px;
+  text-align: center;
+}
+
+.tooltip-body {
+  margin-top: 5px;
+}
+
+.tooltip-stats,
+.tooltip-requirements {
+  display: grid;
+  gap: 2px;
+  margin-top: 7px;
+  color: rgba(36, 49, 38, 0.78);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.tooltip-requirements {
+  color: rgba(112, 74, 51, 0.9);
 }
 
 .status-line {
