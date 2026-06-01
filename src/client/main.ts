@@ -14,6 +14,7 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
+import { RESEARCH_COMMANDS, researchCommandButtonsForSelection } from "./research-controls";
 import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
@@ -22,7 +23,7 @@ import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "..
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
 import { canStartRoom } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, WorldEffect, WorldItem } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldEffect, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -133,6 +134,9 @@ const commandButtons: CommandButton[] = [
   ),
   ...TRAIN_COMMANDS.map((command) =>
     createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind)),
+  ),
+  ...RESEARCH_COMMANDS.map((command) =>
+    createCommandButton(`Research ${command.label}`, command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind)),
   ),
   ...SPELL_COMMANDS.map((command) =>
     createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability)),
@@ -1090,6 +1094,10 @@ function canTrain(unitKind: TrainableUnitKind) {
   return !commandMode && !buildPaletteOpen && selectedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
 }
 
+function canResearch(upgradeKind: UpgradeKind) {
+  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
+}
+
 function canCast(ability: AbilityKind) {
   return !commandMode && !buildPaletteOpen && selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
 }
@@ -1246,6 +1254,16 @@ function train(unitKind: TrainableUnitKind) {
   }
   sendCommand({ type: "train", buildingId: building.id, unitKind });
   statusLabel.textContent = `${labelKind(unitKind)} queued.`;
+}
+
+function research(upgradeKind: UpgradeKind) {
+  const command = researchCommandButtonsForSelection(selectedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
+  if (!command) {
+    showInvalidCommand(`${labelKind(upgradeKind)} needs a selected research building.`);
+    return;
+  }
+  sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind });
+  statusLabel.textContent = `${command.label} started.`;
 }
 
 function hireMercenary() {
@@ -2712,7 +2730,7 @@ function labelBuilding(building: Building) {
   return labelKind(building.kind);
 }
 
-function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind) {
+function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind) {
   return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 }
 

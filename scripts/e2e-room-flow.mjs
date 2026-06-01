@@ -240,6 +240,62 @@ async page => {
   }, roomSetupId);
   must(snapshot.map.id === "wildMarches", "room start did not use selected map");
   must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
+  const researchProof = await page.evaluate(async (roomId) => {
+    const reset = await fetch("/api/rooms/" + roomId + "/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mapId: "bareDuel",
+        options: {
+          aiPlayers: ["enemy"],
+          scenario: {
+            addBuildings: [{ id: "ui-research-barracks", owner: "player", kind: "barracks", x: 640, y: 400, complete: true }],
+          },
+        },
+      }),
+    });
+    if (!reset.ok) throw new Error(await reset.text());
+    return (await reset.json()).snapshot;
+  }, roomSetupId);
+  must(researchProof.buildings.some((building) => building.id === "ui-research-barracks"), "research proof did not seed a selectable barracks");
+  await page.waitForFunction(async (roomId) => {
+    const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
+    return snapshot.buildings.some((building) => building.id === "ui-research-barracks");
+  }, roomSetupId, { timeout: 5000 });
+  await page.evaluate(() => {
+    const gate = document.querySelector("[data-pointer-lock-gate]");
+    if (gate) {
+      gate.classList.add("hidden");
+      gate.style.pointerEvents = "none";
+    }
+  });
+  await page.waitForTimeout(250);
+  await page.mouse.click(640, 400);
+  await page.waitForTimeout(300);
+  const researchSelectionProof = await page.evaluate(() => ({
+    selection: document.querySelector("[data-selection]")?.textContent ?? "",
+    status: document.querySelector("[data-status]")?.textContent ?? "",
+  }));
+  must(researchSelectionProof.selection.includes("Barracks"), "research proof did not select the barracks: " + JSON.stringify(researchSelectionProof));
+  const researchDockProof = await page.evaluate(() => {
+    const buttons = [...document.querySelectorAll("[data-command-dock] button")].filter((button) => !button.hidden);
+    return {
+      labels: buttons.map((button) => button.getAttribute("data-command-label")),
+      hotkeys: buttons.map((button) => button.getAttribute("data-hotkey")),
+    };
+  });
+  must(
+    researchDockProof.labels.includes("Research Weapon Training") &&
+      researchDockProof.labels.includes("Research Reinforced Plating") &&
+      researchDockProof.hotkeys.includes("W") &&
+      researchDockProof.hotkeys.includes("P"),
+    "selected barracks did not expose research buttons: " + JSON.stringify(researchDockProof),
+  );
+  await page.locator("[data-command-label='Research Weapon Training']").click();
+  await page.waitForFunction(async (roomId) => {
+    const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
+    return snapshot.buildings.find((building) => building.id === "ui-research-barracks")?.researchQueue?.[0]?.upgradeKind === "weaponTraining";
+  }, roomSetupId, { timeout: 5000 });
   await page.evaluate(() => {
     const canvas = document.querySelector("canvas");
     let locked = true;
@@ -399,6 +455,7 @@ async page => {
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,
+    researchDockProof,
     privateLobbyProof,
     slotEditProof,
     sameMapSmallProof,
