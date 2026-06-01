@@ -129,10 +129,12 @@ async page => {
     }, { roomId: activeRoomId, body });
   const waitForMenu = async () => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-    await page.waitForSelector("[data-create-game]", { timeout: 5000 });
+    await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   };
   const enterRoomSetup = async () => {
-    await page.click("[data-create-game]");
+    await page.click("[data-open-room-browser]");
+    await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+    await page.click("[data-create-room]");
     await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
     await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
@@ -149,6 +151,15 @@ async page => {
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
     await sleep(140);
+  };
+  const disablePointerLockGateForCanvasProof = async () => {
+    await page.evaluate(() => {
+      const gate = document.querySelector("[data-pointer-lock-gate]");
+      if (gate) {
+        gate.classList.add("hidden");
+        gate.style.pointerEvents = "none";
+      }
+    });
   };
   const canvasPatch = async (x, y, width = 80, height = 80) =>
     page.evaluate(
@@ -425,6 +436,7 @@ async page => {
   activeRoomId = undefined;
   await waitForMenu();
   await startLocalRoom("verdantCrossroads");
+  await disablePointerLockGateForCanvasProof();
   const beforeEdgeScrollPatch = await canvasPatch(640, 400, 240, 160);
   await page.mouse.move(1276, 400);
   await sleep(360);
@@ -435,6 +447,7 @@ async page => {
   activeRoomId = undefined;
   await waitForMenu();
   await startLocalRoom("verdantCrossroads");
+  await disablePointerLockGateForCanvasProof();
   const emptyDockHidden = await page.evaluate(() => document.querySelector("[data-command-dock]")?.classList.contains("hidden"));
   must(emptyDockHidden, "command dock is visible before selecting a usable object");
   await page.keyboard.press("b");

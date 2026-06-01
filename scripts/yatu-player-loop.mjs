@@ -138,8 +138,10 @@ async page => {
     }, { roomId: activeRoomId, playerId, command });
   };
   const startLocalRoom = async (mapId) => {
-    await page.waitForSelector("[data-create-game]", { timeout: 5000 });
-    await page.click("[data-create-game]");
+    await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
+    await page.click("[data-open-room-browser]");
+    await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+    await page.click("[data-create-room]");
     await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
     await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
@@ -148,6 +150,13 @@ async page => {
     await page.click("[data-map-id='" + mapId + "']");
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
+    await page.evaluate(() => {
+      const gate = document.querySelector("[data-pointer-lock-gate]");
+      if (gate) {
+        gate.classList.add("hidden");
+        gate.style.pointerEvents = "none";
+      }
+    });
     await sleep(120);
   };
   const waitFor = async (label, fn, timeout = 5000) => {
@@ -246,7 +255,7 @@ async page => {
     return state;
   };
 
-  await page.waitForSelector("[data-create-game]");
+  await page.waitForSelector("[data-open-room-browser]");
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
   await sleep(260);
   const menuBackdropB = await canvasPatch(640, 400, 180, 120);

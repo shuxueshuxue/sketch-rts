@@ -102,6 +102,12 @@ button {
   padding: clamp(18px, 4vw, 52px);
 }
 
+.main-menu[data-menu-view="rooms"] {
+  grid-template-columns: minmax(720px, min(1120px, calc(100vw - 88px)));
+  align-content: start;
+  padding: clamp(18px, 4vw, 52px);
+}
+
 .menu-title {
   color: #233126;
   font-size: clamp(44px, 8vw, 92px);
@@ -182,11 +188,53 @@ button {
 
 .profile-form,
 .create-game-form,
+.room-browser,
 .room-setup,
 .results-panel {
   display: grid;
   gap: 10px;
   pointer-events: auto;
+}
+
+.room-browser {
+  width: min(1120px, calc(100vw - 88px));
+  height: min(56vh, 520px);
+  grid-template-columns: minmax(220px, 0.32fr) minmax(420px, 0.68fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.room-browser-actions,
+.room-browser-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(45, 61, 43, 0.24);
+  border-radius: 7px;
+  background: rgba(255, 250, 226, 0.42);
+  padding: 10px;
+  overflow: auto;
+}
+
+.room-browser-actions {
+  grid-auto-rows: max-content;
+}
+
+.room-browser-list .map-button-note {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.empty-room-list {
+  border: 1px dashed rgba(45, 61, 43, 0.28);
+  border-radius: 7px;
+  color: rgba(35, 49, 38, 0.68);
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .create-game-grid {
@@ -462,9 +510,17 @@ button {
 }
 
 @media (max-width: 960px) {
-  .main-menu[data-menu-view="setup"] {
+  .main-menu[data-menu-view="setup"],
+  .main-menu[data-menu-view="rooms"] {
     grid-template-columns: minmax(280px, calc(100vw - 32px));
     padding: 18px 16px;
+  }
+
+  .room-browser {
+    width: calc(100vw - 32px);
+    height: min(72vh, 640px);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .room-setup {

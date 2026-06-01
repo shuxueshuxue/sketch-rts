@@ -104,7 +104,10 @@ async page => {
       { x, y, width, height },
     );
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-  must((await page.locator("[data-create-game]").count()) === 1, "home missing single create-game entry");
+  must((await page.locator("[data-open-room-browser]").count()) === 1, "home missing rooms entry");
+  must((await page.locator("[data-open-profile]").count()) === 1, "home missing profile entry");
+  must((await page.locator("[data-create-game]").count()) === 0, "home should not expose create game outside the room browser");
+  must((await page.locator("[data-resume-room]").count()) === 0, "home should not expose resume-room shortcut");
   must((await page.locator("[data-create-local-room]").count()) === 0, "home still exposes old single/local creation entry");
   must((await page.locator("[data-map-id]").count()) === 0, "home exposes direct map picker instead of hierarchy");
 
@@ -125,7 +128,19 @@ async page => {
   const backdropB = await canvasPatch(640, 400, 180, 120);
   must(backdropA.hash !== backdropB.hash, "main menu background did not animate");
 
-  await page.locator("[data-create-game]").click();
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  const roomBrowserLayoutProof = await page.evaluate(() => {
+    const actions = document.querySelector(".room-browser-actions")?.getBoundingClientRect();
+    const list = document.querySelector(".room-browser-list")?.getBoundingClientRect();
+    return {
+      hasCreate: Boolean(document.querySelector("[data-create-room]")),
+      hasList: Boolean(document.querySelector("[data-room-browser-list]")),
+      sideBySide: Boolean(actions && list && list.left > actions.right + 8),
+    };
+  });
+  must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.sideBySide, "rooms browser should show create action on the left and room list on the right: " + JSON.stringify(roomBrowserLayoutProof));
+  await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   must((await page.locator("[data-create-game-form] input[name='privateRoom']").isChecked()) === true, "new rooms should default to private/local shape");
   await page.locator("[data-create-game-form] select[name='mapId']").selectOption("wildMarches");
@@ -182,7 +197,11 @@ async page => {
 
   await page.reload();
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-  await page.locator("[data-resume-room]").click();
+  must((await page.locator("[data-resume-room]").count()) === 0, "reload should not depend on resume-room shortcut");
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "owned room was not visible from Rooms after reload");
+  await page.locator("[data-room-id='" + roomSetupId + "']").click();
   await page.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 5000 });
   const rejoinedRoomProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
@@ -234,6 +253,13 @@ async page => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return room.status === "inMatch" && room.mapId === "wildMarches";
   }, roomSetupId, { timeout: 5000 });
+  await page.reload();
+  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "in-match owned room was not visible from Rooms after reload");
+  await page.locator("[data-room-id='" + roomSetupId + "']").click();
+  await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
   const snapshot = await page.evaluate(async (roomId) => {
     const res = await fetch("/api/rooms/" + roomId + "/snapshot");
     return res.json();
@@ -249,7 +275,7 @@ async page => {
         options: {
           aiPlayers: ["enemy"],
           scenario: {
-            addBuildings: [{ id: "ui-research-barracks", owner: "player", kind: "barracks", x: 640, y: 400, complete: true }],
+            addBuildings: [{ id: "ui-research-barracks", owner: "player", kind: "barracks", x: 1200, y: 960, complete: true }],
           },
         },
       }),
@@ -356,7 +382,9 @@ async page => {
 
   await page.locator("[data-return-home]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
-  await page.locator("[data-create-game]").click();
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   await page.locator("[data-create-game-form] select[name='mapId']").selectOption("bareDuel");
   await page.locator("[data-create-game-form] input[name='humanCount']").fill("2");
@@ -400,7 +428,9 @@ async page => {
   );
   await page.locator("[data-close-room]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
-  await page.locator("[data-create-game]").click();
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   await page.locator("[data-create-game-form] input[name='privateRoom']").uncheck();
   await page.locator("[data-create-game-form] input[name='humanCount']").fill("15");
@@ -457,6 +487,7 @@ async page => {
     winner: ended.result?.winner,
     researchDockProof,
     privateLobbyProof,
+    roomBrowserLayoutProof,
     slotEditProof,
     sameMapSmallProof,
     setupResizeProof,

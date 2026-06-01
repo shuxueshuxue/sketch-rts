@@ -33,7 +33,6 @@ type SpellTargeting = { casterId: string; ability: AbilityKind };
 type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting };
 type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
-const CURRENT_ROOM_STORAGE_KEY = "sketch-rts-current-room";
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
 const MAX_ROOM_SLOTS = 30;
 
@@ -250,15 +249,7 @@ function renderMainMenu() {
     return;
   }
   menuStatus.textContent = `Signed in as ${localUser.name}.`;
-  const resumeRoomId = loadCurrentRoomId();
   mapList.replaceChildren(
-    ...(resumeRoomId
-      ? [menuButton("Resume Room", `Return to ${resumeRoomId}.`, "data-resume-room", () => void resumeStoredRoom(), resumeRoomId)]
-      : []),
-    menuButton("Create Game", "Choose map, player count, computer count, and private/public visibility.", "data-create-game", () => {
-      menuView = "create";
-      renderMainMenu();
-    }),
     menuButton("Rooms", "Browse public rooms on this server.", "data-open-room-browser", () => {
       menuView = "rooms";
       renderMainMenu();
@@ -376,32 +367,40 @@ function renderProfileMenu() {
 async function renderRoomBrowser() {
   menuStatus.textContent = "Rooms hosted by this server.";
   const rooms = await requestJson<{ rooms: RoomState[] }>(`/api/rooms?userId=${encodeURIComponent(localUser.id)}`);
-  const items = rooms.rooms.map((room) =>
-    menuButton(room.name, `${room.mapId} - ${room.status} - ${activeSlotCount(room)} slots`, "data-room-id", async () => {
-      currentRoom = await requestJson<RoomState>(`/api/rooms/${room.id}/join`, { user: localUser });
-      saveCurrentRoomId(currentRoom.id);
-      localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? localPlayerId;
-      menuView = "setup";
-      renderMainMenu();
-    }, room.id),
-  );
-  mapList.replaceChildren(
-    menuButton("Create Room", "Create a private or public game room.", "data-create-room", () => {
+  const browser = document.createElement("div");
+  browser.className = "room-browser";
+  browser.dataset.roomBrowser = "true";
+  browser.innerHTML = `
+    <div class="room-browser-actions"></div>
+    <div class="room-browser-list" data-room-browser-list></div>
+  `;
+  const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
+  actions.replaceChildren(
+    menuButton("Create Room", "Choose map, slots, and private/public visibility.", "data-create-room", () => {
       menuView = "create";
       renderMainMenu();
     }),
-    ...items,
     menuButton("Back", "Return to the main menu.", "data-back-home", () => {
       menuView = "home";
       renderMainMenu();
     }),
   );
+  const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
+  const visibleRooms = rooms.rooms.filter((room) => room.status !== "ended" && (room.status !== "inMatch" || slotForUser(room, localUser.id)));
+  list.replaceChildren(
+    ...(visibleRooms.length > 0
+      ? visibleRooms.map((room) =>
+          menuButton(room.name, roomBrowserNote(room), "data-room-id", () => void enterRoom(room.id), room.id),
+        )
+      : [emptyRoomList()]),
+  );
+  mapList.replaceChildren(browser);
 }
 
 function renderRoomSetup() {
   if (!currentRoom) {
     menuStatus.textContent = "No room selected.";
-    mapList.replaceChildren(menuButton("Create Room", "Create a private or public game room.", "data-create-game", () => {
+    mapList.replaceChildren(menuButton("Create Room", "Create a private or public game room.", "data-create-room", () => {
       menuView = "create";
       renderMainMenu();
     }));
@@ -514,7 +513,6 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
     host: localUser,
     ...input,
   });
-  saveCurrentRoomId(currentRoom.id);
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   menuView = "setup";
   renderMainMenu();
@@ -534,7 +532,6 @@ async function startCurrentRoom() {
   }
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
   currentRoomId = currentRoom.id;
-  saveCurrentRoomId(currentRoom.id);
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
   camera = { x: 0, y: 0 };
@@ -653,6 +650,19 @@ function slotSummaryText(room: RoomState) {
   return `${room.slots.length} total · ${humanSeatCount(room)} human seats · ${tally.human} claimed · ${tally.ai} AI · ${tally.open} open · ${tally.closed} closed`;
 }
 
+function roomBrowserNote(room: RoomState) {
+  const ownedSlot = slotForUser(room, localUser.id);
+  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : room.status === "open" ? "open" : "already started";
+  return `${room.mapId} · ${room.status} · ${activeSlotCount(room)} active · ${access}`;
+}
+
+function emptyRoomList() {
+  const empty = document.createElement("div");
+  empty.className = "empty-room-list";
+  empty.textContent = "No visible rooms.";
+  return empty;
+}
+
 function mapCapacityLabel(mapId: MapId) {
   return mapId === "grandThirty" ? "up to 30" : "2-30 configurable";
 }
@@ -664,7 +674,6 @@ function slotForUser(room: RoomState, userId: string) {
 function returnHome() {
   currentRoom = undefined;
   currentRoomId = undefined;
-  clearCurrentRoomId();
   selectedIds = new Set();
   selectedCampId = undefined;
   commandMode = undefined;
@@ -673,9 +682,7 @@ function returnHome() {
   renderMainMenu();
 }
 
-async function resumeStoredRoom() {
-  const roomId = loadCurrentRoomId();
-  if (!roomId) return;
+async function enterRoom(roomId: string) {
   try {
     const room = await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
     currentRoom = room;
@@ -691,13 +698,13 @@ async function resumeStoredRoom() {
       shell.classList.remove("menu-open");
       mainMenu.classList.add("hidden");
       startRoomPolling();
+      syncPointerLockGate();
       return;
     }
     menuView = "setup";
     renderMainMenu();
   } catch (error) {
-    clearCurrentRoomId();
-    menuStatus.innerHTML = `<span class="error">Could not resume room: ${escapeHtml(error instanceof Error ? error.message : String(error))}</span>`;
+    menuStatus.innerHTML = `<span class="error">Could not enter room: ${escapeHtml(error instanceof Error ? error.message : String(error))}</span>`;
     renderMainMenu();
   }
 }
@@ -2768,18 +2775,6 @@ function loadLocalUserProfile(): LocalUserProfile {
 
 function saveLocalUserProfile(profile: LocalUserProfile) {
   window.localStorage.setItem("sketch-rts-user", JSON.stringify(profile));
-}
-
-function loadCurrentRoomId() {
-  return window.localStorage.getItem(CURRENT_ROOM_STORAGE_KEY) ?? undefined;
-}
-
-function saveCurrentRoomId(roomId: string) {
-  window.localStorage.setItem(CURRENT_ROOM_STORAGE_KEY, roomId);
-}
-
-function clearCurrentRoomId() {
-  window.localStorage.removeItem(CURRENT_ROOM_STORAGE_KEY);
 }
 
 function escapeHtml(value: string) {
