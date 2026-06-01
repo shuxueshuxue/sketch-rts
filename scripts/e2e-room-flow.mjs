@@ -219,6 +219,20 @@ async page => {
   }, roomSetupId);
   must(snapshot.map.id === "wildMarches", "room start did not use selected map");
   must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
+  await page.evaluate(() => {
+    const canvas = document.querySelector("canvas");
+    let locked = true;
+    window.__sketchRtsExitPointerLockCalled = false;
+    Object.defineProperty(document, "pointerLockElement", {
+      configurable: true,
+      get: () => (locked ? canvas : null),
+    });
+    document.exitPointerLock = () => {
+      locked = false;
+      window.__sketchRtsExitPointerLockCalled = true;
+      document.dispatchEvent(new Event("pointerlockchange"));
+    };
+  });
 
   const ended = await page.evaluate(async (roomId) => {
     const reset = await fetch("/api/rooms/" + roomId + "/reset", {
@@ -255,6 +269,8 @@ async page => {
 
   await page.waitForSelector("[data-results-screen='" + roomSetupId + "']", { timeout: 5000 });
   const resultText = await page.locator("[data-result-winner]").textContent();
+  const pointerLockReleasedForResults = await page.evaluate(() => window.__sketchRtsExitPointerLockCalled === true && document.pointerLockElement === null);
+  must(pointerLockReleasedForResults, "results screen did not release pointer lock for menu clicks");
   must(resultText && resultText.includes("Winner:"), "results screen did not show winner");
   must((await page.locator("[data-result-slot='player']").count()) === 1, "results screen missing player slot row");
   must((await page.locator("[data-result-slot='enemy']").count()) === 1, "results screen missing enemy slot row");

@@ -15,6 +15,7 @@ export const gameShellMarkup = `
     <div class="status-line" data-status>Connecting to match...</div>
     <div class="selection-chip" data-selection>Nothing selected</div>
     <div class="command-dock hidden" data-command-dock></div>
+    <div class="item-dock hidden" data-item-dock></div>
     <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
     <div class="pointer-lock-gate hidden" data-pointer-lock-gate role="dialog" aria-modal="true" aria-labelledby="pointer-lock-gate-title">
       <div class="pointer-lock-panel">

@@ -2,6 +2,7 @@ import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
+import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
@@ -89,6 +90,7 @@ const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
+const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
@@ -654,6 +656,7 @@ async function refreshRoomSnapshot() {
 
 function openResults(room: RoomState) {
   if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
   selectedIds = new Set();
@@ -666,6 +669,13 @@ function openResults(room: RoomState) {
   menuView = "results";
   renderMainMenu();
   updateHud();
+}
+
+function releasePointerLockForMenu() {
+  if (document.pointerLockElement === canvas) document.exitPointerLock();
+  pointerLockArmed = false;
+  pointerLockFallbackOnError = false;
+  virtualMouse = undefined;
 }
 
 async function requestJson<T>(path: string, body?: unknown): Promise<T> {
@@ -834,6 +844,10 @@ function onKeyDown(event: KeyboardEvent) {
     closeBuildPalette("Build menu closed.");
     return;
   }
+  if (/^[1-6]$/.test(key) && useInventoryItem(Number(key) - 1)) {
+    event.preventDefault();
+    return;
+  }
 
   // @@@command-hotkeys - Command card hotkeys win before WASD camera keys.
   const command = commandButtons.find((button) => button.hotkey === key && button.isAvailable());
@@ -969,7 +983,18 @@ function issueContextCommandAtWorld(world: Point) {
   }
 
   const resource = hitResource(world);
+  const item = hitGroundItem(world);
   const target = hitAttackTarget(world);
+  if (item) {
+    const command = pickupItemCommand(selectedUnits, item);
+    if (!command) {
+      showInvalidCommand("Select a unit before picking up items.");
+      return;
+    }
+    sendCommand(command);
+    statusLabel.textContent = `${itemLabel(item.kind)} pickup ordered.`;
+    return;
+  }
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
     sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id });
     statusLabel.textContent = "Workers ordered to mine gold.";
@@ -1273,6 +1298,68 @@ function updateHud() {
     if (available) visibleCount += 1;
   }
   commandDock.classList.toggle("hidden", visibleCount === 0);
+  renderItemDock();
+}
+
+function renderItemDock() {
+  if (!snapshot || menuOpen) {
+    itemDock.classList.add("hidden");
+    itemDock.replaceChildren();
+    return;
+  }
+  const entries = carriedItemsForSelection(snapshot, selectedPlayerUnits()).slice(0, 6);
+  itemDock.classList.toggle("hidden", entries.length === 0);
+  itemDock.replaceChildren(
+    ...entries.map(({ item, carrier }, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "item-button";
+      button.dataset.itemId = item.id;
+      button.title = `${itemLabel(item.kind)} (${itemHotkey(index)})`;
+      button.setAttribute("aria-label", button.title);
+      button.disabled = item.cooldownRemaining > 0;
+      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>`;
+      button.addEventListener("click", () => useCarriedItem(item.id));
+      button.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        dropCarriedItem(item.id, carrier.id);
+      });
+      return button;
+    }),
+  );
+}
+
+function useInventoryItem(index: number) {
+  if (!snapshot) return false;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits())[index];
+  if (!entry) return false;
+  useCarriedItem(entry.item.id);
+  return true;
+}
+
+function useCarriedItem(itemId: string) {
+  if (!snapshot) return;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item }) => item.id === itemId);
+  if (!entry) return;
+  const command = useItemCommand(snapshot, localPlayerId, entry.item, entry.carrier);
+  if (!command) {
+    showInvalidCommand(entry.item.kind === "flameCloak" ? "Flame Cloak is passive." : `${itemLabel(entry.item.kind)} has no valid target.`);
+    return;
+  }
+  sendCommand(command);
+  statusLabel.textContent = `${itemLabel(entry.item.kind)} used.`;
+}
+
+function dropCarriedItem(itemId: string, carrierId: string) {
+  if (!snapshot) return;
+  const entry = carriedItemsForSelection(snapshot, selectedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  if (!entry) return;
+  sendCommand(dropItemCommand(entry.item, entry.carrier));
+  statusLabel.textContent = `${itemLabel(entry.item.kind)} dropped.`;
+}
+
+function itemIcon(kind: WorldItem["kind"]) {
+  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : "✦";
 }
 
 function draw() {
@@ -2538,6 +2625,10 @@ function hitResource(world: Point) {
 
 function hitMercenaryCamp(world: Point) {
   return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
+}
+
+function hitGroundItem(world: Point) {
+  return snapshot?.items.find((item) => !item.carrierId && distance(item, world) < 34);
 }
 
 function hitAttackTarget(world: Point) {
