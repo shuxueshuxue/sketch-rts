@@ -80,6 +80,7 @@ function interactiveMemoryScriptId(commandType: InteractivePlaytestCommand["type
   if (commandType === "expand") return "expansion";
   if (commandType === "retreat") return "skirmishPreservation";
   if (commandType === "hire") return "mercenary";
+  if (commandType === "attackMove" || commandType === "focusFire") return "attackWave";
   return issuedScriptId;
 }
 

@@ -147,7 +147,7 @@ Requirements:
 - The command surface is composable. High-level commands should cover common steering moves such as gather army, attack-move, focus fire, retreat, mine, build, train, expand, creep a camp, hire mercenaries, use item, and step until a condition. Low-level raw commands remain available for exact control.
 - The scripted opponent continues through the same AI command planner used by benchmark runs.
 - The controlled side can be manual-only or assisted. Manual commands should be able to coexist with scripted commands when explicitly requested, but the default is that the agent is responsible for the controlled side.
-- Assisted interactive sessions must share the same AI memory object for scripted decisions and manual CLI commands. If the agent manually claims a camp, expansion, retreat, or builder task, that explicit intent is recorded as the same kind of memory claim the AI scripts use, so the next assisted tick does not tug the same units into a conflicting job.
+- Assisted interactive sessions must share the same AI memory object for scripted decisions and manual CLI commands. If the agent manually claims a camp, expansion, retreat, builder task, attack-move, or focus-fire target, that explicit intent is recorded as the same kind of memory claim/job the AI scripts use, so the next assisted tick does not tug the same units into a conflicting job.
 - The tool should fail loudly on invalid unit ids, command shapes, missing sessions, or stale command names. Do not hide errors with permissive parsing.
 - Every interactive transcript should be reproducible enough to turn into a deterministic regression or benchmark slice after a useful tactic is discovered.
 

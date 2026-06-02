@@ -119,6 +119,75 @@ describe("AI interactive playtest wiring", () => {
     });
   });
 
+  it("records manual attack-move commands as attack-wave memory", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [{ id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 300 }],
+          addBuildings: [{ id: "v1a-main", owner: "v1a", kind: "townHall", x: 900, y: 300, complete: true }],
+        },
+      },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "attackMove", unitIds: "combat", x: 900, y: 300 });
+
+    expect(runtime.memories.v2!.strategicPlan).toMatchObject({
+      focusTargetOwner: "v1a",
+      focusTargetSinceTick: 0,
+      focusTargetUpdatedTick: 0,
+    });
+    expect(runtime.memories.v2!.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 0 }]);
+    expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
+      kind: "attack",
+      targetId: "v1a-main",
+      x: 900,
+      y: 300,
+      sinceTick: 0,
+    });
+  });
+
+  it("records manual focus-fire commands as attack-wave memory", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 300 },
+            { id: "v1a-footman", owner: "v1a", kind: "footman", x: 600, y: 300 },
+          ],
+        },
+      },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "focusFire", unitIds: "combat", targetId: "v1a-footman" });
+
+    expect(runtime.memories.v2!.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 0 }]);
+    expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
+      kind: "attack",
+      targetId: "v1a-footman",
+      x: 600,
+      y: 300,
+      sinceTick: 0,
+    });
+  });
+
   it("creates controlled-player memory for manual-only CLI commands without enabling AI assist", () => {
     const session = createInteractivePlaytestSession({
       mapId: "bareDuel",

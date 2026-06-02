@@ -48,6 +48,27 @@ describe("AI playtest CLI", () => {
       }),
     ]);
   });
+
+  it("records CLI attack-move as durable attack memory", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "duel.json");
+
+    runPlaytestCli("new", "--file", file, "--map", "bareDuel", "--you", "v2", "--enemy", "v1a");
+    runPlaytestCli("attack-move", "--file", file, "--units", "workers", "--x", "3604.48", "--y", "2048");
+
+    const status = JSON.parse(runPlaytestCli("status", "--file", file));
+
+    expect(status.aiMemory.v2.jobs).toEqual([expect.objectContaining({ id: "attackWave:v1a", kind: "attackWave" })]);
+    expect(status.aiMemory.v2.claims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "attack",
+          targetId: "building-v1a-townhall",
+        }),
+      ])
+    );
+  });
 });
 
 function runPlaytestCli(...args: string[]) {
