@@ -18,7 +18,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { UNIT_GLYPHS, type GlyphMark, type UnitGlyph } from "./glyphs";
+import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
@@ -2496,20 +2496,21 @@ function drawUnits(units: Unit[]) {
   for (const unit of units) {
     const shake = hitFeedbackOffset(unit, unit.radius);
     const point = worldToScreen({ x: unit.x + shake.x, y: unit.y + shake.y });
-    if (!nearScreen(point, 60)) continue;
+    const scale = unitGlyphScale(unit.radius);
+    if (!nearScreen(point, Math.max(60, unit.radius * 3))) continue;
     ctx.strokeStyle = ownerInk(unit.owner);
     ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
     ctx.lineWidth = selectedIds.has(unit.id) ? 4 : 2;
     if (hasCarriedItem(unit, "flameCloak")) drawFlameCloakAura(point, performance.now(), unit.radius);
     if (selectedIds.has(unit.id)) {
       ctx.beginPath();
-      ctx.ellipse(point.x, point.y + 12, 22, 10, 0, 0, Math.PI * 2);
+      ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    drawUnitGlyph(UNIT_GLYPHS[unit.kind], point);
+    drawUnitGlyph(UNIT_GLYPHS[unit.kind], point, scale);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
-    if (unit.level > 0) drawLevelStar(point.x + 20, point.y - 20, unit.level);
-    drawHp(point.x, point.y - 28, unit.hp, unit.maxHp);
+    if (unit.level > 0) drawLevelStar(point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
+    drawHp(point.x, point.y - unit.radius * 1.55, unit.hp, unit.maxHp);
   }
 }
 
@@ -2559,9 +2560,14 @@ function drawCarriedItems(items: WorldItem[]) {
   }
 }
 
-function drawUnitGlyph(glyph: UnitGlyph, point: Point) {
-  drawGlyphSilhouette(glyph, point);
-  for (const mark of glyph.marks) drawGlyphMark(mark, point);
+function drawUnitGlyph(glyph: UnitGlyph, point: Point, scale = 1) {
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.scale(scale, scale);
+  const localPoint = { x: 0, y: 0 };
+  drawGlyphSilhouette(glyph, localPoint);
+  for (const mark of glyph.marks) drawGlyphMark(mark, localPoint);
+  ctx.restore();
 }
 
 function drawGlyphSilhouette(glyph: UnitGlyph, point: Point) {
