@@ -434,6 +434,37 @@ describe("SDK benchmark", () => {
       matchCount: 2,
       evaluations: [{ name: "first lane", matches: [{ name: "first match" }] }, { name: "second lane", matches: [{ name: "second match" }] }],
     });
-    expect(report.cpuMs).toBeGreaterThanOrEqual(report.evaluations.reduce((total, evaluation) => total + evaluation.cpuMs, 0));
+    expect(report.cpuMs).toBeCloseTo(report.evaluations.reduce((total, evaluation) => total + evaluation.cpuMs, 0), 3);
+  });
+
+  it("keeps benchmark workers alive across multiple tasks instead of spawning one process per match", async () => {
+    const input = {
+      name: "sdk-parallel-worker-pool",
+      evaluations: [
+        {
+          name: "pool lane",
+          matches: [
+            {
+              name: "first pooled task",
+              mapId: "bareDuel" as const,
+              agents: {},
+              maxTicks: 0,
+              thinkInterval: 45,
+            },
+            {
+              name: "second pooled task",
+              mapId: "openClaims" as const,
+              agents: {},
+              maxTicks: 0,
+              thinkInterval: 45,
+            },
+          ],
+        },
+      ],
+    };
+
+    const report = await runBenchmarkParallel(input, { workers: 1, workerModule: new URL("./benchmark/persistent-worker-fixture.ts", import.meta.url).href });
+
+    expect(report.evaluations[0]!.matches.map((match) => match.result.trackers.callIndex)).toEqual([1, 2]);
   });
 });

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { availableParallelism } from "node:os";
+import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "./core";
 import type { SdkGameAgent } from "../game-runner";
@@ -30,10 +31,15 @@ export async function runBenchmarkParallel<TAgent extends SdkGameAgent = SdkGame
   let cursor = 0;
   await Promise.all(
     Array.from({ length: workerCount }, async () => {
-      while (cursor < tasks.length) {
-        const task = tasks[cursor]!;
-        cursor += 1;
-        results[task.id] = await runTaskInChild(task, options.workerModule);
+      const worker = startBenchmarkWorker(options.workerModule);
+      try {
+        while (cursor < tasks.length) {
+          const task = tasks[cursor]!;
+          cursor += 1;
+          results[task.id] = await worker.run(task);
+        }
+      } finally {
+        await worker.close();
       }
     }),
   );
@@ -86,33 +92,83 @@ function benchmarkWorkerCount(requested: number | undefined, taskCount: number) 
   return Math.min(count, taskCount);
 }
 
-async function runTaskInChild<TAgent extends SdkGameAgent>(task: BenchmarkTask<TAgent>, workerModule: string): Promise<BenchmarkMatchReport> {
+type BenchmarkWorker = {
+  run: <TAgent extends SdkGameAgent>(task: BenchmarkTask<TAgent>) => Promise<BenchmarkMatchReport>;
+  close: () => Promise<void>;
+};
+
+function startBenchmarkWorker(workerModule: string): BenchmarkWorker {
   const childPath = fileURLToPath(new URL("./parallel-child.ts", import.meta.url));
   const child = spawn(process.execPath, ["--import", "tsx", childPath, workerModule], {
     cwd: process.cwd(),
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"],
   });
-  let stdout = "";
   let stderr = "";
-  child.stdout.setEncoding("utf8");
   child.stderr.setEncoding("utf8");
-  child.stdout.on("data", (chunk) => {
-    stdout += chunk;
-  });
   child.stderr.on("data", (chunk) => {
     stderr += chunk;
   });
-  child.stdin.end(JSON.stringify({ id: task.id, match: task.match }));
-  const code = await new Promise<number | null>((resolve) => child.on("close", resolve));
-  if (code !== 0) throw new Error(`Benchmark worker exited with ${code}: ${stderr.trim()}`);
-  const line = stdout.trim();
-  if (!line) throw new Error(`Benchmark worker produced no output for ${task.match.name}`);
-  const response = JSON.parse(line) as { id: number; ok: boolean; match?: BenchmarkMatchReport; error?: string };
-  if (response.id !== task.id) throw new Error(`Benchmark worker returned task ${response.id} for task ${task.id}`);
-  if (!response.ok) throw new Error(response.error ?? `Benchmark worker failed task ${task.id}`);
-  if (!response.match) throw new Error(`Benchmark worker task ${task.id} omitted match report`);
-  return response.match;
+
+  let pending: { id: number; resolve: (match: BenchmarkMatchReport) => void; reject: (error: Error) => void } | undefined;
+  let closed = false;
+  let closeCode: number | null = null;
+  const closePromise = new Promise<void>((resolve, reject) => {
+    child.on("error", (error) => {
+      if (pending) pending.reject(error);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      closed = true;
+      closeCode = code;
+      if (pending) pending.reject(new Error(`Benchmark worker exited with ${code}: ${stderr.trim()}`));
+      if (code === 0) resolve();
+      else reject(new Error(`Benchmark worker exited with ${code}: ${stderr.trim()}`));
+    });
+  });
+
+  createInterface({ input: child.stdout, crlfDelay: Infinity }).on("line", (line) => {
+    if (!pending) {
+      child.kill();
+      return;
+    }
+    const current = pending;
+    pending = undefined;
+    const response = JSON.parse(line) as { id: number; ok: boolean; match?: BenchmarkMatchReport; error?: string };
+    if (response.id !== current.id) {
+      current.reject(new Error(`Benchmark worker returned task ${response.id} for task ${current.id}`));
+      return;
+    }
+    if (!response.ok) {
+      current.reject(new Error(response.error ?? `Benchmark worker failed task ${current.id}`));
+      return;
+    }
+    if (!response.match) {
+      current.reject(new Error(`Benchmark worker task ${current.id} omitted match report`));
+      return;
+    }
+    current.resolve(response.match);
+  });
+
+  return {
+    run(task) {
+      if (closed) throw new Error(`Benchmark worker already exited with ${closeCode}: ${stderr.trim()}`);
+      if (pending) throw new Error("Benchmark worker received concurrent tasks on one worker process");
+      return new Promise<BenchmarkMatchReport>((resolve, reject) => {
+        pending = { id: task.id, resolve, reject };
+        child.stdin.write(`${JSON.stringify({ id: task.id, match: task.match })}\n`, (error) => {
+          if (!error) return;
+          const current = pending;
+          pending = undefined;
+          current?.reject(error);
+        });
+      });
+    },
+    async close() {
+      if (!closed) child.stdin.end();
+      await closePromise;
+    },
+  };
 }
 
 function roundMs(value: number) {
