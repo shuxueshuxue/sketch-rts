@@ -58,4 +58,61 @@ describe("SDK game runner", () => {
 
     expect(loop.game.tick).toBe(2);
   });
+
+  it("does not let building elimination decide combat-elimination runs", () => {
+    const game = sketchScene("combat-runner-ignores-building-victory")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("north", { team: "north", race: "grove" })
+      .player("south", { team: "south", race: "grove" })
+      .townHall("south", 1450, 800)
+      .unit("north", "footman", 520, 800)
+      .unit("south", "footman", 1080, 800)
+      .build()
+      .createGame();
+
+    const report = runGame({
+      name: "combat-elimination-no-building-win",
+      game,
+      winnerMode: "combatElimination",
+      agents: {
+        north: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
+        south: { adapter: "external", team: "south", race: "grove", versionLabel: "manual" },
+      },
+      maxTicks: 2,
+      thinkInterval: 1,
+    });
+
+    expect(report.winner).toBeNull();
+    expect(report.winnerTeam).toBe("timeout");
+    expect(report.timeout).toBe(true);
+  });
+
+  it("declares the combat survivor as winner even when the opponent still has buildings", () => {
+    const game = sketchScene("combat-runner-survivor-wins")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("north", { team: "north", race: "grove" })
+      .player("south", { team: "south", race: "grove" })
+      .townHall("south", 1450, 800)
+      .unit("north", "footman", 520, 800)
+      .build()
+      .createGame();
+
+    const report = runGame({
+      name: "combat-elimination-survivor",
+      game,
+      winnerMode: "combatElimination",
+      agents: {
+        north: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
+        south: { adapter: "external", team: "south", race: "grove", versionLabel: "manual" },
+      },
+      maxTicks: 2,
+      thinkInterval: 1,
+    });
+
+    expect(report.winner).toBe("north");
+    expect(report.winnerTeam).toBe("north");
+    expect(report.timeout).toBe(false);
+  });
 });

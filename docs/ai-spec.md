@@ -74,6 +74,7 @@ Combat setup rules:
 
 - Use a very small map or scenario where both armies are near enough that the objective is clear.
 - Both sides' objective is to eliminate all enemy combat units.
+- Combat-elimination runs must ignore ordinary building-elimination victory until one side's combat units are actually gone. Anchor buildings can support setup, spawning, or reporting, but they must not decide a combat benchmark.
 - V2 and V1 both receive combat-specific policy parameters. V1 must not stand still; it should attack-move or otherwise actively engage from the opening frame.
 - Combat-specific policy parameters are scenario context, not a new script stack. V2 and V1 should keep using their normal versioned AI stack unless a future SDK composition API explicitly disables whole categories like economy for scenario setup while preserving the same tactical modules.
 - V2 and V1 must use the same ordered unit-composition recipe in a given combat match. V1 has more bodies by continuing the same recipe, but not a different army identity. If the V2 recipe is ranged-heavy, V1 is also ranged-heavy; if V2 is caster-heavy, V1 is also caster-heavy.
