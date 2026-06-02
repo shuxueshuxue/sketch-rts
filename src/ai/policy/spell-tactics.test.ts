@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
+import { createAiPolicyMemory } from "../memory";
 import { planAbilityCommands, planFocusFireCommand } from "./spell-tactics";
 
 describe("AI spell and focus tactics", () => {
@@ -32,6 +33,30 @@ describe("AI spell and focus tactics", () => {
       .createGame();
 
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual({ type: "attack", unitIds: ["footman", "archer"], targetId: "target" });
+  });
+
+  it("keeps focusing a remembered live target instead of scattering damage every frame", () => {
+    const game = sketchScene("spell-tactics-remembered-focus")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "footman", 650, 780, { id: "footman" })
+      .unit("v2", "archer", 640, 830, { id: "archer" })
+      .unit("v1", "lancer", 720, 800, { id: "remembered-target" })
+      .unit("v1", "raider", 700, 760, { id: "fresh-low-target", hp: 20 })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { focusTargetOwner: "v1", focusTargetId: "remembered-target", focusTargetSinceTick: 0, focusTargetUpdatedTick: 0 };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory })).toEqual({
+      type: "attack",
+      unitIds: ["footman", "archer"],
+      targetId: "remembered-target",
+    });
   });
 
   it("does not pin a small ranged group into a stronger local enemy squad", () => {

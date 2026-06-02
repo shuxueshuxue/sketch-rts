@@ -40,13 +40,23 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   if (fighters.length < 2) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
-  const target = candidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
+  const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
+  const target = rememberedTarget ?? candidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
   if (!target) return undefined;
   const attackers = fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   if (attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
   if (options.policyMode !== "combat" && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
+  if (options.memory) {
+    options.memory.strategicPlan = {
+      ...options.memory.strategicPlan,
+      focusTargetOwner: target.owner,
+      focusTargetId: target.id,
+      focusTargetSinceTick: rememberedTarget ? (options.memory.strategicPlan?.focusTargetSinceTick ?? snapshot.tick) : snapshot.tick,
+      focusTargetUpdatedTick: snapshot.tick,
+    };
+  }
   return attackers.length >= 2 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 

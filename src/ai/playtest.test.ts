@@ -179,6 +179,10 @@ describe("AI interactive playtest wiring", () => {
     applyAiInteractivePlaytestCommand(session, runtime, { type: "focusFire", unitIds: "combat", targetId: "v1a-footman" });
 
     expect(runtime.memories.v2!.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 0 }]);
+    expect(runtime.memories.v2!.strategicPlan).toMatchObject({
+      focusTargetOwner: "v1a",
+      focusTargetId: "v1a-footman",
+    });
     expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
       kind: "attack",
       targetId: "v1a-footman",

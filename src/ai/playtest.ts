@@ -29,6 +29,7 @@ export type AiInteractivePlaytestMemorySummary = {
   }[];
   strategicPlan?: {
     focusTargetOwner?: PlayerId;
+    focusTargetId?: string;
     focusTargetSinceGameSecond?: number;
     focusTargetUpdatedGameSecond?: number;
     expansionAttemptGameSecond?: number;
@@ -134,6 +135,7 @@ function summarizeAiMemory(memory: AiPolicyMemory): AiInteractivePlaytestMemoryS
 function summarizeStrategicPlan(strategicPlan: NonNullable<AiPolicyMemory["strategicPlan"]>): NonNullable<AiInteractivePlaytestMemorySummary["strategicPlan"]> {
   return {
     ...(strategicPlan.focusTargetOwner === undefined ? {} : { focusTargetOwner: strategicPlan.focusTargetOwner }),
+    ...(strategicPlan.focusTargetId === undefined ? {} : { focusTargetId: strategicPlan.focusTargetId }),
     ...(strategicPlan.focusTargetSinceTick === undefined ? {} : { focusTargetSinceGameSecond: tickSecond(strategicPlan.focusTargetSinceTick) }),
     ...(strategicPlan.focusTargetUpdatedTick === undefined ? {} : { focusTargetUpdatedGameSecond: tickSecond(strategicPlan.focusTargetUpdatedTick) }),
     ...(strategicPlan.expansionAttemptTick === undefined ? {} : { expansionAttemptGameSecond: tickSecond(strategicPlan.expansionAttemptTick) }),

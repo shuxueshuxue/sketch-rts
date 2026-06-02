@@ -20,6 +20,7 @@ export type AiPolicyUnitClaim = {
 
 export type AiStrategicPlan = {
   focusTargetOwner?: PlayerId;
+  focusTargetId?: string;
   focusTargetSinceTick?: number;
   focusTargetUpdatedTick?: number;
   expansionAttemptTick?: number;

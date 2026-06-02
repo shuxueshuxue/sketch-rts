@@ -140,10 +140,11 @@ function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof
   const target = attackWaveClaimTarget(query, commandOwner, command);
   const targetId = target ? target.id : `attackWave:${targetOwner}`;
   const targetPoint = target ?? attackWaveCommandPoint(command);
-  const previousSince = memory.strategicPlan?.focusTargetOwner === targetOwner ? memory.strategicPlan.focusTargetSinceTick : undefined;
+  const previousSince = target && memory.strategicPlan?.focusTargetId === target.id ? memory.strategicPlan.focusTargetSinceTick : undefined;
   memory.strategicPlan = {
     ...memory.strategicPlan,
     focusTargetOwner: targetOwner,
+    ...(target ? { focusTargetId: target.id } : {}),
     focusTargetSinceTick: previousSince ?? snapshot.tick,
     focusTargetUpdatedTick: snapshot.tick,
   };
