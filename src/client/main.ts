@@ -24,6 +24,7 @@ import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, uni
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, type ScreenRect as SelectionScreenRect } from "./selection-controls";
+import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
@@ -119,6 +120,8 @@ let selectedCampId: string | undefined;
 const controlGroups: ControlGroups = {};
 let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
+let virtualTooltipTarget: HTMLElement | undefined;
+let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
 let pointerLockFallbackOnError = false;
 let selectionStart: Point | undefined;
@@ -298,6 +301,14 @@ function positionTooltip(target: HTMLElement, event: Event) {
   const source = event instanceof PointerEvent || event instanceof MouseEvent
     ? { x: event.clientX + 14, y: event.clientY + 16 }
     : tooltipAnchor(target);
+  positionTooltipAtSource(source);
+}
+
+function positionTooltipAtPoint(point: Point) {
+  positionTooltipAtSource({ x: point.x + 14, y: point.y + 16 });
+}
+
+function positionTooltipAtSource(source: Point) {
   const rect = tooltipLayer.getBoundingClientRect();
   const x = Math.min(window.innerWidth - rect.width - 10, Math.max(10, source.x));
   const y = Math.min(window.innerHeight - rect.height - 10, Math.max(10, source.y));
@@ -1133,6 +1144,15 @@ function onMouseDown(event: MouseEvent) {
   }
   const point = inputPoint(event);
   lastMouse = point;
+  // @@@virtual-pointer-ui - Pointer-lock mouse events target the canvas; UI follows the drawn virtual cursor.
+  if (event.button === 0 && document.pointerLockElement === canvas) {
+    const target = virtualClickableTargetAt(point);
+    if (target) {
+      virtualUiMouseDownTarget = target;
+      target.focus({ preventScroll: true });
+      return;
+    }
+  }
   if (!snapshot) return;
   const mini = minimapRect();
   if (commandMode) return;
@@ -1174,6 +1194,15 @@ function onMouseUp(event: MouseEvent) {
   }
   const point = inputPoint(event);
   draggingMinimapViewport = false;
+  if (event.button === 0 && document.pointerLockElement === canvas) {
+    const target = virtualClickableTargetAt(point);
+    if (target) {
+      if (target === virtualUiMouseDownTarget) target.click();
+      virtualUiMouseDownTarget = undefined;
+      return;
+    }
+    virtualUiMouseDownTarget = undefined;
+  }
   if (!snapshot) return;
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
@@ -3258,10 +3287,34 @@ function inputPoint(event: MouseEvent): Point {
 function syncVirtualPointerOverlay() {
   if (document.pointerLockElement !== canvas || !virtualMouse) {
     virtualPointerElement.classList.add("hidden");
+    virtualTooltipTarget = undefined;
     return;
   }
   virtualPointerElement.classList.remove("hidden");
   virtualPointerElement.style.transform = virtualPointerTransform(virtualMouse, 18);
+  syncVirtualTooltip(virtualMouse);
+}
+
+function syncVirtualTooltip(point: Point) {
+  const target = virtualTooltipTargetAt(point);
+  if (!target) {
+    if (virtualTooltipTarget) tooltipLayer.classList.add("hidden");
+    virtualTooltipTarget = undefined;
+    return;
+  }
+  if (target !== virtualTooltipTarget || tooltipLayer.classList.contains("hidden")) {
+    renderTooltip(target);
+    virtualTooltipTarget = target;
+  }
+  positionTooltipAtPoint(point);
+}
+
+function virtualTooltipTargetAt(point: Point) {
+  return virtualTooltipTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
+}
+
+function virtualClickableTargetAt(point: Point) {
+  return virtualClickableTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
 }
 
 function screenToWorld(point: Point): Point {
