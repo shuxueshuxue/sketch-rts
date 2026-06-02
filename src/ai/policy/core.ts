@@ -147,35 +147,7 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
 
 export const AI_SCRIPT_VERSIONS: Record<AiScriptVersion, AiScript[]> = {
   v1: SKETCH_RTS_PRESET_AI_STACK,
-  v2: [
-    AI_SCRIPT_LIBRARY.economy,
-    AI_SCRIPT_LIBRARY.constructionRecovery,
-    AI_SCRIPT_LIBRARY.emergencyDefense,
-    AI_SCRIPT_LIBRARY.repair,
-    AI_SCRIPT_LIBRARY.supply,
-    AI_SCRIPT_LIBRARY.earlyTech,
-    AI_SCRIPT_LIBRARY.economicCatchUp,
-    AI_SCRIPT_LIBRARY.productionBuilding,
-    AI_SCRIPT_LIBRARY.expansion,
-    AI_SCRIPT_LIBRARY.mercenary,
-    AI_SCRIPT_LIBRARY.tech,
-    AI_SCRIPT_LIBRARY.defense,
-    AI_SCRIPT_LIBRARY.healingWell,
-    AI_SCRIPT_LIBRARY.training,
-    AI_SCRIPT_LIBRARY.expansionRegroup,
-    AI_SCRIPT_LIBRARY.desperateWorkerFight,
-    AI_SCRIPT_LIBRARY.workerPressure,
-    AI_SCRIPT_LIBRARY.skirmishPreservation,
-    AI_SCRIPT_LIBRARY.earlyHarassment,
-    AI_SCRIPT_LIBRARY.items,
-    AI_SCRIPT_LIBRARY.abilities,
-    AI_SCRIPT_LIBRARY.focusFire,
-    AI_SCRIPT_LIBRARY.expansionDenial,
-    AI_SCRIPT_LIBRARY.objectiveControl,
-    AI_SCRIPT_LIBRARY.workerDefense,
-    AI_SCRIPT_LIBRARY.attackWave,
-    AI_SCRIPT_LIBRARY.workerPressureCloseout,
-  ],
+  v2: SKETCH_RTS_PRESET_AI_STACK,
 };
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {

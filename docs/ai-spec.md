@@ -427,6 +427,39 @@ V2-specific experiments should be gated by version, separate script selection, o
 
 Changing the sampled map mix is often safer than changing V1. The same-map 1v1 score controls must remain meaningful: real 1v1 games on scored terrain, no opponent self-death masquerading as AI strength.
 
+## V2 Reset Inventory
+
+The first V2 attempt accumulated many useful ideas, but the executable stack became weaker than V1 because one-frame "smart" scripts preempted simpler army behavior without a unified job/state contract. That implementation should not remain as a runnable alternate stack or backup code path. Its ideas are preserved here as rewrite input.
+
+Observed failure mode:
+
+- V1 is a boring baseline: economy, production, objective control, worker defense, attack wave.
+- V2 inserted extra economy and tactics scripts before the same generic attack wave.
+- The script runner reserves unit ids after each command. A partially-correct early V2 tactic can consume the army and cause the later plain attack wave to disappear.
+- Some V2 economy scripts also compete for the single economy command slot, so local reserves and special-case spending can delay ordinary production.
+- Same-seed benchmark comparison showed this pattern clearly: a main-defense contact patch fixed one map but regressed two 1v1 controls, proving that local cleverness without a global contract is not trustworthy.
+
+Ideas to reintroduce only through the future job/memory architecture:
+
+- `repair`: assign a non-mining repair/builder worker above mine saturation, especially for damaged main towers and buildings.
+- `earlyTech` / `economicCatchUp`: choose early weapon tech or catch-up expansion when the economy/army state justifies it.
+- production planning: build richer unit tech paths, including stables, sanctum, workshop, late casters, and high-tier units, but under a global spending plan.
+- expansion planning: clear, build, guard, and mine expansions as one long-running job with builder/squad claims and cancellation rules.
+- mercenary planning: send assigned units to claim/hire from camps without stealing the whole army or starving first expansion.
+- `expansionRegroup`: gather a squad around an expansion objective instead of letting units trickle.
+- `workerPressure` / `earlyHarassment`: small worker-line raids that avoid the enemy main army, preserve their group, and stop being a one-trick benchmark exploit.
+- `skirmishPreservation`: pull wounded units toward moon wells or home without creating permanent idle behavior.
+- `focusFire`, spells, and item tactics: preserve micro as composable combat jobs, especially for combat benchmarks, but make them cooperate with attack-wave commitment instead of blindly preempting it.
+- `expansionDenial` and `objectiveControl`: pressure enemy expansions, mercenary camps, and creep routes through committed jobs with local strength checks.
+- main defense: hold tower/base cover when outmatched, but avoid parking out of contact; this needs a principled defense job, not a one-off contact-point patch.
+- strategic focus target: remember a chosen opponent/objective in memory, but keep it accountable to current presence and map state.
+
+Reset rule:
+
+- Until the job/memory rewrite lands, executable V2 should start from the plain V1-style script stack so benchmark failures are honest and easy to reason about.
+- Reintroducing a V2 idea requires a deterministic local test, a job/memory contract, command-conflict evidence, and same-seed benchmark comparison.
+- No removed V2 script should be restored just because it once helped one map. It must explain itself as part of the new stateful architecture.
+
 ## Validation
 
 Every meaningful AI change needs:

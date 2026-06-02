@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { runBehaviorAbTest } from "./ab-test";
+import { AI_SCRIPT_LIBRARY } from "./policy";
 import { sketchScene } from "../sdk/scene";
 
 describe("SDK AI behavior A/B runner", () => {
@@ -37,6 +38,7 @@ describe("SDK AI behavior A/B runner", () => {
       scene,
       owner: "v2",
       behavior: "economicCatchUp",
+      scripts: [AI_SCRIPT_LIBRARY.economicCatchUp],
       maxTicks: 2,
       thinkInterval: 1,
       prepare(game) {
@@ -81,6 +83,7 @@ describe("SDK AI behavior A/B runner", () => {
       save,
       owner: "raider",
       behavior: "earlyHarassment",
+      scripts: [AI_SCRIPT_LIBRARY.earlyHarassment],
       maxTicks: save.snapshot.tick + 1,
       thinkInterval: 1,
       score(_snapshot, telemetry) {
@@ -116,6 +119,7 @@ describe("SDK AI behavior A/B runner", () => {
       scene,
       owner: "v2",
       behavior: "skirmishPreservation",
+      scripts: [AI_SCRIPT_LIBRARY.skirmishPreservation],
       maxTicks: 1,
       thinkInterval: 1,
       score(_snapshot, telemetry) {
@@ -155,6 +159,7 @@ describe("SDK AI behavior A/B runner", () => {
       scene,
       owner: "v2",
       behavior: "expansionRegroup",
+      scripts: [AI_SCRIPT_LIBRARY.expansionRegroup],
       maxTicks: 1,
       thinkInterval: 1,
       score(_snapshot, telemetry) {

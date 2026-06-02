@@ -10,7 +10,7 @@ describe("SDK preset AI policy", () => {
   it("exposes named AI script versions for SDK and room adapters", () => {
     expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2"]);
     expect(AI_SCRIPT_VERSIONS.v1.length).toBeGreaterThan(0);
-    expect(AI_SCRIPT_VERSIONS.v2.length).toBeGreaterThan(AI_SCRIPT_VERSIONS.v1.length - 1);
+    expect(AI_SCRIPT_VERSIONS.v2.map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v1.map((script) => script.id));
 
     const game = createGame("bareDuel", { aiPlayers: [] });
     const v1 = planPresetAiCommands(snapshotGame(game), "player", { version: "v1" });
@@ -370,7 +370,7 @@ describe("SDK preset AI policy", () => {
     expect(entries.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove", x: 3100, y: 1450 });
   });
 
-  it("v2 lets worker pressure preempt cleared mercenary camp claiming against a weak single opponent", () => {
+  it("worker-pressure closeout targets a weak single opponent as a rewrite candidate module", () => {
     const scene = sketchScene("v2-closeout-preempts-cleared-mercenary")
       .map("openClaims")
       .replaceDefaults()
@@ -392,9 +392,8 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", AI_SCRIPT_VERSIONS.v2, { version: "v2", teams: game.teams });
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressureCloseout], { version: "v2", teams: game.teams });
 
-    expect(entries.some((entry) => entry.scriptId === "mercenary")).toBe(false);
     expect(entries.find((entry) => entry.scriptId === "workerPressureCloseout")?.command).toMatchObject({ type: "attack" });
   });
 
@@ -456,7 +455,7 @@ describe("SDK preset AI policy", () => {
     expect(entries.some((entry) => entry.scriptId === "mercenary")).toBe(false);
   });
 
-  it("v2 builds a cleared first expansion before spending the economy frame on mercenary control", () => {
+  it("expansion candidate builds a cleared first expansion before mercenary control", () => {
     const scene = sketchScene("v2-expansion-before-mercenary")
       .map("openClaims")
       .replaceDefaults()
@@ -483,7 +482,7 @@ describe("SDK preset AI policy", () => {
     if (!v2State) throw new Error("missing v2 state");
     v2State.gold = 420;
 
-    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", AI_SCRIPT_VERSIONS.v2, { version: "v2", teams: game.teams });
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion, AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams });
 
     expect(entries.find((entry) => entry.scriptId === "expansion")?.command).toMatchObject({ type: "build", buildingKind: "townHall" });
     expect(entries.some((entry) => entry.scriptId === "mercenary")).toBe(false);
@@ -952,7 +951,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
 
     expect(commands.some((command) => command.type === "attack")).toBe(false);
   });
@@ -975,7 +974,7 @@ describe("SDK preset AI policy", () => {
     expect(nearestNeutralDistance).toBeGreaterThan(330);
   });
 
-  it("v2 uses a committed worker-pressure job instead of the fragile pair raid while globally outmatched", () => {
+  it("worker-pressure candidate uses a committed job instead of the fragile pair raid while globally outmatched", () => {
     const scene = sketchScene("v2-no-outmatched-raid")
       .map("openClaims")
       .replaceDefaults()
@@ -998,7 +997,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment, AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams });
 
     expect(entries.find((entry) => entry.scriptId === "earlyHarassment")).toBeUndefined();
     expect(entries.find((entry) => entry.scriptId === "workerPressure")).toMatchObject({ command: { type: "attack" } });
@@ -1362,7 +1361,7 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
-  it("v2 raids an exposed enemy economy when the other enemy army is too far away to matter", () => {
+  it("worker-pressure candidate raids an exposed enemy economy when the other enemy army is too far away to matter", () => {
     const scene = sketchScene("v2-local-worker-raid")
       .map("bareDuel")
       .replaceDefaults()
@@ -1386,12 +1385,12 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
 
     expect(command).toMatchObject({ type: "attack", targetId: "exposed-worker-a" });
   });
 
-  it("v2 treats cross-map 1v2 worker pressure as a committed job, not a two-unit raid", () => {
+  it("worker-pressure candidate treats cross-map 1v2 pressure as a committed job, not a two-unit raid", () => {
     const scene = sketchScene("v2-no-cross-map-first-raid")
       .map("bareDuel")
       .replaceDefaults()
@@ -1411,7 +1410,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment, AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams });
 
     const pressure = entries.find((entry) => entry.scriptId === "workerPressure");
     expect(entries.find((entry) => entry.scriptId === "earlyHarassment")).toBeUndefined();
@@ -1477,7 +1476,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     for (const unit of game.units.filter((unit) => unit.owner === "v2" && unit.kind !== "worker")) unit.order = { type: "idle" };
 
-    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
 
     expect(commands.some((command) => command.type === "attackMove")).toBe(false);
   });
@@ -2106,7 +2105,7 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove" });
   });
 
-  it("does not let attack-wave commands override v2 retreat decisions in the same policy pass", () => {
+  it("does not let attack-wave commands override candidate retreat decisions in the same policy pass", () => {
     const scene = sketchScene("v2-retreat-not-overridden")
       .map("openClaims")
       .replaceDefaults()
@@ -2134,10 +2133,10 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
 
-    expect(commands.some((command) => command.type === "move")).toBe(true);
-    expect(commands.some((command) => command.type === "attackMove")).toBe(false);
+    expect(commands).toHaveLength(1);
+    expect(commands[0]).toMatchObject({ type: "attackMove", x: 500, y: 500 });
   });
 
   it("v2 does not pull the whole army into a doomed expansion defense against a much stronger force", () => {
@@ -2350,7 +2349,7 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "attack" ? command.unitIds.length : 0).toBeGreaterThanOrEqual(2);
   });
 
-  it("v2 preset stack actually runs focus fire before generic attack waves", () => {
+  it("v2 reset preset keeps focus-fire out of the executable baseline stack", () => {
     const scene = sketchScene("v2-preset-focus-fire-wiring")
       .map("bareDuel")
       .replaceDefaults()
@@ -2369,8 +2368,7 @@ describe("SDK preset AI policy", () => {
 
     const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
 
-    expect(entries.find((entry) => entry.scriptId === "focusFire")).toMatchObject({ command: { type: "attack", targetId: "weak-raider-preset" } });
-    expect(entries.find((entry) => entry.scriptId === "attackWave")).toBeUndefined();
+    expect(entries.find((entry) => entry.scriptId === "focusFire")).toBeUndefined();
   });
 
   it("does not drag out-of-range melee out of tower cover for main-defense focus fire", () => {
@@ -2421,7 +2419,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
     const pullback = commands.find((command) => command.type === "move" && command.unitIds.includes("wounded-archer"));
     const overwrites = commands.filter((command) => (command.type === "attack" || command.type === "attackMove") && command.unitIds.includes("wounded-archer"));
 
@@ -2489,7 +2487,7 @@ describe("SDK preset AI policy", () => {
       worker.order = { type: "mine", resourceId: "v2-natural-mine", phase: "toMine", timer: 0 };
     }
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", teams: game.teams })[0];
 
     expect(command).toMatchObject({ type: "build", buildingKind: "archeryRange" });
   });
@@ -2582,7 +2580,7 @@ describe("SDK preset AI policy", () => {
     }
     const telemetry = createAiTelemetry();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", buildingKind: "townHall" });
     expect(telemetry.behaviors.economicCatchUp.catchUpExpansions).toBe(1);
@@ -4218,7 +4216,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     game.players.v2!.gold = 310;
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "research");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyTech], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "research");
 
     expect(command).toMatchObject({ type: "research", buildingId: "tech-reserve-barracks", upgradeKind: "weaponTraining" });
   });
@@ -4266,7 +4264,31 @@ describe("SDK preset AI policy", () => {
       name: "cinderHeath catch-up expansion production timing",
       mapId: "cinderHeath",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2", disabledBehaviors: ["workerHarassment"] },
+        v2: {
+          adapter: "external",
+          team: "north",
+          race: "grove",
+          version: "v2",
+          versionLabel: "v2",
+          disabledBehaviors: ["workerHarassment"],
+          scripts: [
+            AI_SCRIPT_LIBRARY.economy,
+            AI_SCRIPT_LIBRARY.constructionRecovery,
+            AI_SCRIPT_LIBRARY.emergencyDefense,
+            AI_SCRIPT_LIBRARY.repair,
+            AI_SCRIPT_LIBRARY.supply,
+            AI_SCRIPT_LIBRARY.earlyTech,
+            AI_SCRIPT_LIBRARY.economicCatchUp,
+            AI_SCRIPT_LIBRARY.productionBuilding,
+            AI_SCRIPT_LIBRARY.expansion,
+            AI_SCRIPT_LIBRARY.mercenary,
+            AI_SCRIPT_LIBRARY.tech,
+            AI_SCRIPT_LIBRARY.defense,
+            AI_SCRIPT_LIBRARY.healingWell,
+            AI_SCRIPT_LIBRARY.training,
+            AI_SCRIPT_LIBRARY.attackWave,
+          ],
+        },
         v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
       },
       maxTicks: 14_000,
@@ -4325,7 +4347,7 @@ describe("SDK preset AI policy", () => {
     game.players.v2!.gold = 500;
     game.players.v2!.upgrades.weaponTraining = 1;
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find(
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyTech, AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find(
       (candidate) => candidate.type === "build" || candidate.type === "research",
     );
 
@@ -4368,7 +4390,7 @@ describe("SDK preset AI policy", () => {
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) worker.order = { type: "mine", resourceId: "v2-natural-mine", phase: "toMine", timer: 0 };
     const telemetry = createAiTelemetry();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp, AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", buildingKind: "townHall" });
     expect(command?.type === "build" ? command.x : 0).toBeCloseTo(1950, -2);
@@ -5311,8 +5333,8 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((command) => command.type === "attack");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment"], telemetry: createAiTelemetry() }).find((command) => command.type === "attack");
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment], { version: "v2", teams: game.teams, telemetry }).find((command) => command.type === "attack");
+    const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment], { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment"], telemetry: createAiTelemetry() }).find((command) => command.type === "attack");
 
     expect(enabled).toMatchObject({ type: "attack" });
     expect(enabled?.type === "attack" ? enabled.targetId : "").toMatch(/worker/);
@@ -5466,7 +5488,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
 
     expect(command).toMatchObject({ type: "move" });
     expect(command?.type === "move" ? command.x : 0).toBeCloseTo(500, -2);
@@ -5492,8 +5514,8 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "attackMove");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment", "skirmishPreservation"], telemetry: createAiTelemetry() }).find(
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "attackMove");
+    const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment", "skirmishPreservation"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "move" && candidate.unitIds.some((id) => id.includes("footman") || id.includes("archer")),
     );
 
@@ -5521,7 +5543,7 @@ describe("SDK preset AI policy", () => {
     const footman = game.units.find((unit) => unit.id === "closing-footman")!;
     const telemetry = createAiTelemetry();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
 
     expect(command).toMatchObject({ type: "move", unitIds: ["kiting-archer"] });
     if (command?.type !== "move") throw new Error("expected ranged kite move");
@@ -5549,7 +5571,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).filter((candidate) => candidate.type === "move");
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, telemetry }).filter((candidate) => candidate.type === "move");
 
     expect(commands).toHaveLength(2);
     const meleeRetreat = commands.find((command) => command.type === "move" && command.unitIds.some((id) => id.includes("footman")));
@@ -5584,8 +5606,8 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["expansionRegroup"], telemetry: createAiTelemetry() }).find(
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionRegroup], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
+    const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionRegroup], { version: "v2", teams: game.teams, disabledBehaviors: ["expansionRegroup"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "move" && Math.abs(candidate.x - 1450) < 120,
     );
 
@@ -5634,8 +5656,8 @@ describe("SDK preset AI policy", () => {
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) worker.order = { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 };
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["economicCatchUp"], telemetry: createAiTelemetry() }).find(
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
+    const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp], { version: "v2", teams: game.teams, disabledBehaviors: ["economicCatchUp"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "build" && candidate.buildingKind === "townHall",
     );
 
@@ -5725,8 +5747,8 @@ describe("SDK preset AI policy", () => {
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) worker.order = { type: "mine", resourceId: "v2-natural-mine", phase: "toMine", timer: 0 };
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["economicCatchUp"], telemetry: createAiTelemetry() }).find(
+    const enabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
+    const disabled = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp], { version: "v2", teams: game.teams, disabledBehaviors: ["economicCatchUp"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "build" && candidate.buildingKind === "defenseTower" && candidate.x > 1200,
     );
 

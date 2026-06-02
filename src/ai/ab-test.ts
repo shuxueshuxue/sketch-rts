@@ -1,4 +1,4 @@
-import { createAiTelemetry, planPresetAiCommands, type AiBehaviorId, type AiScriptVersion, type AiTelemetry } from "./policy";
+import { createAiTelemetry, planAiCommandsFromScripts, planPresetAiCommands, type AiBehaviorId, type AiScript, type AiScriptVersion, type AiTelemetry } from "./policy";
 import type { BuiltScene } from "../sdk/scene";
 import { restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
 import { issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
@@ -13,6 +13,7 @@ export type BehaviorAbTestInput = BehaviorAbSource & {
   maxTicks: number;
   thinkInterval: number;
   version?: AiScriptVersion;
+  scripts?: AiScript[];
   prepare?: (game: Game) => void;
   score: (snapshot: GameSnapshot, telemetry: AiTelemetry) => number;
 };
@@ -59,12 +60,13 @@ function runCase(input: BehaviorAbTestInput, label: BehaviorAbCaseReport["label"
   while (game.tick < input.maxTicks && !game.match.winner) {
     if (game.tick % input.thinkInterval === 0) {
       const snapshot = snapshotGame(game);
-      const commands = planPresetAiCommands(snapshot, input.owner, {
+      const options = {
         version: input.version ?? "v2",
         teams: game.teams,
         telemetry,
         disabledBehaviors,
-      });
+      };
+      const commands = input.scripts ? planAiCommandsFromScripts(snapshot, input.owner, input.scripts, options) : planPresetAiCommands(snapshot, input.owner, options);
       for (const command of commands) {
         issuePlayerCommand(game, input.owner, command);
         commandCounts[command.type] = (commandCounts[command.type] ?? 0) + 1;
