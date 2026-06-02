@@ -14,6 +14,7 @@ type ScenePlayerOptions = {
 type SceneUnitOptions = {
   id?: string;
   hp?: number;
+  xp?: number;
   order?: UnitOrder;
 };
 
@@ -72,6 +73,7 @@ export class SceneBuilder {
         x,
         y,
         ...(options.hp !== undefined ? { hp: options.hp } : {}),
+        ...(options.xp !== undefined ? { xp: options.xp } : {}),
         ...(options.order ? { order: options.order } : {}),
       },
     ];

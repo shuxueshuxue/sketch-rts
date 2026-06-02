@@ -29,7 +29,7 @@ export type SdkMapObjectiveReport = {
   totalBounty: number;
 };
 
-const CAMP_CLUSTER_RADIUS = 280;
+const CAMP_CLUSTER_RADIUS = 360;
 const OBJECTIVE_GUARD_RADIUS = 360;
 
 export function analyzeMapObjectives(mapId: MapId, options: CreateGameOptions = {}): SdkMapObjectiveReport {

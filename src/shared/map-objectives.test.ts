@@ -19,7 +19,7 @@ describe("map neutral objective layout", () => {
       expect(report.camps.length, `${mapId} should have neutral camps`).toBeGreaterThan(0);
       expect(bands, `${mapId} should have green, yellow/orange, and red camps`).toEqual(new Set(["green", "orange", "red"]));
       expect(report.guardedCamps, `${mapId} should have guarded mine or mercenary objectives`).toBeGreaterThan(0);
-      expect(report.freeCamps, `${mapId} should have at least as many non-mine/non-merc camps as guarded objective camps`).toBeGreaterThanOrEqual(report.guardedCamps);
+      expect(report.freeCamps, `${mapId} should have non-mine/non-merc route camps`).toBeGreaterThan(0);
       expect(report.carriedItems, `${mapId} should have at least one drop-ready carried item per player`).toBeGreaterThanOrEqual(report.players);
     }
   });
@@ -34,6 +34,24 @@ describe("map neutral objective layout", () => {
         const mine = game.resources.find((resource) => resource.id === `gold-${owner}-main`)!;
         const nearest = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - mine.x, unit.y - mine.y)));
         expect(nearest, `${mapId}:${owner} main mine`).toBeGreaterThanOrEqual(430);
+      }
+    }
+  });
+
+  it("keeps sampled 1v1 sanity starts outside accidental neutral aggro range", () => {
+    const players = ["v2", "v1a"];
+    const teams = { v2: "north", v1a: "south" };
+    for (const mapId of RICH_SCORE_MAPS) {
+      const game = createGame(mapId, { players, aiPlayers: [], teams });
+      const neutrals = game.units.filter((unit) => unit.owner === "neutral" && (UNIT_DEFS[unit.kind].creepFoodPower ?? 0) > 0);
+      for (const owner of players) {
+        const base = game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
+        const mine = game.resources.find((resource) => resource.id === `gold-${owner}-main`)!;
+        const nearestBase = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - base.x, unit.y - base.y)));
+        const nearestMine = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - mine.x, unit.y - mine.y)));
+
+        expect(nearestBase, `${mapId}:${owner} main base`).toBeGreaterThanOrEqual(430);
+        expect(nearestMine, `${mapId}:${owner} main mine`).toBeGreaterThanOrEqual(430);
       }
     }
   });
@@ -59,22 +77,26 @@ describe("map neutral objective layout", () => {
     }
   });
 
-  it("keeps a broad rich official map family for v2 scoring instead of overfitting one wild map", () => {
+  it("keeps a broad rich official map family for v2 scoring without turning 1v1 into a neutral-camp sea", () => {
     expect(RICH_SCORE_MAPS.length).toBe(RICH_SCORE_MAP_COUNT);
     for (const mapId of RICH_SCORE_MAPS) {
       const report = analyzeMapObjectives(mapId);
-      const mercKinds = new Set(createGame(mapId, { aiPlayers: [] }).mercenaryCamps.map((camp) => camp.hireKind));
+      const game = createGame(mapId, { aiPlayers: [] });
+      const mercKinds = new Set(game.mercenaryCamps.map((camp) => camp.hireKind));
+      const unitIds = new Set(game.units.map((unit) => unit.id));
 
       expect(report.players, `${mapId} should be a normal 1v1 scoring map by default`).toBe(2);
-      expect(report.camps.length, `${mapId} should have wildMarches-level camp density`).toBeGreaterThanOrEqual(20);
-      expect(report.guardedCamps, `${mapId} should have multiple guarded economy/mercenary objectives`).toBeGreaterThanOrEqual(8);
-      expect(report.freeCamps, `${mapId} should have at least as many free route/objective camps as guarded camps`).toBeGreaterThanOrEqual(report.guardedCamps);
-      expect(report.carriedItems, `${mapId} should have many carried drops for item-routing AI`).toBeGreaterThanOrEqual(10);
+      expect(report.camps.length, `${mapId} should have bounded 1v1 camp density`).toBeGreaterThanOrEqual(9);
+      expect(report.camps.length, `${mapId} should have bounded 1v1 camp density`).toBeLessThanOrEqual(14);
+      expect(report.guardedCamps, `${mapId} should have guarded economy/mercenary objectives`).toBeGreaterThanOrEqual(5);
+      expect(report.freeCamps, `${mapId} should leave room for army-vs-army play`).toBeLessThanOrEqual(6);
+      expect(report.carriedItems, `${mapId} should have item-routing AI without flooding the map`).toBeGreaterThanOrEqual(6);
       expect(report.bands, `${mapId} should include green camps`).toMatchObject({ green: expect.any(Number) });
       expect(report.bands.green, `${mapId} should include green camps`).toBeGreaterThan(0);
       expect(report.bands.orange, `${mapId} should include yellow/orange camps`).toBeGreaterThan(0);
       expect(report.bands.red, `${mapId} should include red camps`).toBeGreaterThan(0);
       expect(mercKinds, `${mapId} should offer all three mercenary roles`).toEqual(new Set(["mercenary", "contractArcher", "fieldMedic"]));
+      expect(game.items.filter((item) => item.carrierId && !unitIds.has(item.carrierId)), `${mapId} should not have treasure attached to removed camps`).toEqual([]);
     }
   });
 });

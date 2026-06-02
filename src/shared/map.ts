@@ -14,14 +14,15 @@ export type MapScenario = {
 
 export const DEFAULT_MAP_ID: MapId = "verdantCrossroads";
 export const STANDARD_MAP_SIZE = 4096;
+export const COMBAT_ARENA_MAP_SIZE = 1600;
 const AUTHOR_MAP_SIZE = 8192;
 const MAP_SCALE = STANDARD_MAP_SIZE / AUTHOR_MAP_SIZE;
 
 const GENERATED_RICH_MAP_SCENARIOS: MapScenario[] = GENERATED_RICH_SCORE_MAP_IDS.map((id) => ({
   id,
   name: titleizeMapId(id),
-  note: "Generated rich official map with wildMarches-level neutral density, guarded economy routes, mercenary timing, and item pressure for broad AI scoring.",
-  tags: ["4096", "score", "many camps", "mercs"],
+  note: "Generated official scoring map with guarded economy routes, mercenary timing, bounded neutral density, and item pressure for broad AI scoring.",
+  tags: ["4096", "score", "bounded camps", "mercs"],
 }));
 
 export const MAP_SCENARIOS: MapScenario[] = [
@@ -29,6 +30,7 @@ export const MAP_SCENARIOS: MapScenario[] = [
   { id: "bareDuel", name: "Bare Duel", note: "A cleaner duel layout for AI pressure tests without neutral distractions.", tags: ["4096", "few camps", "fast contact"] },
   { id: "openClaims", name: "Open Claims", note: "Expansion-focused economy map with no neutral camps blocking the mines.", tags: ["4096", "expansions", "no wild camps"] },
   { id: "campRush", name: "Camp Rush", note: "No-expansion pressure map where neutral camps and mercenaries shape the route.", tags: ["4096", "no expansions", "wild camps"] },
+  { id: "combatArena", name: "Combat Arena", note: "Small benchmark arena for mixed-army micro without economy or neutral routing.", tags: ["1600", "combat", "micro"] },
   { id: "wildMarches", name: "Wild Marches", note: "Neutral-heavy route network where armies read as moving sketches across a compact battlefield.", tags: ["4096", "many camps", "mercs"] },
   { id: "stagHollow", name: "Stag Hollow", note: "Rich official map with guarded mines, red-camp item pressure, and a mercenary loop around the hollow.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "emberFen", name: "Ember Fen", note: "Rich official map with dense neutral rewards and competing expansion routes through a smoky lowland.", tags: ["4096", "score", "many camps", "mercs"] },
@@ -95,16 +97,23 @@ export const MAP_SCENARIOS: MapScenario[] = [
 
 export function createMap(id: MapId = DEFAULT_MAP_ID): GameMap {
   const scenario = scenarioFor(id);
+  const mapSize = mapSizeFor(id);
   return {
     id,
     name: scenario.name,
-    width: id === "grandThirty" ? STANDARD_MAP_SIZE * 3 : STANDARD_MAP_SIZE,
-    height: id === "grandThirty" ? STANDARD_MAP_SIZE * 3 : STANDARD_MAP_SIZE,
+    width: mapSize,
+    height: mapSize,
     landmarks: scenarioLandmarks(id),
   };
 }
 
 export const SAMPLE_MAP: GameMap = createMap(DEFAULT_MAP_ID);
+
+function mapSizeFor(id: MapId) {
+  if (id === "grandThirty") return STANDARD_MAP_SIZE * 3;
+  if (id === "combatArena") return COMBAT_ARENA_MAP_SIZE;
+  return STANDARD_MAP_SIZE;
+}
 
 function scenarioLandmarks(id: MapId): GameMap["landmarks"] {
   const landmarks: GameMap["landmarks"] = [
@@ -134,6 +143,7 @@ function scenarioLandmarks(id: MapId): GameMap["landmarks"] {
     { id: "stone-east", kind: "bannerStone", x: 5920, y: 5900, size: 140, rotation: 0.3 },
   ];
   const scaled = landmarks.map(scaleLandmark);
+  if (id === "combatArena") return [];
   if (id === "bareDuel") return scaled.filter((landmark) => landmark.kind !== "campMark").slice(0, 20);
   if (id === "openClaims") return scaled.filter((landmark) => landmark.kind !== "campMark");
   if (id === "campRush") return scaled.filter((landmark) => landmark.kind !== "mineScar" || landmark.id === "scar-player" || landmark.id === "scar-enemy");
@@ -164,6 +174,7 @@ function titleizeMapId(id: string) {
 }
 
 export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: PlayerId[] = ["player", "enemy"], teams?: Partial<Record<PlayerId, string>>): ResourceNode[] {
+  if (mapId === "combatArena") return [];
   if (mapId === "grandThirty") {
     return [
       ...players.map((owner, index) => {
@@ -196,6 +207,7 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
 }
 
 export function createInitialMercenaryCamps(mapId: MapId = DEFAULT_MAP_ID): MercenaryCamp[] {
+  if (mapId === "combatArena") return [];
   if (mapId === "bareDuel" || mapId === "openClaims") return [];
   if (mapId === "grandThirty") return grandThirtyMercenaryCamps();
   const camps: MercenaryCamp[] = [
@@ -210,6 +222,7 @@ export function createInitialMercenaryCamps(mapId: MapId = DEFAULT_MAP_ID): Merc
 }
 
 export function createInitialItems(mapId: MapId = DEFAULT_MAP_ID): WorldItem[] {
+  if (mapId === "combatArena") return [];
   if (mapId === "bareDuel" || mapId === "openClaims") return [];
   const items: WorldItem[] = [
     { id: "treasure-center-lightning", kind: "lightningRod", x: 0, y: 0, carrierId: "wildling-center-2", cooldownRemaining: 0 },
@@ -217,14 +230,12 @@ export function createInitialItems(mapId: MapId = DEFAULT_MAP_ID): WorldItem[] {
     { id: "treasure-north-flame", kind: "flameCloak", x: 0, y: 0, carrierId: "wildling-north-2", cooldownRemaining: 0 },
     { id: "treasure-free-yellow-scroll", kind: "guardianScroll", x: 0, y: 0, carrierId: "wildling-free-yellow-north-2", cooldownRemaining: 0 },
     { id: "treasure-free-red-storm", kind: "stormStaff", x: 0, y: 0, carrierId: "wildling-free-red-west-1", cooldownRemaining: 0 },
-    { id: "treasure-free-red-lightning", kind: "lightningRod", x: 0, y: 0, carrierId: "wildling-free-red-east-1", cooldownRemaining: 0 },
+    { id: "treasure-free-red-breach", kind: "breachCharge", x: 0, y: 0, carrierId: "wildling-free-red-east-1", cooldownRemaining: 0 },
   ];
   if (isRichScoreMap(mapId)) {
     items.push(
       { id: "treasure-west-storm", kind: "stormStaff", x: 0, y: 0, carrierId: "wildling-west-1", cooldownRemaining: 0 },
       { id: "treasure-east-scroll", kind: "guardianScroll", x: 0, y: 0, carrierId: "wildling-east-2", cooldownRemaining: 0 },
-      { id: "treasure-march-red-flame", kind: "flameCloak", x: 0, y: 0, carrierId: "wildling-march-red-south-1", cooldownRemaining: 0 },
-      { id: "treasure-march-yellow-book", kind: "experienceBook", x: 0, y: 0, carrierId: "wildling-march-yellow-north-2", cooldownRemaining: 0 },
     );
   }
   if (mapId === "grandThirty") {
@@ -241,20 +252,20 @@ export function createInitialItems(mapId: MapId = DEFAULT_MAP_ID): WorldItem[] {
 }
 
 function grandTreasureKind(index: number): WorldItem["kind"] {
-  const cycle: WorldItem["kind"][] = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook"];
+  const cycle: WorldItem["kind"][] = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"];
   return cycle[index % cycle.length]!;
 }
 
 export function createInitialBuildings(players: PlayerId[] = ["player", "enemy"], mapId: MapId = DEFAULT_MAP_ID, teams?: Partial<Record<PlayerId, string>>): Building[] {
   return players.map((owner, index) => {
-    const start = startPositionFor(owner, index, players.length, mapId === "grandThirty" ? STANDARD_MAP_SIZE * 3 : STANDARD_MAP_SIZE, players, teams);
+    const start = startPositionFor(owner, index, players.length, mapSizeFor(mapId), players, teams);
     return createBuilding(`building-${owner}-townhall`, owner, "townHall", start.baseX, start.baseY, true);
   });
 }
 
 export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: PlayerId[] = ["player", "enemy"], teams?: Partial<Record<PlayerId, string>>): Unit[] {
   const units: Unit[] = players.flatMap((owner, index) => {
-    const start = startPositionFor(owner, index, players.length, mapId === "grandThirty" ? STANDARD_MAP_SIZE * 3 : STANDARD_MAP_SIZE, players, teams);
+    const start = startPositionFor(owner, index, players.length, mapSizeFor(mapId), players, teams);
     return [
       createUnit(`unit-${owner}-worker-1`, owner, "worker", start.baseX - 55, start.baseY + 10),
       createUnit(`unit-${owner}-worker-2`, owner, "worker", start.baseX - 10, start.baseY + 65),
@@ -290,6 +301,7 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
   if (mapId === "grandThirty") return [...units.filter((unit) => unit.owner !== "neutral"), ...grandThirtyWildlings()];
   const playerUnits = units.filter((unit) => unit.owner !== "neutral");
   const neutralUnits = units.filter((unit) => unit.owner === "neutral");
+  if (mapId === "combatArena") return playerUnits;
   if (mapId === "bareDuel" || mapId === "openClaims") return playerUnits;
   if (isRichScoreMap(mapId)) {
     neutralUnits.push(
@@ -300,7 +312,8 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
       createUnit("wildling-east-2", "neutral", "ancientStag", 7020, 3880),
     );
   }
-  return [...playerUnits, ...neutralUnits.map((unit) => scaleUnit(isRichScoreMap(mapId) ? richAuthorUnit(mapId, unit) : unit)), ...freeWildlingCamps(mapId)];
+  const authoredNeutrals = [...neutralUnits.map((unit) => scaleUnit(isRichScoreMap(mapId) ? richAuthorUnit(mapId, unit) : unit)), ...freeWildlingCamps(mapId)];
+  return [...playerUnits, ...keepNeutralUnitsAwayFromPlayerStarts(authoredNeutrals, mapId, players, teams)];
 }
 
 export function createBuilding(
@@ -349,6 +362,8 @@ export function createUnit(
     kind,
     x,
     y,
+    homeX: x,
+    homeY: y,
     hp: stats.hp,
     maxHp: stats.hp,
     speed: stats.speed,
@@ -525,6 +540,55 @@ function keepAwayFromStartingMines(point: { x: number; y: number }, mapSize: num
     if (!moved) break;
   }
   return adjusted;
+}
+
+function keepNeutralUnitsAwayFromPlayerStarts(units: Unit[], mapId: MapId, players: PlayerId[], teams?: Partial<Record<PlayerId, string>>) {
+  const mapSize = mapId === "grandThirty" ? STANDARD_MAP_SIZE * 3 : STANDARD_MAP_SIZE;
+  const safeGap = 440 * (mapSize / STANDARD_MAP_SIZE);
+  const clamp = (value: number) => Math.max(80, Math.min(mapSize - 80, value));
+  const safetyPoints = players.flatMap((owner, index) => {
+    const start = startPositionFor(owner, index, players.length, mapSize, players, teams);
+    return [
+      { x: start.baseX, y: start.baseY },
+      { x: start.mineX, y: start.mineY },
+    ];
+  });
+
+  return units.map((unit) => {
+    if (unit.owner !== "neutral") return unit;
+    let x = unit.x;
+    let y = unit.y;
+    for (let pass = 0; pass < 5; pass += 1) {
+      let moved = false;
+      for (const point of safetyPoints) {
+        const dx = x - point.x;
+        const dy = y - point.y;
+        const gap = Math.hypot(dx, dy);
+        if (gap >= safeGap) continue;
+        const fallbackX = x >= point.x ? 1 : -1;
+        const fallbackY = y >= point.y ? 1 : -1;
+        const unitX = gap > 0 ? dx / gap : fallbackX / Math.SQRT2;
+        const unitY = gap > 0 ? dy / gap : fallbackY / Math.SQRT2;
+        const radial = { x: clamp(point.x + unitX * safeGap), y: clamp(point.y + unitY * safeGap) };
+        const candidates = [radial];
+        for (let angleIndex = 0; angleIndex < 16; angleIndex += 1) {
+          const angle = (Math.PI * 2 * angleIndex) / 16;
+          candidates.push({ x: clamp(point.x + Math.cos(angle) * safeGap), y: clamp(point.y + Math.sin(angle) * safeGap) });
+        }
+        const best = candidates.reduce((winner, candidate) => (nearestSafetyGap(candidate) > nearestSafetyGap(winner) ? candidate : winner), radial);
+        x = best.x;
+        y = best.y;
+        moved = true;
+      }
+      if (!moved) break;
+    }
+    // @@@start-safety - Map-authored objective density must not spawn neutral aggro inside a player's opening economy.
+    return { ...unit, x, y };
+  });
+
+  function nearestSafetyGap(point: { x: number; y: number }) {
+    return Math.min(...safetyPoints.map((start) => Math.hypot(point.x - start.x, point.y - start.y)));
+  }
 }
 
 function teamLaneMineSafetyPoints(mapSize: number) {
@@ -932,7 +996,15 @@ function grandThirtyWildlings(): Unit[] {
 
 function freeWildlingCamps(mapId: MapId): Unit[] {
   if (mapId !== "verdantCrossroads" && mapId !== "campRush" && !isRichScoreMap(mapId)) return [];
-  const units = [
+  if (isRichScoreMap(mapId)) {
+    return [
+      ...wildlingCamp(mapId, "wildling-free-green-west", 820, 2490, ["mossGnawer", "wildling"]),
+      ...wildlingCamp(mapId, "wildling-free-yellow-north", 2800, 850, ["stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
+      ...wildlingCamp(mapId, "wildling-free-red-west", 620, 3330, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
+      ...wildlingCamp(mapId, "wildling-free-red-east", 2300, 3300, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
+    ];
+  }
+  return [
     ...wildlingCamp(mapId, "wildling-free-green-west", 820, 2490, ["mossGnawer", "wildling"]),
     ...wildlingCamp(mapId, "wildling-free-yellow-north", 2800, 850, ["stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
     ...wildlingCamp(mapId, "wildling-free-red-west", 620, 3330, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
@@ -940,31 +1012,6 @@ function freeWildlingCamps(mapId: MapId): Unit[] {
     ...wildlingCamp(mapId, "wildling-free-red-east", 2300, 3300, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
     ...wildlingCamp(mapId, "wildling-free-green-east", 3650, 2280, ["wildling", "thornSlinger"]),
     ...wildlingCamp(mapId, "wildling-free-green-south", 1490, 3560, ["mossGnawer", "barkMender"]),
-  ];
-  if (isRichScoreMap(mapId)) {
-    units.push(
-      ...wildlingCamp(mapId, "wildling-march-green-west", 1180, 2220, ["wildling", "thornSlinger"]),
-      ...wildlingCamp(mapId, "wildling-march-yellow-north", 2500, 700, ["stonebackBrute", "gladeWitch", "gladeWitch", "thornSlinger"]),
-      ...wildlingCamp(mapId, "wildling-march-red-south", 2920, 3560, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
-      ...wildlingCamp(mapId, "wildling-march-green-south", 860, 3740, ["mossGnawer", "wildling"]),
-      ...wildlingCamp(mapId, "wildling-rich-free-north", 1140, 720, ["wildling", "mossGnawer"]),
-      ...wildlingCamp(mapId, "wildling-rich-free-south", 2040, 3660, ["thornSlinger", "barkMender"]),
-      ...wildlingCamp(mapId, "wildling-rich-free-mid", 1280, 1120, ["stonebackBrute", "thornSlinger", "wildling"]),
-      ...wildlingCamp(mapId, "wildling-rich-free-corner", 2960, 3370, ["mossGnawer", "barkMender"]),
-      ...generatedRichExtraFreeCamps(mapId),
-    );
-  }
-  return units;
-}
-
-function generatedRichExtraFreeCamps(mapId: MapId): Unit[] {
-  if (!isGeneratedRichScoreMap(mapId)) return [];
-  return [
-    ...wildlingCamp(mapId, "wildling-rich-free-lantern", 2780, 760, ["wildling", "thornSlinger"]),
-    ...wildlingCamp(mapId, "wildling-rich-free-barrow", 1380, 3060, ["mossGnawer", "barkMender"]),
-    ...wildlingCamp(mapId, "wildling-rich-free-ford", 2140, 2700, ["stonebackBrute", "wildling", "thornSlinger"]),
-    ...wildlingCamp(mapId, "wildling-rich-free-porch", 760, 1260, ["mossGnawer", "thornSlinger"]),
-    ...wildlingCamp(mapId, "wildling-rich-free-bridge", 2440, 2460, ["wildling", "barkMender"]),
   ];
 }
 

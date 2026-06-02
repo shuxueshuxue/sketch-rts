@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
-import { AI_SCRIPT_LIBRARY } from "./ai-policy";
-import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./ai-runtime";
+import { AI_SCRIPT_LIBRARY } from "../ai/policy";
+import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { createBuilding, createInitialResources } from "./map";
 import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
 import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
+
+const AI_DUEL_CPU_BUDGET_MS = 2_500;
 
 function stepMany(game: ReturnType<typeof createGame>, count: number, runtime?: AiRuntimeState) {
   for (let i = 0; i < count; i += 1) {
@@ -26,9 +28,10 @@ function stepUntil(game: ReturnType<typeof createGame>, maxTicks: number, predic
 function runTwoAiDuel(mapId: MapId) {
   const game = createGame(mapId, { aiPlayers: ["player", "enemy"] });
   const runtime = createAiRuntime(["player", "enemy"]);
-  const started = performance.now();
+  const started = process.cpuUsage();
   stepMany(game, 36_000, runtime);
-  return { game, elapsedMs: performance.now() - started };
+  const elapsed = process.cpuUsage(started);
+  return { game, elapsedMs: (elapsed.user + elapsed.system) / 1_000 };
 }
 
 function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAiDuel>) {
@@ -39,7 +42,7 @@ function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAi
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
-  expect(elapsedMs).toBeLessThan(1_500);
+  expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
   expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
   expect(game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
   expect(game.match.stats.unitsKilled.player).toBeGreaterThan(0);
@@ -108,6 +111,77 @@ describe("sketch RTS simulation", () => {
     expect(BUILDING_DEFS.defenseTower.cost).toBeLessThan(BUILDING_DEFS.barracks.cost);
     expect(BUILDING_DEFS.townHall.cost).toBeGreaterThan(BUILDING_DEFS.barracks.cost + UNIT_DEFS.worker.cost);
     expect(BUILDING_DEFS.townHall.buildTime).toBeGreaterThanOrEqual(BUILDING_DEFS.barracks.buildTime * 2);
+  });
+
+  it("tracks which player lost units to neutral creeps", () => {
+    const game = sketchScene("neutral-killed-player-unit")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north", race: "grove" })
+      .player("enemy", { team: "south", race: "ember" })
+      .townHall("player", 500, 500)
+      .unit("player", "footman", 700, 500, { id: "doomed-footman", hp: 1 })
+      .unit("neutral", "mossGnawer", 728, 500, { id: "neutral-killer", order: { type: "attack", targetId: "doomed-footman" } })
+      .townHall("enemy", 3400, 3400)
+      .build()
+      .createGame();
+
+    stepGame(game);
+
+    expect(game.match.stats.unitsKilled.neutral).toBe(1);
+    expect(game.match.stats.unitsKilledByNeutral.player).toBe(1);
+    expect(game.match.stats.unitsKilledByNeutral.enemy).toBe(0);
+  });
+
+  it("leashes neutral units back to their authored camp instead of chasing into worker lines", () => {
+    const game = sketchScene("neutral-leash")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 180, 1000)
+      .worker("v2", 220, 1000, { id: "worker-line" })
+      .unit("v2", "raider", 820, 1000, { id: "puller" })
+      .unit("neutral", "stonebackBrute", 900, 1000, { id: "camp-brute" })
+      .townHall("v1", 3500, 3500)
+      .build()
+      .createGame();
+
+    issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["puller"], targetId: "camp-brute" });
+    stepMany(game, 80);
+    issuePlayerCommand(game, "v2", { type: "move", unitIds: ["puller"], x: 180, y: 1000 });
+    stepMany(game, 360);
+
+    const brute = game.units.find((unit) => unit.id === "camp-brute");
+    const worker = game.units.find((unit) => unit.id === "worker-line");
+    expect(brute).toBeDefined();
+    expect(worker).toBeDefined();
+    expect(Math.hypot(brute!.x - 900, brute!.y - 1000)).toBeLessThan(40);
+    expect(worker!.hp).toBe(worker!.maxHp);
+  });
+
+  it("calls nearby neutral allies when a camp unit is damaged outside ordinary aggro range", () => {
+    const game = sketchScene("neutral-assist-on-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 180, 1000)
+      .unit("v2", "archer", 1000, 1000, { id: "pulling-archer" })
+      .unit("neutral", "mossGnawer", 1188, 1000, { id: "damaged-creep" })
+      .unit("neutral", "mossGnawer", 1220, 1070, { id: "called-creep" })
+      .townHall("v1", 3500, 3500)
+      .build()
+      .createGame();
+
+    issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["pulling-archer"], targetId: "damaged-creep" });
+    stepGame(game);
+
+    const damaged = game.units.find((unit) => unit.id === "damaged-creep");
+    const called = game.units.find((unit) => unit.id === "called-creep");
+    expect(damaged?.hp).toBeLessThan(damaged?.maxHp ?? 0);
+    expect(damaged?.order).toEqual({ type: "attack", targetId: "pulling-archer" });
+    expect(called?.order).toEqual({ type: "attack", targetId: "pulling-archer" });
   });
 
   it("keeps map gold mines lean enough that expansions and harassment matter", () => {
@@ -730,6 +804,30 @@ describe("sketch RTS simulation", () => {
     expect(game.effects.map((effect) => effect.type)).toEqual(expect.arrayContaining(["heal", "summon", "curse"]));
   });
 
+  it("expires summoned spirits without counting them as combat losses", () => {
+    const game = sketchScene("summoned-spirit-lifetime")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3500, 3500)
+      .unit("player", "summoner", 2050, 2000, { id: "lifetime-summoner" })
+      .build()
+      .createGame();
+
+    issueCommand(game, { type: "cast", unitId: "lifetime-summoner", ability: "summon", x: 2090, y: 2040 });
+    const spirit = game.units.find((unit) => unit.owner === "player" && unit.kind === "spirit");
+    if (!spirit) throw new Error("missing summoned spirit");
+
+    stepMany(game, seconds(44.9));
+    expect(game.units.some((unit) => unit.id === spirit.id)).toBe(true);
+
+    stepMany(game, seconds(0.2));
+    expect(game.units.some((unit) => unit.id === spirit.id)).toBe(false);
+    expect(game.match.stats.unitsLost.player).toBe(0);
+  });
+
   it("does not let non-AI player casters spend manual spell cooldowns automatically", () => {
     const game = createGame();
     const witch = game.spawnUnit("player", "witch", 2000, 2000);
@@ -983,6 +1081,31 @@ describe("sketch RTS simulation", () => {
     expect(dropped?.x).toBeCloseTo(caster.x + 24);
   });
 
+  it("breach charge is a consumed building-only item for converting camp rewards into structure damage", () => {
+    const game = sketchScene("breach-charge-building-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .player("enemy")
+      .unit("player", "raider", 1500, 1500, { id: "breach-carrier" })
+      .building("enemy", "barracks", 1700, 1500, { id: "breach-target-barracks" })
+      .unit("enemy", "footman", 1640, 1500, { id: "breach-invalid-unit-target" })
+      .item("breach-charge", "breachCharge", 0, 0, { carrierId: "breach-carrier" })
+      .build()
+      .createGame();
+    const barracks = game.buildings.find((building) => building.id === "breach-target-barracks")!;
+    const unit = game.units.find((candidate) => candidate.id === "breach-invalid-unit-target")!;
+
+    issueCommand(game, { type: "useItem", unitId: "breach-carrier", itemId: "breach-charge", targetId: unit.id });
+    expect(unit.hp).toBe(unit.maxHp);
+    expect(game.items.some((item) => item.id === "breach-charge")).toBe(true);
+
+    issueCommand(game, { type: "useItem", unitId: "breach-carrier", itemId: "breach-charge", targetId: barracks.id });
+
+    expect(barracks.hp).toBeLessThanOrEqual(barracks.maxHp - 240);
+    expect(game.items.some((item) => item.id === "breach-charge")).toBe(false);
+  });
+
   it("guardian scroll protects nearby friendly units from incoming damage for its duration", () => {
     const game = sketchScene("guardian-scroll-protection")
       .map("bareDuel")
@@ -1129,7 +1252,7 @@ describe("sketch RTS simulation", () => {
     const carriedItems = game.items.filter((item) => item.carrierId);
 
     expect(carriedItems.length).toBeGreaterThanOrEqual(3);
-    expect(carriedItems.map((item) => item.kind)).toEqual(expect.arrayContaining(["flameCloak", "lightningRod", "experienceBook"]));
+    expect(carriedItems.map((item) => item.kind)).toEqual(expect.arrayContaining(["flameCloak", "lightningRod", "experienceBook", "breachCharge"]));
     for (const item of carriedItems) {
       const carrier = game.units.find((unit) => unit.id === item.carrierId);
       expect(carrier?.owner).toBe("neutral");

@@ -52,17 +52,24 @@ const HIGH_UPKEEP_GOLD_RATE = 0.4;
 const VETERANCY_STEP = 0.25;
 const ITEM_PICKUP_RANGE = 72;
 const CURSE_DURATION = seconds(18);
+const SUMMONED_SPIRIT_DURATION = seconds(45);
 const GUARDIAN_SCROLL_DURATION = seconds(7);
 const GUARDIAN_SCROLL_COOLDOWN = seconds(45);
 const LIGHTNING_ROD_COOLDOWN = seconds(18);
 const STORM_STAFF_DURATION = seconds(4.8);
 const STORM_STAFF_TICK_INTERVAL = seconds(1.2);
 const STORM_STAFF_COOLDOWN = seconds(27);
+const BREACH_CHARGE_RANGE = 280;
+const BREACH_CHARGE_DAMAGE = 260;
 const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
 const FLAME_CLOAK_COOLDOWN = seconds(2);
 const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const AUTO_ACQUIRE_RANGE = 230;
+const NEUTRAL_LEASH_RANGE = 520;
+const NEUTRAL_TARGET_LEASH_RANGE = 320;
+const NEUTRAL_RETURN_STOP_RANGE = 8;
+const NEUTRAL_ASSIST_RANGE = 360;
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
 const DEFAULT_TEAMS: Record<string, string> = { player: "player", enemy: "enemy", enemy2: "enemy2" };
 const DEFAULT_RACES: Record<string, PlayerState["race"]> = { player: "grove", enemy: "ember", enemy2: "grove" };
@@ -117,6 +124,7 @@ function createMatchState(players: PlayerId[]): MatchState {
       goldSpent: zeroPlayerRecord(players),
       mercenaryKills: zeroPlayerRecord(players),
       neutralUnitsKilled: zeroPlayerRecord(players),
+      unitsKilledByNeutral: zeroPlayerRecord(players),
     },
   };
 }
@@ -188,6 +196,11 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     claimId(seed.id);
     const unit = createUnit(seed.id, seed.owner, seed.kind, seed.x, seed.y);
     applyUnitUpgrades(game, unit);
+    if (seed.xp !== undefined) {
+      if (!Number.isFinite(seed.xp) || seed.xp < 0) throw new Error(`Invalid scenario xp for ${seed.id}`);
+      unit.xp = seed.xp;
+      applyXpLevel(game, unit);
+    }
     if (seed.hp !== undefined) {
       if (!Number.isFinite(seed.hp) || seed.hp <= 0 || seed.hp > unit.maxHp) throw new Error(`Invalid scenario hp for ${seed.id}`);
       unit.hp = seed.hp;
@@ -328,6 +341,7 @@ export function stepGame(game: Game) {
   updateTowerAttacks(game);
   updateUnits(game);
   separateUnits(game);
+  removeExpiredUnits(game);
   removeDead(game);
   updateVictory(game);
 }
@@ -346,6 +360,7 @@ export function snapshotGame(game: Game): GameSnapshot {
         goldSpent: { ...game.match.stats.goldSpent },
         mercenaryKills: { ...game.match.stats.mercenaryKills },
         neutralUnitsKilled: { ...game.match.stats.neutralUnitsKilled },
+        unitsKilledByNeutral: { ...game.match.stats.unitsKilledByNeutral },
       },
     },
     map: game.map,
@@ -475,6 +490,7 @@ function updateResources(game: Game) {
 function updateUnits(game: Game) {
   for (const unit of game.units) {
     unit.cooldown = Math.max(0, unit.cooldown - 1);
+    if (updateNeutralLeash(game, unit)) continue;
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
       if (distance(unit, unit.order) < 5) unit.order = { type: "idle" };
@@ -522,6 +538,24 @@ function updateFollowOrder(game: Game, unit: Unit) {
   if (distance(unit, target) > Math.max(72, target.radius + unit.radius + 26)) {
     moveToward(unit, target.x, target.y, game.map);
   }
+}
+
+function updateNeutralLeash(game: Game, unit: Unit) {
+  if (unit.owner !== "neutral" || unit.homeX === undefined || unit.homeY === undefined) return false;
+  const home = { x: unit.homeX, y: unit.homeY };
+  const homeDistance = distance(unit, home);
+  if (homeDistance <= NEUTRAL_RETURN_STOP_RANGE && unit.order.type === "move" && distance(unit.order, home) <= NEUTRAL_RETURN_STOP_RANGE) {
+    unit.order = { type: "idle" };
+    return false;
+  }
+  const target = unit.order.type === "attack" ? findTarget(game, unit.order.targetId) : undefined;
+  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, home) <= NEUTRAL_TARGET_LEASH_RANGE)) return false;
+
+  // @@@neutral-leash - Creeps reset to their authored camp instead of dragging fights into worker lines forever.
+  unit.order = { type: "move", x: home.x, y: home.y };
+  moveToward(unit, home.x, home.y, game.map);
+  if (distance(unit, home) <= NEUTRAL_RETURN_STOP_RANGE) unit.order = { type: "idle" };
+  return true;
 }
 
 function updateAttackMoveOrder(game: Game, unit: Unit) {
@@ -840,6 +874,7 @@ function applyHeal(game: Game, caster: Unit, target: Unit) {
 function applySummon(game: Game, caster: Unit, x: number, y: number) {
   if (distance(caster, { x, y }) > 260) return;
   const spirit = game.spawnUnit(caster.owner, "spirit", x, y);
+  spirit.expiresTick = game.tick + SUMMONED_SPIRIT_DURATION;
   spirit.order = { type: "idle" };
   caster.cooldown = 220;
   addEffect(game, "summon", x, y, 50);
@@ -866,7 +901,7 @@ function carrierFor(game: Game, item: WorldItem) {
 
 function activateNeutralItem(game: Game, carrier: Unit, item: WorldItem) {
   // @@@neutral-treasure-rule - Camps can weaponize carried treasure, except scrolls that are explicitly inert on monsters.
-  if (item.kind === "guardianScroll" || item.kind === "experienceBook" || item.cooldownRemaining > 0) return;
+  if (item.kind === "guardianScroll" || item.kind === "experienceBook" || item.kind === "breachCharge" || item.cooldownRemaining > 0) return;
   const target = nearestEnemyInRange(game, carrier, item.kind === "stormStaff" ? 280 : 240);
   if (!target) return;
   activateItem(game, carrier, item, target.id, target.x, target.y);
@@ -902,6 +937,14 @@ function activateItem(
     });
     addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION);
     item.cooldownRemaining = GUARDIAN_SCROLL_COOLDOWN;
+    return;
+  }
+  if (item.kind === "breachCharge") {
+    if (carrier.owner === "neutral") return;
+    const target = targetId ? game.buildings.find((building) => building.id === targetId && areEnemyOwners(game, carrier.owner, building.owner)) : undefined;
+    if (!target || distance(carrier, target) > BREACH_CHARGE_RANGE) return;
+    applyAttackDamage(game, carrier, target, BREACH_CHARGE_DAMAGE, BREACH_CHARGE_RANGE);
+    game.items = game.items.filter((candidate) => candidate.id !== item.id);
     return;
   }
   if (item.kind === "experienceBook") {
@@ -992,6 +1035,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return;
   const hpBefore = target.hp;
   target.hp -= damage;
+  if (hpBefore > 0 && isUnit(target) && target.owner === "neutral") triggerNeutralAssist(game, target, attacker);
   if (hpBefore > 0 && target.hp <= 0) {
     recordKill(game, attacker, target);
   }
@@ -1002,6 +1046,25 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   addEffect(game, "hit", to.x, to.y, 14);
 }
 
+function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit | Building) {
+  if (!areEnemyOwners(game, damagedNeutral.owner, attacker.owner)) return;
+  // @@@neutral-assist - Damage is louder than idle acquisition, but existing valid targets should not twitch on every hit.
+  for (const unit of game.units) {
+    if (unit.owner !== "neutral" || unit.hp <= 0) continue;
+    if (distance(unit, damagedNeutral) > NEUTRAL_ASSIST_RANGE) continue;
+    if (neutralHasValidAttackTarget(game, unit)) continue;
+    unit.order = { type: "attack", targetId: attacker.id };
+  }
+}
+
+function neutralHasValidAttackTarget(game: Game, unit: Unit) {
+  if (unit.order.type !== "attack") return false;
+  const target = findTarget(game, unit.order.targetId);
+  if (!target || target.hp <= 0 || !areEnemyOwners(game, unit.owner, target.owner)) return false;
+  if (unit.homeX !== undefined && unit.homeY !== undefined && distance(target, { x: unit.homeX, y: unit.homeY }) > NEUTRAL_TARGET_LEASH_RANGE) return false;
+  return true;
+}
+
 function recordKill(game: Game, attacker: Unit | Building, target: Unit | Building) {
   const attackerOwner = attacker.owner;
   if (isPlayerId(attackerOwner) || attackerOwner === "neutral") {
@@ -1010,6 +1073,9 @@ function recordKill(game: Game, attacker: Unit | Building, target: Unit | Buildi
   if (isUnit(attacker) && isUnit(target)) {
     attacker.kills += 1;
     awardKillXp(game, attacker, target);
+    if (attacker.owner === "neutral" && isPlayerId(target.owner)) {
+      incrementStat(game.match.stats.unitsKilledByNeutral, target.owner, 1);
+    }
     if (isPlayerId(attacker.owner) && isMercenaryUnitKind(attacker.kind) && areEnemyOwners(game, attacker.owner, target.owner)) {
       incrementStat(game.match.stats.mercenaryKills, attacker.owner, 1);
     }
@@ -1246,6 +1312,15 @@ function targetThreatBonus(target: Unit | Building) {
 
 function findTarget(game: Game, targetId: string): Unit | Building | undefined {
   return game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
+}
+
+function removeExpiredUnits(game: Game) {
+  const expiredUnits = game.units.filter((unit) => unit.expiresTick !== undefined && unit.expiresTick <= game.tick);
+  if (expiredUnits.length === 0) return;
+  dropItemsFromDeadUnits(game, expiredUnits);
+  const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
+  game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
+  updateSupplyState(game);
 }
 
 function removeDead(game: Game) {

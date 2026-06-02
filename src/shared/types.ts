@@ -34,7 +34,7 @@ export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind |
 export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "farm";
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse";
-export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook";
+export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating";
 
 export type UnitStatusEffect = {
@@ -79,6 +79,8 @@ export type Unit = {
   kind: UnitKind;
   x: number;
   y: number;
+  homeX?: number;
+  homeY?: number;
   hp: number;
   maxHp: number;
   speed: number;
@@ -91,6 +93,7 @@ export type Unit = {
   kills: number;
   xp: number;
   level: number;
+  expiresTick?: number;
   effects: UnitStatusEffect[];
   order: UnitOrder;
 };
@@ -206,6 +209,7 @@ export type ScenarioUnitSeed = {
   x: number;
   y: number;
   hp?: number;
+  xp?: number;
   order?: UnitOrder;
 };
 
@@ -240,6 +244,7 @@ export type MatchStats = {
   goldSpent: PlayerNumberMap;
   mercenaryKills: PlayerNumberMap;
   neutralUnitsKilled: PlayerNumberMap;
+  unitsKilledByNeutral: PlayerNumberMap;
 };
 
 export type MatchState = {
