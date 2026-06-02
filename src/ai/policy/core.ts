@@ -597,7 +597,7 @@ function moveToMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: Merc
   if (squad.length === 0) return undefined;
   const movers = staleAttackMovers(squad, camp);
   const candidates = movers.length > 0 ? movers : squad.filter((unit) => unit.order.type === "attackMove" && distance(unit.order, camp) <= ATTACK_MOVE_REDIRECT_DISTANCE);
-  const claimants = options.version === "v2" ? nearestEntities(candidates, camp).slice(0, 1) : candidates;
+  const claimants = options.version === "v2" ? nearestEntities(candidates, camp).slice(0, Math.min(3, candidates.length)) : candidates;
   return claimants.length > 0 ? { type: "attackMove", unitIds: claimants.map((unit) => unit.id), x: camp.x, y: camp.y } : undefined;
 }
 
@@ -1333,7 +1333,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (localBaseCommit) return { type: "attackMove", unitIds: movable.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y };
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 2.6 && !currentCommittedOwner) return undefined;
 
-  const armyTarget = options.version === "v2" ? significantOpponentArmyTarget(snapshot, owner, averagePoint(soldiers), options) : undefined;
+  const armyTarget = options.version === "v2" ? significantOpponentArmyTarget(snapshot, owner, averagePoint(soldiers), soldiers, options) : undefined;
   if (armyTarget) return { type: "attack", unitIds: movable.map((unit) => unit.id), targetId: armyTarget.id };
 
   const objective = nearestOpponentObjective(snapshot, owner, averagePoint(soldiers), options, focusedOwner);
@@ -1531,10 +1531,13 @@ function nearestOwnedOpponentObjective(snapshot: GameSnapshot, owner: PlayerId, 
   return army.length > 0 ? averagePoint(army) : undefined;
 }
 
-function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions): Unit | undefined {
+function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, from: Point, soldiers: Unit[], options: PresetAiPolicyOptions): Unit | undefined {
   const army = enemyCombatUnits(snapshot, owner, options.teams);
   if (army.length <= 4) return undefined;
-  return army.sort((a, b) => strategicArmyTargetScore(b, from) - strategicArmyTargetScore(a, from))[0];
+  const ownPower = armyPower(soldiers);
+  return army
+    .filter((unit) => armyPower(army.filter((candidate) => distance(candidate, unit) <= 520)) <= ownPower * 0.95)
+    .sort((a, b) => strategicArmyTargetScore(b, from) - strategicArmyTargetScore(a, from))[0];
 }
 
 function isolatedOpponentDetachmentTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemies: Unit[], options: PresetAiPolicyOptions): Unit | undefined {

@@ -3387,7 +3387,7 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 1180, y: 980 });
   });
 
-  it("v2 pre-claims a cleared mercenary camp with one nearest unit instead of dragging the main army", () => {
+  it("v2 pre-claims a cleared mercenary camp with a small squad instead of one unit or the whole army", () => {
     const scene = sketchScene("v2-mercenary-claim-small-team")
       .map("openClaims")
       .replaceDefaults()
@@ -3408,7 +3408,35 @@ describe("SDK preset AI policy", () => {
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
-    expect(command).toMatchObject({ type: "attackMove", unitIds: ["near-claimant"], x: 1180, y: 980 });
+    expect(command).toMatchObject({ type: "attackMove", unitIds: ["near-claimant", "main-army-c", "main-army-b"], x: 1180, y: 980 });
+  });
+
+  it("does not break a local mercenary route to chase a stronger distant army target", () => {
+    const scene = sketchScene("v2-no-far-strong-army-chase")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 1260, 1550, { order: { type: "attackMove", x: 1260, y: 1550 } })
+      .unit("v2", "footman", 1290, 1570, { order: { type: "attackMove", x: 1260, y: 1550 } })
+      .unit("v2", "lancer", 1320, 1590, { order: { type: "attackMove", x: 1260, y: 1550 } })
+      .unit("v2", "contractArcher", 1240, 1580, { order: { type: "attackMove", x: 1260, y: 1550 } })
+      .unit("v2", "contractArcher", 1270, 1610, { order: { type: "attackMove", x: 1260, y: 1550 } })
+      .mercenaryCamp("local-field-tent", 1260, 1550, { hireKind: "fieldMedic", cost: 155, stock: 2, cooldownRemaining: 0 })
+      .townHall("v1", 3400, 2048)
+      .unit("v1", "footman", 2920, 1940)
+      .unit("v1", "footman", 2960, 1960)
+      .unit("v1", "lancer", 2940, 2000)
+      .unit("v1", "contractArcher", 2990, 1900, { id: "bait-archer" })
+      .unit("v1", "contractArcher", 3010, 1940)
+      .unit("v1", "contractArcher", 2970, 1980)
+      .build();
+    const game = scene.createGame();
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+
+    expect(commands.some((command) => command.type === "attack")).toBe(false);
   });
 
   it("records a mercenary unit claim when sending a squad to a cleared camp", () => {

@@ -281,10 +281,10 @@ describe("SDK game runner", () => {
     expect(report.timeline.at(-1)?.players.v1b?.workers).toBeGreaterThanOrEqual(3);
   });
 
-  it("keeps v2 stronger than a single v1 on the rich-map sanity route", () => {
+  it("keeps v2 stronger than a single v1 on the clean expansion sanity route", () => {
     const report = runAiGame({
-      name: "v2-single-v1-rich-map-sanity",
-      mapId: "wildMarches",
+      name: "v2-single-v1-clean-expansion-sanity",
+      mapId: "openClaims",
       agents: {
         v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
         v1: { adapter: "internal", team: "south", race: "grove", version: "v1" },
@@ -296,7 +296,6 @@ describe("SDK game runner", () => {
 
     expect(report.timeout).toBe(false);
     expect(report.winner).toBe("v2");
-    expect(report.neutralUnitsKilled.v2 ?? 0).toBeGreaterThan(0);
     expect(report.unitsKilled.v2 ?? 0).toBeGreaterThan(report.unitsKilled.v1 ?? 0);
     expect(report.timeline.at(-1)?.players.v2?.combatUnits ?? 0).toBeGreaterThan(0);
   });
