@@ -4017,6 +4017,93 @@ describe("SDK preset AI policy", () => {
     expect(secondWave.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove" });
   });
 
+  it("keeps a committed attack wave from being retasked into worker pressure", () => {
+    const scene = sketchScene("v2-attack-wave-claim-blocks-worker-pressure")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 760, 520, { id: "wave-a" })
+      .unit("v2", "footman", 790, 550, { id: "wave-b" })
+      .unit("v2", "lancer", 820, 580, { id: "wave-c" })
+      .townHall("v1a", 1350, 520)
+      .worker("v1a", 1290, 520, { id: "v1a-target-worker" })
+      .worker("v1a", 1320, 560)
+      .townHall("v1b", 3350, 3300)
+      .worker("v1b", 3300, 3300)
+      .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v1a-main", 1260, 520, 3000)
+      .goldMine("v1b-main", 3300, 3300, 3000)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["wave-a", "wave-b", "wave-c"]) {
+      memory.unitClaims[unitId] = { kind: "attack", targetId: "v1a-main", x: 1350, y: 520, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams, memory })[0];
+
+    expect(entry).toBeUndefined();
+  });
+
+  it("lets worker pressure continue units already claimed for harassment", () => {
+    const scene = sketchScene("v2-harass-claim-continues-worker-pressure")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 760, 520, { id: "harass-a" })
+      .unit("v2", "footman", 790, 550, { id: "harass-b" })
+      .unit("v2", "lancer", 820, 580, { id: "harass-c" })
+      .townHall("v1a", 1350, 520)
+      .worker("v1a", 1290, 520, { id: "v1a-target-worker" })
+      .worker("v1a", 1320, 560)
+      .townHall("v1b", 3350, 3300)
+      .worker("v1b", 3300, 3300)
+      .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v1a-main", 1260, 520, 3000)
+      .goldMine("v1b-main", 3300, 3300, 3000)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["harass-a", "harass-b", "harass-c"]) {
+      memory.unitClaims[unitId] = { kind: "harass", targetId: "v1a-target-worker", x: 1290, y: 520, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams, memory })[0];
+
+    expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "attack", targetId: "v1a-target-worker" } });
+    expect(entry?.command.type === "attack" ? entry.command.unitIds : []).toEqual(["harass-a", "harass-b", "harass-c"]);
+  });
+
+  it("keeps a committed attack wave from being retasked into early harassment", () => {
+    const scene = sketchScene("v2-attack-wave-claim-blocks-early-harass")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "raider", 1220, 520, { id: "wave-a" })
+      .unit("v2", "archer", 1240, 550, { id: "wave-b" })
+      .townHall("v1", 1350, 520)
+      .worker("v1", 1290, 520, { id: "v1-worker-a" })
+      .worker("v1", 1320, 560)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["wave-a", "wave-b"]) {
+      memory.unitClaims[unitId] = { kind: "attack", targetId: "v1-main", x: 1350, y: 520, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment], { version: "v2", teams: game.teams, memory })[0];
+
+    expect(entry).toBeUndefined();
+  });
+
   it("v2 pauses neutral objectives when two enemy armies are approaching the main before buildings are hit", () => {
     const scene = sketchScene("v2-pre-pressure-pauses-objectives")
       .map("openClaims")

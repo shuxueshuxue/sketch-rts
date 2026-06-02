@@ -1119,7 +1119,9 @@ function workerPressureCommand(snapshot: GameSnapshot, owner: PlayerId, options:
     recordBehavior(options, "workerHarassment", "disabledSkips");
     return undefined;
   }
-  const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack");
+  const soldiers = combatUnits(snapshot, owner).filter(
+    (unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && harassmentReadyUnit(snapshot, owner, unit, options),
+  );
   if (soldiers.length < 3) return undefined;
   const target = workerPressureTarget(snapshot, owner, soldiers, options);
   if (opponentPlayerIds(snapshot, owner, options).length === 1) {
@@ -1188,7 +1190,9 @@ function planEarlyHarassment(snapshot: GameSnapshot, owner: PlayerId, options: P
   const enemyWorkers = enemyWorkerUnits(snapshot, owner, options.teams).filter((unit) => distance(unit, enemyBase) <= 560);
   if (enemyWorkers.length === 0) return undefined;
 
-  const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack");
+  const soldiers = combatUnits(snapshot, owner).filter(
+    (unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && harassmentReadyUnit(snapshot, owner, unit, options),
+  );
   if (options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2 && soldiers.length < 3) return undefined;
   if (soldiers.length < 2 || soldiers.length > 4) return undefined;
   const harassers = nearestEntities(soldiers, enemyBase).slice(0, Math.min(2, soldiers.length));
@@ -1213,6 +1217,12 @@ function planEarlyHarassment(snapshot: GameSnapshot, owner: PlayerId, options: P
     return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: harassers.map((unit) => unit.id), targetId: exposedWorker.id }, options);
   }
   return undefined;
+}
+
+function harassmentReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return true;
+  const claim = activeUnitClaim(snapshot, owner, unit, options);
+  return !claim || claim.kind === "harass";
 }
 
 function planDesperateWorkerFight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
