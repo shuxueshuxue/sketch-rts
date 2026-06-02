@@ -2801,6 +2801,18 @@ function drawItemGlyph(item: WorldItem, point: Point, now: number, carried: bool
     ctx.moveTo(x - 4, y + 3);
     ctx.lineTo(x + 4, y + 3);
     ctx.stroke();
+  } else if (item.kind === "breachCharge") {
+    ctx.strokeStyle = "#5f3a24";
+    ctx.fillStyle = "#d28445";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y - 7);
+    ctx.quadraticCurveTo(x + 2, y - 13, x + 7, y - 9);
+    ctx.stroke();
   } else {
     ctx.strokeStyle = "#8a6418";
     ctx.fillStyle = "#f2d05c";
@@ -3149,7 +3161,7 @@ function drawMinimap(marks: MapPresentationMark[]) {
   }
   for (const item of snapshot.items) {
     const point = projectWorldToRect(item, snapshot.map, rect);
-    ctx.strokeStyle = item.kind === "lightningRod" || item.kind === "stormStaff" ? "#315f87" : item.kind === "flameCloak" ? "#963c36" : "#8a6418";
+    ctx.strokeStyle = item.kind === "lightningRod" || item.kind === "stormStaff" ? "#315f87" : item.kind === "flameCloak" ? "#963c36" : item.kind === "breachCharge" ? "#5f3a24" : "#8a6418";
     ctx.lineWidth = 1.3;
     ctx.beginPath();
     ctx.moveTo(point.x - 2.5, point.y + 2.5);

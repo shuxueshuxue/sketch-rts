@@ -83,6 +83,7 @@ function snapshotWith(input: { units?: Unit[]; buildings?: Building[] }): GameSn
         buildingsDestroyed: playerStats(),
         nonBaseBuildingsDestroyed: playerStats(),
         neutralUnitsKilled: playerStats(),
+        unitsKilledByNeutral: playerStats(),
         mercenaryKills: playerStats(),
         goldSpent: playerStats(),
       },

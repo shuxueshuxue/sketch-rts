@@ -186,6 +186,12 @@ const ITEM_TOOLTIPS: Record<ItemKind, GameplayTooltip> = {
     stats: ["Grants 160 XP", "Consumed on use"],
     requirements: ["Carrier must not be neutral."],
   },
+  breachCharge: {
+    title: "Breach Charge",
+    body: "Consumed to blast an enemy building at close range.",
+    stats: ["260 building damage", "Range 280", "Consumed on use"],
+    requirements: ["Needs an enemy building in range.", "Carrier must not be neutral."],
+  },
 };
 
 const UPGRADE_DESCRIPTIONS: Record<UpgradeKind, string> = {
