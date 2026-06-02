@@ -121,7 +121,6 @@ function runDetail(run: BenchmarkDashboardRun) {
       ${summaryCell("1v1 score control", run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
       ${run.probeSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
       ${run.combatSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
-      ${summaryCell("1v1 sanity", run.sanitySummary.wins, run.sanitySummary.matchCount, run.sanitySummary.successRate)}
       <div><span>maps</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>
       <div><span>games</span><strong>${run.report.matchCount}</strong></div>
       <div><span>wall time</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>

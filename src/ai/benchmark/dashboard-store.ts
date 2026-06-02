@@ -25,7 +25,6 @@ export type BenchmarkDashboardRunSummary = {
   scoreControlSummary: BenchmarkEvaluationSummary;
   probeSummaries: BenchmarkEvaluationSummary[];
   combatSummaries: BenchmarkEvaluationSummary[];
-  sanitySummary: BenchmarkEvaluationSummary;
   elapsedMs: number;
   cpuMs?: number;
   matchCount: number;
@@ -35,8 +34,6 @@ export type BenchmarkDashboardStoreOptions = {
   rootDir?: string;
   now?: () => Date;
 };
-
-const DEFAULT_MAP_COUNT = 10;
 
 export async function recordAiVersionBenchmarkDashboardRun(
   options: AiVersionBenchmarkOptions = {},
@@ -111,7 +108,6 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     scoreControlSummary: run.scoreControlSummary,
     probeSummaries: run.probeSummaries,
     combatSummaries: run.combatSummaries,
-    sanitySummary: run.sanitySummary,
     elapsedMs: run.report.elapsedMs,
     cpuMs: run.report.cpuMs,
     matchCount: run.report.matchCount,
@@ -140,7 +136,6 @@ function benchmarkDashboardRunLog(run: BenchmarkDashboardRun) {
     `score control: ${run.scoreControlSummary.wins}/${run.scoreControlSummary.matchCount} (${Math.round(run.scoreControlSummary.successRate * 100)}%)`,
     ...run.probeSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
     ...run.combatSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
-    `sanity: ${run.sanitySummary.wins}/${run.sanitySummary.matchCount} (${Math.round(run.sanitySummary.successRate * 100)}%)`,
     `wall time: ${run.report.elapsedMs}ms`,
     `cpu time: ${formatMs(run.report.cpuMs)}`,
     `selected maps: ${run.selectedRichScoreMapIds.join(", ")}`,

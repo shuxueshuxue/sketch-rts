@@ -34,7 +34,6 @@ export type AiVersionBenchmarkDashboardReport = {
   scoreControlSummary: BenchmarkEvaluationSummary;
   probeSummaries: BenchmarkEvaluationSummary[];
   combatSummaries: BenchmarkEvaluationSummary[];
-  sanitySummary: BenchmarkEvaluationSummary;
   report: BenchmarkReport;
 };
 
@@ -48,11 +47,10 @@ export type BenchmarkEvaluationSummary = {
   matchCount: number;
 };
 
-const DEFAULT_SCORE_SAMPLE_SIZE = 10;
-const DEFAULT_ONE_V_THREE_PROBE_SIZE = 2;
-const DEFAULT_TWO_V_THREE_PROBE_SIZE = 2;
-const DEFAULT_SANITY_SAMPLE_SIZE = 3;
-const DEFAULT_SAMPLE_SIZE = DEFAULT_SCORE_SAMPLE_SIZE + DEFAULT_ONE_V_THREE_PROBE_SIZE + DEFAULT_TWO_V_THREE_PROBE_SIZE + DEFAULT_SANITY_SAMPLE_SIZE;
+const DEFAULT_SCORE_SAMPLE_SIZE = 12;
+const DEFAULT_ONE_V_THREE_PROBE_SIZE = 3;
+const DEFAULT_TWO_V_THREE_PROBE_SIZE = 3;
+const DEFAULT_SAMPLE_SIZE = DEFAULT_SCORE_SAMPLE_SIZE + DEFAULT_ONE_V_THREE_PROBE_SIZE + DEFAULT_TWO_V_THREE_PROBE_SIZE;
 const DEFAULT_MAX_TICKS = 48_000;
 const DEFAULT_THINK_INTERVAL = 45;
 let randomSeedCounter = 0;
@@ -130,11 +128,6 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
         matches: allocatedMaps.twoVThreeProbe.map((mapId, index) => match(`${mapId} 2v3`, mapId, [V2, V2B, V1A, V1B, V1C], index)),
       },
       {
-        name: "1v1 sanity",
-        tag: "melee",
-        matches: allocatedMaps.sanity.map((mapId, index) => match(`${mapId} 1v1`, mapId, [V2, V1A], index)),
-      },
-      {
         name: "15v20 mixed combat",
         tag: "combat",
         matches: combatMatches("15v20", 15, 20, adapter, maxTicks, thinkInterval),
@@ -160,7 +153,6 @@ export function allocateGauntletBenchmarkMaps<TMapId extends string>(mapIds: rea
     score: take(DEFAULT_SCORE_SAMPLE_SIZE),
     oneVThreeProbe: take(DEFAULT_ONE_V_THREE_PROBE_SIZE),
     twoVThreeProbe: take(DEFAULT_TWO_V_THREE_PROBE_SIZE),
-    sanity: take(DEFAULT_SANITY_SAMPLE_SIZE),
   };
 }
 
@@ -180,17 +172,16 @@ export async function runAiVersionBenchmarkParallel(options: AiVersionBenchmarkO
 }
 
 function aiVersionBenchmarkDashboardReport(selectedRichScoreMapIds: MapId[], seed: string, report: BenchmarkReport): AiVersionBenchmarkDashboardReport {
-  const [score, scoreControl, oneVThreeProbe, twoVThreeProbe, sanity, combat15v20, combat10v12] = report.evaluations;
-  if (!score || !scoreControl || !oneVThreeProbe || !twoVThreeProbe || !sanity || !combat15v20 || !combat10v12) throw new Error("AI version benchmark preset must produce paired melee score, probe, sanity, and combat evaluations");
+  const [score, scoreControl, oneVThreeProbe, twoVThreeProbe, combat15v20, combat10v12] = report.evaluations;
+  if (!score || !scoreControl || !oneVThreeProbe || !twoVThreeProbe || !combat15v20 || !combat10v12) throw new Error("AI version benchmark preset must produce paired melee score, probe, and combat evaluations");
   return {
     seed,
     mapPoolSize: RICH_SCORE_MAP_IDS.length,
     selectedRichScoreMapIds,
     scoreSummary: summarizePairedScoreEvaluation(score, scoreControl),
-    scoreControlSummary: summarizeSanityEvaluation(scoreControl),
+    scoreControlSummary: summarizeMeleeControlEvaluation(scoreControl),
     probeSummaries: [summarizeEvaluation(oneVThreeProbe, "north"), summarizeEvaluation(twoVThreeProbe, "north")],
     combatSummaries: [summarizeCombatEvaluation(combat15v20), summarizeCombatEvaluation(combat10v12)],
-    sanitySummary: summarizeSanityEvaluation(sanity),
     report,
   };
 }
@@ -250,7 +241,7 @@ export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluat
   };
 }
 
-export function summarizeSanityEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
+export function summarizeMeleeControlEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
   const wins = evaluation.matches.filter((match) => match.result.winnerTeam === "north" && v2KilledEnemy(match) && opponentWasNotOnlyNeutralKilled(match)).length;
   const losses = evaluation.matches.length - wins;
   return {
@@ -368,6 +359,46 @@ const COMBAT_RECIPES: CombatRecipe[] = [
     ySpacing: 42,
     yOffset: 64,
     xp: (index) => (index % 5 === 0 ? 260 : index % 3 === 0 ? 130 : index % 2 === 0 ? 60 : 0),
+  },
+  {
+    name: "frontline healers",
+    units: ["footman", "footman", "lancer", "fieldMedic", "priest", "archer", "mercenary", "raider"],
+    itemLoadout: [
+      ["guardianScroll", 0],
+      ["flameCloak", 1],
+      ["stormStaff", 4],
+      ["lightningRod", 5],
+    ],
+    v1ItemLoadout: [
+      ["guardianScroll", 0],
+      ["flameCloak", 1],
+      ["stormStaff", 4],
+    ],
+    columns: 4,
+    xSpacing: 48,
+    ySpacing: 50,
+    yOffset: 36,
+    xp: (index) => (index % 4 === 0 ? 80 : 0),
+  },
+  {
+    name: "ranged spread",
+    units: ["archer", "archer", "contractArcher", "witch", "summoner", "fieldMedic", "lancer", "footman"],
+    itemLoadout: [
+      ["stormStaff", 0],
+      ["lightningRod", 2],
+      ["guardianScroll", 5],
+      ["experienceBook", 6],
+    ],
+    v1ItemLoadout: [
+      ["stormStaff", 0],
+      ["lightningRod", 2],
+      ["guardianScroll", 5],
+    ],
+    columns: 5,
+    xSpacing: 30,
+    ySpacing: 70,
+    yOffset: -104,
+    xp: (index) => (index % 6 === 0 ? 140 : 0),
   },
 ];
 

@@ -67,7 +67,6 @@ const scoreCases: GauntletCase[] = [
 ];
 const oneVThreeCases: GauntletCase[] = allocatedMaps.oneVThreeProbe.map((mapId) => ({ name: `${mapId} 1v3 probe`, mapId }));
 const twoVThreeCases: GauntletCase[] = allocatedMaps.twoVThreeProbe.map((mapId) => ({ name: `${mapId} 2v3 probe`, mapId }));
-const sanityCases: GauntletCase[] = allocatedMaps.sanity.map((mapId) => ({ name: `${mapId} 1v1 sanity`, mapId }));
 
 const robustnessCases: GauntletCase[] = [
   { name: "bare duel no-expansion pressure", mapId: "bareDuel" },
@@ -80,9 +79,8 @@ const cpuStarted = process.cpuUsage();
 const scoreReports = adapterCases.flatMap((adapterCase) => scoreCases.map((testCase, index) => ({ ...runCase(testCase, adapterCase, "score", index), lane: "score" as const })));
 const oneVThreeReports = adapterCases.flatMap((adapterCase) => oneVThreeCases.map((testCase, index) => ({ ...runOneVThreeCase(testCase, adapterCase, index), lane: "1v3" as const })));
 const twoVThreeReports = adapterCases.flatMap((adapterCase) => twoVThreeCases.map((testCase, index) => ({ ...runTwoVThreeCase(testCase, adapterCase, index), lane: "2v3" as const })));
-const sanityReports = adapterCases.flatMap((adapterCase) => sanityCases.map((testCase, index) => ({ ...runSanityCase(testCase, adapterCase, index), lane: "sanity" as const })));
 const robustnessReports = adapterCases.flatMap((adapterCase) => robustnessCases.map((testCase) => ({ ...runCase(testCase, adapterCase, "robustness", 0), lane: "robustness" as const })));
-const reports = [...scoreReports, ...oneVThreeReports, ...twoVThreeReports, ...sanityReports, ...robustnessReports];
+const reports = [...scoreReports, ...oneVThreeReports, ...twoVThreeReports, ...robustnessReports];
 const cpu = process.cpuUsage(cpuStarted);
 const summaries = adapterCases.map((adapterCase) => {
   const relevant = scoreReports.filter((report) => report.adapterCase === adapterCase.name);
@@ -103,24 +101,14 @@ const robustnessSummaries = adapterCases.map((adapterCase) => {
     successRate: relevant.filter((report) => !report.failed).length / relevant.length,
   };
 });
-const sanitySummaries = adapterCases.map((adapterCase) => {
-  const relevant = sanityReports.filter((report) => report.adapterCase === adapterCase.name);
-  return {
-    adapterCase: adapterCase.name,
-    cases: relevant.length,
-    failures: relevant.filter((report) => report.failed).length,
-    successRate: relevant.filter((report) => !report.failed).length / Math.max(1, relevant.length),
-  };
-});
 const scoreOk = summaries.every((summary) => summary.successRate >= 1);
 const oneVThreeOk = oneVThreeReports.every((report) => !report.failed);
 const twoVThreeOk = twoVThreeReports.every((report) => !report.failed);
-const sanityOk = sanitySummaries.every((summary) => summary.failures === 0);
 
 process.stdout.write(
   `${JSON.stringify(
     {
-      ok: scoreOk && oneVThreeOk && twoVThreeOk && sanityOk,
+      ok: scoreOk && oneVThreeOk && twoVThreeOk,
       totalElapsedMs: Number((performance.now() - started).toFixed(3)),
       totalCpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
       gauntletMode: mapSelection.mode,
@@ -129,12 +117,10 @@ process.stdout.write(
       scoreCaseCount: scoreCases.length,
       oneVThreeCaseCount: oneVThreeCases.length,
       twoVThreeCaseCount: twoVThreeCases.length,
-      sanityCaseCount: sanityCases.length,
       robustnessCaseCount: robustnessCases.length,
       summaries,
       oneVThreeSummary: summarizeReports(oneVThreeReports),
       twoVThreeSummary: summarizeReports(twoVThreeReports),
-      sanitySummaries,
       robustnessSummaries,
       reports,
     },
@@ -143,8 +129,8 @@ process.stdout.write(
   )}\n`,
 );
 
-if (!scoreOk || !oneVThreeOk || !twoVThreeOk || !sanityOk) {
-  throw new Error("AI version gauntlet failed: v2 did not satisfy the 1v2 score, 1v3 probe, 2v3 probe, and 1v1 sanity gates in every adapter class");
+if (!scoreOk || !oneVThreeOk || !twoVThreeOk) {
+  throw new Error("AI version gauntlet failed: v2 did not satisfy the 1v2 score, 1v3 probe, and 2v3 probe gates in every adapter class");
 }
 
 function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score" | "robustness", index: number) {
@@ -199,27 +185,6 @@ function runTwoVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, inde
     name: testCase.name,
     mapId: testCase.mapId,
     agents: agentsFor(TWO_V_THREE_PLAYERS, adapterCase, index),
-    ...(testCase.options ? { options: testCase.options } : {}),
-    maxTicks: MAX_TICKS,
-    thinkInterval: THINK_INTERVAL,
-    sampleInterval: SAMPLE_INTERVAL,
-  });
-  return {
-    ...report,
-    adapterCase: adapterCase.name,
-    failed: report.winnerTeam !== "north",
-    snapshot: undefined,
-  };
-}
-
-function runSanityCase(testCase: GauntletCase, adapterCase: AdapterCase, index: number) {
-  const report = runGame({
-    name: testCase.name,
-    mapId: testCase.mapId,
-    agents: {
-      v2: { adapter: adapterCase.adapters.v2, team: TEAMS.v2, race: RACES.v2, version: VERSIONS.v2, ...(index % 2 === 1 ? { disabledBehaviors: ["workerHarassment"] as const } : {}) },
-      v1a: { adapter: adapterCase.adapters.v1a, team: "south", race: RACES.v1a, version: VERSIONS.v1a },
-    },
     ...(testCase.options ? { options: testCase.options } : {}),
     maxTicks: MAX_TICKS,
     thinkInterval: THINK_INTERVAL,

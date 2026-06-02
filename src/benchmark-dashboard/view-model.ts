@@ -7,9 +7,7 @@ export function runListMeta(run: BenchmarkDashboardRunSummary | BenchmarkDashboa
   const combats = run.combatSummaries
     .map((summary) => `${summary.wins}/${summary.matchCount} ${summary.name.replace(/\s*mixed combat$/i, "")}`)
     .join(" · ");
-  return [controls, probes, combats, `${run.sanitySummary.wins}/${run.sanitySummary.matchCount} sanity`, `${run.selectedRichScoreMapIds.length}/${run.mapPoolSize} maps`]
-    .filter(Boolean)
-    .join(" · ");
+  return [controls, probes, combats, `${run.selectedRichScoreMapIds.length}/${run.mapPoolSize} maps`].filter(Boolean).join(" · ");
 }
 
 export function campRoleSummary(camps: { freeCamps: number; guardedCamps: number }) {

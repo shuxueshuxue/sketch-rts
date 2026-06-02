@@ -7,9 +7,9 @@ The target is not a clever one-off script. The target is an AI stack that can ke
 ## Goals
 
 - V2 must eventually pass the standard benchmark bundle at 100%.
-- Every benchmark run must include 1v1 sanity checks, so V2 cannot gain multi-enemy tricks while becoming unable to beat V1.
+- Every scored `1v2` map must include a same-map `1v1 score control`, so V2 cannot gain multi-enemy tricks while becoming unable to beat V1 on the same terrain.
 - The stable map pool is 64 maps, selected for quality, manual design, testing coverage, and lower flakiness.
-- Each regular benchmark run randomly samples 17 maps from the 64-map pool. A supplied seed may reproduce a run, but ordinary benchmark runs must not reuse a fixed seed. The 17 maps are allocated as 10 `1v2 score` games, 2 `1v3 probe` games, 2 `2v3 probe` games, and 3 `1v1 sanity` games. The target is 100% pass across all four evaluations.
+- Each regular benchmark run randomly samples 18 maps from the 64-map pool. A supplied seed may reproduce a run, but ordinary benchmark runs must not reuse a fixed seed. The 18 maps are allocated as 12 paired `1v2 score` / `1v1 score control` maps, 3 `1v3 probe` maps, and 3 `2v3 probe` maps. The target is 100% pass across all melee and combat evaluations.
 - The 64-map pool must be normal 1v1-capable RTS terrain, not neutral-camp spam. A rich scoring map should have bounded neutral density: enough guarded mines, mercenary camps, green/orange/red rewards, and item routes to test objective control, but not so many free wild camps that 1v1 becomes a creep-economy minigame before player interaction.
 - Benchmark evaluations must carry tags. The current macro-game benchmark tag is `melee`. A new `combat` tag covers small-map pure micro scenarios.
 - Benchmark output must record real elapsed time and CPU time. CPU-heavy benchmark work and the dashboard should run on the PGL server.
@@ -59,11 +59,13 @@ The initial `combat` targets are:
 - `15v20 mixed combat`: V2 controls 15 units plus key item loadouts against V1 controlling 20 units.
 - `10v12 mixed combat`: V2 controls 10 units plus key item loadouts against V1 controlling 12 units.
 
-Each combat target runs 3 matches in every ordinary benchmark run, not 1. These are fixed pressure shapes inside the run, while the melee maps remain randomly sampled. The 3 combat matches must vary unit mix and positioning. The starting recipe set should cover:
+Each combat target runs 5 matches in every ordinary benchmark run, not 1. These are fixed pressure shapes inside the run, while the melee maps remain randomly sampled. The 5 combat matches must vary unit mix and positioning. The starting recipe set should cover:
 
 - early mixed army
 - late/heavy army
 - ranged-heavy or caster-heavy army, including real spell users
+- healer/frontline coordination
+- ranged spread positioning
 - late/heavy or high-star combat pressure
 
 Combat setup rules:
@@ -75,7 +77,7 @@ Combat setup rules:
 - Include mixed unit composition and key item ratios. Both sides should have usable items where appropriate, including V1, and both sides' combat policy must be able to use those items. The point is micro quality: focus fire, kiting, wounded-unit pullback, item use, spell timing, and target choice.
 - Combat evaluations are not a replacement for `melee`; they are a separate pressure lane that exposes micro failures faster.
 - The first concrete combat map is `combatArena`: a real small map, not a 4096 map with close spawn positions pretending to be small.
-- Dashboard reports keep melee summaries (`scoreSummary`, `probeSummaries`, `sanitySummary`) separate from `combatSummaries`.
+- Dashboard reports keep melee summaries (`scoreSummary`, `scoreControlSummary`, `probeSummaries`) separate from `combatSummaries`.
 - The benchmark pass gate includes combat summaries. A successful melee bundle with failing combat is still a failed benchmark.
 
 ## Project Structure
@@ -404,7 +406,7 @@ Requirements:
 - Shows a bounded, scrollable run list.
 - Uses a two-level nested structure: run list -> game list -> expandable game detail.
 - Shows setup and result data without hiding `none` values that indicate missing events.
-- Makes suspicious wins obvious, especially wins with no first fight or sanity games where the opponent died to neutrals.
+- Makes suspicious wins obvious, especially wins with no first fight or 1v1 controls where the opponent died to neutrals.
 - Shows elapsed time and CPU time for each run.
 
 The dashboard should help expose broken trackers and fake wins. It should not make bad data look clean.
@@ -419,16 +421,16 @@ V1 is the benchmark control. Avoid modifying V1 unless:
 
 V2-specific experiments should be gated by version, separate script selection, or explicit policy modules.
 
-Changing the map used by sanity checks is often safer than changing V1. Sanity checks must remain meaningful: randomly sampled maps, real 1v1, no opponent self-death masquerading as AI strength.
+Changing the sampled map mix is often safer than changing V1. The same-map 1v1 score controls must remain meaningful: real 1v1 games on scored terrain, no opponent self-death masquerading as AI strength.
 
 ## Validation
 
 Every meaningful AI change needs:
 
 - a small deterministic test proving the intended local behavior;
-- a 1v1 sanity signal;
-- the standard sampled benchmark bundle: 10 `1v2 score`, 2 `1v3 probe`, 2 `2v3 probe`, and 3 `1v1 sanity`;
-- the tagged combat bundle: `15v20 mixed combat` and `10v12 mixed combat`;
+- the same-map paired 1v1 score control signal;
+- the standard sampled benchmark bundle: 12 paired `1v2 score` / `1v1 score control` maps, 3 `1v3 probe` maps, and 3 `2v3 probe` maps;
+- the tagged combat bundle: 5 `15v20 mixed combat` matches and 5 `10v12 mixed combat` matches;
 - dashboard inspection for suspicious wins/losses;
 - comparison against the latest known baseline.
 
