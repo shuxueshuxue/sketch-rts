@@ -5,6 +5,7 @@ import type { PlayerId } from "../shared/types";
 
 export type AiGameAgent = SdkGameAgent & {
   version: AiScriptVersion;
+  policyVersion?: AiScriptVersion;
   scripts?: AiScript[];
   policyMode?: PresetAiPolicyOptions["policyMode"];
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
@@ -26,11 +27,12 @@ export function createAiGameCommandPlanner(options: PresetAiPolicyOptions = {}):
   const memories: Record<PlayerId, AiPolicyMemory> = {};
   return ({ snapshot, owner, agent, source, teams }) => {
     const version = agent.version ?? "v1";
-    const scripts = agent.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
+    const policyVersion = agent.policyVersion ?? options.version ?? version;
+    const scripts = agent.scripts ?? AI_SCRIPT_VERSIONS[policyVersion] ?? SKETCH_RTS_PRESET_AI_STACK;
     const memory = memories[owner] ?? (memories[owner] = createAiPolicyMemory());
     const disabledBehaviors = agent.disabledBehaviors ?? options.disabledBehaviors;
     const policyMode = agent.policyMode ?? options.policyMode;
-    return planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams, version, ...options, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
+    return planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams, ...options, version: policyVersion, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
       playerId: owner,
       source,
       scriptId: entry.scriptId,

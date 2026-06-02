@@ -98,6 +98,33 @@ describe("SDK game runner", () => {
     expect(report.commands.some((entry) => entry.owner === "beta" && entry.scriptId !== "economy")).toBe(true);
   });
 
+  it("can execute a reported v2 agent through the v1 reset policy", () => {
+    const seenVersions: string[] = [];
+    const scripts: AiScript[] = [
+      {
+        id: "runner-policy-version-probe",
+        phase: "economy",
+        run(_snapshot, _owner, options) {
+          seenVersions.push(options.version ?? "none");
+          return undefined;
+        },
+      },
+    ];
+
+    runAiGame({
+      name: "sdk-run-game-policy-version",
+      mapId: "bareDuel",
+      agents: {
+        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2", policyVersion: "v1", scripts },
+        v1: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1", scripts },
+      },
+      maxTicks: 1,
+      thinkInterval: 1,
+    });
+
+    expect(seenVersions).toEqual(["v1", "v1"]);
+  });
+
   it("keeps one growing memory object per SDK loop agent", () => {
     const seen: AiPolicyMemory[] = [];
     const scripts: AiScript[] = [
