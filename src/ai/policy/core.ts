@@ -663,13 +663,15 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   const nextMissingProduction = needsCoreArmy ? undefined : productionBuildingNeedKind(snapshot, owner, options);
   const missingProduction =
     nextMissingProduction && shouldTrainBeforeThirdProduction(snapshot, owner, nextMissingProduction, options) ? undefined : nextMissingProduction;
+  const saturatingTwoMines = options.version === "v2" && activeMiningBaseCount(snapshot, owner) >= 2 && workerCount < routineWantedWorkers;
+  const canRebuildArmyWhileSaturatingTwoMines = saturatingTwoMines && player.gold >= UNIT_DEFS.worker.cost + UNIT_DEFS.footman.cost;
   const reserveMainGuardTower = needsMainGuardTower(snapshot, owner, options);
   const reserveEmergencyTower = shouldReserveForEmergencyTower(snapshot, owner, options);
   const reserveHealingWell = shouldReserveForHealingWell(snapshot, owner, options);
   const reserveExpansion = shouldReserveForExpansion(snapshot, owner, options);
   const reserveDuplicateProduction = duplicateCoreProductionReserveKind(snapshot, owner, options);
   const restoreCombatBeforeWorkers =
-    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length === 0 && workerCount >= Math.min(5, routineWantedWorkers) && player.gold >= UNIT_DEFS.footman.cost;
+    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length === 0 && workerCount >= Math.min(5, routineWantedWorkers) && player.gold >= UNIT_DEFS.footman.cost && !canRebuildArmyWhileSaturatingTwoMines;
   const commands: GameCommand[] = [];
   let remainingGold = player.gold;
   let reservedSupply = projectedSupplyUsed(snapshot, owner);
@@ -731,7 +733,6 @@ function routineWorkerCount(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   const bases = options.version === "v2" ? Math.max(1, activeMiningBaseCount(snapshot, owner)) : completeBuildings(snapshot, owner, "townHall").length;
   // @@@mine-worker-cap - A gold mine saturates at five workers; extra one-base workers only steal army tempo.
   if (options.version === "v2") {
-    if (bases >= 2 && opponentPlayerIds(snapshot, owner, options).length < 2 && combatUnits(snapshot, owner).length < 4) return 5;
     return Math.min(12, bases * 5);
   }
   return Math.min(12, 2 + bases * 4);

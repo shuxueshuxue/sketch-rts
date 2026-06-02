@@ -667,6 +667,43 @@ describe("SDK preset AI policy", () => {
     expect(commands).toEqual([{ type: "train", buildingId: "scene-v2-combat-before-worker-after-army-wipe-v2-barracks-1", unitKind: "footman" }]);
   });
 
+  it("v2 keeps training workers toward two-mine saturation when it can also rebuild army", () => {
+    const scene = sketchScene("v2-two-mine-worker-saturation-after-army-loss")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1160, 980, { id: "v2-natural" })
+      .building("v2", "barracks", 650, 560, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 710, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 560, 540, { id: "main-worker-a", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 590, 540, { id: "main-worker-b", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 620, 540, { id: "main-worker-c", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 1160, 980, { id: "natural-worker-a", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 1190, 980, { id: "natural-worker-b", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } })
+      .townHall("v1", 3100, 1450)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1160, 980, 4000)
+      .goldMine("v1-main-mine", 3100, 1450, 4000)
+      .build();
+    const game = scene.createGame();
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 1000;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual(
+      expect.arrayContaining([
+        { type: "train", buildingId: "v2-main", unitKind: "worker" },
+        { type: "train", buildingId: "v2-barracks", unitKind: "footman" },
+      ]),
+    );
+  });
+
   it("v2 still saturates the main mine to five workers while banking for the first expansion", () => {
     const scene = sketchScene("v2-main-mine-workers-before-expansion-bank")
       .map("openClaims")
