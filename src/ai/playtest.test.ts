@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInteractivePlaytestSession } from "../sdk/playtest";
-import { createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "./playtest";
+import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "./playtest";
 import type { AiScript } from "./policy";
 
 describe("AI interactive playtest wiring", () => {
@@ -83,5 +83,59 @@ describe("AI interactive playtest wiring", () => {
     expect(runtime.controlledPlayers).toEqual(["v2", "v1a"]);
     expect(runtime.memories.v2!.jobs.map((job) => job.id)).toEqual(["tick-0", "tick-1"]);
     expect(runtime.memories.v1a!.jobs.map((job) => job.id)).toEqual(["tick-0", "tick-1"]);
+  });
+
+  it("records manual CLI-style objectives into the controlled player's AI memory", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          replaceDefaultMercenaryCamps: true,
+          addUnits: [
+            { id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 300 },
+            { id: "wild-camp-1", owner: "neutral", kind: "wildling", x: 900, y: 920 },
+          ],
+          addMercenaryCamps: [{ id: "camp-natural", x: 900, y: 900, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: 90, cooldownRemaining: 0 }],
+        },
+      },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "creepCamp", campId: "camp-natural", unitIds: "combat" });
+
+    expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
+      kind: "creep",
+      targetId: "wild-camp-1",
+      x: 900,
+      y: 920,
+      sinceTick: 0,
+    });
+  });
+
+  it("creates controlled-player memory for manual-only CLI commands without enabling AI assist", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "bareDuel",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: { players: ["v2", "v1a"], teams: { v2: "north", v1a: "south" } },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: false, thinkInterval: 45, versions: { v1a: "v1" } });
+
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "build", buildingKind: "barracks", x: 420, y: 380 });
+
+    expect(runtime.controlledPlayers).toEqual(["v1a"]);
+    expect(Object.values(runtime.memories.v2!.unitClaims)).toEqual([
+      expect.objectContaining({
+        kind: "build",
+        targetId: "build:barracks:420:380",
+      }),
+    ]);
   });
 });

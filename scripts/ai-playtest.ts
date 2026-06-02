@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { applyInteractivePlaytestCommand, createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
-import { createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "../src/ai/playtest";
+import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
+import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "../src/ai/playtest";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { AiScriptVersion, BuildingKind, GameCommand, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
@@ -65,7 +65,7 @@ if (verb === "step-until") {
 }
 
 const command = commandFromArgs(verb, args);
-applyInteractivePlaytestCommand(session, command);
+applyAiInteractivePlaytestCommand(session, loaded.runtime, command);
 savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
 printJson(summarizeInteractivePlaytestSession(session));
 
