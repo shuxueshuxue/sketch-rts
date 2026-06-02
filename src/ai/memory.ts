@@ -7,7 +7,7 @@ export type AiJobState = {
   updatedTick: number;
 };
 
-export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat";
+export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build";
 
 export type AiPolicyUnitClaim = {
   kind: AiPolicyUnitClaimKind;

@@ -94,6 +94,32 @@ describe("SDK command intents", () => {
     });
   });
 
+  it("does not steal a worker already assigned by a previous high-level build intent", () => {
+    const game = createGame("combatArena", {
+      players: ["v2"],
+      teams: { v2: "north" },
+      scenario: {
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        replaceDefaultResources: true,
+        addUnits: [
+          { id: "builder-in-flight", owner: "v2", kind: "worker", x: 330, y: 320, order: { type: "move", x: 360, y: 320 } },
+          { id: "available-miner", owner: "v2", kind: "worker", x: 260, y: 280, order: { type: "mine", resourceId: "gold-v2-main", phase: "toMine", timer: 0 } },
+        ],
+        addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 }],
+        addResources: [{ id: "gold-v2-main", kind: "goldMine", x: 260, y: 260, amount: 6000 }],
+      },
+    });
+
+    expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "build", buildingKind: "farm", x: 370, y: 320 })).toEqual({
+      type: "build",
+      unitId: "available-miner",
+      buildingKind: "farm",
+      x: 370,
+      y: 320,
+    });
+  });
+
   it("resolves item and ability intents through the shared SDK command surface", () => {
     const game = createGame("combatArena", {
       players: ["v2"],

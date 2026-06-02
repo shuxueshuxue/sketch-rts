@@ -1,13 +1,20 @@
 import { UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
+import type { AiPolicyMemory } from "../memory";
+import { activeUnitClaim } from "./claims";
 import { buildings, completeBuildings, units } from "./snapshot";
 import { distance, nearestEntity, type Point } from "./spatial";
 
 const BUILD_RANGE = 46;
 
-export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point: Point) {
+type AvailableBuilderOptions = {
+  memory?: AiPolicyMemory;
+};
+
+export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point: Point, options: AvailableBuilderOptions = {}) {
   return units(snapshot, owner)
     .filter((unit) => unit.kind === "worker")
+    .filter((unit) => !activeUnitClaim(snapshot, owner, unit, options))
     .filter((unit) => !isReservedBuilder(snapshot, owner, unit))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
 }

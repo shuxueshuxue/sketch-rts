@@ -219,7 +219,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
 function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const stalled = buildings(snapshot, owner).find((building) => !building.complete && !hasAssignedBuilder(snapshot, owner, building));
   if (!stalled) return undefined;
-  const builder = availableBuilder(snapshot, owner, stalled);
+  const builder = availableBuilder(snapshot, owner, stalled, options);
   if (!builder) return undefined;
   return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y }, options);
 }
@@ -254,7 +254,7 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + BUILDING_DEFS.farm.cost) return undefined;
   if (shouldHoldFirstExpansionBank(snapshot, owner, options, BUILDING_DEFS.farm.cost)) return undefined;
   const base = mainBase(snapshot, owner);
-  const builder = availableBuilder(snapshot, owner, base);
+  const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
   const point = safeMainBuildPoint(snapshot, owner, farms.length + 4);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "farm", x: point.x, y: point.y }, options);
@@ -283,7 +283,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const player = playerState(snapshot, owner);
   if (player.gold < BUILDING_DEFS.townHall.cost) return undefined;
   if (enemyPressure(snapshot, owner, mine, 360, options)) return undefined;
-  const builder = availableBuilder(snapshot, owner, mine);
+  const builder = availableBuilder(snapshot, owner, mine, options);
   if (!builder) return undefined;
   const offset = expansionOffset(snapshot, owner);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
@@ -300,7 +300,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
   const main = completeBuildings(snapshot, owner, "townHall")[0];
   if (!main) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && combatUnits(snapshot, owner).length >= 5 && playerState(snapshot, owner).gold >= BUILDING_DEFS.defenseTower.cost) {
-    const builder = availableBuilder(snapshot, owner, main);
+    const builder = availableBuilder(snapshot, owner, main, options);
     if (builder) {
       const point = towerPointFor(snapshot, owner, main, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
@@ -320,7 +320,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
   ) {
     const mine = desiredCatchUpExpansionMine(snapshot, owner);
     if (mine && playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost && !enemyPressure(snapshot, owner, mine, 360, options)) {
-      const builder = availableBuilder(snapshot, owner, mine);
+      const builder = availableBuilder(snapshot, owner, mine, options);
       if (builder) {
         const offset = expansionOffset(snapshot, owner);
         recordBehavior(options, "economicCatchUp", "attempts");
@@ -334,7 +334,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
 
   const exposedExpansion = unguardedExpansion(snapshot, owner);
   if (opponentPlayerIds(snapshot, owner, options).length < 2 && exposedExpansion && playerState(snapshot, owner).gold >= BUILDING_DEFS.defenseTower.cost) {
-    const builder = availableBuilder(snapshot, owner, exposedExpansion);
+    const builder = availableBuilder(snapshot, owner, exposedExpansion, options);
     if (builder) {
       const point = towerPointFor(snapshot, owner, exposedExpansion, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
@@ -356,7 +356,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
   const hasAnyCoreProduction = buildings(snapshot, owner).some((building) => isCoreProductionBuilding(building) && building.complete);
   if (shouldReserveForExpansion(snapshot, owner, options)) return undefined;
   if (options.version === "v2" && hasAnyCoreProduction && combatUnits(snapshot, owner).length >= 5 && !mainGuarded && opponentPlayerIds(snapshot, owner, options).length >= 2 && playerState(snapshot, owner).gold >= BUILDING_DEFS.defenseTower.cost) {
-    const builder = availableBuilder(snapshot, owner, main);
+    const builder = availableBuilder(snapshot, owner, main, options);
     if (builder) {
       const point = towerPointFor(snapshot, owner, main, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
@@ -378,7 +378,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + BUILDING_DEFS[missing].cost) return undefined;
   if (shouldReserveForExpansion(snapshot, owner, options) && !canSpendExpansionRetryBankOnCoreProduction(snapshot, owner, missing, options) && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS[missing].cost) return undefined;
   const base = mainBase(snapshot, owner);
-  const builder = availableBuilder(snapshot, owner, base);
+  const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
   const index = aiPlaybook().productionPlan.indexOf(missing);
   const point = safeMainBuildPoint(snapshot, owner, index);
@@ -417,7 +417,7 @@ function planEmergencyDefense(snapshot: GameSnapshot, owner: PlayerId, options: 
   const underHeavyPressure = threatenedEnemies.length >= 3 && armyPower(threatenedEnemies) > armyPower(ownCombat) * 1.15;
   // @@@early-main-guard - Under direct main pressure, waiting for five soldiers means the tower starts after the base is already collapsing.
   if (ownCombat.length < 2 && !underHeavyPressure) return undefined;
-  const builder = availableBuilder(snapshot, owner, main);
+  const builder = availableBuilder(snapshot, owner, main, options);
   if (!builder) return undefined;
   const point = towerPointFor(snapshot, owner, main as Building, threat);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
@@ -533,7 +533,7 @@ function planDefense(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     if (!threat && !wantsExpansionGuard) continue;
     if (threat && alreadyCovered) continue;
 
-    const builder = availableBuilder(snapshot, owner, base);
+    const builder = availableBuilder(snapshot, owner, base, options);
     if (!builder) continue;
     const point = towerPointFor(snapshot, owner, base, threat);
     return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
@@ -562,7 +562,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (shouldHoldFirstExpansionBank(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
   if (!pressured && shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS.moonWell.cost) return undefined;
 
-  const builder = availableBuilder(snapshot, owner, main);
+  const builder = availableBuilder(snapshot, owner, main, options);
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y }, options);
@@ -1543,7 +1543,7 @@ function catchUpExpansionCommand(snapshot: GameSnapshot, owner: PlayerId, option
   const mine = desiredCatchUpExpansionMine(snapshot, owner);
   if (options.version === "v2" && combatUnits(snapshot, owner).length < catchUpExpansionMinimumCombat(snapshot, owner, options)) return undefined;
   if (!mine || playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost || enemyPressure(snapshot, owner, mine, 360, options)) return undefined;
-  const builder = availableBuilder(snapshot, owner, mine);
+  const builder = availableBuilder(snapshot, owner, mine, options);
   if (!builder) return undefined;
   const offset = expansionOffset(snapshot, owner);
   recordBehavior(options, "economicCatchUp", "attempts");

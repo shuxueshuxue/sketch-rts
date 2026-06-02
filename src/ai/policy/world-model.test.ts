@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { availableBuilder, mainBase, mineAssignmentCounts } from "./world-model";
+import type { AiPolicyMemory } from "../memory";
 
 describe("AI world model helpers", () => {
   it("selects the first completed town hall as the main base", () => {
@@ -30,6 +31,26 @@ describe("AI world model helpers", () => {
       .createGame();
 
     expect(availableBuilder(snapshotGame(game), "v2", { x: 640, y: 520 })).toMatchObject({ id: "free-worker" });
+  });
+
+  it("does not reuse a worker with an active memory claim", () => {
+    const game = sketchScene("world-model-builder-memory-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .worker("v2", 610, 520, { id: "claimed-builder" })
+      .worker("v2", 700, 520, { id: "free-worker" })
+      .build()
+      .createGame();
+    const memory: AiPolicyMemory = {
+      jobs: [],
+      unitClaims: {
+        "claimed-builder": { kind: "build", targetId: "build:farm:640:520", x: 640, y: 520, sinceTick: 0, expiresTick: 900 },
+      },
+    };
+
+    expect(availableBuilder(snapshotGame(game), "v2", { x: 640, y: 520 }, { memory })).toMatchObject({ id: "free-worker" });
   });
 
   it("counts mine assignments by resource id", () => {

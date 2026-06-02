@@ -21,8 +21,10 @@ if (verb === "new") {
   const mapId = (flag(args, "map") ?? "bareDuel") as MapId;
   const controlledPlayer = flag(args, "you") ?? "v2";
   const enemy = flag(args, "enemy") ?? "v1a";
+  const controlledVersion = (flag(args, "you-version") ?? "v2") as AiScriptVersion;
   const enemyVersion = (flag(args, "enemy-version") ?? "v1") as AiScriptVersion;
   const thinkInterval = numberFlag(args, "think-interval", 45);
+  const assistControlled = boolFlag(args, "assist-you");
   const session = createInteractivePlaytestSession({
     id: flag(args, "id") ?? `interactive-${mapId}-${Date.now()}`,
     mapId,
@@ -33,7 +35,7 @@ if (verb === "new") {
       teams: { [controlledPlayer]: "north", [enemy]: "south" },
     },
   });
-  const runtime = createAiInteractivePlaytestRuntime(session, { version: enemyVersion, thinkInterval });
+  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion } });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
   printJson(summarizeInteractivePlaytestSession(session));
   process.exit(0);
@@ -119,6 +121,10 @@ function flag(args: string[], name: string): string | undefined {
   return value;
 }
 
+function boolFlag(args: string[], name: string): boolean {
+  return args.includes(`--${name}`);
+}
+
 function requiredFlag(args: string[], name: string): string {
   const value = flag(args, name);
   if (value === undefined) throw new Error(`Missing required --${name}`);
@@ -144,7 +150,7 @@ function printJson(value: unknown) {
 
 function printHelp() {
   console.log(`Usage:
-  npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --enemy v1a
+  npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240

@@ -116,9 +116,14 @@ function creepCampPoint(snapshot: GameSnapshot, owner: PlayerId, campId: string 
 }
 
 function nearestWorkerId(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }): string {
-  const worker = nearest(snapshot.units.filter((unit) => unit.owner === owner && unit.kind === "worker"), point);
+  const workers = snapshot.units.filter((unit) => unit.owner === owner && unit.kind === "worker");
+  const worker = nearest(workers.filter(isAvailableBuilder), point) ?? nearest(workers, point);
   if (!worker) throw new Error(`No ${owner} workers available`);
   return worker.id;
+}
+
+function isAvailableBuilder(unit: Unit) {
+  return unit.order.type === "idle" || unit.order.type === "mine";
 }
 
 function trainingBuildingId(snapshot: GameSnapshot, owner: PlayerId, unitKind: TrainableUnitKind): string {

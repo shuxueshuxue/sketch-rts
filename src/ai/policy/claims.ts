@@ -28,6 +28,16 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
   for (const command of commands) {
     if ((scriptId === "expansion" || scriptId === "economicCatchUp") && command.type === "build" && command.buildingKind === "townHall") {
       memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
+    }
+    if (command.type === "build") {
+      memory.unitClaims[command.unitId] = {
+        kind: "build",
+        targetId: buildTargetId(command.buildingKind, command.x, command.y),
+        x: command.x,
+        y: command.y,
+        sinceTick: snapshot.tick,
+        expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
+      };
       continue;
     }
     if (command.type === "hire") {
@@ -122,7 +132,12 @@ function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, claim:
   if (claim.kind === "expansion") return Boolean(query.resourceById(claim.targetId));
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
   if (claim.kind === "harass") return Boolean(query.targetById(claim.targetId));
+  if (claim.kind === "build") return claim.sinceTick >= query.snapshot.tick || query.buildings().some((building) => !building.complete && distance(building, claim) <= 80);
   return true;
+}
+
+function buildTargetId(buildingKind: string, x: number, y: number) {
+  return `build:${buildingKind}:${Math.round(x)}:${Math.round(y)}`;
 }
 
 function clearUnitClaimsForTarget(memory: AiPolicyMemory, targetId: string) {
