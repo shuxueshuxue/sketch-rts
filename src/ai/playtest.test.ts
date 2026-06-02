@@ -188,6 +188,40 @@ describe("AI interactive playtest wiring", () => {
     });
   });
 
+  it("records manual wounded retreats as retreat memory claims", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "hurt-archer", owner: "v2", kind: "archer", x: 500, y: 500, hp: 30 },
+            { id: "healthy-footman", owner: "v2", kind: "footman", x: 520, y: 500 },
+          ],
+          addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 200, y: 200, complete: true }],
+        },
+      },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "retreatWounded", hpRatio: 0.5 });
+
+    expect(runtime.memories.v2!.unitClaims["hurt-archer"]).toMatchObject({
+      kind: "retreat",
+      targetId: "retreat",
+      x: 200,
+      y: 200,
+      sinceTick: 0,
+    });
+    expect(runtime.memories.v2!.unitClaims["healthy-footman"]).toBeUndefined();
+  });
+
   it("creates controlled-player memory for manual-only CLI commands without enabling AI assist", () => {
     const session = createInteractivePlaytestSession({
       mapId: "bareDuel",

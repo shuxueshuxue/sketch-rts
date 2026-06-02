@@ -86,6 +86,28 @@ describe("AI playtest CLI", () => {
     expect(status.aiMemory.v2.jobs).toEqual([expect.objectContaining({ id: "attackWave:v1a", kind: "attackWave" })]);
     expect(status.aiMemory.v2.claims.filter((claim: { kind: string }) => claim.kind === "attack")).toHaveLength(15);
   });
+
+  it("retreats wounded units through a memory-backed tactical command", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a");
+    runPlaytestCli("attack-move", "--file", file, "--units", "combat", "--x", "1080", "--y", "800");
+    runPlaytestCli("step", "--file", file, "--ticks", "180");
+    runPlaytestCli("retreat-wounded", "--file", file, "--hp-ratio", "0.95");
+
+    const status = JSON.parse(runPlaytestCli("status", "--file", file));
+
+    expect(status.aiMemory.v2.claims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "retreat",
+          targetId: "retreat",
+        }),
+      ])
+    );
+  });
 });
 
 function runPlaytestCli(...args: string[]) {

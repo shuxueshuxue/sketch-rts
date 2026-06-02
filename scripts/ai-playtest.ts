@@ -79,6 +79,7 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   if (verb === "attack-move") return { type: "attackMove", unitIds: unitSelector(args), x: requiredNumberFlag(args, "x"), y: requiredNumberFlag(args, "y") };
   if (verb === "focus") return { type: "focusFire", unitIds: unitSelector(args), targetId: requiredFlag(args, "target") };
   if (verb === "retreat") return { type: "retreat", unitIds: unitSelector(args), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
+  if (verb === "retreat-wounded") return { type: "retreatWounded", unitIds: unitSelector(args), hpRatio: numberFlag(args, "hp-ratio", 0.5), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   if (verb === "mine") return { type: "mine", unitIds: unitSelector(args), ...(flag(args, "resource") ? { resourceId: requiredFlag(args, "resource") } : {}) };
   if (verb === "repair") return { type: "repair", unitIds: unitSelector(args), buildingId: requiredFlag(args, "building") };
   if (verb === "expand") return { type: "expand", unitId: flag(args, "unit"), ...(flag(args, "resource") ? { resourceId: requiredFlag(args, "resource") } : {}) };
@@ -183,6 +184,7 @@ function printHelp() {
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240
   npm run play:ai -- attack-move --file .playtests/duel.json --units combat --x 2048 --y 2048
+  npm run play:ai -- retreat-wounded --file .playtests/duel.json --hp-ratio 0.5
   npm run play:ai -- expand --file .playtests/duel.json --resource gold-natural
   npm run play:ai -- creep-camp --file .playtests/duel.json --camp merc-camp-crossroad --units combat
   npm run play:ai -- focus --file .playtests/duel.json --target unit-v1a-worker-1

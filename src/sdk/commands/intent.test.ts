@@ -120,6 +120,31 @@ describe("SDK command intents", () => {
     });
   });
 
+  it("resolves retreat-wounded intent to only pull low-health combat units", () => {
+    const game = createGame("combatArena", {
+      players: ["v2"],
+      teams: { v2: "north" },
+      scenario: {
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        replaceDefaultResources: true,
+        addUnits: [
+          { id: "hurt-archer", owner: "v2", kind: "archer", x: 500, y: 500, hp: 30 },
+          { id: "healthy-footman", owner: "v2", kind: "footman", x: 520, y: 500 },
+          { id: "hurt-worker", owner: "v2", kind: "worker", x: 540, y: 500, hp: 10 },
+        ],
+        addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 200, y: 200 }],
+      },
+    });
+
+    expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "retreatWounded", hpRatio: 0.5 })).toEqual({
+      type: "move",
+      unitIds: ["hurt-archer"],
+      x: 200,
+      y: 200,
+    });
+  });
+
   it("resolves item and ability intents through the shared SDK command surface", () => {
     const game = createGame("combatArena", {
       players: ["v2"],

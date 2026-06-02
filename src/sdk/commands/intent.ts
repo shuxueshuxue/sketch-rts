@@ -10,6 +10,7 @@ export type SdkCommandIntent =
   | { type: "attackMove"; unitIds?: SdkUnitSelector; x: number; y: number }
   | { type: "focusFire"; unitIds?: SdkUnitSelector; targetId: string }
   | { type: "retreat"; unitIds?: SdkUnitSelector; x?: number; y?: number }
+  | { type: "retreatWounded"; unitIds?: SdkUnitSelector; hpRatio?: number; x?: number; y?: number }
   | { type: "mine"; unitIds?: SdkUnitSelector; resourceId?: string }
   | { type: "repair"; unitIds?: SdkUnitSelector; buildingId: string }
   | { type: "expand"; resourceId?: string; unitId?: string }
@@ -29,6 +30,10 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   if (intent.type === "retreat") {
     const point = intent.x !== undefined && intent.y !== undefined ? { x: intent.x, y: intent.y } : retreatPoint(snapshot, owner);
     return { type: "move", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: point.x, y: point.y };
+  }
+  if (intent.type === "retreatWounded") {
+    const point = intent.x !== undefined && intent.y !== undefined ? { x: intent.x, y: intent.y } : retreatPoint(snapshot, owner);
+    return { type: "move", unitIds: selectedWoundedUnitIds(snapshot, owner, intent.unitIds ?? "combat", intent.hpRatio ?? 0.5), x: point.x, y: point.y };
   }
   if (intent.type === "mine") return { type: "mine", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), resourceId: intent.resourceId ?? nearestResourceId(snapshot, owner) };
   if (intent.type === "repair") return { type: "repair", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), buildingId: intent.buildingId };
@@ -61,6 +66,14 @@ export function selectedUnitIds(snapshot: GameSnapshot, owner: PlayerId, selecto
   const units = snapshot.units.filter((unit) => unit.owner === owner && matchesSelector(unit, selector));
   if (units.length === 0) throw new Error(`No ${owner} units match selector ${selector}`);
   return units.map((unit) => unit.id);
+}
+
+function selectedWoundedUnitIds(snapshot: GameSnapshot, owner: PlayerId, selector: SdkUnitSelector, hpRatio: number): string[] {
+  if (!Number.isFinite(hpRatio) || hpRatio <= 0 || hpRatio > 1) throw new Error(`retreatWounded hpRatio must be within (0, 1], got ${hpRatio}`);
+  const selected = new Set(selectedUnitIds(snapshot, owner, selector));
+  const wounded = snapshot.units.filter((unit) => selected.has(unit.id) && unit.hp / unit.maxHp <= hpRatio);
+  if (wounded.length === 0) throw new Error(`No ${owner} wounded units match selector ${selector} at hp ratio ${hpRatio}`);
+  return wounded.map((unit) => unit.id);
 }
 
 export function controlledPoint(snapshot: GameSnapshot, owner: PlayerId) {
