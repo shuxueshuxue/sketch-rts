@@ -79,13 +79,13 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
   const adapter = options.adapter ?? "external";
-  const agents = (players: PlayerId[], options: { disableV2WorkerHarassment?: boolean } = {}) =>
+  const agents = (players: PlayerId[], options: { disableV2WorkerHarassment?: boolean; teams?: Partial<Record<PlayerId, string>> } = {}) =>
     Object.fromEntries(
       players.map((owner) => [
         owner,
         {
           adapter,
-          team: TEAMS[owner],
+          team: options.teams?.[owner] ?? TEAMS[owner],
           race: RACES[owner],
           version: owner === V2 || owner === V2B ? "v2" : "v1",
           versionLabel: owner === V2 || owner === V2B ? "v2" : "v1",
@@ -101,6 +101,14 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
     maxTicks,
     thinkInterval,
   });
+  const sideBalancedControlMatches = (mapId: MapId, index: number) => [
+    match(`${mapId} 1v1 control north`, mapId, [V2, V1A], index),
+    {
+      ...match(`${mapId} 1v1 control south`, mapId, [V2, V1A], index),
+      // @@@Side-balanced control - the same map must be checked from both start teams, otherwise spawn bias looks like AI strength.
+      agents: agents([V1A, V2], { disableV2WorkerHarassment: index % 2 === 1, teams: { [V2]: "south", [V1A]: "north" } }),
+    },
+  ];
   const input: BenchmarkInput<AiGameAgent> = {
     name: "AI Version Benchmark",
     evaluations: [
@@ -112,7 +120,7 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
       {
         name: "1v1 score control",
         tag: "melee",
-        matches: allocatedMaps.score.map((mapId, index) => match(`${mapId} 1v1 control`, mapId, [V2, V1A], index)),
+        matches: allocatedMaps.score.flatMap((mapId, index) => sideBalancedControlMatches(mapId, index)),
       },
       {
         name: "1v3 probe",
@@ -220,11 +228,16 @@ function summarizeEvaluation(evaluation: BenchmarkEvaluationReport, expectedWinn
 }
 
 export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluationReport, controlEvaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
-  const controlsByMapId = new Map(controlEvaluation.matches.map((match) => [match.setup.map.id, match]));
+  const controlsByMapId = new Map<string, BenchmarkEvaluationReport["matches"]>();
+  for (const match of controlEvaluation.matches) {
+    const controls = controlsByMapId.get(match.setup.map.id) ?? [];
+    controls.push(match);
+    controlsByMapId.set(match.setup.map.id, controls);
+  }
   const wins = scoreEvaluation.matches.filter((match) => {
-    const control = controlsByMapId.get(match.setup.map.id);
-    if (!control) throw new Error(`Missing 1v1 score control for ${match.setup.map.id}`);
-    return match.result.winnerTeam === "north" && control.result.winnerTeam === "north" && v2KilledEnemy(control) && opponentWasNotOnlyNeutralKilled(control);
+    const controls = controlsByMapId.get(match.setup.map.id);
+    if (!controls?.length) throw new Error(`Missing 1v1 score control for ${match.setup.map.id}`);
+    return match.result.winnerTeam === "north" && controls.some(v2WonControl);
   }).length;
   const losses = scoreEvaluation.matches.length - wins;
   return {
@@ -239,7 +252,7 @@ export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluat
 }
 
 export function summarizeMeleeControlEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
-  const wins = evaluation.matches.filter((match) => match.result.winnerTeam === "north" && v2KilledEnemy(match) && opponentWasNotOnlyNeutralKilled(match)).length;
+  const wins = evaluation.matches.filter(v2WonControl).length;
   const losses = evaluation.matches.length - wins;
   return {
     name: evaluation.name,
@@ -250,6 +263,10 @@ export function summarizeMeleeControlEvaluation(evaluation: BenchmarkEvaluationR
     successRate: evaluation.matches.length === 0 ? 0 : wins / evaluation.matches.length,
     matchCount: evaluation.matches.length,
   };
+}
+
+function v2WonControl(match: BenchmarkEvaluationReport["matches"][number]) {
+  return match.result.winner === V2 && v2KilledEnemy(match) && opponentWasNotOnlyNeutralKilled(match);
 }
 
 export function summarizeCombatEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {

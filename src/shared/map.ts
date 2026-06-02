@@ -413,7 +413,7 @@ function richAuthorMercenaryCamp(mapId: MapId, camp: MercenaryCamp): MercenaryCa
 
 function richAuthorUnit(mapId: MapId, unit: Unit): Unit {
   const point = richAuthorPoint(mapId, unit.x, unit.y);
-  return { ...unit, x: point.x, y: point.y };
+  return withUnitHome({ ...unit, x: point.x, y: point.y }, point.x, point.y);
 }
 
 function richAuthorPoint(mapId: MapId, x: number, y: number) {
@@ -583,7 +583,7 @@ function keepNeutralUnitsAwayFromPlayerStarts(units: Unit[], mapId: MapId, playe
       if (!moved) break;
     }
     // @@@start-safety - Map-authored objective density must not spawn neutral aggro inside a player's opening economy.
-    return { ...unit, x, y };
+    return withUnitHome({ ...unit, x, y }, x, y);
   });
 
   function nearestSafetyGap(point: { x: number; y: number }) {
@@ -870,7 +870,14 @@ function scaleMercenaryCamp(camp: MercenaryCamp): MercenaryCamp {
 }
 
 function scaleUnit(unit: Unit): Unit {
-  return { ...unit, x: scale(unit.x), y: scale(unit.y) };
+  const x = scale(unit.x);
+  const y = scale(unit.y);
+  return withUnitHome({ ...unit, x, y }, x, y);
+}
+
+function withUnitHome(unit: Unit, x: number, y: number): Unit {
+  if (unit.homeX === undefined || unit.homeY === undefined) return unit;
+  return { ...unit, homeX: x, homeY: y };
 }
 
 function startPositionFor(

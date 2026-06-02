@@ -42,12 +42,17 @@ describe("AI benchmark presets", () => {
     });
     expect(preset.input.evaluations[0]!.matches[0]!.agents.v1c).toBeUndefined();
     expect(preset.input.evaluations[0]!.matches.filter((match) => match.agents.v2?.disabledBehaviors?.includes("workerHarassment")).length).toBe(6);
-    expect(preset.input.evaluations[1]!.matches).toHaveLength(12);
-    expect(preset.input.evaluations[1]!.matches.map((match) => match.mapId)).toEqual(preset.input.evaluations[0]!.matches.map((match) => match.mapId));
+    expect(preset.input.evaluations[1]!.matches).toHaveLength(24);
+    expect(preset.input.evaluations[1]!.matches.map((match) => match.mapId)).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
     expect(preset.input.evaluations[1]!.matches[0]!.agents).toMatchObject({
       v2: { version: "v2", team: "north" },
       v1a: { version: "v1", team: "south" },
     });
+    expect(preset.input.evaluations[1]!.matches[1]!.agents).toMatchObject({
+      v2: { version: "v2", team: "south" },
+      v1a: { version: "v1", team: "north" },
+    });
+    expect(Object.keys(preset.input.evaluations[1]!.matches[1]!.agents)).toEqual(["v1a", "v2"]);
     expect(preset.input.evaluations[1]!.matches[0]!.agents.v1b).toBeUndefined();
     expect(preset.input.evaluations[2]!.matches).toHaveLength(3);
     expect(preset.input.evaluations[2]!.matches[0]!.agents).toMatchObject({
@@ -118,10 +123,10 @@ describe("AI benchmark presets", () => {
     const scoreControlMapIds = preset.input.evaluations[1]!.matches.map((match) => match.mapId);
     expect(preset.selection.mapIds).toHaveLength(18);
     expect(allMatchMapIds).toEqual(preset.selection.mapIds);
-    expect(scoreControlMapIds).toEqual(preset.input.evaluations[0]!.matches.map((match) => match.mapId));
+    expect(scoreControlMapIds).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
   });
 
-  it("requires each 1v2 score win to have a same-map 1v1 control win", () => {
+  it("requires each 1v2 score win to have a same-map side-balanced 1v1 control win", () => {
     const summary = summarizePairedScoreEvaluation(
       {
         name: "1v2 score",
@@ -153,21 +158,35 @@ describe("AI benchmark presets", () => {
         startedAt: "now",
         elapsedMs: 0,
         cpuMs: 0,
-        matchCount: 2,
+        matchCount: 4,
         matches: [
           {
-            name: "map-a 1v1 control",
+            name: "map-a 1v1 control north",
             elapsedMs: 0,
             cpuMs: 0,
             setup: { map: { id: "map-a" } } as never,
-            result: { winnerTeam: "south", players: { v2: { enemyUnitKills: 1 }, v1a: { unitsLost: 1, unitsKilledByNeutral: 0 } } } as never,
+            result: { winner: "v1a", winnerTeam: "south", players: { v2: { enemyUnitKills: 1 }, v1a: { unitsLost: 1, unitsKilledByNeutral: 0 } } } as never,
           },
           {
-            name: "map-b 1v1 control",
+            name: "map-a 1v1 control south",
+            elapsedMs: 0,
+            cpuMs: 0,
+            setup: { map: { id: "map-a" } } as never,
+            result: { winner: "v2", winnerTeam: "south", players: { v2: { enemyUnitKills: 7 }, v1a: { unitsLost: 7, unitsKilledByNeutral: 0 } } } as never,
+          },
+          {
+            name: "map-b 1v1 control north",
             elapsedMs: 0,
             cpuMs: 0,
             setup: { map: { id: "map-b" } } as never,
-            result: { winnerTeam: "north", players: { v2: { enemyUnitKills: 7 }, v1a: { unitsLost: 7, unitsKilledByNeutral: 0 } } } as never,
+            result: { winner: "v1a", winnerTeam: "south", players: { v2: { enemyUnitKills: 1 }, v1a: { unitsLost: 1, unitsKilledByNeutral: 0 } } } as never,
+          },
+          {
+            name: "map-b 1v1 control south",
+            elapsedMs: 0,
+            cpuMs: 0,
+            setup: { map: { id: "map-b" } } as never,
+            result: { winner: "v1a", winnerTeam: "north", players: { v2: { enemyUnitKills: 0 }, v1a: { unitsLost: 0, unitsKilledByNeutral: 0 } } } as never,
           },
         ],
       },
@@ -261,6 +280,7 @@ describe("AI benchmark presets", () => {
           cpuMs: 0,
           setup: {} as never,
           result: {
+            winner: "v2",
             winnerTeam: "north",
             players: {
               v2: { enemyUnitKills: 0 } as never,
@@ -277,9 +297,9 @@ describe("AI benchmark presets", () => {
   it("runs the AI benchmark preset through SDK parallel workers", async () => {
     const run = await runAiVersionBenchmarkParallel({ seed: "parallel-smoke", mapCount: 1, maxTicks: 1, workers: 2 });
 
-    expect(run.report.matchCount).toBe(12);
+    expect(run.report.matchCount).toBe(13);
     expect(run.scoreSummary).toMatchObject({ name: "paired 1v2 score", matchCount: 1 });
-    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 1 });
+    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 2 });
     expect(run.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
   });
 });

@@ -613,17 +613,17 @@ describe("SDK preset AI policy", () => {
       trace: { commands: true },
     });
 
-    const combatTrainingBeforeBankStall = report.commands.find(
+    const combatTrainingBeforeBankStall = report.commands.filter(
       (entry) =>
-        entry.tick >= 2_400 &&
-        entry.tick <= 2_700 &&
+        entry.tick >= 2_000 &&
+        entry.tick <= 3_000 &&
         entry.owner === "v2" &&
         entry.scriptId === "training" &&
         entry.command.type === "train" &&
         entry.command.unitKind !== "worker",
     );
 
-    expect(combatTrainingBeforeBankStall).toBeDefined();
+    expect(combatTrainingBeforeBankStall.length).toBeGreaterThanOrEqual(2);
   });
 
   it("v2 preserves worker gold for first combat recovery when its army has been wiped", () => {

@@ -163,6 +163,21 @@ describe("sketch RTS simulation", () => {
     expect(worker!.hp).toBe(worker!.maxHp);
   });
 
+  it("keeps neutral camp homes at their initialized map coordinates", () => {
+    const game = createGame("verdantCrossroads", { aiPlayers: [] });
+    const neutralUnits = game.units.filter((unit) => unit.owner === "neutral");
+
+    expect(neutralUnits.length).toBeGreaterThan(0);
+    for (const unit of neutralUnits) {
+      expect(unit.homeX, unit.id).toBeCloseTo(unit.x, 5);
+      expect(unit.homeY, unit.id).toBeCloseTo(unit.y, 5);
+    }
+
+    stepGame(game);
+
+    expect(game.units.filter((unit) => unit.owner === "neutral" && unit.order.type === "move")).toEqual([]);
+  });
+
   it("calls nearby neutral allies when a camp unit is damaged outside ordinary aggro range", () => {
     const game = sketchScene("neutral-assist-on-damage")
       .map("bareDuel")

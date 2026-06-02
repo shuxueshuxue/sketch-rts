@@ -23,7 +23,7 @@ describe("benchmark dashboard store", () => {
         kind: "ai-version-benchmark",
         seed: "store-second",
         mapPoolSize: 64,
-        matchCount: 40,
+        matchCount: 52,
       });
       expect(summaries[0]?.cpuMs).toBeGreaterThanOrEqual(0);
       expect(summaries[0]?.selectedRichScoreMapIds).toHaveLength(18);
@@ -34,9 +34,9 @@ describe("benchmark dashboard store", () => {
       expect(detail.report.cpuMs).toBeGreaterThanOrEqual(0);
       expect(detail.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
       expect(detail.report.evaluations.map((evaluation) => evaluation.tag)).toEqual(["melee", "melee", "melee", "melee", "combat", "combat"]);
-      expect(detail.report.evaluations.map((evaluation) => evaluation.matches.length)).toEqual([12, 12, 3, 3, 5, 5]);
+      expect(detail.report.evaluations.map((evaluation) => evaluation.matches.length)).toEqual([12, 24, 3, 3, 5, 5]);
       expect([detail.report.evaluations[0]!, ...detail.report.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(detail.selectedRichScoreMapIds);
-      expect(detail.report.evaluations[1]!.matches.map((match) => match.setup.map.id)).toEqual(detail.report.evaluations[0]!.matches.map((match) => match.setup.map.id));
+      expect(detail.report.evaluations[1]!.matches.map((match) => match.setup.map.id)).toEqual(detail.report.evaluations[0]!.matches.flatMap((match) => [match.setup.map.id, match.setup.map.id]));
       expect(detail.report.evaluations.slice(4).flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(Array.from({ length: 10 }, () => "combatArena"));
       await expect(readFile(path.join(benchmarkDashboardLogsDir({ rootDir }), `${second.id}.log`), "utf8")).resolves.toContain("cpu time:");
     } finally {
