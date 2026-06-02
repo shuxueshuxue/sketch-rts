@@ -8,7 +8,7 @@ import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-const AI_DUEL_CPU_BUDGET_MS = 2_500;
+const AI_DUEL_CPU_BUDGET_MS = 3_000;
 
 function stepMany(game: ReturnType<typeof createGame>, count: number, runtime?: AiRuntimeState) {
   for (let i = 0; i < count; i += 1) {

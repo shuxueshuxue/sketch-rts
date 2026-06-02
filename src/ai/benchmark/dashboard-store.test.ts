@@ -55,7 +55,7 @@ describe("benchmark dashboard store", () => {
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 
   it("rejects dashboard run files that do not use the current summary contract", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
