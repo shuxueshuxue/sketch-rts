@@ -1,10 +1,11 @@
-import { applyInteractivePlaytestCommand, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestSession, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
+import { applyInteractivePlaytestCommand, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
 import type { AiScript } from "./policy";
 import { recordAiMemoryForCommands } from "./policy/claims";
 import type { AiScriptVersion, PlayerId } from "../shared/types";
 import { snapshotGame } from "../shared/sim";
-import { createAiPolicyMemory } from "./memory";
+import { createAiPolicyMemory, type AiPolicyMemory, type AiPolicyUnitClaim } from "./memory";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
 
 export type AiInteractivePlaytestRuntimeOptions = {
   assistControlled?: boolean;
@@ -12,6 +13,24 @@ export type AiInteractivePlaytestRuntimeOptions = {
   scripts?: AiScript[];
   version?: AiScriptVersion;
   versions?: Partial<Record<PlayerId, AiScriptVersion>>;
+};
+
+export type AiInteractivePlaytestMemorySummary = {
+  jobs: { id: string; kind: string; createdGameSecond: number; updatedGameSecond: number }[];
+  claims: {
+    unitId: string;
+    kind: AiPolicyUnitClaim["kind"];
+    targetId: string;
+    x?: number;
+    y?: number;
+    sinceGameSecond: number;
+    expiresGameSecond: number;
+  }[];
+  strategicPlan?: AiPolicyMemory["strategicPlan"];
+};
+
+export type AiInteractivePlaytestSummary = InteractivePlaytestSummary & {
+  aiMemory: Record<PlayerId, AiInteractivePlaytestMemorySummary>;
 };
 
 export function createAiInteractivePlaytestRuntime(session: InteractivePlaytestSession, options: AiInteractivePlaytestRuntimeOptions = {}): AiRuntimeState {
@@ -44,10 +63,44 @@ export function stepAiInteractivePlaytestUntil(session: InteractivePlaytestSessi
   });
 }
 
+export function summarizeAiInteractivePlaytestSession(session: InteractivePlaytestSession, runtime: AiRuntimeState): AiInteractivePlaytestSummary {
+  return {
+    ...summarizeInteractivePlaytestSession(session),
+    aiMemory: Object.fromEntries(Object.entries(runtime.memories).map(([owner, memory]) => [owner, summarizeAiMemory(memory)])) as Record<PlayerId, AiInteractivePlaytestMemorySummary>,
+  };
+}
+
 function interactiveMemoryScriptId(commandType: InteractivePlaytestCommand["type"], issuedScriptId: string) {
   if (commandType === "creepCamp") return "objectiveControl";
   if (commandType === "expand") return "expansion";
   if (commandType === "retreat") return "skirmishPreservation";
   if (commandType === "hire") return "mercenary";
   return issuedScriptId;
+}
+
+function summarizeAiMemory(memory: AiPolicyMemory): AiInteractivePlaytestMemorySummary {
+  return {
+    jobs: memory.jobs.map((job) => ({
+      id: job.id,
+      kind: job.kind,
+      createdGameSecond: tickSecond(job.createdTick),
+      updatedGameSecond: tickSecond(job.updatedTick),
+    })),
+    claims: Object.entries(memory.unitClaims)
+      .map(([unitId, claim]) => ({
+        unitId,
+        kind: claim.kind,
+        targetId: claim.targetId,
+        ...(claim.x === undefined ? {} : { x: claim.x }),
+        ...(claim.y === undefined ? {} : { y: claim.y }),
+        sinceGameSecond: tickSecond(claim.sinceTick),
+        expiresGameSecond: tickSecond(claim.expiresTick),
+      }))
+      .sort((a, b) => a.unitId.localeCompare(b.unitId)),
+    ...(memory.strategicPlan ? { strategicPlan: memory.strategicPlan } : {}),
+  };
+}
+
+function tickSecond(tick: number) {
+  return tick / SIM_TICKS_PER_SECOND;
 }

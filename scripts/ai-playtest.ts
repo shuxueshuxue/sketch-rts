@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
-import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "../src/ai/playtest";
+import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
+import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { AiScriptVersion, BuildingKind, GameCommand, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
@@ -37,7 +37,7 @@ if (verb === "new") {
   });
   const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion } });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
-  printJson(summarizeInteractivePlaytestSession(session));
+  printJson(summarizeAiInteractivePlaytestSession(session, runtime));
   process.exit(0);
 }
 
@@ -46,7 +46,7 @@ const loaded = loadPlaytestFile(file);
 const session = restoreInteractivePlaytestSession(loaded.session);
 
 if (verb === "status") {
-  printJson(summarizeInteractivePlaytestSession(session));
+  printJson(summarizeAiInteractivePlaytestSession(session, loaded.runtime));
   process.exit(0);
 }
 
@@ -58,21 +58,21 @@ if (verb === "memory") {
 if (verb === "step") {
   stepAiInteractivePlaytestSession(session, loaded.runtime, numberFlag(args, "ticks", 45));
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
-  printJson(summarizeInteractivePlaytestSession(session));
+  printJson(summarizeAiInteractivePlaytestSession(session, loaded.runtime));
   process.exit(0);
 }
 
 if (verb === "step-until") {
   const result = stepAiInteractivePlaytestUntil(session, loaded.runtime, conditionFromArgs(args), { maxTicks: numberFlag(args, "max-ticks", 240) });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
-  printJson({ result, summary: summarizeInteractivePlaytestSession(session) });
+  printJson({ result, summary: summarizeAiInteractivePlaytestSession(session, loaded.runtime) });
   process.exit(result.conditionMet ? 0 : 1);
 }
 
 const command = commandFromArgs(verb, args);
 applyAiInteractivePlaytestCommand(session, loaded.runtime, command);
 savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
-printJson(summarizeInteractivePlaytestSession(session));
+printJson(summarizeAiInteractivePlaytestSession(session, loaded.runtime));
 
 function commandFromArgs(verb: string, args: string[]): InteractivePlaytestCommand {
   if (verb === "raw") return { type: "raw", owner: flag(args, "owner"), command: JSON.parse(requiredFlag(args, "json")) as GameCommand };
