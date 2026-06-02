@@ -268,7 +268,9 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
 
 function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (resources(snapshot).length <= activePlayerIds(snapshot).length) return undefined;
-  if (missingCombatProductionKind(snapshot, owner) && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
+  const missingCombatProduction = missingCombatProductionKind(snapshot, owner);
+  if (missingCombatProduction && failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options)) return undefined;
+  if (missingCombatProduction && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return undefined;
   if (activeMiningBaseCount(snapshot, owner) >= expansionBaseTarget(options)) return undefined;
   if (options.version === "v2" && activeMiningBaseCount(snapshot, owner) >= 2 && combatUnits(snapshot, owner).length < catchUpExpansionMinimumCombat(snapshot, owner, options)) return undefined;
@@ -283,7 +285,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
     return undefined;
   }
 
-  if (missingCombatProductionKind(snapshot, owner) && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
+  if (missingCombatProduction && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
   const player = playerState(snapshot, owner);
   if (player.gold < BUILDING_DEFS.townHall.cost) return undefined;
   if (enemyPressure(snapshot, owner, mine, 360, options)) return undefined;
@@ -317,6 +319,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (
     options.version === "v2" &&
     missingProduction &&
+    !failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) &&
     hasCoreProduction(snapshot, owner) &&
     completeBuildings(snapshot, owner, "townHall").length === 1 &&
     combatUnits(snapshot, owner).length >= catchUpExpansionMinimumCombat(snapshot, owner, options)
@@ -379,7 +382,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   const player = playerState(snapshot, owner);
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS[missing].cost) return undefined;
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + BUILDING_DEFS[missing].cost) return undefined;
-  if (shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS[missing].cost) return undefined;
+  if (shouldReserveForExpansion(snapshot, owner, options) && !canSpendExpansionRetryBankOnCoreProduction(snapshot, owner, missing, options) && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS[missing].cost) return undefined;
   const base = mainBase(snapshot, owner);
   const builder = availableBuilder(snapshot, owner, base);
   if (!builder) return undefined;
@@ -722,6 +725,18 @@ function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: Pl
   if (!hasCoreProduction(snapshot, owner)) return false;
   // @@@expansion-reserve-training - A one-base army under direct pressure must not idle production just to finish saving for the first natural.
   return healingWellPressure(snapshot, owner, mainBase(snapshot, owner), options);
+}
+
+function canSpendExpansionRetryBankOnCoreProduction(snapshot: GameSnapshot, owner: PlayerId, missing: ProductionBuildingKind, options: PresetAiPolicyOptions) {
+  return failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) && missingCombatProductionKind(snapshot, owner) === missing;
+}
+
+function failedExpansionAttemptBeforeCoreProduction(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return false;
+  if (options.memory?.strategicPlan?.expansionAttemptTick === undefined) return false;
+  if (!missingCombatProductionKind(snapshot, owner)) return false;
+  if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  return !buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete);
 }
 
 function shouldHoldFirstExpansionBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, spendCost: number, availableGold = playerState(snapshot, owner).gold) {

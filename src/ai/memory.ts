@@ -22,6 +22,7 @@ export type AiStrategicPlan = {
   focusTargetOwner?: PlayerId;
   focusTargetSinceTick?: number;
   focusTargetUpdatedTick?: number;
+  expansionAttemptTick?: number;
 };
 
 export type AiPolicyMemory = {

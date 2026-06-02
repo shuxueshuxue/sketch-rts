@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
+import { runAiGame } from "./game-runner";
 import { createAiRuntime, runPresetAiRuntime } from "./runtime";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, createAiPolicyMemory, createAiTelemetry, planAiCommandEntriesFromScripts, planAiCommandsFromScripts, planPresetAiCommandEntries, planPresetAiCommands } from "./policy";
@@ -3926,6 +3927,29 @@ describe("SDK preset AI policy", () => {
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "research");
 
     expect(command).toMatchObject({ type: "research", buildingId: "tech-reserve-barracks", upgradeKind: "weaponTraining" });
+  });
+
+  it("v2 builds cinderHeath stables before spending on a catch-up expansion", () => {
+    const report = runAiGame({
+      name: "cinderHeath catch-up expansion production timing",
+      mapId: "cinderHeath",
+      agents: {
+        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2", disabledBehaviors: ["workerHarassment"] },
+        v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+      },
+      maxTicks: 14_000,
+      thinkInterval: 45,
+      trace: { commands: true },
+    });
+
+    const v2Builds = report.commands.filter((entry) => entry.owner === "v2" && entry.command.type === "build");
+    const stablesTick = v2Builds.find((entry) => entry.command.type === "build" && entry.command.buildingKind === "stables")?.tick;
+    const expansionTicks = v2Builds.filter((entry) => entry.command.type === "build" && entry.command.buildingKind === "townHall").map((entry) => entry.tick);
+
+    expect(stablesTick).toBeDefined();
+    expect(expansionTicks.length).toBeGreaterThan(0);
+    const catchUpExpansionTick = expansionTicks[1];
+    if (catchUpExpansionTick !== undefined) expect(stablesTick!).toBeLessThan(catchUpExpansionTick);
   });
 
   it("v2 takes weapon level two before a third town hall when its two-base army needs a timing upgrade", () => {

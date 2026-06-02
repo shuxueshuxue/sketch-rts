@@ -25,6 +25,10 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
 export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory) {
   const query = createSnapshotQuery(snapshot);
   for (const command of commands) {
+    if ((scriptId === "expansion" || scriptId === "economicCatchUp") && command.type === "build" && command.buildingKind === "townHall") {
+      memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
+      continue;
+    }
     if (command.type === "hire") {
       clearUnitClaimsForTarget(memory, command.campId);
       continue;
