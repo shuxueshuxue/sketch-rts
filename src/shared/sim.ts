@@ -900,7 +900,7 @@ function activateItem(
       unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
       unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL_DURATION });
     });
-    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION);
+    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION, { radius: 280 });
     item.cooldownRemaining = GUARDIAN_SCROLL_COOLDOWN;
     return;
   }
@@ -908,6 +908,7 @@ function activateItem(
     if (carrier.owner === "neutral") return;
     carrier.xp += 160;
     applyXpLevel(game, carrier);
+    addEffect(game, "experienceBurst", carrier.x, carrier.y, 48);
     game.items = game.items.filter((candidate) => candidate.id !== item.id);
   }
 }

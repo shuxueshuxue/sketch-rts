@@ -1004,6 +1004,7 @@ describe("sketch RTS simulation", () => {
 
     expect(guarded.hp).toBe(guarded.maxHp);
     expect(guarded.effects.some((effect) => effect.type === "guardian")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "guardianField" && effect.radius === 280)).toBe(true);
 
     stepMany(game, seconds(8.5));
     attacker.cooldown = 0;
@@ -1011,6 +1012,21 @@ describe("sketch RTS simulation", () => {
     stepMany(game, 2);
 
     expect(guarded.hp).toBeLessThan(guarded.maxHp);
+  });
+
+  it("shows an experience burst when a carried experience book is used", () => {
+    const game = sketchScene("experience-book-visual")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .unit("player", "footman", 1500, 1500, { id: "book-carrier" })
+      .item("experience-book", "experienceBook", 0, 0, { carrierId: "book-carrier" })
+      .build()
+      .createGame();
+
+    issueCommand(game, { type: "useItem", unitId: "book-carrier", itemId: "experience-book" });
+
+    expect(game.effects.some((effect) => effect.type === "experienceBurst" && effect.x === 1500 && effect.y === 1500)).toBe(true);
   });
 
   it("storm staff creates sustained area damage instead of only a single burst", () => {

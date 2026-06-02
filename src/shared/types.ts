@@ -44,7 +44,23 @@ export type UnitStatusEffect = {
 
 export type WorldEffect = {
   id: string;
-  type: "heal" | "summon" | "curse" | "move" | "mine" | "attack" | "attackTarget" | "build" | "projectile" | "melee" | "hit" | "chainLightning" | "guardianField" | "flameBurn" | "storm";
+  type:
+    | "heal"
+    | "summon"
+    | "curse"
+    | "move"
+    | "mine"
+    | "attack"
+    | "attackTarget"
+    | "build"
+    | "projectile"
+    | "melee"
+    | "hit"
+    | "chainLightning"
+    | "guardianField"
+    | "experienceBurst"
+    | "flameBurn"
+    | "storm";
   x: number;
   y: number;
   remaining: number;
