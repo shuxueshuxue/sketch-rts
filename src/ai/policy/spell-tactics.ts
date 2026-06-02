@@ -14,7 +14,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     if (abilities.includes("heal")) {
       const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);
       if (target) {
-        commands.push({ type: "cast", unitId: caster.id, ability: "heal", targetId: target.id });
+        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "heal", targetId: target.id }, options));
         continue;
       }
     }
@@ -22,13 +22,13 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       const target = nearestEnemyUnit(snapshot, owner, caster, 240, options);
       const hasSpirit = units(snapshot, owner).some((unit) => unit.kind === "spirit" && distance(unit, caster) < 320);
       if (target && !hasSpirit) {
-        commands.push({ type: "cast", unitId: caster.id, ability: "summon", x: caster.x + 54, y: caster.y + 28 });
+        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "summon", x: caster.x + 54, y: caster.y + 28 }, options));
         continue;
       }
     }
     if (abilities.includes("curse")) {
       const target = nearestEnemyUnit(snapshot, owner, caster, 260, options);
-      if (target && !target.effects.some((effect) => effect.type === "curse")) commands.push({ type: "cast", unitId: caster.id, ability: "curse", targetId: target.id });
+      if (target && !target.effects.some((effect) => effect.type === "curse")) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "curse", targetId: target.id }, options));
     }
   }
   return commands;

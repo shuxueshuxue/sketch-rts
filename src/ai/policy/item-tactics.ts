@@ -1,5 +1,6 @@
 import { MAX_UPGRADE_LEVEL, XP_STAR_THRESHOLDS } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
+import { resolveAiCommandIntent } from "./commands";
 import { carriedItemsFor, combatUnits, enemyBuildingsNear, groundItems, hostileUnitsNear, items, units } from "./snapshot";
 import { distance, nearestEntities, nearestEntity } from "./spatial";
 import type { PresetAiPolicyOptions } from "./types";
@@ -20,28 +21,28 @@ export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, option
   for (const item of nearestEntities(groundItems(snapshot), mainBase(snapshot, owner))) {
     const carrier = bestItemCarrier(snapshot, owner, item, options);
     if (!carrier) continue;
-    commands.push({ type: "pickupItem", unitId: carrier.id, itemId: item.id });
+    commands.push(resolveAiCommandIntent(snapshot, owner, { type: "pickupItem", unitId: carrier.id, itemId: item.id }, options));
     if (commands.length >= Math.max(1, Math.min(2, ownCombat.length))) break;
   }
   return commands;
 }
 
 function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions): GameCommand | undefined {
-  if (item.kind === "experienceBook") return { type: "useItem", unitId: carrier.id, itemId: item.id };
+  if (item.kind === "experienceBook") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options);
   if (item.kind === "breachCharge") {
     const target = breachChargeTarget(snapshot, owner, carrier, options);
-    return target ? { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id } : undefined;
+    return target ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options) : undefined;
   }
   if (item.kind === "guardianScroll") {
     const allies = combatUnits(snapshot, owner).filter((unit) => distance(unit, carrier) <= 260);
     const enemies = hostileUnitsNear(snapshot, owner, carrier, 300, options.teams);
-    return allies.length >= 4 && enemies.length >= 3 ? { type: "useItem", unitId: carrier.id, itemId: item.id } : undefined;
+    return allies.length >= 4 && enemies.length >= 3 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
   const range = item.kind === "stormStaff" ? 320 : 280;
   const target = nearestEntity(hostileUnitsNear(snapshot, owner, carrier, range, options.teams), carrier);
   if (!target) return undefined;
-  if (item.kind === "stormStaff") return { type: "useItem", unitId: carrier.id, itemId: item.id, x: target.x, y: target.y };
-  if (item.kind === "lightningRod") return { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id };
+  if (item.kind === "stormStaff") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, x: target.x, y: target.y }, options);
+  if (item.kind === "lightningRod") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options);
   return undefined;
 }
 

@@ -41,6 +41,95 @@ describe("SDK command intents", () => {
     });
   });
 
+  it("resolves economy and tech intents through the shared SDK command surface", () => {
+    const game = createGame("combatArena", {
+      players: ["v2"],
+      teams: { v2: "north" },
+      scenario: {
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        replaceDefaultResources: true,
+        replaceDefaultMercenaryCamps: true,
+        addUnits: [{ id: "v2-worker", owner: "v2", kind: "worker", x: 260, y: 280 }],
+        addBuildings: [
+          { id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 },
+          { id: "v2-barracks", owner: "v2", kind: "barracks", x: 330, y: 260 },
+        ],
+        addResources: [{ id: "gold-v2-main", kind: "goldMine", x: 260, y: 260, amount: 6000 }],
+        addMercenaryCamps: [{ id: "camp-main", x: 420, y: 300, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: 90, cooldownRemaining: 0 }],
+      },
+    });
+    const snapshot = snapshotGame(game);
+
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "mine", unitIds: ["v2-worker"], resourceId: "gold-v2-main" })).toEqual({
+      type: "mine",
+      unitIds: ["v2-worker"],
+      resourceId: "gold-v2-main",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "repair", unitIds: ["v2-worker"], buildingId: "v2-main" })).toEqual({
+      type: "repair",
+      unitIds: ["v2-worker"],
+      buildingId: "v2-main",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "build", unitId: "v2-worker", buildingKind: "farm", x: 320, y: 320 })).toEqual({
+      type: "build",
+      unitId: "v2-worker",
+      buildingKind: "farm",
+      x: 320,
+      y: 320,
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "train", buildingId: "v2-barracks", unitKind: "footman" })).toEqual({
+      type: "train",
+      buildingId: "v2-barracks",
+      unitKind: "footman",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "research", buildingId: "v2-barracks", upgradeKind: "weaponTraining" })).toEqual({
+      type: "research",
+      buildingId: "v2-barracks",
+      upgradeKind: "weaponTraining",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "hire", campId: "camp-main" })).toEqual({
+      type: "hire",
+      campId: "camp-main",
+    });
+  });
+
+  it("resolves item and ability intents through the shared SDK command surface", () => {
+    const game = createGame("combatArena", {
+      players: ["v2"],
+      teams: { v2: "north" },
+      scenario: {
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        replaceDefaultResources: true,
+        addUnits: [
+          { id: "v2-priest", owner: "v2", kind: "priest", x: 260, y: 280 },
+          { id: "v2-footman", owner: "v2", kind: "footman", x: 300, y: 280 },
+        ],
+        addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 }],
+        addItems: [{ id: "book", kind: "experienceBook", x: 300, y: 280, cooldownRemaining: 0 }],
+      },
+    });
+    const snapshot = snapshotGame(game);
+
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "pickupItem", unitId: "v2-footman", itemId: "book" })).toEqual({
+      type: "pickupItem",
+      unitId: "v2-footman",
+      itemId: "book",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "cast", unitId: "v2-priest", ability: "heal", targetId: "v2-footman" })).toEqual({
+      type: "cast",
+      unitId: "v2-priest",
+      ability: "heal",
+      targetId: "v2-footman",
+    });
+    expect(resolveSdkCommandIntent(snapshot, "v2", { type: "useItem", unitId: "v2-footman", itemId: "book" })).toEqual({
+      type: "useItem",
+      unitId: "v2-footman",
+      itemId: "book",
+    });
+  });
+
   it("fails loudly when selector intent resolves to no units", () => {
     const game = createGame("combatArena", {
       players: ["v2"],

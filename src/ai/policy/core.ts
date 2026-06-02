@@ -10,6 +10,7 @@ import {
 } from "./base-defense-model";
 import { defensiveRallyPoint, healingWellPointFor, safeMainBuildPoint, towerPointFor } from "./build-layout";
 import { activeUnitClaim } from "./claims";
+import { resolveAiCommandIntent } from "./commands";
 import { armyPower } from "./combat-math";
 import {
   activeMiningBaseCount,
@@ -177,7 +178,7 @@ function groupAttackMoveMinimum(scriptId: string, snapshot: GameSnapshot, owner:
   return 1;
 }
 
-function planEconomy(snapshot: GameSnapshot, owner: PlayerId): GameCommand | undefined {
+function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !nearOwnIncompleteBuilding(snapshot, owner, unit));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
@@ -193,7 +194,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId): GameCommand | und
       assignableWorkers.filter((candidate) => candidate.order.type !== "mine" || candidate.order.resourceId !== mine.id),
       base,
     );
-    if (worker) return { type: "mine", unitIds: [worker.id], resourceId: mine.id };
+    if (worker) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: [worker.id], resourceId: mine.id }, options);
   }
 
   for (const base of bases) {
@@ -206,21 +207,21 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId): GameCommand | und
       base,
     );
     const selected = candidates.slice(0, 5 - assigned);
-    if (selected.length > 0) return { type: "mine", unitIds: selected.map((worker) => worker.id), resourceId: mine.id };
+    if (selected.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: selected.map((worker) => worker.id), resourceId: mine.id }, options);
   }
 
   if (idleWorkers.length === 0) return undefined;
   const mine = nearestResource(activeResources(snapshot), mainBase(snapshot, owner));
   if (!mine) return undefined;
-  return { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: mine.id };
+  return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: mine.id }, options);
 }
 
-function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId): GameCommand | undefined {
+function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const stalled = buildings(snapshot, owner).find((building) => !building.complete && !hasAssignedBuilder(snapshot, owner, building));
   if (!stalled) return undefined;
   const builder = availableBuilder(snapshot, owner, stalled);
   if (!builder) return undefined;
-  return { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y }, options);
 }
 
 function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -239,7 +240,7 @@ function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   );
   if (!worker) return undefined;
   // @@@repair-worker-is-not-miner-cap - Five miners saturate a mine; a sixth worker can still be the right repair/builder unit.
-  return { type: "repair", unitIds: [worker.id], buildingId: damagedTower.id };
+  return resolveAiCommandIntent(snapshot, owner, { type: "repair", unitIds: [worker.id], buildingId: damagedTower.id }, options);
 }
 
 function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -256,7 +257,7 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   const builder = availableBuilder(snapshot, owner, base);
   if (!builder) return undefined;
   const point = safeMainBuildPoint(snapshot, owner, farms.length + 4);
-  return { type: "build", unitId: builder.id, buildingKind: "farm", x: point.x, y: point.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "farm", x: point.x, y: point.y }, options);
 }
 
 function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -274,7 +275,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const nearbyNeutral = neutralUnitsNear(snapshot, mine, 280).length > 0;
   if (nearbyNeutral) {
     const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || (options.version === "v2" && unit.order.type === "attackMove"));
-    if (soldiers.length >= 4 && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y };
+    if (soldiers.length >= 4 && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
     return undefined;
   }
 
@@ -285,7 +286,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const builder = availableBuilder(snapshot, owner, mine);
   if (!builder) return undefined;
   const offset = expansionOffset(snapshot, owner);
-  return { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
 }
 
 function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -304,7 +305,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
       const point = towerPointFor(snapshot, owner, main, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
       recordBehavior(options, "economicCatchUp", "catchUpTowers");
-      return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y };
+      return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
     }
   }
   const missingProduction = missingCombatProductionKind(snapshot, owner);
@@ -324,7 +325,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
         const offset = expansionOffset(snapshot, owner);
         recordBehavior(options, "economicCatchUp", "attempts");
         recordBehavior(options, "economicCatchUp", "catchUpExpansions");
-        return { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y };
+        return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
       }
     }
   }
@@ -338,7 +339,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
       const point = towerPointFor(snapshot, owner, exposedExpansion, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
       recordBehavior(options, "economicCatchUp", "catchUpTowers");
-      return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y };
+      return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
     }
   }
 
@@ -360,7 +361,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
       const point = towerPointFor(snapshot, owner, main, undefined);
       recordBehavior(options, "economicCatchUp", "attempts");
       recordBehavior(options, "economicCatchUp", "catchUpTowers");
-      return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y };
+      return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
     }
   }
 
@@ -381,7 +382,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   if (!builder) return undefined;
   const index = aiPlaybook().productionPlan.indexOf(missing);
   const point = safeMainBuildPoint(snapshot, owner, index);
-  return { type: "build", unitId: builder.id, buildingKind: missing, x: point.x, y: point.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: missing, x: point.x, y: point.y }, options);
 }
 
 function shouldTrainBeforeThirdProduction(snapshot: GameSnapshot, owner: PlayerId, missing: ProductionBuildingKind, options: PresetAiPolicyOptions) {
@@ -419,7 +420,7 @@ function planEmergencyDefense(snapshot: GameSnapshot, owner: PlayerId, options: 
   const builder = availableBuilder(snapshot, owner, main);
   if (!builder) return undefined;
   const point = towerPointFor(snapshot, owner, main as Building, threat);
-  return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
 }
 
 function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -446,7 +447,7 @@ function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPoli
   if ((reserveClearedExpansion || !isV2PriorityWeaponTiming(snapshot, owner, upgradeKind, options)) && shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + level.cost) return undefined;
   const building = researchBuilding(snapshot, owner, upgradeKind);
   if (!building) return undefined;
-  return { type: "research", buildingId: building.id, upgradeKind };
+  return resolveAiCommandIntent(snapshot, owner, { type: "research", buildingId: building.id, upgradeKind }, options);
 }
 
 function planEarlyTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -535,7 +536,7 @@ function planDefense(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const builder = availableBuilder(snapshot, owner, base);
     if (!builder) continue;
     const point = towerPointFor(snapshot, owner, base, threat);
-    return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y };
+    return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
   }
   return undefined;
 }
@@ -564,7 +565,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const builder = availableBuilder(snapshot, owner, main);
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
-  return { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y }, options);
 }
 
 function planMercenary(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -582,7 +583,7 @@ function planMercenary(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const camp = candidates.sort((a, b) => mercenaryCampScore(b, snapshot, owner, options) - mercenaryCampScore(a, snapshot, owner, options))[0];
   if (!camp) return undefined;
   if (friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length === 0) return moveToMercenaryCamp(snapshot, owner, camp, options);
-  return canHireMercenary(snapshot, owner, camp, options) ? { type: "hire", campId: camp.id } : undefined;
+  return canHireMercenary(snapshot, owner, camp, options) ? resolveAiCommandIntent(snapshot, owner, { type: "hire", campId: camp.id }, options) : undefined;
 }
 
 function moveToMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -592,7 +593,7 @@ function moveToMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: Merc
   const movers = staleAttackMovers(squad, camp);
   const candidates = movers.length > 0 ? movers : squad.filter((unit) => unit.order.type === "attackMove" && distance(unit.order, camp) <= ATTACK_MOVE_REDIRECT_DISTANCE);
   const claimants = options.version === "v2" ? nearestEntities(candidates, camp).slice(0, Math.min(3, candidates.length)) : candidates;
-  return claimants.length > 0 ? { type: "attackMove", unitIds: claimants.map((unit) => unit.id), x: camp.x, y: camp.y } : undefined;
+  return claimants.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: claimants.map((unit) => unit.id), x: camp.x, y: camp.y }, options) : undefined;
 }
 
 function shouldSpendExpansionReserveOnControlledMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {
@@ -726,7 +727,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (reserveSensitive && reserveExpansion && !canSpendExpansionReserveOnTraining && remainingGold < BUILDING_DEFS.townHall.cost + cost) continue;
     if (reserveSensitive && reserveDuplicateProduction && remainingGold < BUILDING_DEFS[reserveDuplicateProduction].cost + cost) continue;
     if (remainingGold < cost || reservedSupply + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) continue;
-    commands.push({ type: "train", buildingId: building.id, unitKind });
+    commands.push(resolveAiCommandIntent(snapshot, owner, { type: "train", buildingId: building.id, unitKind }, options));
     remainingGold -= cost;
     reservedSupply += UNIT_DEFS[unitKind].supplyUsed;
     if (unitKind === "worker") queuedWorkers += 1;
@@ -836,7 +837,7 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   const target = mercenaryTarget ? { point: mercenaryTarget.camp } : neutralCampObjective(snapshot, owner, army, anchor, maxObjectiveDistance, requiredPowerRatio, options);
   if (!target) return undefined;
   const stale = staleAttackMovers(army, target.point);
-  return stale.length >= minimumArmy ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.point.x, y: target.point.y } : undefined;
+  return stale.length >= minimumArmy ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.point.x, y: target.point.y }, options) : undefined;
 }
 
 function objectiveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
@@ -979,7 +980,7 @@ function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (!target) return undefined;
   if (expansionDenialRouteCovered(snapshot, owner, soldiers, target, options)) return undefined;
   const stale = staleAttackMovers(soldiers, target);
-  return stale.length > 0 ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.x, y: target.y } : undefined;
+  return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.x, y: target.y }, options) : undefined;
 }
 
 function ownClearNaturalNeedsClaiming(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -1080,7 +1081,7 @@ function planExpansionRegroup(snapshot: GameSnapshot, owner: PlayerId, options: 
     if (!regroupBase) continue;
     recordBehavior(options, "expansionRegroup", "attempts");
     recordBehavior(options, "expansionRegroup", "expansionRegroupRetreats");
-    return { type: "move", unitIds: allies.map((unit) => unit.id), x: regroupBase.x, y: regroupBase.y };
+    return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: allies.map((unit) => unit.id), x: regroupBase.x, y: regroupBase.y }, options);
   }
   return undefined;
 }
@@ -1123,7 +1124,7 @@ function workerPressureCommand(snapshot: GameSnapshot, owner: PlayerId, options:
   }
 
   // @@@worker-pressure-job - Three units hitting one worker line is the first durable 1v2 plan that beat raw benchmark probes.
-  return { type: "attack", unitIds: soldiers.map((unit) => unit.id), targetId: target.id };
+  return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: soldiers.map((unit) => unit.id), targetId: target.id }, options);
 }
 
 function workerPressureTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions): Unit | undefined {
@@ -1189,12 +1190,12 @@ function planEarlyHarassment(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (enemyDefenders.length > harassers.length + 1) {
     recordBehavior(options, "earlyHarassment", "attempts");
     recordBehavior(options, "earlyHarassment", "retreatCommands");
-    return { type: "move", unitIds: harassers.map((unit) => unit.id), x: ownBase.x, y: ownBase.y };
+    return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: harassers.map((unit) => unit.id), x: ownBase.x, y: ownBase.y }, options);
   }
   if (enemyDefenders.length <= harassers.length) {
     recordBehavior(options, "earlyHarassment", "attempts");
     recordBehavior(options, "earlyHarassment", "workerRaidCommands");
-    return { type: "attack", unitIds: harassers.map((unit) => unit.id), targetId: exposedWorker.id };
+    return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: harassers.map((unit) => unit.id), targetId: exposedWorker.id }, options);
   }
   return undefined;
 }
@@ -1210,7 +1211,7 @@ function planDesperateWorkerFight(snapshot: GameSnapshot, owner: PlayerId, optio
       .slice(0, 3);
     const target = nearestEntity(closeEnemies, main);
     // @@@desperate-worker-fight - A towerless close 1v2 base hit needs a few workers in the fight before the hall is already dying.
-    if (workers.length >= 2 && target) return { type: "attack", unitIds: workers.map((unit) => unit.id), targetId: target.id };
+    if (workers.length >= 2 && target) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options);
   }
   return undefined;
 }
@@ -1229,17 +1230,17 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
   if (workers.length < 2) return undefined;
   if (options.version === "v2" && mainHallNeedsDesperateWorkerFight(snapshot, owner, main, ownCombat)) {
     const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
-    return target ? { type: "attack", unitIds: workers.map((unit) => unit.id), targetId: target.id } : undefined;
+    return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
   }
   if (mainWorkerEvacuationThreat(snapshot, owner, options)) {
     const preservedMinerIds = saturatedMineWorkerIds(snapshot, owner, options);
     const evacuatingWorkers = workers.filter((worker) => !preservedMinerIds.has(worker.id));
     if (evacuatingWorkers.length < 2) return undefined;
     const point = workerEvacuationPoint(snapshot, main, averagePoint(enemies));
-    return { type: "move", unitIds: evacuatingWorkers.map((unit) => unit.id), x: point.x, y: point.y };
+    return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: evacuatingWorkers.map((unit) => unit.id), x: point.x, y: point.y }, options);
   }
   const target = enemies.sort((a, b) => mainDefenseTargetScore(b, main, snapshot, owner) - mainDefenseTargetScore(a, main, snapshot, owner))[0];
-  return target ? { type: "attack", unitIds: workers.map((unit) => unit.id), targetId: target.id } : undefined;
+  return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: workers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
 function saturatedMineWorkerIds(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -1306,7 +1307,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
   const movable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
 
-  if (options.policyMode === "combat") return planCombatAttackWave(movable, enemyArmy);
+  if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
 
   const focus = mainDefenseFocusCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (focus) return focus;
@@ -1319,7 +1320,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOwner);
   if (closeout) {
     const stale = staleAttackMovers(movable, closeout);
-    if (stale.length > 0) return { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: closeout.x, y: closeout.y };
+    if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: closeout.x, y: closeout.y }, options);
   }
 
   const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
@@ -1329,24 +1330,24 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     if (options.version === "v2" && !isMainPressure && armyPower(localEnemies) > armyPower(soldiers) * 1.25) {
       const rally = defensiveRallyPoint(snapshot, owner);
       const stale = soldiers.filter((unit) => distance(unit, rally) > 220);
-      return stale.length > 0 ? { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y } : undefined;
+      return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options) : undefined;
     }
     if (options.version === "v2" && isMainPressure && armyPower(localEnemies) > armyPower(soldiers) * 1.15) {
       const rally = defensiveRallyPoint(snapshot, owner);
       const nearest = nearestEntity(localEnemies, rally);
       if (nearest && distance(nearest, rally) > AUTO_ACQUIRE_RANGE + 30) {
         const stale = soldiers.filter((unit) => distance(unit, rally) > 220);
-        if (stale.length > 0) return { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y };
+        if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options);
         return undefined;
       }
     }
     const stale = staleAttackMovers(soldiers, pressuredBuilding);
-    return stale.length > 0 ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: pressuredBuilding.x, y: pressuredBuilding.y } : undefined;
+    return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: pressuredBuilding.x, y: pressuredBuilding.y }, options) : undefined;
   }
 
   const mainHold = mainDefenseHold(snapshot, owner, soldiers, enemyArmy, options);
   if (mainHold) {
-    return mainHold.stale.length > 0 ? { type: "move", unitIds: mainHold.stale.map((unit) => unit.id), x: mainHold.rally.x, y: mainHold.rally.y } : undefined;
+    return mainHold.stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: mainHold.stale.map((unit) => unit.id), x: mainHold.rally.x, y: mainHold.rally.y }, options) : undefined;
   }
 
   if (movable.length === 0) return undefined;
@@ -1363,7 +1364,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     neutralUnitsNear(snapshot, expansionMine, 280).length > 0;
   if (needsExpansionClear) {
     const stale = staleAttackMovers(movable, expansionMine);
-    return soldiers.length >= 4 && stale.length > 0 ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: expansionMine.x, y: expansionMine.y } : undefined;
+    return soldiers.length >= 4 && stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: expansionMine.x, y: expansionMine.y }, options) : undefined;
   }
 
   if (options.version !== "v2" && resources(snapshot).length > activePlayerIds(snapshot).length && !hasEstablishedExpansion(snapshot, owner)) return undefined;
@@ -1373,26 +1374,26 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const smallPressureAllowed = !outnumberedV2 && soldiers.length > 0 && enemyArmy.length <= 2;
   if (soldiers.length < minimumWaveSize && !smallPressureAllowed) return undefined;
   const localPickoff = outnumberedV2 && !currentCommittedOwner && movable.length >= minimumWaveSize ? isolatedOpponentDetachmentTarget(snapshot, owner, soldiers, enemyArmy, options) : undefined;
-  if (localPickoff) return { type: "attack", unitIds: movable.map((unit) => unit.id), targetId: localPickoff.id };
+  if (localPickoff) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: movable.map((unit) => unit.id), targetId: localPickoff.id }, options);
   const localBaseCommit = outnumberedV2 && !currentCommittedOwner && movable.length >= minimumWaveSize ? locallyBeatableOpponentBaseTarget(snapshot, owner, soldiers, enemyArmy, options) : undefined;
-  if (localBaseCommit) return { type: "attackMove", unitIds: movable.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y };
+  if (localBaseCommit) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: movable.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y }, options);
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 2.6 && !currentCommittedOwner) return undefined;
 
   const armyTarget = options.version === "v2" ? significantOpponentArmyTarget(snapshot, owner, averagePoint(soldiers), soldiers, options) : undefined;
-  if (armyTarget) return { type: "attack", unitIds: movable.map((unit) => unit.id), targetId: armyTarget.id };
+  if (armyTarget) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: movable.map((unit) => unit.id), targetId: armyTarget.id }, options);
 
   const objective = nearestOpponentObjective(snapshot, owner, averagePoint(soldiers), options, focusedOwner);
   const point = shouldCloseOutObjective(snapshot, owner, objective, options) ? objective : wavePointFor(snapshot, owner, soldiers, objective);
   const stale = staleAttackMovers(movable, point);
   if (outnumberedV2 && stale.length < minimumWaveSize) return undefined;
-  return stale.length > 0 ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y } : undefined;
+  return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y }, options) : undefined;
 }
 
-function planCombatAttackWave(movable: Unit[], enemyArmy: Unit[]): GameCommand | undefined {
+function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
   if (movable.length === 0 || enemyArmy.length === 0) return undefined;
   const point = averagePoint(enemyArmy);
   const stale = staleAttackMovers(movable, point);
-  return stale.length > 0 ? { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y } : undefined;
+  return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y }, options) : undefined;
 }
 
 function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
@@ -1496,7 +1497,7 @@ function mainDefenseFocusCommand(snapshot: GameSnapshot, owner: PlayerId, soldie
   const target = targets.sort((a, b) => mainDefenseTargetScore(b, rally, snapshot, owner) - mainDefenseTargetScore(a, rally, snapshot, owner))[0];
   if (!target) return undefined;
   const attackers = defenders.filter((unit) => canJoinMainDefenseFocus(unit, target));
-  return attackers.length > 0 ? { type: "attack", unitIds: attackers.map((unit) => unit.id), targetId: target.id } : undefined;
+  return attackers.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
 function mainDefenseTargetScore(unit: Unit, rally: Point, snapshot: GameSnapshot, owner: PlayerId) {
@@ -1547,7 +1548,7 @@ function catchUpExpansionCommand(snapshot: GameSnapshot, owner: PlayerId, option
   const offset = expansionOffset(snapshot, owner);
   recordBehavior(options, "economicCatchUp", "attempts");
   recordBehavior(options, "economicCatchUp", "catchUpExpansions");
-  return { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
 }
 
 function catchUpExpansionMinimumCombat(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

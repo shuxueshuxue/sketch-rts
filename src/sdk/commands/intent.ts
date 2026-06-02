@@ -1,5 +1,5 @@
-import { BUILDING_DEFS } from "../../shared/catalog";
-import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../shared/types";
+import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../shared/types";
 import { createSnapshotQuery, type SnapshotQueryOptions } from "../snapshot/query";
 
 export type SdkUnitSelector = "all" | "combat" | "workers" | string[];
@@ -18,6 +18,8 @@ export type SdkCommandIntent =
   | { type: "train"; buildingId?: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId?: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
+  | { type: "cast"; unitId?: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
+  | { type: "pickupItem"; unitId?: string; itemId: string }
   | { type: "useItem"; unitId?: string; itemId: string; targetId?: string; x?: number; y?: number };
 
 export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId, intent: SdkCommandIntent, options: SnapshotQueryOptions = {}): GameCommand {
@@ -42,6 +44,8 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   if (intent.type === "train") return { type: "train", buildingId: intent.buildingId ?? trainingBuildingId(snapshot, owner, intent.unitKind), unitKind: intent.unitKind };
   if (intent.type === "research") return { type: "research", buildingId: intent.buildingId ?? researchBuildingId(snapshot, owner, intent.upgradeKind), upgradeKind: intent.upgradeKind };
   if (intent.type === "hire") return { type: "hire", campId: intent.campId };
+  if (intent.type === "cast") return { type: "cast", unitId: intent.unitId ?? casterForAbility(snapshot, owner, intent.ability), ability: intent.ability, ...(intent.targetId ? { targetId: intent.targetId } : {}), ...(intent.x !== undefined ? { x: intent.x } : {}), ...(intent.y !== undefined ? { y: intent.y } : {}) };
+  if (intent.type === "pickupItem") return { type: "pickupItem", unitId: intent.unitId ?? carrierForItem(snapshot, owner, intent.itemId), itemId: intent.itemId };
   if (intent.type === "useItem") return { type: "useItem", unitId: intent.unitId ?? carrierForItem(snapshot, owner, intent.itemId), itemId: intent.itemId, ...(intent.targetId ? { targetId: intent.targetId } : {}), ...(intent.x !== undefined ? { x: intent.x } : {}), ...(intent.y !== undefined ? { y: intent.y } : {}) };
   return assertNever(intent);
 }
@@ -135,6 +139,12 @@ function carrierForItem(snapshot: GameSnapshot, owner: PlayerId, itemId: string)
   if (item.carrierId && snapshot.units.some((unit) => unit.id === item.carrierId && unit.owner === owner)) return item.carrierId;
   const unit = nearest(snapshot.units.filter((candidate) => candidate.owner === owner), item);
   if (!unit) throw new Error(`No ${owner} units available to use ${itemId}`);
+  return unit.id;
+}
+
+function casterForAbility(snapshot: GameSnapshot, owner: PlayerId, ability: AbilityKind): string {
+  const unit = snapshot.units.find((candidate) => candidate.owner === owner && UNIT_DEFS[candidate.kind].abilities.includes(ability));
+  if (!unit) throw new Error(`No ${owner} unit can cast ${ability}`);
   return unit.id;
 }
 
