@@ -1,6 +1,6 @@
 import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
-import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, TrainableUnitKind } from "../shared/types";
+import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, TrainableUnitKind, WorldEffect } from "../shared/types";
 
 export type SketchRtsCatalog = {
   units: string[];
@@ -68,6 +68,23 @@ export type FastForwardUntilResult = {
   samples: FastForwardResult[];
 };
 
+export type RoomTickUntilOptions = {
+  until: (snapshot: GameSnapshot) => boolean;
+  maxTicks: number;
+  chunkTicks: number;
+  maxElapsedMs?: number;
+  maxCpuMs?: number;
+};
+
+export type RoomTickUntilResult = {
+  snapshot: GameSnapshot;
+  room: RoomState;
+  totalTicks: number;
+  elapsedMs: number;
+  cpuMs: number;
+  samples: RoomTickResult[];
+};
+
 export type SceneRunStep =
   | { type: "command"; command: GameCommand }
   | { type: "commands"; commands: GameCommand[] }
@@ -94,8 +111,25 @@ export type GoldSaturationProbeOptions = {
   ticks: number;
 };
 
+export type RoomEffectWaitOptions = {
+  roomId: string;
+  effectType?: WorldEffect["type"];
+  predicate?: (effect: WorldEffect, snapshot: GameSnapshot) => boolean;
+  maxTicks?: number;
+  pause?: boolean;
+};
+
+export type RoomEffectWaitResult = {
+  snapshot: GameSnapshot;
+  effect: WorldEffect;
+};
+
 export class SketchRtsSdk {
   constructor(private readonly baseUrl: string, private readonly fetcher: typeof fetch = fetch) {}
+
+  serverUrl() {
+    return this.baseUrl;
+  }
 
   async catalog(): Promise<SketchRtsCatalog> {
     return this.getJson("/api/catalog");
@@ -175,6 +209,18 @@ export class SketchRtsSdk {
     return this.postJson(`/api/rooms/${roomId}/start`, {});
   }
 
+  async pauseRoom(roomId: string): Promise<RoomState> {
+    return this.postJson(`/api/rooms/${roomId}/pause`, {});
+  }
+
+  async resumeRoom(roomId: string): Promise<RoomState> {
+    return this.postJson(`/api/rooms/${roomId}/resume`, {});
+  }
+
+  async closeRoom(roomId: string, userId: string): Promise<RoomState> {
+    return this.postJson(`/api/rooms/${roomId}/close`, { userId });
+  }
+
   async resetRoom(roomId: string, mapId: MapId, options?: GameSetupOptions): Promise<{ room: RoomState; snapshot: GameSnapshot }> {
     return this.postJson(`/api/rooms/${roomId}/reset`, options ? { mapId, options } : { mapId });
   }
@@ -197,6 +243,22 @@ export class SketchRtsSdk {
 
   async commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number): Promise<RoomTickResult> {
     return this.postJson(`/api/rooms/${roomId}/command-tick`, { commands, ticks });
+  }
+
+  async waitForRoomEffect(options: RoomEffectWaitOptions): Promise<RoomEffectWaitResult> {
+    if (options.pause !== false) await this.pauseRoom(options.roomId);
+    const current = await this.roomSnapshot(options.roomId);
+    const currentEffect = findMatchingEffect(current, options);
+    if (currentEffect) return { snapshot: current, effect: currentEffect };
+
+    const result = await this.tickRoomUntil(options.roomId, {
+      maxTicks: options.maxTicks ?? 120,
+      chunkTicks: 1,
+      until: (snapshot) => Boolean(findMatchingEffect(snapshot, options)),
+    });
+    const effect = findMatchingEffect(result.snapshot, options);
+    if (!effect) throw new Error(`Room ${options.roomId} reached the effect predicate without a matching effect`);
+    return { snapshot: result.snapshot, effect };
   }
 
   async saveRoom(roomId: string, input: SaveGameInput): Promise<SaveGameRecord> {
@@ -272,6 +334,46 @@ export class SketchRtsSdk {
     throw new Error(`Tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
   }
 
+  async tickRoomUntil(roomId: string, options: RoomTickUntilOptions): Promise<RoomTickUntilResult> {
+    if (!Number.isInteger(options.maxTicks) || options.maxTicks < 1) {
+      throw new Error("maxTicks must be a positive integer");
+    }
+    if (!Number.isInteger(options.chunkTicks) || options.chunkTicks < 1) {
+      throw new Error("chunkTicks must be a positive integer");
+    }
+
+    let totalTicks = 0;
+    let elapsedMs = 0;
+    let cpuMs = 0;
+    const samples: RoomTickResult[] = [];
+    let latest: RoomTickResult | null = null;
+
+    while (totalTicks < options.maxTicks) {
+      const ticks = Math.min(options.chunkTicks, options.maxTicks - totalTicks);
+      const sample = await this.tickRoom(roomId, ticks);
+      if (!Number.isInteger(sample.ticks) || sample.ticks < 1) {
+        throw new Error(`non-positive tick progress from /api/rooms/${roomId}/tick: ${sample.ticks}`);
+      }
+      samples.push(sample);
+      latest = sample;
+      totalTicks += sample.ticks;
+      elapsedMs += sample.elapsedMs;
+      cpuMs += sample.cpuMs;
+
+      if (options.maxElapsedMs !== undefined && elapsedMs > options.maxElapsedMs) {
+        throw new Error(`Elapsed budget exceeded: ${elapsedMs.toFixed(2)}ms > ${options.maxElapsedMs}ms`);
+      }
+      if (options.maxCpuMs !== undefined && cpuMs > options.maxCpuMs) {
+        throw new Error(`CPU budget exceeded: ${cpuMs.toFixed(2)}ms > ${options.maxCpuMs}ms`);
+      }
+      if (options.until(sample.snapshot)) {
+        return { snapshot: sample.snapshot, room: sample.room, totalTicks, elapsedMs, cpuMs, samples };
+      }
+    }
+
+    throw new Error(`Room ${roomId} tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
+  }
+
   async runScene(options: SceneRunOptions): Promise<SceneRunResult> {
     const initial = await this.reset(options.mapId, options.setup);
     let snapshot = initial;
@@ -325,6 +427,13 @@ export class SketchRtsSdk {
     if (!response.ok) throw new Error(`POST ${path} failed: ${response.status}`);
     return response.json() as Promise<T>;
   }
+}
+
+function findMatchingEffect(snapshot: GameSnapshot, options: Pick<RoomEffectWaitOptions, "effectType" | "predicate">) {
+  return snapshot.effects.find((candidate) => {
+    if (options.effectType && candidate.type !== options.effectType) return false;
+    return options.predicate ? options.predicate(candidate, snapshot) : true;
+  });
 }
 
 function goldSaturationSetup(workerCount: number): GameSetupOptions {

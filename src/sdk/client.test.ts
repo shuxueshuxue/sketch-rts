@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { seconds } from "../shared/time";
 import { SketchRtsSdk } from "./client";
+import { SketchRtsBrowserDebug } from "./browser";
 
 describe("SketchRtsSdk", () => {
   it("dogfoods typed helpers for catalog, reset, snapshot, and command calls", async () => {
@@ -290,13 +291,81 @@ describe("SketchRtsSdk", () => {
     expect(room.mapId).toBe("grandThirty");
     expect(calls).toEqual([{ path: "/api/rooms/grand-thirty", method: "POST", body: { id: "grand", host: { id: "user-host", name: "Host" }, humanCount: 20, aiCount: 10 } }]);
   });
+
+  it("pauses a live room and steps until a room effect appears", async () => {
+    const calls: { path: string; method: string; body?: unknown }[] = [];
+    let tickCalls = 0;
+    const room = { ...makeRoom("room-1"), status: "inMatch" as const };
+    const fetcher: typeof fetch = async (input, init) => {
+      const url = new URL(String(input));
+      const method = init?.method ?? "GET";
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      calls.push({ path: url.pathname, method, body });
+      if (url.pathname === "/api/rooms/room-1/pause") return json({ ...room, autoTick: false });
+      if (url.pathname === "/api/rooms/room-1/snapshot") return json(makeSnapshot(0));
+      if (url.pathname === "/api/rooms/room-1/tick") {
+        tickCalls += 1;
+        return json({
+          ticks: 1,
+          elapsedMs: 1,
+          cpuMs: 0.4,
+          memory: { rssBytes: 1, heapUsedBytes: 2, heapDeltaBytes: 0 },
+          snapshot: makeSnapshot(tickCalls, false, {
+            effects: tickCalls < 2 ? [] : [{ id: "effect-storm", type: "storm", x: 1200, y: 1200, remaining: 30, duration: 60 }],
+          }),
+          room: { ...room, autoTick: false },
+        });
+      }
+      return new Response("missing", { status: 404 });
+    };
+    const sdk = new SketchRtsSdk("http://game.test", fetcher);
+
+    const capture = await sdk.waitForRoomEffect({ roomId: "room-1", effectType: "storm", maxTicks: 5 });
+
+    expect(capture.effect.type).toBe("storm");
+    expect(capture.snapshot.tick).toBe(2);
+    expect(calls).toEqual([
+      { path: "/api/rooms/room-1/pause", method: "POST", body: {} },
+      { path: "/api/rooms/room-1/snapshot", method: "GET" },
+      { path: "/api/rooms/room-1/tick", method: "POST", body: { ticks: 1 } },
+      { path: "/api/rooms/room-1/tick", method: "POST", body: { ticks: 1 } },
+    ]);
+  });
+
+  it("uses a browser adapter for room screenshots instead of open-coded Playwright scripts", async () => {
+    const page = new FakeDebugPage();
+    const sdk = new SketchRtsSdk("http://game.test", async () => json(makeSnapshot()));
+    const browser = new SketchRtsBrowserDebug(sdk, page);
+
+    const shot = await browser.captureRoomScreenshot({
+      roomId: "room-1",
+      path: "/tmp/effect.png",
+      width: 1440,
+      height: 900,
+      user: { id: "user-1", name: "Host" },
+      hidePointerLockGate: true,
+    });
+
+    expect(shot.path).toBe("/tmp/effect.png");
+    expect(page.calls).toEqual([
+      ["setViewportSize", { width: 1440, height: 900 }],
+      ["goto", "http://game.test"],
+      ["evaluate", "localStorage"],
+      ["reload"],
+      ["click", "[data-open-room-browser]"],
+      ["click", "[data-room-id=\"room-1\"]"],
+      ["waitForSelector", ".game-shell:not(.menu-open)"],
+      ["evaluate", "hidePointerLockGate"],
+      ["screenshot", { path: "/tmp/effect.png", fullPage: false }],
+    ]);
+  });
 });
 
 function json(value: unknown) {
   return new Response(JSON.stringify(value), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
-function makeSnapshot(tick = 0, winner = false) {
+function makeSnapshot(tick = 0, winner = false, patch: Record<string, unknown> = {}) {
   return {
     tick,
     match: {
@@ -323,6 +392,7 @@ function makeSnapshot(tick = 0, winner = false) {
     resources: [],
     mercenaryCamps: [],
     effects: [],
+    ...patch,
   };
 }
 
@@ -333,9 +403,51 @@ function makeRoom(id: string) {
     hostUserId: "user-1",
     mapId: "bareDuel",
     status: "open",
+    autoTick: true,
     slots: [
       { id: "slot-1", playerId: "player", controller: "human", userId: "user-1", name: "Host", team: "north", race: "grove", ready: true },
       { id: "slot-2", playerId: "enemy", controller: "ai", name: "AI", team: "south", race: "ember", ready: true },
     ],
   };
+}
+
+class FakeDebugPage {
+  calls: unknown[][] = [];
+
+  async setViewportSize(size: { width: number; height: number }) {
+    this.calls.push(["setViewportSize", size]);
+  }
+
+  async goto(url: string) {
+    this.calls.push(["goto", url]);
+  }
+
+  async evaluate(fn: unknown) {
+    this.calls.push(["evaluate", String(fn).includes("localStorage") ? "localStorage" : "hidePointerLockGate"]);
+  }
+
+  async reload() {
+    this.calls.push(["reload"]);
+  }
+
+  locator(selector: string) {
+    return {
+      click: async () => {
+        this.calls.push(["click", selector]);
+      },
+    };
+  }
+
+  async waitForSelector(selector: string) {
+    this.calls.push(["waitForSelector", selector]);
+  }
+
+  async waitForFunction(_fn: unknown, arg: unknown) {
+    this.calls.push(["waitForFunction", arg]);
+  }
+
+  async screenshot(options: { path: string; fullPage: boolean }) {
+    this.calls.push(["screenshot", options]);
+    return Buffer.from("fake-png");
+  }
 }

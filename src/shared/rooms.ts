@@ -47,6 +47,7 @@ export function createRoom(input: CreateRoomInput): RoomState {
     visibility: input.visibility ?? "public",
     mapId: input.mapId ?? "verdantCrossroads",
     status: "open",
+    autoTick: true,
     slots,
   };
 }
@@ -210,6 +211,7 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
     visibility: "public",
     mapId: "grandThirty",
     status: "open",
+    autoTick: true,
     slots: [...humans, ...ais],
   };
 }

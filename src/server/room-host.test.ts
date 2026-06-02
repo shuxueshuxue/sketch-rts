@@ -82,6 +82,25 @@ describe("server room host", () => {
     expect(result.snapshot.tick).toBe(240);
   });
 
+  it("pauses active-room auto ticking while preserving manual SDK ticks", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-pause", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+
+    const paused = host.pauseRoom(room.id);
+    host.tickActiveRooms(20);
+    const afterAutoTick = host.snapshot(room.id);
+    const manual = host.tickRoom(room.id, 3);
+    const resumed = host.resumeRoom(room.id);
+    host.tickActiveRooms(2);
+
+    expect(paused.autoTick).toBe(false);
+    expect(afterAutoTick.tick).toBe(0);
+    expect(manual.snapshot.tick).toBe(3);
+    expect(resumed.autoTick).toBe(true);
+    expect(host.snapshot(room.id).tick).toBe(5);
+  });
+
   it("resets a live room match with scenario seeds without leaving the room runtime", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-reset", host: hostUser });

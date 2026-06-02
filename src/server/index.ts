@@ -29,7 +29,7 @@ const benchmarkDashboardClients = new Set<Response>();
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 let game = createGame();
 let gameAiRuntime = createAiRuntime(["enemy"]);
-const roomHost = createRoomHost();
+const roomHost = createRoomHost({ autoTick: roomAutoTick });
 
 app.use(express.json({ limit: "64kb" }));
 
@@ -288,6 +288,22 @@ app.post("/api/rooms/:roomId/start", (request, response) => {
   }
 });
 
+app.post("/api/rooms/:roomId/pause", (request, response) => {
+  try {
+    response.json(roomHost.pauseRoom(request.params.roomId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/rooms/:roomId/resume", (request, response) => {
+  try {
+    response.json(roomHost.resumeRoom(request.params.roomId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
 app.post("/api/rooms/:roomId/reset", (request, response) => {
   const body = request.body as { mapId?: unknown; options?: unknown };
   if (!isMapId(body.mapId)) {
@@ -535,7 +551,7 @@ setInterval(() => {
     runPresetAiRuntime(game, gameAiRuntime);
     stepGame(game);
   }
-  if (roomAutoTick) roomHost.tickActiveRooms();
+  roomHost.tickActiveRooms();
 }, 50);
 
 setInterval(() => {

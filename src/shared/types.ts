@@ -44,7 +44,24 @@ export type UnitStatusEffect = {
 
 export type WorldEffect = {
   id: string;
-  type: "heal" | "summon" | "curse" | "move" | "mine" | "attack" | "attackTarget" | "build" | "projectile" | "melee" | "hit" | "chainLightning" | "guardianField" | "flameBurn" | "storm";
+  type:
+    | "heal"
+    | "summon"
+    | "curse"
+    | "move"
+    | "mine"
+    | "attack"
+    | "attackTarget"
+    | "build"
+    | "projectile"
+    | "melee"
+    | "hit"
+    | "chainLightning"
+    | "guardianField"
+    | "experienceBurst"
+    | "flameBurn"
+    | "levelUp"
+    | "storm";
   x: number;
   y: number;
   remaining: number;
@@ -336,6 +353,7 @@ export type RoomState = {
   visibility: RoomVisibility;
   mapId: MapId;
   status: RoomStatus;
+  autoTick: boolean;
   slots: RoomSlot[];
   result?: RoomResult;
 };

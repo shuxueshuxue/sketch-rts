@@ -36,9 +36,12 @@ function runTwoAiDuel(mapId: MapId) {
 
 function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAiDuel>) {
   const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
-  const losingArmies = game.activePlayers
+  const losingOwners = game.activePlayers
     .filter((owner) => owner !== game.match.winner)
-    .map((owner) => game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length);
+    .map((owner) => ({
+      buildings: game.buildings.filter((building) => building.owner === owner).length,
+      workers: game.units.filter((unit) => unit.owner === owner && unit.kind === "worker").length,
+    }));
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
@@ -50,7 +53,7 @@ function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAi
   expect(game.match.stats.unitsLost.player).toBeGreaterThan(0);
   expect(game.match.stats.unitsLost.enemy).toBeGreaterThan(0);
   expect(totalNonBaseBuildingsDestroyed).toBeGreaterThan(0);
-  expect(Math.max(...losingArmies)).toBeLessThanOrEqual(4);
+  expect(losingOwners).toEqual(expect.arrayContaining([expect.objectContaining({ buildings: 0, workers: 0 })]));
 }
 
 function expectActivePlayersSpent(game: ReturnType<typeof createGame>, minimum: number) {
@@ -668,6 +671,7 @@ describe("sketch RTS simulation", () => {
     killWith(game, finisher, "ancientStag");
     expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward + UNIT_DEFS.ancientStag.xpReward);
     expect(finisher.level).toBe(1);
+    expect(game.effects.some((effect) => effect.type === "levelUp")).toBe(true);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.25));
     expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.25));
 
@@ -1193,6 +1197,7 @@ describe("sketch RTS simulation", () => {
 
     expect(guarded.hp).toBe(guarded.maxHp);
     expect(guarded.effects.some((effect) => effect.type === "guardian")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "guardianField" && effect.radius === 280)).toBe(true);
 
     stepMany(game, seconds(8.5));
     attacker.cooldown = 0;
@@ -1200,6 +1205,22 @@ describe("sketch RTS simulation", () => {
     stepMany(game, 2);
 
     expect(guarded.hp).toBeLessThan(guarded.maxHp);
+  });
+
+  it("shows an experience burst when a carried experience book is used", () => {
+    const game = sketchScene("experience-book-visual")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .unit("player", "footman", 1500, 1500, { id: "book-carrier" })
+      .item("experience-book", "experienceBook", 0, 0, { carrierId: "book-carrier" })
+      .build()
+      .createGame();
+
+    issueCommand(game, { type: "useItem", unitId: "book-carrier", itemId: "experience-book" });
+
+    expect(game.effects.some((effect) => effect.type === "experienceBurst" && effect.x === 1500 && effect.y === 1500)).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "levelUp" && effect.x === 1500 && effect.y === 1500)).toBe(true);
   });
 
   it("storm staff creates sustained area damage instead of only a single burst", () => {
@@ -1292,6 +1313,8 @@ describe("sketch RTS simulation", () => {
     const damage = hpBefore - target.hp;
     expect(damage).toBeGreaterThanOrEqual(48);
     expect(damage).toBeLessThanOrEqual(60);
+    expect(game.effects.some((effect) => effect.type === "flameBurn" && effect.x === target.x && effect.y === target.y)).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "flameBurn" && effect.x === 1000 && effect.y === 1000)).toBe(false);
   });
 
   it("lets a wildling use a carried storm staff against challengers", () => {

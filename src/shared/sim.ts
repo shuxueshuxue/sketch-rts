@@ -1020,7 +1020,7 @@ function activateItem(
       unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
       unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL_DURATION });
     });
-    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION);
+    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION, { radius: 280 });
     item.cooldownRemaining = GUARDIAN_SCROLL_COOLDOWN;
     return;
   }
@@ -1036,6 +1036,7 @@ function activateItem(
     if (carrier.owner === "neutral") return;
     carrier.xp += 160;
     applyXpLevel(game, carrier);
+    addEffect(game, "experienceBurst", carrier.x, carrier.y, 48);
     game.items = game.items.filter((candidate) => candidate.id !== item.id);
   }
 }
@@ -1085,10 +1086,10 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   forEachNearbyUnit(game, carrier, 90, (target) => {
     if (distance(target, carrier) > 90 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
     applyAttackDamage(game, carrier, target, 12, 70);
+    addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
   if (!burned) return;
-  addEffect(game, "flameBurn", carrier.x, carrier.y, FLAME_CLOAK_VISUAL_DURATION);
   item.cooldownRemaining = FLAME_CLOAK_COOLDOWN;
 }
 
@@ -1215,6 +1216,7 @@ function applyXpLevel(game: Game, unit: Unit) {
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
   applyDerivedUnitStats(game, unit);
+  addEffect(game, "levelUp", unit.x, unit.y, 54);
 }
 
 function applyDerivedUnitStats(game: Game, unit: Unit) {
