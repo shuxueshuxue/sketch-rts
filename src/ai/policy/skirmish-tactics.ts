@@ -18,6 +18,11 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   // @@@creep-preservation - Neutral camps are real combat threats; v2 must stop donating wounded units while creeping.
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const retreatPoint = skirmishRetreatPoint(snapshot, owner, enemies, ownBase);
+  const combatRetreat = combatWoundedRetreatCommand(snapshot, owner, ownCombat, enemies, options);
+  if (combatRetreat) {
+    recordBehavior(options, "skirmishPreservation", "woundedRangedPullbacks");
+    return [combatRetreat];
+  }
   const commands: GameCommand[] = [];
 
   for (const unit of ownCombat) {
@@ -46,6 +51,14 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }, options)];
+}
+
+function combatWoundedRetreatCommand(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (options.version !== "v2" || options.policyMode !== "combat") return undefined;
+  const hpRatio = 0.55;
+  const exposedWounded = ownCombat.filter((unit) => unit.hp / Math.max(1, unit.maxHp) <= hpRatio && enemies.some((enemy) => distance(enemy, unit) <= 520));
+  if (exposedWounded.length === 0) return undefined;
+  return resolveAiCommandIntent(snapshot, owner, { type: "retreatWounded", unitIds: exposedWounded.map((unit) => unit.id), hpRatio }, options);
 }
 
 function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: Unit[], ownBase: Point): Point {

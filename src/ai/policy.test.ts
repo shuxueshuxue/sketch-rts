@@ -1026,6 +1026,29 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "move", unitIds: expect.arrayContaining(["wounded-footman"]), x: 520, y: 520 });
   });
 
+  it("v2 preset combat policy pulls wounded units before attack-wave can retask them", () => {
+    const scene = sketchScene("v2-combat-preset-wounded-retreat")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 150, 800, { id: "v2-anchor" })
+      .unit("v2", "archer", 700, 800, { id: "wounded-archer", hp: 28 })
+      .unit("v2", "footman", 680, 835, { id: "healthy-footman" })
+      .unit("v1a", "footman", 740, 800, { id: "enemy-footman" })
+      .townHall("v1a", 1450, 800, { id: "v1a-anchor" })
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+
+    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory });
+    const retreat = entries.find((entry) => entry.scriptId === "skirmishPreservation" && entry.command.type === "move")?.command;
+
+    expect(retreat).toMatchObject({ type: "move", unitIds: ["wounded-archer"], x: 150, y: 800 });
+    expect(memory.unitClaims["wounded-archer"]).toMatchObject({ kind: "retreat", targetId: "retreat", x: 150, y: 800 });
+    expect(entries.filter((entry) => entry.command.type === "attack" || entry.command.type === "attackMove").some((entry) => "unitIds" in entry.command && entry.command.unitIds.includes("wounded-archer"))).toBe(false);
+  });
+
   it("v2 pulls wounded units away from neutral camps that are already near the main economy", () => {
     const scene = sketchScene("v2-neutral-near-main-retreat-away")
       .map("openClaims")

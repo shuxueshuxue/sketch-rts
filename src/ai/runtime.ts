@@ -10,6 +10,7 @@ export type AiRuntimeState = {
   scripts?: AiScript[];
   version: AiScriptVersion;
   versions: Partial<Record<PlayerId, AiScriptVersion>>;
+  policyMode?: PresetAiPolicyOptions["policyMode"];
   memories: Record<PlayerId, AiPolicyMemory>;
 };
 
@@ -34,7 +35,7 @@ export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFram
 
 export type AiCommandFrameHooks<Source extends string = string> = CommandFrameHooks<Source>;
 
-export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: number; scripts?: AiScript[]; version?: AiScriptVersion; versions?: Partial<Record<PlayerId, AiScriptVersion>> } = {}): AiRuntimeState {
+export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: number; scripts?: AiScript[]; version?: AiScriptVersion; versions?: Partial<Record<PlayerId, AiScriptVersion>>; policyMode?: PresetAiPolicyOptions["policyMode"] } = {}): AiRuntimeState {
   const thinkInterval = options.thinkInterval ?? 45;
   const controlledPlayers = [...new Set(players)];
   return {
@@ -44,6 +45,7 @@ export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: 
     ...(options.scripts ? { scripts: options.scripts } : {}),
     version: options.version ?? "v1",
     versions: options.versions ?? {},
+    ...(options.policyMode ? { policyMode: options.policyMode } : {}),
     memories: Object.fromEntries(controlledPlayers.map((owner) => [owner, createAiPolicyMemory()])) as Record<PlayerId, AiPolicyMemory>,
   };
 }
@@ -67,7 +69,7 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
       memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
     };
   });
-  return issueAiCommandFrame(game, requests, options);
+  return issueAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
 
 export function issueAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}, hooks: AiCommandFrameHooks<Source> = {}) {

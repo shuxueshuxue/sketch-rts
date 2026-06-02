@@ -33,7 +33,7 @@ if (verb === "new") {
     scriptedPlayers: [enemy],
     options: setup.options,
   });
-  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion } });
+  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion }, ...(setup.policyMode ? { policyMode: setup.policyMode } : {}) });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
   printJson(summarizeAiInteractivePlaytestSession(session, runtime));
   process.exit(0);
@@ -92,7 +92,7 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   throw new Error(`Unknown ai playtest command ${verb}`);
 }
 
-function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions } {
+function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat" } {
   const setup = flag(args, "setup");
   if (setup === undefined) {
     return {
@@ -110,7 +110,7 @@ function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy
       v2Owner: controlledPlayer,
       v1Owner: enemy,
     });
-    return { mapId: combat.mapId, options: combat.options };
+    return { mapId: combat.mapId, options: combat.options, policyMode: "combat" };
   }
   throw new Error(`Unknown ai playtest setup ${setup}`);
 }

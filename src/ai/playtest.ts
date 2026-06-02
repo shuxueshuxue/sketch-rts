@@ -1,6 +1,6 @@
 import { applyInteractivePlaytestCommand, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
-import type { AiScript } from "./policy";
+import type { AiScript, PresetAiPolicyOptions } from "./policy";
 import { recordAiMemoryForCommands } from "./policy/claims";
 import type { AiScriptVersion, PlayerId } from "../shared/types";
 import { snapshotGame } from "../shared/sim";
@@ -13,6 +13,7 @@ export type AiInteractivePlaytestRuntimeOptions = {
   scripts?: AiScript[];
   version?: AiScriptVersion;
   versions?: Partial<Record<PlayerId, AiScriptVersion>>;
+  policyMode?: PresetAiPolicyOptions["policyMode"];
 };
 
 export type AiInteractivePlaytestMemorySummary = {
