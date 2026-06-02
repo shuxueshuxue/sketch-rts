@@ -1,4 +1,4 @@
-import { applyInteractivePlaytestCommand, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
+import { applyInteractivePlaytestCommand, inspectInteractivePlaytestUnits, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestInspectedUnit, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUnitInspection, type InteractivePlaytestUnitInspectionOwner, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
 import type { AiScript, PresetAiPolicyOptions } from "./policy";
 import { recordAiMemoryForCommands } from "./policy/claims";
@@ -39,6 +39,14 @@ export type AiInteractivePlaytestSummary = InteractivePlaytestSummary & {
   aiMemory: Record<PlayerId, AiInteractivePlaytestMemorySummary>;
 };
 
+export type AiInteractivePlaytestInspectedUnit = InteractivePlaytestInspectedUnit & {
+  memoryClaim: AiInteractivePlaytestMemorySummary["claims"][number] | null;
+};
+
+export type AiInteractivePlaytestUnitInspection = Omit<InteractivePlaytestUnitInspection, "units"> & {
+  units: AiInteractivePlaytestInspectedUnit[];
+};
+
 export function createAiInteractivePlaytestRuntime(session: InteractivePlaytestSession, options: AiInteractivePlaytestRuntimeOptions = {}): AiRuntimeState {
   const players = options.assistControlled ? [session.controlledPlayer, ...session.scriptedPlayers] : session.scriptedPlayers;
   return createAiRuntime(players, options);
@@ -76,6 +84,17 @@ export function summarizeAiInteractivePlaytestSession(session: InteractivePlayte
   };
 }
 
+export function inspectAiInteractivePlaytestUnits(session: InteractivePlaytestSession, runtime: AiRuntimeState, options: { owner?: InteractivePlaytestUnitInspectionOwner } = {}): AiInteractivePlaytestUnitInspection {
+  const inspection = inspectInteractivePlaytestUnits(session, options);
+  return {
+    ...inspection,
+    units: inspection.units.map((unit) => ({
+      ...unit,
+      memoryClaim: runtime.memories[unit.owner]?.unitClaims[unit.id] ? summarizeUnitClaim(unit.id, runtime.memories[unit.owner]!.unitClaims[unit.id]!) : null,
+    })),
+  };
+}
+
 function interactiveMemoryScriptId(commandType: InteractivePlaytestCommand["type"], issuedScriptId: string) {
   if (commandType === "creepCamp") return "objectiveControl";
   if (commandType === "expand") return "expansion";
@@ -83,6 +102,18 @@ function interactiveMemoryScriptId(commandType: InteractivePlaytestCommand["type
   if (commandType === "hire") return "mercenary";
   if (commandType === "attackMove" || commandType === "focusFire") return "attackWave";
   return issuedScriptId;
+}
+
+function summarizeUnitClaim(unitId: string, claim: AiPolicyUnitClaim): AiInteractivePlaytestMemorySummary["claims"][number] {
+  return {
+    unitId,
+    kind: claim.kind,
+    targetId: claim.targetId,
+    ...(claim.x === undefined ? {} : { x: claim.x }),
+    ...(claim.y === undefined ? {} : { y: claim.y }),
+    sinceGameSecond: tickSecond(claim.sinceTick),
+    expiresGameSecond: tickSecond(claim.expiresTick),
+  };
 }
 
 function summarizeAiMemory(memory: AiPolicyMemory): AiInteractivePlaytestMemorySummary {
@@ -94,15 +125,7 @@ function summarizeAiMemory(memory: AiPolicyMemory): AiInteractivePlaytestMemoryS
       updatedGameSecond: tickSecond(job.updatedTick),
     })),
     claims: Object.entries(memory.unitClaims)
-      .map(([unitId, claim]) => ({
-        unitId,
-        kind: claim.kind,
-        targetId: claim.targetId,
-        ...(claim.x === undefined ? {} : { x: claim.x }),
-        ...(claim.y === undefined ? {} : { y: claim.y }),
-        sinceGameSecond: tickSecond(claim.sinceTick),
-        expiresGameSecond: tickSecond(claim.expiresTick),
-      }))
+      .map(([unitId, claim]) => summarizeUnitClaim(unitId, claim))
       .sort((a, b) => a.unitId.localeCompare(b.unitId)),
     ...(memory.strategicPlan ? { strategicPlan: summarizeStrategicPlan(memory.strategicPlan) } : {}),
   };

@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
-import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
+import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
+import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
@@ -52,6 +52,11 @@ if (verb === "status") {
 
 if (verb === "memory") {
   printJson(loaded.runtime.memories);
+  process.exit(0);
+}
+
+if (verb === "inspect-units") {
+  printJson(inspectAiInteractivePlaytestUnits(session, loaded.runtime, { owner: unitInspectionOwnerFlag(args) }));
   process.exit(0);
 }
 
@@ -142,6 +147,12 @@ function unitSelector(args: string[]): InteractiveUnitSelector | undefined {
   return raw.split(",").filter(Boolean);
 }
 
+function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspectionOwner {
+  const owner = flag(args, "owner") ?? "all";
+  if (owner === "all" || owner === "neutral") return owner;
+  return owner as PlayerId;
+}
+
 function flag(args: string[], name: string): string | undefined {
   const index = args.indexOf(`--${name}`);
   if (index === -1) return undefined;
@@ -183,6 +194,7 @@ function printHelp() {
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- memory --file .playtests/duel.json
+  npm run play:ai -- inspect-units --file .playtests/duel.json --owner all
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240
   npm run play:ai -- attack-move --file .playtests/duel.json --units combat --x 2048 --y 2048

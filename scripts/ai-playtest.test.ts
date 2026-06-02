@@ -70,6 +70,37 @@ describe("AI playtest CLI", () => {
     );
   });
 
+  it("inspects units with the memory claims used by manual commands", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a");
+    runPlaytestCli("attack-move", "--file", file, "--units", "combat", "--x", "1080", "--y", "800");
+
+    const inspection = JSON.parse(runPlaytestCli("inspect-units", "--file", file, "--owner", "all"));
+
+    expect(inspection.units).toHaveLength(35);
+    expect(inspection.units).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "combat-v1a-unit-20",
+          owner: "v1a",
+          memoryClaim: null,
+        }),
+        expect.objectContaining({
+          id: "combat-v2-unit-1",
+          owner: "v2",
+          carriedItems: [expect.objectContaining({ kind: "flameCloak" })],
+          memoryClaim: expect.objectContaining({
+            kind: "attack",
+            targetId: "combat-v1a-unit-3",
+          }),
+        }),
+      ])
+    );
+  });
+
   it("creates reusable combat playtest setups that can be steered with memory-backed commands", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

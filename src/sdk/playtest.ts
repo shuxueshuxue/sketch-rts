@@ -72,6 +72,16 @@ export type InteractivePlaytestSummary = {
   nearbyEnemies: { id: string; kind: string; x: number; y: number; hp: number; maxHp: number }[];
 };
 
+export type InteractivePlaytestUnitInspectionOwner = Unit["owner"] | "all";
+
+export type InteractivePlaytestUnitInspection = {
+  tick: number;
+  gameSecond: number;
+  winner: PlayerId | null;
+  owner: InteractivePlaytestUnitInspectionOwner;
+  units: InteractivePlaytestInspectedUnit[];
+};
+
 export type InteractivePlaytestPlayerSummary = {
   race: RaceId;
   gold: number;
@@ -101,6 +111,10 @@ export type InteractivePlaytestUnitSummary = {
   maxHp: number;
   order: UnitOrder;
   carriedItems: { id: string; kind: string; cooldownRemaining: number }[];
+};
+
+export type InteractivePlaytestInspectedUnit = InteractivePlaytestUnitSummary & {
+  owner: Unit["owner"];
 };
 
 export type InteractivePlaytestStepOptions<Source extends string = string> = {
@@ -231,6 +245,22 @@ export function summarizeInteractivePlaytestSession(session: InteractivePlaytest
     controlledUnits: controlledUnits(snapshot, session.controlledPlayer),
     visibleObjectives: visibleObjectives(snapshot, controlledCenter),
     nearbyEnemies,
+  };
+}
+
+export function inspectInteractivePlaytestUnits(session: InteractivePlaytestSession, options: { owner?: InteractivePlaytestUnitInspectionOwner } = {}): InteractivePlaytestUnitInspection {
+  const snapshot = snapshotGame(session.game);
+  const owner = options.owner ?? "all";
+  if (owner !== "all" && owner !== "neutral" && !session.game.players[owner]) throw new Error(`Unknown playtest player ${owner}`);
+  return {
+    tick: snapshot.tick,
+    gameSecond: tickSecond(snapshot.tick),
+    winner: snapshot.match.winner,
+    owner,
+    units: snapshot.units
+      .filter((unit) => owner === "all" || unit.owner === owner)
+      .map((unit) => ({ owner: unit.owner, ...summarizeUnit(snapshot, unit) }))
+      .sort((a, b) => a.owner.localeCompare(b.owner) || a.id.localeCompare(b.id)),
   };
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyInteractivePlaytestCommand,
   createInteractivePlaytestSession,
+  inspectInteractivePlaytestUnits,
   restoreInteractivePlaytestSession,
   serializeInteractivePlaytestSession,
   stepInteractivePlaytestSession,
@@ -91,6 +92,44 @@ describe("interactive playtest SDK", () => {
       expect.objectContaining({
         id: "v2-rod",
         kind: "archer",
+        order: { type: "attackMove", x: 1200, y: 800 },
+        carriedItems: [{ id: "rod", kind: "lightningRod", cooldownRemaining: 0 }],
+      }),
+    ]);
+  });
+
+  it("inspects all units by owner so tactical target ids are visible", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-rod", owner: "v2", kind: "archer", x: 300, y: 830, order: { type: "attackMove", x: 1200, y: 800 } },
+            { id: "v1a-target", owner: "v1a", kind: "footman", x: 1200, y: 790, hp: 72 },
+          ],
+          addItems: [{ id: "rod", kind: "lightningRod", x: 0, y: 0, carrierId: "v2-rod", cooldownRemaining: 0 }],
+        },
+      },
+    });
+
+    const inspection = inspectInteractivePlaytestUnits(session, { owner: "all" });
+
+    expect(inspection.units).toEqual([
+      expect.objectContaining({
+        id: "v1a-target",
+        owner: "v1a",
+        hp: 72,
+      }),
+      expect.objectContaining({
+        id: "v2-rod",
+        owner: "v2",
         order: { type: "attackMove", x: 1200, y: 800 },
         carriedItems: [{ id: "rod", kind: "lightningRod", cooldownRemaining: 0 }],
       }),
