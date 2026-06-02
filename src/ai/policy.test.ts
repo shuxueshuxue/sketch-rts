@@ -3652,6 +3652,37 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 1180, y: 980 });
   });
 
+  it("keeps mercenary claims alive across the next economy decision interval", () => {
+    const scene = sketchScene("v2-merc-claim-survives-next-decision")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "farm", 560, 700)
+      .unit("v2", "footman", 760, 700, { id: "claim-a" })
+      .unit("v2", "lancer", 790, 730, { id: "claim-b" })
+      .unit("v2", "archer", 820, 760, { id: "claim-c" })
+      .townHall("v1", 3300, 3300)
+      .unit("neutral", "mossGnawer", 900, 1120, { id: "distracting-creep" })
+      .mercenaryCamp("cleared-melee-camp", 1180, 980, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 80;
+    const memory = createAiPolicyMemory();
+
+    planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams, memory });
+    game.tick = 225;
+
+    const objectiveCommand = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "attackMove",
+    );
+
+    expect(Object.keys(memory.unitClaims).sort()).toEqual(["claim-a", "claim-b", "claim-c"]);
+    expect(objectiveCommand).toBeUndefined();
+  });
+
   it("v2 yields mercenary-camp movement to main-base defense under real pressure", () => {
     const scene = sketchScene("v2-main-pressure-yields-mercenary-move")
       .map("openClaims")
@@ -3955,6 +3986,44 @@ describe("SDK preset AI policy", () => {
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "research");
 
     expect(command).toMatchObject({ type: "research", buildingId: "tech-reserve-barracks", upgradeKind: "weaponTraining" });
+  });
+
+  it("v2 keeps core production training before the first expansion bank is actually close", () => {
+    const scene = sketchScene("v2-training-before-distant-expansion-bank")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-range" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 590, 700)
+      .worker("v2", 520, 520)
+      .worker("v2", 540, 520)
+      .worker("v2", 560, 520)
+      .worker("v2", 580, 520)
+      .worker("v2", 600, 520)
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "lancer", 790, 650)
+      .unit("v2", "archer", 820, 680)
+      .unit("v2", "footman", 850, 710)
+      .townHall("v1a", 3300, 3300)
+      .worker("v1a", 3280, 3300)
+      .worker("v1a", 3300, 3320)
+      .worker("v1a", 3320, 3300)
+      .worker("v1a", 3340, 3300)
+      .worker("v1a", 3360, 3300)
+      .goldMine("v2-main-mine", 560, 520, 4000)
+      .goldMine("v1-main-mine", 3300, 3240, 4000)
+      .goldMine("v2-natural-mine", 1320, 780, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 190;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toContainEqual(expect.objectContaining({ type: "train" }));
   });
 
   it("v2 builds cinderHeath stables before spending on a catch-up expansion", () => {

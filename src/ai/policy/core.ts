@@ -611,6 +611,8 @@ function shouldSpendExpansionReserveOnControlledMercenary(snapshot: GameSnapshot
 function canHireMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {
   const player = playerState(snapshot, owner);
   if (player.gold < camp.cost) return false;
+  const missingProduction = options.version === "v2" ? productionBuildingNeedKind(snapshot, owner, options) : undefined;
+  if (missingProduction && player.gold < BUILDING_DEFS[missingProduction].cost + camp.cost) return false;
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + camp.cost) return false;
   // @@@merc-claim-before-spend - Walking to a cleared mercenary camp is free; only the hire itself competes with first-expansion gold.
   if (shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + camp.cost && !shouldSpendExpansionReserveOnControlledMercenary(snapshot, owner, camp, options)) return false;
@@ -702,7 +704,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     const workerSaturatingEstablishedMines = unitKind === "worker" && activeMiningBaseCount(snapshot, owner) >= 2 && projectedWorkers < routineWantedWorkers;
     const nearTowerMoney = remainingGold >= BUILDING_DEFS.defenseTower.cost - 10;
     const reserveSensitive = unitKind !== "worker" || (!routineWorkerSaturation && !cheapWorkerRecovery) || ((reserveMainGuardTower || reserveEmergencyTower) && nearTowerMoney);
-    const canSpendExpansionReserveOnTraining = unitKind !== "worker" && shouldSpendExpansionReserveOnTraining(snapshot, owner, options);
+    const canSpendExpansionReserveOnTraining = unitKind !== "worker" && shouldSpendExpansionReserveOnTraining(snapshot, owner, options, remainingGold, cost);
     if (reserveSensitive && missingProduction && !workerSaturatingEstablishedMines && remainingGold < BUILDING_DEFS[missingProduction].cost + cost) continue;
     if (reserveSensitive && reserveMainGuardTower && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveEmergencyTower && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
@@ -719,11 +721,12 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   return commands;
 }
 
-function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {
   if (options.version !== "v2") return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
-  if (!hasCoreProduction(snapshot, owner)) return false;
-  // @@@expansion-reserve-training - A one-base army under direct pressure must not idle production just to finish saving for the first natural.
+  if (!buildings(snapshot, owner).some((building) => building.complete && isCoreProductionBuilding(building))) return false;
+  // @@@expansion-reserve-training - First natural reserve starts near the hall cost; before that, idle core production loses the map.
+  if (availableGold < BUILDING_DEFS.townHall.cost - 80 && availableGold - spendCost >= UNIT_DEFS.worker.cost && combatUnits(snapshot, owner).length < 6) return true;
   return healingWellPressure(snapshot, owner, mainBase(snapshot, owner), options);
 }
 

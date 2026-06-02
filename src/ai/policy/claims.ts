@@ -12,7 +12,8 @@ type ClaimPolicyOptions = {
 };
 
 const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
-const MERCENARY_CLAIM_TTL_TICKS = 180;
+// @@@claim-ttl-window - Claims must outlive the next think interval so jobs do not tug the same squad between objectives.
+const UNIT_CLAIM_TTL_TICKS = 900;
 
 export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
   const query = createSnapshotQuery(snapshot);
@@ -43,7 +44,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           x: camp.x,
           y: camp.y,
           sinceTick: snapshot.tick,
-          expiresTick: snapshot.tick + MERCENARY_CLAIM_TTL_TICKS,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
         };
       }
       continue;
@@ -58,7 +59,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           x: mine.x,
           y: mine.y,
           sinceTick: snapshot.tick,
-          expiresTick: snapshot.tick + MERCENARY_CLAIM_TTL_TICKS,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
         };
       }
       continue;
@@ -73,7 +74,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           x: guard.x,
           y: guard.y,
           sinceTick: snapshot.tick,
-          expiresTick: snapshot.tick + MERCENARY_CLAIM_TTL_TICKS,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
         };
       }
       continue;
@@ -88,7 +89,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           x: target.x,
           y: target.y,
           sinceTick: snapshot.tick,
-          expiresTick: snapshot.tick + MERCENARY_CLAIM_TTL_TICKS,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
         };
       }
       continue;
@@ -101,7 +102,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           x: command.x,
           y: command.y,
           sinceTick: snapshot.tick,
-          expiresTick: snapshot.tick + MERCENARY_CLAIM_TTL_TICKS,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
         };
       }
       continue;
