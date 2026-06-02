@@ -627,6 +627,81 @@ describe("SDK preset AI policy", () => {
     expect(combatTrainingBeforeBankStall).toBeDefined();
   });
 
+  it("v2 preserves worker gold for first combat recovery when its army has been wiped", () => {
+    const scene = sketchScene("v2-first-combat-recovery-before-workers")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1_250, 760, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .townHall("v1a", 3_300, 3_300)
+      .unit("v1a", "footman", 850, 820)
+      .unit("v1a", "lancer", 900, 840)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1_300, 760, 4000)
+      .goldMine("v1a-main-mine", 3_300, 3_240, 4000)
+      .build();
+    const game = scene.createGame();
+    if (!game.players.v2) throw new Error("missing v2 player");
+    game.players.v2.gold = 75;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands.find((command) => command.type === "train")).toBeUndefined();
+  });
+
+  it("v2 does not split a thin post-expansion army just to pre-claim a mercenary camp", () => {
+    const scene = sketchScene("v2-no-thin-merc-preclaim")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 1_250, 760)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .unit("v2", "footman", 1_850, 1_650)
+      .unit("v2", "footman", 1_890, 1_680)
+      .unit("v2", "lancer", 1_930, 1_710)
+      .unit("v2", "footman", 1_970, 1_740)
+      .unit("v2", "lancer", 2_010, 1_770)
+      .unit("v2", "footman", 2_050, 1_800)
+      .townHall("v1a", 3_300, 3_300)
+      .unit("v1a", "footman", 2_350, 2_200)
+      .unit("v1a", "footman", 2_390, 2_230)
+      .unit("v1a", "lancer", 2_430, 2_260)
+      .unit("v1a", "lancer", 2_470, 2_290)
+      .unit("v1a", "archer", 2_510, 2_320)
+      .unit("v1a", "archer", 2_550, 2_350)
+      .mercenaryCamp("thin-claim-camp", 1_340, 1_520, { hireKind: "mercenary", stock: 2, cost: 220 })
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1_300, 760, 4000)
+      .goldMine("v1a-main-mine", 3_300, 3_240, 4000)
+      .build();
+    const game = scene.createGame();
+    if (!game.players.v2) throw new Error("missing v2 player");
+    game.players.v2.gold = 50;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams });
+
+    expect(commands.find((command) => command.type === "attackMove")).toBeUndefined();
+  });
+
   it("v2 does not spend near-complete first-expansion gold on extra supply", () => {
     const scene = sketchScene("v2-holds-first-expansion-gold-before-supply")
       .map("openClaims")

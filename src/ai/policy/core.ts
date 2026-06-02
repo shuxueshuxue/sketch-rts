@@ -623,7 +623,9 @@ function canMoveToMercenaryCampBeforeHire(snapshot: GameSnapshot, owner: PlayerI
   if (options.version !== "v2") return false;
   if (opponentPlayerIds(snapshot, owner, options).length >= 2) return false;
   if (firstNaturalNeedsClearing(snapshot, owner)) return false;
+  // @@@thin-merc-preclaim - Camp pre-claims are optional map control; a thin first army must stay together while enemy combat units are still on the field.
   if (!hasEstablishedExpansion(snapshot, owner) && !isLocalFirstMercenaryClaim(snapshot, owner, camp)) return false;
+  if (hasEstablishedExpansion(snapshot, owner) && combatUnits(snapshot, owner).length < 8 && enemyCombatUnits(snapshot, owner, options.teams).length > 0) return false;
   return friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length === 0;
 }
 
@@ -685,8 +687,16 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   const reserveHealingWell = shouldReserveForHealingWell(snapshot, owner, options);
   const reserveExpansion = shouldReserveForExpansion(snapshot, owner, options);
   const reserveDuplicateProduction = duplicateCoreProductionReserveKind(snapshot, owner, options);
-  const restoreCombatBeforeWorkers =
-    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length === 0 && workerCount >= Math.min(5, routineWantedWorkers) && player.gold >= UNIT_DEFS.footman.cost && !canRebuildArmyWhileSaturatingTwoMines;
+  const needsFirstCombatRecovery =
+    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length === 0 && workerCount >= Math.min(5, routineWantedWorkers);
+  const restoreCombatBeforeWorkers = needsFirstCombatRecovery && player.gold >= UNIT_DEFS.footman.cost && !canRebuildArmyWhileSaturatingTwoMines;
+  // @@@first-combat-recovery-bank - After the army is wiped, spending the 75g worker threshold can prevent ever reaching the first 100g fighting unit.
+  const holdFirstCombatRecoveryGold =
+    needsFirstCombatRecovery &&
+    completeBuildings(snapshot, owner, "townHall").length >= 2 &&
+    enemyCombatUnits(snapshot, owner, options.teams).length > 0 &&
+    player.gold >= UNIT_DEFS.worker.cost &&
+    player.gold < UNIT_DEFS.footman.cost;
   const commands: GameCommand[] = [];
   let remainingGold = player.gold;
   let reservedSupply = projectedSupplyUsed(snapshot, owner);
@@ -694,8 +704,8 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
 
   for (const building of buildings(snapshot, owner).filter((candidate) => candidate.complete && candidate.queue.length === 0)) {
     const projectedWorkers = workerCount + queuedWorkers;
-    const needsRoutineWorker = !needsCoreArmy && !restoreCombatBeforeWorkers && projectedWorkers < routineWantedWorkers;
-    const needsRecoveryWorker = !restoreCombatBeforeWorkers && cheapWorkerRecovery && projectedWorkers >= routineWantedWorkers && projectedWorkers < wantedWorkers;
+    const needsRoutineWorker = !needsCoreArmy && !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && projectedWorkers < routineWantedWorkers;
+    const needsRecoveryWorker = !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && cheapWorkerRecovery && projectedWorkers >= routineWantedWorkers && projectedWorkers < wantedWorkers;
     const needsWorker = building.kind === "townHall" && (needsRoutineWorker || needsRecoveryWorker);
     const unitKind = needsWorker ? "worker" : trainingChoice(snapshot, owner, building, options);
     if (!unitKind) continue;
