@@ -2372,7 +2372,7 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "attack" ? command.unitIds.length : 0).toBeGreaterThanOrEqual(2);
   });
 
-  it("v2 reset preset keeps focus-fire out of the executable baseline stack", () => {
+  it("v2 preset reintroduces focus-fire through the memory-backed executable stack", () => {
     const scene = sketchScene("v2-preset-focus-fire-wiring")
       .map("bareDuel")
       .replaceDefaults()
@@ -2391,7 +2391,11 @@ describe("SDK preset AI policy", () => {
 
     const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
 
-    expect(entries.find((entry) => entry.scriptId === "focusFire")).toBeUndefined();
+    expect(entries.find((entry) => entry.scriptId === "focusFire")).toMatchObject({
+      scriptId: "focusFire",
+      command: { type: "attack", targetId: "weak-raider-preset" },
+    });
+    expect(entries.find((entry) => entry.scriptId === "attackWave" && entry.command.type === "attackMove")).toBeUndefined();
   });
 
   it("does not drag out-of-range melee out of tower cover for main-defense focus fire", () => {
