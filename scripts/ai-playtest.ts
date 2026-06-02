@@ -2,8 +2,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
 import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
+import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
 import type { AiRuntimeState } from "../src/ai/runtime";
-import type { AiScriptVersion, BuildingKind, GameCommand, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
+import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
   session: SerializedInteractivePlaytestSession;
@@ -18,22 +19,19 @@ if (!verb || verb === "help" || verb === "--help") {
 
 if (verb === "new") {
   const file = requiredFlag(args, "file");
-  const mapId = (flag(args, "map") ?? "bareDuel") as MapId;
   const controlledPlayer = flag(args, "you") ?? "v2";
   const enemy = flag(args, "enemy") ?? "v1a";
+  const setup = playtestSetupFromArgs(args, controlledPlayer, enemy);
   const controlledVersion = (flag(args, "you-version") ?? "v2") as AiScriptVersion;
   const enemyVersion = (flag(args, "enemy-version") ?? "v1") as AiScriptVersion;
   const thinkInterval = numberFlag(args, "think-interval", 45);
   const assistControlled = boolFlag(args, "assist-you");
   const session = createInteractivePlaytestSession({
-    id: flag(args, "id") ?? `interactive-${mapId}-${Date.now()}`,
-    mapId,
+    id: flag(args, "id") ?? `interactive-${setup.mapId}-${Date.now()}`,
+    mapId: setup.mapId,
     controlledPlayer,
     scriptedPlayers: [enemy],
-    options: {
-      players: [controlledPlayer, enemy],
-      teams: { [controlledPlayer]: "north", [enemy]: "south" },
-    },
+    options: setup.options,
   });
   const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion } });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
@@ -91,6 +89,29 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   if (verb === "hire") return { type: "hire", campId: requiredFlag(args, "camp") };
   if (verb === "use-item") return { type: "useItem", unitId: flag(args, "unit"), itemId: requiredFlag(args, "item"), ...(flag(args, "target") ? { targetId: requiredFlag(args, "target") } : {}), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   throw new Error(`Unknown ai playtest command ${verb}`);
+}
+
+function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions } {
+  const setup = flag(args, "setup");
+  if (setup === undefined) {
+    return {
+      mapId: (flag(args, "map") ?? "bareDuel") as MapId,
+      options: {
+        players: [controlledPlayer, enemy],
+        teams: { [controlledPlayer]: "north", [enemy]: "south" },
+      },
+    };
+  }
+  if (setup === "combat-15v20" || setup === "combat-10v12") {
+    const combat = createCombatScenarioSetup({
+      label: setup.replace("combat-", "") as CombatScenarioLabel,
+      recipeSlug: flag(args, "recipe") ?? "early-mixed",
+      v2Owner: controlledPlayer,
+      v1Owner: enemy,
+    });
+    return { mapId: combat.mapId, options: combat.options };
+  }
+  throw new Error(`Unknown ai playtest setup ${setup}`);
 }
 
 function conditionFromArgs(args: string[]): InteractivePlaytestCondition {
@@ -156,6 +177,7 @@ function printJson(value: unknown) {
 function printHelp() {
   console.log(`Usage:
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
+  npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- memory --file .playtests/duel.json
   npm run play:ai -- step --file .playtests/duel.json --ticks 45

@@ -1,11 +1,11 @@
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
-import { sketchScene } from "../../sdk/scene";
 import { RICH_SCORE_MAP_IDS } from "../../shared/map";
-import type { ItemKind, MapId, PlayerId, RaceId, UnitKind } from "../../shared/types";
+import type { MapId, PlayerId, RaceId } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkReport, BenchmarkMatchInput } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { SdkAgentAdapter } from "../../sdk/game-runner";
+import { COMBAT_SCENARIO_RECIPES, createCombatScenarioSetup, type CombatScenarioRecipe } from "../../sdk/scenarios/combat";
 
 export type GauntletMapSelection<TMapId extends string> = {
   mode: "sample" | "full";
@@ -307,143 +307,18 @@ function opponentWasNotOnlyNeutralKilled(match: BenchmarkEvaluationReport["match
     .some(([, player]) => player.unitsLost > 0 && player.unitsKilledByNeutral < player.unitsLost);
 }
 
-type CombatRecipe = {
-  name: string;
-  units: UnitKind[];
-  itemLoadout: [ItemKind, number][];
-  v1ItemLoadout: [ItemKind, number][];
-  columns: number;
-  xSpacing: number;
-  ySpacing: number;
-  yOffset: number;
-  xp?: (index: number) => number;
-};
-
-const COMBAT_RECIPES: CombatRecipe[] = [
-  {
-    name: "early mixed",
-    units: ["footman", "footman", "lancer", "archer", "raider", "archer"],
-    itemLoadout: [
-      ["flameCloak", 0],
-      ["guardianScroll", 2],
-      ["lightningRod", 4],
-      ["breachCharge", 5],
-    ],
-    v1ItemLoadout: [
-      ["flameCloak", 0],
-      ["guardianScroll", 2],
-      ["lightningRod", 4],
-      ["breachCharge", 5],
-    ],
-    columns: 5,
-    xSpacing: 38,
-    ySpacing: 46,
-    yOffset: 0,
-  },
-  {
-    name: "ranged casters",
-    units: ["archer", "contractArcher", "priest", "summoner", "witch", "archer", "fieldMedic", "lancer"],
-    itemLoadout: [
-      ["stormStaff", 1],
-      ["guardianScroll", 2],
-      ["lightningRod", 4],
-      ["experienceBook", 5],
-    ],
-    v1ItemLoadout: [
-      ["stormStaff", 1],
-      ["guardianScroll", 2],
-      ["lightningRod", 4],
-    ],
-    columns: 4,
-    xSpacing: 34,
-    ySpacing: 58,
-    yOffset: -70,
-  },
-  {
-    name: "high-star heavy",
-    units: ["knight", "golem", "groveWarden", "summoner", "witch", "priest", "raider", "archer", "lancer", "footman"],
-    itemLoadout: [
-      ["flameCloak", 0],
-      ["guardianScroll", 3],
-      ["stormStaff", 4],
-      ["lightningRod", 7],
-      ["experienceBook", 8],
-    ],
-    v1ItemLoadout: [
-      ["flameCloak", 0],
-      ["guardianScroll", 3],
-      ["stormStaff", 4],
-      ["lightningRod", 7],
-    ],
-    columns: 6,
-    xSpacing: 42,
-    ySpacing: 42,
-    yOffset: 64,
-    xp: (index) => (index % 5 === 0 ? 260 : index % 3 === 0 ? 130 : index % 2 === 0 ? 60 : 0),
-  },
-  {
-    name: "frontline healers",
-    units: ["footman", "footman", "lancer", "fieldMedic", "priest", "archer", "mercenary", "raider"],
-    itemLoadout: [
-      ["guardianScroll", 0],
-      ["flameCloak", 1],
-      ["stormStaff", 4],
-      ["lightningRod", 5],
-    ],
-    v1ItemLoadout: [
-      ["guardianScroll", 0],
-      ["flameCloak", 1],
-      ["stormStaff", 4],
-    ],
-    columns: 4,
-    xSpacing: 48,
-    ySpacing: 50,
-    yOffset: 36,
-    xp: (index) => (index % 4 === 0 ? 80 : 0),
-  },
-  {
-    name: "ranged spread",
-    units: ["archer", "archer", "contractArcher", "witch", "summoner", "fieldMedic", "lancer", "footman"],
-    itemLoadout: [
-      ["stormStaff", 0],
-      ["lightningRod", 2],
-      ["guardianScroll", 5],
-      ["experienceBook", 6],
-    ],
-    v1ItemLoadout: [
-      ["stormStaff", 0],
-      ["lightningRod", 2],
-      ["guardianScroll", 5],
-    ],
-    columns: 5,
-    xSpacing: 30,
-    ySpacing: 70,
-    yOffset: -104,
-    xp: (index) => (index % 6 === 0 ? 140 : 0),
-  },
-];
-
 function combatMatches(label: "15v20" | "10v12", v2Count: number, v1Count: number, adapter: SdkAgentAdapter, maxTicks: number, thinkInterval: number) {
-  return COMBAT_RECIPES.map((recipe) => combatMatch(label, recipe, v2Count, v1Count, adapter, maxTicks, thinkInterval));
+  return COMBAT_SCENARIO_RECIPES.map((recipe) => combatMatch(label, recipe, v2Count, v1Count, adapter, maxTicks, thinkInterval));
 }
 
-function combatMatch(label: "15v20" | "10v12", recipe: CombatRecipe, v2Count: number, v1Count: number, adapter: SdkAgentAdapter, maxTicks: number, thinkInterval: number): BenchmarkMatchInput<AiGameAgent> {
-  const scene = sketchScene(`benchmark-${label}-${recipe.name.replace(/\s+/g, "-")}-combat`)
-    .map("combatArena")
-    .replaceDefaults()
-    .player(V2, { team: "north", race: "grove" })
-    .player(V1A, { team: "south", race: "grove" })
-    .townHall(V2, 150, 800, { id: "combat-v2-anchor" })
-    .townHall(V1A, 1450, 800, { id: "combat-v1-anchor" });
-  addCombatArmy(scene, V2, recipe, v2Count, 520, 800, 1);
-  addCombatArmy(scene, V1A, recipe, v1Count, 1080, 800, -1);
-  addCombatItems(scene, V2, v2Count, recipe.itemLoadout);
-  addCombatItems(scene, V1A, v1Count, recipe.v1ItemLoadout);
+function combatMatch(label: "15v20" | "10v12", recipe: CombatScenarioRecipe, v2Count: number, v1Count: number, adapter: SdkAgentAdapter, maxTicks: number, thinkInterval: number): BenchmarkMatchInput<AiGameAgent> {
+  const setup = createCombatScenarioSetup({ label, recipeSlug: recipe.slug, v2Owner: V2, v1Owner: V1A });
+  if (setup.v2Count !== v2Count || setup.v1Count !== v1Count) throw new Error(`Combat setup ${label} count mismatch`);
 
   return {
     name: `combatArena ${label} ${recipe.name}`,
-    mapId: "combatArena",
-    options: scene.toGameSetup(),
+    mapId: setup.mapId,
+    options: setup.options,
     agents: {
       [V2]: { adapter, team: "north", race: "grove", version: "v2", versionLabel: "v2", policyMode: "combat" },
       [V1A]: { adapter, team: "south", race: "grove", version: "v1", versionLabel: "v1", policyMode: "combat" },
@@ -453,29 +328,6 @@ function combatMatch(label: "15v20" | "10v12", recipe: CombatRecipe, v2Count: nu
     maxTicks: Math.min(maxTicks, 9_000),
     thinkInterval,
   };
-}
-
-function addCombatArmy(scene: ReturnType<typeof sketchScene>, owner: PlayerId, recipe: CombatRecipe, count: number, centerX: number, centerY: number, direction: 1 | -1) {
-  for (let index = 0; index < count; index += 1) {
-    const column = index % recipe.columns;
-    const row = Math.floor(index / recipe.columns);
-    scene.unit(owner, combatUnitKind(recipe, index), centerX - direction * row * recipe.xSpacing, centerY + recipe.yOffset + (column - (recipe.columns - 1) / 2) * recipe.ySpacing, { id: combatUnitId(owner, index), ...(recipe.xp ? { xp: recipe.xp(index) } : {}) });
-  }
-}
-
-function combatUnitKind(recipe: CombatRecipe, index: number): UnitKind {
-  return recipe.units[index % recipe.units.length]!;
-}
-
-function addCombatItems(scene: ReturnType<typeof sketchScene>, owner: PlayerId, unitCount: number, loadout: [ItemKind, number][]) {
-  for (const [kind, carrierIndex] of loadout) {
-    if (carrierIndex >= unitCount) continue;
-    scene.item(`combat-${owner}-${kind}-${carrierIndex}`, kind, 0, 0, { carrierId: combatUnitId(owner, carrierIndex) });
-  }
-}
-
-function combatUnitId(owner: PlayerId, index: number) {
-  return `combat-${owner}-unit-${index + 1}`;
 }
 
 function parseSampleSize(value: string | undefined) {

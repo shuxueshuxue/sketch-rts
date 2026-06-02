@@ -69,6 +69,23 @@ describe("AI playtest CLI", () => {
       ])
     );
   });
+
+  it("creates reusable combat playtest setups that can be steered with memory-backed commands", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a"));
+
+    expect(created.players.v2).toMatchObject({ combatUnits: 15, workers: 0, bases: 1 });
+    expect(created.players.v1a).toMatchObject({ combatUnits: 20, workers: 0, bases: 1 });
+
+    runPlaytestCli("attack-move", "--file", file, "--units", "combat", "--x", "1080", "--y", "800");
+    const status = JSON.parse(runPlaytestCli("status", "--file", file));
+
+    expect(status.aiMemory.v2.jobs).toEqual([expect.objectContaining({ id: "attackWave:v1a", kind: "attackWave" })]);
+    expect(status.aiMemory.v2.claims.filter((claim: { kind: string }) => claim.kind === "attack")).toHaveLength(15);
+  });
 });
 
 function runPlaytestCli(...args: string[]) {
