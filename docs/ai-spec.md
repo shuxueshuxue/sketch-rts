@@ -201,6 +201,43 @@ Assist must be stable. Being attacked can create or refresh a target/assist stat
 
 Leash still matters. Called allies should help inside the camp's defendable area, then return home once the fight is over or the target leaves the leash. Assist should make camps coherent, not turn one arrow into permanent map-wide pursuit.
 
+## Static Defense, Tech, And Repair
+
+Static defense is a simulation balance contract, not an AI excuse to ignore worker-line threats. A guarded main should still need army response, but a completed tower near the worker line should make one-ranged-unit harassment expensive instead of free.
+
+Defense tower target shape:
+
+- Towers should have longer range than ordinary ranged units, including mercenary archers, so they can protect the worker line by position instead of being outranged.
+- Tower attack should be materially stronger than the current soft-warning-post model, but not become an army replacement.
+- Tower hit points may be slightly lower if attack is raised. Balance should compare value by cost, effective hit points, attack, range, immobility, build time, and repairability.
+- A reasonable target is that pre-upgrade tower value is below a contract archer on raw `hp * attack` cost efficiency, but wins on range and static-zone control. It should not beat mobile army value in open-field fights.
+
+Building tech:
+
+- Add a building durability upgrade, researched from a building UI surface such as the town hall.
+- The upgrade should be expensive enough to be a deliberate tech choice, not an automatic opener.
+- Once researched, it increases all owned building max HP by 20%.
+- It does not increase tower attack.
+- The UI must expose the research option through the ordinary research controls, not through a hidden AI-only path.
+
+Technology applicability:
+
+- Barracks combat upgrades apply only to ordinary trainable combat units that explicitly belong to the affected unit list.
+- Mercenary units do not receive barracks combat upgrades.
+- Buildings do not receive barracks combat upgrades.
+- Buildings receive only building-specific tech effects such as the building durability upgrade.
+- Summoned units should follow their own explicit simulation rule; they must not accidentally inherit permanent army or mercenary upgrade paths unless the catalog says so.
+
+Repair:
+
+- Workers should be able to repair damaged friendly buildings.
+- Repair is a real command/simulation system, not just passive regeneration.
+- A worker near a damaged friendly building may auto-repair only when the player has enough gold and the worker is not already committed to a higher-priority command.
+- Repair spends gold over time and restores building HP over time.
+- Repair cost ratio should be based on a Warcraft-III-like model: repairing from 0 to full should cost a meaningful fraction of the building's construction cost, not the full cost and not free. The exact ratio should be chosen and tested in simulation balance, then surfaced to the SDK.
+- Repair should stop loudly when the building is full HP, destroyed, unaffordable, or unsafe enough that the worker should flee.
+- AI repair/heal/resupply jobs should use SDK repair intents and memory claims. The AI should not hand-roll raw building HP mutation.
+
 ## Jobs
 
 V2 should move toward named jobs instead of scattered one-frame scripts fighting over the same units.
