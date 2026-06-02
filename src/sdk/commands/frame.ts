@@ -1,4 +1,7 @@
-import { issuePlayerCommand, type Game } from "../../shared/sim";
+import { type Game } from "../../shared/sim";
+import { checksumGame } from "../../shared/sim/checksum";
+import { applyCommandFrame } from "../../shared/sim/frame";
+import type { CommandFrame } from "../../shared/net/types";
 import type { GameCommand, PlayerId } from "../../shared/types";
 
 export type CommandFrameEntry<Source extends string = string> = {
@@ -15,12 +18,37 @@ export type CommandFrameHooks<Source extends string = string> = {
 
 export type CommandFrameResult<Source extends string = string> = {
   commands: CommandFrameEntry<Source>[];
+  frame?: CommandFrame;
+  checksum?: string;
 };
 
 export function issueCommandFrame<Source extends string = string>(game: Game, planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}): CommandFrameResult<Source> {
-  const issued: CommandFrameEntry<Source>[] = [];
-  if (game.match.winner) return { commands: issued };
+  if (game.match.winner) return { commands: [] };
+  const issued = selectIssueableCommandEntries(planned);
 
+  if (issued.length === 0) return { commands: issued };
+  const frame: CommandFrame = {
+    roomId: "sdk",
+    tick: game.tick,
+    sequence: 0,
+    commands: issued.map((entry) => ({ playerId: entry.playerId, command: entry.command })),
+  };
+  let entryIndex = 0;
+  applyCommandFrame(game, frame, {
+    beforeApply() {
+      hooks.beforeIssue?.(issued[entryIndex]!);
+    },
+    afterApply() {
+      hooks.afterIssue?.(issued[entryIndex]!);
+      entryIndex += 1;
+    },
+  });
+
+  return { commands: issued, frame, checksum: checksumGame(game) };
+}
+
+export function selectIssueableCommandEntries<Source extends string = string>(planned: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] {
+  const issued: CommandFrameEntry<Source>[] = [];
   const hiredCampIds = new Set<string>();
   const pickedItemIds = new Set<string>();
   for (const entry of planned) {
@@ -32,11 +60,7 @@ export function issueCommandFrame<Source extends string = string>(game: Game, pl
       if (pickedItemIds.has(entry.command.itemId)) continue;
       pickedItemIds.add(entry.command.itemId);
     }
-    hooks.beforeIssue?.(entry);
-    issuePlayerCommand(game, entry.playerId, entry.command);
-    hooks.afterIssue?.(entry);
     issued.push(entry);
   }
-
-  return { commands: issued };
+  return issued;
 }

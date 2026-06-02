@@ -210,7 +210,7 @@ describe("SketchRtsSdk", () => {
     const calls: { path: string; method: string; body?: unknown }[] = [];
     const room = makeRoom("room-1");
     const save = { schemaVersion: 1, id: "save-1", label: "opening", createdAt: "2026-05-31T00:00:00.000Z", room, snapshot: makeSnapshot(), runtime: { nextId: 1001, activePlayers: ["player", "enemy"], teams: { player: "north", enemy: "south" }, aiPlayers: ["enemy"] } };
-    const replay = { schemaVersion: 1, id: "trace-1", label: "debug", initialSave: save, batches: [], checkpoints: [] };
+    const replay = { schemaVersion: 1, id: "trace-1", label: "debug", initialSave: save, frames: [], checkpoints: [] };
     const fetcher: typeof fetch = async (input, init) => {
       const url = new URL(String(input));
       const method = init?.method ?? "GET";

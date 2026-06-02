@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRoom } from "./rooms";
-import { createDebugReplayTrace, extractReplayFrameSave, recordReplayBatch, recordReplayCheckpoint, replayTraceToTick } from "./replay";
+import { createDebugReplayTrace, extractReplayFrameSave, recordReplayCheckpoint, recordReplayFrame, replayTraceToTick } from "./replay";
 import { createSaveGameRecord } from "./savegame";
 import { createGame, issuePlayerCommand, stepGame } from "./sim";
 
@@ -10,7 +10,26 @@ const room = {
 };
 
 describe("debug replay traces", () => {
-  it("rebuilds a deterministic match state from ordered command batches", () => {
+  it("stores command frames as the replay input instead of a replay-only batch shape", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+    const initialSave = createSaveGameRecord(game, room, { id: "replay-initial" }, new Date("2026-05-31T00:00:00.000Z"), []);
+    const trace = createDebugReplayTrace({ id: "replay-frames", initialSave });
+    const frame = {
+      roomId: room.id,
+      tick: game.tick,
+      sequence: 0,
+      commands: [{ playerId: "player", command: { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 90, y: worker!.y } }],
+    };
+
+    recordReplayFrame(trace, { source: "test-harness", frame });
+
+    expect(trace.frames).toEqual([{ ...frame, source: "test-harness" }]);
+    expect("batches" in trace).toBe(false);
+  });
+
+  it("rebuilds a deterministic match state from ordered command frames", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
     expect(worker).toBeDefined();
@@ -18,7 +37,7 @@ describe("debug replay traces", () => {
     const trace = createDebugReplayTrace({ id: "replay-1", initialSave });
     const command = { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 180, y: worker!.y + 20 };
 
-    recordReplayBatch(trace, { tick: game.tick, source: "sdk-agent", commands: [{ playerId: "player", command }] });
+    recordReplayFrame(trace, { source: "sdk-agent", frame: { roomId: room.id, tick: game.tick, sequence: 0, commands: [{ playerId: "player", command }] } });
     issuePlayerCommand(game, "player", command);
     for (let i = 0; i < 40; i += 1) stepGame(game);
 
@@ -38,7 +57,7 @@ describe("debug replay traces", () => {
     const initialSave = createSaveGameRecord(game, room, { id: "replay-initial" }, new Date("2026-05-31T00:00:00.000Z"), []);
     const trace = createDebugReplayTrace({ id: "replay-1", initialSave });
     const command = { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 90, y: worker!.y + 90 };
-    recordReplayBatch(trace, { tick: 0, source: "test-harness", commands: [{ playerId: "player", command }] });
+    recordReplayFrame(trace, { source: "test-harness", frame: { roomId: room.id, tick: 0, sequence: 0, commands: [{ playerId: "player", command }] } });
 
     const extracted = extractReplayFrameSave(trace, 12, { id: "scene-from-replay", label: "harass bug frame" });
 
@@ -50,7 +69,7 @@ describe("debug replay traces", () => {
     expect(extracted.snapshot.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
-  it("seeks from the nearest checkpoint without replaying earlier batches", () => {
+  it("seeks from the nearest checkpoint without replaying earlier frames", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
     expect(worker).toBeDefined();
@@ -59,14 +78,14 @@ describe("debug replay traces", () => {
     const earlyCommand = { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 60, y: worker!.y };
     const lateCommand = { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 180, y: worker!.y + 30 };
 
-    recordReplayBatch(trace, { tick: 0, source: "test-harness", commands: [{ playerId: "player", command: earlyCommand }] });
+    recordReplayFrame(trace, { source: "test-harness", frame: { roomId: room.id, tick: 0, sequence: 0, commands: [{ playerId: "player", command: earlyCommand }] } });
     issuePlayerCommand(game, "player", earlyCommand);
     for (let i = 0; i < 12; i += 1) stepGame(game);
     recordReplayCheckpoint(trace, game);
-    recordReplayBatch(trace, { tick: game.tick, source: "test-harness", commands: [{ playerId: "player", command: lateCommand }] });
+    recordReplayFrame(trace, { source: "test-harness", frame: { roomId: room.id, tick: game.tick, sequence: 1, commands: [{ playerId: "player", command: lateCommand }] } });
     issuePlayerCommand(game, "player", lateCommand);
     for (let i = 0; i < 8; i += 1) stepGame(game);
-    trace.batches[0]!.commands[0]!.command = { type: "move", unitIds: ["missing-unit"], x: 0, y: 0 };
+    trace.frames[0]!.commands[0]!.command = { type: "move", unitIds: ["missing-unit"], x: 0, y: 0 };
 
     const replayed = replayTraceToTick(trace, game.tick);
 
