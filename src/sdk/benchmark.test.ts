@@ -347,4 +347,45 @@ describe("SDK benchmark", () => {
     expect(player.unitTrainingGoldSpent).toBe(UNIT_DEFS.footman.cost);
     expect(player.totalGoldSpent).toBe(BUILDING_DEFS.farm.cost + UNIT_DEFS.footman.cost);
   });
+
+  it("can report combat elimination winners while base anchors remain alive", () => {
+    const scene = sketchScene("sdk-benchmark-combat-elimination-winner")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "footman", 760, 800, { id: "v2-footman", order: { type: "attack", targetId: "v1-footman" } })
+      .unit("v1", "footman", 790, 800, { id: "v1-footman", hp: 1 })
+      .build();
+
+    const report = runBenchmark({
+      name: "sdk-benchmark-combat-elimination",
+      evaluations: [
+        {
+          name: "combat elimination",
+          tag: "combat",
+          matches: [
+            {
+              name: "anchors stay alive",
+              game: scene.createGame(),
+              winnerMode: "combatElimination",
+              agents: {
+                v2: { adapter: "external", team: "north", race: "grove", versionLabel: "v2" },
+                v1: { adapter: "external", team: "south", race: "ember", versionLabel: "v1" },
+              },
+              maxTicks: 1,
+              thinkInterval: 45,
+            },
+          ],
+        },
+      ],
+    });
+
+    const match = report.evaluations[0]!.matches[0]!;
+    expect(match.result).toMatchObject({ winner: "v2", winnerTeam: "north", timeout: false });
+    expect(match.result.players.v1!.finalSupply).toBe(0);
+    expect(match.result.players.v1!.finalBuildingCount).toBe(1);
+  });
 });

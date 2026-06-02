@@ -334,6 +334,7 @@ function combatMatch(label: "15v20" | "10v12", recipe: CombatRecipe, v2Count: nu
       [V1A]: { adapter, team: "south", race: "grove", version: "v1", versionLabel: "v1", scripts: V1_COMBAT_SCRIPTS, policyMode: "combat" },
     },
     commandPlanner: createAiGameCommandPlanner(),
+    winnerMode: "combatElimination",
     maxTicks: Math.min(maxTicks, 9_000),
     thinkInterval,
   };

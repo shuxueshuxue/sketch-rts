@@ -24,6 +24,7 @@ export type BenchmarkMatchInput<TAgent extends SdkGameAgent = SdkGameAgent> = {
   agents: Record<PlayerId, TAgent>;
   commandPlanner?: SdkGameCommandPlanner<TAgent>;
   options?: CreateGameOptions;
+  winnerMode?: "match" | "combatElimination";
   maxTicks: number;
   thinkInterval: number;
 };
@@ -371,15 +372,30 @@ function benchmarkSetup<TAgent extends SdkGameAgent>(game: Game, input: Benchmar
 
 function benchmarkResult<TAgent extends SdkGameAgent>(game: Game, snapshot: GameSnapshot, input: BenchmarkMatchInput<TAgent>, state: StandardBenchmarkState): BenchmarkMatchResult {
   const players = Object.fromEntries(state.players.map((owner) => [owner, playerResult(owner, snapshot, input, state)])) as Record<PlayerId, BenchmarkPlayerResult>;
+  const overrideWinner = input.winnerMode === "combatElimination" ? combatEliminationWinner(snapshot, state) : undefined;
+  const winner = game.match.winner ?? overrideWinner?.winner ?? null;
+  const winnerTeam = game.match.winner ? state.teams[game.match.winner] ?? game.match.winner : (overrideWinner?.team ?? "timeout");
   return {
     tick: game.tick,
     gameSecond: tickSecond(game.tick),
-    winner: game.match.winner,
-    winnerTeam: game.match.winner ? state.teams[game.match.winner] ?? game.match.winner : "timeout",
-    timeout: !game.match.winner,
+    winner,
+    winnerTeam,
+    timeout: !winner,
     players,
     trackers: {},
   };
+}
+
+function combatEliminationWinner(snapshot: GameSnapshot, state: StandardBenchmarkState): { winner: PlayerId; team: string } | undefined {
+  const combatByTeam = new Map<string, PlayerId[]>();
+  for (const owner of state.players) {
+    const team = state.teams[owner] ?? owner;
+    const combatUnits = snapshot.units.filter((unit) => unit.owner === owner && unit.kind !== "worker");
+    if (combatUnits.length > 0) combatByTeam.set(team, [...(combatByTeam.get(team) ?? []), owner]);
+  }
+  if (combatByTeam.size !== 1) return undefined;
+  const [team, owners] = [...combatByTeam.entries()][0]!;
+  return { team, winner: owners[0]! };
 }
 
 function playerResult<TAgent extends SdkGameAgent>(owner: PlayerId, snapshot: GameSnapshot, input: BenchmarkMatchInput<TAgent>, state: StandardBenchmarkState): BenchmarkPlayerResult {
