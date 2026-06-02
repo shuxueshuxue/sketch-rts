@@ -10,6 +10,7 @@ import {
   type ControlGroups,
 } from "./control-groups";
 import { edgeScrollDelta } from "./edge-scroll";
+import { SessionSocketGameAdapter, type GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
@@ -27,6 +28,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
+import { roomBrowserEntries } from "./room-browser-model";
 import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
@@ -35,7 +37,12 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
+import { LockstepClient } from "./net/lockstep-client";
+import { LockstepRoomGameAdapter } from "./net/room-adapter";
+import { WebSocketTransport } from "./net/websocket-transport";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
+import { createGame } from "../shared/sim";
+import { SimulationEngine } from "../shared/sim/engine";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
 import { canStartRoom } from "../shared/rooms";
@@ -126,9 +133,11 @@ const ctx = requireCanvasContext(canvas);
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
-let roomPollTimer: number | undefined;
+let roomLockstepClient: LockstepClient | undefined;
 let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
+let spectatingRoom = false;
+let activeGameAdapter: GameAdapter;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
@@ -154,7 +163,9 @@ let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
-const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/session`);
+const sessionGameAdapter = new SessionSocketGameAdapter(socket, () => snapshot);
+activeGameAdapter = sessionGameAdapter;
 const commandButtons: CommandButton[] = [
   createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
     title: "Attack Move",
@@ -513,11 +524,11 @@ async function renderRoomBrowser() {
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
-  const visibleRooms = rooms.rooms.filter((room) => room.status !== "ended" && room.status !== "closed" && (room.status !== "inMatch" || slotForUser(room, localUser.id)));
+  const visibleRooms = roomBrowserEntries(rooms.rooms, localUser.id);
   list.replaceChildren(
     ...(visibleRooms.length > 0
-      ? visibleRooms.map((room) =>
-          menuButton(room.name, roomBrowserNote(room), "data-room-id", () => void enterRoom(room.id), room.id),
+      ? visibleRooms.map((entry) =>
+          menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
         )
       : [emptyRoomList()]),
   );
@@ -672,7 +683,7 @@ async function startCurrentRoom() {
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
   currentRoomId = currentRoom.id;
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
-  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
+  connectRoomLockstep(currentRoom.id, currentRoom.mapId, localPlayerId);
   syncDebugView();
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
@@ -681,7 +692,6 @@ async function startCurrentRoom() {
   menuOpen = false;
   shell.classList.remove("menu-open");
   mainMenu.classList.add("hidden");
-  startRoomPolling();
   syncPointerLockGate();
 }
 
@@ -806,6 +816,7 @@ function canRemoveLastRoomSlot(room: RoomState) {
 async function closeCurrentRoom() {
   if (!currentRoom) return;
   await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/close`, { userId: localUser.id });
+  disconnectRoomLockstep();
   currentRoom = undefined;
   currentRoomId = undefined;
   syncDebugView();
@@ -838,9 +849,9 @@ function slotSummaryText(room: RoomState) {
   return `${room.slots.length}/${MAX_ROOM_SLOTS} · ${tally.human} claimed · ${tally.ai} AI${openText}${closedText}`;
 }
 
-function roomBrowserNote(room: RoomState) {
+function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
   const ownedSlot = slotForUser(room, localUser.id);
-  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : room.status === "open" ? "open" : "already started";
+  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : action === "watch" ? "watch live" : room.status === "open" ? "open" : "already started";
   return `${room.mapId} · ${room.status} · ${activeSlotCount(room)} active · ${access}`;
 }
 
@@ -860,8 +871,10 @@ function slotForUser(room: RoomState, userId: string) {
 }
 
 function returnHome() {
+  disconnectRoomLockstep();
   currentRoom = undefined;
   currentRoomId = undefined;
+  spectatingRoom = false;
   syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -874,21 +887,23 @@ function returnHome() {
 
 async function enterRoom(roomId: string) {
   try {
-    const room = await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
+    const existingRoom = await requestJson<RoomState>(`/api/rooms/${roomId}`);
+    const room = existingRoom.status === "inMatch" && !slotForUser(existingRoom, localUser.id) ? existingRoom : await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
     currentRoom = room;
-    localPlayerId = slotForUser(room, localUser.id)?.playerId ?? localPlayerId;
+    const ownedSlot = slotForUser(room, localUser.id);
+    spectatingRoom = room.status === "inMatch" && !ownedSlot;
+    localPlayerId = ownedSlot?.playerId ?? (spectatingRoom ? `spectator-${localUser.id}` : localPlayerId);
     if (room.status === "ended" && room.result) {
       openResults(room);
       return;
     }
     if (room.status === "inMatch") {
       currentRoomId = room.id;
-      snapshot = await requestJson<GameSnapshot>(`/api/rooms/${room.id}/snapshot`);
+      connectRoomLockstep(room.id, room.mapId, localPlayerId);
       syncDebugView();
       menuOpen = false;
       shell.classList.remove("menu-open");
       mainMenu.classList.add("hidden");
-      startRoomPolling();
       syncPointerLockGate();
       return;
     }
@@ -900,33 +915,52 @@ async function enterRoom(roomId: string) {
   }
 }
 
-function startRoomPolling() {
-  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
-  roomPollTimer = window.setInterval(() => {
-    if (!currentRoomId || menuOpen) return;
-    void refreshRoomSnapshot();
-  }, 120);
+function connectRoomLockstep(roomId: string, mapId: MapId, playerId: PlayerId) {
+  disconnectRoomLockstep();
+  const players = currentRoom?.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").map((slot) => slot.playerId);
+  const game = createGame(mapId, players ? { players } : {});
+  const transport = WebSocketTransport.connect(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/rooms/${encodeURIComponent(roomId)}`);
+  roomLockstepClient = new LockstepClient({ roomId, playerId, engine: new SimulationEngine(game), transport });
+  activeGameAdapter = new LockstepRoomGameAdapter(roomLockstepClient, { spectating: spectatingRoom });
+  transport.onMessage((message) => {
+    if (message.type === "room") {
+      currentRoom = message.room;
+      if (message.room.status === "ended" && message.room.result) openResults(message.room);
+    }
+  });
+  transport.onOpen(() => {
+    roomLockstepClient?.join();
+    roomLockstepClient?.requestCheckpoint();
+  });
+  snapshot = activeGameAdapter.currentSnapshot();
+  pruneSelection();
+  updateHud();
 }
 
-async function refreshRoomSnapshot() {
-  if (!currentRoomId) return;
-  const room = await requestJson<RoomState>(`/api/rooms/${currentRoomId}`);
-  if (room.status === "ended" && room.result) {
-    openResults(room);
-    return;
-  }
-  currentRoom = room;
-  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/snapshot`);
+function disconnectRoomLockstep() {
+  if (activeGameAdapter !== sessionGameAdapter) activeGameAdapter.close();
+  activeGameAdapter = sessionGameAdapter;
+  roomLockstepClient = undefined;
+}
+
+function syncActiveGameAdapterSnapshot() {
+  if (menuOpen) return;
+  const changed = activeGameAdapter.updateToRenderTime();
+  const current = activeGameAdapter.currentSnapshot();
+  if (!current) return;
+  if (!changed && snapshot?.tick === current.tick) return;
+  snapshot = current;
   syncDebugView();
   pruneSelection();
   updateHud();
 }
 
 function openResults(room: RoomState) {
-  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  disconnectRoomLockstep();
   releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
+  spectatingRoom = false;
   syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -963,6 +997,7 @@ async function requestJson<T>(path: string, body?: unknown): Promise<T> {
 }
 
 function frame() {
+  syncActiveGameAdapterSnapshot();
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
@@ -1145,21 +1180,11 @@ function onKeyDown(event: KeyboardEvent) {
 }
 
 function sendCommand(command: GameCommand) {
-  if (currentRoomId) {
-    void requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/command`, { playerId: localPlayerId, command })
-      .then((nextSnapshot) => {
-        snapshot = nextSnapshot;
-        pruneSelection();
-        updateHud();
-      })
-      .catch((error) => showInvalidCommand(`Command failed: ${error instanceof Error ? error.message : String(error)}`));
-    return;
+  try {
+    activeGameAdapter.sendCommand(command);
+  } catch (error) {
+    showInvalidCommand(error instanceof Error ? error.message : String(error));
   }
-  if (socket.readyState !== WebSocket.OPEN) {
-    showInvalidCommand("Command failed: socket is not open.");
-    return;
-  }
-  socket.send(JSON.stringify(command));
 }
 
 function showInvalidCommand(message: string) {

@@ -85,6 +85,14 @@ describe("room model", () => {
     expect(lobbyVisibleRooms([privateRoom, publicRoom], host.id).map((room) => room.id)).toEqual(["room-private", "room-public"]);
   });
 
+  it("keeps public in-match rooms visible for spectators without exposing private matches", () => {
+    const publicMatch = { ...createRoom({ id: "room-public-match", host, visibility: "public" }), status: "inMatch" as const };
+    const privateMatch = { ...createRoom({ id: "room-private-match", host, visibility: "private" }), status: "inMatch" as const };
+
+    expect(lobbyVisibleRooms([publicMatch, privateMatch], guest.id).map((room) => room.id)).toEqual(["room-public-match"]);
+    expect(lobbyVisibleRooms([privateMatch], host.id).map((room) => room.id)).toEqual(["room-private-match"]);
+  });
+
   it("does not keep open or closed placeholder names when a slot becomes AI", () => {
     let room = createRoom({ id: "room-slot-name", host });
 
