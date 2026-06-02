@@ -5135,6 +5135,73 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
   });
 
+  it("v2 rebuilds a fighting unit before spending scarce gold on a thin moon well", () => {
+    const scene = sketchScene("v2-rebuilds-combat-before-thin-moon-well")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "farm", 560, 700, { id: "v2-first-farm" })
+      .worker("v2", 520, 560, { id: "v2-builder" })
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 560)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 560)
+      .unit("v2", "footman", 700, 620, { hp: 48 })
+      .townHall("v1a", 3300, 3300)
+      .unit("v1a", "footman", 920, 620)
+      .townHall("v1b", 3400, 3800)
+      .unit("v1b", "lancer", 1880, 820)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .goldMine("v1b-main-mine", 3340, 3800, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 140;
+    game.players.v2!.supplyUsed = 7;
+    game.players.v2!.supplyCap = 16;
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell, AI_SCRIPT_LIBRARY.training], {
+      version: "v2",
+      teams: game.teams,
+    });
+
+    expect(entries).toEqual([{ scriptId: "training", command: { type: "train", buildingId: "v2-barracks", unitKind: "footman" } }]);
+  });
+
+  it("v2 banks scarce one-base gold for combat recovery instead of a sixth worker", () => {
+    const scene = sketchScene("v2-one-base-thin-combat-bank")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "farm", 560, 700, { id: "v2-first-farm" })
+      .worker("v2", 520, 560)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 560)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 560)
+      .unit("v2", "footman", 700, 620)
+      .townHall("v1a", 3300, 3300)
+      .unit("v1a", "footman", 920, 620)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 75;
+    game.players.v2!.supplyUsed = 7;
+    game.players.v2!.supplyCap = 16;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
   it("v2 preserves near-moon-well gold instead of routine training when wounded defenders are under pressure", () => {
     const scene = sketchScene("v2-moon-well-reserve")
       .map("bareDuel")

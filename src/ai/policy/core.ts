@@ -557,6 +557,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const wantsWell = woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
+  if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
   if (shouldHoldFirstExpansionBank(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
@@ -566,6 +567,20 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y }, options);
+}
+
+function shouldRebuildCombatBeforeHealingWell(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return false;
+  if (ownCombat.length >= 2) return false;
+  const player = playerState(snapshot, owner);
+  for (const building of buildings(snapshot, owner).filter((candidate) => candidate.complete && candidate.queue.length === 0)) {
+    const unitKind = trainingChoice(snapshot, owner, building, options);
+    if (!unitKind || unitKind === "worker") continue;
+    const cost = UNIT_DEFS[unitKind].cost;
+    // @@@thin-army-before-healing - A moon well helps wounded units, but with one defender left it must not consume the first rebuild unit.
+    if (player.gold >= cost && player.gold < BUILDING_DEFS.moonWell.cost + cost && canSupply(snapshot, owner, unitKind)) return true;
+  }
+  return false;
 }
 
 function planMercenary(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -684,12 +699,12 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   const reserveExpansion = shouldReserveForExpansion(snapshot, owner, options);
   const reserveDuplicateProduction = duplicateCoreProductionReserveKind(snapshot, owner, options);
   const needsFirstCombatRecovery =
-    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length === 0 && workerCount >= Math.min(5, routineWantedWorkers);
+    options.version === "v2" && hasCoreProduction(snapshot, owner) && combatUnits(snapshot, owner).length < 2 && workerCount >= Math.min(5, routineWantedWorkers);
   const restoreCombatBeforeWorkers = needsFirstCombatRecovery && player.gold >= UNIT_DEFS.footman.cost && !canRebuildArmyWhileSaturatingTwoMines;
   // @@@first-combat-recovery-bank - After the army is wiped, spending the 75g worker threshold can prevent ever reaching the first 100g fighting unit.
   const holdFirstCombatRecoveryGold =
     needsFirstCombatRecovery &&
-    completeBuildings(snapshot, owner, "townHall").length >= 2 &&
+    (completeBuildings(snapshot, owner, "townHall").length >= 2 || combatUnits(snapshot, owner).length > 0) &&
     enemyCombatUnits(snapshot, owner, options.teams).length > 0 &&
     player.gold >= UNIT_DEFS.worker.cost &&
     player.gold < UNIT_DEFS.footman.cost;
