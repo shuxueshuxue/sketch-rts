@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { applyInteractivePlaytestCommand, createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
-import { createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession } from "../src/ai/playtest";
+import { applyInteractivePlaytestCommand, createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
+import { createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "../src/ai/playtest";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { AiScriptVersion, BuildingKind, GameCommand, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
@@ -55,6 +55,13 @@ if (verb === "step") {
   process.exit(0);
 }
 
+if (verb === "step-until") {
+  const result = stepAiInteractivePlaytestUntil(session, loaded.runtime, conditionFromArgs(args), { maxTicks: numberFlag(args, "max-ticks", 240) });
+  savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
+  printJson({ result, summary: summarizeInteractivePlaytestSession(session) });
+  process.exit(result.conditionMet ? 0 : 1);
+}
+
 const command = commandFromArgs(verb, args);
 applyInteractivePlaytestCommand(session, command);
 savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
@@ -69,12 +76,23 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   if (verb === "retreat") return { type: "retreat", unitIds: unitSelector(args), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   if (verb === "mine") return { type: "mine", unitIds: unitSelector(args), ...(flag(args, "resource") ? { resourceId: requiredFlag(args, "resource") } : {}) };
   if (verb === "repair") return { type: "repair", unitIds: unitSelector(args), buildingId: requiredFlag(args, "building") };
+  if (verb === "expand") return { type: "expand", unitId: flag(args, "unit"), ...(flag(args, "resource") ? { resourceId: requiredFlag(args, "resource") } : {}) };
+  if (verb === "creep-camp") return { type: "creepCamp", campId: flag(args, "camp"), unitIds: unitSelector(args) };
   if (verb === "build") return { type: "build", unitId: flag(args, "unit"), buildingKind: requiredFlag(args, "kind") as BuildingKind, x: requiredNumberFlag(args, "x"), y: requiredNumberFlag(args, "y") };
   if (verb === "train") return { type: "train", buildingId: flag(args, "building"), unitKind: requiredFlag(args, "unit-kind") as TrainableUnitKind };
   if (verb === "research") return { type: "research", buildingId: flag(args, "building"), upgradeKind: requiredFlag(args, "upgrade") as UpgradeKind };
   if (verb === "hire") return { type: "hire", campId: requiredFlag(args, "camp") };
   if (verb === "use-item") return { type: "useItem", unitId: flag(args, "unit"), itemId: requiredFlag(args, "item"), ...(flag(args, "target") ? { targetId: requiredFlag(args, "target") } : {}), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   throw new Error(`Unknown ai playtest command ${verb}`);
+}
+
+function conditionFromArgs(args: string[]): InteractivePlaytestCondition {
+  const condition = requiredFlag(args, "condition");
+  if (condition === "first-fight") return { type: "firstFight" };
+  if (condition === "winner") return { type: "winner" };
+  if (condition === "tick") return { type: "tick", tick: requiredNumberFlag(args, "tick") };
+  if (condition === "enemy-nearby") return { type: "enemyNearby", ...(flag(args, "range") ? { range: requiredNumberFlag(args, "range") } : {}) };
+  throw new Error(`Unknown step-until condition ${condition}`);
 }
 
 function loadPlaytestFile(file: string): AiPlaytestFile {
@@ -129,7 +147,10 @@ function printHelp() {
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
+  npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240
   npm run play:ai -- attack-move --file .playtests/duel.json --units combat --x 2048 --y 2048
+  npm run play:ai -- expand --file .playtests/duel.json --resource gold-natural
+  npm run play:ai -- creep-camp --file .playtests/duel.json --camp merc-camp-crossroad --units combat
   npm run play:ai -- focus --file .playtests/duel.json --target unit-v1a-worker-1
   npm run play:ai -- raw --file .playtests/duel.json --json '{"type":"move","unitIds":["unit-v2-worker-1"],"x":500,"y":500}'`);
 }

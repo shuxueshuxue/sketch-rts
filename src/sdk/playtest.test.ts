@@ -5,6 +5,7 @@ import {
   restoreInteractivePlaytestSession,
   serializeInteractivePlaytestSession,
   stepInteractivePlaytestSession,
+  stepInteractivePlaytestUntil,
   summarizeInteractivePlaytestSession,
 } from "./playtest";
 import type { CommandFrameEntry } from "./commands/frame";
@@ -74,5 +75,87 @@ describe("interactive playtest SDK", () => {
     });
 
     expect(() => applyInteractivePlaytestCommand(session, { type: "attackMove", unitIds: "combat", x: 800, y: 800 })).toThrow("No v2 units match selector combat");
+  });
+
+  it("expands and creeps camps through reusable high-level commands", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          replaceDefaultMercenaryCamps: true,
+          addUnits: [
+            { id: "v2-worker", owner: "v2", kind: "worker", x: 260, y: 280 },
+            { id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 300 },
+            { id: "wild-camp-1", owner: "neutral", kind: "wildling", x: 900, y: 920 },
+          ],
+          addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 }],
+          addResources: [
+            { id: "gold-v2-main", kind: "goldMine", x: 260, y: 260, amount: 6000 },
+            { id: "gold-natural", kind: "goldMine", x: 760, y: 760, amount: 6000 },
+          ],
+          addMercenaryCamps: [{ id: "camp-natural", x: 900, y: 900, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: 90, cooldownRemaining: 0 }],
+        },
+      },
+    });
+
+    applyInteractivePlaytestCommand(session, { type: "expand", resourceId: "gold-natural" });
+    expect(session.game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main")).toMatchObject({
+      x: 760,
+      y: 760,
+      complete: false,
+    });
+
+    applyInteractivePlaytestCommand(session, { type: "creepCamp", campId: "camp-natural", unitIds: "combat" });
+    expect(session.game.units.find((unit) => unit.id === "v2-footman")?.order).toEqual({ type: "attackMove", x: 900, y: 900 });
+  });
+
+  it("steps until first enemy contact and exposes fight and timeout state in the summary", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 780 },
+            { id: "v1a-footman", owner: "v1a", kind: "footman", x: 430, y: 780 },
+          ],
+        },
+      },
+    });
+
+    applyInteractivePlaytestCommand(session, { type: "attackMove", unitIds: "combat", x: 430, y: 780 });
+    const result = stepInteractivePlaytestUntil(session, { type: "firstFight" }, {
+      maxTicks: 5,
+      scriptedPlayers: {
+        v1a: () => [
+          {
+            playerId: "v1a",
+            source: "scripted-ai",
+            scriptId: "test-opponent",
+            command: { type: "attackMove", unitIds: ["v1a-footman"], x: 320, y: 780 },
+          },
+        ],
+      },
+    });
+
+    expect(result.conditionMet).toBe(true);
+    expect(result.timedOut).toBe(false);
+    expect(summarizeInteractivePlaytestSession(session)).toMatchObject({
+      fight: { state: "contactRecorded", firstFightGameSecond: expect.any(Number) },
+      runState: { winner: null, timeout: false },
+    });
   });
 });

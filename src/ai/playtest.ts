@@ -1,4 +1,4 @@
-import { stepInteractivePlaytestSession, type InteractivePlaytestSession } from "../sdk/playtest";
+import { stepInteractivePlaytestSession, stepInteractivePlaytestUntil, type InteractivePlaytestCondition, type InteractivePlaytestSession, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
 import type { AiScriptVersion, PlayerId } from "../shared/types";
 
@@ -14,6 +14,13 @@ export function createAiInteractivePlaytestRuntime(session: InteractivePlaytestS
 
 export function stepAiInteractivePlaytestSession(session: InteractivePlaytestSession, runtime: AiRuntimeState, ticks: number) {
   stepInteractivePlaytestSession(session, ticks, {
+    beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
+  });
+}
+
+export function stepAiInteractivePlaytestUntil(session: InteractivePlaytestSession, runtime: AiRuntimeState, condition: InteractivePlaytestCondition, options: Pick<InteractivePlaytestUntilOptions, "maxTicks">): InteractivePlaytestUntilResult {
+  return stepInteractivePlaytestUntil(session, condition, {
+    maxTicks: options.maxTicks,
     beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
   });
 }

@@ -17,6 +17,8 @@ export type InteractivePlaytestCommand =
   | { type: "retreat"; unitIds?: InteractiveUnitSelector; x?: number; y?: number }
   | { type: "mine"; unitIds?: InteractiveUnitSelector; resourceId?: string }
   | { type: "repair"; unitIds?: InteractiveUnitSelector; buildingId: string }
+  | { type: "expand"; resourceId?: string; unitId?: string }
+  | { type: "creepCamp"; campId?: string; unitIds?: InteractiveUnitSelector }
   | { type: "build"; unitId?: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "train"; buildingId?: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId?: string; upgradeKind: UpgradeKind }
@@ -35,20 +37,27 @@ export type InteractivePlaytestTranscriptEntry =
   | { type: "command"; tick: number; owner: PlayerId; command: GameCommand }
   | { type: "step"; fromTick: number; toTick: number; scriptedCommands: number };
 
+export type InteractivePlaytestEvents = {
+  firstFightTick: number | null;
+  lastStepUntil: { condition: InteractivePlaytestCondition["type"]; checkedAtTick: number; timedOut: boolean } | null;
+};
+
 export type InteractivePlaytestSession = {
   id: string;
   controlledPlayer: PlayerId;
   scriptedPlayers: PlayerId[];
   game: Game;
+  events: InteractivePlaytestEvents;
   transcript: InteractivePlaytestTranscriptEntry[];
 };
 
 export type SerializedInteractivePlaytestSession = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: string;
   controlledPlayer: PlayerId;
   scriptedPlayers: PlayerId[];
   save: SaveGameRecord;
+  events: InteractivePlaytestEvents;
   transcript: InteractivePlaytestTranscriptEntry[];
 };
 
@@ -58,6 +67,14 @@ export type InteractivePlaytestSummary = {
   gameSecond: number;
   controlledPlayer: PlayerId;
   winner: PlayerId | null;
+  runState: {
+    winner: PlayerId | null;
+    timeout: boolean;
+  };
+  fight: {
+    state: "none" | "inContact" | "contactRecorded";
+    firstFightGameSecond: number | null;
+  };
   players: Record<PlayerId, InteractivePlaytestPlayerSummary>;
   visibleObjectives: InteractiveObjectiveSummary[];
   nearbyEnemies: { id: string; kind: string; x: number; y: number; hp: number; maxHp: number }[];
@@ -88,6 +105,22 @@ export type InteractivePlaytestStepOptions<Source extends string = string> = {
   scriptedPlayers?: Partial<Record<PlayerId, (snapshot: GameSnapshot, owner: PlayerId, game: Game) => CommandFrameEntry<Source>[]>>;
 };
 
+export type InteractivePlaytestCondition =
+  | { type: "firstFight" }
+  | { type: "winner" }
+  | { type: "tick"; tick: number }
+  | { type: "enemyNearby"; range?: number };
+
+export type InteractivePlaytestUntilOptions<Source extends string = string> = InteractivePlaytestStepOptions<Source> & {
+  maxTicks: number;
+};
+
+export type InteractivePlaytestUntilResult = {
+  conditionMet: boolean;
+  timedOut: boolean;
+  tick: number;
+};
+
 export function createInteractivePlaytestSession(input: InteractivePlaytestSessionInput): InteractivePlaytestSession {
   const players = [...new Set([input.controlledPlayer, ...input.scriptedPlayers, ...(input.options?.players ?? [])])];
   const game = createGame(input.mapId, {
@@ -100,6 +133,7 @@ export function createInteractivePlaytestSession(input: InteractivePlaytestSessi
     controlledPlayer: input.controlledPlayer,
     scriptedPlayers: [...input.scriptedPlayers],
     game,
+    events: { firstFightTick: null, lastStepUntil: null },
     transcript: [],
   };
 }
@@ -111,6 +145,7 @@ export function applyInteractivePlaytestCommand(session: InteractivePlaytestSess
   for (const issued of result.commands) {
     session.transcript.push({ type: "command", tick: session.game.tick, owner: issued.playerId, command: issued.command });
   }
+  recordPlaytestEvents(session);
   return result;
 }
 
@@ -119,34 +154,47 @@ export function stepInteractivePlaytestSession<Source extends string = string>(s
   const fromTick = session.game.tick;
   let scriptedCommands = 0;
   for (let elapsed = 0; elapsed < ticks && !session.game.match.winner; elapsed += 1) {
-    scriptedCommands += options.beforeStep?.(session) ?? 0;
-    const snapshot = snapshotGame(session.game);
-    const planned = session.scriptedPlayers.flatMap((owner) => options.scriptedPlayers?.[owner]?.(snapshot, owner, session.game) ?? []);
-    scriptedCommands += issueCommandFrame(session.game, planned).commands.length;
-    stepGame(session.game);
+    scriptedCommands += stepInteractivePlaytestTick(session, options);
   }
   session.transcript.push({ type: "step", fromTick, toTick: session.game.tick, scriptedCommands });
+}
+
+export function stepInteractivePlaytestUntil<Source extends string = string>(session: InteractivePlaytestSession, condition: InteractivePlaytestCondition, options: InteractivePlaytestUntilOptions<Source>): InteractivePlaytestUntilResult {
+  if (!Number.isInteger(options.maxTicks) || options.maxTicks < 1) throw new Error(`Step-until maxTicks must be a positive integer, got ${options.maxTicks}`);
+  const fromTick = session.game.tick;
+  let scriptedCommands = 0;
+  let conditionMet = conditionMatches(session, condition);
+  for (let elapsed = 0; elapsed < options.maxTicks && !conditionMet && !session.game.match.winner; elapsed += 1) {
+    scriptedCommands += stepInteractivePlaytestTick(session, options);
+    conditionMet = conditionMatches(session, condition);
+  }
+  const timedOut = !conditionMet;
+  session.events.lastStepUntil = { condition: condition.type, checkedAtTick: session.game.tick, timedOut };
+  session.transcript.push({ type: "step", fromTick, toTick: session.game.tick, scriptedCommands });
+  return { conditionMet, timedOut, tick: session.game.tick };
 }
 
 export function serializeInteractivePlaytestSession(session: InteractivePlaytestSession): SerializedInteractivePlaytestSession {
   const room = roomForSession(session);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: session.id,
     controlledPlayer: session.controlledPlayer,
     scriptedPlayers: [...session.scriptedPlayers],
     save: createSaveGameRecord(session.game, room, { id: session.id, label: `Interactive ${session.game.map.name}` }, new Date(), session.scriptedPlayers),
+    events: clone(session.events),
     transcript: clone(session.transcript),
   };
 }
 
 export function restoreInteractivePlaytestSession(serialized: SerializedInteractivePlaytestSession): InteractivePlaytestSession {
-  if (serialized.schemaVersion !== 1) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
+  if (serialized.schemaVersion !== 2) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
   return {
     id: serialized.id,
     controlledPlayer: serialized.controlledPlayer,
     scriptedPlayers: [...serialized.scriptedPlayers],
     game: restoreGameFromSave(serialized.save),
+    events: clone(serialized.events),
     transcript: clone(serialized.transcript),
   };
 }
@@ -165,6 +213,14 @@ export function summarizeInteractivePlaytestSession(session: InteractivePlaytest
     gameSecond: tickSecond(snapshot.tick),
     controlledPlayer: session.controlledPlayer,
     winner: snapshot.match.winner,
+    runState: {
+      winner: snapshot.match.winner,
+      timeout: session.events.lastStepUntil?.timedOut === true,
+    },
+    fight: {
+      state: session.events.firstFightTick !== null ? "contactRecorded" : playerFightInContact(session.game) ? "inContact" : "none",
+      firstFightGameSecond: session.events.firstFightTick === null ? null : tickSecond(session.events.firstFightTick),
+    },
     players: Object.fromEntries(session.game.activePlayers.map((owner) => [owner, summarizePlayer(snapshot, owner)])),
     visibleObjectives: visibleObjectives(snapshot, controlledCenter),
     nearbyEnemies,
@@ -182,12 +238,67 @@ function toGameCommand(game: Game, owner: PlayerId, command: InteractivePlaytest
   }
   if (command.type === "mine") return { type: "mine", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), resourceId: command.resourceId ?? nearestResourceId(game, owner) };
   if (command.type === "repair") return { type: "repair", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), buildingId: command.buildingId };
+  if (command.type === "expand") {
+    const resource = expansionResource(game, owner, command.resourceId);
+    return { type: "build", unitId: command.unitId ?? nearestWorkerId(game, owner, resource), buildingKind: "townHall", x: resource.x, y: resource.y };
+  }
+  if (command.type === "creepCamp") {
+    const point = creepCampPoint(game, owner, command.campId);
+    return { type: "attackMove", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: point.x, y: point.y };
+  }
   if (command.type === "build") return { type: "build", unitId: command.unitId ?? nearestWorkerId(game, owner, { x: command.x, y: command.y }), buildingKind: command.buildingKind, x: command.x, y: command.y };
   if (command.type === "train") return { type: "train", buildingId: command.buildingId ?? trainingBuildingId(game, owner, command.unitKind), unitKind: command.unitKind };
   if (command.type === "research") return { type: "research", buildingId: command.buildingId ?? researchBuildingId(game, owner, command.upgradeKind), upgradeKind: command.upgradeKind };
   if (command.type === "hire") return { type: "hire", campId: command.campId };
   if (command.type === "useItem") return { type: "useItem", unitId: command.unitId ?? carrierForItem(game, owner, command.itemId), itemId: command.itemId, ...(command.targetId ? { targetId: command.targetId } : {}), ...(command.x !== undefined ? { x: command.x } : {}), ...(command.y !== undefined ? { y: command.y } : {}) };
   return assertNever(command);
+}
+
+function stepInteractivePlaytestTick<Source extends string = string>(session: InteractivePlaytestSession, options: InteractivePlaytestStepOptions<Source>) {
+  recordPlaytestEvents(session);
+  let scriptedCommands = options.beforeStep?.(session) ?? 0;
+  const snapshot = snapshotGame(session.game);
+  const planned = session.scriptedPlayers.flatMap((owner) => options.scriptedPlayers?.[owner]?.(snapshot, owner, session.game) ?? []);
+  scriptedCommands += issueCommandFrame(session.game, planned).commands.length;
+  recordPlaytestEvents(session);
+  stepGame(session.game);
+  recordPlaytestEvents(session);
+  return scriptedCommands;
+}
+
+function conditionMatches(session: InteractivePlaytestSession, condition: InteractivePlaytestCondition) {
+  recordPlaytestEvents(session);
+  if (condition.type === "firstFight") return session.events.firstFightTick !== null;
+  if (condition.type === "winner") return session.game.match.winner !== null;
+  if (condition.type === "tick") return session.game.tick >= condition.tick;
+  if (condition.type === "enemyNearby") {
+    const snapshot = snapshotGame(session.game);
+    const query = createSnapshotQuery(snapshot, { teams: session.game.teams });
+    return query.opponentUnitsNear(session.controlledPlayer, controlledPoint(session.game, session.controlledPlayer), condition.range ?? 800).length > 0;
+  }
+  return assertNever(condition);
+}
+
+function recordPlaytestEvents(session: InteractivePlaytestSession) {
+  if (session.events.firstFightTick === null && playerFightInContact(session.game)) session.events.firstFightTick = session.game.tick;
+}
+
+function playerFightInContact(game: Game) {
+  const units = game.units.filter((unit) => unit.owner !== "neutral");
+  for (let outer = 0; outer < units.length; outer += 1) {
+    for (let inner = outer + 1; inner < units.length; inner += 1) {
+      const first = units[outer]!;
+      const second = units[inner]!;
+      if (game.teams[first.owner] === game.teams[second.owner]) continue;
+      const offensive = isOffensiveOrder(first) || isOffensiveOrder(second);
+      if (offensive && distance(first, second) <= Math.max(first.attackRange, second.attackRange) + first.radius + second.radius + 30) return true;
+    }
+  }
+  return false;
+}
+
+function isOffensiveOrder(unit: Unit) {
+  return unit.order.type === "attack" || unit.order.type === "attackMove";
 }
 
 function selectedUnitIds(game: Game, owner: PlayerId, selector: InteractiveUnitSelector): string[] {
@@ -219,6 +330,35 @@ function nearestResourceId(game: Game, owner: PlayerId): string {
   const resource = nearest(game.resources, point);
   if (!resource) throw new Error("No resources exist in this playtest session");
   return resource.id;
+}
+
+function expansionResource(game: Game, owner: PlayerId, resourceId?: string) {
+  if (resourceId) {
+    const resource = game.resources.find((candidate) => candidate.id === resourceId);
+    if (!resource) throw new Error(`Unknown resource ${resourceId}`);
+    return resource;
+  }
+  const ownedBases = game.buildings.filter((building) => building.owner === owner && building.kind === "townHall");
+  const resource = game.resources
+    .filter((candidate) => !ownedBases.some((base) => distance(base, candidate) <= 300))
+    .map((candidate) => ({ candidate, distance: distance(candidate, retreatPoint(game, owner)) }))
+    .sort((a, b) => a.distance - b.distance)[0]?.candidate;
+  if (!resource) throw new Error(`No expansion resource available for ${owner}`);
+  return resource;
+}
+
+function creepCampPoint(game: Game, owner: PlayerId, campId?: string) {
+  if (campId) {
+    const camp = game.mercenaryCamps.find((candidate) => candidate.id === campId);
+    if (camp) return { x: camp.x, y: camp.y };
+    const neutral = game.units.find((candidate) => candidate.owner === "neutral" && candidate.id === campId);
+    if (neutral) return { x: neutral.x, y: neutral.y };
+    throw new Error(`Unknown creep camp ${campId}`);
+  }
+  const point = controlledPoint(game, owner);
+  const camp = nearest(game.mercenaryCamps, point) ?? nearest(game.units.filter((unit) => unit.owner === "neutral"), point);
+  if (!camp) throw new Error("No creep camp target exists in this playtest session");
+  return { x: camp.x, y: camp.y };
 }
 
 function nearestWorkerId(game: Game, owner: PlayerId, point: { x: number; y: number }): string {
@@ -276,6 +416,10 @@ function visibleObjectives(snapshot: GameSnapshot, point: { x: number; y: number
     ...snapshot.mercenaryCamps.map((camp) => ({ id: camp.id, kind: "mercenaryCamp" as const, x: camp.x, y: camp.y, distance: distance(camp, point) })),
     ...snapshot.items.filter((item) => !item.carrierId).map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
   ].sort((a, b) => a.distance - b.distance).slice(0, 12);
+}
+
+function controlledPoint(game: Game, owner: PlayerId) {
+  return armyCenter(game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker")) ?? retreatPoint(game, owner);
 }
 
 function roomForSession(session: InteractivePlaytestSession): RoomState {
