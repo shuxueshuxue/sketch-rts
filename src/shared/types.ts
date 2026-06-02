@@ -60,6 +60,7 @@ export type WorldEffect = {
     | "guardianField"
     | "experienceBurst"
     | "flameBurn"
+    | "levelUp"
     | "storm";
   x: number;
   y: number;
@@ -345,6 +346,7 @@ export type RoomState = {
   visibility: RoomVisibility;
   mapId: MapId;
   status: RoomStatus;
+  autoTick: boolean;
   slots: RoomSlot[];
   result?: RoomResult;
 };

@@ -30,9 +30,14 @@ type HostedRoom = {
   debugReplay?: DebugReplayTrace;
 };
 
+export type RoomHostOptions = {
+  autoTick?: boolean;
+};
+
 const REPLAY_CHECKPOINT_INTERVAL_TICKS = 120;
 
-export function createRoomHost() {
+export function createRoomHost(options: RoomHostOptions = {}) {
+  const defaultAutoTick = options.autoTick ?? true;
   const rooms = new Map<string, HostedRoom>();
   const saves = new Map<string, SaveGameRecord>();
 
@@ -49,8 +54,9 @@ export function createRoomHost() {
   }
 
   function putRoom(room: RoomState, game?: Game, aiRuntime?: AiRuntimeState): RoomState {
-    rooms.set(room.id, game ? (aiRuntime ? { room, game, aiRuntime } : { room, game }) : { room });
-    return room;
+    const storedRoom = { ...room, autoTick: defaultAutoTick };
+    rooms.set(storedRoom.id, game ? (aiRuntime ? { room: storedRoom, game, aiRuntime } : { room: storedRoom, game }) : { room: storedRoom });
+    return storedRoom;
   }
 
   return {
@@ -73,6 +79,18 @@ export function createRoomHost() {
 
     getRoom(roomId: string): RoomState {
       return getHosted(roomId).room;
+    },
+
+    pauseRoom(roomId: string): RoomState {
+      const hosted = getHosted(roomId);
+      hosted.room = { ...hosted.room, autoTick: false };
+      return hosted.room;
+    },
+
+    resumeRoom(roomId: string): RoomState {
+      const hosted = getHosted(roomId);
+      hosted.room = { ...hosted.room, autoTick: true };
+      return hosted.room;
     },
 
     closeRoom(roomId: string, userId: string): RoomState {
@@ -215,7 +233,7 @@ export function createRoomHost() {
     continueSave(saveId: string, saveInput?: SaveGameRecord, options: { roomId?: string } = {}): RoomState {
       const save = saveInput ?? this.readSave(saveId);
       saves.set(save.id, save);
-      const room = { ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const };
+      const room = { ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const, autoTick: defaultAutoTick };
       if (rooms.has(room.id)) throw new Error(`Room ${room.id} already exists`);
       rooms.set(room.id, { room, game: restoreGameFromSave(save), aiRuntime: createAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions ? { versions: save.runtime.aiVersions } : {}) });
       return room;
@@ -225,6 +243,7 @@ export function createRoomHost() {
       const changed: RoomState[] = [];
       for (const hosted of rooms.values()) {
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
+        if (!hosted.room.autoTick) continue;
         for (let i = 0; i < ticks; i += 1) {
           runHostedAiFrame(hosted, hosted.game);
           stepGame(hosted.game);

@@ -958,10 +958,10 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   forEachNearbyUnit(game, carrier, 90, (target) => {
     if (distance(target, carrier) > 90 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
     applyAttackDamage(game, carrier, target, 12, 70);
+    addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
   if (!burned) return;
-  addEffect(game, "flameBurn", carrier.x, carrier.y, FLAME_CLOAK_VISUAL_DURATION);
   item.cooldownRemaining = FLAME_CLOAK_COOLDOWN;
 }
 
@@ -1065,6 +1065,7 @@ function applyXpLevel(game: Game, unit: Unit) {
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
   applyDerivedUnitStats(game, unit);
+  addEffect(game, "levelUp", unit.x, unit.y, 54);
 }
 
 function applyDerivedUnitStats(game: Game, unit: Unit) {

@@ -39,6 +39,12 @@ type SpellTargeting = { casterId: string; ability: AbilityKind };
 type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting };
 type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
+declare global {
+  interface Window {
+    __sketchRtsView?: { roomId?: string; tick?: number };
+  }
+}
+
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
 const MAX_ROOM_SLOTS = 30;
 
@@ -656,6 +662,7 @@ async function startCurrentRoom() {
   currentRoomId = currentRoom.id;
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
+  syncDebugView();
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -790,6 +797,7 @@ async function closeCurrentRoom() {
   await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/close`, { userId: localUser.id });
   currentRoom = undefined;
   currentRoomId = undefined;
+  syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -843,6 +851,7 @@ function slotForUser(room: RoomState, userId: string) {
 function returnHome() {
   currentRoom = undefined;
   currentRoomId = undefined;
+  syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -864,6 +873,7 @@ async function enterRoom(roomId: string) {
     if (room.status === "inMatch") {
       currentRoomId = room.id;
       snapshot = await requestJson<GameSnapshot>(`/api/rooms/${room.id}/snapshot`);
+      syncDebugView();
       menuOpen = false;
       shell.classList.remove("menu-open");
       mainMenu.classList.add("hidden");
@@ -896,6 +906,7 @@ async function refreshRoomSnapshot() {
   }
   currentRoom = room;
   snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/snapshot`);
+  syncDebugView();
   pruneSelection();
   updateHud();
 }
@@ -905,6 +916,7 @@ function openResults(room: RoomState) {
   releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
+  syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -945,6 +957,13 @@ function frame() {
   syncVirtualPointerOverlay();
   syncPointerLockGate();
   requestAnimationFrame(frame);
+}
+
+function syncDebugView() {
+  const view: { roomId?: string; tick?: number } = {};
+  if (currentRoomId !== undefined) view.roomId = currentRoomId;
+  if (snapshot?.tick !== undefined) view.tick = snapshot.tick;
+  window.__sketchRtsView = view;
 }
 
 function isEdgeBrowser() {
@@ -2825,13 +2844,16 @@ function drawItemGlyph(item: WorldItem, point: Point, now: number, carried: bool
 }
 
 function drawLevelStar(x: number, y: number, level: number) {
+  const palette = levelStarPalette(level);
   ctx.save();
-  ctx.fillStyle = "#f2d05c";
-  ctx.strokeStyle = "#8a6418";
+  ctx.fillStyle = palette.fill;
+  ctx.strokeStyle = palette.stroke;
   ctx.lineWidth = 1.5;
+  ctx.shadowColor = palette.glow;
+  ctx.shadowBlur = 5;
   ctx.beginPath();
   for (let i = 0; i < 10; i += 1) {
-    const radius = i % 2 === 0 ? 7 : 3.2;
+    const radius = i % 2 === 0 ? 8 : 3.7;
     const angle = -Math.PI / 2 + (i * Math.PI) / 5;
     const px = x + Math.cos(angle) * radius;
     const py = y + Math.sin(angle) * radius;
@@ -2840,11 +2862,15 @@ function drawLevelStar(x: number, y: number, level: number) {
   }
   ctx.closePath();
   ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.stroke();
-  ctx.fillStyle = "#243126";
-  ctx.font = "8px ui-monospace, monospace";
-  ctx.fillText(String(level), x - 2.5, y + 3);
   ctx.restore();
+}
+
+function levelStarPalette(level: number) {
+  if (level >= 3) return { fill: "#d984e8", stroke: "#7a3f89", glow: "rgba(217, 132, 232, 0.5)" };
+  if (level === 2) return { fill: "#78b7e8", stroke: "#315f87", glow: "rgba(120, 183, 232, 0.46)" };
+  return { fill: "#f2d05c", stroke: "#8a6418", glow: "rgba(242, 208, 92, 0.42)" };
 }
 
 function drawEffects(effects: WorldEffect[]) {
@@ -2946,6 +2972,11 @@ function drawEffects(effects: WorldEffect[]) {
 
     if (effect.type === "experienceBurst") {
       drawExperienceBurstEffect(point, life);
+      continue;
+    }
+
+    if (effect.type === "levelUp") {
+      drawLevelUpEffect(point, life);
       continue;
     }
 
@@ -3205,6 +3236,34 @@ function drawExperienceBurstEffect(point: Point, life: number) {
   ctx.lineTo(point.x - 5, point.y - 5);
   ctx.closePath();
   ctx.fill();
+  ctx.restore();
+}
+
+function drawLevelUpEffect(point: Point, life: number) {
+  const burst = 1 - life;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.shadowColor = "rgba(242, 208, 92, 0.58)";
+  ctx.shadowBlur = 15;
+  ctx.strokeStyle = `rgba(138, 100, 24, ${0.32 + life * 0.42})`;
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < 3; i += 1) {
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y + 9 - i * 8, 18 + burst * (28 + i * 9), 6 + burst * (8 + i * 3), 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = `rgba(242, 208, 92, ${0.5 + life * 0.38})`;
+  for (let i = 0; i < 8; i += 1) {
+    const angle = i * (Math.PI / 4);
+    const inner = 12 + burst * 10;
+    const outer = 28 + burst * 38;
+    ctx.beginPath();
+    ctx.moveTo(point.x + Math.cos(angle) * inner, point.y - 6 + Math.sin(angle) * inner);
+    ctx.lineTo(point.x + Math.cos(angle) * outer, point.y - 6 + Math.sin(angle) * outer);
+    ctx.stroke();
+  }
+  drawLevelStar(point.x, point.y - 31 - burst * 16, 3);
   ctx.restore();
 }
 

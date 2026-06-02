@@ -592,6 +592,7 @@ describe("sketch RTS simulation", () => {
     killWith(game, finisher, "ancientStag");
     expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward + UNIT_DEFS.ancientStag.xpReward);
     expect(finisher.level).toBe(1);
+    expect(game.effects.some((effect) => effect.type === "levelUp")).toBe(true);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.25));
     expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.25));
 
@@ -1027,6 +1028,7 @@ describe("sketch RTS simulation", () => {
     issueCommand(game, { type: "useItem", unitId: "book-carrier", itemId: "experience-book" });
 
     expect(game.effects.some((effect) => effect.type === "experienceBurst" && effect.x === 1500 && effect.y === 1500)).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "levelUp" && effect.x === 1500 && effect.y === 1500)).toBe(true);
   });
 
   it("storm staff creates sustained area damage instead of only a single burst", () => {
@@ -1119,6 +1121,8 @@ describe("sketch RTS simulation", () => {
     const damage = hpBefore - target.hp;
     expect(damage).toBeGreaterThanOrEqual(48);
     expect(damage).toBeLessThanOrEqual(60);
+    expect(game.effects.some((effect) => effect.type === "flameBurn" && effect.x === target.x && effect.y === target.y)).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "flameBurn" && effect.x === 1000 && effect.y === 1000)).toBe(false);
   });
 
   it("lets a wildling use a carried storm staff against challengers", () => {
