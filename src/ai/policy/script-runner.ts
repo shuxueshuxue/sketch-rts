@@ -20,7 +20,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   for (const script of economyScripts) {
     const scriptCommands = asCommands(script.run(snapshot, owner, policyOptions));
     if (scriptCommands.length > 0) {
-      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory);
+      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
       reserveOrderedUnits(scriptCommands, movedUnitIds);
       if (script.id === "economy") continue;
@@ -33,7 +33,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, runnerOptions.minimumAttackMoveUnits?.(script.id, snapshot, owner, policyOptions) ?? 1);
-    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory);
+    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams });
     reserveOrderedUnits(scriptCommands, movedUnitIds);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }

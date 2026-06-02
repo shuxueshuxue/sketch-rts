@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInteractivePlaytestSession } from "../sdk/playtest";
-import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil } from "./playtest";
+import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "./playtest";
 import type { AiScript } from "./policy";
 
 describe("AI interactive playtest wiring", () => {
@@ -137,5 +137,27 @@ describe("AI interactive playtest wiring", () => {
         targetId: "build:barracks:420:380",
       }),
     ]);
+  });
+
+  it("summarizes strategic memory timing in game seconds", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "bareDuel",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: { players: ["v2", "v1a"], teams: { v2: "north", v1a: "south" } },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+    runtime.memories.v2!.strategicPlan = { focusTargetOwner: "v1a", focusTargetSinceTick: 40, focusTargetUpdatedTick: 100, expansionAttemptTick: 140 };
+
+    const summary = summarizeAiInteractivePlaytestSession(session, runtime);
+    const v2Memory = summary.aiMemory.v2;
+    if (!v2Memory) throw new Error("missing v2 memory summary");
+
+    expect(v2Memory.strategicPlan).toEqual({
+      focusTargetOwner: "v1a",
+      focusTargetSinceGameSecond: 2,
+      focusTargetUpdatedGameSecond: 5,
+      expansionAttemptGameSecond: 7,
+    });
   });
 });

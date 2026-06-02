@@ -46,4 +46,36 @@ describe("AI policy command memory claims", () => {
 
     expect(memory.unitClaims.builder).toBeUndefined();
   });
+
+  it("records attack-wave target ownership as a long-running memory job", () => {
+    const game = sketchScene("attack-wave-job-memory")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1a", { team: "south" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 620, 540, { id: "wave-footman" })
+      .townHall("v1a", 1200, 520, { id: "v1a-main" })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+
+    recordAiMemoryForCommands(snapshotGame(game), "attackWave", [{ type: "attackMove", unitIds: ["wave-footman"], x: 1200, y: 520 }], memory, {
+      owner: "v2",
+      teams: game.teams,
+    });
+    game.tick = 45;
+    recordAiMemoryForCommands(snapshotGame(game), "attackWave", [{ type: "attackMove", unitIds: ["wave-footman"], x: 1200, y: 520 }], memory, {
+      owner: "v2",
+      teams: game.teams,
+    });
+
+    expect(memory.strategicPlan).toMatchObject({
+      focusTargetOwner: "v1a",
+      focusTargetSinceTick: 0,
+      focusTargetUpdatedTick: 45,
+    });
+    expect(memory.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 45 }]);
+    expect(memory.unitClaims).toEqual({});
+  });
 });

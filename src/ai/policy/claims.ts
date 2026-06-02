@@ -11,6 +11,13 @@ type ClaimPolicyOptions = {
   memory?: AiPolicyMemory;
 };
 
+type RecordAiMemoryOptions = {
+  owner?: PlayerId;
+  teams?: Partial<Record<PlayerId, string>> | undefined;
+};
+
+type AttackWaveCommand = Extract<GameCommand, { type: "attack" }> | Extract<GameCommand, { type: "attackMove" }>;
+
 const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
 // @@@claim-ttl-window - Claims must outlive the next think interval so jobs do not tug the same squad between objectives.
 const UNIT_CLAIM_TTL_TICKS = 900;
@@ -23,8 +30,8 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
   }
 }
 
-export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory) {
-  const query = createSnapshotQuery(snapshot);
+export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory, options: RecordAiMemoryOptions = {}) {
+  const query = createSnapshotQuery(snapshot, options.teams ? { teams: options.teams } : {});
   for (const command of commands) {
     if ((scriptId === "expansion" || scriptId === "economicCatchUp") && command.type === "build" && command.buildingKind === "townHall") {
       memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
@@ -43,6 +50,9 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     if (command.type === "hire") {
       clearUnitClaimsForTarget(memory, command.campId);
       continue;
+    }
+    if (scriptId === "attackWave" && (command.type === "attack" || command.type === "attackMove")) {
+      recordAttackWaveMemory(snapshot, query, command, memory, options.owner);
     }
     if (scriptId === "mercenary" && command.type === "attackMove") {
       const camp = nearestEntity(query.mercenaryCamps(), command);
@@ -119,6 +129,41 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     }
     clearUnitClaimsForCommand(memory, command);
   }
+}
+
+function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof createSnapshotQuery>, command: AttackWaveCommand, memory: AiPolicyMemory, owner: PlayerId | undefined) {
+  const commandOwner = owner ?? commandUnitOwner(query, command);
+  if (!commandOwner) return;
+  const targetOwner = attackWaveTargetOwner(query, commandOwner, command);
+  if (!targetOwner) return;
+  const previousSince = memory.strategicPlan?.focusTargetOwner === targetOwner ? memory.strategicPlan.focusTargetSinceTick : undefined;
+  memory.strategicPlan = {
+    ...memory.strategicPlan,
+    focusTargetOwner: targetOwner,
+    focusTargetSinceTick: previousSince ?? snapshot.tick,
+    focusTargetUpdatedTick: snapshot.tick,
+  };
+  upsertMemoryJob(memory, `attackWave:${targetOwner}`, "attackWave", snapshot.tick);
+}
+
+function commandUnitOwner(query: ReturnType<typeof createSnapshotQuery>, command: AttackWaveCommand): PlayerId | undefined {
+  return query.unitById(command.unitIds[0] ?? "")?.owner as PlayerId | undefined;
+}
+
+function attackWaveTargetOwner(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, command: AttackWaveCommand): PlayerId | undefined {
+  if (command.type === "attackMove") return nearestEntity(query.opponentBuildingsNear(owner, command, 620), command)?.owner;
+  const target = query.targetById(command.targetId);
+  if (!target || !("owner" in target) || target.owner === "neutral" || !query.isOpponent(owner, target.owner)) return undefined;
+  return target.owner;
+}
+
+function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick: number) {
+  const job = memory.jobs.find((candidate) => candidate.id === id);
+  if (job) {
+    job.updatedTick = tick;
+    return;
+  }
+  memory.jobs.push({ id, kind, createdTick: tick, updatedTick: tick });
 }
 
 export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: ClaimPolicyOptions) {

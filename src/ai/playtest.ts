@@ -26,7 +26,12 @@ export type AiInteractivePlaytestMemorySummary = {
     sinceGameSecond: number;
     expiresGameSecond: number;
   }[];
-  strategicPlan?: AiPolicyMemory["strategicPlan"];
+  strategicPlan?: {
+    focusTargetOwner?: PlayerId;
+    focusTargetSinceGameSecond?: number;
+    focusTargetUpdatedGameSecond?: number;
+    expansionAttemptGameSecond?: number;
+  };
 };
 
 export type AiInteractivePlaytestSummary = InteractivePlaytestSummary & {
@@ -45,7 +50,7 @@ export function applyAiInteractivePlaytestCommand(session: InteractivePlaytestSe
   for (const issued of result.commands) byOwner.set(issued.playerId, [...(byOwner.get(issued.playerId) ?? []), issued]);
   for (const [owner, issued] of byOwner) {
     const memory = runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory());
-    for (const entry of issued) recordAiMemoryForCommands(snapshot, interactiveMemoryScriptId(command.type, entry.scriptId), [entry.command], memory);
+    for (const entry of issued) recordAiMemoryForCommands(snapshot, interactiveMemoryScriptId(command.type, entry.scriptId), [entry.command], memory, { owner, teams: session.game.teams });
   }
   return result;
 }
@@ -97,7 +102,16 @@ function summarizeAiMemory(memory: AiPolicyMemory): AiInteractivePlaytestMemoryS
         expiresGameSecond: tickSecond(claim.expiresTick),
       }))
       .sort((a, b) => a.unitId.localeCompare(b.unitId)),
-    ...(memory.strategicPlan ? { strategicPlan: memory.strategicPlan } : {}),
+    ...(memory.strategicPlan ? { strategicPlan: summarizeStrategicPlan(memory.strategicPlan) } : {}),
+  };
+}
+
+function summarizeStrategicPlan(strategicPlan: NonNullable<AiPolicyMemory["strategicPlan"]>): NonNullable<AiInteractivePlaytestMemorySummary["strategicPlan"]> {
+  return {
+    ...(strategicPlan.focusTargetOwner === undefined ? {} : { focusTargetOwner: strategicPlan.focusTargetOwner }),
+    ...(strategicPlan.focusTargetSinceTick === undefined ? {} : { focusTargetSinceGameSecond: tickSecond(strategicPlan.focusTargetSinceTick) }),
+    ...(strategicPlan.focusTargetUpdatedTick === undefined ? {} : { focusTargetUpdatedGameSecond: tickSecond(strategicPlan.focusTargetUpdatedTick) }),
+    ...(strategicPlan.expansionAttemptTick === undefined ? {} : { expansionAttemptGameSecond: tickSecond(strategicPlan.expansionAttemptTick) }),
   };
 }
 
