@@ -53,4 +53,30 @@ describe("AI spell and focus tactics", () => {
 
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
   });
+
+  it("uses focus fire in combat mode even when the local enemy army is larger", () => {
+    const game = sketchScene("spell-tactics-combat-focus")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .unit("v2", "footman", 700, 760, { id: "front-a" })
+      .unit("v2", "lancer", 700, 800, { id: "front-b" })
+      .unit("v2", "archer", 680, 840, { id: "back-a" })
+      .townHall("v1", 1450, 800)
+      .unit("v1", "mercenary", 760, 760, { id: "wounded-target", hp: 40 })
+      .unit("v1", "footman", 790, 800)
+      .unit("v1", "fieldMedic", 810, 840)
+      .unit("v1", "archer", 830, 880)
+      .unit("v1", "raider", 850, 920)
+      .build()
+      .createGame();
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toEqual({
+      type: "attack",
+      unitIds: ["front-a", "front-b", "back-a"],
+      targetId: "wounded-target",
+    });
+  });
 });

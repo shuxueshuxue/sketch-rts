@@ -44,7 +44,7 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const attackers = fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
-  if (localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
+  if (options.policyMode !== "combat" && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
   return attackers.length >= 2 ? { type: "attack", unitIds: attackers.map((unit) => unit.id), targetId: target.id } : undefined;
 }
 
