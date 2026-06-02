@@ -272,7 +272,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       unit.order = { type: "repair", buildingId: building.id };
     }
-    addEffect(game, "heal", building.x, building.y, 26);
+    addEffect(game, "repair", building.x, building.y, 26);
     return;
   }
 
@@ -713,7 +713,7 @@ function repairBuildingTick(game: Game, owner: PlayerId, building: Building) {
   const hpPerGold = Math.max(1, building.maxHp / fullRepairCost);
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
-  addEffect(game, "heal", building.x, building.y, 12);
+  addEffect(game, "repair", building.x, building.y, 12);
   return true;
 }
 

@@ -1080,6 +1080,7 @@ describe("sketch RTS simulation", () => {
 
     expect(barracks.hp).toBeGreaterThan(barracks.maxHp - 90);
     expect(game.players.player.gold).toBeLessThan(100);
+    expect(game.effects.some((effect) => effect.type === "repair" && effect.x === barracks.x && effect.y === barracks.y)).toBe(true);
     stepUntil(game, 300, () => barracks.hp === barracks.maxHp);
 
     expect(barracks.hp).toBe(barracks.maxHp);
