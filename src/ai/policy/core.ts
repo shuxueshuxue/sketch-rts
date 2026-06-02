@@ -271,6 +271,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   if (missingCombatProductionKind(snapshot, owner) && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return undefined;
   if (activeMiningBaseCount(snapshot, owner) >= expansionBaseTarget(options)) return undefined;
+  if (options.version === "v2" && activeMiningBaseCount(snapshot, owner) >= 2 && combatUnits(snapshot, owner).length < catchUpExpansionMinimumCombat(snapshot, owner, options)) return undefined;
 
   const mine = desiredExpansionMine(snapshot, owner);
   if (!mine) return undefined;
@@ -433,6 +434,15 @@ function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPoli
   if (!level) return undefined;
   const player = playerState(snapshot, owner);
   if (player.gold < level.cost) return undefined;
+  // @@@thin-army-tech-bank - Early upgrades are fine; spending the last bank before a five-body army recreates the low-peak-supply failures.
+  if (
+    options.version === "v2" &&
+    upgradeKind === "weaponTraining" &&
+    activeMiningBaseCount(snapshot, owner) >= 2 &&
+    combatUnits(snapshot, owner).length < 5 &&
+    player.gold < level.cost + UNIT_DEFS.footman.cost
+  )
+    return undefined;
   if (needsMainGuardTower(snapshot, owner, options)) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + level.cost) return undefined;
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + level.cost) return undefined;
@@ -1481,7 +1491,7 @@ function catchUpExpansionCommand(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 function catchUpExpansionMinimumCombat(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  if (completeBuildings(snapshot, owner, "townHall").length >= 2) return 0;
+  if (completeBuildings(snapshot, owner, "townHall").length >= 2) return activeMiningBaseCount(snapshot, owner) >= 2 ? 5 : 0;
   return opponentPlayerIds(snapshot, owner, options).length >= 2 ? 4 : 5;
 }
 

@@ -5252,6 +5252,11 @@ describe("SDK preset AI policy", () => {
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
       .building("v2", "stables", 740, 660, { id: "v2-stables" })
       .worker("v2", 450, 500)
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "footman", 790, 650)
+      .unit("v2", "lancer", 820, 680)
+      .unit("v2", "archer", 850, 710)
+      .unit("v2", "archer", 880, 740)
       .townHall("v1", 3300, 3300, { id: "v1-main" })
       .townHall("v1", 2800, 3000, { id: "v1-natural" })
       .townHall("v1", 2450, 2550, { id: "v1-third" })
@@ -5282,6 +5287,54 @@ describe("SDK preset AI policy", () => {
     expect(enabled?.type === "build" ? enabled.x : 0).toBeCloseTo(1960, -2);
     expect(disabled).toBeUndefined();
     expect(telemetry.behaviors.economicCatchUp.catchUpExpansions).toBe(1);
+  });
+
+  it("v2 spends a two-base bank on army before a third base when the army is still thin", () => {
+    const scene = sketchScene("v2-two-base-army-before-third")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1350, 620, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "stables", 740, 660, { id: "v2-stables" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .building("v2", "farm", 660, 770)
+      .worker("v2", 520, 540, { id: "v2-main-worker-1", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 550, 540, { id: "v2-main-worker-2", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 580, 540, { id: "v2-main-worker-3", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 610, 540, { id: "v2-main-worker-4", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 640, 540, { id: "v2-main-worker-5", order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 1360, 650, { id: "v2-natural-worker-1", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 1390, 650, { id: "v2-natural-worker-2", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 1420, 650, { id: "v2-natural-worker-3", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 1450, 650, { id: "v2-natural-worker-4", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v2", 1480, 650, { id: "v2-natural-worker-5", order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 0 } })
+      .unit("v2", "footman", 780, 640)
+      .unit("v2", "lancer", 820, 680)
+      .unit("v2", "archer", 860, 720)
+      .townHall("v1", 3300, 3300, { id: "v1-main" })
+      .townHall("v1", 2800, 3000, { id: "v1-natural" })
+      .worker("v1", 3350, 3300)
+      .goldMine("v2-main-mine", 560, 540, 3000)
+      .goldMine("v2-natural-mine", 1420, 650, 3000)
+      .goldMine("v2-third-mine", 2050, 980, 3000)
+      .goldMine("v1-main-mine", 3340, 3300, 3000)
+      .goldMine("v1-natural-mine", 2820, 3040, 3000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 340;
+    game.players.v2!.supplyUsed = 16;
+    game.players.v2!.supplyCap = 28;
+
+    const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+
+    expect(commands.find((candidate) => candidate.type === "build" && candidate.buildingKind === "townHall")).toBeUndefined();
+    expect(commands.find((candidate) => candidate.type === "research")).toBeUndefined();
+    expect(commands.find((candidate) => candidate.type === "train" && candidate.unitKind !== "worker")).toMatchObject({ type: "train" });
   });
 
   it("v2 protects catch-up expansions with towers after core army plans exist", () => {
@@ -5337,6 +5390,9 @@ describe("SDK preset AI policy", () => {
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
       .building("v2", "stables", 740, 660, { id: "v2-stables" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .building("v2", "farm", 660, 770)
       .worker("v2", 470, 500)
       .worker("v2", 500, 540)
       .worker("v2", 540, 500)
@@ -5345,6 +5401,11 @@ describe("SDK preset AI policy", () => {
       .worker("v2", 600, 540)
       .worker("v2", 620, 500)
       .worker("v2", 640, 540)
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "footman", 790, 650)
+      .unit("v2", "lancer", 820, 680)
+      .unit("v2", "archer", 850, 710)
+      .unit("v2", "archer", 880, 740)
       .townHall("target", 3800, 3800, { id: "target-main" })
       .goldMine("v2-main-mine", 560, 540, 4000)
       .goldMine("v2-natural", 1120, 620, 4000)
