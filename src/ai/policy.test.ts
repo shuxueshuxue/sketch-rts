@@ -738,6 +738,41 @@ describe("SDK preset AI policy", () => {
     expect(entries).toEqual([]);
   });
 
+  it("v2 does not spend the first main-guard tower bank on a moon well", () => {
+    const scene = sketchScene("v2-main-guard-tower-before-moon-well")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1160, 980, { id: "v2-natural" })
+      .building("v2", "barracks", 650, 560)
+      .building("v2", "archeryRange", 710, 560)
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 560, 540)
+      .unit("v2", "footman", 780, 620, { hp: 85 })
+      .unit("v2", "footman", 820, 650, { hp: 90 })
+      .unit("v2", "lancer", 860, 680)
+      .unit("v2", "contractArcher", 900, 710)
+      .townHall("v1", 3100, 1450)
+      .unit("v1", "footman", 1_160, 760)
+      .unit("v1", "lancer", 1_200, 790)
+      .unit("v1", "contractArcher", 1_240, 820)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1160, 980, 4000)
+      .goldMine("v1-main-mine", 3100, 1450, 4000)
+      .build();
+    const game = scene.createGame();
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 115;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
   it("v2 restores combat before extra workers when production survives an army wipe", () => {
     const scene = sketchScene("v2-combat-before-worker-after-army-wipe")
       .map("openClaims")
@@ -804,6 +839,47 @@ describe("SDK preset AI policy", () => {
         { type: "train", buildingId: "v2-barracks", unitKind: "footman" },
       ]),
     );
+  });
+
+  it("v2 does not spend the thin two-mine defense bank on extra workers", () => {
+    const scene = sketchScene("v2-two-mine-defense-bank-before-workers")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1160, 980, { id: "v2-natural" })
+      .building("v2", "barracks", 650, 560, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 710, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 560, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 590, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 620, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 1160, 980, { order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 1190, 980, { order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } })
+      .unit("v2", "footman", 780, 620)
+      .unit("v2", "footman", 820, 650)
+      .unit("v2", "lancer", 860, 680)
+      .unit("v2", "contractArcher", 900, 710)
+      .townHall("v1", 3100, 1450)
+      .unit("v1", "footman", 1180, 760)
+      .unit("v1", "footman", 1220, 790)
+      .unit("v1", "lancer", 1260, 820)
+      .unit("v1", "contractArcher", 1300, 850)
+      .unit("v1", "mercenary", 1340, 880)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1160, 980, 4000)
+      .goldMine("v1-main-mine", 3100, 1450, 4000)
+      .build();
+    const game = scene.createGame();
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 75;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).not.toContainEqual({ type: "train", buildingId: "v2-main", unitKind: "worker" });
   });
 
   it("v2 still saturates the main mine to five workers while banking for the first expansion", () => {
@@ -1528,6 +1604,31 @@ describe("SDK preset AI policy", () => {
     const workerDefense = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerDefense], { version: "v2", teams: game.teams })[0];
 
     expect(workerDefense).toBeUndefined();
+  });
+
+  it("v2 repairs a damaged main tower with an available non-mining worker", () => {
+    const scene = sketchScene("v2-repairs-damaged-main-tower")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .tower("v2", 560, 540, { id: "v2-main-tower" })
+      .worker("v2", 520, 500, { id: "v2-builder" })
+      .goldMine("v2-main-mine", 570, 530, 4000)
+      .townHall("v1", 3400, 3400)
+      .build();
+    const game = scene.createGame();
+    const tower = game.buildings.find((building) => building.id === "v2-main-tower");
+    if (!tower) throw new Error("missing v2 tower");
+    tower.hp = 80;
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 30;
+
+    const repair = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.repair], { version: "v2", teams: game.teams })[0];
+
+    expect(repair).toMatchObject({ scriptId: "repair", command: { type: "repair", buildingId: "v2-main-tower", unitIds: ["v2-builder"] } });
   });
 
   it("v2 keeps the only currently saturated mine working after a fresh second town hall completes", () => {
@@ -5358,14 +5459,14 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const telemetry = createAiTelemetry();
 
-    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
+    const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "attackMove");
     const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["earlyHarassment", "skirmishPreservation"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "move" && candidate.unitIds.some((id) => id.includes("footman") || id.includes("archer")),
     );
 
-    expect(enabled).toMatchObject({ type: "move" });
-    expect(enabled?.type === "move" ? enabled.x : 0).toBeCloseTo(500, -2);
-    expect(enabled?.type === "move" ? enabled.unitIds.length : 0).toBe(2);
+    expect(enabled).toMatchObject({ type: "attackMove" });
+    expect(enabled?.type === "attackMove" ? enabled.x : 0).toBeCloseTo(500, -2);
+    expect(enabled?.type === "attackMove" ? enabled.unitIds.length : 0).toBe(2);
     expect(disabled).toBeUndefined();
     expect(telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
   });

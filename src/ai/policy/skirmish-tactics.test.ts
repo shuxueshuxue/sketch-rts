@@ -22,7 +22,7 @@ describe("AI skirmish tactics", () => {
     expect(command?.type === "move" ? command.x : 0).toBeLessThan(820);
   });
 
-  it("retreats a modestly disadvantaged open-field group before it gets wiped", () => {
+  it("falls back with attack-move when a modestly disadvantaged group is still healthy enough to trade", () => {
     const game = sketchScene("skirmish-tactics-modest-disadvantage")
       .map("bareDuel")
       .replaceDefaults()
@@ -41,6 +41,6 @@ describe("AI skirmish tactics", () => {
 
     const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "move" });
+    expect(command).toMatchObject({ type: "attackMove" });
   });
 });

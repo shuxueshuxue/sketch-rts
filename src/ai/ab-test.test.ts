@@ -125,7 +125,7 @@ describe("SDK AI behavior A/B runner", () => {
 
     expect(report.enabled.telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
     expect(report.disabled.telemetry.behaviors.skirmishPreservation.disabledSkips).toBeGreaterThan(0);
-    expect(report.enabled.commandCounts.move).toBeGreaterThan(0);
+    expect(report.enabled.commandCounts.attackMove).toBeGreaterThan(0);
     expect(report.scoreDelta).toBeGreaterThan(0);
   });
 

@@ -622,7 +622,7 @@ describe("sketch RTS simulation", () => {
     const attacker = game.spawnUnit("player", "raider", enemyBase.x - 230, enemyBase.y - 40);
     game.players.enemy.gold = 1000;
 
-    stepMany(game, 520, runtime);
+    stepMany(game, 650, runtime);
 
     const tower = game.buildings.find((building) => building.owner === "enemy" && building.kind === "defenseTower");
     expect(tower).toBeDefined();
@@ -1627,9 +1627,11 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps defense towers as static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThanOrEqual(8);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(8);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.attackDamage);
     expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);
-    expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThanOrEqual(40);
+    expect(BUILDING_DEFS.defenseTower.hp * BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.hp * UNIT_DEFS.contractArcher.attackDamage);
+    expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThan(UNIT_DEFS.contractArcher.attackCooldown);
 
     const scene = sketchScene("soft-static-tower")
       .map("bareDuel")

@@ -44,7 +44,7 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (!skirmish) return [];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
-  return [{ type: "move", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }];
+  return [{ type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }];
 }
 
 function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: Unit[], ownBase: Point): Point {

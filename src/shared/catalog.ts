@@ -90,7 +90,7 @@ export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
   stables: { hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), trains: ["raider", "knight"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   sanctum: { hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), trains: ["priest", "summoner", "witch"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 8, attackRange: 240, attackCooldown: seconds(2.2), supplyProvided: 0 },
+  defenseTower: { hp: 160, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 10, attackRange: 270, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), trains: [], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
 };

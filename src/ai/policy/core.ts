@@ -99,6 +99,7 @@ export const AI_SCRIPT_LIBRARY = {
   economy: { id: "economy", phase: "economy", run: planEconomy },
   constructionRecovery: { id: "constructionRecovery", phase: "economy", run: planConstructionRecovery },
   emergencyDefense: { id: "emergencyDefense", phase: "economy", run: planEmergencyDefense },
+  repair: { id: "repair", phase: "economy", run: planRepair },
   supply: { id: "supply", phase: "economy", run: planSupply },
   defense: { id: "defense", phase: "economy", run: planDefense },
   expansion: { id: "expansion", phase: "economy", run: planExpansion },
@@ -150,6 +151,7 @@ export const AI_SCRIPT_VERSIONS: Record<AiScriptVersion, AiScript[]> = {
     AI_SCRIPT_LIBRARY.economy,
     AI_SCRIPT_LIBRARY.constructionRecovery,
     AI_SCRIPT_LIBRARY.emergencyDefense,
+    AI_SCRIPT_LIBRARY.repair,
     AI_SCRIPT_LIBRARY.supply,
     AI_SCRIPT_LIBRARY.earlyTech,
     AI_SCRIPT_LIBRARY.economicCatchUp,
@@ -247,6 +249,25 @@ function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId): Game
   const builder = availableBuilder(snapshot, owner, stalled);
   if (!builder) return undefined;
   return { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y };
+}
+
+function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (options.version !== "v2") return undefined;
+  if (playerState(snapshot, owner).gold < 1) return undefined;
+  const main = mainBase(snapshot, owner);
+  const damagedTower = buildings(snapshot, owner)
+    .filter((building) => building.complete && building.kind === "defenseTower" && building.hp > 0 && building.hp < building.maxHp && distance(building, main) <= 520)
+    .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+  if (!damagedTower) return undefined;
+  const worker = nearestEntity(
+    units(snapshot, owner)
+      .filter((unit) => unit.kind === "worker")
+      .filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "mine"),
+    damagedTower,
+  );
+  if (!worker) return undefined;
+  // @@@repair-worker-is-not-miner-cap - Five miners saturate a mine; a sixth worker can still be the right repair/builder unit.
+  return { type: "repair", unitIds: [worker.id], buildingId: damagedTower.id };
 }
 
 function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -563,6 +584,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const wantsWell = woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
+  if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
   if (shouldHoldFirstExpansionBank(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
   if (!pressured && shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS.moonWell.cost) return undefined;
@@ -697,6 +719,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     enemyCombatUnits(snapshot, owner, options.teams).length > 0 &&
     player.gold >= UNIT_DEFS.worker.cost &&
     player.gold < UNIT_DEFS.footman.cost;
+  const holdThinTwoMineDefenseBank = shouldHoldThinTwoMineDefenseBank(snapshot, owner, options, player.gold, workerCount, routineWantedWorkers);
   const commands: GameCommand[] = [];
   let remainingGold = player.gold;
   let reservedSupply = projectedSupplyUsed(snapshot, owner);
@@ -704,8 +727,8 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
 
   for (const building of buildings(snapshot, owner).filter((candidate) => candidate.complete && candidate.queue.length === 0)) {
     const projectedWorkers = workerCount + queuedWorkers;
-    const needsRoutineWorker = !needsCoreArmy && !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && projectedWorkers < routineWantedWorkers;
-    const needsRecoveryWorker = !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && cheapWorkerRecovery && projectedWorkers >= routineWantedWorkers && projectedWorkers < wantedWorkers;
+    const needsRoutineWorker = !needsCoreArmy && !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && !holdThinTwoMineDefenseBank && projectedWorkers < routineWantedWorkers;
+    const needsRecoveryWorker = !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && !holdThinTwoMineDefenseBank && cheapWorkerRecovery && projectedWorkers >= routineWantedWorkers && projectedWorkers < wantedWorkers;
     const needsWorker = building.kind === "townHall" && (needsRoutineWorker || needsRecoveryWorker);
     const unitKind = needsWorker ? "worker" : trainingChoice(snapshot, owner, building, options);
     if (!unitKind) continue;
@@ -786,6 +809,20 @@ function needsCheapWorkerRecovery(snapshot: GameSnapshot, owner: PlayerId, optio
   if (combatUnits(snapshot, owner).length >= 2) return false;
   const main = mainBase(snapshot, owner);
   return enemyCombatUnitsNear(snapshot, owner, main, 900, options.teams).length > 0;
+}
+
+function shouldHoldThinTwoMineDefenseBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, gold: number, workerCount: number, wantedWorkers: number) {
+  if (options.version !== "v2") return false;
+  if (activeMiningBaseCount(snapshot, owner) < 2 || workerCount >= wantedWorkers) return false;
+  if (gold < UNIT_DEFS.worker.cost || gold >= BUILDING_DEFS.defenseTower.cost + UNIT_DEFS.worker.cost) return false;
+  if (!hasCoreProduction(snapshot, owner)) return false;
+  const main = mainBase(snapshot, owner);
+  if (buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && distance(building, main) < 430)) return false;
+  const ownCombat = combatUnits(snapshot, owner);
+  if (ownCombat.length < 2) return false;
+  const enemies = enemyCombatUnitsNear(snapshot, owner, main, 1_850, options.teams);
+  // @@@two-mine-defense-bank - Fresh two-mine income is fake if the next 100g becomes a worker while the first attack reaches an unguarded main.
+  return enemies.length >= 2 && armyPower(enemies) > armyPower(ownCombat) * 1.05;
 }
 
 function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

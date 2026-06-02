@@ -243,6 +243,7 @@ Repair:
 - Repair cost ratio should be based on a Warcraft-III-like model: repairing from 0 to full should cost a meaningful fraction of the building's construction cost, not the full cost and not free. The exact ratio should be chosen and tested in simulation balance, then surfaced to the SDK.
 - Repair should stop loudly when the building is full HP, destroyed, unaffordable, or unsafe enough that the worker should flee.
 - AI repair/heal/resupply jobs should use SDK repair intents and memory claims. The AI should not hand-roll raw building HP mutation.
+- Mine saturation is not a total-worker cap. A single-base economy may still want a non-mining builder/repair worker when construction, tower maintenance, or emergency repairs are strategically valuable. V2 should distinguish "5 workers mining this gold mine" from "all workers I am allowed to own."
 
 ## Jobs
 
