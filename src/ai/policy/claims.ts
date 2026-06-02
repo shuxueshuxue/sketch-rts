@@ -53,6 +53,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     }
     if (scriptId === "attackWave" && (command.type === "attack" || command.type === "attackMove")) {
       recordAttackWaveMemory(snapshot, query, command, memory, options.owner);
+      continue;
     }
     if (scriptId === "mercenary" && command.type === "attackMove") {
       const camp = nearestEntity(query.mercenaryCamps(), command);
@@ -136,6 +137,9 @@ function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof
   if (!commandOwner) return;
   const targetOwner = attackWaveTargetOwner(query, commandOwner, command);
   if (!targetOwner) return;
+  const target = attackWaveClaimTarget(query, commandOwner, command);
+  const targetId = target ? target.id : `attackWave:${targetOwner}`;
+  const targetPoint = target ?? attackWaveCommandPoint(command);
   const previousSince = memory.strategicPlan?.focusTargetOwner === targetOwner ? memory.strategicPlan.focusTargetSinceTick : undefined;
   memory.strategicPlan = {
     ...memory.strategicPlan,
@@ -144,6 +148,16 @@ function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof
     focusTargetUpdatedTick: snapshot.tick,
   };
   upsertMemoryJob(memory, `attackWave:${targetOwner}`, "attackWave", snapshot.tick);
+  for (const unitId of command.unitIds) {
+    memory.unitClaims[unitId] = {
+      kind: "attack",
+      targetId,
+      x: targetPoint.x,
+      y: targetPoint.y,
+      sinceTick: snapshot.tick,
+      expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
+    };
+  }
 }
 
 function commandUnitOwner(query: ReturnType<typeof createSnapshotQuery>, command: AttackWaveCommand): PlayerId | undefined {
@@ -151,10 +165,19 @@ function commandUnitOwner(query: ReturnType<typeof createSnapshotQuery>, command
 }
 
 function attackWaveTargetOwner(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, command: AttackWaveCommand): PlayerId | undefined {
-  if (command.type === "attackMove") return nearestEntity(query.opponentBuildingsNear(owner, command, 620), command)?.owner;
-  const target = query.targetById(command.targetId);
+  const target = attackWaveClaimTarget(query, owner, command);
   if (!target || !("owner" in target) || target.owner === "neutral" || !query.isOpponent(owner, target.owner)) return undefined;
   return target.owner;
+}
+
+function attackWaveClaimTarget(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, command: AttackWaveCommand) {
+  if (command.type === "attack") return query.targetById(command.targetId);
+  return nearestEntity([...query.opponentBuildingsNear(owner, command, 620), ...query.opponentUnitsNear(owner, command, 420)], command);
+}
+
+function attackWaveCommandPoint(command: AttackWaveCommand): Point {
+  if (command.type === "attackMove") return command;
+  return { x: 0, y: 0 };
 }
 
 function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick: number) {

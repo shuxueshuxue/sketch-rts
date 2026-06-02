@@ -3980,6 +3980,43 @@ describe("SDK preset AI policy", () => {
     expect(entries).toEqual([]);
   });
 
+  it("keeps a committed attack wave from being tugged into neutral objective control", () => {
+    const scene = sketchScene("v2-attack-wave-claim-blocks-creep-tug")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 980, 980, { id: "wave-a" })
+      .unit("v2", "footman", 1010, 1000, { id: "wave-b" })
+      .unit("v2", "lancer", 1040, 1020, { id: "wave-c" })
+      .unit("v2", "archer", 1070, 1040, { id: "wave-d" })
+      .unit("v2", "archer", 1100, 1060, { id: "wave-e" })
+      .townHall("v1a", 1750, 980, { id: "v1a-main" })
+      .building("v1a", "barracks", 1680, 960, { id: "v1a-barracks" })
+      .unit("neutral", "wildling", 860, 900, { id: "camp-a" })
+      .unit("neutral", "thornSlinger", 900, 940, { id: "camp-b" })
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    const snapshot = snapshotGame(game);
+
+    const firstWave = planAiCommandEntriesFromScripts(snapshot, "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory });
+    const objective = planAiCommandEntriesFromScripts(snapshot, "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams, memory });
+    const secondWave = planAiCommandEntriesFromScripts(snapshot, "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory });
+
+    expect(firstWave.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove" });
+    expect(Object.fromEntries(Object.entries(memory.unitClaims).map(([unitId, claim]) => [unitId, claim.kind]))).toEqual({
+      "wave-a": "attack",
+      "wave-b": "attack",
+      "wave-c": "attack",
+      "wave-d": "attack",
+      "wave-e": "attack",
+    });
+    expect(objective).toEqual([]);
+    expect(secondWave.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove" });
+  });
+
   it("v2 pauses neutral objectives when two enemy armies are approaching the main before buildings are hit", () => {
     const scene = sketchScene("v2-pre-pressure-pauses-objectives")
       .map("openClaims")

@@ -76,6 +76,12 @@ describe("AI policy command memory claims", () => {
       focusTargetUpdatedTick: 45,
     });
     expect(memory.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 45 }]);
-    expect(memory.unitClaims).toEqual({});
+    expect(memory.unitClaims["wave-footman"]).toMatchObject({
+      kind: "attack",
+      targetId: "v1a-main",
+      x: 1200,
+      y: 520,
+      sinceTick: 45,
+    });
   });
 });

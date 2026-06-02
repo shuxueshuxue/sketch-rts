@@ -1413,7 +1413,8 @@ function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: 
 
 function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return true;
-  if (activeUnitClaim(snapshot, owner, unit, options)) return false;
+  const claim = activeUnitClaim(snapshot, owner, unit, options);
+  if (claim && claim.kind !== "attack") return false;
   if (unit.order.type !== "move" || unit.hp >= unit.maxHp * 0.58) return true;
   const main = mainBase(snapshot, owner);
   return distance(unit.order, main) >= distance(unit, main);
