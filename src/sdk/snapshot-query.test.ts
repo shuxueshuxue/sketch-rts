@@ -59,7 +59,10 @@ describe("SDK snapshot query", () => {
       .unit("ally", "archer", 760, 720, { id: "ally-archer" })
       .townHall("enemy", 3300, 3300, { id: "enemy-main" })
       .unit("enemy", "lancer", 3000, 3000, { id: "enemy-lancer" })
+      .worker("enemy", 3015, 3000, { id: "enemy-worker" })
+      .unit("neutral", "wildling", 3030, 3000, { id: "neutral-wildling" })
       .goldMine("v2-natural", 1100, 900, 4000)
+      .goldMine("empty-mine", 900, 900, 0)
       .item("ground-scroll", "guardianScroll", 720, 720)
       .item("carried-rod", "lightningRod", 720, 720, { carrierId: "v2-footman" })
       .build();
@@ -83,8 +86,11 @@ describe("SDK snapshot query", () => {
     expect(query.groundItems().map((item) => item.id)).toEqual(["ground-scroll"]);
     expect(query.carriedItemsFor("v2").map((item) => item.id)).toEqual(["carried-rod"]);
     expect(query.buildings().map((building) => building.id).sort()).toEqual(["ally-main", "enemy-main", "v2-barracks", "v2-farm", "v2-main"]);
-    expect(query.resources().map((resource) => resource.id)).toEqual(["v2-natural"]);
-    expect(query.opponentUnitsNear("v2", { x: 3000, y: 3000 }, 80).map((unit) => unit.id)).toEqual(["enemy-lancer"]);
+    expect(query.resources().map((resource) => resource.id).sort()).toEqual(["empty-mine", "v2-natural"]);
+    expect(query.activeResources().map((resource) => resource.id)).toEqual(["v2-natural"]);
+    expect(query.opponentUnitsNear("v2", { x: 3000, y: 3000 }, 80).map((unit) => unit.id).sort()).toEqual(["enemy-lancer", "enemy-worker"]);
+    expect(query.hostileUnitsNear("v2", { x: 3000, y: 3000 }, 80).map((unit) => unit.id).sort()).toEqual(["enemy-lancer", "enemy-worker", "neutral-wildling"]);
+    expect(query.hostileCombatUnitsFor("v2").map((unit) => unit.id).sort()).toEqual(["enemy-lancer", "neutral-wildling"]);
     expect(query.opponentBuildingsNear("v2", { x: 3300, y: 3300 }, 80).map((building) => building.id)).toEqual(["enemy-main"]);
   });
 });

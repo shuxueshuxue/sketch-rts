@@ -32,7 +32,7 @@ export function resources(snapshot: GameSnapshot) {
 }
 
 export function activeResources(snapshot: GameSnapshot) {
-  return resources(snapshot).filter((resource) => resource.amount > 0);
+  return aiSnapshotQuery(snapshot).activeResources();
 }
 
 export function mercenaryCamps(snapshot: GameSnapshot) {
@@ -104,9 +104,9 @@ export function enemyBuildingsNear(snapshot: GameSnapshot, owner: PlayerId, poin
 }
 
 export function hostileUnitsNear(snapshot: GameSnapshot, owner: PlayerId, point: { x: number; y: number }, range: number, teams?: Partial<Record<PlayerId, string>>) {
-  return [...enemyUnitsNear(snapshot, owner, point, range, teams), ...neutralUnitsNear(snapshot, point, range)];
+  return aiSnapshotQuery(snapshot, teams).hostileUnitsNear(owner, point, range);
 }
 
 export function hostileCombatUnits(snapshot: GameSnapshot, owner: PlayerId, teams?: Partial<Record<PlayerId, string>>) {
-  return [...enemyCombatUnits(snapshot, owner, teams), ...neutralUnits(snapshot, owner).filter((unit) => unit.kind !== "worker")];
+  return aiSnapshotQuery(snapshot, teams).hostileCombatUnitsFor(owner);
 }

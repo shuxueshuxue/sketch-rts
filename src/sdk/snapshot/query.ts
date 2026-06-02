@@ -50,6 +50,7 @@ export type SnapshotQuery = {
   itemById(id: string): WorldItem | undefined;
   targetById(id: string): Unit | Building | ResourceNode | MercenaryCamp | WorldItem | undefined;
   resources(): ResourceNode[];
+  activeResources(): ResourceNode[];
   mercenaryCamps(): MercenaryCamp[];
   items(): WorldItem[];
   groundItems(): WorldItem[];
@@ -62,6 +63,8 @@ export type SnapshotQuery = {
   neutralUnitsNear(point: EntityPoint, range: number): Unit[];
   opponentUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
   opponentBuildingsNear(owner: PlayerId, point: EntityPoint, range: number): Building[];
+  hostileUnitsNear(owner: PlayerId, point: EntityPoint, range: number): Unit[];
+  hostileCombatUnitsFor(owner: PlayerId): Unit[];
   forPlayer(owner: PlayerId): SnapshotPlayerView;
 };
 
@@ -99,6 +102,9 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     resources() {
       return snapshot.resources;
     },
+    activeResources() {
+      return snapshot.resources.filter((resource) => resource.amount > 0);
+    },
     mercenaryCamps() {
       return snapshot.mercenaryCamps;
     },
@@ -135,6 +141,12 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
     },
     opponentBuildingsNear(owner, point, range) {
       return snapshot.buildings.filter((building) => isOpponent(owner, building.owner) && distance(building, point) <= range);
+    },
+    hostileUnitsNear(owner, point, range) {
+      return snapshot.units.filter((unit) => (isOpponent(owner, unit.owner) || unit.owner === "neutral") && distance(unit, point) <= range);
+    },
+    hostileCombatUnitsFor(owner) {
+      return snapshot.units.filter((unit) => (isOpponent(owner, unit.owner) || unit.owner === "neutral") && unit.kind !== "worker");
     },
     forPlayer(owner) {
       const ownTeam = teamFor(owner);

@@ -21,6 +21,14 @@ describe("SDK package boundaries", () => {
     expect(policySource).not.toMatch(/snapshot\.(units|buildings|resources|mercenaryCamps|items)/);
   });
 
+  it("keeps AI snapshot convenience helpers as SDK query delegation", () => {
+    const snapshotSource = readFileSync("src/ai/policy/snapshot.ts", "utf8");
+    expect(snapshotSource).toContain("activeResources()");
+    expect(snapshotSource).toContain("hostileUnitsNear(owner, point, range)");
+    expect(snapshotSource).toContain("hostileCombatUnitsFor(owner)");
+    expect(snapshotSource).not.toMatch(/return \[\.\.\.enemy/);
+  });
+
   it("keeps AI modules out of SDK and shared", () => {
     expect(existsSync("src/sdk/ai-policy.ts")).toBe(false);
     expect(existsSync("src/sdk/ai-policy")).toBe(false);
