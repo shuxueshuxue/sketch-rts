@@ -253,16 +253,22 @@ export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluat
 }
 
 export function summarizeMeleeControlEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
-  const wins = evaluation.matches.filter(v2WonControl).length;
-  const losses = evaluation.matches.length - wins;
+  const matchesByMapId = new Map<string, BenchmarkEvaluationReport["matches"]>();
+  for (const match of evaluation.matches) {
+    const mapId = match.setup.map.id;
+    matchesByMapId.set(mapId, [...(matchesByMapId.get(mapId) ?? []), match]);
+  }
+  const mapControls = [...matchesByMapId.values()];
+  const wins = mapControls.filter((matches) => matches.some(v2WonControl)).length;
+  const losses = mapControls.length - wins;
   return {
     name: evaluation.name,
     ...(evaluation.tag ? { tag: evaluation.tag } : {}),
     wins,
     losses,
     failures: losses,
-    successRate: evaluation.matches.length === 0 ? 0 : wins / evaluation.matches.length,
-    matchCount: evaluation.matches.length,
+    successRate: mapControls.length === 0 ? 0 : wins / mapControls.length,
+    matchCount: mapControls.length,
   };
 }
 

@@ -291,7 +291,7 @@ describe("AI benchmark presets", () => {
           name: "fake 1v1",
           elapsedMs: 0,
           cpuMs: 0,
-          setup: {} as never,
+          setup: { map: { id: "fake-map" } } as never,
           result: {
             winner: "v2",
             winnerTeam: "north",
@@ -307,12 +307,40 @@ describe("AI benchmark presets", () => {
     expect(summary).toMatchObject({ wins: 0, losses: 1, failures: 1, successRate: 0 });
   });
 
+  it("summarizes side-balanced 1v1 controls by map instead of raw side games", () => {
+    const summary = summarizeMeleeControlEvaluation({
+      name: "1v1 score control",
+      startedAt: "now",
+      elapsedMs: 0,
+      cpuMs: 0,
+      matchCount: 2,
+      matches: [
+        {
+          name: "map-a 1v1 control north",
+          elapsedMs: 0,
+          cpuMs: 0,
+          setup: { map: { id: "map-a" } } as never,
+          result: { winner: "v1a", winnerTeam: "south", players: { v2: { enemyUnitKills: 3 }, v1a: { unitsLost: 3, unitsKilledByNeutral: 0 } } } as never,
+        },
+        {
+          name: "map-a 1v1 control south",
+          elapsedMs: 0,
+          cpuMs: 0,
+          setup: { map: { id: "map-a" } } as never,
+          result: { winner: "v2", winnerTeam: "south", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 8, unitsKilledByNeutral: 0 } } } as never,
+        },
+      ],
+    });
+
+    expect(summary).toMatchObject({ wins: 1, losses: 0, failures: 0, successRate: 1, matchCount: 1 });
+  });
+
   it("runs the AI benchmark preset through SDK parallel workers", async () => {
     const run = await runAiVersionBenchmarkParallel({ seed: "parallel-smoke", mapCount: 1, maxTicks: 1, workers: 2 });
 
     expect(run.report.matchCount).toBe(13);
     expect(run.scoreSummary).toMatchObject({ name: "paired 1v2 score", matchCount: 1 });
-    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 2 });
+    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 1 });
     expect(run.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
   });
 });
