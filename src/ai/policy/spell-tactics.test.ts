@@ -54,7 +54,7 @@ describe("AI spell and focus tactics", () => {
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
   });
 
-  it("uses focus fire in combat mode even when the local enemy army is larger", () => {
+  it("does not pin a tiny combat squad into focus fire while it is outnumbered", () => {
     const game = sketchScene("spell-tactics-combat-focus")
       .map("combatArena")
       .replaceDefaults()
@@ -67,16 +67,33 @@ describe("AI spell and focus tactics", () => {
       .townHall("v1", 1450, 800)
       .unit("v1", "mercenary", 760, 760, { id: "wounded-target", hp: 40 })
       .unit("v1", "footman", 790, 800)
-      .unit("v1", "fieldMedic", 810, 840)
+      .unit("v1", "footman", 810, 840)
       .unit("v1", "archer", 830, 880)
       .unit("v1", "raider", 850, 920)
       .build()
       .createGame();
 
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toBeUndefined();
+  });
+
+  it("uses focus fire for a full combat group even when the local enemy army is larger", () => {
+    const scene = sketchScene("spell-tactics-combat-full-group-focus")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v1", "mercenary", 820, 760, { id: "wounded-target", hp: 40 });
+    for (let index = 0; index < 12; index += 1) scene.unit("v2", index % 3 === 0 ? "archer" : "footman", 690 + index * 6, 730 + index * 12, { id: `v2-fighter-${index + 1}` });
+    for (let index = 0; index < 16; index += 1) scene.unit("v1", index % 4 === 0 ? "fieldMedic" : "footman", 850 + index * 5, 790 + index * 10, { id: `v1-guard-${index + 1}` });
+    const game = scene.build().createGame();
+
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toEqual({
       type: "attack",
-      unitIds: ["front-a", "front-b", "back-a"],
+      unitIds: Array.from({ length: 12 }, (_, index) => `v2-fighter-${index + 1}`),
       targetId: "wounded-target",
     });
   });
+
 });
