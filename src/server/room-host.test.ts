@@ -82,6 +82,44 @@ describe("server room host", () => {
     expect(result.snapshot.tick).toBe(240);
   });
 
+  it("ticks a live room from an authoritative command frame before stepping simulation", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-frame-tick", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.enableDebugReplay(room.id, { id: "trace-room-frame-tick" });
+    const before = host.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+    const frame = {
+      roomId: room.id,
+      tick: before.tick,
+      sequence: 42,
+      commands: [{ playerId: "player", command: { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }],
+    };
+
+    const result = host.tickRoomFrame(room.id, frame, "browser");
+    const recorded = host.readDebugReplay(room.id);
+
+    expect(result.ticks).toBe(1);
+    expect(result.snapshot.tick).toBe(1);
+    expect(result.snapshot.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
+    expect(recorded.frames).toEqual(expect.arrayContaining([{ ...frame, source: "browser" }]));
+  });
+
+  it("creates checkpoint frames from live room runtime state", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-checkpoint-frame", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.tickRoom(room.id, 3);
+
+    const checkpoint = host.checkpointRoom(room.id);
+
+    expect(checkpoint.roomId).toBe(room.id);
+    expect(checkpoint.tick).toBe(3);
+    expect(checkpoint.snapshot.tick).toBe(3);
+    expect(checkpoint.nextId).toBeGreaterThanOrEqual(1000);
+  });
+
   it("pauses active-room auto ticking while preserving manual SDK ticks", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-pause", host: hostUser, mapId: "bareDuel" });
@@ -99,6 +137,19 @@ describe("server room host", () => {
     expect(manual.snapshot.tick).toBe(3);
     expect(resumed.autoTick).toBe(true);
     expect(host.snapshot(room.id).tick).toBe(5);
+  });
+
+  it("can exclude rooms from ordinary active-room ticking when a lockstep transport owns them", () => {
+    const host = createRoomHost();
+    const lockstepRoom = host.createRoom({ id: "room-lockstep-owned", host: hostUser, mapId: "bareDuel" });
+    const ordinaryRoom = host.createRoom({ id: "room-ordinary-owned", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(lockstepRoom.id);
+    host.startRoom(ordinaryRoom.id);
+
+    host.tickActiveRooms(3, { excludeRoomIds: new Set([lockstepRoom.id]) });
+
+    expect(host.snapshot(lockstepRoom.id).tick).toBe(0);
+    expect(host.snapshot(ordinaryRoom.id).tick).toBe(3);
   });
 
   it("resets a live room match with scenario seeds without leaving the room runtime", () => {
@@ -183,7 +234,7 @@ describe("server room host", () => {
     expect(resumedAfter.match).toEqual(directAfter.match);
   });
 
-  it("records debug replay batches from SDK commands and internal AI commands", () => {
+  it("records debug replay frames from SDK commands and internal AI commands", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-replay", host: hostUser, mapId: "bareDuel" });
     host.startRoom(room.id);
@@ -198,13 +249,13 @@ describe("server room host", () => {
     const replayed = host.replayDebugToTick(room.id, host.snapshot(room.id).tick);
 
     expect(trace.initialSave.snapshot.tick).toBe(0);
-    expect(recorded.batches.some((batch) => batch.source === "sdk-agent")).toBe(true);
-    expect(recorded.batches.some((batch) => batch.source === "internal-ai")).toBe(true);
+    expect(recorded.frames.some((frame) => frame.source === "sdk-agent")).toBe(true);
+    expect(recorded.frames.some((frame) => frame.source === "internal-ai")).toBe(true);
     expect(replayed.units).toEqual(host.snapshot(room.id).units);
     expect(replayed.buildings).toEqual(host.snapshot(room.id).buildings);
   });
 
-  it("records internal AI batches from the normal active-room tick loop", () => {
+  it("records internal AI frames from the normal active-room tick loop", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-replay-autotick", host: hostUser, mapId: "bareDuel" });
     host.startRoom(room.id);
@@ -215,7 +266,7 @@ describe("server room host", () => {
     const recorded = host.readDebugReplay(room.id);
     const replayed = host.replayDebugToTick(room.id, host.snapshot(room.id).tick);
 
-    expect(recorded.batches.some((batch) => batch.source === "internal-ai")).toBe(true);
+    expect(recorded.frames.some((frame) => frame.source === "internal-ai")).toBe(true);
     expect(replayed.units).toEqual(host.snapshot(room.id).units);
     expect(replayed.buildings).toEqual(host.snapshot(room.id).buildings);
   });
@@ -280,7 +331,7 @@ describe("server room host", () => {
     const recorded = host.readDebugReplay(room.id);
 
     expect(ended.room.status).toBe("ended");
-    expect(recorded.batches.some((batch) => batch.source === "browser")).toBe(true);
+    expect(recorded.frames.some((frame) => frame.source === "browser")).toBe(true);
     expect(replayedEnd.match).toEqual(ended.snapshot.match);
     expect(replayedMid.tick).toBeLessThan(ended.snapshot.tick);
   });

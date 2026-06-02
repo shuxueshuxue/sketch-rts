@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
-import { createAiRuntime, issueAiCommandFrame, runPresetAiRuntime } from "./runtime";
+import { createAiRuntime, issueAiCommandFrame, planPresetAiRuntimeCommands, runPresetAiRuntime } from "./runtime";
 import type { AiPolicyMemory, AiScript } from "./policy";
 
 describe("shared AI runtime", () => {
@@ -46,6 +46,17 @@ describe("shared AI runtime", () => {
     expect(runtime.versions.enemy).toBe("v1");
     expect(result.commands.some((entry) => entry.playerId === "player" && entry.command.type === "mine")).toBe(true);
     expect(result.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+  });
+
+  it("can plan due runtime commands without mutating the simulation", () => {
+    const game = createGame("bareDuel", { aiPlayers: ["player"], races: { player: "grove", enemy: "ember" } });
+    const runtime = createAiRuntime(["player"]);
+    const before = snapshotGame(game);
+
+    const result = planPresetAiRuntimeCommands(game, runtime);
+
+    expect(result.commands.length).toBeGreaterThan(0);
+    expect(snapshotGame(game)).toEqual(before);
   });
 
   it("plans every controlled player from the same frame before applying commands", () => {
