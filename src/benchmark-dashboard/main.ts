@@ -1,7 +1,7 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { matchWarnings } from "./warnings";
-import { combatSummariesFor, probeSummariesFor, runListMeta } from "./view-model";
+import { campRoleSummary, combatSummariesFor, probeSummariesFor, runListMeta } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
@@ -175,7 +175,7 @@ function matchDetail(match: BenchmarkMatchReport) {
             <h3>map detail</h3>
             <div class="metric"><span>gold mines</span><strong>${escapeHtml(match.setup.map.goldMines.map((mine) => `${mine.id}@${Math.round(mine.x)},${Math.round(mine.y)}`).join(", "))}</strong></div>
             <div class="metric"><span>camp bands</span><strong>${escapeHtml(campBands(match))}</strong></div>
-            <div class="metric"><span>camp roles</span><strong>${match.setup.map.neutralCamps.freeCamps} free / ${match.setup.map.neutralCamps.guardedCamps} guarded</strong></div>
+            <div class="metric"><span>camp roles</span><strong>${campRoleSummary(match.setup.map.neutralCamps)}</strong></div>
             <div class="metric"><span>merc camps</span><strong>${escapeHtml(match.setup.map.mercenaryCamps.map((camp) => `${camp.id}:${camp.hireKind}x${camp.stock}`).join(", ") || "none")}</strong></div>
             <div class="metric"><span>item kinds</span><strong>${escapeHtml(itemKinds(match))}</strong></div>
           </section>

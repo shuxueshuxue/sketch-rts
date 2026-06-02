@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { combatSummariesFor, probeSummariesFor, runListMeta } from "./view-model";
+import { campRoleSummary, combatSummariesFor, probeSummariesFor, runListMeta } from "./view-model";
 
 describe("benchmark dashboard view model", () => {
   it("renders older dashboard runs without probe summaries", () => {
@@ -30,5 +30,9 @@ describe("benchmark dashboard view model", () => {
     };
 
     expect(runListMeta(run as never)).toBe("1/2 1v3 · 2/2 2v3 · 1/1 15v20 · 0/1 10v12 · 3/3 sanity · 17/64 maps");
+  });
+
+  it("labels unattached neutral camps as route camps instead of free camps", () => {
+    expect(campRoleSummary({ freeCamps: 3, guardedCamps: 8 })).toBe("3 route / 8 guarded");
   });
 });

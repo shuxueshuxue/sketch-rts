@@ -25,3 +25,7 @@ export function runListMeta(run: BenchmarkDashboardRunSummary | BenchmarkDashboa
     .filter(Boolean)
     .join(" · ");
 }
+
+export function campRoleSummary(camps: { freeCamps: number; guardedCamps: number }) {
+  return `${camps.freeCamps} route / ${camps.guardedCamps} guarded`;
+}
