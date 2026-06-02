@@ -725,8 +725,11 @@ function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: Pl
   if (options.version !== "v2") return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (!buildings(snapshot, owner).some((building) => building.complete && isCoreProductionBuilding(building))) return false;
+  const ownCombatCount = combatUnits(snapshot, owner).length;
+  // @@@thin-bank-tempo - A near-ready natural is not worth idling core production when the visible field army is already outnumbering the first squad.
+  if (ownCombatCount < 7 && enemyCombatUnits(snapshot, owner, options.teams).length > ownCombatCount) return true;
   // @@@expansion-reserve-training - First natural reserve starts near the hall cost; before that, idle core production loses the map.
-  if (availableGold < BUILDING_DEFS.townHall.cost - 80 && availableGold - spendCost >= UNIT_DEFS.worker.cost && combatUnits(snapshot, owner).length < 6) return true;
+  if (availableGold < BUILDING_DEFS.townHall.cost - 80 && availableGold - spendCost >= UNIT_DEFS.worker.cost && ownCombatCount < 6) return true;
   return healingWellPressure(snapshot, owner, mainBase(snapshot, owner), options);
 }
 

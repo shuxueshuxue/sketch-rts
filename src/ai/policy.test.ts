@@ -601,6 +601,32 @@ describe("SDK preset AI policy", () => {
     expect(entries).toEqual([]);
   });
 
+  it("v2 keeps combat production active before the first expansion bank in the copperWeald control timing", () => {
+    const report = runAiGame({
+      name: "copperWeald first expansion training timing",
+      mapId: "copperWeald",
+      agents: {
+        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
+        v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+      },
+      maxTicks: 4_501,
+      thinkInterval: 45,
+      trace: { commands: true },
+    });
+
+    const combatTrainingBeforeBankStall = report.commands.find(
+      (entry) =>
+        entry.tick >= 2_400 &&
+        entry.tick <= 2_700 &&
+        entry.owner === "v2" &&
+        entry.scriptId === "training" &&
+        entry.command.type === "train" &&
+        entry.command.unitKind !== "worker",
+    );
+
+    expect(combatTrainingBeforeBankStall).toBeDefined();
+  });
+
   it("v2 does not spend near-complete first-expansion gold on extra supply", () => {
     const scene = sketchScene("v2-holds-first-expansion-gold-before-supply")
       .map("openClaims")
