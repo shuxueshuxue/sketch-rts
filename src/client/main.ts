@@ -1,6 +1,14 @@
 import "./styles.css";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
-import { pruneControlGroups, recallControlGroup, replaceControlGroup, type ControlGroups } from "./control-groups";
+import {
+  controlGroupCenter,
+  controlGroupRecallTap,
+  pruneControlGroups,
+  recallControlGroup,
+  replaceControlGroup,
+  type ControlGroupRecallTap,
+  type ControlGroups,
+} from "./control-groups";
 import { edgeScrollDelta } from "./edge-scroll";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
@@ -124,6 +132,7 @@ let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 const controlGroups: ControlGroups = {};
+let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
@@ -1640,6 +1649,7 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
       return true;
     }
     replaceControlGroup(controlGroups, intent.slot, selectedIds);
+    lastControlGroupRecall = undefined;
     statusLabel.textContent = `Group ${intent.slot} set.`;
     return true;
   }
@@ -1655,11 +1665,14 @@ function selectControlGroup(slot: number) {
     showInvalidCommand(`Group ${slot} is empty.`);
     return;
   }
+  const recallTap = controlGroupRecallTap(lastControlGroupRecall, slot, performance.now());
+  lastControlGroupRecall = recallTap.nextTap;
   selectedIds = new Set(ids);
   focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   selectedCampId = undefined;
   buildPaletteOpen = false;
   statusLabel.textContent = `Group ${slot} selected.`;
+  if (recallTap.shouldCenterCamera) centerCameraOnControlGroup(ids);
   updateHud();
 }
 
@@ -3728,6 +3741,17 @@ function centerCameraFromMinimap(point: Point) {
   if (!snapshot) return;
   const rect = minimapRect();
   const world = minimapPointToWorld(point, rect, snapshot.map);
+  centerCameraOnWorld(world);
+}
+
+function centerCameraOnControlGroup(ids: string[]) {
+  if (!snapshot) return;
+  const center = controlGroupCenter(ids, [...snapshot.units, ...snapshot.buildings]);
+  if (center) centerCameraOnWorld(center);
+}
+
+function centerCameraOnWorld(world: Point) {
+  if (!snapshot) return;
   camera.x = world.x - canvas.width / 2;
   camera.y = world.y - canvas.height / 2;
   clampCamera();
