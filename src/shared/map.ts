@@ -200,7 +200,6 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
       ...expansionMines.map((resource) => scaleResource(richAuthorResource(mapId, resource))),
       { id: "gold-west-march", kind: "goldMine", x: 1620, y: 5220, amount: 6_000 },
       { id: "gold-east-march", kind: "goldMine", x: 6280, y: 2520, amount: 6_000 },
-      { id: "gold-east-watch", kind: "goldMine", x: 6900, y: 3800, amount: 6_000 },
     ] satisfies ResourceNode[]).map((resource) => (resource.id.startsWith("gold-west") || resource.id.startsWith("gold-east") ? scaleResource(richAuthorResource(mapId, resource)) : resource));
   }
   return [...mainMines, ...expansionMines.map(scaleResource)];

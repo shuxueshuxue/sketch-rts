@@ -56,6 +56,23 @@ describe("map neutral objective layout", () => {
     }
   });
 
+  it("keeps rich score side-lane expansion access balanced for 1v1 controls", () => {
+    const players = ["v2", "v1a"];
+    const teams = { v2: "north", v1a: "south" };
+    for (const mapId of RICH_SCORE_MAPS) {
+      const game = createGame(mapId, { players, aiPlayers: [], teams });
+      const distances = players.map((owner) => {
+        const base = game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
+        return Math.min(...game.resources.filter((resource) => resource.kind === "goldMine" && !resource.id.endsWith("-main")).map((resource) => Math.hypot(resource.x - base.x, resource.y - base.y)));
+      });
+      const northDistance = distances[0]!;
+      const southDistance = distances[1]!;
+
+      expect(Math.min(...distances), `${mapId} should not have a nearly free side-lane expansion`).toBeGreaterThanOrEqual(480);
+      expect(Math.abs(northDistance - southDistance), `${mapId} should keep side-lane natural distances comparable`).toBeLessThanOrEqual(450);
+    }
+  });
+
   it("makes guarded mines and mercenary camps real strategic objectives", () => {
     for (const mapId of EVALUATION_MAPS) {
       const report = analyzeEvaluationMap(mapId);
