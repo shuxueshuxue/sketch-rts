@@ -144,6 +144,7 @@ Requirements:
 - A session can be created from a map, controlled player, opponent AI config, and seed-like deterministic options.
 - The session is persisted in a file so an agent can inspect, think, issue commands, step forward, inspect again, and continue across shell calls.
 - The tool prints mid-game situation summaries in game seconds: resources, bases, workers, combat units, supply, nearby enemies, visible objectives, current orders, first-fight state, and winner/timeout state.
+- Tactical status must include the controlled side's units with ids, health, position, current order, and carried items, sorted so wounded units are easy to notice and steer.
 - The command surface is composable. High-level commands should cover common steering moves such as gather army, attack-move, focus fire, retreat, mine, build, train, expand, creep a camp, hire mercenaries, use item, and step until a condition. Low-level raw commands remain available for exact control.
 - The scripted opponent continues through the same AI command planner used by benchmark runs.
 - The controlled side can be manual-only or assisted. Manual commands should be able to coexist with scripted commands when explicitly requested, but the default is that the agent is responsible for the controlled side.

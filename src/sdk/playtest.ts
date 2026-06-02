@@ -1,7 +1,7 @@
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
-import type { Building, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, Unit } from "../shared/types";
+import type { Building, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, Unit, UnitOrder } from "../shared/types";
 import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
 import { controlledPoint, resolveSdkCommandIntent, type SdkCommandIntent, type SdkUnitSelector } from "./commands/intent";
 import { createSnapshotQuery } from "./snapshot/query";
@@ -63,6 +63,7 @@ export type InteractivePlaytestSummary = {
     firstFightGameSecond: number | null;
   };
   players: Record<PlayerId, InteractivePlaytestPlayerSummary>;
+  controlledUnits: InteractivePlaytestUnitSummary[];
   visibleObjectives: InteractiveObjectiveSummary[];
   nearbyEnemies: { id: string; kind: string; x: number; y: number; hp: number; maxHp: number }[];
 };
@@ -85,6 +86,17 @@ export type InteractiveObjectiveSummary = {
   x: number;
   y: number;
   distance: number;
+};
+
+export type InteractivePlaytestUnitSummary = {
+  id: string;
+  kind: string;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  order: UnitOrder;
+  carriedItems: { id: string; kind: string; cooldownRemaining: number }[];
 };
 
 export type InteractivePlaytestStepOptions<Source extends string = string> = {
@@ -209,6 +221,7 @@ export function summarizeInteractivePlaytestSession(session: InteractivePlaytest
       firstFightGameSecond: session.events.firstFightTick === null ? null : tickSecond(session.events.firstFightTick),
     },
     players: Object.fromEntries(session.game.activePlayers.map((owner) => [owner, summarizePlayer(snapshot, owner)])),
+    controlledUnits: controlledUnits(snapshot, session.controlledPlayer),
     visibleObjectives: visibleObjectives(snapshot, controlledCenter),
     nearbyEnemies,
   };
@@ -294,6 +307,27 @@ function visibleObjectives(snapshot: GameSnapshot, point: { x: number; y: number
     ...snapshot.mercenaryCamps.map((camp) => ({ id: camp.id, kind: "mercenaryCamp" as const, x: camp.x, y: camp.y, distance: distance(camp, point) })),
     ...snapshot.items.filter((item) => !item.carrierId).map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
   ].sort((a, b) => a.distance - b.distance).slice(0, 12);
+}
+
+function controlledUnits(snapshot: GameSnapshot, owner: PlayerId): InteractivePlaytestUnitSummary[] {
+  return snapshot.units
+    .filter((unit) => unit.owner === owner)
+    .map((unit) => summarizeUnit(snapshot, unit))
+    .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.id.localeCompare(b.id))
+    .slice(0, 24);
+}
+
+function summarizeUnit(snapshot: GameSnapshot, unit: Unit): InteractivePlaytestUnitSummary {
+  return {
+    id: unit.id,
+    kind: unit.kind,
+    x: unit.x,
+    y: unit.y,
+    hp: unit.hp,
+    maxHp: unit.maxHp,
+    order: clone(unit.order),
+    carriedItems: snapshot.items.filter((item) => item.carrierId === unit.id).map((item) => ({ id: item.id, kind: item.kind, cooldownRemaining: item.cooldownRemaining })),
+  };
 }
 
 function roomForSession(session: InteractivePlaytestSession): RoomState {

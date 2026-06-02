@@ -62,6 +62,41 @@ describe("interactive playtest SDK", () => {
     expect(restored.transcript.map((entry) => entry.type)).toEqual(["command", "step"]);
   });
 
+  it("summarizes controlled units with health, orders, and carried items for tactical steering", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-wounded", owner: "v2", kind: "footman", x: 320, y: 780, hp: 42 },
+            { id: "v2-rod", owner: "v2", kind: "archer", x: 300, y: 830, order: { type: "attackMove", x: 1200, y: 800 } },
+            { id: "v1a-footman", owner: "v1a", kind: "footman", x: 1200, y: 790 },
+          ],
+          addItems: [{ id: "rod", kind: "lightningRod", x: 0, y: 0, carrierId: "v2-rod", cooldownRemaining: 0 }],
+        },
+      },
+    });
+
+    const summary = summarizeInteractivePlaytestSession(session);
+
+    expect(summary.controlledUnits).toEqual([
+      expect.objectContaining({ id: "v2-wounded", kind: "footman", hp: 42, order: { type: "idle" }, carriedItems: [] }),
+      expect.objectContaining({
+        id: "v2-rod",
+        kind: "archer",
+        order: { type: "attackMove", x: 1200, y: 800 },
+        carriedItems: [{ id: "rod", kind: "lightningRod", cooldownRemaining: 0 }],
+      }),
+    ]);
+  });
+
   it("fails loudly when a high-level selector resolves to no valid controlled units", () => {
     const session = createInteractivePlaytestSession({
       mapId: "combatArena",
