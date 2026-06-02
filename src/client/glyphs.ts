@@ -78,3 +78,7 @@ export function glyphFingerprint(glyph: UnitGlyph) {
 export function glyphComplexity(glyph: UnitGlyph) {
   return new Set([glyph.silhouette, ...glyph.marks]).size;
 }
+
+export function unitGlyphScale(radius: number) {
+  return Math.max(0.72, Math.min(1.65, radius / 18));
+}

@@ -50,6 +50,7 @@ export type WorldEffect = {
     | "curse"
     | "move"
     | "mine"
+    | "repair"
     | "attack"
     | "attackTarget"
     | "build"
