@@ -75,6 +75,14 @@ export function createRoomHost() {
       return getHosted(roomId).room;
     },
 
+    closeRoom(roomId: string, userId: string): RoomState {
+      const hosted = getHosted(roomId);
+      if (hosted.room.hostUserId !== userId) throw new Error("Only the room host can close this room");
+      const closed: RoomState = { ...hosted.room, status: "closed" };
+      rooms.delete(roomId);
+      return closed;
+    },
+
     createRoom(input: CreateRoomInput): RoomState {
       if (rooms.has(input.id)) throw new Error(`Room ${input.id} already exists`);
       return putRoom(createRoom(input));

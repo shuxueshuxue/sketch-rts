@@ -102,6 +102,16 @@ button {
   padding: clamp(18px, 4vw, 52px);
 }
 
+.main-menu[data-menu-view="rooms"] {
+  grid-template-columns: minmax(720px, min(1120px, calc(100vw - 88px)));
+  align-content: start;
+  padding: clamp(18px, 4vw, 52px);
+}
+
+.main-menu[data-menu-view="home"] {
+  grid-template-columns: minmax(280px, min(420px, calc(100vw - 40px)));
+}
+
 .menu-title {
   color: #233126;
   font-size: clamp(44px, 8vw, 92px);
@@ -182,11 +192,53 @@ button {
 
 .profile-form,
 .create-game-form,
+.room-browser,
 .room-setup,
 .results-panel {
   display: grid;
   gap: 10px;
   pointer-events: auto;
+}
+
+.room-browser {
+  width: min(1120px, calc(100vw - 88px));
+  height: min(56vh, 520px);
+  grid-template-columns: minmax(220px, 0.32fr) minmax(420px, 0.68fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.room-browser-actions,
+.room-browser-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(45, 61, 43, 0.24);
+  border-radius: 7px;
+  background: rgba(255, 250, 226, 0.42);
+  padding: 10px;
+  overflow: auto;
+}
+
+.room-browser-actions {
+  grid-auto-rows: max-content;
+}
+
+.room-browser-list .map-button-note {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.empty-room-list {
+  border: 1px dashed rgba(45, 61, 43, 0.28);
+  border-radius: 7px;
+  color: rgba(35, 49, 38, 0.68);
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .create-game-grid {
@@ -247,35 +299,6 @@ button {
   gap: 12px;
 }
 
-.room-setup-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: end;
-  gap: 8px;
-}
-
-.room-setup-controls label {
-  display: grid;
-  gap: 3px;
-  color: rgba(35, 49, 38, 0.72);
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.room-setup-controls input {
-  width: 58px;
-  min-height: 28px;
-  border: 1px solid rgba(45, 61, 43, 0.28);
-  border-radius: 4px;
-  background: rgba(255, 250, 226, 0.9);
-  color: #233126;
-  font: inherit;
-  padding: 3px 6px;
-}
-
 .room-setup-name {
   overflow: hidden;
   color: #233126;
@@ -295,9 +318,7 @@ button {
 }
 
 .room-slot-summary {
-  min-width: 360px;
-  padding-bottom: 5px;
-  text-align: right;
+  margin-top: 2px;
 }
 
 .room-setup-layout {
@@ -311,10 +332,6 @@ button {
 .room-slot-pane {
   display: grid;
   min-height: 0;
-  border: 1px solid rgba(45, 61, 43, 0.24);
-  border-radius: 7px;
-  background: rgba(255, 250, 226, 0.42);
-  padding: 10px;
 }
 
 .room-map-pane {
@@ -327,10 +344,47 @@ button {
 
 .slot-pane-head {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 7px;
+  border-bottom: 1px solid rgba(45, 61, 43, 0.18);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 6px;
+}
+
+.slot-actions button {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 250, 226, 0.86);
+  color: #315f87;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.slot-actions button:hover,
+.slot-actions button:focus-visible {
+  outline: none;
+  background: rgba(232, 241, 220, 0.96);
+}
+
+.slot-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.slot-actions .danger-button {
+  border-color: rgba(155, 47, 47, 0.32);
+  color: #8d2d2d;
 }
 
 .profile-form label,
@@ -410,11 +464,15 @@ button {
   gap: 7px;
   overflow: auto;
   padding-right: 3px;
+  scrollbar-gutter: stable;
 }
 
 .slot-list {
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 5px;
+  scrollbar-gutter: stable;
 }
 
 .slot-row {
@@ -446,6 +504,19 @@ button {
   font: inherit;
 }
 
+.slot-controller-badge {
+  min-height: 28px;
+  border: 1px solid rgba(45, 61, 43, 0.18);
+  border-radius: 4px;
+  background: rgba(232, 241, 220, 0.72);
+  color: rgba(35, 49, 38, 0.76);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  text-transform: lowercase;
+}
+
 .slot-ready {
   display: flex;
   align-items: center;
@@ -462,9 +533,17 @@ button {
 }
 
 @media (max-width: 960px) {
-  .main-menu[data-menu-view="setup"] {
+  .main-menu[data-menu-view="setup"],
+  .main-menu[data-menu-view="rooms"] {
     grid-template-columns: minmax(280px, calc(100vw - 32px));
     padding: 18px 16px;
+  }
+
+  .room-browser {
+    width: calc(100vw - 32px);
+    height: min(72vh, 640px);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .room-setup {
@@ -619,16 +698,69 @@ button {
 .selection-chip {
   left: 12px;
   bottom: 12px;
-  max-width: min(300px, calc(100vw - 260px));
-  padding: 7px 9px;
+  max-width: min(520px, calc(100vw - 260px));
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 5px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 800;
 }
 
+.selection-model {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(45, 61, 43, 0.32);
+  border-radius: 5px;
+  background: rgba(251, 247, 223, 0.88);
+  padding: 0;
+  box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.08);
+}
+
+.selection-model.focused {
+  border-color: rgba(49, 95, 135, 0.78);
+  background: #fffbe7;
+  box-shadow: 0 0 0 2px rgba(49, 95, 135, 0.14), inset 0 -2px 0 rgba(36, 49, 38, 0.08);
+}
+
+.selection-model.dimmed {
+  opacity: 0.62;
+}
+
+.selection-model:hover,
+.selection-model:focus-visible {
+  opacity: 1;
+  border-color: rgba(49, 95, 135, 0.66);
+}
+
+.selection-model-canvas {
+  width: 34px;
+  height: 34px;
+}
+
+.selection-model-count {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  min-width: 16px;
+  border-radius: 2px;
+  background: rgba(36, 49, 38, 0.78);
+  color: #fffbe7;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 11px;
+}
+
 .command-dock {
   left: 12px;
-  bottom: 48px;
+  bottom: 64px;
   display: flex;
   gap: 6px;
   padding: 6px;
@@ -637,7 +769,7 @@ button {
 
 .item-dock {
   left: 12px;
-  bottom: 94px;
+  bottom: 110px;
   display: flex;
   gap: 5px;
   padding: 5px;
@@ -662,8 +794,44 @@ button {
   box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.1);
 }
 
-.item-button:disabled {
-  opacity: 0.48;
+.item-button-cooldown {
+  opacity: 0.72;
+}
+
+.item-cooldown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: rgba(36, 49, 38, 0.48);
+  color: #fbf7df;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.research-progress-button[aria-disabled="true"] {
+  opacity: 1;
+}
+
+.research-progress-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--research-progress);
+  height: 4px;
+  border-radius: 0 0 0 4px;
+  background: #315f87;
+}
+
+.research-progress-text {
+  position: absolute;
+  right: 3px;
+  bottom: 6px;
+  color: #315f87;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 900;
 }
 
 .item-icon {
@@ -696,6 +864,60 @@ button {
 .command-button:disabled {
   color: #8f947f;
   background: rgba(246, 241, 214, 0.72);
+}
+
+.tooltip-layer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  max-width: min(320px, calc(100vw - 20px));
+  padding: 9px 10px;
+  border: 1px solid rgba(36, 49, 38, 0.32);
+  border-radius: 6px;
+  background: rgba(255, 251, 231, 0.98);
+  color: #243126;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  box-shadow: 0 8px 18px rgba(36, 49, 38, 0.14);
+}
+
+.tooltip-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-weight: 900;
+}
+
+.tooltip-title span {
+  min-width: 16px;
+  border-radius: 2px;
+  background: rgba(36, 49, 38, 0.78);
+  color: #fffbe7;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 12px;
+  text-align: center;
+}
+
+.tooltip-body {
+  margin-top: 5px;
+}
+
+.tooltip-stats,
+.tooltip-requirements {
+  display: grid;
+  gap: 2px;
+  margin-top: 7px;
+  color: rgba(36, 49, 38, 0.78);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.tooltip-requirements {
+  color: rgba(112, 74, 51, 0.9);
 }
 
 .status-line {

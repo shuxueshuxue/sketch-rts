@@ -111,6 +111,7 @@ export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: nu
 export function joinFirstOpenSlot(room: RoomState, user: LocalUserProfile): RoomState {
   const ownedSlot = room.slots.find((candidate) => candidate.controller === "human" && candidate.userId === user.id);
   if (ownedSlot) return room;
+  if (room.status !== "open") throw new Error("Cannot join after match start");
   const slot = room.slots.find((candidate) => candidate.controller === "open");
   if (!slot) throw new Error("Room has no open slots");
   return updateRoomSlot(room, slot.id, { controller: "human", userId: user.id, name: user.name, ready: false });

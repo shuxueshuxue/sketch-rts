@@ -1,0 +1,51 @@
+import { describe, expect, it } from "vitest";
+import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitTooltip, upgradeTooltip } from "./tooltips";
+
+describe("gameplay tooltips", () => {
+  it("describes trainable units with live catalog stats", () => {
+    const tooltip = unitTooltip("archer", "a");
+
+    expect(tooltip.title).toBe("Archer");
+    expect(tooltip.body).toContain("ranged");
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 105 gold", "Supply 2", "HP 85", "Attack 12", "Range 190", "Train 7.8s"]));
+    expect(tooltip.hotkey).toBe("A");
+  });
+
+  it("describes ability targeting, range, and effect numbers", () => {
+    expect(abilityTooltip("heal", "h")).toMatchObject({
+      title: "Heal",
+      body: expect.stringContaining("allied"),
+      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", "Cooldown 4.0s"]),
+      requirements: ["Priest or field medic must be ready."],
+      hotkey: "H",
+    });
+  });
+
+  it("describes items with use conditions and damage numbers", () => {
+    expect(itemTooltip("lightningRod", "1")).toMatchObject({
+      title: "Lightning Rod",
+      body: expect.stringContaining("enemy"),
+      stats: expect.arrayContaining(["84 initial damage", "3 jumps", "Range 280", "Cooldown 18.0s"]),
+      requirements: ["Needs a visible enemy unit in range."],
+      hotkey: "1",
+    });
+  });
+
+  it("describes upgrades with affected units and per-level changes", () => {
+    const tooltip = upgradeTooltip("reinforcedPlating", "p", 1);
+
+    expect(tooltip.title).toBe("Reinforced Plating II");
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 500 gold", "Research 17.5s", "+15 max HP"]));
+    expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Barracks.", "Affects combat units."]));
+    expect(tooltip.hotkey).toBe("P");
+  });
+
+  it("describes buildings without relying on self-label text", () => {
+    const tooltip = buildingTooltip("barracks", "b");
+
+    expect(tooltip.title).toBe("Barracks");
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 170 gold", "Build 11.0s", "HP 620"]));
+    expect(tooltip.body).toContain("trains");
+    expect(tooltipText(tooltip)).toContain("Barracks");
+  });
+});

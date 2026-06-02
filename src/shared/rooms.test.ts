@@ -35,6 +35,13 @@ describe("room model", () => {
     expect(rejoined.slots.find((slot) => slot.userId === host.id)?.playerId).toBe("player");
   });
 
+  it("only lets claimed players re-enter a room after match start", () => {
+    const started = { ...createRoom({ id: "room-started", host, slotCount: 2 }), status: "inMatch" as const };
+
+    expect(joinFirstOpenSlot(started, host)).toEqual(started);
+    expect(() => joinFirstOpenSlot(started, guest)).toThrow("Cannot join after match start");
+  });
+
   it("creates private or public rooms with requested human and computer slot counts", () => {
     const room = createRoom({ id: "room-counts", host, mapId: "bareDuel", visibility: "private", humanCount: 3, aiCount: 2 });
 

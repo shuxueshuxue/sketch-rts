@@ -12,7 +12,7 @@ import {
   trainTimeFor,
 } from "./map";
 import { seconds } from "./time";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -263,6 +263,11 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "setRally") {
+    setRally(game, owner, command.buildingIds, command.x, command.y, command.target);
+    return;
+  }
+
   if (command.type === "cast") {
     castAbility(game, owner, command.unitId, command.ability, command.targetId, command.x, command.y);
     return;
@@ -346,11 +351,15 @@ export function snapshotGame(game: Game): GameSnapshot {
     map: game.map,
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
     units: game.units.map((unit) => ({ ...unit, order: { ...unit.order } })),
-    buildings: game.buildings.map((building) => ({
-      ...building,
-      queue: building.queue.map((job) => ({ ...job })),
-      researchQueue: building.researchQueue.map((job) => ({ ...job })),
-    })),
+    buildings: game.buildings.map((building) => {
+      const { rallyTarget, ...rest } = building;
+      return {
+        ...rest,
+        ...(rallyTarget ? { rallyTarget: { ...rallyTarget } } : {}),
+        queue: building.queue.map((job) => ({ ...job })),
+        researchQueue: building.researchQueue.map((job) => ({ ...job })),
+      };
+    }),
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
     items: game.items.map((item) => ({ ...item })),
@@ -385,7 +394,7 @@ function updateTraining(game: Game) {
     building.queue.shift();
     const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
     const unit = game.spawnUnit(building.owner, job.unitKind, building.x + Math.cos(angle) * 80, building.y + Math.sin(angle) * 80);
-    unit.order = { type: "move", x: building.rallyX, y: building.rallyY };
+    unit.order = rallyOrderForUnit(game, building, unit);
   }
 }
 
@@ -475,6 +484,10 @@ function updateUnits(game: Game) {
       updateAttackMoveOrder(game, unit);
       continue;
     }
+    if (unit.order.type === "follow") {
+      updateFollowOrder(game, unit);
+      continue;
+    }
     if (unit.order.type === "attack") {
       updateAttackOrder(game, unit);
       continue;
@@ -495,6 +508,19 @@ function updateUnits(game: Game) {
       const target = nearestEnemyInRange(game, unit, 150);
       if (target) unit.order = { type: "attack", targetId: target.id };
     }
+  }
+}
+
+function updateFollowOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "follow") return;
+  const order = unit.order;
+  const target = game.units.find((candidate) => candidate.id === order.targetId && candidate.owner === unit.owner);
+  if (!target) {
+    unit.order = { type: "idle" };
+    return;
+  }
+  if (distance(unit, target) > Math.max(72, target.radius + unit.radius + 26)) {
+    moveToward(unit, target.x, target.y, game.map);
   }
 }
 
@@ -612,6 +638,43 @@ function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKi
   spendGold(game, building.owner, UNIT_DEFS[unitKind].cost);
   building.queue.push({ unitKind, remaining: trainTimeFor(unitKind) });
   updateSupplyState(game);
+}
+
+function setRally(game: Game, owner: PlayerId, buildingIds: string[], x: number, y: number, target: RallyTarget | undefined) {
+  const buildings = buildingsByIds(game, buildingIds, owner);
+  const normalized = normalizeRallyTarget(game, owner, x, y, target);
+  for (const building of buildings) {
+    if (BUILDING_DEFS[building.kind].trains.length === 0) throw new Error(`${building.kind} has no training rally point`);
+    building.rallyX = normalized.x;
+    building.rallyY = normalized.y;
+    building.rallyTarget = normalized.target;
+  }
+  addEffect(game, "move", normalized.x, normalized.y, 24);
+}
+
+function normalizeRallyTarget(game: Game, owner: PlayerId, x: number, y: number, target: RallyTarget | undefined) {
+  if (!target || target.type === "point") {
+    return { x: clamp(x, 0, game.map.width), y: clamp(y, 0, game.map.height), target: { type: "point" } as RallyTarget };
+  }
+  if (target.type === "resource") {
+    const resource = game.resources.find((candidate) => candidate.id === target.resourceId);
+    if (!resource) throw new Error(`Unknown rally resource ${target.resourceId}`);
+    return { x: resource.x, y: resource.y, target };
+  }
+  const unit = game.units.find((candidate) => candidate.id === target.unitId && candidate.owner === owner);
+  if (!unit) throw new Error(`Unknown ${owner} rally unit ${target.unitId}`);
+  return { x: unit.x, y: unit.y, target };
+}
+
+function rallyOrderForUnit(game: Game, building: Building, unit: Unit): Unit["order"] {
+  const target = building.rallyTarget;
+  if (target?.type === "resource" && unit.kind === "worker" && game.resources.some((resource) => resource.id === target.resourceId && resource.amount > 0)) {
+    return { type: "mine", resourceId: target.resourceId, phase: "toMine", timer: 0 };
+  }
+  if (target?.type === "unit" && game.units.some((candidate) => candidate.id === target.unitId && candidate.owner === unit.owner)) {
+    return { type: "follow", targetId: target.unitId };
+  }
+  return { type: "move", x: building.rallyX, y: building.rallyY };
 }
 
 function queueResearch(game: Game, building: Building, upgradeKind: UpgradeKind) {
@@ -1057,6 +1120,13 @@ function unitsByIds(game: Game, unitIds: string[], owner: PlayerId) {
   const missing = units.findIndex((unit) => !unit);
   if (missing >= 0) throw new Error(`Unknown ${owner} unit ${unitIds[missing]}`);
   return units as Unit[];
+}
+
+function buildingsByIds(game: Game, buildingIds: string[], owner: PlayerId) {
+  const buildings = buildingIds.map((id) => game.buildings.find((building) => building.id === id && building.owner === owner));
+  const missing = buildings.findIndex((building) => !building);
+  if (missing >= 0) throw new Error(`Unknown ${owner} building ${buildingIds[missing]}`);
+  return buildings as Building[];
 }
 
 function spendGold(game: Game, owner: PlayerId, amount: number) {

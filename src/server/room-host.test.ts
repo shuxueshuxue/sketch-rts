@@ -115,6 +115,25 @@ describe("server room host", () => {
     expect(Object.keys(snapshot.players).filter((id) => id.startsWith("ai-"))).toHaveLength(15);
   });
 
+  it("lets the host close a room and removes it from the lobby", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-close", host: hostUser });
+
+    const closed = host.closeRoom(room.id, hostUser.id);
+
+    expect(closed.status).toBe("closed");
+    expect(host.listRooms(hostUser.id).some((candidate) => candidate.id === room.id)).toBe(false);
+    expect(() => host.getRoom(room.id)).toThrow(/Unknown room/);
+  });
+
+  it("rejects room close attempts from non-host users", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-close-reject", host: hostUser });
+
+    expect(() => host.closeRoom(room.id, guestUser.id)).toThrow(/Only the room host/);
+    expect(host.getRoom(room.id).status).toBe("open");
+  });
+
   it("saves a live opening and resumes it through an ordinary backend room runtime", () => {
     const directHost = createRoomHost();
     const room = directHost.createRoom({ id: "save-source", host: hostUser });
