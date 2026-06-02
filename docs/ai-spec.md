@@ -54,6 +54,8 @@ Benchmark reports classify evaluations with tags:
 
 Tags must be first-class report/dashboard data, not inferred from evaluation names.
 
+`combat` is a benchmark pressure shape, not a separate AI identity. It must exercise the same composable tactical modules that regular `melee` games use: item use, spell use, focus fire, kiting, wounded pullback, target choice, memory claims, and attack-wave commitment. The scenario may parameterize the environment by removing economy and using combat-elimination victory, but it must not replace V2 with an isolated "combat-only AI" that cannot transfer back into real RTS games.
+
 The initial `combat` targets are:
 
 - `15v20 mixed combat`: V2 controls 15 units plus key item loadouts against V1 controlling 20 units.
@@ -73,6 +75,7 @@ Combat setup rules:
 - Use a very small map or scenario where both armies are near enough that the objective is clear.
 - Both sides' objective is to eliminate all enemy combat units.
 - V2 and V1 both receive combat-specific policy parameters. V1 must not stand still; it should attack-move or otherwise actively engage from the opening frame.
+- Combat-specific policy parameters are scenario context, not a new script stack. V2 and V1 should keep using their normal versioned AI stack unless a future SDK composition API explicitly disables whole categories like economy for scenario setup while preserving the same tactical modules.
 - V2 and V1 must use the same ordered unit-composition recipe in a given combat match. V1 has more bodies by continuing the same recipe, but not a different army identity. If the V2 recipe is ranged-heavy, V1 is also ranged-heavy; if V2 is caster-heavy, V1 is also caster-heavy.
 - Include mixed unit composition and key item ratios. Both sides should have usable items where appropriate, including V1, and both sides' combat policy must be able to use those items. The point is micro quality: focus fire, kiting, wounded-unit pullback, item use, spell timing, and target choice.
 - Combat evaluations are not a replacement for `melee`; they are a separate pressure lane that exposes micro failures faster.

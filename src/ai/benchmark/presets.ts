@@ -1,5 +1,4 @@
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
-import { AI_SCRIPT_LIBRARY, type AiScript } from "../policy";
 import { sketchScene } from "../../sdk/scene";
 import { RICH_SCORE_MAP_IDS } from "../../shared/map";
 import type { ItemKind, MapId, PlayerId, RaceId, UnitKind } from "../../shared/types";
@@ -61,8 +60,6 @@ const V1B: PlayerId = "v1b";
 const V1C: PlayerId = "v1c";
 const TEAMS: Record<PlayerId, string> = { v2: "north", v2b: "north", v1a: "south", v1b: "south", v1c: "south" };
 const RACES: Record<PlayerId, RaceId> = { v2: "grove", v2b: "grove", v1a: "grove", v1b: "grove", v1c: "grove" };
-const V2_COMBAT_SCRIPTS: AiScript[] = [AI_SCRIPT_LIBRARY.items, AI_SCRIPT_LIBRARY.abilities, AI_SCRIPT_LIBRARY.focusFire, AI_SCRIPT_LIBRARY.attackWave];
-const V1_COMBAT_SCRIPTS: AiScript[] = [AI_SCRIPT_LIBRARY.items, AI_SCRIPT_LIBRARY.abilities, AI_SCRIPT_LIBRARY.attackWave];
 
 export function selectGauntletRichScoreMaps<TMapId extends string>(mapIds: readonly TMapId[], env: GauntletSelectionEnv = {}): GauntletMapSelection<TMapId> {
   const seed = env.AI_GAUNTLET_SEED ?? randomSeed();
@@ -424,8 +421,8 @@ function combatMatch(label: "15v20" | "10v12", recipe: CombatRecipe, v2Count: nu
     mapId: "combatArena",
     options: scene.toGameSetup(),
     agents: {
-      [V2]: { adapter, team: "north", race: "grove", version: "v2", versionLabel: "v2", scripts: V2_COMBAT_SCRIPTS, policyMode: "combat" },
-      [V1A]: { adapter, team: "south", race: "grove", version: "v1", versionLabel: "v1", scripts: V1_COMBAT_SCRIPTS, policyMode: "combat" },
+      [V2]: { adapter, team: "north", race: "grove", version: "v2", versionLabel: "v2", policyMode: "combat" },
+      [V1A]: { adapter, team: "south", race: "grove", version: "v1", versionLabel: "v1", policyMode: "combat" },
     },
     commandPlanner: createAiGameCommandPlanner(),
     winnerMode: "combatElimination",

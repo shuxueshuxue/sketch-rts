@@ -70,7 +70,10 @@ describe("AI benchmark presets", () => {
     expect(preset.input.evaluations[5]!.matches[0]).toMatchObject({ name: "combatArena 10v12 early mixed", mapId: "combatArena" });
     expect(Object.keys(preset.input.evaluations[4]!.matches[0]!.agents)).toEqual(["v2", "v1a"]);
     expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.version).toBe("v1");
-    expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.scripts?.map((script) => script.id)).toContain("attackWave");
+    expect(preset.input.evaluations[4]!.matches[0]!.agents.v2?.scripts).toBeUndefined();
+    expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.scripts).toBeUndefined();
+    expect(preset.input.evaluations[4]!.matches[0]!.agents.v2?.policyMode).toBe("combat");
+    expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.policyMode).toBe("combat");
     const allMatchMapIds = [preset.input.evaluations[0]!, ...preset.input.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map((match) => match.mapId));
     expect(allMatchMapIds).toHaveLength(18);
     expect(new Set(allMatchMapIds).size).toBe(18);

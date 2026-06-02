@@ -48,8 +48,8 @@ describe("benchmark dashboard store", () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
     try {
       const now = () => new Date("2026-01-01T00:00:00.000Z");
-      const first = await recordAiVersionBenchmarkDashboardRun({ mapCount: 1, maxTicks: 1_000 }, { rootDir, now });
-      const second = await recordAiVersionBenchmarkDashboardRun({ mapCount: 1, maxTicks: 1_000 }, { rootDir, now });
+      const first = await recordAiVersionBenchmarkDashboardRun({ mapCount: 1, maxTicks: 1 }, { rootDir, now });
+      const second = await recordAiVersionBenchmarkDashboardRun({ mapCount: 1, maxTicks: 1 }, { rootDir, now });
 
       expect(first.seed).not.toBe(second.seed);
     } finally {
