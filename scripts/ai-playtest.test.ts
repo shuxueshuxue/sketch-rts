@@ -101,6 +101,25 @@ describe("AI playtest CLI", () => {
     );
   });
 
+  it("focuses only nearby attackers through a memory-backed tactical command", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a");
+    runPlaytestCli("attack-move", "--file", file, "--units", "combat", "--x", "1080", "--y", "800");
+    runPlaytestCli("step", "--file", file, "--ticks", "120");
+    const inspection = JSON.parse(runPlaytestCli("inspect-units", "--file", file, "--owner", "v2"));
+    const engaged = inspection.units.find((unit: { memoryClaim: { targetId: string } | null }) => unit.memoryClaim?.targetId?.startsWith("combat-v1a-unit-"));
+    if (!engaged) throw new Error(`expected an engaged unit: ${JSON.stringify(inspection.units)}`);
+
+    runPlaytestCli("focus-near", "--file", file, "--units", "combat", "--target", engaged.memoryClaim.targetId);
+    const focused = JSON.parse(runPlaytestCli("inspect-units", "--file", file, "--owner", "v2"));
+
+    expect(focused.units.filter((unit: { memoryClaim: { targetId: string } | null }) => unit.memoryClaim?.targetId === engaged.memoryClaim.targetId).length).toBeGreaterThan(0);
+    expect(focused.units.filter((unit: { order: { type: string; targetId?: string } }) => unit.order.type === "attack" && unit.order.targetId === engaged.memoryClaim.targetId).length).toBeGreaterThan(0);
+  });
+
   it("creates reusable combat playtest setups that can be steered with memory-backed commands", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

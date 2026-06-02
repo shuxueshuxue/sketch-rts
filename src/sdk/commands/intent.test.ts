@@ -145,6 +145,30 @@ describe("SDK command intents", () => {
     });
   });
 
+  it("resolves focus-near intent to only attackers that can join the target", () => {
+    const game = createGame("combatArena", {
+      players: ["v2", "v1a"],
+      teams: { v2: "north", v1a: "south" },
+      scenario: {
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        replaceDefaultResources: true,
+        addUnits: [
+          { id: "near-footman", owner: "v2", kind: "footman", x: 650, y: 800 },
+          { id: "near-archer", owner: "v2", kind: "archer", x: 500, y: 800 },
+          { id: "far-footman", owner: "v2", kind: "footman", x: 240, y: 800 },
+          { id: "target", owner: "v1a", kind: "footman", x: 700, y: 800 },
+        ],
+      },
+    });
+
+    expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "focusFireNear", unitIds: "combat", targetId: "target" })).toEqual({
+      type: "attack",
+      unitIds: ["near-footman", "near-archer"],
+      targetId: "target",
+    });
+  });
+
   it("resolves item and ability intents through the shared SDK command surface", () => {
     const game = createGame("combatArena", {
       players: ["v2"],

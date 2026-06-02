@@ -85,6 +85,7 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   if (verb === "gather") return { type: "gatherArmy", unitIds: unitSelector(args), x: requiredNumberFlag(args, "x"), y: requiredNumberFlag(args, "y") };
   if (verb === "attack-move") return { type: "attackMove", unitIds: unitSelector(args), x: requiredNumberFlag(args, "x"), y: requiredNumberFlag(args, "y") };
   if (verb === "focus") return { type: "focusFire", unitIds: unitSelector(args), targetId: requiredFlag(args, "target") };
+  if (verb === "focus-near") return { type: "focusFireNear", unitIds: unitSelector(args), targetId: requiredFlag(args, "target"), ...(flag(args, "join-range") ? { joinRange: requiredNumberFlag(args, "join-range") } : {}) };
   if (verb === "retreat") return { type: "retreat", unitIds: unitSelector(args), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   if (verb === "retreat-wounded") return { type: "retreatWounded", unitIds: unitSelector(args), hpRatio: numberFlag(args, "hp-ratio", 0.5), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   if (verb === "mine") return { type: "mine", unitIds: unitSelector(args), ...(flag(args, "resource") ? { resourceId: requiredFlag(args, "resource") } : {}) };
@@ -202,5 +203,6 @@ function printHelp() {
   npm run play:ai -- expand --file .playtests/duel.json --resource gold-natural
   npm run play:ai -- creep-camp --file .playtests/duel.json --camp merc-camp-crossroad --units combat
   npm run play:ai -- focus --file .playtests/duel.json --target unit-v1a-worker-1
+  npm run play:ai -- focus-near --file .playtests/duel.json --target unit-v1a-footman-1 --join-range 95
   npm run play:ai -- raw --file .playtests/duel.json --json '{"type":"move","unitIds":["unit-v2-worker-1"],"x":500,"y":500}'`);
 }

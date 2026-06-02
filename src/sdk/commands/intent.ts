@@ -9,6 +9,7 @@ export type SdkCommandIntent =
   | { type: "gatherArmy"; unitIds?: SdkUnitSelector; x: number; y: number }
   | { type: "attackMove"; unitIds?: SdkUnitSelector; x: number; y: number }
   | { type: "focusFire"; unitIds?: SdkUnitSelector; targetId: string }
+  | { type: "focusFireNear"; unitIds?: SdkUnitSelector; targetId: string; joinRange?: number }
   | { type: "retreat"; unitIds?: SdkUnitSelector; x?: number; y?: number }
   | { type: "retreatWounded"; unitIds?: SdkUnitSelector; hpRatio?: number; x?: number; y?: number }
   | { type: "mine"; unitIds?: SdkUnitSelector; resourceId?: string }
@@ -27,6 +28,7 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   if (intent.type === "move" || intent.type === "gatherArmy") return { type: "move", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: intent.x, y: intent.y };
   if (intent.type === "attackMove") return { type: "attackMove", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: intent.x, y: intent.y };
   if (intent.type === "focusFire") return { type: "attack", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), targetId: intent.targetId };
+  if (intent.type === "focusFireNear") return { type: "attack", unitIds: selectedFocusFireNearUnitIds(snapshot, owner, intent.unitIds ?? "combat", intent.targetId, intent.joinRange ?? 95), targetId: intent.targetId };
   if (intent.type === "retreat") {
     const point = intent.x !== undefined && intent.y !== undefined ? { x: intent.x, y: intent.y } : retreatPoint(snapshot, owner);
     return { type: "move", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: point.x, y: point.y };
@@ -74,6 +76,16 @@ function selectedWoundedUnitIds(snapshot: GameSnapshot, owner: PlayerId, selecto
   const wounded = snapshot.units.filter((unit) => selected.has(unit.id) && unit.hp / unit.maxHp <= hpRatio);
   if (wounded.length === 0) throw new Error(`No ${owner} wounded units match selector ${selector} at hp ratio ${hpRatio}`);
   return wounded.map((unit) => unit.id);
+}
+
+function selectedFocusFireNearUnitIds(snapshot: GameSnapshot, owner: PlayerId, selector: SdkUnitSelector, targetId: string, joinRange: number): string[] {
+  if (!Number.isFinite(joinRange) || joinRange < 0) throw new Error(`focusFireNear joinRange must be a non-negative finite number, got ${joinRange}`);
+  const target = snapshot.units.find((unit) => unit.id === targetId) ?? snapshot.buildings.find((building) => building.id === targetId);
+  if (!target) throw new Error(`Unknown focus target ${targetId}`);
+  const selected = new Set(selectedUnitIds(snapshot, owner, selector));
+  const joiners = snapshot.units.filter((unit) => selected.has(unit.id) && distance(unit, target) <= unit.attackRange + unit.radius + ("radius" in target ? target.radius : 0) + joinRange);
+  if (joiners.length === 0) throw new Error(`No ${owner} units near enough to focus ${targetId}`);
+  return joiners.map((unit) => unit.id);
 }
 
 export function controlledPoint(snapshot: GameSnapshot, owner: PlayerId) {
