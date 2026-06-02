@@ -1,29 +1,16 @@
-import { BUILDING_DEFS } from "../shared/catalog";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
-import type { Building, BuildingKind, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, TrainableUnitKind, Unit, UpgradeKind } from "../shared/types";
+import type { Building, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, Unit } from "../shared/types";
 import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
+import { controlledPoint, resolveSdkCommandIntent, type SdkCommandIntent, type SdkUnitSelector } from "./commands/intent";
 import { createSnapshotQuery } from "./snapshot/query";
 
-export type InteractiveUnitSelector = "all" | "combat" | "workers" | string[];
+export type InteractiveUnitSelector = SdkUnitSelector;
 
 export type InteractivePlaytestCommand =
   | { type: "raw"; owner?: PlayerId; command: GameCommand }
-  | { type: "move"; unitIds?: InteractiveUnitSelector; x: number; y: number }
-  | { type: "gatherArmy"; unitIds?: InteractiveUnitSelector; x: number; y: number }
-  | { type: "attackMove"; unitIds?: InteractiveUnitSelector; x: number; y: number }
-  | { type: "focusFire"; unitIds?: InteractiveUnitSelector; targetId: string }
-  | { type: "retreat"; unitIds?: InteractiveUnitSelector; x?: number; y?: number }
-  | { type: "mine"; unitIds?: InteractiveUnitSelector; resourceId?: string }
-  | { type: "repair"; unitIds?: InteractiveUnitSelector; buildingId: string }
-  | { type: "expand"; resourceId?: string; unitId?: string }
-  | { type: "creepCamp"; campId?: string; unitIds?: InteractiveUnitSelector }
-  | { type: "build"; unitId?: string; buildingKind: BuildingKind; x: number; y: number }
-  | { type: "train"; buildingId?: string; unitKind: TrainableUnitKind }
-  | { type: "research"; buildingId?: string; upgradeKind: UpgradeKind }
-  | { type: "hire"; campId: string }
-  | { type: "useItem"; unitId?: string; itemId: string; targetId?: string; x?: number; y?: number };
+  | SdkCommandIntent;
 
 export type InteractivePlaytestSessionInput = {
   id?: string;
@@ -229,29 +216,7 @@ export function summarizeInteractivePlaytestSession(session: InteractivePlaytest
 
 function toGameCommand(game: Game, owner: PlayerId, command: InteractivePlaytestCommand): GameCommand {
   if (command.type === "raw") return command.command;
-  if (command.type === "move" || command.type === "gatherArmy") return { type: "move", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: command.x, y: command.y };
-  if (command.type === "attackMove") return { type: "attackMove", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: command.x, y: command.y };
-  if (command.type === "focusFire") return { type: "attack", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), targetId: command.targetId };
-  if (command.type === "retreat") {
-    const point = command.x !== undefined && command.y !== undefined ? { x: command.x, y: command.y } : retreatPoint(game, owner);
-    return { type: "move", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: point.x, y: point.y };
-  }
-  if (command.type === "mine") return { type: "mine", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), resourceId: command.resourceId ?? nearestResourceId(game, owner) };
-  if (command.type === "repair") return { type: "repair", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), buildingId: command.buildingId };
-  if (command.type === "expand") {
-    const resource = expansionResource(game, owner, command.resourceId);
-    return { type: "build", unitId: command.unitId ?? nearestWorkerId(game, owner, resource), buildingKind: "townHall", x: resource.x, y: resource.y };
-  }
-  if (command.type === "creepCamp") {
-    const point = creepCampPoint(game, owner, command.campId);
-    return { type: "attackMove", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: point.x, y: point.y };
-  }
-  if (command.type === "build") return { type: "build", unitId: command.unitId ?? nearestWorkerId(game, owner, { x: command.x, y: command.y }), buildingKind: command.buildingKind, x: command.x, y: command.y };
-  if (command.type === "train") return { type: "train", buildingId: command.buildingId ?? trainingBuildingId(game, owner, command.unitKind), unitKind: command.unitKind };
-  if (command.type === "research") return { type: "research", buildingId: command.buildingId ?? researchBuildingId(game, owner, command.upgradeKind), upgradeKind: command.upgradeKind };
-  if (command.type === "hire") return { type: "hire", campId: command.campId };
-  if (command.type === "useItem") return { type: "useItem", unitId: command.unitId ?? carrierForItem(game, owner, command.itemId), itemId: command.itemId, ...(command.targetId ? { targetId: command.targetId } : {}), ...(command.x !== undefined ? { x: command.x } : {}), ...(command.y !== undefined ? { y: command.y } : {}) };
-  return assertNever(command);
+  return resolveSdkCommandIntent(snapshotGame(game), owner, command, { teams: game.teams });
 }
 
 function stepInteractivePlaytestTick<Source extends string = string>(session: InteractivePlaytestSession, options: InteractivePlaytestStepOptions<Source>) {
@@ -274,7 +239,7 @@ function conditionMatches(session: InteractivePlaytestSession, condition: Intera
   if (condition.type === "enemyNearby") {
     const snapshot = snapshotGame(session.game);
     const query = createSnapshotQuery(snapshot, { teams: session.game.teams });
-    return query.opponentUnitsNear(session.controlledPlayer, controlledPoint(session.game, session.controlledPlayer), condition.range ?? 800).length > 0;
+    return query.opponentUnitsNear(session.controlledPlayer, controlledPoint(snapshot, session.controlledPlayer), condition.range ?? 800).length > 0;
   }
   return assertNever(condition);
 }
@@ -299,93 +264,6 @@ function playerFightInContact(game: Game) {
 
 function isOffensiveOrder(unit: Unit) {
   return unit.order.type === "attack" || unit.order.type === "attackMove";
-}
-
-function selectedUnitIds(game: Game, owner: PlayerId, selector: InteractiveUnitSelector): string[] {
-  if (Array.isArray(selector)) {
-    for (const id of selector) {
-      const unit = game.units.find((candidate) => candidate.id === id && candidate.owner === owner);
-      if (!unit) throw new Error(`Unknown ${owner} unit ${id}`);
-    }
-    return selector;
-  }
-  const units = game.units.filter((unit) => unit.owner === owner && matchesSelector(unit, selector));
-  if (units.length === 0) throw new Error(`No ${owner} units match selector ${selector}`);
-  return units.map((unit) => unit.id);
-}
-
-function matchesSelector(unit: Unit, selector: Exclude<InteractiveUnitSelector, string[]>): boolean {
-  if (selector === "all") return true;
-  if (selector === "combat") return unit.kind !== "worker";
-  if (selector === "workers") return unit.kind === "worker";
-  return assertNever(selector);
-}
-
-function retreatPoint(game: Game, owner: PlayerId) {
-  return baseCenter(game.buildings.filter((building) => building.owner === owner)) ?? armyCenter(game.units.filter((unit) => unit.owner === owner)) ?? { x: game.map.width / 2, y: game.map.height / 2 };
-}
-
-function nearestResourceId(game: Game, owner: PlayerId): string {
-  const point = retreatPoint(game, owner);
-  const resource = nearest(game.resources, point);
-  if (!resource) throw new Error("No resources exist in this playtest session");
-  return resource.id;
-}
-
-function expansionResource(game: Game, owner: PlayerId, resourceId?: string) {
-  if (resourceId) {
-    const resource = game.resources.find((candidate) => candidate.id === resourceId);
-    if (!resource) throw new Error(`Unknown resource ${resourceId}`);
-    return resource;
-  }
-  const ownedBases = game.buildings.filter((building) => building.owner === owner && building.kind === "townHall");
-  const resource = game.resources
-    .filter((candidate) => !ownedBases.some((base) => distance(base, candidate) <= 300))
-    .map((candidate) => ({ candidate, distance: distance(candidate, retreatPoint(game, owner)) }))
-    .sort((a, b) => a.distance - b.distance)[0]?.candidate;
-  if (!resource) throw new Error(`No expansion resource available for ${owner}`);
-  return resource;
-}
-
-function creepCampPoint(game: Game, owner: PlayerId, campId?: string) {
-  if (campId) {
-    const camp = game.mercenaryCamps.find((candidate) => candidate.id === campId);
-    if (camp) return { x: camp.x, y: camp.y };
-    const neutral = game.units.find((candidate) => candidate.owner === "neutral" && candidate.id === campId);
-    if (neutral) return { x: neutral.x, y: neutral.y };
-    throw new Error(`Unknown creep camp ${campId}`);
-  }
-  const point = controlledPoint(game, owner);
-  const camp = nearest(game.mercenaryCamps, point) ?? nearest(game.units.filter((unit) => unit.owner === "neutral"), point);
-  if (!camp) throw new Error("No creep camp target exists in this playtest session");
-  return { x: camp.x, y: camp.y };
-}
-
-function nearestWorkerId(game: Game, owner: PlayerId, point: { x: number; y: number }): string {
-  const worker = nearest(game.units.filter((unit) => unit.owner === owner && unit.kind === "worker"), point);
-  if (!worker) throw new Error(`No ${owner} workers available`);
-  return worker.id;
-}
-
-function trainingBuildingId(game: Game, owner: PlayerId, unitKind: TrainableUnitKind): string {
-  const building = game.buildings.find((candidate) => candidate.owner === owner && candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
-  if (!building) throw new Error(`No ${owner} complete building can train ${unitKind}`);
-  return building.id;
-}
-
-function researchBuildingId(game: Game, owner: PlayerId, upgradeKind: UpgradeKind): string {
-  const building = game.buildings.find((candidate) => candidate.owner === owner && candidate.complete && BUILDING_DEFS[candidate.kind].researches.includes(upgradeKind));
-  if (!building) throw new Error(`No ${owner} complete building can research ${upgradeKind}`);
-  return building.id;
-}
-
-function carrierForItem(game: Game, owner: PlayerId, itemId: string): string {
-  const item = game.items.find((candidate) => candidate.id === itemId);
-  if (!item) throw new Error(`Unknown item ${itemId}`);
-  if (item.carrierId && game.units.some((unit) => unit.id === item.carrierId && unit.owner === owner)) return item.carrierId;
-  const unit = nearest(game.units.filter((candidate) => candidate.owner === owner), item);
-  if (!unit) throw new Error(`No ${owner} units available to use ${itemId}`);
-  return unit.id;
 }
 
 function summarizePlayer(snapshot: GameSnapshot, owner: PlayerId): InteractivePlaytestPlayerSummary {
@@ -416,10 +294,6 @@ function visibleObjectives(snapshot: GameSnapshot, point: { x: number; y: number
     ...snapshot.mercenaryCamps.map((camp) => ({ id: camp.id, kind: "mercenaryCamp" as const, x: camp.x, y: camp.y, distance: distance(camp, point) })),
     ...snapshot.items.filter((item) => !item.carrierId).map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
   ].sort((a, b) => a.distance - b.distance).slice(0, 12);
-}
-
-function controlledPoint(game: Game, owner: PlayerId) {
-  return armyCenter(game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker")) ?? retreatPoint(game, owner);
 }
 
 function roomForSession(session: InteractivePlaytestSession): RoomState {
