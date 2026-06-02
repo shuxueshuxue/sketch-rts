@@ -1,6 +1,7 @@
 import { UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
+import { resolveAiCommandIntent } from "./commands";
 import { enemyCombatUnits, units } from "./snapshot";
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
@@ -46,7 +47,7 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   if (attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
   if (options.policyMode !== "combat" && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
-  return attackers.length >= 2 ? { type: "attack", unitIds: attackers.map((unit) => unit.id), targetId: target.id } : undefined;
+  return attackers.length >= 2 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
 function focusFireJoinRange(unit: Unit) {

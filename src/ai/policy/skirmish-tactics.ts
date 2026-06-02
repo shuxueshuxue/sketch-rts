@@ -1,5 +1,6 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
+import { resolveAiCommandIntent } from "./commands";
 import { combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear } from "./snapshot";
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
@@ -31,10 +32,10 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
     if (nearbyEnemies.length === 0) continue;
     if (unit.attackRange > 100) {
       const pull = pullbackPoint(unit, retreatPoint, 0.36);
-      commands.push({ type: "move", unitIds: [unit.id], x: pull.x, y: pull.y });
+      commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: pull.x, y: pull.y }, options));
       recordBehavior(options, "skirmishPreservation", "woundedRangedPullbacks");
     } else {
-      commands.push({ type: "move", unitIds: [unit.id], x: retreatPoint.x, y: retreatPoint.y });
+      commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: retreatPoint.x, y: retreatPoint.y }, options));
       recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
     }
   }
@@ -44,7 +45,7 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (!skirmish) return [];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
-  return [{ type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }];
+  return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }, options)];
 }
 
 function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: Unit[], ownBase: Point): Point {
@@ -77,7 +78,7 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
   const homeLength = Math.hypot(homeBiasX, homeBiasY) || 1;
   const x = clamp(unit.x + (dx / length) * 150 + (homeBiasX / homeLength) * 45, 0, snapshot.map.width);
   const y = clamp(unit.y + (dy / length) * 150 + (homeBiasY / homeLength) * 45, 0, snapshot.map.height);
-  return { type: "move", unitIds: [unit.id], x, y };
+  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x, y }, options);
 }
 
 function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], ownBase: Point, options: PresetAiPolicyOptions): { allies: Unit[]; enemies: Unit[] } | undefined {
