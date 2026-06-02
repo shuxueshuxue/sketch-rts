@@ -112,6 +112,59 @@ describe("interactive playtest SDK", () => {
     expect(() => applyInteractivePlaytestCommand(session, { type: "attackMove", unitIds: "combat", x: 800, y: 800 })).toThrow("No v2 units match selector combat");
   });
 
+  it("summarizes combat-elimination playtests by surviving combat units rather than buildings", () => {
+    const contested = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      winnerMode: "combatElimination",
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-footman", owner: "v2", kind: "footman", x: 520, y: 800 },
+            { id: "v1a-footman", owner: "v1a", kind: "footman", x: 1080, y: 800 },
+          ],
+          addBuildings: [{ id: "v1a-anchor", owner: "v1a", kind: "townHall", x: 1450, y: 800, complete: true }],
+        },
+      },
+    });
+
+    stepInteractivePlaytestSession(contested, 1);
+    expect(summarizeInteractivePlaytestSession(contested)).toMatchObject({
+      winner: null,
+      runState: { winner: null, timeout: false },
+    });
+
+    const survivor = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      winnerMode: "combatElimination",
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [{ id: "v2-footman", owner: "v2", kind: "footman", x: 520, y: 800 }],
+          addBuildings: [{ id: "v1a-anchor", owner: "v1a", kind: "townHall", x: 1450, y: 800, complete: true }],
+        },
+      },
+    });
+
+    stepInteractivePlaytestSession(survivor, 1);
+    expect(summarizeInteractivePlaytestSession(survivor)).toMatchObject({
+      winner: "v2",
+      runState: { winner: "v2", timeout: false },
+    });
+  });
+
   it("expands and creeps camps through reusable high-level commands", () => {
     const session = createInteractivePlaytestSession({
       mapId: "combatArena",

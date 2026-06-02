@@ -5,6 +5,7 @@ import type { Building, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, Room
 import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
 import { controlledPoint, resolveSdkCommandIntent, type SdkCommandIntent, type SdkUnitSelector } from "./commands/intent";
 import { createSnapshotQuery } from "./snapshot/query";
+import { normalizeWinnerForMode, type SdkWinnerMode } from "./winner-mode";
 
 export type InteractiveUnitSelector = SdkUnitSelector;
 
@@ -17,6 +18,7 @@ export type InteractivePlaytestSessionInput = {
   mapId: MapId;
   controlledPlayer: PlayerId;
   scriptedPlayers: PlayerId[];
+  winnerMode?: SdkWinnerMode;
   options?: CreateGameOptions;
 };
 
@@ -33,16 +35,18 @@ export type InteractivePlaytestSession = {
   id: string;
   controlledPlayer: PlayerId;
   scriptedPlayers: PlayerId[];
+  winnerMode: SdkWinnerMode;
   game: Game;
   events: InteractivePlaytestEvents;
   transcript: InteractivePlaytestTranscriptEntry[];
 };
 
 export type SerializedInteractivePlaytestSession = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   id: string;
   controlledPlayer: PlayerId;
   scriptedPlayers: PlayerId[];
+  winnerMode: SdkWinnerMode;
   save: SaveGameRecord;
   events: InteractivePlaytestEvents;
   transcript: InteractivePlaytestTranscriptEntry[];
@@ -131,6 +135,7 @@ export function createInteractivePlaytestSession(input: InteractivePlaytestSessi
     id: input.id ?? `interactive-${input.mapId}`,
     controlledPlayer: input.controlledPlayer,
     scriptedPlayers: [...input.scriptedPlayers],
+    winnerMode: input.winnerMode ?? "match",
     game,
     events: { firstFightTick: null, lastStepUntil: null },
     transcript: [],
@@ -176,10 +181,11 @@ export function stepInteractivePlaytestUntil<Source extends string = string>(ses
 export function serializeInteractivePlaytestSession(session: InteractivePlaytestSession): SerializedInteractivePlaytestSession {
   const room = roomForSession(session);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     id: session.id,
     controlledPlayer: session.controlledPlayer,
     scriptedPlayers: [...session.scriptedPlayers],
+    winnerMode: session.winnerMode,
     save: createSaveGameRecord(session.game, room, { id: session.id, label: `Interactive ${session.game.map.name}` }, new Date(), session.scriptedPlayers),
     events: clone(session.events),
     transcript: clone(session.transcript),
@@ -187,11 +193,12 @@ export function serializeInteractivePlaytestSession(session: InteractivePlaytest
 }
 
 export function restoreInteractivePlaytestSession(serialized: SerializedInteractivePlaytestSession): InteractivePlaytestSession {
-  if (serialized.schemaVersion !== 2) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
+  if (serialized.schemaVersion !== 3) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
   return {
     id: serialized.id,
     controlledPlayer: serialized.controlledPlayer,
     scriptedPlayers: [...serialized.scriptedPlayers],
+    winnerMode: serialized.winnerMode,
     game: restoreGameFromSave(serialized.save),
     events: clone(serialized.events),
     transcript: clone(serialized.transcript),
@@ -240,6 +247,7 @@ function stepInteractivePlaytestTick<Source extends string = string>(session: In
   scriptedCommands += issueCommandFrame(session.game, planned).commands.length;
   recordPlaytestEvents(session);
   stepGame(session.game);
+  normalizeWinnerForMode(session.game, session.game.teams, session.winnerMode);
   recordPlaytestEvents(session);
   return scriptedCommands;
 }

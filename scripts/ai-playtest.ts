@@ -4,6 +4,7 @@ import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, se
 import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
 import type { AiRuntimeState } from "../src/ai/runtime";
+import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
@@ -31,6 +32,7 @@ if (verb === "new") {
     mapId: setup.mapId,
     controlledPlayer,
     scriptedPlayers: [enemy],
+    winnerMode: setup.winnerMode,
     options: setup.options,
   });
   const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion }, ...(setup.policyMode ? { policyMode: setup.policyMode } : {}) });
@@ -92,7 +94,7 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   throw new Error(`Unknown ai playtest command ${verb}`);
 }
 
-function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat" } {
+function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode } {
   const setup = flag(args, "setup");
   if (setup === undefined) {
     return {
@@ -110,7 +112,7 @@ function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy
       v2Owner: controlledPlayer,
       v1Owner: enemy,
     });
-    return { mapId: combat.mapId, options: combat.options, policyMode: "combat" };
+    return { mapId: combat.mapId, options: combat.options, policyMode: "combat", winnerMode: "combatElimination" };
   }
   throw new Error(`Unknown ai playtest setup ${setup}`);
 }

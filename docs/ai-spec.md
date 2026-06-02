@@ -151,6 +151,7 @@ Requirements:
 - The controlled side can be manual-only or assisted. Manual commands should be able to coexist with scripted commands when explicitly requested, but the default is that the agent is responsible for the controlled side.
 - Assisted interactive sessions must share the same AI memory object for scripted decisions and manual CLI commands. If the agent manually claims a camp, expansion, retreat, builder task, attack-move, or focus-fire target, that explicit intent is recorded as the same kind of memory claim/job the AI scripts use, so the next assisted tick does not tug the same units into a conflicting job.
 - Scenario modes such as `combat` must be persisted in the interactive runtime and passed into the same policy stack used by benchmark agents. A combat CLI session that drops `policyMode` is a false tool: manual commands may write memory, but assisted ticks will reason with the wrong tactical contract.
+- Combat interactive sessions must also persist and enforce `combatElimination` winner mode, matching benchmark combat semantics. If one side has no combat units left, the CLI must report that immediately even if anchor buildings remain.
 - The tool should fail loudly on invalid unit ids, command shapes, missing sessions, or stale command names. Do not hide errors with permissive parsing.
 - Every interactive transcript should be reproducible enough to turn into a deterministic regression or benchmark slice after a useful tactic is discovered.
 

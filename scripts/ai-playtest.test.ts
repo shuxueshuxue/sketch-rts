@@ -96,6 +96,7 @@ describe("AI playtest CLI", () => {
 
     const persisted = JSON.parse(readFileSync(file, "utf8"));
     expect(persisted.runtime.policyMode).toBe("combat");
+    expect(persisted.session.winnerMode).toBe("combatElimination");
   });
 
   it("retreats wounded units through a memory-backed tactical command", () => {
