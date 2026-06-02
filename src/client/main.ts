@@ -123,7 +123,7 @@ let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
-let pointerLockFallbackOnError = false;
+let pointerLockFieldClickOnError = false;
 let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
@@ -207,10 +207,10 @@ document.addEventListener("focusin", showTooltipFromEvent, true);
 document.addEventListener("focusout", hideTooltipFromEvent, true);
 document.addEventListener("pointerlockchange", syncPointerLockState);
 document.addEventListener("pointerlockerror", () => {
-  if (pointerLockArmed && !pointerLockFallbackOnError) return;
-  const fallbackToFieldClick = pointerLockFallbackOnError;
-  pointerLockFallbackOnError = false;
-  handlePointerLockFailure(fallbackToFieldClick);
+  if (pointerLockArmed && !pointerLockFieldClickOnError) return;
+  const fieldClickOnError = pointerLockFieldClickOnError;
+  pointerLockFieldClickOnError = false;
+  handlePointerLockError(fieldClickOnError);
 });
 document.addEventListener("pointerdown", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("pointerup", suppressPointerLockDocumentMouseDefault, { capture: true });
@@ -650,7 +650,7 @@ async function startCurrentRoom() {
   if (!currentRoom) return;
   if (hasSeenPointerLockGuide()) {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
-    await requestPointerLock(point, { fallbackToFieldClick: true });
+    await requestPointerLock(point, { fieldClickOnError: true });
   }
   currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
   currentRoomId = currentRoom.id;
@@ -921,7 +921,7 @@ function openResults(room: RoomState) {
 function releasePointerLockForMenu() {
   if (document.pointerLockElement === canvas) document.exitPointerLock();
   pointerLockArmed = false;
-  pointerLockFallbackOnError = false;
+  pointerLockFieldClickOnError = false;
   virtualMouse = undefined;
 }
 
@@ -998,28 +998,28 @@ function hidePointerLockGate() {
 async function requestRequiredPointerLock() {
   if (pointerLockGateKind === "guide") markPointerLockGuideSeen();
   const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
-  await requestPointerLock(point, { fallbackToFieldClick: true });
+  await requestPointerLock(point, { fieldClickOnError: true });
   syncPointerLockGate();
 }
 
-async function requestPointerLock(point: Point, options: { fallbackToFieldClick: boolean }) {
+async function requestPointerLock(point: Point, options: { fieldClickOnError: boolean }) {
   pointerLockArmed = false;
-  pointerLockFallbackOnError = options.fallbackToFieldClick;
+  pointerLockFieldClickOnError = options.fieldClickOnError;
   lastMouse = point;
   virtualMouse = point;
   try {
     await canvas.requestPointerLock();
   } catch (error) {
-    const fallbackToFieldClick = pointerLockFallbackOnError;
-    pointerLockFallbackOnError = false;
-    handlePointerLockFailure(fallbackToFieldClick, error);
+    const fieldClickOnError = pointerLockFieldClickOnError;
+    pointerLockFieldClickOnError = false;
+    handlePointerLockError(fieldClickOnError, error);
   }
 }
 
 async function requestPointerLockFromEvent(event: MouseEvent) {
   if (document.pointerLockElement === canvas) return;
   const point = mousePoint(event);
-  await requestPointerLock(point, { fallbackToFieldClick: false });
+  await requestPointerLock(point, { fieldClickOnError: false });
 }
 
 function syncPointerLockState() {
@@ -1028,7 +1028,7 @@ function syncPointerLockState() {
   if (locked) {
     hidePointerLockGate();
     pointerLockArmed = false;
-    pointerLockFallbackOnError = false;
+    pointerLockFieldClickOnError = false;
     statusLabel.textContent = "Mouse locked. Move normally; Escape releases the cursor.";
     return;
   }
@@ -1036,8 +1036,8 @@ function syncPointerLockState() {
   syncPointerLockGate();
 }
 
-function handlePointerLockFailure(fallbackToFieldClick: boolean, error?: unknown) {
-  if (fallbackToFieldClick) {
+function handlePointerLockError(fieldClickOnError: boolean, error?: unknown) {
+  if (fieldClickOnError) {
     pointerLockArmed = true;
     statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
     return;
@@ -1253,6 +1253,7 @@ function issueContextCommandAtWorld(world: Point) {
   const resource = hitResource(world);
   const item = hitGroundItem(world);
   const target = hitAttackTarget(world);
+  const repairTarget = hitBuilding(world, (building) => building.owner === localPlayerId && building.hp < building.maxHp);
   if (item) {
     const command = pickupItemCommand(focusedPlayerUnits(), item);
     if (!command) {
@@ -1266,6 +1267,11 @@ function issueContextCommandAtWorld(world: Point) {
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
     sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id });
     statusLabel.textContent = "Workers ordered to mine gold.";
+    return;
+  }
+  if (repairTarget && selectedUnits.some((unit) => unit.kind === "worker")) {
+    sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id });
+    statusLabel.textContent = `${labelBuilding(repairTarget)} repair ordered.`;
     return;
   }
   if (target) {

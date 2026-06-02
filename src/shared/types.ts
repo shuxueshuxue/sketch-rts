@@ -35,7 +35,7 @@ export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" 
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
-export type UpgradeKind = "weaponTraining" | "reinforcedPlating";
+export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability";
 
 export type UnitStatusEffect = {
   type: "curse" | "guardian";
@@ -66,6 +66,7 @@ export type UnitOrder =
   | { type: "attackMove"; x: number; y: number; targetId?: string }
   | { type: "attack"; targetId: string }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
+  | { type: "repair"; buildingId: string }
   | { type: "pickupItem"; itemId: string };
 
 export type RallyTarget =
@@ -276,6 +277,7 @@ export type GameCommand =
   | { type: "attackMove"; unitIds: string[]; x: number; y: number }
   | { type: "attack"; unitIds: string[]; targetId: string }
   | { type: "mine"; unitIds: string[]; resourceId: string }
+  | { type: "repair"; unitIds: string[]; buildingId: string }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }

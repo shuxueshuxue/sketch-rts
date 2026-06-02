@@ -199,12 +199,14 @@ describe("sketch RTS simulation", () => {
     expect(Math.min(...grandMines.map((mine) => mine.amount))).toBe(6_000);
   });
 
-  it("keeps defense towers as support fire rather than cheap army replacements", () => {
+  it("balances defense towers as longer-ranged static control below contract archer raw value", () => {
     const tower = BUILDING_DEFS.defenseTower;
+    const contractArcher = UNIT_DEFS.contractArcher;
 
-    expect(tower.attackDamage / tower.attackCooldown).toBeLessThanOrEqual(0.12);
-    expect(tower.attackRange).toBeLessThanOrEqual(170);
-    expect(tower.hp).toBeLessThanOrEqual(300);
+    expect(tower.hp).toBeLessThan(280);
+    expect(tower.attackDamage).toBeGreaterThan(6);
+    expect(tower.attackRange).toBeGreaterThan(contractArcher.attackRange);
+    expect(tower.hp * tower.attackDamage).toBeLessThan(contractArcher.hp * contractArcher.attackDamage);
     expect(tower.cost).toBeGreaterThanOrEqual(120);
   });
 
@@ -1016,6 +1018,70 @@ describe("sketch RTS simulation", () => {
     expect(() => issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" })).toThrow(/already at max level/);
   });
 
+  it("researches building durability from the town hall for existing and future buildings", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 2_000;
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    const tower = createBuilding("building-player-durability-tower", "player", "defenseTower", 760, 680, true);
+    game.buildings.push(tower);
+    tower.hp = 50;
+    const baseTowerHp = tower.maxHp;
+
+    issueCommand(game, { type: "research", buildingId: townHall.id, upgradeKind: "buildingDurability" });
+    stepMany(game, UPGRADE_DEFS.buildingDurability.levels[0]!.researchTime + 1);
+
+    expect(game.players.player.upgrades.buildingDurability).toBe(1);
+    expect(tower.maxHp).toBe(Math.round(baseTowerHp * 1.2));
+    expect(tower.hp).toBe(50 + tower.maxHp - baseTowerHp);
+
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 120, y: worker.y });
+    const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
+    stepMany(game, BUILDING_DEFS.farm.buildTime + 20);
+
+    expect(farm.complete).toBe(true);
+    expect(farm.maxHp).toBe(Math.round(BUILDING_DEFS.farm.hp * 1.2));
+    expect(farm.hp).toBe(farm.maxHp);
+  });
+
+  it("keeps mercenaries and buildings out of barracks combat upgrades", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 2_000;
+    const barracks = createBuilding("building-player-merc-tech-barracks", "player", "barracks", 760, 680, true);
+    const tower = createBuilding("building-player-merc-tech-tower", "player", "defenseTower", 820, 680, true);
+    game.buildings.push(barracks, tower);
+    const mercenary = game.spawnUnit("player", "contractArcher", 900, 900);
+    const mercenaryDamage = mercenary.attackDamage;
+    const towerDamage = tower.attackDamage;
+    const towerHp = tower.maxHp;
+
+    issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" });
+    stepMany(game, UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime + 1);
+
+    expect(mercenary.attackDamage).toBe(mercenaryDamage);
+    expect(tower.attackDamage).toBe(towerDamage);
+    expect(tower.maxHp).toBe(towerHp);
+  });
+
+  it("lets workers repair damaged friendly buildings by spending gold", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 100;
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    const barracks = createBuilding("building-player-repair-barracks", "player", "barracks", worker.x + 40, worker.y, true);
+    game.buildings.push(barracks);
+    barracks.hp = barracks.maxHp - 90;
+
+    issueCommand(game, { type: "repair", unitIds: [worker.id], buildingId: barracks.id });
+    stepMany(game, 20);
+
+    expect(barracks.hp).toBeGreaterThan(barracks.maxHp - 90);
+    expect(game.players.player.gold).toBeLessThan(100);
+    stepUntil(game, 300, () => barracks.hp === barracks.maxHp);
+
+    expect(barracks.hp).toBe(barracks.maxHp);
+    expect(worker.order.type).toBe("idle");
+  });
+
   it("keeps neutral treasure on camp carriers, lets monsters use permitted items, and drops items on death", () => {
     const game = sketchScene("neutral-carried-treasure")
       .map("bareDuel")
@@ -1537,10 +1603,10 @@ describe("sketch RTS simulation", () => {
     expect(healthyFootman.hp).toBe(healthyFootman.maxHp);
   });
 
-  it("keeps defense towers as soft static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThanOrEqual(6);
-    expect(BUILDING_DEFS.defenseTower.attackRange).toBeLessThanOrEqual(170);
-    expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThanOrEqual(50);
+  it("keeps defense towers as static control instead of army-melting artillery", () => {
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThanOrEqual(8);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);
+    expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThanOrEqual(40);
 
     const scene = sketchScene("soft-static-tower")
       .map("bareDuel")

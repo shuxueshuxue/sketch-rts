@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, RACE_DEFS, UPGRADE_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, RACE_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../shared/catalog";
 import type { Building, PlayerState, UpgradeKind } from "../shared/types";
 
 export type ResearchCommandButton = {
@@ -20,6 +20,7 @@ export type ResearchProgressButton = ResearchCommandButton & {
 export const RESEARCH_COMMANDS = [
   { upgradeKind: "weaponTraining", label: "Weapon Training", icon: "⚔", hotkey: "w" },
   { upgradeKind: "reinforcedPlating", label: "Reinforced Plating", icon: "▣", hotkey: "p" },
+  { upgradeKind: "buildingDurability", label: "Building Durability", icon: "▥", hotkey: "d" },
 ] satisfies Omit<ResearchCommandButton, "buildingId">[];
 
 export function researchCommandButtonsForSelection(buildings: Building[], player: PlayerState | undefined): ResearchCommandButton[] {
@@ -27,7 +28,7 @@ export function researchCommandButtonsForSelection(buildings: Building[], player
   const raceUpgrades = RACE_DEFS[player.race].upgrades;
   return RESEARCH_COMMANDS.flatMap((command) => {
     if (!raceUpgrades.includes(command.upgradeKind)) return [];
-    if ((player.upgrades[command.upgradeKind] ?? 0) >= MAX_UPGRADE_LEVEL) return [];
+    if ((player.upgrades[command.upgradeKind] ?? 0) >= maxUpgradeLevel(command.upgradeKind)) return [];
     const building = buildings.find((candidate) => canResearchAtBuilding(candidate, command.upgradeKind));
     return building ? [{ ...command, buildingId: building.id }] : [];
   });

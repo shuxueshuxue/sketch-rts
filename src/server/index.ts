@@ -623,6 +623,9 @@ function isCommand(value: unknown): value is GameCommand {
   if (command.type === "mine") {
     return isStringArray(command.unitIds) && typeof command.resourceId === "string";
   }
+  if (command.type === "repair") {
+    return isStringArray(command.unitIds) && typeof command.buildingId === "string";
+  }
   if (command.type === "build") {
     return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   }

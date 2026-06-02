@@ -30,10 +30,10 @@ export function nearOwnIncompleteBuilding(snapshot: GameSnapshot, owner: PlayerI
 }
 
 export function mainBase(snapshot: GameSnapshot, owner: PlayerId) {
-  return completeBuildings(snapshot, owner, "townHall")[0] ?? fallbackBase(snapshot, owner);
+  return completeBuildings(snapshot, owner, "townHall")[0] ?? currentBasePoint(snapshot, owner);
 }
 
-export function fallbackBase(snapshot: GameSnapshot, owner: PlayerId): Point {
+export function currentBasePoint(snapshot: GameSnapshot, owner: PlayerId): Point {
   const start = units(snapshot, owner)[0] ?? buildings(snapshot, owner)[0];
   if (start) return { x: start.x, y: start.y };
   return { x: snapshot.map.width / 2, y: snapshot.map.height / 2 };

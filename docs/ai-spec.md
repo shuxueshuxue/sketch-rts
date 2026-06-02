@@ -23,6 +23,7 @@ The target is not a clever one-off script. The target is an AI stack that can ke
 - Do not patch around SDK friction from the AI layer. If the SDK API is wrong, fix the SDK.
 - Do not implement vague "recovery" heuristics that infer historical intent from current orders. Empty memory is just the start of new memory growth, not a special recovery mode.
 - Do not let AI scripts bypass the SDK to express intent or parse low-level simulation state. If the SDK cannot express or read something the AI needs, improve the SDK and dogfood it.
+- Do not add fallback, compatibility, or old-contract migration paths during this early development phase. There are no live players to protect yet. When a save/schema/command contract changes, update the current data and tests to the new contract and fail loudly on old shapes.
 
 ## Layering
 

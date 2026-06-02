@@ -73,7 +73,7 @@ import {
   availableBuilder,
   canSupply,
   expansionOffset,
-  fallbackBase,
+  currentBasePoint,
   hasAssignedBuilder,
   hasCoreProduction,
   isCoreProductionBuilding,
@@ -112,7 +112,7 @@ export const AI_SCRIPT_LIBRARY = {
   items: { id: "items", phase: "tactics", run: planItemCommands },
   abilities: { id: "abilities", phase: "tactics", run: planAbilityCommands },
   focusFire: { id: "focusFire", phase: "tactics", run: planFocusFireCommand },
-  expansionFallback: { id: "expansionFallback", phase: "tactics", run: planExpansionFallback },
+  expansionRegroup: { id: "expansionRegroup", phase: "tactics", run: planExpansionRegroup },
   desperateWorkerFight: { id: "desperateWorkerFight", phase: "tactics", run: planDesperateWorkerFight },
   workerPressure: { id: "workerPressure", phase: "tactics", run: planWorkerPressure },
   workerPressureCloseout: { id: "workerPressureCloseout", phase: "tactics", run: planWorkerPressureCloseout },
@@ -160,7 +160,7 @@ export const AI_SCRIPT_VERSIONS: Record<AiScriptVersion, AiScript[]> = {
     AI_SCRIPT_LIBRARY.defense,
     AI_SCRIPT_LIBRARY.healingWell,
     AI_SCRIPT_LIBRARY.training,
-    AI_SCRIPT_LIBRARY.expansionFallback,
+    AI_SCRIPT_LIBRARY.expansionRegroup,
     AI_SCRIPT_LIBRARY.desperateWorkerFight,
     AI_SCRIPT_LIBRARY.workerPressure,
     AI_SCRIPT_LIBRARY.skirmishPreservation,
@@ -1009,9 +1009,9 @@ function mercenaryRoleObjectiveBonus(kind: MercenaryUnitKind) {
   return 18;
 }
 
-function planExpansionFallback(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
-  if (behaviorDisabled(options, "expansionFallback")) {
-    recordBehavior(options, "expansionFallback", "disabledSkips");
+function planExpansionRegroup(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (behaviorDisabled(options, "expansionRegroup")) {
+    recordBehavior(options, "expansionRegroup", "disabledSkips");
     return undefined;
   }
 
@@ -1031,11 +1031,11 @@ function planExpansionFallback(snapshot: GameSnapshot, owner: PlayerId, options:
     const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);
     if (localEnemies.length < 2) continue;
     if (armyPower(localEnemies) <= armyPower(allies) * 1.35) continue;
-    const fallback = nearestEntity(townHalls.filter((building) => building.id !== nearestMineTownHall?.id), mine);
-    if (!fallback) continue;
-    recordBehavior(options, "expansionFallback", "attempts");
-    recordBehavior(options, "expansionFallback", "expansionFallbackRetreats");
-    return { type: "move", unitIds: allies.map((unit) => unit.id), x: fallback.x, y: fallback.y };
+    const regroupBase = nearestEntity(townHalls.filter((building) => building.id !== nearestMineTownHall?.id), mine);
+    if (!regroupBase) continue;
+    recordBehavior(options, "expansionRegroup", "attempts");
+    recordBehavior(options, "expansionRegroup", "expansionRegroupRetreats");
+    return { type: "move", unitIds: allies.map((unit) => unit.id), x: regroupBase.x, y: regroupBase.y };
   }
   return undefined;
 }
@@ -1519,7 +1519,7 @@ function nearestOpponentObjective(snapshot: GameSnapshot, owner: PlayerId, from:
   const base = nearestEntity(enemyBuildings(snapshot, owner, options.teams).filter((building) => building.kind === "townHall"), from);
   if (base) return base;
   const army = enemyCombatUnits(snapshot, owner, options.teams);
-  return army.length > 0 ? averagePoint(army) : fallbackBase(snapshot, owner);
+  return army.length > 0 ? averagePoint(army) : currentBasePoint(snapshot, owner);
 }
 
 function nearestOwnedOpponentObjective(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, preferredOwner: PlayerId): Point | undefined {

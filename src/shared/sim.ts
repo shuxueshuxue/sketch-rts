@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS } from "./catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, maxUpgradeLevel } from "./catalog";
 import {
   createBuilding,
   createInitialBuildings,
@@ -65,6 +65,8 @@ const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
 const FLAME_CLOAK_COOLDOWN = seconds(2);
 const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
+const REPAIR_RANGE = BUILD_RANGE + 20;
+const REPAIR_FULL_COST_FRACTION = 0.35;
 const AUTO_ACQUIRE_RANGE = 230;
 const NEUTRAL_LEASH_RANGE = 520;
 const NEUTRAL_TARGET_LEASH_RANGE = 320;
@@ -263,12 +265,24 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "repair") {
+    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
+    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+    if (building.hp >= building.maxHp) throw new Error(`${building.kind} is already fully repaired`);
+    for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
+      unit.order = { type: "repair", buildingId: building.id };
+    }
+    addEffect(game, "heal", building.x, building.y, 26);
+    return;
+  }
+
   if (command.type === "build") {
     const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
     if (!worker) throw new Error(`Unknown ${owner} worker ${command.unitId}`);
     if (!RACE_DEFS[playerState(game, owner).race].buildableBuildings.includes(command.buildingKind)) throw new Error(`${playerState(game, owner).race} race cannot build ${command.buildingKind}`);
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
     const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
+    applyDerivedBuildingStats(game, building);
     game.nextId += 1;
     game.buildings.push(building);
     worker.order = { type: "move", x: command.x - BUILD_RANGE + 10, y: command.y };
@@ -391,6 +405,7 @@ function updateConstruction(game: Game) {
     if (builders.length === 0) continue;
     building.buildProgress += builders.length;
     if (building.buildProgress >= building.buildTime) {
+      applyDerivedBuildingStats(game, building);
       building.complete = true;
       building.hp = building.maxHp;
       for (const builder of builders) builder.order = { type: "idle" };
@@ -512,10 +527,15 @@ function updateUnits(game: Game) {
       updateMineOrder(game, unit);
       continue;
     }
+    if (unit.order.type === "repair") {
+      updateRepairOrder(game, unit);
+      continue;
+    }
     if (unit.order.type === "pickupItem") {
       updatePickupItemOrder(game, unit);
       continue;
     }
+    if (unit.kind === "worker" && updateAutoRepair(game, unit)) continue;
     if (unit.kind !== "worker") {
       const target = nearestEnemyTarget(game, unit, AUTO_ACQUIRE_RANGE);
       if (target) unit.order = { type: "attack", targetId: target.id };
@@ -662,6 +682,41 @@ function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
   return carriedGold;
 }
 
+function updateRepairOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "repair" || !isPlayerId(unit.owner)) return;
+  const order = unit.order;
+  const building = game.buildings.find((candidate) => candidate.id === order.buildingId && candidate.owner === unit.owner);
+  if (!building || building.hp <= 0 || building.hp >= building.maxHp) {
+    unit.order = { type: "idle" };
+    return;
+  }
+  if (distance(unit, building) > REPAIR_RANGE) {
+    moveToward(unit, building.x, building.y, game.map);
+    return;
+  }
+  if (!repairBuildingTick(game, unit.owner, building)) unit.order = { type: "idle" };
+}
+
+function updateAutoRepair(game: Game, unit: Unit) {
+  if (unit.order.type !== "idle" || !isPlayerId(unit.owner)) return false;
+  const building = game.buildings.find(
+    (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && distance(unit, candidate) <= REPAIR_RANGE,
+  );
+  if (!building) return false;
+  return repairBuildingTick(game, unit.owner, building);
+}
+
+function repairBuildingTick(game: Game, owner: PlayerId, building: Building) {
+  const player = playerState(game, owner);
+  if (player.gold < 1 || building.hp >= building.maxHp) return false;
+  const fullRepairCost = Math.max(1, Math.round(BUILDING_DEFS[building.kind].cost * REPAIR_FULL_COST_FRACTION));
+  const hpPerGold = Math.max(1, building.maxHp / fullRepairCost);
+  spendGold(game, owner, 1);
+  building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
+  addEffect(game, "heal", building.x, building.y, 12);
+  return true;
+}
+
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
   if (!building.complete) throw new Error(`Cannot train from incomplete ${building.kind}`);
   if (!BUILDING_DEFS[building.kind].trains.includes(unitKind)) throw new Error(`${building.kind} cannot train ${unitKind}`);
@@ -721,7 +776,7 @@ function queueResearch(game: Game, building: Building, upgradeKind: UpgradeKind)
   }
   const player = playerState(game, building.owner);
   const currentLevel = player.upgrades[upgradeKind] ?? 0;
-  if (currentLevel >= MAX_UPGRADE_LEVEL) throw new Error(`${upgradeKind} already at max level`);
+  if (currentLevel >= maxUpgradeLevel(upgradeKind)) throw new Error(`${upgradeKind} already at max level`);
   if (building.researchQueue.some((job) => job.upgradeKind === upgradeKind)) throw new Error(`${upgradeKind} is already queued`);
   const targetLevel = currentLevel + 1;
   const level = upgrade.levels[targetLevel - 1];
@@ -739,6 +794,9 @@ function completeResearch(game: Game, owner: PlayerId, upgradeKind: UpgradeKind,
   for (const unit of game.units.filter((candidate) => candidate.owner === owner)) {
     applyUpgradeLevelToUnit(game, unit, upgradeKind, targetLevel);
   }
+  for (const building of game.buildings.filter((candidate) => candidate.owner === owner)) {
+    applyUpgradeLevelToBuilding(game, building, upgradeKind, targetLevel);
+  }
 }
 
 function applyUnitUpgrades(game: Game, unit: Unit) {
@@ -752,6 +810,33 @@ function applyUpgradeLevelToUnit(game: Game, unit: Unit, upgradeKind: UpgradeKin
   if (!levelDef) throw new Error(`${upgradeKind} missing level ${level}`);
   if (!upgrade.affectedUnitKinds.includes(unit.kind as TrainableUnitKind)) return;
   applyDerivedUnitStats(game, unit);
+}
+
+function applyUpgradeLevelToBuilding(game: Game, building: Building, upgradeKind: UpgradeKind, level: number) {
+  const upgrade = UPGRADE_DEFS[upgradeKind];
+  const levelDef = upgrade.levels[level - 1];
+  if (!levelDef) throw new Error(`${upgradeKind} missing level ${level}`);
+  if (!levelDef.buildingMaxHpMultiplier) return;
+  applyDerivedBuildingStats(game, building);
+}
+
+function applyDerivedBuildingStats(game: Game, building: Building) {
+  const previousMaxHp = building.maxHp;
+  const def = BUILDING_DEFS[building.kind];
+  let maxHp = def.hp;
+  for (const upgradeKind of UPGRADE_KINDS) {
+    const upgradeLevel = playerState(game, building.owner).upgrades[upgradeKind] ?? 0;
+    for (let level = 0; level < upgradeLevel; level += 1) {
+      const levelDef = UPGRADE_DEFS[upgradeKind].levels[level];
+      if (!levelDef?.buildingMaxHpMultiplier) continue;
+      maxHp = Math.round(maxHp * levelDef.buildingMaxHpMultiplier);
+    }
+  }
+  building.maxHp = maxHp;
+  building.hp = Math.min(building.maxHp, Math.max(1, building.hp + building.maxHp - previousMaxHp));
+  building.attackDamage = def.attackDamage;
+  building.attackRange = def.attackRange;
+  building.attackCooldown = def.attackCooldown;
 }
 
 function hireMercenary(game: Game, owner: PlayerId, campId: string) {
@@ -1515,13 +1600,13 @@ function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number
 
 function forEachNearbyEntity<T extends SpatialEntity>(
   index: SpatialIndex<T> | undefined,
-  fallback: T[],
+  unindexedEntities: T[],
   point: { x: number; y: number },
   range: number,
   visit: (entity: T) => void,
 ) {
   if (!index) {
-    for (const entity of fallback) visit(entity);
+    for (const entity of unindexedEntities) visit(entity);
     return;
   }
   const radius = Math.ceil(range / index.cellSize);

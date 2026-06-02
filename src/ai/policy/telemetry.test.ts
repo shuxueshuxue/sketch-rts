@@ -5,7 +5,7 @@ describe("AI policy telemetry", () => {
   it("creates a complete zeroed behavior counter set", () => {
     const telemetry = createAiTelemetry();
 
-    expect(Object.keys(telemetry.behaviors)).toEqual(["workerHarassment", "earlyHarassment", "skirmishPreservation", "expansionFallback", "economicCatchUp"]);
+    expect(Object.keys(telemetry.behaviors)).toEqual(["workerHarassment", "earlyHarassment", "skirmishPreservation", "expansionRegroup", "economicCatchUp"]);
     for (const stats of Object.values(telemetry.behaviors)) {
       expect(stats).toEqual({
         attempts: 0,
@@ -16,7 +16,7 @@ describe("AI policy telemetry", () => {
         woundedMeleeSaves: 0,
         woundedRangedPullbacks: 0,
         rangedKites: 0,
-        expansionFallbackRetreats: 0,
+        expansionRegroupRetreats: 0,
         catchUpExpansions: 0,
         catchUpTowers: 0,
       });

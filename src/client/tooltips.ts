@@ -43,15 +43,23 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
   const targetLevel = Math.min(upgrade.levels.length, currentLevel + 1);
   const level = upgrade.levels[targetLevel - 1] ?? upgrade.levels[upgrade.levels.length - 1]!;
   const affected = upgrade.affectedUnitKinds.map(labelKind).join(", ");
+  const effect = level.buildingMaxHpMultiplier
+    ? `+${Math.round((level.buildingMaxHpMultiplier - 1) * 100)}% building HP`
+    : level.attackBonus > 0
+      ? `+${level.attackBonus} attack`
+      : `+${level.maxHpBonus} max HP`;
+  const requirements = level.buildingMaxHpMultiplier
+    ? [`Research at ${labelKind(upgrade.buildingKind)}.`, "Affects buildings."]
+    : [`Research at ${labelKind(upgrade.buildingKind)}.`, "Affects combat units.", affected];
   return {
     title: `${labelKind(kind)} ${romanLevel(targetLevel)}`,
     body: UPGRADE_DESCRIPTIONS[kind],
     stats: [
       `Cost ${level.cost} gold`,
       `Research ${formatSeconds(level.researchTime)}`,
-      level.attackBonus > 0 ? `+${level.attackBonus} attack` : `+${level.maxHpBonus} max HP`,
+      effect,
     ],
-    requirements: [`Research at ${labelKind(upgrade.buildingKind)}.`, "Affects combat units.", affected],
+    requirements,
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -123,7 +131,7 @@ const UNIT_DESCRIPTIONS: Record<TrainableUnitKind, string> = {
 };
 
 const BUILDING_DESCRIPTIONS: Record<BuildingKind, string> = {
-  townHall: "Main economy building. Trains workers, receives gold, and provides base supply.",
+  townHall: "Main economy building. Trains workers, receives gold, researches building durability, and provides base supply.",
   barracks: "Core military building that trains melee soldiers and researches army upgrades.",
   archeryRange: "Ranged production building that trains archers.",
   stables: "Mounted unit production building for fast raiders and heavy knights.",
@@ -197,4 +205,5 @@ const ITEM_TOOLTIPS: Record<ItemKind, GameplayTooltip> = {
 const UPGRADE_DESCRIPTIONS: Record<UpgradeKind, string> = {
   weaponTraining: "Improves attack damage for ordinary combat units.",
   reinforcedPlating: "Improves maximum health for ordinary combat units.",
+  buildingDurability: "Improves maximum health for owned buildings.",
 };

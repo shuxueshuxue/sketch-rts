@@ -129,8 +129,8 @@ describe("SDK AI behavior A/B runner", () => {
     expect(report.scoreDelta).toBeGreaterThan(0);
   });
 
-  it("scores expansion fallback through the shared A/B runner", () => {
-    const scene = sketchScene("ab-expansion-fallback")
+  it("scores expansion regroup through the shared A/B runner", () => {
+    const scene = sketchScene("ab-expansion-regroup")
       .map("bareDuel")
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "ember" })
@@ -151,19 +151,19 @@ describe("SDK AI behavior A/B runner", () => {
       .build();
 
     const report = runBehaviorAbTest({
-      name: "expansion fallback retreat",
+      name: "expansion regroup retreat",
       scene,
       owner: "v2",
-      behavior: "expansionFallback",
+      behavior: "expansionRegroup",
       maxTicks: 1,
       thinkInterval: 1,
       score(_snapshot, telemetry) {
-        return telemetry.behaviors.expansionFallback.expansionFallbackRetreats;
+        return telemetry.behaviors.expansionRegroup.expansionRegroupRetreats;
       },
     });
 
-    expect(report.enabled.telemetry.behaviors.expansionFallback.expansionFallbackRetreats).toBe(1);
-    expect(report.disabled.telemetry.behaviors.expansionFallback.disabledSkips).toBeGreaterThan(0);
+    expect(report.enabled.telemetry.behaviors.expansionRegroup.expansionRegroupRetreats).toBe(1);
+    expect(report.disabled.telemetry.behaviors.expansionRegroup.disabledSkips).toBeGreaterThan(0);
     expect(report.enabled.commandCounts.move).toBeGreaterThan(0);
     expect(report.scoreDelta).toBeGreaterThan(0);
   });

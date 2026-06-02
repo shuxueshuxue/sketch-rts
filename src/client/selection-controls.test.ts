@@ -7,7 +7,7 @@ const player: PlayerState = {
   gold: 500,
   supplyUsed: 0,
   supplyCap: 10,
-  upgrades: { weaponTraining: 0, reinforcedPlating: 0 },
+  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0 },
 };
 
 describe("selection controls", () => {

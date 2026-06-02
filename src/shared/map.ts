@@ -86,7 +86,7 @@ export const MAP_SCENARIOS: MapScenario[] = [
   { id: "plumTarn", name: "Plum Tarn", note: "Rich official map with tarn-side expansions, dense yellow camps, and late red drops for veteran carriers.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "wispQuarry", name: "Wisp Quarry", note: "Rich official map with quarry marks, safer opening greens, and hard center camps that test creep judgment.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "brackenFord", name: "Bracken Ford", note: "Rich official map with ford crossings, bracken pockets, and hire camps positioned for staged map control.", tags: ["4096", "score", "many camps", "mercs"] },
-  { id: "mossglassRun", name: "Mossglass Run", note: "Rich official map with glassy moss clearings, lateral mine routes, and free camps as fallback economy.", tags: ["4096", "score", "many camps", "mercs"] },
+  { id: "mossglassRun", name: "Mossglass Run", note: "Rich official map with glassy moss clearings, lateral mine routes, and free camps for secondary economy.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "auricDelta", name: "Auric Delta", note: "Rich official map with gold-toned delta branches, red-camp anchors, and multiple expansion denial paths.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "bluebellHeath", name: "Bluebell Heath", note: "Rich official map with heathland loops, quiet side objectives, and item rewards that favor mobile armies.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "cairnCauseway", name: "Cairn Causeway", note: "Rich official map with causeway pressure, cairn landmarks, and guarded mines away from straight-line attacks.", tags: ["4096", "score", "many camps", "mercs"] },
@@ -530,10 +530,10 @@ function keepAwayFromStartingMines(point: { x: number; y: number }, mapSize: num
       const dy = adjusted.y - mine.y;
       const gap = Math.hypot(dx, dy);
       if (gap >= safeGap) continue;
-      const fallbackX = adjusted.x >= mapSize / 2 ? 1 : -1;
-      const fallbackY = adjusted.y >= mapSize / 2 ? 1 : -1;
-      const unitX = gap > 0 ? dx / gap : fallbackX / Math.SQRT2;
-      const unitY = gap > 0 ? dy / gap : fallbackY / Math.SQRT2;
+      const tieBreakX = adjusted.x >= mapSize / 2 ? 1 : -1;
+      const tieBreakY = adjusted.y >= mapSize / 2 ? 1 : -1;
+      const unitX = gap > 0 ? dx / gap : tieBreakX / Math.SQRT2;
+      const unitY = gap > 0 ? dy / gap : tieBreakY / Math.SQRT2;
       adjusted = { x: clamp(mine.x + unitX * safeGap), y: clamp(mine.y + unitY * safeGap) };
       moved = true;
     }
@@ -565,10 +565,10 @@ function keepNeutralUnitsAwayFromPlayerStarts(units: Unit[], mapId: MapId, playe
         const dy = y - point.y;
         const gap = Math.hypot(dx, dy);
         if (gap >= safeGap) continue;
-        const fallbackX = x >= point.x ? 1 : -1;
-        const fallbackY = y >= point.y ? 1 : -1;
-        const unitX = gap > 0 ? dx / gap : fallbackX / Math.SQRT2;
-        const unitY = gap > 0 ? dy / gap : fallbackY / Math.SQRT2;
+        const tieBreakX = x >= point.x ? 1 : -1;
+        const tieBreakY = y >= point.y ? 1 : -1;
+        const unitX = gap > 0 ? dx / gap : tieBreakX / Math.SQRT2;
+        const unitY = gap > 0 ? dy / gap : tieBreakY / Math.SQRT2;
         const radial = { x: clamp(point.x + unitX * safeGap), y: clamp(point.y + unitY * safeGap) };
         const candidates = [radial];
         for (let angleIndex = 0; angleIndex < 16; angleIndex += 1) {

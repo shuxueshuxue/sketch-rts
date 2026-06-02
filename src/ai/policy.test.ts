@@ -979,8 +979,8 @@ describe("SDK preset AI policy", () => {
     expect(commands).toEqual([]);
   });
 
-  it("v2 keeps expansion fallback from pulling defenders away while the main worker line is under attack", () => {
-    const scene = sketchScene("v2-main-mine-does-not-fallback-to-expansion")
+  it("v2 keeps expansion regroup from pulling defenders away while the main worker line is under attack", () => {
+    const scene = sketchScene("v2-main-mine-does-not-regroup-to-expansion")
       .map("wildMarches")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
@@ -1008,7 +1008,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionFallback], { version: "v2", teams: game.teams });
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionRegroup], { version: "v2", teams: game.teams });
 
     expect(commands[0]).toMatchObject({ type: "move", x: 491.52, y: 2048 });
   });
@@ -5229,8 +5229,8 @@ describe("SDK preset AI policy", () => {
     expect(telemetry.behaviors.skirmishPreservation.woundedRangedPullbacks).toBe(1);
   });
 
-  it("v2 falls back to a friendly expansion when losing a fight near an owned mine", () => {
-    const scene = sketchScene("v2-expansion-fallback")
+  it("v2 regroups to a friendly expansion when losing a fight near an owned mine", () => {
+    const scene = sketchScene("v2-expansion-regroup")
       .map("bareDuel")
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "ember" })
@@ -5253,7 +5253,7 @@ describe("SDK preset AI policy", () => {
     const telemetry = createAiTelemetry();
 
     const enabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "move");
-    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["expansionFallback"], telemetry: createAiTelemetry() }).find(
+    const disabled = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, disabledBehaviors: ["expansionRegroup"], telemetry: createAiTelemetry() }).find(
       (candidate) => candidate.type === "move" && Math.abs(candidate.x - 1450) < 120,
     );
 
@@ -5261,7 +5261,7 @@ describe("SDK preset AI policy", () => {
     expect(enabled?.type === "move" ? enabled.x : 0).toBeCloseTo(1450, -2);
     expect(enabled?.type === "move" ? enabled.unitIds.length : 0).toBe(2);
     expect(disabled).toBeUndefined();
-    expect(telemetry.behaviors.expansionFallback.expansionFallbackRetreats).toBe(1);
+    expect(telemetry.behaviors.expansionRegroup.expansionRegroupRetreats).toBe(1);
   });
 
   it("v2 opens an extra expansion when the opponent economy is ahead", () => {

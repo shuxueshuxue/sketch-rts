@@ -35,7 +35,7 @@ export type BuildingDef = {
 export type UpgradeDef = {
   buildingKind: BuildingKind;
   affectedUnitKinds: TrainableUnitKind[];
-  levels: readonly [UpgradeLevelDef, UpgradeLevelDef, UpgradeLevelDef];
+  levels: readonly UpgradeLevelDef[];
 };
 
 export type UpgradeLevelDef = {
@@ -43,6 +43,7 @@ export type UpgradeLevelDef = {
   researchTime: number;
   attackBonus: number;
   maxHpBonus: number;
+  buildingMaxHpMultiplier?: number;
 };
 
 export type RaceDef = {
@@ -83,13 +84,13 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = {
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
-  townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), trains: ["worker"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },
+  townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), trains: ["worker"], researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },
   barracks: { hp: 620, radius: 40, cost: 170, buildTime: seconds(11), trains: ["footman", "lancer", "groveWarden", "emberRavager"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   archeryRange: { hp: 520, radius: 38, cost: 150, buildTime: seconds(10), trains: ["archer"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   stables: { hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), trains: ["raider", "knight"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   sanctum: { hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), trains: ["priest", "summoner", "witch"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  defenseTower: { hp: 280, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 6, attackRange: 165, attackCooldown: seconds(2.6), supplyProvided: 0 },
+  defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 8, attackRange: 240, attackCooldown: seconds(2.2), supplyProvided: 0 },
   moonWell: { hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), trains: [], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
 };
@@ -115,10 +116,20 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
       { cost: 720, researchTime: seconds(22), attackBonus: 0, maxHpBonus: 20 },
     ],
   },
+  buildingDurability: {
+    buildingKind: "townHall",
+    affectedUnitKinds: [],
+    levels: [
+      { cost: 520, researchTime: seconds(18), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
+    ],
+  },
 };
 
-export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating"];
+export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability"];
 export const MAX_UPGRADE_LEVEL = 3;
+export function maxUpgradeLevel(upgradeKind: UpgradeKind) {
+  return UPGRADE_DEFS[upgradeKind].levels.length;
+}
 export const XP_STAR_THRESHOLDS = [60, 130, 260] as const;
 
 export const TRAINABLE_UNIT_KINDS: TrainableUnitKind[] = [

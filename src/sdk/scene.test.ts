@@ -67,14 +67,4 @@ describe("SDK scene builder", () => {
     expect(game.map.landmarks.map((landmark) => landmark.id)).toEqual(["script-road"]);
   });
 
-  it("restores old upgrade-list saves into level-one tech state", () => {
-    const game = createGame("bareDuel", { aiPlayers: [] });
-    const room = { ...createRoom({ id: "old-tech-save-room", host: { id: "host", name: "Host" }, mapId: "bareDuel" }), status: "inMatch" as const };
-    const save = createSaveGameRecord(game, room, { id: "old-tech-save" }, new Date("2026-05-31T00:00:00.000Z"));
-    (save.snapshot.players.player.upgrades as unknown) = ["weaponTraining"];
-
-    const restored = restoreGameFromSave(save);
-
-    expect(restored.players.player.upgrades).toEqual({ weaponTraining: 1, reinforcedPlating: 0 });
-  });
 });

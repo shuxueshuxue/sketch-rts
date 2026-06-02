@@ -93,13 +93,12 @@ function normalizeSavedPlayers(players: PlayerStateMap): PlayerStateMap {
 }
 
 function normalizeUpgradeLevels(upgrades: unknown): UpgradeLevels {
-  if (Array.isArray(upgrades)) {
-    return Object.fromEntries(UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, upgrades.includes(upgradeKind) ? 1 : 0])) as UpgradeLevels;
-  }
-  if (upgrades && typeof upgrades === "object") {
-    return Object.fromEntries(
-      UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, Math.max(0, Math.min(3, Number((upgrades as Partial<Record<string, unknown>>)[upgradeKind] ?? 0)))]),
-    ) as UpgradeLevels;
-  }
-  return Object.fromEntries(UPGRADE_KINDS.map((upgradeKind) => [upgradeKind, 0])) as UpgradeLevels;
+  if (!upgrades || typeof upgrades !== "object" || Array.isArray(upgrades)) throw new Error("Save upgrade levels must use the current upgrade map shape");
+  return Object.fromEntries(
+    UPGRADE_KINDS.map((upgradeKind) => {
+      const value = (upgrades as Partial<Record<string, unknown>>)[upgradeKind];
+      if (!Number.isInteger(value) || Number(value) < 0) throw new Error(`Save upgrade ${upgradeKind} must be a non-negative integer`);
+      return [upgradeKind, Number(value)];
+    }),
+  ) as UpgradeLevels;
 }

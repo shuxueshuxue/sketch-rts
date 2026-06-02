@@ -24,12 +24,20 @@ const barracks: Building = {
   researchQueue: [],
 };
 
+const townHall: Building = {
+  ...barracks,
+  id: "townhall-1",
+  kind: "townHall",
+  hp: 900,
+  maxHp: 900,
+};
+
 const player: PlayerState = {
   race: "grove",
   gold: 500,
   supplyUsed: 3,
   supplyCap: 10,
-  upgrades: { weaponTraining: 0, reinforcedPlating: 0 },
+  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0 },
 };
 
 describe("research controls", () => {
@@ -39,6 +47,14 @@ describe("research controls", () => {
     expect(commands).toEqual([
       { label: "Weapon Training", icon: "⚔", hotkey: "w", upgradeKind: "weaponTraining", buildingId: "barracks-1" },
       { label: "Reinforced Plating", icon: "▣", hotkey: "p", upgradeKind: "reinforcedPlating", buildingId: "barracks-1" },
+    ]);
+  });
+
+  it("shows building durability for an eligible selected town hall", () => {
+    const commands = researchCommandButtonsForSelection([townHall], player);
+
+    expect(commands).toEqual([
+      { label: "Building Durability", icon: "▥", hotkey: "d", upgradeKind: "buildingDurability", buildingId: "townhall-1" },
     ]);
   });
 

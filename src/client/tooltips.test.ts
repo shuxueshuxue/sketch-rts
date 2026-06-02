@@ -40,6 +40,15 @@ describe("gameplay tooltips", () => {
     expect(tooltip.hotkey).toBe("P");
   });
 
+  it("describes building durability as a town hall building upgrade", () => {
+    const tooltip = upgradeTooltip("buildingDurability", "d", 0);
+
+    expect(tooltip.title).toBe("Building Durability I");
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 520 gold", "Research 18.0s", "+20% building HP"]));
+    expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Town Hall.", "Affects buildings."]));
+    expect(tooltip.hotkey).toBe("D");
+  });
+
   it("describes buildings without relying on self-label text", () => {
     const tooltip = buildingTooltip("barracks", "b");
 

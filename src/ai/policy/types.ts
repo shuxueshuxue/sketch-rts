@@ -3,7 +3,7 @@ import type { AiPolicyMemory } from "../memory";
 
 export type { AiScriptVersion } from "../../shared/types";
 
-export type AiBehaviorId = "workerHarassment" | "earlyHarassment" | "skirmishPreservation" | "expansionFallback" | "economicCatchUp";
+export type AiBehaviorId = "workerHarassment" | "earlyHarassment" | "skirmishPreservation" | "expansionRegroup" | "economicCatchUp";
 
 export type AiBehaviorStats = {
   attempts: number;
@@ -14,7 +14,7 @@ export type AiBehaviorStats = {
   woundedMeleeSaves: number;
   woundedRangedPullbacks: number;
   rangedKites: number;
-  expansionFallbackRetreats: number;
+  expansionRegroupRetreats: number;
   catchUpExpansions: number;
   catchUpTowers: number;
 };
