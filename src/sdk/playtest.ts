@@ -1,0 +1,336 @@
+import { BUILDING_DEFS } from "../shared/catalog";
+import { createSaveGameRecord, restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
+import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
+import type { Building, BuildingKind, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, TrainableUnitKind, Unit, UpgradeKind } from "../shared/types";
+import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
+import { createSnapshotQuery } from "./snapshot/query";
+
+export type InteractiveUnitSelector = "all" | "combat" | "workers" | string[];
+
+export type InteractivePlaytestCommand =
+  | { type: "raw"; owner?: PlayerId; command: GameCommand }
+  | { type: "move"; unitIds?: InteractiveUnitSelector; x: number; y: number }
+  | { type: "gatherArmy"; unitIds?: InteractiveUnitSelector; x: number; y: number }
+  | { type: "attackMove"; unitIds?: InteractiveUnitSelector; x: number; y: number }
+  | { type: "focusFire"; unitIds?: InteractiveUnitSelector; targetId: string }
+  | { type: "retreat"; unitIds?: InteractiveUnitSelector; x?: number; y?: number }
+  | { type: "mine"; unitIds?: InteractiveUnitSelector; resourceId?: string }
+  | { type: "repair"; unitIds?: InteractiveUnitSelector; buildingId: string }
+  | { type: "build"; unitId?: string; buildingKind: BuildingKind; x: number; y: number }
+  | { type: "train"; buildingId?: string; unitKind: TrainableUnitKind }
+  | { type: "research"; buildingId?: string; upgradeKind: UpgradeKind }
+  | { type: "hire"; campId: string }
+  | { type: "useItem"; unitId?: string; itemId: string; targetId?: string; x?: number; y?: number };
+
+export type InteractivePlaytestSessionInput = {
+  id?: string;
+  mapId: MapId;
+  controlledPlayer: PlayerId;
+  scriptedPlayers: PlayerId[];
+  options?: CreateGameOptions;
+};
+
+export type InteractivePlaytestTranscriptEntry =
+  | { type: "command"; tick: number; owner: PlayerId; command: GameCommand }
+  | { type: "step"; fromTick: number; toTick: number; scriptedCommands: number };
+
+export type InteractivePlaytestSession = {
+  id: string;
+  controlledPlayer: PlayerId;
+  scriptedPlayers: PlayerId[];
+  game: Game;
+  transcript: InteractivePlaytestTranscriptEntry[];
+};
+
+export type SerializedInteractivePlaytestSession = {
+  schemaVersion: 1;
+  id: string;
+  controlledPlayer: PlayerId;
+  scriptedPlayers: PlayerId[];
+  save: SaveGameRecord;
+  transcript: InteractivePlaytestTranscriptEntry[];
+};
+
+export type InteractivePlaytestSummary = {
+  id: string;
+  tick: number;
+  gameSecond: number;
+  controlledPlayer: PlayerId;
+  winner: PlayerId | null;
+  players: Record<PlayerId, InteractivePlaytestPlayerSummary>;
+  visibleObjectives: InteractiveObjectiveSummary[];
+  nearbyEnemies: { id: string; kind: string; x: number; y: number; hp: number; maxHp: number }[];
+};
+
+export type InteractivePlaytestPlayerSummary = {
+  race: RaceId;
+  gold: number;
+  supplyUsed: number;
+  supplyCap: number;
+  workers: number;
+  combatUnits: number;
+  bases: number;
+  buildings: number;
+  orders: Record<string, number>;
+};
+
+export type InteractiveObjectiveSummary = {
+  id: string;
+  kind: "resource" | "mercenaryCamp" | "item";
+  x: number;
+  y: number;
+  distance: number;
+};
+
+export type InteractivePlaytestStepOptions<Source extends string = string> = {
+  beforeStep?: (session: InteractivePlaytestSession) => number | void;
+  scriptedPlayers?: Partial<Record<PlayerId, (snapshot: GameSnapshot, owner: PlayerId, game: Game) => CommandFrameEntry<Source>[]>>;
+};
+
+export function createInteractivePlaytestSession(input: InteractivePlaytestSessionInput): InteractivePlaytestSession {
+  const players = [...new Set([input.controlledPlayer, ...input.scriptedPlayers, ...(input.options?.players ?? [])])];
+  const game = createGame(input.mapId, {
+    ...(input.options ?? {}),
+    players,
+    aiPlayers: input.scriptedPlayers,
+  });
+  return {
+    id: input.id ?? `interactive-${input.mapId}`,
+    controlledPlayer: input.controlledPlayer,
+    scriptedPlayers: [...input.scriptedPlayers],
+    game,
+    transcript: [],
+  };
+}
+
+export function applyInteractivePlaytestCommand(session: InteractivePlaytestSession, command: InteractivePlaytestCommand) {
+  const owner = command.type === "raw" ? command.owner ?? session.controlledPlayer : session.controlledPlayer;
+  const gameCommand = toGameCommand(session.game, owner, command);
+  const result = issueCommandFrame(session.game, [{ playerId: owner, source: "interactive", scriptId: `interactive-${command.type}`, command: gameCommand }]);
+  for (const issued of result.commands) {
+    session.transcript.push({ type: "command", tick: session.game.tick, owner: issued.playerId, command: issued.command });
+  }
+  return result;
+}
+
+export function stepInteractivePlaytestSession<Source extends string = string>(session: InteractivePlaytestSession, ticks: number, options: InteractivePlaytestStepOptions<Source> = {}) {
+  if (!Number.isInteger(ticks) || ticks < 1) throw new Error(`Step ticks must be a positive integer, got ${ticks}`);
+  const fromTick = session.game.tick;
+  let scriptedCommands = 0;
+  for (let elapsed = 0; elapsed < ticks && !session.game.match.winner; elapsed += 1) {
+    scriptedCommands += options.beforeStep?.(session) ?? 0;
+    const snapshot = snapshotGame(session.game);
+    const planned = session.scriptedPlayers.flatMap((owner) => options.scriptedPlayers?.[owner]?.(snapshot, owner, session.game) ?? []);
+    scriptedCommands += issueCommandFrame(session.game, planned).commands.length;
+    stepGame(session.game);
+  }
+  session.transcript.push({ type: "step", fromTick, toTick: session.game.tick, scriptedCommands });
+}
+
+export function serializeInteractivePlaytestSession(session: InteractivePlaytestSession): SerializedInteractivePlaytestSession {
+  const room = roomForSession(session);
+  return {
+    schemaVersion: 1,
+    id: session.id,
+    controlledPlayer: session.controlledPlayer,
+    scriptedPlayers: [...session.scriptedPlayers],
+    save: createSaveGameRecord(session.game, room, { id: session.id, label: `Interactive ${session.game.map.name}` }, new Date(), session.scriptedPlayers),
+    transcript: clone(session.transcript),
+  };
+}
+
+export function restoreInteractivePlaytestSession(serialized: SerializedInteractivePlaytestSession): InteractivePlaytestSession {
+  if (serialized.schemaVersion !== 1) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
+  return {
+    id: serialized.id,
+    controlledPlayer: serialized.controlledPlayer,
+    scriptedPlayers: [...serialized.scriptedPlayers],
+    game: restoreGameFromSave(serialized.save),
+    transcript: clone(serialized.transcript),
+  };
+}
+
+export function summarizeInteractivePlaytestSession(session: InteractivePlaytestSession): InteractivePlaytestSummary {
+  const snapshot = snapshotGame(session.game);
+  const query = createSnapshotQuery(snapshot, { teams: session.game.teams });
+  const controlledCenter = armyCenter(query.combatUnitsFor(session.controlledPlayer)) ?? baseCenter(query.buildingsFor(session.controlledPlayer)) ?? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 };
+  const nearbyEnemies = query
+    .opponentUnitsNear(session.controlledPlayer, controlledCenter, 800)
+    .slice(0, 12)
+    .map((unit) => ({ id: unit.id, kind: unit.kind, x: unit.x, y: unit.y, hp: unit.hp, maxHp: unit.maxHp }));
+  return {
+    id: session.id,
+    tick: snapshot.tick,
+    gameSecond: tickSecond(snapshot.tick),
+    controlledPlayer: session.controlledPlayer,
+    winner: snapshot.match.winner,
+    players: Object.fromEntries(session.game.activePlayers.map((owner) => [owner, summarizePlayer(snapshot, owner)])),
+    visibleObjectives: visibleObjectives(snapshot, controlledCenter),
+    nearbyEnemies,
+  };
+}
+
+function toGameCommand(game: Game, owner: PlayerId, command: InteractivePlaytestCommand): GameCommand {
+  if (command.type === "raw") return command.command;
+  if (command.type === "move" || command.type === "gatherArmy") return { type: "move", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: command.x, y: command.y };
+  if (command.type === "attackMove") return { type: "attackMove", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: command.x, y: command.y };
+  if (command.type === "focusFire") return { type: "attack", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), targetId: command.targetId };
+  if (command.type === "retreat") {
+    const point = command.x !== undefined && command.y !== undefined ? { x: command.x, y: command.y } : retreatPoint(game, owner);
+    return { type: "move", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "combat"), x: point.x, y: point.y };
+  }
+  if (command.type === "mine") return { type: "mine", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), resourceId: command.resourceId ?? nearestResourceId(game, owner) };
+  if (command.type === "repair") return { type: "repair", unitIds: selectedUnitIds(game, owner, command.unitIds ?? "workers"), buildingId: command.buildingId };
+  if (command.type === "build") return { type: "build", unitId: command.unitId ?? nearestWorkerId(game, owner, { x: command.x, y: command.y }), buildingKind: command.buildingKind, x: command.x, y: command.y };
+  if (command.type === "train") return { type: "train", buildingId: command.buildingId ?? trainingBuildingId(game, owner, command.unitKind), unitKind: command.unitKind };
+  if (command.type === "research") return { type: "research", buildingId: command.buildingId ?? researchBuildingId(game, owner, command.upgradeKind), upgradeKind: command.upgradeKind };
+  if (command.type === "hire") return { type: "hire", campId: command.campId };
+  if (command.type === "useItem") return { type: "useItem", unitId: command.unitId ?? carrierForItem(game, owner, command.itemId), itemId: command.itemId, ...(command.targetId ? { targetId: command.targetId } : {}), ...(command.x !== undefined ? { x: command.x } : {}), ...(command.y !== undefined ? { y: command.y } : {}) };
+  return assertNever(command);
+}
+
+function selectedUnitIds(game: Game, owner: PlayerId, selector: InteractiveUnitSelector): string[] {
+  if (Array.isArray(selector)) {
+    for (const id of selector) {
+      const unit = game.units.find((candidate) => candidate.id === id && candidate.owner === owner);
+      if (!unit) throw new Error(`Unknown ${owner} unit ${id}`);
+    }
+    return selector;
+  }
+  const units = game.units.filter((unit) => unit.owner === owner && matchesSelector(unit, selector));
+  if (units.length === 0) throw new Error(`No ${owner} units match selector ${selector}`);
+  return units.map((unit) => unit.id);
+}
+
+function matchesSelector(unit: Unit, selector: Exclude<InteractiveUnitSelector, string[]>): boolean {
+  if (selector === "all") return true;
+  if (selector === "combat") return unit.kind !== "worker";
+  if (selector === "workers") return unit.kind === "worker";
+  return assertNever(selector);
+}
+
+function retreatPoint(game: Game, owner: PlayerId) {
+  return baseCenter(game.buildings.filter((building) => building.owner === owner)) ?? armyCenter(game.units.filter((unit) => unit.owner === owner)) ?? { x: game.map.width / 2, y: game.map.height / 2 };
+}
+
+function nearestResourceId(game: Game, owner: PlayerId): string {
+  const point = retreatPoint(game, owner);
+  const resource = nearest(game.resources, point);
+  if (!resource) throw new Error("No resources exist in this playtest session");
+  return resource.id;
+}
+
+function nearestWorkerId(game: Game, owner: PlayerId, point: { x: number; y: number }): string {
+  const worker = nearest(game.units.filter((unit) => unit.owner === owner && unit.kind === "worker"), point);
+  if (!worker) throw new Error(`No ${owner} workers available`);
+  return worker.id;
+}
+
+function trainingBuildingId(game: Game, owner: PlayerId, unitKind: TrainableUnitKind): string {
+  const building = game.buildings.find((candidate) => candidate.owner === owner && candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
+  if (!building) throw new Error(`No ${owner} complete building can train ${unitKind}`);
+  return building.id;
+}
+
+function researchBuildingId(game: Game, owner: PlayerId, upgradeKind: UpgradeKind): string {
+  const building = game.buildings.find((candidate) => candidate.owner === owner && candidate.complete && BUILDING_DEFS[candidate.kind].researches.includes(upgradeKind));
+  if (!building) throw new Error(`No ${owner} complete building can research ${upgradeKind}`);
+  return building.id;
+}
+
+function carrierForItem(game: Game, owner: PlayerId, itemId: string): string {
+  const item = game.items.find((candidate) => candidate.id === itemId);
+  if (!item) throw new Error(`Unknown item ${itemId}`);
+  if (item.carrierId && game.units.some((unit) => unit.id === item.carrierId && unit.owner === owner)) return item.carrierId;
+  const unit = nearest(game.units.filter((candidate) => candidate.owner === owner), item);
+  if (!unit) throw new Error(`No ${owner} units available to use ${itemId}`);
+  return unit.id;
+}
+
+function summarizePlayer(snapshot: GameSnapshot, owner: PlayerId): InteractivePlaytestPlayerSummary {
+  const player = snapshot.players[owner];
+  if (!player) throw new Error(`Snapshot missing player state for ${owner}`);
+  const units = snapshot.units.filter((unit) => unit.owner === owner);
+  const buildings = snapshot.buildings.filter((building) => building.owner === owner);
+  return {
+    race: player.race,
+    gold: player.gold,
+    supplyUsed: player.supplyUsed,
+    supplyCap: player.supplyCap,
+    workers: units.filter((unit) => unit.kind === "worker").length,
+    combatUnits: units.filter((unit) => unit.kind !== "worker").length,
+    bases: buildings.filter((building) => building.kind === "townHall").length,
+    buildings: buildings.length,
+    orders: countBy(units, (unit) => unit.order.type),
+  };
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled interactive playtest value ${JSON.stringify(value)}`);
+}
+
+function visibleObjectives(snapshot: GameSnapshot, point: { x: number; y: number }): InteractiveObjectiveSummary[] {
+  return [
+    ...snapshot.resources.map((resource) => ({ id: resource.id, kind: "resource" as const, x: resource.x, y: resource.y, distance: distance(resource, point) })),
+    ...snapshot.mercenaryCamps.map((camp) => ({ id: camp.id, kind: "mercenaryCamp" as const, x: camp.x, y: camp.y, distance: distance(camp, point) })),
+    ...snapshot.items.filter((item) => !item.carrierId).map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
+  ].sort((a, b) => a.distance - b.distance).slice(0, 12);
+}
+
+function roomForSession(session: InteractivePlaytestSession): RoomState {
+  return {
+    id: session.id,
+    name: `Interactive ${session.game.map.name}`,
+    hostUserId: "interactive-playtest",
+    visibility: "private",
+    mapId: session.game.map.id,
+    status: "inMatch",
+    autoTick: false,
+    slots: session.game.activePlayers.map((owner) => ({
+      id: `slot-${owner}`,
+      playerId: owner,
+      controller: session.scriptedPlayers.includes(owner) ? "ai" : "human",
+      name: owner,
+      team: session.game.teams[owner] ?? owner,
+      race: session.game.players[owner]?.race ?? "grove",
+      ready: true,
+    })),
+  };
+}
+
+function tickSecond(tick: number) {
+  return Number((tick / SIM_TICKS_PER_SECOND).toFixed(2));
+}
+
+function armyCenter(units: Pick<Unit, "x" | "y">[]) {
+  if (units.length === 0) return undefined;
+  return { x: average(units.map((unit) => unit.x)), y: average(units.map((unit) => unit.y)) };
+}
+
+function baseCenter(buildings: Pick<Building, "kind" | "x" | "y">[]) {
+  const bases = buildings.filter((building) => building.kind === "townHall");
+  return armyCenter(bases.length > 0 ? bases : buildings);
+}
+
+function nearest<T extends { x: number; y: number }>(candidates: T[], point: { x: number; y: number }): T | undefined {
+  return candidates.map((candidate) => ({ candidate, distance: distance(candidate, point) })).sort((a, b) => a.distance - b.distance)[0]?.candidate;
+}
+
+function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function average(values: number[]) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function countBy<T>(values: T[], keyFor: (value: T) => string): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const value of values) result[keyFor(value)] = (result[keyFor(value)] ?? 0) + 1;
+  return result;
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}

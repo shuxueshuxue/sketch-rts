@@ -133,6 +133,25 @@ If an AI behavior needs information that only the simulation currently exposes, 
 
 Warning smell: if AI code is personally selecting units by scanning raw `snapshot.units`, personally finding bases by scanning raw `snapshot.buildings`, or personally clustering neutral camps from raw units, the SDK surface is probably missing a primitive.
 
+## Interactive AI Playtesting
+
+Benchmark reports show where an AI failed, but they do not let the agent feel a position while it is still alive. The SDK should include an interactive playtesting surface where a human or LLM agent can control one side against a fully scripted AI opponent.
+
+This is an SDK/debug tool, not the game frontend and not a replacement for benchmark gates.
+
+Requirements:
+
+- A session can be created from a map, controlled player, opponent AI config, and seed-like deterministic options.
+- The session is persisted in a file so an agent can inspect, think, issue commands, step forward, inspect again, and continue across shell calls.
+- The tool prints mid-game situation summaries in game seconds: resources, bases, workers, combat units, supply, nearby enemies, visible objectives, current orders, first-fight state, and winner/timeout state.
+- The command surface is composable. High-level commands should cover common steering moves such as gather army, attack-move, focus fire, retreat, mine, build, train, expand, creep a camp, hire mercenaries, use item, and step until a condition. Low-level raw commands remain available for exact control.
+- The scripted opponent continues through the same AI command planner used by benchmark runs.
+- The controlled side can be manual-only or assisted. Manual commands should be able to coexist with scripted commands when explicitly requested, but the default is that the agent is responsible for the controlled side.
+- The tool should fail loudly on invalid unit ids, command shapes, missing sessions, or stale command names. Do not hide errors with permissive parsing.
+- Every interactive transcript should be reproducible enough to turn into a deterministic regression or benchmark slice after a useful tactic is discovered.
+
+The purpose is to close the loop between "LLM writes conditions" and "LLM understands the game". The agent should be able to pause at a suspicious position, look at the actual board state, try a tactical choice, and then promote that discovered pattern into SDK primitives, AI jobs, or benchmark tests.
+
 ## AMAI Lessons To Borrow
 
 AMAI is useful mainly because its AI is not a stateless pile of tick-local checks. The pieces to borrow are structural:
@@ -470,6 +489,7 @@ Every meaningful AI change needs:
 - the tagged combat bundle: 5 `15v20 mixed combat` matches and 5 `10v12 mixed combat` matches;
 - dashboard inspection for suspicious wins/losses;
 - comparison against the latest known baseline.
+- interactive playtesting evidence for confusing tactical failures, especially cases where benchmark logs alone do not explain why an army chose an obviously bad objective or failed to use a local advantage.
 
 Benchmark failure is a useful constraint, not an inconvenience. If a local tactical idea improves a unit test but tanks the benchmark, the idea is incomplete.
 
