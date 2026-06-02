@@ -1,20 +1,23 @@
 import express, { type Response } from "express";
-import { createServer } from "node:http";
+import { createServer, type IncomingMessage } from "node:http";
 import { randomUUID } from "node:crypto";
 import { watch } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { WebSocketServer, type WebSocket } from "ws";
+import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
 import { createAiRuntime, runPresetAiRuntime } from "../ai/runtime";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
-import { createGame, issueCommand, snapshotGame, stepGame } from "../shared/sim";
+import { createGame, snapshotGame, stepGame } from "../shared/sim";
+import { applyCommandFrame } from "../shared/sim/frame";
 import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
+import { RoomNetHub } from "./room-net";
+import { classifyWebSocketUpgrade } from "./ws-routes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "../..");
@@ -24,12 +27,15 @@ const sessionAutoTick = process.env.SESSION_AUTOTICK !== "0";
 const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ noServer: true });
+const sessionWss = new WebSocketServer({ noServer: true });
+const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 let game = createGame();
 let gameAiRuntime = createAiRuntime(["enemy"]);
+let sessionFrameSequence = 0;
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
+const roomNetHub = new RoomNetHub({ roomHost });
 
 app.use(express.json({ limit: "64kb" }));
 
@@ -40,16 +46,23 @@ app.get("/favicon.ico", (_request, response) => {
 });
 
 server.on("upgrade", (request, socket, head) => {
-  if (request.url !== "/ws") {
+  const route = classifyWebSocketUpgrade(request.url);
+  if (route.type === "room") {
+    roomWss.handleUpgrade(request, socket, head, (ws) => {
+      roomWss.emit("connection", ws, request, route.roomId);
+    });
+    return;
+  }
+  if (route.type === "reject") {
     socket.destroy();
     return;
   }
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit("connection", ws, request);
+  sessionWss.handleUpgrade(request, socket, head, (ws) => {
+    sessionWss.emit("connection", ws, request);
   });
 });
 
-wss.on("connection", (ws) => {
+sessionWss.on("connection", (ws) => {
   send(ws, { type: "snapshot", snapshot: snapshotGame(game) });
   ws.on("message", (raw) => {
     try {
@@ -58,6 +71,18 @@ wss.on("connection", (ws) => {
     } catch (error) {
       send(ws, { type: "error", message: error instanceof Error ? error.message : String(error) });
     }
+  });
+});
+
+roomWss.on("connection", (ws: WebSocket, _request: IncomingMessage, roomId: string) => {
+  roomNetHub.connect(roomId, {
+    send(data) {
+      if (ws.readyState === ws.OPEN) ws.send(data);
+    },
+    on(event, handler) {
+      if (event === "message") ws.on("message", (raw: RawData) => (handler as (raw: string) => void)(raw.toString()));
+      if (event === "close") ws.on("close", handler as () => void);
+    },
   });
 });
 
@@ -551,7 +576,8 @@ setInterval(() => {
     runPresetAiRuntime(game, gameAiRuntime);
     stepGame(game);
   }
-  roomHost.tickActiveRooms();
+  const lockstepRoomIds = roomNetHub.tickConnectedRooms();
+  roomHost.tickActiveRooms(1, { excludeRoomIds: lockstepRoomIds });
 }, 50);
 
 setInterval(() => {
@@ -584,7 +610,7 @@ function send(ws: WebSocket, payload: unknown) {
 
 function broadcastSnapshot() {
   const frame = JSON.stringify({ type: "snapshot", snapshot: snapshotGame(game) });
-  for (const client of wss.clients) {
+  for (const client of sessionWss.clients) {
     if (client.readyState === client.OPEN) client.send(frame);
   }
 }
@@ -607,10 +633,17 @@ function runSessionCommand(command: GameCommand) {
   if (command.type === "startMap") {
     game = createGame(command.mapId);
     gameAiRuntime = createAiRuntime(["enemy"]);
+    sessionFrameSequence = 0;
     broadcastSnapshot();
     return;
   }
-  issueCommand(game, command);
+  applyCommandFrame(game, {
+    roomId: "session",
+    tick: game.tick,
+    sequence: sessionFrameSequence,
+    commands: [{ playerId: "player", command }],
+  });
+  sessionFrameSequence += 1;
 }
 
 function parseCommand(raw: string): GameCommand {
