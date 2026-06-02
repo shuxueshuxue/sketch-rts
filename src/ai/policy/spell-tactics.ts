@@ -68,5 +68,14 @@ function focusFireTargetScore(unit: Unit, fighters: Unit[]) {
   const center = averagePoint(fighters);
   const missingHp = Math.max(0, unit.maxHp - unit.hp);
   const threat = unit.attackDamage * 5 + (unit.attackRange > 100 ? 28 : 0);
-  return missingHp * 2.4 + threat - distance(unit, center) * 0.18;
+  return casterTargetBonus(unit) + missingHp * 2.4 + threat - distance(unit, center) * 0.18;
+}
+
+function casterTargetBonus(unit: Unit) {
+  const abilities = UNIT_DEFS[unit.kind].abilities;
+  let score = 0;
+  if (abilities.includes("summon")) score += 130;
+  if (abilities.includes("heal")) score += 115;
+  if (abilities.includes("curse")) score += 95;
+  return score;
 }

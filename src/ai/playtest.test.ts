@@ -145,6 +145,7 @@ describe("AI interactive playtest wiring", () => {
       focusTargetSinceTick: 0,
       focusTargetUpdatedTick: 0,
     });
+    expect(runtime.memories.v2!.strategicPlan?.focusTargetId).toBeUndefined();
     expect(runtime.memories.v2!.jobs).toEqual([{ id: "attackWave:v1a", kind: "attackWave", createdTick: 0, updatedTick: 0 }]);
     expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
       kind: "attack",

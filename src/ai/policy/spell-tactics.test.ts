@@ -59,6 +59,30 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("targets high-value combat casters before ordinary front-line damage dealers", () => {
+    const game = sketchScene("spell-tactics-caster-focus-priority")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "knight", 680, 760, { id: "knight" })
+      .unit("v2", "golem", 700, 800, { id: "golem" })
+      .unit("v2", "archer", 680, 840, { id: "archer" })
+      .unit("v1", "lancer", 760, 800, { id: "front-lancer" })
+      .unit("v1", "summoner", 790, 820, { id: "summoner" })
+      .unit("v1", "priest", 810, 780, { id: "priest" })
+      .build()
+      .createGame();
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toEqual({
+      type: "attack",
+      unitIds: ["knight", "golem", "archer"],
+      targetId: "summoner",
+    });
+  });
+
   it("does not pin a small ranged group into a stronger local enemy squad", () => {
     const game = sketchScene("spell-tactics-no-disadvantaged-ranged-focus")
       .map("bareDuel")

@@ -140,14 +140,25 @@ function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof
   const target = attackWaveClaimTarget(query, commandOwner, command);
   const targetId = target ? target.id : `attackWave:${targetOwner}`;
   const targetPoint = target ?? attackWaveCommandPoint(command);
-  const previousSince = target && memory.strategicPlan?.focusTargetId === target.id ? memory.strategicPlan.focusTargetSinceTick : undefined;
-  memory.strategicPlan = {
-    ...memory.strategicPlan,
+  const previousPlan = memory.strategicPlan;
+  const explicitFocusTargetId = command.type === "attack" && target ? target.id : undefined;
+  const previousSince =
+    explicitFocusTargetId !== undefined
+      ? previousPlan?.focusTargetId === explicitFocusTargetId
+        ? previousPlan.focusTargetSinceTick
+        : undefined
+      : previousPlan?.focusTargetOwner === targetOwner
+        ? previousPlan.focusTargetSinceTick
+        : undefined;
+  const nextPlan = {
+    ...previousPlan,
     focusTargetOwner: targetOwner,
-    ...(target ? { focusTargetId: target.id } : {}),
     focusTargetSinceTick: previousSince ?? snapshot.tick,
     focusTargetUpdatedTick: snapshot.tick,
   };
+  if (explicitFocusTargetId !== undefined) nextPlan.focusTargetId = explicitFocusTargetId;
+  else if (previousPlan?.focusTargetOwner !== targetOwner) delete nextPlan.focusTargetId;
+  memory.strategicPlan = nextPlan;
   upsertMemoryJob(memory, `attackWave:${targetOwner}`, "attackWave", snapshot.tick);
   for (const unitId of command.unitIds) {
     memory.unitClaims[unitId] = {
