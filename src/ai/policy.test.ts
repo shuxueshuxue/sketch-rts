@@ -1631,6 +1631,39 @@ describe("SDK preset AI policy", () => {
     expect(repair).toMatchObject({ scriptId: "repair", command: { type: "repair", buildingId: "v2-main-tower", unitIds: ["v2-builder"] } });
   });
 
+  it("v2 trains a sixth one-base worker when the saturated main needs tower repair labor", () => {
+    const scene = sketchScene("v2-one-base-repair-worker")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .tower("v2", 560, 540, { id: "v2-main-tower" })
+      .building("v2", "barracks", 650, 560)
+      .building("v2", "farm", 560, 700)
+      .goldMine("v2-main-mine", 570, 530, 4000)
+      .worker("v2", 520, 500, { id: "v2-worker-a", order: { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 } })
+      .worker("v2", 540, 520, { id: "v2-worker-b", order: { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 } })
+      .worker("v2", 560, 540, { id: "v2-worker-c", order: { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 } })
+      .worker("v2", 580, 520, { id: "v2-worker-d", order: { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 } })
+      .worker("v2", 600, 540, { id: "v2-worker-e", order: { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 } })
+      .unit("v2", "footman", 700, 580)
+      .unit("v2", "archer", 730, 620)
+      .townHall("v1", 3400, 3400)
+      .build();
+    const game = scene.createGame();
+    const tower = game.buildings.find((building) => building.id === "v2-main-tower");
+    if (!tower) throw new Error("missing v2 tower");
+    tower.hp = 80;
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 80;
+
+    const train = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "train");
+
+    expect(train).toMatchObject({ type: "train", buildingId: "v2-main", unitKind: "worker" });
+  });
+
   it("v2 keeps the only currently saturated mine working after a fresh second town hall completes", () => {
     const scene = sketchScene("v2-fresh-second-hall-keeps-paying-mine")
       .map("bareDuel")

@@ -696,8 +696,9 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   const player = playerState(snapshot, owner);
   const workerCount = units(snapshot, owner).filter((unit) => unit.kind === "worker").length;
   const routineWantedWorkers = routineWorkerCount(snapshot, owner, options);
+  const repairLaborWorkers = wantsOneBaseRepairLabor(snapshot, owner, options) ? 1 : 0;
   const cheapWorkerRecovery = needsCheapWorkerRecovery(snapshot, owner, options);
-  const wantedWorkers = cheapWorkerRecovery ? Math.max(routineWantedWorkers, 8) : routineWantedWorkers;
+  const wantedWorkers = cheapWorkerRecovery ? Math.max(routineWantedWorkers + repairLaborWorkers, 8) : routineWantedWorkers + repairLaborWorkers;
   const needsCoreArmy = shouldFinishCoreArmyBeforeMoreProduction(snapshot, owner, options);
   const nextMissingProduction = needsCoreArmy ? undefined : productionBuildingNeedKind(snapshot, owner, options);
   const missingProduction =
@@ -728,8 +729,15 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   for (const building of buildings(snapshot, owner).filter((candidate) => candidate.complete && candidate.queue.length === 0)) {
     const projectedWorkers = workerCount + queuedWorkers;
     const needsRoutineWorker = !needsCoreArmy && !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && !holdThinTwoMineDefenseBank && projectedWorkers < routineWantedWorkers;
+    const needsRepairLaborWorker =
+      !needsCoreArmy &&
+      !restoreCombatBeforeWorkers &&
+      !holdFirstCombatRecoveryGold &&
+      !holdThinTwoMineDefenseBank &&
+      projectedWorkers >= routineWantedWorkers &&
+      projectedWorkers < routineWantedWorkers + repairLaborWorkers;
     const needsRecoveryWorker = !restoreCombatBeforeWorkers && !holdFirstCombatRecoveryGold && !holdThinTwoMineDefenseBank && cheapWorkerRecovery && projectedWorkers >= routineWantedWorkers && projectedWorkers < wantedWorkers;
-    const needsWorker = building.kind === "townHall" && (needsRoutineWorker || needsRecoveryWorker);
+    const needsWorker = building.kind === "townHall" && (needsRoutineWorker || needsRepairLaborWorker || needsRecoveryWorker);
     const unitKind = needsWorker ? "worker" : trainingChoice(snapshot, owner, building, options);
     if (!unitKind) continue;
     const cost = UNIT_DEFS[unitKind].cost;
@@ -795,11 +803,23 @@ function shouldHoldFirstExpansionBank(snapshot: GameSnapshot, owner: PlayerId, o
 
 function routineWorkerCount(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const bases = options.version === "v2" ? Math.max(1, activeMiningBaseCount(snapshot, owner)) : completeBuildings(snapshot, owner, "townHall").length;
-  // @@@mine-worker-cap - A gold mine saturates at five workers; extra one-base workers only steal army tempo.
+  // @@@mine-worker-saturation - A mine pays up to five workers; repair/build labor is a separate need, not extra mine income.
   if (options.version === "v2") {
     return Math.min(12, bases * 5);
   }
   return Math.min(12, 2 + bases * 4);
+}
+
+function wantsOneBaseRepairLabor(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return false;
+  if (activeMiningBaseCount(snapshot, owner) !== 1) return false;
+  if (!hasCoreProduction(snapshot, owner)) return false;
+  const main = mainBase(snapshot, owner);
+  const damagedMainTower = buildings(snapshot, owner).some(
+    (building) => building.complete && building.kind === "defenseTower" && building.hp > 0 && building.hp < building.maxHp && distance(building, main) <= 520,
+  );
+  if (!damagedMainTower) return false;
+  return !units(snapshot, owner).some((unit) => unit.kind === "worker" && unit.order.type !== "mine" && distance(unit, main) <= 700);
 }
 
 function needsCheapWorkerRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
