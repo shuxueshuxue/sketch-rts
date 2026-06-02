@@ -50,6 +50,11 @@ if (verb === "status") {
   process.exit(0);
 }
 
+if (verb === "memory") {
+  printJson(loaded.runtime.memories);
+  process.exit(0);
+}
+
 if (verb === "step") {
   stepAiInteractivePlaytestSession(session, loaded.runtime, numberFlag(args, "ticks", 45));
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
@@ -152,6 +157,7 @@ function printHelp() {
   console.log(`Usage:
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
   npm run play:ai -- status --file .playtests/duel.json
+  npm run play:ai -- memory --file .playtests/duel.json
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240
   npm run play:ai -- attack-move --file .playtests/duel.json --units combat --x 2048 --y 2048
