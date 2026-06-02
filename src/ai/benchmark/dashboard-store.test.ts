@@ -23,7 +23,7 @@ describe("benchmark dashboard store", () => {
         kind: "ai-version-benchmark",
         seed: "store-second",
         mapPoolSize: 64,
-        matchCount: 23,
+        matchCount: 33,
       });
       expect(summaries[0]?.cpuMs).toBeGreaterThanOrEqual(0);
       expect(summaries[0]?.selectedRichScoreMapIds).toHaveLength(17);
@@ -32,11 +32,12 @@ describe("benchmark dashboard store", () => {
 
       const detail = await readBenchmarkDashboardRun(second.id, { rootDir });
       expect(detail.report.cpuMs).toBeGreaterThanOrEqual(0);
-      expect(detail.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v3 probe", "2v3 probe", "1v1 sanity", "15v20 mixed combat", "10v12 mixed combat"]);
-      expect(detail.report.evaluations.map((evaluation) => evaluation.tag)).toEqual(["melee", "melee", "melee", "melee", "combat", "combat"]);
-      expect(detail.report.evaluations.map((evaluation) => evaluation.matches.length)).toEqual([10, 2, 2, 3, 3, 3]);
-      expect(detail.report.evaluations.slice(0, 4).flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(detail.selectedRichScoreMapIds);
-      expect(detail.report.evaluations.slice(4).flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(["combatArena", "combatArena", "combatArena", "combatArena", "combatArena", "combatArena"]);
+      expect(detail.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "1v1 sanity", "15v20 mixed combat", "10v12 mixed combat"]);
+      expect(detail.report.evaluations.map((evaluation) => evaluation.tag)).toEqual(["melee", "melee", "melee", "melee", "melee", "combat", "combat"]);
+      expect(detail.report.evaluations.map((evaluation) => evaluation.matches.length)).toEqual([10, 10, 2, 2, 3, 3, 3]);
+      expect([detail.report.evaluations[0]!, ...detail.report.evaluations.slice(2, 5)].flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(detail.selectedRichScoreMapIds);
+      expect(detail.report.evaluations[1]!.matches.map((match) => match.setup.map.id)).toEqual(detail.report.evaluations[0]!.matches.map((match) => match.setup.map.id));
+      expect(detail.report.evaluations.slice(5).flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(["combatArena", "combatArena", "combatArena", "combatArena", "combatArena", "combatArena"]);
       await expect(readFile(path.join(benchmarkDashboardLogsDir({ rootDir }), `${second.id}.log`), "utf8")).resolves.toContain("cpu time:");
     } finally {
       await rm(rootDir, { recursive: true, force: true });
@@ -56,15 +57,15 @@ describe("benchmark dashboard store", () => {
     }
   });
 
-  it("normalizes older dashboard run files that do not have probe or combat summaries", async () => {
+  it("rejects dashboard run files that do not use the current summary contract", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
     try {
       const runsDir = benchmarkDashboardRunsDir({ rootDir });
       await mkdir(runsDir, { recursive: true });
       await writeFile(
-        path.join(runsDir, "old-run.json"),
+        path.join(runsDir, "bad-run.json"),
         JSON.stringify({
-          id: "old-run",
+          id: "bad-run",
           kind: "ai-version-benchmark",
           createdAt: "2026-01-01T00:00:00.000Z",
           seed: "old-seed",
@@ -81,8 +82,8 @@ describe("benchmark dashboard store", () => {
         }),
       );
 
-      await expect(listBenchmarkDashboardRuns({ rootDir })).resolves.toMatchObject([{ probeSummaries: [], combatSummaries: [] }]);
-      await expect(readBenchmarkDashboardRun("old-run", { rootDir })).resolves.toMatchObject({ probeSummaries: [], combatSummaries: [] });
+      await expect(listBenchmarkDashboardRuns({ rootDir })).rejects.toThrow(/current benchmark dashboard run/);
+      await expect(readBenchmarkDashboardRun("bad-run", { rootDir })).rejects.toThrow(/current benchmark dashboard run/);
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { issuePlayerCommand } from "../shared/sim";
-import { runBenchmark } from "./benchmark";
+import { runBenchmark, runBenchmarkParallel } from "./benchmark";
 import type { SdkGameCommandPlannerContext } from "./game-runner";
 import { sketchScene } from "./scene";
 
@@ -387,5 +387,53 @@ describe("SDK benchmark", () => {
     expect(match.result).toMatchObject({ winner: "v2", winnerTeam: "north", timeout: false });
     expect(match.result.players.v1!.finalSupply).toBe(0);
     expect(match.result.players.v1!.finalBuildingCount).toBe(1);
+  });
+
+  it("runs serializable benchmark matches in parallel workers while preserving report order", async () => {
+    const input = {
+      name: "sdk-parallel-benchmark",
+      evaluations: [
+        {
+          name: "first lane",
+          matches: [
+            {
+              name: "first match",
+              mapId: "bareDuel" as const,
+              agents: {
+                v2: { adapter: "external" as const, team: "north", race: "grove" as const, versionLabel: "v2" },
+                v1: { adapter: "external" as const, team: "south", race: "ember" as const, versionLabel: "v1" },
+              },
+              maxTicks: 0,
+              thinkInterval: 45,
+            },
+          ],
+        },
+        {
+          name: "second lane",
+          matches: [
+            {
+              name: "second match",
+              mapId: "openClaims" as const,
+              agents: {
+                v2: { adapter: "external" as const, team: "north", race: "grove" as const, versionLabel: "v2" },
+                v1: { adapter: "external" as const, team: "south", race: "ember" as const, versionLabel: "v1" },
+              },
+              maxTicks: 0,
+              thinkInterval: 45,
+            },
+          ],
+        },
+      ],
+    };
+
+    const report = await runBenchmarkParallel(input, { workers: 2, workerModule: new URL("./benchmark/core-worker.ts", import.meta.url).href });
+
+    expect(report).toMatchObject({
+      name: "sdk-parallel-benchmark",
+      evaluationCount: 2,
+      matchCount: 2,
+      evaluations: [{ name: "first lane", matches: [{ name: "first match" }] }, { name: "second lane", matches: [{ name: "second match" }] }],
+    });
+    expect(report.cpuMs).toBeGreaterThanOrEqual(report.evaluations.reduce((total, evaluation) => total + evaluation.cpuMs, 0));
   });
 });

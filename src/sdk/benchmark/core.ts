@@ -206,7 +206,7 @@ function runBenchmarkEvaluation<TAgent extends SdkGameAgent>(input: BenchmarkEva
   };
 }
 
-function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkMatchInput<TAgent>, trackers: BenchmarkTracker<TAgent>[]): BenchmarkMatchReport {
+export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkMatchInput<TAgent>, trackers: BenchmarkTracker<TAgent>[] = []): BenchmarkMatchReport {
   const started = performance.now();
   const cpuStarted = cpuUsageNow();
   let setup!: BenchmarkMatchSetup;

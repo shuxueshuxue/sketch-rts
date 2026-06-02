@@ -388,7 +388,7 @@ async page => {
     pointerLockStateAfterButton.locked ||
       pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click") ||
       pointerLockStateAfterButton.status?.includes("Pointer lock failed"),
-    "Pointer lock gate did not attempt immediate capture or expose a fallback: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
+    "Pointer lock gate did not attempt immediate capture or expose the field-click recovery path: " + JSON.stringify({ beforePointerLockClickState, pointerLockStateAfterButton }),
   );
   let pointerLockStateAfterFieldClick = null;
   if (!pointerLockStateAfterButton.locked && pointerLockStateAfterButton.status?.includes("Browser needs one battlefield click")) {
@@ -569,7 +569,7 @@ async page => {
       "real right-click attack on an enemy unit",
       "real minimap click-to-jump navigation",
       "real mouse edge scrolling",
-      "real Pointer Lock one-click UI flow with browser activation, fallback, or visible denial",
+    "real Pointer Lock one-click UI flow with browser activation, field-click recovery, or visible denial",
       "top-layer virtual pointer overlay above HUD",
       "browser mouse-default suppression on the battlefield canvas",
       "real right-button drag does not trigger browser back/close gestures",

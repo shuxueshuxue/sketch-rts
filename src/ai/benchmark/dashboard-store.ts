@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { MapId } from "../../shared/types";
 import type { AiVersionBenchmarkDashboardReport, AiVersionBenchmarkOptions, BenchmarkEvaluationSummary } from "./presets";
-import { runAiVersionBenchmark } from "./presets";
+import { runAiVersionBenchmark, runAiVersionBenchmarkParallel } from "./presets";
 
 export type BenchmarkDashboardRun = AiVersionBenchmarkDashboardReport & {
   id: string;
@@ -22,6 +22,7 @@ export type BenchmarkDashboardRunSummary = {
   mapPoolSize: number;
   selectedRichScoreMapIds: MapId[];
   scoreSummary: BenchmarkEvaluationSummary;
+  scoreControlSummary: BenchmarkEvaluationSummary;
   probeSummaries: BenchmarkEvaluationSummary[];
   combatSummaries: BenchmarkEvaluationSummary[];
   sanitySummary: BenchmarkEvaluationSummary;
@@ -42,7 +43,7 @@ export async function recordAiVersionBenchmarkDashboardRun(
   storeOptions: BenchmarkDashboardStoreOptions = {},
 ): Promise<BenchmarkDashboardRun> {
   const now = storeOptions.now?.() ?? new Date();
-  const report = runAiVersionBenchmark(options);
+  const report = options.workers && options.workers > 1 ? await runAiVersionBenchmarkParallel(options) : runAiVersionBenchmark(options);
   const run: BenchmarkDashboardRun = {
     ...report,
     id: runId(now, report.seed),
@@ -81,21 +82,20 @@ export async function listBenchmarkDashboardRuns(options: BenchmarkDashboardStor
   const runs = await Promise.all(
     files
       .filter((file) => file.endsWith(".json"))
-      .map(async (file) => summarizeBenchmarkDashboardRun(normalizeBenchmarkDashboardRun(JSON.parse(await readFile(path.join(dir, file), "utf8")) as BenchmarkDashboardRun))),
+      .map(async (file) => summarizeBenchmarkDashboardRun(assertCurrentBenchmarkDashboardRun(JSON.parse(await readFile(path.join(dir, file), "utf8")) as BenchmarkDashboardRun))),
   );
   return runs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function readBenchmarkDashboardRun(id: string, options: BenchmarkDashboardStoreOptions = {}): Promise<BenchmarkDashboardRun> {
-  return normalizeBenchmarkDashboardRun(JSON.parse(await readFile(path.join(benchmarkDashboardRunsDir(options), `${id}.json`), "utf8")) as BenchmarkDashboardRun);
+  return assertCurrentBenchmarkDashboardRun(JSON.parse(await readFile(path.join(benchmarkDashboardRunsDir(options), `${id}.json`), "utf8")) as BenchmarkDashboardRun);
 }
 
-function normalizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRun {
-  return {
-    ...run,
-    probeSummaries: Array.isArray(run.probeSummaries) ? run.probeSummaries : [],
-    combatSummaries: Array.isArray(run.combatSummaries) ? run.combatSummaries : [],
-  };
+function assertCurrentBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRun {
+  if (!run.scoreControlSummary || !Array.isArray(run.probeSummaries) || !Array.isArray(run.combatSummaries)) {
+    throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+  }
+  return run;
 }
 
 export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRunSummary {
@@ -108,6 +108,7 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     mapPoolSize: run.mapPoolSize,
     selectedRichScoreMapIds: run.selectedRichScoreMapIds,
     scoreSummary: run.scoreSummary,
+    scoreControlSummary: run.scoreControlSummary,
     probeSummaries: run.probeSummaries,
     combatSummaries: run.combatSummaries,
     sanitySummary: run.sanitySummary,
@@ -136,6 +137,7 @@ function benchmarkDashboardRunLog(run: BenchmarkDashboardRun) {
     `createdAt: ${run.createdAt}`,
     `seed: ${run.seed}`,
     `score: ${run.scoreSummary.wins}/${run.scoreSummary.matchCount} (${Math.round(run.scoreSummary.successRate * 100)}%)`,
+    `score control: ${run.scoreControlSummary.wins}/${run.scoreControlSummary.matchCount} (${Math.round(run.scoreControlSummary.successRate * 100)}%)`,
     ...run.probeSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
     ...run.combatSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
     `sanity: ${run.sanitySummary.wins}/${run.sanitySummary.matchCount} (${Math.round(run.sanitySummary.successRate * 100)}%)`,

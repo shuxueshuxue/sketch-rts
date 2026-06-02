@@ -5,6 +5,7 @@ import { RICH_SCORE_MAP_IDS } from "../../shared/map";
 import type { ItemKind, MapId, PlayerId, RaceId, UnitKind } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkReport, BenchmarkMatchInput } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
+import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { SdkAgentAdapter } from "../../sdk/game-runner";
 
 export type GauntletMapSelection<TMapId extends string> = {
@@ -22,6 +23,7 @@ export type AiVersionBenchmarkOptions = {
   maxTicks?: number;
   thinkInterval?: number;
   adapter?: SdkAgentAdapter;
+  workers?: number;
 };
 
 export type AiVersionBenchmarkDashboardReport = {
@@ -29,6 +31,7 @@ export type AiVersionBenchmarkDashboardReport = {
   mapPoolSize: number;
   selectedRichScoreMapIds: MapId[];
   scoreSummary: BenchmarkEvaluationSummary;
+  scoreControlSummary: BenchmarkEvaluationSummary;
   probeSummaries: BenchmarkEvaluationSummary[];
   combatSummaries: BenchmarkEvaluationSummary[];
   sanitySummary: BenchmarkEvaluationSummary;
@@ -112,6 +115,11 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
         matches: allocatedMaps.score.map((mapId, index) => match(`${mapId} 1v2`, mapId, [V2, V1A, V1B], index)),
       },
       {
+        name: "1v1 score control",
+        tag: "melee",
+        matches: allocatedMaps.score.map((mapId, index) => match(`${mapId} 1v1 control`, mapId, [V2, V1A], index)),
+      },
+      {
         name: "1v3 probe",
         tag: "melee",
         matches: allocatedMaps.oneVThreeProbe.map((mapId, index) => match(`${mapId} 1v3`, mapId, [V2, V1A, V1B, V1C], index)),
@@ -159,17 +167,53 @@ export function allocateGauntletBenchmarkMaps<TMapId extends string>(mapIds: rea
 export function runAiVersionBenchmark(options: AiVersionBenchmarkOptions = {}): AiVersionBenchmarkDashboardReport {
   const { input, selection } = createAiVersionBenchmarkInput(options);
   const report = runBenchmark(input);
-  const [score, oneVThreeProbe, twoVThreeProbe, sanity, combat15v20, combat10v12] = report.evaluations;
-  if (!score || !oneVThreeProbe || !twoVThreeProbe || !sanity || !combat15v20 || !combat10v12) throw new Error("AI version benchmark preset must produce melee score, probe, sanity, and combat evaluations");
+  return aiVersionBenchmarkDashboardReport(selection.mapIds, selection.seed, report);
+}
+
+export async function runAiVersionBenchmarkParallel(options: AiVersionBenchmarkOptions = {}): Promise<AiVersionBenchmarkDashboardReport> {
+  const { input, selection } = createAiVersionBenchmarkInput(options);
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput(input), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  return aiVersionBenchmarkDashboardReport(selection.mapIds, selection.seed, report);
+}
+
+function aiVersionBenchmarkDashboardReport(selectedRichScoreMapIds: MapId[], seed: string, report: BenchmarkReport): AiVersionBenchmarkDashboardReport {
+  const [score, scoreControl, oneVThreeProbe, twoVThreeProbe, sanity, combat15v20, combat10v12] = report.evaluations;
+  if (!score || !scoreControl || !oneVThreeProbe || !twoVThreeProbe || !sanity || !combat15v20 || !combat10v12) throw new Error("AI version benchmark preset must produce paired melee score, probe, sanity, and combat evaluations");
   return {
-    seed: selection.seed,
+    seed,
     mapPoolSize: RICH_SCORE_MAP_IDS.length,
-    selectedRichScoreMapIds: selection.mapIds,
-    scoreSummary: summarizeEvaluation(score, "north"),
+    selectedRichScoreMapIds,
+    scoreSummary: summarizePairedScoreEvaluation(score, scoreControl),
+    scoreControlSummary: summarizeSanityEvaluation(scoreControl),
     probeSummaries: [summarizeEvaluation(oneVThreeProbe, "north"), summarizeEvaluation(twoVThreeProbe, "north")],
     combatSummaries: [summarizeCombatEvaluation(combat15v20), summarizeCombatEvaluation(combat10v12)],
     sanitySummary: summarizeSanityEvaluation(sanity),
     report,
+  };
+}
+
+function serializableAiBenchmarkInput(input: BenchmarkInput<AiGameAgent>): BenchmarkInput<AiGameAgent> {
+  return {
+    ...input,
+    evaluations: input.evaluations.map((evaluation) => ({
+      ...evaluation,
+      matches: evaluation.matches.map((match) => {
+        if (match.game) throw new Error(`AI benchmark parallel match ${match.name} cannot include a prebuilt game`);
+        const { commandPlanner: _commandPlanner, game: _game, ...serializableMatch } = match;
+        return {
+          ...serializableMatch,
+          agents: Object.fromEntries(
+            Object.entries(serializableMatch.agents).map(([owner, agent]) => {
+              const { scripts, ...rest } = agent;
+              return [owner, scripts ? { ...rest, scriptIds: scripts.map((script) => script.id) } : rest];
+            }),
+          ) as Record<PlayerId, AiGameAgent>,
+        };
+      }),
+    })),
   };
 }
 
@@ -184,6 +228,25 @@ function summarizeEvaluation(evaluation: BenchmarkEvaluationReport, expectedWinn
     failures: losses,
     successRate: evaluation.matches.length === 0 ? 0 : wins / evaluation.matches.length,
     matchCount: evaluation.matches.length,
+  };
+}
+
+export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluationReport, controlEvaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
+  const controlsByMapId = new Map(controlEvaluation.matches.map((match) => [match.setup.map.id, match]));
+  const wins = scoreEvaluation.matches.filter((match) => {
+    const control = controlsByMapId.get(match.setup.map.id);
+    if (!control) throw new Error(`Missing 1v1 score control for ${match.setup.map.id}`);
+    return match.result.winnerTeam === "north" && control.result.winnerTeam === "north" && v2KilledEnemy(control) && opponentWasNotOnlyNeutralKilled(control);
+  }).length;
+  const losses = scoreEvaluation.matches.length - wins;
+  return {
+    name: "paired 1v2 score",
+    ...(scoreEvaluation.tag ? { tag: scoreEvaluation.tag } : {}),
+    wins,
+    losses,
+    failures: losses,
+    successRate: scoreEvaluation.matches.length === 0 ? 0 : wins / scoreEvaluation.matches.length,
+    matchCount: scoreEvaluation.matches.length,
   };
 }
 
