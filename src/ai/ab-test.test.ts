@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runBehaviorAbTest } from "./ai-ab-test";
-import { sketchScene } from "./scene";
+import { runBehaviorAbTest } from "./ab-test";
+import { sketchScene } from "../sdk/scene";
 
 describe("SDK AI behavior A/B runner", () => {
   it("runs the same scene with a v2 behavior enabled and disabled, then reports telemetry and score delta", () => {
@@ -58,6 +58,7 @@ describe("SDK AI behavior A/B runner", () => {
   it("runs A/B cases from a save-backed replay frame without rebuilding the scene", () => {
     const scene = sketchScene("ab-save-backed-harass")
       .map("bareDuel")
+      .replaceDefaults()
       .player("raider", { team: "north", race: "grove" })
       .player("target", { team: "south", race: "ember" })
       .townHall("raider", 500, 500, { id: "raider-main" })

@@ -1,5 +1,5 @@
-import { createAiTelemetry, planPresetAiCommands, type AiBehaviorId, type AiScriptVersion, type AiTelemetry } from "./ai-policy";
-import type { BuiltScene } from "./scene";
+import { createAiTelemetry, planPresetAiCommands, type AiBehaviorId, type AiScriptVersion, type AiTelemetry } from "./policy";
+import type { BuiltScene } from "../sdk/scene";
 import { restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
 import { issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
 import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";

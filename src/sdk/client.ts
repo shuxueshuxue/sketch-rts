@@ -1,8 +1,6 @@
 import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
 import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, TrainableUnitKind } from "../shared/types";
-import { planPresetAiCommands } from "./ai-policy";
-import type { AiScriptVersion } from "./ai-policy";
 
 export type SketchRtsCatalog = {
   units: string[];
@@ -94,16 +92,6 @@ export type SceneRunResult = {
 export type GoldSaturationProbeOptions = {
   workerCounts: number[];
   ticks: number;
-};
-
-export type SdkAgentOptions = {
-  owner: PlayerId;
-  version?: AiScriptVersion;
-  teams?: Partial<Record<PlayerId, string>>;
-};
-
-export type SdkAgentStep = FastForwardResult & {
-  commands: GameCommand[];
 };
 
 export class SketchRtsSdk {
@@ -282,17 +270,6 @@ export class SketchRtsSdk {
     }
 
     throw new Error(`Tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
-  }
-
-  async stepPresetAgent(options: SdkAgentOptions, ticks: number): Promise<SdkAgentStep> {
-    const snapshot = await this.snapshot();
-    const policyOptions: { version?: AiScriptVersion; teams?: Partial<Record<PlayerId, string>> } = {};
-    if (options.version !== undefined) policyOptions.version = options.version;
-    if (options.teams !== undefined) policyOptions.teams = options.teams;
-    const commands = planPresetAiCommands(snapshot, options.owner, policyOptions);
-    for (const command of commands) await this.command(command);
-    const tick = await this.fastForward(ticks);
-    return { ...tick, commands };
   }
 
   async runScene(options: SceneRunOptions): Promise<SceneRunResult> {

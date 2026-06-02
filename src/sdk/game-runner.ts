@@ -1,26 +1,37 @@
-import { planPresetAiCommandEntries } from "../shared/ai-policy";
+import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
 import { summarizeMatchState, summarizeTimelineSample, type MatchStateSummary, type MatchTimelineSample } from "./match-report";
-import { createAiRuntime, runPresetAiRuntime } from "../shared/ai-runtime";
-import { createGame, issuePlayerCommand, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
-import type { AiScriptVersion, GameCommand, GameSnapshot, MapId, PlayerId, RaceId } from "../shared/types";
+import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
+import type { GameCommand, GameSnapshot, MapId, PlayerId, RaceId } from "../shared/types";
 
 export type SdkAgentAdapter = "internal" | "external";
 
 export type SdkGameAgent = {
   adapter: SdkAgentAdapter;
   team: string;
-  version: AiScriptVersion;
   race?: RaceId;
+  versionLabel?: string;
 };
 
-export type SdkGameRunInput = {
+export type SdkGameCommandPlannerContext<TAgent extends SdkGameAgent = SdkGameAgent> = {
+  game: Game;
+  snapshot: GameSnapshot;
+  owner: PlayerId;
+  agent: TAgent;
+  source: SdkCommandTraceEntry["source"];
+  teams: Record<PlayerId, string>;
+};
+
+export type SdkGameCommandPlanner<TAgent extends SdkGameAgent = SdkGameAgent> = (context: SdkGameCommandPlannerContext<TAgent>) => CommandFrameEntry<SdkCommandTraceEntry["source"]>[];
+
+export type SdkGameRunInput<TAgent extends SdkGameAgent = SdkGameAgent> = {
   name: string;
   mapId?: MapId;
   game?: Game;
-  agents: Record<PlayerId, SdkGameAgent>;
+  agents: Record<PlayerId, TAgent>;
   options?: CreateGameOptions;
   maxTicks: number;
   thinkInterval: number;
+  commandPlanner?: SdkGameCommandPlanner<TAgent>;
   sampleInterval?: number;
   trace?: SdkGameRunTraceOptions;
 };
@@ -55,6 +66,7 @@ export type SdkGameRunReport = {
   unitsKilled: GameSnapshot["match"]["stats"]["unitsKilled"];
   unitsLost: GameSnapshot["match"]["stats"]["unitsLost"];
   neutralUnitsKilled: GameSnapshot["match"]["stats"]["neutralUnitsKilled"];
+  unitsKilledByNeutral: GameSnapshot["match"]["stats"]["unitsKilledByNeutral"];
   mercenaryKills: GameSnapshot["match"]["stats"]["mercenaryKills"];
   nonBaseBuildingsDestroyed: GameSnapshot["match"]["stats"]["nonBaseBuildingsDestroyed"];
   economy: Record<PlayerId, SdkPlayerEconomyReport>;
@@ -78,7 +90,95 @@ export type SdkPlayerEconomyTimingReport = {
   maxMiningBases: number;
 };
 
-export function runGame(input: SdkGameRunInput): SdkGameRunReport {
+export type SdkGameLoopContext = {
+  game: Game;
+  players: PlayerId[];
+  teams: Record<PlayerId, string>;
+};
+
+export type SdkGameLoopCommandContext = SdkGameLoopContext & {
+  tick: number;
+  owner: PlayerId;
+  source: SdkCommandTraceEntry["source"];
+  scriptId: string;
+  command: GameCommand;
+  before: GameSnapshot;
+  after: GameSnapshot;
+};
+
+export type SdkGameLoopStepContext = SdkGameLoopContext & {
+  before: GameSnapshot;
+  after: GameSnapshot;
+};
+
+export type SdkGameLoopHooks = {
+  beforeLoop?: (context: SdkGameLoopContext) => void;
+  afterCommand?: (context: SdkGameLoopCommandContext) => void;
+  afterStep?: (context: SdkGameLoopStepContext) => void;
+};
+
+export type SdkGameLoopResult = SdkGameLoopContext & {
+  snapshot: GameSnapshot;
+  elapsedMs: number;
+  cpuMs: number;
+};
+
+export function runGame<TAgent extends SdkGameAgent = SdkGameAgent>(input: SdkGameRunInput<TAgent>): SdkGameRunReport {
+  const commandCounts: Partial<Record<GameCommand["type"], number>> = {};
+  let commandsByOwner: Record<PlayerId, number> = {};
+  const commandTrace: SdkCommandTraceEntry[] = [];
+  let timeline: MatchTimelineSample[] = [];
+  let economyTimings: Record<PlayerId, SdkPlayerEconomyTimingReport> = {};
+  const sampleInterval = input.sampleInterval ?? 1_200;
+
+  const loop = runGameLoop(input, {
+    beforeLoop({ game, players, teams }) {
+      commandsByOwner = Object.fromEntries(players.map((owner) => [owner, 0])) as Record<PlayerId, number>;
+      timeline = [summarizeTimelineSample(game, teams)];
+      economyTimings = initializeEconomyTimings(game, players);
+    },
+    afterCommand({ tick, owner, source, scriptId, command }) {
+      recordCommand(tick, owner, source, scriptId, command, commandCounts, commandsByOwner, commandTrace, input.trace?.commands === true);
+    },
+    afterStep({ game, players, teams }) {
+      updateEconomyTimings(economyTimings, game, players);
+      if (game.tick % sampleInterval === 0 || game.match.winner) timeline.push(summarizeTimelineSample(game, teams));
+    },
+  });
+
+  const { game, players, teams, snapshot } = loop;
+  const economy = summarizeRunEconomy(game, players);
+  return {
+    name: input.name,
+    mapId: input.mapId ?? game.map.id,
+    tick: game.tick,
+    timeout: !game.match.winner,
+    winner: game.match.winner,
+    winnerTeam: game.match.winner ? teams[game.match.winner] ?? game.match.winner : "timeout",
+    elapsedMs: loop.elapsedMs,
+    cpuMs: loop.cpuMs,
+    snapshot,
+    remaining: summarizeMatchState(game, teams),
+    timeline,
+    commandCounts,
+    commandsByOwner,
+    goldSpent: snapshot.match.stats.goldSpent,
+    unitsKilled: snapshot.match.stats.unitsKilled,
+    unitsLost: snapshot.match.stats.unitsLost,
+    neutralUnitsKilled: snapshot.match.stats.neutralUnitsKilled,
+    unitsKilledByNeutral: snapshot.match.stats.unitsKilledByNeutral,
+    mercenaryKills: snapshot.match.stats.mercenaryKills,
+    nonBaseBuildingsDestroyed: snapshot.match.stats.nonBaseBuildingsDestroyed,
+    economy,
+    economyTimings,
+    bases: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.bases])),
+    expansions: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.expansions])),
+    miningBases: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.miningBases])),
+    commands: commandTrace,
+  };
+}
+
+export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: SdkGameRunInput<TAgent>, hooks: SdkGameLoopHooks = {}): SdkGameLoopResult {
   const game =
     input.game ??
     createGame(requireMapId(input), {
@@ -91,57 +191,27 @@ export function runGame(input: SdkGameRunInput): SdkGameRunReport {
     });
   const players = playersOf(input);
   const teams = teamsOf(input);
-  const versions = versionsOf(input);
-  const internalPlayers = players.filter((owner) => input.agents[owner]?.adapter === "internal");
-  const runtime = createAiRuntime(internalPlayers, { versions });
-  const commandCounts: Partial<Record<GameCommand["type"], number>> = {};
-  const commandsByOwner = Object.fromEntries(players.map((owner) => [owner, 0])) as Record<PlayerId, number>;
-  const commandTrace: SdkCommandTraceEntry[] = [];
-  const timeline = [summarizeTimelineSample(game, teams)];
-  const economyTimings = initializeEconomyTimings(game, players);
-  const sampleInterval = input.sampleInterval ?? 1_200;
+  const loopContext = { game, players, teams };
   const started = performance.now();
   const cpuStarted = process.cpuUsage();
+  hooks.beforeLoop?.(loopContext);
 
   while (game.tick < input.maxTicks && !game.match.winner) {
     if (game.tick % input.thinkInterval === 0) {
-      issueInternalCommands(game, runtime, commandCounts, commandsByOwner, commandTrace, input.trace?.commands === true);
-      issueExternalCommands(game, input, commandCounts, commandsByOwner, commandTrace, input.trace?.commands === true);
+      issueDueAgentCommands(game, input, loopContext, hooks);
     }
+    const before = snapshotGame(game);
     stepGame(game);
-    updateEconomyTimings(economyTimings, game, players);
-    if (game.tick % sampleInterval === 0 || game.match.winner) timeline.push(summarizeTimelineSample(game, teams));
+    const after = snapshotGame(game);
+    hooks.afterStep?.({ ...loopContext, before, after });
   }
 
   const cpu = process.cpuUsage(cpuStarted);
-  const snapshot = snapshotGame(game);
-  const economy = summarizeRunEconomy(game, players);
   return {
-    name: input.name,
-    mapId: input.mapId ?? game.map.id,
-    tick: game.tick,
-    timeout: !game.match.winner,
-    winner: game.match.winner,
-    winnerTeam: game.match.winner ? teams[game.match.winner] ?? game.match.winner : "timeout",
+    ...loopContext,
+    snapshot: snapshotGame(game),
     elapsedMs: Number((performance.now() - started).toFixed(3)),
     cpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
-    snapshot,
-    remaining: summarizeMatchState(game, teams),
-    timeline,
-    commandCounts,
-    commandsByOwner,
-    goldSpent: snapshot.match.stats.goldSpent,
-    unitsKilled: snapshot.match.stats.unitsKilled,
-    unitsLost: snapshot.match.stats.unitsLost,
-    neutralUnitsKilled: snapshot.match.stats.neutralUnitsKilled,
-    mercenaryKills: snapshot.match.stats.mercenaryKills,
-    nonBaseBuildingsDestroyed: snapshot.match.stats.nonBaseBuildingsDestroyed,
-    economy,
-    economyTimings,
-    bases: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.bases])),
-    expansions: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.expansions])),
-    miningBases: Object.fromEntries(Object.entries(economy).map(([owner, summary]) => [owner, summary.miningBases])),
-    commands: commandTrace,
   };
 }
 
@@ -198,47 +268,44 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function issueInternalCommands(
+function issueDueAgentCommands<TAgent extends SdkGameAgent>(
   game: Game,
-  runtime: ReturnType<typeof createAiRuntime>,
-  commandCounts: Partial<Record<GameCommand["type"], number>>,
-  commandsByOwner: Record<PlayerId, number>,
-  commandTrace: SdkCommandTraceEntry[],
-  shouldTraceCommands: boolean,
+  input: SdkGameRunInput<TAgent>,
+  loopContext: SdkGameLoopContext,
+  hooks: SdkGameLoopHooks,
 ) {
-  const result = runPresetAiRuntime(game, runtime);
-  for (const entry of result.commands) recordCommand(game.tick, entry.playerId, "internal-ai", entry.scriptId, entry.command, commandCounts, commandsByOwner, commandTrace, shouldTraceCommands);
-}
-
-function issueExternalCommands(
-  game: Game,
-  input: SdkGameRunInput,
-  commandCounts: Partial<Record<GameCommand["type"], number>>,
-  commandsByOwner: Record<PlayerId, number>,
-  commandTrace: SdkCommandTraceEntry[],
-  shouldTraceCommands: boolean,
-) {
+  if (!input.commandPlanner) return;
   const snapshot = snapshotGame(game);
-  const hiredCampIds = new Set<string>();
-  const pickedItemIds = new Set<string>();
-  const teams = teamsOf(input);
-  for (const owner of playersOf(input)) {
+  const planned = playersOf(input).flatMap((owner) => {
     const agent = input.agents[owner];
-    if (!agent || agent.adapter !== "external") continue;
-    for (const entry of planPresetAiCommandEntries(snapshot, owner, { teams, version: agent.version })) {
-      const command = entry.command;
-      if (command.type === "hire") {
-        if (hiredCampIds.has(command.campId)) continue;
-        hiredCampIds.add(command.campId);
-      }
-      if (command.type === "pickupItem") {
-        if (pickedItemIds.has(command.itemId)) continue;
-        pickedItemIds.add(command.itemId);
-      }
-      issuePlayerCommand(game, owner, command);
-      recordCommand(game.tick, owner, "external-agent", entry.scriptId, command, commandCounts, commandsByOwner, commandTrace, shouldTraceCommands);
-    }
-  }
+    if (!agent) return [];
+    return input.commandPlanner!({
+      game,
+      snapshot,
+      owner,
+      agent,
+      source: agent.adapter === "internal" ? "internal-ai" : "external-agent",
+      teams: loopContext.teams,
+    });
+  });
+  let beforeCommand = snapshotGame(game);
+  issueCommandFrame(game, planned, {
+    beforeIssue() {
+      beforeCommand = snapshotGame(game);
+    },
+    afterIssue(entry) {
+      hooks.afterCommand?.({
+        ...loopContext,
+        tick: game.tick,
+        owner: entry.playerId,
+        source: entry.source ?? "external-agent",
+        scriptId: entry.scriptId,
+        command: entry.command,
+        before: beforeCommand,
+        after: snapshotGame(game),
+      });
+    },
+  });
 }
 
 function recordCommand(
@@ -257,23 +324,19 @@ function recordCommand(
   if (shouldTraceCommands) commandTrace.push({ tick, owner, source, scriptId, command });
 }
 
-function playersOf(input: SdkGameRunInput): PlayerId[] {
+function playersOf<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): PlayerId[] {
   return Object.keys(input.agents);
 }
 
-function teamsOf(input: SdkGameRunInput): Record<PlayerId, string> {
+function teamsOf<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): Record<PlayerId, string> {
   return Object.fromEntries(Object.entries(input.agents).map(([owner, agent]) => [owner, agent.team])) as Record<PlayerId, string>;
 }
 
-function racesOf(input: SdkGameRunInput): Record<PlayerId, RaceId> {
-  return Object.fromEntries(Object.entries(input.agents).filter((entry): entry is [PlayerId, SdkGameAgent & { race: RaceId }] => entry[1].race !== undefined).map(([owner, agent]) => [owner, agent.race])) as Record<PlayerId, RaceId>;
+function racesOf<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): Record<PlayerId, RaceId> {
+  return Object.fromEntries(Object.entries(input.agents).flatMap(([owner, agent]) => (agent.race === undefined ? [] : [[owner, agent.race]]))) as Record<PlayerId, RaceId>;
 }
 
-function versionsOf(input: SdkGameRunInput): Record<PlayerId, AiScriptVersion> {
-  return Object.fromEntries(Object.entries(input.agents).map(([owner, agent]) => [owner, agent.version])) as Record<PlayerId, AiScriptVersion>;
-}
-
-function requireMapId(input: SdkGameRunInput): MapId {
+function requireMapId<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): MapId {
   if (!input.mapId) throw new Error("runGame requires mapId when no game is supplied");
   return input.mapId;
 }

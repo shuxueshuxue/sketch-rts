@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { runGame } from "../game-runner";
-import { seconds } from "../../shared/time";
+import { runAiGame } from "../../game-runner";
+import { seconds } from "../../../shared/time";
 
 describe("SDK barren-map robustness checks", () => {
   it("runs no-expansion 1v2 pressure through the SDK without treating it as a v2 strength gate", () => {
-    const report = runGame({
+    const report = runAiGame({
       name: "bareDuel robustness smoke",
       mapId: "bareDuel",
       agents: {

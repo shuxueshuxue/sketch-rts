@@ -1,4 +1,4 @@
-import { createAiRuntime, runPresetAiRuntime } from "../src/shared/ai-runtime";
+import { createAiRuntime, runPresetAiRuntime } from "../src/ai/runtime";
 import { createGame, stepGame, type CreateGameOptions, type Game } from "../src/shared/sim";
 import type { MapId, PlayerId, RaceId } from "../src/shared/types";
 

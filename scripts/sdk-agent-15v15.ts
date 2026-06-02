@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { planPresetAiCommands } from "../src/sdk/ai-policy";
+import { planPresetAiCommands } from "../src/ai/policy";
 import { SketchRtsSdk } from "../src/sdk/client";
 import type { GameSnapshot, PlayerId, RoomState } from "../src/shared/types";
 
