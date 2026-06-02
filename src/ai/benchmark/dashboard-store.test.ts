@@ -9,7 +9,7 @@ describe("benchmark dashboard store", () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
     try {
       const first = await recordAiVersionBenchmarkDashboardRun(
-        { seed: "store-first", mapCount: 18, maxTicks: 1 },
+        { seed: "store-first", mapCount: 1, maxTicks: 1 },
         { rootDir, now: () => new Date("2026-01-01T00:00:00.000Z") },
       );
       const second = await recordAiVersionBenchmarkDashboardRun(

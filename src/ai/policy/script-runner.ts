@@ -14,8 +14,10 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const commands: AiCommandEntry[] = [];
   const movedUnitIds = new Set<string>();
+  const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
-  for (const script of scripts.filter((candidate) => candidate.phase === "economy")) {
+  // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
+  for (const script of economyScripts) {
     const scriptCommands = asCommands(script.run(snapshot, owner, policyOptions));
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory);

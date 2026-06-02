@@ -116,6 +116,19 @@ describe("AI benchmark presets", () => {
     }
   });
 
+  it("runs combat presets through shared tactics without economy commands", () => {
+    const preset = createAiVersionBenchmarkInput({ seed: "combat-policy-mode", mapCount: 18 });
+    const match = preset.input.evaluations.find((evaluation) => evaluation.name === "15v20 mixed combat")?.matches[0];
+    if (!match) throw new Error("Missing 15v20 combat match");
+
+    const report = runAiGame({ ...match, maxTicks: 900, thinkInterval: 45, trace: { commands: true } });
+    const economyCommands = report.commands.filter((entry) => ["mine", "build", "train", "research", "hire", "repair"].includes(entry.command.type));
+
+    expect(economyCommands).toEqual([]);
+    expect(report.commands.some((entry) => entry.owner === "v2" && entry.scriptId === "attackWave" && entry.command.type === "attackMove")).toBe(true);
+    expect(report.commands.some((entry) => entry.owner === "v1a" && entry.scriptId === "attackWave" && entry.command.type === "attackMove")).toBe(true);
+  });
+
   it("allocates score and probe maps from one eighteen-map random sample", () => {
     const preset = createAiVersionBenchmarkInput({ seed: "api-dashboard-smoke", mapCount: 18 });
 
