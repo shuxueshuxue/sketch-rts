@@ -6,3 +6,4 @@ coverage/
 .superpowers/
 .worktrees/
 .playwright-cli/
+.benchmark-dashboard/

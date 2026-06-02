@@ -1,6 +1,6 @@
 import { createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, leaveUserSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type GrandStressRoomOptions, type SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
-import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../shared/ai-runtime";
+import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
 import { createDebugReplayTrace, extractReplayFrameSave, recordReplayBatch, recordReplayCheckpoint, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../shared/types";

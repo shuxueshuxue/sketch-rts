@@ -1,13 +1,16 @@
-import express from "express";
+import express, { type Response } from "express";
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
+import { watch } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
-import { createAiRuntime, runPresetAiRuntime } from "../shared/ai-runtime";
+import { createAiRuntime, runPresetAiRuntime } from "../ai/runtime";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
+import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { createGame, issueCommand, snapshotGame, stepGame } from "../shared/sim";
 import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
@@ -22,12 +25,19 @@ const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
-const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook"] satisfies ItemKind[];
+const benchmarkDashboardClients = new Set<Response>();
+const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 let game = createGame();
 let gameAiRuntime = createAiRuntime(["enemy"]);
 const roomHost = createRoomHost();
 
 app.use(express.json({ limit: "64kb" }));
+
+app.get("/favicon.ico", (_request, response) => {
+  response
+    .type("image/svg+xml")
+    .send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#f5f6f7"/><path d="M6 22h20M8 17h16M10 12h12" stroke="#202429" stroke-width="3" stroke-linecap="round"/><path d="M8 25 24 7" stroke="#0969da" stroke-width="3" stroke-linecap="round"/></svg>');
+});
 
 server.on("upgrade", (request, socket, head) => {
   if (request.url !== "/ws") {
@@ -58,6 +68,46 @@ app.get("/api/catalog", (_request, response) => {
     races: Object.values(RACE_DEFS),
     maps: MAP_SCENARIOS,
   });
+});
+
+app.get("/api/benchmark-dashboard/runs", async (_request, response) => {
+  try {
+    response.json({ runs: await listBenchmarkDashboardRuns() });
+  } catch (error) {
+    response.status(500).json({ error: errorMessage(error) });
+  }
+});
+
+app.get("/api/benchmark-dashboard/events", (request, response) => {
+  response.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+  });
+  response.write(`event: benchmark-dashboard-ready\ndata: ${JSON.stringify({ type: "ready" })}\n\n`);
+  benchmarkDashboardClients.add(response);
+  request.on("close", () => {
+    benchmarkDashboardClients.delete(response);
+  });
+});
+
+app.get("/api/benchmark-dashboard/runs/:runId", async (request, response) => {
+  try {
+    response.json(await readBenchmarkDashboardRun(request.params.runId));
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+  }
+});
+
+app.post("/api/benchmark-dashboard/runs", async (request, response) => {
+  const body = request.body as Record<string, unknown>;
+  const seed = typeof body.seed === "string" && body.seed.length > 0 ? body.seed : new Date().toISOString();
+  const mapCount = Number.isInteger(body.mapCount) && Number(body.mapCount) > 0 ? Number(body.mapCount) : 10;
+  try {
+    response.json(await recordAiVersionBenchmarkDashboardRun({ seed, mapCount }));
+  } catch (error) {
+    response.status(500).json({ error: errorMessage(error) });
+  }
 });
 
 app.get("/api/snapshot", (_request, response) => {
@@ -506,6 +556,8 @@ if (process.env.NODE_ENV === "production") {
   app.use(vite.middlewares);
 }
 
+await watchBenchmarkDashboardRuns();
+
 server.listen(port, host, () => {
   console.log(`Sketch RTS listening on ${publicListenUrl(host, port)}`);
 });
@@ -519,6 +571,20 @@ function broadcastSnapshot() {
   for (const client of wss.clients) {
     if (client.readyState === client.OPEN) client.send(frame);
   }
+}
+
+async function watchBenchmarkDashboardRuns() {
+  const dir = benchmarkDashboardRunsDir();
+  await mkdir(dir, { recursive: true });
+  watch(dir, { persistent: false }, (eventType, filename) => {
+    if (!filename || !filename.endsWith(".json")) return;
+    broadcastBenchmarkDashboardChange({ eventType, filename });
+  });
+}
+
+function broadcastBenchmarkDashboardChange(payload: { eventType: string; filename: string }) {
+  const frame = `event: benchmark-dashboard-change\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of benchmarkDashboardClients) client.write(frame);
 }
 
 function runSessionCommand(command: GameCommand) {
