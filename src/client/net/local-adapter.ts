@@ -17,7 +17,7 @@ export type LocalGameAdapterOptions = {
 export class LocalGameAdapter implements GameAdapter {
   private sequence = 0;
   private lastUpdate: number;
-  private room?: RoomState;
+  private room: RoomState | undefined;
 
   constructor(
     private readonly game: Game,

@@ -9,8 +9,10 @@ import {
   type ControlGroupRecallTap,
   type ControlGroups,
 } from "./control-groups";
+import { deploymentModeFromEnv } from "./deployment/mode";
+import { createDeploymentRuntime } from "./deployment/runtime";
 import { edgeScrollDelta } from "./edge-scroll";
-import { SessionSocketGameAdapter, type GameAdapter } from "./game-adapter";
+import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
@@ -37,15 +39,10 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { LockstepClient } from "./net/lockstep-client";
-import { LockstepRoomGameAdapter } from "./net/room-adapter";
-import { WebSocketTransport } from "./net/websocket-transport";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
-import { createGame } from "../shared/sim";
-import { SimulationEngine } from "../shared/sim/engine";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
-import { canStartRoom } from "../shared/rooms";
+import { canStartRoom, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -133,7 +130,6 @@ const ctx = requireCanvasContext(canvas);
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
-let roomLockstepClient: LockstepClient | undefined;
 let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let spectatingRoom = false;
@@ -163,9 +159,29 @@ let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
-const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/session`);
-const sessionGameAdapter = new SessionSocketGameAdapter(socket, () => snapshot);
-activeGameAdapter = sessionGameAdapter;
+const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
+  sessionSnapshot: () => snapshot,
+  onSessionOpen() {
+    menuStatus.textContent = "Server online.";
+    statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
+    renderMainMenu();
+  },
+  onSessionSnapshot(nextSnapshot) {
+    if (currentRoomId) return;
+    snapshot = nextSnapshot;
+    pruneSelection();
+    updateHud();
+  },
+  onSessionError(message) {
+    statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+  },
+  onSessionClose() {
+    menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+    statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+  },
+});
+const baseGameAdapter = deploymentRuntime.initialAdapter();
+activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
   createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
     title: "Attack Move",
@@ -201,29 +217,6 @@ const commandButtons: CommandButton[] = [
     hotkey: HIRE_COMMAND.hotkey.toUpperCase(),
   })),
 ];
-
-socket.addEventListener("open", () => {
-  menuStatus.textContent = "Server online.";
-  statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
-  renderMainMenu();
-});
-
-socket.addEventListener("message", (event) => {
-  const message = JSON.parse(event.data as string) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
-  if (message.type === "error") {
-    statusLabel.innerHTML = `<span class="error">${escapeHtml(message.message)}</span>`;
-    return;
-  }
-  if (currentRoomId) return;
-  snapshot = message.snapshot;
-  pruneSelection();
-  updateHud();
-});
-
-socket.addEventListener("close", () => {
-  menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
-  statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
-});
 
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("keydown", onKeyDown);
@@ -504,7 +497,7 @@ function renderProfileMenu() {
 
 async function renderRoomBrowser() {
   menuStatus.textContent = "Rooms hosted by this server.";
-  const rooms = await requestJson<{ rooms: RoomState[] }>(`/api/rooms?userId=${encodeURIComponent(localUser.id)}`);
+  const rooms = await deploymentRuntime.listRooms(localUser.id);
   const browser = document.createElement("div");
   browser.className = "room-browser";
   browser.dataset.roomBrowser = "true";
@@ -524,7 +517,7 @@ async function renderRoomBrowser() {
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
-  const visibleRooms = roomBrowserEntries(rooms.rooms, localUser.id);
+  const visibleRooms = roomBrowserEntries(rooms, localUser.id);
   list.replaceChildren(
     ...(visibleRooms.length > 0
       ? visibleRooms.map((entry) =>
@@ -657,7 +650,7 @@ async function createLocalRoom() {
 }
 
 async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
-  currentRoom = await requestJson<RoomState>("/api/rooms", {
+  currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
     host: localUser,
     ...input,
@@ -670,7 +663,7 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
 async function selectRoomMap(mapId: MapId) {
   selectedMapId = mapId;
   pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
-  if (currentRoom) currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/map`, { mapId });
+  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId);
   renderMainMenu();
 }
 
@@ -680,10 +673,11 @@ async function startCurrentRoom() {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
   }
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
-  currentRoomId = currentRoom.id;
-  localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
-  connectRoomLockstep(currentRoom.id, currentRoom.mapId, localPlayerId);
+  const started = await deploymentRuntime.startRoom(currentRoom.id, localUser, handleRuntimeRoomUpdate);
+  currentRoom = started.room;
+  currentRoomId = started.room.id;
+  localPlayerId = started.playerId;
+  activateStartedMatch(started.adapter, started.snapshot);
   syncDebugView();
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
@@ -769,14 +763,14 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
 
 async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unknown>) {
   if (!currentRoom) return;
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slots/${slotId}`, patch);
+  currentRoom = await deploymentRuntime.updateRoomSlot(currentRoom.id, slotId, patch as SlotPatch);
   renderMainMenu();
 }
 
 async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
   if (!currentRoom) return;
   if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slot-counts`, { humanCount, aiCount });
+  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, humanCount, aiCount);
   renderMainMenu();
 }
 
@@ -815,8 +809,8 @@ function canRemoveLastRoomSlot(room: RoomState) {
 
 async function closeCurrentRoom() {
   if (!currentRoom) return;
-  await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/close`, { userId: localUser.id });
-  disconnectRoomLockstep();
+  await deploymentRuntime.closeRoom(currentRoom.id, localUser.id);
+  disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
   syncDebugView();
@@ -871,7 +865,7 @@ function slotForUser(room: RoomState, userId: string) {
 }
 
 function returnHome() {
-  disconnectRoomLockstep();
+  disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
   spectatingRoom = false;
@@ -887,19 +881,19 @@ function returnHome() {
 
 async function enterRoom(roomId: string) {
   try {
-    const existingRoom = await requestJson<RoomState>(`/api/rooms/${roomId}`);
-    const room = existingRoom.status === "inMatch" && !slotForUser(existingRoom, localUser.id) ? existingRoom : await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
+    const entered = await deploymentRuntime.enterRoom(roomId, localUser);
+    const room = entered.room;
     currentRoom = room;
-    const ownedSlot = slotForUser(room, localUser.id);
-    spectatingRoom = room.status === "inMatch" && !ownedSlot;
-    localPlayerId = ownedSlot?.playerId ?? (spectatingRoom ? `spectator-${localUser.id}` : localPlayerId);
+    spectatingRoom = entered.spectating;
+    localPlayerId = entered.playerId;
     if (room.status === "ended" && room.result) {
       openResults(room);
       return;
     }
     if (room.status === "inMatch") {
       currentRoomId = room.id;
-      connectRoomLockstep(room.id, room.mapId, localPlayerId);
+      const started = deploymentRuntime.connectRoom(room, localPlayerId, spectatingRoom, handleRuntimeRoomUpdate);
+      activateStartedMatch(started.adapter, started.snapshot);
       syncDebugView();
       menuOpen = false;
       shell.classList.remove("menu-open");
@@ -915,32 +909,22 @@ async function enterRoom(roomId: string) {
   }
 }
 
-function connectRoomLockstep(roomId: string, mapId: MapId, playerId: PlayerId) {
-  disconnectRoomLockstep();
-  const players = currentRoom?.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").map((slot) => slot.playerId);
-  const game = createGame(mapId, players ? { players } : {});
-  const transport = WebSocketTransport.connect(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/rooms/${encodeURIComponent(roomId)}`);
-  roomLockstepClient = new LockstepClient({ roomId, playerId, engine: new SimulationEngine(game), transport });
-  activeGameAdapter = new LockstepRoomGameAdapter(roomLockstepClient, { spectating: spectatingRoom });
-  transport.onMessage((message) => {
-    if (message.type === "room") {
-      currentRoom = message.room;
-      if (message.room.status === "ended" && message.room.result) openResults(message.room);
-    }
-  });
-  transport.onOpen(() => {
-    roomLockstepClient?.join();
-    roomLockstepClient?.requestCheckpoint();
-  });
-  snapshot = activeGameAdapter.currentSnapshot();
+function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot) {
+  disconnectActiveMatch();
+  activeGameAdapter = adapter;
+  snapshot = nextSnapshot;
   pruneSelection();
   updateHud();
 }
 
-function disconnectRoomLockstep() {
-  if (activeGameAdapter !== sessionGameAdapter) activeGameAdapter.close();
-  activeGameAdapter = sessionGameAdapter;
-  roomLockstepClient = undefined;
+function disconnectActiveMatch() {
+  if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
+  activeGameAdapter = baseGameAdapter;
+}
+
+function handleRuntimeRoomUpdate(room: RoomState) {
+  currentRoom = room;
+  if (room.status === "ended" && room.result) openResults(room);
 }
 
 function syncActiveGameAdapterSnapshot() {
@@ -956,7 +940,7 @@ function syncActiveGameAdapterSnapshot() {
 }
 
 function openResults(room: RoomState) {
-  disconnectRoomLockstep();
+  disconnectActiveMatch();
   releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
@@ -980,20 +964,6 @@ function releasePointerLockForMenu() {
   pointerLockArmed = false;
   pointerLockFieldClickOnError = false;
   virtualMouse = undefined;
-}
-
-async function requestJson<T>(path: string, body?: unknown): Promise<T> {
-  const init: RequestInit =
-    body === undefined
-      ? { method: "GET" }
-      : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        };
-  const response = await fetch(path, init);
-  if (!response.ok) throw new Error(await response.text());
-  return response.json() as Promise<T>;
 }
 
 function frame() {

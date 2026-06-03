@@ -3,7 +3,7 @@ import { createRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, room
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
-import { LocalGameAdapter } from "../net/local-adapter";
+import { LocalGameAdapter, type LocalGameAdapterOptions } from "../net/local-adapter";
 import type { DeploymentRuntime, StartedMatch } from "./runtime";
 
 export type StaticSoloDeploymentRuntimeOptions = {
@@ -66,35 +66,37 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return { ...room, status: "closed" };
   }
 
-  async startRoom(roomId: string, user: LocalUserProfile): Promise<StartedMatch> {
+  async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
     const room = this.replaceRoom({ ...this.requireRoom(roomId), status: "inMatch" });
     const setup = roomToGameSetup({ ...room, status: "open" });
     const slot = setup.playerSlots.find((candidate) => candidate.userId === user.id);
     const playerId = slot?.playerId ?? "player";
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
-    const adapter = new LocalGameAdapter(game, playerId, {
+    const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
       aiRuntime,
       room,
-      tickMs: this.options.tickMs,
-      now: this.options.now,
-      onRoomEnded: (ended) => this.replaceRoom(ended),
-    });
+      onRoomEnded: (ended) => {
+        this.replaceRoom(ended);
+        onRoom(ended);
+      },
+    }));
     return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
-  connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, _onRoom: (room: RoomState) => void): StartedMatch {
+  connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
     if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
     const setup = roomToGameSetup({ ...room, status: "open" });
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
-    const adapter = new LocalGameAdapter(game, playerId, {
+    const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
       aiRuntime,
       room,
-      tickMs: this.options.tickMs,
-      now: this.options.now,
-      onRoomEnded: (ended) => this.replaceRoom(ended),
-    });
+      onRoomEnded: (ended) => {
+        this.replaceRoom(ended);
+        onRoom(ended);
+      },
+    }));
     return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
@@ -109,5 +111,13 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   private replaceRoom(room: RoomState): RoomState {
     this.rooms.set(room.id, room);
     return room;
+  }
+
+  private localAdapterOptions(options: LocalGameAdapterOptions): LocalGameAdapterOptions {
+    return {
+      ...options,
+      ...(this.options.tickMs === undefined ? {} : { tickMs: this.options.tickMs }),
+      ...(this.options.now === undefined ? {} : { now: this.options.now }),
+    };
   }
 }

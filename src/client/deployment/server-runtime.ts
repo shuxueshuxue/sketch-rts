@@ -24,6 +24,10 @@ export type ServerDeploymentRuntimeOptions = {
   createSessionSocket?: () => ServerSessionSocket;
   createRoomTransport?: (roomId: string) => RoomTransport;
   sessionSnapshot?: () => GameSnapshot | undefined;
+  onSessionOpen?: () => void;
+  onSessionSnapshot?: (snapshot: GameSnapshot) => void;
+  onSessionError?: (message: string) => void;
+  onSessionClose?: () => void;
 };
 
 export class ServerDeploymentRuntime implements DeploymentRuntime {
@@ -31,6 +35,10 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
   private readonly createSessionSocket: () => ServerSessionSocket;
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
+  private readonly onSessionOpen: (() => void) | undefined;
+  private readonly onSessionSnapshot: ((snapshot: GameSnapshot) => void) | undefined;
+  private readonly onSessionError: ((message: string) => void) | undefined;
+  private readonly onSessionClose: (() => void) | undefined;
   private sessionSocket: ServerSessionSocket | undefined;
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
@@ -38,12 +46,26 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     this.createSessionSocket = options.createSessionSocket ?? createDefaultSessionSocket;
     this.createRoomTransport = options.createRoomTransport ?? createDefaultRoomTransport;
     this.sessionSnapshot = options.sessionSnapshot ?? (() => undefined);
+    this.onSessionOpen = options.onSessionOpen;
+    this.onSessionSnapshot = options.onSessionSnapshot;
+    this.onSessionError = options.onSessionError;
+    this.onSessionClose = options.onSessionClose;
   }
 
   private readonly sessionSnapshot: () => GameSnapshot | undefined;
 
   initialAdapter(): GameAdapter {
     this.sessionSocket = this.createSessionSocket();
+    this.sessionSocket.addEventListener?.("open", () => this.onSessionOpen?.());
+    this.sessionSocket.addEventListener?.("message", (event) => {
+      const message = JSON.parse(event.data) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
+      if (message.type === "error") {
+        this.onSessionError?.(message.message);
+        return;
+      }
+      this.onSessionSnapshot?.(message.snapshot);
+    });
+    this.sessionSocket.addEventListener?.("close", () => this.onSessionClose?.());
     return new SessionSocketGameAdapter(this.sessionSocket, this.sessionSnapshot);
   }
 
@@ -86,10 +108,10 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/close`, { userId });
   }
 
-  async startRoom(roomId: string, _user: LocalUserProfile): Promise<StartedMatch> {
+  async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
     const room = await this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/start`, {});
-    const playerId = room.slots.find((slot) => slot.controller === "human")?.playerId ?? "player";
-    return this.connectRoom(room, playerId, false, () => {});
+    const playerId = slotForUser(room, user.id)?.playerId ?? "player";
+    return this.connectRoom(room, playerId, false, onRoom);
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
