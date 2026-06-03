@@ -1,12 +1,22 @@
-import { createRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { createAiRuntime } from "../../ai/runtime";
+import { createRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
+import { LocalGameAdapter } from "../net/local-adapter";
 import type { DeploymentRuntime, StartedMatch } from "./runtime";
+
+export type StaticSoloDeploymentRuntimeOptions = {
+  now?: () => number;
+  tickMs?: number;
+};
 
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "static" as const;
   private readonly rooms = new Map<string, RoomState>();
   private readonly emptyAdapter = new EmptyGameAdapter();
+
+  constructor(private readonly options: StaticSoloDeploymentRuntimeOptions = {}) {}
 
   initialAdapter() {
     return this.emptyAdapter;
@@ -56,12 +66,36 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return { ...room, status: "closed" };
   }
 
-  async startRoom(_roomId: string, _user: LocalUserProfile): Promise<StartedMatch> {
-    throw new Error("No static match has been started.");
+  async startRoom(roomId: string, user: LocalUserProfile): Promise<StartedMatch> {
+    const room = this.replaceRoom({ ...this.requireRoom(roomId), status: "inMatch" });
+    const setup = roomToGameSetup({ ...room, status: "open" });
+    const slot = setup.playerSlots.find((candidate) => candidate.userId === user.id);
+    const playerId = slot?.playerId ?? "player";
+    const game = createGame(setup.mapId, setup.options);
+    const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
+    const adapter = new LocalGameAdapter(game, playerId, {
+      aiRuntime,
+      room,
+      tickMs: this.options.tickMs,
+      now: this.options.now,
+      onRoomEnded: (ended) => this.replaceRoom(ended),
+    });
+    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
-  connectRoom(_room: RoomState, _playerId: PlayerId, _spectating: boolean, _onRoom: (room: RoomState) => void): StartedMatch {
-    throw new Error("No static match has been started.");
+  connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, _onRoom: (room: RoomState) => void): StartedMatch {
+    if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
+    const setup = roomToGameSetup({ ...room, status: "open" });
+    const game = createGame(setup.mapId, setup.options);
+    const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
+    const adapter = new LocalGameAdapter(game, playerId, {
+      aiRuntime,
+      room,
+      tickMs: this.options.tickMs,
+      now: this.options.now,
+      onRoomEnded: (ended) => this.replaceRoom(ended),
+    });
+    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
   close(): void {}

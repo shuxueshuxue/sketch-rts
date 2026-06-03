@@ -27,4 +27,21 @@ describe("static solo deployment runtime", () => {
     expect(room.slots).toHaveLength(3);
     expect(room.slots[1]).toMatchObject({ controller: "ai", team: "south", ready: true });
   });
+
+  it("starts a local match and advances AI-driven ticks without backend transport", async () => {
+    let runtimeNow = 0;
+    const runtime = new StaticSoloDeploymentRuntime({ now: () => runtimeNow });
+    await runtime.createRoom({ id: "room-live", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+
+    const started = await runtime.startRoom("room-live", host);
+    const beforeTick = started.snapshot.tick;
+    runtimeNow += 1_000;
+    const changed = started.adapter.updateToRenderTime();
+    const after = started.adapter.currentSnapshot();
+
+    expect(started.room.status).toBe("inMatch");
+    expect(changed).toBe(true);
+    expect(after?.tick).toBeGreaterThan(beforeTick);
+    expect(after?.units.some((unit) => unit.owner === "enemy" && unit.order)).toBe(true);
+  });
 });

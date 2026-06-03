@@ -14,4 +14,15 @@ describe("local game adapter", () => {
     expect(adapter.currentSnapshot().tick).toBe(1);
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
+
+  it("advances render-time ticks even when no player command is sent", () => {
+    let now = 0;
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const adapter = new LocalGameAdapter(game, "player", { now: () => now, tickMs: 50 });
+
+    now = 160;
+
+    expect(adapter.updateToRenderTime()).toBe(true);
+    expect(adapter.currentSnapshot().tick).toBe(3);
+  });
 });
