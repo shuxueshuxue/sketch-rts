@@ -8,6 +8,22 @@ export type GameAdapter = {
   close(): void;
 };
 
+export class EmptyGameAdapter implements GameAdapter {
+  sendCommand(): void {
+    throw new Error("No active match.");
+  }
+
+  currentSnapshot(): undefined {
+    return undefined;
+  }
+
+  updateToRenderTime(): boolean {
+    return false;
+  }
+
+  close(): void {}
+}
+
 export type SessionCommandSocket = {
   OPEN: number;
   readyState: number;
