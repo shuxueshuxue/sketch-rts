@@ -90,7 +90,6 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
           race: RACES[owner],
           version: owner === V2 || owner === V2B ? "v2" : "v1",
           versionLabel: owner === V2 || owner === V2B ? "v2" : "v1",
-          ...((owner === V2 || owner === V2B) ? { policyVersion: "v1" as const } : {}),
           ...((owner === V2 || owner === V2B) && options.disableV2WorkerHarassment ? { disabledBehaviors: ["workerHarassment"] as const } : {}),
         },
       ]),

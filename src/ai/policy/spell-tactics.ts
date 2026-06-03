@@ -38,6 +38,10 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
 export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version !== "v2") return undefined;
   const fighters = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && unit.hp >= unit.maxHp * 0.36 && focusFireReadyUnit(snapshot, owner, unit, options));
+  if (fighters.length === 1) {
+    const target = soloFinisherTarget(fighters[0]!, enemyCombatUnits(snapshot, owner, options.teams));
+    return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: [fighters[0]!.id], targetId: target.id }, options) : undefined;
+  }
   if (fighters.length < 2) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
@@ -78,6 +82,18 @@ function focusFireAttackers(fighters: Unit[], target: Unit) {
 function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   const claim = activeUnitClaim(snapshot, owner, unit, options);
   return !claim || claim.kind === "attack";
+}
+
+function soloFinisherTarget(fighter: Unit, enemies: Unit[]) {
+  return enemies
+    .filter((enemy) => distance(fighter, enemy) <= fighter.attackRange)
+    .filter((enemy) => enemy.hp <= fighter.attackDamage)
+    .sort((a, b) => soloFinisherScore(b) - soloFinisherScore(a))[0];
+}
+
+function soloFinisherScore(unit: Unit) {
+  // @@@solo-finisher - A lone survivor may take a free last hit, but only without chasing into the enemy group.
+  return casterTargetBonus(unit) + (unit.maxHp - unit.hp) * 3 + unit.attackDamage * 4 + (unit.attackRange > 100 ? 35 : 0);
 }
 
 function focusFireCanPickOffWoundedTarget(attackers: Unit[], target: Unit) {

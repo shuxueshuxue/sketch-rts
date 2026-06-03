@@ -175,6 +175,27 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("lets one ranged survivor finish a killable target already in range", () => {
+    const game = sketchScene("spell-tactics-solo-finisher")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "archer", 660, 720, { id: "last-archer" })
+      .unit("v1", "summoner", 940, 760, { id: "killable-summoner", hp: 6 })
+      .unit("v1", "contractArcher", 900, 720, { id: "healthy-archer", hp: 95 })
+      .unit("v1", "priest", 910, 780, { id: "wounded-priest", hp: 40 })
+      .build()
+      .createGame();
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual({
+      type: "attack",
+      unitIds: ["last-archer"],
+      targetId: "killable-summoner",
+    });
+  });
+
   it("does not pin a tiny combat squad into focus fire while it is outnumbered", () => {
     const game = sketchScene("spell-tactics-combat-focus")
       .map("combatArena")

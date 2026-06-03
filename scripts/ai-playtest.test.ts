@@ -210,7 +210,7 @@ describe("AI playtest CLI", () => {
       { playerId: "v2", team: "south", controller: "human" },
     ]);
     expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
-    expect(persisted.runtime.versions).toMatchObject({ v2: "v1", v1a: "v1" });
+    expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
   });
 
   it("persists per-player disabled benchmark behaviors for exact assisted replay", () => {

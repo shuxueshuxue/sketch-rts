@@ -37,18 +37,20 @@ describe("AI benchmark presets", () => {
     expect(preset.input.evaluations.map((evaluation) => evaluation.tag)).toEqual(["melee", "melee", "melee", "melee", "combat", "combat"]);
     expect(preset.input.evaluations[0]!.matches).toHaveLength(12);
     expect(preset.input.evaluations[0]!.matches[0]!.agents).toMatchObject({
-      v2: { version: "v2", versionLabel: "v2", policyVersion: "v1", team: "north" },
+      v2: { version: "v2", versionLabel: "v2", team: "north" },
       v1a: { version: "v1", team: "south" },
       v1b: { version: "v1", team: "south" },
     });
+    expect(preset.input.evaluations[0]!.matches[0]!.agents.v2?.policyVersion).toBeUndefined();
     expect(preset.input.evaluations[0]!.matches[0]!.agents.v1c).toBeUndefined();
     expect(preset.input.evaluations[0]!.matches.filter((match) => match.agents.v2?.disabledBehaviors?.includes("workerHarassment")).length).toBe(6);
     expect(preset.input.evaluations[1]!.matches).toHaveLength(24);
     expect(preset.input.evaluations[1]!.matches.map((match) => match.mapId)).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
     expect(preset.input.evaluations[1]!.matches[0]!.agents).toMatchObject({
-      v2: { version: "v2", versionLabel: "v2", policyVersion: "v1", team: "north" },
+      v2: { version: "v2", versionLabel: "v2", team: "north" },
       v1a: { version: "v1", team: "south" },
     });
+    expect(preset.input.evaluations[1]!.matches[0]!.agents.v2?.policyVersion).toBeUndefined();
     expect(preset.input.evaluations[1]!.matches[1]!.agents).toMatchObject({
       v2: { version: "v2", team: "south" },
       v1a: { version: "v1", team: "north" },
