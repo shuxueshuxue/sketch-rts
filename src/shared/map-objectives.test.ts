@@ -152,6 +152,7 @@ describe("map neutral objective layout", () => {
   it("keeps side-biased rich maps out of the score pool", () => {
     expect(RICH_SCORE_MAPS).not.toContain("stagHollow");
     expect(RICH_SCORE_MAPS).not.toContain("willowCircuit");
+    expect(RICH_SCORE_MAPS).not.toContain("quarrySong");
   });
 });
 

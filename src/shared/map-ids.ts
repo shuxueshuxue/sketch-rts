@@ -1,5 +1,5 @@
 export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena"] as const;
-export const NON_SCORE_RICH_MAP_IDS = ["stagHollow", "willowCircuit"] as const;
+export const NON_SCORE_RICH_MAP_IDS = ["stagHollow", "willowCircuit", "quarrySong"] as const;
 
 export const AUTHORED_RICH_SCORE_MAP_IDS = [
   "wildMarches",
@@ -16,7 +16,6 @@ export const AUTHORED_RICH_SCORE_MAP_IDS = [
   "amberReach",
   "lichenCrown",
   "obsidianBrook",
-  "quarrySong",
   "mistHarbor",
   "sableRun",
   "fernBarrow",
@@ -69,6 +68,7 @@ export const GENERATED_RICH_SCORE_MAP_IDS = [
   "copperFen",
   "cloverRun",
   "hazelCircuit",
+  "spruceCircuit",
 ] as const;
 
 export const RICH_SCORE_MAP_IDS = [...AUTHORED_RICH_SCORE_MAP_IDS, ...GENERATED_RICH_SCORE_MAP_IDS] as const;
