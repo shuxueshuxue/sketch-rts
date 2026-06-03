@@ -122,7 +122,7 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
     <button type="button" class="run-item" data-run-id="${escapeHtml(run.id)}" data-selected="${run.id === selectedId}">
       <span>${escapeHtml(formatDate(run.createdAt))}</span>
       <strong>${run.scoreSummary.wins}/${run.scoreSummary.matchCount} ${escapeHtml(scoreLabel(run.scoreSummary.name))}</strong>
-      <small>${runTags(run).map((tag) => `<b>${escapeHtml(tag)}</b>`).join("")}</small>
+      <small>${runTags(run).map((tag) => `<b>${escapeHtml(tag)}</b>`).join(" ")}</small>
       <em>${escapeHtml(runListMeta(run))}</em>
     </button>
   `;
