@@ -417,7 +417,7 @@ function richAuthorUnit(mapId: MapId, unit: Unit): Unit {
 }
 
 function richAuthorPoint(mapId: MapId, x: number, y: number) {
-  if (isSideLaneMarchAuthorPoint(x, y)) return { x, y };
+  if (isFixedRichObjectiveAuthorPoint(x, y)) return { x, y };
   if (mapId === "wildMarches") return { x, y };
   if (mapId === "emberFen") return { x: clampAuthor(x * 0.94 + 220), y: clampAuthor(y * 0.9 + 440) };
   if (mapId === "thornedDelta") return { x: clampAuthor(x * 1.03 - 120), y: clampAuthor(y * 0.95 + 210) };
@@ -453,17 +453,22 @@ function richAuthorPoint(mapId: MapId, x: number, y: number) {
   return richGeneratedPoint(mapId, x, y, AUTHOR_MAP_SIZE);
 }
 
-function isSideLaneMarchAuthorPoint(x: number, y: number) {
-  // @@@side-lane-natural-anchor - Score maps may vary routes, but paired side-lane naturals must not drift into spawn bias.
+function isFixedRichObjectiveAuthorPoint(x: number, y: number) {
+  // @@@fixed-rich-objective-clusters - Score maps may vary routes, but paired early objectives must keep camp and guard geometry together.
   return (
     (x === 1620 && y === 5220) ||
+    (x === 1720 && y === 5040) ||
     (x === 1680 && y === 5120) ||
     (x === 1780 && y === 5020) ||
     (x === 1740 && y === 5160) ||
     (x === 6572 && y === 5220) ||
     (x === 6572 && y === 5060) ||
     (x === 6472 && y === 5120) ||
-    (x === 6532 && y === 4980)
+    (x === 6532 && y === 4980) ||
+    (x === 5880 && y === 3880) ||
+    (x === 5840 && y === 3820) ||
+    (x === 5960 && y === 3920) ||
+    (x === 5880 && y === 3980)
   );
 }
 

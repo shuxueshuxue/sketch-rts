@@ -92,6 +92,18 @@ describe("map neutral objective layout", () => {
     }
   });
 
+  it("keeps guarded rich mercenary camps inside the AI guard radius", () => {
+    for (const mapId of RICH_SCORE_MAPS) {
+      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
+      const report = analyzeMapObjectives(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
+      const guardedMercenaryIds = new Set(report.camps.flatMap((camp) => camp.guardedObjectiveIds.filter((id) => id.startsWith("merc-camp-"))));
+
+      for (const camp of game.mercenaryCamps.filter((candidate) => guardedMercenaryIds.has(candidate.id))) {
+        expect(neutralCreepsNear(game.units, camp, 260), `${mapId}:${camp.id} should not be reported as guarded while AI sees it as free`).not.toEqual([]);
+      }
+    }
+  });
+
   it("makes guarded mines and mercenary camps real strategic objectives", () => {
     for (const mapId of EVALUATION_MAPS) {
       const report = analyzeEvaluationMap(mapId);
@@ -142,4 +154,8 @@ function analyzeEvaluationMap(mapId: MapId) {
   if (mapId !== "grandThirty") return analyzeMapObjectives(mapId);
   const teams = Object.fromEntries(GRAND_PLAYERS.map((owner, index) => [owner, index < 15 ? "north" : "south"]));
   return analyzeMapObjectives(mapId, { players: GRAND_PLAYERS, teams: teams as Record<PlayerId, string> });
+}
+
+function neutralCreepsNear(units: ReturnType<typeof createGame>["units"], point: { x: number; y: number }, range: number) {
+  return units.filter((unit) => unit.owner === "neutral" && (UNIT_DEFS[unit.kind].creepFoodPower ?? 0) > 0 && Math.hypot(unit.x - point.x, unit.y - point.y) <= range);
 }
