@@ -172,6 +172,7 @@ function conditionFromArgs(args: string[]): InteractivePlaytestCondition {
   if (condition === "first-fight") return { type: "firstFight" };
   if (condition === "winner") return { type: "winner" };
   if (condition === "tick") return { type: "tick", tick: requiredNumberFlag(args, "tick") };
+  if (condition === "time") return { type: "gameSecond", seconds: requiredNumberFlag(args, "seconds") };
   if (condition === "enemy-nearby") return { type: "enemyNearby", ...(flag(args, "range") ? { range: requiredNumberFlag(args, "range") } : {}) };
   throw new Error(`Unknown step-until condition ${condition}`);
 }
@@ -264,6 +265,7 @@ function printHelp() {
   npm run play:ai -- inspect-units --file .playtests/duel.json --owner all
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240
+  npm run play:ai -- step-until --file .playtests/duel.json --condition time --seconds 120 --max-ticks 3600
   npm run play:ai -- attack-move --file .playtests/duel.json --units combat --x 2048 --y 2048
   npm run play:ai -- retreat-wounded --file .playtests/duel.json --hp-ratio 0.5
   npm run play:ai -- expand --file .playtests/duel.json --resource gold-natural

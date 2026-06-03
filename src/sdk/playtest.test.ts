@@ -309,4 +309,23 @@ describe("interactive playtest SDK", () => {
       runState: { winner: null, timeout: false },
     });
   });
+
+  it("steps until a target game second for interactive tactical inspection", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "bareDuel",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+      },
+    });
+
+    const result = stepInteractivePlaytestUntil(session, { type: "gameSecond", seconds: 3 }, { maxTicks: 120 });
+
+    expect(result.conditionMet).toBe(true);
+    expect(result.timedOut).toBe(false);
+    expect(summarizeInteractivePlaytestSession(session).gameSecond).toBe(3);
+    expect(session.events.lastStepUntil).toMatchObject({ condition: "gameSecond", timedOut: false });
+  });
 });

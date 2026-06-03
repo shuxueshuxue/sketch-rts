@@ -126,6 +126,7 @@ export type InteractivePlaytestCondition =
   | { type: "firstFight" }
   | { type: "winner" }
   | { type: "tick"; tick: number }
+  | { type: "gameSecond"; seconds: number }
   | { type: "enemyNearby"; range?: number };
 
 export type InteractivePlaytestUntilOptions<Source extends string = string> = InteractivePlaytestStepOptions<Source> & {
@@ -287,6 +288,7 @@ function conditionMatches(session: InteractivePlaytestSession, condition: Intera
   if (condition.type === "firstFight") return session.events.firstFightTick !== null;
   if (condition.type === "winner") return session.game.match.winner !== null;
   if (condition.type === "tick") return session.game.tick >= condition.tick;
+  if (condition.type === "gameSecond") return session.game.tick / SIM_TICKS_PER_SECOND >= condition.seconds;
   if (condition.type === "enemyNearby") {
     const snapshot = snapshotGame(session.game);
     const query = createSnapshotQuery(snapshot, { teams: session.game.teams });
