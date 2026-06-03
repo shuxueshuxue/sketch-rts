@@ -4051,6 +4051,32 @@ describe("SDK preset AI policy", () => {
     expect(commands).toEqual([]);
   });
 
+  it("v2 sends four early idle fighters to a nearby winnable objective instead of waiting for five", () => {
+    const scene = sketchScene("v2-four-fighter-early-objective")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "farm", 560, 700)
+      .unit("v2", "footman", 720, 720)
+      .unit("v2", "footman", 760, 740)
+      .unit("v2", "footman", 800, 760)
+      .unit("v2", "lancer", 840, 780)
+      .unit("neutral", "wildling", 1160, 980)
+      .unit("neutral", "mossGnawer", 1190, 1010)
+      .mercenaryCamp("near-bow-post", 1180, 980, { hireKind: "contractArcher", cost: 145, stock: 2, cooldownRemaining: 0 })
+      .townHall("v1", 3300, 3300)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toMatchObject({ type: "attackMove", x: 1180, y: 980 });
+  });
+
   it("v2 does not pre-claim an enemy-side mercenary camp with a small squad before securing its first expansion", () => {
     const scene = sketchScene("v2-no-enemy-side-merc-preclaim-before-expansion")
       .map("openClaims")

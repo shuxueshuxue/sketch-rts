@@ -173,7 +173,7 @@ export function planAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: P
 }
 
 function groupAttackMoveMinimum(scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  if (scriptId === "objectiveControl") return objectiveControlMinimumArmy();
+  if (scriptId === "objectiveControl") return objectiveControlMinimumArmy(snapshot, owner, options);
   if (scriptId === "expansionDenial") return 5;
   if (scriptId === "expansion") return 4;
   // @@@attack-wave-threshold-owner - Attack wave has context-specific thresholds; the runner only removes already-reserved units.
@@ -862,7 +862,7 @@ function shouldHoldThinTwoMineDefenseBank(snapshot: GameSnapshot, owner: PlayerI
 function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version === "v2" && (mainBaseNeedsObjectivePause(snapshot, owner, options) || ownedBaseNeedsObjectivePause(snapshot, owner, options))) return undefined;
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
-  const minimumArmy = objectiveControlMinimumArmy();
+  const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
   if (army.length < minimumArmy) return undefined;
   if (options.version === "v2" && army.length >= 7 && opponentIsReducedToBuildings(snapshot, owner, options) && closeoutAttackWaveTarget(snapshot, owner, army, army, [], options)) return undefined;
   if (options.version === "v2" && armyCommittedToEnemyObjective(snapshot, owner, army, minimumArmy, options)) return undefined;
@@ -902,7 +902,8 @@ function attackMoveTargetsEnemyObjective(snapshot: GameSnapshot, owner: PlayerId
   );
 }
 
-function objectiveControlMinimumArmy() {
+function objectiveControlMinimumArmy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version === "v2" && !hasEstablishedExpansion(snapshot, owner) && combatUnits(snapshot, owner).length >= 4) return 4;
   return 5;
 }
 
