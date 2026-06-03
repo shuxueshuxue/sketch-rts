@@ -1,4 +1,4 @@
-import { AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
+import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { issueCommandFrame, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import type { PlayerId } from "../shared/types";
@@ -8,6 +8,8 @@ export type AiRuntimeState = {
   lastThink: Partial<Record<PlayerId, number>>;
   thinkInterval: number;
   scripts?: AiScript[];
+  scriptIds?: string[];
+  scriptIdsByPlayer?: Partial<Record<PlayerId, string[]>>;
   version: AiScriptVersion;
   versions: Partial<Record<PlayerId, AiScriptVersion>>;
   policyMode?: PresetAiPolicyOptions["policyMode"];
@@ -35,7 +37,18 @@ export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFram
 
 export type AiCommandFrameHooks<Source extends string = string> = CommandFrameHooks<Source>;
 
-export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: number; scripts?: AiScript[]; version?: AiScriptVersion; versions?: Partial<Record<PlayerId, AiScriptVersion>>; policyMode?: PresetAiPolicyOptions["policyMode"] } = {}): AiRuntimeState {
+export function createAiRuntime(
+  players: PlayerId[],
+  options: {
+    thinkInterval?: number;
+    scripts?: AiScript[];
+    scriptIds?: string[];
+    scriptIdsByPlayer?: Partial<Record<PlayerId, string[]>>;
+    version?: AiScriptVersion;
+    versions?: Partial<Record<PlayerId, AiScriptVersion>>;
+    policyMode?: PresetAiPolicyOptions["policyMode"];
+  } = {},
+): AiRuntimeState {
   const thinkInterval = options.thinkInterval ?? 45;
   const controlledPlayers = [...new Set(players)];
   return {
@@ -43,6 +56,8 @@ export function createAiRuntime(players: PlayerId[], options: { thinkInterval?: 
     lastThink: Object.fromEntries(players.map((owner) => [owner, -thinkInterval])),
     thinkInterval,
     ...(options.scripts ? { scripts: options.scripts } : {}),
+    ...(options.scriptIds ? { scriptIds: [...options.scriptIds] } : {}),
+    ...(options.scriptIdsByPlayer ? { scriptIdsByPlayer: cloneScriptIdsByPlayer(options.scriptIdsByPlayer) } : {}),
     version: options.version ?? "v1",
     versions: options.versions ?? {},
     ...(options.policyMode ? { policyMode: options.policyMode } : {}),
@@ -65,7 +80,7 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
     return {
       playerId: owner,
       version,
-      scripts: runtime.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK,
+      scripts: runtimeScriptsForOwner(runtime, owner, version),
       memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
     };
   });
@@ -96,4 +111,22 @@ export function issueAiCommandFrame<Source extends string = string>(game: Game, 
   }
 
   return issueCommandFrame(game, planned, hooks);
+}
+
+function runtimeScriptsForOwner(runtime: AiRuntimeState, owner: PlayerId, version: AiScriptVersion) {
+  const scriptIds = runtime.scriptIdsByPlayer?.[owner] ?? runtime.scriptIds;
+  if (scriptIds) return scriptsFromIds(scriptIds);
+  return runtime.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
+}
+
+function scriptsFromIds(scriptIds: string[]): AiScript[] {
+  return scriptIds.map((id) => {
+    const script = AI_SCRIPT_LIBRARY[id as keyof typeof AI_SCRIPT_LIBRARY];
+    if (!script) throw new Error(`Unknown AI script id ${id}`);
+    return script;
+  });
+}
+
+function cloneScriptIdsByPlayer(value: Partial<Record<PlayerId, string[]>>) {
+  return Object.fromEntries(Object.entries(value).map(([owner, scriptIds]) => [owner, scriptIds ? [...scriptIds] : scriptIds])) as Partial<Record<PlayerId, string[]>>;
 }

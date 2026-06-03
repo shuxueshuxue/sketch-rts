@@ -5,6 +5,7 @@ import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, 
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
+import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
 import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
@@ -27,6 +28,7 @@ if (verb === "new") {
   const enemyVersion = (flag(args, "enemy-version") ?? "v1") as AiScriptVersion;
   const thinkInterval = numberFlag(args, "think-interval", 45);
   const assistControlled = boolFlag(args, "assist-you");
+  const scriptIdsByPlayer = scriptIdsByPlayerFromArgs(args, controlledPlayer, enemy, assistControlled);
   const session = createInteractivePlaytestSession({
     id: flag(args, "id") ?? `interactive-${setup.mapId}-${Date.now()}`,
     mapId: setup.mapId,
@@ -35,7 +37,7 @@ if (verb === "new") {
     winnerMode: setup.winnerMode,
     options: setup.options,
   });
-  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion }, ...(setup.policyMode ? { policyMode: setup.policyMode } : {}) });
+  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion }, ...(Object.keys(scriptIdsByPlayer).length > 0 ? { scriptIdsByPlayer } : {}), ...(setup.policyMode ? { policyMode: setup.policyMode } : {}) });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
   printJson(summarizeAiInteractivePlaytestSession(session, runtime));
   process.exit(0);
@@ -154,6 +156,27 @@ function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspect
   return owner as PlayerId;
 }
 
+function scriptIdsByPlayerFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId, assistControlled: boolean): Partial<Record<PlayerId, string[]>> {
+  const youScripts = scriptIdsFlag(args, "you-scripts");
+  const enemyScripts = scriptIdsFlag(args, "enemy-scripts");
+  if (youScripts && !assistControlled) throw new Error("--you-scripts requires --assist-you");
+  return {
+    ...(youScripts ? { [controlledPlayer]: youScripts } : {}),
+    ...(enemyScripts ? { [enemy]: enemyScripts } : {}),
+  };
+}
+
+function scriptIdsFlag(args: string[], name: string): string[] | undefined {
+  const raw = flag(args, name);
+  if (raw === undefined) return undefined;
+  const scriptIds = raw.split(",").map((value) => value.trim()).filter(Boolean);
+  if (scriptIds.length === 0) throw new Error(`--${name} must include at least one script id`);
+  for (const scriptId of scriptIds) {
+    if (!(scriptId in AI_SCRIPT_LIBRARY)) throw new Error(`Unknown AI script id ${scriptId}`);
+  }
+  return scriptIds;
+}
+
 function flag(args: string[], name: string): string | undefined {
   const index = args.indexOf(`--${name}`);
   if (index === -1) return undefined;
@@ -192,6 +215,7 @@ function printJson(value: unknown) {
 function printHelp() {
   console.log(`Usage:
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
+  npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --assist-you --you-scripts skirmishPreservation --enemy-scripts attackWave
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- memory --file .playtests/duel.json

@@ -11,6 +11,8 @@ export type AiInteractivePlaytestRuntimeOptions = {
   assistControlled?: boolean;
   thinkInterval?: number;
   scripts?: AiScript[];
+  scriptIds?: string[];
+  scriptIdsByPlayer?: Partial<Record<PlayerId, string[]>>;
   version?: AiScriptVersion;
   versions?: Partial<Record<PlayerId, AiScriptVersion>>;
   policyMode?: PresetAiPolicyOptions["policyMode"];

@@ -3,6 +3,7 @@ import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
 import { createAiRuntime, issueAiCommandFrame, runPresetAiRuntime } from "./runtime";
 import type { AiPolicyMemory, AiScript } from "./policy";
+import { sketchScene } from "../sdk/scene";
 
 describe("shared AI runtime", () => {
   it("keeps simulation ticks free of AI decisions", () => {
@@ -46,6 +47,38 @@ describe("shared AI runtime", () => {
     expect(runtime.versions.enemy).toBe("v1");
     expect(result.commands.some((entry) => entry.playerId === "player" && entry.command.type === "mine")).toBe(true);
     expect(result.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+  });
+
+  it("lets one runtime select AI script ids per controlled player", () => {
+    const game = sketchScene("runtime-per-player-script-ids")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north", race: "grove" })
+      .player("enemy", { team: "south", race: "grove" })
+      .townHall("player", 500, 500)
+      .worker("player", 450, 500)
+      .unit("player", "footman", 760, 520)
+      .unit("player", "footman", 790, 550)
+      .unit("player", "lancer", 820, 580)
+      .unit("player", "archer", 850, 610)
+      .unit("player", "archer", 880, 640)
+      .townHall("enemy", 1350, 520)
+      .worker("enemy", 1300, 520)
+      .goldMine("player-main", 420, 520, 3000)
+      .goldMine("enemy-main", 1260, 520, 3000)
+      .build()
+      .createGame();
+    const runtime = createAiRuntime(["player", "enemy"], {
+      thinkInterval: 1,
+      versions: { player: "v2", enemy: "v1" },
+      scriptIdsByPlayer: { player: ["attackWave"], enemy: ["economy"] },
+    } as never);
+
+    const result = runPresetAiRuntime(game, runtime);
+
+    expect(result.commands.find((entry) => entry.playerId === "player")?.scriptId).toBe("attackWave");
+    expect(result.commands.some((entry) => entry.playerId === "player" && entry.command.type === "mine")).toBe(false);
+    expect(result.commands.find((entry) => entry.playerId === "enemy")).toMatchObject({ scriptId: "economy", command: { type: "mine" } });
   });
 
   it("plans every controlled player from the same frame before applying commands", () => {

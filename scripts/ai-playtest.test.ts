@@ -149,6 +149,21 @@ describe("AI playtest CLI", () => {
     expect(persisted.session.winnerMode).toBe("combatElimination");
   });
 
+  it("persists per-player assisted script ids for composable CLI control", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you", "--you-scripts", "skirmishPreservation", "--enemy-scripts", "attackWave");
+
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+    expect(persisted.runtime.scriptIdsByPlayer).toEqual({
+      v2: ["skirmishPreservation"],
+      v1a: ["attackWave"],
+    });
+  });
+
   it("retreats wounded units through a memory-backed tactical command", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);
