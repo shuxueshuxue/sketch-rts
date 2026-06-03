@@ -15,6 +15,57 @@ type EffectRenderContext = {
   worldToScreen: (point: Point) => Point;
 };
 
+export type HammerEffectKind = "build" | "repair";
+
+export type HammerEffectFrame = {
+  angle: number;
+  siteStroke: string;
+  siteFill: string;
+  sparkStroke: string;
+  handleStroke: string;
+  headStroke: string;
+  site: { rx: number; ry: number };
+  impact: Point;
+  handle: { from: Point; to: Point };
+  head: { from: Point; to: Point };
+};
+
+export function hammerEffectFrame(kind: HammerEffectKind, life: number, remaining: number): HammerEffectFrame {
+  const clampedLife = Math.max(0, Math.min(1, life));
+  const pulse = 1 - clampedLife;
+  const swing = (Math.sin(remaining * 0.76) + 1) / 2;
+  const angle = 0.64 + swing * 0.82 - Math.PI / 2;
+  const handleLength = 34;
+  const pivot = { x: -24, y: 4 };
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  const impact = { x: pivot.x + dx * handleLength, y: pivot.y + dy * handleLength };
+  const handle = {
+    from: pivot,
+    to: impact,
+  };
+  const headHalf = 8.5;
+  const headCenter = { x: impact.x + dx * 2, y: impact.y + dy * 2 };
+  const px = -dy;
+  const py = dx;
+
+  return {
+    angle,
+    siteStroke: kind === "build" ? `rgba(49, 95, 135, ${0.34 + clampedLife * 0.34})` : `rgba(185, 134, 27, ${0.42 + clampedLife * 0.34})`,
+    siteFill: kind === "build" ? `rgba(49, 95, 135, ${0.05 + clampedLife * 0.07})` : `rgba(185, 134, 27, ${0.06 + clampedLife * 0.08})`,
+    sparkStroke: kind === "build" ? `rgba(101, 142, 170, ${0.5 + clampedLife * 0.28})` : `rgba(222, 174, 63, ${0.54 + clampedLife * 0.28})`,
+    handleStroke: "rgba(123, 86, 31, 0.86)",
+    headStroke: "rgba(36, 49, 38, 0.86)",
+    site: { rx: 18 + pulse * 16, ry: 7 + pulse * 5 },
+    impact,
+    handle,
+    head: {
+      from: { x: headCenter.x - px * headHalf, y: headCenter.y - py * headHalf },
+      to: { x: headCenter.x + px * headHalf, y: headCenter.y + py * headHalf },
+    },
+  };
+}
+
 export function renderWorldEffects(options: RenderWorldEffectsOptions) {
   const { ctx, effects, worldToScreen, nearScreen } = options;
   const renderer = { ctx, worldToScreen };
