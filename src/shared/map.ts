@@ -215,7 +215,7 @@ export function createInitialMercenaryCamps(mapId: MapId = DEFAULT_MAP_ID): Merc
     { id: "merc-camp-field-tent", x: 2520, y: 3100, radius: 50, hireKind: "fieldMedic", cost: UNIT_DEFS.fieldMedic.cost, stock: 3, cooldown: seconds(18), cooldownRemaining: 0 },
   ];
   if (isRichScoreMap(mapId)) {
-    camps.push({ id: "merc-camp-west-road", x: 1720, y: 5040, radius: 54, hireKind: "contractArcher", cost: UNIT_DEFS.contractArcher.cost, stock: 4, cooldown: seconds(17), cooldownRemaining: 0 });
+    camps.push({ id: "merc-camp-west-bow-post", x: 2312, y: 4080, radius: 50, hireKind: "contractArcher", cost: UNIT_DEFS.contractArcher.cost, stock: 3, cooldown: seconds(16), cooldownRemaining: 0 });
   }
   return camps.map((camp) => scaleMercenaryCamp(isRichScoreMap(mapId) ? richAuthorMercenaryCamp(mapId, camp) : camp));
 }
@@ -310,6 +310,9 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
       createUnit("wildling-east-1", "neutral", "stonebackBrute", 6572, 5060),
       createUnit("wildling-east-2", "neutral", "thornSlinger", 6472, 5120),
       createUnit("wildling-east-3", "neutral", "gladeWitch", 6532, 4980),
+      createUnit("wildling-merc-west-bow-1", "neutral", "gladeWitch", 2352, 4020),
+      createUnit("wildling-merc-west-bow-2", "neutral", "thornSlinger", 2232, 4120),
+      createUnit("wildling-merc-west-bow-3", "neutral", "barkMender", 2312, 4180),
     );
   }
   const authoredNeutrals = [...neutralUnits.map((unit) => scaleUnit(isRichScoreMap(mapId) ? richAuthorUnit(mapId, unit) : unit)), ...freeWildlingCamps(mapId)];
@@ -457,7 +460,6 @@ function isFixedRichObjectiveAuthorPoint(x: number, y: number) {
   // @@@fixed-rich-objective-clusters - Score maps may vary routes, but paired early objectives must keep camp and guard geometry together.
   return (
     (x === 1620 && y === 5220) ||
-    (x === 1720 && y === 5040) ||
     (x === 1680 && y === 5120) ||
     (x === 1780 && y === 5020) ||
     (x === 1740 && y === 5160) ||
@@ -468,7 +470,11 @@ function isFixedRichObjectiveAuthorPoint(x: number, y: number) {
     (x === 5880 && y === 3880) ||
     (x === 5840 && y === 3820) ||
     (x === 5960 && y === 3920) ||
-    (x === 5880 && y === 3980)
+    (x === 5880 && y === 3980) ||
+    (x === 2312 && y === 4080) ||
+    (x === 2352 && y === 4020) ||
+    (x === 2232 && y === 4120) ||
+    (x === 2312 && y === 4180)
   );
 }
 

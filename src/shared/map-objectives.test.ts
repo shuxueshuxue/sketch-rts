@@ -148,6 +148,11 @@ describe("map neutral objective layout", () => {
       expect(game.items.filter((item) => item.carrierId && !unitIds.has(item.carrierId)), `${mapId} should not have treasure attached to removed camps`).toEqual([]);
     }
   });
+
+  it("keeps side-biased rich maps out of the score pool", () => {
+    expect(RICH_SCORE_MAPS).not.toContain("stagHollow");
+    expect(RICH_SCORE_MAPS).not.toContain("willowCircuit");
+  });
 });
 
 function analyzeEvaluationMap(mapId: MapId) {
