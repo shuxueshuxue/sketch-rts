@@ -2,6 +2,7 @@ import { UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
+import { activeUnitClaim } from "./claims";
 import { enemyCombatUnits, units } from "./snapshot";
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
@@ -36,7 +37,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
 
 export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version !== "v2") return undefined;
-  const fighters = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && unit.hp >= unit.maxHp * 0.36);
+  const fighters = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && unit.hp >= unit.maxHp * 0.36 && focusFireReadyUnit(snapshot, owner, unit, options));
   if (fighters.length < 2) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
@@ -48,8 +49,9 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const attackers = focusFireAttackers(fighters, target);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
-  if (attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
-  if (options.policyMode !== "combat" && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
+  const canPickOffWoundedTarget = focusFireCanPickOffWoundedTarget(attackers, target);
+  if (!canPickOffWoundedTarget && attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
+  if (!canPickOffWoundedTarget && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
   if (options.memory) {
     options.memory.strategicPlan = {
       ...options.memory.strategicPlan,
@@ -71,6 +73,15 @@ function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: P
 
 function focusFireAttackers(fighters: Unit[], target: Unit) {
   return fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
+}
+
+function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
+  const claim = activeUnitClaim(snapshot, owner, unit, options);
+  return !claim || claim.kind === "attack";
+}
+
+function focusFireCanPickOffWoundedTarget(attackers: Unit[], target: Unit) {
+  return attackers.length >= 5 && target.hp <= target.maxHp * 0.6;
 }
 
 function focusFireJoinRange(unit: Unit) {

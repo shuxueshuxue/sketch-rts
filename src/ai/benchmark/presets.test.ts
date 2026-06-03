@@ -121,7 +121,7 @@ describe("AI benchmark presets", () => {
     const match = preset.input.evaluations.find((evaluation) => evaluation.name === "15v20 mixed combat")?.matches[0];
     if (!match) throw new Error("Missing 15v20 combat match");
 
-    const report = runAiGame({ ...match, maxTicks: 900, thinkInterval: 45, trace: { commands: true } });
+    const report = runAiGame({ ...match, maxTicks: 900, trace: { commands: true } });
     const economyCommands = report.commands.filter((entry) => ["mine", "build", "train", "research", "hire", "repair"].includes(entry.command.type));
 
     expect(economyCommands).toEqual([]);

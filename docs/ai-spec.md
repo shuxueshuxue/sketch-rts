@@ -56,6 +56,10 @@ Tags must be first-class report/dashboard data, not inferred from evaluation nam
 
 `combat` is a benchmark pressure shape, not a separate AI identity. It must exercise the same composable tactical modules that regular `melee` games use: item use, spell use, focus fire, kiting, wounded pullback, target choice, memory claims, and attack-wave commitment. The scenario may parameterize the environment by removing economy and using combat-elimination victory, but it must not replace V2 with an isolated "combat-only AI" that cannot transfer back into real RTS games.
 
+Anti-reward-hacking rule: benchmark lanes must be treated equally at the AI/runtime layer. `combat` may make failures faster to see, but it must not receive a bespoke think cadence, bespoke tactical brain, or lane-only conditions that are unavailable to `melee`. If a shorter think interval, tactical cadence, memory claim, command arbitration rule, focus-fire rule, item rule, or wounded-pullback rule is useful, it must be expressed as a shared SDK/AI capability that every lane can use under the same contract. A combat improvement only counts when it can migrate back into normal melee play; otherwise it is a benchmark exploit, not AI progress.
+
+Dashboard and benchmark summaries should make lane contracts visible enough to catch accidental divergence. Different scenario context is fine; different hidden privilege is not.
+
 The initial `combat` targets are:
 
 - `15v20 mixed combat`: V2 controls 15 units plus key item loadouts against V1 controlling 20 units.

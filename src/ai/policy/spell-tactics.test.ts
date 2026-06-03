@@ -35,6 +35,30 @@ describe("AI spell and focus tactics", () => {
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual({ type: "attack", unitIds: ["footman", "archer"], targetId: "target" });
   });
 
+  it("does not pull retreat-claimed fighters back into focus fire", () => {
+    const game = sketchScene("spell-tactics-focus-respects-retreat-claims")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "footman", 660, 780, { id: "healthy-footman" })
+      .unit("v2", "archer", 650, 830, { id: "healthy-archer" })
+      .unit("v2", "lancer", 690, 805, { id: "retreat-lancer", hp: 58 })
+      .unit("v1", "archer", 735, 805, { id: "target", hp: 35 })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["retreat-lancer"] = { kind: "retreat", targetId: "retreat", x: 150, y: 200, sinceTick: 0, expiresTick: 900 };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory })).toEqual({
+      type: "attack",
+      unitIds: ["healthy-footman", "healthy-archer"],
+      targetId: "target",
+    });
+  });
+
   it("keeps focusing a remembered live target instead of scattering damage every frame", () => {
     const game = sketchScene("spell-tactics-remembered-focus")
       .map("combatArena")
@@ -147,6 +171,29 @@ describe("AI spell and focus tactics", () => {
       .createGame();
 
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toBeUndefined();
+  });
+
+  it("keeps a medium squad focused on a wounded target while outnumbered in every lane", () => {
+    const scene = sketchScene("spell-tactics-combat-medium-group-focus")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v1", "archer", 790, 790, { id: "wounded-archer", hp: 30 });
+    for (let index = 0; index < 6; index += 1) scene.unit("v2", index % 2 === 0 ? "archer" : "footman", 680 + index * 12, 740 + index * 18, { id: `v2-fighter-${index + 1}` });
+    for (let index = 0; index < 10; index += 1) scene.unit("v1", index % 3 === 0 ? "archer" : "footman", 820 + index * 8, 760 + index * 12, { id: `v1-guard-${index + 1}` });
+    const game = scene.build().createGame();
+
+    const expected = {
+      type: "attack",
+      unitIds: Array.from({ length: 6 }, (_, index) => `v2-fighter-${index + 1}`),
+      targetId: "wounded-archer",
+    };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual(expected);
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat" })).toEqual(expected);
   });
 
   it("uses focus fire for a full combat group even when the local enemy army is larger", () => {
