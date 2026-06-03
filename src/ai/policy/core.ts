@@ -608,6 +608,7 @@ function planMercenary(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
 
 function moveToMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (mainBaseNeedsObjectivePause(snapshot, owner, options)) return undefined;
+  if (options.version === "v2" && !hasEstablishedExpansion(snapshot, owner) && enemyCombatUnits(snapshot, owner, options.teams).length > 0) return undefined;
   const squad = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && (options.version !== "v2" || !activeUnitClaim(snapshot, owner, unit, options)));
   if (squad.length === 0) return undefined;
   const movers = staleAttackMovers(squad, camp);
@@ -638,7 +639,8 @@ function canMoveToMercenaryCampBeforeHire(snapshot: GameSnapshot, owner: PlayerI
   if (options.version !== "v2") return false;
   if (opponentPlayerIds(snapshot, owner, options).length >= 2) return false;
   if (firstNaturalNeedsClearing(snapshot, owner)) return false;
-  // @@@thin-merc-preclaim - Camp pre-claims are optional map control; a thin first army must stay together while enemy combat units are still on the field.
+  // @@@merc-preclaim-after-first-mine - Free walking is still a real army split; before the first expansion, keep the squad available while enemy combat exists.
+  if (!hasEstablishedExpansion(snapshot, owner) && enemyCombatUnits(snapshot, owner, options.teams).length > 0) return false;
   if (!hasEstablishedExpansion(snapshot, owner) && !isLocalFirstMercenaryClaim(snapshot, owner, camp)) return false;
   if (hasEstablishedExpansion(snapshot, owner) && combatUnits(snapshot, owner).length < 8 && enemyCombatUnits(snapshot, owner, options.teams).length > 0) return false;
   return friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length === 0;
@@ -1426,6 +1428,7 @@ function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit
   if (options.version !== "v2") return true;
   const claim = activeUnitClaim(snapshot, owner, unit, options);
   if (claim && claim.kind !== "attack" && !safeStoppedRetreatClaimCanRejoin(snapshot, owner, unit, claim, options)) return false;
+  if (unit.hp < unit.maxHp * 0.36) return false;
   if (unit.order.type !== "move" || unit.hp >= unit.maxHp * 0.58) return true;
   const main = mainBase(snapshot, owner);
   return distance(unit.order, main) >= distance(unit, main);

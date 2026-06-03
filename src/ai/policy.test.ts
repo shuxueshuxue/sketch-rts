@@ -399,6 +399,67 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 does not pre-claim a local mercenary camp before its first expansion while enemy combat is on the field", () => {
+    const scene = sketchScene("v2-no-merc-preclaim-before-first-expansion-fight")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "farm", 610, 500)
+      .building("v2", "barracks", 650, 560)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "stables", 750, 560)
+      .unit("v2", "footman", 900, 760)
+      .unit("v2", "footman", 930, 790)
+      .unit("v2", "lancer", 960, 820)
+      .unit("v2", "archer", 990, 850)
+      .unit("v2", "footman", 1020, 880)
+      .townHall("v1", 3400, 3300)
+      .unit("v1", "footman", 2400, 1900)
+      .unit("v1", "archer", 2440, 1940)
+      .unit("v1", "footman", 2480, 1980)
+      .unit("v1", "lancer", 2520, 2020)
+      .unit("v1", "archer", 2560, 2060)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1000, 920, 4000)
+      .goldMine("v1-main-mine", 3340, 3300, 4000)
+      .mercenaryCamp("local-contract-post", 1600, 900, { hireKind: "contractArcher", cost: 140 })
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 attack-wave does not count a badly wounded unit as ready combat strength", () => {
+    const scene = sketchScene("v2-attack-wave-sends-healthy-units")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "archer", 1300, 1400, { id: "wounded-archer", hp: 10 })
+      .unit("v2", "footman", 1340, 1420)
+      .unit("v2", "footman", 1380, 1440)
+      .unit("v2", "lancer", 1420, 1460)
+      .unit("v2", "lancer", 1460, 1480)
+      .unit("v2", "archer", 1500, 1500)
+      .townHall("v1", 3400, 3300)
+      .unit("v1", "footman", 2100, 1800)
+      .unit("v1", "lancer", 2140, 1840)
+      .unit("v1", "archer", 2180, 1880)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1-main-mine", 3340, 3300, 4000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove" || candidate.type === "focusFire");
+
+    expect(command?.unitIds).not.toContain("wounded-archer");
+  });
+
   it("v2 lets attack-wave closeout preempt neutral objective control when the enemy has no army or workers", () => {
     const scene = sketchScene("v2-closeout-preempts-neutral-objective")
       .map("openClaims")
@@ -1525,8 +1586,8 @@ describe("SDK preset AI policy", () => {
       .player("v1", { team: "south", race: "grove" })
       .townHall("v2", 500, 500);
     scene
-      .unit("v2", "footman", 520, 500, { id: "recovered-footman", hp: 36 })
-      .unit("v2", "lancer", 550, 520, { id: "recovered-lancer", hp: 42 })
+      .unit("v2", "footman", 520, 500, { id: "recovered-footman", hp: 60 })
+      .unit("v2", "lancer", 550, 520, { id: "recovered-lancer", hp: 60 })
       .unit("v2", "archer", 580, 540, { id: "recovered-archer", hp: 70 })
       .unit("v2", "footman", 620, 560, { id: "fresh-footman" })
       .unit("v2", "archer", 650, 580, { id: "fresh-archer" })
@@ -3829,14 +3890,14 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "archer", 770, 760, { id: "main-army-b" })
       .unit("v2", "footman", 805, 790, { id: "main-army-c" })
       .townHall("v1", 3300, 3300)
-      .mercenaryCamp("cleared-melee-camp", 1180, 980, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
+      .mercenaryCamp("cleared-melee-camp", 1600, 1200, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
       .build();
     const game = scene.createGame();
     game.players.v2!.gold = 300;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
-    expect(command).toMatchObject({ type: "attackMove", unitIds: ["near-claimant", "main-army-c", "main-army-b"], x: 1180, y: 980 });
+    expect(command).toMatchObject({ type: "attackMove", unitIds: ["near-claimant", "main-army-c", "main-army-b"], x: 1600, y: 1200 });
   });
 
   it("does not break a local mercenary route to chase a stronger distant army target", () => {
@@ -4337,14 +4398,28 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "ember" })
       .townHall("v2", 500, 500)
+      .townHall("v2", 1200, 900)
       .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 650, 650)
+      .building("v2", "stables", 680, 680)
       .building("v2", "farm", 560, 700)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1200, 900, 4000)
       .unit("v2", "footman", 700, 700)
       .unit("v2", "lancer", 735, 730)
       .unit("v2", "archer", 770, 760)
+      .unit("v2", "footman", 805, 790)
+      .unit("v2", "lancer", 840, 820)
+      .unit("v2", "archer", 875, 850)
+      .unit("v2", "footman", 910, 880)
+      .unit("v2", "lancer", 945, 910)
       .townHall("v1", 3300, 3300)
       .unit("v1", "footman", 3100, 3100)
-      .mercenaryCamp("cleared-melee-camp", 1180, 980, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
+      .unit("v1", "lancer", 3140, 3140)
+      .unit("v1", "archer", 3180, 3180)
+      .unit("v1", "footman", 3220, 3220)
+      .unit("v1", "lancer", 3260, 3260)
+      .mercenaryCamp("cleared-melee-camp", 1600, 1200, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
       .unit("neutral", "wildling", 900, 1180, { id: "tempting-free-camp-1" })
       .unit("neutral", "thornSlinger", 940, 1200, { id: "tempting-free-camp-2" })
       .build();
