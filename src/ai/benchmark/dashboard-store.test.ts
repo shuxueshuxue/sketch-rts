@@ -42,7 +42,7 @@ describe("benchmark dashboard store", () => {
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 
   it("does not reuse a fixed timestamp seed for ordinary dashboard runs", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));

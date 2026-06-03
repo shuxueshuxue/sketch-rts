@@ -56,7 +56,7 @@ type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
-    __sketchRtsView?: { roomId?: string; tick?: number };
+    __sketchRtsView?: { roomId?: string; tick?: number; enemyOrders?: Record<string, number> };
   }
 }
 
@@ -1001,9 +1001,17 @@ function frame() {
 }
 
 function syncDebugView() {
-  const view: { roomId?: string; tick?: number } = {};
+  const view: { roomId?: string; tick?: number; enemyOrders?: Record<string, number> } = {};
   if (currentRoomId !== undefined) view.roomId = currentRoomId;
   if (snapshot?.tick !== undefined) view.tick = snapshot.tick;
+  if (snapshot) {
+    const enemyOrders: Record<string, number> = {};
+    for (const unit of snapshot.units) {
+      if (unit.owner === localPlayerId || !unit.order) continue;
+      enemyOrders[unit.order.type] = (enemyOrders[unit.order.type] ?? 0) + 1;
+    }
+    if (Object.keys(enemyOrders).length > 0) view.enemyOrders = enemyOrders;
+  }
   window.__sketchRtsView = view;
 }
 

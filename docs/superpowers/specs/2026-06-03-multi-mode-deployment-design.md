@@ -107,7 +107,7 @@ Add scripts:
 
 The existing `build` can stay as server mode to avoid changing current deployment behavior.
 
-The benchmark dashboard remains server mode only unless a later checkpoint explicitly designs a static dashboard.
+The benchmark dashboard remains server mode only unless a later checkpoint explicitly designs a static dashboard. Static builds should ship only the game entrypoint and not `benchmark.html`.
 
 ## Testing
 
@@ -160,6 +160,7 @@ Sanitized YATU summary: `~/share/ops/sketch-rts-multi-mode-yatu-2026-06-03.md`.
 
 Automated checks run on branch `codex/multi-mode-deployment`:
 
+- `npm test -- --run` (75 files / 556 tests)
 - `npm test -- src/client/deployment/server-runtime.test.ts src/client/deployment/runtime.test.ts src/client/deployment/static-runtime.test.ts src/client/net/local-adapter.test.ts --run`
 - `npm test -- src/server/room-net.test.ts src/server/room-host.test.ts --run`
 - `npm run build`
@@ -171,6 +172,7 @@ YATU proofs completed:
 - Static Playwright CLI boot and room UI proof on `npm run dev:static -- --port 5175`: Rooms/Profile first viewport, room browser, Create Game, Room Setup, slot rows, Start Match, and live tick advancement.
 - Static network isolation proof in the same Playwright CLI run: no `/api/*`, `/ws/*`, `ws://*`, or `wss://*` traffic; no request failures.
 - Static production visible command proof: on `build:static` preview, the pointer-lock gate released, a real canvas click selected one worker (`x1`), a right-click issued a visible command (`Workers ordered to mine gold.`), ticks advanced, and no backend traffic was emitted.
+- Static production AI runtime proof: on `build:static` preview, the visible Rooms -> Create Room -> Room Setup -> Start Match path on `bareDuel` advanced from tick `4` to tick `40` while `window.__sketchRtsView.enemyOrders` reported `{ move: 1, idle: 2 }`; no backend traffic or request failures were emitted.
 - Static production lifecycle proof: Start Match -> Concede -> Results -> Rematch -> Room Setup -> Back/Home completed through visible UI with no backend traffic.
 - Server Playwright CLI room UI proof on `PORT=5176 npm run dev`: same Rooms -> Create Room -> Room Setup -> Start Match path reached a live room and advanced ticks.
 - Server Playwright CLI network proof: room setup used `GET /api/rooms?userId=...`, `POST /api/rooms`, and `POST /api/rooms/:id/start`; no HTTP snapshot or command polling appeared in the network log.
@@ -180,3 +182,6 @@ YATU proofs completed:
 Notes:
 
 - An initial Combat Arena lifecycle attempt exposed a selectable-map render error, which this branch fixes with a terrain recipe. Combat Arena itself still does not naturally produce a room winner because it has no buildings, so lifecycle closure uses the static Concede product action.
+- Two AI perf tests in `src/shared/sim.test.ts` now use the same CPU-time measurement pattern as the rest of that file instead of wall-clock time, so parallel worker scheduling does not masquerade as sim cost.
+- The benchmark dashboard store test now uses the same explicit 15s timeout budget as the adjacent real-benchmark store test, avoiding a default 5s timeout on a deliberately heavy integration path.
+- Static Vite builds now exclude the server-only benchmark dashboard entrypoint; default/server builds still include it.
