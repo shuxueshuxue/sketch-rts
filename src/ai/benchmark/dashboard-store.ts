@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { MapId } from "../../shared/types";
 import type { AiVersionBenchmarkDashboardReport, AiVersionBenchmarkOptions, BenchmarkEvaluationSummary } from "./presets";
-import { runAiVersionBenchmark, runAiVersionBenchmarkParallel } from "./presets";
+import { runAiVersionBenchmark, runAiVersionBenchmarkParallel, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
 
 export type BenchmarkDashboardRun = AiVersionBenchmarkDashboardReport & {
   id: string;
@@ -94,7 +94,13 @@ function assertCurrentBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benchma
   if (!run.scoreControlSummary || !Array.isArray(run.probeSummaries) || !Array.isArray(run.combatSummaries)) {
     throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
   }
-  return run;
+  const [score, scoreControl] = run.report.evaluations;
+  if (!score || !scoreControl) throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+  return {
+    ...run,
+    scoreSummary: summarizePairedScoreEvaluation(score, scoreControl),
+    scoreControlSummary: summarizeMeleeControlEvaluation(scoreControl),
+  };
 }
 
 export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRunSummary {

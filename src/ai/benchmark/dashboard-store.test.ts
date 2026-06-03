@@ -57,6 +57,105 @@ describe("benchmark dashboard store", () => {
     }
   });
 
+  it("derives dashboard summaries from match reports instead of stored summary fields", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
+    try {
+      const runsDir = benchmarkDashboardRunsDir({ rootDir });
+      await mkdir(runsDir, { recursive: true });
+      await writeFile(
+        path.join(runsDir, "stale-summary.json"),
+        JSON.stringify({
+          id: "stale-summary",
+          kind: "ai-version-benchmark",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          seed: "stale-seed",
+          name: "AI Version Benchmark",
+          mapPoolSize: 64,
+          selectedRichScoreMapIds: ["map-a", "map-b"],
+          scoreSummary: { name: "paired 1v2 score", wins: 2, losses: 0, failures: 0, successRate: 1, matchCount: 2 },
+          scoreControlSummary: { name: "1v1 score control", wins: 2, losses: 0, failures: 0, successRate: 1, matchCount: 2 },
+          probeSummaries: [],
+          combatSummaries: [],
+          elapsedMs: 1,
+          matchCount: 6,
+          report: {
+            name: "AI Version Benchmark",
+            elapsedMs: 1,
+            cpuMs: 1,
+            matchCount: 6,
+            evaluations: [
+              {
+                name: "1v2 score",
+                tag: "melee",
+                startedAt: "2026-01-01T00:00:00.000Z",
+                elapsedMs: 1,
+                cpuMs: 1,
+                matchCount: 2,
+                matches: [
+                  { name: "map-a 1v2", elapsedMs: 1, cpuMs: 1, setup: { map: { id: "map-a" } }, result: { winnerTeam: "north", players: { v2: { enemyUnitKills: 8 } } } },
+                  { name: "map-b 1v2", elapsedMs: 1, cpuMs: 1, setup: { map: { id: "map-b" } }, result: { winnerTeam: "north", players: { v2: { enemyUnitKills: 8 } } } },
+                ],
+              },
+              {
+                name: "1v1 score control",
+                tag: "melee",
+                startedAt: "2026-01-01T00:00:00.000Z",
+                elapsedMs: 1,
+                cpuMs: 1,
+                matchCount: 4,
+                matches: [
+                  {
+                    name: "map-a 1v1 control north",
+                    elapsedMs: 1,
+                    cpuMs: 1,
+                    setup: { map: { id: "map-a" } },
+                    result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 8, unitsKilledByNeutral: 0 } } },
+                  },
+                  {
+                    name: "map-a 1v1 control south",
+                    elapsedMs: 1,
+                    cpuMs: 1,
+                    setup: { map: { id: "map-a" } },
+                    result: { winner: "v2", winnerTeam: "south", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 8, unitsKilledByNeutral: 0 } } },
+                  },
+                  {
+                    name: "map-b 1v1 control north",
+                    elapsedMs: 1,
+                    cpuMs: 1,
+                    setup: { map: { id: "map-b" } },
+                    result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 8, unitsKilledByNeutral: 0 } } },
+                  },
+                  {
+                    name: "map-b 1v1 control south",
+                    elapsedMs: 1,
+                    cpuMs: 1,
+                    setup: { map: { id: "map-b" } },
+                    result: { winner: "v1a", winnerTeam: "north", players: { v2: { enemyUnitKills: 2 }, v1a: { unitsLost: 2, unitsKilledByNeutral: 0 } } },
+                  },
+                ],
+              },
+            ],
+          },
+          mapCount: 2,
+          full: false,
+        }),
+      );
+
+      await expect(listBenchmarkDashboardRuns({ rootDir })).resolves.toMatchObject([
+        {
+          scoreSummary: { wins: 1, losses: 1, failures: 1, successRate: 0.5, matchCount: 2 },
+          scoreControlSummary: { wins: 3, losses: 1, failures: 1, successRate: 0.75, matchCount: 4 },
+        },
+      ]);
+      await expect(readBenchmarkDashboardRun("stale-summary", { rootDir })).resolves.toMatchObject({
+        scoreSummary: { wins: 1, losses: 1, failures: 1, successRate: 0.5, matchCount: 2 },
+        scoreControlSummary: { wins: 3, losses: 1, failures: 1, successRate: 0.75, matchCount: 4 },
+      });
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects dashboard run files that do not use the current summary contract", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
     try {

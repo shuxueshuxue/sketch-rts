@@ -139,7 +139,7 @@ describe("AI benchmark presets", () => {
     expect(scoreControlMapIds).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
   });
 
-  it("requires each 1v2 score win to have a same-map side-balanced 1v1 control win", () => {
+  it("requires each 1v2 score win to pass both same-map side-balanced 1v1 controls", () => {
     const summary = summarizePairedScoreEvaluation(
       {
         name: "1v2 score",
@@ -178,7 +178,7 @@ describe("AI benchmark presets", () => {
             elapsedMs: 0,
             cpuMs: 0,
             setup: { map: { id: "map-a" } } as never,
-            result: { winner: "v1a", winnerTeam: "south", players: { v2: { enemyUnitKills: 1 }, v1a: { unitsLost: 1, unitsKilledByNeutral: 0 } } } as never,
+            result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 7 }, v1a: { unitsLost: 7, unitsKilledByNeutral: 0 } } } as never,
           },
           {
             name: "map-a 1v1 control south",
@@ -307,7 +307,7 @@ describe("AI benchmark presets", () => {
     expect(summary).toMatchObject({ wins: 0, losses: 1, failures: 1, successRate: 0 });
   });
 
-  it("summarizes side-balanced 1v1 controls by map instead of raw side games", () => {
+  it("summarizes side-balanced 1v1 controls by raw side games", () => {
     const summary = summarizeMeleeControlEvaluation({
       name: "1v1 score control",
       startedAt: "now",
@@ -332,7 +332,53 @@ describe("AI benchmark presets", () => {
       ],
     });
 
-    expect(summary).toMatchObject({ wins: 1, losses: 0, failures: 0, successRate: 1, matchCount: 1 });
+    expect(summary).toMatchObject({ wins: 1, losses: 1, failures: 1, successRate: 0.5, matchCount: 2 });
+  });
+
+  it("requires both side-balanced controls before a 1v2 score map can pass", () => {
+    const score = {
+      name: "1v2 score",
+      tag: "melee",
+      startedAt: "now",
+      elapsedMs: 0,
+      cpuMs: 0,
+      matchCount: 1,
+      matches: [
+        {
+          name: "map-a 1v2",
+          elapsedMs: 0,
+          cpuMs: 0,
+          setup: { map: { id: "map-a" } } as never,
+          result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 4, unitsKilledByNeutral: 0 }, v1b: { unitsLost: 4, unitsKilledByNeutral: 0 } } } as never,
+        },
+      ],
+    };
+    const control = {
+      name: "1v1 score control",
+      tag: "melee",
+      startedAt: "now",
+      elapsedMs: 0,
+      cpuMs: 0,
+      matchCount: 2,
+      matches: [
+        {
+          name: "map-a 1v1 control north",
+          elapsedMs: 0,
+          cpuMs: 0,
+          setup: { map: { id: "map-a" } } as never,
+          result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 8 }, v1a: { unitsLost: 8, unitsKilledByNeutral: 0 } } } as never,
+        },
+        {
+          name: "map-a 1v1 control south",
+          elapsedMs: 0,
+          cpuMs: 0,
+          setup: { map: { id: "map-a" } } as never,
+          result: { winner: "v1a", winnerTeam: "north", players: { v2: { enemyUnitKills: 2 }, v1a: { unitsLost: 2, unitsKilledByNeutral: 0 } } } as never,
+        },
+      ],
+    };
+
+    expect(summarizePairedScoreEvaluation(score as never, control as never)).toMatchObject({ wins: 0, losses: 1, failures: 1, successRate: 0, matchCount: 1 });
   });
 
   it("runs the AI benchmark preset through SDK parallel workers", async () => {
@@ -340,7 +386,7 @@ describe("AI benchmark presets", () => {
 
     expect(run.report.matchCount).toBe(13);
     expect(run.scoreSummary).toMatchObject({ name: "paired 1v2 score", matchCount: 1 });
-    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 1 });
+    expect(run.scoreControlSummary).toMatchObject({ name: "1v1 score control", matchCount: 2 });
     expect(run.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
   });
 });

@@ -1,7 +1,7 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { matchWarnings } from "./warnings";
-import { campRoleSummary, runListMeta, scoreControlGameSummary } from "./view-model";
+import { campRoleSummary, runListMeta } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
@@ -105,7 +105,6 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
 }
 
 function runDetail(run: BenchmarkDashboardRun) {
-  const controlGames = scoreControlGameSummary(run);
   return `
     <div class="detail-head">
       <div>
@@ -119,8 +118,7 @@ function runDetail(run: BenchmarkDashboardRun) {
     </div>
     <div class="summary-grid">
       ${summaryCell(scoreLabel(run.scoreSummary.name), run.scoreSummary.wins, run.scoreSummary.matchCount, run.scoreSummary.successRate)}
-      ${summaryCell("1v1 control maps", run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
-      ${controlGames ? summaryCell(controlGames.name, controlGames.wins, controlGames.matchCount, controlGames.successRate) : ""}
+      ${summaryCell("1v1 score control", run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
       ${run.probeSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
       ${run.combatSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
       <div><span>maps</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>

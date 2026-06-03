@@ -238,7 +238,7 @@ export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluat
   const wins = scoreEvaluation.matches.filter((match) => {
     const controls = controlsByMapId.get(match.setup.map.id);
     if (!controls?.length) throw new Error(`Missing 1v1 score control for ${match.setup.map.id}`);
-    return match.result.winnerTeam === "north" && controls.some(v2WonControl);
+    return match.result.winnerTeam === "north" && controls.length === 2 && controls.every(v2WonControl);
   }).length;
   const losses = scoreEvaluation.matches.length - wins;
   return {
@@ -253,22 +253,16 @@ export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluat
 }
 
 export function summarizeMeleeControlEvaluation(evaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
-  const matchesByMapId = new Map<string, BenchmarkEvaluationReport["matches"]>();
-  for (const match of evaluation.matches) {
-    const mapId = match.setup.map.id;
-    matchesByMapId.set(mapId, [...(matchesByMapId.get(mapId) ?? []), match]);
-  }
-  const mapControls = [...matchesByMapId.values()];
-  const wins = mapControls.filter((matches) => matches.some(v2WonControl)).length;
-  const losses = mapControls.length - wins;
+  const wins = evaluation.matches.filter(v2WonControl).length;
+  const losses = evaluation.matches.length - wins;
   return {
     name: evaluation.name,
     ...(evaluation.tag ? { tag: evaluation.tag } : {}),
     wins,
     losses,
     failures: losses,
-    successRate: mapControls.length === 0 ? 0 : wins / mapControls.length,
-    matchCount: mapControls.length,
+    successRate: evaluation.matches.length === 0 ? 0 : wins / evaluation.matches.length,
+    matchCount: evaluation.matches.length,
   };
 }
 
