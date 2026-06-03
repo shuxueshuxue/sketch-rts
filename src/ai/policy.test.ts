@@ -364,6 +364,41 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 1000, y: 2226.6666666666665 });
   });
 
+  it("v2 does not spend the expansion frame clearing a guarded natural while its main worker line is threatened", () => {
+    const scene = sketchScene("v2-expansion-pauses-for-main-worker-pressure")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "farm", 610, 500)
+      .building("v2", "barracks", 650, 560)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "stables", 750, 560)
+      .worker("v2", 560, 540)
+      .unit("v2", "footman", 900, 760)
+      .unit("v2", "footman", 930, 790)
+      .unit("v2", "lancer", 960, 820)
+      .unit("v2", "archer", 990, 850)
+      .unit("v2", "footman", 1020, 880)
+      .unit("v2", "archer", 1050, 910)
+      .unit("v1", "footman", 660, 540)
+      .unit("v1", "archer", 700, 560)
+      .unit("v1", "lancer", 740, 580)
+      .townHall("v1", 3400, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1000, 2200, 4000)
+      .goldMine("v1-main-mine", 3340, 3300, 4000)
+      .unit("neutral", "stonebackBrute", 1000, 2200)
+      .unit("neutral", "thornSlinger", 1040, 2240)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 lets attack-wave closeout preempt neutral objective control when the enemy has no army or workers", () => {
     const scene = sketchScene("v2-closeout-preempts-neutral-objective")
       .map("openClaims")

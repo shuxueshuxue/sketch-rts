@@ -265,6 +265,8 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
 
 function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (resources(snapshot).length <= activePlayerIds(snapshot).length) return undefined;
+  // @@@main-before-natural - Expansion is an economy claim; it must not reserve the whole army while the main base is already under real pressure.
+  if (options.version === "v2" && mainBaseNeedsObjectivePause(snapshot, owner, options)) return undefined;
   const missingCombatProduction = missingCombatProductionKind(snapshot, owner);
   if (missingCombatProduction && failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options)) return undefined;
   if (missingCombatProduction && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
