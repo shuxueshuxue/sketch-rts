@@ -7,6 +7,9 @@ describe("gameplay keybindings", () => {
     expect(gameplayKeyIntent(key("1", "Digit1", { ctrlKey: true }), context())).toEqual({ type: "none" });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ controlGroups: new Set([1]), inventorySlots: 1 }))).toEqual({ type: "controlGroupRecall", slot: 1 });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ inventorySlots: 1 }))).toEqual({ type: "inventoryUse", index: 0 });
+    expect(gameplayKeyIntent(key("2", "Digit2"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "inventoryUse", index: 0 });
+    expect(gameplayKeyIntent(key("3", "Digit3"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "controlGroupRecall", slot: 3 });
+    expect(gameplayKeyIntent(key("4", "Digit4"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "inventoryUse", index: 1 });
   });
 
   it("routes ordinary command-card hotkeys through the same resolver", () => {

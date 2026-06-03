@@ -1,7 +1,15 @@
 import type { GameCommand, GameSnapshot, ItemKind, PlayerId, Unit, WorldItem } from "../shared/types";
 
 export function itemHotkey(index: number) {
-  return String(index + 1);
+  return itemHotkeys(index + 1)[index] ?? "";
+}
+
+export function itemHotkeys(count: number, reservedDigits = new Set<number>()) {
+  const keys: string[] = [];
+  for (let digit = 1; digit <= 9 && keys.length < count; digit += 1) {
+    if (!reservedDigits.has(digit)) keys.push(String(digit));
+  }
+  return keys;
 }
 
 export function itemLabel(kind: ItemKind) {
