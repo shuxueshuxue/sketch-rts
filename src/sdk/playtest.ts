@@ -139,7 +139,7 @@ export type InteractivePlaytestUntilResult = {
 };
 
 export function createInteractivePlaytestSession(input: InteractivePlaytestSessionInput): InteractivePlaytestSession {
-  const players = [...new Set([input.controlledPlayer, ...input.scriptedPlayers, ...(input.options?.players ?? [])])];
+  const players = input.options?.players ? [...new Set([...input.options.players, input.controlledPlayer, ...input.scriptedPlayers])] : [...new Set([input.controlledPlayer, ...input.scriptedPlayers])];
   const game = createGame(input.mapId, {
     ...(input.options ?? {}),
     players,

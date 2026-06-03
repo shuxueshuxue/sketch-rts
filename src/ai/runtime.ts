@@ -15,6 +15,7 @@ export type AiRuntimeState = {
   version: AiScriptVersion;
   versions: Partial<Record<PlayerId, AiScriptVersion>>;
   policyMode?: PresetAiPolicyOptions["policyMode"];
+  disabledBehaviorsByPlayer?: Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>;
   memories: Record<PlayerId, AiPolicyMemory>;
 };
 
@@ -28,6 +29,7 @@ export type AiCommandFrameRequest<Source extends string = string> = {
   version?: AiScriptVersion;
   scripts?: AiScript[];
   memory?: AiPolicyMemory;
+  disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
 };
 
 export type AiMemoryProvider = {
@@ -49,6 +51,7 @@ export function createAiRuntime(
     version?: AiScriptVersion;
     versions?: Partial<Record<PlayerId, AiScriptVersion>>;
     policyMode?: PresetAiPolicyOptions["policyMode"];
+    disabledBehaviorsByPlayer?: Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>;
   } = {},
 ): AiRuntimeState {
   const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
@@ -63,6 +66,7 @@ export function createAiRuntime(
     version: options.version ?? "v1",
     versions: options.versions ?? {},
     ...(options.policyMode ? { policyMode: options.policyMode } : {}),
+    ...(options.disabledBehaviorsByPlayer ? { disabledBehaviorsByPlayer: cloneDisabledBehaviorsByPlayer(options.disabledBehaviorsByPlayer) } : {}),
     memories: Object.fromEntries(controlledPlayers.map((owner) => [owner, createAiPolicyMemory()])) as Record<PlayerId, AiPolicyMemory>,
   };
 }
@@ -84,6 +88,7 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
       version,
       scripts: runtimeScriptsForOwner(runtime, owner, version),
       memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
+      ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
     };
   });
   return issueAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
@@ -102,7 +107,7 @@ export function issueAiCommandFrame<Source extends string = string>(game: Game, 
     const scripts = request.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
     const memory = request.memory ?? memoryProvider?.get(owner) ?? policyOptions.memory ?? createAiPolicyMemory();
     memoryProvider?.set?.(owner, memory);
-    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams: game.teams, version, ...policyOptions, memory })) {
+    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams: game.teams, version, ...policyOptions, ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}), memory })) {
       planned.push({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),
@@ -131,4 +136,8 @@ function scriptsFromIds(scriptIds: string[]): AiScript[] {
 
 function cloneScriptIdsByPlayer(value: Partial<Record<PlayerId, string[]>>) {
   return Object.fromEntries(Object.entries(value).map(([owner, scriptIds]) => [owner, scriptIds ? [...scriptIds] : scriptIds])) as Partial<Record<PlayerId, string[]>>;
+}
+
+function cloneDisabledBehaviorsByPlayer(value: Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>) {
+  return Object.fromEntries(Object.entries(value).map(([owner, disabled]) => [owner, disabled ? [...disabled] : disabled])) as Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>;
 }

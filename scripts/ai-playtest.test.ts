@@ -175,6 +175,56 @@ describe("AI playtest CLI", () => {
     expect(persisted.runtime.thinkInterval).toBe(15);
   });
 
+  it("creates manual sessions from exact benchmark 1v2 matches", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "benchmark.json");
+
+    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--from-benchmark", "quarrySong 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2"));
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(created.id).toBe("interactive-quarrySong-1v2");
+    expect(created.players.v2).toMatchObject({ bases: 1, workers: 3 });
+    expect(created.players.v1a).toMatchObject({ bases: 1, workers: 3 });
+    expect(created.players.v1b).toMatchObject({ bases: 1, workers: 3 });
+    expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b"]);
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, controller: slot.controller }))).toEqual([
+      { playerId: "v2", team: "north", controller: "human" },
+      { playerId: "v1a", team: "south", controller: "ai" },
+      { playerId: "v1b", team: "south", controller: "ai" },
+    ]);
+    expect(persisted.runtime.versions).toMatchObject({ v1a: "v1", v1b: "v1" });
+  });
+
+  it("creates side-swapped benchmark control sessions without duplicating preset setup", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "benchmark-control.json");
+
+    runPlaytestCli("new", "--file", file, "--from-benchmark", "quarrySong 1v1 control south", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.scriptedPlayers).toEqual(["v1a"]);
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, controller: slot.controller }))).toEqual([
+      { playerId: "v1a", team: "north", controller: "ai" },
+      { playerId: "v2", team: "south", controller: "human" },
+    ]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+    expect(persisted.runtime.versions).toMatchObject({ v2: "v1", v1a: "v1" });
+  });
+
+  it("persists per-player disabled benchmark behaviors for exact assisted replay", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "benchmark-disabled.json");
+
+    runPlaytestCli("new", "--file", file, "--from-benchmark", "silverRidge 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "2", "--you", "v2", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b"]);
+    expect(persisted.runtime.disabledBehaviorsByPlayer).toEqual({ v2: ["workerHarassment"] });
+  });
+
   it("retreats wounded units through a memory-backed tactical command", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

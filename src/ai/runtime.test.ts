@@ -88,6 +88,30 @@ describe("shared AI runtime", () => {
     expect(result.commands.find((entry) => entry.playerId === "enemy")).toMatchObject({ scriptId: "economy", command: { type: "mine" } });
   });
 
+  it("passes disabled behaviors per controlled player", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], players: ["player", "enemy"] });
+    const scripts: AiScript[] = [
+      {
+        id: "disabled-behavior-probe",
+        phase: "economy",
+        run(snapshot, owner, options) {
+          if (options.disabledBehaviors?.includes("workerHarassment")) return undefined;
+          const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
+          return worker ? { type: "mine", unitIds: [worker.id], resourceId: `gold-${owner}-main` } : undefined;
+        },
+      },
+    ];
+    const runtime = createAiRuntime(["player", "enemy"], {
+      scripts,
+      disabledBehaviorsByPlayer: { player: ["workerHarassment"] },
+    });
+
+    const result = runPresetAiRuntime(game, runtime);
+
+    expect(result.commands.map((entry) => entry.playerId)).toEqual(["enemy"]);
+    expect(result.commands[0]).toMatchObject({ scriptId: "disabled-behavior-probe", command: { type: "mine" } });
+  });
+
   it("plans every controlled player from the same frame before applying commands", () => {
     const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"] });
     game.players.player.gold = 5000;

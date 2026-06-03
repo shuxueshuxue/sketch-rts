@@ -16,6 +16,7 @@ export type AiInteractivePlaytestRuntimeOptions = {
   version?: AiScriptVersion;
   versions?: Partial<Record<PlayerId, AiScriptVersion>>;
   policyMode?: PresetAiPolicyOptions["policyMode"];
+  disabledBehaviorsByPlayer?: NonNullable<AiRuntimeState["disabledBehaviorsByPlayer"]>;
 };
 
 export type AiInteractivePlaytestMemorySummary = {

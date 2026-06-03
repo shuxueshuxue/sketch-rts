@@ -7,6 +7,7 @@ import { DEFAULT_AI_THINK_INTERVAL } from "../src/ai/runtime";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
+import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
 import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
@@ -25,20 +26,22 @@ if (verb === "new") {
   const controlledPlayer = flag(args, "you") ?? "v2";
   const enemy = flag(args, "enemy") ?? "v1a";
   const setup = playtestSetupFromArgs(args, controlledPlayer, enemy);
-  const controlledVersion = (flag(args, "you-version") ?? "v2") as AiScriptVersion;
-  const enemyVersion = (flag(args, "enemy-version") ?? "v1") as AiScriptVersion;
+  const controlledVersion = setup.versions?.[controlledPlayer] ?? ((flag(args, "you-version") ?? "v2") as AiScriptVersion);
+  const enemyVersion = setup.versions?.[enemy] ?? ((flag(args, "enemy-version") ?? "v1") as AiScriptVersion);
   const thinkInterval = numberFlag(args, "think-interval", DEFAULT_AI_THINK_INTERVAL);
   const assistControlled = boolFlag(args, "assist-you");
-  const scriptIdsByPlayer = scriptIdsByPlayerFromArgs(args, controlledPlayer, enemy, assistControlled);
+  const scriptedPlayers = setup.scriptedPlayers ?? [enemy];
+  const versions = { ...Object.fromEntries(scriptedPlayers.map((owner) => [owner, setup.versions?.[owner] ?? enemyVersion])), [controlledPlayer]: controlledVersion } as Partial<Record<PlayerId, AiScriptVersion>>;
+  const scriptIdsByPlayer = scriptIdsByPlayerFromArgs(args, controlledPlayer, scriptedPlayers, assistControlled);
   const session = createInteractivePlaytestSession({
-    id: flag(args, "id") ?? `interactive-${setup.mapId}-${Date.now()}`,
+    id: flag(args, "id") ?? setup.id ?? `interactive-${setup.mapId}-${Date.now()}`,
     mapId: setup.mapId,
     controlledPlayer,
-    scriptedPlayers: [enemy],
+    scriptedPlayers,
     winnerMode: setup.winnerMode,
     options: setup.options,
   });
-  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions: { [controlledPlayer]: controlledVersion, [enemy]: enemyVersion }, ...(Object.keys(scriptIdsByPlayer).length > 0 ? { scriptIdsByPlayer } : {}), ...(setup.policyMode ? { policyMode: setup.policyMode } : {}) });
+  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions, ...(Object.keys(scriptIdsByPlayer).length > 0 ? { scriptIdsByPlayer } : {}), ...(setup.policyMode ? { policyMode: setup.policyMode } : {}), ...(setup.disabledBehaviorsByPlayer ? { disabledBehaviorsByPlayer: setup.disabledBehaviorsByPlayer } : {}) });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
   printJson(summarizeAiInteractivePlaytestSession(session, runtime));
   process.exit(0);
@@ -104,7 +107,10 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   throw new Error(`Unknown ai playtest command ${verb}`);
 }
 
-function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode } {
+function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { id?: string; mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode; scriptedPlayers?: PlayerId[]; versions?: Partial<Record<PlayerId, AiScriptVersion>>; disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"] } {
+  const benchmarkMatchName = flag(args, "from-benchmark");
+  if (benchmarkMatchName !== undefined) return benchmarkPlaytestSetup(args, benchmarkMatchName, controlledPlayer);
+
   const setup = flag(args, "setup");
   if (setup === undefined) {
     return {
@@ -125,6 +131,40 @@ function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy
     return { mapId: combat.mapId, options: combat.options, policyMode: "combat", winnerMode: "combatElimination" };
   }
   throw new Error(`Unknown ai playtest setup ${setup}`);
+}
+
+function benchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): { id: string; mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode; scriptedPlayers: PlayerId[]; versions: Partial<Record<PlayerId, AiScriptVersion>>; disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"] } {
+  const { input } = createAiVersionBenchmarkInput({
+    ...(flag(args, "benchmark-seed") ? { seed: requiredFlag(args, "benchmark-seed") } : {}),
+    ...(flag(args, "benchmark-map-count") ? { mapCount: requiredNumberFlag(args, "benchmark-map-count") } : {}),
+    full: boolFlag(args, "benchmark-full"),
+  });
+  const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
+  const match = matches.find((candidate) => candidate.name === matchName);
+  if (!match) throw new Error(`Unknown benchmark match ${matchName}`);
+  const agentEntries = Object.entries(match.agents);
+  if (!match.agents[controlledPlayer]) throw new Error(`Benchmark match ${matchName} does not include controlled player ${controlledPlayer}`);
+  const players = agentEntries.map(([owner]) => owner as PlayerId);
+  const scriptedPlayers = players.filter((owner) => owner !== controlledPlayer);
+  const teams = Object.fromEntries(agentEntries.map(([owner, agent]) => [owner, agent.team])) as Record<PlayerId, string>;
+  const races = Object.fromEntries(agentEntries.map(([owner, agent]) => [owner, agent.race])) as Record<PlayerId, NonNullable<typeof match.agents[PlayerId]["race"]>>;
+  const versions = Object.fromEntries(agentEntries.map(([owner, agent]) => [owner, agent.policyVersion ?? agent.version])) as Partial<Record<PlayerId, AiScriptVersion>>;
+  const disabledBehaviorsByPlayer = Object.fromEntries(agentEntries.filter(([, agent]) => agent.disabledBehaviors && agent.disabledBehaviors.length > 0).map(([owner, agent]) => [owner, [...agent.disabledBehaviors!]])) as AiRuntimeState["disabledBehaviorsByPlayer"];
+  return {
+    id: `interactive-${matchName.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    mapId: match.mapId ?? "bareDuel",
+    options: {
+      ...(match.options ?? {}),
+      players,
+      teams,
+      races,
+    },
+    ...(agentEntries.some(([, agent]) => agent.policyMode) ? { policyMode: agentEntries.find(([, agent]) => agent.policyMode)?.[1].policyMode } : {}),
+    ...(match.winnerMode ? { winnerMode: match.winnerMode } : {}),
+    scriptedPlayers,
+    versions,
+    ...(disabledBehaviorsByPlayer && Object.keys(disabledBehaviorsByPlayer).length > 0 ? { disabledBehaviorsByPlayer } : {}),
+  };
 }
 
 function conditionFromArgs(args: string[]): InteractivePlaytestCondition {
@@ -158,13 +198,13 @@ function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspect
   return owner as PlayerId;
 }
 
-function scriptIdsByPlayerFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId, assistControlled: boolean): Partial<Record<PlayerId, string[]>> {
+function scriptIdsByPlayerFromArgs(args: string[], controlledPlayer: PlayerId, scriptedPlayers: PlayerId[], assistControlled: boolean): Partial<Record<PlayerId, string[]>> {
   const youScripts = scriptIdsFlag(args, "you-scripts");
   const enemyScripts = scriptIdsFlag(args, "enemy-scripts");
   if (youScripts && !assistControlled) throw new Error("--you-scripts requires --assist-you");
   return {
     ...(youScripts ? { [controlledPlayer]: youScripts } : {}),
-    ...(enemyScripts ? { [enemy]: enemyScripts } : {}),
+    ...(enemyScripts ? Object.fromEntries(scriptedPlayers.map((owner) => [owner, enemyScripts])) : {}),
   };
 }
 
