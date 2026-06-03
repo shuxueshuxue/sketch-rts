@@ -146,7 +146,12 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "repair") {
-      drawRepairEffect(ctx, point, life, effect.remaining);
+      drawHammerEffect(ctx, "repair", point, life, effect.remaining);
+      continue;
+    }
+
+    if (effect.type === "build") {
+      drawHammerEffect(ctx, "build", point, life, effect.remaining);
       continue;
     }
 
@@ -186,13 +191,10 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     ctx.lineWidth = 2;
-    ctx.strokeStyle =
-      effect.type === "build" ? "#315f87" : effect.type === "mine" ? "#b9861b" : effect.type === "attack" ? "#9b2f2f" : "#243126";
-    ctx.setLineDash(effect.type === "build" ? [6, 5] : []);
+    ctx.strokeStyle = effect.type === "mine" ? "#b9861b" : effect.type === "attack" ? "#9b2f2f" : "#243126";
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.setLineDash([]);
   }
 }
 
@@ -282,36 +284,48 @@ function drawHealEffect(renderer: EffectRenderContext, effect: WorldEffect, poin
   ctx.restore();
 }
 
-function drawRepairEffect(ctx: CanvasRenderingContext2D, point: Point, life: number, remaining: number) {
-  const pulse = 1 - life;
-  const ring = 16 + pulse * 18;
+function drawHammerEffect(ctx: CanvasRenderingContext2D, kind: HammerEffectKind, point: Point, life: number, remaining: number) {
+  const frame = hammerEffectFrame(kind, life, remaining);
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.shadowColor = "rgba(49, 95, 135, 0.34)";
+
+  ctx.shadowColor = kind === "build" ? "rgba(49, 95, 135, 0.28)" : "rgba(185, 134, 27, 0.3)";
   ctx.shadowBlur = 8;
-  ctx.strokeStyle = `rgba(49, 95, 135, ${0.32 + life * 0.38})`;
-  ctx.fillStyle = `rgba(185, 134, 27, ${0.06 + life * 0.08})`;
+  ctx.strokeStyle = frame.siteStroke;
+  ctx.fillStyle = frame.siteFill;
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 16, ring * 1.15, ring * 0.42, 0, 0, Math.PI * 2);
+  ctx.ellipse(point.x, point.y + 16, frame.site.rx, frame.site.ry, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = `rgba(185, 134, 27, ${0.46 + life * 0.32})`;
+  const impact = { x: point.x + frame.impact.x, y: point.y + frame.impact.y };
+  ctx.strokeStyle = frame.sparkStroke;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(impact.x - 8, impact.y + 5);
+  ctx.lineTo(impact.x - 1, impact.y + 1);
+  ctx.moveTo(impact.x + 1, impact.y + 6);
+  ctx.lineTo(impact.x + 8, impact.y + 2);
+  ctx.moveTo(impact.x - 2, impact.y + 9);
+  ctx.lineTo(impact.x + 4, impact.y + 9);
+  ctx.stroke();
+
+  ctx.strokeStyle = frame.handleStroke;
   ctx.lineWidth = 3;
-  for (let i = 0; i < 4; i += 1) {
-    const angle = remaining * 0.34 + i * (Math.PI / 2);
-    const x = point.x + Math.cos(angle) * (10 + pulse * 16);
-    const y = point.y + 8 + Math.sin(angle) * (5 + pulse * 7);
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y - 3);
-    ctx.lineTo(x + 5, y + 3);
-    ctx.moveTo(x + 2, y - 6);
-    ctx.lineTo(x - 2, y + 6);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(point.x + frame.handle.from.x, point.y + frame.handle.from.y);
+  ctx.lineTo(point.x + frame.handle.to.x, point.y + frame.handle.to.y);
+  ctx.stroke();
+
+  ctx.strokeStyle = frame.headStroke;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(point.x + frame.head.from.x, point.y + frame.head.from.y);
+  ctx.lineTo(point.x + frame.head.to.x, point.y + frame.head.to.y);
+  ctx.stroke();
   ctx.restore();
 }
 
