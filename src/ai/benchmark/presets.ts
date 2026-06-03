@@ -1,4 +1,5 @@
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
+import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { RICH_SCORE_MAP_IDS } from "../../shared/map";
 import type { MapId, PlayerId, RaceId } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkReport, BenchmarkMatchInput } from "../../sdk/benchmark/core";
@@ -51,7 +52,7 @@ const DEFAULT_ONE_V_THREE_PROBE_SIZE = 3;
 const DEFAULT_TWO_V_THREE_PROBE_SIZE = 3;
 const DEFAULT_SAMPLE_SIZE = DEFAULT_SCORE_SAMPLE_SIZE + DEFAULT_ONE_V_THREE_PROBE_SIZE + DEFAULT_TWO_V_THREE_PROBE_SIZE;
 const DEFAULT_MAX_TICKS = 48_000;
-const DEFAULT_THINK_INTERVAL = 45;
+const DEFAULT_THINK_INTERVAL = DEFAULT_AI_THINK_INTERVAL;
 let randomSeedCounter = 0;
 const V2: PlayerId = "v2";
 const V2B: PlayerId = "v2b";

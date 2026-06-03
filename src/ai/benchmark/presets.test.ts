@@ -30,6 +30,7 @@ describe("AI benchmark presets", () => {
 
   it("builds the visible benchmark as melee score/probes plus tagged combat micro lanes", () => {
     const preset = createAiVersionBenchmarkInput({ seed: "visible-dashboard", mapCount: 18 });
+    const thinkIntervals = new Set(preset.input.evaluations.flatMap((evaluation) => evaluation.matches.map((match) => match.thinkInterval)));
 
     expect(preset.input.evaluations).toHaveLength(6);
     expect(preset.input.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
@@ -83,6 +84,7 @@ describe("AI benchmark presets", () => {
     expect(allMatchMapIds).toHaveLength(18);
     expect(new Set(allMatchMapIds).size).toBe(18);
     expect(allMatchMapIds).toEqual(preset.selection.mapIds);
+    expect([...thinkIntervals]).toEqual([15]);
   });
 
   it("uses matching combat recipes for both sides while varying mix, stars, and formation", () => {

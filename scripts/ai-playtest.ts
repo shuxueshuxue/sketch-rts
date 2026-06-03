@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
 import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
+import { DEFAULT_AI_THINK_INTERVAL } from "../src/ai/runtime";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
@@ -26,7 +27,7 @@ if (verb === "new") {
   const setup = playtestSetupFromArgs(args, controlledPlayer, enemy);
   const controlledVersion = (flag(args, "you-version") ?? "v2") as AiScriptVersion;
   const enemyVersion = (flag(args, "enemy-version") ?? "v1") as AiScriptVersion;
-  const thinkInterval = numberFlag(args, "think-interval", 45);
+  const thinkInterval = numberFlag(args, "think-interval", DEFAULT_AI_THINK_INTERVAL);
   const assistControlled = boolFlag(args, "assist-you");
   const scriptIdsByPlayer = scriptIdsByPlayerFromArgs(args, controlledPlayer, enemy, assistControlled);
   const session = createInteractivePlaytestSession({
@@ -98,6 +99,7 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
   if (verb === "train") return { type: "train", buildingId: flag(args, "building"), unitKind: requiredFlag(args, "unit-kind") as TrainableUnitKind };
   if (verb === "research") return { type: "research", buildingId: flag(args, "building"), upgradeKind: requiredFlag(args, "upgrade") as UpgradeKind };
   if (verb === "hire") return { type: "hire", campId: requiredFlag(args, "camp") };
+  if (verb === "pickup-item") return { type: "pickupItem", unitId: flag(args, "unit"), itemId: requiredFlag(args, "item") };
   if (verb === "use-item") return { type: "useItem", unitId: flag(args, "unit"), itemId: requiredFlag(args, "item"), ...(flag(args, "target") ? { targetId: requiredFlag(args, "target") } : {}), ...(flag(args, "x") ? { x: requiredNumberFlag(args, "x") } : {}), ...(flag(args, "y") ? { y: requiredNumberFlag(args, "y") } : {}) };
   throw new Error(`Unknown ai playtest command ${verb}`);
 }
@@ -228,5 +230,6 @@ function printHelp() {
   npm run play:ai -- creep-camp --file .playtests/duel.json --camp merc-camp-crossroad --units combat
   npm run play:ai -- focus --file .playtests/duel.json --target unit-v1a-worker-1
   npm run play:ai -- focus-near --file .playtests/duel.json --target unit-v1a-footman-1 --join-range 95
+  npm run play:ai -- pickup-item --file .playtests/duel.json --item treasure-center-lightning
   npm run play:ai -- raw --file .playtests/duel.json --json '{"type":"move","unitIds":["unit-v2-worker-1"],"x":500,"y":500}'`);
 }

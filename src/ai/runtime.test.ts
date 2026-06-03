@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
-import { createAiRuntime, issueAiCommandFrame, runPresetAiRuntime } from "./runtime";
+import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, issueAiCommandFrame, runPresetAiRuntime } from "./runtime";
 import type { AiPolicyMemory, AiScript } from "./policy";
 import { sketchScene } from "../sdk/scene";
 
 describe("shared AI runtime", () => {
+  it("uses one shared fast-enough default think interval for every runtime caller", () => {
+    const runtime = createAiRuntime(["player", "enemy"]);
+
+    expect(DEFAULT_AI_THINK_INTERVAL).toBe(15);
+    expect(runtime.thinkInterval).toBe(DEFAULT_AI_THINK_INTERVAL);
+  });
+
   it("keeps simulation ticks free of AI decisions", () => {
     const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
 

@@ -3,6 +3,8 @@ import { issueCommandFrame, type CommandFrameEntry, type CommandFrameHooks } fro
 import { snapshotGame, type Game } from "../shared/sim";
 import type { PlayerId } from "../shared/types";
 
+export const DEFAULT_AI_THINK_INTERVAL = 15;
+
 export type AiRuntimeState = {
   controlledPlayers: PlayerId[];
   lastThink: Partial<Record<PlayerId, number>>;
@@ -49,7 +51,7 @@ export function createAiRuntime(
     policyMode?: PresetAiPolicyOptions["policyMode"];
   } = {},
 ): AiRuntimeState {
-  const thinkInterval = options.thinkInterval ?? 45;
+  const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
   const controlledPlayers = [...new Set(players)];
   return {
     controlledPlayers,

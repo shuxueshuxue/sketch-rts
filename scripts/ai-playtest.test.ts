@@ -164,6 +164,17 @@ describe("AI playtest CLI", () => {
     });
   });
 
+  it("uses the shared AI think interval by default", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you");
+
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+    expect(persisted.runtime.thinkInterval).toBe(15);
+  });
+
   it("retreats wounded units through a memory-backed tactical command", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);
@@ -184,6 +195,19 @@ describe("AI playtest CLI", () => {
         }),
       ])
     );
+  });
+
+  it("picks up a nearby item through the reusable SDK item intent", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-15v20", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a");
+    runPlaytestCli("raw", "--file", file, "--json", '{"type":"dropItem","unitId":"combat-v2-unit-5","itemId":"combat-v2-lightningRod-4","x":522,"y":892}');
+    runPlaytestCli("pickup-item", "--file", file, "--item", "combat-v2-lightningRod-4");
+
+    const inspection = JSON.parse(runPlaytestCli("inspect-units", "--file", file, "--owner", "v2"));
+    expect(inspection.units.some((unit: { carriedItems: { id: string }[] }) => unit.carriedItems.some((item) => item.id === "combat-v2-lightningRod-4"))).toBe(true);
   });
 });
 
