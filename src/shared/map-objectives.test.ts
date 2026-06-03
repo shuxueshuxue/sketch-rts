@@ -73,6 +73,25 @@ describe("map neutral objective layout", () => {
     }
   });
 
+  it("guards both side-lane march mines in rich score maps", () => {
+    for (const mapId of RICH_SCORE_MAPS) {
+      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
+      const report = analyzeMapObjectives(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
+      const guardedIds = new Set(report.camps.flatMap((camp) => camp.guardedObjectiveIds));
+      const westCamp = report.camps.find((camp) => camp.guardedObjectiveIds.includes("gold-west-march"))!;
+      const eastCamp = report.camps.find((camp) => camp.guardedObjectiveIds.includes("gold-east-march"))!;
+      const westMine = game.resources.find((resource) => resource.id === "gold-west-march")!;
+      const eastMine = game.resources.find((resource) => resource.id === "gold-east-march")!;
+      const northBase = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall")!;
+      const southBase = game.buildings.find((building) => building.owner === "v1a" && building.kind === "townHall")!;
+
+      expect(guardedIds.has("gold-west-march"), `${mapId} west march mine should be guarded`).toBe(true);
+      expect(guardedIds.has("gold-east-march"), `${mapId} east march mine should be guarded`).toBe(true);
+      expect(Math.abs(Math.hypot(westMine.x - northBase.x, westMine.y - northBase.y) - Math.hypot(eastMine.x - southBase.x, eastMine.y - southBase.y)), `${mapId} side march mines should mirror start access`).toBeLessThanOrEqual(20);
+      expect(Math.abs(westCamp.power - eastCamp.power), `${mapId} side march guards should have comparable power`).toBeLessThanOrEqual(1);
+    }
+  });
+
   it("makes guarded mines and mercenary camps real strategic objectives", () => {
     for (const mapId of EVALUATION_MAPS) {
       const report = analyzeEvaluationMap(mapId);

@@ -199,7 +199,7 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
       ...mainMines,
       ...expansionMines.map((resource) => scaleResource(richAuthorResource(mapId, resource))),
       { id: "gold-west-march", kind: "goldMine", x: 1620, y: 5220, amount: 6_000 },
-      { id: "gold-east-march", kind: "goldMine", x: 6280, y: 2520, amount: 6_000 },
+      { id: "gold-east-march", kind: "goldMine", x: 6572, y: 5220, amount: 6_000 },
     ] satisfies ResourceNode[]).map((resource) => (resource.id.startsWith("gold-west") || resource.id.startsWith("gold-east") ? scaleResource(richAuthorResource(mapId, resource)) : resource));
   }
   return [...mainMines, ...expansionMines.map(scaleResource)];
@@ -307,8 +307,9 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
       createUnit("wildling-west-1", "neutral", "stonebackBrute", 1680, 5120),
       createUnit("wildling-west-2", "neutral", "thornSlinger", 1780, 5020),
       createUnit("wildling-west-3", "neutral", "gladeWitch", 1740, 5160),
-      createUnit("wildling-east-1", "neutral", "gladeWitch", 6900, 3800),
-      createUnit("wildling-east-2", "neutral", "ancientStag", 7020, 3880),
+      createUnit("wildling-east-1", "neutral", "stonebackBrute", 6572, 5060),
+      createUnit("wildling-east-2", "neutral", "thornSlinger", 6472, 5120),
+      createUnit("wildling-east-3", "neutral", "gladeWitch", 6532, 4980),
     );
   }
   const authoredNeutrals = [...neutralUnits.map((unit) => scaleUnit(isRichScoreMap(mapId) ? richAuthorUnit(mapId, unit) : unit)), ...freeWildlingCamps(mapId)];
@@ -416,6 +417,7 @@ function richAuthorUnit(mapId: MapId, unit: Unit): Unit {
 }
 
 function richAuthorPoint(mapId: MapId, x: number, y: number) {
+  if (isSideLaneMarchAuthorPoint(x, y)) return { x, y };
   if (mapId === "wildMarches") return { x, y };
   if (mapId === "emberFen") return { x: clampAuthor(x * 0.94 + 220), y: clampAuthor(y * 0.9 + 440) };
   if (mapId === "thornedDelta") return { x: clampAuthor(x * 1.03 - 120), y: clampAuthor(y * 0.95 + 210) };
@@ -449,6 +451,20 @@ function richAuthorPoint(mapId: MapId, x: number, y: number) {
   if (mapId === "copperWeald") return { x: clampAuthor(x * 0.95 + 320), y: clampAuthor(y * 0.98 + 170) };
   if (mapId === "opalFen") return { x: clampAuthor(x * 1.05 - 220), y: clampAuthor(y * 1.04 - 150) };
   return richGeneratedPoint(mapId, x, y, AUTHOR_MAP_SIZE);
+}
+
+function isSideLaneMarchAuthorPoint(x: number, y: number) {
+  // @@@side-lane-natural-anchor - Score maps may vary routes, but paired side-lane naturals must not drift into spawn bias.
+  return (
+    (x === 1620 && y === 5220) ||
+    (x === 1680 && y === 5120) ||
+    (x === 1780 && y === 5020) ||
+    (x === 1740 && y === 5160) ||
+    (x === 6572 && y === 5220) ||
+    (x === 6572 && y === 5060) ||
+    (x === 6472 && y === 5120) ||
+    (x === 6532 && y === 4980)
+  );
 }
 
 function richStandardPoint(mapId: MapId, x: number, y: number) {
@@ -1004,7 +1020,6 @@ function freeWildlingCamps(mapId: MapId): Unit[] {
   if (mapId !== "verdantCrossroads" && mapId !== "campRush" && !isRichScoreMap(mapId)) return [];
   if (isRichScoreMap(mapId)) {
     return [
-      ...wildlingCamp(mapId, "wildling-free-green-west", 820, 2490, ["mossGnawer", "wildling"]),
       ...wildlingCamp(mapId, "wildling-free-yellow-north", 2800, 850, ["stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
       ...wildlingCamp(mapId, "wildling-free-red-west", 620, 3330, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
       ...wildlingCamp(mapId, "wildling-free-red-east", 2300, 3300, ["ancientStag", "ancientStag", "stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger"]),
