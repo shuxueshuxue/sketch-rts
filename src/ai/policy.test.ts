@@ -364,6 +364,34 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 1000, y: 2226.6666666666665 });
   });
 
+  it("v2 clears its guarded first natural before a nearby guarded mercenary camp", () => {
+    const scene = sketchScene("v2-natural-before-guarded-merc-objective")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 720, 720)
+      .unit("v2", "footman", 760, 740)
+      .unit("v2", "footman", 800, 760)
+      .unit("v2", "lancer", 840, 780)
+      .townHall("v1", 3400, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 900, 1120, 4000)
+      .goldMine("v1-main-mine", 3340, 3300, 4000)
+      .unit("neutral", "wildling", 900, 1120)
+      .unit("neutral", "mossGnawer", 930, 1150)
+      .mercenaryCamp("near-bow-post", 1180, 980, { hireKind: "contractArcher", cost: 145, stock: 2, cooldownRemaining: 0 })
+      .unit("neutral", "wildling", 1160, 980)
+      .unit("neutral", "mossGnawer", 1190, 1010)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toMatchObject({ type: "attackMove", x: 915, y: 1135 });
+  });
+
   it("v2 does not spend the expansion frame clearing a guarded natural while its main worker line is threatened", () => {
     const scene = sketchScene("v2-expansion-pauses-for-main-worker-pressure")
       .map("openClaims")

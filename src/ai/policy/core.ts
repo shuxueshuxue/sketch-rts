@@ -875,7 +875,8 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
     .filter((candidate) => distance(candidate.camp, anchor) <= maxObjectiveDistance)
     .filter((candidate) => armyPower(army) >= armyPower(candidate.guards) * requiredPowerRatio)
     .sort((a, b) => objectiveCampScore(b.camp, b.guards, anchor) - objectiveCampScore(a.camp, a.guards, anchor))[0];
-  const target = mercenaryTarget ? { point: mercenaryTarget.camp } : neutralCampObjective(snapshot, owner, army, anchor, maxObjectiveDistance, requiredPowerRatio, options);
+  const naturalTarget = guardedFirstNaturalObjective(snapshot, owner, army, anchor, maxObjectiveDistance, requiredPowerRatio, options);
+  const target = naturalTarget ?? (mercenaryTarget ? { point: mercenaryTarget.camp } : neutralCampObjective(snapshot, owner, army, anchor, maxObjectiveDistance, requiredPowerRatio, options));
   if (!target) return undefined;
   const stale = staleAttackMovers(army, target.point);
   return stale.length >= minimumArmy ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.point.x, y: target.point.y }, options) : undefined;
@@ -905,6 +906,19 @@ function attackMoveTargetsEnemyObjective(snapshot: GameSnapshot, owner: PlayerId
 function objectiveControlMinimumArmy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (options.version === "v2" && !hasEstablishedExpansion(snapshot, owner) && combatUnits(snapshot, owner).length >= 4) return 4;
   return 5;
+}
+
+function guardedFirstNaturalObjective(snapshot: GameSnapshot, owner: PlayerId, army: Unit[], anchor: Point, maxDistance: number, requiredPowerRatio: number, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || !firstNaturalNeedsClearing(snapshot, owner)) return undefined;
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine) return undefined;
+  const guards = neutralGuardsNear(snapshot, mine, 280);
+  if (guards.length === 0) return undefined;
+  const point = averagePoint(guards);
+  if (distance(point, anchor) > maxDistance) return undefined;
+  if (armyPower(army) < armyPower(guards) * requiredPowerRatio) return undefined;
+  if (localEnemyControlNearObjective(snapshot, owner, point, army, options)) return undefined;
+  return { point };
 }
 
 function opponentIsReducedToBuildings(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
