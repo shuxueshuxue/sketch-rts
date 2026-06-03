@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { snapshotGame } from "../../shared/sim";
+import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import { sketchScene } from "../../sdk/scene";
 import { createAiPolicyMemory } from "../memory";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./claims";
@@ -83,5 +84,23 @@ describe("AI policy command memory claims", () => {
       y: 520,
       sinceTick: 45,
     });
+  });
+
+  it("keeps objective claims alive long enough for distant camp walks", () => {
+    const game = sketchScene("long-objective-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 620, 540, { id: "claim-footman" })
+      .unit("neutral", "wildling", 1420, 1120, { id: "distant-guard" })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+
+    recordAiMemoryForCommands(snapshotGame(game), "objectiveControl", [{ type: "attackMove", unitIds: ["claim-footman"], x: 1420, y: 1120 }], memory);
+
+    expect(memory.unitClaims["claim-footman"]).toMatchObject({ kind: "creep", targetId: "distant-guard", sinceTick: 0 });
+    expect(memory.unitClaims["claim-footman"]?.expiresTick).toBeGreaterThanOrEqual(120 * SIM_TICKS_PER_SECOND);
   });
 });
