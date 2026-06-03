@@ -136,6 +136,30 @@ describe("interactive playtest SDK", () => {
     ]);
   });
 
+  it("sorts inspected units so wounded controlled units are easy to steer", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "v2-z-wounded", owner: "v2", kind: "archer", x: 300, y: 830, hp: 12 },
+            { id: "v2-a-healthy", owner: "v2", kind: "footman", x: 320, y: 780 },
+            { id: "v1a-target", owner: "v1a", kind: "footman", x: 1200, y: 790, hp: 72 },
+          ],
+        },
+      },
+    });
+
+    expect(inspectInteractivePlaytestUnits(session, { owner: "v2" }).units.map((unit) => unit.id)).toEqual(["v2-z-wounded", "v2-a-healthy"]);
+  });
+
   it("fails loudly when a high-level selector resolves to no valid controlled units", () => {
     const session = createInteractivePlaytestSession({
       mapId: "combatArena",

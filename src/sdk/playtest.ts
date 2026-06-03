@@ -260,7 +260,7 @@ export function inspectInteractivePlaytestUnits(session: InteractivePlaytestSess
     units: snapshot.units
       .filter((unit) => owner === "all" || unit.owner === owner)
       .map((unit) => ({ owner: unit.owner, ...summarizeUnit(snapshot, unit) }))
-      .sort((a, b) => a.owner.localeCompare(b.owner) || a.id.localeCompare(b.id)),
+      .sort((a, b) => a.owner.localeCompare(b.owner) || a.hp / a.maxHp - b.hp / b.maxHp || a.id.localeCompare(b.id)),
   };
 }
 

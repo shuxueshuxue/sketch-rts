@@ -1,7 +1,7 @@
 import { applyInteractivePlaytestCommand, inspectInteractivePlaytestUnits, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestInspectedUnit, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUnitInspection, type InteractivePlaytestUnitInspectionOwner, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
 import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
 import type { AiScript, PresetAiPolicyOptions } from "./policy";
-import { recordAiMemoryForCommands } from "./policy/claims";
+import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./policy/claims";
 import type { AiScriptVersion, PlayerId } from "../shared/types";
 import { snapshotGame } from "../shared/sim";
 import { createAiPolicyMemory, type AiPolicyMemory, type AiPolicyUnitClaim } from "./memory";
@@ -66,19 +66,25 @@ export function applyAiInteractivePlaytestCommand(session: InteractivePlaytestSe
 }
 
 export function stepAiInteractivePlaytestSession(session: InteractivePlaytestSession, runtime: AiRuntimeState, ticks: number) {
+  pruneAiInteractivePlaytestMemories(session, runtime);
   stepInteractivePlaytestSession(session, ticks, {
     beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
   });
+  pruneAiInteractivePlaytestMemories(session, runtime);
 }
 
 export function stepAiInteractivePlaytestUntil(session: InteractivePlaytestSession, runtime: AiRuntimeState, condition: InteractivePlaytestCondition, options: Pick<InteractivePlaytestUntilOptions, "maxTicks">): InteractivePlaytestUntilResult {
-  return stepInteractivePlaytestUntil(session, condition, {
+  pruneAiInteractivePlaytestMemories(session, runtime);
+  const result = stepInteractivePlaytestUntil(session, condition, {
     maxTicks: options.maxTicks,
     beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
   });
+  pruneAiInteractivePlaytestMemories(session, runtime);
+  return result;
 }
 
 export function summarizeAiInteractivePlaytestSession(session: InteractivePlaytestSession, runtime: AiRuntimeState): AiInteractivePlaytestSummary {
+  pruneAiInteractivePlaytestMemories(session, runtime);
   return {
     ...summarizeInteractivePlaytestSession(session),
     aiMemory: Object.fromEntries(Object.entries(runtime.memories).map(([owner, memory]) => [owner, summarizeAiMemory(memory)])) as Record<PlayerId, AiInteractivePlaytestMemorySummary>,
@@ -86,6 +92,7 @@ export function summarizeAiInteractivePlaytestSession(session: InteractivePlayte
 }
 
 export function inspectAiInteractivePlaytestUnits(session: InteractivePlaytestSession, runtime: AiRuntimeState, options: { owner?: InteractivePlaytestUnitInspectionOwner } = {}): AiInteractivePlaytestUnitInspection {
+  pruneAiInteractivePlaytestMemories(session, runtime);
   const inspection = inspectInteractivePlaytestUnits(session, options);
   return {
     ...inspection,
@@ -94,6 +101,11 @@ export function inspectAiInteractivePlaytestUnits(session: InteractivePlaytestSe
       memoryClaim: runtime.memories[unit.owner]?.unitClaims[unit.id] ? summarizeUnitClaim(unit.id, runtime.memories[unit.owner]!.unitClaims[unit.id]!) : null,
     })),
   };
+}
+
+function pruneAiInteractivePlaytestMemories(session: InteractivePlaytestSession, runtime: AiRuntimeState) {
+  const snapshot = snapshotGame(session.game);
+  for (const [owner, memory] of Object.entries(runtime.memories)) pruneAiPolicyMemory(snapshot, owner as PlayerId, memory);
 }
 
 function interactiveMemoryScriptId(commandType: InteractivePlaytestCommand["type"], issuedScriptId: string) {

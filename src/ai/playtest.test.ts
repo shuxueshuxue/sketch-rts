@@ -227,6 +227,36 @@ describe("AI interactive playtest wiring", () => {
     expect(runtime.memories.v2!.unitClaims["healthy-footman"]).toBeUndefined();
   });
 
+  it("prunes manual-only memory claims for units that died while stepping", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "combatArena",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: {
+        players: ["v2", "v1a"],
+        teams: { v2: "north", v1a: "south" },
+        scenario: {
+          replaceDefaultUnits: true,
+          replaceDefaultBuildings: true,
+          replaceDefaultResources: true,
+          addUnits: [
+            { id: "hurt-archer", owner: "v2", kind: "archer", x: 500, y: 500, hp: 30 },
+            { id: "v1a-footman", owner: "v1a", kind: "footman", x: 900, y: 500 },
+          ],
+        },
+      },
+    });
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: false, thinkInterval: 45, versions: { v1a: "v1" } });
+    applyAiInteractivePlaytestCommand(session, runtime, { type: "retreatWounded", hpRatio: 0.5, x: 200, y: 500 });
+    const deadIndex = session.game.units.findIndex((unit) => unit.id === "hurt-archer");
+    if (deadIndex === -1) throw new Error("missing hurt archer");
+    session.game.units.splice(deadIndex, 1);
+
+    stepAiInteractivePlaytestSession(session, runtime, 1);
+
+    expect(runtime.memories.v2!.unitClaims["hurt-archer"]).toBeUndefined();
+  });
+
   it("creates controlled-player memory for manual-only CLI commands without enabling AI assist", () => {
     const session = createInteractivePlaytestSession({
       mapId: "bareDuel",
