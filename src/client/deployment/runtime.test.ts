@@ -21,4 +21,17 @@ describe("deployment runtime factory", () => {
     expect(sessionSockets).toBe(0);
     expect(roomTransports).toBe(0);
   });
+
+  it("reports static runtime readiness through the same boot callback", () => {
+    let ready = 0;
+    const runtime = createDeploymentRuntime("static", {
+      onSessionOpen() {
+        ready += 1;
+      },
+    });
+
+    runtime.initialAdapter();
+
+    expect(ready).toBe(1);
+  });
 });

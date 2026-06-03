@@ -9,6 +9,7 @@ import type { DeploymentRuntime, StartedMatch } from "./runtime";
 export type StaticSoloDeploymentRuntimeOptions = {
   now?: () => number;
   tickMs?: number;
+  onSessionOpen?: () => void;
 };
 
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
@@ -19,6 +20,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   constructor(private readonly options: StaticSoloDeploymentRuntimeOptions = {}) {}
 
   initialAdapter() {
+    this.options.onSessionOpen?.();
     return this.emptyAdapter;
   }
 
