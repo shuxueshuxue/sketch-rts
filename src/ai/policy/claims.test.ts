@@ -103,4 +103,27 @@ describe("AI policy command memory claims", () => {
     expect(memory.unitClaims["claim-footman"]).toMatchObject({ kind: "creep", targetId: "distant-guard", sinceTick: 0 });
     expect(memory.unitClaims["claim-footman"]?.expiresTick).toBeGreaterThanOrEqual(120 * SIM_TICKS_PER_SECOND);
   });
+
+  it("records guarded mercenary camp objectives as camp claims instead of disposable guard claims", () => {
+    const game = sketchScene("guarded-merc-camp-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 620, 540, { id: "claim-footman" })
+      .unit("neutral", "wildling", 1180, 990, { id: "camp-guard" })
+      .mercenaryCamp("guarded-camp", 1160, 980)
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+
+    recordAiMemoryForCommands(snapshotGame(game), "objectiveControl", [{ type: "attackMove", unitIds: ["claim-footman"], x: 1160, y: 980 }], memory);
+
+    expect(memory.unitClaims["claim-footman"]).toMatchObject({
+      kind: "mercenary",
+      targetId: "guarded-camp",
+      x: 1160,
+      y: 980,
+    });
+  });
 });

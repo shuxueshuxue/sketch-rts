@@ -111,10 +111,10 @@ describe("AI interactive playtest wiring", () => {
     applyAiInteractivePlaytestCommand(session, runtime, { type: "creepCamp", campId: "camp-natural", unitIds: "combat" });
 
     expect(runtime.memories.v2!.unitClaims["v2-footman"]).toMatchObject({
-      kind: "creep",
-      targetId: "wild-camp-1",
+      kind: "mercenary",
+      targetId: "camp-natural",
       x: 900,
-      y: 920,
+      y: 900,
       sinceTick: 0,
     });
   });

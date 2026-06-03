@@ -87,6 +87,20 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       continue;
     }
     if (scriptId === "objectiveControl" && command.type === "attackMove") {
+      const camp = nearestEntity(query.mercenaryCamps(), command);
+      if (camp && distance(camp, command) <= ATTACK_MOVE_REDIRECT_DISTANCE) {
+        for (const unitId of command.unitIds) {
+          memory.unitClaims[unitId] = {
+            kind: "mercenary",
+            targetId: camp.id,
+            x: camp.x,
+            y: camp.y,
+            sinceTick: snapshot.tick,
+            expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS,
+          };
+        }
+        continue;
+      }
       const guard = nearestEntity(query.neutralUnitsNear(command, ATTACK_MOVE_REDIRECT_DISTANCE), command);
       if (!guard) continue;
       for (const unitId of command.unitIds) {
