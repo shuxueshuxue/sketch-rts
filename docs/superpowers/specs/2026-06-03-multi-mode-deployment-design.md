@@ -170,12 +170,13 @@ YATU proofs completed:
 
 - Static Playwright CLI boot and room UI proof on `npm run dev:static -- --port 5175`: Rooms/Profile first viewport, room browser, Create Game, Room Setup, slot rows, Start Match, and live tick advancement.
 - Static network isolation proof in the same Playwright CLI run: no `/api/*`, `/ws/*`, `ws://*`, or `wss://*` traffic; no request failures.
+- Static production visible command proof: on `build:static` preview, the pointer-lock gate released, a real canvas click selected one worker (`x1`), a right-click issued a visible command (`Workers ordered to mine gold.`), ticks advanced, and no backend traffic was emitted.
+- Static production lifecycle proof: Start Match -> Concede -> Results -> Rematch -> Room Setup -> Back/Home completed through visible UI with no backend traffic.
 - Server Playwright CLI room UI proof on `PORT=5176 npm run dev`: same Rooms -> Create Room -> Room Setup -> Start Match path reached a live room and advanced ticks.
 - Server Playwright CLI network proof: room setup used `GET /api/rooms?userId=...`, `POST /api/rooms`, and `POST /api/rooms/:id/start`; no HTTP snapshot or command polling appeared in the network log.
 - Server backend/WebSocket YATU: real HTTP create/start plus real `/ws/rooms/:roomId` connection received authoritative room frames containing enemy AI command types `mine` and `train`.
 - Production artifact proof: both `build:static` and `build:server` completed.
 
-Residual proof gaps to keep honest:
+Notes:
 
-- Static results/rematch/home lifecycle was not proven through product-visible YATU in this slice. An initial Combat Arena attempt exposed a selectable-map render error, which this branch fixes with a terrain recipe. A later production static Combat Arena run reached tick `1800` with no backend traffic but did not produce `Match Results`, because Combat Arena does not produce a winner through the normal room result path.
-- Static visible player-command effect was not proven through canvas YATU because headless browser pointer-lock behavior kept the pointer-lock gate over the battlefield. Static command-frame behavior remains covered by runtime/adapter tests, but that is auxiliary evidence, not YATU closure for the visible command path.
+- An initial Combat Arena lifecycle attempt exposed a selectable-map render error, which this branch fixes with a terrain recipe. Combat Arena itself still does not naturally produce a room winner because it has no buildings, so lifecycle closure uses the static Concede product action.

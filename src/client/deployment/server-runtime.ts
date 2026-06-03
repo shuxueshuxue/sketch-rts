@@ -132,6 +132,14 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
+  canForfeitMatch(): boolean {
+    return false;
+  }
+
+  async forfeitMatch(_roomId: string, _user: LocalUserProfile): Promise<RoomState> {
+    throw new Error("Forfeit is not available in server deployment mode");
+  }
+
   close(): void {
     this.sessionSocket?.close?.();
   }

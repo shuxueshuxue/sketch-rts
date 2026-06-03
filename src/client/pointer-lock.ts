@@ -1,6 +1,7 @@
 export type PointerLockPoint = { x: number; y: number };
 export type PointerLockViewport = { width: number; height: number };
 export type UserAgentBrand = { brand: string };
+export type PointerLockGateState = { menuOpen: boolean; hasSnapshot: boolean; isLocked: boolean; armed: boolean; unavailable: boolean };
 
 const SUPPRESSED_CANVAS_MOUSE_EVENTS = new Set([
   "mousedown",
@@ -55,6 +56,10 @@ export function shouldSuppressCanvasPointerGesture(eventType: string, button: nu
 export function shouldSuppressPointerLockMouseDefault(eventType: string, button: number, buttons: number) {
   if (!["pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "mousemove", "contextmenu"].includes(eventType)) return false;
   return button === 2 || (buttons & 2) !== 0;
+}
+
+export function shouldBlockBattlefieldForPointerLock(state: PointerLockGateState) {
+  return !state.menuOpen && state.hasSnapshot && !state.isLocked && !state.armed && !state.unavailable;
 }
 
 function clamp(value: number, min: number, max: number) {

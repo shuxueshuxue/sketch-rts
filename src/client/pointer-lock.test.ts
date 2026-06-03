@@ -9,6 +9,7 @@ import {
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
+  shouldBlockBattlefieldForPointerLock,
 } from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
@@ -77,5 +78,11 @@ describe("pointer lock virtual mouse", () => {
     expect(shouldSuppressPointerLockMouseDefault("pointermove", -1, 0)).toBe(false);
     expect(shouldSuppressPointerLockMouseDefault("mousedown", 0, 1)).toBe(false);
     expect(shouldSuppressPointerLockMouseDefault("keydown", 2, 2)).toBe(false);
+  });
+
+  it("does not block battlefield clicks after pointer lock is known unavailable", () => {
+    expect(shouldBlockBattlefieldForPointerLock({ menuOpen: false, hasSnapshot: true, isLocked: false, armed: false, unavailable: false })).toBe(true);
+    expect(shouldBlockBattlefieldForPointerLock({ menuOpen: false, hasSnapshot: true, isLocked: false, armed: true, unavailable: false })).toBe(false);
+    expect(shouldBlockBattlefieldForPointerLock({ menuOpen: false, hasSnapshot: true, isLocked: false, armed: false, unavailable: true })).toBe(false);
   });
 });

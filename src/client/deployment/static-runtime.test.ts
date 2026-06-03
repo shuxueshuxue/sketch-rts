@@ -44,4 +44,16 @@ describe("static solo deployment runtime", () => {
     expect(after?.tick).toBeGreaterThan(beforeTick);
     expect(after?.units.some((unit) => unit.owner === "enemy" && unit.order)).toBe(true);
   });
+
+  it("can concede a local match into ordinary room results", async () => {
+    const runtime = new StaticSoloDeploymentRuntime();
+    await runtime.createRoom({ id: "room-concede", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    await runtime.startRoom("room-concede", host);
+
+    const ended = await runtime.forfeitMatch("room-concede", host);
+
+    expect(ended.status).toBe("ended");
+    expect(ended.result).toMatchObject({ winner: "enemy" });
+    expect(ended.result?.slots.map((slot) => slot.playerId)).toEqual(["player", "enemy"]);
+  });
 });

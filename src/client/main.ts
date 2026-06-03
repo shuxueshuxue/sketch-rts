@@ -24,6 +24,7 @@ import {
   moveVirtualPointer,
   pointerLockRequiredBody,
   pointerLockRequiredTitle,
+  shouldBlockBattlefieldForPointerLock,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
@@ -117,6 +118,7 @@ const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
+const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
@@ -146,6 +148,7 @@ let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
 let pointerLockFieldClickOnError = false;
+let pointerLockUnavailable = false;
 let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
@@ -241,6 +244,7 @@ document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { 
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
+forfeitButton.addEventListener("click", () => void forfeitCurrentMatch());
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
@@ -686,6 +690,7 @@ async function startCurrentRoom() {
   menuOpen = false;
   shell.classList.remove("menu-open");
   mainMenu.classList.add("hidden");
+  syncMatchActions();
   syncPointerLockGate();
 }
 
@@ -814,6 +819,7 @@ async function closeCurrentRoom() {
   currentRoom = undefined;
   currentRoomId = undefined;
   syncDebugView();
+  syncMatchActions();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -870,6 +876,7 @@ function returnHome() {
   currentRoomId = undefined;
   spectatingRoom = false;
   syncDebugView();
+  syncMatchActions();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -898,6 +905,7 @@ async function enterRoom(roomId: string) {
       menuOpen = false;
       shell.classList.remove("menu-open");
       mainMenu.classList.add("hidden");
+      syncMatchActions();
       syncPointerLockGate();
       return;
     }
@@ -915,6 +923,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot) 
   snapshot = nextSnapshot;
   pruneSelection();
   updateHud();
+  syncMatchActions();
 }
 
 function disconnectActiveMatch() {
@@ -955,14 +964,30 @@ function openResults(room: RoomState) {
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");
   menuView = "results";
+  syncMatchActions();
   renderMainMenu();
   updateHud();
+}
+
+async function forfeitCurrentMatch() {
+  if (!currentRoomId) return;
+  try {
+    const ended = await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
+    openResults(ended);
+  } catch (error) {
+    showInvalidCommand(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function syncMatchActions() {
+  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch());
 }
 
 function releasePointerLockForMenu() {
   if (document.pointerLockElement === canvas) document.exitPointerLock();
   pointerLockArmed = false;
   pointerLockFieldClickOnError = false;
+  pointerLockUnavailable = false;
   virtualMouse = undefined;
 }
 
@@ -1001,7 +1026,7 @@ function markPointerLockGuideSeen() {
 }
 
 function syncPointerLockGate() {
-  if (menuOpen || !snapshot || document.pointerLockElement === canvas) {
+  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable })) {
     hidePointerLockGate();
     return;
   }
@@ -1042,6 +1067,11 @@ async function requestPointerLock(point: Point, options: { fieldClickOnError: bo
   pointerLockFieldClickOnError = options.fieldClickOnError;
   lastMouse = point;
   virtualMouse = point;
+  if (options.fieldClickOnError) {
+    pointerLockArmed = true;
+    hidePointerLockGate();
+    statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
+  }
   try {
     await canvas.requestPointerLock();
   } catch (error) {
@@ -1061,6 +1091,7 @@ function syncPointerLockState() {
   const locked = document.pointerLockElement === canvas;
   shell.classList.toggle("pointer-locked", locked);
   if (locked) {
+    pointerLockUnavailable = false;
     hidePointerLockGate();
     pointerLockArmed = false;
     pointerLockFieldClickOnError = false;
@@ -1074,11 +1105,14 @@ function syncPointerLockState() {
 function handlePointerLockError(fieldClickOnError: boolean, error?: unknown) {
   if (fieldClickOnError) {
     pointerLockArmed = true;
+    hidePointerLockGate();
     statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
     return;
   }
   pointerLockArmed = false;
-  const message = error instanceof Error ? `Pointer lock failed: ${error.message}` : "Pointer lock failed. Use the continue prompt to try again.";
+  pointerLockUnavailable = true;
+  hidePointerLockGate();
+  const message = error instanceof Error ? `Pointer lock unavailable: ${error.message}` : "Pointer lock unavailable. Battlefield clicks still work.";
   showInvalidCommand(message);
 }
 
@@ -1164,8 +1198,10 @@ function showInvalidCommand(message: string) {
 function onMouseDown(event: MouseEvent) {
   suppressCanvasMouseDefault(event);
   if (pointerLockArmed && event.button === 0) {
+    pointerLockArmed = false;
+    pointerLockUnavailable = true;
+    hidePointerLockGate();
     void requestPointerLockFromEvent(event);
-    return;
   }
   const point = inputPoint(event);
   lastMouse = point;

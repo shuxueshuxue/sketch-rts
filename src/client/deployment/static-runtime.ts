@@ -1,5 +1,5 @@
 import { createAiRuntime } from "../../ai/runtime";
-import { createRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
@@ -15,6 +15,7 @@ export type StaticSoloDeploymentRuntimeOptions = {
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "static" as const;
   private readonly rooms = new Map<string, RoomState>();
+  private readonly matches = new Map<string, { adapter: LocalGameAdapter; onRoom: (room: RoomState) => void }>();
   private readonly emptyAdapter = new EmptyGameAdapter();
 
   constructor(private readonly options: StaticSoloDeploymentRuntimeOptions = {}) {}
@@ -83,6 +84,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
         onRoom(ended);
       },
     }));
+    this.matches.set(room.id, { adapter, onRoom });
     return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
   }
 
@@ -99,7 +101,25 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
         onRoom(ended);
       },
     }));
+    this.matches.set(room.id, { adapter, onRoom });
     return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
+  }
+
+  canForfeitMatch(): boolean {
+    return true;
+  }
+
+  async forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+    const room = this.requireRoom(roomId);
+    const match = this.matches.get(roomId);
+    if (!match) throw new Error(`Room ${roomId} is not in a local match`);
+    const loser = room.slots.find((slot) => slot.userId === user.id)?.playerId;
+    const winner = room.slots.find((slot) => (slot.controller === "human" || slot.controller === "ai") && slot.playerId !== loser)?.playerId ?? null;
+    const snapshot = match.adapter.currentSnapshot();
+    const ended = this.replaceRoom(finishRoom(room, { ...snapshot, match: { ...snapshot.match, winner, endedAtTick: snapshot.tick } }));
+    this.matches.delete(roomId);
+    match.onRoom(ended);
+    return ended;
   }
 
   close(): void {}

@@ -25,6 +25,8 @@ export type DeploymentRuntime = {
   closeRoom(roomId: string, userId: string): Promise<RoomState>;
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void): Promise<StartedMatch>;
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch;
+  canForfeitMatch(): boolean;
+  forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState>;
   close(): void;
 };
 
