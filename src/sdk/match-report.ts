@@ -194,5 +194,6 @@ function unitValue(unit: Unit) {
 
 function unitPower(unit: Unit) {
   const health = Math.max(0, unit.hp) / Math.max(1, unit.maxHp);
-  return health * (1 + unit.attackDamage / 18 + unit.attackRange / 260 + UNIT_DEFS[unit.kind].supplyUsed * 0.2);
+  // @@@range-power-cap - Long attack reach creates uptime, but reports must not count 600 range as several extra bodies.
+  return health * (1 + unit.attackDamage / 18 + Math.min(unit.attackRange, 260) / 520 + UNIT_DEFS[unit.kind].supplyUsed * 0.2);
 }

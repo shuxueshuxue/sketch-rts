@@ -19,6 +19,7 @@ export type BenchmarkDashboardRunSummary = {
   createdAt: string;
   seed: string;
   name: string;
+  tags: string[];
   mapPoolSize: number;
   selectedRichScoreMapIds: MapId[];
   scoreSummary: BenchmarkEvaluationSummary;
@@ -110,6 +111,7 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     createdAt: run.createdAt,
     seed: run.seed,
     name: run.report.name,
+    tags: benchmarkDashboardRunTags(run),
     mapPoolSize: run.mapPoolSize,
     selectedRichScoreMapIds: run.selectedRichScoreMapIds,
     scoreSummary: run.scoreSummary,
@@ -120,6 +122,10 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     cpuMs: run.report.cpuMs,
     matchCount: run.report.matchCount,
   };
+}
+
+export function benchmarkDashboardRunTags(run: Pick<BenchmarkDashboardRun, "report">) {
+  return [...new Set(run.report.evaluations.map((evaluation) => evaluation.tag ?? "untagged"))].sort();
 }
 
 export function benchmarkDashboardRunsDir(options: BenchmarkDashboardStoreOptions = {}) {

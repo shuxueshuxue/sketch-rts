@@ -85,4 +85,22 @@ describe("SDK match report summaries", () => {
     expect(sample.players.alpha!.armyPower).toBeGreaterThan(sample.players.beta!.armyPower);
     expect(sample.teams.north!.productionBuildings).toBe(2);
   });
+
+  it("caps long range in report army power so ranged balance does not distort strategic summaries", () => {
+    const scene = sketchScene("report-range-power-cap")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("alpha", { team: "north", race: "grove" })
+      .player("beta", { team: "south", race: "ember" })
+      .townHall("alpha", 500, 500)
+      .unit("alpha", "archer", 700, 700)
+      .townHall("beta", 3300, 3300)
+      .unit("beta", "footman", 3220, 3300)
+      .build();
+    const sample = summarizeTimelineSample(scene.createGame(), { alpha: "north", beta: "south" });
+
+    const cappedArcherPower = 1 + UNIT_DEFS.archer.attackDamage / 18 + 260 / 520 + UNIT_DEFS.archer.supplyUsed * 0.2;
+    expect(sample.players.alpha!.armyPower).toBeCloseTo(cappedArcherPower);
+    expect(sample.players.alpha!.armyPower).toBeLessThan(1 + UNIT_DEFS.archer.attackDamage / 18 + UNIT_DEFS.archer.attackRange / 260 + UNIT_DEFS.archer.supplyUsed * 0.2);
+  });
 });

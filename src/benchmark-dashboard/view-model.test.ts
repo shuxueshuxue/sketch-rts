@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { campRoleSummary, runListMeta } from "./view-model";
+import { campRoleSummary, dashboardTags, runListMeta, runMatchesTag, runTags } from "./view-model";
 
 describe("benchmark dashboard view model", () => {
   it("renders probe and combat summaries when the run contains tagged lanes", () => {
@@ -22,5 +22,17 @@ describe("benchmark dashboard view model", () => {
 
   it("labels unattached neutral camps as route camps instead of free camps", () => {
     expect(campRoleSummary({ freeCamps: 3, guardedCamps: 8 })).toBe("3 route / 8 guarded");
+  });
+
+  it("derives tag filters from summaries and full reports", () => {
+    const summaryRun = { tags: ["combat", "melee"] };
+    const detailRun = { report: { evaluations: [{ tag: "melee" }, { tag: "combat" }, {}] } };
+
+    expect(runTags(summaryRun as never)).toEqual(["combat", "melee"]);
+    expect(runTags(detailRun as never)).toEqual(["combat", "melee", "untagged"]);
+    expect(dashboardTags([summaryRun as never, detailRun as never])).toEqual(["combat", "melee", "untagged"]);
+    expect(runMatchesTag(summaryRun as never, "combat")).toBe(true);
+    expect(runMatchesTag(summaryRun as never, "untagged")).toBe(false);
+    expect(runMatchesTag(summaryRun as never, "all")).toBe(true);
   });
 });

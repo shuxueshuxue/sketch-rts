@@ -1,12 +1,13 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { matchWarnings } from "./warnings";
-import { campRoleSummary, runListMeta } from "./view-model";
+import { campRoleSummary, dashboardTags, runListMeta, runMatchesTag, runTags } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
   runs: BenchmarkDashboardRunSummary[];
   selectedRun: BenchmarkDashboardRun | null;
+  selectedTag: string;
   loading: boolean;
   error: string | null;
 };
@@ -15,7 +16,7 @@ const appRoot = document.querySelector<HTMLDivElement>("#benchmark-app");
 if (!appRoot) throw new Error("missing benchmark app root");
 const root: HTMLDivElement = appRoot;
 
-const state: DashboardState = { runs: [], selectedRun: null, loading: false, error: null };
+const state: DashboardState = { runs: [], selectedRun: null, selectedTag: "all", loading: false, error: null };
 
 void loadDashboard();
 connectDashboardEvents();
@@ -29,7 +30,8 @@ async function loadDashboard(options: { showLoading?: boolean; preserveSelection
   try {
     const { runs } = await requestJson<{ runs: BenchmarkDashboardRunSummary[] }>("/api/benchmark-dashboard/runs");
     state.runs = runs;
-    const selected = (selectedId ? runs.find((run) => run.id === selectedId) : undefined) ?? runs[0];
+    const visibleRuns = filteredRuns();
+    const selected = (selectedId ? visibleRuns.find((run) => run.id === selectedId) : undefined) ?? visibleRuns[0];
     state.selectedRun = selected ? await requestJson<BenchmarkDashboardRun>(`/api/benchmark-dashboard/runs/${encodeURIComponent(selected.id)}`) : null;
     state.error = null;
   } catch (error) {
@@ -55,7 +57,10 @@ async function selectRun(id: string) {
 }
 
 function render() {
-  const selectedId = state.selectedRun?.id ?? state.runs[0]?.id ?? "";
+  const tags = dashboardTags(state.runs);
+  if (state.selectedTag !== "all" && !tags.includes(state.selectedTag)) state.selectedTag = "all";
+  const visibleRuns = filteredRuns();
+  const selectedId = state.selectedRun && runMatchesTag(state.selectedRun, state.selectedTag) ? state.selectedRun.id : visibleRuns[0]?.id ?? "";
   root.innerHTML = `
     <main class="dashboard-shell">
       <aside class="run-list">
@@ -66,8 +71,12 @@ function render() {
           </div>
           <button type="button" data-refresh ${state.loading ? "disabled" : ""}>Refresh</button>
         </div>
+        <div class="tag-filter">
+          ${tagButton("all", tags.length === 0 ? "all" : `all ${tags.length}`, state.selectedTag)}
+          ${tags.map((tag) => tagButton(tag, tag, state.selectedTag)).join("")}
+        </div>
         <div class="run-stack">
-          ${state.runs.length === 0 ? `<div class="empty">No benchmark runs yet.</div>` : state.runs.map((run) => runListItem(run, selectedId)).join("")}
+          ${visibleRuns.length === 0 ? `<div class="empty">No benchmark runs for this tag.</div>` : visibleRuns.map((run) => runListItem(run, selectedId)).join("")}
         </div>
       </aside>
       <section class="detail-panel">
@@ -78,9 +87,23 @@ function render() {
     </main>
   `;
   root.querySelector("[data-refresh]")?.addEventListener("click", () => void loadDashboard());
+  for (const button of root.querySelectorAll<HTMLButtonElement>("[data-tag]")) {
+    button.addEventListener("click", () => {
+      state.selectedTag = button.dataset.tag ?? "all";
+      void loadDashboard({ showLoading: false, preserveSelection: false });
+    });
+  }
   for (const button of root.querySelectorAll<HTMLButtonElement>("[data-run-id]")) {
     button.addEventListener("click", () => void selectRun(button.dataset.runId ?? ""));
   }
+}
+
+function filteredRuns() {
+  return state.runs.filter((run) => runMatchesTag(run, state.selectedTag));
+}
+
+function tagButton(tag: string, label: string, selectedTag: string) {
+  return `<button type="button" data-tag="${escapeHtml(tag)}" data-selected="${tag === selectedTag}">${escapeHtml(label)}</button>`;
 }
 
 function connectDashboardEvents() {
@@ -99,12 +122,14 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
     <button type="button" class="run-item" data-run-id="${escapeHtml(run.id)}" data-selected="${run.id === selectedId}">
       <span>${escapeHtml(formatDate(run.createdAt))}</span>
       <strong>${run.scoreSummary.wins}/${run.scoreSummary.matchCount} ${escapeHtml(scoreLabel(run.scoreSummary.name))}</strong>
+      <small>${runTags(run).map((tag) => `<b>${escapeHtml(tag)}</b>`).join("")}</small>
       <em>${escapeHtml(runListMeta(run))}</em>
     </button>
   `;
 }
 
 function runDetail(run: BenchmarkDashboardRun) {
+  const visibleEvaluations = state.selectedTag === "all" ? run.report.evaluations : run.report.evaluations.filter((evaluation) => (evaluation.tag ?? "untagged") === state.selectedTag);
   return `
     <div class="detail-head">
       <div>
@@ -128,7 +153,7 @@ function runDetail(run: BenchmarkDashboardRun) {
     </div>
     <div class="map-strip">${run.selectedRichScoreMapIds.map((mapId) => `<span>${escapeHtml(mapId)}</span>`).join("")}</div>
     <div class="evaluation-list">
-      ${run.report.evaluations
+      ${visibleEvaluations
         .map(
           (evaluation) => `
             <section class="evaluation">

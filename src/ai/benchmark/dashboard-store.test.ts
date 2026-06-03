@@ -27,6 +27,7 @@ describe("benchmark dashboard store", () => {
       });
       expect(summaries[0]?.cpuMs).toBeGreaterThanOrEqual(0);
       expect(summaries[0]?.selectedRichScoreMapIds).toHaveLength(18);
+      expect(summaries[0]?.tags).toEqual(["combat", "melee"]);
       expect(summaries[0]?.probeSummaries.map((summary) => summary.name)).toEqual(["1v3 probe", "2v3 probe"]);
       expect(summaries[0]?.combatSummaries.map((summary) => summary.name)).toEqual(["15v20 mixed combat", "10v12 mixed combat"]);
 
