@@ -39,7 +39,9 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
     return allies.length >= 4 && enemies.length >= 3 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
   const range = item.kind === "stormStaff" ? 320 : 280;
-  const target = nearestEntity(hostileUnitsNear(snapshot, owner, carrier, range, options.teams), carrier);
+  const hostileTargets = hostileUnitsNear(snapshot, owner, carrier, range, options.teams);
+  // @@@item-real-target - Burst items should not spend their first hit on temporary summons while real combat units are available.
+  const target = nearestEntity(hostileTargets.filter((unit) => unit.kind !== "spirit"), carrier) ?? nearestEntity(hostileTargets, carrier);
   if (!target) return undefined;
   if (item.kind === "stormStaff") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, x: target.x, y: target.y }, options);
   if (item.kind === "lightningRod") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options);
