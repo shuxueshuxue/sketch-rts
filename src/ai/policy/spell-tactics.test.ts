@@ -151,6 +151,30 @@ describe("AI spell and focus tactics", () => {
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
   });
 
+  it("lets a small nearby group pick off a critically wounded target", () => {
+    const game = sketchScene("spell-tactics-critical-pickoff")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "archer", 760, 790, { id: "archer" })
+      .unit("v2", "contractArcher", 780, 820, { id: "contract-archer" })
+      .unit("v2", "fieldMedic", 820, 800, { id: "field-medic" })
+      .unit("v1", "archer", 930, 805, { id: "critical-archer", hp: 8 })
+      .unit("v1", "mercenary", 960, 820)
+      .unit("v1", "footman", 990, 850)
+      .unit("v1", "fieldMedic", 1020, 880)
+      .build()
+      .createGame();
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual({
+      type: "attack",
+      unitIds: ["archer", "contract-archer", "field-medic"],
+      targetId: "critical-archer",
+    });
+  });
+
   it("does not pin a tiny combat squad into focus fire while it is outnumbered", () => {
     const game = sketchScene("spell-tactics-combat-focus")
       .map("combatArena")

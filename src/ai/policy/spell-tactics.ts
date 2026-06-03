@@ -81,7 +81,10 @@ function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit,
 }
 
 function focusFireCanPickOffWoundedTarget(attackers: Unit[], target: Unit) {
-  return attackers.length >= 5 && target.hp <= target.maxHp * 0.6;
+  if (attackers.length >= 5 && target.hp <= target.maxHp * 0.6) return true;
+  const volleyDamage = attackers.reduce((total, unit) => total + unit.attackDamage, 0);
+  // @@@critical-pickoff - A tiny group may finish a near-dead target, but ordinary wounded targets still respect local odds.
+  return attackers.length >= 2 && target.hp <= target.maxHp * 0.18 && volleyDamage >= target.hp * 2;
 }
 
 function focusFireJoinRange(unit: Unit) {
