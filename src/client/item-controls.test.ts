@@ -23,6 +23,17 @@ describe("item controls", () => {
     expect(dropItemCommand(rod, carrier)).toEqual({ type: "dropItem", unitId: carrier.id, itemId: rod.id, x: 133, y: 108 });
   });
 
+  it("treats neutral wildlings as valid enemy targets for player damage items", () => {
+    const game = createGame();
+    const carrier = unit("carrier", 100, 100);
+    const wildling = unit("wildling-target", 180, 100, "neutral");
+    const rod: WorldItem = { id: "rod", kind: "lightningRod", x: 0, y: 0, carrierId: carrier.id, cooldownRemaining: 0 };
+    game.units = [carrier, wildling];
+    game.items = [rod];
+
+    expect(useItemCommand(game, "player", rod, carrier)).toEqual({ type: "useItem", unitId: carrier.id, itemId: rod.id, targetId: wildling.id });
+  });
+
   it("picks the nearest selected unit for a ground item", () => {
     const near = unit("near", 100, 100);
     const far = unit("far", 600, 600);

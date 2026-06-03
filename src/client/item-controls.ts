@@ -49,7 +49,7 @@ function nearestUnit(units: Unit[], point: { x: number; y: number }) {
 function nearestEnemy(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, range: number) {
   const rangeSquared = range * range;
   return snapshot.units
-    .filter((unit) => unit.owner !== owner && unit.owner !== "neutral" && distanceSquared(unit, carrier) <= rangeSquared)
+    .filter((unit) => unit.owner !== owner && distanceSquared(unit, carrier) <= rangeSquared)
     .sort((a, b) => distanceSquared(a, carrier) - distanceSquared(b, carrier))[0];
 }
 

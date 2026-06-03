@@ -1184,6 +1184,24 @@ describe("sketch RTS simulation", () => {
     expect(dropped?.x).toBeCloseTo(caster.x + 24);
   });
 
+  it("lets player lightning rods target neutral wildlings", () => {
+    const game = sketchScene("player-lightning-neutral-target")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player")
+      .unit("player", "footman", 1500, 1500, { id: "neutral-rod-caster" })
+      .unit("neutral", "wildling", 1600, 1500, { id: "neutral-rod-target" })
+      .item("neutral-target-lightning", "lightningRod", 0, 0, { carrierId: "neutral-rod-caster" })
+      .build()
+      .createGame();
+    const wildling = game.units.find((unit) => unit.id === "neutral-rod-target")!;
+
+    issueCommand(game, { type: "useItem", unitId: "neutral-rod-caster", itemId: "neutral-target-lightning", targetId: wildling.id });
+
+    expect(wildling.hp).toBeLessThan(wildling.maxHp);
+    expect(game.effects.some((effect) => effect.type === "chainLightning" && effect.toX === wildling.x && effect.toY === wildling.y)).toBe(true);
+  });
+
   it("breach charge is a consumed building-only item for converting camp rewards into structure damage", () => {
     const game = sketchScene("breach-charge-building-damage")
       .map("bareDuel")
