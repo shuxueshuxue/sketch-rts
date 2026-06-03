@@ -103,7 +103,14 @@ describe("server room host", () => {
     expect(result.ticks).toBe(1);
     expect(result.snapshot.tick).toBe(1);
     expect(result.snapshot.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
-    expect(recorded.frames).toEqual(expect.arrayContaining([{ ...frame, source: "browser" }]));
+    expect(result.frame.commands).toEqual(
+      expect.arrayContaining([
+        frame.commands[0],
+        expect.objectContaining({ playerId: "enemy", command: expect.objectContaining({ type: "mine" }) }),
+      ]),
+    );
+    expect(recorded.frames[0]).toMatchObject({ roomId: frame.roomId, tick: frame.tick, sequence: frame.sequence, source: "browser" });
+    expect(recorded.frames[0]?.commands).toEqual(result.frame.commands);
   });
 
   it("creates checkpoint frames from live room runtime state", () => {

@@ -26,14 +26,34 @@ describe("room net hub", () => {
 
     const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
     expect(messages[0]).toEqual({ type: "hello", roomId: room.id, playerId: "player", tick: 0 });
-    expect(messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame)).toEqual([
-      { roomId: room.id, tick: 0, sequence: 0, commands: [] },
-      { roomId: room.id, tick: 1, sequence: 1, commands: [] },
-      { roomId: room.id, tick: 2, sequence: 2, commands: [{ playerId: "player", clientSeq: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }] },
+    const frames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
+    expect(frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence }))).toEqual([
+      { tick: 0, sequence: 0 },
+      { tick: 1, sequence: 1 },
+      { tick: 2, sequence: 2 },
     ]);
+    expect(frames[0]?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames[2]?.commands).toContainEqual({ playerId: "player", clientSeq: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
     const after = roomHost.snapshot(room.id);
     expect(after.tick).toBe(3);
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
+  });
+
+  it("broadcasts internal AI commands in the connected room frame", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-connected-ai", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    hub.tickRoom(room.id);
+
+    const frame = socket.sent.map((raw) => decodeServerNetMessage(raw)).find((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame")?.frame;
+    const after = roomHost.snapshot(room.id);
+    const enemyWorker = after.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
+    expect(frame?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(enemyWorker?.order.type).not.toBe("idle");
   });
 
   it("records checksum messages through the coordinator and fails malformed room ids loudly", () => {

@@ -20,6 +20,10 @@ export type RoomTickResult = {
   room: RoomState;
 };
 
+export type RoomFrameTickResult = RoomTickResult & {
+  frame: CommandFrame;
+};
+
 export type RoomResetResult = {
   room: RoomState;
   snapshot: GameSnapshot;
@@ -198,7 +202,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedRoom(hosted, game, ticks);
     },
 
-    tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomTickResult {
+    tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
       const { hosted, game } = getLiveGame(roomId);
       if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
       return tickHostedFrame(hosted, game, frame, source);
@@ -306,12 +310,13 @@ function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number): RoomTick
   };
 }
 
-function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, source: ReplayCommandSource): RoomTickResult {
+function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, source: ReplayCommandSource): RoomFrameTickResult {
   const memoryStarted = process.memoryUsage();
   const cpuStarted = process.cpuUsage();
   const started = performance.now();
-  recordHostedReplayFrame(hosted, source, frame);
-  applyCommandFrame(game, frame);
+  const completedFrame = completeHostedCommandFrame(hosted, game, frame);
+  recordHostedReplayFrame(hosted, source, completedFrame);
+  applyCommandFrame(game, completedFrame);
   stepGame(game);
   recordHostedReplayCheckpoint(hosted, game);
   const elapsedMs = performance.now() - started;
@@ -333,7 +338,17 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
     },
     snapshot: snapshotGame(game),
     room: hosted.room,
+    frame: completedFrame,
   };
+}
+
+function completeHostedCommandFrame(hosted: HostedRoom, game: Game, frame: CommandFrame): CommandFrame {
+  if (!hosted.aiRuntime) return frame;
+  // @@@lockstep-ai-frame - Connected rooms must broadcast AI commands in the same authoritative frame clients apply.
+  const result = planPresetAiRuntimeCommands(game, hosted.aiRuntime);
+  const aiCommands = result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
+  if (aiCommands.length === 0) return frame;
+  return { ...frame, commands: [...frame.commands, ...aiCommands] };
 }
 
 function runHostedAiFrame(hosted: HostedRoom, game: Game) {

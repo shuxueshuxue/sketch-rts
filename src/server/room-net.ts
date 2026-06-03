@@ -39,11 +39,11 @@ export class RoomNetHub {
     const snapshot = this.options.roomHost.snapshot(roomId);
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
-    state.spectatorSync.recordFrame(frame);
-    this.broadcast(roomId, { type: "frame", frame });
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
+    state.spectatorSync.recordFrame(result.frame);
+    this.broadcast(roomId, { type: "frame", frame: result.frame });
     if (result.room.status === "ended") this.broadcast(roomId, { type: "room", room: result.room });
-    return frame;
+    return result.frame;
   }
 
   tickConnectedRooms(): Set<string> {
