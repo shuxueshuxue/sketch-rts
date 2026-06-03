@@ -47,7 +47,6 @@ function asCommands(result: GameCommand | GameCommand[] | undefined): GameComman
 }
 
 function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: number): GameCommand[] {
-  if (movedUnitIds.size === 0) return commands;
   const filtered: GameCommand[] = [];
   for (const command of commands) {
     if (command.type === "attack") {
