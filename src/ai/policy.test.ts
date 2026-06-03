@@ -4020,6 +4020,37 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 1300, y: 980 });
   });
 
+  it("v2 reserves near-hire gold once a squad controls a cleared combat mercenary camp", () => {
+    const scene = sketchScene("v2-controlled-merc-camp-reserve")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 520)
+      .worker("v2", 560, 500)
+      .worker("v2", 580, 520)
+      .worker("v2", 600, 540)
+      .worker("v2", 620, 560)
+      .unit("v2", "footman", 1290, 980)
+      .unit("v2", "footman", 1320, 1000)
+      .unit("v2", "lancer", 1300, 960)
+      .townHall("v1", 3300, 3300)
+      .mercenaryCamp("controlled-contract-archers", 1300, 980, { hireKind: "contractArcher", cost: 145, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 140;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.tech, AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
   it("v2 does not pre-claim an enemy-side mercenary camp with a small squad before securing its first expansion", () => {
     const scene = sketchScene("v2-no-enemy-side-merc-preclaim-before-expansion")
       .map("openClaims")

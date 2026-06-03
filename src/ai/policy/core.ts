@@ -448,6 +448,7 @@ function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPoli
   if (needsMainGuardTower(snapshot, owner, options)) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + level.cost) return undefined;
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + level.cost) return undefined;
+  if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, level.cost)) return undefined;
   const reserveClearedExpansion = shouldReserveForClearedExpansion(snapshot, owner, options);
   if ((reserveClearedExpansion || !isV2PriorityWeaponTiming(snapshot, owner, upgradeKind, options)) && shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + level.cost) return undefined;
   const building = researchBuilding(snapshot, owner, upgradeKind);
@@ -745,6 +746,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (reserveSensitive && reserveMainGuardTower && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveEmergencyTower && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveHealingWell && remainingGold < BUILDING_DEFS.moonWell.cost + cost) continue;
+    if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, cost, remainingGold)) continue;
     if (reserveSensitive && shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)) continue;
     if (reserveSensitive && reserveExpansion && !canSpendExpansionReserveOnTraining && remainingGold < BUILDING_DEFS.townHall.cost + cost) continue;
     if (reserveSensitive && reserveDuplicateProduction && remainingGold < BUILDING_DEFS[reserveDuplicateProduction].cost + cost) continue;
@@ -779,6 +781,26 @@ function failedExpansionAttemptBeforeCoreProduction(snapshot: GameSnapshot, owne
   if (!missingCombatProductionKind(snapshot, owner)) return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   return !buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete);
+}
+
+function shouldReserveForControlledMercenaryHire(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, spendCost: number, availableGold = playerState(snapshot, owner).gold) {
+  const camp = controlledMercenaryHireReserveCamp(snapshot, owner, options);
+  return Boolean(camp && availableGold < camp.cost + spendCost);
+}
+
+function controlledMercenaryHireReserveCamp(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return undefined;
+  const player = playerState(snapshot, owner);
+  // @@@controlled-merc-bank - A held cleared camp is a near-certain combat conversion; routine spending should not reset the hire clock.
+  return mercenaryCamps(snapshot)
+    .filter((camp) => camp.stock > 0 && camp.cooldownRemaining === 0)
+    .filter((camp) => neutralGuardsNear(snapshot, camp, 260).length === 0)
+    .filter((camp) => friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length > 0)
+    .filter((camp) => hiredMercenaryCount(snapshot, owner, camp.hireKind) < mercenaryRoleLimit(camp.hireKind))
+    .filter((camp) => canSupply(snapshot, owner, camp.hireKind))
+    .filter((camp) => camp.hireKind !== "fieldMedic" || units(snapshot, owner).some((unit) => unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72))
+    .filter((camp) => player.gold < camp.cost)
+    .sort((a, b) => mercenaryCampScore(b, snapshot, owner, options) - mercenaryCampScore(a, snapshot, owner, options))[0];
 }
 
 function shouldHoldFirstExpansionBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, spendCost: number, availableGold = playerState(snapshot, owner).gold) {
