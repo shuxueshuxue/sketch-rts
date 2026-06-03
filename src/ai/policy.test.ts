@@ -346,6 +346,7 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "footman", 930, 790)
       .unit("v2", "lancer", 960, 820)
       .unit("v2", "archer", 990, 850)
+      .unit("v2", "footman", 1020, 880)
       .townHall("v1", 3400, 3300)
       .goldMine("v2-main-mine", 560, 540, 4000)
       .goldMine("v2-natural-mine", 1000, 2200, 4000)
@@ -636,7 +637,7 @@ describe("SDK preset AI policy", () => {
     const combatTrainingBeforeBankStall = report.commands.filter(
       (entry) =>
         entry.tick >= 2_000 &&
-        entry.tick <= 3_200 &&
+        entry.tick <= 3_600 &&
         entry.owner === "v2" &&
         entry.scriptId === "training" &&
         entry.command.type === "train" &&
@@ -715,6 +716,27 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     if (!game.players.v2) throw new Error("missing v2 player");
     game.players.v2.gold = 50;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams });
+
+    expect(commands.find((command) => command.type === "attackMove")).toBeUndefined();
+  });
+
+  it("v2 does not pre-claim a mercenary camp with only the first three fighters", () => {
+    const scene = sketchScene("v2-no-first-three-merc-preclaim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .unit("v2", "footman", 900, 780)
+      .unit("v2", "footman", 940, 800)
+      .unit("v2", "lancer", 980, 820)
+      .townHall("v1a", 3_300, 3_300)
+      .mercenaryCamp("first-three-camp", 1_120, 920, { hireKind: "mercenary", stock: 2, cost: 220 })
+      .build();
+    const game = scene.createGame();
 
     const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams });
 
@@ -1313,6 +1335,27 @@ describe("SDK preset AI policy", () => {
     expect(commands).toEqual([]);
   });
 
+  it("v2 waits for a full first squad before taking neutral objectives", () => {
+    const scene = sketchScene("v2-no-first-three-neutral-objective")
+      .map("wildMarches")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 520, 520)
+      .townHall("v1a", 3400, 3400)
+      .unit("v2", "footman", 900, 2000)
+      .unit("v2", "footman", 940, 2020)
+      .unit("v2", "lancer", 980, 2040)
+      .unit("neutral", "mossGnawer", 1260, 1550)
+      .unit("neutral", "wildling", 1300, 1580)
+      .build();
+    const game = scene.createGame();
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
   it("v2 still takes a locally safe neutral objective while globally outpowered in a 1v2", () => {
     const scene = sketchScene("v2-local-objective-while-globally-outpowered")
       .map("wildMarches")
@@ -1327,6 +1370,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "lancer", 1020, 2060)
       .unit("v2", "archer", 1060, 2080)
       .unit("v2", "archer", 1100, 2100)
+      .unit("v2", "footman", 1140, 2120)
+      .unit("v2", "archer", 1180, 2140)
       .townHall("v1a", 3300, 3300)
       .unit("v1a", "footman", 2600, 3200)
       .unit("v1a", "footman", 2640, 3220)
@@ -1394,6 +1439,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "lancer", 1770, 1710)
       .unit("v2", "archer", 1810, 1730)
       .unit("v2", "archer", 1850, 1750)
+      .unit("v2", "footman", 1890, 1770)
+      .unit("v2", "archer", 1930, 1790)
       .townHall("v1a", 3300, 3300)
       .townHall("v1b", 3400, 3800)
       .unit("v1b", "footman", 2120, 2060)
@@ -1433,6 +1480,36 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove" || candidate.type === "attack");
 
     expect(command).toBeUndefined();
+  });
+
+  it("v2 can fold safe stopped retreat claims back into a full attack wave", () => {
+    const scene = sketchScene("v2-retreat-claims-rejoin-wave")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500);
+    scene
+      .unit("v2", "footman", 520, 500, { id: "recovered-footman", hp: 36 })
+      .unit("v2", "lancer", 550, 520, { id: "recovered-lancer", hp: 42 })
+      .unit("v2", "archer", 580, 540, { id: "recovered-archer", hp: 70 })
+      .unit("v2", "footman", 620, 560, { id: "fresh-footman" })
+      .unit("v2", "archer", 650, 580, { id: "fresh-archer" })
+      .townHall("v1", 2200, 1600)
+      .building("v1", "barracks", 2140, 1560)
+      .unit("v1", "footman", 2080, 1540)
+      .unit("v1", "lancer", 2110, 1570)
+      .unit("v1", "archer", 2140, 1600);
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["recovered-footman", "recovered-lancer", "recovered-archer"]) {
+      memory.unitClaims[unitId] = { kind: "retreat", targetId: "retreat", x: 500, y: 500, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory }).find((candidate) => candidate.type === "attackMove" || candidate.type === "attack");
+
+    expect(command).toBeDefined();
+    expect(command && "unitIds" in command ? command.unitIds : []).toEqual(expect.arrayContaining(["recovered-footman", "recovered-lancer", "recovered-archer", "fresh-footman", "fresh-archer"]));
   });
 
   it("worker-pressure candidate raids an exposed enemy economy when the other enemy army is too far away to matter", () => {
@@ -3157,7 +3234,7 @@ describe("SDK preset AI policy", () => {
     expect(commands.find((command) => command.type === "attackMove")).toMatchObject({ type: "attackMove", x: 980, y: 860 });
   });
 
-  it("v2 takes a slightly farther guarded mercenary objective with a four-unit squad when the fight is favorable", () => {
+  it("v2 takes a slightly farther guarded mercenary objective with a five-unit squad when the fight is favorable", () => {
     const scene = sketchScene("v2-earlier-far-merc-objective")
       .map("openClaims")
       .replaceDefaults()
@@ -3168,6 +3245,7 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "lancer", 735, 730)
       .unit("v2", "archer", 770, 760)
       .unit("v2", "footman", 805, 790)
+      .unit("v2", "archer", 840, 820)
       .townHall("v1", 3300, 3300)
       .mercenaryCamp("far-but-winnable-medic-camp", 1500, 1120, { hireKind: "fieldMedic", cost: 155, stock: 2, cooldownRemaining: 0 })
       .unit("neutral", "wildling", 1460, 1100)
@@ -3264,6 +3342,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "footman", 720, 720)
       .unit("v2", "lancer", 750, 750)
       .unit("v2", "archer", 780, 720)
+      .unit("v2", "footman", 810, 750)
+      .unit("v2", "archer", 840, 720)
       .townHall("v1", 3300, 3300)
       .unit("neutral", "wildling", 1040, 980, { id: "book-guard-a" })
       .unit("neutral", "thornSlinger", 1090, 1015, { id: "book-guard-b" })
@@ -3277,7 +3357,7 @@ describe("SDK preset AI policy", () => {
     if (command?.type !== "attackMove") throw new Error("expected treasure-camp attackMove");
     expect(command.x).toBeCloseTo(1065, -1);
     expect(command.y).toBeCloseTo(998, -1);
-    expect(command.unitIds.length).toBe(3);
+    expect(command.unitIds.length).toBe(5);
   });
 
   it("records a creep claim when assigning a squad to a neutral treasure camp", () => {
@@ -3290,6 +3370,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "footman", 720, 720, { id: "creep-footman" })
       .unit("v2", "lancer", 750, 750, { id: "creep-lancer" })
       .unit("v2", "archer", 780, 720, { id: "creep-archer" })
+      .unit("v2", "footman", 810, 750, { id: "creep-footman-b" })
+      .unit("v2", "archer", 840, 720, { id: "creep-archer-b" })
       .townHall("v1", 3300, 3300)
       .unit("neutral", "wildling", 1040, 980, { id: "book-guard-a" })
       .unit("neutral", "thornSlinger", 1090, 1015, { id: "book-guard-b" })

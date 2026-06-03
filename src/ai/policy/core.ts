@@ -173,7 +173,7 @@ export function planAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: P
 }
 
 function groupAttackMoveMinimum(scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  if (scriptId === "objectiveControl") return objectiveControlMinimumArmy(snapshot, owner, options);
+  if (scriptId === "objectiveControl") return objectiveControlMinimumArmy();
   if (scriptId === "expansionDenial") return 5;
   if (scriptId === "expansion") return 4;
   // @@@attack-wave-threshold-owner - Attack wave has context-specific thresholds; the runner only removes already-reserved units.
@@ -836,7 +836,7 @@ function shouldHoldThinTwoMineDefenseBank(snapshot: GameSnapshot, owner: PlayerI
 function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version === "v2" && (mainBaseNeedsObjectivePause(snapshot, owner, options) || ownedBaseNeedsObjectivePause(snapshot, owner, options))) return undefined;
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
-  const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
+  const minimumArmy = objectiveControlMinimumArmy();
   if (army.length < minimumArmy) return undefined;
   if (options.version === "v2" && army.length >= 7 && opponentIsReducedToBuildings(snapshot, owner, options) && closeoutAttackWaveTarget(snapshot, owner, army, army, [], options)) return undefined;
   if (options.version === "v2" && armyCommittedToEnemyObjective(snapshot, owner, army, minimumArmy, options)) return undefined;
@@ -876,9 +876,8 @@ function attackMoveTargetsEnemyObjective(snapshot: GameSnapshot, owner: PlayerId
   );
 }
 
-function objectiveControlMinimumArmy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  if (options.version !== "v2") return 5;
-  return opponentPlayerIds(snapshot, owner, options).length >= 2 ? 5 : 3;
+function objectiveControlMinimumArmy() {
+  return 5;
 }
 
 function opponentIsReducedToBuildings(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -1424,10 +1423,18 @@ function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: 
 function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return true;
   const claim = activeUnitClaim(snapshot, owner, unit, options);
-  if (claim && claim.kind !== "attack") return false;
+  if (claim && claim.kind !== "attack" && !safeStoppedRetreatClaimCanRejoin(snapshot, owner, unit, claim, options)) return false;
   if (unit.order.type !== "move" || unit.hp >= unit.maxHp * 0.58) return true;
   const main = mainBase(snapshot, owner);
   return distance(unit.order, main) >= distance(unit, main);
+}
+
+function safeStoppedRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, claim: { kind: string; x: number; y: number }, options: PresetAiPolicyOptions) {
+  if (claim.kind !== "retreat") return false;
+  const stoppedAtSafePoint = unit.order.type === "idle" || (unit.order.type === "move" && distance(unit, claim) <= 110);
+  if (!stoppedAtSafePoint) return false;
+  // @@@retreat-memory-release - A retreat claim protects units during the pullback; once they are stopped in safety, army memory may recruit them again.
+  return enemyCombatUnitsNear(snapshot, owner, unit, 420, options.teams).length === 0 && neutralUnitsNear(snapshot, unit, 420).length === 0;
 }
 
 function committedAttackWaveOwner(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], options: PresetAiPolicyOptions): PlayerId | undefined {
