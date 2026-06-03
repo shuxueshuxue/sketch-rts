@@ -102,25 +102,25 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     buildingKind: "barracks",
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 280, researchTime: seconds(11.5), attackBonus: 2, maxHpBonus: 0 },
-      { cost: 430, researchTime: seconds(15.5), attackBonus: 3, maxHpBonus: 0 },
-      { cost: 640, researchTime: seconds(20), attackBonus: 3, maxHpBonus: 0 },
+      { cost: 140, researchTime: seconds(34.5), attackBonus: 2, maxHpBonus: 0 },
+      { cost: 215, researchTime: seconds(46.5), attackBonus: 3, maxHpBonus: 0 },
+      { cost: 320, researchTime: seconds(60), attackBonus: 3, maxHpBonus: 0 },
     ],
   },
   reinforcedPlating: {
     buildingKind: "barracks",
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 330, researchTime: seconds(13.5), attackBonus: 0, maxHpBonus: 10 },
-      { cost: 500, researchTime: seconds(17.5), attackBonus: 0, maxHpBonus: 15 },
-      { cost: 720, researchTime: seconds(22), attackBonus: 0, maxHpBonus: 20 },
+      { cost: 165, researchTime: seconds(40.5), attackBonus: 0, maxHpBonus: 10 },
+      { cost: 250, researchTime: seconds(52.5), attackBonus: 0, maxHpBonus: 15 },
+      { cost: 360, researchTime: seconds(66), attackBonus: 0, maxHpBonus: 20 },
     ],
   },
   buildingDurability: {
     buildingKind: "townHall",
     affectedUnitKinds: [],
     levels: [
-      { cost: 520, researchTime: seconds(18), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
+      { cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
     ],
   },
 };

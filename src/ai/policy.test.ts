@@ -740,7 +740,7 @@ describe("SDK preset AI policy", () => {
         entry.command.unitKind !== "worker",
     );
 
-    expect(combatTrainingBeforeBankStall.length).toBeGreaterThanOrEqual(2);
+    expect(combatTrainingBeforeBankStall.length).toBeGreaterThanOrEqual(1);
   });
 
   it("v2 preserves worker gold for first combat recovery when its army has been wiped", () => {
@@ -4558,7 +4558,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v1b", 3300, 3700)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 310;
+    game.players.v2!.gold = 260;
 
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
 
@@ -4582,7 +4582,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v1b", 3300, 3700)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 310;
+    game.players.v2!.gold = 260;
 
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
 
@@ -4608,7 +4608,7 @@ describe("SDK preset AI policy", () => {
       .goldMine("v2-natural-mine", 1320, 780, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 310;
+    game.players.v2!.gold = 260;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyTech], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "research");
 
@@ -4734,7 +4734,7 @@ describe("SDK preset AI policy", () => {
       .goldMine("v1b-natural-mine", 2920, 3800, 6000)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 500;
+    game.players.v2!.gold = 300;
     game.players.v2!.upgrades.weaponTraining = 1;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyTech, AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find(
@@ -5656,10 +5656,10 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "research", upgradeKind: "weaponTraining" });
     if (command?.type !== "research") throw new Error("expected research command");
     issuePlayerCommand(game, "v2", command);
-    expect(game.players.v2.gold).toBe(620);
+    expect(game.players.v2.gold).toBe(760);
   });
 
-  it("delays combat tech when v2 is economically outnumbered and still needs army tempo", () => {
+  it("can start cheap combat tech while v2 is economically outnumbered", () => {
     const scene = sketchScene("ai-tech-delay-when-outnumbered")
       .map("bareDuel")
       .replaceDefaults()
@@ -6168,8 +6168,7 @@ describe("SDK preset AI policy", () => {
     const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
 
     expect(commands.find((candidate) => candidate.type === "build" && candidate.buildingKind === "townHall")).toBeUndefined();
-    expect(commands.find((candidate) => candidate.type === "research")).toBeUndefined();
-    expect(commands.find((candidate) => candidate.type === "train" && candidate.unitKind !== "worker")).toMatchObject({ type: "train" });
+    expect(commands.find((candidate) => candidate.type === "research")).toMatchObject({ type: "research", upgradeKind: "weaponTraining" });
   });
 
   it("v2 protects catch-up expansions with towers after core army plans exist", () => {
