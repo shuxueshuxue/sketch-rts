@@ -96,6 +96,7 @@ describe("map neutral objective layout", () => {
 
   it("keeps a broad rich official map family for v2 scoring without turning 1v1 into a neutral-camp sea", () => {
     expect(RICH_SCORE_MAPS.length).toBe(RICH_SCORE_MAP_COUNT);
+    expect(RICH_SCORE_MAPS).not.toContain("stagHollow");
     for (const mapId of RICH_SCORE_MAPS) {
       const report = analyzeMapObjectives(mapId);
       const game = createGame(mapId, { aiPlayers: [] });

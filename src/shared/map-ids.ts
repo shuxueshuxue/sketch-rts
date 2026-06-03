@@ -1,8 +1,8 @@
 export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena"] as const;
+export const NON_SCORE_RICH_MAP_IDS = ["stagHollow"] as const;
 
 export const AUTHORED_RICH_SCORE_MAP_IDS = [
   "wildMarches",
-  "stagHollow",
   "emberFen",
   "thornedDelta",
   "silverRidge",
@@ -68,7 +68,8 @@ export const GENERATED_RICH_SCORE_MAP_IDS = [
   "pearlCircuit",
   "yarrowFen",
   "copperFen",
+  "cloverRun",
 ] as const;
 
 export const RICH_SCORE_MAP_IDS = [...AUTHORED_RICH_SCORE_MAP_IDS, ...GENERATED_RICH_SCORE_MAP_IDS] as const;
-export const MAP_IDS = [...BASE_MAP_IDS, ...RICH_SCORE_MAP_IDS, "grandThirty"] as const;
+export const MAP_IDS = [...BASE_MAP_IDS, ...NON_SCORE_RICH_MAP_IDS, ...RICH_SCORE_MAP_IDS, "grandThirty"] as const;
