@@ -5,7 +5,7 @@ import type { AiCommandEntry, AiPolicyContext, AiScript, PresetAiPolicyOptions }
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
-  minimumAttackMoveUnits?: (scriptId: string, snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => number;
+  minimumAttackMoveUnits?: (scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => number;
 };
 
 export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: PresetAiPolicyOptions = {}, runnerOptions: ScriptRunnerOptions = {}): AiCommandEntry[] {
@@ -32,7 +32,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const rawScriptCommands = asCommands(script.run(snapshot, owner, policyOptions));
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
-      : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, runnerOptions.minimumAttackMoveUnits?.(script.id, snapshot, owner, policyOptions) ?? 1);
+      : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams });
     reserveOrderedUnits(scriptCommands, movedUnitIds);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
@@ -46,7 +46,7 @@ function asCommands(result: GameCommand | GameCommand[] | undefined): GameComman
   return Array.isArray(result) ? result : [result];
 }
 
-function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: number): GameCommand[] {
+function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: (command: Extract<GameCommand, { type: "attackMove" }>) => number): GameCommand[] {
   const filtered: GameCommand[] = [];
   for (const command of commands) {
     if (command.type === "attack") {
@@ -54,7 +54,7 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
     } else if (command.type === "attackMove") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length >= minimumAttackMoveUnits) filtered.push({ ...command, unitIds });
+      if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push({ ...command, unitIds });
     } else if (command.type === "move") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });

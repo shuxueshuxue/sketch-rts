@@ -172,11 +172,12 @@ export function planAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: P
   });
 }
 
-function groupAttackMoveMinimum(scriptId: string, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+function groupAttackMoveMinimum(scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (scriptId === "objectiveControl") return objectiveControlMinimumArmy(snapshot, owner, options);
   if (scriptId === "expansionDenial") return 5;
   if (scriptId === "expansion") return 4;
-  if (scriptId === "attackWave") return 5;
+  // @@@attack-wave-threshold-owner - Attack wave has context-specific thresholds; the runner only removes already-reserved units.
+  if (scriptId === "attackWave") return command.unitIds.length < 5 ? 1 : 5;
   return 1;
 }
 
