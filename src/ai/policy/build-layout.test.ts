@@ -30,6 +30,19 @@ describe("AI build layout helpers", () => {
     expect(healingWellPointFor(snapshotGame(game), "v2", { x: 500, y: 500 })).toEqual({ x: 414, y: 618 });
   });
 
+  it("spaces extra moon wells instead of stacking them on the first well", () => {
+    const game = sketchScene("build-layout-second-healing-well")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .building("v2", "moonWell", 414, 618)
+      .build()
+      .createGame();
+
+    expect(healingWellPointFor(snapshotGame(game), "v2", { x: 500, y: 500 })).not.toEqual({ x: 414, y: 618 });
+  });
+
   it("rallies between the main hall and a nearby completed tower", () => {
     const game = sketchScene("build-layout-defensive-rally")
       .map("bareDuel")

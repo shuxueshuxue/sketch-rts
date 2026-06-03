@@ -39,10 +39,23 @@ function mainBuildPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Poi
 
 export function healingWellPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Point): Point {
   const direction = ownerDirection(snapshot, owner);
-  return {
-    x: clamp(base.x - direction * 86, 0, snapshot.map.width),
-    y: clamp(base.y + 118, 0, snapshot.map.height),
-  };
+  const candidates = [
+    { x: base.x - direction * 86, y: base.y + 118 },
+    { x: base.x - direction * 150, y: base.y + 176 },
+    { x: base.x - direction * 150, y: base.y + 56 },
+    { x: base.x - direction * 34, y: base.y + 188 },
+    { x: base.x - direction * 34, y: base.y + 36 },
+  ].map((point) => ({ x: clamp(point.x, 0, snapshot.map.width), y: clamp(point.y, 0, snapshot.map.height) }));
+  return candidates.sort((a, b) => healingWellPointScore(snapshot, owner, b, base) - healingWellPointScore(snapshot, owner, a, base))[0] ?? base;
+}
+
+function healingWellPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Point, base: Point) {
+  const ownBuildings = buildings(snapshot, owner);
+  const nearestWell = nearestEntity(ownBuildings.filter((building) => building.kind === "moonWell"), point);
+  const nearestBuilding = nearestEntity(ownBuildings, point);
+  const wellOverlapPenalty = nearestWell ? Math.max(0, 110 - distance(point, nearestWell)) * 40 : 0;
+  const buildingSpacingPenalty = nearestBuilding ? Math.max(0, 95 - distance(point, nearestBuilding)) * 12 : 0;
+  return -distance(point, base) * 0.2 - wellOverlapPenalty - buildingSpacingPenalty;
 }
 
 export function defensiveRallyPoint(snapshot: GameSnapshot, owner: PlayerId): Point {

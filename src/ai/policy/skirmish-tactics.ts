@@ -46,11 +46,27 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   }
   if (commands.length > 0) return commands;
 
+  const recoveryCommands = woundedRecoveryCommands(snapshot, owner, ownCombat, enemies, retreatPoint, options);
+  if (recoveryCommands.length > 0) {
+    for (const command of recoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
+    return recoveryCommands;
+  }
+
   const skirmish = localSkirmish(snapshot, owner, ownCombat, enemies, ownBase, options);
   if (!skirmish) return [];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }, options)];
+}
+
+function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
+  if (options.version !== "v2") return [];
+  return ownCombat
+    .filter((unit) => unit.hp < unit.maxHp * 0.36)
+    .filter((unit) => unit.order.type === "idle" || unit.order.type === "attackMove")
+    .filter((unit) => distance(unit, retreatPoint) > 220)
+    .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 420))
+    .map((unit) => resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: retreatPoint.x, y: retreatPoint.y }, options));
 }
 
 function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {

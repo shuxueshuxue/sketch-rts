@@ -43,4 +43,23 @@ describe("AI skirmish tactics", () => {
 
     expect(command).toMatchObject({ type: "attackMove" });
   });
+
+  it("sends an idle badly wounded v2 fighter home after the immediate fight is gone", () => {
+    const game = sketchScene("skirmish-tactics-idle-wounded-recovery")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .building("v2", "moonWell", 414, 618)
+      .unit("v2", "footman", 900, 900, { id: "idle-wounded-footman", hp: 32 })
+      .unit("v2", "archer", 940, 920, { id: "healthy-archer" })
+      .townHall("v1", 3300, 3300)
+      .build()
+      .createGame();
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["idle-wounded-footman"], x: 500, y: 500 });
+  });
 });
