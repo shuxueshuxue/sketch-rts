@@ -59,6 +59,30 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("drops a remembered focus target when only a small tail can still fight it", () => {
+    const scene = sketchScene("spell-tactics-drop-stale-focus-tail")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "raider", 1040, 800, { id: "tail-raider-a" })
+      .unit("v2", "lancer", 1060, 830, { id: "tail-lancer-b" })
+      .unit("v1", "raider", 1160, 810, { id: "remembered-runner", hp: 24 })
+      .unit("v1", "archer", 760, 790, { id: "front-archer", hp: 55 });
+    for (let index = 0; index < 10; index += 1) scene.unit("v2", index % 3 === 0 ? "archer" : "footman", 680 + index * 8, 730 + index * 12, { id: `front-fighter-${index + 1}` });
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { focusTargetOwner: "v1", focusTargetId: "remembered-runner", focusTargetSinceTick: 0, focusTargetUpdatedTick: 120 };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory })).toEqual({
+      type: "attack",
+      unitIds: Array.from({ length: 10 }, (_, index) => `front-fighter-${index + 1}`),
+      targetId: "front-archer",
+    });
+  });
+
   it("targets high-value combat casters before ordinary front-line damage dealers", () => {
     const game = sketchScene("spell-tactics-caster-focus-priority")
       .map("combatArena")

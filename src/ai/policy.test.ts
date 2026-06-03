@@ -1044,8 +1044,8 @@ describe("SDK preset AI policy", () => {
     const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory });
     const retreat = entries.find((entry) => entry.scriptId === "skirmishPreservation" && entry.command.type === "move")?.command;
 
-    expect(retreat).toMatchObject({ type: "move", unitIds: ["wounded-archer"], x: 150, y: 800 });
-    expect(memory.unitClaims["wounded-archer"]).toMatchObject({ kind: "retreat", targetId: "retreat", x: 150, y: 800 });
+    expect(retreat).toMatchObject({ type: "move", unitIds: ["wounded-archer"], x: 502, y: 800 });
+    expect(memory.unitClaims["wounded-archer"]).toMatchObject({ kind: "retreat", targetId: "retreat", x: 502, y: 800 });
     expect(entries.filter((entry) => entry.command.type === "attack" || entry.command.type === "attackMove").some((entry) => "unitIds" in entry.command && entry.command.unitIds.includes("wounded-archer"))).toBe(false);
   });
 

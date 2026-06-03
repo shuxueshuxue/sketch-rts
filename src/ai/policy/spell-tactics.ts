@@ -41,9 +41,11 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
-  const target = rememberedTarget ?? candidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
+  const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(rememberedTarget, fighters, options) ? rememberedTarget : undefined;
+  const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
+  const target = anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
   if (!target) return undefined;
-  const attackers = fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
+  const attackers = focusFireAttackers(fighters, target);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   if (attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
@@ -53,11 +55,22 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
       ...options.memory.strategicPlan,
       focusTargetOwner: target.owner,
       focusTargetId: target.id,
-      focusTargetSinceTick: rememberedTarget ? (options.memory.strategicPlan?.focusTargetSinceTick ?? snapshot.tick) : snapshot.tick,
+      focusTargetSinceTick: anchoredRememberedTarget ? (options.memory.strategicPlan?.focusTargetSinceTick ?? snapshot.tick) : snapshot.tick,
       focusTargetUpdatedTick: snapshot.tick,
     };
   }
   return attackers.length >= 2 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {
+  if (options.policyMode !== "combat" || fighters.length < 6) return true;
+  const attackers = focusFireAttackers(fighters, target);
+  // @@@focus-tail-release - Combat focus memory should stabilize a fight, not let a tiny tail drag the main army out of formation.
+  return attackers.length >= Math.max(3, Math.ceil(fighters.length * 0.45));
+}
+
+function focusFireAttackers(fighters: Unit[], target: Unit) {
+  return fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
 }
 
 function focusFireJoinRange(unit: Unit) {

@@ -35,6 +35,8 @@ export type BenchmarkDashboardStoreOptions = {
   now?: () => Date;
 };
 
+const BENCHMARK_DASHBOARD_RUN_CONTRACT = "run-contract-v2";
+
 export async function recordAiVersionBenchmarkDashboardRun(
   options: AiVersionBenchmarkOptions = {},
   storeOptions: BenchmarkDashboardStoreOptions = {},
@@ -115,15 +117,19 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
 }
 
 export function benchmarkDashboardRunsDir(options: BenchmarkDashboardStoreOptions = {}) {
-  return path.join(benchmarkDashboardRootDir(options), "runs");
+  return path.join(benchmarkDashboardContractDir(options), "runs");
 }
 
 export function benchmarkDashboardLogsDir(options: BenchmarkDashboardStoreOptions = {}) {
-  return path.join(benchmarkDashboardRootDir(options), "logs");
+  return path.join(benchmarkDashboardContractDir(options), "logs");
 }
 
 export function benchmarkDashboardRootDir(options: BenchmarkDashboardStoreOptions = {}) {
   return options.rootDir ?? process.env.AI_BENCHMARK_DASHBOARD_DIR ?? path.join(process.cwd(), ".benchmark-dashboard");
+}
+
+function benchmarkDashboardContractDir(options: BenchmarkDashboardStoreOptions = {}) {
+  return path.join(benchmarkDashboardRootDir(options), BENCHMARK_DASHBOARD_RUN_CONTRACT);
 }
 
 function benchmarkDashboardRunLog(run: BenchmarkDashboardRun) {
