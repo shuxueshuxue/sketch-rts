@@ -177,5 +177,5 @@ YATU proofs completed:
 
 Residual proof gaps to keep honest:
 
-- Static results/rematch/home lifecycle was not proven through product-visible YATU in this slice. A Combat Arena attempt exposed an existing `Missing terrain texture recipe for combatArena` render error and was not counted.
+- Static results/rematch/home lifecycle was not proven through product-visible YATU in this slice. An initial Combat Arena attempt exposed a selectable-map render error, which this branch fixes with a terrain recipe. A later production static Combat Arena run reached tick `1800` with no backend traffic but did not produce `Match Results`, because Combat Arena does not produce a winner through the normal room result path.
 - Static visible player-command effect was not proven through canvas YATU because headless browser pointer-lock behavior kept the pointer-lock gate over the battlefield. Static command-frame behavior remains covered by runtime/adapter tests, but that is auxiliary evidence, not YATU closure for the visible command path.

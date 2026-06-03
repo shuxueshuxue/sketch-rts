@@ -45,6 +45,15 @@ const RECIPES: Partial<Record<MapId, SceneRecipe>> = {
     hatchColor: "rgba(135, 116, 78, 0.08)",
     silhouetteColor: "rgba(79, 93, 68, 0.1)",
   },
+  combatArena: {
+    contourSpacing: 180,
+    hatchSpacing: 360,
+    amplitude: 10,
+    drift: 0.52,
+    contourColor: "rgba(92, 76, 70, 0.078)",
+    hatchColor: "rgba(132, 96, 82, 0.084)",
+    silhouetteColor: "rgba(88, 70, 66, 0.104)",
+  },
   openClaims: {
     contourSpacing: 300,
     hatchSpacing: 560,
