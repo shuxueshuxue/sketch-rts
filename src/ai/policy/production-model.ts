@@ -20,7 +20,7 @@ export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: Play
   const player = playerState(snapshot, owner);
   const plan = aiPlaybook().productionPlan;
   const army = combatUnits(snapshot, owner);
-  const armyGates = options.version === "v2" ? [0, 3, 5, 8, 11] : [0, 3, 6, 8, 11];
+  const armyGates = options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
   const goldGates = [0, 420, 620, 820, 1040];
   const desired = plan.filter((_, index) => index === 0 || army.length >= armyGates[index]! || player.gold > goldGates[index]!);
   if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell")) return undefined;

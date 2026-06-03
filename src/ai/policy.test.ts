@@ -4653,7 +4653,7 @@ describe("SDK preset AI policy", () => {
     expect(commands).toContainEqual(expect.objectContaining({ type: "train" }));
   });
 
-  it("v2 builds cinderHeath stables before spending on a catch-up expansion", () => {
+  it("v2 does not spend the cinderHeath first-expansion window on early stables", () => {
     const report = runAiGame({
       name: "cinderHeath catch-up expansion production timing",
       mapId: "cinderHeath",
@@ -4692,12 +4692,8 @@ describe("SDK preset AI policy", () => {
 
     const v2Builds = report.commands.filter((entry) => entry.owner === "v2" && entry.command.type === "build");
     const stablesTick = v2Builds.find((entry) => entry.command.type === "build" && entry.command.buildingKind === "stables")?.tick;
-    const expansionTicks = v2Builds.filter((entry) => entry.command.type === "build" && entry.command.buildingKind === "townHall").map((entry) => entry.tick);
 
-    expect(stablesTick).toBeDefined();
-    expect(expansionTicks.length).toBeGreaterThan(0);
-    const catchUpExpansionTick = expansionTicks[1];
-    if (catchUpExpansionTick !== undefined) expect(stablesTick!).toBeLessThan(catchUpExpansionTick);
+    expect(stablesTick).toBeUndefined();
   });
 
   it("v2 takes weapon level two before a third town hall when its two-base army needs a timing upgrade", () => {

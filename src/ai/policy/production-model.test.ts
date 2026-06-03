@@ -37,7 +37,7 @@ describe("AI production model", () => {
     expect(duplicateCoreProductionReserveKind(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe("barracks");
   });
 
-  it("lets v2 commit to the third production building at five combat units", () => {
+  it("keeps v2 on two production buildings at five one-base combat units", () => {
     const scene = sketchScene("production-model-v2-third-production")
       .map("bareDuel")
       .replaceDefaults()
@@ -46,6 +46,20 @@ describe("AI production model", () => {
       .building("v2", "barracks", 620, 620)
       .building("v2", "archeryRange", 700, 620);
     for (let i = 0; i < 5; i += 1) scene.unit("v2", i % 2 === 0 ? "footman" : "archer", 700 + i * 20, 760);
+    const game = scene.build().createGame();
+
+    expect(productionBuildingNeedKind(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
+  });
+
+  it("lets v2 commit to the third production building at seven combat units", () => {
+    const scene = sketchScene("production-model-v2-third-production-seven")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 620);
+    for (let i = 0; i < 7; i += 1) scene.unit("v2", i % 2 === 0 ? "footman" : "archer", 700 + i * 20, 760);
     const game = scene.build().createGame();
 
     expect(productionBuildingNeedKind(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe("stables");
