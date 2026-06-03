@@ -153,3 +153,29 @@ The PR is complete only when both modes are independently proven:
 - static and server modes each have multiple independent YATU proofs from the matrix above;
 - the deployment mode boundary is centralized and not scattered as ad hoc `if static` checks throughout UI event handlers;
 - the official checkpoint/spec docs record the mode boundary and evidence.
+
+## Implementation Evidence - 2026-06-03
+
+Sanitized YATU summary: `~/share/ops/sketch-rts-multi-mode-yatu-2026-06-03.md`.
+
+Automated checks run on branch `codex/multi-mode-deployment`:
+
+- `npm test -- src/client/deployment/server-runtime.test.ts src/client/deployment/runtime.test.ts src/client/deployment/static-runtime.test.ts src/client/net/local-adapter.test.ts --run`
+- `npm test -- src/server/room-net.test.ts src/server/room-host.test.ts --run`
+- `npm run build`
+- `npm run build:static`
+- `npm run build:server`
+
+YATU proofs completed:
+
+- Static Playwright CLI boot and room UI proof on `npm run dev:static -- --port 5175`: Rooms/Profile first viewport, room browser, Create Game, Room Setup, slot rows, Start Match, and live tick advancement.
+- Static network isolation proof in the same Playwright CLI run: no `/api/*`, `/ws/*`, `ws://*`, or `wss://*` traffic; no request failures.
+- Server Playwright CLI room UI proof on `PORT=5176 npm run dev`: same Rooms -> Create Room -> Room Setup -> Start Match path reached a live room and advanced ticks.
+- Server Playwright CLI network proof: room setup used `GET /api/rooms?userId=...`, `POST /api/rooms`, and `POST /api/rooms/:id/start`; no HTTP snapshot or command polling appeared in the network log.
+- Server backend/WebSocket YATU: real HTTP create/start plus real `/ws/rooms/:roomId` connection received authoritative room frames containing enemy AI command types `mine` and `train`.
+- Production artifact proof: both `build:static` and `build:server` completed.
+
+Residual proof gaps to keep honest:
+
+- Static results/rematch/home lifecycle was not proven through product-visible YATU in this slice. A Combat Arena attempt exposed an existing `Missing terrain texture recipe for combatArena` render error and was not counted.
+- Static visible player-command effect was not proven through canvas YATU because headless browser pointer-lock behavior kept the pointer-lock gate over the battlefield. Static command-frame behavior remains covered by runtime/adapter tests, but that is auxiliary evidence, not YATU closure for the visible command path.
