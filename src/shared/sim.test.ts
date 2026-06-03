@@ -116,6 +116,22 @@ describe("sketch RTS simulation", () => {
     expect(BUILDING_DEFS.townHall.buildTime).toBeGreaterThanOrEqual(BUILDING_DEFS.barracks.buildTime * 2);
   });
 
+  it("applies the first ranged damage and reach balance slice without changing melee prices", () => {
+    expect(UNIT_DEFS.footman).toMatchObject({ attackDamage: 16, attackRange: 48, cost: 100 });
+    expect(UNIT_DEFS.mercenary).toMatchObject({ attackDamage: 28, attackRange: 62, cost: 160 });
+    expect(UNIT_DEFS.archer).toMatchObject({ attackDamage: 22, attackRange: 570, cost: 105 });
+    expect(UNIT_DEFS.contractArcher).toMatchObject({ attackDamage: 31, attackRange: 630, cost: 145 });
+    expect(UNIT_DEFS.priest).toMatchObject({ attackDamage: 11, attackRange: 360, cost: 135 });
+    expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 13, attackRange: 390, cost: 150 });
+    expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 14, attackRange: 450, cost: 145 });
+    expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 13, attackRange: 375, cost: 155 });
+    expect(BUILDING_DEFS.defenseTower).toMatchObject({ attackDamage: 18, attackRange: 600, cost: 125 });
+    expect(BUILDING_DEFS.moonWell).toMatchObject({ attackDamage: 0, attackRange: 210, cost: 115 });
+
+    expect((UNIT_DEFS.archer.attackDamage * UNIT_DEFS.archer.hp) / UNIT_DEFS.archer.cost).toBeLessThan((UNIT_DEFS.footman.attackDamage * UNIT_DEFS.footman.hp) / UNIT_DEFS.footman.cost);
+    expect((UNIT_DEFS.contractArcher.attackDamage * UNIT_DEFS.contractArcher.hp) / UNIT_DEFS.contractArcher.cost).toBeLessThan((UNIT_DEFS.mercenary.attackDamage * UNIT_DEFS.mercenary.hp) / UNIT_DEFS.mercenary.cost);
+  });
+
   it("tracks which player lost units to neutral creeps", () => {
     const game = sketchScene("neutral-killed-player-unit")
       .map("bareDuel")
@@ -222,8 +238,9 @@ describe("sketch RTS simulation", () => {
     const contractArcher = UNIT_DEFS.contractArcher;
 
     expect(tower.hp).toBeLessThan(280);
-    expect(tower.attackDamage).toBeGreaterThan(6);
-    expect(tower.attackRange).toBeGreaterThan(contractArcher.attackRange);
+    expect(tower.attackDamage).toBe(18);
+    expect(tower.attackRange).toBe(600);
+    expect(tower.attackRange).toBeLessThan(contractArcher.attackRange);
     expect(tower.hp * tower.attackDamage).toBeLessThan(contractArcher.hp * contractArcher.attackDamage);
     expect(tower.cost).toBeGreaterThanOrEqual(120);
   });
@@ -1199,8 +1216,8 @@ describe("sketch RTS simulation", () => {
       .player("player")
       .player("enemy")
       .unit("player", "footman", 1500, 1500, { id: "guarded-footman" })
-      .unit("player", "archer", 1540, 1500, { id: "scroll-carrier" })
-      .unit("enemy", "archer", 1580, 1500, { id: "enemy-archer" })
+      .unit("player", "worker", 1540, 1500, { id: "scroll-carrier" })
+      .unit("enemy", "archer", 1900, 1500, { id: "enemy-archer" })
       .item("guardian-scroll", "guardianScroll", 0, 0, { carrierId: "scroll-carrier" })
       .build()
       .createGame();
@@ -1643,9 +1660,10 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps defense towers as static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(8);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(18);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.attackDamage);
-    expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBe(600);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBeLessThan(UNIT_DEFS.contractArcher.attackRange);
     expect(BUILDING_DEFS.defenseTower.hp * BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.hp * UNIT_DEFS.contractArcher.attackDamage);
     expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThan(UNIT_DEFS.contractArcher.attackCooldown);
 

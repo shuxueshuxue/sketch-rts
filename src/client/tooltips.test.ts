@@ -7,7 +7,7 @@ describe("gameplay tooltips", () => {
 
     expect(tooltip.title).toBe("Archer");
     expect(tooltip.body).toContain("ranged");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 105 gold", "Supply 2", "HP 85", "Attack 12", "Range 190", "Train 7.8s"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 105 gold", "Supply 2", "HP 85", "Attack 22", "Range 570", "Train 7.8s"]));
     expect(tooltip.hotkey).toBe("A");
   });
 

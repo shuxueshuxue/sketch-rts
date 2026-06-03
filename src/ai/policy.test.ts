@@ -234,6 +234,23 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 waits for a real wave before crossing the map in ordinary one-on-one pressure", () => {
+    const scene = sketchScene("v2-no-single-unit-cross-map-pressure")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 720, 600)
+      .townHall("v1", 3300, 3300)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 does not count untouched neutral camps as enemy army when deciding whether to push", () => {
     const scene = sketchScene("v2-neutral-camps-do-not-freeze-closeout")
       .map("openClaims")
@@ -271,12 +288,15 @@ describe("SDK preset AI policy", () => {
       .townHall("v2", 500, 500)
       .unit("v2", "footman", 1280, 1400)
       .unit("v2", "archer", 1320, 1420)
+      .unit("v2", "footman", 1360, 1380)
+      .unit("v2", "lancer", 1400, 1400)
+      .unit("v2", "archer", 1440, 1420)
       .townHall("v1a", 3100, 1450, { id: "v1a-last-hall" })
-      .unit("neutral", "stonebackBrute", 1360, 1460, { id: "neutral-brute" })
-      .unit("neutral", "thornSlinger", 1400, 1500)
-      .unit("neutral", "gladeWitch", 1440, 1460)
-      .unit("neutral", "wildling", 1480, 1500)
-      .unit("neutral", "mossGnawer", 1520, 1460)
+      .unit("neutral", "stonebackBrute", 1520, 1460, { id: "neutral-brute" })
+      .unit("neutral", "thornSlinger", 1560, 1500)
+      .unit("neutral", "gladeWitch", 1600, 1460)
+      .unit("neutral", "wildling", 1640, 1500)
+      .unit("neutral", "mossGnawer", 1680, 1460)
       .build();
     const game = scene.createGame();
 
@@ -616,7 +636,7 @@ describe("SDK preset AI policy", () => {
     const combatTrainingBeforeBankStall = report.commands.filter(
       (entry) =>
         entry.tick >= 2_000 &&
-        entry.tick <= 3_000 &&
+        entry.tick <= 3_200 &&
         entry.owner === "v2" &&
         entry.scriptId === "training" &&
         entry.command.type === "train" &&
@@ -801,6 +821,37 @@ describe("SDK preset AI policy", () => {
     const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
 
     expect(commands).toEqual([{ type: "train", buildingId: "scene-v2-combat-before-worker-after-army-wipe-v2-barracks-1", unitKind: "footman" }]);
+  });
+
+  it("v2 trains a sixth one-base worker as build and repair labor after core production exists", () => {
+    const scene = sketchScene("v2-one-base-repair-labor-worker")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 650, 560, { id: "v2-barracks" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 540, 520, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 560, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 590, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 620, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .worker("v2", 650, 540, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } })
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "footman", 800, 640)
+      .townHall("v1", 3100, 1450)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1-main-mine", 3100, 1450, 4000)
+      .build();
+    const game = scene.createGame();
+    const v2State = game.players.v2;
+    if (!v2State) throw new Error("missing v2 state");
+    v2State.gold = 125;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([{ type: "train", buildingId: "v2-main", unitKind: "worker" }]);
   });
 
   it("v2 keeps training workers toward two-mine saturation when it can also rebuild army", () => {

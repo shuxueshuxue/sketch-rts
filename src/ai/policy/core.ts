@@ -806,10 +806,7 @@ function wantsOneBaseRepairLabor(snapshot: GameSnapshot, owner: PlayerId, option
   if (activeMiningBaseCount(snapshot, owner) !== 1) return false;
   if (!hasCoreProduction(snapshot, owner)) return false;
   const main = mainBase(snapshot, owner);
-  const damagedMainTower = buildings(snapshot, owner).some(
-    (building) => building.complete && building.kind === "defenseTower" && building.hp > 0 && building.hp < building.maxHp && distance(building, main) <= 520,
-  );
-  if (!damagedMainTower) return false;
+  // @@@one-base-labor - Five workers saturate one mine; a sixth worker is for building and tower repair, not extra income.
   return !units(snapshot, owner).some((unit) => unit.kind === "worker" && unit.order.type !== "mine" && distance(unit, main) <= 700);
 }
 
@@ -1398,8 +1395,8 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (options.version !== "v2" && resources(snapshot).length > activePlayerIds(snapshot).length && !hasEstablishedExpansion(snapshot, owner)) return undefined;
   if (outnumberedV2 && localNeutralEngagement(snapshot, movable, enemyArmy)) return undefined;
 
-  // @@@1v2-local-pressure - Two enemy teams are globally stronger by definition; v2 must probe one local target before both economies compound.
-  const smallPressureAllowed = !outnumberedV2 && soldiers.length > 0 && enemyArmy.length <= 2;
+  // @@@wave-integrity - V2 pressure is an army job; keep V1's old poke behavior but stop V2 from feeding one unit at a time.
+  const smallPressureAllowed = options.version !== "v2" && !outnumberedV2 && soldiers.length > 0 && enemyArmy.length <= 2;
   if (soldiers.length < minimumWaveSize && !smallPressureAllowed) return undefined;
   const localPickoff = outnumberedV2 && !currentCommittedOwner && movable.length >= minimumWaveSize ? isolatedOpponentDetachmentTarget(snapshot, owner, soldiers, enemyArmy, options) : undefined;
   if (localPickoff) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: movable.map((unit) => unit.id), targetId: localPickoff.id }, options);

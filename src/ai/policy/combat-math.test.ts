@@ -7,7 +7,7 @@ describe("AI combat math", () => {
     const frontliner = unit({ hp: 80, maxHp: 100, attackDamage: 18, attackRange: 64 });
     const woundedArcher = unit({ hp: 30, maxHp: 60, attackDamage: 12, attackRange: 360 });
 
-    expect(armyPower([frontliner, woundedArcher])).toBeCloseTo(1 * (1 + 18 / 18 + 64 / 260) + 1 * (1 + 12 / 18 + 360 / 260));
+    expect(armyPower([frontliner, woundedArcher])).toBeCloseTo(1 * (1 + 18 / 18 + 64 / 520) + 1 * (1 + 12 / 18 + 260 / 520));
   });
 });
 

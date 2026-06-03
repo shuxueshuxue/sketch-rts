@@ -180,10 +180,10 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "benchmark.json");
 
-    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--from-benchmark", "quarrySong 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2"));
+    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--from-benchmark", "sableRun 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2"));
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
-    expect(created.id).toBe("interactive-quarrySong-1v2");
+    expect(created.id).toBe("interactive-sableRun-1v2");
     expect(created.players.v2).toMatchObject({ bases: 1, workers: 3 });
     expect(created.players.v1a).toMatchObject({ bases: 1, workers: 3 });
     expect(created.players.v1b).toMatchObject({ bases: 1, workers: 3 });
@@ -201,7 +201,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "benchmark-control.json");
 
-    runPlaytestCli("new", "--file", file, "--from-benchmark", "quarrySong 1v1 control south", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2", "--assist-you");
+    runPlaytestCli("new", "--file", file, "--from-benchmark", "sableRun 1v1 control south", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.scriptedPlayers).toEqual(["v1a"]);
