@@ -8,6 +8,7 @@ import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
 import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
+import { SIM_TICKS_PER_SECOND } from "../src/shared/time";
 import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
@@ -74,7 +75,8 @@ if (verb === "step") {
 }
 
 if (verb === "step-until") {
-  const result = stepAiInteractivePlaytestUntil(session, loaded.runtime, conditionFromArgs(args), { maxTicks: numberFlag(args, "max-ticks", 240) });
+  const condition = conditionFromArgs(args);
+  const result = stepAiInteractivePlaytestUntil(session, loaded.runtime, condition, { maxTicks: numberFlag(args, "max-ticks", defaultStepUntilMaxTicks(session, condition)) });
   savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime: loaded.runtime });
   printJson({ result, summary: summarizeAiInteractivePlaytestSession(session, loaded.runtime) });
   process.exit(result.conditionMet ? 0 : 1);
@@ -175,6 +177,12 @@ function conditionFromArgs(args: string[]): InteractivePlaytestCondition {
   if (condition === "time") return { type: "gameSecond", seconds: requiredNumberFlag(args, "seconds") };
   if (condition === "enemy-nearby") return { type: "enemyNearby", ...(flag(args, "range") ? { range: requiredNumberFlag(args, "range") } : {}) };
   throw new Error(`Unknown step-until condition ${condition}`);
+}
+
+function defaultStepUntilMaxTicks(session: ReturnType<typeof restoreInteractivePlaytestSession>, condition: InteractivePlaytestCondition) {
+  if (condition.type === "tick") return Math.max(240, condition.tick - session.game.tick);
+  if (condition.type === "gameSecond") return Math.max(240, Math.ceil(condition.seconds * SIM_TICKS_PER_SECOND) - session.game.tick);
+  return 240;
 }
 
 function loadPlaytestFile(file: string): AiPlaytestFile {

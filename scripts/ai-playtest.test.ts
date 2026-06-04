@@ -271,6 +271,18 @@ describe("AI playtest CLI", () => {
     expect(stepped.result).toMatchObject({ conditionMet: true, timedOut: false });
     expect(stepped.summary.gameSecond).toBe(4);
   });
+
+  it("steps until a target tick without requiring a duplicate max tick flag", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "duel.json");
+
+    runPlaytestCli("new", "--file", file, "--map", "bareDuel", "--you", "v2", "--enemy", "v1a");
+    const stepped = JSON.parse(runPlaytestCli("step-until", "--file", file, "--condition", "tick", "--tick", "320"));
+
+    expect(stepped.result).toMatchObject({ conditionMet: true, timedOut: false, tick: 320 });
+    expect(stepped.summary.tick).toBe(320);
+  });
 });
 
 function runPlaytestCli(...args: string[]) {
