@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, maxUpgradeLevel } from "./catalog";
+import { buildingPlacementBlocker } from "./build-placement";
 import {
   createBuilding,
   createInitialBuildings,
@@ -12,7 +13,7 @@ import {
   trainTimeFor,
 } from "./map";
 import { seconds } from "./time";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -68,6 +69,8 @@ const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const REPAIR_RANGE = BUILD_RANGE + 20;
 const REPAIR_FULL_COST_FRACTION = 0.35;
 const AUTO_ACQUIRE_RANGE = 230;
+const RANGED_ATTACK_RANGE_THRESHOLD = 90;
+const PROJECTILE_FLIGHT_DURATION = 22;
 const NEUTRAL_LEASH_RANGE = 520;
 const NEUTRAL_TARGET_LEASH_RANGE = 320;
 const NEUTRAL_RETURN_STOP_RANGE = 8;
@@ -92,6 +95,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     resources: createInitialResources(mapId, activePlayers, teams),
     mercenaryCamps: createInitialMercenaryCamps(mapId),
     items: createInitialItems(mapId),
+    projectiles: [],
     effects: [],
     nextId: RUNTIME_ID_START,
     activePlayers,
@@ -280,6 +284,8 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
     if (!worker) throw new Error(`Unknown ${owner} worker ${command.unitId}`);
     if (!RACE_DEFS[playerState(game, owner).race].buildableBuildings.includes(command.buildingKind)) throw new Error(`${playerState(game, owner).race} race cannot build ${command.buildingKind}`);
+    const blocker = buildingPlacementBlocker(game, command.buildingKind, command);
+    if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
     const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
     applyDerivedBuildingStats(game, building);
@@ -336,6 +342,7 @@ export function stepGame(game: Game) {
   if (game.match.winner) return;
   game.tick += 1;
   updateWorldEffects(game);
+  updateProjectiles(game);
   updateUnitStatusEffects(game);
   updateConstruction(game);
   updateTraining(game);
@@ -392,6 +399,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
     items: game.items.map((item) => ({ ...item })),
+    projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
   };
 }
@@ -447,7 +455,7 @@ function updateTowerAttacks(game: Game) {
     if (building.cooldown > 0) continue;
     const target = nearestEnemyUnit(game, building.owner, building.x, building.y, building.attackRange);
     if (!target) continue;
-    applyAttackDamage(game, building, target, building.attackDamage, building.attackRange);
+    applyWeaponAttack(game, building, target, building.attackDamage, building.attackRange);
     building.cooldown = building.attackCooldown;
   }
 }
@@ -608,7 +616,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
   }
   if (unit.cooldown > 0) return;
   const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
-  applyAttackDamage(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }
 
@@ -625,7 +633,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
   }
   if (unit.cooldown > 0) return;
   const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
-  applyAttackDamage(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }
 
@@ -1110,6 +1118,50 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
   });
 }
 
+function updateProjectiles(game: Game) {
+  const pending: Projectile[] = [];
+  for (const projectile of game.projectiles) {
+    projectile.remaining -= 1;
+    if (projectile.remaining > 0) {
+      pending.push(projectile);
+      continue;
+    }
+    applyProjectileImpact(game, projectile);
+  }
+  game.projectiles = pending;
+}
+
+function applyProjectileImpact(game: Game, projectile: Projectile) {
+  const target = findTarget(game, projectile.targetId);
+  if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
+  const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
+  if (applyDamage(game, attacker, target, projectile.damage)) addEffect(game, "hit", target.x, target.y, 14);
+}
+
+function projectileAttacker(projectile: Projectile): Building {
+  return {
+    id: projectile.attackerId,
+    owner: projectile.owner as Exclude<Owner, "neutral">,
+    kind: "defenseTower",
+    x: projectile.fromX,
+    y: projectile.fromY,
+    hp: 1,
+    maxHp: 1,
+    radius: 0,
+    complete: true,
+    buildProgress: 0,
+    buildTime: 0,
+    attackDamage: 0,
+    attackRange: 0,
+    attackCooldown: 0,
+    cooldown: 0,
+    rallyX: projectile.fromX,
+    rallyY: projectile.fromY,
+    queue: [],
+    researchQueue: [],
+  };
+}
+
 function updateUnitStatusEffects(game: Game) {
   for (const unit of game.units) {
     for (const effect of unit.effects) effect.remaining -= 1;
@@ -1117,19 +1169,56 @@ function updateUnitStatusEffects(game: Game) {
   }
 }
 
+function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
+  if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
+    launchProjectile(game, attacker, target, damage);
+    return;
+  }
+  applyAttackDamage(game, attacker, target, damage, attackRange);
+}
+
+function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+  const projectile = {
+    id: `projectile-${game.nextId}`,
+    owner: attacker.owner,
+    attackerId: attacker.id,
+    targetId: target.id,
+    fromX: attacker.x,
+    fromY: attacker.y,
+    toX: target.x,
+    toY: target.y,
+    damage,
+    remaining: PROJECTILE_FLIGHT_DURATION,
+    duration: PROJECTILE_FLIGHT_DURATION,
+  } satisfies Projectile;
+  game.nextId += 1;
+  game.projectiles.push(projectile);
+  addEffect(game, "projectile", target.x, target.y, PROJECTILE_FLIGHT_DURATION, {
+    fromX: projectile.fromX,
+    fromY: projectile.fromY,
+    toX: projectile.toX,
+    toY: projectile.toY,
+  });
+}
+
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
-  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return;
+  if (!applyDamage(game, attacker, target, damage)) return;
+  const from = { x: attacker.x, y: attacker.y };
+  const to = { x: target.x, y: target.y };
+  const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
+  addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
+  addEffect(game, "hit", to.x, to.y, 14);
+}
+
+function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return false;
   const hpBefore = target.hp;
   target.hp -= damage;
   if (hpBefore > 0 && isUnit(target) && target.owner === "neutral") triggerNeutralAssist(game, target, attacker);
   if (hpBefore > 0 && target.hp <= 0) {
     recordKill(game, attacker, target);
   }
-  const from = { x: attacker.x, y: attacker.y };
-  const to = { x: target.x, y: target.y };
-  const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
-  addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
-  addEffect(game, "hit", to.x, to.y, 14);
+  return true;
 }
 
 function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit | Building) {

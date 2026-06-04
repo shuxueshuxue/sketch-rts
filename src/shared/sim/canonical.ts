@@ -15,6 +15,7 @@ export function canonicalGameState(game: Game) {
     resources: game.resources,
     mercenaryCamps: game.mercenaryCamps,
     items: game.items,
+    projectiles: game.projectiles,
     effects: game.effects,
     runtime: {
       nextId: game.nextId,
