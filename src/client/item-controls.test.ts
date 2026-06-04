@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issueCommand, stepGame } from "../shared/sim";
-import { dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
+import { dropItemCommand, itemHotkey, itemHotkeys, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import type { Unit, WorldItem } from "../shared/types";
 
 describe("item controls", () => {
   it("maps item slots to compact labels and number hotkeys", () => {
     expect(itemHotkey(0)).toBe("1");
     expect(itemHotkey(5)).toBe("6");
+    expect(itemHotkeys(3, new Set([1, 3]))).toEqual(["2", "4", "5"]);
     expect(itemLabel("lightningRod")).toBe("Lightning Rod");
   });
 
@@ -20,6 +21,17 @@ describe("item controls", () => {
 
     expect(useItemCommand(game, "player", rod, carrier)).toEqual({ type: "useItem", unitId: carrier.id, itemId: rod.id, targetId: enemy.id });
     expect(dropItemCommand(rod, carrier)).toEqual({ type: "dropItem", unitId: carrier.id, itemId: rod.id, x: 133, y: 108 });
+  });
+
+  it("treats neutral wildlings as valid enemy targets for player damage items", () => {
+    const game = createGame();
+    const carrier = unit("carrier", 100, 100);
+    const wildling = unit("wildling-target", 180, 100, "neutral");
+    const rod: WorldItem = { id: "rod", kind: "lightningRod", x: 0, y: 0, carrierId: carrier.id, cooldownRemaining: 0 };
+    game.units = [carrier, wildling];
+    game.items = [rod];
+
+    expect(useItemCommand(game, "player", rod, carrier)).toEqual({ type: "useItem", unitId: carrier.id, itemId: rod.id, targetId: wildling.id });
   });
 
   it("picks the nearest selected unit for a ground item", () => {

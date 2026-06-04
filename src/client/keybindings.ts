@@ -1,6 +1,7 @@
 export type GameplayKeyContext = {
   controlGroups: Set<number>;
   inventorySlots: number;
+  inventoryHotkeys?: number[];
   commandHotkeys?: Set<string>;
 };
 
@@ -18,6 +19,8 @@ export function gameplayKeyIntent(event: KeyboardEvent, context: GameplayKeyCont
   if (event.ctrlKey && event.shiftKey) return { type: "none" };
   if (event.ctrlKey || event.shiftKey) return { type: "none" };
   if (digit && context.controlGroups.has(digit)) return { type: "controlGroupRecall", slot: digit };
+  const inventoryHotkeyIndex = digit && context.inventoryHotkeys ? context.inventoryHotkeys.indexOf(digit) : -1;
+  if (inventoryHotkeyIndex >= 0) return { type: "inventoryUse", index: inventoryHotkeyIndex };
   if (digit && digit <= context.inventorySlots) return { type: "inventoryUse", index: digit - 1 };
   const hotkey = event.key.toLowerCase();
   if (context.commandHotkeys?.has(hotkey)) return { type: "commandHotkey", hotkey };

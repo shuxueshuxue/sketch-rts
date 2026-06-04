@@ -15,7 +15,7 @@ import { edgeScrollDelta } from "./edge-scroll";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
-import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
+import { carriedItemsForSelection, dropItemCommand, itemHotkeys, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { drawLevelStar } from "./level-star";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
@@ -51,7 +51,8 @@ type Point = { x: number; y: number };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type BuildPlacement = { workerId: string; buildingKind: BuildingKind };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
-type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting };
+type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
+type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
 type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
@@ -1277,6 +1278,7 @@ function onMouseUp(event: MouseEvent) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
+    else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 2) cancelCommandMode();
     selectionStart = undefined;
     selectionEnd = undefined;
@@ -1519,12 +1521,69 @@ function issueSpellAt(point: Point) {
   updateHud();
 }
 
+function beginItemTargeting(entry: { item: WorldItem; carrier: Unit }) {
+  commandMode = { type: "item", targeting: { unitId: entry.carrier.id, itemId: entry.item.id, kind: entry.item.kind } };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent =
+    entry.item.kind === "stormStaff"
+      ? `${itemLabel(entry.item.kind)} mode. Left-click a target point or unit, right-click or Escape to cancel.`
+      : `${itemLabel(entry.item.kind)} mode. Left-click a valid target, right-click or Escape to cancel.`;
+  updateHud();
+}
+
+function issueItemAt(point: Point) {
+  if (!commandMode || commandMode.type !== "item" || !snapshot) return;
+  const { kind, itemId, unitId } = commandMode.targeting;
+  const world = screenToWorld(point);
+  if (kind === "stormStaff") {
+    const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
+    sendCommand(target ? { type: "useItem", unitId, itemId, x: target.x, y: target.y } : { type: "useItem", unitId, itemId, x: world.x, y: world.y });
+    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+  if (kind === "lightningRod") {
+    const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
+    if (!target) {
+      showInvalidCommand(`${itemLabel(kind)} needs an enemy unit target.`);
+      return;
+    }
+    sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
+    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+  if (kind === "breachCharge") {
+    const target = hitBuilding(world, (building) => building.owner !== localPlayerId);
+    if (!target) {
+      showInvalidCommand(`${itemLabel(kind)} needs an enemy building target.`);
+      return;
+    }
+    sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
+    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+  }
+}
+
 function cancelCommandMode() {
   const canceled = commandMode?.type;
   commandMode = undefined;
   clearCommandModeClasses();
   statusLabel.textContent =
-    canceled === "attackMove" ? "Attack-move canceled." : canceled === "spell" ? "Spell targeting canceled." : "Build placement canceled.";
+    canceled === "attackMove"
+      ? "Attack-move canceled."
+      : canceled === "spell"
+        ? "Spell targeting canceled."
+        : canceled === "item"
+          ? "Item targeting canceled."
+          : "Build placement canceled.";
   updateHud();
 }
 
@@ -1663,6 +1722,13 @@ function pruneSelection() {
     commandMode = undefined;
     clearCommandModeClasses();
   }
+  if (commandMode?.type === "item") {
+    const targeting = commandMode.targeting;
+    if (!liveIds.has(targeting.unitId) || !snapshot.items.some((item) => item.id === targeting.itemId && item.carrierId === targeting.unitId)) {
+      commandMode = undefined;
+      clearCommandModeClasses();
+    }
+  }
   if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
 }
 
@@ -1672,9 +1738,12 @@ function liveSelectionIds() {
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if (!snapshot) return false;
+  const inventoryEntries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
   const intent = gameplayKeyIntent(event, {
-    controlGroups: new Set(Object.keys(controlGroups).map(Number)),
-    inventorySlots: carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6).length,
+    controlGroups: reservedGroupDigits,
+    inventorySlots: inventoryEntries.length,
+    inventoryHotkeys: itemHotkeys(inventoryEntries.length, reservedGroupDigits).map(Number),
     commandHotkeys: new Set(commandButtons.filter((button) => button.isAvailable()).map((button) => button.hotkey)),
   });
   if (intent.type === "none") return false;
@@ -1968,18 +2037,20 @@ function renderItemDock() {
     return;
   }
   const entries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.classList.toggle("hidden", entries.length === 0);
   itemDock.replaceChildren(
     ...entries.map(({ item, carrier }, index) => {
+      const hotkey = hotkeys[index] ?? "";
       const button = document.createElement("button");
       button.type = "button";
       button.className = "item-button";
       button.dataset.itemId = item.id;
       const cooldownText = item.cooldownRemaining > 0 ? ` - recharging ${item.cooldownRemaining}` : "";
-      button.setAttribute("aria-label", `${itemLabel(item.kind)} (${itemHotkey(index)})${cooldownText}`);
-      applyTooltip(button, itemTooltip(item.kind, itemHotkey(index)));
+      button.setAttribute("aria-label", `${itemLabel(item.kind)} (${hotkey})${cooldownText}`);
+      applyTooltip(button, itemTooltip(item.kind, hotkey));
       button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
-      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${itemHotkey(index)}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
+      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
       button.addEventListener("click", () => useCarriedItem(item.id));
       button.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -2008,6 +2079,10 @@ function useCarriedItem(itemId: string) {
   }
   if (entry.item.cooldownRemaining > 0) {
     showInvalidCommand(`${itemLabel(entry.item.kind)} is recharging.`);
+    return;
+  }
+  if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge") {
+    beginItemTargeting(entry);
     return;
   }
   const command = useItemCommand(snapshot, localPlayerId, entry.item, entry.carrier);

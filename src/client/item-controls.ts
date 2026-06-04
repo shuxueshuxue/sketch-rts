@@ -1,7 +1,15 @@
 import type { GameCommand, GameSnapshot, ItemKind, PlayerId, Unit, WorldItem } from "../shared/types";
 
 export function itemHotkey(index: number) {
-  return String(index + 1);
+  return itemHotkeys(index + 1)[index] ?? "";
+}
+
+export function itemHotkeys(count: number, reservedDigits = new Set<number>()) {
+  const keys: string[] = [];
+  for (let digit = 1; digit <= 9 && keys.length < count; digit += 1) {
+    if (!reservedDigits.has(digit)) keys.push(String(digit));
+  }
+  return keys;
 }
 
 export function itemLabel(kind: ItemKind) {
@@ -41,7 +49,7 @@ function nearestUnit(units: Unit[], point: { x: number; y: number }) {
 function nearestEnemy(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, range: number) {
   const rangeSquared = range * range;
   return snapshot.units
-    .filter((unit) => unit.owner !== owner && unit.owner !== "neutral" && distanceSquared(unit, carrier) <= rangeSquared)
+    .filter((unit) => unit.owner !== owner && distanceSquared(unit, carrier) <= rangeSquared)
     .sort((a, b) => distanceSquared(a, carrier) - distanceSquared(b, carrier))[0];
 }
 
