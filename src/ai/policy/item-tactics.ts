@@ -6,6 +6,9 @@ import { distance, nearestEntities, nearestEntity } from "./spatial";
 import type { PresetAiPolicyOptions } from "./types";
 import { isCoreProductionBuilding, mainBase } from "./world-model";
 
+const GUARDIAN_SCROLL_THREAT_RANGE = 380;
+const GUARDIAN_SCROLL_CONTACT_RANGE = 300;
+
 export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
   const ownUnits = units(snapshot, owner);
@@ -35,8 +38,14 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
   }
   if (item.kind === "guardianScroll") {
     const allies = combatUnits(snapshot, owner).filter((unit) => distance(unit, carrier) <= 260);
-    const enemies = hostileUnitsNear(snapshot, owner, carrier, 300, options.teams);
-    return allies.length >= 4 && enemies.length >= 3 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
+    const contactEnemies = hostileUnitsNear(snapshot, owner, carrier, GUARDIAN_SCROLL_CONTACT_RANGE, options.teams);
+    // @@@guardian-precast - Outnumbered ranged fights are decided before melee contact; advantage armies should not get a free early snowball shield.
+    const threatEnemies = hostileUnitsNear(snapshot, owner, carrier, GUARDIAN_SCROLL_THREAT_RANGE, options.teams);
+    const outnumbered = combatUnits(snapshot, owner).length < hostileUnitsNear(snapshot, owner, carrier, 900, options.teams).length;
+    const backlineCarrier = carrier.attackRange > 100;
+    const contactFight = contactEnemies.length >= 3;
+    const rangedBurstWindow = backlineCarrier && outnumbered && threatEnemies.length >= 3;
+    return allies.length >= 4 && (contactFight || rangedBurstWindow) ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
   const range = item.kind === "stormStaff" ? 320 : 280;
   const hostileTargets = hostileUnitsNear(snapshot, owner, carrier, range, options.teams);

@@ -4792,6 +4792,36 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "useItem", unitId: "scroll-carrier", itemId: "green-guardian-scroll" });
   });
 
+  it("v2 pre-casts guardian scroll when a ranged burst fight is about to connect", () => {
+    const game = sketchScene("ai-guardian-scroll-ranged-burst-window")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "fieldMedic", 623.5, 583.2, { id: "scroll-carrier" })
+      .unit("v2", "archer", 655.4, 583.9, { id: "storm-carrier" })
+      .unit("v2", "contractArcher", 665.9, 691.7, { id: "rod-carrier" })
+      .unit("v2", "lancer", 631.5, 639)
+      .unit("v2", "footman", 627.5, 692)
+      .unit("v1", "archer", 942.2, 588.2)
+      .unit("v1", "archer", 933.1, 642.4)
+      .unit("v1", "contractArcher", 934, 696)
+      .unit("v1", "witch", 940.6, 749.1)
+      .unit("v1", "archer", 984.5, 805.7)
+      .unit("v1", "contractArcher", 1006.1, 586.8)
+      .item("blue-storm-staff", "stormStaff", 0, 0, { carrierId: "storm-carrier" })
+      .item("blue-lightning-rod", "lightningRod", 0, 0, { carrierId: "rod-carrier" })
+      .item("green-guardian-scroll", "guardianScroll", 0, 0, { carrierId: "scroll-carrier" })
+      .build()
+      .createGame();
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.items], { version: "v2", teams: game.teams, policyMode: "combat" });
+
+    expect(commands).toContainEqual({ type: "useItem", unitId: "scroll-carrier", itemId: "green-guardian-scroll" });
+  });
+
   it("v2 can research early weapon training before the full production chain exists", () => {
     const scene = sketchScene("v2-early-weapon-training")
       .map("bareDuel")
