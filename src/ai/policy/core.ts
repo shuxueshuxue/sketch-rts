@@ -144,6 +144,8 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
   AI_SCRIPT_LIBRARY.focusFire,
+  AI_SCRIPT_LIBRARY.workerPressure,
+  AI_SCRIPT_LIBRARY.workerPressureCloseout,
   AI_SCRIPT_LIBRARY.objectiveControl,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,

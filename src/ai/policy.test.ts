@@ -569,6 +569,32 @@ describe("SDK preset AI policy", () => {
     expect(entries.some((entry) => entry.scriptId === "workerPressureCloseout")).toBe(false);
   });
 
+  it("v2 preset keeps a stranded 1v2 combat squad pressuring workers instead of idling", () => {
+    const scene = sketchScene("v2-stranded-squad-worker-pressure")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 2860, 900)
+      .unit("v2", "lancer", 2900, 880)
+      .unit("v2", "archer", 2920, 920)
+      .unit("v2", "contractArcher", 2940, 900)
+      .townHall("v1a", 3600, 1480)
+      .worker("v1a", 3420, 1410, { id: "v1a-target-worker" })
+      .worker("v1a", 3460, 1450)
+      .townHall("v1b", 3600, 2620)
+      .worker("v1b", 3440, 2600)
+      .worker("v1b", 3480, 2640)
+      .build();
+    const game = scene.createGame();
+
+    const entry = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.scriptId === "workerPressure");
+
+    expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "attack", targetId: "v1a-target-worker" } });
+  });
+
   it("v2 builds missing core production before spending the economy frame on mercenary control", () => {
     const scene = sketchScene("v2-production-before-mercenary")
       .map("openClaims")
