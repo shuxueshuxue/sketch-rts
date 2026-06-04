@@ -47,8 +47,9 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
   const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(rememberedTarget, fighters, options) ? rememberedTarget : undefined;
+  const finisherTarget = options.policyMode === "combat" && anchoredRememberedTarget && anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4 ? singleHitFinisherTarget(candidates, fighters) : undefined;
   const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
-  const target = anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
+  const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
   if (!target) return undefined;
   const attackers = focusFireAttackers(fighters, target);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
@@ -78,6 +79,12 @@ function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: P
 
 function focusFireAttackers(fighters: Unit[], target: Unit) {
   return fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
+}
+
+function singleHitFinisherTarget(candidates: Unit[], fighters: Unit[]) {
+  return candidates
+    .filter((target) => focusFireAttackers(fighters, target).some((attacker) => target.hp <= attacker.attackDamage))
+    .sort((a, b) => a.hp - b.hp || focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
 }
 
 function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {

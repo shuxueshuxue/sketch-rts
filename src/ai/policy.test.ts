@@ -2675,6 +2675,31 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "attack" ? command.unitIds.sort() : []).toEqual(["tail-archer-a", "tail-archer-b"]);
   });
 
+  it("v2 combat focus memory yields to an immediately killable nearby target", () => {
+    const scene = sketchScene("v2-combat-focus-finisher-before-memory")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 150, 800)
+      .unit("v2", "footman", 820, 790)
+      .unit("v2", "lancer", 835, 820)
+      .unit("v2", "archer", 790, 760)
+      .unit("v2", "archer", 795, 850)
+      .townHall("v1", 1450, 800)
+      .unit("v1", "archer", 900, 790, { id: "remembered-archer", hp: 28 })
+      .unit("v1", "raider", 905, 830, { id: "free-kill-raider", hp: 9 })
+      .unit("v1", "footman", 970, 810)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { focusTargetOwner: "v1", focusTargetId: "remembered-archer", focusTargetSinceTick: 0, focusTargetUpdatedTick: 0 };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.focusFire], { version: "v2", teams: game.teams, policyMode: "combat", memory }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ type: "attack", targetId: "free-kill-raider" });
+  });
+
   it("v2 preset reintroduces focus-fire through the memory-backed executable stack", () => {
     const scene = sketchScene("v2-preset-focus-fire-wiring")
       .map("bareDuel")
