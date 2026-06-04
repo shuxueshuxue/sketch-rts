@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BUILDING_DEFS } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
 import { runAiGame } from "./game-runner";
 import { createAiRuntime, runPresetAiRuntime } from "./runtime";
@@ -6456,6 +6457,41 @@ describe("SDK preset AI policy", () => {
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
+  });
+
+  it("v2 adds a recovery moon well when settled wounded defenders are outside existing well range", () => {
+    const scene = sketchScene("v2-uncovered-wounded-recovery-moon-well")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .building("v2", "stables", 780, 620, { id: "v2-stables" })
+      .building("v2", "farm", 560, 700, { id: "v2-first-farm" })
+      .building("v2", "moonWell", 340, 680, { id: "v2-existing-moon-well" })
+      .worker("v2", 520, 560, { id: "v2-builder" })
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 560)
+      .worker("v2", 580, 560)
+      .unit("v2", "footman", 450, 235, { hp: 42, order: { type: "idle" } })
+      .unit("v2", "lancer", 500, 250, { hp: 35, order: { type: "move", x: 500, y: 250 } })
+      .unit("v2", "footman", 540, 245, { hp: 46, order: { type: "idle" } })
+      .unit("v2", "archer", 530, 280)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 700;
+    game.players.v2!.supplyUsed = 11;
+    game.players.v2!.supplyCap = 40;
+
+    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
+
+    expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
+    if (command?.type === "build") expect(distance(command, { x: 500, y: 245 })).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
   });
 
   it("v2 rebuilds a fighting unit before spending scarce gold on a thin moon well", () => {

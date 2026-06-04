@@ -7,9 +7,12 @@ import { DEFAULT_AI_THINK_INTERVAL, planAiRuntimeCommandEntries } from "../src/a
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
+import type { AiGameAgent } from "../src/ai/game-runner";
+import type { BenchmarkMatchInput } from "../src/sdk/benchmark/core";
+import { createAiMeleeControlBenchmarkInput } from "../src/ai/benchmark/control";
 import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
 import { SIM_TICKS_PER_SECOND } from "../src/shared/time";
-import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
+import type { AiScriptVersion, BuildingKind, GameCommand, GameSetupOptions, MapId, PlayerId, RaceId, TrainableUnitKind, UpgradeKind } from "../src/shared/types";
 
 type AiPlaytestFile = {
   session: SerializedInteractivePlaytestSession;
@@ -123,16 +126,24 @@ function commandFromArgs(verb: string, args: string[]): InteractivePlaytestComma
 }
 
 function playtestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): { id?: string; mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode; scriptedPlayers?: PlayerId[]; versions?: Partial<Record<PlayerId, AiScriptVersion>>; disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"] } {
+  const controlBenchmarkMatchName = flag(args, "from-control-benchmark");
+  if (controlBenchmarkMatchName !== undefined) return controlBenchmarkPlaytestSetup(args, controlBenchmarkMatchName, controlledPlayer);
+
   const benchmarkMatchName = flag(args, "from-benchmark");
   if (benchmarkMatchName !== undefined) return benchmarkPlaytestSetup(args, benchmarkMatchName, controlledPlayer);
 
   const setup = flag(args, "setup");
   if (setup === undefined) {
+    const controlledTeam = flag(args, "you-team") ?? "north";
+    const enemyTeam = flag(args, "enemy-team") ?? "south";
+    const controlledRace = flag(args, "you-race") as RaceId | undefined;
+    const enemyRace = flag(args, "enemy-race") as RaceId | undefined;
     return {
       mapId: (flag(args, "map") ?? "bareDuel") as MapId,
       options: {
         players: [controlledPlayer, enemy],
-        teams: { [controlledPlayer]: "north", [enemy]: "south" },
+        teams: { [controlledPlayer]: controlledTeam, [enemy]: enemyTeam },
+        ...(controlledRace || enemyRace ? { races: { ...(controlledRace ? { [controlledPlayer]: controlledRace } : {}), ...(enemyRace ? { [enemy]: enemyRace } : {}) } } : {}),
       },
     };
   }
@@ -157,6 +168,22 @@ function benchmarkPlaytestSetup(args: string[], matchName: string, controlledPla
   const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
   const match = matches.find((candidate) => candidate.name === matchName);
   if (!match) throw new Error(`Unknown benchmark match ${matchName}`);
+  return playtestSetupFromBenchmarkMatch(match, matchName, controlledPlayer);
+}
+
+function controlBenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): { id: string; mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode; scriptedPlayers: PlayerId[]; versions: Partial<Record<PlayerId, AiScriptVersion>>; disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"] } {
+  const { input } = createAiMeleeControlBenchmarkInput({
+    ...(flag(args, "control-seed") ? { seed: requiredFlag(args, "control-seed") } : {}),
+    ...(flag(args, "control-map-count") ? { mapCount: requiredNumberFlag(args, "control-map-count") } : {}),
+    full: boolFlag(args, "control-full"),
+  });
+  const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
+  const match = matches.find((candidate) => candidate.name === matchName);
+  if (!match) throw new Error(`Unknown control benchmark match ${matchName}`);
+  return playtestSetupFromBenchmarkMatch(match, matchName, controlledPlayer);
+}
+
+function playtestSetupFromBenchmarkMatch(match: BenchmarkMatchInput<AiGameAgent>, matchName: string, controlledPlayer: PlayerId): { id: string; mapId: MapId; options: GameSetupOptions; policyMode?: "melee" | "combat"; winnerMode?: SdkWinnerMode; scriptedPlayers: PlayerId[]; versions: Partial<Record<PlayerId, AiScriptVersion>>; disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"] } {
   const agentEntries = Object.entries(match.agents);
   if (!match.agents[controlledPlayer]) throw new Error(`Benchmark match ${matchName} does not include controlled player ${controlledPlayer}`);
   const players = agentEntries.map(([owner]) => owner as PlayerId);
@@ -283,6 +310,8 @@ function clone<T>(value: T): T {
 function printHelp() {
   console.log(`Usage:
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
+  npm run play:ai -- new --file .playtests/control-south.json --map amberReach --you v2 --enemy v1a --you-team south --enemy-team north --you-race grove --enemy-race grove --assist-you
+  npm run play:ai -- new --file .playtests/control-south.json --from-control-benchmark "amberReach 1v1 control south" --control-seed moonwell-layout-50-2026-06-04 --control-map-count 50 --you v2 --assist-you
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --assist-you --you-scripts skirmishPreservation --enemy-scripts attackWave
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json

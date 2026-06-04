@@ -250,6 +250,7 @@ function playerBlock(owner: string, player: BenchmarkPlayerResult) {
     ["killed by neutral", player.unitsKilledByNeutral],
     ["tower builds", player.defenseTowerBuildCount],
     ["moon wells", player.moonWellBuildCount],
+    ["moon well healing", `${player.moonWellHealingEvents} events / ${player.moonWellHealingHp} hp`],
     ["item pickups", player.itemPickupCount],
     ["item uses", player.itemUseCount],
     ["peak supply", player.peakSupply],

@@ -568,12 +568,13 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const main = mainBase(snapshot, owner);
   const wellsNearMain = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && distance(building, main) < 520).length;
   const desiredWells = completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 8 ? 2 : 1;
-  if (wellsNearMain >= desiredWells) return undefined;
+  const uncoveredRecovery = options.version === "v2" && hasUncoveredSettledWoundedRecovery(snapshot, owner, main);
+  if (wellsNearMain >= desiredWells && !uncoveredRecovery) return undefined;
 
   const ownCombat = combatUnits(snapshot, owner);
   const woundedDefenders = ownCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
   const pressured = healingWellPressure(snapshot, owner, main, options);
-  const wantsWell = woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
+  const wantsWell = uncoveredRecovery || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
@@ -586,6 +587,19 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y }, options);
+}
+
+function hasUncoveredSettledWoundedRecovery(snapshot: GameSnapshot, owner: PlayerId, main: Point) {
+  const wells = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0);
+  if (wells.length === 0) return false;
+  const uncovered = combatUnits(snapshot, owner).filter(
+    (unit) =>
+      unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
+      distance(unit, main) <= 760 &&
+      (unit.order.type === "idle" || unit.order.type === "move") &&
+      wells.every((well) => distance(unit, well) > BUILDING_DEFS.moonWell.attackRange),
+  );
+  return uncovered.length >= 2;
 }
 
 function shouldRebuildCombatBeforeHealingWell(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {

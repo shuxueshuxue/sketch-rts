@@ -232,6 +232,38 @@ describe("AI playtest CLI", () => {
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
   });
 
+  it("creates exact side-swapped sessions from the all-map control benchmark", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "control-benchmark-south.json");
+
+    runPlaytestCli("new", "--file", file, "--from-control-benchmark", "brackenFord 1v1 control south", "--control-seed", "control-cli-seed", "--control-map-count", "2", "--you", "v2", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
+      { playerId: "v1a", team: "north", race: "grove", controller: "ai" },
+      { playerId: "v2", team: "south", race: "grove", controller: "human" },
+    ]);
+    expect(persisted.session.scriptedPlayers).toEqual(["v1a"]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+    expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
+  });
+
+  it("creates manual side-swapped map sessions with explicit teams", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "manual-control-south.json");
+
+    runPlaytestCli("new", "--file", file, "--map", "amberReach", "--you", "v2", "--enemy", "v1a", "--you-team", "south", "--enemy-team", "north", "--you-race", "grove", "--enemy-race", "grove", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
+      { playerId: "v2", team: "south", race: "grove", controller: "human" },
+      { playerId: "v1a", team: "north", race: "grove", controller: "ai" },
+    ]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+  });
+
   it("persists per-player disabled benchmark behaviors for exact assisted replay", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

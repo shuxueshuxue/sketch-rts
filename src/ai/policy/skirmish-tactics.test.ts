@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { BUILDING_DEFS } from "../../shared/catalog";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { planSkirmishPreservation } from "./skirmish-tactics";
+import { distance } from "./spatial";
 
 describe("AI skirmish tactics", () => {
   it("pulls a wounded ranged unit away from a melee unit that has closed the distance", () => {
@@ -57,9 +59,33 @@ describe("AI skirmish tactics", () => {
       .townHall("v1", 3300, 3300)
       .build()
       .createGame();
+    const well = game.buildings.find((building) => building.owner === "v2" && building.kind === "moonWell")!;
 
     const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "move", unitIds: ["idle-wounded-footman"], x: 500, y: 500 });
+    expect(command).toMatchObject({ type: "move", unitIds: ["idle-wounded-footman"] });
+    if (command?.type === "move") expect(distance(command, well)).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
+  });
+
+  it("sends settled wounded fighters into moon well range instead of the neutral-leash retreat point", () => {
+    const game = sketchScene("skirmish-tactics-wounded-moon-well-recovery")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 2600)
+      .building("v2", "moonWell", 340, 2680)
+      .unit("neutral", "wildling", 500, 2900)
+      .unit("v2", "footman", 780, 2300, { id: "settled-wounded-footman", hp: 32, order: { type: "idle" } })
+      .unit("v2", "archer", 820, 2320, { id: "healthy-archer" })
+      .townHall("v1", 3300, 3300)
+      .build()
+      .createGame();
+    const well = game.buildings.find((building) => building.owner === "v2" && building.kind === "moonWell")!;
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["settled-wounded-footman"] });
+    if (command?.type === "move") expect(distance(command, well)).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
   });
 });

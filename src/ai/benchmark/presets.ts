@@ -24,7 +24,10 @@ export type AiVersionBenchmarkOptions = {
   thinkInterval?: number;
   adapter?: SdkAgentAdapter;
   workers?: number;
+  workerHarassment?: WorkerHarassmentBenchmarkMode;
 };
+
+export type WorkerHarassmentBenchmarkMode = 0 | 0.5 | 1;
 
 export type AiVersionBenchmarkDashboardReport = {
   seed: string;
@@ -62,6 +65,29 @@ const V1C: PlayerId = "v1c";
 const TEAMS: Record<PlayerId, string> = { v2: "north", v2b: "north", v1a: "south", v1b: "south", v1c: "south" };
 const RACES: Record<PlayerId, RaceId> = { v2: "grove", v2b: "grove", v1a: "grove", v1b: "grove", v1c: "grove" };
 
+type AiBenchmarkAgentOptions = {
+  adapter?: SdkAgentAdapter;
+  disableV2WorkerHarassment?: boolean;
+  teams?: Partial<Record<PlayerId, string>>;
+};
+
+function aiBenchmarkAgents(players: PlayerId[], options: AiBenchmarkAgentOptions = {}) {
+  const adapter = options.adapter ?? "external";
+  return Object.fromEntries(
+    players.map((owner) => [
+      owner,
+      {
+        adapter,
+        team: options.teams?.[owner] ?? TEAMS[owner],
+        race: RACES[owner],
+        version: owner === V2 || owner === V2B ? "v2" : "v1",
+        versionLabel: owner === V2 || owner === V2B ? "v2" : "v1",
+        ...((owner === V2 || owner === V2B) && options.disableV2WorkerHarassment ? { disabledBehaviors: ["workerHarassment"] as const } : {}),
+      },
+    ]),
+  ) as Record<PlayerId, AiGameAgent>;
+}
+
 export function selectGauntletRichScoreMaps<TMapId extends string>(mapIds: readonly TMapId[], env: GauntletSelectionEnv = {}): GauntletMapSelection<TMapId> {
   const seed = env.AI_GAUNTLET_SEED ?? randomSeed();
   if (env.AI_GAUNTLET_FULL === "1") return { mode: "full", seed, mapIds: [...mapIds] };
@@ -80,36 +106,14 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
   const adapter = options.adapter ?? "external";
-  const agents = (players: PlayerId[], options: { disableV2WorkerHarassment?: boolean; teams?: Partial<Record<PlayerId, string>> } = {}) =>
-    Object.fromEntries(
-      players.map((owner) => [
-        owner,
-        {
-          adapter,
-          team: options.teams?.[owner] ?? TEAMS[owner],
-          race: RACES[owner],
-          version: owner === V2 || owner === V2B ? "v2" : "v1",
-          versionLabel: owner === V2 || owner === V2B ? "v2" : "v1",
-          ...((owner === V2 || owner === V2B) && options.disableV2WorkerHarassment ? { disabledBehaviors: ["workerHarassment"] as const } : {}),
-        },
-      ]),
-    ) as Record<PlayerId, AiGameAgent>;
   const match = (name: string, mapId: MapId, players: PlayerId[], index: number): BenchmarkMatchInput<AiGameAgent> => ({
     name,
     mapId,
-    agents: agents(players, { disableV2WorkerHarassment: index % 2 === 1 }),
+    agents: aiBenchmarkAgents(players, { adapter, disableV2WorkerHarassment: index % 2 === 1 }),
     commandPlanner: createAiGameCommandPlanner(),
     maxTicks,
     thinkInterval,
   });
-  const sideBalancedControlMatches = (mapId: MapId, index: number) => [
-    match(`${mapId} 1v1 control north`, mapId, [V2, V1A], index),
-    {
-      ...match(`${mapId} 1v1 control south`, mapId, [V2, V1A], index),
-      // @@@Side-balanced control - the same map must be checked from both start teams, otherwise spawn bias looks like AI strength.
-      agents: agents([V1A, V2], { disableV2WorkerHarassment: index % 2 === 1, teams: { [V2]: "south", [V1A]: "north" } }),
-    },
-  ];
   const input: BenchmarkInput<AiGameAgent> = {
     name: "AI Version Benchmark",
     evaluations: [
@@ -121,7 +125,7 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
       {
         name: "1v1 score control",
         tag: "melee",
-        matches: allocatedMaps.score.flatMap((mapId, index) => sideBalancedControlMatches(mapId, index)),
+        matches: allocatedMaps.score.flatMap((mapId, index) => createAiMeleeControlMatches(mapId, index, { adapter, maxTicks, thinkInterval })),
       },
       {
         name: "1v3 probe",
@@ -162,6 +166,35 @@ export function allocateGauntletBenchmarkMaps<TMapId extends string>(mapIds: rea
   };
 }
 
+export function createAiMeleeControlMatches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "adapter" | "maxTicks" | "thinkInterval" | "workerHarassment"> = {}) {
+  const adapter = options.adapter ?? "external";
+  const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
+  const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
+  const disableV2WorkerHarassment = workerHarassmentDisabledForIndex(options.workerHarassment ?? 0.5, index);
+  const match = (name: string, agents: Record<PlayerId, AiGameAgent>): BenchmarkMatchInput<AiGameAgent> => ({
+    name,
+    mapId,
+    agents,
+    commandPlanner: createAiGameCommandPlanner(),
+    maxTicks,
+    thinkInterval,
+  });
+  return [
+    match(`${mapId} 1v1 control north`, aiBenchmarkAgents([V2, V1A], { adapter, disableV2WorkerHarassment })),
+    match(
+      `${mapId} 1v1 control south`,
+      // @@@Side-balanced control - the same map must be checked from both start teams, otherwise spawn bias looks like AI strength.
+      aiBenchmarkAgents([V1A, V2], { adapter, disableV2WorkerHarassment, teams: { [V2]: "south", [V1A]: "north" } }),
+    ),
+  ];
+}
+
+function workerHarassmentDisabledForIndex(mode: WorkerHarassmentBenchmarkMode, index: number) {
+  if (mode === 0) return true;
+  if (mode === 1) return false;
+  return index % 2 === 1;
+}
+
 export function runAiVersionBenchmark(options: AiVersionBenchmarkOptions = {}): AiVersionBenchmarkDashboardReport {
   const { input, selection } = createAiVersionBenchmarkInput(options);
   const report = runBenchmark(input);
@@ -192,7 +225,7 @@ function aiVersionBenchmarkDashboardReport(selectedRichScoreMapIds: MapId[], see
   };
 }
 
-function serializableAiBenchmarkInput(input: BenchmarkInput<AiGameAgent>): BenchmarkInput<AiGameAgent> {
+export function serializableAiBenchmarkInput(input: BenchmarkInput<AiGameAgent>): BenchmarkInput<AiGameAgent> {
   return {
     ...input,
     evaluations: input.evaluations.map((evaluation) => ({

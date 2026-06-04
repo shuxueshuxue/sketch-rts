@@ -210,6 +210,44 @@ describe("SDK benchmark", () => {
     expect(player.totalGoldIncome).toBe(30);
   });
 
+  it("reports actual moon well healing events and restored hit points", () => {
+    const scene = sketchScene("sdk-benchmark-moon-well-healing")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "moonWell", 500, 500)
+      .unit("v2", "footman", 620, 500, { id: "wounded-footman", hp: 80 })
+      .townHall("v1", 3400, 3400)
+      .build();
+
+    const report = runBenchmark({
+      name: "sdk-benchmark-moon-well-healing",
+      evaluations: [
+        {
+          name: "moon well healing",
+          matches: [
+            {
+              name: "heals wounded soldier",
+              game: scene.createGame(),
+              agents: {
+                v2: { adapter: "external", team: "north", race: "grove", versionLabel: "v2" },
+                v1: { adapter: "external", team: "south", race: "ember", versionLabel: "v1" },
+              },
+              maxTicks: 92,
+              thinkInterval: 45,
+            },
+          ],
+        },
+      ],
+    });
+
+    const player = report.evaluations[0]!.matches[0]!.result.players.v2!;
+    expect(player.moonWellHealingEvents).toBe(4);
+    expect(player.moonWellHealingHp).toBe(20);
+  });
+
   it("reports player units killed by neutral creeps", () => {
     const scene = sketchScene("sdk-benchmark-killed-by-neutral")
       .map("bareDuel")

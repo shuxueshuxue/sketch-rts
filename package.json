@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:ai-matrix": "tsx scripts/ai-matrix.ts",
     "benchmark:ai": "tsx scripts/ai-version-benchmark.ts",
+    "benchmark:ai-control": "tsx scripts/ai-control-benchmark.ts",
     "play:ai": "tsx scripts/ai-playtest.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",
     "test:sdk-ai-ab": "vitest --run src/ai/ab-test.test.ts",

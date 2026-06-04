@@ -139,6 +139,8 @@ export type BenchmarkPlayerResult = {
   unitsKilledByNeutral: number;
   defenseTowerBuildCount: number;
   moonWellBuildCount: number;
+  moonWellHealingEvents: number;
+  moonWellHealingHp: number;
   itemPickupCount: number;
   itemUseCount: number;
   peakSupply: number;
@@ -160,6 +162,8 @@ type StandardBenchmarkState = {
   baseBuildCount: Record<PlayerId, number>;
   defenseTowerBuildCount: Record<PlayerId, number>;
   moonWellBuildCount: Record<PlayerId, number>;
+  moonWellHealingEvents: Record<PlayerId, number>;
+  moonWellHealingHp: Record<PlayerId, number>;
   unitTrainingGoldSpent: Record<PlayerId, number>;
   buildingGoldSpent: Record<PlayerId, number>;
   itemPickupCount: Record<PlayerId, number>;
@@ -265,6 +269,8 @@ function createStandardState<TAgent extends SdkGameAgent>(game: Game, input: Ben
     baseBuildCount: initialBuildingCounts("townHall"),
     defenseTowerBuildCount: initialBuildingCounts("defenseTower"),
     moonWellBuildCount: initialBuildingCounts("moonWell"),
+    moonWellHealingEvents: zeroRecord(players),
+    moonWellHealingHp: zeroRecord(players),
     unitTrainingGoldSpent: zeroRecord(players),
     buildingGoldSpent: zeroRecord(players),
     itemPickupCount: zeroRecord(players),
@@ -300,6 +306,7 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
   const beforeUnits = new Map(before.units.map((unit) => [unit.id, unit]));
   const afterUnits = new Map(after.units.map((unit) => [unit.id, unit]));
   const missingNeutralUnits = before.units.filter((unit) => unit.owner === "neutral" && !afterUnits.has(unit.id));
+  recordMoonWellHealing(state, before, after, afterUnits);
   for (const owner of state.players) {
     state.peakSupply[owner] = Math.max(state.peakSupply[owner] ?? 0, after.players[owner]?.supplyUsed ?? 0);
     if (state.firstExpansionMiningSecond[owner] === null && miningBaseCount(after, owner) > 1) state.firstExpansionMiningSecond[owner] = tickSecond(after.tick);
@@ -321,6 +328,24 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
     state.goldMineIncome[owner] = (state.goldMineIncome[owner] ?? 0) + mined;
   }
   recordItemTransitions(state, before, after);
+}
+
+function recordMoonWellHealing(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, afterUnits: Map<string, Unit>) {
+  const wells = after.buildings.filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0);
+  for (const effect of after.effects) {
+    if (effect.type !== "heal" || effect.remaining !== effect.duration || effect.fromX === undefined || effect.fromY === undefined || effect.toX === undefined || effect.toY === undefined) continue;
+    const well = wells.find((candidate) => distance(candidate, { x: effect.fromX!, y: effect.fromY! }) <= 1);
+    if (!well) continue;
+    let healedHp = 0;
+    for (const beforeUnit of before.units) {
+      if (beforeUnit.owner !== well.owner || beforeUnit.kind === "worker" || distance(beforeUnit, { x: effect.toX, y: effect.toY }) > 2) continue;
+      const afterUnit = afterUnits.get(beforeUnit.id);
+      if (!afterUnit) continue;
+      healedHp = Math.max(healedHp, Math.max(0, afterUnit.hp - beforeUnit.hp));
+    }
+    state.moonWellHealingEvents[well.owner] = (state.moonWellHealingEvents[well.owner] ?? 0) + 1;
+    state.moonWellHealingHp[well.owner] = (state.moonWellHealingHp[well.owner] ?? 0) + healedHp;
+  }
 }
 
 function recordItemTransitions(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot) {
@@ -420,6 +445,8 @@ function playerResult<TAgent extends SdkGameAgent>(owner: PlayerId, snapshot: Ga
     unitsKilledByNeutral: snapshot.match.stats.unitsKilledByNeutral[owner] ?? 0,
     defenseTowerBuildCount: state.defenseTowerBuildCount[owner] ?? 0,
     moonWellBuildCount: state.moonWellBuildCount[owner] ?? 0,
+    moonWellHealingEvents: state.moonWellHealingEvents[owner] ?? 0,
+    moonWellHealingHp: state.moonWellHealingHp[owner] ?? 0,
     itemPickupCount: state.itemPickupCount[owner] ?? 0,
     itemUseCount: state.itemUseCount[owner] ?? 0,
     peakSupply: state.peakSupply[owner] ?? 0,

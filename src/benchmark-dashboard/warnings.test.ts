@@ -58,6 +58,8 @@ function player(overrides: Partial<BenchmarkPlayerResult>): BenchmarkPlayerResul
     unitsKilledByNeutral: 0,
     defenseTowerBuildCount: 0,
     moonWellBuildCount: 0,
+    moonWellHealingEvents: 0,
+    moonWellHealingHp: 0,
     itemPickupCount: 0,
     itemUseCount: 0,
     peakSupply: 0,

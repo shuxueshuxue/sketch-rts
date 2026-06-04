@@ -1,7 +1,8 @@
+import { BUILDING_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
-import { combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear } from "./snapshot";
+import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear } from "./snapshot";
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
@@ -64,9 +65,27 @@ function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCom
   return ownCombat
     .filter((unit) => unit.hp < unit.maxHp * 0.36)
     .filter((unit) => unit.order.type === "idle" || unit.order.type === "attackMove")
-    .filter((unit) => distance(unit, retreatPoint) > 220)
     .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 420))
-    .map((unit) => resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: retreatPoint.x, y: retreatPoint.y }, options));
+    .flatMap((unit) => {
+      const recoveryPoint = woundedRecoveryPoint(snapshot, owner, unit, retreatPoint);
+      if (distance(unit, recoveryPoint) <= 110) return [];
+      return [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: recoveryPoint.x, y: recoveryPoint.y }, options)];
+    });
+}
+
+function woundedRecoveryPoint(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, retreatPoint: Point): Point {
+  const well = nearestEntity(buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0), unit);
+  if (!well) return retreatPoint;
+  if (distance(unit, well) <= BUILDING_DEFS.moonWell.attackRange - 12) return unit;
+  const dx = unit.x - well.x;
+  const dy = unit.y - well.y;
+  const length = Math.hypot(dx, dy) || 1;
+  // @@@wounded-healing-ring - Long-term recovery should converge inside healing range without reusing the neutral-leash escape point.
+  const radius = BUILDING_DEFS.moonWell.attackRange * 0.75;
+  return {
+    x: clamp(well.x + (dx / length) * radius, 0, snapshot.map.width),
+    y: clamp(well.y + (dy / length) * radius, 0, snapshot.map.height),
+  };
 }
 
 function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
