@@ -595,6 +595,39 @@ describe("SDK preset AI policy", () => {
     expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "attack", targetId: "v1a-target-worker" } });
   });
 
+  it("v2 worker pressure yields when a stronger army is already on the main base", () => {
+    const scene = sketchScene("v2-worker-pressure-yields-to-main")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .tower("v2", 350, 500)
+      .building("v2", "archeryRange", 820, 520, { id: "pressured-range" })
+      .unit("v2", "footman", 2500, 2480, { id: "harass-footman-a", order: { type: "attack", targetId: "v1b-worker" } })
+      .unit("v2", "footman", 2540, 2500, { id: "harass-footman-b", order: { type: "attack", targetId: "v1b-worker" } })
+      .unit("v2", "lancer", 2580, 2520, { id: "harass-lancer", order: { type: "attack", targetId: "v1b-worker" } })
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1b", 3400, 3800)
+      .worker("v1b", 3400, 3800, { id: "v1b-worker" });
+    for (let index = 0; index < 6; index += 1) {
+      scene.unit("v1a", index % 3 === 0 ? "contractArcher" : "footman", 760 + index * 30, 540 + index * 12, {
+        order: { type: "attackMove", x: 820, y: 520, targetId: "pressured-range" },
+      });
+    }
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["harass-footman-a", "harass-footman-b", "harass-lancer"]) {
+      memory.unitClaims[unitId] = { kind: "harass", targetId: "v1b-worker", x: 3400, y: 3800, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams, memory });
+
+    expect(entries.find((entry) => entry.scriptId === "workerPressure")).toBeUndefined();
+    expect(entries.find((entry) => entry.scriptId === "attackWave")).toMatchObject({ command: { type: "move" } });
+  });
+
   it("v2 builds missing core production before spending the economy frame on mercenary control", () => {
     const scene = sketchScene("v2-production-before-mercenary")
       .map("openClaims")
