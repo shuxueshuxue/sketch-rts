@@ -91,6 +91,7 @@ import {
 
 const AUTO_ACQUIRE_RANGE = 230;
 const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
+const MAIN_APPROACH_THREAT_RANGE = 1_550;
 const NEUTRAL_ASSIST_PLANNING_RANGE = 360;
 const SUPPLY_BUILDING_LIMIT = 15;
 
@@ -930,10 +931,11 @@ function opponentIsReducedToBuildings(snapshot: GameSnapshot, owner: PlayerId, o
 function mainBaseNeedsObjectivePause(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const main = mainBase(snapshot, owner);
   if (options.version === "v2" && mainWorkerLineThreat(snapshot, owner, options)) return true;
-  const threatRange = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2 ? 1_550 : 1_050;
+  const threatRange = options.version === "v2" ? MAIN_APPROACH_THREAT_RANGE : 1_050;
   const enemies = enemyCombatUnitsNear(snapshot, owner, main, threatRange, options.teams);
   if (enemies.length < 3) return false;
   const nearbyDefenders = combatUnits(snapshot, owner).filter((unit) => distance(unit, main) <= 900);
+  if (options.version === "v2" && nearbyDefenders.length < enemies.length) return true;
   return armyPower(enemies) >= armyPower(nearbyDefenders) * 0.55;
 }
 
@@ -1378,14 +1380,12 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (focus) return focus;
 
   const minimumWaveSize = 5;
-  if (options.version === "v2" && movable.length < minimumWaveSize && enemyArmy.length > 2) return undefined;
-
-  const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, movable, options);
-  const focusedOwner = currentCommittedOwner ?? focusedOpponentOwner(snapshot, owner, options);
-  const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOwner);
-  if (closeout) {
-    const stale = staleAttackMovers(movable, closeout);
-    if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: closeout.x, y: closeout.y }, options);
+  if (options.version !== "v2") {
+    const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOpponentOwner(snapshot, owner, options));
+    if (closeout) {
+      const stale = staleAttackMovers(movable, closeout);
+      if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: closeout.x, y: closeout.y }, options);
+    }
   }
 
   const pressuredBuilding = mostPressuredAlliedBuilding(snapshot, owner, options);
@@ -1415,8 +1415,18 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     return mainHold.stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: mainHold.stale.map((unit) => unit.id), x: mainHold.rally.x, y: mainHold.rally.y }, options) : undefined;
   }
 
+  if (options.version === "v2" && movable.length < minimumWaveSize && enemyArmy.length > 2) return undefined;
+
   if (movable.length === 0) return undefined;
   const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
+
+  const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, movable, options);
+  const focusedOwner = currentCommittedOwner ?? focusedOpponentOwner(snapshot, owner, options);
+  const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOwner);
+  if (closeout) {
+    const stale = staleAttackMovers(movable, closeout);
+    if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: closeout.x, y: closeout.y }, options);
+  }
 
   const expansionMine = desiredExpansionMine(snapshot, owner);
   const committedToExpansionClear =
@@ -1554,9 +1564,11 @@ function mainDefenseHold(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit
   if (options.version !== "v2" || soldiers.length < 3) return undefined;
   const main = mainBase(snapshot, owner);
   const rally = defensiveRallyPoint(snapshot, owner);
-  const approaching = enemyArmy.filter((unit) => distance(unit, main) <= 1_050);
+  const approaching = enemyArmy.filter((unit) => distance(unit, main) <= MAIN_APPROACH_THREAT_RANGE);
   if (approaching.length < 4) return undefined;
-  if (armyPower(approaching) <= armyPower(soldiers) * 1.15) return undefined;
+  const localDefenders = soldiers.filter((unit) => distance(unit, main) <= 900);
+  // @@@main-approach-recall - Home defense depends on local bodies near the base; far objective squads do not count as already defending.
+  if (localDefenders.length >= approaching.length && armyPower(approaching) <= armyPower(localDefenders) * 1.15) return undefined;
   if (nearestEntity(approaching, rally) && distance(nearestEntity(approaching, rally)!, rally) <= AUTO_ACQUIRE_RANGE + 30) return undefined;
   const stale = soldiers.filter((unit) => distance(unit, rally) > 220);
   return { rally, stale };

@@ -4476,6 +4476,70 @@ describe("SDK preset AI policy", () => {
     expect(entries.find((entry) => entry.scriptId === "objectiveControl")).toBeUndefined();
   });
 
+  it("v2 pauses neutral objectives when a one-on-one army is already on the main approach", () => {
+    const scene = sketchScene("v2-1v1-main-approach-pauses-objectives")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 610, 560)
+      .unit("v2", "footman", 1680, 920)
+      .unit("v2", "footman", 1710, 950)
+      .unit("v2", "lancer", 1740, 980)
+      .unit("v2", "lancer", 1770, 1010)
+      .unit("v2", "archer", 1800, 1040)
+      .townHall("v1", 3400, 3400)
+      .unit("v1", "footman", 1500, 760)
+      .unit("v1", "footman", 1530, 790)
+      .unit("v1", "lancer", 1560, 820)
+      .unit("v1", "lancer", 1590, 850)
+      .unit("v1", "archer", 1620, 880)
+      .unit("neutral", "wildling", 1960, 760, { id: "approach-camp-a" })
+      .unit("neutral", "thornSlinger", 2010, 790, { id: "approach-camp-b" })
+      .build();
+    const game = scene.createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams });
+
+    expect(entries).toEqual([]);
+  });
+
+  it("v2 recalls objective-claimed fighters when a one-on-one army crosses the main approach", () => {
+    const scene = sketchScene("v2-1v1-main-approach-recalls-objective-claims")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 610, 560)
+      .unit("v2", "footman", 1680, 920, { id: "claimed-a", order: { type: "attackMove", x: 1980, y: 760 } })
+      .unit("v2", "footman", 1710, 950, { id: "claimed-b", order: { type: "attackMove", x: 1980, y: 760 } })
+      .unit("v2", "lancer", 1740, 980, { id: "claimed-c", order: { type: "attackMove", x: 1980, y: 760 } })
+      .unit("v2", "lancer", 1770, 1010, { id: "claimed-d", order: { type: "attackMove", x: 1980, y: 760 } })
+      .unit("v2", "archer", 1800, 1040, { id: "claimed-e", order: { type: "attackMove", x: 1980, y: 760 } })
+      .townHall("v1", 3400, 3400)
+      .unit("v1", "footman", 1500, 760)
+      .unit("v1", "footman", 1530, 790)
+      .unit("v1", "lancer", 1560, 820)
+      .unit("v1", "lancer", 1590, 850)
+      .unit("v1", "archer", 1620, 880)
+      .unit("neutral", "wildling", 1960, 760, { id: "approach-camp-a" })
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["claimed-a", "claimed-b", "claimed-c", "claimed-d", "claimed-e"]) {
+      memory.unitClaims[unitId] = { kind: "creep", targetId: "approach-camp-a", x: 1960, y: 760, sinceTick: 0, expiresTick: 3600 };
+    }
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ scriptId: "attackWave", command: { type: "move" } });
+    expect(entries[0]?.command.type === "move" ? entries[0].command.unitIds : []).toEqual(["claimed-a", "claimed-b", "claimed-c", "claimed-d", "claimed-e"]);
+    expect(Object.keys(memory.unitClaims)).toEqual([]);
+  });
+
   it("does not let later tactics overwrite a mercenary-camp move in the same policy pass", () => {
     const scene = sketchScene("v2-merc-move-arbitration")
       .map("openClaims")
