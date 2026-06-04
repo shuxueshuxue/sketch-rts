@@ -1,32 +1,38 @@
-import type { Building, GameSnapshot, PlayerId } from "../../shared/types";
+import { isBuildPlacementClear } from "../../shared/build-placement";
+import type { Building, BuildingKind, GameSnapshot, PlayerId } from "../../shared/types";
 import { aiSnapshotQuery, buildings } from "./snapshot";
 import { clamp, distance, nearestEntity, type Point } from "./spatial";
 import { mainBase, ownerDirection } from "./world-model";
 
 export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Building, threat: Point | undefined): Point {
+  let preferred: Point;
   if (threat) {
     const dx = threat.x - base.x;
     const dy = threat.y - base.y;
     const length = Math.hypot(dx, dy) || 1;
-    return {
+    preferred = {
       x: clamp(base.x - (dx / length) * 150, 0, snapshot.map.width),
       y: clamp(base.y - (dy / length) * 150, 0, snapshot.map.height),
     };
+    return legalBuildPointNear(snapshot, "defenseTower", preferred);
   }
   const direction = ownerDirection(snapshot, owner);
-  return {
+  preferred = {
     x: clamp(base.x + direction * 150, 0, snapshot.map.width),
     y: clamp(base.y + direction * 120, 0, snapshot.map.height),
   };
+  return legalBuildPointNear(snapshot, "defenseTower", preferred);
 }
 
-export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot: number): Point {
+export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot: number, buildingKind: BuildingKind = "farm"): Point {
   const base = mainBase(snapshot, owner);
   const direction = ownerDirection(snapshot, owner);
   const xSteps = [120, 190, 260, 330].map((x) => x + Math.floor(slot / 4) * 34);
   const ySteps = [100, -100, 180, -180, 260, -260].map((y) => y + (slot % 2 === 0 ? 0 : 28));
   const candidates = xSteps.flatMap((x) => ySteps.map((y) => ({ x: clamp(base.x + direction * x, 0, snapshot.map.width), y: clamp(base.y + y, 0, snapshot.map.height) })));
-  return candidates.sort((a, b) => mainBuildPointScore(snapshot, owner, b, base) - mainBuildPointScore(snapshot, owner, a, base))[0] ?? base;
+  return candidates
+    .filter((point) => isBuildPlacementClear(snapshot, buildingKind, point))
+    .sort((a, b) => mainBuildPointScore(snapshot, owner, b, base) - mainBuildPointScore(snapshot, owner, a, base))[0] ?? legalBuildPointNear(snapshot, buildingKind, base);
 }
 
 function mainBuildPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Point, base: Point) {
@@ -46,7 +52,9 @@ export function healingWellPointFor(snapshot: GameSnapshot, owner: PlayerId, bas
     { x: base.x - direction * 34, y: base.y + 188 },
     { x: base.x - direction * 34, y: base.y + 36 },
   ].map((point) => ({ x: clamp(point.x, 0, snapshot.map.width), y: clamp(point.y, 0, snapshot.map.height) }));
-  return candidates.sort((a, b) => healingWellPointScore(snapshot, owner, b, base) - healingWellPointScore(snapshot, owner, a, base))[0] ?? base;
+  return candidates
+    .filter((point) => isBuildPlacementClear(snapshot, "moonWell", point))
+    .sort((a, b) => healingWellPointScore(snapshot, owner, b, base) - healingWellPointScore(snapshot, owner, a, base))[0] ?? legalBuildPointNear(snapshot, "moonWell", base);
 }
 
 function healingWellPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Point, base: Point) {
@@ -63,4 +71,24 @@ export function defensiveRallyPoint(snapshot: GameSnapshot, owner: PlayerId): Po
   const tower = nearestEntity(buildings(snapshot, owner).filter((building) => building.kind === "defenseTower" && building.complete && distance(building, base) <= 520), base);
   if (!tower) return base;
   return { x: (base.x + tower.x) / 2, y: (base.y + tower.y) / 2 };
+}
+
+export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, preferred: Point): Point {
+  if (isBuildPlacementClear(snapshot, kind, preferred)) return preferred;
+  // @@@placement-candidates - AI layout should avoid illegal foundations before the sim has to reject the command.
+  const offsets = [72, 104, 140].flatMap((radius) => [
+    { x: 0, y: -radius },
+    { x: 0, y: radius },
+    { x: -radius, y: 0 },
+    { x: radius, y: 0 },
+    { x: -radius, y: -radius },
+    { x: radius, y: -radius },
+    { x: -radius, y: radius },
+    { x: radius, y: radius },
+  ]);
+  return (
+    offsets
+      .map((offset) => ({ x: clamp(preferred.x + offset.x, 0, snapshot.map.width), y: clamp(preferred.y + offset.y, 0, snapshot.map.height) }))
+      .find((point) => isBuildPlacementClear(snapshot, kind, point)) ?? preferred
+  );
 }
