@@ -42,7 +42,7 @@ import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
-import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
+import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { canStartRoom, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
@@ -2125,7 +2125,6 @@ function draw() {
   }
   const presentationMarks = createMapPresentation(snapshot);
   drawLandmarks(snapshot.map.landmarks);
-  drawWildlingCampPowerMarks(presentationMarks);
   drawResources(snapshot.resources);
   drawMercenaryCamps(snapshot.mercenaryCamps);
   drawItems(snapshot.items);
@@ -2350,36 +2349,6 @@ function drawLandmarks(landmarks: TerrainLandmark[]) {
       ctx.lineTo(landmark.size * 0.22, -landmark.size * 0.12);
       ctx.stroke();
     }
-    ctx.restore();
-  }
-}
-
-function drawWildlingCampPowerMarks(marks: MapPresentationMark[]) {
-  for (const mark of marks) {
-    if (mark.category !== "wildlingCamp") continue;
-    const point = worldToScreen(mark);
-    if (!nearScreen(point, mark.radius + 40)) continue;
-    const ink = campBandInk(mark.powerBand);
-    ctx.save();
-    ctx.strokeStyle = ink;
-    ctx.fillStyle = `${ink}18`;
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash(mark.powerBand === "red" ? [] : [7, 5]);
-    ctx.beginPath();
-    ctx.ellipse(point.x, point.y + 12, mark.radius, mark.radius * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.setLineDash([]);
-    for (let i = 0; i < 3; i += 1) {
-      const angle = -Math.PI / 2 + i * Math.PI * 0.33;
-      ctx.beginPath();
-      ctx.moveTo(point.x + Math.cos(angle) * mark.radius * 0.45, point.y + 12 + Math.sin(angle) * mark.radius * 0.18);
-      ctx.lineTo(point.x + Math.cos(angle) * mark.radius * 0.82, point.y + 12 + Math.sin(angle) * mark.radius * 0.32);
-      ctx.stroke();
-    }
-    ctx.font = "11px ui-monospace, monospace";
-    ctx.fillStyle = ink;
-    ctx.fillText(String(mark.power ?? 0), point.x - 7, point.y + 16);
     ctx.restore();
   }
 }
@@ -3132,11 +3101,10 @@ function drawMinimap(marks: MapPresentationMark[]) {
       ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
       ctx.stroke();
     } else if (mark.category === "wildlingCamp") {
-      ctx.strokeStyle = campBandInk(mark.powerBand);
-      ctx.lineWidth = mark.powerBand === "red" ? 2.4 : 1.7;
+      ctx.fillStyle = "#704a33";
       ctx.beginPath();
-      ctx.arc(point.x, point.y, mark.powerBand === "red" ? 4.8 : mark.powerBand === "orange" ? 4 : 3.2, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
+      ctx.fill();
     } else if (mark.category === "building") {
       ctx.fillStyle = ownerInk(mark.owner);
       ctx.fillRect(point.x - 3, point.y - 3, 6, 6);
@@ -3391,12 +3359,6 @@ function romanLevel(level: number) {
 
 function distance(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function campBandInk(band: WildlingPowerBand | undefined) {
-  if (band === "red") return "#9b2f2f";
-  if (band === "orange") return "#b97927";
-  return "#5d8b4c";
 }
 
 function ownerInk(owner: Owner | undefined) {
