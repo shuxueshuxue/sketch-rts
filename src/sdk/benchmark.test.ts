@@ -153,7 +153,7 @@ describe("SDK benchmark", () => {
                 v2: { adapter: "external", team: "north", race: "grove", versionLabel: "v2" },
                 v1: { adapter: "external", team: "south", race: "ember", versionLabel: "v1" },
               },
-              maxTicks: 1,
+              maxTicks: 24,
               thinkInterval: 45,
             },
           ],
@@ -162,8 +162,8 @@ describe("SDK benchmark", () => {
     });
 
     const match = report.evaluations[0]!.matches[0]!;
-    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(0.05);
-    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(0.05);
+    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(1.15);
+    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(1.15);
   });
 
   it("splits gold income into mine income and creep bounty income", () => {
