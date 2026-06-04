@@ -99,6 +99,7 @@ function soloFinisherScore(unit: Unit) {
 function focusFireCanPickOffWoundedTarget(attackers: Unit[], target: Unit) {
   if (attackers.length >= 5 && target.hp <= target.maxHp * 0.6) return true;
   const volleyDamage = attackers.reduce((total, unit) => total + unit.attackDamage, 0);
+  if (attackers.length >= 2 && target.hp <= target.maxHp * 0.34 && volleyDamage >= target.hp * 1.35) return true;
   // @@@critical-pickoff - A tiny group may finish a near-dead target, but ordinary wounded targets still respect local odds.
   return attackers.length >= 2 && target.hp <= target.maxHp * 0.18 && volleyDamage >= target.hp * 2;
 }

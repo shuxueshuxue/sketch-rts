@@ -2624,6 +2624,31 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "attack" ? command.unitIds.length : 0).toBeGreaterThanOrEqual(2);
   });
 
+  it("v2 refocuses a split combat tail onto a wounded caster it can pick off", () => {
+    const scene = sketchScene("v2-combat-tail-pickoff")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 150, 800)
+      .unit("v2", "archer", 690, 690, { id: "tail-archer-a" })
+      .unit("v2", "archer", 705, 740, { id: "tail-archer-b" })
+      .townHall("v1", 1450, 800)
+      .unit("v1", "summoner", 900, 710, { id: "wounded-summoner", hp: 31 })
+      .unit("v1", "witch", 930, 665, { id: "healthy-witch" })
+      .unit("v1", "priest", 940, 755, { id: "healthy-priest" })
+      .unit("v1", "archer", 965, 710, { id: "healthy-archer" })
+      .build();
+    const game = scene.createGame();
+    game.units.find((unit) => unit.id === "tail-archer-a")!.order = { type: "attack", targetId: "healthy-witch" };
+    game.units.find((unit) => unit.id === "tail-archer-b")!.order = { type: "attack", targetId: "healthy-priest" };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.focusFire], { version: "v2", teams: game.teams, policyMode: "combat" }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ type: "attack", targetId: "wounded-summoner" });
+    expect(command?.type === "attack" ? command.unitIds.sort() : []).toEqual(["tail-archer-a", "tail-archer-b"]);
+  });
+
   it("v2 preset reintroduces focus-fire through the memory-backed executable stack", () => {
     const scene = sketchScene("v2-preset-focus-fire-wiring")
       .map("bareDuel")
