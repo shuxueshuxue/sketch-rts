@@ -35,6 +35,12 @@ describe("terrain texture linework", () => {
     expect(coverage).toBeLessThan(0.03);
     expect(hashStrokes(strokes)).toBe(hashStrokes(generateTerrainLinework({ mapId: "sundialReach", camera: { x: 640, y: 480 }, ...VIEWPORT })));
   });
+
+  it("covers the selectable combat arena map", () => {
+    const strokes = generateTerrainLinework({ mapId: "combatArena", camera: { x: 0, y: 0 }, ...VIEWPORT });
+
+    expect(strokes.length).toBeGreaterThan(4);
+  });
 });
 
 function hashStrokes(strokes: ReturnType<typeof generateTerrainLinework>) {

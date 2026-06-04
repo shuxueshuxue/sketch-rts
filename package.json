@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/server/index.ts",
+    "dev:static": "VITE_SKETCH_RTS_DEPLOYMENT=static vite --host 0.0.0.0",
     "dev:lan": "HOST=0.0.0.0 tsx src/server/index.ts",
     "server": "tsx src/server/index.ts",
     "test": "vitest",
@@ -22,7 +23,9 @@
     "test:e2e-brutal": "node scripts/e2e-brutal-spec.mjs",
     "test:yatu": "node scripts/yatu-player-loop.mjs",
     "test:sdk-effect-proof": "tsx scripts/sdk-effect-proof.ts",
-    "build": "tsc --noEmit && vite build"
+    "build": "tsc --noEmit && vite build",
+    "build:server": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=server vite build",
+    "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",

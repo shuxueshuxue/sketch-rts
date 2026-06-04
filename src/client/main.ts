@@ -9,7 +9,10 @@ import {
   type ControlGroupRecallTap,
   type ControlGroups,
 } from "./control-groups";
+import { deploymentModeFromEnv } from "./deployment/mode";
+import { createDeploymentRuntime } from "./deployment/runtime";
 import { edgeScrollDelta } from "./edge-scroll";
+import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
 import { carriedItemsForSelection, dropItemCommand, itemHotkey, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
@@ -21,12 +24,14 @@ import {
   moveVirtualPointer,
   pointerLockRequiredBody,
   pointerLockRequiredTitle,
+  shouldBlockBattlefieldForPointerLock,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
+import { roomBrowserEntries } from "./room-browser-model";
 import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
@@ -38,7 +43,7 @@ import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } fr
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark, type WildlingPowerBand } from "../shared/presentation";
-import { canStartRoom } from "../shared/rooms";
+import { canStartRoom, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -51,7 +56,7 @@ type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
-    __sketchRtsView?: { roomId?: string; tick?: number };
+    __sketchRtsView?: { roomId?: string; tick?: number; enemyOrders?: Record<string, number> };
   }
 }
 
@@ -113,6 +118,7 @@ const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
+const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
@@ -126,9 +132,10 @@ const ctx = requireCanvasContext(canvas);
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
-let roomPollTimer: number | undefined;
 let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
+let spectatingRoom = false;
+let activeGameAdapter: GameAdapter;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
@@ -141,6 +148,7 @@ let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
 let pointerLockFieldClickOnError = false;
+let pointerLockUnavailable = false;
 let selectionStart: Point | undefined;
 let selectionEnd: Point | undefined;
 let lastMouse: Point | undefined;
@@ -154,7 +162,29 @@ let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
-const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
+  sessionSnapshot: () => snapshot,
+  onSessionOpen() {
+    menuStatus.textContent = "Server online.";
+    statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
+    renderMainMenu();
+  },
+  onSessionSnapshot(nextSnapshot) {
+    if (currentRoomId) return;
+    snapshot = nextSnapshot;
+    pruneSelection();
+    updateHud();
+  },
+  onSessionError(message) {
+    statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+  },
+  onSessionClose() {
+    menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+    statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
+  },
+});
+const baseGameAdapter = deploymentRuntime.initialAdapter();
+activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
   createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
     title: "Attack Move",
@@ -191,29 +221,6 @@ const commandButtons: CommandButton[] = [
   })),
 ];
 
-socket.addEventListener("open", () => {
-  menuStatus.textContent = "Server online.";
-  statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
-  renderMainMenu();
-});
-
-socket.addEventListener("message", (event) => {
-  const message = JSON.parse(event.data as string) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
-  if (message.type === "error") {
-    statusLabel.innerHTML = `<span class="error">${escapeHtml(message.message)}</span>`;
-    return;
-  }
-  if (currentRoomId) return;
-  snapshot = message.snapshot;
-  pruneSelection();
-  updateHud();
-});
-
-socket.addEventListener("close", () => {
-  menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
-  statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
-});
-
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
@@ -237,6 +244,7 @@ document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { 
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
+forfeitButton.addEventListener("click", () => void forfeitCurrentMatch());
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
@@ -493,7 +501,7 @@ function renderProfileMenu() {
 
 async function renderRoomBrowser() {
   menuStatus.textContent = "Rooms hosted by this server.";
-  const rooms = await requestJson<{ rooms: RoomState[] }>(`/api/rooms?userId=${encodeURIComponent(localUser.id)}`);
+  const rooms = await deploymentRuntime.listRooms(localUser.id);
   const browser = document.createElement("div");
   browser.className = "room-browser";
   browser.dataset.roomBrowser = "true";
@@ -513,11 +521,11 @@ async function renderRoomBrowser() {
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
-  const visibleRooms = rooms.rooms.filter((room) => room.status !== "ended" && room.status !== "closed" && (room.status !== "inMatch" || slotForUser(room, localUser.id)));
+  const visibleRooms = roomBrowserEntries(rooms, localUser.id);
   list.replaceChildren(
     ...(visibleRooms.length > 0
-      ? visibleRooms.map((room) =>
-          menuButton(room.name, roomBrowserNote(room), "data-room-id", () => void enterRoom(room.id), room.id),
+      ? visibleRooms.map((entry) =>
+          menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
         )
       : [emptyRoomList()]),
   );
@@ -646,7 +654,7 @@ async function createLocalRoom() {
 }
 
 async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
-  currentRoom = await requestJson<RoomState>("/api/rooms", {
+  currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
     host: localUser,
     ...input,
@@ -659,7 +667,7 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
 async function selectRoomMap(mapId: MapId) {
   selectedMapId = mapId;
   pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
-  if (currentRoom) currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/map`, { mapId });
+  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId);
   renderMainMenu();
 }
 
@@ -669,10 +677,11 @@ async function startCurrentRoom() {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
   }
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/start`, {});
-  currentRoomId = currentRoom.id;
-  localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
-  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoom.id}/snapshot`);
+  const started = await deploymentRuntime.startRoom(currentRoom.id, localUser, handleRuntimeRoomUpdate);
+  currentRoom = started.room;
+  currentRoomId = started.room.id;
+  localPlayerId = started.playerId;
+  activateStartedMatch(started.adapter, started.snapshot);
   syncDebugView();
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
@@ -681,7 +690,7 @@ async function startCurrentRoom() {
   menuOpen = false;
   shell.classList.remove("menu-open");
   mainMenu.classList.add("hidden");
-  startRoomPolling();
+  syncMatchActions();
   syncPointerLockGate();
 }
 
@@ -759,14 +768,14 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
 
 async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unknown>) {
   if (!currentRoom) return;
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slots/${slotId}`, patch);
+  currentRoom = await deploymentRuntime.updateRoomSlot(currentRoom.id, slotId, patch as SlotPatch);
   renderMainMenu();
 }
 
 async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
   if (!currentRoom) return;
   if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
-  currentRoom = await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/slot-counts`, { humanCount, aiCount });
+  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, humanCount, aiCount);
   renderMainMenu();
 }
 
@@ -805,10 +814,12 @@ function canRemoveLastRoomSlot(room: RoomState) {
 
 async function closeCurrentRoom() {
   if (!currentRoom) return;
-  await requestJson<RoomState>(`/api/rooms/${currentRoom.id}/close`, { userId: localUser.id });
+  await deploymentRuntime.closeRoom(currentRoom.id, localUser.id);
+  disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
   syncDebugView();
+  syncMatchActions();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -838,9 +849,9 @@ function slotSummaryText(room: RoomState) {
   return `${room.slots.length}/${MAX_ROOM_SLOTS} · ${tally.human} claimed · ${tally.ai} AI${openText}${closedText}`;
 }
 
-function roomBrowserNote(room: RoomState) {
+function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
   const ownedSlot = slotForUser(room, localUser.id);
-  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : room.status === "open" ? "open" : "already started";
+  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : action === "watch" ? "watch live" : room.status === "open" ? "open" : "already started";
   return `${room.mapId} · ${room.status} · ${activeSlotCount(room)} active · ${access}`;
 }
 
@@ -860,9 +871,12 @@ function slotForUser(room: RoomState, userId: string) {
 }
 
 function returnHome() {
+  disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
+  spectatingRoom = false;
   syncDebugView();
+  syncMatchActions();
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -874,21 +888,24 @@ function returnHome() {
 
 async function enterRoom(roomId: string) {
   try {
-    const room = await requestJson<RoomState>(`/api/rooms/${roomId}/join`, { user: localUser });
+    const entered = await deploymentRuntime.enterRoom(roomId, localUser);
+    const room = entered.room;
     currentRoom = room;
-    localPlayerId = slotForUser(room, localUser.id)?.playerId ?? localPlayerId;
+    spectatingRoom = entered.spectating;
+    localPlayerId = entered.playerId;
     if (room.status === "ended" && room.result) {
       openResults(room);
       return;
     }
     if (room.status === "inMatch") {
       currentRoomId = room.id;
-      snapshot = await requestJson<GameSnapshot>(`/api/rooms/${room.id}/snapshot`);
+      const started = deploymentRuntime.connectRoom(room, localPlayerId, spectatingRoom, handleRuntimeRoomUpdate);
+      activateStartedMatch(started.adapter, started.snapshot);
       syncDebugView();
       menuOpen = false;
       shell.classList.remove("menu-open");
       mainMenu.classList.add("hidden");
-      startRoomPolling();
+      syncMatchActions();
       syncPointerLockGate();
       return;
     }
@@ -900,33 +917,43 @@ async function enterRoom(roomId: string) {
   }
 }
 
-function startRoomPolling() {
-  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
-  roomPollTimer = window.setInterval(() => {
-    if (!currentRoomId || menuOpen) return;
-    void refreshRoomSnapshot();
-  }, 120);
+function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot) {
+  disconnectActiveMatch();
+  activeGameAdapter = adapter;
+  snapshot = nextSnapshot;
+  pruneSelection();
+  updateHud();
+  syncMatchActions();
 }
 
-async function refreshRoomSnapshot() {
-  if (!currentRoomId) return;
-  const room = await requestJson<RoomState>(`/api/rooms/${currentRoomId}`);
-  if (room.status === "ended" && room.result) {
-    openResults(room);
-    return;
-  }
+function disconnectActiveMatch() {
+  if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
+  activeGameAdapter = baseGameAdapter;
+}
+
+function handleRuntimeRoomUpdate(room: RoomState) {
   currentRoom = room;
-  snapshot = await requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/snapshot`);
+  if (room.status === "ended" && room.result) openResults(room);
+}
+
+function syncActiveGameAdapterSnapshot() {
+  if (menuOpen) return;
+  const changed = activeGameAdapter.updateToRenderTime();
+  const current = activeGameAdapter.currentSnapshot();
+  if (!current) return;
+  if (!changed && snapshot?.tick === current.tick) return;
+  snapshot = current;
   syncDebugView();
   pruneSelection();
   updateHud();
 }
 
 function openResults(room: RoomState) {
-  if (roomPollTimer !== undefined) window.clearInterval(roomPollTimer);
+  disconnectActiveMatch();
   releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
+  spectatingRoom = false;
   syncDebugView();
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -937,32 +964,35 @@ function openResults(room: RoomState) {
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");
   menuView = "results";
+  syncMatchActions();
   renderMainMenu();
   updateHud();
+}
+
+async function forfeitCurrentMatch() {
+  if (!currentRoomId) return;
+  try {
+    const ended = await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
+    openResults(ended);
+  } catch (error) {
+    showInvalidCommand(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function syncMatchActions() {
+  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch());
 }
 
 function releasePointerLockForMenu() {
   if (document.pointerLockElement === canvas) document.exitPointerLock();
   pointerLockArmed = false;
   pointerLockFieldClickOnError = false;
+  pointerLockUnavailable = false;
   virtualMouse = undefined;
 }
 
-async function requestJson<T>(path: string, body?: unknown): Promise<T> {
-  const init: RequestInit =
-    body === undefined
-      ? { method: "GET" }
-      : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        };
-  const response = await fetch(path, init);
-  if (!response.ok) throw new Error(await response.text());
-  return response.json() as Promise<T>;
-}
-
 function frame() {
+  syncActiveGameAdapterSnapshot();
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
@@ -971,9 +1001,17 @@ function frame() {
 }
 
 function syncDebugView() {
-  const view: { roomId?: string; tick?: number } = {};
+  const view: { roomId?: string; tick?: number; enemyOrders?: Record<string, number> } = {};
   if (currentRoomId !== undefined) view.roomId = currentRoomId;
   if (snapshot?.tick !== undefined) view.tick = snapshot.tick;
+  if (snapshot) {
+    const enemyOrders: Record<string, number> = {};
+    for (const unit of snapshot.units) {
+      if (unit.owner === localPlayerId || !unit.order) continue;
+      enemyOrders[unit.order.type] = (enemyOrders[unit.order.type] ?? 0) + 1;
+    }
+    if (Object.keys(enemyOrders).length > 0) view.enemyOrders = enemyOrders;
+  }
   window.__sketchRtsView = view;
 }
 
@@ -996,7 +1034,7 @@ function markPointerLockGuideSeen() {
 }
 
 function syncPointerLockGate() {
-  if (menuOpen || !snapshot || document.pointerLockElement === canvas) {
+  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable })) {
     hidePointerLockGate();
     return;
   }
@@ -1037,6 +1075,11 @@ async function requestPointerLock(point: Point, options: { fieldClickOnError: bo
   pointerLockFieldClickOnError = options.fieldClickOnError;
   lastMouse = point;
   virtualMouse = point;
+  if (options.fieldClickOnError) {
+    pointerLockArmed = true;
+    hidePointerLockGate();
+    statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
+  }
   try {
     await canvas.requestPointerLock();
   } catch (error) {
@@ -1056,6 +1099,7 @@ function syncPointerLockState() {
   const locked = document.pointerLockElement === canvas;
   shell.classList.toggle("pointer-locked", locked);
   if (locked) {
+    pointerLockUnavailable = false;
     hidePointerLockGate();
     pointerLockArmed = false;
     pointerLockFieldClickOnError = false;
@@ -1069,11 +1113,14 @@ function syncPointerLockState() {
 function handlePointerLockError(fieldClickOnError: boolean, error?: unknown) {
   if (fieldClickOnError) {
     pointerLockArmed = true;
+    hidePointerLockGate();
     statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
     return;
   }
   pointerLockArmed = false;
-  const message = error instanceof Error ? `Pointer lock failed: ${error.message}` : "Pointer lock failed. Use the continue prompt to try again.";
+  pointerLockUnavailable = true;
+  hidePointerLockGate();
+  const message = error instanceof Error ? `Pointer lock unavailable: ${error.message}` : "Pointer lock unavailable. Battlefield clicks still work.";
   showInvalidCommand(message);
 }
 
@@ -1145,21 +1192,11 @@ function onKeyDown(event: KeyboardEvent) {
 }
 
 function sendCommand(command: GameCommand) {
-  if (currentRoomId) {
-    void requestJson<GameSnapshot>(`/api/rooms/${currentRoomId}/command`, { playerId: localPlayerId, command })
-      .then((nextSnapshot) => {
-        snapshot = nextSnapshot;
-        pruneSelection();
-        updateHud();
-      })
-      .catch((error) => showInvalidCommand(`Command failed: ${error instanceof Error ? error.message : String(error)}`));
-    return;
+  try {
+    activeGameAdapter.sendCommand(command);
+  } catch (error) {
+    showInvalidCommand(error instanceof Error ? error.message : String(error));
   }
-  if (socket.readyState !== WebSocket.OPEN) {
-    showInvalidCommand("Command failed: socket is not open.");
-    return;
-  }
-  socket.send(JSON.stringify(command));
 }
 
 function showInvalidCommand(message: string) {
@@ -1169,8 +1206,10 @@ function showInvalidCommand(message: string) {
 function onMouseDown(event: MouseEvent) {
   suppressCanvasMouseDefault(event);
   if (pointerLockArmed && event.button === 0) {
+    pointerLockArmed = false;
+    pointerLockUnavailable = true;
+    hidePointerLockGate();
     void requestPointerLockFromEvent(event);
-    return;
   }
   const point = inputPoint(event);
   lastMouse = point;

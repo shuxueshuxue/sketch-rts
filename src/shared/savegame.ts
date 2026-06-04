@@ -1,4 +1,5 @@
 import { createGame, type Game } from "./sim";
+import { checksumGame } from "./sim/checksum";
 import { UPGRADE_KINDS } from "./catalog";
 import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
 
@@ -17,6 +18,7 @@ export type SaveGameRecord = {
     teams: Record<PlayerId, string>;
     aiPlayers: PlayerId[];
     aiVersions?: Partial<Record<PlayerId, AiScriptVersion>>;
+    checksum?: string;
   };
 };
 
@@ -40,6 +42,7 @@ export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGam
       teams: { ...game.teams },
       aiPlayers: [...aiPlayers],
       aiVersions: { ...aiVersions },
+      checksum: checksumGame(game),
     },
   };
 }

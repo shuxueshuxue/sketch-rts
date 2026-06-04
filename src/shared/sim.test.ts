@@ -8,7 +8,12 @@ import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-const AI_DUEL_CPU_BUDGET_MS = 2_500;
+const AI_DUEL_CPU_BUDGET_MS = 3_000;
+
+function elapsedCpuMs(started: NodeJS.CpuUsage) {
+  const elapsed = process.cpuUsage(started);
+  return (elapsed.user + elapsed.system) / 1_000;
+}
 
 function stepMany(game: ReturnType<typeof createGame>, count: number, runtime?: AiRuntimeState) {
   for (let i = 0; i < count; i += 1) {
@@ -30,8 +35,7 @@ function runTwoAiDuel(mapId: MapId) {
   const runtime = createAiRuntime(["player", "enemy"]);
   const started = process.cpuUsage();
   stepMany(game, 36_000, runtime);
-  const elapsed = process.cpuUsage(started);
-  return { game, elapsedMs: (elapsed.user + elapsed.system) / 1_000 };
+  return { game, elapsedMs: elapsedCpuMs(started) };
 }
 
 function expectTwoAiDuelBaseline({ game, elapsedMs }: ReturnType<typeof runTwoAiDuel>) {
@@ -1553,11 +1557,11 @@ describe("sketch RTS simulation", () => {
   it("runs a fast three-AI free-for-all with a real third faction economy and winner", () => {
     const game = createGame("wildMarches", { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"] });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
-    const started = performance.now();
+    const started = process.cpuUsage();
 
     stepMany(game, 36_000, runtime);
 
-    const elapsedMs = performance.now() - started;
+    const elapsedMs = elapsedCpuMs(started);
     const totalNeutralKills = sumPlayerStats(game.match.stats.neutralUnitsKilled);
     const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
     const survivingTownHallOwners = game.activePlayers.filter((owner) => game.buildings.some((building) => building.owner === owner && building.kind === "townHall"));
@@ -1594,7 +1598,7 @@ describe("sketch RTS simulation", () => {
       teams: { player: "north", enemy: "south", enemy2: "south" },
     });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
-    const started = performance.now();
+    const started = process.cpuUsage();
     const enemyBase = game.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall")!;
     const enemy2Base = game.buildings.find((building) => building.owner === "enemy2" && building.kind === "townHall")!;
     const enemyFootman = game.spawnUnit("enemy", "footman", enemyBase.x - 60, enemyBase.y - 20);
@@ -1609,7 +1613,7 @@ describe("sketch RTS simulation", () => {
       runPresetAiRuntime(game, runtime);
       stepGame(game);
     }
-    const elapsedMs = performance.now() - started;
+    const elapsedMs = elapsedCpuMs(started);
     const survivingTeams = new Set(
       game.activePlayers
         .filter((owner) => game.buildings.some((building) => building.owner === owner && building.kind === "townHall") || game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length > 3)

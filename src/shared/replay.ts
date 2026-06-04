@@ -1,21 +1,17 @@
 import { restoreGameFromSave, type SaveGameRecord } from "./savegame";
-import { issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
+import { snapshotGame, stepGame, type Game } from "./sim";
+import { applyCommandFrame } from "./sim/frame";
+import type { CommandEnvelope, CommandFrame } from "./net/types";
 import type { GameCommand, GameSnapshot, PlayerId } from "./types";
 
 export const DEBUG_REPLAY_SCHEMA_VERSION = 1;
 
 export type ReplayCommandSource = "browser" | "sdk-agent" | "internal-ai" | "test-harness";
 
-export type ReplayCommandEnvelope = {
-  playerId: PlayerId;
-  command: GameCommand;
-};
+export type ReplayCommandEnvelope = CommandEnvelope;
 
-export type ReplayCommandBatch = {
-  sequence: number;
-  tick: number;
+export type ReplayCommandFrame = CommandFrame & {
   source: ReplayCommandSource;
-  commands: ReplayCommandEnvelope[];
 };
 
 export type DebugReplayCheckpoint = {
@@ -29,7 +25,7 @@ export type DebugReplayTrace = {
   id: string;
   label?: string;
   initialSave: SaveGameRecord;
-  batches: ReplayCommandBatch[];
+  frames: ReplayCommandFrame[];
   checkpoints: DebugReplayCheckpoint[];
 };
 
@@ -39,18 +35,16 @@ export function createDebugReplayTrace(input: { id: string; label?: string; init
     id: input.id,
     ...(input.label ? { label: input.label } : {}),
     initialSave: clone(input.initialSave),
-    batches: [],
+    frames: [],
     checkpoints: [],
   };
 }
 
-export function recordReplayBatch(trace: DebugReplayTrace, input: { tick: number; source: ReplayCommandSource; commands: ReplayCommandEnvelope[] }) {
-  if (input.commands.length === 0) return;
-  trace.batches.push({
-    sequence: trace.batches.length,
-    tick: input.tick,
+export function recordReplayFrame(trace: DebugReplayTrace, input: { source: ReplayCommandSource; frame: CommandFrame }) {
+  if (input.frame.commands.length === 0) return;
+  trace.frames.push({
+    ...clone(input.frame),
     source: input.source,
-    commands: clone(input.commands),
   });
 }
 
@@ -66,14 +60,14 @@ export function replayTraceToTick(trace: DebugReplayTrace, targetTick: number): 
   if (!Number.isInteger(targetTick) || targetTick < trace.initialSave.snapshot.tick) throw new Error(`Invalid replay target tick ${targetTick}`);
   const checkpoint = nearestCheckpoint(trace, targetTick);
   const game = checkpoint ? restoreCheckpoint(trace, checkpoint) : restoreGameFromSave(trace.initialSave);
-  const batches = [...trace.batches].sort((a, b) => a.tick - b.tick || a.sequence - b.sequence);
-  let batchIndex = batches.findIndex((batch) => batch.tick >= game.tick);
-  if (batchIndex < 0) batchIndex = batches.length;
+  const frames = [...trace.frames].sort((a, b) => a.tick - b.tick || a.sequence - b.sequence);
+  let frameIndex = frames.findIndex((frame) => frame.tick >= game.tick);
+  if (frameIndex < 0) frameIndex = frames.length;
 
   while (game.tick < targetTick) {
-    while (batchIndex < batches.length && batches[batchIndex]!.tick === game.tick) {
-      applyReplayBatch(game, batches[batchIndex]!);
-      batchIndex += 1;
+    while (frameIndex < frames.length && frames[frameIndex]!.tick === game.tick) {
+      applyReplayFrame(game, frames[frameIndex]!);
+      frameIndex += 1;
     }
     stepGame(game);
   }
@@ -99,10 +93,10 @@ export function extractReplayFrameSave(trace: DebugReplayTrace, targetTick: numb
   };
 }
 
-function applyReplayBatch(game: Game, batch: ReplayCommandBatch) {
-  if (batch.tick < game.tick) throw new Error(`Replay batch ${batch.sequence} is behind current tick ${game.tick}`);
-  if (batch.tick > game.tick) throw new Error(`Replay batch ${batch.sequence} skipped tick ${game.tick}`);
-  for (const entry of batch.commands) issuePlayerCommand(game, entry.playerId, entry.command);
+function applyReplayFrame(game: Game, frame: ReplayCommandFrame) {
+  if (frame.tick < game.tick) throw new Error(`Replay frame ${frame.sequence} is behind current tick ${game.tick}`);
+  if (frame.tick > game.tick) throw new Error(`Replay frame ${frame.sequence} skipped tick ${game.tick}`);
+  applyCommandFrame(game, frame);
 }
 
 function nearestCheckpoint(trace: DebugReplayTrace, targetTick: number) {

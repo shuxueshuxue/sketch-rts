@@ -11,6 +11,7 @@ export const gameShellMarkup = `
       <div class="resource-readout">Gold: <span data-gold>?</span></div>
       <div class="supply-readout">Supply: <span data-supply>?</span></div>
       <div data-map-readout>Map: 4096 x 4096</div>
+      <button type="button" class="match-action hidden" data-forfeit-match>Concede</button>
     </div>
     <div class="status-line" data-status>Connecting to match...</div>
     <div class="selection-chip" data-selection>Nothing selected</div>

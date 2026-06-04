@@ -1,8 +1,10 @@
 import { createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, leaveUserSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type GrandStressRoomOptions, type SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
-import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../ai/runtime";
-import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
-import { createDebugReplayTrace, extractReplayFrameSave, recordReplayBatch, recordReplayCheckpoint, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
+import { createAiRuntime, planPresetAiRuntimeCommands, type AiRuntimeState } from "../ai/runtime";
+import { createGame, snapshotGame, stepGame, type Game } from "../shared/sim";
+import { applyCommandFrame } from "../shared/sim/frame";
+import { createDebugReplayTrace, extractReplayFrameSave, recordReplayFrame, recordReplayCheckpoint, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
+import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../shared/types";
 
 export type RoomTickResult = {
@@ -18,6 +20,10 @@ export type RoomTickResult = {
   room: RoomState;
 };
 
+export type RoomFrameTickResult = RoomTickResult & {
+  frame: CommandFrame;
+};
+
 export type RoomResetResult = {
   room: RoomState;
   snapshot: GameSnapshot;
@@ -28,6 +34,7 @@ type HostedRoom = {
   game?: Game;
   aiRuntime?: AiRuntimeState;
   debugReplay?: DebugReplayTrace;
+  nextFrameSequence: number;
 };
 
 export type RoomHostOptions = {
@@ -55,7 +62,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
   function putRoom(room: RoomState, game?: Game, aiRuntime?: AiRuntimeState): RoomState {
     const storedRoom = { ...room, autoTick: defaultAutoTick };
-    rooms.set(storedRoom.id, game ? (aiRuntime ? { room: storedRoom, game, aiRuntime } : { room: storedRoom, game }) : { room: storedRoom });
+    rooms.set(storedRoom.id, game ? (aiRuntime ? { room: storedRoom, game, aiRuntime, nextFrameSequence: 0 } : { room: storedRoom, game, nextFrameSequence: 0 }) : { room: storedRoom, nextFrameSequence: 0 });
     return storedRoom;
   }
 
@@ -174,28 +181,36 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
     commandRoom(roomId: string, playerId: PlayerId, command: GameCommand): GameSnapshot {
       const { hosted, game } = getLiveGame(roomId);
-      recordHostedReplayBatch(hosted, game.tick, "browser", [{ playerId, command }]);
-      issuePlayerCommand(game, playerId, command);
+      applyHostedCommandFrame(hosted, game, "browser", [{ playerId, command }]);
       return snapshotGame(game);
     },
 
     commandRooms(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[]): GameSnapshot {
       const { hosted, game } = getLiveGame(roomId);
-      recordHostedReplayBatch(hosted, game.tick, "browser", commands);
-      for (const entry of commands) issuePlayerCommand(game, entry.playerId, entry.command);
+      applyHostedCommandFrame(hosted, game, "browser", commands);
       return snapshotGame(game);
     },
 
     commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number): RoomTickResult {
       const { hosted, game } = getLiveGame(roomId);
-      recordHostedReplayBatch(hosted, game.tick, "sdk-agent", commands);
-      for (const entry of commands) issuePlayerCommand(game, entry.playerId, entry.command);
+      applyHostedCommandFrame(hosted, game, "sdk-agent", commands);
       return tickHostedRoom(hosted, game, ticks);
     },
 
     tickRoom(roomId: string, ticks: number): RoomTickResult {
       const { hosted, game } = getLiveGame(roomId);
       return tickHostedRoom(hosted, game, ticks);
+    },
+
+    tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
+      const { hosted, game } = getLiveGame(roomId);
+      if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
+      return tickHostedFrame(hosted, game, frame, source);
+    },
+
+    checkpointRoom(roomId: string): CheckpointFrame {
+      const { game } = getLiveGame(roomId);
+      return { roomId, tick: game.tick, snapshot: snapshotGame(game), nextId: game.nextId };
     },
 
     saveRoom(roomId: string, input: SaveGameInput): SaveGameRecord {
@@ -235,13 +250,14 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       saves.set(save.id, save);
       const room = { ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const, autoTick: defaultAutoTick };
       if (rooms.has(room.id)) throw new Error(`Room ${room.id} already exists`);
-      rooms.set(room.id, { room, game: restoreGameFromSave(save), aiRuntime: createAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions ? { versions: save.runtime.aiVersions } : {}) });
+      rooms.set(room.id, { room, game: restoreGameFromSave(save), aiRuntime: createAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions ? { versions: save.runtime.aiVersions } : {}), nextFrameSequence: 0 });
       return room;
     },
 
-    tickActiveRooms(ticks = 1): RoomState[] {
+    tickActiveRooms(ticks = 1, options: { excludeRoomIds?: Set<string> } = {}): RoomState[] {
       const changed: RoomState[] = [];
       for (const hosted of rooms.values()) {
+        if (options.excludeRoomIds?.has(hosted.room.id)) continue;
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
         if (!hosted.room.autoTick) continue;
         for (let i = 0; i < ticks; i += 1) {
@@ -294,16 +310,75 @@ function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number): RoomTick
   };
 }
 
-function runHostedAiFrame(hosted: HostedRoom, game: Game) {
-  if (!hosted.aiRuntime) return;
-  // @@@hosted-ai-replay - Autoplay and SDK fast-forward must record the same AI command stream.
-  const result = runPresetAiRuntime(game, hosted.aiRuntime);
-  recordHostedReplayBatch(hosted, game.tick, "internal-ai", result.commands);
+function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, source: ReplayCommandSource): RoomFrameTickResult {
+  const memoryStarted = process.memoryUsage();
+  const cpuStarted = process.cpuUsage();
+  const started = performance.now();
+  const completedFrame = completeHostedCommandFrame(hosted, game, frame);
+  recordHostedReplayFrame(hosted, source, completedFrame);
+  applyCommandFrame(game, completedFrame);
+  stepGame(game);
+  recordHostedReplayCheckpoint(hosted, game);
+  const elapsedMs = performance.now() - started;
+  const cpu = process.cpuUsage(cpuStarted);
+  const memory = process.memoryUsage();
+  if (game.match.winner) {
+    hosted.room = finishRoom(hosted.room, snapshotGame(game));
+    delete hosted.game;
+    delete hosted.aiRuntime;
+  }
+  return {
+    ticks: 1,
+    elapsedMs,
+    cpuMs: (cpu.user + cpu.system) / 1000,
+    memory: {
+      rssBytes: memory.rss,
+      heapUsedBytes: memory.heapUsed,
+      heapDeltaBytes: memory.heapUsed - memoryStarted.heapUsed,
+    },
+    snapshot: snapshotGame(game),
+    room: hosted.room,
+    frame: completedFrame,
+  };
 }
 
-function recordHostedReplayBatch(hosted: HostedRoom, tick: number, source: ReplayCommandSource, commands: { playerId: PlayerId; command: GameCommand }[]) {
+function completeHostedCommandFrame(hosted: HostedRoom, game: Game, frame: CommandFrame): CommandFrame {
+  if (!hosted.aiRuntime) return frame;
+  // @@@lockstep-ai-frame - Connected rooms must broadcast AI commands in the same authoritative frame clients apply.
+  const result = planPresetAiRuntimeCommands(game, hosted.aiRuntime);
+  const aiCommands = result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
+  if (aiCommands.length === 0) return frame;
+  return { ...frame, commands: [...frame.commands, ...aiCommands] };
+}
+
+function runHostedAiFrame(hosted: HostedRoom, game: Game) {
+  if (!hosted.aiRuntime) return;
+  // @@@hosted-ai-frame - Internal AI plans only; the room host owns the authoritative frame application.
+  const result = planPresetAiRuntimeCommands(game, hosted.aiRuntime);
+  applyHostedCommandFrame(hosted, game, "internal-ai", result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })));
+}
+
+function applyHostedCommandFrame(hosted: HostedRoom, game: Game, source: ReplayCommandSource, commands: CommandEnvelope[]) {
+  if (commands.length === 0) return;
+  const frame = createHostedCommandFrame(hosted, game, commands);
+  recordHostedReplayFrame(hosted, source, frame);
+  applyCommandFrame(game, frame);
+}
+
+function createHostedCommandFrame(hosted: HostedRoom, game: Game, commands: CommandEnvelope[]): CommandFrame {
+  const frame = {
+    roomId: hosted.room.id,
+    tick: game.tick,
+    sequence: hosted.nextFrameSequence,
+    commands,
+  };
+  hosted.nextFrameSequence += 1;
+  return frame;
+}
+
+function recordHostedReplayFrame(hosted: HostedRoom, source: ReplayCommandSource, frame: CommandFrame) {
   if (!hosted.debugReplay) return;
-  recordReplayBatch(hosted.debugReplay, { tick, source, commands });
+  recordReplayFrame(hosted.debugReplay, { source, frame });
 }
 
 function recordHostedReplayCheckpoint(hosted: HostedRoom, game: Game) {

@@ -1,5 +1,5 @@
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
-import { issueCommandFrame, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
+import { issueCommandFrame, selectIssueableCommandEntries, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import type { PlayerId } from "../shared/types";
 
@@ -19,8 +19,8 @@ export type AiRuntimeState = {
   memories: Record<PlayerId, AiPolicyMemory>;
 };
 
-export type AiRuntimeResult = {
-  commands: AiRuntimeIssuedCommand[];
+export type AiRuntimeResult<Source extends string = string> = {
+  commands: AiRuntimeIssuedCommand<Source>[];
 };
 
 export type AiCommandFrameRequest<Source extends string = string> = {
@@ -72,6 +72,11 @@ export function createAiRuntime(
 }
 
 export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
+  const planned = planPresetAiRuntimeCommands(game, runtime, options);
+  return issueCommandFrame(game, planned.commands);
+}
+
+export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
   if (game.match.winner) return { commands: [] };
 
   const dueOwners = runtime.controlledPlayers.filter((owner) => {
@@ -91,7 +96,7 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
       ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
     };
   });
-  return issueAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
+  return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
 
 export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState, owners: PlayerId[] = runtime.controlledPlayers, options: PresetAiPolicyOptions = {}): AiRuntimeIssuedCommand[] {
@@ -108,13 +113,19 @@ export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState,
       },
     ];
   });
-  return planAiCommandFrameRequests(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
+  return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options }).commands;
 }
 
 export function issueAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}, hooks: AiCommandFrameHooks<Source> = {}) {
   if (game.match.winner) return { commands: [] };
+  const planned = planAiCommandFrame(game, requests, options);
+  return issueCommandFrame(game, planned.commands, hooks);
+}
+
+export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
+  if (game.match.winner) return { commands: [] };
   const { memoryProvider, ...policyOptions } = options;
-  return issueCommandFrame(game, planAiCommandFrameRequests(game, requests, policyOptions, memoryProvider), hooks);
+  return { commands: selectIssueableCommandEntries(planAiCommandFrameRequests(game, requests, policyOptions, memoryProvider)) };
 }
 
 function planAiCommandFrameRequests<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {

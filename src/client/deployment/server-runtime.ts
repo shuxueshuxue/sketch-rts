@@ -1,0 +1,172 @@
+import { createGame } from "../../shared/sim";
+import { SimulationEngine } from "../../shared/sim/engine";
+import type { ServerNetMessage } from "../../shared/net/types";
+import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
+import type { GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
+import { LockstepRoomGameAdapter, SessionSocketGameAdapter, type GameAdapter, type SessionCommandSocket } from "../game-adapter";
+import { LockstepClient } from "../net/lockstep-client";
+import type { NetTransport } from "../net/transport";
+import { WebSocketTransport } from "../net/websocket-transport";
+import type { DeploymentRuntime, StartedMatch } from "./runtime";
+
+export type ServerSessionSocket = SessionCommandSocket & {
+  close?(): void;
+  addEventListener?(type: "message", handler: (event: { data: string }) => void): void;
+  addEventListener?(type: "open" | "close", handler: () => void): void;
+};
+
+export type RoomTransport = NetTransport & {
+  onOpen?(handler: () => void): void;
+};
+
+export type ServerDeploymentRuntimeOptions = {
+  fetchJson?: <T>(path: string, body?: unknown) => Promise<T>;
+  createSessionSocket?: () => ServerSessionSocket;
+  createRoomTransport?: (roomId: string) => RoomTransport;
+  sessionSnapshot?: () => GameSnapshot | undefined;
+  onSessionOpen?: () => void;
+  onSessionSnapshot?: (snapshot: GameSnapshot) => void;
+  onSessionError?: (message: string) => void;
+  onSessionClose?: () => void;
+};
+
+export class ServerDeploymentRuntime implements DeploymentRuntime {
+  readonly kind = "server" as const;
+  private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
+  private readonly createSessionSocket: () => ServerSessionSocket;
+  private readonly createRoomTransport: (roomId: string) => RoomTransport;
+  private readonly onSessionOpen: (() => void) | undefined;
+  private readonly onSessionSnapshot: ((snapshot: GameSnapshot) => void) | undefined;
+  private readonly onSessionError: ((message: string) => void) | undefined;
+  private readonly onSessionClose: (() => void) | undefined;
+  private sessionSocket: ServerSessionSocket | undefined;
+
+  constructor(options: ServerDeploymentRuntimeOptions = {}) {
+    this.fetchJson = options.fetchJson ?? requestJson;
+    this.createSessionSocket = options.createSessionSocket ?? createDefaultSessionSocket;
+    this.createRoomTransport = options.createRoomTransport ?? createDefaultRoomTransport;
+    this.sessionSnapshot = options.sessionSnapshot ?? (() => undefined);
+    this.onSessionOpen = options.onSessionOpen;
+    this.onSessionSnapshot = options.onSessionSnapshot;
+    this.onSessionError = options.onSessionError;
+    this.onSessionClose = options.onSessionClose;
+  }
+
+  private readonly sessionSnapshot: () => GameSnapshot | undefined;
+
+  initialAdapter(): GameAdapter {
+    this.sessionSocket = this.createSessionSocket();
+    this.sessionSocket.addEventListener?.("open", () => this.onSessionOpen?.());
+    this.sessionSocket.addEventListener?.("message", (event) => {
+      const message = JSON.parse(event.data) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
+      if (message.type === "error") {
+        this.onSessionError?.(message.message);
+        return;
+      }
+      this.onSessionSnapshot?.(message.snapshot);
+    });
+    this.sessionSocket.addEventListener?.("close", () => this.onSessionClose?.());
+    return new SessionSocketGameAdapter(this.sessionSocket, this.sessionSnapshot);
+  }
+
+  async listRooms(viewerUserId?: string): Promise<RoomState[]> {
+    const query = viewerUserId ? `?userId=${encodeURIComponent(viewerUserId)}` : "";
+    const result = await this.fetchJson<{ rooms: RoomState[] }>(`/api/rooms${query}`);
+    return result.rooms;
+  }
+
+  async createRoom(input: CreateRoomInput): Promise<RoomState> {
+    return this.fetchJson<RoomState>("/api/rooms", input);
+  }
+
+  async getRoom(roomId: string): Promise<RoomState> {
+    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}`);
+  }
+
+  async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
+    const existingRoom = await this.getRoom(roomId);
+    const ownedSlot = slotForUser(existingRoom, user.id);
+    const room = existingRoom.status === "inMatch" && !ownedSlot ? existingRoom : await this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/join`, { user });
+    const joinedSlot = slotForUser(room, user.id);
+    const spectating = room.status === "inMatch" && !joinedSlot;
+    return { room, spectating, playerId: joinedSlot?.playerId ?? (spectating ? `spectator-${user.id}` : "player") };
+  }
+
+  async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
+    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/map`, { mapId });
+  }
+
+  async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
+    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/slots/${encodeURIComponent(slotId)}`, patch);
+  }
+
+  async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
+    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`, { humanCount, aiCount });
+  }
+
+  async closeRoom(roomId: string, userId: string): Promise<RoomState> {
+    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/close`, { userId });
+  }
+
+  async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
+    const room = await this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/start`, {});
+    const playerId = slotForUser(room, user.id)?.playerId ?? "player";
+    return this.connectRoom(room, playerId, false, onRoom);
+  }
+
+  connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
+    const players = room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").map((slot) => slot.playerId);
+    const game = createGame(room.mapId, players.length > 0 ? { players } : {});
+    const transport = this.createRoomTransport(room.id);
+    const client = new LockstepClient({ roomId: room.id, playerId, engine: new SimulationEngine(game), transport });
+    const adapter = new LockstepRoomGameAdapter(client, { spectating });
+    transport.onMessage((message: ServerNetMessage) => {
+      if (message.type === "room") onRoom(message.room);
+    });
+    const join = () => {
+      client.join();
+      client.requestCheckpoint();
+    };
+    if (transport.onOpen) transport.onOpen(join);
+    else join();
+    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
+  }
+
+  canForfeitMatch(): boolean {
+    return false;
+  }
+
+  async forfeitMatch(_roomId: string, _user: LocalUserProfile): Promise<RoomState> {
+    throw new Error("Forfeit is not available in server deployment mode");
+  }
+
+  close(): void {
+    this.sessionSocket?.close?.();
+  }
+}
+
+function createDefaultSessionSocket(): ServerSessionSocket {
+  return new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/session`);
+}
+
+function createDefaultRoomTransport(roomId: string): RoomTransport {
+  return WebSocketTransport.connect(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/rooms/${encodeURIComponent(roomId)}`);
+}
+
+async function requestJson<T>(path: string, body?: unknown): Promise<T> {
+  const init: RequestInit =
+    body === undefined
+      ? { method: "GET" }
+      : {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        };
+  const response = await fetch(path, init);
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<T>;
+}
+
+function slotForUser(room: RoomState, userId: string) {
+  return room.slots.find((slot) => slot.userId === userId);
+}
