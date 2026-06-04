@@ -4,6 +4,7 @@ import { snapshotGame, type Game } from "../shared/sim";
 import type { PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
+export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = "v2";
 
 export type AiRuntimeState = {
   controlledPlayers: PlayerId[];
@@ -63,7 +64,7 @@ export function createAiRuntime(
     ...(options.scripts ? { scripts: options.scripts } : {}),
     ...(options.scriptIds ? { scriptIds: [...options.scriptIds] } : {}),
     ...(options.scriptIdsByPlayer ? { scriptIdsByPlayer: cloneScriptIdsByPlayer(options.scriptIdsByPlayer) } : {}),
-    version: options.version ?? "v1",
+    version: options.version ?? DEFAULT_AI_SCRIPT_VERSION,
     versions: options.versions ?? {},
     ...(options.policyMode ? { policyMode: options.policyMode } : {}),
     ...(options.disabledBehaviorsByPlayer ? { disabledBehaviorsByPlayer: cloneDisabledBehaviorsByPlayer(options.disabledBehaviorsByPlayer) } : {}),
@@ -135,7 +136,7 @@ function planAiCommandFrameRequests<Source extends string = string>(game: Game, 
   for (const request of requests) {
     const owner = request.playerId;
     if (!game.players[owner]) continue;
-    const version = request.version ?? "v1";
+    const version = request.version ?? DEFAULT_AI_SCRIPT_VERSION;
     const scripts = request.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
     const memory = request.memory ?? memoryProvider?.get(owner) ?? policyOptions.memory ?? createAiPolicyMemory();
     memoryProvider?.set?.(owner, memory);

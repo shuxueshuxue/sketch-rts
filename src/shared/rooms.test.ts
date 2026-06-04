@@ -23,6 +23,7 @@ describe("room model", () => {
     expect(setup.playerSlots.map((slot) => slot.controller)).toEqual(["human", "human", "ai"]);
     expect(setup.options.players).toEqual(["player", "enemy", "player-4"]);
     expect(setup.options.aiPlayers).toEqual(["player-4"]);
+    expect(setup.options.aiVersions).toEqual({ "player-4": "v2" });
     expect(setup.options.teams).toMatchObject({ player: "north", enemy: "north", "player-4": "south" });
   });
 
@@ -117,6 +118,7 @@ describe("room model", () => {
     expect(setup.playerSlots.filter((slot) => slot.controller === "ai")).toHaveLength(15);
     expect(setup.options.players).toHaveLength(30);
     expect(setup.options.aiPlayers).toHaveLength(15);
+    expect(setup.options.aiVersions?.["ai-1"]).toBe("v2");
     expect(setup.options.players?.slice(0, 3)).toEqual(["human-1", "human-2", "human-3"]);
     expect(setup.options.aiPlayers?.slice(0, 3)).toEqual(["ai-1", "ai-2", "ai-3"]);
   });

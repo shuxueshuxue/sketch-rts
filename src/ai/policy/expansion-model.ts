@@ -4,7 +4,7 @@ import { armyPower } from "./combat-math";
 import { opponentPlayerIds } from "./ownership";
 import { missingCombatProductionKind } from "./production-model";
 import { activePlayerIds, activeResources, allBuildings, buildings, combatUnits, completeBuildings, neutralUnitsNear, resources, units } from "./snapshot";
-import { distance } from "./spatial";
+import { averagePoint, distance } from "./spatial";
 import { enemyPressure } from "./threats";
 import { hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
@@ -20,6 +20,24 @@ export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
 
 export function desiredCatchUpExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
   return desiredExpansionMine(snapshot, owner);
+}
+
+export function desiredForwardExpansionMine(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  if (!hasCoreProduction(snapshot, owner)) return undefined;
+  const army = combatUnits(snapshot, owner);
+  if (army.length < 6) return undefined;
+  const main = mainBase(snapshot, owner);
+  const center = averagePoint(army);
+  if (distance(center, main) < 1_200) return undefined;
+  const ordinary = desiredExpansionMine(snapshot, owner);
+  return activeResources(snapshot)
+    .filter((resource) => completeBuildings(snapshot, owner, "townHall").every((townHall) => distance(resource, townHall) > 520))
+    .filter((resource) => neutralUnitsNear(snapshot, resource, 280).length === 0)
+    .filter((resource) => distance(resource, center) <= 950)
+    .filter((resource) => !ordinary || distance(resource, center) + 500 < distance(ordinary, center))
+    .filter((resource) => !enemyPressure(snapshot, owner, resource, 420, options))
+    .sort((a, b) => distance(a, center) - distance(b, center))[0];
 }
 
 export function activeMiningBaseCount(snapshot: GameSnapshot, owner: PlayerId) {

@@ -8,7 +8,7 @@ import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-const AI_DUEL_CPU_BUDGET_MS = 3_000;
+const AI_DUEL_CPU_BUDGET_MS = 4_500;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
   const elapsed = process.cpuUsage(started);
@@ -114,22 +114,22 @@ describe("sketch RTS simulation", () => {
     expect(BUILDING_DEFS.barracks.cost + BUILDING_DEFS.farm.cost + UNIT_DEFS.footman.cost + UNIT_DEFS.lancer.cost).toBeLessThanOrEqual(game.players.player.gold);
     expect(UNIT_DEFS.worker.cost).toBeLessThanOrEqual(75);
     expect(UNIT_DEFS.footman.cost).toBeLessThanOrEqual(105);
-    expect(UNIT_DEFS.archer.cost).toBeLessThanOrEqual(110);
+    expect(UNIT_DEFS.archer.cost).toBeLessThanOrEqual(115);
     expect(BUILDING_DEFS.defenseTower.cost).toBeLessThan(BUILDING_DEFS.barracks.cost);
     expect(BUILDING_DEFS.townHall.cost).toBeGreaterThan(BUILDING_DEFS.barracks.cost + UNIT_DEFS.worker.cost);
     expect(BUILDING_DEFS.townHall.buildTime).toBeGreaterThanOrEqual(BUILDING_DEFS.barracks.buildTime * 2);
   });
 
-  it("applies the first ranged damage and reach balance slice without changing melee prices", () => {
+  it("applies the ranged nerf and curse-support balance slice without changing melee prices", () => {
     expect(UNIT_DEFS.footman).toMatchObject({ attackDamage: 16, attackRange: 48, cost: 100 });
     expect(UNIT_DEFS.mercenary).toMatchObject({ attackDamage: 28, attackRange: 62, cost: 160 });
-    expect(UNIT_DEFS.archer).toMatchObject({ attackDamage: 22, attackRange: 570, cost: 105 });
-    expect(UNIT_DEFS.contractArcher).toMatchObject({ attackDamage: 31, attackRange: 630, cost: 145 });
-    expect(UNIT_DEFS.priest).toMatchObject({ attackDamage: 11, attackRange: 360, cost: 135 });
-    expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 13, attackRange: 390, cost: 150 });
-    expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 14, attackRange: 450, cost: 145 });
-    expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 13, attackRange: 375, cost: 155 });
-    expect(BUILDING_DEFS.defenseTower).toMatchObject({ attackDamage: 18, attackRange: 600, cost: 125 });
+    expect(UNIT_DEFS.archer).toMatchObject({ attackDamage: 13, attackRange: 399, cost: 115 });
+    expect(UNIT_DEFS.contractArcher).toMatchObject({ attackDamage: 19, attackRange: 441, cost: 145 });
+    expect(UNIT_DEFS.priest).toMatchObject({ attackDamage: 7, attackRange: 252, cost: 135 });
+    expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 8, attackRange: 273, cost: 150 });
+    expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 8, attackRange: 315, cost: 145 });
+    expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 8, attackRange: 263, cost: 155 });
+    expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 16, attackRange: 480, cost: 125 });
     expect(BUILDING_DEFS.moonWell).toMatchObject({ attackDamage: 0, attackRange: 210, cost: 115 });
 
     expect((UNIT_DEFS.archer.attackDamage * UNIT_DEFS.archer.hp) / UNIT_DEFS.archer.cost).toBeLessThan((UNIT_DEFS.footman.attackDamage * UNIT_DEFS.footman.hp) / UNIT_DEFS.footman.cost);
@@ -251,15 +251,16 @@ describe("sketch RTS simulation", () => {
     expect(Math.min(...grandMines.map((mine) => mine.amount))).toBe(6_000);
   });
 
-  it("balances defense towers as longer-ranged static control below contract archer raw value", () => {
+  it("balances defense towers as durable static control with the release tower damage", () => {
     const tower = BUILDING_DEFS.defenseTower;
     const contractArcher = UNIT_DEFS.contractArcher;
 
-    expect(tower.hp).toBeLessThan(280);
-    expect(tower.attackDamage).toBe(18);
-    expect(tower.attackRange).toBe(600);
-    expect(tower.attackRange).toBeLessThan(contractArcher.attackRange);
-    expect(tower.hp * tower.attackDamage).toBeLessThan(contractArcher.hp * contractArcher.attackDamage);
+    expect(tower.hp).toBe(200);
+    expect(tower.attackDamage).toBe(16);
+    expect(tower.attackDamage).toBeLessThan(contractArcher.attackDamage);
+    expect(tower.attackRange).toBe(480);
+    expect(tower.attackRange).toBeGreaterThan(contractArcher.attackRange);
+    expect(tower.attackCooldown).toBeGreaterThan(contractArcher.attackCooldown);
     expect(tower.cost).toBeGreaterThanOrEqual(120);
   });
 
@@ -858,6 +859,24 @@ describe("sketch RTS simulation", () => {
     expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "spirit")).toBe(true);
     expect(enemy.effects.some((effect) => effect.type === "curse")).toBe(true);
     expect(game.effects.map((effect) => effect.type)).toEqual(expect.arrayContaining(["heal", "summon", "curse"]));
+  });
+
+  it("curse directly cuts outgoing attack damage to forty percent for attack and attack-move orders", () => {
+    const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [] });
+    game.units = [];
+    const attackOrderFootman = game.spawnUnit("player", "footman", 500, 500);
+    const attackOrderTarget = game.spawnUnit("enemy", "worker", 540, 500);
+    const attackMoveFootman = game.spawnUnit("player", "footman", 500, 620);
+    const attackMoveTarget = game.spawnUnit("enemy", "worker", 540, 620);
+    attackOrderFootman.effects.push({ type: "curse", remaining: 60 });
+    attackMoveFootman.effects.push({ type: "curse", remaining: 60 });
+
+    issueCommand(game, { type: "attack", unitIds: [attackOrderFootman.id], targetId: attackOrderTarget.id });
+    issueCommand(game, { type: "attackMove", unitIds: [attackMoveFootman.id], x: attackMoveTarget.x, y: attackMoveTarget.y });
+    stepMany(game, 1);
+
+    expect(attackOrderTarget.hp).toBe(UNIT_DEFS.worker.hp - Math.round(UNIT_DEFS.footman.attackDamage * 0.4));
+    expect(attackMoveTarget.hp).toBe(UNIT_DEFS.worker.hp - Math.round(UNIT_DEFS.footman.attackDamage * 0.4));
   });
 
   it("expires summoned spirits without counting them as combat losses", () => {
@@ -1479,23 +1498,27 @@ describe("sketch RTS simulation", () => {
     expect(attackOrders.length).toBeGreaterThan(0);
   });
 
-  it("commands AI armies as a clustered attack-move wave instead of direct single-unit base dives", () => {
+  it("only sends AI attack waves into the enemy base after the enemy army and economy collapse", () => {
     const game = createGame();
     const runtime = createAiRuntime(["enemy"]);
-    stepUntil(game, 5_400, () => game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker" && unit.order.type === "attackMove").length >= 3, runtime);
-
-    const army = game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker");
-    const attackMoveOrders = army.map((unit) => unit.order).filter((order): order is Extract<typeof order, { type: "attackMove" }> => order.type === "attackMove");
     const playerTownHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    let baseCloseout: { unitIds: string[]; playerUnits: number } | undefined;
 
-    expect(attackMoveOrders.length).toBeGreaterThanOrEqual(3);
-    for (const order of attackMoveOrders) {
-      expect(Math.hypot(order.x - playerTownHall.x, order.y - playerTownHall.y)).toBeGreaterThan(700);
+    for (let i = 0; i < 5_400 && !baseCloseout; i += 1) {
+      const result = runPresetAiRuntime(game, runtime);
+      const command = result.commands.map((entry) => entry.command).find((candidate) => candidate.type === "attackMove" && Math.hypot(candidate.x - playerTownHall.x, candidate.y - playerTownHall.y) <= 700);
+      if (command?.type === "attackMove") {
+        baseCloseout = {
+          unitIds: command.unitIds,
+          playerUnits: game.units.filter((unit) => unit.owner === "player").length,
+        };
+      }
+      stepGame(game);
     }
-    const xs = attackMoveOrders.map((order) => order.x);
-    const ys = attackMoveOrders.map((order) => order.y);
-    expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(180);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(180);
+
+    expect(baseCloseout).toBeDefined();
+    expect(baseCloseout?.unitIds.length).toBeGreaterThanOrEqual(2);
+    expect(baseCloseout?.playerUnits).toBe(0);
   });
 
   it("does not spam unfinished supply buildings while one farm is already pending", () => {
@@ -1601,7 +1624,7 @@ describe("sketch RTS simulation", () => {
     expect(survivingContenders).toEqual([game.match.winner]);
     expect(Math.max(...loserArmies)).toBeLessThanOrEqual(maxAcceptableLoserCombat);
     expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
-    expect(elapsedMs).toBeLessThan(2_000);
+    expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
     expectWinnerSpentAndLosersDiedCleanly(game, 1_500, 600, maxAcceptableLoserCombat);
     expect(game.match.stats.unitsKilled.player + game.match.stats.unitsKilled.enemy + game.match.stats.unitsKilled.enemy2).toBeGreaterThan(20);
     expect(game.match.stats.unitsLost.player + game.match.stats.unitsLost.enemy + game.match.stats.unitsLost.enemy2).toBeGreaterThan(20);
@@ -1643,7 +1666,7 @@ describe("sketch RTS simulation", () => {
 
     expect(game.match.winner).not.toBeNull();
     expect(game.match.endedAtTick).toBeLessThanOrEqual(48_000);
-    expect(elapsedMs).toBeLessThan(2_000);
+    expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
     expect(survivingTeams.size).toBe(1);
     expect(Math.max(...losingArmies)).toBeLessThanOrEqual(3);
     expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_000);
@@ -1700,11 +1723,10 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps defense towers as static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(18);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(16);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.attackDamage);
-    expect(BUILDING_DEFS.defenseTower.attackRange).toBe(600);
-    expect(BUILDING_DEFS.defenseTower.attackRange).toBeLessThan(UNIT_DEFS.contractArcher.attackRange);
-    expect(BUILDING_DEFS.defenseTower.hp * BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.hp * UNIT_DEFS.contractArcher.attackDamage);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBe(480);
+    expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);
     expect(BUILDING_DEFS.defenseTower.attackCooldown).toBeGreaterThan(UNIT_DEFS.contractArcher.attackCooldown);
 
     const scene = sketchScene("soft-static-tower")

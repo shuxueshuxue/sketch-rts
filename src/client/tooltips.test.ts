@@ -7,7 +7,7 @@ describe("gameplay tooltips", () => {
 
     expect(tooltip.title).toBe("Archer");
     expect(tooltip.body).toContain("ranged");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 105 gold", "Supply 2", "HP 85", "Attack 22", "Range 570", "Train 7.8s"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 115 gold", "Supply 2", "HP 85", "Attack 13", "Range 399", "Train 7.8s"]));
     expect(tooltip.hotkey).toBe("A");
   });
 
@@ -19,6 +19,7 @@ describe("gameplay tooltips", () => {
       requirements: ["Priest or field medic must be ready."],
       hotkey: "H",
     });
+    expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
   });
 
   it("describes items with use conditions and damage numbers", () => {

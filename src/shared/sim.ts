@@ -607,7 +607,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
     return;
   }
   if (unit.cooldown > 0) return;
-  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.62 : 1;
+  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
   applyAttackDamage(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }
@@ -624,7 +624,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
     return;
   }
   if (unit.cooldown > 0) return;
-  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.62 : 1;
+  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
   applyAttackDamage(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }

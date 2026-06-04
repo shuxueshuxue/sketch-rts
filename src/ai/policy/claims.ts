@@ -115,6 +115,20 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       }
       continue;
     }
+    if (scriptId === "objectiveControl" && command.type === "move") {
+      for (const unitId of command.unitIds) {
+        // @@@objective-move-retreat-claim - Objective recalls are still objective-owned; record the move as recovery so the next pass does not reclaim the same camp.
+        memory.unitClaims[unitId] = {
+          kind: "retreat",
+          targetId: "retreat",
+          x: command.x,
+          y: command.y,
+          sinceTick: snapshot.tick,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
+        };
+      }
+      continue;
+    }
     if (scriptId.startsWith("workerPressure") && command.type === "attack") {
       const target = query.targetById(command.targetId);
       if (!target) continue;

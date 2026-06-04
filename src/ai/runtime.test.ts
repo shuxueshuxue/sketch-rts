@@ -11,6 +11,26 @@ describe("shared AI runtime", () => {
 
     expect(DEFAULT_AI_THINK_INTERVAL).toBe(15);
     expect(runtime.thinkInterval).toBe(DEFAULT_AI_THINK_INTERVAL);
+    expect(runtime.version).toBe("v2");
+  });
+
+  it("defaults direct AI command-frame requests to v2 policy", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], players: ["player", "enemy"] });
+    const seenVersions: string[] = [];
+    const scripts: AiScript[] = [
+      {
+        id: "default-version-probe",
+        phase: "economy",
+        run(_snapshot, _owner, options) {
+          seenVersions.push(options.version ?? "<missing>");
+          return undefined;
+        },
+      },
+    ];
+
+    issueAiCommandFrame(game, [{ playerId: "player", scripts }]);
+
+    expect(seenVersions).toEqual(["v2"]);
   });
 
   it("keeps simulation ticks free of AI decisions", () => {

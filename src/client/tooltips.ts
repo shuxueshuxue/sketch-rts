@@ -158,7 +158,7 @@ const ABILITY_TOOLTIPS: Record<AbilityKind, GameplayTooltip> = {
   curse: {
     title: "Curse",
     body: "Weakens an enemy unit so its attacks deal less damage.",
-    stats: ["Enemy damage x0.62", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
+    stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
     requirements: ["Witch must be ready.", "Target an enemy unit."],
   },
 };

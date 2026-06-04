@@ -3,6 +3,8 @@ import type { SdkGameAgent, SdkGameCommandPlanner, SdkGameRunInput, SdkGameLoopH
 import { runGame, runGameLoop } from "../sdk/game-runner";
 import type { PlayerId } from "../shared/types";
 
+const DEFAULT_AI_GAME_POLICY_VERSION: AiScriptVersion = "v2";
+
 export type AiGameAgent = SdkGameAgent & {
   version: AiScriptVersion;
   policyVersion?: AiScriptVersion;
@@ -26,7 +28,7 @@ export function runAiGameLoop(input: AiGameRunInput, hooks: SdkGameLoopHooks = {
 export function createAiGameCommandPlanner(options: PresetAiPolicyOptions = {}): SdkGameCommandPlanner<AiGameAgent> {
   const memories: Record<PlayerId, AiPolicyMemory> = {};
   return ({ snapshot, owner, agent, source, teams }) => {
-    const version = agent.version ?? "v1";
+    const version = agent.version ?? DEFAULT_AI_GAME_POLICY_VERSION;
     const policyVersion = agent.policyVersion ?? options.version ?? version;
     const scripts = agent.scripts ?? AI_SCRIPT_VERSIONS[policyVersion] ?? SKETCH_RTS_PRESET_AI_STACK;
     const memory = memories[owner] ?? (memories[owner] = createAiPolicyMemory());

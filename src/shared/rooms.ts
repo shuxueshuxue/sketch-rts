@@ -1,5 +1,7 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
 
+export const DEFAULT_INTERNAL_AI_VERSION = "v2";
+
 export type CreateRoomInput = {
   id: string;
   host: LocalUserProfile;
@@ -149,7 +151,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
     options: {
       players: playerSlots.map((slot) => slot.playerId),
       aiPlayers: playerSlots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId),
-      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, "v1"])),
+      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, DEFAULT_INTERNAL_AI_VERSION])),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race as RaceId])),
     },
