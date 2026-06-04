@@ -1163,7 +1163,6 @@ function workerPressureCommand(snapshot: GameSnapshot, owner: PlayerId, options:
     recordBehavior(options, "workerHarassment", "disabledSkips");
     return undefined;
   }
-  if (options.version === "v2" && mainBaseNeedsObjectivePause(snapshot, owner, options)) return undefined;
   const soldiers = combatUnits(snapshot, owner).filter(
     (unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && harassmentReadyUnit(snapshot, owner, unit, options),
   );
