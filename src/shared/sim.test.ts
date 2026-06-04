@@ -227,7 +227,7 @@ describe("sketch RTS simulation", () => {
       .createGame();
 
     issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["pulling-archer"], targetId: "damaged-creep" });
-    stepGame(game);
+    stepMany(game, 24);
 
     const damaged = game.units.find((unit) => unit.id === "damaged-creep");
     const called = game.units.find((unit) => unit.id === "called-creep");
@@ -478,6 +478,22 @@ describe("sketch RTS simulation", () => {
     expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman").length).toBe(1);
   });
 
+  it("rejects building placement that overlaps an existing building without spending gold", () => {
+    const game = createGame();
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    game.players.player.gold = 1000;
+    const goldBefore = game.players.player.gold;
+    const spentBefore = game.match.stats.goldSpent.player;
+    const buildingCountBefore = game.buildings.length;
+
+    expect(() => issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 10, y: townHall.y })).toThrow(/placement|too close|overlap/i);
+
+    expect(game.players.player.gold).toBe(goldBefore);
+    expect(game.match.stats.goldSpent.player).toBe(spentBefore);
+    expect(game.buildings).toHaveLength(buildingCountBefore);
+  });
+
   it("enforces race-specific trainable units through the ordinary train command", () => {
     const game = createGame("bareDuel", { aiPlayers: [], races: { player: "grove", enemy: "ember" } });
     const groveBarracks = createBuilding("grove-barracks", "player", "barracks", 620, 620, true);
@@ -606,7 +622,7 @@ describe("sketch RTS simulation", () => {
 
     expect(() => issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" })).toThrow(/supply/i);
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 90, y: worker.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 130, y: townHall.y });
     stepMany(game, 220);
 
     expect(game.players.player.supplyCap).toBeGreaterThan(game.players.player.supplyUsed);
@@ -618,13 +634,81 @@ describe("sketch RTS simulation", () => {
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     game.players.player.gold = 1000;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: worker.x + 90, y: worker.y });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x + 130, y: townHall.y });
     stepMany(game, 260);
     const tower = game.buildings.find((building) => building.owner === "player" && building.kind === "defenseTower")!;
     const target = game.spawnUnit("enemy", "raider", tower.x + 120, tower.y);
     stepMany(game, 120);
 
     expect(tower.complete).toBe(true);
+    expect(target.hp).toBeLessThan(target.maxHp);
+  });
+
+  it("delays ranged unit damage until its projectile lands", () => {
+    const game = sketchScene("delayed-ranged-unit-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3400, 3400)
+      .unit("player", "archer", 900, 900, { id: "projectile-archer", order: { type: "attack", targetId: "projectile-target" } })
+      .unit("enemy", "footman", 1110, 900, { id: "projectile-target" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "projectile-target")!;
+
+    stepGame(game);
+
+    expect(target.hp).toBe(target.maxHp);
+    expect(game.effects.some((effect) => effect.type === "projectile")).toBe(true);
+
+    stepMany(game, 24);
+
+    expect(target.hp).toBeLessThan(target.maxHp);
+  });
+
+  it("keeps melee unit damage immediate", () => {
+    const game = sketchScene("immediate-melee-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3400, 3400)
+      .unit("player", "footman", 900, 900, { id: "melee-footman", order: { type: "attack", targetId: "melee-target" } })
+      .unit("enemy", "footman", 940, 900, { id: "melee-target" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "melee-target")!;
+
+    stepGame(game);
+
+    expect(target.hp).toBeLessThan(target.maxHp);
+  });
+
+  it("delays defense tower damage until its projectile lands", () => {
+    const game = sketchScene("delayed-tower-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3400, 3400)
+      .tower("player", 900, 900, { id: "projectile-tower" })
+      .unit("enemy", "raider", 1100, 900, { id: "tower-target" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "tower-target")!;
+
+    stepGame(game);
+
+    expect(target.hp).toBe(target.maxHp);
+
+    stepMany(game, 24);
+
     expect(target.hp).toBeLessThan(target.maxHp);
   });
 
@@ -637,7 +721,7 @@ describe("sketch RTS simulation", () => {
     const woundedRaider = game.spawnUnit("enemy", "raider", 620, 500);
     woundedRaider.hp = 20;
 
-    stepGame(game);
+    stepMany(game, 24);
 
     expect(woundedRaider.hp).toBeLessThan(20);
     expect(healthyFront.hp).toBe(healthyFront.maxHp);
@@ -691,8 +775,11 @@ describe("sketch RTS simulation", () => {
     stepMany(game, 1);
 
     const projectile = game.effects.find((effect) => effect.type === "projectile");
-    const hit = game.effects.find((effect) => effect.type === "hit");
     expect(projectile).toMatchObject({ fromX: archer.x, fromY: archer.y, toX: target.x, toY: target.y });
+
+    stepMany(game, 24);
+
+    const hit = game.effects.find((effect) => effect.type === "hit" && distance(effect, target) < 1);
     expect(hit).toMatchObject({ x: target.x, y: target.y });
   });
 
@@ -801,7 +888,9 @@ describe("sketch RTS simulation", () => {
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     game.players.player.gold = 1000;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: worker.x + 90, y: worker.y });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x + 130, y: townHall.y });
     stepMany(game, 260);
     const tower = game.buildings.find((building) => building.owner === "player" && building.kind === "defenseTower")!;
     const target = game.spawnUnit("enemy", "raider", tower.x + 120, tower.y);
@@ -1108,9 +1197,9 @@ describe("sketch RTS simulation", () => {
     expect(tower.hp).toBe(50 + tower.maxHp - baseTowerHp);
 
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 120, y: worker.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 90, y: townHall.y });
     const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
-    stepMany(game, BUILDING_DEFS.farm.buildTime + 20);
+    stepMany(game, BUILDING_DEFS.farm.buildTime + 80);
 
     expect(farm.complete).toBe(true);
     expect(farm.maxHp).toBe(Math.round(BUILDING_DEFS.farm.hp * 1.2));
@@ -1181,7 +1270,7 @@ describe("sketch RTS simulation", () => {
     lightningCarrier.hp = 1;
     challenger.cooldown = 0;
     issueCommand(game, { type: "attack", unitIds: [challenger.id], targetId: lightningCarrier.id });
-    stepMany(game, 1);
+    stepMany(game, 24);
 
     const dropped = game.items.find((item) => item.id === "item-red-lightning");
     expect(dropped?.carrierId).toBeUndefined();
@@ -1480,7 +1569,7 @@ describe("sketch RTS simulation", () => {
     game.buildings.push(townHall, farm);
 
     issueCommand(game, { type: "attackMove", unitIds: [archer.id], x: 2650, y: 2500 });
-    stepMany(game, 1);
+    stepMany(game, 24);
 
     expect(farm.hp).toBeLessThan(farm.maxHp);
     expect(townHall.hp).toBe(townHall.maxHp);
@@ -1685,7 +1774,7 @@ describe("sketch RTS simulation", () => {
     game.units = game.units.filter((unit) => unit.owner === "neutral" || game.teams[unit.owner] === "south");
     for (let i = 0; i < 4; i += 1) game.spawnUnit("human-1", "footman", 1200 + i * 30, 1200);
 
-    stepGame(game);
+    stepMany(game, 24);
 
     expect(game.match.winner).toBe("ai-1");
   });
@@ -1700,7 +1789,7 @@ describe("sketch RTS simulation", () => {
     game.buildings.push(tower);
     attacker.order = { type: "attackMove", x: 1000, y: 900 };
 
-    stepGame(game);
+    stepMany(game, 24);
 
     expect(soldier.hp).toBeLessThan(soldier.maxHp);
     expect(worker.hp).toBe(worker.maxHp);
@@ -1716,7 +1805,7 @@ describe("sketch RTS simulation", () => {
     weakRaider.hp = 20;
     attacker.order = { type: "attackMove", x: 1040, y: 900 };
 
-    stepGame(game);
+    stepMany(game, 24);
 
     expect(weakRaider.hp).toBeLessThan(20);
     expect(healthyFootman.hp).toBe(healthyFootman.maxHp);
@@ -1769,10 +1858,11 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 }
 
 function killWith(game: ReturnType<typeof createGame>, attacker: Unit, targetKind: UnitKind, owner: Unit["owner"] = "enemy") {
-  const target = game.spawnUnit(owner, targetKind, attacker.x + Math.min(80, Math.max(38, attacker.attackRange - 4)), attacker.y);
+  const targetDistance = attacker.attackRange > 90 ? attacker.attackRange - 4 : Math.min(80, Math.max(38, attacker.attackRange - 4));
+  const target = game.spawnUnit(owner, targetKind, attacker.x + targetDistance, attacker.y);
   target.hp = 1;
   issueCommand(game, { type: "attack", unitIds: [attacker.id], targetId: target.id });
-  stepMany(game, 1);
+  stepUntil(game, 40, () => !game.units.some((unit) => unit.id === target.id));
   attacker.cooldown = 0;
 }
 
