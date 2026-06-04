@@ -8,7 +8,7 @@ import {
   shouldReserveForEmergencyTower,
   shouldReserveForHealingWell,
 } from "./base-defense-model";
-import { defensiveRallyPoint, healingWellPointFor, safeMainBuildPoint, towerPointFor } from "./build-layout";
+import { defensiveRallyPoint, healingWellPointFor, legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "./build-layout";
 import { activeUnitClaim } from "./claims";
 import { resolveAiCommandIntent } from "./commands";
 import { armyPower } from "./combat-math";
@@ -264,7 +264,7 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   const base = mainBase(snapshot, owner);
   const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
-  const point = safeMainBuildPoint(snapshot, owner, farms.length + 4);
+  const point = safeMainBuildPoint(snapshot, owner, farms.length + 4, "farm");
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "farm", x: point.x, y: point.y }, options);
 }
 
@@ -297,7 +297,8 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const builder = availableBuilder(snapshot, owner, mine, options);
   if (!builder) return undefined;
   const offset = expansionOffset(snapshot, owner);
-  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
+  const point = legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: point.x, y: point.y }, options);
 }
 
 function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -334,9 +335,10 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
       const builder = availableBuilder(snapshot, owner, mine, options);
       if (builder) {
         const offset = expansionOffset(snapshot, owner);
+        const point = legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
         recordBehavior(options, "economicCatchUp", "attempts");
         recordBehavior(options, "economicCatchUp", "catchUpExpansions");
-        return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
+        return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: point.x, y: point.y }, options);
       }
     }
   }
@@ -393,7 +395,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
   const index = aiPlaybook().productionPlan.indexOf(missing);
-  const point = safeMainBuildPoint(snapshot, owner, index);
+  const point = safeMainBuildPoint(snapshot, owner, index, missing);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: missing, x: point.x, y: point.y }, options);
 }
 
@@ -1847,9 +1849,10 @@ function catchUpExpansionCommand(snapshot: GameSnapshot, owner: PlayerId, option
   const builder = availableBuilder(snapshot, owner, mine, options);
   if (!builder) return undefined;
   const offset = expansionOffset(snapshot, owner);
+  const point = legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
   recordBehavior(options, "economicCatchUp", "attempts");
   recordBehavior(options, "economicCatchUp", "catchUpExpansions");
-  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: mine.x + offset.x, y: mine.y + offset.y }, options);
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: point.x, y: point.y }, options);
 }
 
 function catchUpExpansionMinimumCombat(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

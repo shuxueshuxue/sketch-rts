@@ -77,6 +77,20 @@ export type WorldEffect = {
   tickEvery?: number;
 };
 
+export type Projectile = {
+  id: string;
+  owner: Owner;
+  attackerId: string;
+  targetId: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  damage: number;
+  remaining: number;
+  duration: number;
+};
+
 export type UnitOrder =
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
@@ -316,6 +330,7 @@ export type GameSnapshot = {
   resources: ResourceNode[];
   mercenaryCamps: MercenaryCamp[];
   items: WorldItem[];
+  projectiles: Projectile[];
   effects: WorldEffect[];
 };
 

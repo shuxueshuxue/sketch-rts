@@ -73,6 +73,7 @@ function snapshotWith(input: { units?: Unit[]; buildings?: Building[] }): GameSn
     resources: [],
     mercenaryCamps: [],
     items: [],
+    projectiles: [],
     effects: [],
     match: {
       winner: null,

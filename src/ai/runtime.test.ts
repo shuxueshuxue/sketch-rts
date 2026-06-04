@@ -155,7 +155,7 @@ describe("shared AI runtime", () => {
           if (owner === "player") {
             const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
             if (!worker) return undefined;
-            return { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 80, y: worker.y };
+            return { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 140, y: worker.y };
           }
 
           const enemyWorker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
@@ -185,7 +185,7 @@ describe("shared AI runtime", () => {
         run(snapshot, owner) {
           if (owner === "player") {
             const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
-            return worker ? { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 80, y: worker.y } : undefined;
+            return worker ? { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 140, y: worker.y } : undefined;
           }
           const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
           const sawPlayerFarm = snapshot.buildings.some((building) => building.owner === "player" && building.kind === "farm" && !building.complete);
@@ -214,7 +214,7 @@ describe("shared AI runtime", () => {
         phase: "economy",
         run(snapshot, owner) {
           const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
-          return worker ? { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 80, y: worker.y } : undefined;
+          return worker ? { type: "build", unitId: worker.id, buildingKind: "farm", x: worker.x + 140, y: worker.y } : undefined;
         },
       },
     ];
