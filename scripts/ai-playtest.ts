@@ -3,7 +3,7 @@ import { dirname } from "node:path";
 import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner, type InteractiveUnitSelector, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
 import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../src/sdk/scenarios/combat";
-import { DEFAULT_AI_THINK_INTERVAL } from "../src/ai/runtime";
+import { DEFAULT_AI_THINK_INTERVAL, planAiRuntimeCommandEntries } from "../src/ai/runtime";
 import type { AiRuntimeState } from "../src/ai/runtime";
 import type { SdkWinnerMode } from "../src/sdk/winner-mode";
 import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
@@ -64,6 +64,19 @@ if (verb === "memory") {
 
 if (verb === "inspect-units") {
   printJson(inspectAiInteractivePlaytestUnits(session, loaded.runtime, { owner: unitInspectionOwnerFlag(args) }));
+  process.exit(0);
+}
+
+if (verb === "plan") {
+  const owner = flag(args, "owner") as PlayerId | undefined;
+  if (owner && !session.game.players[owner]) throw new Error(`Unknown player ${owner}`);
+  const runtime = clone(loaded.runtime);
+  printJson({
+    tick: session.game.tick,
+    gameSecond: session.game.tick / SIM_TICKS_PER_SECOND,
+    owner: owner ?? "all",
+    entries: planAiRuntimeCommandEntries(session.game, runtime, owner ? [owner] : undefined),
+  });
   process.exit(0);
 }
 
@@ -263,6 +276,10 @@ function printJson(value: unknown) {
   console.log(JSON.stringify(value, null, 2));
 }
 
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 function printHelp() {
   console.log(`Usage:
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
@@ -270,6 +287,7 @@ function printHelp() {
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
   npm run play:ai -- memory --file .playtests/duel.json
+  npm run play:ai -- plan --file .playtests/duel.json --owner v2
   npm run play:ai -- inspect-units --file .playtests/duel.json --owner all
   npm run play:ai -- step --file .playtests/duel.json --ticks 45
   npm run play:ai -- step-until --file .playtests/duel.json --condition first-fight --max-ticks 240

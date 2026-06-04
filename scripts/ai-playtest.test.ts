@@ -164,6 +164,25 @@ describe("AI playtest CLI", () => {
     });
   });
 
+  it("prints planned AI command entries without mutating the playtest file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "combat.json");
+
+    runPlaytestCli("new", "--file", file, "--setup", "combat-10v12", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you");
+    const before = readFileSync(file, "utf8");
+
+    const planned = JSON.parse(runPlaytestCli("plan", "--file", file, "--owner", "v2"));
+    const after = readFileSync(file, "utf8");
+
+    expect(after).toBe(before);
+    expect(planned).toMatchObject({
+      tick: 0,
+      owner: "v2",
+      entries: expect.arrayContaining([expect.objectContaining({ playerId: "v2", scriptId: "attackWave", command: expect.objectContaining({ type: "attackMove" }) })]),
+    });
+  });
+
   it("uses the shared AI think interval by default", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

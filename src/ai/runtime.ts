@@ -94,11 +94,32 @@ export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options:
   return issueAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
 
+export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState, owners: PlayerId[] = runtime.controlledPlayers, options: PresetAiPolicyOptions = {}): AiRuntimeIssuedCommand[] {
+  if (game.match.winner) return [];
+  const requests = owners.flatMap((owner) => {
+    const version = runtime.versions[owner] ?? runtime.version;
+    return [
+      {
+        playerId: owner,
+        version,
+        scripts: runtimeScriptsForOwner(runtime, owner, version),
+        memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
+        ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
+      },
+    ];
+  });
+  return planAiCommandFrameRequests(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
+}
+
 export function issueAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}, hooks: AiCommandFrameHooks<Source> = {}) {
   if (game.match.winner) return { commands: [] };
+  const { memoryProvider, ...policyOptions } = options;
+  return issueCommandFrame(game, planAiCommandFrameRequests(game, requests, policyOptions, memoryProvider), hooks);
+}
+
+function planAiCommandFrameRequests<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
   const snapshot = snapshotGame(game);
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
-  const { memoryProvider, ...policyOptions } = options;
   // @@@shared-ai-frame - All controlled slots reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
     const owner = request.playerId;
@@ -117,7 +138,7 @@ export function issueAiCommandFrame<Source extends string = string>(game: Game, 
     }
   }
 
-  return issueCommandFrame(game, planned, hooks);
+  return planned;
 }
 
 function runtimeScriptsForOwner(runtime: AiRuntimeState, owner: PlayerId, version: AiScriptVersion) {
