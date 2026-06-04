@@ -1583,7 +1583,7 @@ function mainDefenseFocusCommand(snapshot: GameSnapshot, owner: PlayerId, soldie
   if (targets.length === 0) return undefined;
   const target = targets.sort((a, b) => mainDefenseTargetScore(b, rally, snapshot, owner) - mainDefenseTargetScore(a, rally, snapshot, owner))[0];
   if (!target) return undefined;
-  const attackers = defenders.filter((unit) => canJoinMainDefenseFocus(unit, target));
+  const attackers = defenders.filter((unit) => canJoinMainDefenseFocus(snapshot, owner, unit, target, options));
   return attackers.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
@@ -1595,9 +1595,27 @@ function mainDefenseTargetScore(unit: Unit, rally: Point, snapshot: GameSnapshot
   return missingHp * 2 + threat + buildingPressure - distance(unit, rally) * 0.2;
 }
 
-function canJoinMainDefenseFocus(unit: Unit, target: Unit) {
-  const leash = unit.attackRange > 100 ? 80 : 35;
-  return distance(unit, target) <= unit.attackRange + leash;
+function canJoinMainDefenseFocus(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, target: Unit, options: PresetAiPolicyOptions) {
+  const distanceToTarget = distance(unit, target);
+  const closeLeash = unit.attackRange > 100 ? 80 : 35;
+  if (distanceToTarget <= unit.attackRange + closeLeash) return true;
+  if (unit.attackRange > 100) return false;
+  if (mainDefenseTowerCovers(snapshot, owner, unit)) {
+    // @@@tower-cover-chase - A covered melee unit only leaves the tower line when an attacker has already crossed past that cover into a building kill window.
+    if (!targetPressuresAlliedBuilding(snapshot, owner, target, options) || mainDefenseTowerCovers(snapshot, owner, target)) return false;
+  }
+  return distanceToTarget <= unit.attackRange + 245;
+}
+
+function mainDefenseTowerCovers(snapshot: GameSnapshot, owner: PlayerId, point: Point) {
+  const main = mainBase(snapshot, owner);
+  return buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && building.complete && distance(building, main) <= 520 && distance(building, point) <= 260);
+}
+
+function targetPressuresAlliedBuilding(snapshot: GameSnapshot, owner: PlayerId, target: Unit, options: PresetAiPolicyOptions) {
+  const targetId = target.order.type === "attack" ? target.order.targetId : target.order.type === "attackMove" ? target.order.targetId : undefined;
+  if (!targetId) return false;
+  return alliedBuildings(snapshot, owner, options).some((building) => building.id === targetId);
 }
 
 function pressuredBuildingBeats(owner: PlayerId, candidate: Building, candidatePressure: number, current: Building, currentPressure: number) {

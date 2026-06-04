@@ -483,7 +483,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove" || candidate.type === "focusFire");
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
     expect(command?.unitIds).not.toContain("wounded-archer");
   });
@@ -2700,6 +2700,31 @@ describe("SDK preset AI policy", () => {
 
     expect(command).toMatchObject({ type: "attack", targetId: "weak-raider" });
     expect(command?.type === "attack" ? command.unitIds : []).toEqual(["cover-archer-a", "cover-archer-b"]);
+  });
+
+  it("v2 lets nearby melee outside tower cover join main-defense focus fire", () => {
+    const scene = sketchScene("v2-main-defense-melee-rejoin")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .tower("v2", 250, 500, { id: "v2-main-tower" })
+      .unit("v2", "footman", 520, 520, { id: "main-footman", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "lancer", 550, 530, { id: "main-lancer", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "archer", 580, 540, { id: "main-archer", order: { type: "move", x: 500, y: 500 } })
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1b", 3300, 3700)
+      .unit("v1a", "raider", 720, 530, { id: "wounded-base-attacker", hp: 32 })
+      .unit("v1b", "footman", 820, 560, { id: "healthy-base-attacker" })
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ type: "attack", targetId: "wounded-base-attacker" });
+    expect(command?.type === "attack" ? command.unitIds.sort() : []).toEqual(["main-archer", "main-footman", "main-lancer"]);
   });
 
   it("does not let main-defense focus override wounded-unit pullbacks in the same policy pass", () => {
