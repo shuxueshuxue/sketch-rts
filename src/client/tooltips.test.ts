@@ -35,7 +35,7 @@ describe("gameplay tooltips", () => {
     const tooltip = upgradeTooltip("reinforcedPlating", "p", 1);
 
     expect(tooltip.title).toBe("Reinforced Plating II");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 500 gold", "Research 17.5s", "+15 max HP"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 250 gold", "Research 52.5s", "+15 max HP"]));
     expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Barracks.", "Affects combat units."]));
     expect(tooltip.hotkey).toBe("P");
   });
@@ -44,7 +44,7 @@ describe("gameplay tooltips", () => {
     const tooltip = upgradeTooltip("buildingDurability", "d", 0);
 
     expect(tooltip.title).toBe("Building Durability I");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 520 gold", "Research 18.0s", "+20% building HP"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 260 gold", "Research 54.0s", "+20% building HP"]));
     expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Town Hall.", "Affects buildings."]));
     expect(tooltip.hotkey).toBe("D");
   });
