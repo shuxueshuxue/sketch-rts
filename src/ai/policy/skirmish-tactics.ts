@@ -73,6 +73,7 @@ function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, o
   if (options.version !== "v2" || options.policyMode !== "combat") return [];
   return ownCombat
     .filter((unit) => unit.hp / Math.max(1, unit.maxHp) <= 0.42 && enemies.some((enemy) => distance(enemy, unit) <= 520))
+    .filter((unit) => unit.attackRange > 100 || unit.hp < unit.maxHp * 0.36)
     .map((unit) => {
       const pull = pullbackPoint(unit, retreatPoint, 0.36);
       return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: pull.x, y: pull.y }, options);

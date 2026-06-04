@@ -6214,6 +6214,26 @@ describe("SDK preset AI policy", () => {
     expect(telemetry.behaviors.skirmishPreservation.woundedRangedPullbacks).toBe(1);
   });
 
+  it("v2 combat pullback preserves ranged units without pulling bruised melee out of the line", () => {
+    const scene = sketchScene("v2-combat-pullback-ranged-not-bruised-melee")
+      .map("combatArena")
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .townHall("v2", 150, 800)
+      .unit("v2", "footman", 800, 800, { id: "bruised-frontliner", hp: 58 })
+      .unit("v2", "archer", 760, 760, { id: "wounded-archer", hp: 35 })
+      .townHall("v1", 1450, 800)
+      .unit("v1", "footman", 850, 800)
+      .unit("v1", "raider", 875, 760)
+      .build();
+    const game = scene.createGame();
+
+    const moves = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams, policyMode: "combat" }).filter((command) => command.type === "move");
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]).toMatchObject({ type: "move", unitIds: ["wounded-archer"] });
+  });
+
   it("v2 regroups to a friendly expansion when losing a fight near an owned mine", () => {
     const scene = sketchScene("v2-expansion-regroup")
       .map("bareDuel")
