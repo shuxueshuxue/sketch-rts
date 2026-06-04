@@ -73,6 +73,7 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
 function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {
   if (options.policyMode !== "combat" || fighters.length < 6) return true;
   const attackers = focusFireAttackers(fighters, target);
+  if (rememberedWoundedTargetCanBeFinished(target, attackers)) return true;
   // @@@focus-tail-release - Combat focus memory should stabilize a fight, not let a tiny tail drag the main army out of formation.
   return attackers.length >= Math.max(3, Math.ceil(fighters.length * 0.45));
 }
@@ -110,6 +111,10 @@ function focusFireCanPickOffWoundedTarget(attackers: Unit[], target: Unit) {
   if (attackers.length >= 2 && target.hp <= target.maxHp * 0.34 && volleyDamage >= target.hp * 1.35) return true;
   // @@@critical-pickoff - A tiny group may finish a near-dead target, but ordinary wounded targets still respect local odds.
   return attackers.length >= 2 && target.hp <= target.maxHp * 0.18 && volleyDamage >= target.hp * 2;
+}
+
+function rememberedWoundedTargetCanBeFinished(target: Unit, attackers: Unit[]) {
+  return attackers.length >= 4 && target.hp <= target.maxHp * 0.4 && attackers.reduce((total, unit) => total + unit.attackDamage, 0) >= target.hp * 1.35;
 }
 
 function focusFireJoinRange(unit: Unit) {

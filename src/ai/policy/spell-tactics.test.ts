@@ -107,6 +107,32 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("keeps a four-unit combat tail on a remembered wounded target it can finish", () => {
+    const scene = sketchScene("spell-tactics-keep-wounded-focus-tail")
+      .map("combatArena")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 150, 800)
+      .townHall("v1", 1450, 800)
+      .unit("v2", "archer", 630, 700, { id: "tail-archer-a" })
+      .unit("v2", "archer", 640, 760, { id: "tail-archer-b" })
+      .unit("v2", "archer", 650, 820, { id: "tail-archer-c" })
+      .unit("v2", "raider", 830, 805, { id: "tail-raider" })
+      .unit("v1", "raider", 900, 805, { id: "remembered-raider", hp: 31 })
+      .unit("v1", "archer", 895, 760, { id: "fresh-wounded-archer", hp: 28 });
+    for (let index = 0; index < 6; index += 1) scene.unit("v2", index % 2 === 0 ? "footman" : "lancer", 680 + index * 14, 970 + index * 18, { id: `front-fighter-${index + 1}` });
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { focusTargetOwner: "v1", focusTargetId: "remembered-raider", focusTargetSinceTick: 60, focusTargetUpdatedTick: 105 };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, policyMode: "combat", memory })).toEqual({
+      type: "attack",
+      unitIds: ["tail-archer-a", "tail-archer-b", "tail-archer-c", "tail-raider"],
+      targetId: "remembered-raider",
+    });
+  });
+
   it("targets high-value combat casters before ordinary front-line damage dealers", () => {
     const game = sketchScene("spell-tactics-caster-focus-priority")
       .map("combatArena")
