@@ -25,7 +25,15 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
     if (blocker) return `${command.buildingKind} placement is too close to ${blocker.kind}`;
     return canSpendGold(snapshot, owner, BUILDING_DEFS[command.buildingKind].cost) ? undefined : `Need ${BUILDING_DEFS[command.buildingKind].cost} gold`;
   }
-  if (command.type === "setRally") return missingBuildingError(snapshot, owner, command.buildingIds) ?? rallyTargetError(snapshot, owner, command.target);
+  if (command.type === "setRally") {
+    const missing = missingBuildingError(snapshot, owner, command.buildingIds);
+    if (missing) return missing;
+    const rallyless = command.buildingIds
+      .map((buildingId) => snapshot.buildings.find((building) => building.id === buildingId && building.owner === owner))
+      .find((building) => building && BUILDING_DEFS[building.kind].trains.length === 0);
+    if (rallyless) return `${rallyless.kind} has no training rally point`;
+    return rallyTargetError(snapshot, owner, command.target);
+  }
   if (command.type === "train") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return `Unknown ${owner} building ${command.buildingId}`;
