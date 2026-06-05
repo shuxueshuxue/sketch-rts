@@ -25,4 +25,15 @@ describe("local game adapter", () => {
     expect(adapter.updateToRenderTime()).toBe(true);
     expect(adapter.currentSnapshot().tick).toBe(3);
   });
+
+  it("rejects invalid local player commands before stepping simulation", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(townHall).toBeDefined();
+    const adapter = new LocalGameAdapter(game, "player");
+
+    expect(() => adapter.sendCommand({ type: "train", buildingId: townHall!.id, unitKind: "footman" })).toThrow(/Local command rejected: townHall cannot train footman/);
+    expect(adapter.currentSnapshot().tick).toBe(0);
+    expect(townHall!.queue).toHaveLength(0);
+  });
 });

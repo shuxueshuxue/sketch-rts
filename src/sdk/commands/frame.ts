@@ -1,5 +1,6 @@
-import { type Game } from "../../shared/sim";
+import { snapshotGame, type Game } from "../../shared/sim";
 import { checksumGame } from "../../shared/sim/checksum";
+import { commandValidationError } from "../../shared/sim/command-validation";
 import { applyCommandFrame } from "../../shared/sim/frame";
 import type { CommandFrame } from "../../shared/net/types";
 import type { GameCommand, PlayerId } from "../../shared/types";
@@ -27,6 +28,11 @@ export function issueCommandFrame<Source extends string = string>(game: Game, pl
   const issued = selectIssueableCommandEntries(planned);
 
   if (issued.length === 0) return { commands: issued };
+  const snapshot = snapshotGame(game);
+  for (const entry of issued) {
+    const error = commandValidationError(snapshot, entry.playerId, entry.command);
+    if (error) throw new Error(`SDK command frame rejected ${entry.playerId} ${entry.scriptId} command: ${error}`);
+  }
   const frame: CommandFrame = {
     roomId: "sdk",
     tick: game.tick,
