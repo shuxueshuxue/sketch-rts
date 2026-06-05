@@ -1,4 +1,5 @@
 import "./styles.css";
+import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import {
   controlGroupCenter,
@@ -50,7 +51,6 @@ import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
 type ScreenRect = { x: number; y: number; width: number; height: number };
-type BuildPlacement = { workerId: string; buildingKind: BuildingKind };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
@@ -1479,9 +1479,14 @@ function beginSpellTargeting(ability: AbilityKind) {
 }
 
 function confirmBuildPlacement(point: Point) {
-  if (!commandMode || commandMode.type !== "build") return;
+  if (!commandMode || commandMode.type !== "build" || !snapshot) return;
   const world = screenToWorld(point);
-  sendCommand({ type: "build", unitId: commandMode.placement.workerId, buildingKind: commandMode.placement.buildingKind, x: world.x, y: world.y });
+  const result = buildPlacementCommand(snapshot, commandMode.placement, world);
+  if ("error" in result) {
+    showInvalidCommand(result.error);
+    return;
+  }
+  sendCommand(result.command);
   statusLabel.textContent = `${labelKind(commandMode.placement.buildingKind)} foundation placed.`;
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2989,9 +2994,12 @@ function drawBuildPlacementPreview() {
   const def = BUILDING_DEFS[commandMode.placement.buildingKind];
   const point = lastMouse;
   const size = 58;
+  const world = screenToWorld(point);
+  const placement = snapshot ? buildPlacementCommand(snapshot, commandMode.placement, world) : undefined;
+  const validPlacement = !placement || "command" in placement;
   ctx.save();
-  ctx.strokeStyle = "#315f87";
-  ctx.fillStyle = "rgba(49, 95, 135, 0.08)";
+  ctx.strokeStyle = validPlacement ? "#315f87" : "#9f3a3a";
+  ctx.fillStyle = validPlacement ? "rgba(49, 95, 135, 0.08)" : "rgba(159, 58, 58, 0.11)";
   ctx.lineWidth = 2;
   ctx.setLineDash([7, 5]);
   ctx.beginPath();
@@ -3006,7 +3014,7 @@ function drawBuildPlacementPreview() {
   ctx.lineTo(point.x - size / 2, point.y + size / 2);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = "#315f87";
+  ctx.fillStyle = validPlacement ? "#315f87" : "#9f3a3a";
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillText(`${commandMode.placement.buildingKind} ${def.cost}g`, point.x - 34, point.y + size / 2 + 22);
   ctx.restore();

@@ -388,6 +388,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       },
     },
     map: game.map,
+    teams: { ...game.teams },
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
     units: game.units.map((unit) => ({ ...unit, order: { ...unit.order }, orderQueue: unit.orderQueue?.map((order) => ({ ...order })) ?? [] })),
     buildings: game.buildings.map((building) => {

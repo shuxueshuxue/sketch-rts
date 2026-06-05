@@ -12,6 +12,7 @@ import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEF
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
+import { commandValidationError } from "../shared/sim/command-validation";
 import { applyCommandFrame } from "../shared/sim/frame";
 import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
@@ -362,6 +363,11 @@ app.post("/api/rooms/:roomId/command", (request, response) => {
     return;
   }
   try {
+    const error = commandValidationError(roomHost.snapshot(request.params.roomId), body.playerId, body.command);
+    if (error) {
+      response.status(400).json({ error });
+      return;
+    }
     response.json(roomHost.commandRoom(request.params.roomId, body.playerId, body.command));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -375,6 +381,12 @@ app.post("/api/rooms/:roomId/commands", (request, response) => {
     return;
   }
   try {
+    const snapshot = roomHost.snapshot(request.params.roomId);
+    const error = body.commands.map((entry) => commandValidationError(snapshot, entry.playerId, entry.command)).find((message) => message);
+    if (error) {
+      response.status(400).json({ error });
+      return;
+    }
     response.json(roomHost.commandRooms(request.params.roomId, body.commands));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -534,6 +546,13 @@ app.post("/api/command", (request, response) => {
     return;
   }
   try {
+    if (request.body.type !== "startMap") {
+      const error = commandValidationError(snapshotGame(game), "player", request.body);
+      if (error) {
+        response.status(400).json({ error });
+        return;
+      }
+    }
     runSessionCommand(request.body);
     response.json(snapshotGame(game));
   } catch (error) {
@@ -637,6 +656,8 @@ function runSessionCommand(command: GameCommand) {
     broadcastSnapshot();
     return;
   }
+  const error = commandValidationError(snapshotGame(game), "player", command);
+  if (error) throw new Error(error);
   applyCommandFrame(game, {
     roomId: "session",
     tick: game.tick,
