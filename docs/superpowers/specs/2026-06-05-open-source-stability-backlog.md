@@ -174,4 +174,25 @@ For release readiness, the final integration branch must run:
 
 ## Current Status
 
-Created as release backlog on 2026-06-05. Implementation PRs are pending.
+Created as release backlog on 2026-06-05.
+
+Closed:
+
+- #12 Shift queued commands: merged in PR #23.
+- #13 Remove upgrade pop star: merged in PR #19.
+- #14 Double-click select same type: merged in PR #21.
+- #15 Repair rate and animation: merged in PR #22.
+- #16 AI late-tech composition: merged in PR #27. Final-head pgl evidence on run `2026-06-05T16-53-33-967Z-4i6q28` showed 23/24 1v1 control and 10/12 paired 1v2.
+- #17 Neutral aggro on ranged damage: verified already satisfied and closed.
+- #18 AI third and fourth expansions: merged in PR #26.
+
+Open:
+
+- #20 Crash-free sim, AI, and lockstep architecture audit.
+- #24 Browser-language i18n.
+- #25 Public in-game chat overlay.
+
+Still not release-complete:
+
+- The full pgl gauntlet still fails the 100% script gate, mainly in probe and combat lanes.
+- #20 must prove ordinary valid play cannot crash the simulation, AI script path, or command-frame lockstep.
