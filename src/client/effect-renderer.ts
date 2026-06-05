@@ -1,5 +1,4 @@
 import type { WorldEffect } from "../shared/types";
-import { drawLevelStar } from "./level-star";
 
 type Point = { x: number; y: number };
 
@@ -177,11 +176,6 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
 
     if (effect.type === "experienceBurst") {
       drawExperienceBurstEffect(ctx, point, life);
-      continue;
-    }
-
-    if (effect.type === "levelUp") {
-      drawLevelUpEffect(ctx, point, life);
       continue;
     }
 
@@ -484,34 +478,6 @@ function drawExperienceBurstEffect(ctx: CanvasRenderingContext2D, point: Point, 
   ctx.lineTo(point.x - 5, point.y - 5);
   ctx.closePath();
   ctx.fill();
-  ctx.restore();
-}
-
-function drawLevelUpEffect(ctx: CanvasRenderingContext2D, point: Point, life: number) {
-  const burst = 1 - life;
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.shadowColor = "rgba(242, 208, 92, 0.58)";
-  ctx.shadowBlur = 15;
-  ctx.strokeStyle = `rgba(138, 100, 24, ${0.32 + life * 0.42})`;
-  ctx.lineWidth = 2.5;
-  for (let i = 0; i < 3; i += 1) {
-    ctx.beginPath();
-    ctx.ellipse(point.x, point.y + 9 - i * 8, 18 + burst * (28 + i * 9), 6 + burst * (8 + i * 3), 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = `rgba(242, 208, 92, ${0.5 + life * 0.38})`;
-  for (let i = 0; i < 8; i += 1) {
-    const angle = i * (Math.PI / 4);
-    const inner = 12 + burst * 10;
-    const outer = 28 + burst * 38;
-    ctx.beginPath();
-    ctx.moveTo(point.x + Math.cos(angle) * inner, point.y - 6 + Math.sin(angle) * inner);
-    ctx.lineTo(point.x + Math.cos(angle) * outer, point.y - 6 + Math.sin(angle) * outer);
-    ctx.stroke();
-  }
-  drawLevelStar(ctx, point.x, point.y - 31 - burst * 16, 3);
   ctx.restore();
 }
 

@@ -849,7 +849,7 @@ describe("sketch RTS simulation", () => {
     killWith(game, finisher, "ancientStag");
     expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward + UNIT_DEFS.ancientStag.xpReward);
     expect(finisher.level).toBe(1);
-    expect(game.effects.some((effect) => effect.type === "levelUp")).toBe(true);
+    expect(game.effects.map((effect) => effect.type as string)).not.toContain("levelUp");
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.25));
     expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.25));
 
@@ -1437,7 +1437,7 @@ describe("sketch RTS simulation", () => {
     issueCommand(game, { type: "useItem", unitId: "book-carrier", itemId: "experience-book" });
 
     expect(game.effects.some((effect) => effect.type === "experienceBurst" && effect.x === 1500 && effect.y === 1500)).toBe(true);
-    expect(game.effects.some((effect) => effect.type === "levelUp" && effect.x === 1500 && effect.y === 1500)).toBe(true);
+    expect(game.effects.map((effect) => effect.type as string)).not.toContain("levelUp");
   });
 
   it("storm staff creates sustained area damage instead of only a single burst", () => {
