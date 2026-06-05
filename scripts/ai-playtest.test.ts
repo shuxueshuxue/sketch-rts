@@ -228,7 +228,7 @@ describe("AI playtest CLI", () => {
       { playerId: "v1a", team: "north", controller: "ai" },
       { playerId: "v2", team: "south", controller: "human" },
     ]);
-    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v1a", "v2"]);
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
   });
 
@@ -245,7 +245,7 @@ describe("AI playtest CLI", () => {
       { playerId: "v2", team: "south", race: "grove", controller: "human" },
     ]);
     expect(persisted.session.scriptedPlayers).toEqual(["v1a"]);
-    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a"]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v1a", "v2"]);
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
   });
 
@@ -273,6 +273,32 @@ describe("AI playtest CLI", () => {
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b"]);
+    expect(persisted.runtime.disabledBehaviorsByPlayer).toEqual({ v2: ["workerHarassment"] });
+  });
+
+  it("lets exact control benchmark sessions use the requested worker harassment mode", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "control-worker-harassment.json");
+
+    runPlaytestCli(
+      "new",
+      "--file",
+      file,
+      "--from-control-benchmark",
+      "brackenFord 1v1 control south",
+      "--control-seed",
+      "control-cli-seed",
+      "--control-map-count",
+      "2",
+      "--control-worker-harassment",
+      "0",
+      "--you",
+      "v2",
+      "--assist-you",
+    );
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
     expect(persisted.runtime.disabledBehaviorsByPlayer).toEqual({ v2: ["workerHarassment"] });
   });
 

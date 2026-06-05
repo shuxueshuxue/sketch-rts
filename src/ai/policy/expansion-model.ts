@@ -95,7 +95,7 @@ export function expansionIsNearlyCleared(snapshot: GameSnapshot, owner: PlayerId
   const remainingNeutralPower = neutralGuardPower(snapshot, mine);
   if (remainingNeutralPower <= 0 || remainingNeutralPower > 1) return false;
   const nearbyArmy = combatUnits(snapshot, owner).filter((unit) => distance(unit, mine) <= 420);
-  return nearbyArmy.length >= 3 && armyPower(nearbyArmy) >= remainingNeutralPower * 4;
+  return nearbyArmy.length >= 3 && expansionClearPower(nearbyArmy) >= remainingNeutralPower * 4;
 }
 
 export function activeGuardedFirstNatural(snapshot: GameSnapshot, owner: PlayerId, mine: ResourceNode, options: PresetAiPolicyOptions) {
@@ -108,14 +108,22 @@ export function activeGuardedFirstNatural(snapshot: GameSnapshot, owner: PlayerI
   if (remainingNeutralPower <= 0 || remainingNeutralPower > 2) return false;
   // @@@guarded-natural-reserve - Do not starve army production while a full guarded natural still needs real clearing.
   const committedArmy = combatUnits(snapshot, owner).filter((unit) => distance(unit, mine) <= 560 || (unit.order.type === "attackMove" && distance(unit.order, mine) <= 260));
-  return committedArmy.length >= 4 && armyPower(committedArmy) >= remainingNeutralPower * 1.2;
+  return committedArmy.length >= 4 && expansionClearPower(committedArmy) >= remainingNeutralPower * 1.2;
 }
 
 export function canClearGuardedExpansion(snapshot: GameSnapshot, mine: ResourceNode, soldiers: Unit[], options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return true;
   const remainingNeutralPower = neutralGuardPower(snapshot, mine);
   // @@@guarded-natural-power - Four bodies are not enough if this exact squad is weaker than the natural guards.
-  return remainingNeutralPower <= 0 || armyPower(soldiers) >= remainingNeutralPower;
+  return remainingNeutralPower <= 0 || expansionClearPower(soldiers) >= remainingNeutralPower;
+}
+
+function expansionClearPower(units: Unit[]) {
+  // @@@guarded-natural-wounds - Natural clearing is attrition-limited; badly wounded bodies cannot be valued as full strategic army power.
+  return units.reduce((total, unit) => {
+    const health = Math.max(0.2, unit.hp / Math.max(1, unit.maxHp));
+    return total + health * (1 + unit.attackDamage / 18 + Math.min(unit.attackRange, 260) / 520);
+  }, 0);
 }
 
 export function neutralGuardPower(snapshot: GameSnapshot, mine: ResourceNode) {

@@ -626,6 +626,16 @@ function updateAttackOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
+  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0) {
+    const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange));
+    if (!replacement) {
+      unit.order = { type: "idle" };
+      return;
+    }
+    unit.order = { type: "attack", targetId: replacement.id };
+    updateAttackOrder(game, unit);
+    return;
+  }
   const gap = distance(unit, target);
   if (gap > unit.attackRange) {
     moveToward(unit, target.x, target.y, game.map);
@@ -1433,7 +1443,7 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
   forEachNearbyEnemyUnit(game, owner, point, range, (unit) => {
     const candidateDistance = distanceSquared(unit, point);
     if (candidateDistance > limit) return;
-    const score = targetPriorityScore(unit, candidateDistance);
+    const score = targetPriorityScore(game, owner, unit, candidateDistance);
     if (score <= bestScore) return;
     best = unit;
     bestScore = score;
@@ -1450,7 +1460,7 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
   forEachNearbyEnemyUnit(game, unit.owner, point, range, (candidate) => {
     const candidateDistance = distanceSquared(unit, candidate);
     if (candidateDistance > limit) return;
-    const score = targetPriorityScore(candidate, candidateDistance);
+    const score = targetPriorityScore(game, unit.owner, candidate, candidateDistance);
     if (score > bestScore) {
       best = candidate;
       bestScore = score;
@@ -1459,7 +1469,7 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
   forEachNearbyEnemyBuilding(game, unit.owner, unit, range, (building) => {
     const candidateDistance = distanceSquared(unit, building);
     if (candidateDistance > limit) return;
-    const score = targetPriorityScore(building, candidateDistance);
+    const score = targetPriorityScore(game, unit.owner, building, candidateDistance);
     if (score > bestScore) {
       best = building;
       bestScore = score;
@@ -1468,9 +1478,17 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
   return best;
 }
 
-function targetPriorityScore(target: Unit | Building, distanceSq: number) {
+function targetPriorityScore(game: Game, attackerOwner: Owner, target: Unit | Building, distanceSq: number) {
+  if (projectedHpAfterPendingProjectiles(game, attackerOwner, target) <= 0) return Number.NEGATIVE_INFINITY;
   const distancePenalty = Math.sqrt(distanceSq) * 0.9;
   return targetPriorityBase(target) + targetThreatBonus(target) - distancePenalty;
+}
+
+function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building) {
+  const pendingDamage = game.projectiles
+    .filter((projectile) => projectile.owner === attackerOwner && projectile.targetId === target.id)
+    .reduce((total, projectile) => total + projectile.damage, 0);
+  return target.hp - pendingDamage;
 }
 
 function targetPriorityBase(target: Unit | Building) {

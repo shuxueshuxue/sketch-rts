@@ -22,13 +22,15 @@ const ATTACK_MOVE_REDIRECT_DISTANCE = 240;
 // @@@claim-ttl-window - Long objective walks need a longer memory window than local tactical claims, or squads get re-tasked mid-route.
 const UNIT_CLAIM_TTL_TICKS = 900;
 const OBJECTIVE_CLAIM_TTL_TICKS = 3600;
+const OBJECTIVE_ABANDON_GRACE_TICKS = 300;
 
 export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
   const query = createSnapshotQuery(snapshot);
   for (const [unitId, claim] of Object.entries(memory.unitClaims)) {
     const unit = query.unitById(unitId);
-    if (!unit || unit.owner !== owner || claim.expiresTick < snapshot.tick || !claimTargetExists(query, claim)) delete memory.unitClaims[unitId];
+    if (!unit || unit.owner !== owner || claim.expiresTick < snapshot.tick || objectiveClaimAbandoned(unit, claim, snapshot.tick) || !claimTargetExists(query, owner, claim)) delete memory.unitClaims[unitId];
   }
+  pruneStrategicExpansionClaim(query, owner, memory);
 }
 
 export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory, options: RecordAiMemoryOptions = {}) {
@@ -74,6 +76,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     if (scriptId === "expansion" && command.type === "attackMove") {
       const mine = nearestEntity(query.resources(), command);
       if (!mine || distance(mine, command) > ATTACK_MOVE_REDIRECT_DISTANCE) continue;
+      memory.strategicPlan = { ...memory.strategicPlan, expansionClaimTargetId: mine.id, expansionClaimTick: snapshot.tick };
       for (const unitId of command.unitIds) {
         memory.unitClaims[unitId] = {
           kind: "expansion",
@@ -233,16 +236,42 @@ function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick:
 export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: ClaimPolicyOptions) {
   const claim = options.memory?.unitClaims[unit.id];
   if (!claim || claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
-  return claimTargetExists(createSnapshotQuery(snapshot), claim) ? claim : undefined;
+  if (objectiveClaimAbandoned(unit, claim, snapshot.tick)) return undefined;
+  return claimTargetExists(createSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
 }
 
-function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, claim: AiPolicyUnitClaim) {
+function objectiveClaimAbandoned(unit: Unit, claim: AiPolicyUnitClaim, currentTick: number) {
+  if (claim.kind !== "creep" && claim.kind !== "mercenary" && claim.kind !== "expansion") return false;
+  if (currentTick < claim.sinceTick + OBJECTIVE_ABANDON_GRACE_TICKS) return false;
+  if (unit.order.type !== "idle") return false;
+  // @@@abandoned-objective-claim - Long objective claims keep squads stable while walking; once a unit has stopped far from the point, the old claim is stale ownership.
+  return distance(unit, claim) > 260;
+}
+
+function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, claim: AiPolicyUnitClaim) {
   if (claim.kind === "mercenary") return Boolean(query.mercenaryCampById(claim.targetId));
-  if (claim.kind === "expansion") return Boolean(query.resourceById(claim.targetId));
+  if (claim.kind === "expansion") return expansionClaimStillNeedsArmy(query, owner, claim);
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
   if (claim.kind === "harass") return Boolean(query.targetById(claim.targetId));
   if (claim.kind === "build") return claim.sinceTick >= query.snapshot.tick || query.buildings().some((building) => !building.complete && distance(building, claim) <= 80);
   return true;
+}
+
+function expansionClaimStillNeedsArmy(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, claim: AiPolicyUnitClaim) {
+  const resource = query.resourceById(claim.targetId);
+  if (!resource) return false;
+  // @@@expansion-claim-complete - Once the town hall exists at the claimed mine, army ownership of the clearing task is done.
+  return !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= 260);
+}
+
+function pruneStrategicExpansionClaim(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, memory: AiPolicyMemory) {
+  const plan = memory.strategicPlan;
+  if (!plan?.expansionClaimTargetId) return;
+  const resource = query.resourceById(plan.expansionClaimTargetId);
+  const expired = plan.expansionClaimTick !== undefined && plan.expansionClaimTick + OBJECTIVE_CLAIM_TTL_TICKS < query.snapshot.tick;
+  if (resource && !expired && !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= 260)) return;
+  delete plan.expansionClaimTargetId;
+  delete plan.expansionClaimTick;
 }
 
 function buildTargetId(buildingKind: string, x: number, y: number) {

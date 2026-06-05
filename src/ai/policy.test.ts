@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
 import { runAiGame } from "./game-runner";
 import { createAiRuntime, runPresetAiRuntime } from "./runtime";
@@ -259,6 +259,103 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
     expect(command).toMatchObject({ type: "attackMove", x: 3400, y: 1500 });
+  });
+
+  it("v2 all-ins with its last small army when its own economy is dead", () => {
+    const scene = sketchScene("v2-no-worker-last-army-all-in")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "south", race: "grove" })
+      .player("v1a", { team: "north", race: "grove" })
+      .townHall("v2", 3604, 2048)
+      .building("v2", "barracks", 3484, 1948)
+      .unit("v2", "contractArcher", 1325, 1929)
+      .unit("v2", "contractArcher", 1585, 1795)
+      .unit("v2", "footman", 3572, 2004)
+      .townHall("v1a", 492, 2048)
+      .building("v1a", "barracks", 612, 2148)
+      .worker("v1a", 520, 2040)
+      .worker("v1a", 540, 2060)
+      .worker("v1a", 560, 2080)
+      .unit("v1a", "contractArcher", 901, 2245, { id: "hurt-contract", hp: 54 })
+      .unit("v1a", "lancer", 933, 2259, { id: "hurt-lancer", hp: 20 })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 36;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ targetId: "hurt-lancer" });
+  });
+
+  it("v2 attacks enemy workers with its last small army when no enemy combat remains", () => {
+    const scene = sketchScene("v2-no-worker-last-army-worker-cleanup")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "south", race: "grove" })
+      .player("v1a", { team: "north", race: "grove" })
+      .townHall("v2", 3604, 2048)
+      .building("v2", "barracks", 3484, 1948)
+      .unit("v2", "contractArcher", 1358, 2226)
+      .unit("v2", "contractArcher", 1472, 2209)
+      .unit("v2", "footman", 2391, 2305)
+      .townHall("v1a", 492, 2048)
+      .building("v1a", "barracks", 612, 2148)
+      .worker("v1a", 520, 2040, { id: "cleanup-worker-a" })
+      .worker("v1a", 540, 2060, { id: "cleanup-worker-b" })
+      .worker("v1a", 560, 2080, { id: "cleanup-worker-c" })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 36;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ targetId: expect.stringContaining("cleanup-worker") });
+  });
+
+  it("v2 attacks buildings with its last small army after both armies and enemy workers are gone", () => {
+    const scene = sketchScene("v2-no-worker-last-army-building-cleanup")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "south", race: "grove" })
+      .player("v1a", { team: "north", race: "grove" })
+      .townHall("v2", 3604, 2048)
+      .building("v2", "barracks", 3484, 1948)
+      .unit("v2", "contractArcher", 1358, 2226)
+      .unit("v2", "contractArcher", 1472, 2209)
+      .unit("v2", "footman", 2391, 2305)
+      .townHall("v1a", 492, 2048, { id: "cleanup-hall" })
+      .building("v1a", "barracks", 612, 2148)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 36;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack" || candidate.type === "attackMove");
+
+    expect(command).toMatchObject({ type: "attack", targetId: "cleanup-hall" });
+  });
+
+  it("v2 focuses a one-on-one no-worker opponent's residual army instead of resetting", () => {
+    const scene = sketchScene("v2-one-on-one-dead-economy-residual-focus")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "south", race: "grove" })
+      .player("v1a", { team: "north", race: "grove" })
+      .townHall("v2", 3604, 2048)
+      .townHall("v2", 3376, 2680)
+      .townHall("v1a", 492, 2048)
+      .building("v1a", "barracks", 612, 2148);
+    for (let i = 0; i < 22; i += 1) {
+      scene.unit("v2", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 1500 + (i % 8) * 30, 1880 + Math.floor(i / 8) * 34);
+    }
+    for (let i = 0; i < 24; i += 1) {
+      scene.unit("v1a", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 920 + (i % 8) * 26, 1860 + Math.floor(i / 8) * 32, { id: `residual-${i}` });
+    }
+    const game = scene.build().createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attack");
+
+    expect(command).toMatchObject({ targetId: expect.stringContaining("residual-") });
   });
 
   it("v2 abandons a guarded dead-economy focus owner for the other empty base", () => {
@@ -743,9 +840,10 @@ describe("SDK preset AI policy", () => {
       .goldMine("v2-main-mine", 560, 540, 4000)
       .goldMine("v2-natural-mine", 1000, 920, 4000)
       .goldMine("v1-main-mine", 3340, 3300, 4000)
-      .mercenaryCamp("local-contract-post", 1600, 900, { hireKind: "contractArcher", cost: 140 })
+      .mercenaryCamp("local-contract-post", 1600, 900, { hireKind: "contractArcher", cost: 140, stock: 2, cooldownRemaining: 0 })
       .build();
     const game = scene.createGame();
+    game.players.v2!.gold = 300;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
@@ -786,6 +884,7 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
       .townHall("v2", 500, 500)
+      .townHall("v2", 1300, 760)
       .unit("v2", "footman", 1280, 1400)
       .unit("v2", "footman", 1320, 1420)
       .unit("v2", "lancer", 1360, 1440)
@@ -804,6 +903,77 @@ describe("SDK preset AI policy", () => {
 
     expect(entries.some((entry) => entry.scriptId === "objectiveControl")).toBe(false);
     expect(entries.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove", x: 3100, y: 1450 });
+  });
+
+  it("v2 lets closeout preempt neutral objective control when the enemy has only a small residual army", () => {
+    const scene = sketchScene("v2-closeout-preempts-creep-with-residual-army")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 1300, 760)
+      .unit("v2", "footman", 1280, 1400)
+      .unit("v2", "footman", 1320, 1420)
+      .unit("v2", "lancer", 1360, 1440)
+      .unit("v2", "lancer", 1400, 1460)
+      .unit("v2", "archer", 1440, 1480)
+      .unit("v2", "archer", 1480, 1500)
+      .unit("v2", "raider", 1520, 1520)
+      .townHall("v1a", 3100, 1450, { id: "v1a-closeout-hall" })
+      .unit("v1a", "footman", 3030, 1410, { hp: 44 })
+      .unit("v1a", "lancer", 3070, 1480, { hp: 52 })
+      .unit("v1a", "archer", 3140, 1430, { hp: 35 })
+      .unit("neutral", "ancientStag", 1300, 2500)
+      .unit("neutral", "stonebackBrute", 1360, 2560)
+      .unit("neutral", "gladeWitch", 1420, 2520)
+      .build();
+    const game = scene.createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", AI_SCRIPT_VERSIONS.v2, { version: "v2", teams: game.teams });
+
+    expect(entries.some((entry) => entry.scriptId === "objectiveControl")).toBe(false);
+    expect(entries.find((entry) => entry.scriptId === "attackWave")?.command).toMatchObject({ type: "attackMove", x: 3100, y: 1450 });
+  });
+
+  it("v2 pauses neutral objective control when a 1v2 enemy squad controls its unfinished expansion", () => {
+    const scene = sketchScene("v2-1v2-pauses-creep-for-unfinished-expansion-threat")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 820, 900, { id: "v2-natural" })
+      .building("v2", "townHall", 1940, 3060, { id: "v2-third-building", complete: false })
+      .unit("v2", "footman", 1540, 3000)
+      .unit("v2", "footman", 1580, 3040)
+      .unit("v2", "lancer", 1620, 3000)
+      .unit("v2", "lancer", 1660, 3040)
+      .unit("v2", "archer", 1500, 2960)
+      .unit("v2", "contractArcher", 1540, 2920)
+      .unit("v2", "contractArcher", 1580, 2960)
+      .unit("v2", "contractArcher", 1620, 2920)
+      .townHall("v1a", 3400, 1500)
+      .townHall("v1b", 3400, 2600)
+      .unit("v1b", "footman", 2360, 3220)
+      .unit("v1b", "footman", 2400, 3260)
+      .unit("v1b", "lancer", 2380, 3180)
+      .unit("v1b", "mercenary", 2420, 3220)
+      .unit("v1b", "mercenary", 2440, 3280)
+      .unit("neutral", "wildling", 920, 3340, { id: "west-objective-a" })
+      .unit("neutral", "wildling", 950, 3370, { id: "west-objective-b" })
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 820, 900, 4000)
+      .goldMine("v2-third-mine", 1940, 3060, 4000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "attackMove",
+    );
+
+    expect(command).toBeUndefined();
   });
 
   it("worker-pressure closeout targets a weak single opponent as a rewrite candidate module", () => {
@@ -932,6 +1102,9 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "footman", 860, 720)
       .unit("v2", "lancer", 900, 740)
       .unit("v2", "archer", 940, 760)
+      .unit("v2", "footman", 980, 780)
+      .unit("v2", "lancer", 1020, 800)
+      .unit("v2", "archer", 1060, 820)
       .townHall("v1a", 3100, 1450)
       .worker("v1a", 3040, 1440)
       .goldMine("v2-main-mine", 560, 540, 4000)
@@ -1086,6 +1259,37 @@ describe("SDK preset AI policy", () => {
     );
 
     expect(combatTrainingBeforeBankStall.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("v2 spends a low-gold melee-only training window on the first archer", () => {
+    const scene = sketchScene("v2-first-archer-before-more-melee")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "farm", 610, 500)
+      .building("v2", "farm", 650, 500)
+      .building("v2", "barracks", 650, 560, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 710, 560, { id: "v2-archery" })
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .worker("v2", 620, 560)
+      .unit("v2", "footman", 700, 620)
+      .unit("v2", "footman", 730, 640)
+      .unit("v2", "lancer", 760, 660)
+      .unit("v2", "footman", 790, 680)
+      .townHall("v1a", 3100, 1450)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 115;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([{ type: "train", buildingId: "v2-archery", unitKind: "archer" }]);
   });
 
   it("v2 preserves worker gold for first combat recovery when its army has been wiped", () => {
@@ -1488,7 +1692,7 @@ describe("SDK preset AI policy", () => {
     expect(nearestNeutralDistance).toBeGreaterThan(330);
   });
 
-  it("worker-pressure candidate uses a committed job instead of the fragile pair raid while globally outmatched", () => {
+  it("v2 does not use worker pressure to cross the map while one-base and globally outmatched", () => {
     const scene = sketchScene("v2-no-outmatched-raid")
       .map("openClaims")
       .replaceDefaults()
@@ -1514,7 +1718,7 @@ describe("SDK preset AI policy", () => {
     const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.earlyHarassment, AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams });
 
     expect(entries.find((entry) => entry.scriptId === "earlyHarassment")).toBeUndefined();
-    expect(entries.find((entry) => entry.scriptId === "workerPressure")).toMatchObject({ command: { type: "attack" } });
+    expect(entries.find((entry) => entry.scriptId === "workerPressure")).toBeUndefined();
   });
 
   it("v2 pulls a wounded melee unit out of a neutral camp instead of donating it while creeping", () => {
@@ -2011,7 +2215,7 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attack", targetId: "exposed-worker-a" });
   });
 
-  it("worker-pressure candidate treats cross-map 1v2 pressure as a committed job, not a two-unit raid", () => {
+  it("v2 does not drain its first one-base 1v2 squad into cross-map worker pressure", () => {
     const scene = sketchScene("v2-no-cross-map-first-raid")
       .map("bareDuel")
       .replaceDefaults()
@@ -2035,8 +2239,39 @@ describe("SDK preset AI policy", () => {
 
     const pressure = entries.find((entry) => entry.scriptId === "workerPressure");
     expect(entries.find((entry) => entry.scriptId === "earlyHarassment")).toBeUndefined();
-    expect(pressure).toMatchObject({ command: { type: "attack" } });
-    expect(pressure?.command.type === "attack" ? pressure.command.unitIds.length : 0).toBe(3);
+    expect(pressure).toBeUndefined();
+  });
+
+  it("v2 sends only a small worker-pressure detachment after its expansion is online", () => {
+    const scene = sketchScene("v2-worker-pressure-detachment-after-expansion")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 900, 500)
+      .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v2-natural", 900, 520, 3000)
+      .unit("v2", "footman", 760, 620, { id: "reserve-a" })
+      .unit("v2", "archer", 790, 650, { id: "reserve-b" })
+      .unit("v2", "lancer", 820, 680, { id: "reserve-c" })
+      .unit("v2", "footman", 860, 710, { id: "raid-a" })
+      .unit("v2", "archer", 890, 740, { id: "raid-b" })
+      .unit("v2", "lancer", 920, 770, { id: "raid-c" })
+      .unit("v2", "footman", 950, 800, { id: "reserve-d" })
+      .townHall("v1a", 3400, 3300)
+      .worker("v1a", 3360, 3300, { id: "far-worker" })
+      .worker("v1a", 3380, 3340)
+      .townHall("v1b", 3400, 3800)
+      .worker("v1b", 3360, 3800)
+      .build();
+    const game = scene.createGame();
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams })[0];
+
+    expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "attack", targetId: "far-worker" } });
+    expect(entry?.command.type === "attack" ? entry.command.unitIds : []).toHaveLength(3);
   });
 
   it("v2 does not send its first harassment pair across the whole map in a 1v1", () => {
@@ -2879,6 +3114,65 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "move" ? command.y : 9999).toBeLessThan(700);
   });
 
+  it("v2 keeps a one-on-one main defense behind cover instead of breaking into a stronger farm siege", () => {
+    const scene = sketchScene("v2-no-outmatched-farm-break-in")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 492, 2048, { id: "v2-main" })
+      .tower("v2", 342, 2041, { id: "v2-main-tower" })
+      .building("v2", "moonWell", 406, 2166)
+      .building("v2", "farm", 786, 1816, { id: "pressured-farm" })
+      .unit("v2", "footman", 478, 2064)
+      .unit("v2", "footman", 467, 2028)
+      .unit("v2", "lancer", 515, 2067)
+      .unit("v2", "footman", 502, 2034)
+      .unit("v2", "lancer", 395, 2022)
+      .unit("v2", "footman", 540, 1964)
+      .unit("v2", "footman", 420, 2048)
+      .townHall("v1a", 3604, 2048);
+    const enemyKinds = ["footman", "footman", "lancer", "footman", "lancer", "archer", "footman", "archer", "footman", "archer", "contractArcher"] as const;
+    enemyKinds.forEach((kind, index) => {
+      scene.unit("v1a", kind, 930 + (index % 4) * 38, 1720 + Math.floor(index / 4) * 52, {
+        id: `farm-sieger-${index}`,
+        order: { type: "attackMove", x: 786, y: 1816, targetId: "pressured-farm" },
+      });
+    });
+    const game = scene.build().createGame();
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+
+    expect(commands.some((command) => command.type === "attackMove")).toBe(false);
+  });
+
+  it("v2 counter-pushes a late main-base standoff instead of staying pinned to its own pressured building", () => {
+    const scene = sketchScene("v2-late-main-standoff-counter-push")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "south", race: "grove" })
+      .player("v1a", { team: "north", race: "grove" })
+      .townHall("v2", 3376, 2680, { id: "v2-main" })
+      .townHall("v1a", 600, 2000, { id: "v1a-main" });
+    const currentHold = { type: "attackMove" as const, x: 3376, y: 2680 };
+    for (let i = 0; i < 30; i += 1) {
+      scene.unit("v2", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 3290 + (i % 8) * 18, 2600 + Math.floor(i / 8) * 26, { id: `v2-defender-${i}`, order: currentHold });
+    }
+    for (let i = 0; i < 5; i += 1) {
+      scene.unit("v1a", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 3020 + i * 16, 3130, { id: `v1a-pressure-near-${i}` });
+    }
+    for (let i = 0; i < 19; i += 1) {
+      scene.unit("v1a", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 2920 + (i % 7) * 18, 3200 + Math.floor(i / 7) * 28, { id: `v1a-pressure-outer-${i}` });
+    }
+    const game = scene.build().createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toMatchObject({ type: "attackMove" });
+    expect(command?.type === "attackMove" ? command.x : 9999).toBeLessThan(3100);
+    expect(command?.type === "attackMove" ? command.unitIds.length : 0).toBeGreaterThanOrEqual(24);
+  });
+
   it("v2 does not leave main tower cover to body-block a pressured production building while outmatched", () => {
     const scene = sketchScene("v2-main-pressure-stays-in-cover")
       .map("bareDuel")
@@ -3117,13 +3411,14 @@ describe("SDK preset AI policy", () => {
       .player("v1b", { team: "south", race: "ember" })
       .townHall("v2", 500, 500, { id: "v2-main" })
       .tower("v2", 250, 500, { id: "v2-main-tower" })
-      .unit("v2", "footman", 520, 520, { id: "main-footman", order: { type: "move", x: 500, y: 500 } })
-      .unit("v2", "lancer", 550, 530, { id: "main-lancer", order: { type: "move", x: 500, y: 500 } })
-      .unit("v2", "archer", 580, 540, { id: "main-archer", order: { type: "move", x: 500, y: 500 } })
+      .building("v2", "farm", 760, 500, { id: "pressured-farm" })
+      .unit("v2", "footman", 820, 500, { id: "main-footman", order: { type: "move", x: 760, y: 500 } })
+      .unit("v2", "lancer", 840, 530, { id: "main-lancer", order: { type: "move", x: 760, y: 500 } })
+      .unit("v2", "archer", 860, 540, { id: "main-archer", order: { type: "move", x: 760, y: 500 } })
       .townHall("v1a", 3300, 3300)
       .townHall("v1b", 3300, 3700)
-      .unit("v1a", "raider", 720, 530, { id: "wounded-base-attacker", hp: 32 })
-      .unit("v1b", "footman", 820, 560, { id: "healthy-base-attacker" })
+      .unit("v1a", "raider", 900, 500, { id: "wounded-base-attacker", hp: 32, order: { type: "attackMove", x: 760, y: 500, targetId: "pressured-farm" } })
+      .unit("v1b", "footman", 940, 540, { id: "healthy-base-attacker" })
       .build();
     const game = scene.createGame();
 
@@ -3534,6 +3829,9 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "lancer", 950, 820)
       .unit("v2", "archer", 980, 790)
       .unit("v2", "archer", 1010, 820)
+      .unit("v2", "footman", 1040, 790)
+      .unit("v2", "lancer", 1070, 820)
+      .unit("v2", "archer", 1100, 790)
       .townHall("v1", 3400, 3300, { id: "v1-main" })
       .worker("v1", 3360, 3300)
       .worker("v1", 3380, 3340)
@@ -3588,6 +3886,109 @@ describe("SDK preset AI policy", () => {
     const trainCommands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).filter((command) => command.type === "train");
 
     expect(trainCommands.map((command) => (command.type === "train" ? command.buildingId : ""))).toEqual(expect.arrayContaining(["v2-archery", "v2-barracks", "v2-sanctum", "v2-stables"]));
+  });
+
+  it("v2 spends scarce training gold on a wounded-group priest before another basic soldier", () => {
+    const scene = sketchScene("v2-wounded-priest-before-basic-soldier")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .building("v2", "stables", 780, 620, { id: "v2-stables" })
+      .building("v2", "sanctum", 860, 620, { id: "v2-sanctum" })
+      .worker("v2", 510, 520)
+      .worker("v2", 530, 520)
+      .worker("v2", 550, 520)
+      .worker("v2", 570, 520)
+      .worker("v2", 590, 520)
+      .worker("v2", 610, 520)
+      .worker("v2", 630, 520)
+      .worker("v2", 650, 520)
+      .worker("v2", 670, 520)
+      .worker("v2", 690, 520)
+      .unit("v2", "footman", 840, 700, { hp: 40 })
+      .unit("v2", "lancer", 875, 700, { hp: 44 })
+      .unit("v2", "archer", 910, 700, { hp: 25 })
+      .unit("v2", "footman", 945, 700)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = UNIT_DEFS.priest.cost;
+    game.players.v2!.supplyUsed = 18;
+    game.players.v2!.supplyCap = 40;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([{ type: "train", buildingId: "v2-sanctum", unitKind: "priest" }]);
+  });
+
+  it("v2 spends tech reserve on immediate training when a stronger one-on-one army is near its bases", () => {
+    const scene = sketchScene("v2-tech-reserve-breaks-for-one-on-one-base-threat")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 720, 980, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .tower("v2", 420, 560)
+      .building("v2", "farm", 780, 620)
+      .building("v2", "farm", 860, 620)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 760, 960, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000);
+    for (let i = 0; i < 5; i += 1) scene.worker("v2", 520 + i * 18, 520, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } });
+    for (let i = 0; i < 5; i += 1) scene.worker("v2", 730 + i * 18, 960, { order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } });
+    for (let i = 0; i < 9; i += 1) scene.unit("v2", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 760 + (i % 5) * 22, 620 + Math.floor(i / 5) * 24);
+    for (let i = 0; i < 14; i += 1) scene.unit("v1a", i % 4 === 0 ? "contractArcher" : i % 4 === 1 ? "lancer" : "footman", 1280 + (i % 7) * 24, 720 + Math.floor(i / 7) * 24);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = UNIT_DEFS.footman.cost + 35;
+    game.players.v2!.supplyUsed = 28;
+    game.players.v2!.supplyCap = 44;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands.some((command) => command.type === "train" && command.buildingId === "v2-barracks")).toBe(true);
+  });
+
+  it("v2 spends weapon upgrade bank on immediate training when a stronger one-on-one army is near its bases", () => {
+    const scene = sketchScene("v2-weapon-bank-breaks-for-one-on-one-base-threat")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 720, 980, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620)
+      .building("v2", "stables", 780, 620)
+      .building("v2", "sanctum", 860, 620)
+      .tower("v2", 420, 560)
+      .building("v2", "farm", 940, 620)
+      .building("v2", "farm", 1020, 620)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 760, 960, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000);
+    for (let i = 0; i < 5; i += 1) scene.worker("v2", 520 + i * 18, 520, { order: { type: "mine", resourceId: "v2-main-mine", phase: "gather", timer: 10 } });
+    for (let i = 0; i < 5; i += 1) scene.worker("v2", 730 + i * 18, 960, { order: { type: "mine", resourceId: "v2-natural-mine", phase: "gather", timer: 10 } });
+    for (let i = 0; i < 9; i += 1) scene.unit("v2", i % 3 === 0 ? "lancer" : i % 3 === 1 ? "footman" : "archer", 760 + (i % 5) * 22, 620 + Math.floor(i / 5) * 24);
+    for (let i = 0; i < 14; i += 1) scene.unit("v1a", i % 4 === 0 ? "contractArcher" : i % 4 === 1 ? "lancer" : "footman", 1280 + (i % 7) * 24, 720 + Math.floor(i / 7) * 24);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = UNIT_DEFS.footman.cost + 35;
+    game.players.v2!.supplyUsed = 28;
+    game.players.v2!.supplyCap = 44;
+    game.players.v2!.upgrades.weaponTraining = 1;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands.some((command) => command.type === "train" && command.buildingId === "v2-barracks")).toBe(true);
   });
 
   it("v2 rebuilds workers after a raid instead of waiting to afford the next tech building", () => {
@@ -3863,6 +4264,7 @@ describe("SDK preset AI policy", () => {
       .building("v2", "archeryRange", 700, 560)
       .building("v2", "farm", 560, 700)
       .building("v2", "farm", 610, 735)
+      .building("v2", "moonWell", 500, 680)
       .worker("v2", 520, 540)
       .unit("v2", "footman", 760, 720, { hp: 55 })
       .unit("v2", "lancer", 800, 740)
@@ -4597,6 +4999,70 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
 
     expect(command).toMatchObject({ type: "attackMove", x: 1300, y: 980 });
+  });
+
+  it("v2 yields late mercenary movement when idle core production has a training backlog", () => {
+    const scene = sketchScene("v2-mercenary-move-yields-to-training-backlog")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "townHall", 980, 860, { id: "v2-natural-townhall" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .unit("v2", "footman", 720, 720, { id: "claim-footman" })
+      .unit("v2", "footman", 760, 740, { id: "claim-footman-2" })
+      .unit("v2", "lancer", 800, 760, { id: "claim-lancer" })
+      .unit("v2", "lancer", 840, 790)
+      .unit("v2", "archer", 880, 820)
+      .unit("v2", "archer", 920, 850)
+      .unit("v2", "footman", 960, 880)
+      .unit("v2", "lancer", 1000, 910)
+      .townHall("v1", 3300, 3300)
+      .mercenaryCamp("cleared-contract-archers", 1300, 980, { hireKind: "contractArcher", cost: 145, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 500;
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary, AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(entries.some((entry) => entry.scriptId === "mercenary")).toBe(false);
+    expect(entries).toContainEqual(expect.objectContaining({ scriptId: "training", command: expect.objectContaining({ type: "train" }) }));
+  });
+
+  it("v2 preserves early training gold for a controlled field medic camp with wounded fighters", () => {
+    const scene = sketchScene("v2-controlled-field-medic-bank")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 920, 760)
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "farm", 560, 700)
+      .worker("v2", 520, 540)
+      .unit("v2", "footman", 1180, 980, { hp: 52 })
+      .unit("v2", "lancer", 1210, 1000, { hp: 60 })
+      .unit("v2", "archer", 1240, 980)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural", 920, 760, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .mercenaryCamp("controlled-field-medic", 1200, 980, { hireKind: "fieldMedic", cost: UNIT_DEFS.fieldMedic.cost, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = UNIT_DEFS.footman.cost;
+    game.players.v2!.supplyUsed = 12;
+    game.players.v2!.supplyCap = 24;
+
+    const economyCommand = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "train" || candidate.type === "build" || candidate.type === "research" || candidate.type === "hire",
+    );
+
+    expect(economyCommand).toBeUndefined();
   });
 
   it("v2 reserves near-hire gold once a squad controls a cleared combat mercenary camp", () => {
@@ -5895,6 +6361,219 @@ describe("SDK preset AI policy", () => {
     expect(commands.find((command) => command.type === "attackMove")).toBeDefined();
   });
 
+  it("v2 does not spend a cleared first-expansion bank on a pressure moon well", () => {
+    const scene = sketchScene("v2-cleared-natural-bank-vs-moon-well")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .worker("v2", 620, 560)
+      .unit("v2", "footman", 1040, 650, { id: "v2-claim-footman", hp: 58 })
+      .unit("v2", "footman", 1080, 680)
+      .unit("v2", "lancer", 1010, 620, { hp: 62 })
+      .unit("v2", "archer", 1000, 700)
+      .unit("v2", "archer", 960, 660)
+      .unit("v2", "footman", 1010, 735)
+      .unit("v1a", "footman", 120, 500)
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1a", 2920, 3060)
+      .townHall("v1b", 3300, 3800)
+      .townHall("v1b", 2920, 3800)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 1120, 650, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .goldMine("v1b-main-mine", 3340, 3800, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost - 70;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["v2-claim-footman"] = { kind: "expansion", targetId: "v2-cleared-natural", x: 1120, y: 650, sinceTick: 0, expiresTick: 3600 };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 keeps the cleared first-expansion bank after the army claim has released", () => {
+    const scene = sketchScene("v2-cleared-natural-strategic-bank")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .worker("v2", 620, 560)
+      .unit("v2", "footman", 1040, 650, { id: "v2-free-footman", hp: 58 })
+      .unit("v2", "footman", 1080, 680)
+      .unit("v2", "lancer", 1010, 620, { hp: 62 })
+      .unit("v2", "archer", 1000, 700)
+      .unit("v2", "archer", 960, 660)
+      .unit("v2", "footman", 1010, 735)
+      .unit("v1a", "footman", 120, 500)
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1a", 2920, 3060)
+      .townHall("v1b", 3300, 3800)
+      .townHall("v1b", 2920, 3800)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 1120, 650, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .goldMine("v1b-main-mine", 3340, 3800, 4000)
+      .build();
+    const game = scene.createGame();
+    game.tick = 6300;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost - 70;
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { expansionClaimTargetId: "v2-cleared-natural", expansionClaimTick: 4800 };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 finishes a remembered cleared first expansion even after the clearing squad was thinned", () => {
+    const scene = sketchScene("v2-remembered-cleared-natural-builds-after-attrition")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .unit("v2", "footman", 980, 760)
+      .unit("v2", "footman", 1010, 790)
+      .unit("v2", "lancer", 1040, 820)
+      .unit("v2", "archer", 1070, 850)
+      .unit("v2", "archer", 1100, 880)
+      .townHall("v1a", 3400, 3400)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 1120, 820, 4000)
+      .goldMine("v1a-main-mine", 3340, 3400, 4000)
+      .build();
+    const game = scene.createGame();
+    game.tick = 8400;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost;
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { expansionClaimTargetId: "v2-cleared-natural", expansionClaimTick: 4800 };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toMatchObject({ type: "build", buildingKind: "townHall" });
+  });
+
+  it("v2 still waits for the first-expansion army size while the clearing claim is active", () => {
+    const scene = sketchScene("v2-active-natural-claim-still-waits-for-army-size")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .unit("v2", "footman", 980, 760, { id: "v2-claim-footman" })
+      .unit("v2", "footman", 1010, 790)
+      .unit("v2", "lancer", 1040, 820)
+      .unit("v2", "archer", 1070, 850)
+      .unit("v2", "archer", 1100, 880)
+      .townHall("v1a", 3400, 3400)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 1120, 820, 4000)
+      .goldMine("v1a-main-mine", 3340, 3400, 4000)
+      .build();
+    const game = scene.createGame();
+    game.tick = 5100;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost;
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { expansionClaimTargetId: "v2-cleared-natural", expansionClaimTick: 4800 };
+    memory.unitClaims["v2-claim-footman"] = { kind: "expansion", targetId: "v2-cleared-natural", x: 1120, y: 820, sinceTick: 4800, expiresTick: 8400 };
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 does not spend a cleared first-expansion bank on an edge-pressure main tower", () => {
+    const scene = sketchScene("v2-cleared-natural-bank-vs-edge-tower")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .worker("v2", 540, 560)
+      .worker("v2", 560, 540)
+      .worker("v2", 580, 560)
+      .worker("v2", 600, 540)
+      .worker("v2", 620, 560)
+      .unit("v2", "footman", 1040, 650, { id: "v2-claim-footman" })
+      .unit("v2", "footman", 1080, 680)
+      .unit("v2", "lancer", 1010, 620)
+      .unit("v2", "archer", 1000, 700)
+      .unit("v2", "archer", 960, 660)
+      .unit("v2", "footman", 1010, 735)
+      .unit("v1a", "footman", 120, 500)
+      .unit("v1a", "lancer", 160, 540)
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1a", 2920, 3060)
+      .townHall("v1b", 3300, 3800)
+      .townHall("v1b", 2920, 3800)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 1120, 650, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .goldMine("v1b-main-mine", 3340, 3800, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost - 70;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["v2-claim-footman"] = { kind: "expansion", targetId: "v2-cleared-natural", x: 1120, y: 650, sinceTick: 0, expiresTick: 3600 };
+
+    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "build" && candidate.buildingKind === "defenseTower",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 redirects an attack-moving army to clear its guarded natural expansion", () => {
     const scene = sketchScene("v2-attackmove-army-clears-guarded-natural")
       .map("openClaims")
@@ -5998,6 +6677,37 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 waits before clearing a guarded natural with a badly wounded squad", () => {
+    const scene = sketchScene("v2-waits-on-wounded-natural-squad")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .worker("v2", 520, 540)
+      .unit("v2", "footman", 1040, 650, { hp: 50 })
+      .unit("v2", "lancer", 1080, 680, { hp: 45 })
+      .unit("v2", "archer", 1010, 620, { hp: 35 })
+      .unit("v2", "archer", 1000, 700, { hp: 35 })
+      .unit("neutral", "stonebackBrute", 1130, 655)
+      .unit("neutral", "thornSlinger", 1170, 690)
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1b", 3300, 3800)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-wounded-natural", 1120, 650, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .goldMine("v1b-main-mine", 3340, 3800, 4000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 can take its first clear expansion with two production buildings before stables", () => {
     const scene = sketchScene("v2-two-production-first-expansion")
       .map("openClaims")
@@ -6027,6 +6737,35 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", unitId: "v2-builder", buildingKind: "townHall" });
+  });
+
+  it("v2 waits for a real first combat group before taking a clear one-on-one expansion", () => {
+    const scene = sketchScene("v2-1v1-clear-expansion-after-first-group")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .worker("v2", 520, 540, { id: "v2-builder" })
+      .unit("v2", "footman", 900, 720)
+      .unit("v2", "lancer", 940, 760)
+      .unit("v2", "archer", 980, 800)
+      .unit("v2", "footman", 1020, 820)
+      .unit("v2", "lancer", 1060, 840)
+      .unit("v2", "archer", 1100, 860)
+      .townHall("v1a", 3400, 3400)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-clear-natural", 1200, 900, 4000)
+      .goldMine("v1a-main-mine", 3340, 3400, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 340;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
+
+    expect(command).toBeUndefined();
   });
 
   it("v2 does not treat neutral guards at its natural as a main-base attack wave", () => {
@@ -6498,6 +7237,39 @@ describe("SDK preset AI policy", () => {
     if (command?.type === "build") expect(distance(command, { x: 500, y: 245 })).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
   });
 
+  it("v2 does not add a third moon well for uncovered wounded recovery", () => {
+    const scene = sketchScene("v2-caps-uncovered-wounded-recovery-moon-wells")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .building("v2", "stables", 780, 620, { id: "v2-stables" })
+      .building("v2", "farm", 560, 700, { id: "v2-first-farm" })
+      .building("v2", "moonWell", 300, 680, { id: "v2-existing-moon-well-a" })
+      .building("v2", "moonWell", 850, 680, { id: "v2-existing-moon-well-b" })
+      .worker("v2", 520, 560, { id: "v2-builder" })
+      .unit("v2", "footman", 500, 250, { hp: 42, order: { type: "idle" } })
+      .unit("v2", "lancer", 540, 250, { hp: 35, order: { type: "move", x: 540, y: 250 } })
+      .unit("v2", "archer", 520, 285)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 700;
+    game.players.v2!.supplyUsed = 9;
+    game.players.v2!.supplyCap = 40;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 rebuilds a fighting unit before spending scarce gold on a thin moon well", () => {
     const scene = sketchScene("v2-rebuilds-combat-before-thin-moon-well")
       .map("bareDuel")
@@ -6744,6 +7516,43 @@ describe("SDK preset AI policy", () => {
     expect(command?.type === "attackMove" ? command.x : 0).toBeCloseTo(alliedBase.x, -2);
   });
 
+  it("v2 does not split base defenders away from an active local unit fight", () => {
+    const scene = sketchScene("v2-no-base-fight-split")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 492, 2048, { id: "v2-main" })
+      .tower("v2", 373, 1957)
+      .unit("v2", "footman", 680, 1896, { id: "v2-a", order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "lancer", 773, 1880, { id: "v2-b", hp: 79, order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-a" } })
+      .unit("v2", "footman", 745, 1960, { id: "v2-c", order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "footman", 723, 1892, { id: "v2-d", order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "lancer", 690, 1931, { id: "v2-e", order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "footman", 744, 1859, { id: "v2-f", hp: 98, order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "contractArcher", 621, 1927, { id: "v2-g", order: { type: "attackMove", x: 856, y: 1816 } })
+      .unit("v2", "fieldMedic", 669, 1865, { id: "v2-h", hp: 66, order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-b" } })
+      .unit("v2", "fieldMedic", 727, 1931, { id: "v2-i", order: { type: "attackMove", x: 856, y: 1816, targetId: "enemy-merc-a" } })
+      .townHall("v1a", 3604, 2048)
+      .unit("v1a", "footman", 985, 1805, { order: { type: "attackMove", x: 856, y: 1816 } })
+      .unit("v1a", "lancer", 889, 1863, { hp: 76, order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "lancer", 863, 1798, { hp: 64, order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "archer", 1003, 1885, { order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "contractArcher", 978, 1838, { order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "contractArcher", 1009, 1845, { order: { type: "attackMove", x: 856, y: 1816 } })
+      .unit("v1a", "mercenary", 881, 1828, { id: "enemy-merc-a", hp: 80, order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "mercenary", 845, 1847, { id: "enemy-merc-b", order: { type: "attackMove", x: 856, y: 1816, targetId: "v2-b" } })
+      .unit("v1a", "contractArcher", 1044, 1857, { order: { type: "attackMove", x: 856, y: 1816 } })
+      .build();
+    const game = scene.createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.focusFire, AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+    const attackWave = entries.find((entry) => entry.scriptId === "attackWave")?.command;
+
+    expect(entries.find((entry) => entry.scriptId === "focusFire")).toBeDefined();
+    expect(attackWave).not.toMatchObject({ type: "move" });
+  });
+
   it("v2 counts early harassment worker raids and the behavior can be disabled for A/B tests", () => {
     const scene = sketchScene("v2-harass-workers")
       .map("bareDuel")
@@ -6808,15 +7617,20 @@ describe("SDK preset AI policy", () => {
       .player("v1a", { team: "south", race: "grove" })
       .player("v1b", { team: "south", race: "grove" })
       .townHall("v2", 500, 500)
+      .townHall("v2", 900, 500)
       .unit("v2", "footman", 760, 520)
       .unit("v2", "footman", 790, 550)
       .unit("v2", "lancer", 820, 580)
+      .unit("v2", "archer", 850, 610)
+      .unit("v2", "footman", 880, 640)
+      .unit("v2", "lancer", 910, 670)
       .townHall("v1a", 1350, 520)
       .worker("v1a", 1290, 520)
       .worker("v1a", 1320, 560)
       .townHall("v1b", 3350, 3300)
       .worker("v1b", 3300, 3300)
       .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v2-natural", 900, 520, 3000)
       .goldMine("v1a-main", 1260, 520, 3000)
       .goldMine("v1b-main", 3300, 3300, 3000)
       .build();
@@ -6873,9 +7687,13 @@ describe("SDK preset AI policy", () => {
       .player("v1a", { team: "south", race: "grove" })
       .player("v1b", { team: "south", race: "grove" })
       .townHall("v2", 500, 500)
+      .townHall("v2", 900, 500)
       .unit("v2", "footman", 760, 520)
       .unit("v2", "footman", 790, 550)
       .unit("v2", "lancer", 820, 580)
+      .unit("v2", "archer", 850, 610)
+      .unit("v2", "footman", 880, 640)
+      .unit("v2", "lancer", 910, 670)
       .townHall("v1a", 3300, 3300)
       .worker("v1a", 3000, 3180, { id: "nearer-cross-owner-worker" })
       .unit("v1a", "footman", 3160, 3300)
@@ -6885,6 +7703,7 @@ describe("SDK preset AI policy", () => {
       .unit("v1b", "footman", 3150, 3320)
       .unit("v1b", "archer", 3190, 3360)
       .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v2-natural", 900, 520, 3000)
       .goldMine("v1a-main", 3300, 3300, 3000)
       .goldMine("v1b-main", 3280, 3320, 3000)
       .build();

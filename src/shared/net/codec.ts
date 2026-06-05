@@ -22,6 +22,7 @@ export function decodeServerNetMessage(raw: string): ServerNetMessage {
   if (message.type === "frame") return decodeFrameMessage(message);
   if (message.type === "checkpoint") return decodeCheckpointMessage(message);
   if (message.type === "desync") return decodeDesyncMessage(message);
+  if (message.type === "error") return decodeErrorMessage(message);
   if (message.type === "room") return decodeRoomMessage(message);
   throw new Error(`Unknown server net message type ${message.type}`);
 }
@@ -78,6 +79,11 @@ function decodeCheckpointMessage(message: Record<string, unknown>): ServerNetMes
 function decodeDesyncMessage(message: Record<string, unknown>): ServerNetMessage {
   if (!isString(message.roomId) || !Number.isInteger(message.tick) || !isRecord(message.checksums)) throw new Error("Malformed server desync message");
   return { type: "desync", roomId: message.roomId, tick: Number(message.tick), checksums: message.checksums as Record<string, string> };
+}
+
+function decodeErrorMessage(message: Record<string, unknown>): ServerNetMessage {
+  if (!isString(message.roomId) || !isString(message.message)) throw new Error("Malformed server error message");
+  return { type: "error", roomId: message.roomId, message: message.message };
 }
 
 function decodeRoomMessage(message: Record<string, unknown>): ServerNetMessage {

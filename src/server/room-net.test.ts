@@ -56,6 +56,57 @@ describe("room net hub", () => {
     expect(enemyWorker?.order.type).not.toBe("idle");
   });
 
+  it("reports invalid lockstep commands without crashing the room ticker", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-invalid-build", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const before = roomHost.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    const townHall = before.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(worker).toBeDefined();
+    expect(townHall).toBeDefined();
+    const hub = new RoomNetHub({ roomHost, commandDelayTicks: 0 });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    socket.emit(encodeNetMessage({ type: "join", roomId: room.id, playerId: "player" }));
+    socket.emit(
+      encodeNetMessage({
+        type: "command",
+        roomId: room.id,
+        playerId: "player",
+        clientSeq: 1,
+        command: { type: "build", unitId: worker!.id, buildingKind: "farm", x: townHall!.x + 10, y: townHall!.y },
+      }),
+    );
+
+    expect(() => hub.tickRoom(room.id)).not.toThrow();
+
+    const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
+    const serverError = messages.find((message) => message.type === "error");
+    expect(serverError).toMatchObject({ type: "error", roomId: room.id, message: expect.stringMatching(/farm placement is too close to townHall/) });
+    expect(roomHost.getRoom(room.id).status).toBe("inMatch");
+  });
+
+  it("drops sockets that fail during broadcast without stopping the room ticker", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-stale-socket", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const staleSocket = new ThrowingSocket();
+    const liveSocket = new FakeSocket();
+
+    hub.connect(room.id, staleSocket);
+    hub.connect(room.id, liveSocket);
+
+    expect(() => hub.tickRoom(room.id)).not.toThrow();
+    expect(() => hub.tickRoom(room.id)).not.toThrow();
+
+    const frames = liveSocket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message) => message.type === "frame");
+    expect(frames).toHaveLength(2);
+    expect(staleSocket.sendAttempts).toBe(1);
+  });
+
   it("records checksum messages through the coordinator and fails malformed room ids loudly", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-checksum", host: hostUser, mapId: "bareDuel" });
@@ -137,5 +188,14 @@ class FakeSocket implements RoomNetSocket {
 
   emit(raw: string): void {
     for (const handler of this.handlers) handler(raw);
+  }
+}
+
+class ThrowingSocket extends FakeSocket {
+  sendAttempts = 0;
+
+  send(_data: string): void {
+    this.sendAttempts += 1;
+    throw new Error("socket is closed");
   }
 }

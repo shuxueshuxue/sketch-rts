@@ -67,4 +67,27 @@ describe("AI training choice", () => {
 
     expect(trainingChoice(snapshot, "v2", sanctum, { version: "v2" })).toBe("summoner");
   });
+
+  it("lets v2 train a second priest before other second casters when a wounded group needs healing", () => {
+    const scene = sketchScene("training-choice-v2-wounded-priest")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .building("v2", "sanctum", 700, 620, { id: "sanctum" })
+      .unit("v2", "priest", 760, 620)
+      .unit("v2", "summoner", 790, 650)
+      .unit("v2", "witch", 820, 680)
+      .unit("v2", "footman", 860, 720, { hp: 34 })
+      .unit("v2", "lancer", 890, 720, { hp: 38 })
+      .unit("v2", "archer", 920, 720, { hp: 24 });
+    for (let i = 0; i < 5; i += 1) scene.unit("v2", i % 2 === 0 ? "footman" : "archer", 960 + i * 24, 760);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = 520;
+    const snapshot = snapshotGame(game);
+    const sanctum = snapshot.buildings.find((building) => building.id === "sanctum");
+    if (!sanctum) throw new Error("missing sanctum");
+
+    expect(trainingChoice(snapshot, "v2", sanctum, { version: "v2" })).toBe("priest");
+  });
 });

@@ -10,6 +10,7 @@ export type LockstepClientOptions = {
   playerId: PlayerId;
   engine: SimulationEngine;
   transport: NetTransport;
+  onError?: (message: string) => void;
 };
 
 export class LockstepClient {
@@ -17,7 +18,7 @@ export class LockstepClient {
   private localInputSeq = 0;
 
   constructor(private readonly options: LockstepClientOptions) {
-    this.options.transport.onMessage((message) => this.receiveMessage(message));
+    this.options.transport.onMessage((message) => this.handleServerMessage(message));
   }
 
   join(): void {
@@ -58,8 +59,15 @@ export class LockstepClient {
     while (this.frameBuffer.has(this.options.engine.game.tick)) {
       const frame = this.frameBuffer.take(this.options.engine.game.tick);
       if (!frame) return changed;
-      this.options.engine.applyFrame(frame);
-      this.options.engine.step();
+      try {
+        this.options.engine.applyFrame(frame);
+        this.options.engine.step();
+      } catch (error) {
+        // @@@lockstep-resync - A bad or stale frame is a visible sync failure; report it, then recover from server truth instead of crashing the render loop.
+        this.options.onError?.(errorMessage(error));
+        this.requestCheckpoint();
+        return changed;
+      }
       changed = true;
     }
     return changed;
@@ -68,7 +76,22 @@ export class LockstepClient {
   private receiveMessage(message: ServerNetMessage): void {
     if (message.type === "frame") this.receiveFrame(message.frame);
     if (message.type === "checkpoint") this.restoreCheckpoint(message.checkpoint);
-    if (message.type === "desync") throw new Error(`Lockstep desync at tick ${message.tick}`);
+    if (message.type === "desync") {
+      // @@@lockstep-desync-recovery - Desync is a synchronization failure, not a page-fatal exception; the server checkpoint is the recovery boundary.
+      this.options.onError?.(`Lockstep desync at tick ${message.tick}`);
+      this.requestCheckpoint();
+    }
+    if (message.type === "error" && message.roomId === this.options.roomId) this.options.onError?.(message.message);
+  }
+
+  private handleServerMessage(message: ServerNetMessage): void {
+    try {
+      this.receiveMessage(message);
+    } catch (error) {
+      // @@@lockstep-message-boundary - Transport callbacks run on the browser event loop; report sync faults visibly instead of letting one bad packet become a page-fatal exception.
+      this.options.onError?.(errorMessage(error));
+      this.requestCheckpoint();
+    }
   }
 
   private restoreCheckpoint(checkpoint: CheckpointFrame): void {
@@ -88,6 +111,7 @@ function restoreGameSnapshot(game: Game, checkpoint: CheckpointFrame): void {
   game.resources = clone(checkpoint.snapshot.resources);
   game.mercenaryCamps = clone(checkpoint.snapshot.mercenaryCamps);
   game.items = clone(checkpoint.snapshot.items);
+  game.projectiles = clone(checkpoint.snapshot.projectiles);
   game.effects = clone(checkpoint.snapshot.effects);
   game.nextId = checkpoint.nextId;
   delete game.unitSpatial;
@@ -100,4 +124,8 @@ function restoreGameSnapshot(game: Game, checkpoint: CheckpointFrame): void {
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

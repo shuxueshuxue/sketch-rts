@@ -32,6 +32,7 @@ import {
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { roomBrowserEntries } from "./room-browser-model";
+import { roomSetupViewAction } from "./room-view-state";
 import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
@@ -534,7 +535,8 @@ async function renderRoomBrowser() {
 }
 
 function renderRoomSetup() {
-  if (!currentRoom) {
+  const setupAction = roomSetupViewAction(currentRoom);
+  if (setupAction === "empty") {
     menuStatus.textContent = "No room selected.";
     mapList.replaceChildren(menuButton("Create Room", "Create a private or public game room.", "data-create-room", () => {
       menuView = "create";
@@ -542,16 +544,26 @@ function renderRoomSetup() {
     }));
     return;
   }
-  selectedMapId = currentRoom.mapId;
-  menuStatus.textContent = `${currentRoom.name} - ${currentRoom.visibility} - ${currentRoom.status}`;
+  if (setupAction === "results") {
+    openResults(currentRoom!);
+    return;
+  }
+  if (setupAction === "enterMatch") {
+    // @@@stale-setup-recovery - Room state can advance through start/websocket before the menu rerenders; follow server truth instead of showing editable setup for a live match.
+    void enterRoom(currentRoom!.id);
+    return;
+  }
+  const room = currentRoom!;
+  selectedMapId = room.mapId;
+  menuStatus.textContent = `${room.name} - ${room.visibility} - ${room.status}`;
   const setup = document.createElement("div");
   setup.className = "room-setup";
-  setup.dataset.roomSetup = currentRoom.id;
+  setup.dataset.roomSetup = room.id;
   setup.innerHTML = `
     <div class="room-setup-header">
       <div>
         <div class="room-section-title">Room</div>
-        <div class="room-setup-name">${escapeHtml(currentRoom.name)}</div>
+        <div class="room-setup-name">${escapeHtml(room.name)}</div>
       </div>
     </div>
     <div class="room-setup-layout">
@@ -563,13 +575,13 @@ function renderRoomSetup() {
         <div class="slot-pane-head">
           <div>
             <div class="room-section-title">Slots</div>
-            <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(currentRoom))}</div>
+            <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(room))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" data-add-player-slot ${currentRoom.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Player</button>
-            <button type="button" data-add-ai-slot ${currentRoom.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Computer</button>
-            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(currentRoom) ? "" : "disabled"}>Remove Slot</button>
-            <button type="button" class="danger-button" data-close-room ${currentRoom.hostUserId === localUser.id ? "" : "disabled"}>Close Room</button>
+            <button type="button" data-add-player-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Player</button>
+            <button type="button" data-add-ai-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Computer</button>
+            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(room) ? "" : "disabled"}>Remove Slot</button>
+            <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>Close Room</button>
           </div>
         </div>
         <div class="slot-list"></div>
@@ -581,12 +593,12 @@ function renderRoomSetup() {
     </div>
   `;
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
-  startButton.disabled = !canStartRoom(currentRoom);
+  startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? "Fill open slots, keep at least two active slots on two teams, and ready human players." : "Start match";
   const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
-  slotList.replaceChildren(...currentRoom.slots.map(slotRow));
+  slotList.replaceChildren(...room.slots.map(slotRow));
   setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
   setup.querySelector("[data-add-ai-slot]")?.addEventListener("click", () => void addAiRoomSlot());
   setup.querySelector("[data-remove-slot]")?.addEventListener("click", () => void removeLastRoomSlot());

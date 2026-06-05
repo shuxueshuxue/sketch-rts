@@ -30,4 +30,10 @@ describe("net message codec", () => {
     expect(() => decodeServerNetMessage(JSON.stringify({ type: "mystery" }))).toThrow(/Unknown server net message type mystery/);
     expect(() => decodeClientNetMessage(JSON.stringify({ type: "command", roomId: "room-1" }))).toThrow(/Malformed client command message/);
   });
+
+  it("decodes server error messages", () => {
+    const serverError = { type: "error", roomId: "room-1", message: "farm placement is too close to townHall" } as const;
+
+    expect(decodeServerNetMessage(encodeNetMessage(serverError))).toEqual(serverError);
+  });
 });

@@ -99,4 +99,25 @@ describe("AI base defense model", () => {
 
     expect(shouldReserveForHealingWell(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe(true);
   });
+
+  it("does not reserve gold for a third moon well", () => {
+    const game = sketchScene("base-defense-moon-well-reserve-cap")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1a", { team: "south" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "moonWell", 1300, 1200)
+      .building("v2", "moonWell", 1600, 1200)
+      .unit("v2", "archer", 620, 540, { hp: 20 })
+      .unit("v1a", "footman", 900, 520)
+      .build()
+      .createGame();
+    const player = game.players.v2;
+    if (!player) throw new Error("missing v2 player");
+    player.gold = BUILDING_DEFS.moonWell.cost - 10;
+
+    expect(shouldReserveForHealingWell(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe(false);
+  });
 });

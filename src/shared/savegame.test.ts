@@ -8,6 +8,19 @@ describe("savegame runtime sync metadata", () => {
   it("stores the deterministic checksum with runtime checkpoint metadata", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     stepGame(game);
+    game.projectiles.push({
+      id: "projectile-save-sync",
+      owner: "player",
+      attackerId: "unit-player-archer",
+      targetId: "unit-enemy-footman",
+      fromX: 900,
+      fromY: 900,
+      toX: 1100,
+      toY: 900,
+      damage: 13,
+      remaining: 12,
+      duration: 24,
+    });
     const room = {
       ...createRoom({ id: "save-room", host: { id: "host", name: "Host" }, mapId: "bareDuel" }),
       status: "inMatch" as const,
@@ -17,6 +30,7 @@ describe("savegame runtime sync metadata", () => {
     const restored = restoreGameFromSave(save);
 
     expect(save.runtime.checksum).toBe(checksumGame(game));
+    expect(restored.projectiles).toEqual(game.projectiles);
     expect(checksumGame(restored)).toBe(save.runtime.checksum);
   });
 });

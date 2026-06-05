@@ -34,12 +34,13 @@ export class RoomNetHub {
     socket.on("close", () => state.sockets.delete(socket));
   }
 
-  tickRoom(roomId: string): CommandFrame {
+  tickRoom(roomId: string): CommandFrame | undefined {
     const state = this.stateFor(roomId);
     const snapshot = this.options.roomHost.snapshot(roomId);
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
-    const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
+    const result = this.tryTickRoomFrame(roomId, frame);
+    if (!result) return undefined;
     state.spectatorSync.recordFrame(result.frame);
     this.broadcast(roomId, { type: "frame", frame: result.frame });
     if (result.room.status === "ended") this.broadcast(roomId, { type: "room", room: result.room });
@@ -64,7 +65,7 @@ export class RoomNetHub {
     const message = decodeClientNetMessage(raw);
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
-      this.send(socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.snapshot(message.roomId).tick });
+      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.snapshot(message.roomId).tick });
       return;
     }
     if (message.type === "command") {
@@ -90,6 +91,16 @@ export class RoomNetHub {
     });
   }
 
+  private tryTickRoomFrame(roomId: string, frame: CommandFrame): ReturnType<RoomNetHubOptions["roomHost"]["tickRoomFrame"]> | undefined {
+    try {
+      return this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
+    } catch (error) {
+      // @@@lockstep-command-error - Sim commands still fail loudly; the room network edge translates them so one invalid client command cannot kill the server ticker.
+      this.broadcast(roomId, { type: "error", roomId, message: errorMessage(error) });
+      return undefined;
+    }
+  }
+
   private stateFor(roomId: string): RoomNetState {
     const existing = this.rooms.get(roomId);
     if (existing) return existing;
@@ -103,20 +114,36 @@ export class RoomNetHub {
   }
 
   private broadcast(roomId: string, message: ServerNetMessage): void {
+    const state = this.stateFor(roomId);
     const encoded = encodeNetMessage(message);
-    for (const socket of this.stateFor(roomId).sockets) socket.send(encoded);
+    for (const socket of [...state.sockets]) this.trySend(state, socket, encoded);
   }
 
-  private send(socket: RoomNetSocket, message: ServerNetMessage): void {
-    socket.send(encodeNetMessage(message));
+  private send(roomId: string, socket: RoomNetSocket, message: ServerNetMessage): boolean {
+    return this.trySend(this.stateFor(roomId), socket, encodeNetMessage(message));
+  }
+
+  private trySend(state: RoomNetState, socket: RoomNetSocket, encoded: string): boolean {
+    try {
+      socket.send(encoded);
+      return true;
+    } catch {
+      // @@@room-net-stale-socket - A closed client connection is transport churn; remove it so one stale browser cannot stop the authoritative room ticker.
+      state.sockets.delete(socket);
+      return false;
+    }
   }
 
   private sendCheckpointWithFrames(socket: RoomNetSocket, roomId: string, requestedTick: number | undefined): void {
     const state = this.stateFor(roomId);
     const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : state.spectatorSync.checkpointAtOrBefore(requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
-    this.send(socket, { type: "checkpoint", checkpoint });
+    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint })) return;
     for (const frame of state.spectatorSync.framesFrom(checkpoint.tick)) {
-      this.send(socket, { type: "frame", frame });
+      if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
   }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

@@ -67,6 +67,7 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
   game.resources = clone(save.snapshot.resources);
   game.mercenaryCamps = clone(save.snapshot.mercenaryCamps);
   game.items = clone(save.snapshot.items);
+  game.projectiles = clone(save.snapshot.projectiles);
   game.effects = clone(save.snapshot.effects);
   game.nextId = save.runtime.nextId;
   game.activePlayers = [...save.runtime.activePlayers];

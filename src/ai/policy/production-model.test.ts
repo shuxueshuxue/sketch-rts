@@ -57,6 +57,7 @@ describe("AI production model", () => {
       .replaceDefaults()
       .player("v2", { team: "north" })
       .townHall("v2", 500, 500)
+      .townHall("v2", 1200, 720)
       .building("v2", "barracks", 620, 620)
       .building("v2", "archeryRange", 700, 620);
     for (let i = 0; i < 7; i += 1) scene.unit("v2", i % 2 === 0 ? "footman" : "archer", 700 + i * 20, 760);

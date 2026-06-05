@@ -40,6 +40,41 @@ describe("server deployment runtime", () => {
 
     expect(started.playerId).toBe("enemy");
   });
+
+  it("creates the lockstep client game from the room setup teams and races", () => {
+    const host = { id: "host", name: "Host" };
+    const open = createRoom({ id: "room-teams", host, mapId: "bareDuel", humanCount: 1, aiCount: 2 });
+    const northAlly = updateRoomSlot(open, "slot-2", { team: "north", race: "grove" });
+    const southEnemy = updateRoomSlot(northAlly, "slot-3", { team: "south", race: "grove" });
+    const startedRoom = { ...southEnemy, status: "inMatch" as const };
+    const runtime = new ServerDeploymentRuntime({
+      createSessionSocket: () => new FakeSocket(),
+      createRoomTransport: () => new FakeTransport(),
+    });
+
+    const started = runtime.connectRoom(startedRoom, "player", false, () => {});
+
+    expect(started.snapshot.players.enemy?.race).toBe("grove");
+    expect(started.snapshot.players.enemy2?.race).toBe("grove");
+  });
+
+  it("surfaces lockstep room command errors through the runtime error callback", () => {
+    const host = { id: "host", name: "Host" };
+    const open = createRoom({ id: "room-errors", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const startedRoom = { ...open, status: "inMatch" as const };
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    const runtime = new ServerDeploymentRuntime({
+      createSessionSocket: () => new FakeSocket(),
+      createRoomTransport: () => transport,
+      onSessionError: (message) => errors.push(message),
+    });
+
+    runtime.connectRoom(startedRoom, "player", false, () => {});
+    transport.emit({ type: "error", roomId: startedRoom.id, message: "farm placement is too close to townHall" });
+
+    expect(errors).toEqual(["farm placement is too close to townHall"]);
+  });
 });
 
 class FakeSocket {
@@ -57,7 +92,14 @@ class FakeSocket {
 }
 
 class FakeTransport implements NetTransport {
+  private handlers: ((message: ServerNetMessage) => void)[] = [];
+
   send(_message: ClientNetMessage): void {}
-  onMessage(_handler: (message: ServerNetMessage) => void): void {}
+  onMessage(handler: (message: ServerNetMessage) => void): void {
+    this.handlers.push(handler);
+  }
   close(): void {}
+  emit(message: ServerNetMessage): void {
+    for (const handler of this.handlers) handler(message);
+  }
 }

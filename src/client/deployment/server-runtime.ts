@@ -1,7 +1,7 @@
 import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import type { ServerNetMessage } from "../../shared/net/types";
-import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
+import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import type { GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { LockstepRoomGameAdapter, SessionSocketGameAdapter, type GameAdapter, type SessionCommandSocket } from "../game-adapter";
 import { LockstepClient } from "../net/lockstep-client";
@@ -115,10 +115,16 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
-    const players = room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").map((slot) => slot.playerId);
-    const game = createGame(room.mapId, players.length > 0 ? { players } : {});
+    const setup = roomToGameSetup({ ...room, status: "open" });
+    const game = createGame(setup.mapId, setup.options);
     const transport = this.createRoomTransport(room.id);
-    const client = new LockstepClient({ roomId: room.id, playerId, engine: new SimulationEngine(game), transport });
+    const client = new LockstepClient({
+      roomId: room.id,
+      playerId,
+      engine: new SimulationEngine(game),
+      transport,
+      ...(this.onSessionError ? { onError: this.onSessionError } : {}),
+    });
     const adapter = new LockstepRoomGameAdapter(client, { spectating });
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);

@@ -37,4 +37,5 @@ export type ServerNetMessage =
   | { type: "frame"; frame: CommandFrame }
   | { type: "checkpoint"; checkpoint: CheckpointFrame }
   | { type: "desync"; roomId: string; tick: number; checksums: Record<PlayerId, string> }
+  | { type: "error"; roomId: string; message: string }
   | { type: "room"; room: RoomState };

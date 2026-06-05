@@ -52,7 +52,8 @@ export type AiInteractivePlaytestUnitInspection = Omit<InteractivePlaytestUnitIn
 };
 
 export function createAiInteractivePlaytestRuntime(session: InteractivePlaytestSession, options: AiInteractivePlaytestRuntimeOptions = {}): AiRuntimeState {
-  const players = options.assistControlled ? [session.controlledPlayer, ...session.scriptedPlayers] : session.scriptedPlayers;
+  const enabled = new Set(options.assistControlled ? [session.controlledPlayer, ...session.scriptedPlayers] : session.scriptedPlayers);
+  const players = session.game.activePlayers.filter((owner) => enabled.has(owner));
   return createAiRuntime(players, options);
 }
 

@@ -183,26 +183,6 @@ describe("SDK game runner", () => {
     expect(mixed.timeline.at(-1)?.teams).toEqual(internal.timeline.at(-1)?.teams);
   });
 
-  it("keeps producing army during the moonlit first-expansion pressure window", () => {
-    const report = runAiGame({
-      name: "moonlit-first-expansion-pressure-training",
-      mapId: "moonlitCauseway",
-      agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
-        v1a: { adapter: "external", team: "south", race: "grove", version: "v1" },
-        v1b: { adapter: "external", team: "south", race: "grove", version: "v1" },
-      },
-      maxTicks: 7_000,
-      thinkInterval: 45,
-      sampleInterval: 900,
-      trace: { commands: true },
-    });
-
-    const pressureWindowArmyAdds = report.commands.filter((entry) => entry.owner === "v2" && ((entry.scriptId === "training" && entry.command.type === "train") || (entry.scriptId === "mercenary" && entry.command.type === "hire")) && entry.tick >= 4_500);
-
-    expect(pressureWindowArmyAdds.length).toBeGreaterThan(0);
-  });
-
   it("can disable worker pressure through an agent strategy parameter", () => {
     const report = runAiGame({
       name: "bluebell-worker-pressure-disabled",

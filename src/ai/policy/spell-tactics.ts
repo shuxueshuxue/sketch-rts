@@ -55,6 +55,7 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   const canPickOffWoundedTarget = focusFireCanPickOffWoundedTarget(attackers, target);
+  if (!canPickOffWoundedTarget && partialTailFocusIsSupportedByStrongerEnemy(fighters, attackers, target, enemies)) return undefined;
   if (options.policyMode === "combat" && attackers.length < 4 && localEnemies.length > attackers.length && casterTargetBonus(target) === 0 && target.hp > target.maxHp * 0.18) return undefined;
   if (!canPickOffWoundedTarget && attackers.length < 12 && localEnemies.length > attackers.length) return undefined;
   if (!canPickOffWoundedTarget && localEnemies.length >= 2 && armyPower(localEnemies) > armyPower(attackers) * 1.1) return undefined;
@@ -68,6 +69,15 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
     };
   }
   return attackers.length >= 2 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function partialTailFocusIsSupportedByStrongerEnemy(fighters: Unit[], attackers: Unit[], target: Unit, enemies: Unit[]) {
+  if (!UNIT_DEFS[target.kind].abilities.includes("heal") || target.hp < target.maxHp * 0.82) return false;
+  if (attackers.length >= Math.max(5, Math.ceil(fighters.length * 0.65))) return false;
+  const support = enemies.filter((enemy) => distance(enemy, target) <= 900);
+  if (support.length <= attackers.length + 1) return false;
+  // @@@supported-caster-tail - A healer/caster bonus is not a license for a partial tail to start a fight the main group cannot join.
+  return armyPower(support) > armyPower(attackers) * 1.12;
 }
 
 function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {

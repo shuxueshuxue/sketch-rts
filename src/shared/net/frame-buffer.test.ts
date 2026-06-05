@@ -17,11 +17,21 @@ describe("command frame buffer", () => {
     expect(buffer.take(2)).toBeUndefined();
   });
 
-  it("fails loudly when two frames target the same tick", () => {
+  it("keeps repeated delivery of the same frame idempotent", () => {
+    const buffer = new CommandFrameBuffer();
+    const repeated = frame(4);
+
+    buffer.push(repeated);
+    buffer.push(repeated);
+
+    expect(buffer.take(4)).toEqual(repeated);
+  });
+
+  it("fails loudly when conflicting frames target the same tick", () => {
     const buffer = new CommandFrameBuffer();
     buffer.push(frame(4));
 
-    expect(() => buffer.push(frame(4))).toThrow(/already has frame for tick 4/);
+    expect(() => buffer.push({ ...frame(4), sequence: 40 })).toThrow(/already has frame for tick 4/);
   });
 
   it("discards frames older than a restored checkpoint tick", () => {

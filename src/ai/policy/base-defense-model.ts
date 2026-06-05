@@ -8,6 +8,8 @@ import { distance, type Point } from "./spatial";
 import { availableBuilder, hasCoreProduction, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 
+export const AI_MOON_WELL_LIMIT = 2;
+
 export function shouldReserveForCoreProductionRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, spendCost: number) {
   if (options.version !== "v2" || hasCoreProduction(snapshot, owner)) return false;
   const missing = missingCombatProductionKind(snapshot, owner);
@@ -52,11 +54,16 @@ export function shouldReserveForHealingWell(snapshot: GameSnapshot, owner: Playe
   if (player.gold >= BUILDING_DEFS.moonWell.cost || player.gold < BUILDING_DEFS.moonWell.cost - 25) return false;
   if (!hasCoreProduction(snapshot, owner)) return false;
   if (shouldReserveForEmergencyTower(snapshot, owner, options)) return false;
+  if (options.version === "v2" && hasReachedHealingWellLimit(snapshot, owner)) return false;
   const main = mainBase(snapshot, owner);
   if (buildings(snapshot, owner).some((building) => building.kind === "moonWell" && distance(building, main) < 520)) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === "moonWell" && !building.complete)) return false;
   if (!healingWellPressure(snapshot, owner, main, options)) return false;
   return combatUnits(snapshot, owner).some((unit) => unit.hp < unit.maxHp * 0.86 && distance(unit, main) <= 720);
+}
+
+export function hasReachedHealingWellLimit(snapshot: GameSnapshot, owner: PlayerId) {
+  return buildings(snapshot, owner).filter((building) => building.kind === "moonWell").length >= AI_MOON_WELL_LIMIT;
 }
 
 export function healingWellPressure(snapshot: GameSnapshot, owner: PlayerId, main: Point, options: PresetAiPolicyOptions) {

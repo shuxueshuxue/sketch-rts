@@ -670,6 +670,46 @@ describe("sketch RTS simulation", () => {
     expect(target.hp).toBeLessThan(target.maxHp);
   });
 
+  it("does not spend a second ranged projectile on a target already killed by pending projectile damage", () => {
+    const game = sketchScene("ranged-projectile-pending-damage-targeting")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3400, 3400)
+      .unit("player", "archer", 900, 900, { id: "archer-a", order: { type: "attackMove", x: 1200, y: 900 } })
+      .unit("player", "archer", 900, 930, { id: "archer-b", order: { type: "attackMove", x: 1200, y: 900 } })
+      .unit("enemy", "raider", 1000, 900, { id: "doomed-raider", hp: UNIT_DEFS.archer.attackDamage })
+      .unit("enemy", "footman", 1020, 930, { id: "fresh-footman" })
+      .build()
+      .createGame();
+
+    stepGame(game);
+
+    expect(game.projectiles.map((projectile) => projectile.targetId).sort()).toEqual(["doomed-raider", "fresh-footman"]);
+  });
+
+  it("retargets explicit ranged attack orders when pending projectile damage already kills the target", () => {
+    const game = sketchScene("ranged-projectile-pending-damage-explicit-attack")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north" })
+      .player("enemy", { team: "south" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3400, 3400)
+      .unit("player", "archer", 900, 900, { id: "archer-a", order: { type: "attack", targetId: "doomed-raider" } })
+      .unit("player", "archer", 900, 930, { id: "archer-b", order: { type: "attack", targetId: "doomed-raider" } })
+      .unit("enemy", "raider", 1000, 900, { id: "doomed-raider", hp: UNIT_DEFS.archer.attackDamage })
+      .unit("enemy", "footman", 1020, 930, { id: "fresh-footman" })
+      .build()
+      .createGame();
+
+    stepGame(game);
+
+    expect(game.projectiles.map((projectile) => projectile.targetId).sort()).toEqual(["doomed-raider", "fresh-footman"]);
+  });
+
   it("keeps melee unit damage immediate", () => {
     const game = sketchScene("immediate-melee-damage")
       .map("bareDuel")

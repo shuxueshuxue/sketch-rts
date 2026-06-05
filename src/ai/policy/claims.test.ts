@@ -126,4 +126,63 @@ describe("AI policy command memory claims", () => {
       y: 980,
     });
   });
+
+  it("clears expansion army claims once the claimed mine has an owned town hall", () => {
+    const game = sketchScene("expansion-claim-complete")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .goldMine("natural-mine", 760, 760, 5000)
+      .townHall("v2", 740, 740, { id: "natural-hall" })
+      .unit("v2", "footman", 760, 820, { id: "claim-footman" })
+      .build()
+      .createGame();
+    game.tick = 420;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["claim-footman"] = { kind: "expansion", targetId: "natural-mine", x: 760, y: 760, sinceTick: 0, expiresTick: 3600 };
+    memory.strategicPlan = { expansionClaimTargetId: "natural-mine", expansionClaimTick: 0 };
+
+    pruneAiPolicyMemory(snapshotGame(game), "v2", memory);
+
+    expect(memory.unitClaims["claim-footman"]).toBeUndefined();
+    expect(memory.strategicPlan?.expansionClaimTargetId).toBeUndefined();
+  });
+
+  it("clears abandoned objective claims when the unit has stopped far from the claim point", () => {
+    const game = sketchScene("abandoned-expansion-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .goldMine("natural-mine", 760, 760, 5000)
+      .unit("v2", "footman", 520, 500, { id: "claim-footman", order: { type: "idle" } })
+      .build()
+      .createGame();
+    game.tick = 420;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["claim-footman"] = { kind: "expansion", targetId: "natural-mine", x: 760, y: 760, sinceTick: 0, expiresTick: 3600 };
+
+    pruneAiPolicyMemory(snapshotGame(game), "v2", memory);
+
+    expect(memory.unitClaims["claim-footman"]).toBeUndefined();
+  });
+
+  it("remembers the expansion target after assigning a squad to clear a natural", () => {
+    const game = sketchScene("expansion-strategic-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .goldMine("natural-mine", 760, 760, 5000)
+      .unit("v2", "footman", 520, 500, { id: "claim-footman" })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+
+    recordAiMemoryForCommands(snapshotGame(game), "expansion", [{ type: "attackMove", unitIds: ["claim-footman"], x: 760, y: 760 }], memory, { owner: "v2" });
+
+    expect(memory.strategicPlan).toMatchObject({ expansionClaimTargetId: "natural-mine", expansionClaimTick: 0 });
+  });
+
 });

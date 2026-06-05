@@ -55,6 +55,69 @@ describe("lockstep client", () => {
     expect(client.currentSnapshot().tick).toBe(1);
   });
 
+  it("accepts repeated delivery of the same future frame without throwing through the page", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    const frame = { roomId: "room-1", tick: 1, sequence: 10, commands: [] };
+
+    client.receiveFrame(frame);
+
+    expect(() => client.receiveFrame(frame)).not.toThrow();
+  });
+
+  it("reports server command errors from room transport", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+
+    transport.emit({ type: "error", roomId: "room-1", message: "farm placement is too close to townHall" });
+
+    expect(errors).toEqual(["farm placement is too close to townHall"]);
+  });
+
+  it("reports local frame apply errors and asks for an authoritative checkpoint", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+
+    client.receiveFrame({
+      roomId: "room-1",
+      tick: 0,
+      sequence: 0,
+      commands: [{ playerId: "enemy", command: { type: "move", unitIds: ["unit-enemy-footman-2954"], x: 10, y: 10 } }],
+    });
+
+    expect(() => client.updateToRenderTime()).not.toThrow();
+    expect(errors).toEqual(["Unknown enemy unit unit-enemy-footman-2954"]);
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+    expect(game.tick).toBe(0);
+  });
+
+  it("reports desync messages and asks for an authoritative checkpoint instead of throwing through the page", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+
+    expect(() => transport.emit({ type: "desync", roomId: "room-1", tick: 42, checksums: { player: "local", enemy: "remote" } })).not.toThrow();
+    expect(errors).toEqual(["Lockstep desync at tick 42"]);
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+  });
+
+  it("reports server message handling errors instead of throwing through the page", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+
+    expect(() => transport.emit({ type: "frame", frame: { roomId: "other-room", tick: 0, sequence: 1, commands: [] } })).not.toThrow();
+    expect(errors).toEqual(["Received frame for other-room while joined to room-1"]);
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+  });
+
   it("restores the local engine from checkpoint messages", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
@@ -65,12 +128,26 @@ describe("lockstep client", () => {
     worker!.order = { type: "move", x: worker!.x + 50, y: worker!.y };
     checkpointGame.tick = 12;
     checkpointGame.nextId = 1234;
+    checkpointGame.projectiles.push({
+      id: "projectile-checkpoint-sync",
+      owner: "enemy",
+      attackerId: "unit-enemy-archer",
+      targetId: worker!.id,
+      fromX: worker!.x + 100,
+      fromY: worker!.y,
+      toX: worker!.x,
+      toY: worker!.y,
+      damage: 13,
+      remaining: 11,
+      duration: 24,
+    });
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: 1234 } });
 
     expect(game.tick).toBe(12);
     expect(game.nextId).toBe(1234);
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
+    expect(game.projectiles).toEqual(checkpointGame.projectiles);
   });
 
   it("drops buffered frames older than a restored checkpoint", () => {

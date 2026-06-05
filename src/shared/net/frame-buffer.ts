@@ -4,7 +4,11 @@ export class CommandFrameBuffer {
   private frames = new Map<number, CommandFrame>();
 
   push(frame: CommandFrame): void {
-    if (this.frames.has(frame.tick)) throw new Error(`CommandFrameBuffer already has frame for tick ${frame.tick}`);
+    const existing = this.frames.get(frame.tick);
+    if (existing) {
+      if (sameFrame(existing, frame)) return;
+      throw new Error(`CommandFrameBuffer already has frame for tick ${frame.tick}`);
+    }
     this.frames.set(frame.tick, frame);
   }
 
@@ -24,4 +28,8 @@ export class CommandFrameBuffer {
       if (frameTick < tick) this.frames.delete(frameTick);
     }
   }
+}
+
+function sameFrame(left: CommandFrame, right: CommandFrame) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }

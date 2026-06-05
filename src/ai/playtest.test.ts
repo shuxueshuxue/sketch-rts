@@ -85,6 +85,19 @@ describe("AI interactive playtest wiring", () => {
     expect(runtime.memories.v1a!.jobs.map((job) => job.id)).toEqual(["tick-0", "tick-1"]);
   });
 
+  it("keeps assisted players in benchmark session order", () => {
+    const session = createInteractivePlaytestSession({
+      mapId: "bareDuel",
+      controlledPlayer: "v2",
+      scriptedPlayers: ["v1a"],
+      options: { players: ["v1a", "v2"], teams: { v1a: "north", v2: "south" } },
+    });
+
+    const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled: true, thinkInterval: 45, versions: { v2: "v2", v1a: "v1" } });
+
+    expect(runtime.controlledPlayers).toEqual(["v1a", "v2"]);
+  });
+
   it("records manual CLI-style objectives into the controlled player's AI memory", () => {
     const session = createInteractivePlaytestSession({
       mapId: "combatArena",

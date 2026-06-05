@@ -2,7 +2,8 @@ import { BUILDING_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
-import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear } from "./snapshot";
+import { opponentPlayerIds } from "./ownership";
+import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear, units } from "./snapshot";
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
@@ -52,12 +53,22 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
     for (const command of recoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
     return recoveryCommands;
   }
+  if (shouldLetDeadEconomyCloseoutContinue(snapshot, owner, ownCombat, options)) return [];
 
   const skirmish = localSkirmish(snapshot, owner, ownCombat, enemies, ownBase, options);
   if (!skirmish) return [];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }, options)];
+}
+
+function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || ownCombat.length < 18) return false;
+  const opponents = opponentPlayerIds(snapshot, owner, options);
+  if (opponents.length !== 1) return false;
+  if (buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete).length < 2) return false;
+  // @@@dead-economy-skirmish - In one-on-one closeout, a no-worker opponent cannot punish a bad trade economically; do not let preservation reset the army forever.
+  return units(snapshot, opponents[0]!).filter((unit) => unit.kind === "worker").length <= 1;
 }
 
 function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
@@ -140,10 +151,16 @@ function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[
     if (allies.length < 2) continue;
     const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);
     if (localEnemies.length < 2) continue;
+    if (dormantNeutralThreatsStillOnRoute(localEnemies, allies)) continue;
     if (armyPower(localEnemies) <= armyPower(allies) * 1.05) continue;
     return { allies, enemies: localEnemies };
   }
   return undefined;
+}
+
+function dormantNeutralThreatsStillOnRoute(enemies: Unit[], allies: Unit[]) {
+  // @@@dormant-neutral-route - Idle/leashing creeps near a route are objective-planning input; skirmish preservation should react once they engage.
+  return enemies.every((enemy) => enemy.owner === "neutral" && (enemy.order.type === "idle" || enemy.order.type === "move") && allies.every((ally) => distance(enemy, ally) > 280));
 }
 
 function nearestEnemyBase(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions) {

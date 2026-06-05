@@ -20,6 +20,7 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
     const summoners = units(snapshot, owner).filter((unit) => unit.kind === "summoner").length;
     const witches = units(snapshot, owner).filter((unit) => unit.kind === "witch").length;
     const casterTarget = v2LateCasterTarget(snapshot, owner, options);
+    if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && priests < casterTarget.priests) return "priest";
     if (casterTarget.summoners > 1 && priests >= 1 && summoners >= 1 && witches >= 1) {
       if (summoners < casterTarget.summoners) return "summoner";
       if (witches < casterTarget.witches) return "witch";
@@ -34,6 +35,13 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
   }
   if (building.kind === "workshop") return "golem";
   return undefined;
+}
+
+export function shouldPrioritizeWoundedPriestTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}) {
+  if (options.version !== "v2") return false;
+  const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "fieldMedic").length;
+  if (healers >= 2) return false;
+  return combatUnits(snapshot, owner).filter((unit) => unit.kind !== "priest" && unit.kind !== "fieldMedic" && unit.hp < unit.maxHp * 0.62).length >= 3;
 }
 
 function v2LateCasterTarget(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

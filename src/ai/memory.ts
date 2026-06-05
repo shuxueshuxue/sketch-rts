@@ -24,6 +24,8 @@ export type AiStrategicPlan = {
   focusTargetSinceTick?: number;
   focusTargetUpdatedTick?: number;
   expansionAttemptTick?: number;
+  expansionClaimTargetId?: string;
+  expansionClaimTick?: number;
 };
 
 export type AiPolicyMemory = {

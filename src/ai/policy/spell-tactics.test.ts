@@ -177,6 +177,32 @@ describe("AI spell and focus tactics", () => {
     expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
   });
 
+  it("does not pull a partial tail into a supported healer focus", () => {
+    const scene = sketchScene("spell-tactics-no-supported-healer-tail-focus")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3300, 3300)
+      .unit("v2", "footman", 1120, 1600, { id: "tail-footman-a" })
+      .unit("v2", "footman", 1145, 1630, { id: "tail-footman-b" })
+      .unit("v2", "lancer", 1165, 1605, { id: "tail-lancer" })
+      .unit("v2", "contractArcher", 1040, 1620, { id: "tail-contract" });
+    for (let index = 0; index < 4; index += 1) scene.unit("v2", index % 2 === 0 ? "footman" : "lancer", 520 + index * 28, 2060 + index * 12, { id: `rear-fighter-${index + 1}` });
+    scene
+      .unit("v1", "fieldMedic", 1220, 1624, { id: "supported-medic" })
+      .unit("v1", "contractArcher", 1400, 1650)
+      .unit("v1", "contractArcher", 1420, 1680)
+      .unit("v1", "mercenary", 1680, 1920)
+      .unit("v1", "mercenary", 1720, 1950)
+      .unit("v1", "lancer", 1760, 1980)
+      .unit("v1", "footman", 1800, 2010);
+    const game = scene.build().createGame();
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
+  });
+
   it("lets a small nearby group pick off a critically wounded target", () => {
     const game = sketchScene("spell-tactics-critical-pickoff")
       .map("bareDuel")

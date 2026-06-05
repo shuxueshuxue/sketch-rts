@@ -175,6 +175,7 @@ function controlBenchmarkPlaytestSetup(args: string[], matchName: string, contro
   const { input } = createAiMeleeControlBenchmarkInput({
     ...(flag(args, "control-seed") ? { seed: requiredFlag(args, "control-seed") } : {}),
     ...(flag(args, "control-map-count") ? { mapCount: requiredNumberFlag(args, "control-map-count") } : {}),
+    ...(flag(args, "control-worker-harassment") ? { workerHarassment: workerHarassmentFlag(args, "control-worker-harassment") } : {}),
     full: boolFlag(args, "control-full"),
   });
   const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
@@ -299,6 +300,12 @@ function requiredNumberFlag(args: string[], name: string): number {
   return numberFlag(args, name, Number.NaN);
 }
 
+function workerHarassmentFlag(args: string[], name: string): 0 | 0.5 | 1 {
+  const value = requiredNumberFlag(args, name);
+  if (value !== 0 && value !== 0.5 && value !== 1) throw new Error(`--${name} must be 0, 0.5, or 1`);
+  return value;
+}
+
 function printJson(value: unknown) {
   console.log(JSON.stringify(value, null, 2));
 }
@@ -312,6 +319,7 @@ function printHelp() {
   npm run play:ai -- new --file .playtests/duel.json --map bareDuel --you v2 --you-version v2 --enemy v1a --enemy-version v1 --assist-you
   npm run play:ai -- new --file .playtests/control-south.json --map amberReach --you v2 --enemy v1a --you-team south --enemy-team north --you-race grove --enemy-race grove --assist-you
   npm run play:ai -- new --file .playtests/control-south.json --from-control-benchmark "amberReach 1v1 control south" --control-seed moonwell-layout-50-2026-06-04 --control-map-count 50 --you v2 --assist-you
+  npm run play:ai -- new --file .playtests/control-south.json --from-control-benchmark "amberReach 1v1 control south" --control-seed moonwell-layout-50-2026-06-04 --control-map-count 50 --control-worker-harassment 0.5 --you v2 --assist-you
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --assist-you --you-scripts skirmishPreservation --enemy-scripts attackWave
   npm run play:ai -- new --file .playtests/combat.json --setup combat-15v20 --recipe early-mixed --you v2 --enemy v1a
   npm run play:ai -- status --file .playtests/duel.json
