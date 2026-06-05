@@ -37,7 +37,32 @@ export function applySelectionPick(previous: SelectionState, pickedIds: string[]
   };
 }
 
+export function selectNearbySameKindUnits(
+  snapshot: GameSnapshot,
+  owner: PlayerId,
+  anchorUnitId: string,
+  radius: number,
+  previous: SelectionState,
+  additive: boolean,
+): SelectionState {
+  const anchor = snapshot.units.find((unit) => unit.id === anchorUnitId && unit.owner === owner);
+  if (!anchor) return previous;
+  const pickedIds = snapshot.units
+    .filter((unit) => unit.owner === owner && unit.kind === anchor.kind && distance(unit, anchor) <= radius)
+    .sort((a, b) => {
+      if (a.id === anchor.id) return -1;
+      if (b.id === anchor.id) return 1;
+      return distance(a, anchor) - distance(b, anchor);
+    })
+    .map((unit) => unit.id);
+  return applySelectionPick(previous, pickedIds, additive);
+}
+
 function isProjectedInside(entity: Unit | Building, rect: ScreenRect, project: (point: Point) => Point) {
   const screen = project(entity);
   return screen.x >= rect.left && screen.x <= rect.right && screen.y >= rect.top && screen.y <= rect.bottom;
+}
+
+function distance(a: Point, b: Point) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
 }

@@ -38,7 +38,7 @@ import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
-import { applySelectionPick, selectInScreenBox, type ScreenRect as SelectionScreenRect } from "./selection-controls";
+import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
@@ -106,6 +106,7 @@ const SPELL_COMMANDS = [
   { ability: "curse", icon: "☾", hotkey: "c" },
 ] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
+const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
 app.innerHTML = gameShellMarkup;
 
@@ -1306,7 +1307,7 @@ function onMouseUp(event: MouseEvent) {
   if (dragDistance > 8 && selectionEnd) {
     selectUnitsInBox(selectionStart, selectionEnd, event.shiftKey);
   } else {
-    selectSingle(point, event.shiftKey);
+    selectSingle(point, event.shiftKey, event.detail >= 2);
   }
   selectionStart = undefined;
   selectionEnd = undefined;
@@ -1652,11 +1653,13 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
   if (selectedIds.size > 0 || !additive) buildPaletteOpen = false;
 }
 
-function selectSingle(point: Point, additive = false) {
+function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
   const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
   if (unit) {
-    const result = applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
+    const result = sameKind
+      ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
+      : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;

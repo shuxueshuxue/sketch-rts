@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applySelectionPick, selectInScreenBox } from "./selection-controls";
+import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits } from "./selection-controls";
 import type { Building, GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 const player: PlayerState = {
@@ -41,6 +41,23 @@ describe("selection controls", () => {
 
     expect([...result.selectedIds]).toEqual(["worker-1", "barracks-1"]);
     expect(result.focusedSelectionId).toBe("barracks-1");
+  });
+
+  it("double-click selects nearby same-kind friendly units around the clicked unit", () => {
+    const snapshot = snapshotWith({
+      units: [
+        unit("anchor", 1000, 1000, "player", "footman"),
+        unit("near-footman", 1300, 1000, "player", "footman"),
+        unit("far-footman", 2200, 1000, "player", "footman"),
+        unit("near-archer", 1100, 1000, "player", "archer"),
+        unit("enemy-footman", 1050, 1000, "enemy", "footman"),
+      ],
+    });
+
+    const result = selectNearbySameKindUnits(snapshot, "player", "anchor", 900, emptySelection(), false);
+
+    expect([...result.selectedIds]).toEqual(["anchor", "near-footman"]);
+    expect(result.focusedSelectionId).toBe("anchor");
   });
 });
 
@@ -89,11 +106,11 @@ function playerStats() {
   return { player: 0, enemy: 0, enemy2: 0 };
 }
 
-function unit(id: string, x: number, y: number, owner: Unit["owner"] = "player"): Unit {
+function unit(id: string, x: number, y: number, owner: Unit["owner"] = "player", kind: Unit["kind"] = "worker"): Unit {
   return {
     id,
     owner,
-    kind: "worker",
+    kind,
     x,
     y,
     hp: 100,
