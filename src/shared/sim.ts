@@ -68,6 +68,8 @@ const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const REPAIR_RANGE = BUILD_RANGE + 20;
 const REPAIR_FULL_COST_FRACTION = 0.35;
+const REPAIR_TICK_INTERVAL = seconds(1.5);
+const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 const AUTO_ACQUIRE_RANGE = 230;
 const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 const PROJECTILE_FLIGHT_DURATION = 22;
@@ -275,8 +277,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (building.hp >= building.maxHp) throw new Error(`${building.kind} is already fully repaired`);
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       unit.order = { type: "repair", buildingId: building.id };
+      unit.cooldown = 0;
     }
-    addEffect(game, "repair", building.x, building.y, 26);
+    addRepairHammerEffect(game, building);
     return;
   }
 
@@ -712,27 +715,37 @@ function updateRepairOrder(game: Game, unit: Unit) {
     moveToward(unit, building.x, building.y, game.map);
     return;
   }
-  if (!repairBuildingTick(game, unit.owner, building)) unit.order = { type: "idle" };
+  if (unit.cooldown > 0) return;
+  if (!repairBuildingTick(game, unit, building)) unit.order = { type: "idle" };
 }
 
 function updateAutoRepair(game: Game, unit: Unit) {
   if (unit.order.type !== "idle" || !isPlayerId(unit.owner)) return false;
+  if (unit.cooldown > 0) return false;
   const building = game.buildings.find(
     (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && distance(unit, candidate) <= REPAIR_RANGE,
   );
   if (!building) return false;
-  return repairBuildingTick(game, unit.owner, building);
+  return repairBuildingTick(game, unit, building);
 }
 
-function repairBuildingTick(game: Game, owner: PlayerId, building: Building) {
+function repairBuildingTick(game: Game, unit: Unit, building: Building) {
+  if (!isPlayerId(unit.owner)) return false;
+  const owner = unit.owner;
   const player = playerState(game, owner);
   if (player.gold < 1 || building.hp >= building.maxHp) return false;
   const fullRepairCost = Math.max(1, Math.round(BUILDING_DEFS[building.kind].cost * REPAIR_FULL_COST_FRACTION));
   const hpPerGold = Math.max(1, building.maxHp / fullRepairCost);
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
-  addEffect(game, "repair", building.x, building.y, 12);
+  unit.cooldown = REPAIR_TICK_INTERVAL;
+  addRepairHammerEffect(game, building);
   return true;
+}
+
+function addRepairHammerEffect(game: Game, building: Building) {
+  if (game.effects.some((effect) => effect.type === "repair" && effect.x === building.x && effect.y === building.y)) return;
+  addEffect(game, "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION);
 }
 
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
