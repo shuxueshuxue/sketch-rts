@@ -1315,7 +1315,6 @@ function applyXpLevel(game: Game, unit: Unit) {
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
   applyDerivedUnitStats(game, unit);
-  addEffect(game, "levelUp", unit.x, unit.y, 54);
 }
 
 function applyDerivedUnitStats(game: Game, unit: Unit) {

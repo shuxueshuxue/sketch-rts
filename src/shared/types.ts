@@ -61,7 +61,6 @@ export type WorldEffect = {
     | "guardianField"
     | "experienceBurst"
     | "flameBurn"
-    | "levelUp"
     | "storm";
   x: number;
   y: number;
