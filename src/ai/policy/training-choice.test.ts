@@ -68,6 +68,25 @@ describe("AI training choice", () => {
     expect(trainingChoice(snapshot, "v2", sanctum, { version: "v2" })).toBe("summoner");
   });
 
+  it("lets v2 add the first curse witch before duplicating existing casters", () => {
+    const scene = sketchScene("training-choice-v2-first-witch")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .building("v2", "sanctum", 700, 620, { id: "sanctum" })
+      .unit("v2", "priest", 760, 620)
+      .unit("v2", "summoner", 790, 650);
+    for (let i = 0; i < 8; i += 1) scene.unit("v2", i % 2 === 0 ? "footman" : "archer", 860 + i * 24, 720);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = 520;
+    const snapshot = snapshotGame(game);
+    const sanctum = snapshot.buildings.find((building) => building.id === "sanctum");
+    if (!sanctum) throw new Error("missing sanctum");
+
+    expect(trainingChoice(snapshot, "v2", sanctum, { version: "v2" })).toBe("witch");
+  });
+
   it("lets v2 train a second priest before other second casters when a wounded group needs healing", () => {
     const scene = sketchScene("training-choice-v2-wounded-priest")
       .map("bareDuel")

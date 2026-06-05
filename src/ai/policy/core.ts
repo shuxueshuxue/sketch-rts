@@ -961,8 +961,30 @@ function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, op
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
+  if (shouldPrioritizeMatureLateTechTraining(snapshot, owner, options, candidates)) {
+    return [...candidates].sort((a, b) => matureLateTechTrainingRank(a, snapshot, owner, options) - matureLateTechTrainingRank(b, snapshot, owner, options));
+  }
   if (!shouldPrioritizeWoundedPriestTraining(snapshot, owner, options)) return candidates;
   return [...candidates].sort((a, b) => Number(b.kind === "sanctum") - Number(a.kind === "sanctum"));
+}
+
+function shouldPrioritizeMatureLateTechTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+  if (options.version !== "v2") return false;
+  if (activeMiningBaseCount(snapshot, owner) < 2) return false;
+  if (combatUnits(snapshot, owner).length < 10) return false;
+  if (playerState(snapshot, owner).gold < UNIT_DEFS.priest.cost + UNIT_DEFS.knight.cost + UNIT_DEFS.footman.cost) return false;
+  if (!candidates.some((building) => building.kind === "sanctum" || building.kind === "stables")) return false;
+  const ownUnits = units(snapshot, owner);
+  return (
+    ownUnits.filter((unit) => unit.kind === "priest" || unit.kind === "summoner" || unit.kind === "witch").length < 3 ||
+    ownUnits.filter((unit) => unit.kind === "knight").length < 2
+  );
+}
+
+function matureLateTechTrainingRank(building: Building, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (building.kind === "sanctum") return 0;
+  if (building.kind === "stables" && trainingChoice(snapshot, owner, building, options) === "knight") return 1;
+  return 2;
 }
 
 function shouldPrioritizeFirstRangedTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
