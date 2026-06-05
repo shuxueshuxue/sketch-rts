@@ -120,6 +120,46 @@ Acceptance evidence:
 - Keep fail-loud behavior for truly invalid commands; do not hide errors with silent fallback.
 - Run product-level YATU for a real room match after fixes, plus automated test/build verification.
 
+### 9. Browser-Language I18n
+
+GitHub issue: [#24](https://github.com/shuxueshuxue/sketch-rts/issues/24)
+
+Add a small internationalization layer for browser-visible UI text. The first supported locales are English and Chinese. The client should choose the initial locale from browser language preferences: Chinese browser locales show Chinese UI; English or unknown locales show English UI.
+
+Boundaries:
+
+- Locale must stay out of simulation state, replay data, SDK command contracts, AI decisions, and command-frame lockstep.
+- User-facing browser UI text should move into translation resources instead of ad-hoc inline strings.
+- Map ids, code identifiers, replay ids, and developer-only logs do not need translation.
+
+Acceptance evidence:
+
+- Unit tests cover locale selection fallback and translation lookup behavior.
+- Source scan or focused tests prove major browser-visible UI text is tracked by the i18n layer.
+- Playwright CLI YATU runs Chinese and English browser-language sessions and verifies the UI switches.
+- Existing command-frame, replay, and simulation tests still pass.
+
+### 10. Public In-Game Chat Overlay
+
+GitHub issue: [#25](https://github.com/shuxueshuxue/sketch-rts/issues/25)
+
+Add a public Warcraft-style in-game chat surface. Pressing Enter opens a chat input; submitted messages appear on the left side of the game screen with sender information, then fade out. This slice does not include private chat.
+
+Boundaries:
+
+- Chat transport is separate from deterministic simulation commands.
+- Chat must not mutate sim state, replay command frames, AI policy, or lockstep determinism.
+- Multiplayer room chat and local/static play should share the same UI component; only the transport edge may differ.
+- While the chat input is active, normal game hotkeys and command shortcuts must not fire accidentally.
+
+Acceptance evidence:
+
+- Client tests cover Enter-to-open, submit, Escape/blur behavior, and keyboard isolation while typing.
+- Room/server integration tests prove public messages reach all players without entering command-frame batches.
+- Playwright CLI YATU verifies two browser clients exchange chat messages during a live room match.
+- Visual/YATU evidence confirms left overlay placement, sender labels, and fade-out behavior.
+- Existing lockstep/replay/sim tests still pass unchanged for deterministic gameplay.
+
 ## PR Strategy
 
 Create one issue and one implementation PR per item. Merge each PR only after its own automated checks pass. Use pgl for full AI benchmarks and long sweeps. UI and simulation changes still require YATU through Playwright CLI for player-visible behavior.
