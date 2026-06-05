@@ -1279,10 +1279,45 @@ describe("sketch RTS simulation", () => {
     expect(barracks.hp).toBeGreaterThan(barracks.maxHp - 90);
     expect(game.players.player.gold).toBeLessThan(100);
     expect(game.effects.some((effect) => effect.type === "repair" && effect.x === barracks.x && effect.y === barracks.y)).toBe(true);
-    stepUntil(game, 300, () => barracks.hp === barracks.maxHp);
+    stepUntil(game, 900, () => barracks.hp === barracks.maxHp);
+    stepGame(game);
 
     expect(barracks.hp).toBe(barracks.maxHp);
     expect(worker.order.type).toBe("idle");
+  });
+
+  it("repairs and spends gold on a fixed worker cadence instead of every tick", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 100;
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    game.units = game.units.filter((unit) => unit === worker || unit.owner !== "player");
+    const barracks = createBuilding("building-player-cadence-barracks", "player", "barracks", worker.x + 40, worker.y, true);
+    game.buildings.push(barracks);
+    barracks.hp = barracks.maxHp - 120;
+
+    issueCommand(game, { type: "repair", unitIds: [worker.id], buildingId: barracks.id });
+    stepMany(game, 20);
+
+    expect(game.players.player.gold).toBe(99);
+    expect(barracks.hp).toBeGreaterThan(barracks.maxHp - 120);
+    expect(barracks.hp).toBeLessThan(barracks.maxHp - 30);
+  });
+
+  it("uses build-length hammer effects for repair instead of per-tick repair flashes", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 100;
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    const barracks = createBuilding("building-player-repair-effect-barracks", "player", "barracks", worker.x + 40, worker.y, true);
+    game.buildings.push(barracks);
+    barracks.hp = barracks.maxHp - 160;
+
+    issueCommand(game, { type: "repair", unitIds: [worker.id], buildingId: barracks.id });
+    expect(game.effects.find((effect) => effect.type === "repair" && effect.x === barracks.x && effect.y === barracks.y)?.duration).toBe(60);
+    stepMany(game, 40);
+
+    const repairEffects = game.effects.filter((effect) => effect.type === "repair" && effect.x === barracks.x && effect.y === barracks.y);
+    expect(repairEffects.length).toBeLessThanOrEqual(2);
+    expect(repairEffects.every((effect) => effect.duration === 60)).toBe(true);
   });
 
   it("keeps neutral treasure on camp carriers, lets monsters use permitted items, and drops items on death", () => {
