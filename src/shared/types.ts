@@ -329,6 +329,7 @@ export type GameSnapshot = {
   tick: number;
   match: MatchState;
   map: GameMap;
+  teams?: Partial<Record<PlayerId, string>>;
   players: PlayerStateMap;
   units: Unit[];
   buildings: Building[];

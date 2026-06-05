@@ -1,6 +1,6 @@
 import { buildingPlacementBlocker } from "../build-placement";
 import { BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../catalog";
-import type { GameCommand, GameSnapshot, PlayerId, UnitKind } from "../types";
+import type { GameCommand, GameSnapshot, Owner, PlayerId, UnitKind } from "../types";
 
 export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): string | undefined {
   const player = snapshot.players[owner];
@@ -104,9 +104,23 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   if (!caster) return `Unknown ${owner} caster ${command.unitId}`;
   if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return `${caster.kind} cannot cast ${command.ability}`;
   if (caster.cooldown > 0) return `${caster.kind} is on cooldown`;
-  if (command.ability === "heal") return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId) ? undefined : "Heal requires an allied unit target";
-  if (command.ability === "curse") return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId) ? undefined : "Curse requires an enemy unit target";
+  if (command.ability === "heal") {
+    return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
+      ? undefined
+      : "Heal requires an allied unit target";
+  }
+  if (command.ability === "curse") {
+    return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner))
+      ? undefined
+      : "Curse requires an enemy unit target";
+  }
   return Number.isFinite(command.x) && Number.isFinite(command.y) ? undefined : "Summon requires a target point";
+}
+
+function areEnemyOwners(snapshot: GameSnapshot, a: Owner, b: Owner) {
+  if (a === b) return false;
+  if (a === "neutral" || b === "neutral") return a !== "neutral" || b !== "neutral";
+  return (snapshot.teams?.[a] ?? a) !== (snapshot.teams?.[b] ?? b);
 }
 
 function canSpendGold(snapshot: GameSnapshot, owner: PlayerId, amount: number) {
