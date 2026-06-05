@@ -1286,6 +1286,27 @@ describe("sketch RTS simulation", () => {
     expect(worker.order.type).toBe("idle");
   });
 
+  it("queues movement commands behind the current unit order when requested", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    game.units = game.units.filter((unit) => unit === worker || unit.owner !== "player");
+    const first = { x: worker.x + 120, y: worker.y };
+    const second = { x: worker.x + 240, y: worker.y };
+
+    issueCommand(game, { type: "move", unitIds: [worker.id], x: first.x, y: first.y });
+    issueCommand(game, { type: "move", unitIds: [worker.id], x: second.x, y: second.y, queued: true });
+
+    expect(worker.order).toEqual({ type: "move", x: first.x, y: first.y });
+    expect(worker.orderQueue).toEqual([{ type: "move", x: second.x, y: second.y }]);
+    expect(game.effects.some((effect) => effect.type === "queuedMove" && effect.x === second.x && effect.y === second.y)).toBe(true);
+
+    stepUntil(game, 120, () => worker.order.type === "move" && worker.order.x === second.x);
+    expect(worker.order).toEqual({ type: "move", x: second.x, y: second.y });
+
+    stepUntil(game, 120, () => worker.order.type === "idle");
+    expect(worker.orderQueue).toEqual([]);
+  });
+
   it("repairs and spends gold on a fixed worker cadence instead of every tick", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 100;

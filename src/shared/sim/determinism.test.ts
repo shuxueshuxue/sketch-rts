@@ -22,6 +22,27 @@ describe("deterministic command-frame simulation", () => {
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
+  it("applies queued unit commands through the shared command-frame path", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    game.units = game.units.filter((unit) => unit === worker || unit.owner !== "player");
+    const first = { x: worker.x + 120, y: worker.y };
+    const second = { x: worker.x + 240, y: worker.y };
+
+    applyCommandFrame(game, {
+      roomId: "local",
+      tick: game.tick,
+      sequence: 0,
+      commands: [
+        { playerId: "player", command: { type: "move", unitIds: [worker.id], x: first.x, y: first.y } },
+        { playerId: "player", command: { type: "move", unitIds: [worker.id], x: second.x, y: second.y, queued: true } },
+      ],
+    });
+
+    expect(worker.order).toEqual({ type: "move", x: first.x, y: first.y });
+    expect(worker.orderQueue).toEqual([{ type: "move", x: second.x, y: second.y }]);
+  });
+
   it("fails loudly when a command frame targets a different tick", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const frame: CommandFrame = { roomId: "local", tick: game.tick + 1, sequence: 0, commands: [] };

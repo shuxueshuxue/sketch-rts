@@ -13,7 +13,7 @@ import {
   trainTimeFor,
 } from "./map";
 import { seconds } from "./time";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -238,26 +238,26 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "move") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      unit.order = { type: "move", x: command.x, y: command.y };
+      assignUnitOrder(unit, { type: "move", x: command.x, y: command.y }, command.queued);
     }
-    addEffect(game, "move", command.x, command.y, 24);
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
     return;
   }
 
   if (command.type === "attackMove") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      unit.order = { type: "attackMove", x: command.x, y: command.y };
+      assignUnitOrder(unit, { type: "attackMove", x: command.x, y: command.y }, command.queued);
     }
-    addEffect(game, "attack", command.x, command.y, 28);
+    addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28);
     return;
   }
 
   if (command.type === "attack") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      unit.order = { type: "attack", targetId: command.targetId };
+      assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
     const target = findTarget(game, command.targetId);
-    if (target) addEffect(game, "attackTarget", target.x, target.y, 32);
+    if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32);
     return;
   }
 
@@ -265,9 +265,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const resource = game.resources.find((candidate) => candidate.id === command.resourceId);
     if (!resource) throw new Error(`Unknown resource ${command.resourceId}`);
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
-      unit.order = { type: "mine", resourceId: command.resourceId, phase: "toMine", timer: 0 };
+      assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: "toMine", timer: 0 }, command.queued);
     }
-    addEffect(game, "mine", resource.x, resource.y, 30);
+    addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30);
     return;
   }
 
@@ -276,10 +276,10 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
     if (building.hp >= building.maxHp) throw new Error(`${building.kind} is already fully repaired`);
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
-      unit.order = { type: "repair", buildingId: building.id };
-      unit.cooldown = 0;
+      assignUnitOrder(unit, { type: "repair", buildingId: building.id }, command.queued);
+      if (unit.order.type === "repair" && unit.order.buildingId === building.id) unit.cooldown = 0;
     }
-    addRepairHammerEffect(game, building);
+    addRepairHammerEffect(game, building, command.queued);
     return;
   }
 
@@ -322,7 +322,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "pickupItem") {
-    pickupItem(game, owner, command.unitId, command.itemId);
+    pickupItem(game, owner, command.unitId, command.itemId, command.queued);
     return;
   }
 
@@ -389,7 +389,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     },
     map: game.map,
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
-    units: game.units.map((unit) => ({ ...unit, order: { ...unit.order } })),
+    units: game.units.map((unit) => ({ ...unit, order: { ...unit.order }, orderQueue: unit.orderQueue?.map((order) => ({ ...order })) ?? [] })),
     buildings: game.buildings.map((building) => {
       const { rallyTarget, ...rest } = building;
       return {
@@ -516,6 +516,7 @@ function updateResources(game: Game) {
 function updateUnits(game: Game) {
   for (const unit of game.units) {
     unit.cooldown = Math.max(0, unit.cooldown - 1);
+    activateQueuedOrder(unit);
     if (updateNeutralLeash(game, unit)) continue;
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
@@ -556,6 +557,23 @@ function updateUnits(game: Game) {
       if (target) unit.order = { type: "attack", targetId: target.id };
     }
   }
+}
+
+function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
+  // @@@command-queue - Queued orders live in simulation state so local, lockstep, replay, and SDK paths share one behavior.
+  if (queued) {
+    unit.orderQueue = [...(unit.orderQueue ?? []), order];
+    return;
+  }
+  unit.order = order;
+  unit.orderQueue = [];
+}
+
+function activateQueuedOrder(unit: Unit) {
+  if (unit.order.type !== "idle") return;
+  const next = unit.orderQueue?.shift();
+  if (!next) return;
+  unit.order = next;
 }
 
 function updateFollowOrder(game: Game, unit: Unit) {
@@ -743,9 +761,10 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   return true;
 }
 
-function addRepairHammerEffect(game: Game, building: Building) {
-  if (game.effects.some((effect) => effect.type === "repair" && effect.x === building.x && effect.y === building.y)) return;
-  addEffect(game, "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION);
+function addRepairHammerEffect(game: Game, building: Building, queued = false) {
+  const activeType = queued ? ["repair", "queuedRepair"] : ["repair"];
+  if (game.effects.some((effect) => activeType.includes(effect.type) && effect.x === building.x && effect.y === building.y)) return;
+  addEffect(game, queued ? "queuedRepair" : "repair", building.x, building.y, REPAIR_HAMMER_EFFECT_DURATION);
 }
 
 function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKind) {
@@ -907,14 +926,14 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
   unit.order = { type: "idle" };
 }
 
-function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string) {
+function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string, queued = false) {
   const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
   if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
   const item = game.items.find((candidate) => candidate.id === itemId);
   if (!item) throw new Error(`Unknown item ${itemId}`);
   if (item.carrierId) throw new Error(`${item.id} is already carried`);
   if (distance(unit, item) > ITEM_PICKUP_RANGE) {
-    unit.order = { type: "pickupItem", itemId };
+    assignUnitOrder(unit, { type: "pickupItem", itemId }, queued);
     return;
   }
   attachItemToUnit(item, unit);

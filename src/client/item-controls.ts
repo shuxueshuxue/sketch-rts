@@ -23,7 +23,7 @@ export function carriedItemsForSelection(snapshot: GameSnapshot, selectedUnits: 
     .map((item) => ({ item, carrier: selectedUnits.find((unit) => unit.id === item.carrierId)! }));
 }
 
-export function pickupItemCommand(selectedUnits: Unit[], item: WorldItem): GameCommand | undefined {
+export function pickupItemCommand(selectedUnits: Unit[], item: WorldItem): Extract<GameCommand, { type: "pickupItem" }> | undefined {
   const carrier = nearestUnit(selectedUnits, item);
   return carrier ? { type: "pickupItem", unitId: carrier.id, itemId: item.id } : undefined;
 }

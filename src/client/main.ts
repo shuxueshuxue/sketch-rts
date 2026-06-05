@@ -1289,7 +1289,7 @@ function onMouseUp(event: MouseEvent) {
   if (!snapshot) return;
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
-    else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point);
+    else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 2) cancelCommandMode();
@@ -1298,7 +1298,7 @@ function onMouseUp(event: MouseEvent) {
     return;
   }
   if (event.button === 2) {
-    issueContextCommand(point);
+    issueContextCommand(point, event.shiftKey);
     return;
   }
   if (event.button !== 0 || !selectionStart) return;
@@ -1314,13 +1314,13 @@ function onMouseUp(event: MouseEvent) {
   updateHud();
 }
 
-function issueContextCommand(point: Point) {
+function issueContextCommand(point: Point, queued = false) {
   if (!snapshot) return;
   const mini = minimapRect();
-  issueContextCommandAtWorld(isInsideRect(point, mini) ? minimapPointToWorld(point, mini, snapshot.map) : screenToWorld(point));
+  issueContextCommandAtWorld(isInsideRect(point, mini) ? minimapPointToWorld(point, mini, snapshot.map) : screenToWorld(point), queued);
 }
 
-function issueContextCommandAtWorld(world: Point) {
+function issueContextCommandAtWorld(world: Point, queued = false) {
   if (!snapshot) return;
   const selectedUnits = selectedPlayerUnits();
   const rallyBuildings = selectedPlayerRallyBuildings();
@@ -1344,26 +1344,26 @@ function issueContextCommandAtWorld(world: Point) {
       showInvalidCommand("Focus a unit before picking up items.");
       return;
     }
-    sendCommand(command);
+    sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued });
     statusLabel.textContent = `${itemLabel(item.kind)} pickup ordered.`;
     return;
   }
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id });
+    sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id, queued });
     statusLabel.textContent = "Workers ordered to mine gold.";
     return;
   }
   if (repairTarget && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id });
+    sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id, queued });
     statusLabel.textContent = `${labelBuilding(repairTarget)} repair ordered.`;
     return;
   }
   if (target) {
-    sendCommand({ type: "attack", unitIds, targetId: target.id });
+    sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
     statusLabel.textContent = target.owner === "neutral" ? "Attack order issued on wildlings." : "Attack order issued.";
     return;
   }
-  sendCommand({ type: "move", unitIds, x: world.x, y: world.y });
+  sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
   statusLabel.textContent = "Move order issued.";
 }
 
@@ -1488,7 +1488,7 @@ function confirmBuildPlacement(point: Point) {
   updateHud();
 }
 
-function issueAttackMoveAt(point: Point) {
+function issueAttackMoveAt(point: Point, queued = false) {
   if (!commandMode || commandMode.type !== "attackMove") return;
   const unitIds = selectedPlayerUnits().map((unit) => unit.id);
   if (unitIds.length === 0) {
@@ -1499,7 +1499,7 @@ function issueAttackMoveAt(point: Point) {
     return;
   }
   const world = screenToWorld(point);
-  sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y });
+  sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y, queued });
   statusLabel.textContent = "Attack-move order issued.";
   clearCommandModeClasses();
   commandMode = undefined;
