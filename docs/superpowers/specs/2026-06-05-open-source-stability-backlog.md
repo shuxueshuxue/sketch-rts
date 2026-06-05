@@ -126,6 +126,14 @@ GitHub issue: [#24](https://github.com/shuxueshuxue/sketch-rts/issues/24)
 
 Add a small internationalization layer for browser-visible UI text. The first supported locales are English and Chinese. The client should choose the initial locale from browser language preferences: Chinese browser locales show Chinese UI; English or unknown locales show English UI.
 
+Design:
+
+- Add one client-side i18n module that owns locale detection, translation lookup, and text formatting. UI code imports this module; simulation, AI, SDK, replay, and lockstep code do not.
+- Locale detection reads `navigator.languages` / `navigator.language` once at client bootstrap. Any `zh-*` locale selects Chinese; `en-*` or unknown locales select English.
+- Translation resources live as explicit English and Chinese dictionaries. Missing keys fail loudly in tests and development rather than silently showing stale English.
+- Browser-visible copy, HUD labels, lobby controls, room text, visible command/status errors, settings, and player-facing benchmark/dashboard labels move into translation keys.
+- Game data identifiers remain language-neutral. Map ids, unit ids, replay ids, lockstep commands, SDK contracts, saved games, AI decisions, and developer logs do not become translated state.
+
 Boundaries:
 
 - Locale must stay out of simulation state, replay data, SDK command contracts, AI decisions, and command-frame lockstep.
@@ -144,6 +152,15 @@ Acceptance evidence:
 GitHub issue: [#25](https://github.com/shuxueshuxue/sketch-rts/issues/25)
 
 Add a public Warcraft-style in-game chat surface. Pressing Enter opens a chat input; submitted messages appear on the left side of the game screen with sender information, then fade out. This slice does not include private chat.
+
+Design:
+
+- Add one reusable chat overlay component for match screens. It owns the left-side message stack, the transient input, sender labels, message lifetime, and fade-out animation.
+- Pressing `Enter` while no text input is active opens/focuses the chat input. Pressing `Enter` inside the input submits a non-empty public message. `Escape` closes the input without submitting.
+- Chat input mode captures keyboard events so RTS hotkeys, selection shortcuts, and command shortcuts do not fire while the user is typing.
+- Chat messages are public only. Each message carries sender display name, sender slot/player id, text, and receive time. Private messages, rich text, moderation, and persistent history are out of scope for this slice.
+- Multiplayer rooms send chat through a room/chat transport separate from deterministic command frames. Local/static play can use the same overlay with a local in-memory transport so the UI path stays shared.
+- Chat is never replay input. It must not mutate simulation state, command-frame batches, AI memory, SDK command logs, replay determinism, or benchmark results.
 
 Boundaries:
 
