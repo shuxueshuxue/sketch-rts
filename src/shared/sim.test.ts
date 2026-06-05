@@ -1720,7 +1720,9 @@ describe("sketch RTS simulation", () => {
 
   it("expands AI economies to open gold mines when expansions exist", () => {
     const game = createGame("openClaims", { aiPlayers: ["player", "enemy"] });
-    const runtime = createAiRuntime(["player", "enemy"]);
+    const runtime = createAiRuntime(["player", "enemy"], {
+      scripts: [AI_SCRIPT_LIBRARY.economy, AI_SCRIPT_LIBRARY.supply, AI_SCRIPT_LIBRARY.productionBuilding, AI_SCRIPT_LIBRARY.training, AI_SCRIPT_LIBRARY.expansion],
+    });
 
     for (let i = 0; i < 36_000 && !ownersHaveMiningExpansions(game, ["player", "enemy"]); i += 1) {
       runPresetAiRuntime(game, runtime);
