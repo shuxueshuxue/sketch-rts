@@ -65,10 +65,10 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
 function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
   if (options.version !== "v2" || ownCombat.length < 18) return false;
   const opponents = opponentPlayerIds(snapshot, owner, options);
-  if (opponents.length !== 1) return false;
+  if (opponents.length < 1) return false;
   if (buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete).length < 2) return false;
-  // @@@dead-economy-skirmish - In one-on-one closeout, a no-worker opponent cannot punish a bad trade economically; do not let preservation reset the army forever.
-  return units(snapshot, opponents[0]!).filter((unit) => unit.kind === "worker").length <= 1;
+  // @@@dead-economy-skirmish - A no-worker enemy team cannot punish a bad trade economically; do not let preservation reset the closeout army forever.
+  return !opponents.some((opponent) => units(snapshot, opponent).filter((unit) => unit.kind === "worker").length > 1);
 }
 
 function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
