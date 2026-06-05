@@ -205,7 +205,7 @@ Closed:
 
 Open:
 
-- #20 Crash-free sim, AI, and lockstep architecture audit.
+- #20 Crash-free sim, AI, and lockstep architecture audit. Current slice: repeatable crash inventory plus SDK/local command-frame admission validation.
 - #24 Browser-language i18n.
 - #25 Public in-game chat overlay.
 
