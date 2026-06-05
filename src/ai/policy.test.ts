@@ -4160,6 +4160,85 @@ describe("SDK preset AI policy", () => {
     expect(commands).toEqual([{ type: "train", buildingId: "v2-sanctum", unitKind: "priest" }]);
   });
 
+  it("v2 keeps a thin two-base training bank on routine basic units", () => {
+    const scene = sketchScene("v2-mature-bank-late-tech-before-basic")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 920, 760, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .building("v2", "stables", 780, 620, { id: "v2-stables" })
+      .building("v2", "sanctum", 860, 620, { id: "v2-sanctum" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .building("v2", "farm", 660, 770)
+      .building("v2", "farm", 710, 805)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 920, 760, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000);
+    for (let i = 0; i < 10; i += 1) {
+      scene.worker("v2", 520 + (i % 5) * 18, 520 + Math.floor(i / 5) * 26, {
+        order: { type: "mine", resourceId: i < 5 ? "v2-main-mine" : "v2-natural-mine", phase: "gather", timer: 10 },
+      });
+    }
+    for (let i = 0; i < 10; i += 1) scene.unit("v2", i % 3 === 0 ? "footman" : i % 3 === 1 ? "archer" : "lancer", 760 + i * 24, 760);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = UNIT_DEFS.priest.cost + UNIT_DEFS.knight.cost;
+    game.players.v2!.supplyUsed = 36;
+    game.players.v2!.supplyCap = 60;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([
+      { type: "train", buildingId: "v2-barracks", unitKind: "footman" },
+      { type: "train", buildingId: "v2-archery", unitKind: "archer" },
+    ]);
+  });
+
+  it("v2 spends a mature two-base training bank on late-tech units while keeping a basic unit window", () => {
+    const scene = sketchScene("v2-mature-bank-late-tech-plus-basic")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 920, 760, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
+      .building("v2", "stables", 780, 620, { id: "v2-stables" })
+      .building("v2", "sanctum", 860, 620, { id: "v2-sanctum" })
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .building("v2", "farm", 660, 770)
+      .building("v2", "farm", 710, 805)
+      .townHall("v1a", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 920, 760, 4000)
+      .goldMine("v1a-main-mine", 3340, 3300, 4000);
+    for (let i = 0; i < 10; i += 1) {
+      scene.worker("v2", 520 + (i % 5) * 18, 520 + Math.floor(i / 5) * 26, {
+        order: { type: "mine", resourceId: i < 5 ? "v2-main-mine" : "v2-natural-mine", phase: "gather", timer: 10 },
+      });
+    }
+    for (let i = 0; i < 10; i += 1) scene.unit("v2", i % 3 === 0 ? "footman" : i % 3 === 1 ? "archer" : "lancer", 760 + i * 24, 760);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = UNIT_DEFS.priest.cost + UNIT_DEFS.knight.cost + UNIT_DEFS.footman.cost;
+    game.players.v2!.supplyUsed = 36;
+    game.players.v2!.supplyCap = 60;
+
+    const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
+
+    expect(commands).toEqual([
+      { type: "train", buildingId: "v2-sanctum", unitKind: "priest" },
+      { type: "train", buildingId: "v2-stables", unitKind: "knight" },
+      { type: "train", buildingId: "v2-barracks", unitKind: "footman" },
+    ]);
+  });
+
   it("v2 spends tech reserve on immediate training when a stronger one-on-one army is near its bases", () => {
     const scene = sketchScene("v2-tech-reserve-breaks-for-one-on-one-base-threat")
       .map("bareDuel")

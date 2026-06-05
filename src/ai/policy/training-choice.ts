@@ -1,5 +1,6 @@
+import { UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
-import { combatUnits, units } from "./snapshot";
+import { combatUnits, completeBuildings, units } from "./snapshot";
 import { aiPlaybook } from "./playbook";
 import { playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
@@ -13,7 +14,7 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
     const playbook = aiPlaybook();
     const preferred = playbook.stablesUnits[0] ?? "raider";
     if (preferred === "raider" && raiders < 3) return "raider";
-    return knights < 2 && playerState(snapshot, owner).gold > 520 ? "knight" : "raider";
+    return knights < 2 && shouldTrainKnight(snapshot, owner, options) ? "knight" : "raider";
   }
   if (building.kind === "sanctum") {
     const priests = units(snapshot, owner).filter((unit) => unit.kind === "priest").length;
@@ -21,6 +22,9 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
     const witches = units(snapshot, owner).filter((unit) => unit.kind === "witch").length;
     const casterTarget = v2LateCasterTarget(snapshot, owner, options);
     if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && priests < casterTarget.priests) return "priest";
+    if (priests < 1 && casterTarget.priests > 0) return "priest";
+    if (summoners < 1 && casterTarget.summoners > 0) return "summoner";
+    if (witches < 1 && casterTarget.witches > 0) return "witch";
     if (casterTarget.summoners > 1 && priests >= 1 && summoners >= 1 && witches >= 1) {
       if (summoners < casterTarget.summoners) return "summoner";
       if (witches < casterTarget.witches) return "witch";
@@ -35,6 +39,13 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
   }
   if (building.kind === "workshop") return "golem";
   return undefined;
+}
+
+function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  const gold = playerState(snapshot, owner).gold;
+  if (gold > 520) return true;
+  if (options.version !== "v2") return false;
+  return completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 10 && gold >= UNIT_DEFS.knight.cost;
 }
 
 export function shouldPrioritizeWoundedPriestTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}) {
