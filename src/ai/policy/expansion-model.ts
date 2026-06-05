@@ -13,9 +13,12 @@ export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
   const townHalls = completeBuildings(snapshot, owner, "townHall");
   const base = mainBase(snapshot, owner);
   return activeResources(snapshot)
-    .filter((resource) => townHalls.every((townHall) => distance(resource, townHall) > 520))
-    .filter((resource) => allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340))
+    .filter((resource) => unoccupiedExpansionMine(snapshot, owner, resource, townHalls))
     .sort((a, b) => distance(a, base) - distance(b, base))[0];
+}
+
+function unoccupiedExpansionMine(snapshot: GameSnapshot, owner: PlayerId, resource: ResourceNode, ownTownHalls = completeBuildings(snapshot, owner, "townHall")) {
+  return ownTownHalls.every((townHall) => distance(resource, townHall) > 520) && allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340);
 }
 
 export function desiredCatchUpExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
@@ -32,7 +35,7 @@ export function desiredForwardExpansionMine(snapshot: GameSnapshot, owner: Playe
   if (distance(center, main) < 1_200) return undefined;
   const ordinary = desiredExpansionMine(snapshot, owner);
   return activeResources(snapshot)
-    .filter((resource) => completeBuildings(snapshot, owner, "townHall").every((townHall) => distance(resource, townHall) > 520))
+    .filter((resource) => unoccupiedExpansionMine(snapshot, owner, resource))
     .filter((resource) => neutralUnitsNear(snapshot, resource, 280).length === 0)
     .filter((resource) => distance(resource, center) <= 950)
     .filter((resource) => !ordinary || distance(resource, center) + 500 < distance(ordinary, center))
@@ -92,23 +95,29 @@ export function shouldReserveForClearedExpansion(snapshot: GameSnapshot, owner: 
 }
 
 export function expansionIsNearlyCleared(snapshot: GameSnapshot, owner: PlayerId, mine: ResourceNode) {
+  const guards = neutralUnitsNear(snapshot, mine, 280);
   const remainingNeutralPower = neutralGuardPower(snapshot, mine);
-  if (remainingNeutralPower <= 0 || remainingNeutralPower > 1) return false;
+  if (remainingNeutralPower <= 0) return true;
+  if (remainingNeutralPower > 4.5) return false;
+  const damagedGuard = guards.some((unit) => unit.hp < unit.maxHp * 0.55);
+  if (remainingNeutralPower > 1 && !damagedGuard) return false;
   const nearbyArmy = combatUnits(snapshot, owner).filter((unit) => distance(unit, mine) <= 420);
-  return nearbyArmy.length >= 3 && expansionClearPower(nearbyArmy) >= remainingNeutralPower * 4;
+  const requiredBodies = remainingNeutralPower <= 1 ? 3 : 4;
+  const requiredPowerRatio = remainingNeutralPower <= 1 ? 4 : 1.55;
+  return nearbyArmy.length >= requiredBodies && expansionClearPower(nearbyArmy) >= remainingNeutralPower * requiredPowerRatio;
 }
 
 export function activeGuardedFirstNatural(snapshot: GameSnapshot, owner: PlayerId, mine: ResourceNode, options: PresetAiPolicyOptions) {
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (!hasCoreProduction(snapshot, owner)) return false;
-  if (!opponentEconomyAhead(snapshot, owner, options)) return false;
   if (enemyPressure(snapshot, owner, mine, 360, options)) return false;
-  if (playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost - 80) return false;
   const remainingNeutralPower = neutralGuardPower(snapshot, mine);
-  if (remainingNeutralPower <= 0 || remainingNeutralPower > 2) return false;
-  // @@@guarded-natural-reserve - Do not starve army production while a full guarded natural still needs real clearing.
+  if (remainingNeutralPower <= 0 || remainingNeutralPower > 6) return false;
+  const guards = neutralUnitsNear(snapshot, mine, 280);
+  if (remainingNeutralPower > 2 && !guards.some((unit) => unit.hp < unit.maxHp * 0.75)) return false;
+  // @@@active-natural-bank - Once the first natural fight is already won operationally, routine macro spending must not reset the town-hall bank window.
   const committedArmy = combatUnits(snapshot, owner).filter((unit) => distance(unit, mine) <= 560 || (unit.order.type === "attackMove" && distance(unit.order, mine) <= 260));
-  return committedArmy.length >= 4 && expansionClearPower(committedArmy) >= remainingNeutralPower * 1.2;
+  return committedArmy.length >= 4 && expansionClearPower(committedArmy) >= remainingNeutralPower;
 }
 
 export function canClearGuardedExpansion(snapshot: GameSnapshot, mine: ResourceNode, soldiers: Unit[], options: PresetAiPolicyOptions) {

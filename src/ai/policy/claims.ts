@@ -58,6 +58,19 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       recordAttackWaveMemory(snapshot, query, command, memory, options.owner);
       continue;
     }
+    if (scriptId === "attackWave" && command.type === "move") {
+      for (const unitId of command.unitIds) {
+        memory.unitClaims[unitId] = {
+          kind: "retreat",
+          targetId: "retreat",
+          x: command.x,
+          y: command.y,
+          sinceTick: snapshot.tick,
+          expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
+        };
+      }
+      continue;
+    }
     if (scriptId === "mercenary" && command.type === "attackMove") {
       const camp = nearestEntity(query.mercenaryCamps(), command);
       if (!camp || distance(camp, command) > ATTACK_MOVE_REDIRECT_DISTANCE) continue;

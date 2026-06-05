@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
-import { canClearGuardedExpansion, desiredExpansionMine, opponentEconomyAhead, shouldReserveForClearedExpansion } from "./expansion-model";
+import { canClearGuardedExpansion, desiredExpansionMine, desiredForwardExpansionMine, opponentEconomyAhead, shouldReserveForClearedExpansion } from "./expansion-model";
 
 describe("AI expansion model", () => {
   it("chooses an unclaimed natural mine away from existing town halls", () => {
@@ -16,6 +16,25 @@ describe("AI expansion model", () => {
       .createGame();
 
     expect(desiredExpansionMine(snapshotGame(game), "v2")).toMatchObject({ id: "natural-mine" });
+  });
+
+  it("does not choose an occupied town-hall mine as a forward expansion", () => {
+    const scene = sketchScene("expansion-model-forward-occupied-mine")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1a", { team: "south" })
+      .player("v1b", { team: "south" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .goldMine("ordinary-natural", 1300, 620, 6000)
+      .goldMine("occupied-forward", 2500, 2500, 6000)
+      .townHall("v1a", 2520, 2500)
+      .townHall("v1b", 3300, 3800);
+    for (let index = 0; index < 6; index += 1) scene.unit("v2", index % 2 === 0 ? "footman" : "lancer", 2470 + index * 16, 2500);
+    const game = scene.build().createGame();
+
+    expect(desiredForwardExpansionMine(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBeUndefined();
   });
 
   it("treats combined 1v2 economy as ahead when enemy workers materially outnumber ours", () => {
