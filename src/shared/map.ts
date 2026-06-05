@@ -381,6 +381,7 @@ export function createUnit(
     level: 0,
     effects: [],
     order: { type: "idle" },
+    orderQueue: [],
   };
 }
 

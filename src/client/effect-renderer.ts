@@ -125,9 +125,10 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
-    if (effect.type === "attackTarget") {
+    if (effect.type === "attackTarget" || effect.type === "queuedAttackTarget") {
       const pulse = 0.55 + Math.sin(effect.remaining * 0.9) * 0.22;
-      ctx.strokeStyle = `rgba(155, 47, 47, ${pulse})`;
+      ctx.setLineDash(effect.type === "queuedAttackTarget" ? [5, 5] : []);
+      ctx.strokeStyle = effect.type === "queuedAttackTarget" ? `rgba(155, 47, 47, ${pulse * 0.58})` : `rgba(155, 47, 47, ${pulse})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.ellipse(point.x, point.y + 10, radius * 1.15, radius * 0.5, 0, 0, Math.PI * 2);
@@ -136,6 +137,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       ctx.moveTo(point.x + radius * 0.45, point.y + 10);
       ctx.lineTo(point.x + radius * 1.25, point.y + 10);
       ctx.stroke();
+      ctx.setLineDash([]);
       continue;
     }
 
@@ -185,11 +187,19 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     ctx.lineWidth = 2;
-    ctx.strokeStyle = effect.type === "mine" ? "#b9861b" : effect.type === "attack" ? "#9b2f2f" : "#243126";
+    ctx.save();
+    ctx.setLineDash(isQueuedEffect(effect.type) ? [4, 5] : []);
+    ctx.strokeStyle = effect.type === "mine" || effect.type === "queuedMine" ? "#b9861b" : effect.type === "attack" || effect.type === "queuedAttack" ? "#9b2f2f" : "#243126";
+    if (isQueuedEffect(effect.type)) ctx.globalAlpha *= 0.58;
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
   }
+}
+
+function isQueuedEffect(type: WorldEffect["type"]) {
+  return type === "queuedMove" || type === "queuedMine" || type === "queuedRepair" || type === "queuedAttack" || type === "queuedAttackTarget";
 }
 
 // @@@effect-language - Active powers need readable world symbols, not generic debug circles.

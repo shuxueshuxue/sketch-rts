@@ -49,10 +49,15 @@ export type WorldEffect = {
     | "summon"
     | "curse"
     | "move"
+    | "queuedMove"
     | "mine"
+    | "queuedMine"
     | "repair"
+    | "queuedRepair"
     | "attack"
+    | "queuedAttack"
     | "attackTarget"
+    | "queuedAttackTarget"
     | "build"
     | "projectile"
     | "melee"
@@ -128,6 +133,7 @@ export type Unit = {
   expiresTick?: number;
   effects: UnitStatusEffect[];
   order: UnitOrder;
+  orderQueue?: UnitOrder[];
 };
 
 export type Building = {
@@ -304,18 +310,18 @@ export type TerrainLandmark = {
 
 export type GameCommand =
   | { type: "startMap"; mapId: MapId }
-  | { type: "move"; unitIds: string[]; x: number; y: number }
-  | { type: "attackMove"; unitIds: string[]; x: number; y: number }
-  | { type: "attack"; unitIds: string[]; targetId: string }
-  | { type: "mine"; unitIds: string[]; resourceId: string }
-  | { type: "repair"; unitIds: string[]; buildingId: string }
+  | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
+  | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
-  | { type: "pickupItem"; unitId: string; itemId: string }
+  | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
