@@ -36,4 +36,17 @@ describe("local game adapter", () => {
     expect(adapter.currentSnapshot().tick).toBe(0);
     expect(townHall!.queue).toHaveLength(0);
   });
+
+  it("keeps stale local command issuers from rejecting live issuer subsets", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const workers = game.units.filter((unit) => unit.owner === "player" && unit.kind === "worker").slice(0, 2);
+    expect(workers).toHaveLength(2);
+    game.units = game.units.filter((unit) => unit.id !== workers[1]!.id);
+    const adapter = new LocalGameAdapter(game, "player");
+
+    expect(() => adapter.sendCommand({ type: "move", unitIds: workers.map((worker) => worker.id), x: workers[0]!.x + 80, y: workers[0]!.y })).not.toThrow();
+
+    expect(adapter.currentSnapshot().tick).toBe(1);
+    expect(game.units.find((unit) => unit.id === workers[0]!.id)?.order).toMatchObject({ type: "move" });
+  });
 });

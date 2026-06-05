@@ -97,13 +97,15 @@ After the fix, the same command list fails before mutation:
 }
 ```
 
+The admission pass now first applies the command-frame current-issuer normalizer before validating. That preserves the frame contract where a multi-unit command with one dead/stale issuer still applies to the surviving issuers instead of turning into an admission failure.
+
 ## Current Command Path Ruling
 
 The intended command chain is now:
 
 - Browser room/server commands: validate at `room-net` / REST server boundary with `commandValidationError`.
-- Local browser commands: validate in `LocalGameAdapter` before frame apply.
-- SDK/AI frame commands: validate in `issueCommandFrame` before frame apply.
+- Local browser commands: normalize to current frame issuers, then validate in `LocalGameAdapter` before frame apply.
+- SDK/AI frame commands: normalize to current frame issuers, then validate in `issueCommandFrame` before frame apply.
 - Accepted command frames: normalize stale issuers and same-frame races in `applyCommandFrame`.
 - Raw sim direct calls: keep fail-loud throws for invalid internal/test/tool callers.
 
@@ -131,3 +133,9 @@ npx vitest run src/sdk/commands/frame.test.ts src/client/net/local-adapter.test.
 npx vitest run src/sdk/commands/frame.test.ts src/client/net/local-adapter.test.ts src/ai/runtime.test.ts src/ai/game-runner.test.ts src/sdk/game-runner.test.ts src/shared/sim/determinism.test.ts src/server/room-host.test.ts src/server/room-net.test.ts src/client/net/lockstep-client.test.ts
 npm --silent run audit:crash-inventory -- --json
 ```
+
+Latest counts:
+
+- Focused regression suite: 9 files / 92 tests passed.
+- Full Vitest suite: 91 files / 819 tests passed.
+- Inventory script: 269 findings, with 193 throws and 76 non-null assertions.

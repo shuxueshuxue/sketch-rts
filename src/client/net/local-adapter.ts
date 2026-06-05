@@ -3,7 +3,7 @@ import type { CommandEnvelope } from "../../shared/net/types";
 import { finishRoom } from "../../shared/rooms";
 import { snapshotGame, stepGame, type Game } from "../../shared/sim";
 import { commandValidationError } from "../../shared/sim/command-validation";
-import { applyCommandFrame } from "../../shared/sim/frame";
+import { applyCommandFrame, commandWithCurrentIssuers } from "../../shared/sim/frame";
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../../shared/types";
 import type { GameAdapter } from "../game-adapter";
 
@@ -55,7 +55,9 @@ export class LocalGameAdapter implements GameAdapter {
     const aiCommands = this.options.aiRuntime ? planPresetAiRuntimeCommands(this.game, this.options.aiRuntime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })) : [];
     const snapshot = snapshotGame(this.game);
     for (const entry of [...commands, ...aiCommands]) {
-      const error = commandValidationError(snapshot, entry.playerId, entry.command);
+      const currentCommand = commandWithCurrentIssuers(this.game, entry.playerId, entry.command);
+      if (!currentCommand) continue;
+      const error = commandValidationError(snapshot, entry.playerId, currentCommand);
       if (error) throw new Error(`Local command rejected: ${error}`);
     }
     applyCommandFrame(this.game, {

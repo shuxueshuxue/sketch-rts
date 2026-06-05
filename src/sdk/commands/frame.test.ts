@@ -55,4 +55,24 @@ describe("SDK command frames", () => {
     expect(game.tick).toBe(0);
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
   });
+
+  it("keeps stale SDK frame issuers from rejecting live issuer subsets", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const workers = game.units.filter((unit) => unit.owner === "player" && unit.kind === "worker").slice(0, 2);
+    expect(workers).toHaveLength(2);
+    game.units = game.units.filter((unit) => unit.id !== workers[1]!.id);
+
+    expect(() =>
+      issueCommandFrame(game, [
+        {
+          playerId: "player",
+          source: "external-agent",
+          scriptId: "sdk-frame-test",
+          command: { type: "move", unitIds: workers.map((worker) => worker.id), x: workers[0]!.x + 140, y: workers[0]!.y },
+        },
+      ]),
+    ).not.toThrow();
+
+    expect(game.units.find((unit) => unit.id === workers[0]!.id)?.order).toMatchObject({ type: "move" });
+  });
 });
