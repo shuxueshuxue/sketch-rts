@@ -77,7 +77,7 @@ describe("lockstep client", () => {
     expect(errors).toEqual(["farm placement is too close to townHall"]);
   });
 
-  it("reports local frame apply errors and asks for an authoritative checkpoint", () => {
+  it("applies stale command-frame unit ids without forcing a checkpoint", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
     const errors: string[] = [];
@@ -91,7 +91,28 @@ describe("lockstep client", () => {
     });
 
     expect(() => client.updateToRenderTime()).not.toThrow();
-    expect(errors).toEqual(["Unknown enemy unit unit-enemy-footman-2954"]);
+    expect(errors).toEqual([]);
+    expect(transport.sent).not.toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+    expect(game.tick).toBe(1);
+  });
+
+  it("reports local invalid frame command errors and asks for an authoritative checkpoint", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(townHall).toBeDefined();
+    const transport = new FakeTransport();
+    const errors: string[] = [];
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+
+    client.receiveFrame({
+      roomId: "room-1",
+      tick: 0,
+      sequence: 0,
+      commands: [{ playerId: "player", command: { type: "train", buildingId: townHall!.id, unitKind: "footman" } }],
+    });
+
+    expect(() => client.updateToRenderTime()).not.toThrow();
+    expect(errors).toEqual(["townHall cannot train footman"]);
     expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
     expect(game.tick).toBe(0);
   });
