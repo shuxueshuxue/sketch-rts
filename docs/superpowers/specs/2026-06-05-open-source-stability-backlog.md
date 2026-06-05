@@ -102,6 +102,24 @@ Acceptance evidence:
 - Benchmark/details expose first/third/fourth expansion timing.
 - 1v1 control remains at least 90%, and 1v2/probe lanes should improve or remain explainably unchanged.
 
+### 8. Crash-Free Sim, AI, And Lockstep Architecture Audit
+
+GitHub issue: [#20](https://github.com/shuxueshuxue/sketch-rts/issues/20)
+
+Audit the full repository for logic paths where ordinary valid play can throw and terminate the game. The target areas are simulation command application, unit/order execution, AI policy scripts, command-frame lockstep, replay/save/SDK command paths, and client command emission.
+
+This is not a request for broad catch/fallback guards. The goal is to make the command model, ownership model, and frame application boundary strong enough that valid game states and valid player/AI commands cannot produce crashy logic errors. Invalid commands should still fail loudly, but at the correct boundary instead of during ordinary simulation ticks.
+
+Acceptance evidence:
+
+- Inventory explicit throws, unsafe lookups, and invariants across sim, AI, command-frame, SDK/replay, and client command emission.
+- Classify each as impossible by construction, invalid external input that should fail before sim, or valid-play crash risk requiring architecture cleanup.
+- Add focused failing tests for every valid-play crash risk before changing production code.
+- Prove internal AI commands and player commands enter the same validated command-frame path.
+- Prove lockstep command-frame application cannot reference stale unit/building ids during ordinary gameplay, or change the command model so it cannot happen.
+- Keep fail-loud behavior for truly invalid commands; do not hide errors with silent fallback.
+- Run product-level YATU for a real room match after fixes, plus automated test/build verification.
+
 ## PR Strategy
 
 Create one issue and one implementation PR per item. Merge each PR only after its own automated checks pass. Use pgl for full AI benchmarks and long sweeps. UI and simulation changes still require YATU through Playwright CLI for player-visible behavior.
