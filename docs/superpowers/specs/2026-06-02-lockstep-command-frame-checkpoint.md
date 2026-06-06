@@ -40,6 +40,19 @@ The room WebSocket path is now wired into the running server:
 - `src/client/main.ts` starts room matches through `LockstepClient`; room commands no longer call the HTTP room command endpoint, and room gameplay no longer polls HTTP snapshots.
 - Public in-match rooms now stay visible in the room browser as spectator entries; spectators connect through room WebSocket without claiming a player slot or POSTing `/join`.
 
+## Checkpoint Semantics
+
+Normal room play advances through authoritative command frames. Checkpoints are synchronization boundaries, not a routine replacement for applying frames.
+
+Checkpoint requests carry a reason. The server records that reason with a semantic class and annotates the checkpoint response with the same reason/class so client restore events are attributed by server metadata, not by client-side guessing:
+
+- `initial-sync` -> `initial`: a player or spectator is joining and needs authoritative state before consuming frames.
+- `late-catchup` -> `catchup`: a late observer requests a retained checkpoint and replay window.
+- `manual` -> `manual`: an explicit developer/user diagnostic request.
+- `frame-apply-error`, `server-desync`, and `message-error` -> `recovery`: a sync fault occurred and the client is asking to recover from server truth.
+
+Recovery checkpoints are incidents. They must stay visible through room sync events and the `/api/rooms/:roomId/sync-events` summary. A release or YATU run with recovery checkpoint growth should be treated as evidence to investigate, not as proof that lockstep is healthy.
+
 ## Evidence
 
 Final automated verification passed:
@@ -154,4 +167,6 @@ Session frontend YATU proof passed through Playwright CLI against a real local s
 
 ## Remaining Work
 
-- No remaining handoff item is currently known from this checkpoint ledger; run the completion audit before closing the branch.
+- GitHub #38 still needs broad frontend YATU stress for visual/client-state sync.
+- GitHub #42 still needs removal of old global session gameplay APIs.
+- GitHub #43 still needs explicit proof that static and server deployments share one gameplay core.

@@ -1,5 +1,6 @@
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
-import type { ClientNetMessage, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../shared/net/types";
+import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
+import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
 import { commandValidationError } from "../shared/sim/command-validation";
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
@@ -90,6 +91,17 @@ export class RoomNetHub {
 
   syncEventsForRoom(roomId: string): RoomSyncEvent[] {
     return this.stateFor(roomId).syncEvents.map((event) => ({ ...event, ...(event.checksums ? { checksums: { ...event.checksums } } : {}) }));
+  }
+
+  syncSummaryForRoom(roomId: string): RoomSyncSummary {
+    const events = this.stateFor(roomId).syncEvents;
+    const byKind = zeroKindCounts();
+    const checkpointRequests = zeroCheckpointClassCounts();
+    for (const event of events) {
+      byKind[event.kind] += 1;
+      if (event.kind === "checkpoint-request" && event.checkpointClass) checkpointRequests[event.checkpointClass] += 1;
+    }
+    return { total: events.length, byKind, checkpointRequests };
   }
 
   private receive(socketRoomId: string, socket: RoomNetSocket, raw: string): void {
@@ -195,16 +207,19 @@ export class RoomNetHub {
     const requestedTick = message.tick;
     const state = this.stateFor(roomId);
     const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : state.spectatorSync.checkpointAtOrBefore(requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
+    const reason = message.reason ?? (requestedTick === undefined ? "manual" : "late-catchup");
+    const checkpointClass = checkpointRequestClass(reason);
     this.recordSyncEvent(roomId, {
       kind: "checkpoint-request",
       roomId,
       playerId: message.playerId,
       localTick: message.clientTick ?? this.options.roomHost.snapshot(roomId).tick,
       serverTick: checkpoint.tick,
-      reason: message.reason ?? (requestedTick === undefined ? "manual" : "late-catchup"),
+      reason,
+      checkpointClass,
       ...(message.clientChecksum ? { clientChecksum: message.clientChecksum } : {}),
     });
-    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint })) return;
+    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint: { ...checkpoint, reason, checkpointClass } })) return;
     for (const frame of state.spectatorSync.framesFrom(checkpoint.tick)) {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
@@ -281,4 +296,19 @@ export class RoomNetHub {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function zeroKindCounts(): Record<RoomSyncEventKind, number> {
+  return {
+    "frame-apply-error": 0,
+    "server-desync": 0,
+    "message-error": 0,
+    "checkpoint-restore": 0,
+    "checkpoint-request": 0,
+    "checksum-mismatch": 0,
+  };
+}
+
+function zeroCheckpointClassCounts(): Record<CheckpointRequestClass, number> {
+  return { initial: 0, catchup: 0, manual: 0, recovery: 0 };
 }

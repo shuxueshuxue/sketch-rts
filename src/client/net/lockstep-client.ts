@@ -124,7 +124,13 @@ export class LockstepClient {
     restoreGameSnapshot(this.options.engine.game, checkpoint);
     this.frameBuffer.discardBefore(checkpoint.tick);
     this.checkpointRevision += 1;
-    this.emitSyncEvent({ kind: "checkpoint-restore", localTick: this.options.engine.game.tick, serverTick: checkpoint.tick });
+    this.emitSyncEvent({
+      kind: "checkpoint-restore",
+      localTick: this.options.engine.game.tick,
+      serverTick: checkpoint.tick,
+      ...(checkpoint.reason ? { reason: checkpoint.reason } : {}),
+      ...(checkpoint.checkpointClass ? { checkpointClass: checkpoint.checkpointClass } : {}),
+    });
   }
 
   private emitChecksumIfDue(): void {
