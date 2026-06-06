@@ -1,10 +1,11 @@
 import { createAiRuntime } from "../../ai/runtime";
+import type { ChatMessage } from "../../shared/net/types";
 import { createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
 import { LocalGameAdapter, type LocalGameAdapterOptions } from "../net/local-adapter";
-import type { DeploymentRuntime, StartedMatch } from "./runtime";
+import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
 
 export type StaticSoloDeploymentRuntimeOptions = {
   now?: () => number;
@@ -85,7 +86,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       },
     }));
     this.matches.set(room.id, { adapter, onRoom });
-    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId), snapshot: adapter.currentSnapshot() };
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
@@ -102,7 +103,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       },
     }));
     this.matches.set(room.id, { adapter, onRoom });
-    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId), snapshot: adapter.currentSnapshot() };
   }
 
   canForfeitMatch(): boolean {
@@ -142,4 +143,22 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       ...(this.options.now === undefined ? {} : { now: this.options.now }),
     };
   }
+}
+
+function createLocalChat(roomId: string, playerId: PlayerId): MatchChat {
+  const handlers = new Set<(message: ChatMessage) => void>();
+  let nextSequence = 1;
+  return {
+    send(text, senderName) {
+      const trimmed = text.trim();
+      if (!trimmed) throw new Error("Chat message cannot be empty");
+      const message: ChatMessage = { id: `chat-${roomId}-${nextSequence}`, roomId, playerId, senderName, text: trimmed, sentAt: Date.now() };
+      nextSequence += 1;
+      for (const handler of [...handlers]) handler(message);
+    },
+    onMessage(handler) {
+      handlers.add(handler);
+      return () => handlers.delete(handler);
+    },
+  };
 }
