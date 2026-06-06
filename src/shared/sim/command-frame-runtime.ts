@@ -30,6 +30,13 @@ export type RuntimeAdmissionOptions = {
 
 type ValidationPurpose = "admission" | "apply";
 
+// @@@frame-cadence - Product paths may choose transport delay, but a simulation tick means: apply all frames for this tick, then step once.
+export function advanceCommandFrameTick(game: Game, frames?: CommandFrame | CommandFrame[], options: Pick<RuntimeFrameOptions, "applyHooks"> = {}): void {
+  const frameList = Array.isArray(frames) ? frames : frames ? [frames] : [];
+  for (const frame of frameList) applyCommandFrame(game, frame, options.applyHooks);
+  stepGame(game);
+}
+
 export class CommandFrameRuntime<State = unknown> {
   private nextSequence = 0;
 
@@ -44,8 +51,9 @@ export class CommandFrameRuntime<State = unknown> {
   }
 
   tick(commands: CommandEnvelope[] = [], options: RuntimeFrameOptions = {}): CommandFrame | undefined {
-    const frame = this.completeAndApply(commands, options);
-    stepGame(this.options.game);
+    const frame = this.completeFrame(commands, options);
+    if (frame) options.onFrame?.(frame);
+    advanceCommandFrameTick(this.options.game, frame, options.applyHooks ? { applyHooks: options.applyHooks } : {});
     return frame;
   }
 

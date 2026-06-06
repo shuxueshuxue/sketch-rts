@@ -35,6 +35,15 @@ describe("command frame runtime boundary", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("keeps debug replay on the shared command-frame cadence primitive", () => {
+    const source = readFileSync("src/shared/replay.ts", "utf8");
+    const forbidden = ["applyCommandFrame", "stepGame"];
+    const offenders = forbidden.filter((needle) => source.includes(needle));
+
+    expect(offenders).toEqual([]);
+    expect(source).toContain("advanceCommandFrameTick");
+  });
+
   it("rejects illegal live commands through shared runtime admission", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
