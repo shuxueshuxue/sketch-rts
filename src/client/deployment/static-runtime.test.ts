@@ -45,6 +45,20 @@ describe("static solo deployment runtime", () => {
     expect(after?.units.some((unit) => unit.owner === "enemy" && unit.order)).toBe(true);
   });
 
+  it("uses the local command-frame admission path for player commands", async () => {
+    const runtime = new StaticSoloDeploymentRuntime();
+    await runtime.createRoom({ id: "room-local-admission", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const started = await runtime.startRoom("room-local-admission", host);
+    const townHall = started.snapshot.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(townHall).toBeDefined();
+
+    expect(() => started.adapter.sendCommand({ type: "train", buildingId: townHall!.id, unitKind: "footman" })).toThrow(/Local command rejected: townHall cannot train footman/);
+
+    const after = started.adapter.currentSnapshot();
+    expect(after?.tick).toBe(0);
+    expect(after?.buildings.find((building) => building.id === townHall!.id)?.queue).toHaveLength(0);
+  });
+
   it("can concede a local match into ordinary room results", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-concede", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
