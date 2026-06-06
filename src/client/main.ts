@@ -2484,7 +2484,7 @@ function drawBuildings(buildings: Building[]) {
     const selected = selectedIds.has(building.id);
     const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
     const rallyPoint = worldToScreen({ x: building.rallyX, y: building.rallyY });
-    const showRally = shouldRenderBuildingRally({ selected, trainable, buildingPoint: point, rallyPoint, nearScreen });
+    const showRally = shouldRenderBuildingRally({ selected, trainable });
     if (!nearScreen(point, 120)) {
       if (showRally) drawBuildingRally(building, point, rallyPoint);
       continue;
