@@ -132,7 +132,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     });
     const join = () => {
       client.join();
-      client.requestCheckpoint();
+      client.requestCheckpoint("initial-sync");
     };
     if (transport.onOpen) transport.onOpen(join);
     else join();

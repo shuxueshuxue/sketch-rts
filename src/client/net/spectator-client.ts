@@ -19,7 +19,7 @@ export class SpectatorClient {
 
   join(): void {
     this.client.join();
-    this.client.requestCheckpoint();
+    this.client.requestCheckpoint("initial-sync");
   }
 
   currentSnapshot(): GameSnapshot {
