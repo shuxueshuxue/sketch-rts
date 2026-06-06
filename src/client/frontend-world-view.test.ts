@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import type { GameAdapter } from "./game-adapter";
 import { syncFrontendWorldView } from "./frontend-world-view";
 import type { ControlGroups } from "./control-groups";
@@ -36,6 +37,27 @@ describe("frontend world view", () => {
     expect(view.selectedIds.has(staleUnit!.id)).toBe(false);
     expect(view.focusedSelectionId).not.toBe(staleUnit!.id);
     expect(controlGroups[1]).toBeUndefined();
+  });
+
+  it("keeps command construction entrypoints downstream of a fresh adapter projection", () => {
+    const source = readFileSync(new URL("./main.ts", import.meta.url), "utf8");
+    const commandEntrypoints = [
+      "issueContextCommand",
+      "confirmBuildPlacement",
+      "issueAttackMoveAt",
+      "issueSpellAt",
+      "issueItemAt",
+      "train",
+      "research",
+      "hireMercenary",
+      "useInventoryItem",
+      "useCarriedItem",
+      "dropCarriedItem",
+    ];
+
+    for (const name of commandEntrypoints) {
+      expect(source).toMatch(new RegExp(`function ${name}\\([^)]*\\) \\{\\n  if \\(!syncBeforeCommandProjection\\(\\)\\) return(?: false)?;`));
+    }
   });
 });
 

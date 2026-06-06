@@ -961,9 +961,9 @@ function handleRuntimeRoomUpdate(room: RoomState) {
 }
 
 function syncActiveGameAdapterSnapshot() {
-  if (menuOpen) return;
+  if (menuOpen) return false;
   const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
-  if (!view.snapshot) return;
+  if (!view.snapshot) return false;
   snapshot = view.snapshot;
   selectedIds = view.selectedIds;
   focusedSelectionId = view.focusedSelectionId;
@@ -971,6 +971,14 @@ function syncActiveGameAdapterSnapshot() {
   syncDebugView();
   pruneSelection();
   updateHud();
+  return true;
+}
+
+function syncBeforeCommandProjection() {
+  // @@@command-projection-truth - Input events can arrive between render frames; command construction must re-materialize adapter truth before reading selection ids.
+  if (syncActiveGameAdapterSnapshot() && snapshot) return true;
+  showInvalidCommand("No active match.");
+  return false;
 }
 
 function openResults(room: RoomState) {
@@ -1381,6 +1389,7 @@ function onMouseUp(event: MouseEvent) {
 }
 
 function issueContextCommand(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
   const mini = minimapRect();
   issueContextCommandAtWorld(isInsideRect(point, mini) ? minimapPointToWorld(point, mini, snapshot.map) : screenToWorld(point), queued);
@@ -1545,6 +1554,7 @@ function beginSpellTargeting(ability: AbilityKind) {
 }
 
 function confirmBuildPlacement(point: Point) {
+  if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "build" || !snapshot) return;
   const world = screenToWorld(point);
   const result = buildPlacementCommand(snapshot, commandMode.placement, world);
@@ -1560,6 +1570,7 @@ function confirmBuildPlacement(point: Point) {
 }
 
 function issueAttackMoveAt(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "attackMove") return;
   const unitIds = selectedPlayerUnits().map((unit) => unit.id);
   if (unitIds.length === 0) {
@@ -1578,6 +1589,7 @@ function issueAttackMoveAt(point: Point, queued = false) {
 }
 
 function issueSpellAt(point: Point) {
+  if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "spell") return;
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
@@ -1617,6 +1629,7 @@ function beginItemTargeting(entry: { item: WorldItem; carrier: Unit }) {
 }
 
 function issueItemAt(point: Point) {
+  if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "item" || !snapshot) return;
   const { kind, itemId, unitId } = commandMode.targeting;
   const world = screenToWorld(point);
@@ -1682,6 +1695,7 @@ function closeBuildPalette(message?: string) {
 }
 
 function train(unitKind: TrainableUnitKind) {
+  if (!syncBeforeCommandProjection()) return;
   const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
   if (!building) {
     showInvalidCommand(`${labelKind(unitKind)} needs a selected production building.`);
@@ -1692,6 +1706,7 @@ function train(unitKind: TrainableUnitKind) {
 }
 
 function research(upgradeKind: UpgradeKind) {
+  if (!syncBeforeCommandProjection()) return;
   const command = researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
   if (!command) {
     showInvalidCommand(`${labelKind(upgradeKind)} needs a selected research building.`);
@@ -1702,6 +1717,7 @@ function research(upgradeKind: UpgradeKind) {
 }
 
 function hireMercenary() {
+  if (!syncBeforeCommandProjection()) return;
   const camp = selectedMercenaryCamp();
   if (!camp) {
     showInvalidCommand("Hire needs a selected mercenary camp.");
@@ -2140,6 +2156,7 @@ function renderItemDock() {
 }
 
 function useInventoryItem(index: number) {
+  if (!syncBeforeCommandProjection()) return false;
   if (!snapshot) return false;
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits())[index];
   if (!entry) return false;
@@ -2148,6 +2165,7 @@ function useInventoryItem(index: number) {
 }
 
 function useCarriedItem(itemId: string) {
+  if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
   if (!entry) return;
@@ -2173,6 +2191,7 @@ function useCarriedItem(itemId: string) {
 }
 
 function dropCarriedItem(itemId: string, carrierId: string) {
+  if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
