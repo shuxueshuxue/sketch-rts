@@ -26,6 +26,16 @@ export type RoomFrameTickResult = RoomTickResult & {
   frame: CommandFrame;
 };
 
+export type HostedRoomFrameEvent = {
+  frame: CommandFrame;
+  source: ReplayCommandSource;
+  room: RoomState;
+  snapshot: GameSnapshot;
+  checksum: string;
+};
+
+export type HostedRoomFrameListener = (event: HostedRoomFrameEvent) => void;
+
 export type RoomResetResult = {
   room: RoomState;
   snapshot: GameSnapshot;
@@ -37,6 +47,7 @@ type HostedRoom = {
   aiRuntime?: AiRuntimeState;
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
   debugReplay?: DebugReplayTrace;
+  frameListeners?: Set<HostedRoomFrameListener>;
 };
 
 export type RoomHostOptions = {
@@ -100,6 +111,13 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
     hasRoom(roomId: string): boolean {
       return rooms.has(roomId);
+    },
+
+    observeRoomFrames(roomId: string, listener: HostedRoomFrameListener): () => void {
+      const hosted = getHosted(roomId);
+      hosted.frameListeners ??= new Set();
+      hosted.frameListeners.add(listener);
+      return () => hosted.frameListeners?.delete(listener);
     },
 
     pauseRoom(roomId: string): RoomState {
@@ -370,15 +388,21 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   const frameOptions = input.frame ? { frame: input.frame } : {};
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => recordHostedReplayFrame(hosted, input.source, frame) });
   recordHostedReplayCheckpoint(hosted, game);
-  if (game.match.winner) finishHostedRoom(hosted, game);
+  const snapshot = snapshotGame(game);
+  if (game.match.winner) finishHostedRoom(hosted, snapshot);
+  if (completedFrame) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
   return completedFrame;
 }
 
-function finishHostedRoom(hosted: HostedRoom, game: Game) {
-  hosted.room = finishRoom(hosted.room, snapshotGame(game));
+function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
+  hosted.room = finishRoom(hosted.room, snapshot);
   delete hosted.game;
   delete hosted.aiRuntime;
   delete hosted.frameRuntime;
+}
+
+function notifyHostedFrameListeners(hosted: HostedRoom, event: HostedRoomFrameEvent) {
+  for (const listener of [...(hosted.frameListeners ?? [])]) listener(event);
 }
 
 function applyHostedCommandFrame(hosted: HostedRoom, frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>, source: ReplayCommandSource, commands: CommandEnvelope[]) {
