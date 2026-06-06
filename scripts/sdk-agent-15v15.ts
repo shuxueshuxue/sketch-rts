@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { DEFAULT_AI_SCRIPT_VERSION, planAiCommandFrameFromSnapshot, type AiMemoryProvider } from "../src/ai/runtime";
 import { SketchRtsSdk } from "../src/sdk/client";
+import { runExternalAgentRoom } from "../src/sdk/external-agent-room-runner";
 import type { GameSnapshot, PlayerId, RoomState } from "../src/shared/types";
 
 const port = Number(process.env.SDK_AGENT_15V15_PORT ?? 5180);
@@ -28,57 +29,34 @@ try {
   server.stderr?.on("data", (chunk) => process.stderr.write(chunk));
 
   await waitForSdk();
-  const room = await sdk.createGrandThirtyRoom({ id: "agent-host", name: "Grand Agent Host" }, `sdk-agent-grand-thirty-${STRESS_NAME}`, {
-    humanCount: HUMAN_COUNT,
-    aiCount: AI_COUNT,
+  const memoryProvider = createScriptMemoryProvider();
+  const run = await runExternalAgentRoom({
+    sdk,
+    setupRoom: createGrandStressRoom,
+    maxTicks: MAX_TICKS,
+    stepTicks: STEP_TICKS,
+    ...(MAX_WALL_MS === undefined ? {} : { maxWallMs: MAX_WALL_MS }),
+    planCommands({ snapshot, externalPlayers, teams }) {
+      return planAiCommandFrameFromSnapshot(
+        snapshot,
+        externalPlayers.map((owner) => ({ playerId: owner, source: "external-agent", version: EXTERNAL_AGENT_VERSION })),
+        { teams, memoryProvider },
+      ).commands;
+    },
+    onProgress({ snapshot, elapsedMs, totalTickCpuMs }) {
+      if (snapshot.tick > 0 && snapshot.tick % 3_600 === 0) {
+        process.stderr.write(`${STRESS_NAME} progress tick=${snapshot.tick} elapsedMs=${elapsedMs.toFixed(1)} cpuMs=${totalTickCpuMs.toFixed(1)}\n`);
+      }
+    },
   });
-  const humanAgents = room.slots.filter((slot) => slot.controller === "human").map((slot) => slot.playerId);
-  const internalAis = room.slots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId);
-  const teams = Object.fromEntries(room.slots.map((slot) => [slot.playerId, slot.team]));
-
-  must(humanAgents.length === HUMAN_COUNT, `expected ${HUMAN_COUNT} external human agents, got ${humanAgents.length}`);
-  must(internalAis.length === AI_COUNT, `expected ${AI_COUNT} internal AI slots, got ${internalAis.length}`);
-
-  const started = await sdk.startRoom(room.id);
+  const latest = run.snapshot;
+  const endedRoom = run.room;
+  const humanAgents = run.externalPlayers;
+  const internalAis = run.internalPlayers;
+  const started = run.startedRoom;
   must(started.mapId === "grandThirty", `${STRESS_NAME} room did not start on grandThirty`);
   must(started.slots.filter((slot) => slot.controller === "human").length === HUMAN_COUNT, "human slots changed at start");
   must(started.slots.filter((slot) => slot.controller === "ai").length === AI_COUNT, "internal AI slots changed at start");
-
-  const runStarted = performance.now();
-  const cpuStarted = process.cpuUsage();
-  let latest = await sdk.roomSnapshot(room.id);
-  const commandsByOwner: Record<PlayerId, number> = Object.fromEntries(humanAgents.map((owner) => [owner, 0]));
-  const commandKinds: Record<string, number> = {};
-  const scriptCounts: Record<string, number> = {};
-  const memorySamples: number[] = [];
-  const memoryProvider = createScriptMemoryProvider();
-  let totalTickCpuMs = 0;
-
-  while (!latest.match.winner && latest.tick < MAX_TICKS) {
-    const elapsed = performance.now() - runStarted;
-    if (MAX_WALL_MS !== undefined && elapsed > MAX_WALL_MS) throw new Error(`${STRESS_NAME} test wall budget exceeded at tick ${latest.tick}: ${elapsed.toFixed(1)}ms`);
-    const planned = planAiCommandFrameFromSnapshot(
-      latest,
-      humanAgents.map((owner) => ({ playerId: owner, source: "external-agent", version: EXTERNAL_AGENT_VERSION })),
-      { teams, memoryProvider },
-    ).commands;
-    const batch = planned.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
-    const ticked = await sdk.commandTickRoom(room.id, batch, STEP_TICKS);
-    latest = ticked.snapshot;
-    for (const entry of planned) {
-      commandsByOwner[entry.playerId] = (commandsByOwner[entry.playerId] ?? 0) + 1;
-      commandKinds[entry.command.type] = (commandKinds[entry.command.type] ?? 0) + 1;
-      scriptCounts[entry.scriptId] = (scriptCounts[entry.scriptId] ?? 0) + 1;
-    }
-    totalTickCpuMs += ticked.cpuMs;
-    memorySamples.push(ticked.memory.heapUsedBytes);
-    if (latest.tick > 0 && latest.tick % 3_600 === 0) {
-      process.stderr.write(`${STRESS_NAME} progress tick=${latest.tick} elapsedMs=${(performance.now() - runStarted).toFixed(1)} cpuMs=${totalTickCpuMs.toFixed(1)}\n`);
-    }
-  }
-
-  const endedRoom = (await sdk.listRooms()).find((candidate) => candidate.id === room.id);
-  const cpu = process.cpuUsage(cpuStarted);
   const report = {
     ok: latest.match.winner !== null || latest.tick >= MAX_TICKS,
     stressName: STRESS_NAME,
@@ -90,15 +68,15 @@ try {
     tick: latest.tick,
     roomStatus: endedRoom?.status,
     planner: PLANNER_REPORT,
+    cadence: run.cadence,
     wallBudgetMs: MAX_WALL_MS ?? null,
-    elapsedMs: Number((performance.now() - runStarted).toFixed(3)),
-    cpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
-    totalTickCpuMs: Number(totalTickCpuMs.toFixed(3)),
-    heapMin: Math.min(...memorySamples),
-    heapMax: Math.max(...memorySamples),
-    commandKinds,
-    scriptCounts,
-    activeCommandingHumans: Object.values(commandsByOwner).filter((count) => count > 0).length,
+    elapsedMs: run.elapsedMs,
+    totalTickCpuMs: run.totalTickCpuMs,
+    heapMin: run.heapMin,
+    heapMax: run.heapMax,
+    commandKinds: run.commandKinds,
+    scriptCounts: run.scriptCounts,
+    activeCommandingHumans: Object.values(run.commandsByOwner).filter((count) => count > 0).length,
     humanGoldSpent: sumOwners(humanAgents, latest.match.stats.goldSpent),
     internalAiGoldSpent: sumOwners(internalAis, latest.match.stats.goldSpent),
     humanKills: sumOwners(humanAgents, latest.match.stats.unitsKilled),
@@ -109,14 +87,21 @@ try {
       humans: sumOwners(humanAgents, latest.match.stats.nonBaseBuildingsDestroyed),
       internalAis: sumOwners(internalAis, latest.match.stats.nonBaseBuildingsDestroyed),
     },
-    losingArmy: losingArmy(latest, teams),
-    losingArmyPerPlayer: losingArmyPerPlayer(latest, teams, [...humanAgents, ...internalAis]),
+    losingArmy: losingArmy(latest, run.teams),
+    losingArmyPerPlayer: losingArmyPerPlayer(latest, run.teams, [...humanAgents, ...internalAis]),
   };
 
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  assertGrandThirty(report, latest, endedRoom, humanAgents, internalAis, teams);
+  assertGrandThirty(report, latest, endedRoom, humanAgents, internalAis, run.teams);
 } finally {
   await stopServer(server);
+}
+
+async function createGrandStressRoom(): Promise<RoomState> {
+  return sdk.createGrandThirtyRoom({ id: "agent-host", name: "Grand Agent Host" }, `sdk-agent-grand-thirty-${STRESS_NAME}`, {
+    humanCount: HUMAN_COUNT,
+    aiCount: AI_COUNT,
+  });
 }
 
 function assertGrandThirty(
