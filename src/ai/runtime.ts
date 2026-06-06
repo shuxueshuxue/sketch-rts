@@ -1,8 +1,8 @@
 import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider } from "./planner-context";
-import { selectIssueableCommandEntries, type CommandFrameEntry } from "../sdk/commands/frame";
+import type { CommandFrameEntry } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
-import type { CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
+import { normalizeCommandFrameEntries, type CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
@@ -108,7 +108,7 @@ export function planAiCommandFrame<Source extends string = string>(game: Game, r
 export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
   if (snapshot.match.winner) return { commands: [] };
   const { memoryProvider, ...policyOptions } = options;
-  return { commands: selectIssueableCommandEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider)) };
+  return { commands: normalizeCommandFrameEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider)) };
 }
 
 function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
