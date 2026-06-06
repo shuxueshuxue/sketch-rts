@@ -10,6 +10,15 @@ describe("AI control benchmark CLI", () => {
       seed: "control-cli-seed",
       matchCount: 4,
     });
+    expect(output.manifest.evaluations[0].matches[0]).toMatchObject({
+      name: output.matches[0],
+      commandPlanner: "present",
+      agents: {
+        v2: { adapter: "external", team: "north", race: "grove", aiVersion: "v2" },
+        v1a: { adapter: "external", team: "south", race: "grove", aiVersion: "v1" },
+      },
+    });
+    expect(output.manifest.evaluations[0].matches[3].agents.v2.disabledBehaviors).toEqual(["workerHarassment"]);
     expect(output.selectedMapIds).toHaveLength(2);
     expect(output.matches).toEqual(output.selectedMapIds.flatMap((mapId: string) => [`${mapId} 1v1 control north`, `${mapId} 1v1 control south`]));
   });
