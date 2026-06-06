@@ -202,14 +202,16 @@ Closed:
 - #16 AI late-tech composition: merged in PR #27. Final-head pgl evidence on run `2026-06-05T16-53-33-967Z-4i6q28` showed 23/24 1v1 control and 10/12 paired 1v2.
 - #17 Neutral aggro on ranged damage: verified already satisfied and closed.
 - #18 AI third and fourth expansions: merged in PR #26.
+- #20 Crash-free sim, AI, and lockstep architecture audit: merged in PR #32 and closed on 2026-06-06. Post-merge evidence included focused command-frame/lockstep tests, `npm run build`, full Vitest, crash inventory, and room-flow YATU.
+- #25 Public in-game chat overlay: merged in PR #34 and closed on 2026-06-06. Evidence included client keyboard tests, room/server chat tests, two-browser Playwright CLI chat YATU, room-flow YATU, `npm run build`, and full Vitest.
+- Rich-map center objective side balance: merged in PR #35 on 2026-06-06. Evidence included a red/green map objective balance test, post-merge `src/shared/map-objectives.test.ts`, `npm run build`, full Vitest, and pgl 1v1 control `92/100` on seed `current-main-50-2026-06-06` with 50 maps and 64 workers.
 
 Open:
 
-- #20 Crash-free sim, AI, and lockstep architecture audit. Current slice: repeatable crash inventory plus SDK/local command-frame admission validation.
 - #24 Browser-language i18n.
-- #25 Public in-game chat overlay.
 
 Still not release-complete:
 
-- The full pgl gauntlet still fails the 100% script gate, mainly in probe and combat lanes.
-- #20 must prove ordinary valid play cannot crash the simulation, AI script path, or command-frame lockstep.
+- #24 still needs full browser-visible UI coverage beyond the first home/create-room i18n slice.
+- The current `origin/main` has fresh pgl 1v1 control evidence after PR #35 (`92/100` on seed `current-main-50-2026-06-06`), but the live dashboard full gauntlet run is still older than the current release head.
+- The full pgl gauntlet still fails the 100% script gate on the last recorded evidence, mainly in probe and combat lanes.
