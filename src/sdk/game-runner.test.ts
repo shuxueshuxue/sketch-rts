@@ -31,8 +31,8 @@ describe("SDK game runner", () => {
       name: "generic-planner",
       game,
       agents: {
-        player: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
-        enemy: { adapter: "external", team: "south", race: "ember", versionLabel: "manual" },
+        player: { controller: "external-agent", team: "north", race: "grove", versionLabel: "manual" },
+        enemy: { controller: "external-agent", team: "south", race: "ember", versionLabel: "manual" },
       },
       commandPlanner,
       maxTicks: 1,
@@ -44,13 +44,36 @@ describe("SDK game runner", () => {
     expect(report.commands[0]).toMatchObject({ owner: "player", source: "external-agent", scriptId: "sdk-test-planner" });
   });
 
+  it("separates seat controller setup from trace source labels", () => {
+    const seenSources: string[] = [];
+    const commandPlanner: SdkGameCommandPlanner = ({ owner, source }) => {
+      seenSources.push(`${owner}:${source}`);
+      return [];
+    };
+
+    const report = runGame({
+      name: "controller-trace-split",
+      mapId: "bareDuel",
+      agents: {
+        player: { controller: "internal-ai", traceSource: "external-agent", team: "north", race: "grove", versionLabel: "manual" },
+        enemy: { controller: "external-agent", traceSource: "internal-ai", team: "south", race: "ember", versionLabel: "manual" },
+      },
+      commandPlanner,
+      maxTicks: 1,
+      thinkInterval: 1,
+    });
+
+    expect(seenSources).toEqual(["player:external-agent", "enemy:internal-ai"]);
+    expect(report.tick).toBe(1);
+  });
+
   it("does not issue commands when no planner is supplied", () => {
     const loop = runGameLoop({
       name: "no-planner",
       mapId: "bareDuel",
       agents: {
-        player: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
-        enemy: { adapter: "external", team: "south", race: "ember", versionLabel: "manual" },
+        player: { controller: "external-agent", team: "north", race: "grove", versionLabel: "manual" },
+        enemy: { controller: "external-agent", team: "south", race: "ember", versionLabel: "manual" },
       },
       maxTicks: 2,
       thinkInterval: 1,
@@ -76,8 +99,8 @@ describe("SDK game runner", () => {
       game,
       winnerMode: "combatElimination",
       agents: {
-        north: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
-        south: { adapter: "external", team: "south", race: "grove", versionLabel: "manual" },
+        north: { controller: "external-agent", team: "north", race: "grove", versionLabel: "manual" },
+        south: { controller: "external-agent", team: "south", race: "grove", versionLabel: "manual" },
       },
       maxTicks: 2,
       thinkInterval: 1,
@@ -104,8 +127,8 @@ describe("SDK game runner", () => {
       game,
       winnerMode: "combatElimination",
       agents: {
-        north: { adapter: "external", team: "north", race: "grove", versionLabel: "manual" },
-        south: { adapter: "external", team: "south", race: "grove", versionLabel: "manual" },
+        north: { controller: "external-agent", team: "north", race: "grove", versionLabel: "manual" },
+        south: { controller: "external-agent", team: "south", race: "grove", versionLabel: "manual" },
       },
       maxTicks: 2,
       thinkInterval: 1,

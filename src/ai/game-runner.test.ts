@@ -14,8 +14,8 @@ describe("SDK game runner", () => {
         name: "runner-loop-hooks",
         mapId: "bareDuel",
         agents: {
-          v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
-          v1: { adapter: "external", team: "south", race: "grove", version: "v1" },
+          v2: { controller: "external-agent", team: "north", race: "grove", version: "v2" },
+          v1: { controller: "external-agent", team: "south", race: "grove", version: "v1" },
         },
         maxTicks: 120,
         thinkInterval: 45,
@@ -43,8 +43,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-smoke",
       mapId: "bareDuel",
       agents: {
-        alpha: { adapter: "external", team: "north", race: "grove", version: "v1" },
-        beta: { adapter: "internal", team: "south", race: "ember", version: "v1" },
+        alpha: { controller: "external-agent", team: "north", race: "grove", version: "v1" },
+        beta: { controller: "internal-ai", team: "south", race: "ember", version: "v1" },
       },
       maxTicks: 180,
       thinkInterval: 45,
@@ -65,8 +65,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-trace",
       mapId: "bareDuel",
       agents: {
-        alpha: { adapter: "external", team: "north", race: "grove", version: "v1" },
-        beta: { adapter: "internal", team: "south", race: "ember", version: "v1" },
+        alpha: { controller: "external-agent", team: "north", race: "grove", version: "v1" },
+        beta: { controller: "internal-ai", team: "south", race: "ember", version: "v1" },
       },
       maxTicks: 90,
       thinkInterval: 45,
@@ -86,8 +86,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-agent-script-override",
       mapId: "bareDuel",
       agents: {
-        alpha: { adapter: "external", team: "north", race: "grove", version: "v1", scripts: [AI_SCRIPT_LIBRARY.economy] },
-        beta: { adapter: "internal", team: "south", race: "ember", version: "v1" },
+        alpha: { controller: "external-agent", team: "north", race: "grove", version: "v1", scripts: [AI_SCRIPT_LIBRARY.economy] },
+        beta: { controller: "internal-ai", team: "south", race: "ember", version: "v1" },
       },
       maxTicks: 90,
       thinkInterval: 45,
@@ -115,8 +115,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-policy-version",
       mapId: "bareDuel",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2", policyVersion: "v1", scripts },
-        v1: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1", scripts },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", versionLabel: "v2", policyVersion: "v1", scripts },
+        v1: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1", scripts },
       },
       maxTicks: 1,
       thinkInterval: 1,
@@ -143,8 +143,8 @@ describe("SDK game runner", () => {
       name: "runner-memory-provider",
       mapId: "bareDuel",
       agents: {
-        alpha: { adapter: "external", team: "north", race: "grove", version: "v2", scripts },
-        beta: { adapter: "external", team: "south", race: "grove", version: "v1", scripts: [AI_SCRIPT_LIBRARY.economy] },
+        alpha: { controller: "external-agent", team: "north", race: "grove", version: "v2", scripts },
+        beta: { controller: "external-agent", team: "south", race: "grove", version: "v1", scripts: [AI_SCRIPT_LIBRARY.economy] },
       },
       maxTicks: 2,
       thinkInterval: 1,
@@ -155,11 +155,11 @@ describe("SDK game runner", () => {
     expect(seen[0]?.jobs.map((job) => job.id)).toEqual(["tick-0", "tick-1"]);
   });
 
-  it("plans mixed internal/external adapters from the same simulation frame", () => {
+  it("plans mixed internal/external controllers from the same simulation frame", () => {
     const agents = {
-      v2: { adapter: "internal", team: "north", race: "grove", version: "v2" },
-      v1a: { adapter: "internal", team: "south", race: "grove", version: "v1" },
-      v1b: { adapter: "internal", team: "south", race: "grove", version: "v1" },
+      v2: { controller: "internal-ai", team: "north", race: "grove", version: "v2" },
+      v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
+      v1b: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
     } as const;
     const internal = runAiGame({
       name: "runner-frame-internal",
@@ -172,7 +172,7 @@ describe("SDK game runner", () => {
     const mixed = runAiGame({
       name: "runner-frame-mixed",
       mapId: "wildMarches",
-      agents: { ...agents, v2: { ...agents.v2, adapter: "external" } },
+      agents: { ...agents, v2: { ...agents.v2, controller: "external-agent" } },
       maxTicks: 3600,
       thinkInterval: 45,
       sampleInterval: 1200,
@@ -188,10 +188,10 @@ describe("SDK game runner", () => {
       name: "bluebell-worker-pressure-disabled",
       mapId: "bluebellHeath",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2", disabledBehaviors: ["workerHarassment"] },
-        v1a: { adapter: "external", team: "south", race: "grove", version: "v1" },
-        v1b: { adapter: "external", team: "south", race: "grove", version: "v1" },
-        v1c: { adapter: "external", team: "south", race: "grove", version: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", disabledBehaviors: ["workerHarassment"] },
+        v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1" },
+        v1b: { controller: "external-agent", team: "south", race: "grove", version: "v1" },
+        v1c: { controller: "external-agent", team: "south", race: "grove", version: "v1" },
       },
       maxTicks: 2_200,
       thinkInterval: 45,
@@ -227,8 +227,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-economy-report",
       game,
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
-        v1: { adapter: "external", team: "south", race: "grove", version: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2" },
+        v1: { controller: "external-agent", team: "south", race: "grove", version: "v1" },
       },
       maxTicks: 0,
       thinkInterval: 45,
@@ -258,8 +258,8 @@ describe("SDK game runner", () => {
       name: "sdk-run-game-killed-by-neutral",
       game: scene.createGame(),
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
-        v1: { adapter: "external", team: "south", race: "ember", version: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2" },
+        v1: { controller: "external-agent", team: "south", race: "ember", version: "v1" },
       },
       maxTicks: 1,
       thinkInterval: 45,
@@ -274,9 +274,9 @@ describe("SDK game runner", () => {
       name: "camp-rush-opening-safety",
       mapId: "campRush",
       agents: {
-        v2: { adapter: "internal", team: "north", race: "grove", version: "v2" },
-        v1a: { adapter: "internal", team: "south", race: "grove", version: "v1" },
-        v1b: { adapter: "internal", team: "south", race: "ember", version: "v1" },
+        v2: { controller: "internal-ai", team: "north", race: "grove", version: "v2" },
+        v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
+        v1b: { controller: "internal-ai", team: "south", race: "ember", version: "v1" },
       },
       maxTicks: 360,
       thinkInterval: 45,
@@ -293,8 +293,8 @@ describe("SDK game runner", () => {
       name: "v2-single-v1-clean-expansion-sanity",
       mapId: "openClaims",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2" },
-        v1: { adapter: "internal", team: "south", race: "grove", version: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2" },
+        v1: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
       },
       maxTicks: 24_000,
       thinkInterval: 45,

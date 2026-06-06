@@ -1,5 +1,5 @@
 import type { BenchmarkInput, BenchmarkMatchInput } from "./core";
-import type { SdkGameAgent } from "../game-runner";
+import { traceSourceFor, type SdkGameAgent, type SdkPlannerOrigin } from "../game-runner";
 import type { PlayerId } from "../../shared/types";
 
 export type BenchmarkInputManifest = {
@@ -38,7 +38,9 @@ export type BenchmarkScenarioManifest = {
 };
 
 export type BenchmarkAgentManifest = {
-  adapter: SdkGameAgent["adapter"];
+  controller: SdkGameAgent["controller"];
+  plannerOrigin: SdkPlannerOrigin;
+  traceSource: NonNullable<SdkGameAgent["traceSource"]>;
   team: string;
   race?: string;
   aiVersion: string;
@@ -77,14 +79,16 @@ function describeBenchmarkMatch<TAgent extends SdkGameAgent>(match: BenchmarkMat
     hasPrebuiltGame: Boolean(match.game),
     ...(match.winnerMode ? { winnerMode: match.winnerMode } : {}),
     ...(match.options?.scenario ? { scenario: describeScenario(match.options.scenario) } : {}),
-    agents: Object.fromEntries(Object.entries(match.agents).map(([owner, agent]) => [owner, describeBenchmarkAgent(agent)])) as Record<PlayerId, BenchmarkAgentManifest>,
+    agents: Object.fromEntries(Object.entries(match.agents).map(([owner, agent]) => [owner, describeBenchmarkAgent(agent, match.commandPlanner ? "local-command-planner" : "none")])) as Record<PlayerId, BenchmarkAgentManifest>,
   };
 }
 
-function describeBenchmarkAgent(agent: SdkGameAgent): BenchmarkAgentManifest {
+function describeBenchmarkAgent(agent: SdkGameAgent, plannerOrigin: SdkPlannerOrigin): BenchmarkAgentManifest {
   const rich = agent as RichBenchmarkAgent;
   return {
-    adapter: agent.adapter,
+    controller: agent.controller,
+    plannerOrigin,
+    traceSource: traceSourceFor(agent),
     team: agent.team,
     ...(agent.race ? { race: agent.race } : {}),
     aiVersion: agent.versionLabel ?? "unknown",

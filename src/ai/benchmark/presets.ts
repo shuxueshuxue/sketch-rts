@@ -5,7 +5,7 @@ import type { MapId, PlayerId, RaceId } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkReport, BenchmarkMatchInput } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
-import type { SdkAgentAdapter } from "../../sdk/game-runner";
+import type { SdkAgentController } from "../../sdk/game-runner";
 import { COMBAT_SCENARIO_RECIPES, createCombatScenarioSetup, type CombatScenarioRecipe } from "../../sdk/scenarios/combat";
 
 export type GauntletMapSelection<TMapId extends string> = {
@@ -22,7 +22,7 @@ export type AiVersionBenchmarkOptions = {
   full?: boolean;
   maxTicks?: number;
   thinkInterval?: number;
-  adapter?: SdkAgentAdapter;
+  controller?: SdkAgentController;
   workers?: number;
   workerHarassment?: WorkerHarassmentBenchmarkMode;
 };
@@ -66,18 +66,18 @@ const TEAMS: Record<PlayerId, string> = { v2: "north", v2b: "north", v1a: "south
 const RACES: Record<PlayerId, RaceId> = { v2: "grove", v2b: "grove", v1a: "grove", v1b: "grove", v1c: "grove" };
 
 type AiBenchmarkAgentOptions = {
-  adapter?: SdkAgentAdapter;
+  controller?: SdkAgentController;
   disableV2WorkerHarassment?: boolean;
   teams?: Partial<Record<PlayerId, string>>;
 };
 
 function aiBenchmarkAgents(players: PlayerId[], options: AiBenchmarkAgentOptions = {}) {
-  const adapter = options.adapter ?? "external";
+  const controller = options.controller ?? "external-agent";
   return Object.fromEntries(
     players.map((owner) => [
       owner,
       {
-        adapter,
+        controller,
         team: options.teams?.[owner] ?? TEAMS[owner],
         race: RACES[owner],
         version: owner === V2 || owner === V2B ? "v2" : "v1",
@@ -105,11 +105,11 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
   const allocatedMaps = allocateGauntletBenchmarkMaps(selection.mapIds);
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
-  const adapter = options.adapter ?? "external";
+  const controller = options.controller ?? "external-agent";
   const match = (name: string, mapId: MapId, players: PlayerId[], index: number): BenchmarkMatchInput<AiGameAgent> => ({
     name,
     mapId,
-    agents: aiBenchmarkAgents(players, { adapter, disableV2WorkerHarassment: index % 2 === 1 }),
+    agents: aiBenchmarkAgents(players, { controller, disableV2WorkerHarassment: index % 2 === 1 }),
     commandPlanner: createAiGameCommandPlanner(),
     maxTicks,
     thinkInterval,
@@ -125,7 +125,7 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
       {
         name: "1v1 score control",
         tag: "melee",
-        matches: allocatedMaps.score.flatMap((mapId, index) => createAiMeleeControlMatches(mapId, index, { adapter, maxTicks, thinkInterval })),
+        matches: allocatedMaps.score.flatMap((mapId, index) => createAiMeleeControlMatches(mapId, index, { controller, maxTicks, thinkInterval })),
       },
       {
         name: "1v3 probe",
@@ -140,12 +140,12 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
       {
         name: "15v20 mixed combat",
         tag: "combat",
-        matches: combatMatches("15v20", 15, 20, adapter, maxTicks, thinkInterval),
+        matches: combatMatches("15v20", 15, 20, controller, maxTicks, thinkInterval),
       },
       {
         name: "10v12 mixed combat",
         tag: "combat",
-        matches: combatMatches("10v12", 10, 12, adapter, maxTicks, thinkInterval),
+        matches: combatMatches("10v12", 10, 12, controller, maxTicks, thinkInterval),
       },
     ],
   };
@@ -166,8 +166,8 @@ export function allocateGauntletBenchmarkMaps<TMapId extends string>(mapIds: rea
   };
 }
 
-export function createAiMeleeControlMatches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "adapter" | "maxTicks" | "thinkInterval" | "workerHarassment"> = {}) {
-  const adapter = options.adapter ?? "external";
+export function createAiMeleeControlMatches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval" | "workerHarassment"> = {}) {
+  const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
   const disableV2WorkerHarassment = workerHarassmentDisabledForIndex(options.workerHarassment ?? 0.5, index);
@@ -180,11 +180,11 @@ export function createAiMeleeControlMatches(mapId: MapId, index: number, options
     thinkInterval,
   });
   return [
-    match(`${mapId} 1v1 control north`, aiBenchmarkAgents([V2, V1A], { adapter, disableV2WorkerHarassment })),
+    match(`${mapId} 1v1 control north`, aiBenchmarkAgents([V2, V1A], { controller, disableV2WorkerHarassment })),
     match(
       `${mapId} 1v1 control south`,
       // @@@Side-balanced control - the same map must be checked from both start teams, otherwise spawn bias looks like AI strength.
-      aiBenchmarkAgents([V1A, V2], { adapter, disableV2WorkerHarassment, teams: { [V2]: "south", [V1A]: "north" } }),
+      aiBenchmarkAgents([V1A, V2], { controller, disableV2WorkerHarassment, teams: { [V2]: "south", [V1A]: "north" } }),
     ),
   ];
 }
@@ -334,11 +334,11 @@ function opponentWasNotOnlyNeutralKilled(match: BenchmarkEvaluationReport["match
     .some(([, player]) => player.unitsLost > 0 && player.unitsKilledByNeutral < player.unitsLost);
 }
 
-function combatMatches(label: "15v20" | "10v12", v2Count: number, v1Count: number, adapter: SdkAgentAdapter, maxTicks: number, thinkInterval: number) {
-  return COMBAT_SCENARIO_RECIPES.map((recipe) => combatMatch(label, recipe, v2Count, v1Count, adapter, maxTicks, thinkInterval));
+function combatMatches(label: "15v20" | "10v12", v2Count: number, v1Count: number, controller: SdkAgentController, maxTicks: number, thinkInterval: number) {
+  return COMBAT_SCENARIO_RECIPES.map((recipe) => combatMatch(label, recipe, v2Count, v1Count, controller, maxTicks, thinkInterval));
 }
 
-function combatMatch(label: "15v20" | "10v12", recipe: CombatScenarioRecipe, v2Count: number, v1Count: number, adapter: SdkAgentAdapter, maxTicks: number, thinkInterval: number): BenchmarkMatchInput<AiGameAgent> {
+function combatMatch(label: "15v20" | "10v12", recipe: CombatScenarioRecipe, v2Count: number, v1Count: number, controller: SdkAgentController, maxTicks: number, thinkInterval: number): BenchmarkMatchInput<AiGameAgent> {
   const setup = createCombatScenarioSetup({ label, recipeSlug: recipe.slug, v2Owner: V2, v1Owner: V1A });
   if (setup.v2Count !== v2Count || setup.v1Count !== v1Count) throw new Error(`Combat setup ${label} count mismatch`);
 
@@ -347,8 +347,8 @@ function combatMatch(label: "15v20" | "10v12", recipe: CombatScenarioRecipe, v2C
     mapId: setup.mapId,
     options: setup.options,
     agents: {
-      [V2]: { adapter, team: "north", race: "grove", version: "v2", versionLabel: "v2", policyMode: "combat" },
-      [V1A]: { adapter, team: "south", race: "grove", version: "v1", versionLabel: "v1", policyMode: "combat" },
+      [V2]: { controller, team: "north", race: "grove", version: "v2", versionLabel: "v2", policyMode: "combat" },
+      [V1A]: { controller, team: "south", race: "grove", version: "v1", versionLabel: "v1", policyMode: "combat" },
     },
     commandPlanner: createAiGameCommandPlanner(),
     winnerMode: "combatElimination",

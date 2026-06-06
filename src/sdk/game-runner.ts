@@ -4,10 +4,13 @@ import { normalizeWinnerForMode, type SdkWinnerMode } from "./winner-mode";
 import { createGame, snapshotGame, type CreateGameOptions, type Game } from "../shared/sim";
 import type { GameCommand, GameSnapshot, MapId, PlayerId, RaceId } from "../shared/types";
 
-export type SdkAgentAdapter = "internal" | "external";
+export type SdkAgentController = "internal-ai" | "external-agent";
+export type SdkPlannerOrigin = "local-command-planner" | "none";
+export type SdkCommandSource = "internal-ai" | "external-agent";
 
 export type SdkGameAgent = {
-  adapter: SdkAgentAdapter;
+  controller: SdkAgentController;
+  traceSource?: SdkCommandSource;
   team: string;
   race?: RaceId;
   versionLabel?: string;
@@ -18,11 +21,12 @@ export type SdkGameCommandPlannerContext<TAgent extends SdkGameAgent = SdkGameAg
   snapshot: GameSnapshot;
   owner: PlayerId;
   agent: TAgent;
-  source: SdkCommandTraceEntry["source"];
+  source: SdkCommandSource;
+  plannerOrigin: SdkPlannerOrigin;
   teams: Record<PlayerId, string>;
 };
 
-export type SdkGameCommandPlanner<TAgent extends SdkGameAgent = SdkGameAgent> = (context: SdkGameCommandPlannerContext<TAgent>) => CommandFrameEntry<SdkCommandTraceEntry["source"]>[];
+export type SdkGameCommandPlanner<TAgent extends SdkGameAgent = SdkGameAgent> = (context: SdkGameCommandPlannerContext<TAgent>) => CommandFrameEntry<SdkCommandSource>[];
 
 export type SdkGameRunInput<TAgent extends SdkGameAgent = SdkGameAgent> = {
   name: string;
@@ -45,7 +49,7 @@ export type SdkGameRunTraceOptions = {
 export type SdkCommandTraceEntry = {
   tick: number;
   owner: PlayerId;
-  source: "internal-ai" | "external-agent";
+  source: SdkCommandSource;
   scriptId: string;
   command: GameCommand;
 };
@@ -101,7 +105,8 @@ export type SdkGameLoopContext = {
 export type SdkGameLoopCommandContext = SdkGameLoopContext & {
   tick: number;
   owner: PlayerId;
-  source: SdkCommandTraceEntry["source"];
+  source: SdkCommandSource;
+  plannerOrigin: SdkPlannerOrigin;
   scriptId: string;
   command: GameCommand;
   before: GameSnapshot;
@@ -186,7 +191,7 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
     createGame(requireMapId(input), {
       ...(input.options ?? {}),
       players: playersOf(input),
-      aiPlayers: playersOf(input).filter((owner) => input.agents[owner]?.adapter === "internal"),
+      aiPlayers: playersOf(input).filter((owner) => input.agents[owner]?.controller === "internal-ai"),
       teams: teamsOf(input),
       races: racesOf(input),
       ...(input.options?.scenario ? { scenario: input.options.scenario } : {}),
@@ -284,12 +289,14 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
   const planned = playersOf(input).flatMap((owner) => {
     const agent = input.agents[owner];
     if (!agent) return [];
+    const plannerOrigin: SdkPlannerOrigin = "local-command-planner";
     return input.commandPlanner!({
       game,
       snapshot,
       owner,
       agent,
-      source: agent.adapter === "internal" ? "internal-ai" : "external-agent",
+      source: traceSourceFor(agent),
+      plannerOrigin,
       teams: loopContext.teams,
     });
   });
@@ -303,7 +310,8 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
         ...loopContext,
         tick: game.tick,
         owner: entry.playerId,
-        source: entry.source ?? "external-agent",
+        source: requireCommandSource(entry),
+        plannerOrigin: "local-command-planner",
         scriptId: entry.scriptId,
         command: entry.command,
         before: beforeCommand,
@@ -339,6 +347,15 @@ function teamsOf<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): R
 
 function racesOf<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): Record<PlayerId, RaceId> {
   return Object.fromEntries(Object.entries(input.agents).flatMap(([owner, agent]) => (agent.race === undefined ? [] : [[owner, agent.race]]))) as Record<PlayerId, RaceId>;
+}
+
+export function traceSourceFor(agent: SdkGameAgent): SdkCommandSource {
+  return agent.traceSource ?? agent.controller;
+}
+
+function requireCommandSource(entry: CommandFrameEntry<SdkCommandSource>): SdkCommandSource {
+  if (!entry.source) throw new Error(`SDK game runner command ${entry.scriptId} for ${entry.playerId} is missing trace source`);
+  return entry.source;
 }
 
 function requireMapId<TAgent extends SdkGameAgent>(input: SdkGameRunInput<TAgent>): MapId {

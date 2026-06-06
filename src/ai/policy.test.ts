@@ -1353,8 +1353,8 @@ describe("SDK preset AI policy", () => {
       name: "copperWeald first expansion training timing",
       mapId: "copperWeald",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
-        v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
+        v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
       },
       maxTicks: 4_501,
       thinkInterval: 45,
@@ -6769,7 +6769,7 @@ describe("SDK preset AI policy", () => {
       mapId: "cinderHeath",
       agents: {
         v2: {
-          adapter: "external",
+          controller: "external-agent",
           team: "north",
           race: "grove",
           version: "v2",
@@ -6793,7 +6793,7 @@ describe("SDK preset AI policy", () => {
             AI_SCRIPT_LIBRARY.attackWave,
           ],
         },
-        v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+        v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
       },
       maxTicks: 14_000,
       thinkInterval: 45,

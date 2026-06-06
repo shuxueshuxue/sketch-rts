@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { BenchmarkInput } from "./core";
 import { describeBenchmarkInput } from "./manifest";
+import type { SdkAgentController } from "../game-runner";
 
 type ManifestAgent = {
-  adapter: "internal" | "external";
+  controller: SdkAgentController;
   team: string;
   race: "grove";
   versionLabel: string;
@@ -29,8 +30,8 @@ describe("benchmark manifest", () => {
                 },
               },
               agents: {
-                v2: { adapter: "external", team: "north", race: "grove", versionLabel: "v2", version: "v2", disabledBehaviors: ["workerHarassment"] },
-                v1a: { adapter: "internal", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+                v2: { controller: "external-agent", team: "north", race: "grove", versionLabel: "v2", version: "v2", disabledBehaviors: ["workerHarassment"] },
+                v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
               },
               commandPlanner: () => [],
               maxTicks: 120,
@@ -60,8 +61,8 @@ describe("benchmark manifest", () => {
               hasPrebuiltGame: false,
               scenario: { units: 0, buildings: 0, resources: 0, mercenaryCamps: 0, items: 0, landmarks: 1 },
               agents: {
-                v2: { adapter: "external", team: "north", race: "grove", aiVersion: "v2", disabledBehaviors: ["workerHarassment"] },
-                v1a: { adapter: "internal", team: "south", race: "grove", aiVersion: "v1" },
+                v2: { controller: "external-agent", plannerOrigin: "local-command-planner", traceSource: "external-agent", team: "north", race: "grove", aiVersion: "v2", disabledBehaviors: ["workerHarassment"] },
+                v1a: { controller: "internal-ai", plannerOrigin: "local-command-planner", traceSource: "internal-ai", team: "south", race: "grove", aiVersion: "v1" },
               },
             },
           ],

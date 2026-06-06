@@ -1,14 +1,14 @@
 import { runAiGame, type AiGameAgent } from "../src/ai/game-runner";
-import type { SdkAgentAdapter } from "../src/sdk/game-runner";
+import type { SdkAgentController } from "../src/sdk/game-runner";
 import { RICH_SCORE_MAP_IDS } from "../src/shared/map";
 import type { CreateGameOptions } from "../src/shared/sim";
 import { seconds } from "../src/shared/time";
 import type { AiScriptVersion, MapId, PlayerId, RaceId, ScenarioOverride } from "../src/shared/types";
 import { allocateGauntletBenchmarkMaps, selectGauntletRichScoreMaps } from "./ai-version-gauntlet-selection";
 
-type AdapterCase = {
+type ControllerCase = {
   name: string;
-  adapters: Record<PlayerId, SdkAgentAdapter>;
+  controllers: Record<PlayerId, SdkAgentController>;
 };
 
 type GauntletCase = {
@@ -33,11 +33,11 @@ const TEAMS: Record<PlayerId, string> = { v2: "north", v2b: "north", v1a: "south
 const RACES: Record<PlayerId, RaceId> = { v2: "grove", v2b: "grove", v1a: "grove", v1b: "grove", v1c: "grove" };
 const VERSIONS: Record<PlayerId, AiScriptVersion> = { v2: "v2", v2b: "v2", v1a: "v1", v1b: "v1", v1c: "v1" };
 
-const adapterCases: AdapterCase[] = [
-  { name: "internal-only", adapters: { v2: "internal", v2b: "internal", v1a: "internal", v1b: "internal", v1c: "internal" } },
-  { name: "external-only", adapters: { v2: "external", v2b: "external", v1a: "external", v1b: "external", v1c: "external" } },
-  { name: "mixed-v2-external", adapters: { v2: "external", v2b: "external", v1a: "internal", v1b: "internal", v1c: "internal" } },
-  { name: "mixed-v2-internal", adapters: { v2: "internal", v2b: "internal", v1a: "external", v1b: "external", v1c: "external" } },
+const controllerCases: ControllerCase[] = [
+  { name: "internal-only", controllers: { v2: "internal-ai", v2b: "internal-ai", v1a: "internal-ai", v1b: "internal-ai", v1c: "internal-ai" } },
+  { name: "external-only", controllers: { v2: "external-agent", v2b: "external-agent", v1a: "external-agent", v1b: "external-agent", v1c: "external-agent" } },
+  { name: "mixed-v2-external", controllers: { v2: "external-agent", v2b: "external-agent", v1a: "internal-ai", v1b: "internal-ai", v1c: "internal-ai" } },
+  { name: "mixed-v2-internal", controllers: { v2: "internal-ai", v2b: "internal-ai", v1a: "external-agent", v1b: "external-agent", v1c: "external-agent" } },
 ];
 
 const mapSelection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], process.env);
@@ -77,7 +77,7 @@ const robustnessCases: GauntletCase[] = [
 ];
 
 if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
-  const report = runCase({ name: "runner probe", mapId: richScoreMaps[0] ?? "bareDuel", maxTicks: 1 }, adapterCases[0]!, "robustness", 0);
+  const report = runCase({ name: "runner probe", mapId: richScoreMaps[0] ?? "bareDuel", maxTicks: 1 }, controllerCases[0]!, "robustness", 0);
   const commandCounts = {
     [V2]: report.commandsByOwner[V2] ?? 0,
     [V1A]: report.commandsByOwner[V1A] ?? 0,
@@ -89,7 +89,7 @@ if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
         gauntletMode: mapSelection.mode,
         mapSelectionSeed: mapSelection.seed,
         mapId: report.mapId,
-        adapterCase: report.adapterCase,
+        controllerCase: report.controllerCase,
         tick: report.tick,
         commandCounts,
       },
@@ -102,26 +102,26 @@ if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
 
 const started = performance.now();
 const cpuStarted = process.cpuUsage();
-const scoreReports = adapterCases.flatMap((adapterCase) => scoreCases.map((testCase, index) => ({ ...runCase(testCase, adapterCase, "score", index), lane: "score" as const })));
-const oneVThreeReports = adapterCases.flatMap((adapterCase) => oneVThreeCases.map((testCase, index) => ({ ...runOneVThreeCase(testCase, adapterCase, index), lane: "1v3" as const })));
-const twoVThreeReports = adapterCases.flatMap((adapterCase) => twoVThreeCases.map((testCase, index) => ({ ...runTwoVThreeCase(testCase, adapterCase, index), lane: "2v3" as const })));
-const robustnessReports = adapterCases.flatMap((adapterCase) => robustnessCases.map((testCase) => ({ ...runCase(testCase, adapterCase, "robustness", 0), lane: "robustness" as const })));
+const scoreReports = controllerCases.flatMap((controllerCase) => scoreCases.map((testCase, index) => ({ ...runCase(testCase, controllerCase, "score", index), lane: "score" as const })));
+const oneVThreeReports = controllerCases.flatMap((controllerCase) => oneVThreeCases.map((testCase, index) => ({ ...runOneVThreeCase(testCase, controllerCase, index), lane: "1v3" as const })));
+const twoVThreeReports = controllerCases.flatMap((controllerCase) => twoVThreeCases.map((testCase, index) => ({ ...runTwoVThreeCase(testCase, controllerCase, index), lane: "2v3" as const })));
+const robustnessReports = controllerCases.flatMap((controllerCase) => robustnessCases.map((testCase) => ({ ...runCase(testCase, controllerCase, "robustness", 0), lane: "robustness" as const })));
 const reports = [...scoreReports, ...oneVThreeReports, ...twoVThreeReports, ...robustnessReports];
 const cpu = process.cpuUsage(cpuStarted);
-const summaries = adapterCases.map((adapterCase) => {
-  const relevant = scoreReports.filter((report) => report.adapterCase === adapterCase.name);
+const summaries = controllerCases.map((controllerCase) => {
+  const relevant = scoreReports.filter((report) => report.controllerCase === controllerCase.name);
   return {
-    adapterCase: adapterCase.name,
+    controllerCase: controllerCase.name,
     wins: relevant.filter((report) => report.winnerTeam === "north").length,
     losses: relevant.filter((report) => report.winnerTeam === "south").length,
     failures: relevant.filter((report) => report.failed).length,
     successRate: relevant.filter((report) => !report.failed).length / relevant.length,
   };
 });
-const robustnessSummaries = adapterCases.map((adapterCase) => {
-  const relevant = robustnessReports.filter((report) => report.adapterCase === adapterCase.name);
+const robustnessSummaries = controllerCases.map((controllerCase) => {
+  const relevant = robustnessReports.filter((report) => report.controllerCase === controllerCase.name);
   return {
-    adapterCase: adapterCase.name,
+    controllerCase: controllerCase.name,
     cases: relevant.length,
     failures: relevant.filter((report) => report.failed).length,
     successRate: relevant.filter((report) => !report.failed).length / relevant.length,
@@ -156,10 +156,10 @@ process.stdout.write(
 );
 
 if (!scoreOk || !oneVThreeOk || !twoVThreeOk) {
-  throw new Error("AI version gauntlet failed: v2 did not satisfy the 1v2 score, 1v3 probe, and 2v3 probe gates in every adapter class");
+  throw new Error("AI version gauntlet failed: v2 did not satisfy the 1v2 score, 1v3 probe, and 2v3 probe gates in every controller class");
 }
 
-function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score" | "robustness", index: number) {
+function runCase(testCase: GauntletCase, controllerCase: ControllerCase, lane: "score" | "robustness", index: number) {
   const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
@@ -167,7 +167,7 @@ function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score"
       SCORE_PLAYERS.map((owner) => [
         owner,
         {
-          adapter: adapterCase.adapters[owner],
+          controller: controllerCase.controllers[owner],
           team: TEAMS[owner],
           race: RACES[owner],
           version: VERSIONS[owner],
@@ -182,17 +182,17 @@ function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score"
   });
   return {
     ...report,
-    adapterCase: adapterCase.name,
+    controllerCase: controllerCase.name,
     failed: lane === "score" ? report.winnerTeam !== "north" : robustnessFailed(report),
     snapshot: undefined,
   };
 }
 
-function runOneVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, index: number) {
+function runOneVThreeCase(testCase: GauntletCase, controllerCase: ControllerCase, index: number) {
   const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
-    agents: agentsFor(ONE_V_THREE_PLAYERS, adapterCase, index),
+    agents: agentsFor(ONE_V_THREE_PLAYERS, controllerCase, index),
     ...(testCase.options ? { options: testCase.options } : {}),
     maxTicks: testCase.maxTicks ?? MAX_TICKS,
     thinkInterval: THINK_INTERVAL,
@@ -200,17 +200,17 @@ function runOneVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, inde
   });
   return {
     ...report,
-    adapterCase: adapterCase.name,
+    controllerCase: controllerCase.name,
     failed: report.winnerTeam !== "north",
     snapshot: undefined,
   };
 }
 
-function runTwoVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, index: number) {
+function runTwoVThreeCase(testCase: GauntletCase, controllerCase: ControllerCase, index: number) {
   const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
-    agents: agentsFor(TWO_V_THREE_PLAYERS, adapterCase, index),
+    agents: agentsFor(TWO_V_THREE_PLAYERS, controllerCase, index),
     ...(testCase.options ? { options: testCase.options } : {}),
     maxTicks: testCase.maxTicks ?? MAX_TICKS,
     thinkInterval: THINK_INTERVAL,
@@ -218,18 +218,18 @@ function runTwoVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, inde
   });
   return {
     ...report,
-    adapterCase: adapterCase.name,
+    controllerCase: controllerCase.name,
     failed: report.winnerTeam !== "north",
     snapshot: undefined,
   };
 }
 
-function agentsFor(players: PlayerId[], adapterCase: AdapterCase, index: number): Record<PlayerId, AiGameAgent> {
+function agentsFor(players: PlayerId[], controllerCase: ControllerCase, index: number): Record<PlayerId, AiGameAgent> {
   return Object.fromEntries(
     players.map((owner) => [
       owner,
       {
-        adapter: adapterCase.adapters[owner] ?? adapterCase.adapters[V2],
+        controller: controllerCase.controllers[owner] ?? controllerCase.controllers[V2],
         team: TEAMS[owner],
         race: RACES[owner],
         version: VERSIONS[owner],
