@@ -33,4 +33,11 @@ describe("server global session boundary", () => {
     expect(productionFallback).toBeGreaterThan(apiBoundary);
     expect(viteMiddleware).toBeGreaterThan(apiBoundary);
   });
+
+  it("keeps save and debug replay payload validation owned by the shared savegame schema", () => {
+    const source = readFileSync("src/server/index.ts", "utf8");
+
+    expect(source).toContain('import { parseSaveGameInput } from "../shared/savegame"');
+    expect(source).not.toContain("function parseSaveInput");
+  });
 });

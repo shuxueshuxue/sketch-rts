@@ -1,4 +1,4 @@
-import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
+import { assertSaveGameInput, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, WorldEffect } from "../shared/types";
 
@@ -177,11 +177,11 @@ export class SketchRtsSdk {
   }
 
   async saveRoom(roomId: string, input: SaveGameInput): Promise<SaveGameRecord> {
-    return this.postJson(`/api/rooms/${roomId}/save`, input);
+    return this.postJson(`/api/rooms/${roomId}/save`, assertSaveGameInput(input, "savegame input"));
   }
 
   async enableDebugReplay(roomId: string, input: SaveGameInput): Promise<DebugReplayTrace> {
-    return this.postJson(`/api/rooms/${roomId}/debug-replay`, input);
+    return this.postJson(`/api/rooms/${roomId}/debug-replay`, assertSaveGameInput(input, "debug replay input"));
   }
 
   async readDebugReplay(roomId: string): Promise<DebugReplayTrace> {
@@ -193,7 +193,7 @@ export class SketchRtsSdk {
   }
 
   async saveDebugReplayFrame(roomId: string, tick: number, input: SaveGameInput): Promise<SaveGameRecord> {
-    return this.postJson(`/api/rooms/${roomId}/debug-replay/ticks/${tick}/save`, input);
+    return this.postJson(`/api/rooms/${roomId}/debug-replay/ticks/${tick}/save`, assertSaveGameInput(input, "replay frame save input"));
   }
 
   async listSavegames(): Promise<SaveGameRecord[]> {

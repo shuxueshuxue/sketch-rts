@@ -290,6 +290,19 @@ describe("SketchRtsSdk", () => {
     ]);
   });
 
+  it("validates save and debug replay payloads before sending SDK requests", async () => {
+    const calls: string[] = [];
+    const sdk = new SketchRtsSdk("http://game.test", async (input) => {
+      calls.push(String(input));
+      return json({});
+    });
+
+    await expect(sdk.saveRoom("room-1", { id: "" })).rejects.toThrow("Malformed savegame input");
+    await expect(sdk.enableDebugReplay("room-1", { id: "trace-1", label: 12 } as never)).rejects.toThrow("Malformed debug replay input");
+    await expect(sdk.saveDebugReplayFrame("room-1", 65, { label: "missing id" } as never)).rejects.toThrow("Malformed replay frame save input");
+    expect(calls).toEqual([]);
+  });
+
   it("creates configurable grand stress rooms through a typed helper", async () => {
     const calls: { path: string; method: string; body?: unknown }[] = [];
     const fetcher: typeof fetch = async (input, init) => {
