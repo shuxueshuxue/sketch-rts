@@ -75,6 +75,29 @@ describe("server deployment runtime", () => {
 
     expect(errors).toEqual(["farm placement is too close to townHall"]);
   });
+
+  it("sends match commands through the room lockstep transport without local sim mutation", () => {
+    const host = { id: "host", name: "Host" };
+    const open = createRoom({ id: "room-lockstep-command", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const startedRoom = { ...open, status: "inMatch" as const };
+    const transport = new FakeTransport();
+    const runtime = new ServerDeploymentRuntime({
+      createSessionSocket: () => new FakeSocket(),
+      createRoomTransport: () => transport,
+    });
+    const started = runtime.connectRoom(startedRoom, "player", false, () => {});
+    const worker = started.snapshot.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+
+    const command = { type: "move" as const, unitIds: [worker!.id], x: worker!.x + 120, y: worker!.y };
+    started.adapter.sendCommand(command);
+
+    const localSnapshot = started.adapter.currentSnapshot();
+    expect(localSnapshot).toBeDefined();
+    expect(localSnapshot?.tick).toBe(0);
+    expect(localSnapshot?.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
+    expect(transport.sent).toContainEqual({ type: "command", roomId: startedRoom.id, playerId: "player", clientSeq: 0, command });
+  });
 });
 
 class FakeSocket {
@@ -92,9 +115,12 @@ class FakeSocket {
 }
 
 class FakeTransport implements NetTransport {
+  sent: ClientNetMessage[] = [];
   private handlers: ((message: ServerNetMessage) => void)[] = [];
 
-  send(_message: ClientNetMessage): void {}
+  send(message: ClientNetMessage): void {
+    this.sent.push(message);
+  }
   onMessage(handler: (message: ServerNetMessage) => void): void {
     this.handlers.push(handler);
   }

@@ -111,6 +111,17 @@ The intended command chain is now:
 
 This means ordinary player/AI/SDK command-frame paths no longer rely on raw sim throws for structural command rejection.
 
+Command-path proof coverage:
+
+- `src/sdk/commands/frame.test.ts` proves SDK command frames reject invalid entries before partial mutation and still normalize stale issuers.
+- `src/client/net/local-adapter.test.ts` proves local player commands and local AI commands are validated before frame application, and rejected commands do not consume AI think cycles.
+- `src/server/room-net.test.ts` proves connected-room player commands and internal AI commands are broadcast together as authoritative room frames, and invalid lockstep commands become room errors instead of ticker crashes.
+- `src/client/deployment/static-runtime.test.ts` proves static deployment match commands use the `LocalGameAdapter` command-frame admission path.
+- `src/client/deployment/server-runtime.test.ts` proves server deployment match commands go through the room lockstep transport and do not mutate local simulation state before an authoritative frame arrives.
+- `src/sdk/game-runner.test.ts` proves SDK command planners issue commands through the generic SDK runner surface rather than importing AI policy or bypassing the frame layer.
+
+The deployment-specific tests exercise player commands at the deployment edge. Deployment AI path proof is inherited through the shared adapters they instantiate: static deployment uses `LocalGameAdapter`, and server deployment receives internal AI only through `RoomNetHub` authoritative frames.
+
 ## Valid-Play Room Lifecycle Crash Found In Follow-Up
 
 Product-level room-flow YATU exposed one real server crash after the command-admission slice:
@@ -145,7 +156,6 @@ The inventory and SDK/local admission fix do not fully close #20 yet.
 Remaining evidence needed:
 
 - Run product-level Playwright CLI YATU on a real room match from current main after this follow-up PR is merged.
-- Add or run a focused room/local/SDK proof that player commands and internal AI commands share the validated command-frame path in all deployment modes.
 - Re-run `npm --silent run audit:crash-inventory` after each #20 follow-up and inspect any new finding under AI policy, command frame, SDK frame, or client command emission.
 - Consider a later cleanup that shares `areEnemyOwners`, supply, spend, and command validation predicates between `command-validation.ts` and `frame.ts`; this is not required for the present fix but reduces drift risk.
 
@@ -183,4 +193,22 @@ Latest follow-up counts:
 - Playwright CLI room-flow YATU: passed with proof artifact under `~/share/ops/sketch-rts-yatu/rts-rf-mq1msdcc`.
 - Build: passed.
 - Full Vitest suite: 91 files / 824 tests passed.
+- Inventory script: 270 findings, with 194 throws and 76 non-null assertions.
+
+Command-path proof branch `codex/issue-20-command-path-proof` evidence:
+
+```bash
+npx vitest run src/client/deployment/static-runtime.test.ts src/client/deployment/server-runtime.test.ts
+npx vitest run src/client/net/local-adapter.test.ts src/client/deployment/static-runtime.test.ts src/client/deployment/server-runtime.test.ts src/sdk/commands/frame.test.ts src/server/room-net.test.ts src/sdk/game-runner.test.ts
+npm run build
+npm --silent run audit:crash-inventory -- --json
+npm test -- --run
+```
+
+Latest command-path proof counts:
+
+- Deployment command-path proof suite: 2 files / 10 tests passed.
+- Full command-path proof suite: 6 files / 34 tests passed.
+- Build: passed.
+- Full Vitest suite: 91 files / 826 tests passed.
 - Inventory script: 270 findings, with 194 throws and 76 non-null assertions.
