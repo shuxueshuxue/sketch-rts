@@ -309,7 +309,6 @@ export type TerrainLandmark = {
 };
 
 export type GameCommand =
-  | { type: "startMap"; mapId: MapId }
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }

@@ -5,7 +5,6 @@ import type { GameCommand, GameSnapshot, Owner, PlayerId, UnitKind } from "../ty
 export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): string | undefined {
   const player = snapshot.players[owner];
   if (!player) return `Unknown player ${owner}`;
-  if (command.type === "startMap") return "startMap is a server session command, not a simulation order";
   if (command.type === "move" || command.type === "attackMove") return missingUnitError(snapshot, owner, command.unitIds);
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : `Unknown target ${command.targetId}`);
   if (command.type === "mine") return missingUnitError(snapshot, owner, command.unitIds) ?? (snapshot.resources.some((resource) => resource.id === command.resourceId) ? undefined : `Unknown resource ${command.resourceId}`);

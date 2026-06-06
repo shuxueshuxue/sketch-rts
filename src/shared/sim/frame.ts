@@ -44,7 +44,6 @@ function issueFrameCommand(game: Game, owner: PlayerId, command: GameCommand): v
 
 export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
-  if (command.type === "startMap") return command;
   if (command.type === "move" || command.type === "attackMove") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 ? { ...command, unitIds } : undefined;

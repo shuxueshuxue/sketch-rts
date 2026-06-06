@@ -26,7 +26,7 @@ describe("SketchRtsSdk", () => {
     const catalog = await sdk.catalog();
     const reset = await sdk.reset("bareDuel");
     const snapshot = await sdk.snapshot();
-    const afterCommand = await sdk.command({ type: "startMap", mapId: "bareDuel" });
+    const afterCommand = await sdk.command({ type: "move", unitIds: ["worker"], x: 10, y: 20 });
     const fastForward = await sdk.fastForward(120);
 
     expect(catalog.maps[0]?.id).toBe("bareDuel");
@@ -42,7 +42,7 @@ describe("SketchRtsSdk", () => {
       { path: "/api/catalog", method: "GET" },
       { path: "/api/reset", method: "POST", body: { mapId: "bareDuel" } },
       { path: "/api/snapshot", method: "GET" },
-      { path: "/api/command", method: "POST", body: { type: "startMap", mapId: "bareDuel" } },
+      { path: "/api/command", method: "POST", body: { type: "move", unitIds: ["worker"], x: 10, y: 20 } },
       { path: "/api/tick", method: "POST", body: { ticks: 120 } },
     ]);
   });

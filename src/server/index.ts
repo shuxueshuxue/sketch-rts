@@ -548,6 +548,7 @@ app.post("/api/reset", (request, response) => {
   }
   game = createGame(mapId, options);
   gameAiRuntime = createAiRuntime(options.aiPlayers ?? ["enemy"], options.aiVersions ? { versions: options.aiVersions } : {});
+  sessionFrameSequence = 0;
   broadcastSnapshot();
   response.json(snapshotGame(game));
 });
@@ -558,12 +559,10 @@ app.post("/api/command", (request, response) => {
     return;
   }
   try {
-    if (request.body.type !== "startMap") {
-      const error = commandValidationError(snapshotGame(game), "player", request.body);
-      if (error) {
-        response.status(400).json({ error });
-        return;
-      }
+    const error = commandValidationError(snapshotGame(game), "player", request.body);
+    if (error) {
+      response.status(400).json({ error });
+      return;
     }
     runSessionCommand(request.body);
     response.json(snapshotGame(game));
@@ -661,13 +660,6 @@ function broadcastBenchmarkDashboardChange(payload: { eventType: string; filenam
 }
 
 function runSessionCommand(command: GameCommand) {
-  if (command.type === "startMap") {
-    game = createGame(command.mapId);
-    gameAiRuntime = createAiRuntime(["enemy"]);
-    sessionFrameSequence = 0;
-    broadcastSnapshot();
-    return;
-  }
   const error = commandValidationError(snapshotGame(game), "player", command);
   if (error) throw new Error(error);
   applyCommandFrame(game, {
@@ -690,9 +682,6 @@ function parseCommand(raw: string): GameCommand {
 function isCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
   const command = value as Record<string, unknown>;
-  if (command.type === "startMap") {
-    return isMapId(command.mapId);
-  }
   if (command.type === "move") {
     return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   }

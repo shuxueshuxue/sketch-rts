@@ -232,9 +232,6 @@ export function issueCommand(game: Game, command: GameCommand) {
 
 export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   if (!game.players[owner]) throw new Error(`Unknown player ${owner}`);
-  if (command.type === "startMap") {
-    throw new Error("startMap is a server session command, not a simulation order");
-  }
 
   if (command.type === "move") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
