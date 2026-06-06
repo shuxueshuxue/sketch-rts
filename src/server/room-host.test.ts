@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { AiScript } from "../ai/policy";
 import { createRoomHost } from "./room-host";
 import type { LocalUserProfile } from "../shared/types";
+import { createAiRuntime } from "../ai/runtime";
+import { createGame } from "../shared/sim";
+import { LocalGameAdapter } from "../client/net/local-adapter";
 
 const hostUser: LocalUserProfile = { id: "user-host", name: "Host" };
 const guestUser: LocalUserProfile = { id: "user-guest", name: "Guest" };
@@ -14,6 +17,18 @@ function invalidTrainingAiScript(): AiScript {
       const townHall = snapshot.buildings.find((building) => building.owner === owner && building.kind === "townHall");
       expect(townHall).toBeDefined();
       return { type: "train", buildingId: townHall!.id, unitKind: "footman" };
+    },
+  };
+}
+
+function movingEnemyScript(): AiScript {
+  return {
+    id: "moving-enemy-command",
+    phase: "tactics",
+    run(snapshot, owner) {
+      const enemyWorker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
+      expect(enemyWorker).toBeDefined();
+      return { type: "move", unitIds: [enemyWorker!.id], x: enemyWorker!.x - 80, y: enemyWorker!.y };
     },
   };
 }
@@ -124,6 +139,54 @@ describe("server room host", () => {
     );
     expect(recorded.frames[0]).toMatchObject({ roomId: frame.roomId, tick: frame.tick, sequence: frame.sequence, source: "browser" });
     expect(recorded.frames[0]?.commands).toEqual(result.frame.commands);
+  });
+
+  it("keeps SDK command-tick frames equivalent to the local authoritative frame runtime", () => {
+    const aiScripts = [movingEnemyScript()];
+    const localGame = createGame("bareDuel", { aiPlayers: ["enemy"] });
+    const localWorker = localGame.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(localWorker).toBeDefined();
+    const local = new LocalGameAdapter(localGame, "player", { aiRuntime: createAiRuntime(["enemy"], { scripts: aiScripts }) });
+
+    const host = createRoomHost({ autoTick: false, aiScripts });
+    const room = host.createRoom({ id: "room-command-tick-equivalence", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.resetRoom(room.id, "bareDuel", { aiPlayers: ["enemy"] });
+    host.enableDebugReplay(room.id, { id: "trace-command-tick-equivalence" });
+    const hostedBefore = host.snapshot(room.id);
+    const hostedWorker = hostedBefore.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(hostedWorker).toBeDefined();
+
+    const playerCommand = { type: "move" as const, unitIds: [hostedWorker!.id], x: hostedWorker!.x + 80, y: hostedWorker!.y };
+    local.sendCommand({ ...playerCommand, unitIds: [localWorker!.id] });
+    const hosted = host.commandTickRoom(room.id, [{ playerId: "player", command: playerCommand }], 1);
+    const localSnapshot = local.currentSnapshot();
+    const hostedEnemyWorker = hosted.snapshot.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
+    const localEnemyWorker = localSnapshot.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
+    const recorded = host.readDebugReplay(room.id);
+
+    expect(hosted.snapshot.tick).toBe(localSnapshot.tick);
+    expect(hosted.snapshot.units).toEqual(localSnapshot.units);
+    expect(hostedEnemyWorker?.order).toEqual(localEnemyWorker?.order);
+    if (!hostedEnemyWorker || hostedEnemyWorker.order.type !== "move") throw new Error("expected hosted enemy worker to keep its AI move order");
+    expect(recorded.frames).toHaveLength(1);
+    expect(recorded.frames[0]?.source).toBe("sdk-agent");
+    expect(recorded.frames[0]?.commands).toEqual([
+      { playerId: "player", command: playerCommand },
+      { playerId: "enemy", command: { type: "move", unitIds: [hostedEnemyWorker!.id], x: hostedEnemyWorker!.order.x, y: hostedEnemyWorker!.order.y } },
+    ]);
+  });
+
+  it("fails loudly instead of dropping direct command-tick batches with no tick budget", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-command-tick-zero", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    const before = host.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+
+    expect(() => host.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 0)).toThrow(/ticks must be a positive integer/);
+    expect(host.snapshot(room.id).units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
   });
 
   it("rejects invalid hosted AI commands in connected room frames before recording or mutating player commands", () => {

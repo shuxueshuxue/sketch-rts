@@ -1,9 +1,8 @@
-import { planPresetAiRuntimeCommands, type AiRuntimeState } from "../../ai/runtime";
+import { createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState } from "../../ai/runtime";
 import type { CommandEnvelope } from "../../shared/net/types";
 import { finishRoom } from "../../shared/rooms";
-import { snapshotGame, stepGame, type Game } from "../../shared/sim";
-import { commandValidationError } from "../../shared/sim/command-validation";
-import { applyCommandFrame, commandWithCurrentIssuers } from "../../shared/sim/frame";
+import { snapshotGame, type Game } from "../../shared/sim";
+import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../../shared/types";
 import type { GameAdapter } from "../game-adapter";
 
@@ -16,9 +15,9 @@ export type LocalGameAdapterOptions = {
 };
 
 export class LocalGameAdapter implements GameAdapter {
-  private sequence = 0;
   private lastUpdate: number;
   private room: RoomState | undefined;
+  private readonly frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>;
 
   constructor(
     private readonly game: Game,
@@ -27,6 +26,12 @@ export class LocalGameAdapter implements GameAdapter {
   ) {
     this.lastUpdate = this.now();
     this.room = options.room;
+    this.frameRuntime = new CommandFrameRuntime({
+      game,
+      roomId: this.room?.id ?? "local",
+      rejectionLabel: "Local command rejected",
+      ...(options.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(this.game, options.aiRuntime) } : {}),
+    });
   }
 
   sendCommand(command: GameCommand): void {
@@ -52,25 +57,7 @@ export class LocalGameAdapter implements GameAdapter {
   close(): void {}
 
   private applyAndStep(commands: CommandEnvelope[]): void {
-    const snapshot = snapshotGame(this.game);
-    this.validateFrameEntries(snapshot, commands);
-    const runtimeLastThink = this.options.aiRuntime ? { ...this.options.aiRuntime.lastThink } : undefined;
-    let aiCommands: CommandEnvelope[] = [];
-    try {
-      aiCommands = this.options.aiRuntime ? planPresetAiRuntimeCommands(this.game, this.options.aiRuntime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })) : [];
-      this.validateFrameEntries(snapshot, aiCommands);
-    } catch (error) {
-      if (this.options.aiRuntime && runtimeLastThink) this.options.aiRuntime.lastThink = runtimeLastThink;
-      throw error;
-    }
-    applyCommandFrame(this.game, {
-      roomId: this.room?.id ?? "local",
-      tick: this.game.tick,
-      sequence: this.sequence,
-      commands: [...commands, ...aiCommands],
-    });
-    this.sequence += 1;
-    stepGame(this.game);
+    this.frameRuntime.tick(commands);
     if (this.room && this.game.match.winner) {
       this.room = finishRoom(this.room, snapshotGame(this.game));
       this.options.onRoomEnded?.(this.room);
@@ -79,14 +66,5 @@ export class LocalGameAdapter implements GameAdapter {
 
   private now(): number {
     return this.options.now?.() ?? performance.now();
-  }
-
-  private validateFrameEntries(snapshot: GameSnapshot, entries: CommandEnvelope[]): void {
-    for (const entry of entries) {
-      const currentCommand = commandWithCurrentIssuers(this.game, entry.playerId, entry.command);
-      if (!currentCommand) continue;
-      const error = commandValidationError(snapshot, entry.playerId, currentCommand);
-      if (error) throw new Error(`Local command rejected: ${error}`);
-    }
   }
 }
