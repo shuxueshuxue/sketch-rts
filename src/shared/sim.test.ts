@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
 import { AI_SCRIPT_LIBRARY } from "../ai/policy";
-import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "../ai/runtime";
+import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
+import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialResources } from "./map";
 import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
 import { seconds } from "./time";
@@ -17,14 +18,14 @@ function elapsedCpuMs(started: NodeJS.CpuUsage) {
 
 function stepMany(game: ReturnType<typeof createGame>, count: number, runtime?: AiRuntimeState) {
   for (let i = 0; i < count; i += 1) {
-    if (runtime) runPresetAiRuntime(game, runtime);
+    if (runtime) runPresetAiRuntimeForTest(game, runtime);
     stepGame(game);
   }
 }
 
 function stepUntil(game: ReturnType<typeof createGame>, maxTicks: number, predicate: () => boolean, runtime?: AiRuntimeState) {
   for (let i = 0; i < maxTicks && !predicate(); i += 1) {
-    if (runtime) runPresetAiRuntime(game, runtime);
+    if (runtime) runPresetAiRuntimeForTest(game, runtime);
     stepGame(game);
   }
   return predicate();
@@ -1738,7 +1739,7 @@ describe("sketch RTS simulation", () => {
     let baseCloseout: { unitIds: string[]; playerUnits: number } | undefined;
 
     for (let i = 0; i < 5_400 && !baseCloseout; i += 1) {
-      const result = runPresetAiRuntime(game, runtime);
+      const result = runPresetAiRuntimeForTest(game, runtime);
       const command = result.commands.map((entry) => entry.command).find((candidate) => candidate.type === "attackMove" && Math.hypot(candidate.x - playerTownHall.x, candidate.y - playerTownHall.y) <= 700);
       if (command?.type === "attackMove") {
         baseCloseout = {
@@ -1773,7 +1774,7 @@ describe("sketch RTS simulation", () => {
     });
 
     for (let i = 0; i < 36_000 && !ownersHaveMiningExpansions(game, ["player", "enemy"]); i += 1) {
-      runPresetAiRuntime(game, runtime);
+      runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
     }
 
@@ -1886,7 +1887,7 @@ describe("sketch RTS simulation", () => {
     expect(enemy2Footman.order.type === "attack" ? enemy2Footman.order.targetId : "").not.toBe(enemyFootman.id);
 
     while (!game.match.winner && game.tick < 48_000) {
-      runPresetAiRuntime(game, runtime);
+      runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
     }
     const elapsedMs = elapsedCpuMs(started);
