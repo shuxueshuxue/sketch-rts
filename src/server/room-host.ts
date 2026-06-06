@@ -291,17 +291,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         if (options.excludeRoomIds?.has(hosted.room.id)) continue;
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
         if (!hosted.room.autoTick) continue;
+        const game = hosted.game;
         for (let i = 0; i < ticks; i += 1) {
-          hosted.frameRuntime ??= createHostedFrameRuntime(hosted, hosted.game);
-          hosted.frameRuntime.tick([], { onFrame: (frame) => recordHostedReplayFrame(hosted, "internal-ai", frame) });
-          recordHostedReplayCheckpoint(hosted, hosted.game);
-          if (hosted.game.match.winner) break;
-        }
-        if (hosted.game.match.winner) {
-          hosted.room = finishRoom(hosted.room, snapshotGame(hosted.game));
-          delete hosted.game;
-          delete hosted.aiRuntime;
-          delete hosted.frameRuntime;
+          advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
+          if (game.match.winner) break;
         }
         changed.push(hosted.room);
       }
@@ -326,19 +319,12 @@ function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number, options: 
   for (let i = 0; i < ticks; i += 1) {
     const commands = i === 0 ? options.initialCommands ?? [] : [];
     const source = commands.length > 0 ? options.initialSource ?? "browser" : "internal-ai";
-    hosted.frameRuntime.tick(commands, { onFrame: (frame) => recordHostedReplayFrame(hosted, source, frame) });
-    recordHostedReplayCheckpoint(hosted, game);
+    advanceHostedRoomTick(hosted, game, { commands, source });
     if (game.match.winner) break;
   }
   const elapsedMs = performance.now() - started;
   const cpu = process.cpuUsage(cpuStarted);
   const memory = process.memoryUsage();
-  if (game.match.winner) {
-    hosted.room = finishRoom(hosted.room, snapshotGame(game));
-    delete hosted.game;
-    delete hosted.aiRuntime;
-    delete hosted.frameRuntime;
-  }
   return {
     ticks,
     elapsedMs,
@@ -358,17 +344,11 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
   const cpuStarted = process.cpuUsage();
   const started = performance.now();
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
-  const completedFrame = hosted.frameRuntime.tick(frame.commands, { frame, onFrame: (completed) => recordHostedReplayFrame(hosted, source, completed) });
-  recordHostedReplayCheckpoint(hosted, game);
+  const completedFrame = advanceHostedRoomTick(hosted, game, { frame, source });
+  if (!completedFrame) throw new Error(`Hosted room ${hosted.room.id} advanced without a command frame`);
   const elapsedMs = performance.now() - started;
   const cpu = process.cpuUsage(cpuStarted);
   const memory = process.memoryUsage();
-  if (game.match.winner) {
-    hosted.room = finishRoom(hosted.room, snapshotGame(game));
-    delete hosted.game;
-    delete hosted.aiRuntime;
-    delete hosted.frameRuntime;
-  }
   return {
     ticks: 1,
     elapsedMs,
@@ -380,8 +360,25 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
     },
     snapshot: snapshotGame(game),
     room: hosted.room,
-    frame: completedFrame!,
+    frame: completedFrame,
   };
+}
+
+function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource }): CommandFrame | undefined {
+  hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
+  const commands = input.commands ?? input.frame?.commands ?? [];
+  const frameOptions = input.frame ? { frame: input.frame } : {};
+  const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => recordHostedReplayFrame(hosted, input.source, frame) });
+  recordHostedReplayCheckpoint(hosted, game);
+  if (game.match.winner) finishHostedRoom(hosted, game);
+  return completedFrame;
+}
+
+function finishHostedRoom(hosted: HostedRoom, game: Game) {
+  hosted.room = finishRoom(hosted.room, snapshotGame(game));
+  delete hosted.game;
+  delete hosted.aiRuntime;
+  delete hosted.frameRuntime;
 }
 
 function applyHostedCommandFrame(hosted: HostedRoom, frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>, source: ReplayCommandSource, commands: CommandEnvelope[]) {
