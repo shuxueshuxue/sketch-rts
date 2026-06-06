@@ -1,4 +1,5 @@
-import { runGame, type SdkAgentAdapter, type SdkGameAgent } from "../src/sdk/game-runner";
+import { runAiGame, type AiGameAgent } from "../src/ai/game-runner";
+import type { SdkAgentAdapter } from "../src/sdk/game-runner";
 import { RICH_SCORE_MAP_IDS } from "../src/shared/map";
 import type { CreateGameOptions } from "../src/shared/sim";
 import { seconds } from "../src/shared/time";
@@ -14,6 +15,7 @@ type GauntletCase = {
   name: string;
   mapId: MapId;
   options?: CreateGameOptions;
+  maxTicks?: number;
 };
 
 const MAX_TICKS = 48_000;
@@ -73,6 +75,30 @@ const robustnessCases: GauntletCase[] = [
   { name: "open claims no-creep smoke", mapId: "openClaims" },
   { name: "camp rush no-expansion objectives", mapId: "campRush" },
 ];
+
+if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
+  const report = runCase({ name: "runner probe", mapId: richScoreMaps[0] ?? "bareDuel", maxTicks: 1 }, adapterCases[0]!, "robustness", 0);
+  const commandCounts = {
+    [V2]: report.commandsByOwner[V2] ?? 0,
+    [V1A]: report.commandsByOwner[V1A] ?? 0,
+  };
+  process.stdout.write(
+    `${JSON.stringify(
+      {
+        ok: commandCounts[V2] > 0 && commandCounts[V1A] > 0,
+        gauntletMode: mapSelection.mode,
+        mapSelectionSeed: mapSelection.seed,
+        mapId: report.mapId,
+        adapterCase: report.adapterCase,
+        tick: report.tick,
+        commandCounts,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  process.exit(commandCounts[V2] > 0 && commandCounts[V1A] > 0 ? 0 : 1);
+}
 
 const started = performance.now();
 const cpuStarted = process.cpuUsage();
@@ -134,7 +160,7 @@ if (!scoreOk || !oneVThreeOk || !twoVThreeOk) {
 }
 
 function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score" | "robustness", index: number) {
-  const report = runGame({
+  const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
     agents: Object.fromEntries(
@@ -148,9 +174,9 @@ function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score"
           ...(owner === V2 && index % 2 === 1 ? { disabledBehaviors: ["workerHarassment"] as const } : {}),
         },
       ]),
-    ) as Record<PlayerId, SdkGameAgent>,
+    ) as Record<PlayerId, AiGameAgent>,
     ...(testCase.options ? { options: testCase.options } : {}),
-    maxTicks: MAX_TICKS,
+    maxTicks: testCase.maxTicks ?? MAX_TICKS,
     thinkInterval: THINK_INTERVAL,
     sampleInterval: SAMPLE_INTERVAL,
   });
@@ -163,12 +189,12 @@ function runCase(testCase: GauntletCase, adapterCase: AdapterCase, lane: "score"
 }
 
 function runOneVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, index: number) {
-  const report = runGame({
+  const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
     agents: agentsFor(ONE_V_THREE_PLAYERS, adapterCase, index),
     ...(testCase.options ? { options: testCase.options } : {}),
-    maxTicks: MAX_TICKS,
+    maxTicks: testCase.maxTicks ?? MAX_TICKS,
     thinkInterval: THINK_INTERVAL,
     sampleInterval: SAMPLE_INTERVAL,
   });
@@ -181,12 +207,12 @@ function runOneVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, inde
 }
 
 function runTwoVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, index: number) {
-  const report = runGame({
+  const report = runAiGame({
     name: testCase.name,
     mapId: testCase.mapId,
     agents: agentsFor(TWO_V_THREE_PLAYERS, adapterCase, index),
     ...(testCase.options ? { options: testCase.options } : {}),
-    maxTicks: MAX_TICKS,
+    maxTicks: testCase.maxTicks ?? MAX_TICKS,
     thinkInterval: THINK_INTERVAL,
     sampleInterval: SAMPLE_INTERVAL,
   });
@@ -198,7 +224,7 @@ function runTwoVThreeCase(testCase: GauntletCase, adapterCase: AdapterCase, inde
   };
 }
 
-function agentsFor(players: PlayerId[], adapterCase: AdapterCase, index: number): Record<PlayerId, SdkGameAgent> {
+function agentsFor(players: PlayerId[], adapterCase: AdapterCase, index: number): Record<PlayerId, AiGameAgent> {
   return Object.fromEntries(
     players.map((owner) => [
       owner,
@@ -210,7 +236,7 @@ function agentsFor(players: PlayerId[], adapterCase: AdapterCase, index: number)
         ...((owner === V2 || owner === V2B) && index % 2 === 1 ? { disabledBehaviors: ["workerHarassment"] as const } : {}),
       },
     ]),
-  ) as Record<PlayerId, SdkGameAgent>;
+  ) as Record<PlayerId, AiGameAgent>;
 }
 
 function summarizeReports(reports: Array<{ failed: boolean }>) {
@@ -221,7 +247,7 @@ function summarizeReports(reports: Array<{ failed: boolean }>) {
   };
 }
 
-function robustnessFailed(report: ReturnType<typeof runGame>) {
+function robustnessFailed(report: ReturnType<typeof runAiGame>) {
   return (report.commandsByOwner[V2] ?? 0) === 0 || (report.goldSpent[V2] ?? 0) === 0;
 }
 
