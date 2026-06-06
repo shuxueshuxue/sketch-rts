@@ -48,8 +48,7 @@ export class RoomNetHub {
     const snapshot = this.options.roomHost.snapshot(roomId);
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
-    const result = this.tryTickRoomFrame(roomId, frame);
-    if (!result) return undefined;
+    const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
     state.spectatorSync.recordFrame(result.frame);
     this.broadcast(roomId, { type: "frame", frame: result.frame });
     if (result.room.status === "ended") this.broadcast(roomId, { type: "room", room: result.room });
@@ -110,16 +109,6 @@ export class RoomNetHub {
     });
   }
 
-  private tryTickRoomFrame(roomId: string, frame: CommandFrame): ReturnType<RoomNetHubOptions["roomHost"]["tickRoomFrame"]> | undefined {
-    try {
-      return this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
-    } catch (error) {
-      // @@@lockstep-command-error - Sim commands still fail loudly; the room network edge translates them so one invalid client command cannot kill the server ticker.
-      this.broadcast(roomId, { type: "error", roomId, message: errorMessage(error) });
-      return undefined;
-    }
-  }
-
   private stateFor(roomId: string): RoomNetState {
     const existing = this.rooms.get(roomId);
     if (existing) return existing;
@@ -161,8 +150,4 @@ export class RoomNetHub {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
   }
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

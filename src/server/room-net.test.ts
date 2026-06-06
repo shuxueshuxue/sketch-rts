@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest";
+import type { AiScript } from "../ai/policy";
 import { decodeServerNetMessage, encodeNetMessage } from "../shared/net/codec";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub, type RoomNetSocket } from "./room-net";
 import type { ServerNetMessage } from "../shared/net/types";
 
 const hostUser = { id: "host", name: "Host" };
+
+function invalidTrainingAiScript(): AiScript {
+  return {
+    id: "invalid-room-net-ai-command",
+    phase: "economy",
+    run(snapshot, owner) {
+      const townHall = snapshot.buildings.find((building) => building.owner === owner && building.kind === "townHall");
+      expect(townHall).toBeDefined();
+      return { type: "train", buildingId: townHall!.id, unitKind: "footman" };
+    },
+  };
+}
 
 describe("room net hub", () => {
   it("accepts client commands and broadcasts authoritative frames before ticking the room sim", () => {
@@ -54,6 +67,19 @@ describe("room net hub", () => {
     const enemyWorker = after.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
     expect(frame?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
     expect(enemyWorker?.order.type).not.toBe("idle");
+  });
+
+  it("fails hosted internal AI admission loudly instead of swallowing room frame faults", () => {
+    const roomHost = createRoomHost({ autoTick: false, aiScripts: [invalidTrainingAiScript()] });
+    const room = roomHost.createRoom({ id: "room-invalid-connected-ai", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+
+    expect(() => hub.tickRoom(room.id)).toThrow(/Hosted command rejected: townHall cannot train footman/);
+    expect(socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message) => message.type === "error")).toEqual([]);
   });
 
   it("reports invalid lockstep commands without crashing the room ticker", () => {

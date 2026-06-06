@@ -108,6 +108,7 @@ function dispositionFor(file: string, kind: FindingKind, snippet: string) {
   if (file.startsWith("src/sdk/benchmark") || file.startsWith("src/ai/benchmark")) return "benchmark contract boundary";
   if (file.startsWith("src/sdk/")) return "SDK API contract boundary";
   if (file.startsWith("src/ai/policy") || file.startsWith("src/ai/runtime")) return "AI script/policy input invariant";
+  if (file === "src/server/room-host.ts" && (snippet.includes("Hosted command rejected") || snippet === "throw error;")) return "hosted command admission boundary";
   if (file.startsWith("src/server/")) return "server API/room boundary";
   if (file.startsWith("src/client/net") || file.startsWith("src/client/deployment") || file === "src/client/game-adapter.ts") return "client adapter boundary";
   if (file.startsWith("src/client/")) return "client DOM/render invariant";
