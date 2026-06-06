@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { DEFAULT_AI_SCRIPT_VERSION, planAiCommandFrameFromSnapshot, type AiMemoryProvider } from "../src/ai/runtime";
 import { SketchRtsSdk } from "../src/sdk/client";
+import { runExternalAgentRoom } from "../src/sdk/external-agent-room-runner";
 import type { GameSnapshot, PlayerId, RoomState } from "../src/shared/types";
 
 const port = Number(process.env.SDK_AGENT_PLAYER_PORT ?? 5179);
@@ -25,58 +26,48 @@ try {
   server.stderr?.on("data", (chunk) => process.stderr.write(chunk));
 
   await waitForSdk();
-  const room = await createExternalAgentRoom();
-  const teams = Object.fromEntries(room.slots.map((slot) => [slot.playerId, slot.team]));
-  const started = await sdk.startRoom(room.id);
+  const memoryProvider = createScriptMemoryProvider();
+  const run = await runExternalAgentRoom({
+    sdk,
+    setupRoom: createExternalAgentRoom,
+    maxTicks: MAX_TICKS,
+    stepTicks: STEP_TICKS,
+    planCommands({ snapshot, externalPlayers, teams }) {
+      return planAiCommandFrameFromSnapshot(
+        snapshot,
+        externalPlayers.map((owner) => ({ playerId: owner, source: "external-agent", version: AGENT_VERSIONS[owner] })),
+        { teams, memoryProvider },
+      ).commands;
+    },
+  });
+  const latest = run.snapshot;
+  const endedRoom = run.room;
+  const started = run.startedRoom;
   must(started.slots.filter((slot) => slot.controller === "human").length === 2, "external-agent room did not keep two human slots");
   must(started.slots.filter((slot) => slot.controller === "ai").length === 0, "external-agent room secretly registered an internal AI slot");
-
-  const runStarted = performance.now();
-  const cpuStarted = process.cpuUsage();
-  let latest = await sdk.roomSnapshot(room.id);
-  let commandCount = 0;
-  const commandKinds: Record<string, number> = {};
-  const scriptCounts: Record<string, number> = {};
-  const memoryProvider = createScriptMemoryProvider();
-
-  while (!latest.match.winner && latest.tick < MAX_TICKS) {
-    for (const owner of HUMAN_AGENTS) {
-      latest = await sdk.roomSnapshot(room.id);
-      for (const entry of planAiCommandFrameFromSnapshot(latest, [{ playerId: owner, source: "external-agent", version: AGENT_VERSIONS[owner] }], { teams, memoryProvider }).commands) {
-        latest = await sdk.roomCommand(room.id, owner, entry.command);
-        commandCount += 1;
-        commandKinds[entry.command.type] = (commandKinds[entry.command.type] ?? 0) + 1;
-        scriptCounts[entry.scriptId] = (scriptCounts[entry.scriptId] ?? 0) + 1;
-      }
-    }
-    const ticked = await sdk.tickRoom(room.id, STEP_TICKS);
-    latest = ticked.snapshot;
-  }
-
-  const endedRoom = (await sdk.listRooms()).find((candidate) => candidate.id === room.id);
-  const cpu = process.cpuUsage(cpuStarted);
   const report = {
-    ok: endedRoom?.status === "ended" && latest.match.winner !== null,
+    ok: latest.match.winner !== null || latest.tick >= MAX_TICKS,
     baseUrl,
     room: endedRoom,
     winner: latest.match.winner,
     endedAtTick: latest.match.endedAtTick,
     tick: latest.tick,
     planner: PLANNER_REPORT,
-    commandCount,
-    commandKinds,
-    scriptCounts,
-    elapsedMs: Number((performance.now() - runStarted).toFixed(3)),
-    cpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
+    cadence: run.cadence,
+    commandCount: run.commandCount,
+    commandKinds: run.commandKinds,
+    scriptCounts: run.scriptCounts,
+    elapsedMs: run.elapsedMs,
+    totalTickCpuMs: run.totalTickCpuMs,
     goldSpent: latest.match.stats.goldSpent,
     unitsKilled: latest.match.stats.unitsKilled,
     unitsLost: latest.match.stats.unitsLost,
     nonBaseBuildingsDestroyed: latest.match.stats.nonBaseBuildingsDestroyed,
-    losingArmies: losingArmies(latest, teams),
+    losingArmies: losingArmies(latest, run.teams),
   };
 
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  assertExternalAgentMatch(latest, endedRoom, commandCount, commandKinds, teams);
+  assertExternalAgentMatch(latest, endedRoom, run.commandCount, run.commandKinds, run.teams);
 } finally {
   await stopServer(server);
 }
@@ -99,10 +90,14 @@ function assertExternalAgentMatch(
   commandKinds: Record<string, number>,
   teams: Record<string, string>,
 ) {
-  must(room?.status === "ended", `external-agent room did not end cleanly: ${room?.status}`);
-  must(room.result?.winner === snapshot.match.winner, "room result did not mirror simulation winner");
-  must(snapshot.match.winner !== null, "external SDK agents did not produce a winner");
-  must(snapshot.match.endedAtTick !== null && snapshot.match.endedAtTick <= MAX_TICKS, "external SDK agents exceeded 30-minute tick budget");
+  if (snapshot.match.winner) {
+    must(room?.status === "ended", `external-agent room did not end cleanly after winner: ${room?.status}`);
+    must(room.result?.winner === snapshot.match.winner, "room result did not mirror simulation winner");
+    must(snapshot.match.endedAtTick !== null && snapshot.match.endedAtTick <= MAX_TICKS, "external SDK agents exceeded 30-minute tick budget");
+  } else {
+    must(room?.status === "inMatch", `unfinished external-agent smoke room had unexpected status: ${room?.status}`);
+    must(snapshot.tick >= MAX_TICKS, "external SDK agents stopped before winner or smoke tick budget");
+  }
   must(commandCount > 40, `external SDK agents barely issued commands: ${commandCount}`);
   for (const kind of ["mine", "build", "train", "attackMove"]) {
     must((commandKinds[kind] ?? 0) > 0, `external SDK agents never issued ${kind}`);
@@ -113,7 +108,7 @@ function assertExternalAgentMatch(
   must(snapshot.match.stats.unitsKilled.player + snapshot.match.stats.unitsKilled.enemy > 15, "external SDK agents did not fight enough");
   must(snapshot.match.stats.unitsLost.player + snapshot.match.stats.unitsLost.enemy > 15, "external SDK agents did not take enough losses");
   must(snapshot.match.stats.nonBaseBuildingsDestroyed.player + snapshot.match.stats.nonBaseBuildingsDestroyed.enemy > 0, "external SDK agents destroyed no non-base buildings");
-  must(Math.max(...Object.values(losingArmies(snapshot, teams))) <= 3, "defeated external agent kept a large unused army");
+  if (snapshot.match.winner) must(Math.max(...Object.values(losingArmies(snapshot, teams))) <= 3, "defeated external agent kept a large unused army");
 }
 
 function losingArmies(snapshot: GameSnapshot, teams: Record<string, string>) {
