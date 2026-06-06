@@ -2,6 +2,7 @@ import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { snapshotGame, stepGame, type Game } from "../sim";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
+import type { GameCommand } from "../types";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
@@ -29,6 +30,24 @@ export type RuntimeAdmissionOptions = {
 };
 
 type ValidationPurpose = "admission" | "apply";
+
+export function normalizeCommandFrameEntries<Entry extends { command: GameCommand }>(entries: Entry[]): Entry[] {
+  const normalized: Entry[] = [];
+  const hiredCampIds = new Set<string>();
+  const pickedItemIds = new Set<string>();
+  for (const entry of entries) {
+    if (entry.command.type === "hire") {
+      if (hiredCampIds.has(entry.command.campId)) continue;
+      hiredCampIds.add(entry.command.campId);
+    }
+    if (entry.command.type === "pickupItem") {
+      if (pickedItemIds.has(entry.command.itemId)) continue;
+      pickedItemIds.add(entry.command.itemId);
+    }
+    normalized.push(entry);
+  }
+  return normalized;
+}
 
 // @@@frame-cadence - Product paths may choose transport delay, but a simulation tick means: apply all frames for this tick, then step once.
 export function advanceCommandFrameTick(game: Game, frames?: CommandFrame | CommandFrame[], options: Pick<RuntimeFrameOptions, "applyHooks"> = {}): void {
@@ -58,13 +77,14 @@ export class CommandFrameRuntime<State = unknown> {
   }
 
   admit(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
-    this.validate(commands, { purpose: "admission", rejectionLabel: options.rejectionLabel });
+    this.validate(normalizeCommandFrameEntries(commands), { purpose: "admission", rejectionLabel: options.rejectionLabel });
   }
 
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
-    this.validate(commands, { purpose: "apply", rejectionLabel: options.rejectionLabel });
+    const normalizedCommands = normalizeCommandFrameEntries(commands);
+    this.validate(normalizedCommands, { purpose: "apply", rejectionLabel: options.rejectionLabel });
     const aiCommands = options.includeAi === false ? [] : this.planAiCommands();
-    const completedCommands = [...commands, ...aiCommands];
+    const completedCommands = normalizeCommandFrameEntries([...normalizedCommands, ...aiCommands]);
     if (options.frame) return { ...options.frame, commands: completedCommands };
     if (completedCommands.length === 0) return undefined;
     const frame = {

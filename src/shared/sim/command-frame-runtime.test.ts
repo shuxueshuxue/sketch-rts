@@ -32,6 +32,22 @@ describe("command frame runtime boundary", () => {
     expect(source).toContain("CommandFrameRuntime");
   });
 
+  it("keeps command collision normalization owned by the shared frame runtime", () => {
+    const runtimeSource = readFileSync("src/shared/sim/command-frame-runtime.ts", "utf8");
+    const sdkSource = readFileSync("src/sdk/commands/frame.ts", "utf8");
+    const aiSource = readFileSync("src/ai/runtime.ts", "utf8");
+    const forbiddenOutsideRuntime = ["selectIssueableCommandEntries", "hiredCampIds", "pickedItemIds"];
+    const offenders = [
+      ...forbiddenOutsideRuntime.filter((needle) => sdkSource.includes(needle)).map((needle) => `src/sdk/commands/frame.ts: ${needle}`),
+      ...forbiddenOutsideRuntime.filter((needle) => aiSource.includes(needle)).map((needle) => `src/ai/runtime.ts: ${needle}`),
+    ];
+
+    expect(runtimeSource).toContain("normalizeCommandFrameEntries");
+    expect(sdkSource).toContain("normalizeCommandFrameEntries");
+    expect(aiSource).toContain("normalizeCommandFrameEntries");
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps offline SDK and AI diagnostic runners from owning raw apply or step loops", () => {
     const runnerFiles = ["src/sdk/game-runner.ts", "src/sdk/playtest.ts", "src/ai/playtest.ts", "src/ai/ab-test.ts", "scripts/ai-matrix.ts"];
     const forbidden = ["stepGame", "issuePlayerCommand", "applyCommandFrame", "runPresetAiRuntime"];
@@ -98,5 +114,27 @@ describe("command frame runtime boundary", () => {
 
     expect(() => runtime.completeAndApply([{ playerId: "player", command: { type: "move", unitIds: ["unit-player-already-gone"], x: 900, y: 900 } }], { includeAi: false })).not.toThrow();
     expect(game.tick).toBe(0);
+  });
+
+  it("normalizes collisions across player commands and AI planner commands before framing", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+    game.mercenaryCamps = [{ id: "mixed-source-camp", x: worker!.x, y: worker!.y, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: 90, cooldownRemaining: 0 }];
+    const runtime = new CommandFrameRuntime({
+      game,
+      roomId: "runtime-mixed-source",
+      rejectionLabel: "Runtime command rejected",
+      aiPlanner: {
+        checkpoint: () => undefined,
+        restore: () => {},
+        plan: () => [{ playerId: "player", command: { type: "hire", campId: "mixed-source-camp" } }],
+      },
+    });
+
+    const frame = runtime.completeAndApply([{ playerId: "player", command: { type: "hire", campId: "mixed-source-camp" } }]);
+
+    expect(frame?.commands).toEqual([{ playerId: "player", command: { type: "hire", campId: "mixed-source-camp" } }]);
+    expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "mercenary")).toHaveLength(1);
   });
 });

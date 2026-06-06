@@ -4,6 +4,7 @@ import { createRoomHost } from "./room-host";
 import type { LocalUserProfile } from "../shared/types";
 import { createAiRuntime } from "../ai/runtime";
 import { createGame } from "../shared/sim";
+import { seconds } from "../shared/time";
 import { LocalGameAdapter } from "../client/net/local-adapter";
 
 const hostUser: LocalUserProfile = { id: "user-host", name: "Host" };
@@ -121,6 +122,77 @@ describe("server room host", () => {
     expect(after.tick).toBe(before.tick + 1);
     expect(after.units.find((unit) => unit.id === playerWorker!.id)?.order).toMatchObject({ type: "move" });
     expect(after.units.find((unit) => unit.id === enemyWorker!.id)?.order).toMatchObject({ type: "move" });
+  });
+
+  it("normalizes duplicate room hires before recording the command frame", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-duplicate-hire", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        replaceDefaultMercenaryCamps: true,
+        addMercenaryCamps: [{ id: "shared-camp", x: 420, y: 300, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 }],
+      },
+    });
+    host.enableDebugReplay(room.id, { id: "trace-room-duplicate-hire" });
+
+    const after = host.commandRooms(room.id, [
+      { playerId: "player", command: { type: "hire", campId: "shared-camp" } },
+      { playerId: "player", command: { type: "hire", campId: "shared-camp" } },
+    ]);
+    const recorded = host.readDebugReplay(room.id);
+
+    expect(after.units.filter((unit) => unit.owner === "player" && unit.kind === "mercenary")).toHaveLength(1);
+    expect(recorded.frames[0]?.commands).toEqual([{ playerId: "player", command: { type: "hire", campId: "shared-camp" } }]);
+  });
+
+  it("normalizes duplicate room hires before admission rejects a losing command", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-duplicate-hire-admission", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        replaceDefaultMercenaryCamps: true,
+        addMercenaryCamps: [{ id: "shared-camp", x: 420, y: 300, radius: 54, hireKind: "mercenary", cost: 160, stock: 1, cooldown: seconds(4.5), cooldownRemaining: 0 }],
+      },
+    });
+    host.enableDebugReplay(room.id, { id: "trace-room-duplicate-hire-admission" });
+
+    expect(() =>
+      host.commandRooms(room.id, [
+        { playerId: "player", command: { type: "hire", campId: "shared-camp" } },
+        { playerId: "enemy", command: { type: "hire", campId: "shared-camp" } },
+      ]),
+    ).not.toThrow();
+    expect(host.readDebugReplay(room.id).frames[0]?.commands).toEqual([{ playerId: "player", command: { type: "hire", campId: "shared-camp" } }]);
+  });
+
+  it("normalizes duplicate room item pickups before recording the command frame", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-duplicate-pickup", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addUnits: [
+          { id: "pickup-first", owner: "player", kind: "footman", x: 900, y: 900 },
+          { id: "pickup-second", owner: "player", kind: "footman", x: 905, y: 900 },
+        ],
+        addItems: [{ id: "shared-scroll", kind: "guardianScroll", x: 900, y: 900, cooldownRemaining: 0 }],
+      },
+    });
+    host.enableDebugReplay(room.id, { id: "trace-room-duplicate-pickup" });
+
+    const after = host.commandRooms(room.id, [
+      { playerId: "player", command: { type: "pickupItem", unitId: "pickup-first", itemId: "shared-scroll" } },
+      { playerId: "player", command: { type: "pickupItem", unitId: "pickup-second", itemId: "shared-scroll" } },
+    ]);
+    const recorded = host.readDebugReplay(room.id);
+
+    expect(after.items.find((item) => item.id === "shared-scroll")?.carrierId).toBe("pickup-first");
+    expect(recorded.frames[0]?.commands).toEqual([{ playerId: "player", command: { type: "pickupItem", unitId: "pickup-first", itemId: "shared-scroll" } }]);
   });
 
   it("fast-forwards only live room matches and records results when a match ends", () => {

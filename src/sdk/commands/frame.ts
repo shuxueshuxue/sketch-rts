@@ -1,6 +1,6 @@
 import type { Game } from "../../shared/sim";
 import { checksumGame } from "../../shared/sim/checksum";
-import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
+import { CommandFrameRuntime, normalizeCommandFrameEntries } from "../../shared/sim/command-frame-runtime";
 import type { CommandFrame } from "../../shared/net/types";
 import type { GameCommand, PlayerId } from "../../shared/types";
 
@@ -42,7 +42,7 @@ export class SdkCommandFrameRuntime {
 
   issue<Source extends string = string>(planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}): CommandFrameResult<Source> {
     if (this.game.match.winner) return { commands: [] };
-    const issued = selectIssueableCommandEntries(planned);
+    const issued = normalizeCommandFrameEntries(planned);
 
     if (issued.length === 0) return { commands: issued };
     let entryIndex = 0;
@@ -71,22 +71,4 @@ export class SdkCommandFrameRuntime {
   tick(): void {
     this.runtime.tick([]);
   }
-}
-
-export function selectIssueableCommandEntries<Source extends string = string>(planned: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] {
-  const issued: CommandFrameEntry<Source>[] = [];
-  const hiredCampIds = new Set<string>();
-  const pickedItemIds = new Set<string>();
-  for (const entry of planned) {
-    if (entry.command.type === "hire") {
-      if (hiredCampIds.has(entry.command.campId)) continue;
-      hiredCampIds.add(entry.command.campId);
-    }
-    if (entry.command.type === "pickupItem") {
-      if (pickedItemIds.has(entry.command.itemId)) continue;
-      pickedItemIds.add(entry.command.itemId);
-    }
-    issued.push(entry);
-  }
-  return issued;
 }
