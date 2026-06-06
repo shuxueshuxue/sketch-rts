@@ -23,8 +23,8 @@ npm --silent run audit:crash-inventory -- --json
 
 Run on branch `codex/issue-20-crash-inventory` at base `66d52f3` plus this checkpoint's local edits:
 
-- Total findings: 269
-- Explicit throws: 193
+- Total findings: 270
+- Explicit throws: 194
 - Non-null assertions: 76
 
 Top areas:
@@ -51,7 +51,7 @@ Top dispositions:
 | SDK command intent/frame boundary | 20 |
 | simulation model invariant | 18 |
 | network message decode boundary | 16 |
-| client adapter boundary | 14 |
+| client adapter boundary | 15 |
 
 ## Classification Rules
 
@@ -136,6 +136,6 @@ npm --silent run audit:crash-inventory -- --json
 
 Latest counts:
 
-- Focused regression suite: 9 files / 92 tests passed.
-- Full Vitest suite: 91 files / 819 tests passed.
-- Inventory script: 269 findings, with 193 throws and 76 non-null assertions.
+- Focused regression suite: 9 files / 94 tests passed.
+- Full Vitest suite: 91 files / 821 tests passed.
+- Inventory script: 270 findings, with 194 throws and 76 non-null assertions.

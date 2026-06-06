@@ -52,13 +52,16 @@ export class LocalGameAdapter implements GameAdapter {
   close(): void {}
 
   private applyAndStep(commands: CommandEnvelope[]): void {
-    const aiCommands = this.options.aiRuntime ? planPresetAiRuntimeCommands(this.game, this.options.aiRuntime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })) : [];
     const snapshot = snapshotGame(this.game);
-    for (const entry of [...commands, ...aiCommands]) {
-      const currentCommand = commandWithCurrentIssuers(this.game, entry.playerId, entry.command);
-      if (!currentCommand) continue;
-      const error = commandValidationError(snapshot, entry.playerId, currentCommand);
-      if (error) throw new Error(`Local command rejected: ${error}`);
+    this.validateFrameEntries(snapshot, commands);
+    const runtimeLastThink = this.options.aiRuntime ? { ...this.options.aiRuntime.lastThink } : undefined;
+    let aiCommands: CommandEnvelope[] = [];
+    try {
+      aiCommands = this.options.aiRuntime ? planPresetAiRuntimeCommands(this.game, this.options.aiRuntime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })) : [];
+      this.validateFrameEntries(snapshot, aiCommands);
+    } catch (error) {
+      if (this.options.aiRuntime && runtimeLastThink) this.options.aiRuntime.lastThink = runtimeLastThink;
+      throw error;
     }
     applyCommandFrame(this.game, {
       roomId: this.room?.id ?? "local",
@@ -76,5 +79,14 @@ export class LocalGameAdapter implements GameAdapter {
 
   private now(): number {
     return this.options.now?.() ?? performance.now();
+  }
+
+  private validateFrameEntries(snapshot: GameSnapshot, entries: CommandEnvelope[]): void {
+    for (const entry of entries) {
+      const currentCommand = commandWithCurrentIssuers(this.game, entry.playerId, entry.command);
+      if (!currentCommand) continue;
+      const error = commandValidationError(snapshot, entry.playerId, currentCommand);
+      if (error) throw new Error(`Local command rejected: ${error}`);
+    }
   }
 }
