@@ -133,7 +133,7 @@ describe("room net hub", () => {
     expect(staleSocket.sendAttempts).toBe(1);
   });
 
-  it("records checksum messages through the coordinator and fails malformed room ids loudly", () => {
+  it("records checksum messages through the coordinator and reports malformed client messages", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-checksum", host: hostUser, mapId: "bareDuel" });
     roomHost.startRoom(room.id);
@@ -145,7 +145,12 @@ describe("room net hub", () => {
     socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 0, hash: "abcd" }));
 
     expect(hub.checksumsForTick(room.id, 0)).toEqual({ player: "abcd" });
-    expect(() => socket.emit(encodeNetMessage({ type: "command", roomId: "other-room", playerId: "player", command: { type: "move", unitIds: [], x: 0, y: 0 } }))).toThrow(/does not match socket room/);
+    socket.emit(encodeNetMessage({ type: "command", roomId: "other-room", playerId: "player", command: { type: "move", unitIds: [], x: 0, y: 0 } }));
+    socket.emit(JSON.stringify({ type: "chat", roomId: room.id, playerId: "player", senderName: "Ada", text: "" }));
+
+    const errors = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "error" }> => message.type === "error");
+    expect(errors.map((message) => message.message)).toEqual([`Client message room other-room does not match socket room ${room.id}`, "Malformed client chat message"]);
+    expect(() => hub.tickRoom(room.id)).not.toThrow();
   });
 
   it("broadcasts public chat without admitting it to command frames", () => {

@@ -33,7 +33,13 @@ export class RoomNetHub {
   connect(roomId: string, socket: RoomNetSocket): void {
     const state = this.stateFor(roomId);
     state.sockets.add(socket);
-    socket.on("message", (raw) => this.receive(roomId, socket, String(raw)));
+    socket.on("message", (raw) => {
+      try {
+        this.receive(roomId, socket, String(raw));
+      } catch (error) {
+        this.send(roomId, socket, { type: "error", roomId, message: errorMessage(error) });
+      }
+    });
     socket.on("close", () => state.sockets.delete(socket));
   }
 
@@ -174,4 +180,8 @@ export class RoomNetHub {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
   }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }
