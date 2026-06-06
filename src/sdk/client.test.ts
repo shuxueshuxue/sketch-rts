@@ -4,8 +4,9 @@ import { SketchRtsSdk } from "./client";
 import { SketchRtsBrowserDebug } from "./browser";
 
 describe("SketchRtsSdk", () => {
-  it("dogfoods typed helpers for catalog, reset, snapshot, and command calls", async () => {
+  it("dogfoods typed helpers for catalog and room-scoped gameplay calls", async () => {
     const calls: { path: string; method: string; body?: unknown }[] = [];
+    const room = makeRoom("room-1");
     const fetcher: typeof fetch = async (input, init) => {
       const url = new URL(String(input));
       const method = init?.method ?? "GET";
@@ -13,25 +14,27 @@ describe("SketchRtsSdk", () => {
       if (url.pathname === "/api/catalog") {
         return json({ units: ["worker"], buildings: ["townHall"], races: [{ id: "grove", name: "Grove Kin", note: "Test race" }], maps: [{ id: "bareDuel", name: "Bare Duel", note: "Test", tags: ["4096"] }] });
       }
-      if (url.pathname === "/api/tick") {
-        return json({ ticks: 120, elapsedMs: 3, cpuMs: 1.2, memory: { rssBytes: 1000, heapUsedBytes: 500, heapDeltaBytes: 12 }, snapshot: makeSnapshot() });
-      }
-      if (url.pathname === "/api/reset" || url.pathname === "/api/snapshot" || url.pathname === "/api/command") {
-        return json(makeSnapshot());
-      }
+      if (url.pathname === "/api/rooms" && method === "POST") return json(room);
+      if (url.pathname === "/api/rooms/room-1/start") return json({ ...room, status: "inMatch" });
+      if (url.pathname === "/api/rooms/room-1/reset") return json({ room: { ...room, status: "inMatch" }, snapshot: makeSnapshot() });
+      if (url.pathname === "/api/rooms/room-1/snapshot") return json(makeSnapshot());
+      if (url.pathname === "/api/rooms/room-1/command") return json(makeSnapshot());
+      if (url.pathname === "/api/rooms/room-1/tick") return json({ ticks: 120, elapsedMs: 3, cpuMs: 1.2, memory: { rssBytes: 1000, heapUsedBytes: 500, heapDeltaBytes: 12 }, snapshot: makeSnapshot(), room: { ...room, status: "inMatch" } });
       return new Response("missing", { status: 404 });
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
     const catalog = await sdk.catalog();
-    const reset = await sdk.reset("bareDuel");
-    const snapshot = await sdk.snapshot();
-    const afterCommand = await sdk.command({ type: "move", unitIds: ["worker"], x: 10, y: 20 });
-    const fastForward = await sdk.fastForward(120);
+    await sdk.createRoom({ id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 1 });
+    await sdk.startRoom("room-1");
+    const reset = await sdk.resetRoom("room-1", "bareDuel");
+    const snapshot = await sdk.roomSnapshot("room-1");
+    const afterCommand = await sdk.roomCommand("room-1", "player", { type: "move", unitIds: ["worker"], x: 10, y: 20 });
+    const fastForward = await sdk.tickRoom("room-1", 120);
 
     expect(catalog.maps[0]?.id).toBe("bareDuel");
     expect(catalog.races[0]?.id).toBe("grove");
-    expect(reset.map.id).toBe("bareDuel");
+    expect(reset.snapshot.map.id).toBe("bareDuel");
     expect(snapshot.players.player.supplyCap).toBe(10);
     expect(afterCommand.map.width).toBe(4096);
     expect(fastForward.ticks).toBe(120);
@@ -40,10 +43,12 @@ describe("SketchRtsSdk", () => {
     expect(fastForward.memory.heapDeltaBytes).toBe(12);
     expect(calls).toEqual([
       { path: "/api/catalog", method: "GET" },
-      { path: "/api/reset", method: "POST", body: { mapId: "bareDuel" } },
-      { path: "/api/snapshot", method: "GET" },
-      { path: "/api/command", method: "POST", body: { type: "move", unitIds: ["worker"], x: 10, y: 20 } },
-      { path: "/api/tick", method: "POST", body: { ticks: 120 } },
+      { path: "/api/rooms", method: "POST", body: { id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 1 } },
+      { path: "/api/rooms/room-1/start", method: "POST", body: {} },
+      { path: "/api/rooms/room-1/reset", method: "POST", body: { mapId: "bareDuel" } },
+      { path: "/api/rooms/room-1/snapshot", method: "GET" },
+      { path: "/api/rooms/room-1/command", method: "POST", body: { playerId: "player", command: { type: "move", unitIds: ["worker"], x: 10, y: 20 } } },
+      { path: "/api/rooms/room-1/tick", method: "POST", body: { ticks: 120 } },
     ]);
   });
 
@@ -56,11 +61,11 @@ describe("SketchRtsSdk", () => {
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
-    await sdk.reset("bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
+    await sdk.resetRoom("room-1", "bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
 
     expect(calls).toEqual([
       {
-        path: "/api/reset",
+        path: "/api/rooms/room-1/reset",
         method: "POST",
         body: { mapId: "bareDuel", options: { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } } },
       },
@@ -76,7 +81,7 @@ describe("SketchRtsSdk", () => {
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
-    await sdk.reset("bareDuel", {
+    await sdk.resetRoom("room-1", "bareDuel", {
       scenario: {
         addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
         addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
@@ -91,7 +96,7 @@ describe("SketchRtsSdk", () => {
 
     expect(calls).toEqual([
       {
-        path: "/api/reset",
+        path: "/api/rooms/room-1/reset",
         method: "POST",
         body: {
           mapId: "bareDuel",
@@ -126,10 +131,13 @@ describe("SketchRtsSdk", () => {
     expect(calls).toEqual(["/api/rooms?userId=user%201"]);
   });
 
-  it("runs guarded full-match speed control through SDK tick chunks", async () => {
+  it("runs guarded room speed control through SDK tick chunks", async () => {
     const calls: unknown[] = [];
     let currentTick = 0;
-    const fetcher: typeof fetch = async (_input, init) => {
+    const room = { ...makeRoom("room-1"), status: "inMatch" as const };
+    const fetcher: typeof fetch = async (input, init) => {
+      const url = new URL(String(input));
+      expect(url.pathname).toBe("/api/rooms/room-1/tick");
       const body = JSON.parse(String(init?.body));
       calls.push(body);
       currentTick += body.ticks;
@@ -139,11 +147,12 @@ describe("SketchRtsSdk", () => {
         cpuMs: 2,
         memory: { rssBytes: 1200, heapUsedBytes: 700, heapDeltaBytes: 10 },
         snapshot: makeSnapshot(currentTick, currentTick >= 300),
+        room,
       });
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
-    const result = await sdk.fastForwardUntil({
+    const result = await sdk.tickRoomUntil("room-1", {
       until: (snapshot) => snapshot.match.winner !== null,
       maxTicks: 1000,
       chunkTicks: 120,
@@ -159,7 +168,8 @@ describe("SketchRtsSdk", () => {
     expect(calls).toEqual([{ ticks: 120 }, { ticks: 120 }, { ticks: 120 }]);
   });
 
-  it("fails loudly when a guarded SDK speed-control run burns too much CPU", async () => {
+  it("fails loudly when a guarded room speed-control run burns too much CPU", async () => {
+    const room = { ...makeRoom("room-1"), status: "inMatch" as const };
     const fetcher: typeof fetch = async (_input, init) => {
       const body = JSON.parse(String(init?.body));
       return json({
@@ -168,12 +178,13 @@ describe("SketchRtsSdk", () => {
         cpuMs: 9,
         memory: { rssBytes: 1200, heapUsedBytes: 700, heapDeltaBytes: 10 },
         snapshot: makeSnapshot(body.ticks, false),
+        room,
       });
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
     await expect(
-      sdk.fastForwardUntil({
+      sdk.tickRoomUntil("room-1", {
         until: (snapshot) => snapshot.match.winner !== null,
         maxTicks: 1000,
         chunkTicks: 200,
@@ -182,8 +193,9 @@ describe("SketchRtsSdk", () => {
     ).rejects.toThrow("CPU budget exceeded");
   });
 
-  it("fails loudly when a guarded SDK speed-control run makes no tick progress", async () => {
+  it("fails loudly when a guarded room speed-control run makes no tick progress", async () => {
     let calls = 0;
+    const room = { ...makeRoom("room-1"), status: "inMatch" as const };
     const fetcher: typeof fetch = async () => {
       calls += 1;
       if (calls > 3) throw new Error("test guard: SDK kept ticking without progress");
@@ -193,12 +205,13 @@ describe("SketchRtsSdk", () => {
         cpuMs: 1,
         memory: { rssBytes: 1200, heapUsedBytes: 700, heapDeltaBytes: 0 },
         snapshot: makeSnapshot(0, false),
+        room,
       });
     };
     const sdk = new SketchRtsSdk("http://game.test", fetcher);
 
     await expect(
-      sdk.fastForwardUntil({
+      sdk.tickRoomUntil("room-1", {
         until: (snapshot) => snapshot.match.winner !== null,
         maxTicks: 1000,
         chunkTicks: 200,

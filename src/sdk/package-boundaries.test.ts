@@ -48,6 +48,31 @@ describe("SDK package boundaries", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it("keeps SDK gameplay control room-scoped instead of global-session scoped", () => {
+    const sdkClient = readFileSync("src/sdk/client.ts", "utf8");
+    const globalGameplayEndpoints = ["/api/snapshot", "/api/reset", "/api/command", "/api/tick"];
+    const globalGameplayMethods = [
+      "async snapshot(",
+      "async reset(",
+      "async command(",
+      "async mine(",
+      "async move(",
+      "async attackMove(",
+      "async attack(",
+      "async build(",
+      "async train(",
+      "async hire(",
+      "async cast(",
+      "async fastForward(",
+      "async fastForwardUntil(",
+      "async runScene(",
+    ];
+
+    const offenders = [...globalGameplayEndpoints, ...globalGameplayMethods].filter((needle) => sdkClient.includes(needle));
+
+    expect(offenders).toEqual([]);
+  });
 });
 
 function filesUnder(dir: string): string[] {

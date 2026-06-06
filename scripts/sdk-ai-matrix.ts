@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { SketchRtsSdk, type FastForwardResult } from "../src/sdk/client";
+import { SketchRtsSdk, type RoomTickResult } from "../src/sdk/client";
 import type { GameSetupOptions, GameSnapshot, MapId, PlayerId, RaceId } from "../src/shared/types";
 
 type SdkMatrixCase = {
@@ -26,6 +26,8 @@ type ExpansionProof = Record<PlayerId, ExpansionOwnerProof>;
 const port = Number(process.env.SDK_AI_MATRIX_PORT ?? 5175);
 const baseUrl = `http://127.0.0.1:${port}`;
 const sdk = new SketchRtsSdk(baseUrl);
+const host = { id: "sdk-ai-matrix-host", name: "SDK AI Matrix Host" };
+const runId = Date.now().toString(36);
 const MAX_TICKS = 36_000;
 const DUEL_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove" };
 const THREE_PLAYER_RACES: Partial<Record<PlayerId, RaceId>> = { player: "grove", enemy: "grove", enemy2: "grove" };
@@ -92,7 +94,7 @@ let server: ReturnType<typeof spawn> | undefined;
 try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0" },
+    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0", ROOM_AUTOTICK: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout?.on("data", (chunk) => process.stdout.write(chunk));
@@ -133,8 +135,17 @@ try {
 async function runCase(testCase: SdkMatrixCase) {
   const expansionProof = createExpansionProof();
   const caseStarted = performance.now();
-  await sdk.reset(testCase.mapId, testCase.options);
-  const result = await sdk.fastForwardUntil({
+  const roomId = `sdk-ai-matrix-${runId}-${slug(testCase.name)}`;
+  await sdk.createRoom({
+    id: roomId,
+    host,
+    mapId: testCase.mapId,
+    visibility: "private",
+    humanCount: 1,
+    aiCount: Math.max(1, testCase.activePlayers.length - 1),
+  });
+  await sdk.resetRoom(roomId, testCase.mapId, testCase.options);
+  const result = await sdk.tickRoomUntil(roomId, {
     until: (snapshot) => snapshot.match.winner !== null,
     maxTicks: MAX_TICKS,
     chunkTicks: 45,
@@ -167,7 +178,7 @@ async function runCase(testCase: SdkMatrixCase) {
   };
 }
 
-function assertCase(testCase: SdkMatrixCase, result: { snapshot: GameSnapshot; totalTicks: number; elapsedMs: number; cpuMs: number; samples: FastForwardResult[] }, expansionProof: ExpansionProof) {
+function assertCase(testCase: SdkMatrixCase, result: { snapshot: GameSnapshot; totalTicks: number; elapsedMs: number; cpuMs: number; samples: RoomTickResult[] }, expansionProof: ExpansionProof) {
   const snapshot = result.snapshot;
   must(snapshot.match.winner !== null, `${testCase.name}: no winner`);
   must(snapshot.match.endedAtTick !== null && snapshot.match.endedAtTick <= MAX_TICKS, `${testCase.name}: exceeded 30-minute tick budget`);
@@ -291,4 +302,8 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 
 function must(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
+}
+
+function slug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }

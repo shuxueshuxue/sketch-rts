@@ -1,6 +1,6 @@
 import type { SaveGameInput, SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
-import type { AbilityKind, BuildingKind, GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, TrainableUnitKind, WorldEffect } from "../shared/types";
+import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, WorldEffect } from "../shared/types";
 
 export type SketchRtsCatalog = {
   units: string[];
@@ -52,22 +52,6 @@ export type TickMemoryObservation = {
   heapDeltaBytes: number;
 };
 
-export type FastForwardUntilOptions = {
-  until: (snapshot: GameSnapshot) => boolean;
-  maxTicks: number;
-  chunkTicks: number;
-  maxElapsedMs?: number;
-  maxCpuMs?: number;
-};
-
-export type FastForwardUntilResult = {
-  snapshot: GameSnapshot;
-  totalTicks: number;
-  elapsedMs: number;
-  cpuMs: number;
-  samples: FastForwardResult[];
-};
-
 export type RoomTickUntilOptions = {
   until: (snapshot: GameSnapshot) => boolean;
   maxTicks: number;
@@ -83,27 +67,6 @@ export type RoomTickUntilResult = {
   elapsedMs: number;
   cpuMs: number;
   samples: RoomTickResult[];
-};
-
-export type SceneRunStep =
-  | { type: "command"; command: GameCommand }
-  | { type: "commands"; commands: GameCommand[] }
-  | { type: "tick"; ticks: number; label?: string };
-
-export type SceneRunSample = FastForwardResult & {
-  label: string;
-};
-
-export type SceneRunOptions = {
-  mapId: MapId;
-  setup?: GameSetupOptions;
-  steps: SceneRunStep[];
-};
-
-export type SceneRunResult = {
-  initial: GameSnapshot;
-  snapshot: GameSnapshot;
-  samples: SceneRunSample[];
 };
 
 export type GoldSaturationProbeOptions = {
@@ -133,54 +96,6 @@ export class SketchRtsSdk {
 
   async catalog(): Promise<SketchRtsCatalog> {
     return this.getJson("/api/catalog");
-  }
-
-  async snapshot(): Promise<GameSnapshot> {
-    return this.getJson("/api/snapshot");
-  }
-
-  async reset(mapId: MapId, options?: GameSetupOptions): Promise<GameSnapshot> {
-    return this.postJson("/api/reset", options ? { mapId, options } : { mapId });
-  }
-
-  async command(command: GameCommand): Promise<GameSnapshot> {
-    return this.postJson("/api/command", command);
-  }
-
-  async mine(unitIds: string[], resourceId: string): Promise<GameSnapshot> {
-    return this.command({ type: "mine", unitIds, resourceId });
-  }
-
-  async move(unitIds: string[], x: number, y: number): Promise<GameSnapshot> {
-    return this.command({ type: "move", unitIds, x, y });
-  }
-
-  async attackMove(unitIds: string[], x: number, y: number): Promise<GameSnapshot> {
-    return this.command({ type: "attackMove", unitIds, x, y });
-  }
-
-  async attack(unitIds: string[], targetId: string): Promise<GameSnapshot> {
-    return this.command({ type: "attack", unitIds, targetId });
-  }
-
-  async build(unitId: string, buildingKind: BuildingKind, x: number, y: number): Promise<GameSnapshot> {
-    return this.command({ type: "build", unitId, buildingKind, x, y });
-  }
-
-  async train(buildingId: string, unitKind: TrainableUnitKind): Promise<GameSnapshot> {
-    return this.command({ type: "train", buildingId, unitKind });
-  }
-
-  async hire(campId: string): Promise<GameSnapshot> {
-    return this.command({ type: "hire", campId });
-  }
-
-  async cast(unitId: string, ability: AbilityKind, target: { targetId: string } | { x: number; y: number }): Promise<GameSnapshot> {
-    return this.command({ type: "cast", unitId, ability, ...target });
-  }
-
-  async fastForward(ticks: number): Promise<FastForwardResult> {
-    return this.postJson("/api/tick", { ticks });
   }
 
   async listRooms(options: { userId?: string } = {}): Promise<RoomState[]> {
@@ -294,46 +209,6 @@ export class SketchRtsSdk {
     return this.postJson(`/api/savegames/${saveId}/continue`, options);
   }
 
-  async fastForwardUntil(options: FastForwardUntilOptions): Promise<FastForwardUntilResult> {
-    if (!Number.isInteger(options.maxTicks) || options.maxTicks < 1) {
-      throw new Error("maxTicks must be a positive integer");
-    }
-    if (!Number.isInteger(options.chunkTicks) || options.chunkTicks < 1) {
-      throw new Error("chunkTicks must be a positive integer");
-    }
-
-    let totalTicks = 0;
-    let elapsedMs = 0;
-    let cpuMs = 0;
-    const samples: FastForwardResult[] = [];
-    let latest: GameSnapshot | null = null;
-
-    while (totalTicks < options.maxTicks) {
-      const ticks = Math.min(options.chunkTicks, options.maxTicks - totalTicks);
-      const sample = await this.fastForward(ticks);
-      if (!Number.isInteger(sample.ticks) || sample.ticks < 1) {
-        throw new Error(`non-positive tick progress from /api/tick: ${sample.ticks}`);
-      }
-      samples.push(sample);
-      latest = sample.snapshot;
-      totalTicks += sample.ticks;
-      elapsedMs += sample.elapsedMs;
-      cpuMs += sample.cpuMs;
-
-      if (options.maxElapsedMs !== undefined && elapsedMs > options.maxElapsedMs) {
-        throw new Error(`Elapsed budget exceeded: ${elapsedMs.toFixed(2)}ms > ${options.maxElapsedMs}ms`);
-      }
-      if (options.maxCpuMs !== undefined && cpuMs > options.maxCpuMs) {
-        throw new Error(`CPU budget exceeded: ${cpuMs.toFixed(2)}ms > ${options.maxCpuMs}ms`);
-      }
-      if (options.until(sample.snapshot)) {
-        return { snapshot: sample.snapshot, totalTicks, elapsedMs, cpuMs, samples };
-      }
-    }
-
-    throw new Error(`Tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
-  }
-
   async tickRoomUntil(roomId: string, options: RoomTickUntilOptions): Promise<RoomTickUntilResult> {
     if (!Number.isInteger(options.maxTicks) || options.maxTicks < 1) {
       throw new Error("maxTicks must be a positive integer");
@@ -346,7 +221,6 @@ export class SketchRtsSdk {
     let elapsedMs = 0;
     let cpuMs = 0;
     const samples: RoomTickResult[] = [];
-    let latest: RoomTickResult | null = null;
 
     while (totalTicks < options.maxTicks) {
       const ticks = Math.min(options.chunkTicks, options.maxTicks - totalTicks);
@@ -355,7 +229,6 @@ export class SketchRtsSdk {
         throw new Error(`non-positive tick progress from /api/rooms/${roomId}/tick: ${sample.ticks}`);
       }
       samples.push(sample);
-      latest = sample;
       totalTicks += sample.ticks;
       elapsedMs += sample.elapsedMs;
       cpuMs += sample.cpuMs;
@@ -374,40 +247,20 @@ export class SketchRtsSdk {
     throw new Error(`Room ${roomId} tick budget exceeded before condition matched: ${totalTicks}/${options.maxTicks}`);
   }
 
-  async runScene(options: SceneRunOptions): Promise<SceneRunResult> {
-    const initial = await this.reset(options.mapId, options.setup);
-    let snapshot = initial;
-    const samples: SceneRunSample[] = [];
-    for (const [index, step] of options.steps.entries()) {
-      if (step.type === "command") {
-        snapshot = await this.command(step.command);
-        continue;
-      }
-      if (step.type === "commands") {
-        for (const command of step.commands) snapshot = await this.command(command);
-        continue;
-      }
-      const sample = await this.fastForward(step.ticks);
-      snapshot = sample.snapshot;
-      samples.push({ ...sample, label: step.label ?? `tick-${index + 1}` });
-    }
-    return { initial, snapshot, samples };
-  }
-
   async goldSaturationProbe(options: GoldSaturationProbeOptions): Promise<Record<number, number>> {
     const incomes: Record<number, number> = {};
+    const host = { id: "sdk-gold-saturation", name: "SDK Gold Saturation" };
+    const probeId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1_000_000).toString(36)}`;
     for (const workerCount of options.workerCounts) {
+      const roomId = `sdk-gold-saturation-${probeId}-${workerCount}`;
       const setup = goldSaturationSetup(workerCount);
       const workerIds = Array.from({ length: workerCount }, (_, index) => `gold-sdk-worker-${index + 1}`);
-      const result = await this.runScene({
-        mapId: "bareDuel",
-        setup,
-        steps: [
-          { type: "command", command: { type: "mine", unitIds: workerIds, resourceId: "gold-sdk-saturation" } },
-          { type: "tick", ticks: options.ticks, label: `${workerCount}-workers` },
-        ],
-      });
+      await this.createRoom({ id: roomId, host, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 0 });
+      await this.resetRoom(roomId, "bareDuel", setup);
+      await this.roomCommand(roomId, "player", { type: "mine", unitIds: workerIds, resourceId: "gold-sdk-saturation" });
+      const result = await this.tickRoom(roomId, options.ticks);
       incomes[workerCount] = result.snapshot.players.player.gold;
+      await this.closeRoom(roomId, host.id);
     }
     return incomes;
   }

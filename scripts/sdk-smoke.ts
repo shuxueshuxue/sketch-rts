@@ -5,12 +5,15 @@ import { seconds } from "../src/shared/time";
 const port = Number(process.env.SDK_SMOKE_PORT ?? 5174);
 const baseUrl = `http://127.0.0.1:${port}`;
 const sdk = new SketchRtsSdk(baseUrl);
+const host = { id: "sdk-smoke-host", name: "SDK Smoke Host" };
+const roomId = `sdk-smoke-${Date.now().toString(36)}`;
 let server: ReturnType<typeof spawn> | undefined;
+let roomCreated = false;
 
 try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0" },
+    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0", ROOM_AUTOTICK: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout?.on("data", (chunk) => process.stdout.write(chunk));
@@ -23,15 +26,19 @@ try {
   must(catalog.buildings.includes("townHall"), "catalog did not expose buildable town hall");
   must(catalog.races.some((race) => race.id === "ember"), "catalog did not expose ember race slot");
 
-  const startedWild = await sdk.reset("wildMarches");
-  must(startedWild.map.id === "wildMarches", "SDK reset did not select wildMarches");
+  await sdk.createRoom({ id: roomId, host, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 1 });
+  roomCreated = true;
 
-  const reset = await sdk.reset("bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
+  const startedWild = await sdk.resetRoom(roomId, "wildMarches");
+  must(startedWild.snapshot.map.id === "wildMarches", "SDK room reset did not select wildMarches");
+
+  const resetResult = await sdk.resetRoom(roomId, "bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
+  const reset = resetResult.snapshot;
   must(reset.map.id === "bareDuel", "reset did not select bareDuel");
   must(reset.mercenaryCamps.length === 0, "bareDuel should reset without mercenary camps");
   must(reset.players.player.race === "grove" && reset.players.enemy.race === "ember", "SDK reset did not apply race setup options");
 
-  const custom = await sdk.reset("bareDuel", {
+  const customResult = await sdk.resetRoom(roomId, "bareDuel", {
     aiPlayers: [],
     scenario: {
       addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
@@ -44,6 +51,7 @@ try {
       addLandmarks: [{ id: "landmark-agent-banner", kind: "bannerStone", x: 1500, y: 1500, size: 96, rotation: 0.25 }],
     },
   });
+  const custom = customResult.snapshot;
   must(custom.resources.some((resource) => resource.id === "gold-agent-pocket" && resource.amount === 1234), "SDK custom scenario did not add resource");
   must(custom.mercenaryCamps.some((camp) => camp.id === "merc-agent-pocket" && camp.stock === 2), "SDK custom scenario did not add mercenary camp");
   must(custom.units.some((unit) => unit.id === "unit-agent-wildling" && unit.kind === "wildling" && unit.hp === unit.maxHp), "SDK custom scenario did not construct unit");
@@ -52,17 +60,18 @@ try {
   must(custom.map.landmarks.some((landmark) => landmark.id === "landmark-agent-banner"), "SDK custom scenario did not add landmark");
   must(custom.players.player.supplyCap > reset.players.player.supplyCap, "SDK custom scenario building did not affect supply");
 
-  const miningStart = await sdk.reset("bareDuel", { aiPlayers: ["enemy"], races: { player: "grove", enemy: "ember" } });
+  const miningStartResult = await sdk.resetRoom(roomId, "bareDuel", { aiPlayers: ["enemy"], races: { player: "grove", enemy: "ember" } });
+  const miningStart = miningStartResult.snapshot;
   const worker = miningStart.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
   const mine = miningStart.resources.find((resource) => resource.id === "gold-player-main");
   must(worker, "reset snapshot did not contain a player worker");
   must(mine, "reset snapshot did not contain player main gold mine");
 
-  const afterMineCommand = await sdk.command({ type: "mine", unitIds: [worker.id], resourceId: mine.id });
+  const afterMineCommand = await sdk.roomCommand(roomId, "player", { type: "mine", unitIds: [worker.id], resourceId: mine.id });
   const orderedWorker = afterMineCommand.units.find((unit) => unit.id === worker.id);
   must(orderedWorker?.order.type === "mine", "SDK mine command did not set worker mine order");
 
-  const fast = await sdk.fastForwardUntil({
+  const fast = await sdk.tickRoomUntil(roomId, {
     until: (snapshot) => snapshot.players.player.gold > miningStart.players.player.gold,
     maxTicks: 1400,
     chunkTicks: 140,
@@ -75,11 +84,12 @@ try {
   must(fast.elapsedMs >= 0 && fast.cpuMs >= 0, "SDK fast-forward did not accumulate timing observations");
   must(Boolean(lastSample?.memory && lastSample.memory.rssBytes > 0 && lastSample.memory.heapUsedBytes > 0), "SDK fast-forward did not expose memory observations");
 
-  const snapshot = await sdk.snapshot();
+  const snapshot = await sdk.roomSnapshot(roomId);
   must(snapshot.tick >= fast.snapshot.tick, "SDK snapshot did not observe current server state");
 
-  const duelStart = await sdk.reset("bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
-  const duel = await sdk.fastForwardUntil({
+  const duelStartResult = await sdk.resetRoom(roomId, "bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
+  const duelStart = duelStartResult.snapshot;
+  const duel = await sdk.tickRoomUntil(roomId, {
     until: (sample) => sample.match.stats.goldSpent.player > 1_500 && sample.match.stats.goldSpent.enemy > 1_500,
     maxTicks: 36_000,
     chunkTicks: 2_000,
@@ -131,6 +141,7 @@ try {
     )}\n`,
   );
 } finally {
+  if (roomCreated) await sdk.closeRoom(roomId, host.id);
   if (server && !server.killed) {
     server.kill("SIGINT");
     await new Promise((resolve) => setTimeout(resolve, 250));
