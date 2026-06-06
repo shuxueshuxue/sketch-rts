@@ -1,5 +1,6 @@
 import { availableParallelism } from "node:os";
 import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
+import { runAiBenchmarkRunnerParityProbe } from "../src/ai/benchmark/parity";
 import { recordAiVersionBenchmarkDashboardRun } from "../src/ai/benchmark/dashboard-store";
 import { describeBenchmarkInput } from "../src/sdk/benchmark/manifest";
 
@@ -27,6 +28,35 @@ if (process.env.AI_BENCHMARK_DRY_RUN === "1") {
         workers,
         dashboardPath: process.env.AI_BENCHMARK_DASHBOARD_DIR ?? ".benchmark-dashboard",
         manifest: describeBenchmarkInput(input),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  process.exit(0);
+}
+
+if (process.env.AI_BENCHMARK_PARITY_PROBE === "1") {
+  const { input, selection } = createAiVersionBenchmarkInput({ ...options, maxTicks: 1 });
+  const controlMatch = input.evaluations.find((evaluation) => evaluation.name === "1v1 score control")?.matches[0];
+  if (!controlMatch) throw new Error("AI version benchmark parity probe could not find a 1v1 score control match");
+  const proof = await runAiBenchmarkRunnerParityProbe({
+    name: "AI Version Benchmark Runner Parity Probe",
+    evaluations: [{ name: "1v1 score control", tag: "melee", matches: [controlMatch] }],
+  });
+  process.stdout.write(
+    `${JSON.stringify(
+      {
+        name: "AI Version Benchmark Runner Parity Probe",
+        seed: selection.seed,
+        selectedRichScoreMapIds: selection.mapIds,
+        matchName: controlMatch.name,
+        setupEqual: proof.setupEqual,
+        coreResultEqual: proof.coreResultEqual,
+        serialManifest: proof.serialManifest,
+        parallelManifest: proof.parallelManifest,
+        serial: parityReportSummary(proof.serialReport),
+        parallel: parityReportSummary(proof.parallelReport),
       },
       null,
       2,
@@ -65,4 +95,14 @@ if (!benchmarkPassed(run.scoreSummary.successRate, [...run.probeSummaries, ...ru
 
 function benchmarkPassed(scoreRate: number, laneRates: number[]) {
   return scoreRate >= SCORE_SUCCESS_GATE && laneRates.every((rate) => rate >= SCORE_SUCCESS_GATE);
+}
+
+function parityReportSummary(report: Awaited<ReturnType<typeof runAiBenchmarkRunnerParityProbe>>["serialReport"]) {
+  const match = report.evaluations[0]?.matches[0];
+  if (!match) throw new Error("Parity report did not include a match");
+  return {
+    map: match.setup.map.id,
+    players: match.setup.players,
+    result: match.result,
+  };
 }
