@@ -9,40 +9,12 @@ export type GameAdapter = {
 };
 
 export class EmptyGameAdapter implements GameAdapter {
-  sendCommand(): void {
+  sendCommand(_command: GameCommand): void {
     throw new Error("No active match.");
   }
 
   currentSnapshot(): undefined {
     return undefined;
-  }
-
-  updateToRenderTime(): boolean {
-    return false;
-  }
-
-  close(): void {}
-}
-
-export type SessionCommandSocket = {
-  OPEN: number;
-  readyState: number;
-  send(data: string): void;
-};
-
-export class SessionSocketGameAdapter implements GameAdapter {
-  constructor(
-    private readonly socket: SessionCommandSocket,
-    private readonly snapshot: () => GameSnapshot | undefined,
-  ) {}
-
-  sendCommand(command: GameCommand): void {
-    if (this.socket.readyState !== this.socket.OPEN) throw new Error("Command failed: socket is not open.");
-    this.socket.send(JSON.stringify(command));
-  }
-
-  currentSnapshot(): GameSnapshot | undefined {
-    return this.snapshot();
   }
 
   updateToRenderTime(): boolean {
