@@ -91,6 +91,21 @@ describe("deterministic command-frame simulation", () => {
     expect(game.buildings.some((building) => building.id === townHall!.id)).toBe(false);
   });
 
+  it("keeps structural illegal command-frame rules fail-loud at apply time", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(townHall).toBeDefined();
+
+    expect(() =>
+      applyCommandFrame(game, {
+        roomId: "local",
+        tick: game.tick,
+        sequence: 0,
+        commands: [{ playerId: "player", command: { type: "train", buildingId: townHall!.id, unitKind: "footman" } }],
+      }),
+    ).toThrow(/townHall cannot train footman/);
+  });
+
   it("keeps direct sim ability commands fail-loud for stale targets", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const priest = game.spawnUnit("player", "priest", 900, 900);

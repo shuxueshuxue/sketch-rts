@@ -52,6 +52,26 @@ describe("command frame runtime boundary", () => {
     expect(source).toContain("advanceCommandFrameTick");
   });
 
+  it("keeps gameplay command legality out of the frame apply layer", () => {
+    const source = readFileSync("src/shared/sim/frame.ts", "utf8");
+    const forbidden = ["../catalog", "../build-placement", "canSpendGold", "canSupply", "hasFriendlyUnitAtCamp", "RACE_DEFS", "BUILDING_DEFS", "UNIT_DEFS", "UPGRADE_DEFS"];
+    const offenders = forbidden.filter((needle) => source.includes(needle));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps live-issuer normalization from re-owning gameplay legality", () => {
+    const source = readFileSync("src/shared/sim/command-validation.ts", "utf8");
+    const start = source.indexOf("export function narrowFrameCommandToLiveOperands");
+    const end = source.indexOf("function missingUnitError");
+    const normalizer = start >= 0 && end > start ? source.slice(start, end) : source;
+    const forbidden = ["buildingPlacementBlocker", "canSpendGold", "canSupply", "hasFriendlyUnitAtCamp", "maxUpgradeLevel", "BUILDING_DEFS", "RACE_DEFS", "UNIT_DEFS", "UPGRADE_DEFS"];
+    const offenders = forbidden.filter((needle) => normalizer.includes(needle));
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(offenders).toEqual([]);
+  });
+
   it("rejects illegal live commands through shared runtime admission", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
