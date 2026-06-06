@@ -4,6 +4,7 @@ import { createAiRuntime, planPresetAiRuntimeCommands, type AiRuntimeState } fro
 import type { AiScript, AiScriptVersion } from "../ai/policy";
 import { createGame, snapshotGame, stepGame, type Game } from "../shared/sim";
 import { commandValidationError } from "../shared/sim/command-validation";
+import { checksumGame } from "../shared/sim/checksum";
 import { applyCommandFrame, commandWithCurrentIssuers } from "../shared/sim/frame";
 import { createDebugReplayTrace, extractReplayFrameSave, recordReplayFrame, recordReplayCheckpoint, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
@@ -184,6 +185,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
     snapshot(roomId: string): GameSnapshot {
       return snapshotGame(getLiveGame(roomId).game);
+    },
+
+    checksumRoom(roomId: string): string {
+      return checksumGame(getLiveGame(roomId).game);
     },
 
     commandRoom(roomId: string, playerId: PlayerId, command: GameCommand): GameSnapshot {

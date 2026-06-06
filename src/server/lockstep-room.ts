@@ -81,4 +81,10 @@ export class LockstepRoomCoordinator {
   checksumsForTick(tick: number): Record<PlayerId, string> {
     return Object.fromEntries(this.checksums.get(tick) ?? []) as Record<PlayerId, string>;
   }
+
+  discardChecksumsBefore(tick: number): void {
+    for (const checksumTick of this.checksums.keys()) {
+      if (checksumTick < tick) this.checksums.delete(checksumTick);
+    }
+  }
 }
