@@ -52,6 +52,15 @@ describe("command frame runtime boundary", () => {
     expect(source).toContain("advanceCommandFrameTick");
   });
 
+  it("keeps lockstep rendering on the engine frame-advance primitive", () => {
+    const source = readFileSync("src/client/net/lockstep-client.ts", "utf8");
+    const forbidden = ["engine.applyFrame", "engine.step"];
+    const offenders = forbidden.filter((needle) => source.includes(needle));
+
+    expect(offenders).toEqual([]);
+    expect(source).toContain("engine.advanceFrame");
+  });
+
   it("keeps gameplay command legality out of the frame apply layer", () => {
     const source = readFileSync("src/shared/sim/frame.ts", "utf8");
     const forbidden = ["../catalog", "../build-placement", "canSpendGold", "canSupply", "hasFriendlyUnitAtCamp", "RACE_DEFS", "BUILDING_DEFS", "UNIT_DEFS", "UPGRADE_DEFS"];

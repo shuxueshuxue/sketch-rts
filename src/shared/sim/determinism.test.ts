@@ -5,6 +5,8 @@ import { canonicalGameState } from "./canonical";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "../sim";
 import { createBuilding } from "../map";
 import type { CommandFrame } from "../net/types";
+import { SimulationEngine } from "./engine";
+import { advanceCommandFrameTick } from "./command-frame-runtime";
 
 describe("deterministic command-frame simulation", () => {
   it("applies command frames as the shared simulation input", () => {
@@ -255,6 +257,26 @@ describe("deterministic command-frame simulation", () => {
     expect(result.tick).toBe(framed.tick);
     expect(result.checksum).toBe(checksumGame(framed));
     expect(snapshotGame(framed)).toEqual(snapshotGame(direct));
+  });
+
+  it("advances simulation engine frames through the shared command-frame cadence", () => {
+    const engineGame = createGame("bareDuel", { aiPlayers: [] });
+    const primitiveGame = createGame("bareDuel", { aiPlayers: [] });
+    const worker = engineGame.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+    const frame: CommandFrame = {
+      roomId: "local",
+      tick: engineGame.tick,
+      sequence: 0,
+      commands: [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 180, y: worker!.y + 30 } }],
+    };
+
+    new SimulationEngine(engineGame).advanceFrame(frame);
+    advanceCommandFrameTick(primitiveGame, frame);
+
+    expect(engineGame.tick).toBe(primitiveGame.tick);
+    expect(checksumGame(engineGame)).toBe(checksumGame(primitiveGame));
+    expect(snapshotGame(engineGame)).toEqual(snapshotGame(primitiveGame));
   });
 
   it("produces the same checksum for the same seed and command frames", () => {

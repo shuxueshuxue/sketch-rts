@@ -74,8 +74,7 @@ export class LockstepClient {
       const frame = this.frameBuffer.take(this.options.engine.game.tick);
       if (!frame) return changed;
       try {
-        this.options.engine.applyFrame(frame);
-        this.options.engine.step();
+        this.options.engine.advanceFrame(frame);
       } catch (error) {
         // @@@lockstep-resync - A bad or stale frame is a visible sync failure; report it, then recover from server truth instead of crashing the render loop.
         const message = errorMessage(error);
