@@ -608,6 +608,7 @@ button {
 .menu-open .selection-chip,
 .menu-open .command-dock,
 .menu-open .item-dock,
+.menu-open .chat-overlay,
 .menu-open .status-line {
   display: none;
 }
@@ -648,6 +649,68 @@ button {
 .supply-readout {
   color: #315f87;
   font-weight: 700;
+}
+
+.chat-overlay {
+  position: absolute;
+  left: 18px;
+  top: 104px;
+  width: min(360px, calc(100vw - 36px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.chat-messages {
+  display: flex;
+  min-height: 36px;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.chat-message {
+  max-width: 100%;
+  color: rgba(255, 250, 226, 0.96);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 1px 1px rgba(20, 25, 18, 0.82),
+    0 0 6px rgba(20, 25, 18, 0.45);
+  transition: opacity 1.2s ease;
+}
+
+.chat-message.fading {
+  opacity: 0;
+}
+
+.chat-sender {
+  color: #f2c766;
+  font-weight: 800;
+}
+
+.chat-input-row {
+  width: 100%;
+  pointer-events: auto;
+}
+
+.chat-input-row input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 250, 226, 0.54);
+  border-radius: 6px;
+  background: rgba(28, 35, 24, 0.72);
+  color: #fff8dc;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  padding: 8px 10px;
+}
+
+.chat-input-row input:focus {
+  border-color: rgba(242, 199, 102, 0.88);
 }
 
 .pointer-lock-gate {
