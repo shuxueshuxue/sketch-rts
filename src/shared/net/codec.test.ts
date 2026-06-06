@@ -36,4 +36,16 @@ describe("net message codec", () => {
 
     expect(decodeServerNetMessage(encodeNetMessage(serverError))).toEqual(serverError);
   });
+
+  it("round-trips public chat messages outside command frames", () => {
+    const client: ClientNetMessage = { type: "chat", roomId: "room-1", playerId: "player", senderName: "Ada", text: "push mid" };
+    const server: ServerNetMessage = {
+      type: "chat",
+      message: { id: "chat-room-1-1", roomId: "room-1", playerId: "player", senderName: "Ada", text: "push mid", sentAt: 1200 },
+    };
+
+    expect(decodeClientNetMessage(encodeNetMessage(client))).toEqual(client);
+    expect(decodeServerNetMessage(encodeNetMessage(server))).toEqual(server);
+    expect(() => decodeClientNetMessage(JSON.stringify({ type: "chat", roomId: "room-1", playerId: "player", text: "" }))).toThrow(/Malformed client chat message/);
+  });
 });

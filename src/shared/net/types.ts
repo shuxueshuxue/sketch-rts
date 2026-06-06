@@ -1,5 +1,14 @@
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../types";
 
+export type ChatMessage = {
+  id: string;
+  roomId: string;
+  playerId: PlayerId;
+  senderName: string;
+  text: string;
+  sentAt: number;
+};
+
 export type CommandEnvelope = {
   playerId: PlayerId;
   command: GameCommand;
@@ -29,6 +38,7 @@ export type CheckpointFrame = {
 export type ClientNetMessage =
   | { type: "join"; roomId: string; playerId: PlayerId }
   | { type: "command"; roomId: string; playerId: PlayerId; command: GameCommand; clientSeq?: number }
+  | { type: "chat"; roomId: string; playerId: PlayerId; senderName: string; text: string }
   | { type: "checksum"; roomId: string; playerId: PlayerId; tick: number; hash: string }
   | { type: "requestCheckpoint"; roomId: string; tick?: number };
 
@@ -38,4 +48,5 @@ export type ServerNetMessage =
   | { type: "checkpoint"; checkpoint: CheckpointFrame }
   | { type: "desync"; roomId: string; tick: number; checksums: Record<PlayerId, string> }
   | { type: "error"; roomId: string; message: string }
+  | { type: "chat"; message: ChatMessage }
   | { type: "room"; room: RoomState };
