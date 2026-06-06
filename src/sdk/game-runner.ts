@@ -1,7 +1,7 @@
-import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
+import { createSdkCommandFrameRuntime, type CommandFrameEntry, type SdkCommandFrameRuntime } from "./commands/frame";
 import { summarizeMatchState, summarizeTimelineSample, type MatchStateSummary, type MatchTimelineSample } from "./match-report";
 import { normalizeWinnerForMode, type SdkWinnerMode } from "./winner-mode";
-import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
+import { createGame, snapshotGame, type CreateGameOptions, type Game } from "../shared/sim";
 import type { GameCommand, GameSnapshot, MapId, PlayerId, RaceId } from "../shared/types";
 
 export type SdkAgentAdapter = "internal" | "external";
@@ -194,16 +194,17 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
   const players = playersOf(input);
   const teams = teamsOf(input);
   const loopContext = { game, players, teams };
+  const frameRuntime = createSdkCommandFrameRuntime(game);
   const started = performance.now();
   const cpuStarted = process.cpuUsage();
   hooks.beforeLoop?.(loopContext);
 
   while (game.tick < input.maxTicks && !game.match.winner) {
     if (game.tick % input.thinkInterval === 0) {
-      issueDueAgentCommands(game, input, loopContext, hooks);
+      issueDueAgentCommands(frameRuntime, game, input, loopContext, hooks);
     }
     const before = snapshotGame(game);
-    stepGame(game);
+    frameRuntime.tick();
     normalizeWinnerForMode(game, teams, input.winnerMode ?? "match");
     const after = snapshotGame(game);
     hooks.afterStep?.({ ...loopContext, before, after });
@@ -272,6 +273,7 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 }
 
 function issueDueAgentCommands<TAgent extends SdkGameAgent>(
+  frameRuntime: SdkCommandFrameRuntime,
   game: Game,
   input: SdkGameRunInput<TAgent>,
   loopContext: SdkGameLoopContext,
@@ -292,7 +294,7 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
     });
   });
   let beforeCommand = snapshotGame(game);
-  issueCommandFrame(game, planned, {
+  frameRuntime.issue(planned, {
     beforeIssue() {
       beforeCommand = snapshotGame(game);
     },

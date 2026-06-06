@@ -1,5 +1,5 @@
 import { applyInteractivePlaytestCommand, inspectInteractivePlaytestUnits, stepInteractivePlaytestSession, stepInteractivePlaytestUntil, summarizeInteractivePlaytestSession, type InteractivePlaytestCommand, type InteractivePlaytestCondition, type InteractivePlaytestInspectedUnit, type InteractivePlaytestSession, type InteractivePlaytestSummary, type InteractivePlaytestUnitInspection, type InteractivePlaytestUnitInspectionOwner, type InteractivePlaytestUntilOptions, type InteractivePlaytestUntilResult } from "../sdk/playtest";
-import { createAiRuntime, runPresetAiRuntime, type AiRuntimeState } from "./runtime";
+import { createAiRuntime, planPresetAiRuntimeCommands, type AiRuntimeState } from "./runtime";
 import type { AiScript, PresetAiPolicyOptions } from "./policy";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./policy/claims";
 import type { AiScriptVersion, PlayerId } from "../shared/types";
@@ -72,7 +72,7 @@ export function applyAiInteractivePlaytestCommand(session: InteractivePlaytestSe
 export function stepAiInteractivePlaytestSession(session: InteractivePlaytestSession, runtime: AiRuntimeState, ticks: number) {
   pruneAiInteractivePlaytestMemories(session, runtime);
   stepInteractivePlaytestSession(session, ticks, {
-    beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
+    beforeStep: () => session.frameRuntime.issue(planPresetAiRuntimeCommands(session.game, runtime).commands).commands.length,
   });
   pruneAiInteractivePlaytestMemories(session, runtime);
 }
@@ -81,7 +81,7 @@ export function stepAiInteractivePlaytestUntil(session: InteractivePlaytestSessi
   pruneAiInteractivePlaytestMemories(session, runtime);
   const result = stepInteractivePlaytestUntil(session, condition, {
     maxTicks: options.maxTicks,
-    beforeStep: () => runPresetAiRuntime(session.game, runtime).commands.length,
+    beforeStep: () => session.frameRuntime.issue(planPresetAiRuntimeCommands(session.game, runtime).commands).commands.length,
   });
   pruneAiInteractivePlaytestMemories(session, runtime);
   return result;

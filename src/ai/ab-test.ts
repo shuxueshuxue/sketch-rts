@@ -1,7 +1,8 @@
 import { createAiTelemetry, planAiCommandsFromScripts, planPresetAiCommands, type AiBehaviorId, type AiScript, type AiScriptVersion, type AiTelemetry } from "./policy";
 import type { BuiltScene } from "../sdk/scene";
+import { createSdkCommandFrameRuntime } from "../sdk/commands/frame";
 import { restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
-import { issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
+import { snapshotGame, type Game } from "../shared/sim";
 import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 
 type BehaviorAbSource = { scene: BuiltScene; save?: never } | { save: SaveGameRecord; scene?: never };
@@ -54,6 +55,7 @@ export function runBehaviorAbTest(input: BehaviorAbTestInput): BehaviorAbTestRep
 function runCase(input: BehaviorAbTestInput, label: BehaviorAbCaseReport["label"], disabledBehaviors: AiBehaviorId[]): BehaviorAbCaseReport {
   const game = createCaseGame(input);
   input.prepare?.(game);
+  const frameRuntime = createSdkCommandFrameRuntime(game, { roomId: "behavior-ab-test" });
   const telemetry = createAiTelemetry();
   const commandCounts: BehaviorAbCaseReport["commandCounts"] = {};
 
@@ -67,12 +69,12 @@ function runCase(input: BehaviorAbTestInput, label: BehaviorAbCaseReport["label"
         disabledBehaviors,
       };
       const commands = input.scripts ? planAiCommandsFromScripts(snapshot, input.owner, input.scripts, options) : planPresetAiCommands(snapshot, input.owner, options);
-      for (const command of commands) {
-        issuePlayerCommand(game, input.owner, command);
-        commandCounts[command.type] = (commandCounts[command.type] ?? 0) + 1;
+      const issued = frameRuntime.issue(commands.map((command) => ({ playerId: input.owner, scriptId: input.behavior, command }))).commands;
+      for (const entry of issued) {
+        commandCounts[entry.command.type] = (commandCounts[entry.command.type] ?? 0) + 1;
       }
     }
-    stepGame(game);
+    frameRuntime.tick();
   }
 
   const snapshot = snapshotGame(game);
