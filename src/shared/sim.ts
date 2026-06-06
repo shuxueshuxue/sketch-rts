@@ -74,7 +74,8 @@ const AUTO_ACQUIRE_RANGE = 230;
 const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 const PROJECTILE_FLIGHT_DURATION = 22;
 const NEUTRAL_LEASH_RANGE = 520;
-const NEUTRAL_DAMAGE_RESPONSE_RANGE = 460;
+// @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
+const NEUTRAL_DAMAGE_RESPONSE_RANGE = Math.max(BUILDING_DEFS.defenseTower.attackRange, ...Object.values(UNIT_DEFS).map((unit) => unit.attackRange));
 const NEUTRAL_RETURN_STOP_RANGE = 8;
 const NEUTRAL_ASSIST_RANGE = 360;
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];

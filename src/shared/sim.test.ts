@@ -261,6 +261,29 @@ describe("sketch RTS simulation", () => {
     expect(called?.order).toMatchObject({ type: "attack", targetId: "pulling-archer" });
   });
 
+  it("keeps maximum-range neutral damage response from being erased by the camp leash", () => {
+    const game = sketchScene("neutral-tower-range-assist-on-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 180, 1000)
+      .building("v2", "defenseTower", 720, 1000, { id: "pulling-tower" })
+      .unit("neutral", "mossGnawer", 1188, 1000, { id: "damaged-creep" })
+      .unit("neutral", "mossGnawer", 1220, 1070, { id: "called-creep" })
+      .townHall("v1", 3500, 3500)
+      .build()
+      .createGame();
+
+    stepMany(game, 24);
+
+    const damaged = game.units.find((unit) => unit.id === "damaged-creep");
+    const called = game.units.find((unit) => unit.id === "called-creep");
+    expect(damaged?.hp).toBeLessThan(damaged?.maxHp ?? 0);
+    expect(damaged?.order).toMatchObject({ type: "attack", targetId: "pulling-tower" });
+    expect(called?.order).toMatchObject({ type: "attack", targetId: "pulling-tower" });
+  });
+
   it("keeps wide-camp neutral assist aggro anchored to the damaged camp member", () => {
     const game = sketchScene("neutral-wide-camp-assist-on-damage")
       .map("bareDuel")
