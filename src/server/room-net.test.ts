@@ -69,6 +69,25 @@ describe("room net hub", () => {
     expect(enemyWorker?.order.type).not.toBe("idle");
   });
 
+  it("publishes SDK command ticks through the connected room frame stream", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-sdk-frame-publication", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const before = roomHost.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(worker).toBeDefined();
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1);
+
+    const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
+    expect(frames).toHaveLength(1);
+    expect(frames[0]?.frame.commands).toContainEqual({ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
+    expect(frames[0]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+  });
+
   it("fails hosted internal AI admission loudly instead of swallowing room frame faults", () => {
     const roomHost = createRoomHost({ autoTick: false, aiScripts: [invalidTrainingAiScript()] });
     const room = roomHost.createRoom({ id: "room-invalid-connected-ai", host: hostUser, mapId: "bareDuel" });

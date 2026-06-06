@@ -3,7 +3,7 @@ import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
 import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
-import type { createRoomHost } from "./room-host";
+import type { createRoomHost, HostedRoomFrameEvent } from "./room-host";
 import { DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT, SpectatorSyncLog } from "./spectator-sync";
 
 export type RoomNetSocket = {
@@ -28,6 +28,7 @@ type RoomNetState = {
   syncEvents: RoomSyncEvent[];
   nextSyncEventSequence: number;
   nextChatSequence: number;
+  unsubscribeFrameEvents?: () => void;
 };
 
 export class RoomNetHub {
@@ -62,10 +63,6 @@ export class RoomNetHub {
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
-    this.recordAuthoritativeChecksum(roomId, result.snapshot.tick, this.options.roomHost.checksumRoom(roomId));
-    state.spectatorSync.recordFrame(result.frame);
-    this.broadcast(roomId, { type: "frame", frame: result.frame });
-    if (result.room.status === "ended") this.broadcast(roomId, { type: "room", room: result.room });
     return result.frame;
   }
 
@@ -74,6 +71,7 @@ export class RoomNetHub {
     for (const [roomId, state] of this.rooms.entries()) {
       if (state.sockets.size === 0) continue;
       if (!this.options.roomHost.hasRoom(roomId)) {
+        state.unsubscribeFrameEvents?.();
         this.rooms.delete(roomId);
         continue;
       }
@@ -162,7 +160,7 @@ export class RoomNetHub {
   private stateFor(roomId: string): RoomNetState {
     const existing = this.rooms.get(roomId);
     if (existing) return existing;
-    const created = {
+    const created: RoomNetState = {
       coordinator: new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) }),
       sockets: new Set<RoomNetSocket>(),
       spectatorSync: new SpectatorSyncLog({ ...(this.options.frameHistoryLimit !== undefined ? { frameHistoryLimit: this.options.frameHistoryLimit } : {}) }),
@@ -172,8 +170,18 @@ export class RoomNetHub {
       nextSyncEventSequence: 1,
       nextChatSequence: 1,
     };
+    created.unsubscribeFrameEvents = this.options.roomHost.observeRoomFrames(roomId, (event) => this.publishFrameEvent(roomId, event));
     this.rooms.set(roomId, created);
     return created;
+  }
+
+  private publishFrameEvent(roomId: string, event: HostedRoomFrameEvent): void {
+    const state = this.rooms.get(roomId);
+    if (!state) return;
+    this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
+    state.spectatorSync.recordFrame(event.frame);
+    this.broadcast(roomId, { type: "frame", frame: event.frame });
+    if (event.room.status === "ended") this.broadcast(roomId, { type: "room", room: event.room });
   }
 
   private broadcast(roomId: string, message: ServerNetMessage): void {
