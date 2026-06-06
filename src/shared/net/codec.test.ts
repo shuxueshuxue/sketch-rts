@@ -29,6 +29,7 @@ describe("net message codec", () => {
     expect(() => decodeClientNetMessage("not-json")).toThrow(/Invalid net message JSON/);
     expect(() => decodeServerNetMessage(JSON.stringify({ type: "mystery" }))).toThrow(/Unknown server net message type mystery/);
     expect(() => decodeClientNetMessage(JSON.stringify({ type: "command", roomId: "room-1" }))).toThrow(/Malformed client command message/);
+    expect(() => decodeClientNetMessage(JSON.stringify({ type: "command", roomId: "room-1", playerId: "player", command: { type: "move" } }))).toThrow(/Malformed client command message/);
   });
 
   it("decodes server error messages", () => {

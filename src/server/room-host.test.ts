@@ -217,6 +217,27 @@ describe("server room host", () => {
     expect(recorded.frames).toHaveLength(0);
   });
 
+  it("keeps delayed room frames tolerant of commands that become blocked at apply time", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-frame-transient-block", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    const before = host.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    const townHall = before.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(worker).toBeDefined();
+    expect(townHall).toBeDefined();
+
+    expect(() =>
+      host.tickRoomFrame(room.id, {
+        roomId: room.id,
+        tick: before.tick,
+        sequence: 99,
+        commands: [{ playerId: "player", command: { type: "build", unitId: worker!.id, buildingKind: "farm", x: townHall!.x + 10, y: townHall!.y } }],
+      }),
+    ).not.toThrow();
+    expect(host.snapshot(room.id).tick).toBe(1);
+  });
+
   it("creates checkpoint frames from live room runtime state", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-checkpoint-frame", host: hostUser, mapId: "bareDuel" });

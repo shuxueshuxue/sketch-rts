@@ -1,6 +1,7 @@
 import type { ChatMessage, CheckpointFrame, CheckpointRequestClass, CheckpointRequestReason, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, ServerNetMessage } from "./types";
-import type { GameCommand, RoomState } from "../types";
+import type { RoomState } from "../types";
 import { checkpointRequestClass } from "./checkpoint-semantics";
+import { isGameCommand } from "../command-schema";
 
 export function encodeNetMessage(message: ClientNetMessage | ServerNetMessage): string {
   return JSON.stringify(message);
@@ -45,7 +46,7 @@ function decodeJoinMessage(message: Record<string, unknown>): ClientNetMessage {
 }
 
 function decodeClientCommandMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId) || !isString(message.playerId) || !isCommandLike(message.command)) throw new Error("Malformed client command message");
+  if (!isString(message.roomId) || !isString(message.playerId) || !isGameCommand(message.command)) throw new Error("Malformed client command message");
   return {
     type: "command",
     roomId: message.roomId,
@@ -119,10 +120,6 @@ function decodeRoomMessage(message: Record<string, unknown>): ServerNetMessage {
 }
 
 function hasType(value: unknown): value is Record<string, unknown> & { type: string } {
-  return isRecord(value) && isString(value.type);
-}
-
-function isCommandLike(value: unknown): value is GameCommand {
   return isRecord(value) && isString(value.type);
 }
 

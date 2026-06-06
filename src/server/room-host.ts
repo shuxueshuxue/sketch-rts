@@ -201,18 +201,27 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
     commandRoom(roomId: string, playerId: PlayerId, command: GameCommand): GameSnapshot {
       const { hosted, game, frameRuntime } = getLiveGame(roomId);
-      applyHostedCommandFrame(hosted, frameRuntime, "browser", [{ playerId, command }]);
+      const commands = [{ playerId, command }];
+      frameRuntime.admit(commands);
+      applyHostedCommandFrame(hosted, frameRuntime, "browser", commands);
       return snapshotGame(game);
+    },
+
+    admitCommands(roomId: string, commands: CommandEnvelope[]): void {
+      const { frameRuntime } = getLiveGame(roomId);
+      frameRuntime.admit(commands);
     },
 
     commandRooms(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[]): GameSnapshot {
       const { hosted, game, frameRuntime } = getLiveGame(roomId);
+      frameRuntime.admit(commands);
       applyHostedCommandFrame(hosted, frameRuntime, "browser", commands);
       return snapshotGame(game);
     },
 
     commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number): RoomTickResult {
-      const { hosted, game } = getLiveGame(roomId);
+      const { hosted, game, frameRuntime } = getLiveGame(roomId);
+      frameRuntime.admit(commands);
       return tickHostedRoom(hosted, game, ticks, { initialCommands: commands, initialSource: "sdk-agent" });
     },
 

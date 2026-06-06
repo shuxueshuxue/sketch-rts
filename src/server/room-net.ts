@@ -1,7 +1,6 @@
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
 import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
 import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
-import { commandValidationError } from "../shared/sim/command-validation";
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
 import type { createRoomHost } from "./room-host";
@@ -134,11 +133,7 @@ export class RoomNetHub {
 
   private acceptCommand(message: Extract<ClientNetMessage, { type: "command" }>): void {
     const snapshot = this.options.roomHost.snapshot(message.roomId);
-    const error = commandValidationError(snapshot, message.playerId, message.command);
-    if (error) {
-      this.broadcast(message.roomId, { type: "error", roomId: message.roomId, message: error });
-      return;
-    }
+    this.options.roomHost.admitCommands(message.roomId, [{ playerId: message.playerId, command: message.command }]);
     this.stateFor(message.roomId).coordinator.acceptCommand({
       currentTick: snapshot.tick,
       playerId: message.playerId,

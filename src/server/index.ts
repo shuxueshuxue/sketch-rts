@@ -7,11 +7,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
-import { commandValidationError } from "../shared/sim/command-validation";
-import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
+import { isCommandEnvelope } from "../shared/command-schema";
+import type { CommandEnvelope } from "../shared/net/types";
+import type { GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub } from "./room-net";
@@ -339,16 +340,11 @@ app.get("/api/rooms/:roomId/sync-events", (request, response) => {
 
 app.post("/api/rooms/:roomId/command", (request, response) => {
   const body = request.body as Record<string, unknown>;
-  if (!isPlayerId(body.playerId) || !isCommand(body.command)) {
+  if (!isCommandEnvelope(body)) {
     response.status(400).json({ error: "Malformed room command" });
     return;
   }
   try {
-    const error = commandValidationError(roomHost.snapshot(request.params.roomId), body.playerId, body.command);
-    if (error) {
-      response.status(400).json({ error });
-      return;
-    }
     response.json(roomHost.commandRoom(request.params.roomId, body.playerId, body.command));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -357,18 +353,12 @@ app.post("/api/rooms/:roomId/command", (request, response) => {
 
 app.post("/api/rooms/:roomId/commands", (request, response) => {
   const body = request.body as Record<string, unknown>;
-  if (!Array.isArray(body.commands) || !body.commands.every(isRoomCommandEnvelope)) {
+  if (!Array.isArray(body.commands) || !body.commands.every(isCommandEnvelope)) {
     response.status(400).json({ error: "Malformed room command batch" });
     return;
   }
   try {
-    const snapshot = roomHost.snapshot(request.params.roomId);
-    const error = body.commands.map((entry) => commandValidationError(snapshot, entry.playerId, entry.command)).find((message) => message);
-    if (error) {
-      response.status(400).json({ error });
-      return;
-    }
-    response.json(roomHost.commandRooms(request.params.roomId, body.commands));
+    response.json(roomHost.commandRooms(request.params.roomId, body.commands as CommandEnvelope[]));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
@@ -391,12 +381,12 @@ app.post("/api/rooms/:roomId/tick", (request, response) => {
 
 app.post("/api/rooms/:roomId/command-tick", (request, response) => {
   const body = request.body as Record<string, unknown>;
-  if (!Array.isArray(body.commands) || !body.commands.every(isRoomCommandEnvelope) || !isTickCount(body.ticks)) {
+  if (!Array.isArray(body.commands) || !body.commands.every(isCommandEnvelope) || !isTickCount(body.ticks)) {
     response.status(400).json({ error: "Malformed room command-tick batch" });
     return;
   }
   try {
-    const result = roomHost.commandTickRoom(request.params.roomId, body.commands, body.ticks);
+    const result = roomHost.commandTickRoom(request.params.roomId, body.commands as CommandEnvelope[], body.ticks);
     if (result.room.status === "ended") roomNetHub.publishRoom(request.params.roomId);
     response.json(result);
   } catch (error) {
@@ -551,99 +541,12 @@ function broadcastBenchmarkDashboardChange(payload: { eventType: string; filenam
   for (const client of benchmarkDashboardClients) client.write(frame);
 }
 
-function isCommand(value: unknown): value is GameCommand {
-  if (!value || typeof value !== "object") return false;
-  const command = value as Record<string, unknown>;
-  if (command.type === "move") {
-    return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
-  }
-  if (command.type === "attackMove") {
-    return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
-  }
-  if (command.type === "attack") {
-    return isStringArray(command.unitIds) && typeof command.targetId === "string";
-  }
-  if (command.type === "mine") {
-    return isStringArray(command.unitIds) && typeof command.resourceId === "string";
-  }
-  if (command.type === "repair") {
-    return isStringArray(command.unitIds) && typeof command.buildingId === "string";
-  }
-  if (command.type === "build") {
-    return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
-  }
-  if (command.type === "setRally") {
-    return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
-  }
-  if (command.type === "train") {
-    return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
-  }
-  if (command.type === "research") {
-    return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
-  }
-  if (command.type === "hire") {
-    return typeof command.campId === "string";
-  }
-  if (command.type === "cast") {
-    return (
-      typeof command.unitId === "string" &&
-      (command.ability === "heal" || command.ability === "summon" || command.ability === "curse") &&
-      (command.targetId === undefined || typeof command.targetId === "string") &&
-      (command.x === undefined || isNumber(command.x)) &&
-      (command.y === undefined || isNumber(command.y))
-    );
-  }
-  if (command.type === "pickupItem") {
-    return typeof command.unitId === "string" && typeof command.itemId === "string";
-  }
-  if (command.type === "dropItem") {
-    return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
-  }
-  if (command.type === "useItem") {
-    return (
-      typeof command.unitId === "string" &&
-      typeof command.itemId === "string" &&
-      (command.targetId === undefined || typeof command.targetId === "string") &&
-      (command.x === undefined || isNumber(command.x)) &&
-      (command.y === undefined || isNumber(command.y))
-    );
-  }
-  return false;
-}
-
-function isRoomCommandEnvelope(value: unknown): value is { playerId: PlayerId; command: GameCommand } {
-  if (!value || typeof value !== "object") return false;
-  const envelope = value as Record<string, unknown>;
-  return isPlayerId(envelope.playerId) && isCommand(envelope.command);
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
-
-function isRallyTarget(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const target = value as Record<string, unknown>;
-  if (target.type === "point") return true;
-  if (target.type === "resource") return typeof target.resourceId === "string";
-  if (target.type === "unit") return typeof target.unitId === "string";
-  return false;
-}
-
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
 function isBuildableBuilding(value: unknown) {
   return typeof value === "string" && (BUILDABLE_BUILDING_KINDS as readonly string[]).includes(value);
-}
-
-function isTrainableUnit(value: unknown) {
-  return typeof value === "string" && (TRAINABLE_UNIT_KINDS as readonly string[]).includes(value);
-}
-
-function isUpgradeKind(value: unknown) {
-  return typeof value === "string" && (UPGRADE_KINDS as readonly string[]).includes(value);
 }
 
 function parseGameSetupOptions(value: unknown): GameSetupOptions | undefined {
