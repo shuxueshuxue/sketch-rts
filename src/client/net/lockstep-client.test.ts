@@ -213,6 +213,24 @@ describe("lockstep client", () => {
     expect(game.projectiles).toEqual(checkpointGame.projectiles);
   });
 
+  it("reports a render update when a checkpoint changes state at the same tick", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.tick = 12;
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    const checkpointGame = createGame("bareDuel", { aiPlayers: [] });
+    checkpointGame.tick = 12;
+    checkpointGame.players.player.gold = 8744;
+    checkpointGame.units = checkpointGame.units.filter((unit) => unit.owner !== "player");
+
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: checkpointGame.nextId } });
+
+    expect(client.updateToRenderTime()).toBe(true);
+    expect(client.currentSnapshot().players.player.gold).toBe(8744);
+    expect(client.currentSnapshot().units.some((unit) => unit.owner === "player")).toBe(false);
+    expect(client.updateToRenderTime()).toBe(false);
+  });
+
   it("drops buffered frames older than a restored checkpoint", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
