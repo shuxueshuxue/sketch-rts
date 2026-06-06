@@ -128,16 +128,16 @@ function scenarioLandmarks(id: MapId): GameMap["landmarks"] {
     { id: "ridge-north", kind: "ridge", x: 4100, y: 980, size: 500, rotation: 0.2 },
     { id: "ridge-west", kind: "ridge", x: 1740, y: 3180, size: 460, rotation: 1.4 },
     { id: "ridge-south", kind: "ridge", x: 3960, y: 6640, size: 540, rotation: 0.4 },
-    { id: "ruin-center-a", kind: "ruin", x: 4300, y: 4200, size: 260, rotation: 0.1 },
-    { id: "ruin-center-b", kind: "ruin", x: 4620, y: 4460, size: 220, rotation: 0.6 },
+    { id: "ruin-center-a", kind: "ruin", x: 4096, y: 4200, size: 260, rotation: 0.1 },
+    { id: "ruin-center-b", kind: "ruin", x: 4416, y: 4460, size: 220, rotation: 0.6 },
     { id: "ditch-west", kind: "ditch", x: 2540, y: 4520, size: 560, rotation: 0.15 },
     { id: "ditch-east", kind: "ditch", x: 5700, y: 3320, size: 620, rotation: -0.2 },
     { id: "camp-north", kind: "campMark", x: 3980, y: 1540, size: 220, rotation: 0.2 },
-    { id: "camp-center", kind: "campMark", x: 4300, y: 4200, size: 260, rotation: 0.7 },
+    { id: "camp-center", kind: "campMark", x: 4096, y: 4200, size: 260, rotation: 0.7 },
     { id: "camp-south", kind: "campMark", x: 3700, y: 6080, size: 240, rotation: 0.5 },
     { id: "scar-player", kind: "mineScar", x: 1180, y: 920, size: 220, rotation: 0.4 },
     { id: "scar-enemy", kind: "mineScar", x: 7000, y: 7140, size: 240, rotation: 0.4 },
-    { id: "scar-center", kind: "mineScar", x: 4300, y: 4200, size: 180, rotation: 0.2 },
+    { id: "scar-center", kind: "mineScar", x: 4096, y: 4200, size: 180, rotation: 0.2 },
     { id: "stone-crossroad", kind: "bannerStone", x: 4020, y: 4020, size: 180, rotation: 0.1 },
     { id: "stone-west", kind: "bannerStone", x: 2060, y: 2200, size: 140, rotation: 0.3 },
     { id: "stone-east", kind: "bannerStone", x: 5920, y: 5900, size: 140, rotation: 0.3 },
@@ -191,7 +191,7 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
   const expansionMines: ResourceNode[] = [
     { id: "gold-north-ridge", kind: "goldMine", x: 4060, y: 1320, amount: 6_000 },
     { id: "gold-south-grove", kind: "goldMine", x: 3720, y: 6260, amount: 6_000 },
-    { id: "gold-center-scar", kind: "goldMine", x: 4300, y: 4200, amount: 6_000 },
+    { id: "gold-center-scar", kind: "goldMine", x: 4096, y: 4200, amount: 6_000 },
   ];
   if (mapId === "bareDuel" || mapId === "campRush") return mainMines;
   if (isRichScoreMap(mapId)) {
@@ -277,10 +277,10 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
     createUnit("wildling-north-3", "neutral", "stonebackBrute", 3970, 1620),
     createUnit("wildling-north-4", "neutral", "gladeWitch", 4050, 1600),
     createUnit("wildling-north-5", "neutral", "barkMender", 3890, 1500),
-    createUnit("wildling-center-1", "neutral", "stonebackBrute", 4200, 4070),
-    createUnit("wildling-center-2", "neutral", "gladeWitch", 4380, 4310),
-    createUnit("wildling-center-3", "neutral", "barkMender", 4290, 4210),
-    createUnit("wildling-center-4", "neutral", "thornSlinger", 4180, 4300),
+    createUnit("wildling-center-1", "neutral", "stonebackBrute", 3996, 4070),
+    createUnit("wildling-center-2", "neutral", "gladeWitch", 4176, 4310),
+    createUnit("wildling-center-3", "neutral", "barkMender", 4086, 4210),
+    createUnit("wildling-center-4", "neutral", "thornSlinger", 3976, 4300),
     createUnit("wildling-south-1", "neutral", "mossGnawer", 3580, 6040),
     createUnit("wildling-south-2", "neutral", "barkMender", 3810, 6110),
     createUnit("wildling-south-3", "neutral", "stonebackBrute", 3690, 6160),
@@ -468,6 +468,12 @@ function isFixedRichObjectiveAuthorPoint(x: number, y: number) {
     (x === 6572 && y === 5060) ||
     (x === 6472 && y === 5120) ||
     (x === 6532 && y === 4980) ||
+    (x === 4096 && y === 4200) ||
+    (x === 4416 && y === 4460) ||
+    (x === 3996 && y === 4070) ||
+    (x === 4176 && y === 4310) ||
+    (x === 4086 && y === 4210) ||
+    (x === 3976 && y === 4300) ||
     (x === 5880 && y === 3880) ||
     (x === 5840 && y === 3820) ||
     (x === 5960 && y === 3920) ||
