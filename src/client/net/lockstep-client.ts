@@ -18,8 +18,6 @@ export class LockstepClient {
   private readonly frameBuffer = new CommandFrameBuffer();
   private localInputSeq = 0;
   private lastChecksumTick = -1;
-  private checkpointRevision = 0;
-  private renderedCheckpointRevision = 0;
 
   constructor(private readonly options: LockstepClientOptions) {
     this.options.transport.onMessage((message) => this.handleServerMessage(message));
@@ -71,9 +69,7 @@ export class LockstepClient {
   }
 
   updateToRenderTime(): boolean {
-    // @@@checkpoint-render-revision - Checkpoint restore can replace units at the same tick, so render sync must observe state replacement, not only frame/tick progress.
-    let changed = this.renderedCheckpointRevision !== this.checkpointRevision;
-    this.renderedCheckpointRevision = this.checkpointRevision;
+    let changed = false;
     while (this.frameBuffer.has(this.options.engine.game.tick)) {
       const frame = this.frameBuffer.take(this.options.engine.game.tick);
       if (!frame) return changed;
@@ -123,7 +119,6 @@ export class LockstepClient {
     if (checkpoint.roomId !== this.options.roomId) throw new Error(`Received checkpoint for ${checkpoint.roomId} while joined to ${this.options.roomId}`);
     restoreGameSnapshot(this.options.engine.game, checkpoint);
     this.frameBuffer.discardBefore(checkpoint.tick);
-    this.checkpointRevision += 1;
     this.emitSyncEvent({
       kind: "checkpoint-restore",
       localTick: this.options.engine.game.tick,

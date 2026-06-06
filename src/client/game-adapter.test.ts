@@ -27,7 +27,7 @@ describe("game adapters", () => {
     expect(transport.sent).toEqual([]);
   });
 
-  it("reports room checkpoint state replacement through the adapter at the same tick", () => {
+  it("does not turn same-tick checkpoint replacement into render invalidation state", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.tick = 12;
     const transport = new FakeTransport();
@@ -40,7 +40,7 @@ describe("game adapters", () => {
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: checkpointGame.nextId } });
 
-    expect(adapter.updateToRenderTime()).toBe(true);
+    expect(adapter.updateToRenderTime()).toBe(false);
     expect(adapter.currentSnapshot().players.player.gold).toBe(8744);
     expect(adapter.currentSnapshot().units.some((unit) => unit.owner === "player")).toBe(false);
     expect(adapter.updateToRenderTime()).toBe(false);
