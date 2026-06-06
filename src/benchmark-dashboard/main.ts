@@ -214,7 +214,9 @@ function matchDetail(match: BenchmarkMatchReport) {
                     <span>${escapeHtml(player.team)}</span>
                     <span>${escapeHtml(player.aiVersion)}</span>
                     <span>${escapeHtml(player.race)}</span>
-                    <span>${escapeHtml(player.adapter)}</span>
+                    <span>${escapeHtml(player.controller)}</span>
+                    <span>${escapeHtml(player.plannerOrigin)}</span>
+                    <span>${escapeHtml(player.traceSource)}</span>
                   </div>
                 `,
               )

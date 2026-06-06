@@ -14,8 +14,8 @@ describe("AI control benchmark CLI", () => {
       name: output.matches[0],
       commandPlanner: "present",
       agents: {
-        v2: { adapter: "external", team: "north", race: "grove", aiVersion: "v2" },
-        v1a: { adapter: "external", team: "south", race: "grove", aiVersion: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", aiVersion: "v2" },
+        v1a: { controller: "external-agent", team: "south", race: "grove", aiVersion: "v1" },
       },
     });
     expect(output.manifest.evaluations[0].matches[3].agents.v2.disabledBehaviors).toEqual(["workerHarassment"]);

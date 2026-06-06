@@ -19,8 +19,8 @@ describe("wounded moon well stats tracker", () => {
       .unit("v1a", "footman", 3400, 3320)
       .build();
     const agents: Record<string, AiGameAgent> = {
-      v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
-      v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+      v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
+      v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
     };
 
     const report = runBenchmark({
@@ -70,8 +70,8 @@ describe("wounded moon well stats tracker", () => {
       .townHall("v1a", 3400, 3400)
       .build();
     const agents: Record<string, AiGameAgent> = {
-      v2: { adapter: "external", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
-      v1a: { adapter: "external", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
+      v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
+      v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
     };
 
     const report = runBenchmark({

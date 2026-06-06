@@ -90,7 +90,7 @@ export type AiMeleeControlPlayerDetail = {
   totalGoldSpent: number;
 };
 
-export type AiMeleeControlBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "adapter" | "workers" | "workerHarassment">;
+export type AiMeleeControlBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers" | "workerHarassment">;
 
 export function createAiMeleeControlBenchmarkInput(options: AiMeleeControlBenchmarkOptions = {}): AiMeleeControlBenchmarkInput {
   const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {

@@ -3,7 +3,7 @@ import type { CreateGameOptions, Game } from "../../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, PlayerId, RaceId, Unit, UpgradeKind } from "../../shared/types";
 import { analyzeGameMapObjectives, type SdkMapObjectiveReport } from "../map-analysis";
-import { runGameLoop, type SdkAgentAdapter, type SdkGameAgent, type SdkGameCommandPlanner } from "../game-runner";
+import { runGameLoop, traceSourceFor, type SdkAgentController, type SdkCommandSource, type SdkGameAgent, type SdkGameCommandPlanner, type SdkPlannerOrigin } from "../game-runner";
 
 export type BenchmarkInput<TAgent extends SdkGameAgent = SdkGameAgent> = {
   name: string;
@@ -46,7 +46,9 @@ export type BenchmarkTrackerContext<TAgent extends SdkGameAgent = SdkGameAgent> 
 export type BenchmarkCommandContext<TAgent extends SdkGameAgent = SdkGameAgent> = BenchmarkTrackerContext<TAgent> & {
   tick: number;
   owner: PlayerId;
-  adapter: SdkAgentAdapter;
+  controller: SdkAgentController;
+  plannerOrigin: SdkPlannerOrigin;
+  traceSource: SdkCommandSource;
   scriptId: string;
   command: GameCommand;
 };
@@ -109,7 +111,9 @@ export type BenchmarkPlayerSetup = {
   team: string;
   race: RaceId;
   aiVersion: string;
-  adapter: SdkAgentAdapter;
+  controller: SdkAgentController;
+  plannerOrigin: SdkPlannerOrigin;
+  traceSource: SdkCommandSource;
 };
 
 export type BenchmarkMatchResult = {
@@ -231,7 +235,9 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
         players: context.players,
         tick: context.tick,
         owner: context.owner,
-        adapter: commandSourceAdapter(context.source),
+        controller: requireBenchmarkAgent(input, context.owner).controller,
+        plannerOrigin: context.plannerOrigin,
+        traceSource: context.source,
         scriptId: context.scriptId,
         command: context.command,
       };
@@ -249,10 +255,6 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
     report.result.trackers[entry.tracker.id] = entry.tracker.finish(entry.state, { game: loop.game, match: input, players: loop.players, report });
   }
   return report;
-}
-
-function commandSourceAdapter(source: "internal-ai" | "external-agent"): SdkAgentAdapter {
-  return source === "internal-ai" ? "internal" : "external";
 }
 
 function createStandardState<TAgent extends SdkGameAgent>(game: Game, input: BenchmarkMatchInput<TAgent>, players: PlayerId[]): StandardBenchmarkState {
@@ -284,6 +286,12 @@ function createStandardState<TAgent extends SdkGameAgent>(game: Game, input: Ben
     goldMineIncome: zeroRecord(players),
     creepBountyIncome: zeroRecord(players),
   };
+}
+
+function requireBenchmarkAgent<TAgent extends SdkGameAgent>(input: BenchmarkMatchInput<TAgent>, owner: PlayerId): TAgent {
+  const agent = input.agents[owner];
+  if (!agent) throw new Error(`Benchmark match ${input.name} command owner ${owner} is missing from agents`);
+  return agent;
 }
 
 function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owner: PlayerId, command: GameCommand) {
@@ -389,7 +397,14 @@ function benchmarkSetup<TAgent extends SdkGameAgent>(game: Game, input: Benchmar
     players: Object.fromEntries(
       Object.entries(input.agents).map(([owner, agent]) => [
         owner,
-        { team: agent.team, race: agent.race ?? game.players[owner]?.race ?? "grove", aiVersion: agent.versionLabel ?? "unknown", adapter: agent.adapter },
+        {
+          team: agent.team,
+          race: agent.race ?? game.players[owner]?.race ?? "grove",
+          aiVersion: agent.versionLabel ?? "unknown",
+          controller: agent.controller,
+          plannerOrigin: input.commandPlanner ? "local-command-planner" : "none",
+          traceSource: traceSourceFor(agent),
+        },
       ]),
     ),
   };
