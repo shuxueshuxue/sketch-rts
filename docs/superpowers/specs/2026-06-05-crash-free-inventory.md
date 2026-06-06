@@ -104,7 +104,7 @@ The admission pass now first applies the command-frame current-issuer normalizer
 
 The intended command chain is now:
 
-- Browser room/server commands: validate at `room-net` / REST server boundary with `commandValidationError`.
+- Browser room/server commands: decode payload shape at `room-net` / REST server boundaries with the shared command schema, then route gameplay admission through `room-host` / `CommandFrameRuntime.admit`.
 - Local browser commands: normalize to current frame issuers, then validate in `LocalGameAdapter` before frame apply.
 - SDK/AI frame commands: normalize to current frame issuers, then validate in `issueCommandFrame` before frame apply.
 - Hosted room commands: normalize to current frame issuers, then validate inside `room-host` before debug replay recording and frame apply. This covers room-host browser/SDK calls, active-room internal AI, and connected-room AI commands merged into authoritative frames.
@@ -119,6 +119,7 @@ Command-path proof coverage:
 - `src/client/net/local-adapter.test.ts` proves local player commands and local AI commands are validated before frame application, and rejected commands do not consume AI think cycles.
 - `src/server/room-host.test.ts` proves hosted internal AI commands are rejected before room-frame mutation, and connected-room AI validation rejects before player command mutation or replay recording.
 - `src/server/room-net.test.ts` proves connected-room player commands and internal AI commands are broadcast together as authoritative room frames, external invalid lockstep commands become room errors before entering the room frame, and hosted internal AI admission failures are not swallowed by the websocket layer.
+- `src/server/rest-command-boundary.test.ts` proves malformed command payloads are rejected at both real REST and WebSocket room ingress boundaries.
 - `src/client/deployment/static-runtime.test.ts` proves static deployment match commands use the `LocalGameAdapter` command-frame admission path.
 - `src/client/deployment/server-runtime.test.ts` proves server deployment match commands go through the room lockstep transport and do not mutate local simulation state before an authoritative frame arrives.
 - `src/sdk/game-runner.test.ts` proves SDK command planners issue commands through the generic SDK runner surface rather than importing AI policy or bypassing the frame layer.
@@ -134,7 +135,7 @@ Closure review exposed one remaining command-chain gap:
 
 The hosted command ruling is now:
 
-- `room-host` validates every hosted frame entry with the same `commandWithCurrentIssuers` plus `commandValidationError` admission used by local and SDK frame paths.
+- `room-host` validates every hosted external command entry with `CommandFrameRuntime.admit`, while delayed frame apply keeps stale/transient command no-op tolerance through the runtime apply purpose.
 - Hosted AI planning restores `lastThink` if admission fails, so a rejected AI frame cannot silently consume a think cycle.
 - Connected room frames validate merged AI commands before recording debug replay frames or applying player commands, so invalid AI cannot create partial replay/state mutation.
 - `RoomNetHub` no longer catches room-frame application errors. Ordinary invalid client commands are rejected at `acceptCommand`; unexpected hosted frame failures fail loudly instead of being hidden by the network layer.
