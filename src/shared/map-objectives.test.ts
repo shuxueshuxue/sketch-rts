@@ -92,6 +92,19 @@ describe("map neutral objective layout", () => {
     }
   });
 
+  it("keeps the first contested economy objective centered between 1v1 score starts", () => {
+    for (const mapId of RICH_SCORE_MAPS) {
+      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
+      const leftBase = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall")!;
+      const rightBase = game.buildings.find((building) => building.owner === "v1a" && building.kind === "townHall")!;
+      const contestedEconomy = game.resources.filter((resource) => !resource.id.endsWith("-main") && resource.id !== "gold-west-march" && resource.id !== "gold-east-march");
+      const leftDistance = Math.min(...contestedEconomy.map((resource) => Math.hypot(resource.x - leftBase.x, resource.y - leftBase.y)));
+      const rightDistance = Math.min(...contestedEconomy.map((resource) => Math.hypot(resource.x - rightBase.x, resource.y - rightBase.y)));
+
+      expect(Math.abs(leftDistance - rightDistance), `${mapId} should not let one score start reach the first contested economy objective much earlier`).toBeLessThanOrEqual(160);
+    }
+  });
+
   it("keeps guarded rich mercenary camps inside the AI guard radius", () => {
     for (const mapId of RICH_SCORE_MAPS) {
       const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
