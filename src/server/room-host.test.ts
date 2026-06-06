@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
+import type { AiScript } from "../ai/policy";
 import { createRoomHost } from "./room-host";
 import type { LocalUserProfile } from "../shared/types";
 
 const hostUser: LocalUserProfile = { id: "user-host", name: "Host" };
 const guestUser: LocalUserProfile = { id: "user-guest", name: "Guest" };
+
+function invalidTrainingAiScript(): AiScript {
+  return {
+    id: "invalid-hosted-ai-command",
+    phase: "economy",
+    run(snapshot, owner) {
+      const townHall = snapshot.buildings.find((building) => building.owner === owner && building.kind === "townHall");
+      expect(townHall).toBeDefined();
+      return { type: "train", buildingId: townHall!.id, unitKind: "footman" };
+    },
+  };
+}
 
 describe("server room host", () => {
   it("creates joins configures and starts rooms without a solo-only path", () => {
@@ -111,6 +124,34 @@ describe("server room host", () => {
     );
     expect(recorded.frames[0]).toMatchObject({ roomId: frame.roomId, tick: frame.tick, sequence: frame.sequence, source: "browser" });
     expect(recorded.frames[0]?.commands).toEqual(result.frame.commands);
+  });
+
+  it("rejects invalid hosted AI commands in connected room frames before recording or mutating player commands", () => {
+    const host = createRoomHost({ aiScripts: [invalidTrainingAiScript()] });
+    const room = host.createRoom({ id: "room-frame-invalid-ai", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    host.enableDebugReplay(room.id, { id: "trace-room-frame-invalid-ai" });
+    const before = host.snapshot(room.id);
+    const worker = before.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    const enemyTownHall = before.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall");
+    expect(worker).toBeDefined();
+    expect(enemyTownHall).toBeDefined();
+
+    expect(() =>
+      host.tickRoomFrame(room.id, {
+        roomId: room.id,
+        tick: before.tick,
+        sequence: 7,
+        commands: [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }],
+      }),
+    ).toThrow(/Hosted command rejected: townHall cannot train footman/);
+
+    const after = host.snapshot(room.id);
+    const recorded = host.readDebugReplay(room.id);
+    expect(after.tick).toBe(0);
+    expect(after.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
+    expect(after.buildings.find((building) => building.id === enemyTownHall!.id)?.queue).toHaveLength(0);
+    expect(recorded.frames).toHaveLength(0);
   });
 
   it("creates checkpoint frames from live room runtime state", () => {
@@ -276,6 +317,19 @@ describe("server room host", () => {
     expect(recorded.frames.some((frame) => frame.source === "internal-ai")).toBe(true);
     expect(replayed.units).toEqual(host.snapshot(room.id).units);
     expect(replayed.buildings).toEqual(host.snapshot(room.id).buildings);
+  });
+
+  it("rejects invalid hosted internal AI commands before mutating the room frame", () => {
+    const host = createRoomHost({ autoTick: false, aiScripts: [invalidTrainingAiScript()] });
+    const room = host.createRoom({ id: "room-invalid-hosted-ai", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+
+    expect(() => host.tickRoom(room.id, 1)).toThrow(/Hosted command rejected: townHall cannot train footman/);
+
+    const after = host.snapshot(room.id);
+    const enemyTownHall = after.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall");
+    expect(after.tick).toBe(0);
+    expect(enemyTownHall?.queue).toHaveLength(0);
   });
 
   it("records replay checkpoints during room ticking for fast seek", () => {
