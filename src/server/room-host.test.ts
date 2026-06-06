@@ -33,6 +33,30 @@ function movingEnemyScript(): AiScript {
   };
 }
 
+function resetRoomWithPlayerSiege(host: ReturnType<typeof createRoomHost>, roomId: string, options: { aiPlayers?: string[] } = {}) {
+  const result = host.resetRoom(roomId, "bareDuel", {
+    aiPlayers: options.aiPlayers ?? [],
+    scenario: {
+      addUnits: Array.from({ length: 18 }, (_, index) => ({
+        id: `replay-siege-${index}`,
+        owner: "player",
+        kind: "golem",
+        x: 3020 + index * 4,
+        y: 3020 + index * 4,
+      })),
+    },
+  });
+  return result;
+}
+
+function playerSiegeAttackCommand() {
+  return {
+    type: "attack" as const,
+    unitIds: Array.from({ length: 18 }, (_, index) => `replay-siege-${index}`),
+    targetId: "building-enemy-townhall",
+  };
+}
+
 describe("server room host", () => {
   it("creates joins configures and starts rooms without a solo-only path", () => {
     const host = createRoomHost();
@@ -450,25 +474,10 @@ describe("server room host", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-replay-ended", host: hostUser, mapId: "bareDuel" });
     host.startRoom(room.id);
-    host.resetRoom(room.id, "bareDuel", {
-      aiPlayers: [],
-      scenario: {
-        addUnits: Array.from({ length: 18 }, (_, index) => ({
-          id: `replay-siege-${index}`,
-          owner: "player",
-          kind: "golem",
-          x: 3020 + index * 4,
-          y: 3020 + index * 4,
-        })),
-      },
-    });
+    resetRoomWithPlayerSiege(host, room.id);
 
     host.enableDebugReplay(room.id, { id: "trace-ended", label: "post match rewind" });
-    host.commandRoom(room.id, "player", {
-      type: "attack",
-      unitIds: Array.from({ length: 18 }, (_, index) => `replay-siege-${index}`),
-      targetId: "building-enemy-townhall",
-    });
+    host.commandRoom(room.id, "player", playerSiegeAttackCommand());
 
     const ended = host.tickRoom(room.id, 800);
     const replayedEnd = host.replayDebugToTick(room.id, ended.snapshot.tick);
@@ -479,5 +488,54 @@ describe("server room host", () => {
     expect(recorded.frames.some((frame) => frame.source === "browser")).toBe(true);
     expect(replayedEnd.match).toEqual(ended.snapshot.match);
     expect(replayedMid.tick).toBeLessThan(ended.snapshot.tick);
+  });
+
+  it("keeps lockstep frame ticking on the same match-finish and replay path", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-frame-ended", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    resetRoomWithPlayerSiege(host, room.id);
+    host.enableDebugReplay(room.id, { id: "trace-frame-ended", label: "frame post match rewind" });
+
+    let snapshot = host.snapshot(room.id);
+    host.tickRoomFrame(room.id, {
+      roomId: room.id,
+      tick: snapshot.tick,
+      sequence: 0,
+      commands: [{ playerId: "player", command: playerSiegeAttackCommand() }],
+    });
+    for (let sequence = 1; sequence < 800 && host.getRoom(room.id).status === "inMatch"; sequence += 1) {
+      snapshot = host.snapshot(room.id);
+      host.tickRoomFrame(room.id, { roomId: room.id, tick: snapshot.tick, sequence, commands: [] });
+    }
+
+    const ended = host.getRoom(room.id);
+    const recorded = host.readDebugReplay(room.id);
+    const replayedEnd = host.replayDebugToTick(room.id, ended.result?.endedAtTick ?? 0);
+
+    expect(ended.status).toBe("ended");
+    expect(recorded.frames.some((frame) => frame.source === "browser")).toBe(true);
+    expect(recorded.checkpoints.some((checkpoint) => checkpoint.snapshot.match.winner === ended.result?.winner)).toBe(true);
+    expect(replayedEnd.match.winner).toBe(ended.result?.winner);
+  });
+
+  it("keeps active-room auto ticking on the same match-finish and replay path", () => {
+    const host = createRoomHost({ aiScripts: [movingEnemyScript()] });
+    const room = host.createRoom({ id: "room-autotick-ended", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    resetRoomWithPlayerSiege(host, room.id, { aiPlayers: ["enemy"] });
+    host.enableDebugReplay(room.id, { id: "trace-autotick-ended", label: "autotick post match rewind" });
+    host.commandRoom(room.id, "player", playerSiegeAttackCommand());
+
+    host.tickActiveRooms(800);
+
+    const ended = host.getRoom(room.id);
+    const recorded = host.readDebugReplay(room.id);
+    const replayedEnd = host.replayDebugToTick(room.id, ended.result?.endedAtTick ?? 0);
+
+    expect(ended.status).toBe("ended");
+    expect(recorded.frames.some((frame) => frame.source === "internal-ai")).toBe(true);
+    expect(recorded.checkpoints.some((checkpoint) => checkpoint.snapshot.match.winner === ended.result?.winner)).toBe(true);
+    expect(replayedEnd.match.winner).toBe(ended.result?.winner);
   });
 });
