@@ -1,8 +1,13 @@
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { availableParallelism } from "node:os";
+import { BUILDING_DEFS, UNIT_DEFS } from "../src/shared/catalog";
 import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
 import { runAiBenchmarkRunnerParityProbe } from "../src/ai/benchmark/parity";
 import { recordAiVersionBenchmarkDashboardRun } from "../src/ai/benchmark/dashboard-store";
 import { describeBenchmarkInput } from "../src/sdk/benchmark/manifest";
+import type { BenchmarkInput } from "../src/sdk/benchmark/core";
+import type { AiGameAgent } from "../src/ai/game-runner";
 
 const mapCount = process.env.AI_GAUNTLET_MAP_COUNT ? Number.parseInt(process.env.AI_GAUNTLET_MAP_COUNT, 10) : 18;
 const SCORE_SUCCESS_GATE = 1;
@@ -38,25 +43,38 @@ if (process.env.AI_BENCHMARK_DRY_RUN === "1") {
 
 if (process.env.AI_BENCHMARK_PARITY_PROBE === "1") {
   const { input, selection } = createAiVersionBenchmarkInput({ ...options, maxTicks: 1 });
-  const controlMatch = input.evaluations.find((evaluation) => evaluation.name === "1v1 score control")?.matches[0];
-  if (!controlMatch) throw new Error("AI version benchmark parity probe could not find a 1v1 score control match");
-  const proof = await runAiBenchmarkRunnerParityProbe({
-    name: "AI Version Benchmark Runner Parity Probe",
-    evaluations: [{ name: "1v1 score control", tag: "melee", matches: [controlMatch] }],
-  });
+  const proofInput = representativeParityInput(input);
+  const proof = await runAiBenchmarkRunnerParityProbe(proofInput);
   process.stdout.write(
     `${JSON.stringify(
       {
         name: "AI Version Benchmark Runner Parity Probe",
+        commit: gitCommit(),
+        catalogHash: catalogHash(),
         seed: selection.seed,
         selectedRichScoreMapIds: selection.mapIds,
-        matchName: controlMatch.name,
+        mapCount: selection.mapIds.length,
+        full: options.full,
+        workers,
+        dashboardPath: process.env.AI_BENCHMARK_DASHBOARD_DIR ?? ".benchmark-dashboard",
+        probeCount: proof.probes.length,
         setupEqual: proof.setupEqual,
         coreResultEqual: proof.coreResultEqual,
-        serialManifest: proof.serialManifest,
-        parallelManifest: proof.parallelManifest,
-        serial: parityReportSummary(proof.serialReport),
-        parallel: parityReportSummary(proof.parallelReport),
+        directResultEqual: proof.directResultEqual,
+        probes: proof.probes.map((probe) => ({
+          evaluationName: probe.evaluationName,
+          ...(probe.tag ? { tag: probe.tag } : {}),
+          matchName: probe.matchName,
+          matchIndex: probe.matchIndex,
+          setupEqual: probe.setupEqual,
+          coreResultEqual: probe.coreResultEqual,
+          directResultEqual: probe.directResultEqual,
+          serialManifest: probe.serialManifest,
+          parallelManifest: probe.parallelManifest,
+          serial: probe.serial,
+          parallel: probe.parallel,
+          direct: probe.direct,
+        })),
       },
       null,
       2,
@@ -97,12 +115,32 @@ function benchmarkPassed(scoreRate: number, laneRates: number[]) {
   return scoreRate >= SCORE_SUCCESS_GATE && laneRates.every((rate) => rate >= SCORE_SUCCESS_GATE);
 }
 
-function parityReportSummary(report: Awaited<ReturnType<typeof runAiBenchmarkRunnerParityProbe>>["serialReport"]) {
-  const match = report.evaluations[0]?.matches[0];
-  if (!match) throw new Error("Parity report did not include a match");
+function representativeParityInput(input: BenchmarkInput<AiGameAgent>): BenchmarkInput<AiGameAgent> {
   return {
-    map: match.setup.map.id,
-    players: match.setup.players,
-    result: match.result,
+    name: "AI Version Benchmark Runner Parity Probe",
+    evaluations: input.evaluations.flatMap((evaluation) => {
+      const match = evaluation.matches[0];
+      if (!match) return [];
+      return [{ name: evaluation.name, ...(evaluation.tag ? { tag: evaluation.tag } : {}), matches: [match] }];
+    }),
   };
+}
+
+function gitCommit() {
+  return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+}
+
+function catalogHash() {
+  return createHash("sha256").update(stableJson({ BUILDING_DEFS, UNIT_DEFS })).digest("hex");
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stableJson(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }

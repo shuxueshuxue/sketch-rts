@@ -35,20 +35,27 @@ describe("AI version benchmark CLI", () => {
   });
 
   it("prints a serial/parallel runner parity proof without writing a dashboard run", () => {
-    const output = JSON.parse(runVersionBenchmarkCli({ AI_BENCHMARK_PARITY_PROBE: "1", AI_GAUNTLET_SEED: "version-cli-seed", AI_GAUNTLET_MAP_COUNT: "1" }));
+    const output = JSON.parse(runVersionBenchmarkCli({ AI_BENCHMARK_PARITY_PROBE: "1", AI_GAUNTLET_SEED: "version-cli-seed", AI_GAUNTLET_MAP_COUNT: "18" }));
 
     expect(output).toMatchObject({
       name: "AI Version Benchmark Runner Parity Probe",
       seed: "version-cli-seed",
-      matchName: `${output.selectedRichScoreMapIds[0]} 1v1 control north`,
+      mapCount: 18,
+      probeCount: 6,
       setupEqual: true,
       coreResultEqual: true,
+      directResultEqual: true,
     });
-    expect(output.selectedRichScoreMapIds).toHaveLength(1);
-    expect(output.serialManifest.evaluations[0].matches[0].commandPlanner).toBe("present");
-    expect(output.parallelManifest.evaluations[0].matches[0].commandPlanner).toBe("absent");
-    expect(output.serial).toMatchObject({ map: output.selectedRichScoreMapIds[0], result: { tick: 1, timeout: true } });
-    expect(output.parallel).toEqual(output.serial);
+    expect(output.selectedRichScoreMapIds).toHaveLength(18);
+    expect(output.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(output.catalogHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(output.dashboardPath).toBe(".benchmark-dashboard");
+    expect(output.probes.map((probe: { evaluationName: string }) => probe.evaluationName)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
+    expect(output.probes.every((probe: { setupEqual: boolean; coreResultEqual: boolean; directResultEqual: boolean }) => probe.setupEqual && probe.coreResultEqual && probe.directResultEqual)).toBe(true);
+    expect(output.probes[0].serialManifest.commandPlanner).toBe("present");
+    expect(output.probes[0].parallelManifest.commandPlanner).toBe("absent");
+    expect(output.probes[0].serial).toMatchObject({ map: output.selectedRichScoreMapIds[0], result: { tick: 1, timeout: true } });
+    expect(output.probes[0].parallel).toEqual(output.probes[0].serial);
     expect(output.serialReport).toBeUndefined();
     expect(output.parallelReport).toBeUndefined();
   });
