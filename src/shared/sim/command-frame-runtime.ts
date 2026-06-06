@@ -1,7 +1,7 @@
 import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { snapshotGame, stepGame, type Game } from "../sim";
-import { commandValidationError } from "./command-validation";
-import { applyCommandFrame, commandWithCurrentIssuers, type CommandFrameApplyHooks } from "./frame";
+import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
+import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
@@ -94,10 +94,10 @@ export class CommandFrameRuntime<State = unknown> {
     if (commands.length === 0) return;
     const snapshot = snapshotGame(this.options.game);
     for (const [index, entry] of commands.entries()) {
-      const currentCommand = commandWithCurrentIssuers(this.options.game, entry.playerId, entry.command, { purpose: options.purpose });
+      const currentCommand = narrowFrameCommandToLiveOperands(this.options.game, entry.playerId, entry.command);
       if (!currentCommand) continue;
-      const error = commandValidationError(snapshot, entry.playerId, currentCommand);
-      if (error) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${error}`);
+      const legality = checkCommandLegality(snapshot, entry.playerId, currentCommand);
+      if (legality && (options.purpose === "admission" || !legality.transient)) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${legality.message}`);
     }
   }
 }
