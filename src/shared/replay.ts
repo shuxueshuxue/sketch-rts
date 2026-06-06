@@ -1,6 +1,6 @@
 import { restoreGameFromSave, type SaveGameRecord } from "./savegame";
-import { snapshotGame, stepGame, type Game } from "./sim";
-import { applyCommandFrame } from "./sim/frame";
+import { snapshotGame, type Game } from "./sim";
+import { advanceCommandFrameTick } from "./sim/command-frame-runtime";
 import type { CommandEnvelope, CommandFrame } from "./net/types";
 import type { GameCommand, GameSnapshot, PlayerId } from "./types";
 
@@ -65,11 +65,12 @@ export function replayTraceToTick(trace: DebugReplayTrace, targetTick: number): 
   if (frameIndex < 0) frameIndex = frames.length;
 
   while (game.tick < targetTick) {
+    const framesForTick: ReplayCommandFrame[] = [];
     while (frameIndex < frames.length && frames[frameIndex]!.tick === game.tick) {
-      applyReplayFrame(game, frames[frameIndex]!);
+      framesForTick.push(frames[frameIndex]!);
       frameIndex += 1;
     }
-    stepGame(game);
+    advanceCommandFrameTick(game, framesForTick);
   }
 
   return game;
@@ -91,12 +92,6 @@ export function extractReplayFrameSave(trace: DebugReplayTrace, targetTick: numb
       nextId: game.nextId,
     },
   };
-}
-
-function applyReplayFrame(game: Game, frame: ReplayCommandFrame) {
-  if (frame.tick < game.tick) throw new Error(`Replay frame ${frame.sequence} is behind current tick ${game.tick}`);
-  if (frame.tick > game.tick) throw new Error(`Replay frame ${frame.sequence} skipped tick ${game.tick}`);
-  applyCommandFrame(game, frame);
 }
 
 function nearestCheckpoint(trace: DebugReplayTrace, targetTick: number) {
