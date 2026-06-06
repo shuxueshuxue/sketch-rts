@@ -42,7 +42,7 @@ function issueFrameCommand(game: Game, owner: PlayerId, command: GameCommand): v
   issuePlayerCommand(game, owner, currentCommand);
 }
 
-function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
+export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
   if (command.type === "startMap") return command;
   if (command.type === "move" || command.type === "attackMove") {

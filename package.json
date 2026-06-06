@@ -24,6 +24,7 @@
     "test:e2e-brutal": "node scripts/e2e-brutal-spec.mjs",
     "test:yatu": "node scripts/yatu-player-loop.mjs",
     "test:sdk-effect-proof": "tsx scripts/sdk-effect-proof.ts",
+    "audit:crash-inventory": "tsx scripts/crash-inventory.ts",
     "build": "tsc --noEmit && vite build",
     "build:server": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=server vite build",
     "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build"
