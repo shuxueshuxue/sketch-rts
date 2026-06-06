@@ -97,6 +97,7 @@ describe("server room host", () => {
 
     const after = host.commandRoom(room.id, "player", { type: "move", unitIds: [worker!.id], x: worker!.x + 180, y: worker!.y });
 
+    expect(after.tick).toBe(before.tick + 1);
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
@@ -117,6 +118,7 @@ describe("server room host", () => {
       { playerId: "enemy", command: { type: "move", unitIds: [enemyWorker!.id], x: enemyWorker!.x - 120, y: enemyWorker!.y } },
     ]);
 
+    expect(after.tick).toBe(before.tick + 1);
     expect(after.units.find((unit) => unit.id === playerWorker!.id)?.order).toMatchObject({ type: "move" });
     expect(after.units.find((unit) => unit.id === enemyWorker!.id)?.order).toMatchObject({ type: "move" });
   });

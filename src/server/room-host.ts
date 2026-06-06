@@ -221,8 +221,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const { hosted, game, frameRuntime } = getLiveGame(roomId);
       const commands = [{ playerId, command }];
       frameRuntime.admit(commands);
-      applyHostedCommandFrame(hosted, frameRuntime, "browser", commands);
-      return snapshotGame(game);
+      return tickHostedRoom(hosted, game, 1, { initialCommands: commands, initialSource: "browser" }).snapshot;
     },
 
     admitCommands(roomId: string, commands: CommandEnvelope[]): void {
@@ -233,8 +232,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     commandRooms(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[]): GameSnapshot {
       const { hosted, game, frameRuntime } = getLiveGame(roomId);
       frameRuntime.admit(commands);
-      applyHostedCommandFrame(hosted, frameRuntime, "browser", commands);
-      return snapshotGame(game);
+      return tickHostedRoom(hosted, game, 1, { initialCommands: commands, initialSource: "browser" }).snapshot;
     },
 
     commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number): RoomTickResult {
@@ -403,10 +401,6 @@ function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
 
 function notifyHostedFrameListeners(hosted: HostedRoom, event: HostedRoomFrameEvent) {
   for (const listener of [...(hosted.frameListeners ?? [])]) listener(event);
-}
-
-function applyHostedCommandFrame(hosted: HostedRoom, frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>, source: ReplayCommandSource, commands: CommandEnvelope[]) {
-  frameRuntime.completeAndApply(commands, { includeAi: false, onFrame: (frame) => recordHostedReplayFrame(hosted, source, frame) });
 }
 
 function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameRuntime<AiRuntimeFramePlannerState> {
