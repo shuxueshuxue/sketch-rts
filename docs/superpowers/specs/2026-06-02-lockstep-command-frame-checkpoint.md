@@ -39,6 +39,13 @@ The room WebSocket path is now wired into the running server:
 - `src/client/main.ts` starts room matches through `LockstepClient`; room commands no longer call the HTTP room command endpoint, and room gameplay no longer polls HTTP snapshots.
 - Public in-match rooms now stay visible in the room browser as spectator entries; spectators connect through room WebSocket without claiming a player slot or POSTing `/join`.
 
+Frontend world state has one authority:
+
+- The active `GameAdapter` snapshot is gameplay truth for local/static play and hosted room play.
+- `selectedIds`, `focusedSelectionId`, control groups, debug view, and canvas render data are UI projection only.
+- `src/client/frontend-world-view.ts` materializes the active adapter snapshot and prunes selected/control-group ids from that snapshot.
+- `src/client/main.ts` must refresh that projection before command construction entrypoints read selected/focused ids. A visible entity or remembered selection id cannot be treated as command authority until it has survived the latest adapter snapshot materialization.
+
 ## Checkpoint Semantics
 
 Normal room play advances through authoritative command frames. Checkpoints are synchronization boundaries, not a routine replacement for applying frames.
