@@ -1,5 +1,5 @@
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
-import type { CheckpointFrame, CommandFrame, ServerNetMessage } from "../../shared/net/types";
+import type { CheckpointFrame, CheckpointRequestReason, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../../shared/net/types";
 import type { Game } from "../../shared/sim";
 import type { GameCommand, PlayerId } from "../../shared/types";
 import type { SimulationEngine } from "../../shared/sim/engine";
@@ -10,12 +10,14 @@ export type LockstepClientOptions = {
   playerId: PlayerId;
   engine: SimulationEngine;
   transport: NetTransport;
+  checksumEveryTicks?: number;
   onError?: (message: string) => void;
 };
 
 export class LockstepClient {
   private readonly frameBuffer = new CommandFrameBuffer();
   private localInputSeq = 0;
+  private lastChecksumTick = -1;
 
   constructor(private readonly options: LockstepClientOptions) {
     this.options.transport.onMessage((message) => this.handleServerMessage(message));
@@ -25,12 +27,24 @@ export class LockstepClient {
     this.options.transport.send({ type: "join", roomId: this.options.roomId, playerId: this.options.playerId });
   }
 
-  requestCheckpoint(): void {
-    this.options.transport.send({ type: "requestCheckpoint", roomId: this.options.roomId });
+  requestCheckpoint(reason: CheckpointRequestReason = "manual", tick?: number): void {
+    this.options.transport.send({
+      type: "requestCheckpoint",
+      roomId: this.options.roomId,
+      playerId: this.options.playerId,
+      ...(tick !== undefined ? { tick } : {}),
+      reason,
+      clientTick: this.options.engine.game.tick,
+      clientChecksum: this.currentChecksum(),
+    });
   }
 
   currentSnapshot() {
     return this.options.engine.snapshot();
+  }
+
+  currentChecksum(): string {
+    return this.options.engine.checksum();
   }
 
   close(): void {
@@ -64,11 +78,14 @@ export class LockstepClient {
         this.options.engine.step();
       } catch (error) {
         // @@@lockstep-resync - A bad or stale frame is a visible sync failure; report it, then recover from server truth instead of crashing the render loop.
-        this.options.onError?.(errorMessage(error));
-        this.requestCheckpoint();
+        const message = errorMessage(error);
+        this.options.onError?.(message);
+        this.emitSyncEvent({ kind: "frame-apply-error", localTick: this.options.engine.game.tick, message, frameTick: frame.tick, frameSequence: frame.sequence });
+        this.requestCheckpoint("frame-apply-error");
         return changed;
       }
       changed = true;
+      this.emitChecksumIfDue();
     }
     return changed;
   }
@@ -78,8 +95,10 @@ export class LockstepClient {
     if (message.type === "checkpoint") this.restoreCheckpoint(message.checkpoint);
     if (message.type === "desync") {
       // @@@lockstep-desync-recovery - Desync is a synchronization failure, not a page-fatal exception; the server checkpoint is the recovery boundary.
-      this.options.onError?.(`Lockstep desync at tick ${message.tick}`);
-      this.requestCheckpoint();
+      const error = `Lockstep desync at tick ${message.tick}`;
+      this.options.onError?.(error);
+      this.emitSyncEvent({ kind: "server-desync", localTick: this.options.engine.game.tick, serverTick: message.tick, message: error, checksums: message.checksums });
+      this.requestCheckpoint("server-desync");
     }
     if (message.type === "error" && message.roomId === this.options.roomId) this.options.onError?.(message.message);
   }
@@ -89,8 +108,10 @@ export class LockstepClient {
       this.receiveMessage(message);
     } catch (error) {
       // @@@lockstep-message-boundary - Transport callbacks run on the browser event loop; report sync faults visibly instead of letting one bad packet become a page-fatal exception.
-      this.options.onError?.(errorMessage(error));
-      this.requestCheckpoint();
+      const message = errorMessage(error);
+      this.options.onError?.(message);
+      this.emitSyncEvent({ kind: "message-error", localTick: this.options.engine.game.tick, message });
+      this.requestCheckpoint("message-error");
     }
   }
 
@@ -98,6 +119,19 @@ export class LockstepClient {
     if (checkpoint.roomId !== this.options.roomId) throw new Error(`Received checkpoint for ${checkpoint.roomId} while joined to ${this.options.roomId}`);
     restoreGameSnapshot(this.options.engine.game, checkpoint);
     this.frameBuffer.discardBefore(checkpoint.tick);
+    this.emitSyncEvent({ kind: "checkpoint-restore", localTick: this.options.engine.game.tick, serverTick: checkpoint.tick });
+  }
+
+  private emitChecksumIfDue(): void {
+    const cadence = Math.max(1, this.options.checksumEveryTicks ?? 20);
+    const tick = this.options.engine.game.tick;
+    if (tick === this.lastChecksumTick || tick % cadence !== 0) return;
+    this.options.transport.send({ type: "checksum", roomId: this.options.roomId, playerId: this.options.playerId, tick, hash: this.currentChecksum() });
+    this.lastChecksumTick = tick;
+  }
+
+  private emitSyncEvent(event: Omit<RoomSyncEvent, "roomId" | "playerId">): void {
+    this.options.transport.send({ type: "syncEvent", roomId: this.options.roomId, event: { roomId: this.options.roomId, playerId: this.options.playerId, ...event } });
   }
 }
 

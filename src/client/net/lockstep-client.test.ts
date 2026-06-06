@@ -37,7 +37,7 @@ describe("lockstep client", () => {
 
     expect(transport.sent).toEqual([
       { type: "join", roomId: "room-1", playerId: "player" },
-      { type: "requestCheckpoint", roomId: "room-1" },
+      { type: "requestCheckpoint", roomId: "room-1", playerId: "player", reason: "manual", clientTick: 0, clientChecksum: client.currentChecksum() },
     ]);
     expect(client.currentSnapshot().tick).toBe(0);
     expect(transport.closed).toBe(true);
@@ -53,6 +53,17 @@ describe("lockstep client", () => {
 
     expect(client.updateToRenderTime()).toBe(true);
     expect(client.currentSnapshot().tick).toBe(1);
+  });
+
+  it("emits deterministic checksums after applied frames on the configured cadence", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, checksumEveryTicks: 1 });
+
+    client.receiveFrame({ roomId: "room-1", tick: 0, sequence: 0, commands: [] });
+    client.updateToRenderTime();
+
+    expect(transport.sent).toContainEqual({ type: "checksum", roomId: "room-1", playerId: "player", tick: 1, hash: client.currentChecksum() });
   });
 
   it("accepts repeated delivery of the same future frame without throwing through the page", () => {
@@ -113,7 +124,20 @@ describe("lockstep client", () => {
 
     expect(() => client.updateToRenderTime()).not.toThrow();
     expect(errors).toEqual(["townHall cannot train footman"]);
-    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+    expect(transport.sent).toContainEqual({
+      type: "syncEvent",
+      roomId: "room-1",
+      event: {
+        kind: "frame-apply-error",
+        roomId: "room-1",
+        playerId: "player",
+        localTick: 0,
+        message: "townHall cannot train footman",
+        frameTick: 0,
+        frameSequence: 0,
+      },
+    });
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1", playerId: "player", reason: "frame-apply-error", clientTick: 0, clientChecksum: client.currentChecksum() });
     expect(game.tick).toBe(0);
   });
 
@@ -121,22 +145,40 @@ describe("lockstep client", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
     const errors: string[] = [];
-    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
 
     expect(() => transport.emit({ type: "desync", roomId: "room-1", tick: 42, checksums: { player: "local", enemy: "remote" } })).not.toThrow();
     expect(errors).toEqual(["Lockstep desync at tick 42"]);
-    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+    expect(transport.sent).toContainEqual({
+      type: "syncEvent",
+      roomId: "room-1",
+      event: {
+        kind: "server-desync",
+        roomId: "room-1",
+        playerId: "player",
+        localTick: 0,
+        serverTick: 42,
+        message: "Lockstep desync at tick 42",
+        checksums: { player: "local", enemy: "remote" },
+      },
+    });
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1", playerId: "player", reason: "server-desync", clientTick: 0, clientChecksum: client.currentChecksum() });
   });
 
   it("reports server message handling errors instead of throwing through the page", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
     const errors: string[] = [];
-    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
 
     expect(() => transport.emit({ type: "frame", frame: { roomId: "other-room", tick: 0, sequence: 1, commands: [] } })).not.toThrow();
     expect(errors).toEqual(["Received frame for other-room while joined to room-1"]);
-    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1" });
+    expect(transport.sent).toContainEqual({
+      type: "syncEvent",
+      roomId: "room-1",
+      event: { kind: "message-error", roomId: "room-1", playerId: "player", localTick: 0, message: "Received frame for other-room while joined to room-1" },
+    });
+    expect(transport.sent).toContainEqual({ type: "requestCheckpoint", roomId: "room-1", playerId: "player", reason: "message-error", clientTick: 0, clientChecksum: client.currentChecksum() });
   });
 
   it("restores the local engine from checkpoint messages", () => {
