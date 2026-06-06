@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRoom } from "./rooms";
-import { createSaveGameRecord, restoreGameFromSave } from "./savegame";
+import { assertSaveGameInput, createSaveGameRecord, parseSaveGameInput, restoreGameFromSave } from "./savegame";
 import { checksumGame } from "./sim/checksum";
 import { createGame, stepGame } from "./sim";
 
@@ -32,5 +32,15 @@ describe("savegame runtime sync metadata", () => {
     expect(save.runtime.checksum).toBe(checksumGame(game));
     expect(restored.projectiles).toEqual(game.projectiles);
     expect(checksumGame(restored)).toBe(save.runtime.checksum);
+  });
+
+  it("normalizes save and debug replay payloads through one shared runtime schema", () => {
+    expect(parseSaveGameInput({ id: "save-1", label: "opening", ignored: true })).toEqual({ id: "save-1", label: "opening" });
+    expect(parseSaveGameInput({ id: "save-1" })).toEqual({ id: "save-1" });
+    expect(parseSaveGameInput({ id: "" })).toBeUndefined();
+    expect(parseSaveGameInput({ id: "save-1", label: 12 })).toBeUndefined();
+    expect(parseSaveGameInput(undefined)).toBeUndefined();
+    expect(assertSaveGameInput({ id: "trace-1", label: "" }, "debug replay input")).toEqual({ id: "trace-1", label: "" });
+    expect(() => assertSaveGameInput({ label: "missing id" }, "debug replay input")).toThrow("Malformed debug replay input");
   });
 });

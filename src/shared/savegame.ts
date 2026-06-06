@@ -27,6 +27,23 @@ export type SaveGameInput = {
   label?: string;
 };
 
+export function parseSaveGameInput(value: unknown): SaveGameInput | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const source = value as Record<string, unknown>;
+  if (typeof source.id !== "string" || source.id.length === 0) return undefined;
+  if (source.label !== undefined && typeof source.label !== "string") return undefined;
+  return {
+    id: source.id,
+    ...(typeof source.label === "string" ? { label: source.label } : {}),
+  };
+}
+
+export function assertSaveGameInput(value: unknown, label = "savegame input"): SaveGameInput {
+  const input = parseSaveGameInput(value);
+  if (!input) throw new Error(`Malformed ${label}`);
+  return input;
+}
+
 export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGameInput, now = new Date(), aiPlayers: PlayerId[] = [], aiVersions: Partial<Record<PlayerId, AiScriptVersion>> = {}): SaveGameRecord {
   if (room.status !== "inMatch") throw new Error("Only live room matches can be saved");
   return {

@@ -12,6 +12,7 @@ import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
 import type { CommandEnvelope } from "../shared/net/types";
+import { parseSaveGameInput } from "../shared/savegame";
 import type { GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
@@ -408,7 +409,7 @@ app.get("/api/rooms/:roomId/result", (request, response) => {
 });
 
 app.post("/api/rooms/:roomId/save", (request, response) => {
-  const input = parseSaveInput(request.body);
+  const input = parseSaveGameInput(request.body);
   if (!input) {
     response.status(400).json({ error: "Malformed savegame input" });
     return;
@@ -421,7 +422,7 @@ app.post("/api/rooms/:roomId/save", (request, response) => {
 });
 
 app.post("/api/rooms/:roomId/debug-replay", (request, response) => {
-  const input = parseSaveInput(request.body);
+  const input = parseSaveGameInput(request.body);
   if (!input) {
     response.status(400).json({ error: "Malformed debug replay input" });
     return;
@@ -456,7 +457,7 @@ app.get("/api/rooms/:roomId/debug-replay/ticks/:tick", (request, response) => {
 
 app.post("/api/rooms/:roomId/debug-replay/ticks/:tick/save", (request, response) => {
   const tick = Number(request.params.tick);
-  const input = parseSaveInput(request.body);
+  const input = parseSaveGameInput(request.body);
   if (!Number.isInteger(tick) || tick < 0) {
     response.status(400).json({ error: "tick must be a non-negative integer" });
     return;
@@ -696,17 +697,6 @@ function parseSlotPatch(value: unknown) {
     patch.userId = source.userId;
   }
   return patch;
-}
-
-function parseSaveInput(value: unknown) {
-  if (!value || typeof value !== "object") return undefined;
-  const source = value as Record<string, unknown>;
-  if (typeof source.id !== "string" || source.id.length === 0) return undefined;
-  if (source.label !== undefined && typeof source.label !== "string") return undefined;
-  return {
-    id: source.id,
-    ...(typeof source.label === "string" ? { label: source.label } : {}),
-  };
 }
 
 function isTickCount(value: unknown): value is number {

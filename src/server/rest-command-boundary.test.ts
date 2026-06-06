@@ -35,6 +35,29 @@ describe("server REST and WebSocket command ingress", () => {
       await stopServer(server);
     }
   }, 45_000);
+
+  it("rejects malformed save and debug replay payloads at real REST boundaries", async () => {
+    const port = await freePort();
+    const server = await startServer(port);
+    try {
+      const roomId = `malformed-save-${Date.now()}`;
+
+      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/save`, {})).resolves.toEqual({
+        status: 400,
+        body: { error: "Malformed savegame input" },
+      });
+      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/debug-replay`, { id: "trace", label: 12 })).resolves.toEqual({
+        status: 400,
+        body: { error: "Malformed debug replay input" },
+      });
+      await expect(postRawJson(`http://127.0.0.1:${port}/api/rooms/${roomId}/debug-replay/ticks/65/save`, { label: "missing id" })).resolves.toEqual({
+        status: 400,
+        body: { error: "Malformed replay frame save input" },
+      });
+    } finally {
+      await stopServer(server);
+    }
+  }, 45_000);
 });
 
 async function postJson(url: string, body: unknown) {
@@ -45,6 +68,15 @@ async function postJson(url: string, body: unknown) {
   });
   if (!response.ok) throw new Error(`${url} failed ${response.status}: ${await response.text()}`);
   return response.json() as Promise<{ id: string }>;
+}
+
+async function postRawJson(url: string, body: unknown) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return { status: response.status, body: await response.json() };
 }
 
 async function webSocketMalformedCommand(url: string, roomId: string): Promise<unknown> {
