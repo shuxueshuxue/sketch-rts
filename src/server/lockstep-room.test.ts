@@ -40,4 +40,15 @@ describe("lockstep room coordinator", () => {
 
     expect(coordinator.checksumsForTick(20)).toEqual({ player: "aaaa", enemy: "bbbb" });
   });
+
+  it("discards old checksum ticks on the room history horizon", () => {
+    const coordinator = new LockstepRoomCoordinator({ roomId: "room-lockstep" });
+
+    coordinator.recordChecksum({ roomId: "room-lockstep", tick: 20, playerId: "player", hash: "aaaa" });
+    coordinator.recordChecksum({ roomId: "room-lockstep", tick: 21, playerId: "player", hash: "bbbb" });
+    coordinator.discardChecksumsBefore(21);
+
+    expect(coordinator.checksumsForTick(20)).toEqual({});
+    expect(coordinator.checksumsForTick(21)).toEqual({ player: "bbbb" });
+  });
 });

@@ -153,6 +153,77 @@ describe("room net hub", () => {
     expect(() => hub.tickRoom(room.id)).not.toThrow();
   });
 
+  it("broadcasts desync and records a sync event when a client checksum differs from server truth", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-checksum-mismatch", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const playerSocket = new FakeSocket();
+    const observerSocket = new FakeSocket();
+
+    hub.connect(room.id, playerSocket);
+    hub.connect(room.id, observerSocket);
+    hub.tickRoom(room.id);
+    playerSocket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 1, hash: "wrong-hash" }));
+
+    const playerMessages = playerSocket.sent.map((raw) => decodeServerNetMessage(raw));
+    const observerMessages = observerSocket.sent.map((raw) => decodeServerNetMessage(raw));
+    const desync = playerMessages.find((message): message is Extract<ServerNetMessage, { type: "desync" }> => message.type === "desync");
+    expect(desync).toMatchObject({ type: "desync", roomId: room.id, tick: 1, checksums: { player: "wrong-hash" } });
+    expect(desync?.checksums.server).toMatch(/^[0-9a-f]{8}$/);
+    expect(observerMessages).toContainEqual(desync);
+    expect(hub.syncEventsForRoom(room.id)).toContainEqual(
+      expect.objectContaining({
+        kind: "checksum-mismatch",
+        roomId: room.id,
+        playerId: "player",
+        localTick: 1,
+        serverTick: 1,
+        checksums: expect.objectContaining({ player: "wrong-hash", server: expect.stringMatching(/^[0-9a-f]{8}$/) }),
+      }),
+    );
+  });
+
+  it("trims checksum comparison history to the retained frame horizon", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-checksum-trim", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 2 });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    hub.tickRoom(room.id);
+    hub.tickRoom(room.id);
+    hub.tickRoom(room.id);
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 1, hash: "old-wrong-hash" }));
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 99, hash: "future-wrong-hash" }));
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 3, hash: "new-wrong-hash" }));
+
+    const desyncs = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "desync" }> => message.type === "desync");
+    expect(desyncs.map((message) => message.tick)).toEqual([3]);
+    expect(hub.checksumsForTick(room.id, 1)).toEqual({});
+    expect(hub.checksumsForTick(room.id, 99)).toEqual({});
+    expect(hub.checksumsForTick(room.id, 3)).toEqual({ player: "new-wrong-hash" });
+  });
+
+  it("records bounded client sync diagnostic events", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-sync-events", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost, syncEventLimit: 2, now: () => 1500 });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    socket.emit(encodeNetMessage({ type: "syncEvent", roomId: room.id, event: { kind: "checkpoint-restore", roomId: room.id, playerId: "player", localTick: 2, serverTick: 2, message: "initial-sync" } }));
+    socket.emit(encodeNetMessage({ type: "syncEvent", roomId: room.id, event: { kind: "frame-apply-error", roomId: room.id, playerId: "player", localTick: 3, message: "bad frame" } }));
+    socket.emit(encodeNetMessage({ type: "syncEvent", roomId: room.id, event: { kind: "server-desync", roomId: room.id, playerId: "player", localTick: 4, serverTick: 4, message: "desync" } }));
+
+    expect(hub.syncEventsForRoom(room.id)).toEqual([
+      expect.objectContaining({ kind: "frame-apply-error", roomId: room.id, playerId: "player", localTick: 3, message: "bad frame", recordedAt: 1500 }),
+      expect.objectContaining({ kind: "server-desync", roomId: room.id, playerId: "player", localTick: 4, message: "desync", recordedAt: 1500 }),
+    ]);
+  });
+
   it("broadcasts public chat without admitting it to command frames", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-chat", host: hostUser, mapId: "bareDuel" });
@@ -184,10 +255,21 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
     hub.connect(room.id, socket);
 
-    socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id }));
+    socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "player", reason: "initial-sync", clientTick: 0, clientChecksum: "abcd1234" }));
 
     const checkpoint = socket.sent.map((raw) => decodeServerNetMessage(raw)).find((message) => message.type === "checkpoint");
     expect(checkpoint).toMatchObject({ type: "checkpoint", checkpoint: { roomId: room.id, tick: 4, snapshot: { tick: 4 } } });
+    expect(hub.syncEventsForRoom(room.id)).toContainEqual(
+      expect.objectContaining({
+        kind: "checkpoint-request",
+        roomId: room.id,
+        playerId: "player",
+        localTick: 0,
+        serverTick: 4,
+        reason: "initial-sync",
+        clientChecksum: "abcd1234",
+      }),
+    );
   });
 
   it("replays retained frames after a requested checkpoint for late observers", () => {
@@ -201,7 +283,7 @@ describe("room net hub", () => {
     const observer = new FakeSocket();
     hub.connect(room.id, observer);
 
-    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, tick: 2 }));
+    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: 2, clientTick: 5, clientChecksum: "eeee1234" }));
 
     const messages = observer.sent.map((raw) => decodeServerNetMessage(raw));
     const checkpoint = messages.find((message) => message.type === "checkpoint");

@@ -48,4 +48,41 @@ describe("net message codec", () => {
     expect(decodeServerNetMessage(encodeNetMessage(server))).toEqual(server);
     expect(() => decodeClientNetMessage(JSON.stringify({ type: "chat", roomId: "room-1", playerId: "player", text: "" }))).toThrow(/Malformed client chat message/);
   });
+
+  it("round-trips sync diagnostics and classified checkpoint requests", () => {
+    const event = {
+      type: "syncEvent",
+      roomId: "room-1",
+      event: {
+        kind: "frame-apply-error",
+        roomId: "room-1",
+        playerId: "player",
+        localTick: 10,
+        message: "unknown unit",
+        frameTick: 10,
+        frameSequence: 4,
+      },
+    } satisfies ClientNetMessage;
+    const request = {
+      type: "requestCheckpoint",
+      roomId: "room-1",
+      playerId: "player",
+      tick: 8,
+      reason: "frame-apply-error",
+      clientTick: 10,
+      clientChecksum: "abcd1234",
+    } satisfies ClientNetMessage;
+
+    expect(decodeClientNetMessage(encodeNetMessage(event))).toEqual(event);
+    expect(decodeClientNetMessage(encodeNetMessage(request))).toEqual(request);
+    expect(() =>
+      decodeClientNetMessage(
+        JSON.stringify({
+          type: "syncEvent",
+          roomId: "room-1",
+          event: { kind: "frame-apply-error", roomId: "room-1", playerId: "player", localTick: 10, id: "client-id", recordedAt: 1 },
+        }),
+      ),
+    ).toThrow(/Malformed client sync event message/);
+  });
 });

@@ -14,7 +14,7 @@ describe("spectator client", () => {
 
     expect(transport.sent).toEqual([
       { type: "join", roomId: "room-1", playerId: "viewer-1" },
-      { type: "requestCheckpoint", roomId: "room-1" },
+      { type: "requestCheckpoint", roomId: "room-1", playerId: "viewer-1", reason: "initial-sync", clientTick: 0, clientChecksum: "305cb7f9" },
     ]);
     expect(client.currentSnapshot().tick).toBe(0);
   });

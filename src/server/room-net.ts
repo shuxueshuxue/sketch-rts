@@ -1,10 +1,10 @@
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
-import type { ClientNetMessage, CommandFrame, ServerNetMessage } from "../shared/net/types";
+import type { ClientNetMessage, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../shared/net/types";
 import { commandValidationError } from "../shared/sim/command-validation";
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
 import type { createRoomHost } from "./room-host";
-import { SpectatorSyncLog } from "./spectator-sync";
+import { DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT, SpectatorSyncLog } from "./spectator-sync";
 
 export type RoomNetSocket = {
   send(data: string): void;
@@ -15,6 +15,7 @@ export type RoomNetHubOptions = {
   roomHost: ReturnType<typeof createRoomHost>;
   commandDelayTicks?: number;
   frameHistoryLimit?: number;
+  syncEventLimit?: number;
   now?: () => number;
 };
 
@@ -22,6 +23,10 @@ type RoomNetState = {
   coordinator: LockstepRoomCoordinator;
   sockets: Set<RoomNetSocket>;
   spectatorSync: SpectatorSyncLog;
+  authoritativeChecksums: Map<number, string>;
+  desyncReports: Set<string>;
+  syncEvents: RoomSyncEvent[];
+  nextSyncEventSequence: number;
   nextChatSequence: number;
 };
 
@@ -57,6 +62,7 @@ export class RoomNetHub {
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
+    this.recordAuthoritativeChecksum(roomId, result.snapshot.tick, this.options.roomHost.checksumRoom(roomId));
     state.spectatorSync.recordFrame(result.frame);
     this.broadcast(roomId, { type: "frame", frame: result.frame });
     if (result.room.status === "ended") this.broadcast(roomId, { type: "room", room: result.room });
@@ -82,6 +88,10 @@ export class RoomNetHub {
     return this.stateFor(roomId).coordinator.checksumsForTick(tick);
   }
 
+  syncEventsForRoom(roomId: string): RoomSyncEvent[] {
+    return this.stateFor(roomId).syncEvents.map((event) => ({ ...event, ...(event.checksums ? { checksums: { ...event.checksums } } : {}) }));
+  }
+
   private receive(socketRoomId: string, socket: RoomNetSocket, raw: string): void {
     const message = decodeClientNetMessage(raw);
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
@@ -98,11 +108,15 @@ export class RoomNetHub {
       return;
     }
     if (message.type === "checksum") {
-      this.stateFor(message.roomId).coordinator.recordChecksum(message);
+      this.acceptChecksum(message);
+      return;
+    }
+    if (message.type === "syncEvent") {
+      this.recordSyncEvent(message.roomId, message.event);
       return;
     }
     if (message.type === "requestCheckpoint") {
-      this.sendCheckpointWithFrames(socket, message.roomId, message.tick);
+      this.sendCheckpointWithFrames(socket, message);
     }
   }
 
@@ -145,6 +159,10 @@ export class RoomNetHub {
       coordinator: new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) }),
       sockets: new Set<RoomNetSocket>(),
       spectatorSync: new SpectatorSyncLog({ ...(this.options.frameHistoryLimit !== undefined ? { frameHistoryLimit: this.options.frameHistoryLimit } : {}) }),
+      authoritativeChecksums: new Map<number, string>(),
+      desyncReports: new Set<string>(),
+      syncEvents: [],
+      nextSyncEventSequence: 1,
       nextChatSequence: 1,
     };
     this.rooms.set(roomId, created);
@@ -172,12 +190,91 @@ export class RoomNetHub {
     }
   }
 
-  private sendCheckpointWithFrames(socket: RoomNetSocket, roomId: string, requestedTick: number | undefined): void {
+  private sendCheckpointWithFrames(socket: RoomNetSocket, message: Extract<ClientNetMessage, { type: "requestCheckpoint" }>): void {
+    const roomId = message.roomId;
+    const requestedTick = message.tick;
     const state = this.stateFor(roomId);
     const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : state.spectatorSync.checkpointAtOrBefore(requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
+    this.recordSyncEvent(roomId, {
+      kind: "checkpoint-request",
+      roomId,
+      playerId: message.playerId,
+      localTick: message.clientTick ?? this.options.roomHost.snapshot(roomId).tick,
+      serverTick: checkpoint.tick,
+      reason: message.reason ?? (requestedTick === undefined ? "manual" : "late-catchup"),
+      ...(message.clientChecksum ? { clientChecksum: message.clientChecksum } : {}),
+    });
     if (!this.send(roomId, socket, { type: "checkpoint", checkpoint })) return;
     for (const frame of state.spectatorSync.framesFrom(checkpoint.tick)) {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
+    }
+  }
+
+  private acceptChecksum(message: Extract<ClientNetMessage, { type: "checksum" }>): void {
+    const state = this.stateFor(message.roomId);
+    const retainedTicks = [...state.authoritativeChecksums.keys()];
+    const oldestRetainedTick = retainedTicks.length > 0 ? Math.min(...retainedTicks) : undefined;
+    const latestRetainedTick = retainedTicks.length > 0 ? Math.max(...retainedTicks) : undefined;
+    // @@@checksum-window - Client checksums are diagnostic evidence for retained authoritative ticks only; stale or future ticks cannot be compared and must not grow room memory.
+    if ((oldestRetainedTick !== undefined && message.tick < oldestRetainedTick) || (latestRetainedTick !== undefined && message.tick > latestRetainedTick)) return;
+    state.coordinator.recordChecksum(message);
+    const authoritative = state.authoritativeChecksums.get(message.tick);
+    if (authoritative !== undefined) this.reportChecksumMismatchIfNeeded(message.roomId, message.playerId, message.tick, message.hash, authoritative);
+  }
+
+  private recordAuthoritativeChecksum(roomId: string, tick: number, hash: string): void {
+    const state = this.stateFor(roomId);
+    state.authoritativeChecksums.set(tick, hash);
+    this.trimChecksumHistory(state, tick);
+    const clientChecksums = state.coordinator.checksumsForTick(tick);
+    for (const [playerId, clientHash] of Object.entries(clientChecksums)) {
+      this.reportChecksumMismatchIfNeeded(roomId, playerId, tick, clientHash, hash);
+    }
+  }
+
+  private reportChecksumMismatchIfNeeded(roomId: string, playerId: PlayerId, tick: number, clientHash: string, authoritativeHash: string): void {
+    if (clientHash === authoritativeHash) return;
+    const state = this.stateFor(roomId);
+    const key = `${tick}:${playerId}:${clientHash}:${authoritativeHash}`;
+    if (state.desyncReports.has(key)) return;
+    state.desyncReports.add(key);
+    const checksums = { ...state.coordinator.checksumsForTick(tick), server: authoritativeHash };
+    this.recordSyncEvent(roomId, {
+      kind: "checksum-mismatch",
+      roomId,
+      playerId,
+      localTick: tick,
+      serverTick: tick,
+      message: `Checksum mismatch at tick ${tick}`,
+      checksums,
+    });
+    this.broadcast(roomId, { type: "desync", roomId, tick, checksums });
+  }
+
+  private recordSyncEvent(roomId: string, event: RoomSyncEvent): void {
+    const state = this.stateFor(roomId);
+    const stored = {
+      ...event,
+      id: `sync-${roomId}-${state.nextSyncEventSequence}`,
+      roomId,
+      recordedAt: this.options.now?.() ?? Date.now(),
+    };
+    state.nextSyncEventSequence += 1;
+    state.syncEvents.push(stored);
+    const limit = this.options.syncEventLimit ?? 200;
+    if (state.syncEvents.length > limit) state.syncEvents.splice(0, state.syncEvents.length - limit);
+  }
+
+  private trimChecksumHistory(state: RoomNetState, latestTick: number): void {
+    const limit = this.options.frameHistoryLimit ?? DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT;
+    const oldestTick = latestTick - limit + 1;
+    for (const tick of state.authoritativeChecksums.keys()) {
+      if (tick < oldestTick) state.authoritativeChecksums.delete(tick);
+    }
+    state.coordinator.discardChecksumsBefore(oldestTick);
+    for (const key of state.desyncReports) {
+      const tick = Number(key.split(":", 1)[0]);
+      if (Number.isFinite(tick) && tick < oldestTick) state.desyncReports.delete(key);
     }
   }
 }

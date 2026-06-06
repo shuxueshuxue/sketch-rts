@@ -1,4 +1,4 @@
-import type { ChatMessage, CheckpointFrame, ClientNetMessage, CommandFrame, ServerNetMessage } from "./types";
+import type { ChatMessage, CheckpointFrame, CheckpointRequestReason, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, ServerNetMessage } from "./types";
 import type { GameCommand, RoomState } from "../types";
 
 export function encodeNetMessage(message: ClientNetMessage | ServerNetMessage): string {
@@ -12,6 +12,7 @@ export function decodeClientNetMessage(raw: string): ClientNetMessage {
   if (message.type === "command") return decodeClientCommandMessage(message);
   if (message.type === "chat") return decodeClientChatMessage(message);
   if (message.type === "checksum") return decodeChecksumMessage(message);
+  if (message.type === "syncEvent") return decodeSyncEventMessage(message);
   if (message.type === "requestCheckpoint") return decodeRequestCheckpointMessage(message);
   throw new Error(`Unknown client net message type ${message.type}`);
 }
@@ -64,8 +65,21 @@ function decodeChecksumMessage(message: Record<string, unknown>): ClientNetMessa
 }
 
 function decodeRequestCheckpointMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId)) throw new Error("Malformed checkpoint request message");
-  return { type: "requestCheckpoint", roomId: message.roomId, ...(Number.isInteger(message.tick) ? { tick: Number(message.tick) } : {}) };
+  if (!isString(message.roomId) || !isString(message.playerId)) throw new Error("Malformed checkpoint request message");
+  return {
+    type: "requestCheckpoint",
+    roomId: message.roomId,
+    playerId: message.playerId,
+    ...(Number.isInteger(message.tick) ? { tick: Number(message.tick) } : {}),
+    ...(isCheckpointReason(message.reason) ? { reason: message.reason } : {}),
+    ...(Number.isInteger(message.clientTick) ? { clientTick: Number(message.clientTick) } : {}),
+    ...(isString(message.clientChecksum) ? { clientChecksum: message.clientChecksum } : {}),
+  };
+}
+
+function decodeSyncEventMessage(message: Record<string, unknown>): ClientNetMessage {
+  if (!isString(message.roomId) || !isRoomSyncEvent(message.event) || message.event.roomId !== message.roomId) throw new Error("Malformed client sync event message");
+  return { type: "syncEvent", roomId: message.roomId, event: message.event };
 }
 
 function decodeHelloMessage(message: Record<string, unknown>): ServerNetMessage {
@@ -121,6 +135,32 @@ function isString(value: unknown): value is string {
 
 function isNonEmptyString(value: unknown): value is string {
   return isString(value) && value.trim().length > 0;
+}
+
+function isCheckpointReason(value: unknown): value is CheckpointRequestReason {
+  return value === "initial-sync" || value === "late-catchup" || value === "frame-apply-error" || value === "server-desync" || value === "message-error" || value === "manual";
+}
+
+function isRoomSyncEventKind(value: unknown): value is RoomSyncEventKind {
+  return value === "frame-apply-error" || value === "server-desync" || value === "message-error" || value === "checkpoint-restore" || value === "checkpoint-request" || value === "checksum-mismatch";
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return isRecord(value) && Object.values(value).every(isString);
+}
+
+function isRoomSyncEvent(value: unknown): value is RoomSyncEvent {
+  if (!isRecord(value) || !isRoomSyncEventKind(value.kind) || !isString(value.roomId) || !isString(value.playerId) || !Number.isInteger(value.localTick)) return false;
+  if (value.id !== undefined) return false;
+  if (value.serverTick !== undefined && !Number.isInteger(value.serverTick)) return false;
+  if (value.message !== undefined && !isString(value.message)) return false;
+  if (value.frameTick !== undefined && !Number.isInteger(value.frameTick)) return false;
+  if (value.frameSequence !== undefined && !Number.isInteger(value.frameSequence)) return false;
+  if (value.reason !== undefined && !isCheckpointReason(value.reason)) return false;
+  if (value.clientChecksum !== undefined && !isString(value.clientChecksum)) return false;
+  if (value.checksums !== undefined && !isStringRecord(value.checksums)) return false;
+  if (value.recordedAt !== undefined) return false;
+  return true;
 }
 
 function isChatMessage(value: unknown): value is ChatMessage {
