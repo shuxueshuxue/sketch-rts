@@ -33,9 +33,13 @@ export type CheckpointFrame = {
   tick: number;
   snapshot: GameSnapshot;
   nextId: number;
+  reason?: CheckpointRequestReason;
+  checkpointClass?: CheckpointRequestClass;
 };
 
 export type CheckpointRequestReason = "initial-sync" | "late-catchup" | "frame-apply-error" | "server-desync" | "message-error" | "manual";
+
+export type CheckpointRequestClass = "initial" | "catchup" | "manual" | "recovery";
 
 export type RoomSyncEventKind = "frame-apply-error" | "server-desync" | "message-error" | "checkpoint-restore" | "checkpoint-request" | "checksum-mismatch";
 
@@ -50,9 +54,16 @@ export type RoomSyncEvent = {
   frameTick?: number;
   frameSequence?: number;
   reason?: CheckpointRequestReason;
+  checkpointClass?: CheckpointRequestClass;
   clientChecksum?: string;
   checksums?: Record<string, string>;
   recordedAt?: number;
+};
+
+export type RoomSyncSummary = {
+  total: number;
+  byKind: Record<RoomSyncEventKind, number>;
+  checkpointRequests: Record<CheckpointRequestClass, number>;
 };
 
 export type ClientNetMessage =

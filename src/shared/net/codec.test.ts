@@ -54,13 +54,13 @@ describe("net message codec", () => {
       type: "syncEvent",
       roomId: "room-1",
       event: {
-        kind: "frame-apply-error",
+        kind: "checkpoint-request",
         roomId: "room-1",
         playerId: "player",
         localTick: 10,
-        message: "unknown unit",
-        frameTick: 10,
-        frameSequence: 4,
+        serverTick: 12,
+        reason: "server-desync",
+        checkpointClass: "recovery",
       },
     } satisfies ClientNetMessage;
     const request = {
@@ -81,6 +81,24 @@ describe("net message codec", () => {
           type: "syncEvent",
           roomId: "room-1",
           event: { kind: "frame-apply-error", roomId: "room-1", playerId: "player", localTick: 10, id: "client-id", recordedAt: 1 },
+        }),
+      ),
+    ).toThrow(/Malformed client sync event message/);
+    expect(() =>
+      decodeClientNetMessage(
+        JSON.stringify({
+          type: "syncEvent",
+          roomId: "room-1",
+          event: { kind: "checkpoint-request", roomId: "room-1", playerId: "player", localTick: 10, checkpointClass: "routine" },
+        }),
+      ),
+    ).toThrow(/Malformed client sync event message/);
+    expect(() =>
+      decodeClientNetMessage(
+        JSON.stringify({
+          type: "syncEvent",
+          roomId: "room-1",
+          event: { kind: "checkpoint-request", roomId: "room-1", playerId: "player", localTick: 10, reason: "server-desync", checkpointClass: "initial" },
         }),
       ),
     ).toThrow(/Malformed client sync event message/);

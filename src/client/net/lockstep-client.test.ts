@@ -213,6 +213,30 @@ describe("lockstep client", () => {
     expect(game.projectiles).toEqual(checkpointGame.projectiles);
   });
 
+  it("classifies checkpoint restore events by server-provided checkpoint metadata", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    const checkpointGame = createGame("bareDuel", { aiPlayers: [] });
+    checkpointGame.tick = 8;
+
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 8, snapshot: checkpointGame, nextId: checkpointGame.nextId, reason: "server-desync", checkpointClass: "recovery" } });
+
+    expect(transport.sent).toContainEqual({
+      type: "syncEvent",
+      roomId: "room-1",
+      event: {
+        kind: "checkpoint-restore",
+        roomId: "room-1",
+        playerId: "player",
+        localTick: 8,
+        serverTick: 8,
+        reason: "server-desync",
+        checkpointClass: "recovery",
+      },
+    });
+  });
+
   it("reports a render update when a checkpoint changes state at the same tick", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.tick = 12;

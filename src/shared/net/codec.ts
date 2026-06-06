@@ -1,5 +1,6 @@
-import type { ChatMessage, CheckpointFrame, CheckpointRequestReason, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, ServerNetMessage } from "./types";
+import type { ChatMessage, CheckpointFrame, CheckpointRequestClass, CheckpointRequestReason, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, ServerNetMessage } from "./types";
 import type { GameCommand, RoomState } from "../types";
+import { checkpointRequestClass } from "./checkpoint-semantics";
 
 export function encodeNetMessage(message: ClientNetMessage | ServerNetMessage): string {
   return JSON.stringify(message);
@@ -141,6 +142,10 @@ function isCheckpointReason(value: unknown): value is CheckpointRequestReason {
   return value === "initial-sync" || value === "late-catchup" || value === "frame-apply-error" || value === "server-desync" || value === "message-error" || value === "manual";
 }
 
+function isCheckpointRequestClass(value: unknown): value is CheckpointRequestClass {
+  return value === "initial" || value === "catchup" || value === "manual" || value === "recovery";
+}
+
 function isRoomSyncEventKind(value: unknown): value is RoomSyncEventKind {
   return value === "frame-apply-error" || value === "server-desync" || value === "message-error" || value === "checkpoint-restore" || value === "checkpoint-request" || value === "checksum-mismatch";
 }
@@ -157,6 +162,8 @@ function isRoomSyncEvent(value: unknown): value is RoomSyncEvent {
   if (value.frameTick !== undefined && !Number.isInteger(value.frameTick)) return false;
   if (value.frameSequence !== undefined && !Number.isInteger(value.frameSequence)) return false;
   if (value.reason !== undefined && !isCheckpointReason(value.reason)) return false;
+  if (value.checkpointClass !== undefined && !isCheckpointRequestClass(value.checkpointClass)) return false;
+  if (value.reason !== undefined && value.checkpointClass !== undefined && checkpointRequestClass(value.reason) !== value.checkpointClass) return false;
   if (value.clientChecksum !== undefined && !isString(value.clientChecksum)) return false;
   if (value.checksums !== undefined && !isStringRecord(value.checksums)) return false;
   if (value.recordedAt !== undefined) return false;

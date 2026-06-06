@@ -258,7 +258,7 @@ describe("room net hub", () => {
     socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "player", reason: "initial-sync", clientTick: 0, clientChecksum: "abcd1234" }));
 
     const checkpoint = socket.sent.map((raw) => decodeServerNetMessage(raw)).find((message) => message.type === "checkpoint");
-    expect(checkpoint).toMatchObject({ type: "checkpoint", checkpoint: { roomId: room.id, tick: 4, snapshot: { tick: 4 } } });
+    expect(checkpoint).toMatchObject({ type: "checkpoint", checkpoint: { roomId: room.id, tick: 4, snapshot: { tick: 4 }, reason: "initial-sync", checkpointClass: "initial" } });
     expect(hub.syncEventsForRoom(room.id)).toContainEqual(
       expect.objectContaining({
         kind: "checkpoint-request",
@@ -267,9 +267,31 @@ describe("room net hub", () => {
         localTick: 0,
         serverTick: 4,
         reason: "initial-sync",
+        checkpointClass: "initial",
         clientChecksum: "abcd1234",
       }),
     );
+  });
+
+  it("classifies checkpoint requests and counts recovery separately from normal sync", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-checkpoint-class", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+
+    socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "player", reason: "initial-sync", clientTick: 0 }));
+    socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: 0, clientTick: 4 }));
+    socket.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "player", reason: "server-desync", clientTick: 6, clientChecksum: "badc0de" }));
+
+    const requests = hub.syncEventsForRoom(room.id).filter((event) => event.kind === "checkpoint-request");
+    expect(requests.map((event) => ({ playerId: event.playerId, reason: event.reason, checkpointClass: event.checkpointClass }))).toEqual([
+      { playerId: "player", reason: "initial-sync", checkpointClass: "initial" },
+      { playerId: "observer", reason: "late-catchup", checkpointClass: "catchup" },
+      { playerId: "player", reason: "server-desync", checkpointClass: "recovery" },
+    ]);
+    expect(hub.syncSummaryForRoom(room.id).checkpointRequests).toEqual({ initial: 1, catchup: 1, manual: 0, recovery: 1 });
   });
 
   it("replays retained frames after a requested checkpoint for late observers", () => {
