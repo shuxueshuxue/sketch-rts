@@ -1,32 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "../shared/sim";
 import { SimulationEngine } from "../shared/sim/engine";
-import type { GameCommand, GameSnapshot } from "../shared/types";
+import type { GameCommand } from "../shared/types";
 import { LockstepClient } from "./net/lockstep-client";
 import type { ClientNetMessage, ServerNetMessage } from "../shared/net/types";
 import type { NetTransport } from "./net/transport";
-import { LockstepRoomGameAdapter, SessionSocketGameAdapter } from "./game-adapter";
+import { EmptyGameAdapter, LockstepRoomGameAdapter } from "./game-adapter";
 
 const moveCommand: GameCommand = { type: "move", unitIds: ["worker"], x: 10, y: 20 };
 
 describe("game adapters", () => {
-  it("sends session commands through the global session socket boundary", () => {
-    const socket = new FakeSocket();
-    const adapter = new SessionSocketGameAdapter(socket, () => ({ tick: 12 } as GameSnapshot));
+  it("keeps gameplay unavailable until a real match adapter is installed", () => {
+    const adapter = new EmptyGameAdapter();
 
-    adapter.sendCommand(moveCommand);
-
-    expect(socket.sent).toEqual([JSON.stringify(moveCommand)]);
-    expect(adapter.currentSnapshot()).toMatchObject({ tick: 12 });
+    expect(adapter.currentSnapshot()).toBeUndefined();
     expect(adapter.updateToRenderTime()).toBe(false);
-  });
-
-  it("fails session commands loudly when the socket is not open", () => {
-    const socket = new FakeSocket();
-    socket.readyState = 0;
-    const adapter = new SessionSocketGameAdapter(socket, () => undefined);
-
-    expect(() => adapter.sendCommand(moveCommand)).toThrow("socket is not open");
+    expect(() => adapter.sendCommand(moveCommand)).toThrow("No active match");
   });
 
   it("keeps room spectators from issuing lockstep commands", () => {
@@ -57,16 +46,6 @@ describe("game adapters", () => {
     expect(adapter.updateToRenderTime()).toBe(false);
   });
 });
-
-class FakeSocket {
-  OPEN = 1;
-  readyState = 1;
-  sent: string[] = [];
-
-  send(data: string): void {
-    this.sent.push(data);
-  }
-}
 
 class FakeTransport implements NetTransport {
   sent: ClientNetMessage[] = [];

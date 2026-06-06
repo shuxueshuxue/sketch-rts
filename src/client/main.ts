@@ -177,24 +177,13 @@ let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
-  sessionSnapshot: () => snapshot,
-  onSessionOpen() {
+  onRuntimeReady() {
     menuStatus.textContent = "Server online.";
     statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
     renderMainMenu();
   },
-  onSessionSnapshot(nextSnapshot) {
-    if (currentRoomId) return;
-    snapshot = nextSnapshot;
-    pruneSelection();
-    updateHud();
-  },
-  onSessionError(message) {
+  onRuntimeError(message) {
     statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
-  },
-  onSessionClose() {
-    menuStatus.innerHTML = `<span class="error">Disconnected from match server.</span>`;
-    statusLabel.innerHTML = `<span class="error">Disconnected from match server.</span>`;
   },
 });
 const baseGameAdapter = deploymentRuntime.initialAdapter();

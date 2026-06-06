@@ -10,7 +10,7 @@ import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
 export type StaticSoloDeploymentRuntimeOptions = {
   now?: () => number;
   tickMs?: number;
-  onSessionOpen?: () => void;
+  onRuntimeReady?: () => void;
 };
 
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
@@ -22,7 +22,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   constructor(private readonly options: StaticSoloDeploymentRuntimeOptions = {}) {}
 
   initialAdapter() {
-    this.options.onSessionOpen?.();
+    this.options.onRuntimeReady?.();
     return this.emptyAdapter;
   }
 

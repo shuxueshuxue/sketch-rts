@@ -2,18 +2,12 @@ import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
 import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
-import type { GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
-import { LockstepRoomGameAdapter, SessionSocketGameAdapter, type GameAdapter, type SessionCommandSocket } from "../game-adapter";
+import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
+import { EmptyGameAdapter, LockstepRoomGameAdapter, type GameAdapter } from "../game-adapter";
 import { LockstepClient } from "../net/lockstep-client";
 import type { NetTransport } from "../net/transport";
 import { WebSocketTransport } from "../net/websocket-transport";
 import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
-
-export type ServerSessionSocket = SessionCommandSocket & {
-  close?(): void;
-  addEventListener?(type: "message", handler: (event: { data: string }) => void): void;
-  addEventListener?(type: "open" | "close", handler: () => void): void;
-};
 
 export type RoomTransport = NetTransport & {
   onOpen?(handler: () => void): void;
@@ -21,52 +15,25 @@ export type RoomTransport = NetTransport & {
 
 export type ServerDeploymentRuntimeOptions = {
   fetchJson?: <T>(path: string, body?: unknown) => Promise<T>;
-  createSessionSocket?: () => ServerSessionSocket;
   createRoomTransport?: (roomId: string) => RoomTransport;
-  sessionSnapshot?: () => GameSnapshot | undefined;
-  onSessionOpen?: () => void;
-  onSessionSnapshot?: (snapshot: GameSnapshot) => void;
-  onSessionError?: (message: string) => void;
-  onSessionClose?: () => void;
+  onRuntimeError?: (message: string) => void;
 };
 
 export class ServerDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "server" as const;
   private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
-  private readonly createSessionSocket: () => ServerSessionSocket;
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
-  private readonly onSessionOpen: (() => void) | undefined;
-  private readonly onSessionSnapshot: ((snapshot: GameSnapshot) => void) | undefined;
-  private readonly onSessionError: ((message: string) => void) | undefined;
-  private readonly onSessionClose: (() => void) | undefined;
-  private sessionSocket: ServerSessionSocket | undefined;
+  private readonly onRuntimeError: ((message: string) => void) | undefined;
+  private readonly emptyAdapter = new EmptyGameAdapter();
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
     this.fetchJson = options.fetchJson ?? requestJson;
-    this.createSessionSocket = options.createSessionSocket ?? createDefaultSessionSocket;
     this.createRoomTransport = options.createRoomTransport ?? createDefaultRoomTransport;
-    this.sessionSnapshot = options.sessionSnapshot ?? (() => undefined);
-    this.onSessionOpen = options.onSessionOpen;
-    this.onSessionSnapshot = options.onSessionSnapshot;
-    this.onSessionError = options.onSessionError;
-    this.onSessionClose = options.onSessionClose;
+    this.onRuntimeError = options.onRuntimeError;
   }
 
-  private readonly sessionSnapshot: () => GameSnapshot | undefined;
-
   initialAdapter(): GameAdapter {
-    this.sessionSocket = this.createSessionSocket();
-    this.sessionSocket.addEventListener?.("open", () => this.onSessionOpen?.());
-    this.sessionSocket.addEventListener?.("message", (event) => {
-      const message = JSON.parse(event.data) as { type: "snapshot"; snapshot: GameSnapshot } | { type: "error"; message: string };
-      if (message.type === "error") {
-        this.onSessionError?.(message.message);
-        return;
-      }
-      this.onSessionSnapshot?.(message.snapshot);
-    });
-    this.sessionSocket.addEventListener?.("close", () => this.onSessionClose?.());
-    return new SessionSocketGameAdapter(this.sessionSocket, this.sessionSnapshot);
+    return this.emptyAdapter;
   }
 
   async listRooms(viewerUserId?: string): Promise<RoomState[]> {
@@ -123,7 +90,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
       playerId,
       engine: new SimulationEngine(game),
       transport,
-      ...(this.onSessionError ? { onError: this.onSessionError } : {}),
+      ...(this.onRuntimeError ? { onError: this.onRuntimeError } : {}),
     });
     const adapter = new LockstepRoomGameAdapter(client, { spectating });
     const chat = createTransportChat(transport, room.id, playerId);
@@ -148,12 +115,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   }
 
   close(): void {
-    this.sessionSocket?.close?.();
+    this.emptyAdapter.close();
   }
-}
-
-function createDefaultSessionSocket(): ServerSessionSocket {
-  return new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/session`);
 }
 
 function createDefaultRoomTransport(roomId: string): RoomTransport {

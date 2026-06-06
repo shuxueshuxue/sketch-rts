@@ -5,6 +5,17 @@ import type { NetTransport } from "../net/transport";
 import { ServerDeploymentRuntime } from "./server-runtime";
 
 describe("server deployment runtime", () => {
+  it("boots server deployment without opening a global session gameplay socket", () => {
+    const runtime = new ServerDeploymentRuntime({
+      createRoomTransport: () => new FakeTransport(),
+    });
+
+    const adapter = runtime.initialAdapter();
+
+    expect(adapter.currentSnapshot()).toBeUndefined();
+    expect(() => adapter.sendCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toThrow("No active match");
+  });
+
   it("uses existing room API paths for room setup", async () => {
     const calls: { path: string; body?: unknown }[] = [];
     const runtime = new ServerDeploymentRuntime({
@@ -12,7 +23,6 @@ describe("server deployment runtime", () => {
         calls.push({ path, body });
         return { id: "room-1", slots: [] } as T;
       },
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => new FakeTransport(),
     });
 
@@ -32,7 +42,6 @@ describe("server deployment runtime", () => {
     const transport = new FakeTransport();
     const runtime = new ServerDeploymentRuntime({
       fetchJson: async <T>() => startedRoom as T,
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => transport,
     });
 
@@ -48,7 +57,6 @@ describe("server deployment runtime", () => {
     const southEnemy = updateRoomSlot(northAlly, "slot-3", { team: "south", race: "grove" });
     const startedRoom = { ...southEnemy, status: "inMatch" as const };
     const runtime = new ServerDeploymentRuntime({
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => new FakeTransport(),
     });
 
@@ -65,9 +73,8 @@ describe("server deployment runtime", () => {
     const transport = new FakeTransport();
     const errors: string[] = [];
     const runtime = new ServerDeploymentRuntime({
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => transport,
-      onSessionError: (message) => errors.push(message),
+      onRuntimeError: (message) => errors.push(message),
     });
 
     runtime.connectRoom(startedRoom, "player", false, () => {});
@@ -82,7 +89,6 @@ describe("server deployment runtime", () => {
     const startedRoom = { ...open, status: "inMatch" as const };
     const transport = new FakeTransport();
     const runtime = new ServerDeploymentRuntime({
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => transport,
     });
     const started = runtime.connectRoom(startedRoom, "player", false, () => {});
@@ -105,7 +111,6 @@ describe("server deployment runtime", () => {
     const startedRoom = { ...open, status: "inMatch" as const };
     const transport = new FakeTransport();
     const runtime = new ServerDeploymentRuntime({
-      createSessionSocket: () => new FakeSocket(),
       createRoomTransport: () => transport,
     });
     const started = runtime.connectRoom(startedRoom, "player", false, () => {});
@@ -120,20 +125,6 @@ describe("server deployment runtime", () => {
     expect(received).toEqual(["Ada: push mid"]);
   });
 });
-
-class FakeSocket {
-  OPEN = 1;
-  readyState = 1;
-  sent: string[] = [];
-
-  addEventListener(): void {}
-
-  send(data: string): void {
-    this.sent.push(data);
-  }
-
-  close(): void {}
-}
 
 class FakeTransport implements NetTransport {
   sent: ClientNetMessage[] = [];
