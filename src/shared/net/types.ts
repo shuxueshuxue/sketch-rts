@@ -35,18 +35,39 @@ export type CheckpointFrame = {
   nextId: number;
 };
 
+export type CheckpointRequestReason = "initial-sync" | "late-catchup" | "frame-apply-error" | "server-desync" | "message-error" | "manual";
+
+export type RoomSyncEventKind = "frame-apply-error" | "server-desync" | "message-error" | "checkpoint-restore" | "checkpoint-request" | "checksum-mismatch";
+
+export type RoomSyncEvent = {
+  id?: string;
+  kind: RoomSyncEventKind;
+  roomId: string;
+  playerId: PlayerId;
+  localTick: number;
+  serverTick?: number;
+  message?: string;
+  frameTick?: number;
+  frameSequence?: number;
+  reason?: CheckpointRequestReason;
+  clientChecksum?: string;
+  checksums?: Record<string, string>;
+  recordedAt?: number;
+};
+
 export type ClientNetMessage =
   | { type: "join"; roomId: string; playerId: PlayerId }
   | { type: "command"; roomId: string; playerId: PlayerId; command: GameCommand; clientSeq?: number }
   | { type: "chat"; roomId: string; playerId: PlayerId; senderName: string; text: string }
   | { type: "checksum"; roomId: string; playerId: PlayerId; tick: number; hash: string }
-  | { type: "requestCheckpoint"; roomId: string; tick?: number };
+  | { type: "syncEvent"; roomId: string; event: RoomSyncEvent }
+  | { type: "requestCheckpoint"; roomId: string; playerId: PlayerId; tick?: number; reason?: CheckpointRequestReason; clientTick?: number; clientChecksum?: string };
 
 export type ServerNetMessage =
   | { type: "hello"; roomId: string; playerId: PlayerId; tick: number }
   | { type: "frame"; frame: CommandFrame }
   | { type: "checkpoint"; checkpoint: CheckpointFrame }
-  | { type: "desync"; roomId: string; tick: number; checksums: Record<PlayerId, string> }
+  | { type: "desync"; roomId: string; tick: number; checksums: Record<string, string> }
   | { type: "error"; roomId: string; message: string }
   | { type: "chat"; message: ChatMessage }
   | { type: "room"; room: RoomState };
