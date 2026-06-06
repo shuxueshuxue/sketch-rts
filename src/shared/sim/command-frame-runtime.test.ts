@@ -15,6 +15,14 @@ describe("command frame runtime boundary", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("keeps hosted room tick entry points behind one hosted frame tick primitive", () => {
+    const source = readFileSync("src/server/room-host.ts", "utf8");
+    const directRuntimeTicks = source.match(/frameRuntime\.tick\(/g) ?? [];
+
+    expect(directRuntimeTicks).toHaveLength(1);
+    expect(source).toContain("advanceHostedRoomTick");
+  });
+
   it("keeps offline SDK command frames on the shared runtime instead of a second apply path", () => {
     const source = readFileSync("src/sdk/commands/frame.ts", "utf8");
     const forbidden = ["commandValidationError", "applyCommandFrame"];
