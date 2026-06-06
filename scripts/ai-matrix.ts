@@ -1,5 +1,6 @@
-import { createAiRuntime, runPresetAiRuntime } from "../src/ai/runtime";
-import { createGame, stepGame, type CreateGameOptions, type Game } from "../src/shared/sim";
+import { createAiRuntime, createPresetAiRuntimeFramePlanner } from "../src/ai/runtime";
+import { createGame, type CreateGameOptions, type Game } from "../src/shared/sim";
+import { CommandFrameRuntime } from "../src/shared/sim/command-frame-runtime";
 import type { MapId, PlayerId, RaceId } from "../src/shared/types";
 
 type MatrixCase = {
@@ -96,13 +97,18 @@ process.stdout.write(
 function runCase(testCase: MatrixCase) {
   const game = createGame(testCase.mapId, testCase.options);
   const runtime = createAiRuntime(testCase.options.aiPlayers ?? []);
+  const frameRuntime = new CommandFrameRuntime({
+    game,
+    roomId: "ai-matrix",
+    rejectionLabel: "AI matrix command rejected",
+    aiPlanner: createPresetAiRuntimeFramePlanner(game, runtime),
+  });
   const expansionProof = createExpansionProof();
   const started = performance.now();
   const cpuStarted = process.cpuUsage();
   sampleExpansionProof(game, expansionProof);
   for (let i = 0; i < MAX_TICKS && !game.match.winner; i += 1) {
-    runPresetAiRuntime(game, runtime);
-    stepGame(game);
+    frameRuntime.tick();
     if (game.tick % 45 === 0) sampleExpansionProof(game, expansionProof);
   }
   sampleExpansionProof(game, expansionProof);

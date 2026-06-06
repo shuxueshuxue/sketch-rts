@@ -1,8 +1,8 @@
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameRecord } from "../shared/savegame";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import { createGame, snapshotGame, stepGame, type CreateGameOptions, type Game } from "../shared/sim";
+import { createGame, snapshotGame, type CreateGameOptions, type Game } from "../shared/sim";
 import type { Building, GameCommand, GameSnapshot, MapId, PlayerId, RaceId, RoomState, Unit, UnitOrder } from "../shared/types";
-import { issueCommandFrame, type CommandFrameEntry } from "./commands/frame";
+import { createSdkCommandFrameRuntime, type CommandFrameEntry, type SdkCommandFrameRuntime } from "./commands/frame";
 import { controlledPoint, resolveSdkCommandIntent, type SdkCommandIntent, type SdkUnitSelector } from "./commands/intent";
 import { createSnapshotQuery } from "./snapshot/query";
 import { normalizeWinnerForMode, type SdkWinnerMode } from "./winner-mode";
@@ -37,6 +37,7 @@ export type InteractivePlaytestSession = {
   scriptedPlayers: PlayerId[];
   winnerMode: SdkWinnerMode;
   game: Game;
+  frameRuntime: SdkCommandFrameRuntime;
   events: InteractivePlaytestEvents;
   transcript: InteractivePlaytestTranscriptEntry[];
 };
@@ -152,6 +153,7 @@ export function createInteractivePlaytestSession(input: InteractivePlaytestSessi
     scriptedPlayers: [...input.scriptedPlayers],
     winnerMode: input.winnerMode ?? "match",
     game,
+    frameRuntime: createSdkCommandFrameRuntime(game),
     events: { firstFightTick: null, lastStepUntil: null },
     transcript: [],
   };
@@ -160,7 +162,7 @@ export function createInteractivePlaytestSession(input: InteractivePlaytestSessi
 export function applyInteractivePlaytestCommand(session: InteractivePlaytestSession, command: InteractivePlaytestCommand) {
   const owner = command.type === "raw" ? command.owner ?? session.controlledPlayer : session.controlledPlayer;
   const gameCommand = toGameCommand(session.game, owner, command);
-  const result = issueCommandFrame(session.game, [{ playerId: owner, source: "interactive", scriptId: `interactive-${command.type}`, command: gameCommand }]);
+  const result = session.frameRuntime.issue([{ playerId: owner, source: "interactive", scriptId: `interactive-${command.type}`, command: gameCommand }]);
   for (const issued of result.commands) {
     session.transcript.push({ type: "command", tick: session.game.tick, owner: issued.playerId, command: issued.command });
   }
@@ -209,12 +211,14 @@ export function serializeInteractivePlaytestSession(session: InteractivePlaytest
 
 export function restoreInteractivePlaytestSession(serialized: SerializedInteractivePlaytestSession): InteractivePlaytestSession {
   if (serialized.schemaVersion !== 3) throw new Error(`Unsupported interactive playtest schema ${serialized.schemaVersion}`);
+  const game = restoreGameFromSave(serialized.save);
   return {
     id: serialized.id,
     controlledPlayer: serialized.controlledPlayer,
     scriptedPlayers: [...serialized.scriptedPlayers],
     winnerMode: serialized.winnerMode,
-    game: restoreGameFromSave(serialized.save),
+    game,
+    frameRuntime: createSdkCommandFrameRuntime(game),
     events: clone(serialized.events),
     transcript: clone(serialized.transcript),
   };
@@ -275,9 +279,9 @@ function stepInteractivePlaytestTick<Source extends string = string>(session: In
   let scriptedCommands = options.beforeStep?.(session) ?? 0;
   const snapshot = snapshotGame(session.game);
   const planned = session.scriptedPlayers.flatMap((owner) => options.scriptedPlayers?.[owner]?.(snapshot, owner, session.game) ?? []);
-  scriptedCommands += issueCommandFrame(session.game, planned).commands.length;
+  scriptedCommands += session.frameRuntime.issue(planned).commands.length;
   recordPlaytestEvents(session);
-  stepGame(session.game);
+  session.frameRuntime.tick();
   normalizeWinnerForMode(session.game, session.game.teams, session.winnerMode);
   recordPlaytestEvents(session);
   return scriptedCommands;

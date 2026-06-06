@@ -12,4 +12,24 @@ describe("command frame runtime boundary", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it("keeps offline SDK command frames on the shared runtime instead of a second apply path", () => {
+    const source = readFileSync("src/sdk/commands/frame.ts", "utf8");
+    const forbidden = ["commandValidationError", "applyCommandFrame"];
+    const offenders = forbidden.filter((needle) => source.includes(needle));
+
+    expect(offenders).toEqual([]);
+    expect(source).toContain("CommandFrameRuntime");
+  });
+
+  it("keeps offline SDK and AI diagnostic runners from owning raw apply or step loops", () => {
+    const runnerFiles = ["src/sdk/game-runner.ts", "src/sdk/playtest.ts", "src/ai/playtest.ts", "src/ai/ab-test.ts", "scripts/ai-matrix.ts"];
+    const forbidden = ["stepGame", "issuePlayerCommand", "applyCommandFrame", "runPresetAiRuntime"];
+    const offenders = runnerFiles.flatMap((file) => {
+      const source = readFileSync(file, "utf8");
+      return forbidden.filter((needle) => source.includes(needle)).map((needle) => `${file}: ${needle}`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
 });

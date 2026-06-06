@@ -1,7 +1,6 @@
-import { snapshotGame, type Game } from "../../shared/sim";
+import type { Game } from "../../shared/sim";
 import { checksumGame } from "../../shared/sim/checksum";
-import { commandValidationError } from "../../shared/sim/command-validation";
-import { applyCommandFrame, commandWithCurrentIssuers } from "../../shared/sim/frame";
+import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
 import type { CommandFrame } from "../../shared/net/types";
 import type { GameCommand, PlayerId } from "../../shared/types";
 
@@ -24,35 +23,54 @@ export type CommandFrameResult<Source extends string = string> = {
 };
 
 export function issueCommandFrame<Source extends string = string>(game: Game, planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}): CommandFrameResult<Source> {
-  if (game.match.winner) return { commands: [] };
-  const issued = selectIssueableCommandEntries(planned);
+  return new SdkCommandFrameRuntime(game).issue(planned, hooks);
+}
 
-  if (issued.length === 0) return { commands: issued };
-  const snapshot = snapshotGame(game);
-  for (const entry of issued) {
-    const currentCommand = commandWithCurrentIssuers(game, entry.playerId, entry.command);
-    if (!currentCommand) continue;
-    const error = commandValidationError(snapshot, entry.playerId, currentCommand);
-    if (error) throw new Error(`SDK command frame rejected ${entry.playerId} ${entry.scriptId} command: ${error}`);
+export function createSdkCommandFrameRuntime(game: Game, options: { roomId?: string } = {}) {
+  return new SdkCommandFrameRuntime(game, options);
+}
+
+export class SdkCommandFrameRuntime {
+  private readonly runtime: CommandFrameRuntime;
+
+  constructor(
+    private readonly game: Game,
+    options: { roomId?: string } = {},
+  ) {
+    this.runtime = new CommandFrameRuntime({ game, roomId: options.roomId ?? "sdk", rejectionLabel: "SDK command frame rejected" });
   }
-  const frame: CommandFrame = {
-    roomId: "sdk",
-    tick: game.tick,
-    sequence: 0,
-    commands: issued.map((entry) => ({ playerId: entry.playerId, command: entry.command })),
-  };
-  let entryIndex = 0;
-  applyCommandFrame(game, frame, {
-    beforeApply() {
-      hooks.beforeIssue?.(issued[entryIndex]!);
-    },
-    afterApply() {
-      hooks.afterIssue?.(issued[entryIndex]!);
-      entryIndex += 1;
-    },
-  });
 
-  return { commands: issued, frame, checksum: checksumGame(game) };
+  issue<Source extends string = string>(planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}): CommandFrameResult<Source> {
+    if (this.game.match.winner) return { commands: [] };
+    const issued = selectIssueableCommandEntries(planned);
+
+    if (issued.length === 0) return { commands: issued };
+    let entryIndex = 0;
+    const appliedFrame = this.runtime.completeAndApply(
+      issued.map((entry) => ({ playerId: entry.playerId, command: entry.command })),
+      {
+        rejectionLabel(entry, index) {
+          const issuedEntry = issued[index];
+          return `SDK command frame rejected ${issuedEntry?.playerId ?? entry.playerId} ${issuedEntry?.scriptId ?? "unknown"} command`;
+        },
+        applyHooks: {
+          beforeApply() {
+            hooks.beforeIssue?.(issued[entryIndex]!);
+          },
+          afterApply() {
+            hooks.afterIssue?.(issued[entryIndex]!);
+            entryIndex += 1;
+          },
+        },
+      },
+    );
+
+    return { commands: issued, ...(appliedFrame ? { frame: appliedFrame } : {}), checksum: checksumGame(this.game) };
+  }
+
+  tick(): void {
+    this.runtime.tick([]);
+  }
 }
 
 export function selectIssueableCommandEntries<Source extends string = string>(planned: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] {
