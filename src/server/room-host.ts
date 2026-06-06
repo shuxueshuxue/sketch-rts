@@ -88,6 +88,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return getHosted(roomId).room;
     },
 
+    hasRoom(roomId: string): boolean {
+      return rooms.has(roomId);
+    },
+
     pauseRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = { ...hosted.room, autoTick: false };

@@ -400,7 +400,9 @@ app.post("/api/rooms/:roomId/tick", (request, response) => {
     return;
   }
   try {
-    response.json(roomHost.tickRoom(request.params.roomId, requestedTicks));
+    const result = roomHost.tickRoom(request.params.roomId, requestedTicks);
+    if (result.room.status === "ended") roomNetHub.publishRoom(request.params.roomId);
+    response.json(result);
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
@@ -413,7 +415,9 @@ app.post("/api/rooms/:roomId/command-tick", (request, response) => {
     return;
   }
   try {
-    response.json(roomHost.commandTickRoom(request.params.roomId, body.commands, body.ticks));
+    const result = roomHost.commandTickRoom(request.params.roomId, body.commands, body.ticks);
+    if (result.room.status === "ended") roomNetHub.publishRoom(request.params.roomId);
+    response.json(result);
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }

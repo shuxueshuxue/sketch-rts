@@ -172,6 +172,84 @@ describe("room net hub", () => {
     expect(roomHost.snapshot(connected.id).tick).toBe(1);
     expect(roomHost.snapshot(unconnected.id).tick).toBe(0);
   });
+
+  it("skips connected rooms after an external tick ends the match", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-externally-ended", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addUnits: Array.from({ length: 18 }, (_, index) => ({
+          id: `external-siege-${index}`,
+          owner: "player",
+          kind: "golem",
+          x: 3020 + index * 4,
+          y: 3020 + index * 4,
+        })),
+      },
+    });
+    roomHost.commandRoom(room.id, "player", {
+      type: "attack",
+      unitIds: Array.from({ length: 18 }, (_, index) => `external-siege-${index}`),
+      targetId: "building-enemy-townhall",
+    });
+    const hub = new RoomNetHub({ roomHost });
+    hub.connect(room.id, new FakeSocket());
+
+    const ended = roomHost.tickRoom(room.id, 800);
+
+    expect(ended.room.status).toBe("ended");
+    expect(() => hub.tickConnectedRooms()).not.toThrow();
+    expect(hub.tickConnectedRooms()).toEqual(new Set());
+  });
+
+  it("drops stale connected-room state after the authoritative room is closed", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-closed-with-socket", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    hub.connect(room.id, new FakeSocket());
+
+    const closed = roomHost.closeRoom(room.id, hostUser.id);
+
+    expect(closed.status).toBe("closed");
+    expect(() => hub.tickConnectedRooms()).not.toThrow();
+    expect(hub.tickConnectedRooms()).toEqual(new Set());
+  });
+
+  it("can publish an externally changed room state to connected clients", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-publish-ended", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addUnits: Array.from({ length: 18 }, (_, index) => ({
+          id: `publish-siege-${index}`,
+          owner: "player",
+          kind: "golem",
+          x: 3020 + index * 4,
+          y: 3020 + index * 4,
+        })),
+      },
+    });
+    roomHost.commandRoom(room.id, "player", {
+      type: "attack",
+      unitIds: Array.from({ length: 18 }, (_, index) => `publish-siege-${index}`),
+      targetId: "building-enemy-townhall",
+    });
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+
+    const ended = roomHost.tickRoom(room.id, 800);
+    hub.publishRoom(room.id);
+
+    expect(ended.room.status).toBe("ended");
+    const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
+    expect(messages).toContainEqual({ type: "room", room: ended.room });
+  });
 });
 
 class FakeSocket implements RoomNetSocket {
