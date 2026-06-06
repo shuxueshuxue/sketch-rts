@@ -35,7 +35,15 @@ export class RoomNetHub {
     socket.on("close", () => state.sockets.delete(socket));
   }
 
+  publishRoom(roomId: string): void {
+    const state = this.rooms.get(roomId);
+    if (!state) return;
+    const encoded = encodeNetMessage({ type: "room", room: this.options.roomHost.getRoom(roomId) });
+    for (const socket of [...state.sockets]) this.trySend(state, socket, encoded);
+  }
+
   tickRoom(roomId: string): CommandFrame | undefined {
+    if (this.options.roomHost.getRoom(roomId).status !== "inMatch") return undefined;
     const state = this.stateFor(roomId);
     const snapshot = this.options.roomHost.snapshot(roomId);
     state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
@@ -52,6 +60,11 @@ export class RoomNetHub {
     const ticked = new Set<string>();
     for (const [roomId, state] of this.rooms.entries()) {
       if (state.sockets.size === 0) continue;
+      if (!this.options.roomHost.hasRoom(roomId)) {
+        this.rooms.delete(roomId);
+        continue;
+      }
+      if (this.options.roomHost.getRoom(roomId).status !== "inMatch") continue;
       this.tickRoom(roomId);
       ticked.add(roomId);
     }

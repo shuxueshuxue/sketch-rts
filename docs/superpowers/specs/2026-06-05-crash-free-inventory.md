@@ -111,13 +111,40 @@ The intended command chain is now:
 
 This means ordinary player/AI/SDK command-frame paths no longer rely on raw sim throws for structural command rejection.
 
+## Valid-Play Room Lifecycle Crash Found In Follow-Up
+
+Product-level room-flow YATU exposed one real server crash after the command-admission slice:
+
+- A connected room could be advanced to `ended` through the REST room tick path.
+- `RoomNetHub.tickConnectedRooms()` treated "has websocket sockets" as equivalent to "is a live match".
+- The next server interval called `roomHost.snapshot(roomId)` for an ended room, which correctly failed loudly with `Room <id> is not in a live match`.
+
+The lifecycle ruling is now:
+
+- Room-net tick entry points only tick rooms whose authoritative `RoomState.status` is `inMatch`.
+- Explicit unknown room ids and impossible `inMatch` runtime state still fail loudly.
+- Stale room-net state for a room that was authoritatively closed is transport residue, not a simulation invariant; the connected-room ticker drops it before asking for a live snapshot.
+- HTTP room tick and command-tick paths publish ended room state to connected websocket clients when they end a match, so browser clients leave the match through the ordinary room update path instead of waiting on stale live state.
+- Publishing room state is a no-op when no websocket client has ever connected, so REST-driven headless matches do not allocate orphan room-net coordinators.
+
+Known non-crash residual:
+
+- If a mid-match room close ever becomes user-reachable, connected clients may need an explicit closed-room notification path. Today the close affordance is pre-match while room websockets attach only in-match, and the crash-free requirement is satisfied by dropping stale transport state instead of ticking a deleted room.
+
+Regression coverage:
+
+- `src/server/room-net.test.ts` proves connected externally ended rooms are skipped by the connected-room ticker.
+- `src/server/room-net.test.ts` proves stale connected-room state is dropped after the authoritative room is closed.
+- `src/server/room-net.test.ts` proves externally changed room state can be published to connected clients.
+- `scripts/e2e-room-flow.mjs` now reloads back into the same server room after scenario reset, selects the seeded barracks through the real browser path, verifies research progress with the current accessible button contract, and verifies ended room results through websocket-published room state.
+
 ## Still Open Before Closing Issue #20
 
 The inventory and SDK/local admission fix do not fully close #20 yet.
 
 Remaining evidence needed:
 
-- Run product-level Playwright CLI YATU on a real room match from current main after this PR is merged.
+- Run product-level Playwright CLI YATU on a real room match from current main after this follow-up PR is merged.
 - Add or run a focused room/local/SDK proof that player commands and internal AI commands share the validated command-frame path in all deployment modes.
 - Re-run `npm --silent run audit:crash-inventory` after each #20 follow-up and inspect any new finding under AI policy, command frame, SDK frame, or client command emission.
 - Consider a later cleanup that shares `areEnemyOwners`, supply, spend, and command validation predicates between `command-validation.ts` and `frame.ts`; this is not required for the present fix but reduces drift risk.
@@ -138,4 +165,22 @@ Latest counts:
 
 - Focused regression suite: 9 files / 94 tests passed.
 - Full Vitest suite: 91 files / 821 tests passed.
+- Inventory script: 270 findings, with 194 throws and 76 non-null assertions.
+
+Follow-up branch `codex/issue-20-yatu-room-flow` evidence:
+
+```bash
+npx vitest run src/server/room-net.test.ts src/server/room-host.test.ts
+npm run test:e2e-room-flow
+npm run build
+npm test -- --run
+npm --silent run audit:crash-inventory -- --json
+```
+
+Latest follow-up counts:
+
+- Focused room lifecycle regression suite: 2 files / 30 tests passed.
+- Playwright CLI room-flow YATU: passed with proof artifact under `~/share/ops/sketch-rts-yatu/rts-rf-mq1msdcc`.
+- Build: passed.
+- Full Vitest suite: 91 files / 824 tests passed.
 - Inventory script: 270 findings, with 194 throws and 76 non-null assertions.
