@@ -11,7 +11,7 @@ The modes must be explicit. Static mode must not be a best-effort fallback after
 
 ## Current Difference
 
-Server mode currently boots the browser through `/ws/session`, then uses `/api/rooms` and `/ws/rooms/:roomId` for room setup and lockstep matches. The server owns room state, authoritative command frames, AI ticking, save/debug endpoints, and benchmark dashboard storage.
+Server mode uses `/api/rooms*` for room setup and `/ws/rooms/:roomId` for lockstep matches. The server owns room state, authoritative command frames, AI ticking, save/debug endpoints, and benchmark dashboard storage. The old global session gameplay socket and global gameplay endpoints are removed.
 
 Static mode cannot use any of those network surfaces. The browser must own the local room setup state, create the `Game`, run AI planning, apply command frames, step the simulation, and render snapshots. Static mode keeps the same room browser, create-room, slot setup, and results UI, but the backing room list is local browser state rather than a server-hosted shared lobby.
 
@@ -37,8 +37,8 @@ main.ts UI/input/rendering
   -> DeploymentRuntime
       -> ServerDeploymentRuntime
           -> HTTP room control plane
-          -> WebSocket session/room transports
-          -> SessionSocketGameAdapter / LockstepRoomGameAdapter
+          -> WebSocket room transport
+          -> LockstepRoomGameAdapter
       -> StaticSoloDeploymentRuntime
           -> in-memory RoomState setup
           -> local Game + AI runtime + command frames
@@ -88,12 +88,11 @@ The static runtime must not import server modules or Node-only APIs.
 
 `ServerDeploymentRuntime` wraps the current behavior:
 
-- `/ws/session` for global session snapshots where still needed;
 - `/api/rooms*` for room CRUD;
 - `/ws/rooms/:roomId` for lockstep room gameplay;
 - server room browser and spectators remain available.
 
-The server runtime may continue using `SessionSocketGameAdapter` and `LockstepRoomGameAdapter`.
+The server runtime uses `LockstepRoomGameAdapter` for live room gameplay and an empty adapter before a room match is entered.
 
 During this work, the lockstep room path must also be checked for AI ticking. A read-only architecture review found that connected lockstep rooms are excluded from ordinary active-room ticking, while `tickRoomFrame` did not visibly run hosted AI before stepping. If this is confirmed in current code, the implementation must fix it as part of preserving server-mode gameplay while adding static mode.
 
@@ -132,7 +131,7 @@ Required YATU proof matrix:
 - **Static room lifecycle:** finish or force a local match result through product-visible state and prove the existing results/rematch/home surfaces still work without backend calls.
 - **Server multiplayer preservation:** run server mode through Playwright CLI, create/start a room, issue a room command, and prove room gameplay still uses `/ws/rooms/:roomId` frames rather than HTTP command/snapshot polling.
 - **Server AI preservation:** in a server-backed room with AI slots, prove an AI-controlled slot emits or applies commands through the authoritative room frame path while connected lockstep clients are present.
-- **Mode isolation:** run static and server builds separately and prove their network surfaces do not cross: static emits no API/WS traffic; server mode still opens `/ws/session` or `/ws/rooms/:roomId` where appropriate.
+- **Mode isolation:** run static and server builds separately and prove their network surfaces do not cross: static emits no API/WS traffic; server mode opens `/ws/rooms/:roomId` for gameplay and does not use the removed global session socket.
 - **Build artifact proof:** open the production static build output, not only Vite dev mode, so the proof matches the deployable artifact.
 
 Each YATU proof must store a short sanitized summary under `~/share/ops` and keep raw browser traces, request dumps, screenshots, and temporary scripts out of the repo.

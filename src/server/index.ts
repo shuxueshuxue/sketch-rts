@@ -7,13 +7,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
-import { createAiRuntime, runPresetAiRuntime } from "../ai/runtime";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
-import { createGame, snapshotGame, stepGame } from "../shared/sim";
 import { commandValidationError } from "../shared/sim/command-validation";
-import { applyCommandFrame } from "../shared/sim/frame";
 import type { GameCommand, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
@@ -24,17 +21,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const port = Number(process.env.PORT ?? 5173);
 const host = bindHostFromEnv(process.env);
-const sessionAutoTick = process.env.SESSION_AUTOTICK !== "0";
 const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
 const server = createServer(app);
-const sessionWss = new WebSocketServer({ noServer: true });
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
-let game = createGame();
-let gameAiRuntime = createAiRuntime(["enemy"]);
-let sessionFrameSequence = 0;
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
 const roomNetHub = new RoomNetHub({ roomHost });
 
@@ -58,21 +50,6 @@ server.on("upgrade", (request, socket, head) => {
     socket.destroy();
     return;
   }
-  sessionWss.handleUpgrade(request, socket, head, (ws) => {
-    sessionWss.emit("connection", ws, request);
-  });
-});
-
-sessionWss.on("connection", (ws) => {
-  send(ws, { type: "snapshot", snapshot: snapshotGame(game) });
-  ws.on("message", (raw) => {
-    try {
-      const command = parseCommand(raw.toString());
-      runSessionCommand(command);
-    } catch (error) {
-      send(ws, { type: "error", message: error instanceof Error ? error.message : String(error) });
-    }
-  });
 });
 
 roomWss.on("connection", (ws: WebSocket, _request: IncomingMessage, roomId: string) => {
@@ -134,10 +111,6 @@ app.post("/api/benchmark-dashboard/runs", async (request, response) => {
   } catch (error) {
     response.status(500).json({ error: errorMessage(error) });
   }
-});
-
-app.get("/api/snapshot", (_request, response) => {
-  response.json(snapshotGame(game));
 });
 
 app.get("/api/rooms", (request, response) => {
@@ -534,85 +507,15 @@ app.post("/api/savegames/:saveId/continue", (request, response) => {
   }
 });
 
-app.post("/api/reset", (request, response) => {
-  const body = request.body as { mapId?: unknown; options?: unknown };
-  const mapId = body.mapId;
-  if (!isMapId(mapId)) {
-    response.status(400).json({ error: "Unknown map id" });
-    return;
-  }
-  const options = parseGameSetupOptions(body.options);
-  if (!options) {
-    response.status(400).json({ error: "Malformed game setup options" });
-    return;
-  }
-  game = createGame(mapId, options);
-  gameAiRuntime = createAiRuntime(options.aiPlayers ?? ["enemy"], options.aiVersions ? { versions: options.aiVersions } : {});
-  sessionFrameSequence = 0;
-  broadcastSnapshot();
-  response.json(snapshotGame(game));
-});
-
-app.post("/api/command", (request, response) => {
-  if (!isCommand(request.body)) {
-    response.status(400).json({ error: "Malformed command" });
-    return;
-  }
-  try {
-    const error = commandValidationError(snapshotGame(game), "player", request.body);
-    if (error) {
-      response.status(400).json({ error });
-      return;
-    }
-    runSessionCommand(request.body);
-    response.json(snapshotGame(game));
-  } catch (error) {
-    response.status(400).json({ error: error instanceof Error ? error.message : String(error) });
-  }
-});
-
-app.post("/api/tick", (request, response) => {
-  const requestedTicks = (request.body as { ticks?: unknown }).ticks;
-  if (!isTickCount(requestedTicks)) {
-    response.status(400).json({ error: "ticks must be an integer between 1 and 20000" });
-    return;
-  }
-  const ticks = requestedTicks;
-  const started = performance.now();
-  const cpuStarted = process.cpuUsage();
-  const memoryStarted = process.memoryUsage();
-  for (let i = 0; i < ticks; i += 1) {
-    runPresetAiRuntime(game, gameAiRuntime);
-    stepGame(game);
-  }
-  const elapsedMs = performance.now() - started;
-  const cpu = process.cpuUsage(cpuStarted);
-  const memory = process.memoryUsage();
-  response.json({
-    ticks,
-    elapsedMs,
-    cpuMs: (cpu.user + cpu.system) / 1000,
-    memory: {
-      rssBytes: memory.rss,
-      heapUsedBytes: memory.heapUsed,
-      heapDeltaBytes: memory.heapUsed - memoryStarted.heapUsed,
-    },
-    snapshot: snapshotGame(game),
-  });
+// @@@api-fail-loud-boundary - Register real /api routes above this line; unknown API paths must fail as JSON before the SPA middleware can serve index.html.
+app.use("/api", (_request, response) => {
+  response.status(404).json({ error: "Unknown API route" });
 });
 
 setInterval(() => {
-  if (sessionAutoTick) {
-    runPresetAiRuntime(game, gameAiRuntime);
-    stepGame(game);
-  }
   const lockstepRoomIds = roomNetHub.tickConnectedRooms();
   roomHost.tickActiveRooms(1, { excludeRoomIds: lockstepRoomIds });
 }, 50);
-
-setInterval(() => {
-  broadcastSnapshot();
-}, 100);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(root, "dist")));
@@ -634,17 +537,6 @@ server.listen(port, host, () => {
   console.log(`Sketch RTS listening on ${publicListenUrl(host, port)}`);
 });
 
-function send(ws: WebSocket, payload: unknown) {
-  ws.send(JSON.stringify(payload));
-}
-
-function broadcastSnapshot() {
-  const frame = JSON.stringify({ type: "snapshot", snapshot: snapshotGame(game) });
-  for (const client of sessionWss.clients) {
-    if (client.readyState === client.OPEN) client.send(frame);
-  }
-}
-
 async function watchBenchmarkDashboardRuns() {
   const dir = benchmarkDashboardRunsDir();
   await mkdir(dir, { recursive: true });
@@ -657,26 +549,6 @@ async function watchBenchmarkDashboardRuns() {
 function broadcastBenchmarkDashboardChange(payload: { eventType: string; filename: string }) {
   const frame = `event: benchmark-dashboard-change\ndata: ${JSON.stringify(payload)}\n\n`;
   for (const client of benchmarkDashboardClients) client.write(frame);
-}
-
-function runSessionCommand(command: GameCommand) {
-  const error = commandValidationError(snapshotGame(game), "player", command);
-  if (error) throw new Error(error);
-  applyCommandFrame(game, {
-    roomId: "session",
-    tick: game.tick,
-    sequence: sessionFrameSequence,
-    commands: [{ playerId: "player", command }],
-  });
-  sessionFrameSequence += 1;
-}
-
-function parseCommand(raw: string): GameCommand {
-  const value = JSON.parse(raw) as unknown;
-  if (!isCommand(value)) {
-    throw new Error(`Malformed command: ${raw}`);
-  }
-  return value;
 }
 
 function isCommand(value: unknown): value is GameCommand {

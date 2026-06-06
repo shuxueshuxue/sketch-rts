@@ -13,7 +13,7 @@ let server;
 try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0", ROOM_AUTOTICK: "0" },
+    env: { ...process.env, PORT: String(port), ROOM_AUTOTICK: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout.on("data", (chunk) => process.stdout.write(chunk));
@@ -91,12 +91,16 @@ async page => {
     if (!condition) throw new Error(message);
   };
   let activeRoomId;
+  const requireActiveRoomId = () => {
+    must(activeRoomId, "room-mode E2E requires an active room id");
+    return activeRoomId;
+  };
   const snapshot = async () =>
     page.evaluate(async (roomId) => {
-      const res = await fetch(roomId ? "/api/rooms/" + roomId + "/snapshot" : "/api/snapshot");
+      const res = await fetch("/api/rooms/" + roomId + "/snapshot");
       if (!res.ok) throw new Error(await res.text());
       return res.json();
-    }, activeRoomId);
+    }, requireActiveRoomId());
   const catalog = async () =>
     page.evaluate(async () => {
       const res = await fetch("/api/catalog");
@@ -118,7 +122,7 @@ async page => {
   };
   const resetScenario = async (body) =>
     page.evaluate(async ({ roomId, body }) => {
-      const res = await fetch(roomId ? "/api/rooms/" + roomId + "/reset" : "/api/reset", {
+      const res = await fetch("/api/rooms/" + roomId + "/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -126,7 +130,7 @@ async page => {
       if (!res.ok) throw new Error(await res.text());
       const result = await res.json();
       return result.snapshot ?? result;
-    }, { roomId: activeRoomId, body });
+    }, { roomId: requireActiveRoomId(), body });
   const waitForMenu = async () => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
     await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
