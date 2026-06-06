@@ -1,4 +1,4 @@
-import type { CheckpointFrame, ClientNetMessage, CommandFrame, ServerNetMessage } from "./types";
+import type { ChatMessage, CheckpointFrame, ClientNetMessage, CommandFrame, ServerNetMessage } from "./types";
 import type { GameCommand, RoomState } from "../types";
 
 export function encodeNetMessage(message: ClientNetMessage | ServerNetMessage): string {
@@ -10,6 +10,7 @@ export function decodeClientNetMessage(raw: string): ClientNetMessage {
   if (!hasType(message)) throw new Error("Net message must be an object with a string type");
   if (message.type === "join") return decodeJoinMessage(message);
   if (message.type === "command") return decodeClientCommandMessage(message);
+  if (message.type === "chat") return decodeClientChatMessage(message);
   if (message.type === "checksum") return decodeChecksumMessage(message);
   if (message.type === "requestCheckpoint") return decodeRequestCheckpointMessage(message);
   throw new Error(`Unknown client net message type ${message.type}`);
@@ -23,6 +24,7 @@ export function decodeServerNetMessage(raw: string): ServerNetMessage {
   if (message.type === "checkpoint") return decodeCheckpointMessage(message);
   if (message.type === "desync") return decodeDesyncMessage(message);
   if (message.type === "error") return decodeErrorMessage(message);
+  if (message.type === "chat") return decodeServerChatMessage(message);
   if (message.type === "room") return decodeRoomMessage(message);
   throw new Error(`Unknown server net message type ${message.type}`);
 }
@@ -49,6 +51,11 @@ function decodeClientCommandMessage(message: Record<string, unknown>): ClientNet
     command: message.command,
     ...(Number.isInteger(message.clientSeq) ? { clientSeq: Number(message.clientSeq) } : {}),
   };
+}
+
+function decodeClientChatMessage(message: Record<string, unknown>): ClientNetMessage {
+  if (!isString(message.roomId) || !isString(message.playerId) || !isString(message.senderName) || !isNonEmptyString(message.text)) throw new Error("Malformed client chat message");
+  return { type: "chat", roomId: message.roomId, playerId: message.playerId, senderName: message.senderName, text: message.text };
 }
 
 function decodeChecksumMessage(message: Record<string, unknown>): ClientNetMessage {
@@ -86,6 +93,11 @@ function decodeErrorMessage(message: Record<string, unknown>): ServerNetMessage 
   return { type: "error", roomId: message.roomId, message: message.message };
 }
 
+function decodeServerChatMessage(message: Record<string, unknown>): ServerNetMessage {
+  if (!isChatMessage(message.message)) throw new Error("Malformed server chat message");
+  return { type: "chat", message: message.message };
+}
+
 function decodeRoomMessage(message: Record<string, unknown>): ServerNetMessage {
   if (!isRecord(message.room)) throw new Error("Malformed server room message");
   return { type: "room", room: message.room as RoomState };
@@ -105,4 +117,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return isString(value) && value.trim().length > 0;
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  return isRecord(value) && isString(value.id) && isString(value.roomId) && isString(value.playerId) && isString(value.senderName) && isNonEmptyString(value.text) && Number.isFinite(value.sentAt);
 }

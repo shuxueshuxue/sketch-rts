@@ -3,12 +3,19 @@ import type { DeploymentMode } from "./mode";
 import { ServerDeploymentRuntime, type ServerDeploymentRuntimeOptions } from "./server-runtime";
 import { StaticSoloDeploymentRuntime, type StaticSoloDeploymentRuntimeOptions } from "./static-runtime";
 import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
+import type { ChatMessage } from "../../shared/net/types";
 import type { GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
+
+export type MatchChat = {
+  send(text: string, senderName: string): void;
+  onMessage(handler: (message: ChatMessage) => void): () => void;
+};
 
 export type StartedMatch = {
   room: RoomState;
   playerId: PlayerId;
   adapter: GameAdapter;
+  chat: MatchChat;
   snapshot: GameSnapshot;
 };
 

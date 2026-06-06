@@ -14,6 +14,12 @@ export const gameShellMarkup = `
       <button type="button" class="match-action hidden" data-forfeit-match>Concede</button>
     </div>
     <div class="status-line" data-status>Connecting to match...</div>
+    <div class="chat-overlay" data-chat-overlay>
+      <div class="chat-messages" data-chat-messages></div>
+      <form class="chat-input-row hidden" data-chat-form>
+        <input data-chat-input autocomplete="off" maxlength="180" aria-label="Public chat message" />
+      </form>
+    </div>
     <div class="selection-chip" data-selection>Nothing selected</div>
     <div class="command-dock hidden" data-command-dock></div>
     <div class="item-dock hidden" data-item-dock></div>

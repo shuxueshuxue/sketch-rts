@@ -98,6 +98,27 @@ describe("server deployment runtime", () => {
     expect(localSnapshot?.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
     expect(transport.sent).toContainEqual({ type: "command", roomId: startedRoom.id, playerId: "player", clientSeq: 0, command });
   });
+
+  it("routes public chat through the room transport without using match commands", () => {
+    const host = { id: "host", name: "Host" };
+    const open = createRoom({ id: "room-chat", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const startedRoom = { ...open, status: "inMatch" as const };
+    const transport = new FakeTransport();
+    const runtime = new ServerDeploymentRuntime({
+      createSessionSocket: () => new FakeSocket(),
+      createRoomTransport: () => transport,
+    });
+    const started = runtime.connectRoom(startedRoom, "player", false, () => {});
+    const received: string[] = [];
+    started.chat.onMessage((message) => received.push(`${message.senderName}: ${message.text}`));
+
+    started.chat.send("push mid", "Ada");
+    transport.emit({ type: "chat", message: { id: "chat-room-chat-1", roomId: startedRoom.id, playerId: "player", senderName: "Ada", text: "push mid", sentAt: 1200 } });
+
+    expect(transport.sent).toContainEqual({ type: "chat", roomId: startedRoom.id, playerId: "player", senderName: "Ada", text: "push mid" });
+    expect(transport.sent.some((message) => message.type === "command")).toBe(false);
+    expect(received).toEqual(["Ada: push mid"]);
+  });
 });
 
 class FakeSocket {

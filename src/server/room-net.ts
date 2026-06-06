@@ -15,12 +15,14 @@ export type RoomNetHubOptions = {
   roomHost: ReturnType<typeof createRoomHost>;
   commandDelayTicks?: number;
   frameHistoryLimit?: number;
+  now?: () => number;
 };
 
 type RoomNetState = {
   coordinator: LockstepRoomCoordinator;
   sockets: Set<RoomNetSocket>;
   spectatorSync: SpectatorSyncLog;
+  nextChatSequence: number;
 };
 
 export class RoomNetHub {
@@ -31,7 +33,13 @@ export class RoomNetHub {
   connect(roomId: string, socket: RoomNetSocket): void {
     const state = this.stateFor(roomId);
     state.sockets.add(socket);
-    socket.on("message", (raw) => this.receive(roomId, socket, String(raw)));
+    socket.on("message", (raw) => {
+      try {
+        this.receive(roomId, socket, String(raw));
+      } catch (error) {
+        this.send(roomId, socket, { type: "error", roomId, message: errorMessage(error) });
+      }
+    });
     socket.on("close", () => state.sockets.delete(socket));
   }
 
@@ -85,6 +93,10 @@ export class RoomNetHub {
       this.acceptCommand(message);
       return;
     }
+    if (message.type === "chat") {
+      this.acceptChat(message);
+      return;
+    }
     if (message.type === "checksum") {
       this.stateFor(message.roomId).coordinator.recordChecksum(message);
       return;
@@ -109,6 +121,23 @@ export class RoomNetHub {
     });
   }
 
+  private acceptChat(message: Extract<ClientNetMessage, { type: "chat" }>): void {
+    const state = this.stateFor(message.roomId);
+    const sequence = state.nextChatSequence;
+    state.nextChatSequence += 1;
+    this.broadcast(message.roomId, {
+      type: "chat",
+      message: {
+        id: `chat-${message.roomId}-${sequence}`,
+        roomId: message.roomId,
+        playerId: message.playerId,
+        senderName: message.senderName,
+        text: message.text,
+        sentAt: this.options.now?.() ?? Date.now(),
+      },
+    });
+  }
+
   private stateFor(roomId: string): RoomNetState {
     const existing = this.rooms.get(roomId);
     if (existing) return existing;
@@ -116,6 +145,7 @@ export class RoomNetHub {
       coordinator: new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) }),
       sockets: new Set<RoomNetSocket>(),
       spectatorSync: new SpectatorSyncLog({ ...(this.options.frameHistoryLimit !== undefined ? { frameHistoryLimit: this.options.frameHistoryLimit } : {}) }),
+      nextChatSequence: 1,
     };
     this.rooms.set(roomId, created);
     return created;
@@ -150,4 +180,8 @@ export class RoomNetHub {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
   }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }

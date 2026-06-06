@@ -1,13 +1,13 @@
 import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
-import type { ServerNetMessage } from "../../shared/net/types";
+import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
 import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import type { GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { LockstepRoomGameAdapter, SessionSocketGameAdapter, type GameAdapter, type SessionCommandSocket } from "../game-adapter";
 import { LockstepClient } from "../net/lockstep-client";
 import type { NetTransport } from "../net/transport";
 import { WebSocketTransport } from "../net/websocket-transport";
-import type { DeploymentRuntime, StartedMatch } from "./runtime";
+import type { DeploymentRuntime, MatchChat, StartedMatch } from "./runtime";
 
 export type ServerSessionSocket = SessionCommandSocket & {
   close?(): void;
@@ -126,6 +126,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
       ...(this.onSessionError ? { onError: this.onSessionError } : {}),
     });
     const adapter = new LockstepRoomGameAdapter(client, { spectating });
+    const chat = createTransportChat(transport, room.id, playerId);
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);
     });
@@ -135,7 +136,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     };
     if (transport.onOpen) transport.onOpen(join);
     else join();
-    return { room, playerId, adapter, snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };
   }
 
   canForfeitMatch(): boolean {
@@ -175,4 +176,24 @@ async function requestJson<T>(path: string, body?: unknown): Promise<T> {
 
 function slotForUser(room: RoomState, userId: string) {
   return room.slots.find((slot) => slot.userId === userId);
+}
+
+function createTransportChat(transport: RoomTransport, roomId: string, playerId: PlayerId): MatchChat {
+  const handlers = new Set<(message: ChatMessage) => void>();
+  transport.onMessage((message) => {
+    if (message.type !== "chat") return;
+    if (message.message.roomId !== roomId) return;
+    for (const handler of [...handlers]) handler(message.message);
+  });
+  return {
+    send(text, senderName) {
+      const trimmed = text.trim();
+      if (!trimmed) throw new Error("Chat message cannot be empty");
+      transport.send({ type: "chat", roomId, playerId, senderName, text: trimmed });
+    },
+    onMessage(handler) {
+      handlers.add(handler);
+      return () => handlers.delete(handler);
+    },
+  };
 }
