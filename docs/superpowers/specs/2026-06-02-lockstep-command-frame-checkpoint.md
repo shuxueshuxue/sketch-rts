@@ -10,14 +10,13 @@ The simulation now has a shared command-frame entry layer:
 - `src/shared/sim/checksum.ts` hashes that canonical state.
 - `src/shared/sim/engine.ts` wraps the existing simulation functions without changing sim semantics.
 
-Replay, savegame, SDK command batching, room-host commands, and the global server session command path now move toward the same frame contract:
+Replay, savegame, SDK command batching, and room-host commands now move toward the same frame contract:
 
 - Debug replay traces store `frames`, not replay-only `batches`.
 - Room-host browser and SDK command paths create hosted `CommandFrame`s before applying commands.
 - Hosted internal AI now plans commands without mutating simulation state; room-host creates and applies the authoritative internal-AI `CommandFrame`.
 - SDK `issueCommandFrame` constructs and applies a shared `CommandFrame` while preserving per-command hooks.
 - Savegame runtime metadata records the deterministic checksum for checkpoint proof.
-- The global `/api/command` and `/ws/session` session command path applies a session `CommandFrame`.
 
 Network boundaries now have first-pass protocol primitives:
 
@@ -26,13 +25,13 @@ Network boundaries now have first-pass protocol primitives:
 - `src/shared/net/codec.ts` encodes and decodes typed net messages and fails loudly on malformed payloads.
 - `src/shared/net/frame-buffer.ts` stores authoritative frames by tick.
 - `src/client/net/transport.ts`, `websocket-transport.ts`, and `lockstep-client.ts` define a client adapter path where local commands are sent over transport and simulation advances only after server frames arrive.
-- `src/client/net/local-adapter.ts`, `room-adapter.ts`, and `spectator-client.ts` provide the handoff-named client net surfaces for local command-frame stepping, room lockstep play, and observer checkpoint sync.
-- `src/client/game-adapter.ts` defines the active gameplay adapter boundary; global session commands and room lockstep commands now share the same `sendCommand` / `currentSnapshot` / `updateToRenderTime` surface in `src/client/main.ts`.
+- `src/client/net/local-adapter.ts` and `lockstep-client.ts` provide local command-frame stepping and room lockstep sync.
+- `src/client/game-adapter.ts` defines the active gameplay adapter boundary; local/static play and room lockstep play share the same `sendCommand` / `currentSnapshot` / `updateToRenderTime` surface in `src/client/main.ts`.
 
 The room WebSocket path is now wired into the running server:
 
-- `/ws/rooms/:roomId` is mounted separately from `/ws/session` so room clients do not receive global snapshot broadcasts.
-- Bare `/ws` is rejected by the server upgrade classifier; session and room transports now have explicit WebSocket paths.
+- `/ws/rooms/:roomId` is the server gameplay WebSocket path.
+- Bare `/ws` and the removed global session socket are rejected by the server upgrade classifier.
 - `src/server/room-net.ts` accepts typed room messages, sends `hello` and `checkpoint`, records checksums, accepts delayed client commands, broadcasts authoritative frames, and advances the room through `tickRoomFrame`.
 - `src/server/room-net.ts` retains recent authoritative checkpoints and frames so a late observer can request an older checkpoint and replay the frames after it.
 - `src/server/room-host.ts` exposes `tickRoomFrame` and `checkpointRoom`; connected lockstep rooms can be excluded from the ordinary active-room ticker so they are not double-stepped.
@@ -145,28 +144,8 @@ Adapter frontend YATU proof passed through Playwright CLI against a real local s
 }
 ```
 
-Session WebSocket routing proof passed against a real local server on port `5194`:
-
-```json
-{
-  "sessionMessageTypes": ["snapshot"],
-  "rejectedRoot": { "opened": false, "closed": false, "error": "socket hang up", "messages": 0 },
-  "roomMessageTypes": ["hello"]
-}
-```
-
-Session frontend YATU proof passed through Playwright CLI against a real local server on port `5195`. The browser opened the app session socket at `/ws/session`, did not open bare `/ws`, and received session snapshots:
-
-```json
-{
-  "websockets": ["ws://127.0.0.1:25195/?token=kMaLbgfreMga", "ws://127.0.0.1:5195/ws/session"],
-  "snapshotMessages": 7,
-  "status": "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers."
-}
-```
-
 ## Remaining Work
 
 - GitHub #38 still needs broad frontend YATU stress for visual/client-state sync.
-- GitHub #42 still needs removal of old global session gameplay APIs.
+- GitHub #42 removes old global session gameplay APIs; closure still needs post-merge verification evidence.
 - GitHub #43 still needs explicit proof that static and server deployments share one gameplay core.
