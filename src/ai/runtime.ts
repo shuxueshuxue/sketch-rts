@@ -1,11 +1,12 @@
-import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
+import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
+import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider } from "./planner-context";
 import { issueCommandFrame, selectIssueableCommandEntries, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import type { CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
-export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = "v2";
+export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = DEFAULT_AI_PLANNER_VERSION;
 
 export type AiRuntimeState = {
   controlledPlayers: PlayerId[];
@@ -32,11 +33,6 @@ export type AiCommandFrameRequest<Source extends string = string> = {
   scripts?: AiScript[];
   memory?: AiPolicyMemory;
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
-};
-
-export type AiMemoryProvider = {
-  get(owner: PlayerId): AiPolicyMemory | undefined;
-  set?(owner: PlayerId, memory: AiPolicyMemory): void;
 };
 
 export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFrameEntry<Source>;
@@ -91,14 +87,7 @@ export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState,
 
   const requests = dueOwners.map((owner) => {
     runtime.lastThink[owner] = game.tick;
-    const version = runtime.versions[owner] ?? runtime.version;
-    return {
-      playerId: owner,
-      version,
-      scripts: runtimeScriptsForOwner(runtime, owner, version),
-      memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
-      ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
-    };
+    return runtimeRequestForOwner(runtime, owner);
   });
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
@@ -115,18 +104,7 @@ export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntime
 
 export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState, owners: PlayerId[] = runtime.controlledPlayers, options: PresetAiPolicyOptions = {}): AiRuntimeIssuedCommand[] {
   if (game.match.winner) return [];
-  const requests = owners.flatMap((owner) => {
-    const version = runtime.versions[owner] ?? runtime.version;
-    return [
-      {
-        playerId: owner,
-        version,
-        scripts: runtimeScriptsForOwner(runtime, owner, version),
-        memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
-        ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
-      },
-    ];
-  });
+  const requests = owners.map((owner) => runtimeRequestForOwner(runtime, owner));
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options }).commands;
 }
 
@@ -150,37 +128,26 @@ function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
   // @@@shared-ai-frame - All controlled slots reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
-    const owner = request.playerId;
-    if (!snapshot.players[owner]) continue;
-    const version = request.version ?? policyOptions.version ?? DEFAULT_AI_SCRIPT_VERSION;
-    const scripts = request.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
-    const memory = request.memory ?? memoryProvider?.get(owner) ?? policyOptions.memory ?? createAiPolicyMemory();
-    memoryProvider?.set?.(owner, memory);
-    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { ...policyOptions, version, ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}), memory })) {
-      planned.push({
-        playerId: owner,
-        ...(request.source !== undefined ? { source: request.source } : {}),
-        scriptId: entry.scriptId,
-        command: entry.command,
-      });
-    }
+    planned.push(...planAiOwnerCommandEntries(snapshot, request, { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) }));
   }
 
   return planned;
 }
 
-function runtimeScriptsForOwner(runtime: AiRuntimeState, owner: PlayerId, version: AiScriptVersion) {
-  const scriptIds = runtime.scriptIdsByPlayer?.[owner] ?? runtime.scriptIds;
-  if (scriptIds) return scriptsFromIds(scriptIds);
-  return runtime.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
+function runtimeRequestForOwner(runtime: AiRuntimeState, owner: PlayerId): AiCommandFrameRequest {
+  const scriptIds = runtimeScriptIdsForOwner(runtime, owner);
+  return {
+    playerId: owner,
+    version: runtime.versions[owner] ?? runtime.version,
+    ...(runtime.scripts ? { scripts: runtime.scripts } : {}),
+    ...(scriptIds ? { scriptIds } : {}),
+    memory: runtime.memories[owner] ?? (runtime.memories[owner] = createAiPolicyMemory()),
+    ...(runtime.disabledBehaviorsByPlayer?.[owner] ? { disabledBehaviors: runtime.disabledBehaviorsByPlayer[owner] } : {}),
+  };
 }
 
-function scriptsFromIds(scriptIds: string[]): AiScript[] {
-  return scriptIds.map((id) => {
-    const script = AI_SCRIPT_LIBRARY[id as keyof typeof AI_SCRIPT_LIBRARY];
-    if (!script) throw new Error(`Unknown AI script id ${id}`);
-    return script;
-  });
+function runtimeScriptIdsForOwner(runtime: AiRuntimeState, owner: PlayerId) {
+  return runtime.scriptIdsByPlayer?.[owner] ?? runtime.scriptIds;
 }
 
 function cloneScriptIdsByPlayer(value: Partial<Record<PlayerId, string[]>>) {
