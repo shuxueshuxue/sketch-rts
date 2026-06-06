@@ -356,6 +356,14 @@ app.get("/api/rooms/:roomId/snapshot", (request, response) => {
   }
 });
 
+app.get("/api/rooms/:roomId/sync-events", (request, response) => {
+  try {
+    response.json({ events: roomNetHub.syncEventsForRoom(request.params.roomId) });
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
 app.post("/api/rooms/:roomId/command", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!isPlayerId(body.playerId) || !isCommand(body.command)) {
