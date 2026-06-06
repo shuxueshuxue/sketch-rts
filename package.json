@@ -21,6 +21,7 @@
     "test:sdk-smoke": "tsx scripts/sdk-smoke.ts",
     "test:sdk-savegame": "tsx scripts/sdk-savegame.ts",
     "test:e2e-room-flow": "node scripts/e2e-room-flow.mjs",
+    "test:e2e-room-sync": "node scripts/room-sync-yatu.mjs",
     "test:e2e-brutal": "node scripts/e2e-brutal-spec.mjs",
     "test:yatu": "node scripts/yatu-player-loop.mjs",
     "test:sdk-effect-proof": "tsx scripts/sdk-effect-proof.ts",
