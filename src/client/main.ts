@@ -11,7 +11,7 @@ import {
   type ControlGroups,
 } from "./control-groups";
 import { deploymentModeFromEnv } from "./deployment/mode";
-import { createDeploymentRuntime } from "./deployment/runtime";
+import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
 import { edgeScrollDelta } from "./edge-scroll";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
@@ -124,6 +124,9 @@ const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
 const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
+const chatMessages = requireElement<HTMLDivElement>("[data-chat-messages]");
+const chatForm = requireElement<HTMLFormElement>("[data-chat-form]");
+const chatInput = requireElement<HTMLInputElement>("[data-chat-input]");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
@@ -144,6 +147,8 @@ let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let spectatingRoom = false;
 let activeGameAdapter: GameAdapter;
+let activeChat: MatchChat | undefined;
+let activeChatUnsubscribe: (() => void) | undefined;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
@@ -248,6 +253,7 @@ document.addEventListener("pointerdown", suppressPointerLockDocumentMouseDefault
 document.addEventListener("pointerup", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("pointermove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("mousedown", suppressPointerLockDocumentMouseDefault, { capture: true });
+chatForm.addEventListener("submit", submitChatForm);
 document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
@@ -700,7 +706,7 @@ async function startCurrentRoom() {
   currentRoom = started.room;
   currentRoomId = started.room.id;
   localPlayerId = started.playerId;
-  activateStartedMatch(started.adapter, started.snapshot);
+  activateStartedMatch(started.adapter, started.snapshot, started.chat);
   syncDebugView();
   camera = { x: 0, y: 0 };
   selectedIds = new Set();
@@ -919,7 +925,7 @@ async function enterRoom(roomId: string) {
     if (room.status === "inMatch") {
       currentRoomId = room.id;
       const started = deploymentRuntime.connectRoom(room, localPlayerId, spectatingRoom, handleRuntimeRoomUpdate);
-      activateStartedMatch(started.adapter, started.snapshot);
+      activateStartedMatch(started.adapter, started.snapshot, started.chat);
       syncDebugView();
       menuOpen = false;
       shell.classList.remove("menu-open");
@@ -936,9 +942,12 @@ async function enterRoom(roomId: string) {
   }
 }
 
-function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot) {
+function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
   disconnectActiveMatch();
   activeGameAdapter = adapter;
+  activeChat = chat;
+  activeChatUnsubscribe = chat.onMessage(renderChatMessage);
+  resetChatOverlay();
   snapshot = nextSnapshot;
   pruneSelection();
   updateHud();
@@ -947,6 +956,10 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot) 
 
 function disconnectActiveMatch() {
   if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
+  activeChatUnsubscribe?.();
+  activeChatUnsubscribe = undefined;
+  activeChat = undefined;
+  closeChatInput();
   activeGameAdapter = baseGameAdapter;
 }
 
@@ -1167,6 +1180,13 @@ function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEven
 
 function onKeyDown(event: KeyboardEvent) {
   const key = event.key.toLowerCase();
+  if (isChatInputOpen()) {
+    if (key === "escape") {
+      event.preventDefault();
+      closeChatInput();
+    }
+    return;
+  }
   if (menuOpen) {
     const mapIndex = Number(key) - 1;
     const scenario = MAP_SCENARIOS[mapIndex];
@@ -1177,6 +1197,11 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (event.repeat) return;
+  if (key === "enter") {
+    event.preventDefault();
+    openChatInput();
+    return;
+  }
   if (key === "escape" && commandMode) {
     event.preventDefault();
     cancelCommandMode();
@@ -1216,6 +1241,53 @@ function sendCommand(command: GameCommand) {
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
   }
+}
+
+function openChatInput() {
+  if (!activeChat || menuOpen) return;
+  chatForm.classList.remove("hidden");
+  chatInput.focus();
+}
+
+function closeChatInput() {
+  chatInput.value = "";
+  chatForm.classList.add("hidden");
+  if (document.activeElement === chatInput) chatInput.blur();
+}
+
+function isChatInputOpen() {
+  return !chatForm.classList.contains("hidden") && document.activeElement === chatInput;
+}
+
+function submitChatForm(event: SubmitEvent) {
+  event.preventDefault();
+  if (!activeChat) return;
+  const text = chatInput.value.trim();
+  if (!text) {
+    closeChatInput();
+    return;
+  }
+  try {
+    activeChat.send(text, localUser.name);
+    closeChatInput();
+  } catch (error) {
+    showInvalidCommand(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function renderChatMessage(message: { senderName: string; text: string }) {
+  const row = document.createElement("div");
+  row.className = "chat-message";
+  row.innerHTML = `<span class="chat-sender">${escapeHtml(message.senderName)}</span>: ${escapeHtml(message.text)}`;
+  chatMessages.append(row);
+  while (chatMessages.children.length > 8) chatMessages.firstElementChild?.remove();
+  window.setTimeout(() => row.classList.add("fading"), 7_000);
+  window.setTimeout(() => row.remove(), 9_000);
+}
+
+function resetChatOverlay() {
+  chatMessages.replaceChildren();
+  closeChatInput();
 }
 
 function showInvalidCommand(message: string) {
