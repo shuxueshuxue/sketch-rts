@@ -29,7 +29,7 @@ const EN_TRANSLATIONS = {
   "roomCreate.submit": "Create Room",
 } as const;
 
-type TranslationKey = keyof typeof EN_TRANSLATIONS;
+export type TranslationKey = keyof typeof EN_TRANSLATIONS;
 
 const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
   "common.back": "返回",
@@ -81,8 +81,8 @@ export function createI18n(locale: Locale) {
   const dictionary = TRANSLATIONS[locale];
   return {
     locale,
-    t(key: string, values: TranslationValues = {}) {
-      const template = dictionary[key as TranslationKey];
+    t(key: TranslationKey, values: TranslationValues = {}) {
+      const template = dictionary[key];
       if (template === undefined) {
         throw new Error(`Missing ${locale} translation for ${key}`);
       }

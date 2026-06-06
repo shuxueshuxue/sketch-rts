@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createI18n, detectLocale } from "./i18n";
+import { createI18n, detectLocale, type TranslationKey } from "./i18n";
 
 describe("client i18n", () => {
   it("selects Chinese for Chinese browser languages", () => {
@@ -19,7 +19,7 @@ describe("client i18n", () => {
 
     expect(en.t("home.rooms.label")).toBe("Rooms");
     expect(zh.t("home.rooms.label")).toBe("房间");
-    expect(() => en.t("missing.key")).toThrow("Missing en translation for missing.key");
+    expect(() => en.t("missing.key" as TranslationKey)).toThrow("Missing en translation for missing.key");
   });
 
   it("formats values and fails loudly when a value is missing", () => {
