@@ -1,6 +1,7 @@
 import "./styles.css";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
+import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -1180,11 +1181,19 @@ function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEven
 
 function onKeyDown(event: KeyboardEvent) {
   const key = event.key.toLowerCase();
-  if (isChatInputOpen()) {
-    if (key === "escape") {
-      event.preventDefault();
-      closeChatInput();
-    }
+  const chatIntent = chatKeyIntent(event, {
+    hasActiveChat: Boolean(activeChat),
+    inputFocused: document.activeElement === chatInput,
+    inputVisible: isChatInputOpen(),
+    menuOpen,
+  });
+  if (chatIntent !== "pass") {
+    if (chatIntent === "capture") return;
+    event.preventDefault();
+    if (chatIntent === "open") openChatInput();
+    if (chatIntent === "close") closeChatInput();
+    if (chatIntent === "focus") chatInput.focus();
+    if (chatIntent === "submit") submitChatText();
     return;
   }
   if (menuOpen) {
@@ -1197,11 +1206,6 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (event.repeat) return;
-  if (key === "enter") {
-    event.preventDefault();
-    openChatInput();
-    return;
-  }
   if (key === "escape" && commandMode) {
     event.preventDefault();
     cancelCommandMode();
@@ -1256,13 +1260,17 @@ function closeChatInput() {
 }
 
 function isChatInputOpen() {
-  return !chatForm.classList.contains("hidden") && document.activeElement === chatInput;
+  return !chatForm.classList.contains("hidden");
 }
 
 function submitChatForm(event: SubmitEvent) {
   event.preventDefault();
+  submitChatText();
+}
+
+function submitChatText() {
   if (!activeChat) return;
-  const text = chatInput.value.trim();
+  const text = normalizeChatText(chatInput.value);
   if (!text) {
     closeChatInput();
     return;
