@@ -66,6 +66,24 @@ describe("server deployment runtime", () => {
     expect(started.snapshot.players.enemy2?.race).toBe("grove");
   });
 
+  it("connects spectators through the same room lockstep adapter without command authority", () => {
+    const host = { id: "host", name: "Host" };
+    const open = createRoom({ id: "room-spectator", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const startedRoom = { ...open, status: "inMatch" as const };
+    const transport = new FakeTransport();
+    const runtime = new ServerDeploymentRuntime({
+      createRoomTransport: () => transport,
+    });
+
+    const started = runtime.connectRoom(startedRoom, "spectator-viewer", true, () => {});
+
+    expect(transport.sent).toEqual([
+      { type: "join", roomId: startedRoom.id, playerId: "spectator-viewer" },
+      expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0 }),
+    ]);
+    expect(() => started.adapter.sendCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toThrow("Spectators cannot issue commands");
+  });
+
   it("surfaces lockstep room command errors through the runtime error callback", () => {
     const host = { id: "host", name: "Host" };
     const open = createRoom({ id: "room-errors", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
