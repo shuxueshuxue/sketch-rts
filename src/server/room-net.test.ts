@@ -148,6 +148,28 @@ describe("room net hub", () => {
     expect(() => socket.emit(encodeNetMessage({ type: "command", roomId: "other-room", playerId: "player", command: { type: "move", unitIds: [], x: 0, y: 0 } }))).toThrow(/does not match socket room/);
   });
 
+  it("broadcasts public chat without admitting it to command frames", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-chat", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost, now: () => 1200 });
+    const sender = new FakeSocket();
+    const receiver = new FakeSocket();
+
+    hub.connect(room.id, sender);
+    hub.connect(room.id, receiver);
+    sender.emit(encodeNetMessage({ type: "chat", roomId: room.id, playerId: "player", senderName: "Ada", text: "push mid" }));
+
+    const senderMessages = sender.sent.map((raw) => decodeServerNetMessage(raw));
+    const receiverMessages = receiver.sent.map((raw) => decodeServerNetMessage(raw));
+    expect(senderMessages).toContainEqual({ type: "chat", message: { id: "chat-room-chat-1", roomId: room.id, playerId: "player", senderName: "Ada", text: "push mid", sentAt: 1200 } });
+    expect(receiverMessages).toContainEqual({ type: "chat", message: { id: "chat-room-chat-1", roomId: room.id, playerId: "player", senderName: "Ada", text: "push mid", sentAt: 1200 } });
+
+    hub.tickRoom(room.id);
+    const frames = sender.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
+    expect(frames[0]?.frame.commands.some((entry) => (entry.command as { type: string }).type === "chat")).toBe(false);
+  });
+
   it("serves checkpoint requests from the live room state", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-checkpoint", host: hostUser, mapId: "bareDuel" });
