@@ -428,6 +428,34 @@ Each game result records per player:
 
 These tracker fields are not optional dashboard decoration. They are fixed benchmark instrumentation and should be available through SDK report APIs.
 
+## Benchmark Runner Parity
+
+Release benchmark evidence must come from the formal benchmark script, not from ad-hoc single-game loops. If a quick reproducer disagrees with the dashboard, first print the formal setup and parity proof before tuning AI.
+
+The canonical dry-run contract is:
+
+```bash
+AI_BENCHMARK_DRY_RUN=1 AI_GAUNTLET_SEED=<seed> AI_GAUNTLET_MAP_COUNT=18 npx tsx scripts/ai-version-benchmark.ts
+```
+
+The canonical runner parity contract is:
+
+```bash
+AI_BENCHMARK_PARITY_PROBE=1 AI_GAUNTLET_SEED=<seed> AI_GAUNTLET_MAP_COUNT=18 npx tsx scripts/ai-version-benchmark.ts
+```
+
+The parity probe runs one representative match from each formal evaluation lane: `1v2 score`, `1v1 score control`, `1v3 probe`, `2v3 probe`, `15v20 mixed combat`, and `10v12 mixed combat`. It must print the commit, catalog hash, seed, map selection, dashboard path, serial manifest, parallel-worker manifest, and per-probe setup/result equality. The serial manifest has an in-process `commandPlanner`; the parallel-worker manifest is intentionally serializable and therefore has no planner. The worker restores the same planner before execution, so the required proof is equal executed setup and core result, not byte-identical serialized input.
+
+The parity probe also compares the formal serial benchmark runner against the direct SDK single-game runner under the same match input. Any mismatch means the benchmark score is not trustworthy until the exact setup difference is printed and classified as either a bug or an explicit benchmark contract.
+
+Full benchmark runs and long sweeps belong on `pgl`, not on a local laptop. A dashboard-backed release run must write to the live pgl dashboard store:
+
+```bash
+ssh pgl 'cd /home/ubuntu/sketch-rts-benchmark-main && AI_BENCHMARK_DASHBOARD_DIR=/home/ubuntu/sketch-rts-benchmark-main/.benchmark-dashboard AI_GAUNTLET_SEED=<seed> AI_GAUNTLET_MAP_COUNT=18 AI_BENCHMARK_WORKERS=<workers> npx tsx scripts/ai-version-benchmark.ts'
+```
+
+If running from a temporary pgl checkout, set the same `AI_BENCHMARK_DASHBOARD_DIR` or immediately copy the resulting `run-contract-v2/runs/*.json` and `logs/*.log` into that live dashboard directory. A local `.benchmark-dashboard` in a temp checkout is not dashboard evidence.
+
 ## Dashboard Requirements
 
 The benchmark dashboard is a separate frontend debugger supported by the SDK.

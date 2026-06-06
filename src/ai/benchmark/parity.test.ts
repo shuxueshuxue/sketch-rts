@@ -17,6 +17,14 @@ describe("AI benchmark runner parity", () => {
     expect(proof.parallelManifest.evaluations[0]?.matches[0]?.commandPlanner).toBe("absent");
     expect(proof.setupEqual).toBe(true);
     expect(proof.coreResultEqual).toBe(true);
+    expect(proof.directResultEqual).toBe(true);
     expect(proof.serialReport).toEqual(proof.parallelReport);
+    expect(proof.probes[0]).toMatchObject({
+      evaluationName: "1v1 score control",
+      matchName: controlMatch.name,
+      setupEqual: true,
+      coreResultEqual: true,
+      directResultEqual: true,
+    });
   });
 });
