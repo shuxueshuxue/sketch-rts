@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { planPresetAiCommands } from "../src/ai/policy";
+import { DEFAULT_AI_SCRIPT_VERSION, planAiCommandFrameFromSnapshot, type AiMemoryProvider } from "../src/ai/runtime";
 import { SketchRtsSdk } from "../src/sdk/client";
 import type { GameSnapshot, PlayerId, RoomState } from "../src/shared/types";
 
@@ -9,6 +9,8 @@ const sdk = new SketchRtsSdk(baseUrl);
 const MAX_TICKS = 36_000;
 const STEP_TICKS = 45;
 const HUMAN_AGENTS = ["player", "enemy"] as const;
+const AGENT_VERSIONS = { player: "v2", enemy: "v1" } as const;
+const PLANNER_REPORT = { origin: "shared-ai-command-frame", defaultVersion: DEFAULT_AI_SCRIPT_VERSION, versions: AGENT_VERSIONS } as const;
 
 let server: ReturnType<typeof spawn> | undefined;
 
@@ -16,6 +18,7 @@ try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
     env: { ...process.env, PORT: String(port), ROOM_AUTOTICK: "0" },
+    detached: true,
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout?.on("data", (chunk) => process.stdout.write(chunk));
@@ -33,14 +36,17 @@ try {
   let latest = await sdk.roomSnapshot(room.id);
   let commandCount = 0;
   const commandKinds: Record<string, number> = {};
+  const scriptCounts: Record<string, number> = {};
+  const memoryProvider = createScriptMemoryProvider();
 
   while (!latest.match.winner && latest.tick < MAX_TICKS) {
     for (const owner of HUMAN_AGENTS) {
       latest = await sdk.roomSnapshot(room.id);
-      for (const command of planPresetAiCommands(latest, owner, { teams })) {
-        latest = await sdk.roomCommand(room.id, owner, command);
+      for (const entry of planAiCommandFrameFromSnapshot(latest, [{ playerId: owner, source: "external-agent", version: AGENT_VERSIONS[owner] }], { teams, memoryProvider }).commands) {
+        latest = await sdk.roomCommand(room.id, owner, entry.command);
         commandCount += 1;
-        commandKinds[command.type] = (commandKinds[command.type] ?? 0) + 1;
+        commandKinds[entry.command.type] = (commandKinds[entry.command.type] ?? 0) + 1;
+        scriptCounts[entry.scriptId] = (scriptCounts[entry.scriptId] ?? 0) + 1;
       }
     }
     const ticked = await sdk.tickRoom(room.id, STEP_TICKS);
@@ -50,14 +56,16 @@ try {
   const endedRoom = (await sdk.listRooms()).find((candidate) => candidate.id === room.id);
   const cpu = process.cpuUsage(cpuStarted);
   const report = {
-    ok: true,
+    ok: endedRoom?.status === "ended" && latest.match.winner !== null,
     baseUrl,
     room: endedRoom,
     winner: latest.match.winner,
     endedAtTick: latest.match.endedAtTick,
     tick: latest.tick,
+    planner: PLANNER_REPORT,
     commandCount,
     commandKinds,
+    scriptCounts,
     elapsedMs: Number((performance.now() - runStarted).toFixed(3)),
     cpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
     goldSpent: latest.match.stats.goldSpent,
@@ -67,14 +75,10 @@ try {
     losingArmies: losingArmies(latest, teams),
   };
 
-  assertExternalAgentMatch(latest, endedRoom, commandCount, commandKinds, teams);
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  assertExternalAgentMatch(latest, endedRoom, commandCount, commandKinds, teams);
 } finally {
-  if (server && !server.killed) {
-    server.kill("SIGINT");
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    if (!server.killed) server.kill("SIGTERM");
-  }
+  await stopServer(server);
 }
 
 async function createExternalAgentRoom(): Promise<RoomState> {
@@ -122,6 +126,14 @@ function losingArmies(snapshot: GameSnapshot, teams: Record<string, string>) {
   ) as Record<PlayerId, number>;
 }
 
+function createScriptMemoryProvider(): AiMemoryProvider {
+  const memories = new Map<PlayerId, NonNullable<ReturnType<AiMemoryProvider["get"]>>>();
+  return {
+    get: (owner) => memories.get(owner),
+    set: (owner, memory) => memories.set(owner, memory),
+  };
+}
+
 async function waitForSdk() {
   const started = Date.now();
   while (Date.now() - started < 15_000) {
@@ -133,6 +145,18 @@ async function waitForSdk() {
     }
   }
   throw new Error(`SDK agent-player server did not become ready at ${baseUrl}`);
+}
+
+async function stopServer(process: ReturnType<typeof spawn> | undefined) {
+  if (!process?.pid) return;
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    try {
+      globalThis.process.kill(-process.pid, signal);
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
 }
 
 function must(value: unknown, message: string): asserts value {

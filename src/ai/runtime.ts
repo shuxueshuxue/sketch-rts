@@ -2,7 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { issueCommandFrame, selectIssueableCommandEntries, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import type { CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
-import type { PlayerId } from "../shared/types";
+import type { GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
 export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = "v2";
@@ -137,23 +137,26 @@ export function issueAiCommandFrame<Source extends string = string>(game: Game, 
 }
 
 export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
-  if (game.match.winner) return { commands: [] };
-  const { memoryProvider, ...policyOptions } = options;
-  return { commands: selectIssueableCommandEntries(planAiCommandFrameRequests(game, requests, policyOptions, memoryProvider)) };
+  return planAiCommandFrameFromSnapshot(snapshotGame(game), requests, { teams: game.teams, ...options });
 }
 
-function planAiCommandFrameRequests<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
-  const snapshot = snapshotGame(game);
+export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
+  if (snapshot.match.winner) return { commands: [] };
+  const { memoryProvider, ...policyOptions } = options;
+  return { commands: selectIssueableCommandEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider)) };
+}
+
+function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
   // @@@shared-ai-frame - All controlled slots reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
     const owner = request.playerId;
-    if (!game.players[owner]) continue;
-    const version = request.version ?? DEFAULT_AI_SCRIPT_VERSION;
+    if (!snapshot.players[owner]) continue;
+    const version = request.version ?? policyOptions.version ?? DEFAULT_AI_SCRIPT_VERSION;
     const scripts = request.scripts ?? AI_SCRIPT_VERSIONS[version] ?? SKETCH_RTS_PRESET_AI_STACK;
     const memory = request.memory ?? memoryProvider?.get(owner) ?? policyOptions.memory ?? createAiPolicyMemory();
     memoryProvider?.set?.(owner, memory);
-    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { teams: game.teams, version, ...policyOptions, ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}), memory })) {
+    for (const entry of planAiCommandEntriesFromScripts(snapshot, owner, scripts, { ...policyOptions, version, ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}), memory })) {
       planned.push({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),

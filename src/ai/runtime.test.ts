@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
-import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, issueAiCommandFrame, planPresetAiRuntimeCommands, runPresetAiRuntime } from "./runtime";
+import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, issueAiCommandFrame, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands, runPresetAiRuntime } from "./runtime";
 import type { AiPolicyMemory, AiScript } from "./policy";
 import { sketchScene } from "../sdk/scene";
 
@@ -265,6 +265,43 @@ describe("shared AI runtime", () => {
 
     expect(result.commands).toHaveLength(1);
     expect(stored.get("player")?.jobs).toEqual([{ id: "probe-job", kind: "probe", createdTick: 0, updatedTick: 0 }]);
+  });
+
+  it("plans external-agent commands from a server snapshot through the shared planner contract", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], players: ["player", "enemy"], teams: { player: "north", enemy: "south" } });
+    const stored = new Map<string, AiPolicyMemory>();
+    const seenVersions: string[] = [];
+    const seenMemories: AiPolicyMemory[] = [];
+    const scripts: AiScript[] = [
+      {
+        id: "snapshot-planner-contract-probe",
+        phase: "economy",
+        run(snapshot, owner, options) {
+          seenVersions.push(options.version ?? "<missing>");
+          seenMemories.push(options.memory);
+          options.memory.jobs.push({ id: `snapshot-${snapshot.tick}`, kind: "probe", createdTick: snapshot.tick, updatedTick: snapshot.tick });
+          const worker = snapshot.units.find((unit) => unit.owner === owner && unit.kind === "worker");
+          return worker ? { type: "move", unitIds: [worker.id], x: worker.x + 20, y: worker.y + 20 } : undefined;
+        },
+      },
+    ];
+
+    const result = planAiCommandFrameFromSnapshot(
+      snapshotGame(game),
+      [{ playerId: "player", source: "external-agent", scripts }],
+      {
+        memoryProvider: {
+          get: (owner) => stored.get(owner),
+          set: (owner, memory) => stored.set(owner, memory),
+        },
+      },
+    );
+
+    expect(result.commands).toHaveLength(1);
+    expect(result.commands[0]).toMatchObject({ playerId: "player", source: "external-agent", scriptId: "snapshot-planner-contract-probe" });
+    expect(seenVersions).toEqual(["v2"]);
+    expect(stored.get("player")).toBe(seenMemories[0]);
+    expect(stored.get("player")?.jobs).toEqual([{ id: "snapshot-0", kind: "probe", createdTick: 0, updatedTick: 0 }]);
   });
 
   it("accepts an explicitly supplied frame memory for direct SDK command frames", () => {
