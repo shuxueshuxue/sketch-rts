@@ -34,6 +34,7 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
+import { shouldRenderBuildingRally } from "./rally-visual";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -402,7 +403,7 @@ function renderMainMenu() {
 }
 
 function renderCreateGameMenu() {
-  menuStatus.textContent = t("roomCreate.status");
+  menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
@@ -2480,14 +2481,21 @@ function drawBuildings(buildings: Building[]) {
   for (const building of buildings) {
     const shake = hitFeedbackOffset(building, building.radius);
     const point = worldToScreen({ x: building.x + shake.x, y: building.y + shake.y });
-    if (!nearScreen(point, 120)) continue;
+    const selected = selectedIds.has(building.id);
+    const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
+    const rallyPoint = worldToScreen({ x: building.rallyX, y: building.rallyY });
+    const showRally = shouldRenderBuildingRally({ selected, trainable, buildingPoint: point, rallyPoint, nearScreen });
+    if (!nearScreen(point, 120)) {
+      if (showRally) drawBuildingRally(building, point, rallyPoint);
+      continue;
+    }
     ctx.strokeStyle = ownerInk(building.owner);
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
-    ctx.lineWidth = selectedIds.has(building.id) ? 4 : 2;
+    ctx.lineWidth = selected ? 4 : 2;
     const size = building.kind === "townHall" ? 76 : 58;
-    if (selectedIds.has(building.id)) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
+    if (selected) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
     drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
-    if (selectedIds.has(building.id) && BUILDING_DEFS[building.kind].trains.length > 0) drawBuildingRally(building, point);
+    if (showRally) drawBuildingRally(building, point, rallyPoint);
     drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
     if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
@@ -2496,9 +2504,7 @@ function drawBuildings(buildings: Building[]) {
   }
 }
 
-function drawBuildingRally(building: Building, from: Point) {
-  const to = worldToScreen({ x: building.rallyX, y: building.rallyY });
-  if (!nearScreen(from, 80) && !nearScreen(to, 80)) return;
+function drawBuildingRally(building: Building, from: Point, to: Point) {
   const ink = building.rallyTarget?.type === "resource" ? "#b9861b" : building.rallyTarget?.type === "unit" ? "#5d8b4c" : "#315f87";
   ctx.save();
   ctx.strokeStyle = ink;
