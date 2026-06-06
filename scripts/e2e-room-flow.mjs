@@ -12,7 +12,7 @@ let server;
 try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), SESSION_AUTOTICK: "0", ROOM_AUTOTICK: "0" },
+    env: { ...process.env, PORT: String(port), ROOM_AUTOTICK: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout.on("data", (chunk) => process.stdout.write(chunk));
