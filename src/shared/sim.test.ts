@@ -236,6 +236,30 @@ describe("sketch RTS simulation", () => {
     expect(called?.order).toEqual({ type: "attack", targetId: "pulling-archer" });
   });
 
+  it("keeps long-range neutral damage aggro from being erased by the camp leash", () => {
+    const game = sketchScene("neutral-long-range-assist-on-damage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 180, 1000)
+      .unit("v2", "archer", 800, 1000, { id: "pulling-archer" })
+      .unit("neutral", "mossGnawer", 1188, 1000, { id: "damaged-creep" })
+      .unit("neutral", "mossGnawer", 1220, 1070, { id: "called-creep" })
+      .townHall("v1", 3500, 3500)
+      .build()
+      .createGame();
+
+    issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["pulling-archer"], targetId: "damaged-creep" });
+    stepMany(game, 24);
+
+    const damaged = game.units.find((unit) => unit.id === "damaged-creep");
+    const called = game.units.find((unit) => unit.id === "called-creep");
+    expect(damaged?.hp).toBeLessThan(damaged?.maxHp ?? 0);
+    expect(damaged?.order).toEqual({ type: "attack", targetId: "pulling-archer" });
+    expect(called?.order).toEqual({ type: "attack", targetId: "pulling-archer" });
+  });
+
   it("keeps map gold mines lean enough that expansions and harassment matter", () => {
     const regularMaps = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "wildMarches"] as const;
 

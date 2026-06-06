@@ -74,7 +74,7 @@ const AUTO_ACQUIRE_RANGE = 230;
 const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 const PROJECTILE_FLIGHT_DURATION = 22;
 const NEUTRAL_LEASH_RANGE = 520;
-const NEUTRAL_TARGET_LEASH_RANGE = 320;
+const NEUTRAL_DAMAGE_RESPONSE_RANGE = 460;
 const NEUTRAL_RETURN_STOP_RANGE = 8;
 const NEUTRAL_ASSIST_RANGE = 360;
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
@@ -596,7 +596,7 @@ function updateNeutralLeash(game: Game, unit: Unit) {
     return false;
   }
   const target = unit.order.type === "attack" ? findTarget(game, unit.order.targetId) : undefined;
-  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, home) <= NEUTRAL_TARGET_LEASH_RANGE)) return false;
+  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, home) <= NEUTRAL_DAMAGE_RESPONSE_RANGE)) return false;
 
   // @@@neutral-leash - Creeps reset to their authored camp instead of dragging fights into worker lines forever.
   unit.order = { type: "move", x: home.x, y: home.y };
@@ -1276,7 +1276,7 @@ function neutralHasValidAttackTarget(game: Game, unit: Unit) {
   if (unit.order.type !== "attack") return false;
   const target = findTarget(game, unit.order.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, unit.owner, target.owner)) return false;
-  if (unit.homeX !== undefined && unit.homeY !== undefined && distance(target, { x: unit.homeX, y: unit.homeY }) > NEUTRAL_TARGET_LEASH_RANGE) return false;
+  if (unit.homeX !== undefined && unit.homeY !== undefined && distance(target, { x: unit.homeX, y: unit.homeY }) > NEUTRAL_DAMAGE_RESPONSE_RANGE) return false;
   return true;
 }
 

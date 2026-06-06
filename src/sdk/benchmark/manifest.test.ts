@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
-import type { AiGameAgent } from "../../ai/game-runner";
 import type { BenchmarkInput } from "./core";
 import { describeBenchmarkInput } from "./manifest";
 
+type ManifestAgent = {
+  adapter: "internal" | "external";
+  team: string;
+  race: "grove";
+  versionLabel: string;
+  version: string;
+  disabledBehaviors?: readonly string[];
+};
+
 describe("benchmark manifest", () => {
   it("describes benchmark setup facts without running matches", () => {
-    const input: BenchmarkInput<AiGameAgent> = {
+    const input: BenchmarkInput<ManifestAgent> = {
       name: "Manifest Probe",
       evaluations: [
         {
