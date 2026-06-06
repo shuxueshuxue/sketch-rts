@@ -590,13 +590,14 @@ function updateFollowOrder(game: Game, unit: Unit) {
 function updateNeutralLeash(game: Game, unit: Unit) {
   if (unit.owner !== "neutral" || unit.homeX === undefined || unit.homeY === undefined) return false;
   const home = { x: unit.homeX, y: unit.homeY };
+  const responseOrigin = neutralResponseOrigin(unit) ?? home;
   const homeDistance = distance(unit, home);
   if (homeDistance <= NEUTRAL_RETURN_STOP_RANGE && unit.order.type === "move" && distance(unit.order, home) <= NEUTRAL_RETURN_STOP_RANGE) {
     unit.order = { type: "idle" };
     return false;
   }
   const target = unit.order.type === "attack" ? findTarget(game, unit.order.targetId) : undefined;
-  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, home) <= NEUTRAL_DAMAGE_RESPONSE_RANGE)) return false;
+  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, responseOrigin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE)) return false;
 
   // @@@neutral-leash - Creeps reset to their authored camp instead of dragging fights into worker lines forever.
   unit.order = { type: "move", x: home.x, y: home.y };
@@ -1263,12 +1264,13 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
 
 function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit | Building) {
   if (!areEnemyOwners(game, damagedNeutral.owner, attacker.owner)) return;
+  const origin = neutralHomeOrCurrentPoint(damagedNeutral);
   // @@@neutral-assist - Damage is louder than idle acquisition, but existing valid targets should not twitch on every hit.
   for (const unit of game.units) {
     if (unit.owner !== "neutral" || unit.hp <= 0) continue;
     if (distance(unit, damagedNeutral) > NEUTRAL_ASSIST_RANGE) continue;
     if (neutralHasValidAttackTarget(game, unit)) continue;
-    unit.order = { type: "attack", targetId: attacker.id };
+    unit.order = { type: "attack", targetId: attacker.id, leashX: origin.x, leashY: origin.y };
   }
 }
 
@@ -1276,8 +1278,19 @@ function neutralHasValidAttackTarget(game: Game, unit: Unit) {
   if (unit.order.type !== "attack") return false;
   const target = findTarget(game, unit.order.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, unit.owner, target.owner)) return false;
-  if (unit.homeX !== undefined && unit.homeY !== undefined && distance(target, { x: unit.homeX, y: unit.homeY }) > NEUTRAL_DAMAGE_RESPONSE_RANGE) return false;
+  const responseOrigin = neutralResponseOrigin(unit);
+  if (responseOrigin && distance(target, responseOrigin) > NEUTRAL_DAMAGE_RESPONSE_RANGE) return false;
   return true;
+}
+
+function neutralResponseOrigin(unit: Unit) {
+  if (unit.order.type === "attack" && unit.order.leashX !== undefined && unit.order.leashY !== undefined) return { x: unit.order.leashX, y: unit.order.leashY };
+  if (unit.homeX !== undefined && unit.homeY !== undefined) return { x: unit.homeX, y: unit.homeY };
+  return undefined;
+}
+
+function neutralHomeOrCurrentPoint(unit: Unit) {
+  return unit.homeX !== undefined && unit.homeY !== undefined ? { x: unit.homeX, y: unit.homeY } : { x: unit.x, y: unit.y };
 }
 
 function recordKill(game: Game, attacker: Unit | Building, target: Unit | Building) {

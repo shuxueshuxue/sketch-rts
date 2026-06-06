@@ -100,7 +100,7 @@ export type UnitOrder =
   | { type: "move"; x: number; y: number }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string }
-  | { type: "attack"; targetId: string }
+  | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
   | { type: "pickupItem"; itemId: string };
