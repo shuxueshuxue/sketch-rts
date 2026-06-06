@@ -1,5 +1,6 @@
 import { availableParallelism } from "node:os";
 import { createAiMeleeControlBenchmarkInput, runAiMeleeControlBenchmarkDetailsParallel, runAiMeleeControlBenchmarkParallel } from "../src/ai/benchmark/control";
+import { describeBenchmarkInput } from "../src/sdk/benchmark/manifest";
 
 const args = process.argv.slice(2);
 
@@ -26,6 +27,7 @@ if (boolFlag(args, "dry-run")) {
     selectedMapIds: selection.mapIds,
     matchCount: input.evaluations.reduce((total, evaluation) => total + evaluation.matches.length, 0),
     matches: input.evaluations.flatMap((evaluation) => evaluation.matches.map((match) => match.name)),
+    manifest: describeBenchmarkInput(input),
   });
   process.exit(0);
 }
