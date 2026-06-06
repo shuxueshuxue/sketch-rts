@@ -25,7 +25,6 @@ const EN_TRANSLATIONS = {
   "roomCreate.slotCountFallback": "Choose slot counts",
   "roomCreate.slotCountLabel": "{count} total slots",
   "roomCreate.slotCountRangeError": "Rooms need 2-30 total slots and at least one human player.",
-  "roomCreate.status": "One room flow for private local games and public LAN games.",
   "roomCreate.submit": "Create Room",
 } as const;
 
@@ -54,7 +53,6 @@ const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
   "roomCreate.slotCountFallback": "请选择槽位数量",
   "roomCreate.slotCountLabel": "共 {count} 个槽位",
   "roomCreate.slotCountRangeError": "房间需要 2-30 个总槽位，并且至少包含 1 名人类玩家。",
-  "roomCreate.status": "私人本地游戏和公开局域网游戏共用同一套房间流程。",
   "roomCreate.submit": "创建房间",
 };
 

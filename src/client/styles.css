@@ -132,6 +132,10 @@ button {
   font-weight: 800;
 }
 
+.menu-status:empty {
+  display: none;
+}
+
 .map-list {
   display: grid;
   gap: 8px;
