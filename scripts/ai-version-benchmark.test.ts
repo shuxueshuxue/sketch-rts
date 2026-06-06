@@ -33,6 +33,25 @@ describe("AI version benchmark CLI", () => {
       scenario: { units: 35 },
     });
   });
+
+  it("prints a serial/parallel runner parity proof without writing a dashboard run", () => {
+    const output = JSON.parse(runVersionBenchmarkCli({ AI_BENCHMARK_PARITY_PROBE: "1", AI_GAUNTLET_SEED: "version-cli-seed", AI_GAUNTLET_MAP_COUNT: "1" }));
+
+    expect(output).toMatchObject({
+      name: "AI Version Benchmark Runner Parity Probe",
+      seed: "version-cli-seed",
+      matchName: `${output.selectedRichScoreMapIds[0]} 1v1 control north`,
+      setupEqual: true,
+      coreResultEqual: true,
+    });
+    expect(output.selectedRichScoreMapIds).toHaveLength(1);
+    expect(output.serialManifest.evaluations[0].matches[0].commandPlanner).toBe("present");
+    expect(output.parallelManifest.evaluations[0].matches[0].commandPlanner).toBe("absent");
+    expect(output.serial).toMatchObject({ map: output.selectedRichScoreMapIds[0], result: { tick: 1, timeout: true } });
+    expect(output.parallel).toEqual(output.serial);
+    expect(output.serialReport).toBeUndefined();
+    expect(output.parallelReport).toBeUndefined();
+  });
 });
 
 function runVersionBenchmarkCli(env: Record<string, string>) {
