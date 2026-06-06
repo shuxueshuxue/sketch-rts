@@ -237,7 +237,7 @@ describe("lockstep client", () => {
     });
   });
 
-  it("reports a render update when a checkpoint changes state at the same tick", () => {
+  it("restores same-tick checkpoints without owning render invalidation state", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.tick = 12;
     const transport = new FakeTransport();
@@ -249,7 +249,7 @@ describe("lockstep client", () => {
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 12, snapshot: checkpointGame, nextId: checkpointGame.nextId } });
 
-    expect(client.updateToRenderTime()).toBe(true);
+    expect(client.updateToRenderTime()).toBe(false);
     expect(client.currentSnapshot().players.player.gold).toBe(8744);
     expect(client.currentSnapshot().units.some((unit) => unit.owner === "player")).toBe(false);
     expect(client.updateToRenderTime()).toBe(false);

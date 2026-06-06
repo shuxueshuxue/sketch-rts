@@ -5,7 +5,6 @@ import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
-  pruneControlGroups,
   recallControlGroup,
   replaceControlGroup,
   type ControlGroupRecallTap,
@@ -14,6 +13,7 @@ import {
 import { deploymentModeFromEnv } from "./deployment/mode";
 import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
 import { edgeScrollDelta } from "./edge-scroll";
+import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
@@ -960,11 +960,12 @@ function handleRuntimeRoomUpdate(room: RoomState) {
 
 function syncActiveGameAdapterSnapshot() {
   if (menuOpen) return;
-  const changed = activeGameAdapter.updateToRenderTime();
-  const current = activeGameAdapter.currentSnapshot();
-  if (!current) return;
-  if (!changed && snapshot?.tick === current.tick) return;
-  snapshot = current;
+  const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
+  if (!view.snapshot) return;
+  snapshot = view.snapshot;
+  selectedIds = view.selectedIds;
+  focusedSelectionId = view.focusedSelectionId;
+  selectedCampId = view.selectedCampId;
   syncDebugView();
   pruneSelection();
   updateHud();
@@ -1807,11 +1808,7 @@ function selectionRect(start: Point, end: Point): SelectionScreenRect {
 
 function pruneSelection() {
   if (!snapshot) return;
-  const liveIds = liveSelectionIds();
-  selectedIds = new Set([...selectedIds].filter((id) => liveIds.has(id)));
-  focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
-  pruneControlGroups(controlGroups, liveIds);
-  if (selectedCampId && !snapshot.mercenaryCamps.some((camp) => camp.id === selectedCampId)) selectedCampId = undefined;
+  const liveIds = liveSelectionIds(snapshot);
   if (commandMode?.type === "build" && !liveIds.has(commandMode.placement.workerId)) {
     commandMode = undefined;
     clearCommandModeClasses();
@@ -1824,10 +1821,6 @@ function pruneSelection() {
     }
   }
   if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
-}
-
-function liveSelectionIds() {
-  return new Set([...(snapshot?.units.map((unit) => unit.id) ?? []), ...(snapshot?.buildings.map((building) => building.id) ?? [])]);
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
@@ -1863,7 +1856,7 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
 
 function selectControlGroup(slot: number) {
   if (!snapshot) return;
-  const ids = recallControlGroup(controlGroups, slot, liveSelectionIds());
+  const ids = recallControlGroup(controlGroups, slot, liveSelectionIds(snapshot));
   if (ids.length === 0) {
     delete controlGroups[slot];
     showInvalidCommand(`Group ${slot} is empty.`);
