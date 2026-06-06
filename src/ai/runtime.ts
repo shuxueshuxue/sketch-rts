@@ -1,6 +1,7 @@
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { issueCommandFrame, selectIssueableCommandEntries, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
+import type { CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import type { PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
@@ -41,6 +42,8 @@ export type AiMemoryProvider = {
 export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFrameEntry<Source>;
 
 export type AiCommandFrameHooks<Source extends string = string> = CommandFrameHooks<Source>;
+
+export type AiRuntimeFramePlannerState = Partial<Record<PlayerId, number>>;
 
 export function createAiRuntime(
   players: PlayerId[],
@@ -98,6 +101,16 @@ export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState,
     };
   });
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
+}
+
+export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntimeState): CommandFrameRuntimeAiPlanner<AiRuntimeFramePlannerState> {
+  return {
+    checkpoint: () => ({ ...runtime.lastThink }),
+    restore: (lastThink) => {
+      runtime.lastThink = lastThink;
+    },
+    plan: () => planPresetAiRuntimeCommands(game, runtime).commands.map((entry) => ({ playerId: entry.playerId, command: entry.command })),
+  };
 }
 
 export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState, owners: PlayerId[] = runtime.controlledPlayers, options: PresetAiPolicyOptions = {}): AiRuntimeIssuedCommand[] {
