@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createGame } from "../sim";
+import { CommandFrameRuntime } from "./command-frame-runtime";
 
 describe("command frame runtime boundary", () => {
   it("keeps local and hosted adapters from re-owning frame validation application or stepping", () => {
@@ -31,5 +33,24 @@ describe("command frame runtime boundary", () => {
     });
 
     expect(offenders).toEqual([]);
+  });
+
+  it("rejects illegal live commands through shared runtime admission", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall");
+    expect(worker).toBeDefined();
+    expect(townHall).toBeDefined();
+    const runtime = new CommandFrameRuntime({ game, roomId: "runtime-admission", rejectionLabel: "Runtime command rejected" });
+
+    expect(() => runtime.admit([{ playerId: "player", command: { type: "build", unitId: worker!.id, buildingKind: "farm", x: townHall!.x + 10, y: townHall!.y } }])).toThrow(/Runtime command rejected: farm placement is too close to townHall/);
+  });
+
+  it("treats stale issuers as shared runtime no-ops instead of boundary errors", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const runtime = new CommandFrameRuntime({ game, roomId: "runtime-stale", rejectionLabel: "Runtime command rejected" });
+
+    expect(() => runtime.completeAndApply([{ playerId: "player", command: { type: "move", unitIds: ["unit-player-already-gone"], x: 900, y: 900 } }], { includeAi: false })).not.toThrow();
+    expect(game.tick).toBe(0);
   });
 });

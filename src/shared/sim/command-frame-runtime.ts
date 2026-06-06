@@ -24,6 +24,12 @@ export type RuntimeFrameOptions = {
   rejectionLabel?: (entry: CommandEnvelope, index: number) => string;
 };
 
+export type RuntimeAdmissionOptions = {
+  rejectionLabel?: RuntimeFrameOptions["rejectionLabel"];
+};
+
+type ValidationPurpose = "admission" | "apply";
+
 export class CommandFrameRuntime<State = unknown> {
   private nextSequence = 0;
 
@@ -43,8 +49,12 @@ export class CommandFrameRuntime<State = unknown> {
     return frame;
   }
 
+  admit(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
+    this.validate(commands, { purpose: "admission", rejectionLabel: options.rejectionLabel });
+  }
+
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
-    this.validate(commands, options.rejectionLabel);
+    this.validate(commands, { purpose: "apply", rejectionLabel: options.rejectionLabel });
     const aiCommands = options.includeAi === false ? [] : this.planAiCommands();
     const completedCommands = [...commands, ...aiCommands];
     if (options.frame) return { ...options.frame, commands: completedCommands };
@@ -64,7 +74,7 @@ export class CommandFrameRuntime<State = unknown> {
     const checkpoint = this.options.aiPlanner.checkpoint();
     try {
       const commands = this.options.aiPlanner.plan();
-      this.validate(commands);
+      this.validate(commands, { purpose: "apply" });
       return commands;
     } catch (error) {
       this.options.aiPlanner.restore(checkpoint);
@@ -72,14 +82,14 @@ export class CommandFrameRuntime<State = unknown> {
     }
   }
 
-  private validate(commands: CommandEnvelope[], rejectionLabel?: RuntimeFrameOptions["rejectionLabel"]): void {
+  private validate(commands: CommandEnvelope[], options: { purpose: ValidationPurpose; rejectionLabel?: RuntimeFrameOptions["rejectionLabel"] }): void {
     if (commands.length === 0) return;
     const snapshot = snapshotGame(this.options.game);
     for (const [index, entry] of commands.entries()) {
-      const currentCommand = commandWithCurrentIssuers(this.options.game, entry.playerId, entry.command);
+      const currentCommand = commandWithCurrentIssuers(this.options.game, entry.playerId, entry.command, { purpose: options.purpose });
       if (!currentCommand) continue;
       const error = commandValidationError(snapshot, entry.playerId, currentCommand);
-      if (error) throw new Error(`${rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${error}`);
+      if (error) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${error}`);
     }
   }
 }

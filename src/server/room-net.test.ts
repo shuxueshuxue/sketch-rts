@@ -147,9 +147,10 @@ describe("room net hub", () => {
     expect(hub.checksumsForTick(room.id, 0)).toEqual({ player: "abcd" });
     socket.emit(encodeNetMessage({ type: "command", roomId: "other-room", playerId: "player", command: { type: "move", unitIds: [], x: 0, y: 0 } }));
     socket.emit(JSON.stringify({ type: "chat", roomId: room.id, playerId: "player", senderName: "Ada", text: "" }));
+    socket.emit(JSON.stringify({ type: "command", roomId: room.id, playerId: "player", command: { type: "move" } }));
 
     const errors = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "error" }> => message.type === "error");
-    expect(errors.map((message) => message.message)).toEqual([`Client message room other-room does not match socket room ${room.id}`, "Malformed client chat message"]);
+    expect(errors.map((message) => message.message)).toEqual([`Client message room other-room does not match socket room ${room.id}`, "Malformed client chat message", "Malformed client command message"]);
     expect(() => hub.tickRoom(room.id)).not.toThrow();
   });
 

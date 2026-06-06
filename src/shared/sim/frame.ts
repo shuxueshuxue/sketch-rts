@@ -42,7 +42,8 @@ function issueFrameCommand(game: Game, owner: PlayerId, command: GameCommand): v
   issuePlayerCommand(game, owner, currentCommand);
 }
 
-export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
+export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: GameCommand, options: { purpose?: "admission" | "apply" } = {}): GameCommand | undefined {
+  const admission = options.purpose === "admission";
   if (!game.players[owner]) return command;
   if (command.type === "move" || command.type === "attackMove") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
@@ -67,6 +68,7 @@ export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: 
   if (command.type === "build") {
     if (currentUnit(game, owner, command.unitId)?.kind !== "worker") return undefined;
     if (!RACE_DEFS[game.players[owner].race].buildableBuildings.includes(command.buildingKind)) return command;
+    if (admission) return command;
     if (buildingPlacementBlocker(game, command.buildingKind, command)) return undefined;
     if (!canSpendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost)) return undefined;
     return command;
@@ -80,6 +82,7 @@ export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: 
     const building = currentBuilding(game, owner, command.buildingId);
     if (!building) return undefined;
     if (!building.complete || !BUILDING_DEFS[building.kind].trains.includes(command.unitKind) || !RACE_DEFS[game.players[owner].race].trainableUnits.includes(command.unitKind)) return command;
+    if (admission) return command;
     if (!canSupply(game, owner, command.unitKind) || !canSpendGold(game, owner, UNIT_DEFS[command.unitKind].cost)) return undefined;
     return command;
   }
@@ -88,6 +91,7 @@ export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: 
     if (!building) return undefined;
     const upgrade = UPGRADE_DEFS[command.upgradeKind];
     if (!building.complete || !upgrade || upgrade.buildingKind !== building.kind || !BUILDING_DEFS[building.kind].researches.includes(command.upgradeKind) || !RACE_DEFS[game.players[owner].race].upgrades.includes(command.upgradeKind)) return command;
+    if (admission) return command;
     const currentLevel = game.players[owner].upgrades[command.upgradeKind] ?? 0;
     if (currentLevel >= maxUpgradeLevel(command.upgradeKind) || building.researchQueue.some((job) => job.upgradeKind === command.upgradeKind)) return undefined;
     const nextLevel = upgrade.levels[currentLevel];
@@ -99,6 +103,10 @@ export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: 
     const caster = currentUnit(game, owner, command.unitId);
     if (!caster) return undefined;
     if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return command;
+    if (admission) {
+      if ((command.ability === "heal" || command.ability === "curse") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
+      return command;
+    }
     if (caster.cooldown > 0) return undefined;
     if (command.ability === "heal" && (!command.targetId || !game.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(game, unit.owner, owner)))) return undefined;
     if (command.ability === "curse" && (!command.targetId || !game.units.some((unit) => unit.id === command.targetId && areEnemyOwners(game, unit.owner, owner)))) return undefined;
@@ -116,6 +124,7 @@ export function commandWithCurrentIssuers(game: Game, owner: PlayerId, command: 
   if (command.type === "hire") {
     const camp = game.mercenaryCamps.find((candidate) => candidate.id === command.campId);
     if (!camp) return command;
+    if (admission) return command;
     if (camp.stock <= 0 || camp.cooldownRemaining > 0 || !canSupply(game, owner, camp.hireKind) || !canSpendGold(game, owner, camp.cost) || !hasFriendlyUnitAtCamp(game, owner, camp)) return undefined;
     return command;
   }
