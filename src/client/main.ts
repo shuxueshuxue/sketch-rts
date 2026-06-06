@@ -16,6 +16,7 @@ import { edgeScrollDelta } from "./edge-scroll";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
+import { createBrowserI18n } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { drawLevelStar } from "./level-star";
@@ -109,6 +110,10 @@ const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
 app.innerHTML = gameShellMarkup;
+
+const i18n = createBrowserI18n();
+const t = i18n.t;
+document.documentElement.lang = i18n.locale;
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
@@ -356,16 +361,16 @@ function renderMainMenu() {
   mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
     menuView === "home"
-      ? "Sketch RTS"
+      ? t("home.title")
       : menuView === "profile"
-        ? "Profile"
+        ? t("home.profile.title")
         : menuView === "rooms"
-          ? "Rooms"
+          ? t("home.rooms.title")
           : menuView === "create"
-            ? "Create Game"
+            ? t("home.create.title")
             : menuView === "results"
-              ? "Match Results"
-              : "Room Setup";
+              ? t("home.results.title")
+              : t("home.roomSetup.title");
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -386,13 +391,13 @@ function renderMainMenu() {
     renderRoomSetup();
     return;
   }
-  menuStatus.textContent = `Signed in as ${localUser.name}.`;
+  menuStatus.textContent = t("home.signedIn", { name: localUser.name });
   mapList.replaceChildren(
-    menuButton("Rooms", "Browse public rooms on this server.", "data-open-room-browser", () => {
+    menuButton(t("home.rooms.label"), t("home.rooms.note"), "data-open-room-browser", () => {
       menuView = "rooms";
       renderMainMenu();
     }),
-    menuButton("Profile", `Player id ${localUser.id.slice(0, 8)}...`, "data-open-profile", () => {
+    menuButton(t("profile.open.label"), t("profile.open.note", { id: localUser.id.slice(0, 8) }), "data-open-profile", () => {
       menuView = "profile";
       renderMainMenu();
     }),
@@ -400,28 +405,28 @@ function renderMainMenu() {
 }
 
 function renderCreateGameMenu() {
-  menuStatus.textContent = "One room flow for private local games and public LAN games.";
+  menuStatus.textContent = t("roomCreate.status");
   const form = document.createElement("form");
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
   form.innerHTML = `
     <div class="create-game-grid">
-      <label>Room name<input name="name" value="${escapeHtml(localUser.name)}'s Room" /></label>
-      <label>Map
+      <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
+      <label>${escapeHtml(t("roomCreate.map.label"))}
         <select name="mapId">
           ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)} - ${escapeHtml(mapCapacityLabel(scenario.id))}</option>`).join("")}
         </select>
       </label>
       <div class="create-count-grid">
-        <label>Human players<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
-        <label>Computer players<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+        <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
+        <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
       </div>
-      <div class="create-slot-total" data-create-slot-total>2 total slots</div>
+      <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
     </div>
-    <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> Private room</label>
+    <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
     <div class="menu-actions">
-      <button type="submit" data-submit-create-game>Create Room</button>
-      <button type="button" data-back-home>Back</button>
+      <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
+      <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
   form.addEventListener("submit", (event) => {
@@ -430,13 +435,13 @@ function renderCreateGameMenu() {
     const mapId = String(data.get("mapId"));
     const humanCount = Number(data.get("humanCount"));
     const aiCount = Number(data.get("aiCount"));
-    const name = String(data.get("name") ?? "").trim() || `${localUser.name}'s Room`;
+    const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
     if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > 30) {
-      menuStatus.innerHTML = `<span class="error">Rooms need 2-30 total slots and at least one human player.</span>`;
+      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.slotCountRangeError"))}</span>`;
       return;
     }
     if (!MAP_SCENARIOS.some((scenario) => scenario.id === mapId)) {
-      menuStatus.innerHTML = `<span class="error">Choose a known map.</span>`;
+      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.knownMapError"))}</span>`;
       return;
     }
     void createConfiguredRoom({
@@ -452,7 +457,7 @@ function renderCreateGameMenu() {
     const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
     const total = humanCount + aiCount;
     const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
-    totalLabel.textContent = Number.isInteger(total) ? `${total} total slots` : "Choose slot counts";
+    totalLabel.textContent = Number.isInteger(total) ? t("roomCreate.slotCountLabel", { count: total }) : t("roomCreate.slotCountFallback");
     totalLabel.classList.toggle("error", !Number.isInteger(humanCount) || !Number.isInteger(aiCount) || total < 2 || total > MAX_ROOM_SLOTS || humanCount < 1 || aiCount < 0);
   };
   form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
