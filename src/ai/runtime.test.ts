@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
-import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, issueAiCommandFrame, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands, runPresetAiRuntime } from "./runtime";
+import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands } from "./runtime";
+import { issueAiCommandFrameForTest, runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import type { AiPolicyMemory, AiScript } from "./policy";
 import { sketchScene } from "../sdk/scene";
 
@@ -28,7 +29,7 @@ describe("shared AI runtime", () => {
       },
     ];
 
-    issueAiCommandFrame(game, [{ playerId: "player", scripts }]);
+    issueAiCommandFrameForTest(game, [{ playerId: "player", scripts }]);
 
     expect(seenVersions).toEqual(["v2"]);
   });
@@ -50,7 +51,7 @@ describe("shared AI runtime", () => {
     let issuedCommands = 0;
 
     for (let i = 0; i < 1200; i += 1) {
-      issuedCommands += runPresetAiRuntime(game, runtime).commands.length;
+      issuedCommands += runPresetAiRuntimeForTest(game, runtime).commands.length;
       stepGame(game);
     }
 
@@ -68,7 +69,7 @@ describe("shared AI runtime", () => {
     const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"] });
     const runtime = createAiRuntime(["player", "enemy"], { versions: { player: "v2", enemy: "v1" } });
 
-    const result = runPresetAiRuntime(game, runtime);
+    const result = runPresetAiRuntimeForTest(game, runtime);
 
     expect(runtime.versions.player).toBe("v2");
     expect(runtime.versions.enemy).toBe("v1");
@@ -101,7 +102,7 @@ describe("shared AI runtime", () => {
       scriptIdsByPlayer: { player: ["attackWave"], enemy: ["economy"] },
     } as never);
 
-    const result = runPresetAiRuntime(game, runtime);
+    const result = runPresetAiRuntimeForTest(game, runtime);
 
     expect(result.commands.find((entry) => entry.playerId === "player")?.scriptId).toBe("attackWave");
     expect(result.commands.some((entry) => entry.playerId === "player" && entry.command.type === "mine")).toBe(false);
@@ -126,7 +127,7 @@ describe("shared AI runtime", () => {
       disabledBehaviorsByPlayer: { player: ["workerHarassment"] },
     });
 
-    const result = runPresetAiRuntime(game, runtime);
+    const result = runPresetAiRuntimeForTest(game, runtime);
 
     expect(result.commands.map((entry) => entry.playerId)).toEqual(["enemy"]);
     expect(result.commands[0]).toMatchObject({ scriptId: "disabled-behavior-probe", command: { type: "mine" } });
@@ -166,7 +167,7 @@ describe("shared AI runtime", () => {
     ];
     const runtime = createAiRuntime(["player", "enemy"], { scripts });
 
-    const result = runPresetAiRuntime(game, runtime);
+    const result = runPresetAiRuntimeForTest(game, runtime);
 
     expect(result.commands).toHaveLength(1);
     expect(result.commands[0]?.playerId).toBe("player");
@@ -194,7 +195,7 @@ describe("shared AI runtime", () => {
       },
     ];
 
-    const result = issueAiCommandFrame(game, [
+    const result = issueAiCommandFrameForTest(game, [
       { playerId: "player", source: "external-agent", version: "v2", scripts },
       { playerId: "enemy", source: "internal-ai", version: "v1", scripts },
     ]);
@@ -220,7 +221,7 @@ describe("shared AI runtime", () => {
     ];
     const observations: string[] = [];
 
-    issueAiCommandFrame(
+    issueAiCommandFrameForTest(
       game,
       [{ playerId: "player", source: "external-agent", version: "v2", scripts }],
       {},
@@ -252,7 +253,7 @@ describe("shared AI runtime", () => {
       },
     ];
 
-    const result = issueAiCommandFrame(
+    const result = issueAiCommandFrameForTest(
       game,
       [{ playerId: "player", source: "external-agent", version: "v2", scripts }],
       {
@@ -318,7 +319,7 @@ describe("shared AI runtime", () => {
       },
     ];
 
-    issueAiCommandFrame(game, [{ playerId: "player", version: "v2", scripts }], { memory });
+    issueAiCommandFrameForTest(game, [{ playerId: "player", version: "v2", scripts }], { memory });
 
     expect(memory.jobs).toEqual([{ id: "direct-frame", kind: "probe", createdTick: 0, updatedTick: 0 }]);
   });
@@ -339,9 +340,9 @@ describe("shared AI runtime", () => {
     ];
     const runtime = createAiRuntime(["player"], { scripts, thinkInterval: 1 });
 
-    runPresetAiRuntime(game, runtime);
+    runPresetAiRuntimeForTest(game, runtime);
     stepGame(game);
-    runPresetAiRuntime(game, runtime);
+    runPresetAiRuntimeForTest(game, runtime);
 
     expect(seen).toHaveLength(2);
     expect(seen[1]).toBe(seen[0]);
@@ -354,7 +355,7 @@ describe("shared AI runtime", () => {
     game.players.enemy.gold = 5000;
 
     for (let i = 0; i < 900; i += 1) {
-      runPresetAiRuntime(game, runtime);
+      runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
     }
 
@@ -364,7 +365,7 @@ describe("shared AI runtime", () => {
     game.buildings.push(createBuilding("building-enemy-forced-extra-farm", "enemy", "farm", firstBarracks!.x, firstBarracks!.y, true));
 
     for (let i = 0; i < 500; i += 1) {
-      runPresetAiRuntime(game, runtime);
+      runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
     }
 

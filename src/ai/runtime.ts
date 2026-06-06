@@ -1,6 +1,6 @@
 import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider } from "./planner-context";
-import { issueCommandFrame, selectIssueableCommandEntries, type CommandFrameEntry, type CommandFrameHooks } from "../sdk/commands/frame";
+import { selectIssueableCommandEntries, type CommandFrameEntry } from "../sdk/commands/frame";
 import { snapshotGame, type Game } from "../shared/sim";
 import type { CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import type { GameSnapshot, PlayerId } from "../shared/types";
@@ -37,8 +37,6 @@ export type AiCommandFrameRequest<Source extends string = string> = {
 
 export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFrameEntry<Source>;
 
-export type AiCommandFrameHooks<Source extends string = string> = CommandFrameHooks<Source>;
-
 export type AiRuntimeFramePlannerState = Partial<Record<PlayerId, number>>;
 
 export function createAiRuntime(
@@ -71,11 +69,6 @@ export function createAiRuntime(
   };
 }
 
-export function runPresetAiRuntime(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
-  const planned = planPresetAiRuntimeCommands(game, runtime, options);
-  return issueCommandFrame(game, planned.commands);
-}
-
 export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState, options: PresetAiPolicyOptions = {}): AiRuntimeResult {
   if (game.match.winner) return { commands: [] };
 
@@ -106,12 +99,6 @@ export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState,
   if (game.match.winner) return [];
   const requests = owners.map((owner) => runtimeRequestForOwner(runtime, owner));
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options }).commands;
-}
-
-export function issueAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}, hooks: AiCommandFrameHooks<Source> = {}) {
-  if (game.match.winner) return { commands: [] };
-  const planned = planAiCommandFrame(game, requests, options);
-  return issueCommandFrame(game, planned.commands, hooks);
 }
 
 export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {

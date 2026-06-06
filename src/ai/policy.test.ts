@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
 import { runAiGame } from "./game-runner";
-import { createAiRuntime, runPresetAiRuntime } from "./runtime";
+import { createAiRuntime } from "./runtime";
+import { runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, createAiPolicyMemory, createAiTelemetry, planAiCommandEntriesFromScripts, planAiCommandsFromScripts, planPresetAiCommandEntries, planPresetAiCommands } from "./policy";
 import { sketchScene } from "../sdk/scene";
@@ -7697,9 +7698,9 @@ describe("SDK preset AI policy", () => {
       races: { v2: "grove", v1a: "grove", v1b: "grove" },
     });
     const runtime = createAiRuntime([...players], { versions: { v2: "v2", v1a: "v1", v1b: "v1" } });
-    let v2Commands: ReturnType<typeof runPresetAiRuntime>["commands"] = [];
+    let v2Commands: ReturnType<typeof runPresetAiRuntimeForTest>["commands"] = [];
     while (game.tick <= 3060) {
-      if (game.tick % 45 === 0) v2Commands = runPresetAiRuntime(game, runtime).commands.filter((entry) => entry.playerId === "v2");
+      if (game.tick % 45 === 0) v2Commands = runPresetAiRuntimeForTest(game, runtime).commands.filter((entry) => entry.playerId === "v2");
       stepGame(game);
     }
 
