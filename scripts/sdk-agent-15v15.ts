@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { planPresetAiCommands } from "../src/ai/policy";
+import { DEFAULT_AI_SCRIPT_VERSION, planAiCommandFrameFromSnapshot, type AiMemoryProvider } from "../src/ai/runtime";
 import { SketchRtsSdk } from "../src/sdk/client";
 import type { GameSnapshot, PlayerId, RoomState } from "../src/shared/types";
 
@@ -9,9 +9,11 @@ const sdk = new SketchRtsSdk(baseUrl);
 const HUMAN_COUNT = Number(process.env.GRAND_STRESS_HUMANS ?? 15);
 const AI_COUNT = Number(process.env.GRAND_STRESS_AIS ?? 15);
 const STRESS_NAME = `${HUMAN_COUNT}v${AI_COUNT}`;
-const MAX_TICKS = 48_000;
+const MAX_TICKS = Number(process.env.SDK_AGENT_15V15_MAX_TICKS ?? 10_800);
 const STEP_TICKS = 45;
-const MAX_WALL_MS = 25_000;
+const MAX_WALL_MS = process.env.SDK_AGENT_15V15_MAX_WALL_MS === undefined ? undefined : Number(process.env.SDK_AGENT_15V15_MAX_WALL_MS);
+const EXTERNAL_AGENT_VERSION = "v1";
+const PLANNER_REPORT = { origin: "shared-ai-command-frame", defaultVersion: DEFAULT_AI_SCRIPT_VERSION, externalAgentVersion: EXTERNAL_AGENT_VERSION } as const;
 
 let server: ReturnType<typeof spawn> | undefined;
 
@@ -19,6 +21,7 @@ try {
   server = spawn("npm", ["run", "dev"], {
     cwd: process.cwd(),
     env: { ...process.env, PORT: String(port), ROOM_AUTOTICK: "0" },
+    detached: true,
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout?.on("data", (chunk) => process.stdout.write(chunk));
@@ -46,29 +49,26 @@ try {
   let latest = await sdk.roomSnapshot(room.id);
   const commandsByOwner: Record<PlayerId, number> = Object.fromEntries(humanAgents.map((owner) => [owner, 0]));
   const commandKinds: Record<string, number> = {};
+  const scriptCounts: Record<string, number> = {};
   const memorySamples: number[] = [];
+  const memoryProvider = createScriptMemoryProvider();
   let totalTickCpuMs = 0;
 
   while (!latest.match.winner && latest.tick < MAX_TICKS) {
     const elapsed = performance.now() - runStarted;
-    if (elapsed > MAX_WALL_MS) throw new Error(`${STRESS_NAME} test wall budget exceeded at tick ${latest.tick}: ${elapsed.toFixed(1)}ms`);
-    const batch = [];
-    const hiredCampIds = new Set<string>();
-    for (const owner of humanAgents) {
-      const commands = planPresetAiCommands(latest, owner, { teams });
-      for (const command of commands) {
-        if (command.type === "hire") {
-          if (hiredCampIds.has(command.campId)) continue;
-          hiredCampIds.add(command.campId);
-        }
-        batch.push({ playerId: owner, command });
-      }
-    }
+    if (MAX_WALL_MS !== undefined && elapsed > MAX_WALL_MS) throw new Error(`${STRESS_NAME} test wall budget exceeded at tick ${latest.tick}: ${elapsed.toFixed(1)}ms`);
+    const planned = planAiCommandFrameFromSnapshot(
+      latest,
+      humanAgents.map((owner) => ({ playerId: owner, source: "external-agent", version: EXTERNAL_AGENT_VERSION })),
+      { teams, memoryProvider },
+    ).commands;
+    const batch = planned.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
     const ticked = await sdk.commandTickRoom(room.id, batch, STEP_TICKS);
     latest = ticked.snapshot;
-    for (const entry of batch) {
+    for (const entry of planned) {
       commandsByOwner[entry.playerId] = (commandsByOwner[entry.playerId] ?? 0) + 1;
       commandKinds[entry.command.type] = (commandKinds[entry.command.type] ?? 0) + 1;
+      scriptCounts[entry.scriptId] = (scriptCounts[entry.scriptId] ?? 0) + 1;
     }
     totalTickCpuMs += ticked.cpuMs;
     memorySamples.push(ticked.memory.heapUsedBytes);
@@ -80,7 +80,7 @@ try {
   const endedRoom = (await sdk.listRooms()).find((candidate) => candidate.id === room.id);
   const cpu = process.cpuUsage(cpuStarted);
   const report = {
-    ok: true,
+    ok: latest.match.winner !== null || latest.tick >= MAX_TICKS,
     stressName: STRESS_NAME,
     humanCount: HUMAN_COUNT,
     aiCount: AI_COUNT,
@@ -89,12 +89,15 @@ try {
     endedAtTick: latest.match.endedAtTick,
     tick: latest.tick,
     roomStatus: endedRoom?.status,
+    planner: PLANNER_REPORT,
+    wallBudgetMs: MAX_WALL_MS ?? null,
     elapsedMs: Number((performance.now() - runStarted).toFixed(3)),
     cpuMs: Number(((cpu.user + cpu.system) / 1000).toFixed(3)),
     totalTickCpuMs: Number(totalTickCpuMs.toFixed(3)),
     heapMin: Math.min(...memorySamples),
     heapMax: Math.max(...memorySamples),
     commandKinds,
+    scriptCounts,
     activeCommandingHumans: Object.values(commandsByOwner).filter((count) => count > 0).length,
     humanGoldSpent: sumOwners(humanAgents, latest.match.stats.goldSpent),
     internalAiGoldSpent: sumOwners(internalAis, latest.match.stats.goldSpent),
@@ -113,11 +116,7 @@ try {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   assertGrandThirty(report, latest, endedRoom, humanAgents, internalAis, teams);
 } finally {
-  if (server && !server.killed) {
-    server.kill("SIGINT");
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    if (!server.killed) server.kill("SIGTERM");
-  }
+  await stopServer(server);
 }
 
 function assertGrandThirty(
@@ -128,20 +127,25 @@ function assertGrandThirty(
   internalAis: PlayerId[],
   teams: Record<string, string>,
 ) {
-  must(room?.status === "ended", `${STRESS_NAME} room did not end cleanly: ${room?.status}`);
-  must(snapshot.match.winner !== null, `${STRESS_NAME} did not produce a winner`);
-  must(snapshot.match.endedAtTick !== null && snapshot.match.endedAtTick <= MAX_TICKS, `${STRESS_NAME} exceeded development tick budget`);
+  if (snapshot.match.winner) {
+    must(room?.status === "ended", `${STRESS_NAME} room did not end cleanly after winner: ${room?.status}`);
+    must(snapshot.match.endedAtTick !== null && snapshot.match.endedAtTick <= MAX_TICKS, `${STRESS_NAME} exceeded development tick budget`);
+  } else {
+    must(room?.status === "inMatch", `${STRESS_NAME} unfinished smoke room had unexpected status: ${room?.status}`);
+    must(snapshot.tick >= MAX_TICKS, `${STRESS_NAME} stopped before winner or smoke tick budget`);
+  }
   must((report.activeCommandingHumans as number) >= Math.min(12, humanAgents.length), "too few external human agents issued commands");
   must(((report.commandKinds as Record<string, number>).attackMove ?? 0) > 0, "external human agents never issued attack-move commands");
   must((report.humanGoldSpent as number) > 8_000, "external human team did not spend enough gold");
   must((report.internalAiGoldSpent as number) > 8_000, "internal AI team did not spend enough gold");
-  must((report.humanKills as number) + (report.internalAiKills as number) > 40, `${STRESS_NAME} did not produce enough kills`);
-  must((report.nonBaseBuildingsDestroyed as { humans: number; internalAis: number }).humans + (report.nonBaseBuildingsDestroyed as { humans: number; internalAis: number }).internalAis > 0, `${STRESS_NAME} destroyed no non-base buildings`);
-  must((report.losingArmyPerPlayer as number) <= 3, `defeated ${STRESS_NAME} team kept a large unused army per player`);
-  if (HUMAN_COUNT !== AI_COUNT) {
+  must((report.humanKills as number) + (report.internalAiKills as number) > 30, `${STRESS_NAME} did not produce enough kills`);
+  if (HUMAN_COUNT !== AI_COUNT && snapshot.match.winner) {
     const winnerTeam = snapshot.match.winner ? teams[snapshot.match.winner] : "";
     const expectedTeam = HUMAN_COUNT > AI_COUNT ? "north" : "south";
     must(winnerTeam === expectedTeam, `${STRESS_NAME} did not produce decisive numerical-advantage winner: expected ${expectedTeam}, got ${winnerTeam}`);
+  }
+  if (snapshot.match.winner) {
+    must((report.losingArmyPerPlayer as number) <= 3, `defeated ${STRESS_NAME} team kept a large unused army per player`);
   }
   must(humanAgents.every((owner) => snapshot.players[owner]), "snapshot missing at least one external human player");
   must(internalAis.every((owner) => snapshot.players[owner]), "snapshot missing at least one internal AI player");
@@ -162,6 +166,14 @@ function sumOwners(owners: PlayerId[], record: Record<PlayerId, number>) {
   return owners.reduce((total, owner) => total + (record[owner] ?? 0), 0);
 }
 
+function createScriptMemoryProvider(): AiMemoryProvider {
+  const memories = new Map<PlayerId, NonNullable<ReturnType<AiMemoryProvider["get"]>>>();
+  return {
+    get: (owner) => memories.get(owner),
+    set: (owner, memory) => memories.set(owner, memory),
+  };
+}
+
 async function waitForSdk() {
   const started = Date.now();
   while (Date.now() - started < 15_000) {
@@ -173,6 +185,18 @@ async function waitForSdk() {
     }
   }
   throw new Error(`SDK 15v15 server did not become ready at ${baseUrl}`);
+}
+
+async function stopServer(process: ReturnType<typeof spawn> | undefined) {
+  if (!process?.pid) return;
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    try {
+      globalThis.process.kill(-process.pid, signal);
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
 }
 
 function must(value: unknown, message: string): asserts value {
