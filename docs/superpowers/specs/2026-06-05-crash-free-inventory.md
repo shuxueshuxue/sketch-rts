@@ -5,7 +5,7 @@
 This is the checkpoint ledger for issue #20. It audits production TypeScript under `src/**`, excluding tests and Vite ambient declarations, for the two patterns most likely to turn ordinary play into a hard crash:
 
 - explicit `throw` statements
-- TypeScript non-null assertions
+- TypeScript non-null assertions, which are the explicit escape hatches left after `strict` and `noUncheckedIndexedAccess` force ordinary unsafe indexed lookups to be handled at compile time
 
 The repeatable inventory command is:
 
@@ -21,10 +21,10 @@ npm --silent run audit:crash-inventory -- --json
 
 ## Current Inventory
 
-Run on branch `codex/issue-20-crash-inventory` at base `66d52f3` plus this checkpoint's local edits:
+Current closure run on branch `codex/issue-20-closure-evidence` at base `6118d1c`:
 
-- Total findings: 270
-- Explicit throws: 194
+- Total findings: 272
+- Explicit throws: 196
 - Non-null assertions: 76
 
 Top areas:
@@ -38,7 +38,7 @@ Top areas:
 | SDK benchmark | 19 |
 | network codec | 16 |
 | AI benchmark | 13 |
-| server | 13 |
+| server | 15 |
 
 Top dispositions:
 
@@ -62,6 +62,7 @@ The current classification model is:
 - `raw sim fail-loud direct-command invariant`: raw `issuePlayerCommand` and lower sim helpers must still throw for invalid direct callers. Browser, room, server, SDK, and AI frame paths must validate before reaching these throws.
 - `command admission boundary`: `src/shared/sim/command-validation.ts` owns external command rejection text.
 - `command-frame tick invariant`: frame tick mismatch is a deterministic lockstep contract violation and should fail loudly.
+- `hosted command admission boundary`: hosted room player/SDK/internal-AI frames validate before replay recording and raw sim frame application.
 - `network/message/save/replay/room boundary`: malformed external data or invalid room/save/replay lifecycle should fail at that boundary.
 - `SDK command intent/frame boundary`: SDK helpers may fail loudly for invalid SDK use, but not after partially mutating a command frame.
 - `AI script/policy input invariant`: AI planning assumes live players/scripts selected by runtime. Missing owner/script is invalid runtime setup, not ordinary play.
@@ -106,6 +107,7 @@ The intended command chain is now:
 - Browser room/server commands: validate at `room-net` / REST server boundary with `commandValidationError`.
 - Local browser commands: normalize to current frame issuers, then validate in `LocalGameAdapter` before frame apply.
 - SDK/AI frame commands: normalize to current frame issuers, then validate in `issueCommandFrame` before frame apply.
+- Hosted room commands: normalize to current frame issuers, then validate inside `room-host` before debug replay recording and frame apply. This covers room-host browser/SDK calls, active-room internal AI, and connected-room AI commands merged into authoritative frames.
 - Accepted command frames: normalize stale issuers and same-frame races in `applyCommandFrame`.
 - Raw sim direct calls: keep fail-loud throws for invalid internal/test/tool callers.
 
@@ -115,12 +117,33 @@ Command-path proof coverage:
 
 - `src/sdk/commands/frame.test.ts` proves SDK command frames reject invalid entries before partial mutation and still normalize stale issuers.
 - `src/client/net/local-adapter.test.ts` proves local player commands and local AI commands are validated before frame application, and rejected commands do not consume AI think cycles.
-- `src/server/room-net.test.ts` proves connected-room player commands and internal AI commands are broadcast together as authoritative room frames, and invalid lockstep commands become room errors instead of ticker crashes.
+- `src/server/room-host.test.ts` proves hosted internal AI commands are rejected before room-frame mutation, and connected-room AI validation rejects before player command mutation or replay recording.
+- `src/server/room-net.test.ts` proves connected-room player commands and internal AI commands are broadcast together as authoritative room frames, external invalid lockstep commands become room errors before entering the room frame, and hosted internal AI admission failures are not swallowed by the websocket layer.
 - `src/client/deployment/static-runtime.test.ts` proves static deployment match commands use the `LocalGameAdapter` command-frame admission path.
 - `src/client/deployment/server-runtime.test.ts` proves server deployment match commands go through the room lockstep transport and do not mutate local simulation state before an authoritative frame arrives.
 - `src/sdk/game-runner.test.ts` proves SDK command planners issue commands through the generic SDK runner surface rather than importing AI policy or bypassing the frame layer.
 
-The deployment-specific tests exercise player commands at the deployment edge. Deployment AI path proof is inherited through the shared adapters they instantiate: static deployment uses `LocalGameAdapter`, and server deployment receives internal AI only through `RoomNetHub` authoritative frames.
+The deployment-specific tests exercise player commands at the deployment edge. Deployment AI path proof is inherited through the shared adapters they instantiate: static deployment uses `LocalGameAdapter`, and server deployment receives internal AI through `RoomNetHub` authoritative frames backed by hosted frame admission.
+
+## Valid-Play Hosted AI Admission Gap Found In Closure Review
+
+Closure review exposed one remaining command-chain gap:
+
+- Local AI commands already validated in `LocalGameAdapter`, but hosted server AI commands planned in `room-host` were appended to room frames and applied directly.
+- `RoomNetHub` also had a broad room-frame try/catch that could convert unexpected frame-application failures into websocket error messages.
+
+The hosted command ruling is now:
+
+- `room-host` validates every hosted frame entry with the same `commandWithCurrentIssuers` plus `commandValidationError` admission used by local and SDK frame paths.
+- Hosted AI planning restores `lastThink` if admission fails, so a rejected AI frame cannot silently consume a think cycle.
+- Connected room frames validate merged AI commands before recording debug replay frames or applying player commands, so invalid AI cannot create partial replay/state mutation.
+- `RoomNetHub` no longer catches room-frame application errors. Ordinary invalid client commands are rejected at `acceptCommand`; unexpected hosted frame failures fail loudly instead of being hidden by the network layer.
+
+Regression coverage:
+
+- `src/server/room-host.test.ts` proves invalid hosted internal AI commands are rejected before mutation in ordinary room ticks.
+- `src/server/room-host.test.ts` proves invalid hosted AI commands merged into connected room frames reject before recording debug replay or mutating a player command from the same frame.
+- `src/server/room-net.test.ts` proves hosted internal AI admission failures fail loudly through room net instead of being swallowed as websocket errors.
 
 ## Valid-Play Room Lifecycle Crash Found In Follow-Up
 
@@ -149,15 +172,22 @@ Regression coverage:
 - `src/server/room-net.test.ts` proves externally changed room state can be published to connected clients.
 - `scripts/e2e-room-flow.mjs` now reloads back into the same server room after scenario reset, selects the seeded barracks through the real browser path, verifies research progress with the current accessible button contract, and verifies ended room results through websocket-published room state.
 
-## Still Open Before Closing Issue #20
+## Issue #20 Closure Ruling
 
-The inventory and SDK/local admission fix do not fully close #20 yet.
+The issue #20 crash-free acceptance criteria are satisfied by the current command model and evidence set:
 
-Remaining evidence needed:
+- The inventory script covers explicit throws and non-null assertions under production `src/**`, excluding tests and Vite ambient declarations.
+- Each finding is mechanically classified by file path and pattern into command admission, frame tick, room lifecycle, SDK/API, AI policy/runtime, network/message, save/replay, client render, or model-invariant dispositions.
+- The valid-play crash risks found in this checkpoint were the partial command-frame mutation gap, the connected-room lifecycle gap, and the hosted internal-AI admission gap. All have focused regression coverage and implementation fixes.
+- Browser/player commands, internal AI commands, SDK-planned commands, local/static commands, and room/server commands now enter validated command-frame paths before raw sim mutation.
+- Accepted command frames normalize stale unit issuers, stale building issuers, stale ability targets, same-frame build placement races, already-restored repair targets, and unavailable economy/supply actions into no-ops before raw sim direct-command throws.
+- Invalid external commands still fail loudly at their boundary: local adapter, REST/room net, SDK frame admission, network codec, or room lifecycle boundary.
+- Product-level room-flow YATU exercises the real browser path through room creation, server room reset, command issuance, websocket-published room updates, and ended-room display.
 
-- Run product-level Playwright CLI YATU on a real room match from current main after this follow-up PR is merged.
-- Re-run `npm --silent run audit:crash-inventory` after each #20 follow-up and inspect any new finding under AI policy, command frame, SDK frame, or client command emission.
-- Consider a later cleanup that shares `areEnemyOwners`, supply, spend, and command validation predicates between `command-validation.ts` and `frame.ts`; this is not required for the present fix but reduces drift risk.
+Residual architecture hygiene:
+
+- `command-validation.ts` and `frame.ts` still duplicate some spend, supply, and owner predicates. This is not a #20 closure blocker because current tests prove the relevant boundary behavior, but future command types should prefer shared predicates to reduce drift.
+- AI policy guarded non-null lookups remain review-sensitive when adjacent decision logic changes. They are currently classified as guarded policy invariants rather than ordinary-play crash risks.
 
 ## Verification For This Checkpoint
 
@@ -212,3 +242,21 @@ Latest command-path proof counts:
 - Build: passed.
 - Full Vitest suite: 91 files / 826 tests passed.
 - Inventory script: 270 findings, with 194 throws and 76 non-null assertions.
+
+Closure evidence branch `codex/issue-20-closure-evidence` evidence:
+
+```bash
+npm --silent run audit:crash-inventory -- --json
+npx vitest run src/shared/sim/determinism.test.ts src/client/net/lockstep-client.test.ts src/client/net/local-adapter.test.ts src/client/deployment/static-runtime.test.ts src/client/deployment/server-runtime.test.ts src/sdk/commands/frame.test.ts src/server/room-host.test.ts src/server/room-net.test.ts src/sdk/game-runner.test.ts
+npm run build
+npm test -- --run
+npm run test:e2e-room-flow
+```
+
+Latest closure evidence counts:
+
+- Focused crash-free command/lockstep suite: 9 files / 83 tests passed.
+- Inventory script: 272 findings, with 196 throws and 76 non-null assertions.
+- Build: passed.
+- Full Vitest suite: 91 files / 829 tests passed.
+- Playwright CLI room-flow YATU: passed with proof artifact under `~/share/ops/sketch-rts-yatu/rts-rf-mq1on1zs`.
