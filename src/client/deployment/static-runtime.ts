@@ -1,5 +1,6 @@
 import { createAiRuntime } from "../../ai/runtime";
 import type { ChatMessage } from "../../shared/net/types";
+import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
 import { createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
@@ -31,8 +32,9 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   }
 
   async createRoom(input: CreateRoomInput): Promise<RoomState> {
-    if (this.rooms.has(input.id)) throw new Error(`Room ${input.id} already exists`);
-    const room = createRoom(input);
+    const parsed = assertCreateRoomInput(input);
+    if (this.rooms.has(parsed.id)) throw new Error(`Room ${parsed.id} already exists`);
+    const room = createRoom(parsed);
     this.rooms.set(room.id, room);
     return room;
   }
@@ -52,15 +54,21 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   }
 
   async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
-    return this.replaceRoom(updateRoomMap(this.requireRoom(roomId), mapId));
+    const input = parseMapUpdateRequest({ mapId });
+    if (!input) throw new Error("Malformed room map input");
+    return this.replaceRoom(updateRoomMap(this.requireRoom(roomId), input.mapId));
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
-    return this.replaceRoom(updateRoomSlot(this.requireRoom(roomId), slotId, patch));
+    const input = parseSlotPatch(patch);
+    if (!input) throw new Error("Malformed slot patch");
+    return this.replaceRoom(updateRoomSlot(this.requireRoom(roomId), slotId, input));
   }
 
   async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
-    return this.replaceRoom(resizeRoomSlots(this.requireRoom(roomId), humanCount, aiCount));
+    const input = parseSlotCountsRequest({ humanCount, aiCount });
+    if (!input) throw new Error("Malformed room slot count input");
+    return this.replaceRoom(resizeRoomSlots(this.requireRoom(roomId), input.humanCount, input.aiCount));
   }
 
   async closeRoom(roomId: string, userId: string): Promise<RoomState> {

@@ -15,6 +15,12 @@ describe("static solo deployment runtime", () => {
     expect(rooms.map((room) => room.id)).toEqual(["room-1"]);
   });
 
+  it("validates local room setup through the shared runtime schema", async () => {
+    const runtime = new StaticSoloDeploymentRuntime();
+
+    await expect(runtime.createRoom({ id: "room-invalid", host, mapId: "missing-map" as never })).rejects.toThrow("Malformed room create input");
+  });
+
   it("uses shared room helpers for map, slot, and slot-count edits", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-setup", host, humanCount: 1, aiCount: 1 });
