@@ -1,5 +1,6 @@
 import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
+import { prepareChatPayload } from "../../shared/chat";
 import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
 import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
@@ -150,9 +151,7 @@ function createTransportChat(transport: RoomTransport, roomId: string, playerId:
   });
   return {
     send(text, senderName) {
-      const trimmed = text.trim();
-      if (!trimmed) throw new Error("Chat message cannot be empty");
-      transport.send({ type: "chat", roomId, playerId, senderName, text: trimmed });
+      transport.send({ type: "chat", ...prepareChatPayload({ roomId, playerId, senderName, text }) });
     },
     onMessage(handler) {
       handlers.add(handler);

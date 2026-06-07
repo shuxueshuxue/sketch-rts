@@ -1,4 +1,5 @@
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
+import { createChatMessage } from "../shared/chat";
 import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
 import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
 import type { PlayerId } from "../shared/types";
@@ -145,17 +146,18 @@ export class RoomNetHub {
   private acceptChat(message: Extract<ClientNetMessage, { type: "chat" }>): void {
     const state = this.stateFor(message.roomId);
     const sequence = state.nextChatSequence;
+    const chat = createChatMessage({
+      roomId: message.roomId,
+      playerId: message.playerId,
+      senderName: message.senderName,
+      text: message.text,
+      sequence,
+      sentAt: this.options.now?.() ?? Date.now(),
+    });
     state.nextChatSequence += 1;
     this.broadcast(message.roomId, {
       type: "chat",
-      message: {
-        id: `chat-${message.roomId}-${sequence}`,
-        roomId: message.roomId,
-        playerId: message.playerId,
-        senderName: message.senderName,
-        text: message.text,
-        sentAt: this.options.now?.() ?? Date.now(),
-      },
+      message: chat,
     });
   }
 

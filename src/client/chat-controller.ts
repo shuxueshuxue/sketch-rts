@@ -18,7 +18,4 @@ export function chatKeyIntent(event: Pick<KeyboardEvent, "key" | "repeat">, stat
   return key === "enter" ? "open" : "pass";
 }
 
-export function normalizeChatText(value: string): string | undefined {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
+export { normalizeChatText } from "../shared/chat";

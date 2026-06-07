@@ -76,4 +76,17 @@ describe("static solo deployment runtime", () => {
     expect(ended.result).toMatchObject({ winner: "enemy" });
     expect(ended.result?.slots.map((slot) => slot.playerId)).toEqual(["player", "enemy"]);
   });
+
+  it("uses the shared chat message semantics for local match chat", async () => {
+    const runtime = new StaticSoloDeploymentRuntime({ now: () => 1200 });
+    await runtime.createRoom({ id: "room-chat", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
+    const started = await runtime.startRoom("room-chat", host);
+    const received: string[] = [];
+    started.chat.onMessage((message) => received.push(`${message.id}|${message.senderName}|${message.text}|${message.sentAt}`));
+
+    started.chat.send(" push mid ", "Ada");
+
+    expect(received).toEqual(["chat-room-chat-1|Ada|push mid|1200"]);
+    expect(() => started.chat.send("   ", "Ada")).toThrow("Chat message cannot be empty");
+  });
 });
