@@ -1,6 +1,6 @@
-import { availableParallelism } from "node:os";
 import { createAiMeleeControlBenchmarkInput, runAiMeleeControlBenchmarkDetailsParallel, runAiMeleeControlBenchmarkParallel } from "../src/ai/benchmark/control";
 import { describeBenchmarkInput } from "../src/sdk/benchmark/manifest";
+import { boolFlag, csvFlag, flag, printJson, requiredFlag, requiredNumberFlag, workerCountFromArgs } from "./benchmark-cli";
 
 const args = process.argv.slice(2);
 
@@ -16,7 +16,7 @@ const options = {
   ...(flag(args, "max-ticks") ? { maxTicks: requiredNumberFlag(args, "max-ticks") } : {}),
   ...(flag(args, "think-interval") ? { thinkInterval: requiredNumberFlag(args, "think-interval") } : {}),
   ...(flag(args, "worker-harassment") ? { workerHarassment: workerHarassmentFlag(args) } : {}),
-  workers: flag(args, "workers") ? requiredNumberFlag(args, "workers") : Math.max(1, availableParallelism() - 1),
+  workers: workerCountFromArgs(args),
 };
 
 if (boolFlag(args, "dry-run")) {
@@ -46,46 +46,10 @@ function controlFilterFromArgs(args: string[]) {
   };
 }
 
-function csvFlag(args: string[], name: string): string[] {
-  return requiredFlag(args, name)
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-}
-
-function flag(args: string[], name: string): string | undefined {
-  const index = args.indexOf(`--${name}`);
-  if (index === -1) return undefined;
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for --${name}`);
-  return value;
-}
-
-function boolFlag(args: string[], name: string): boolean {
-  return args.includes(`--${name}`);
-}
-
-function requiredFlag(args: string[], name: string): string {
-  const value = flag(args, name);
-  if (value === undefined) throw new Error(`Missing required --${name}`);
-  return value;
-}
-
-function requiredNumberFlag(args: string[], name: string): number {
-  const raw = requiredFlag(args, name);
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed)) throw new Error(`--${name} must be a finite number`);
-  return parsed;
-}
-
 function workerHarassmentFlag(args: string[]): 0 | 0.5 | 1 {
   const value = requiredNumberFlag(args, "worker-harassment");
   if (value !== 0 && value !== 0.5 && value !== 1) throw new Error("--worker-harassment must be 0, 0.5, or 1");
   return value;
-}
-
-function printJson(value: unknown) {
-  console.log(JSON.stringify(value, null, 2));
 }
 
 function printHelp() {
