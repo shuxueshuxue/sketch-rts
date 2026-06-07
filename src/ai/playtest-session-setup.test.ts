@@ -30,4 +30,20 @@ describe("AI playtest session setup", () => {
       },
     });
   });
+
+  it("creates exact cross-race benchmark playtest setup descriptions for race balance replay", () => {
+    const setup = createAiPlaytestSetupFromArgs(["--from-cross-race-benchmark", "glassmereFord ember south", "--cross-race-seed", "cross-race-cli-seed", "--cross-race-map-count", "2"], "ember", "grove");
+
+    expect(setup).toMatchObject({
+      id: "interactive-glassmereFord-ember-south",
+      mapId: "glassmereFord",
+      scriptedPlayers: ["grove"],
+      versions: { ember: "v2", grove: "v2" },
+      options: {
+        players: ["ember", "grove"],
+        teams: { ember: "south", grove: "north" },
+        races: { ember: "ember", grove: "grove" },
+      },
+    });
+  });
 });

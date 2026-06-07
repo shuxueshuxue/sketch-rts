@@ -308,6 +308,23 @@ describe("AI playtest CLI", () => {
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1" });
   });
 
+  it("creates exact cross-race benchmark sessions for ember versus grove replay", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "cross-race-benchmark.json");
+
+    runPlaytestCli("new", "--file", file, "--from-cross-race-benchmark", "glassmereFord ember south", "--cross-race-seed", "cross-race-cli-seed", "--cross-race-map-count", "2", "--you", "ember", "--enemy", "grove", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
+      { playerId: "ember", team: "south", race: "ember", controller: "human" },
+      { playerId: "grove", team: "north", race: "grove", controller: "ai" },
+    ]);
+    expect(persisted.session.scriptedPlayers).toEqual(["grove"]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["ember", "grove"]);
+    expect(persisted.runtime.versions).toMatchObject({ ember: "v2", grove: "v2" });
+  });
+
   it("creates manual side-swapped map sessions with explicit teams", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

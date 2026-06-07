@@ -1,9 +1,9 @@
-import { createAiMeleeControlBenchmarkInput } from "./benchmark/control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput } from "./benchmark/control";
 import { createAiVersionBenchmarkInput } from "./benchmark/presets";
 import type { AiGameAgent } from "./game-runner";
 import type { AiRuntimeState } from "./runtime";
 import { createCombatScenarioSetup, type CombatScenarioLabel } from "../sdk/scenarios/combat";
-import type { BenchmarkMatchInput } from "../sdk/benchmark/core";
+import type { BenchmarkInput, BenchmarkMatchInput } from "../sdk/benchmark/core";
 import type { SdkWinnerMode } from "../sdk/winner-mode";
 import type { AiScriptVersion, GameSetupOptions, MapId, PlayerId, RaceId } from "../shared/types";
 
@@ -19,6 +19,9 @@ export type AiPlaytestSetupDescription = {
 };
 
 export function createAiPlaytestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): AiPlaytestSetupDescription {
+  const crossRaceBenchmarkMatchName = flag(args, "from-cross-race-benchmark");
+  if (crossRaceBenchmarkMatchName !== undefined) return crossRaceBenchmarkPlaytestSetup(args, crossRaceBenchmarkMatchName, controlledPlayer);
+
   const controlBenchmarkMatchName = flag(args, "from-control-benchmark");
   if (controlBenchmarkMatchName !== undefined) return controlBenchmarkPlaytestSetup(args, controlBenchmarkMatchName, controlledPlayer);
 
@@ -58,10 +61,7 @@ function benchmarkPlaytestSetup(args: string[], matchName: string, controlledPla
     ...(flag(args, "benchmark-map-count") ? { mapCount: requiredNumberFlag(args, "benchmark-map-count") } : {}),
     full: boolFlag(args, "benchmark-full"),
   });
-  const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
-  const match = matches.find((candidate) => candidate.name === matchName);
-  if (!match) throw new Error(`Unknown benchmark match ${matchName}`);
-  return playtestSetupFromBenchmarkMatch(match, matchName, controlledPlayer);
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "benchmark");
 }
 
 function controlBenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
@@ -71,9 +71,22 @@ function controlBenchmarkPlaytestSetup(args: string[], matchName: string, contro
     ...(flag(args, "control-worker-harassment") ? { workerHarassment: workerHarassmentFlag(args, "control-worker-harassment") } : {}),
     full: boolFlag(args, "control-full"),
   });
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "control benchmark");
+}
+
+function crossRaceBenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
+  const { input } = createAiCrossRaceBenchmarkInput({
+    ...(flag(args, "cross-race-seed") ? { seed: requiredFlag(args, "cross-race-seed") } : {}),
+    ...(flag(args, "cross-race-map-count") ? { mapCount: requiredNumberFlag(args, "cross-race-map-count") } : {}),
+    full: boolFlag(args, "cross-race-full"),
+  });
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "cross-race benchmark");
+}
+
+function setupFromBenchmarkInput(input: BenchmarkInput<AiGameAgent>, matchName: string, controlledPlayer: PlayerId, label: string): RequiredBenchmarkSetupDescription {
   const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
   const match = matches.find((candidate) => candidate.name === matchName);
-  if (!match) throw new Error(`Unknown control benchmark match ${matchName}`);
+  if (!match) throw new Error(`Unknown ${label} match ${matchName}`);
   return playtestSetupFromBenchmarkMatch(match, matchName, controlledPlayer);
 }
 
