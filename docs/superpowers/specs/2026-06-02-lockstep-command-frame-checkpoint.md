@@ -40,6 +40,7 @@ The room WebSocket path is now wired into the running server:
 - Delayed commands, authoritative checksum history, and desync suppression keys from the previous epoch are discarded before the replacement checkpoint is sent to clients.
 - `src/server/room-host.ts` exposes `tickRoomFrame` and `checkpointRoom`; connected lockstep rooms can be excluded from the ordinary active-room ticker so they are not double-stepped.
 - `src/client/net/lockstep-client.ts` restores checkpoint snapshots into its existing engine and still advances simulation only from server frames. Checkpoint restore is an epoch boundary on the client: `LockstepClient` clears all buffered frames before consuming post-checkpoint frames, so future frames from a previous room epoch cannot apply after reset/continue recovery.
+- Checkpoint restore and save/replay restore share one in-place snapshot mutation primitive: `src/shared/sim.ts` exports `restoreSnapshotIntoGame`, and the complete `GameSnapshot` restore key list is locked by `GAME_SNAPSHOT_RESTORE_KEYS`. Lockstep checkpoints call this primitive directly; savegame restoration creates the runtime shell, applies save-only player upgrade normalization, then calls the same primitive. Replay checkpoint restore continues through savegame restore, so it shares the same field-copy owner.
 - `src/client/main.ts` starts room matches through `LockstepClient`; room commands no longer call the HTTP room command endpoint, and room gameplay no longer polls HTTP snapshots.
 - Public in-match rooms now stay visible in the room browser as spectator entries; spectators connect through room WebSocket without claiming a player slot or POSTing `/join`.
 
@@ -160,3 +161,17 @@ Adapter frontend YATU proof passed through Playwright CLI against a real local s
 - GitHub #38 still needs broad frontend YATU stress for visual/client-state sync.
 - GitHub #42 removes old global session gameplay APIs; closure still needs post-merge verification evidence.
 - GitHub #43 still needs explicit proof that static and server deployments share one gameplay core.
+
+## Restore Primitive Evidence - 2026-06-07
+
+GitHub #71 closed the checkpoint/savegame restore double-chain.
+
+Automated checks run on branch `codex/issue-71-restore-primitive`:
+
+- `npm test -- --run src/shared/sim/restore.test.ts src/client/net/lockstep-client.test.ts src/shared/savegame.test.ts src/shared/replay.test.ts src/server/room-host.test.ts`
+- `npm run build`
+
+Coverage:
+
+- `src/shared/sim/restore.test.ts` proves `restoreSnapshotIntoGame` restores the current `GameSnapshot` key set, restores `nextId`, and invalidates all runtime lookup/spatial caches in one place.
+- `src/client/net/lockstep-client.test.ts` proves a lockstep checkpoint restore and a savegame restore from the same snapshot produce equivalent snapshots and checksums.
