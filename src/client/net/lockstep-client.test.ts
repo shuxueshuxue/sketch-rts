@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createGame } from "../../shared/sim";
+import { createGame, snapshotGame } from "../../shared/sim";
+import { createRoom } from "../../shared/rooms";
+import { createSaveGameRecord, restoreGameFromSave } from "../../shared/savegame";
+import { checksumGame } from "../../shared/sim/checksum";
 import { SimulationEngine } from "../../shared/sim/engine";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import type { NetTransport } from "./transport";
@@ -214,6 +217,37 @@ describe("lockstep client", () => {
     expect(game.nextId).toBe(1234);
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
     expect(game.projectiles).toEqual(checkpointGame.projectiles);
+  });
+
+  it("restores checkpoint snapshots to the same state as savegame restore", () => {
+    const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [], teams: { player: "north", enemy: "south" } });
+    const transport = new FakeTransport();
+    new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    const checkpointGame = createGame("wildMarches", { players: ["player", "enemy"], aiPlayers: [], teams: { player: "north", enemy: "south" } });
+    checkpointGame.tick = 18;
+    checkpointGame.nextId = 4321;
+    checkpointGame.players.player.gold = 2222;
+    checkpointGame.projectiles.push({
+      id: "projectile-checkpoint-save-equivalence",
+      owner: "enemy",
+      attackerId: "unit-enemy-archer",
+      targetId: "unit-player-worker",
+      fromX: 300,
+      fromY: 300,
+      toX: 200,
+      toY: 200,
+      damage: 11,
+      remaining: 10,
+      duration: 24,
+    });
+    const room = { ...createRoom({ id: "room-1", host: { id: "host", name: "Host" }, mapId: "wildMarches" }), status: "inMatch" as const };
+    const save = createSaveGameRecord(checkpointGame, room, { id: "save-equivalent" }, new Date("2026-06-07T00:00:00.000Z"), []);
+
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: checkpointGame.tick, snapshot: snapshotGame(checkpointGame), nextId: checkpointGame.nextId }, epoch: 0 });
+    const restoredFromSave = restoreGameFromSave(save);
+
+    expect(snapshotGame(game)).toEqual(snapshotGame(restoredFromSave));
+    expect(checksumGame(game)).toBe(checksumGame(restoredFromSave));
   });
 
   it("classifies checkpoint restore events by server-provided checkpoint metadata", () => {
