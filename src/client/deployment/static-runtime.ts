@@ -1,4 +1,5 @@
 import { createAiRuntime } from "../../ai/runtime";
+import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
 import { createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
@@ -94,7 +95,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       },
     }));
     this.matches.set(room.id, { adapter, onRoom });
-    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId), snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId, this.options.now), snapshot: adapter.currentSnapshot() };
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
@@ -111,7 +112,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
       },
     }));
     this.matches.set(room.id, { adapter, onRoom });
-    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId), snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat: createLocalChat(room.id, playerId, this.options.now), snapshot: adapter.currentSnapshot() };
   }
 
   canForfeitMatch(): boolean {
@@ -153,14 +154,12 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   }
 }
 
-function createLocalChat(roomId: string, playerId: PlayerId): MatchChat {
+function createLocalChat(roomId: string, playerId: PlayerId, now: (() => number) | undefined): MatchChat {
   const handlers = new Set<(message: ChatMessage) => void>();
   let nextSequence = 1;
   return {
     send(text, senderName) {
-      const trimmed = text.trim();
-      if (!trimmed) throw new Error("Chat message cannot be empty");
-      const message: ChatMessage = { id: `chat-${roomId}-${nextSequence}`, roomId, playerId, senderName, text: trimmed, sentAt: Date.now() };
+      const message = createChatMessage({ roomId, playerId, senderName, text, sequence: nextSequence, sentAt: now?.() ?? Date.now() });
       nextSequence += 1;
       for (const handler of [...handlers]) handler(message);
     },
