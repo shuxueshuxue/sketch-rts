@@ -6,6 +6,9 @@ describe("shared command payload schema", () => {
     expect(isGameCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toBe(true);
     expect(isGameCommand({ type: "build", unitId: "worker", buildingKind: "farm", x: 10, y: 20 })).toBe(true);
     expect(isGameCommand({ type: "cast", unitId: "priest", ability: "heal", targetId: "ally" })).toBe(true);
+    expect(isGameCommand({ type: "cast", unitId: "ember-acolyte", ability: "emberMend", targetId: "ally" })).toBe(true);
+    expect(isGameCommand({ type: "cast", unitId: "pyre-caller", ability: "cinderSoul", x: 10, y: 20 })).toBe(true);
+    expect(isGameCommand({ type: "cast", unitId: "ash-hexer", ability: "ashCurse", targetId: "enemy" })).toBe(true);
     expect(isCommandEnvelope({ playerId: "player", clientSeq: 3, command: { type: "attackMove", unitIds: ["footman"], x: 100, y: 120 } })).toBe(true);
   });
 

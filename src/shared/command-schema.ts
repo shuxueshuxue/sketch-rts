@@ -1,4 +1,4 @@
-import { BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
+import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
 
@@ -18,7 +18,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "cast") {
     return (
       typeof command.unitId === "string" &&
-      (command.ability === "heal" || command.ability === "summon" || command.ability === "curse") &&
+      isAbilityKind(command.ability) &&
       (command.targetId === undefined || typeof command.targetId === "string") &&
       (command.x === undefined || isNumber(command.x)) &&
       (command.y === undefined || isNumber(command.y))
@@ -75,4 +75,8 @@ function isTrainableUnit(value: unknown) {
 
 function isUpgradeKind(value: unknown) {
   return typeof value === "string" && (UPGRADE_KINDS as readonly string[]).includes(value);
+}
+
+function isAbilityKind(value: unknown) {
+  return typeof value === "string" && (ABILITY_KINDS as readonly string[]).includes(value);
 }

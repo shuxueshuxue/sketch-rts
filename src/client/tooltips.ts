@@ -261,7 +261,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     heal: {
       title: "Heal",
       body: "Restores health to an allied unit in range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 4.0s"],
+      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
       requirements: ["Priest or field medic must be ready."],
     },
     summon: {
@@ -276,12 +276,30 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
       stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
       requirements: ["Witch must be ready.", "Target an enemy unit."],
     },
+    emberMend: {
+      title: "Ember Mend",
+      body: "Quickly restores health to an allied unit at shorter range.",
+      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
+      requirements: ["Ember acolyte must be ready."],
+    },
+    cinderSoul: {
+      title: "Cinder Soul",
+      body: "Creates a shorter-lived spirit at a nearby ground point.",
+      stats: ["Summons 1 spirit", "Range 260", "Duration 45.0s", "Cooldown 11.0s"],
+      requirements: ["Pyre caller must be ready.", "Target a nearby point."],
+    },
+    ashCurse: {
+      title: "Ash Curse",
+      body: "Briefly weakens an enemy unit with a lighter damage curse.",
+      stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
+      requirements: ["Ash hexer must be ready.", "Target an enemy unit."],
+    },
   },
   zh: {
     heal: {
       title: "治疗",
       body: "为射程内的友方单位恢复生命。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 4.0s"],
+      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
       requirements: ["牧师或战地医师必须准备就绪。"],
     },
     summon: {
@@ -295,6 +313,24 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
       body: "削弱敌方单位，使其攻击造成更少伤害。",
       stats: ["敌方伤害 x0.4", "射程 280", "持续 18.0s", "冷却 7.5s"],
       requirements: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
+    },
+    emberMend: {
+      title: "余烬疗愈",
+      body: "以较短射程快速治疗友方单位。",
+      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
+      requirements: ["余烬侍僧必须准备就绪。"],
+    },
+    cinderSoul: {
+      title: "余火魂灵",
+      body: "在附近地面目标点召唤一个持续时间较短的灵体。",
+      stats: ["召唤 1 个灵体", "射程 260", "持续 45.0s", "冷却 11.0s"],
+      requirements: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
+    },
+    ashCurse: {
+      title: "灰烬诅咒",
+      body: "短暂削弱敌方单位，降低其攻击伤害。",
+      stats: ["敌方伤害 x0.4", "射程 280", "持续 18.0s", "冷却 7.5s"],
+      requirements: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
     },
   },
 };

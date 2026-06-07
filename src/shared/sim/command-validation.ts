@@ -1,5 +1,5 @@
 import { buildingPlacementBlocker } from "../build-placement";
-import { BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../catalog";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
 
@@ -140,7 +140,8 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if (command.type === "cast") {
     const caster = currentUnit(game, owner, command.unitId);
     if (!caster) return undefined;
-    if ((command.ability === "heal" || command.ability === "curse") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
+    const behavior = ABILITY_DEFS[command.ability].behavior;
+    if ((behavior === "heal" || behavior === "curse") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
     return command;
   }
   if (command.type === "pickupItem") {
@@ -209,12 +210,13 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   if (!caster) return commandError(`Unknown ${owner} caster ${command.unitId}`, true);
   if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
   if (caster.cooldown > 0) return commandError(`${caster.kind} is on cooldown`, true);
-  if (command.ability === "heal") {
+  const behavior = ABILITY_DEFS[command.ability].behavior;
+  if (behavior === "heal") {
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
       : commandError("Heal requires an allied unit target");
   }
-  if (command.ability === "curse") {
+  if (behavior === "curse") {
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
       : commandError("Curse requires an enemy unit target");

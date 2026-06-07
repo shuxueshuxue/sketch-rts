@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
 import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
@@ -114,6 +114,15 @@ describe("sketch RTS simulation", () => {
     expect(rawValue("emberAcolyte")).toBeLessThanOrEqual(rawValue("priest"));
     expect(rawValue("ashHexer")).toBeLessThanOrEqual(rawValue("witch"));
     expect(rawValue("pyreCaller")).toBeLessThanOrEqual(rawValue("summoner"));
+  });
+
+  it("gives ember support units their own abilities through shared ability primitives", () => {
+    expect(UNIT_DEFS.emberAcolyte.abilities).toEqual(["emberMend"]);
+    expect(UNIT_DEFS.ashHexer.abilities).toEqual(["ashCurse"]);
+    expect(UNIT_DEFS.pyreCaller.abilities).toEqual(["cinderSoul"]);
+    expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: seconds(6) });
+    expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.4, effectDuration: seconds(18), cooldown: seconds(7.5) });
+    expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(45), cooldown: seconds(11) });
   });
 
   it("keeps starts fair and prices paced for the slower five-worker mine economy", () => {
@@ -1068,6 +1077,38 @@ describe("sketch RTS simulation", () => {
     expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "spirit")).toBe(true);
     expect(enemy.effects.some((effect) => effect.type === "curse")).toBe(true);
     expect(game.effects.map((effect) => effect.type)).toEqual(expect.arrayContaining(["heal", "summon", "curse"]));
+  });
+
+  it("supports ember-only heal, summon, and curse parameters through the same cast command", () => {
+    const game = sketchScene("ember-ability-effects")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { race: "ember" })
+      .player("enemy", { race: "grove" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3500, 3500)
+      .unit("player", "emberAcolyte", 2000, 2000, { id: "ember-acolyte" })
+      .unit("player", "pyreCaller", 2050, 2000, { id: "pyre-caller" })
+      .unit("player", "ashHexer", 2100, 2000, { id: "ash-hexer" })
+      .unit("player", "emberRavager", 2030, 2040, { id: "hurt-ravager", hp: 30 })
+      .unit("enemy", "raider", 2240, 2000, { id: "ash-target" })
+      .build()
+      .createGame();
+    const acolyte = game.units.find((unit) => unit.id === "ember-acolyte")!;
+    const caller = game.units.find((unit) => unit.id === "pyre-caller")!;
+    const hexer = game.units.find((unit) => unit.id === "ash-hexer")!;
+    const hurt = game.units.find((unit) => unit.id === "hurt-ravager")!;
+    const enemy = game.units.find((unit) => unit.id === "ash-target")!;
+
+    issueCommand(game, { type: "cast", unitId: acolyte.id, ability: "emberMend", targetId: hurt.id });
+    issueCommand(game, { type: "cast", unitId: caller.id, ability: "cinderSoul", x: 2090, y: 2040 });
+    issueCommand(game, { type: "cast", unitId: hexer.id, ability: "ashCurse", targetId: enemy.id });
+    stepMany(game, 5);
+
+    expect(hurt.hp).toBe(85);
+    const spirit = game.units.find((unit) => unit.owner === "player" && unit.kind === "spirit");
+    expect(spirit?.expiresTick).toBe(game.tick - 5 + seconds(45));
+    expect(enemy.effects).toContainEqual({ type: "curse", remaining: seconds(18) - 5 });
   });
 
   it("curse directly cuts outgoing attack damage to forty percent for attack and attack-move orders", () => {

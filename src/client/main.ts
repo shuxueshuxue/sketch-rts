@@ -46,7 +46,7 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
@@ -119,6 +119,9 @@ const SPELL_COMMANDS = [
   { ability: "heal", icon: "+", hotkey: "h" },
   { ability: "summon", icon: "◎", hotkey: "u" },
   { ability: "curse", icon: "☾", hotkey: "c" },
+  { ability: "emberMend", icon: "+", hotkey: "m" },
+  { ability: "cinderSoul", icon: "◎", hotkey: "o" },
+  { ability: "ashCurse", icon: "☾", hotkey: "x" },
 ] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
@@ -1660,8 +1663,9 @@ function beginSpellTargeting(ability: AbilityKind) {
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
+  const behavior = ABILITY_DEFS[ability].behavior;
   statusLabel.textContent =
-    ability === "summon"
+    behavior === "summon"
       ? t("status.summonMode")
       : t("status.spellMode", { ability: labelKind(ability) });
   updateHud();
@@ -1707,7 +1711,8 @@ function issueSpellAt(point: Point) {
   if (!commandMode || commandMode.type !== "spell") return;
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
-  if (ability === "summon") {
+  const behavior = ABILITY_DEFS[ability].behavior;
+  if (behavior === "summon") {
     sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y });
     statusLabel.textContent = t("status.summonOrdered");
     clearCommandModeClasses();
@@ -1717,7 +1722,7 @@ function issueSpellAt(point: Point) {
   }
 
   const target =
-    ability === "heal"
+    behavior === "heal"
       ? hitUnit(world, (unit) => unit.owner === localPlayerId)
       : hitUnit(world, (unit) => unit.owner !== localPlayerId);
   if (!target) {
@@ -3281,23 +3286,26 @@ function drawSpellPreview() {
   if (!commandMode || commandMode.type !== "spell" || !lastMouse) return;
   const point = lastMouse;
   const ability = commandMode.targeting.ability;
+  const behavior = ABILITY_DEFS[ability].behavior;
+  const color = behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
+  const fill = behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
   ctx.save();
-  ctx.strokeStyle = ability === "heal" ? "#5d8b4c" : ability === "summon" ? "#5f578f" : "#7f3a70";
-  ctx.fillStyle = ability === "heal" ? "rgba(93, 139, 76, 0.08)" : ability === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  ctx.strokeStyle = color;
+  ctx.fillStyle = fill;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
-  ctx.arc(point.x, point.y, ability === "summon" ? 28 : 22, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.beginPath();
-  if (ability === "heal") {
+  if (behavior === "heal") {
     ctx.moveTo(point.x - 16, point.y);
     ctx.lineTo(point.x + 16, point.y);
     ctx.moveTo(point.x, point.y - 16);
     ctx.lineTo(point.x, point.y + 16);
-  } else if (ability === "summon") {
+  } else if (behavior === "summon") {
     ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
     ctx.moveTo(point.x - 23, point.y + 14);
     ctx.lineTo(point.x + 23, point.y + 14);
@@ -3309,7 +3317,7 @@ function drawSpellPreview() {
   }
   ctx.stroke();
   ctx.font = "11px ui-monospace, monospace";
-  ctx.fillStyle = ability === "heal" ? "#5d8b4c" : ability === "summon" ? "#5f578f" : "#7f3a70";
+  ctx.fillStyle = color;
   ctx.fillText(labelKind(ability), point.x - 20, point.y + 44);
   ctx.restore();
 }

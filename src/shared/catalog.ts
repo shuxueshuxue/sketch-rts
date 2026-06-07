@@ -19,6 +19,11 @@ export type UnitDef = {
   abilities: AbilityKind[];
 };
 
+export type AbilityDef =
+  | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
+  | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
+  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; statusType: "curse"; effectType: "curse" };
+
 export type BuildingDef = {
   hp: number;
   radius: number;
@@ -65,9 +70,9 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = {
   emberRavager: { hp: 118, speed: 3.8, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   cinderRunner: { hp: 96, speed: 4.35, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   sparkArcher: { hp: 76, speed: 3.15, radius: 16, attackDamage: 12, attackRange: 360, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, xpReward: 30, abilities: [] },
-  emberAcolyte: { hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["heal"] },
-  ashHexer: { hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["curse"] },
-  pyreCaller: { hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 145, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"] },
+  emberAcolyte: { hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["emberMend"] },
+  ashHexer: { hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["ashCurse"] },
+  pyreCaller: { hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 145, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["cinderSoul"] },
   knight: { hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: [] },
   priest: { hp: 90, speed: 3, radius: 16, attackDamage: 7, attackRange: 252, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, xpReward: 35, abilities: ["heal"] },
   summoner: { hp: 95, speed: 2.8, radius: 17, attackDamage: 8, attackRange: 273, attackCooldown: seconds(1.9), cost: 150, trainTime: seconds(10.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"] },
@@ -87,6 +92,17 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = {
 };
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
+
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse"];
+
+export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
+  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
+  summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(11), summonKind: "spirit", summonDuration: seconds(45), effectType: "summon" },
+  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
+  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
+  cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(11), summonKind: "spirit", summonDuration: seconds(45), effectType: "summon" },
+  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
+};
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
   townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), trains: ["worker"], researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },

@@ -19,6 +19,29 @@ describe("AI spell and focus tactics", () => {
     expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "cast", unitId: "priest", ability: "heal", targetId: "wounded" });
   });
 
+  it("casts ember-specific support abilities through the same spell planner", () => {
+    const game = sketchScene("spell-tactics-ember-abilities")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3500, 3500)
+      .unit("v2", "emberAcolyte", 540, 500, { id: "acolyte" })
+      .unit("v2", "pyreCaller", 580, 500, { id: "caller" })
+      .unit("v2", "ashHexer", 620, 500, { id: "hexer" })
+      .unit("v2", "emberRavager", 570, 500, { id: "wounded", hp: 30 })
+      .unit("v1", "footman", 710, 500, { id: "target" })
+      .build()
+      .createGame();
+
+    expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual([
+      { type: "cast", unitId: "acolyte", ability: "emberMend", targetId: "wounded" },
+      { type: "cast", unitId: "caller", ability: "cinderSoul", x: 634, y: 528 },
+      { type: "cast", unitId: "hexer", ability: "ashCurse", targetId: "target" },
+    ]);
+  });
+
   it("focuses nearby v2 fighters onto one enemy target", () => {
     const game = sketchScene("spell-tactics-focus")
       .map("bareDuel")

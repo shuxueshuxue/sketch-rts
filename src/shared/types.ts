@@ -38,13 +38,14 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind | WildlingUnitKind>;
 export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "emberForge" | "cinderSpire" | "emberShrine" | "farm";
 export type ResourceKind = "goldMine";
-export type AbilityKind = "heal" | "summon" | "curse";
+export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability";
 
 export type UnitStatusEffect = {
   type: "curse" | "guardian";
   remaining: number;
+  damageMultiplier?: number;
 };
 
 export type WorldEffect = {

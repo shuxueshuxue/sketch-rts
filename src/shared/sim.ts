@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel } from "./catalog";
 import { buildingPlacementBlocker } from "./build-placement";
 import {
   createBuilding,
@@ -70,8 +70,6 @@ const LOW_UPKEEP_GOLD_RATE = 0.7;
 const HIGH_UPKEEP_GOLD_RATE = 0.4;
 const VETERANCY_STEP = 0.25;
 const ITEM_PICKUP_RANGE = 72;
-const CURSE_DURATION = seconds(18);
-const SUMMONED_SPIRIT_DURATION = seconds(45);
 const GUARDIAN_SCROLL_DURATION = seconds(7);
 const LIGHTNING_ROD_COOLDOWN = seconds(18);
 const STORM_STAFF_DURATION = seconds(4.8);
@@ -687,8 +685,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
     return;
   }
   if (unit.cooldown > 0) return;
-  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
-  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }
 
@@ -714,8 +711,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
     return;
   }
   if (unit.cooldown > 0) return;
-  const damageMultiplier = unit.effects.some((effect) => effect.type === "curse") ? 0.4 : 1;
-  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * damageMultiplier)), unit.attackRange);
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
   unit.cooldown = unit.attackCooldown;
 }
 
@@ -1033,45 +1029,50 @@ function castAbility(
   if (!caster) throw new Error(`Unknown ${owner} caster ${unitId}`);
   if (!UNIT_DEFS[caster.kind].abilities.includes(ability)) throw new Error(`${caster.kind} cannot cast ${ability}`);
   if (caster.cooldown > 0) throw new Error(`${caster.kind} is on cooldown`);
+  const def = ABILITY_DEFS[ability];
 
-  if (ability === "heal") {
+  if (def.behavior === "heal") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && !areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Heal requires an allied unit target");
-    applyHeal(game, caster, target);
+    applyHeal(game, caster, target, def);
     return;
   }
-  if (ability === "curse") {
+  if (def.behavior === "curse") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Curse requires an enemy unit target");
-    applyCurse(game, caster, target);
+    applyCurse(game, caster, target, def);
     return;
   }
   if (!isNumber(x) || !isNumber(y)) throw new Error("Summon requires a target point");
-  applySummon(game, caster, x, y);
+  applySummon(game, caster, x, y, def);
 }
 
-function applyHeal(game: Game, caster: Unit, target: Unit) {
-  if (distance(caster, target) > 240) return;
-  target.hp = Math.min(target.maxHp, target.hp + 55);
-  caster.cooldown = 120;
-  addEffect(game, "heal", target.x, target.y, 36);
+function applyHeal(game: Game, caster: Unit, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "heal" }>) {
+  if (distance(caster, target) > def.range) return;
+  target.hp = Math.min(target.maxHp, target.hp + def.healAmount);
+  caster.cooldown = def.cooldown;
+  addEffect(game, def.effectType, target.x, target.y, 36);
 }
 
-function applySummon(game: Game, caster: Unit, x: number, y: number) {
-  if (distance(caster, { x, y }) > 260) return;
-  const spirit = game.spawnUnit(caster.owner, "spirit", x, y);
-  spirit.expiresTick = game.tick + SUMMONED_SPIRIT_DURATION;
+function applySummon(game: Game, caster: Unit, x: number, y: number, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "summon" }>) {
+  if (distance(caster, { x, y }) > def.range) return;
+  const spirit = game.spawnUnit(caster.owner, def.summonKind, x, y);
+  spirit.expiresTick = game.tick + def.summonDuration;
   spirit.order = { type: "idle" };
-  caster.cooldown = 220;
-  addEffect(game, "summon", x, y, 50);
+  caster.cooldown = def.cooldown;
+  addEffect(game, def.effectType, x, y, 50);
 }
 
-function applyCurse(game: Game, caster: Unit, target: Unit) {
-  if (distance(caster, target) > 280) return;
-  target.effects = target.effects.filter((effect) => effect.type !== "curse");
-  target.effects.push({ type: "curse", remaining: CURSE_DURATION });
-  caster.cooldown = 150;
-  addEffect(game, "curse", target.x, target.y, 46);
+function applyCurse(game: Game, caster: Unit, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "curse" }>) {
+  if (distance(caster, target) > def.range) return;
+  target.effects = target.effects.filter((effect) => effect.type !== def.statusType);
+  target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(def.damageMultiplier !== 0.4 ? { damageMultiplier: def.damageMultiplier } : {}) });
+  caster.cooldown = def.cooldown;
+  addEffect(game, def.effectType, target.x, target.y, 46);
+}
+
+function outgoingDamageMultiplier(unit: Unit) {
+  return unit.effects.reduce((multiplier, effect) => Math.min(multiplier, effect.damageMultiplier ?? (effect.type === "curse" ? 0.4 : 1)), 1);
 }
 
 function carriedItem(game: Game, unit: Unit, itemId: string) {
