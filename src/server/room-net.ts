@@ -4,7 +4,7 @@ import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEv
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
 import type { createRoomHost, HostedRoomFrameEvent } from "./room-host";
-import { DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT, SpectatorSyncLog } from "./spectator-sync";
+import { DEFAULT_ROOM_FRAME_HISTORY_LIMIT } from "./room-history";
 
 export type RoomNetSocket = {
   send(data: string): void;
@@ -22,7 +22,6 @@ export type RoomNetHubOptions = {
 type RoomNetState = {
   coordinator: LockstepRoomCoordinator;
   sockets: Set<RoomNetSocket>;
-  spectatorSync: SpectatorSyncLog;
   authoritativeChecksums: Map<number, string>;
   desyncReports: Set<string>;
   syncEvents: RoomSyncEvent[];
@@ -60,7 +59,6 @@ export class RoomNetHub {
     if (this.options.roomHost.getRoom(roomId).status !== "inMatch") return undefined;
     const state = this.stateFor(roomId);
     const snapshot = this.options.roomHost.snapshot(roomId);
-    state.spectatorSync.recordCheckpoint(this.options.roomHost.checkpointRoom(roomId));
     const frame = state.coordinator.buildFrame(snapshot.tick);
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
     return result.frame;
@@ -163,13 +161,13 @@ export class RoomNetHub {
     const created: RoomNetState = {
       coordinator: new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) }),
       sockets: new Set<RoomNetSocket>(),
-      spectatorSync: new SpectatorSyncLog({ ...(this.options.frameHistoryLimit !== undefined ? { frameHistoryLimit: this.options.frameHistoryLimit } : {}) }),
       authoritativeChecksums: new Map<number, string>(),
       desyncReports: new Set<string>(),
       syncEvents: [],
       nextSyncEventSequence: 1,
       nextChatSequence: 1,
     };
+    if (this.options.frameHistoryLimit !== undefined) this.options.roomHost.setFrameHistoryLimit(roomId, this.options.frameHistoryLimit);
     created.unsubscribeFrameEvents = this.options.roomHost.observeRoomFrames(roomId, (event) => this.publishFrameEvent(roomId, event));
     this.rooms.set(roomId, created);
     return created;
@@ -179,7 +177,6 @@ export class RoomNetHub {
     const state = this.rooms.get(roomId);
     if (!state) return;
     this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
-    state.spectatorSync.recordFrame(event.frame);
     this.broadcast(roomId, { type: "frame", frame: event.frame });
     if (event.room.status === "ended") this.broadcast(roomId, { type: "room", room: event.room });
   }
@@ -208,8 +205,7 @@ export class RoomNetHub {
   private sendCheckpointWithFrames(socket: RoomNetSocket, message: Extract<ClientNetMessage, { type: "requestCheckpoint" }>): void {
     const roomId = message.roomId;
     const requestedTick = message.tick;
-    const state = this.stateFor(roomId);
-    const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : state.spectatorSync.checkpointAtOrBefore(requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
+    const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : this.options.roomHost.checkpointAtOrBefore(roomId, requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
     const reason = message.reason ?? (requestedTick === undefined ? "manual" : "late-catchup");
     const checkpointClass = checkpointRequestClass(reason);
     this.recordSyncEvent(roomId, {
@@ -223,7 +219,7 @@ export class RoomNetHub {
       ...(message.clientChecksum ? { clientChecksum: message.clientChecksum } : {}),
     });
     if (!this.send(roomId, socket, { type: "checkpoint", checkpoint: { ...checkpoint, reason, checkpointClass } })) return;
-    for (const frame of state.spectatorSync.framesFrom(checkpoint.tick)) {
+    for (const frame of this.options.roomHost.framesFrom(roomId, checkpoint.tick)) {
       if (!this.send(roomId, socket, { type: "frame", frame })) return;
     }
   }
@@ -284,7 +280,7 @@ export class RoomNetHub {
   }
 
   private trimChecksumHistory(state: RoomNetState, latestTick: number): void {
-    const limit = this.options.frameHistoryLimit ?? DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT;
+    const limit = this.options.frameHistoryLimit ?? DEFAULT_ROOM_FRAME_HISTORY_LIMIT;
     const oldestTick = latestTick - limit + 1;
     for (const tick of state.authoritativeChecksums.keys()) {
       if (tick < oldestTick) state.authoritativeChecksums.delete(tick);
