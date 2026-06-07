@@ -267,6 +267,26 @@ describe("lockstep client", () => {
 
     expect(() => client.receiveFrame({ roomId: "room-1", tick: 4, sequence: 14, commands: [] })).not.toThrow();
   });
+
+  it("clears buffered future frames when a checkpoint starts a replacement epoch", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    const oldEpochUnit = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
+    expect(oldEpochUnit).toBeDefined();
+    client.receiveFrame({ roomId: "room-1", tick: 1, sequence: 1, commands: [{ playerId: "player", command: { type: "move", unitIds: [oldEpochUnit!.id], x: oldEpochUnit!.x + 100, y: oldEpochUnit!.y } }] });
+    const checkpointGame = createGame("wildMarches", { aiPlayers: [] });
+    checkpointGame.tick = 0;
+
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 0, snapshot: checkpointGame, nextId: checkpointGame.nextId } });
+    client.receiveFrame({ roomId: "room-1", tick: 0, sequence: 0, commands: [] });
+    client.updateToRenderTime();
+    client.updateToRenderTime();
+
+    expect(client.currentSnapshot().tick).toBe(1);
+    expect(client.currentSnapshot().map.id).toBe("wildMarches");
+    expect(client.currentSnapshot().units.find((unit) => unit.id === oldEpochUnit!.id)?.order).toEqual({ type: "idle" });
+  });
 });
 
 class FakeTransport implements NetTransport {

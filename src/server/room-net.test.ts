@@ -441,6 +441,63 @@ describe("room net hub", () => {
     expect(hub.tickConnectedRooms()).toEqual(new Set());
   });
 
+  it("publishes a replacement checkpoint when a connected live room is reset", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-reset-with-socket", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+    hub.tickRoom(room.id);
+    socket.sent = [];
+
+    roomHost.resetRoom(room.id, "wildMarches", { aiPlayers: [] });
+
+    const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
+    expect(messages).toContainEqual(expect.objectContaining({ type: "room", room: expect.objectContaining({ id: room.id, status: "inMatch", mapId: "wildMarches" }) }));
+    expect(messages).toContainEqual(expect.objectContaining({ type: "checkpoint", checkpoint: expect.objectContaining({ roomId: room.id, tick: 0, snapshot: expect.objectContaining({ tick: 0, map: expect.objectContaining({ id: "wildMarches" }) }) }) }));
+  });
+
+  it("drops delayed commands from the previous lockstep epoch after reset", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-reset-drops-pending", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.resetRoom(room.id, "bareDuel", {
+      aiPlayers: [],
+      scenario: {
+        addUnits: [{ id: "old-epoch-footman", owner: "player", kind: "footman", x: 900, y: 900 }],
+      },
+    });
+    const hub = new RoomNetHub({ roomHost, commandDelayTicks: 2 });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+    socket.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", command: { type: "move", unitIds: ["old-epoch-footman"], x: 950, y: 950 } }));
+
+    roomHost.resetRoom(room.id, "bareDuel", { aiPlayers: [] });
+    socket.sent = [];
+    hub.tickRoom(room.id);
+    hub.tickRoom(room.id);
+    hub.tickRoom(room.id);
+
+    const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
+    expect(frames.flatMap((message) => message.frame.commands)).not.toContainEqual({ playerId: "player", command: { type: "move", unitIds: ["old-epoch-footman"], x: 950, y: 950 } });
+  });
+
+  it("publishes a closed room lifecycle event before removing connected-room state", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-close-published", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+
+    const closed = roomHost.closeRoom(room.id, hostUser.id);
+
+    const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
+    expect(closed.status).toBe("closed");
+    expect(messages).toContainEqual({ type: "room", room: closed });
+  });
+
   it("can publish an externally changed room state to connected clients", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-publish-ended", host: hostUser, mapId: "bareDuel" });
