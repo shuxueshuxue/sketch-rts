@@ -2,7 +2,8 @@ import { createAiRuntime } from "../../ai/runtime";
 import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
-import { createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { createRoomLifecycleHost } from "../../shared/room-lifecycle";
+import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
@@ -17,7 +18,7 @@ export type StaticSoloDeploymentRuntimeOptions = {
 
 export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "static" as const;
-  private readonly rooms = new Map<string, RoomState>();
+  private readonly lifecycle = createRoomLifecycleHost();
   private readonly matches = new Map<string, { adapter: LocalGameAdapter; onRoom: (room: RoomState) => void }>();
   private readonly emptyAdapter = new EmptyGameAdapter();
 
@@ -29,26 +30,22 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   }
 
   async listRooms(viewerUserId?: string): Promise<RoomState[]> {
-    return lobbyVisibleRooms([...this.rooms.values()], viewerUserId);
+    return this.lifecycle.listRooms(viewerUserId);
   }
 
   async createRoom(input: CreateRoomInput): Promise<RoomState> {
     const parsed = assertCreateRoomInput(input);
-    if (this.rooms.has(parsed.id)) throw new Error(`Room ${parsed.id} already exists`);
-    const room = createRoom(parsed);
-    this.rooms.set(room.id, room);
-    return room;
+    return this.lifecycle.createRoom(parsed);
   }
 
   async getRoom(roomId: string): Promise<RoomState> {
-    return this.requireRoom(roomId);
+    return this.lifecycle.getRoom(roomId);
   }
 
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
-    let room = this.requireRoom(roomId);
+    let room = this.lifecycle.getRoom(roomId);
     if (room.status === "open") {
-      room = joinFirstOpenSlot(room, user);
-      this.rooms.set(room.id, room);
+      room = this.lifecycle.joinRoom(roomId, user);
     }
     const slot = room.slots.find((candidate) => candidate.userId === user.id);
     return { room, spectating: room.status === "inMatch" && !slot, playerId: slot?.playerId ?? "player" };
@@ -57,40 +54,37 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
     const input = parseMapUpdateRequest({ mapId });
     if (!input) throw new Error("Malformed room map input");
-    return this.replaceRoom(updateRoomMap(this.requireRoom(roomId), input.mapId));
+    return this.lifecycle.updateMap(roomId, input.mapId);
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
     const input = parseSlotPatch(patch);
     if (!input) throw new Error("Malformed slot patch");
-    return this.replaceRoom(updateRoomSlot(this.requireRoom(roomId), slotId, input));
+    return this.lifecycle.updateSlot(roomId, slotId, input);
   }
 
   async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
     const input = parseSlotCountsRequest({ humanCount, aiCount });
     if (!input) throw new Error("Malformed room slot count input");
-    return this.replaceRoom(resizeRoomSlots(this.requireRoom(roomId), input.humanCount, input.aiCount));
+    return this.lifecycle.resizeSlots(roomId, input.humanCount, input.aiCount);
   }
 
   async closeRoom(roomId: string, userId: string): Promise<RoomState> {
-    const room = this.requireRoom(roomId);
-    if (room.hostUserId !== userId) throw new Error("Only the room host can close this room");
-    this.rooms.delete(roomId);
-    return { ...room, status: "closed" };
+    return this.lifecycle.closeRoom(roomId, userId);
   }
 
   async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
-    const room = this.replaceRoom({ ...this.requireRoom(roomId), status: "inMatch" });
-    const setup = roomToGameSetup({ ...room, status: "open" });
+    const setup = this.lifecycle.prepareStartRoom(roomId);
     const slot = setup.playerSlots.find((candidate) => candidate.userId === user.id);
     const playerId = slot?.playerId ?? "player";
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
+    const { room } = this.lifecycle.startRoom(roomId);
     const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
       aiRuntime,
       room,
+      finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
       onRoomEnded: (ended) => {
-        this.replaceRoom(ended);
         onRoom(ended);
       },
     }));
@@ -100,14 +94,15 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
 
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
     if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
+    if (!this.lifecycle.hasRoom(room.id)) throw new Error(`Unknown room ${room.id}`);
     const setup = roomToGameSetup({ ...room, status: "open" });
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
     const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
       aiRuntime,
       room,
+      finishRoom: (snapshot) => this.lifecycle.finishRoom(room.id, snapshot),
       onRoomEnded: (ended) => {
-        this.replaceRoom(ended);
         onRoom(ended);
       },
     }));
@@ -120,30 +115,19 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   }
 
   async forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState> {
-    const room = this.requireRoom(roomId);
+    const room = this.lifecycle.getRoom(roomId);
     const match = this.matches.get(roomId);
     if (!match) throw new Error(`Room ${roomId} is not in a local match`);
     const loser = room.slots.find((slot) => slot.userId === user.id)?.playerId;
     const winner = room.slots.find((slot) => (slot.controller === "human" || slot.controller === "ai") && slot.playerId !== loser)?.playerId ?? null;
     const snapshot = match.adapter.currentSnapshot();
-    const ended = this.replaceRoom(finishRoom(room, { ...snapshot, match: { ...snapshot.match, winner, endedAtTick: snapshot.tick } }));
+    const ended = this.lifecycle.finishRoom(roomId, { ...snapshot, match: { ...snapshot.match, winner, endedAtTick: snapshot.tick } });
     this.matches.delete(roomId);
     match.onRoom(ended);
     return ended;
   }
 
   close(): void {}
-
-  private requireRoom(roomId: string): RoomState {
-    const room = this.rooms.get(roomId);
-    if (!room) throw new Error(`Unknown room ${roomId}`);
-    return room;
-  }
-
-  private replaceRoom(room: RoomState): RoomState {
-    this.rooms.set(room.id, room);
-    return room;
-  }
 
   private localAdapterOptions(options: LocalGameAdapterOptions): LocalGameAdapterOptions {
     return {

@@ -1,6 +1,5 @@
 import { createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState } from "../../ai/runtime";
 import type { CommandEnvelope } from "../../shared/net/types";
-import { finishRoom } from "../../shared/rooms";
 import { snapshotGame, type Game } from "../../shared/sim";
 import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../../shared/types";
@@ -11,6 +10,7 @@ export type LocalGameAdapterOptions = {
   tickMs?: number;
   aiRuntime?: AiRuntimeState;
   room?: RoomState;
+  finishRoom?: (snapshot: GameSnapshot) => RoomState;
   onRoomEnded?: (room: RoomState) => void;
 };
 
@@ -59,7 +59,8 @@ export class LocalGameAdapter implements GameAdapter {
   private applyAndStep(commands: CommandEnvelope[]): void {
     this.frameRuntime.tick(commands);
     if (this.room && this.game.match.winner) {
-      this.room = finishRoom(this.room, snapshotGame(this.game));
+      if (!this.options.finishRoom) throw new Error(`Local room ${this.room.id} finished without a lifecycle finisher`);
+      this.room = this.options.finishRoom(snapshotGame(this.game));
       this.options.onRoomEnded?.(this.room);
     }
   }
