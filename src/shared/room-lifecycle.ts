@@ -26,6 +26,11 @@ export type RoomStartResult = {
 
 export type RoomStartSetup = RoomStartResult["setup"];
 
+export function liveRoomToGameSetup(room: RoomState): RoomStartSetup {
+  if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
+  return roomToGameSetup({ ...room, status: "open" });
+}
+
 export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
   const defaultAutoTick = options.defaultAutoTick ?? true;
   const rooms = new Map<string, RoomState>();

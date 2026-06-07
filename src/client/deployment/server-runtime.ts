@@ -2,7 +2,8 @@ import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import { prepareChatPayload } from "../../shared/chat";
 import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
-import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { liveRoomToGameSetup } from "../../shared/room-lifecycle";
+import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter, LockstepRoomGameAdapter, type GameAdapter } from "../game-adapter";
 import { LockstepClient } from "../net/lockstep-client";
@@ -83,7 +84,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   }
 
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
-    const setup = roomToGameSetup({ ...room, status: "open" });
+    const setup = liveRoomToGameSetup(room);
     const game = createGame(setup.mapId, setup.options);
     const transport = this.createRoomTransport(room.id);
     const client = new LockstepClient({

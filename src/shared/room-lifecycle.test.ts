@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRoomLifecycleHost } from "./room-lifecycle";
+import { createRoomLifecycleHost, liveRoomToGameSetup } from "./room-lifecycle";
 import { createGame, snapshotGame } from "./sim";
 import type { GameSnapshot, LocalUserProfile, RoomState } from "./types";
 
@@ -58,5 +58,17 @@ describe("room lifecycle host", () => {
     expect(reset.setup.mapId).toBe("wildMarches");
     expect(adopted.autoTick).toBe(false);
     expect(lifecycle.getRoom("room-adopted")).toEqual(adopted);
+  });
+
+  it("converts live rooms back into game setup without deployment-local status hacks", () => {
+    const lifecycle = createRoomLifecycleHost();
+    const created = lifecycle.createRoom({ id: "room-live-setup", host: hostUser, humanCount: 1, aiCount: 1, mapId: "bareDuel" });
+    const { room } = lifecycle.startRoom(created.id);
+
+    const setup = liveRoomToGameSetup(room);
+
+    expect(setup.mapId).toBe("bareDuel");
+    expect(setup.options.players).toEqual(["player", "enemy"]);
+    expect(() => liveRoomToGameSetup({ ...room, status: "open" })).toThrow(/not in a live match/);
   });
 });

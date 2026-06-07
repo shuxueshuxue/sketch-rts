@@ -2,8 +2,8 @@ import { createAiRuntime } from "../../ai/runtime";
 import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
-import { createRoomLifecycleHost } from "../../shared/room-lifecycle";
-import { roomToGameSetup, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
+import { createRoomLifecycleHost, liveRoomToGameSetup } from "../../shared/room-lifecycle";
+import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
 import { createGame } from "../../shared/sim";
 import type { LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
@@ -95,7 +95,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
   connectRoom(room: RoomState, playerId: PlayerId, _spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch {
     if (room.status !== "inMatch") throw new Error(`Room ${room.id} is not in a live match`);
     if (!this.lifecycle.hasRoom(room.id)) throw new Error(`Unknown room ${room.id}`);
-    const setup = roomToGameSetup({ ...room, status: "open" });
+    const setup = liveRoomToGameSetup(room);
     const game = createGame(setup.mapId, setup.options);
     const aiRuntime = createAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions ? { versions: setup.options.aiVersions } : {});
     const adapter = new LocalGameAdapter(game, playerId, this.localAdapterOptions({
