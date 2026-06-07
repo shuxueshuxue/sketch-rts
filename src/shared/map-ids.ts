@@ -73,3 +73,7 @@ export const GENERATED_RICH_SCORE_MAP_IDS = [
 
 export const RICH_SCORE_MAP_IDS = [...AUTHORED_RICH_SCORE_MAP_IDS, ...GENERATED_RICH_SCORE_MAP_IDS] as const;
 export const MAP_IDS = [...BASE_MAP_IDS, ...NON_SCORE_RICH_MAP_IDS, ...RICH_SCORE_MAP_IDS, "grandThirty"] as const;
+
+export function isMapId(value: unknown): value is (typeof MAP_IDS)[number] {
+  return typeof value === "string" && (MAP_IDS as readonly string[]).includes(value);
+}
