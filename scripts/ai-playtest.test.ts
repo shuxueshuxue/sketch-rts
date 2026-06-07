@@ -35,6 +35,11 @@ describe("AI playtest CLI", () => {
       requiredFlags: ["file"],
       optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-gauntlet", "assist-you"]),
     });
+    expect(byName["diagnose"]).toMatchObject({
+      category: "planning",
+      requiredFlags: ["file"],
+      optionalFlags: expect.arrayContaining(["checkpoint-ticks", "plan-owner", "inspect-owner"]),
+    });
     expect(manifest.commands.every((command: { example?: string }) => command.example)).toBe(true);
   });
 
@@ -225,7 +230,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "diagnosis.json");
 
-    const diagnosis = JSON.parse(runPlaytestCli("diagnose", "--file", file, "--setup", "combat-10v12", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you", "--checkpoint-ticks", "45", "--plan-owner", "v2"));
+    const diagnosis = JSON.parse(runPlaytestCli("diagnose", "--file", file, "--setup", "combat-10v12", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you", "--checkpoint-ticks", "45", "--plan-owner", "v2", "--inspect-owner", "v2"));
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(diagnosis.samples.map((sample: { tick: number }) => sample.tick)).toEqual([0, 45]);
@@ -238,6 +243,8 @@ describe("AI playtest CLI", () => {
         }),
       ])
     );
+    expect(diagnosis.samples[1].inspections.v2.units.length).toBeGreaterThan(0);
+    expect(diagnosis.samples[1].inspections.v2.units.some((unit: { memoryClaim: unknown }) => unit.memoryClaim !== null)).toBe(true);
     expect(diagnosis.finalSummary.tick).toBe(45);
     expect(persisted.session.save.snapshot.tick).toBe(45);
   });

@@ -34,6 +34,7 @@ if (verb === "diagnose") {
     args,
     checkpoints: diagnosisCheckpointsFromArgs(args),
     planOwners: playerListFlag(args, "plan-owner"),
+    ...(flag(args, "inspect-owner") ? { inspectOwner: unitInspectionOwnerFlag(args, "inspect-owner") } : {}),
   });
   savePlaytestFile(file, diagnosis.file);
   const { file: _persistedFile, ...report } = diagnosis;
@@ -141,8 +142,8 @@ function numberListFlag(args: string[], name: string): number[] {
   });
 }
 
-function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspectionOwner {
-  const owner = flag(args, "owner") ?? "all";
+function unitInspectionOwnerFlag(args: string[], name = "owner"): InteractivePlaytestUnitInspectionOwner {
+  const owner = flag(args, name) ?? "all";
   if (owner === "all" || owner === "neutral") return owner;
   return owner as PlayerId;
 }

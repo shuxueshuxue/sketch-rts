@@ -1,7 +1,7 @@
-import { restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCondition } from "../sdk/playtest";
+import { restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner } from "../sdk/playtest";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { PlayerId } from "../shared/types";
-import { stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession, type AiInteractivePlaytestSummary } from "./playtest";
+import { inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession, type AiInteractivePlaytestSummary, type AiInteractivePlaytestUnitInspection } from "./playtest";
 import { planAiRuntimeCommandEntries, type AiRuntimeIssuedCommand } from "./runtime";
 import { createAiPlaytestFileFromArgs, type AiPlaytestFile } from "./playtest-session-file";
 
@@ -23,6 +23,7 @@ export type AiPlaytestDiagnosisSample = {
   gameSecond: number;
   summary: AiInteractivePlaytestSummary;
   plans: Partial<Record<PlayerId | "all", AiPlaytestDiagnosisPlan>>;
+  inspections: Partial<Record<InteractivePlaytestUnitInspectionOwner, AiInteractivePlaytestUnitInspection>>;
 };
 
 export type AiPlaytestDiagnosis = {
@@ -31,7 +32,7 @@ export type AiPlaytestDiagnosis = {
   finalSummary: AiInteractivePlaytestSummary;
 };
 
-export function runAiPlaytestDiagnosis(input: { args: string[]; checkpoints?: AiPlaytestDiagnosisCheckpoint[]; planOwners?: PlayerId[] }): AiPlaytestDiagnosis {
+export function runAiPlaytestDiagnosis(input: { args: string[]; checkpoints?: AiPlaytestDiagnosisCheckpoint[]; planOwners?: PlayerId[]; inspectOwner?: InteractivePlaytestUnitInspectionOwner }): AiPlaytestDiagnosis {
   const initial = createAiPlaytestFileFromArgs(input.args);
   const session = restoreInteractivePlaytestSession(initial.session);
   const runtime = clone(initial.runtime);
@@ -42,7 +43,7 @@ export function runAiPlaytestDiagnosis(input: { args: string[]; checkpoints?: Ai
     if (checkpoint.type !== "initial") {
       stepAiInteractivePlaytestUntil(session, runtime, conditionForCheckpoint(checkpoint), { maxTicks: maxTicksForCheckpoint(session.game.tick, checkpoint) });
     }
-    samples.push(sampleDiagnosis(checkpointLabel(checkpoint), input.planOwners, session, runtime));
+    samples.push(sampleDiagnosis(checkpointLabel(checkpoint), input.planOwners, input.inspectOwner, session, runtime));
   }
 
   return {
@@ -52,7 +53,7 @@ export function runAiPlaytestDiagnosis(input: { args: string[]; checkpoints?: Ai
   };
 }
 
-function sampleDiagnosis(label: string, planOwners: PlayerId[] | undefined, session: ReturnType<typeof restoreInteractivePlaytestSession>, runtime: AiPlaytestFile["runtime"]): AiPlaytestDiagnosisSample {
+function sampleDiagnosis(label: string, planOwners: PlayerId[] | undefined, inspectOwner: InteractivePlaytestUnitInspectionOwner | undefined, session: ReturnType<typeof restoreInteractivePlaytestSession>, runtime: AiPlaytestFile["runtime"]): AiPlaytestDiagnosisSample {
   const plans: AiPlaytestDiagnosisSample["plans"] = {};
   if (planOwners && planOwners.length > 0) {
     for (const owner of planOwners) {
@@ -61,12 +62,15 @@ function sampleDiagnosis(label: string, planOwners: PlayerId[] | undefined, sess
   } else {
     plans.all = { owner: "all", entries: planAiRuntimeCommandEntries(session.game, clone(runtime)) };
   }
+  const inspections: AiPlaytestDiagnosisSample["inspections"] = {};
+  if (inspectOwner) inspections[inspectOwner] = inspectAiInteractivePlaytestUnits(session, runtime, { owner: inspectOwner });
   return {
     label,
     tick: session.game.tick,
     gameSecond: session.game.tick / SIM_TICKS_PER_SECOND,
     summary: summarizeAiInteractivePlaytestSession(session, runtime),
     plans,
+    inspections,
   };
 }
 

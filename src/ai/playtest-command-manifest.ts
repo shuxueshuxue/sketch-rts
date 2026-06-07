@@ -59,8 +59,8 @@ export const AI_PLAYTEST_COMMAND_MANIFEST: AiPlaytestCommandSpec[] = [
     category: "planning",
     summary: "Create a fresh playtest, sample tactical checkpoints, and print planned AI entries.",
     requiredFlags: ["file"],
-    optionalFlags: ["id", "map", "setup", "recipe", "from-benchmark", "benchmark-seed", "benchmark-map-count", "benchmark-full", "from-control-benchmark", "control-seed", "control-map-count", "control-worker-harassment", "control-full", "from-cross-race-benchmark", "cross-race-seed", "cross-race-map-count", "cross-race-full", "from-gauntlet", "gauntlet-seed", "gauntlet-map-count", "gauntlet-full", "you", "enemy", "you-version", "enemy-version", "you-team", "enemy-team", "you-race", "enemy-race", "assist-you", "think-interval", "you-scripts", "enemy-scripts", "checkpoint-ticks", "checkpoint-seconds", "plan-owner"],
-    example: "npm run play:ai -- diagnose --file .playtests/duel.json --setup combat-10v12 --recipe early-mixed --checkpoint-ticks 45,90 --plan-owner v2",
+    optionalFlags: ["id", "map", "setup", "recipe", "from-benchmark", "benchmark-seed", "benchmark-map-count", "benchmark-full", "from-control-benchmark", "control-seed", "control-map-count", "control-worker-harassment", "control-full", "from-cross-race-benchmark", "cross-race-seed", "cross-race-map-count", "cross-race-full", "from-gauntlet", "gauntlet-seed", "gauntlet-map-count", "gauntlet-full", "you", "enemy", "you-version", "enemy-version", "you-team", "enemy-team", "you-race", "enemy-race", "assist-you", "think-interval", "you-scripts", "enemy-scripts", "checkpoint-ticks", "checkpoint-seconds", "plan-owner", "inspect-owner"],
+    example: "npm run play:ai -- diagnose --file .playtests/duel.json --setup combat-10v12 --recipe early-mixed --checkpoint-ticks 45,90 --plan-owner v2 --inspect-owner v2",
   },
   {
     name: "step",

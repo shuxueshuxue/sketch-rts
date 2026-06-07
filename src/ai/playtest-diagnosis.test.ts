@@ -36,4 +36,26 @@ describe("AI playtest diagnosis", () => {
     expect(diagnosis.file.session.id).toBe("diagnosis-combat");
     expect(diagnosis.file.runtime.lastThink.v2).toBe(30);
   });
+
+  it("can include inspected units at every checkpoint through the shared inspection primitive", () => {
+    const diagnosis = runAiPlaytestDiagnosis({
+      args: ["--id", "diagnosis-units", "--setup", "combat-10v12", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you"],
+      checkpoints: [{ type: "initial" }, { type: "tick", tick: 45 }],
+      planOwners: ["v2"],
+      inspectOwner: "v2",
+    });
+
+    expect(diagnosis.samples).toHaveLength(2);
+    expect(diagnosis.samples[0]!.inspections.v2).toMatchObject({
+      owner: "v2",
+      units: expect.arrayContaining([
+        expect.objectContaining({
+          owner: "v2",
+          hp: expect.any(Number),
+          order: expect.objectContaining({ type: expect.any(String) }),
+        }),
+      ]),
+    });
+    expect(diagnosis.samples[1]!.inspections.v2!.units.some((unit) => unit.memoryClaim !== null)).toBe(true);
+  });
 });
