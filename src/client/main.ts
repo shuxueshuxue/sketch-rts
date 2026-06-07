@@ -48,7 +48,9 @@ import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
+import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
+import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
@@ -67,7 +69,6 @@ declare global {
 }
 
 const POINTER_LOCK_GUIDE_STORAGE_KEY = "sketch-rts-pointer-lock-guide-v1";
-const MAX_ROOM_SLOTS = 30;
 
 const app = requireElement<HTMLDivElement>("#app");
 
@@ -416,8 +417,8 @@ function renderCreateGameMenu() {
         </select>
       </label>
       <div class="create-count-grid">
-        <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="30" value="1" /></label>
-        <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="29" value="1" /></label>
+        <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="${MAX_ROOM_SLOTS}" value="1" /></label>
+        <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="1" /></label>
       </div>
       <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
     </div>
@@ -434,19 +435,20 @@ function renderCreateGameMenu() {
     const humanCount = Number(data.get("humanCount"));
     const aiCount = Number(data.get("aiCount"));
     const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
-    if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > 30) {
+    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
+    if (!slotCounts) {
       menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.slotCountRangeError"))}</span>`;
       return;
     }
-    if (!MAP_SCENARIOS.some((scenario) => scenario.id === mapId)) {
+    if (!isMapId(mapId)) {
       menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.knownMapError"))}</span>`;
       return;
     }
     void createConfiguredRoom({
       name,
-      mapId: mapId as MapId,
-      humanCount,
-      aiCount,
+      mapId,
+      humanCount: slotCounts.humanCount,
+      aiCount: slotCounts.aiCount,
       visibility: data.get("privateRoom") === "on" ? "private" : "public",
     });
   });
@@ -454,9 +456,10 @@ function renderCreateGameMenu() {
     const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
     const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
     const total = humanCount + aiCount;
+    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
     const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
     totalLabel.textContent = Number.isInteger(total) ? t("roomCreate.slotCountLabel", { count: total }) : t("roomCreate.slotCountFallback");
-    totalLabel.classList.toggle("error", !Number.isInteger(humanCount) || !Number.isInteger(aiCount) || total < 2 || total > MAX_ROOM_SLOTS || humanCount < 1 || aiCount < 0);
+    totalLabel.classList.toggle("error", !slotCounts);
   };
   form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
@@ -791,8 +794,9 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
 
 async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
   if (!currentRoom) return;
-  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > MAX_ROOM_SLOTS) return;
-  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, humanCount, aiCount);
+  const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
+  if (!slotCounts) return;
+  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, slotCounts.humanCount, slotCounts.aiCount);
   renderMainMenu();
 }
 

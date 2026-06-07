@@ -1,4 +1,5 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
+import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
 export const DEFAULT_INTERNAL_AI_VERSION = "v2";
 
@@ -23,10 +24,7 @@ type EditableRoomSlot = Omit<RoomSlot, "userId"> & { userId?: string | undefined
 export type SlotPatch = Partial<Pick<RoomSlot, "controller" | "team" | "race" | "ready" | "name">> & { userId?: string | undefined };
 
 export function createRoom(input: CreateRoomInput): RoomState {
-  const humanCount = input.humanCount ?? 1;
-  const aiCount = input.aiCount ?? Math.max(1, (input.slotCount ?? 2) - humanCount);
-  const slotCount = input.humanCount !== undefined || input.aiCount !== undefined ? humanCount + aiCount : (input.slotCount ?? 2);
-  if (humanCount < 1 || aiCount < 0 || slotCount < 2 || slotCount > 30) throw new Error("Rooms require 2 to 30 total slots and at least one human slot");
+  const { humanCount, aiCount, slotCount } = assertRoomSlotCounts(input);
   const slots = Array.from({ length: slotCount }, (_, index): RoomSlot => {
     const playerId = defaultPlayerId(index);
     const isHost = index === 0;
@@ -69,11 +67,7 @@ export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
 
 export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: number): RoomState {
   if (room.status !== "open") throw new Error("Cannot edit slots after match start");
-  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 0 || humanCount + aiCount < 2 || humanCount + aiCount > 30) {
-    throw new Error("Rooms require 2 to 30 total slots and at least one human slot");
-  }
-
-  const slotCount = humanCount + aiCount;
+  const slotCount = assertRoomSlotCounts({ humanCount, aiCount }).slotCount;
   const slots = Array.from({ length: slotCount }, (_, index): RoomSlot => {
     const existing = room.slots[index];
     const isHost = index === 0;
@@ -179,7 +173,7 @@ export function lobbyVisibleRooms(rooms: RoomState[], viewerUserId?: string): Ro
 export function createGrandThirtyRoom(id: string, host: LocalUserProfile, options: GrandStressRoomOptions = {}): RoomState {
   const humanCount = options.humanCount ?? 15;
   const aiCount = options.aiCount ?? 15;
-  if (!Number.isInteger(humanCount) || !Number.isInteger(aiCount) || humanCount < 1 || aiCount < 1 || humanCount + aiCount !== 30) {
+  if (!isGrandStressSlotCounts(humanCount, aiCount)) {
     throw new Error("Grand stress rooms require humanCount + aiCount = 30 with both sides active");
   }
 

@@ -1,5 +1,6 @@
 import { assertSaveGameInput, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import type { DebugReplayTrace } from "../shared/replay";
+import type { CreateRoomRequest, GrandStressRoomRequest } from "../shared/room-schema";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomState, RoomVisibility, SlotController, WorldEffect } from "../shared/types";
 
 export type SketchRtsCatalog = {
@@ -15,22 +16,6 @@ export type FastForwardResult = {
   elapsedMs: number;
   cpuMs: number;
   memory: TickMemoryObservation;
-};
-
-export type CreateRoomRequest = {
-  id?: string;
-  host: LocalUserProfile;
-  name?: string;
-  mapId?: MapId;
-  slotCount?: number;
-  humanCount?: number;
-  aiCount?: number;
-  visibility?: RoomVisibility;
-};
-
-export type GrandStressRoomRequest = {
-  humanCount?: number;
-  aiCount?: number;
 };
 
 export type SlotPatchRequest = {
