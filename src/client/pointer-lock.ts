@@ -27,14 +27,6 @@ export function moveVirtualPointer(
   };
 }
 
-export function pointerLockRequiredTitle() {
-  return "Continue game";
-}
-
-export function pointerLockRequiredBody() {
-  return "Mouse lock is paused. Continue when you're ready; Escape releases it again.";
-}
-
 export function virtualPointerTransform(point: PointerLockPoint, size: number) {
   const offset = size / 2;
   return `translate(${Math.round(point.x - offset)}px, ${Math.round(point.y - offset)}px)`;

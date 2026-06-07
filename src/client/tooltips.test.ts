@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createI18n } from "./i18n";
 import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitTooltip, upgradeTooltip } from "./tooltips";
 
 describe("gameplay tooltips", () => {
@@ -57,5 +58,25 @@ describe("gameplay tooltips", () => {
     expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 170 gold", "Build 11.0s", "HP 620"]));
     expect(tooltip.body).toContain("trains");
     expect(tooltipText(tooltip)).toContain("Barracks");
+  });
+
+  it("uses the active locale for labels, descriptions, stats, and requirements", () => {
+    const zh = createI18n("zh");
+
+    expect(unitTooltip("archer", "a", zh)).toMatchObject({
+      title: "弓箭手",
+      body: expect.stringContaining("远程"),
+      stats: expect.arrayContaining(["花费 115 金", "人口 2", "生命 85", "攻击 13", "射程 399", "训练 7.8s"]),
+      hotkey: "A",
+    });
+    expect(abilityTooltip("heal", "h", zh)).toMatchObject({
+      title: "治疗",
+      stats: expect.arrayContaining(["恢复 55 生命", "射程 240", "冷却 4.0s"]),
+      requirements: ["牧师或战地医师必须准备就绪。"],
+    });
+    expect(itemTooltip("lightningRod", "1", zh).requirements).toEqual(["需要射程内可见的敌方单位。"]);
+    expect(upgradeTooltip("buildingDurability", "d", 0, zh).requirements).toEqual(["在城镇大厅研究。", "影响建筑。"]);
+    expect(buildingTooltip("barracks", "b", zh).requirements[0]).toContain("提供：步兵");
+    expect(buildingTooltip("barracks", "b", zh).requirements[0]).toContain("武器训练");
   });
 });

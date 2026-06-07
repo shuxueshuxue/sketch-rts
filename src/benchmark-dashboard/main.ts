@@ -1,4 +1,5 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
+import { browserLanguages, detectLocale, type Locale } from "../client/i18n";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { matchWarnings } from "./warnings";
 import { campRoleSummary, dashboardTags, runListMeta, runMatchesTag, runTags } from "./view-model";
@@ -12,9 +13,135 @@ type DashboardState = {
   error: string | null;
 };
 
+const DASHBOARD_TEXT = {
+  en: {
+    aiVersion: "ai version",
+    all: "all",
+    baseBuilds: "base builds",
+    building: "building",
+    campBands: "camp bands",
+    campRoles: "camp roles",
+    camps: "camps",
+    cpu: "cpu",
+    cpuTime: "cpu time",
+    creep: "creep",
+    enemyExpansionHit: "enemy expansion hit",
+    enemyKills: "enemy kills",
+    eventDisconnected: "Benchmark dashboard event stream disconnected.",
+    events: "events",
+    finalBuildings: "final buildings",
+    finalSupply: "final supply",
+    firstExpansionMining: "first expansion mining",
+    firstFight: "first fight",
+    games: "games",
+    gold: "gold",
+    goldIncome: "gold income",
+    goldMines: "gold mines",
+    goldSpent: "gold spent",
+    itemKinds: "item kinds",
+    itemPickups: "item pickups",
+    items: "items",
+    itemUses: "item uses",
+    killedByNeutral: "killed by neutral",
+    loading: "Running or loading benchmark...",
+    mapDetail: "map detail",
+    maps: "maps",
+    mercCamps: "merc camps",
+    mercs: "mercs",
+    mine: "mine",
+    moonWellHealing: "moon well healing",
+    moonWells: "moon wells",
+    neutralKills: "neutral kills",
+    noReports: "No benchmark reports found.",
+    none: "none",
+    noRunsForTag: "No benchmark runs for this tag.",
+    notAvailable: "n/a",
+    ownExpansionHit: "own expansion hit",
+    peakSupply: "peak supply",
+    players: "players",
+    race: "race",
+    refresh: "Refresh",
+    scoreControl: "1v1 score control",
+    size: "size",
+    starUnits: "star units",
+    title: "Benchmark",
+    towerBuilds: "tower builds",
+    unit: "unit",
+    unitLosses: "unit losses",
+    untagged: "untagged",
+    upgradeTimings: "upgrade timings",
+    wall: "wall",
+    wallTime: "wall time",
+  },
+  zh: {
+    aiVersion: "AI 版本",
+    all: "全部",
+    baseBuilds: "基地建造",
+    building: "建筑",
+    campBands: "野怪营地分层",
+    campRoles: "营地角色",
+    camps: "营地",
+    cpu: "CPU",
+    cpuTime: "CPU 时间",
+    creep: "野怪",
+    enemyExpansionHit: "攻击敌方分矿",
+    enemyKills: "击杀敌方单位",
+    eventDisconnected: "Benchmark dashboard 事件流已断开。",
+    events: "次",
+    finalBuildings: "最终建筑",
+    finalSupply: "最终人口",
+    firstExpansionMining: "首次分矿采集",
+    firstFight: "首次交战",
+    games: "局",
+    gold: "金矿",
+    goldIncome: "金矿收入",
+    goldMines: "金矿点",
+    goldSpent: "金矿支出",
+    itemKinds: "物品类型",
+    itemPickups: "拾取物品",
+    items: "物品",
+    itemUses: "使用物品",
+    killedByNeutral: "被野怪击杀",
+    loading: "正在运行或加载 benchmark...",
+    mapDetail: "地图细节",
+    maps: "地图",
+    mercCamps: "雇佣兵营地",
+    mercs: "雇佣营",
+    mine: "矿",
+    moonWellHealing: "月井治疗",
+    moonWells: "月井",
+    neutralKills: "击杀野怪",
+    noReports: "没有找到 benchmark 报告。",
+    none: "无",
+    noRunsForTag: "这个标签下没有 benchmark run。",
+    notAvailable: "不可用",
+    ownExpansionHit: "己方分矿被打",
+    peakSupply: "峰值人口",
+    players: "玩家",
+    race: "种族",
+    refresh: "刷新",
+    scoreControl: "1v1 分数控制组",
+    size: "尺寸",
+    starUnits: "星级单位",
+    title: "Benchmark",
+    towerBuilds: "防御塔建造",
+    unit: "单位",
+    unitLosses: "单位损失",
+    untagged: "未标记",
+    upgradeTimings: "升级时间",
+    wall: "墙钟",
+    wallTime: "墙钟时间",
+  },
+} as const satisfies Record<Locale, Record<string, string>>;
+
+type DashboardTextKey = keyof typeof DASHBOARD_TEXT.en;
+
 const appRoot = document.querySelector<HTMLDivElement>("#benchmark-app");
 if (!appRoot) throw new Error("missing benchmark app root");
 const root: HTMLDivElement = appRoot;
+const locale = detectLocale(browserLanguages());
+document.documentElement.lang = locale;
+document.title = text("title");
 
 const state: DashboardState = { runs: [], selectedRun: null, selectedTag: "all", loading: false, error: null };
 
@@ -67,22 +194,22 @@ function render() {
         <div class="panel-head">
           <div>
             <span class="eyebrow">AI Lab</span>
-            <h1>Benchmark</h1>
+            <h1>${escapeHtml(text("title"))}</h1>
           </div>
-          <button type="button" data-refresh ${state.loading ? "disabled" : ""}>Refresh</button>
+          <button type="button" data-refresh ${state.loading ? "disabled" : ""}>${escapeHtml(text("refresh"))}</button>
         </div>
         <div class="tag-filter">
-          ${tagButton("all", tags.length === 0 ? "all" : `all ${tags.length}`, state.selectedTag)}
+          ${tagButton("all", tags.length === 0 ? text("all") : `${text("all")} ${tags.length}`, state.selectedTag)}
           ${tags.map((tag) => tagButton(tag, tag, state.selectedTag)).join("")}
         </div>
         <div class="run-stack">
-          ${visibleRuns.length === 0 ? `<div class="empty">No benchmark runs for this tag.</div>` : visibleRuns.map((run) => runListItem(run, selectedId)).join("")}
+          ${visibleRuns.length === 0 ? `<div class="empty">${escapeHtml(text("noRunsForTag"))}</div>` : visibleRuns.map((run) => runListItem(run, selectedId)).join("")}
         </div>
       </aside>
       <section class="detail-panel">
         ${state.error ? `<div class="error">${escapeHtml(state.error)}</div>` : ""}
-        ${state.loading ? `<div class="loading">Running or loading benchmark...</div>` : ""}
-        ${state.selectedRun ? runDetail(state.selectedRun) : `<div class="empty detail-empty">No benchmark reports found.</div>`}
+        ${state.loading ? `<div class="loading">${escapeHtml(text("loading"))}</div>` : ""}
+        ${state.selectedRun ? runDetail(state.selectedRun) : `<div class="empty detail-empty">${escapeHtml(text("noReports"))}</div>`}
       </section>
     </main>
   `;
@@ -112,7 +239,7 @@ function connectDashboardEvents() {
     void loadDashboard({ showLoading: false, preserveSelection: false });
   });
   events.addEventListener("error", () => {
-    state.error = "Benchmark dashboard event stream disconnected.";
+    state.error = text("eventDisconnected");
     render();
   });
 }
@@ -123,7 +250,7 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
       <span>${escapeHtml(formatDate(run.createdAt))}</span>
       <strong>${run.scoreSummary.wins}/${run.scoreSummary.matchCount} ${escapeHtml(scoreLabel(run.scoreSummary.name))}</strong>
       <small>${runTags(run).map((tag) => `<b>${escapeHtml(tag)}</b>`).join(" ")}</small>
-      <em>${escapeHtml(runListMeta(run))}</em>
+      <em>${escapeHtml(runListMeta(run, locale))}</em>
     </button>
   `;
 }
@@ -138,18 +265,18 @@ function runDetail(run: BenchmarkDashboardRun) {
       </div>
       <div class="run-meta">
         <span>${escapeHtml(run.seed)}</span>
-        <strong>wall ${formatMs(run.report.elapsedMs)} · cpu ${formatMs(run.report.cpuMs)}</strong>
+        <strong>${escapeHtml(text("wall"))} ${formatMs(run.report.elapsedMs)} · ${escapeHtml(text("cpu"))} ${formatMs(run.report.cpuMs)}</strong>
       </div>
     </div>
     <div class="summary-grid">
       ${summaryCell(scoreLabel(run.scoreSummary.name), run.scoreSummary.wins, run.scoreSummary.matchCount, run.scoreSummary.successRate)}
-      ${summaryCell("1v1 score control", run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
+      ${summaryCell(text("scoreControl"), run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
       ${run.probeSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
       ${run.combatSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
-      <div><span>maps</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>
-      <div><span>games</span><strong>${run.report.matchCount}</strong></div>
-      <div><span>wall time</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>
-      <div><span>cpu time</span><strong>${formatMs(run.report.cpuMs)}</strong></div>
+      <div><span>${escapeHtml(text("maps"))}</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>
+      <div><span>${escapeHtml(text("games"))}</span><strong>${run.report.matchCount}</strong></div>
+      <div><span>${escapeHtml(text("wallTime"))}</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>
+      <div><span>${escapeHtml(text("cpuTime"))}</span><strong>${formatMs(run.report.cpuMs)}</strong></div>
     </div>
     <div class="map-strip">${run.selectedRichScoreMapIds.map((mapId) => `<span>${escapeHtml(mapId)}</span>`).join("")}</div>
     <div class="evaluation-list">
@@ -157,7 +284,7 @@ function runDetail(run: BenchmarkDashboardRun) {
         .map(
           (evaluation) => `
             <section class="evaluation">
-              <header><strong>${escapeHtml(evaluation.name)}</strong><em>${escapeHtml(evaluation.tag ?? "untagged")}</em><span>${evaluation.matchCount} games · wall ${formatMs(evaluation.elapsedMs)} · cpu ${formatMs(evaluation.cpuMs)}</span></header>
+              <header><strong>${escapeHtml(evaluation.name)}</strong><em>${escapeHtml(evaluation.tag ?? text("untagged"))}</em><span>${evaluation.matchCount} ${escapeHtml(text("games"))} · ${escapeHtml(text("wall"))} ${formatMs(evaluation.elapsedMs)} · ${escapeHtml(text("cpu"))} ${formatMs(evaluation.cpuMs)}</span></header>
               ${evaluation.matches.map(matchDetail).join("")}
             </section>
           `,
@@ -184,28 +311,28 @@ function matchDetail(match: BenchmarkMatchReport) {
         <span>${escapeHtml(match.setup.map.name)}</span>
         <strong>${escapeHtml(match.result.winnerTeam)}</strong>
         ${warnings.length > 0 ? `<mark class="match-warning">${escapeHtml(warnings.join(" · "))}</mark>` : ""}
-        <span>${match.result.gameSecond}s · cpu ${formatMs(match.cpuMs)}</span>
+        <span>${match.result.gameSecond}s · ${escapeHtml(text("cpu"))} ${formatMs(match.cpuMs)}</span>
       </summary>
       <div class="match-body">
         ${warnings.length > 0 ? `<div class="warning-strip">${warnings.map((warning) => `<strong>${escapeHtml(warning)}</strong>`).join("")}</div>` : ""}
         <div class="setup-grid">
-          <div><span>size</span><strong>${match.setup.map.width}x${match.setup.map.height}</strong></div>
-          <div><span>gold</span><strong>${match.setup.map.goldMineCount}</strong></div>
-          <div><span>camps</span><strong>${match.setup.map.neutralCamps.camps.length}</strong></div>
-          <div><span>mercs</span><strong>${match.setup.map.mercenaryCamps.length}</strong></div>
-          <div><span>items</span><strong>${match.setup.map.items.total}</strong></div>
+          <div><span>${escapeHtml(text("size"))}</span><strong>${match.setup.map.width}x${match.setup.map.height}</strong></div>
+          <div><span>${escapeHtml(text("gold"))}</span><strong>${match.setup.map.goldMineCount}</strong></div>
+          <div><span>${escapeHtml(text("camps"))}</span><strong>${match.setup.map.neutralCamps.camps.length}</strong></div>
+          <div><span>${escapeHtml(text("mercs"))}</span><strong>${match.setup.map.mercenaryCamps.length}</strong></div>
+          <div><span>${escapeHtml(text("items"))}</span><strong>${match.setup.map.items.total}</strong></div>
         </div>
         <div class="setup-detail">
           <section>
-            <h3>map detail</h3>
-            <div class="metric"><span>gold mines</span><strong>${escapeHtml(match.setup.map.goldMines.map((mine) => `${mine.id}@${Math.round(mine.x)},${Math.round(mine.y)}`).join(", "))}</strong></div>
-            <div class="metric"><span>camp bands</span><strong>${escapeHtml(campBands(match))}</strong></div>
-            <div class="metric"><span>camp roles</span><strong>${campRoleSummary(match.setup.map.neutralCamps)}</strong></div>
-            <div class="metric"><span>merc camps</span><strong>${escapeHtml(match.setup.map.mercenaryCamps.map((camp) => `${camp.id}:${camp.hireKind}x${camp.stock}`).join(", ") || "none")}</strong></div>
-            <div class="metric"><span>item kinds</span><strong>${escapeHtml(itemKinds(match))}</strong></div>
+            <h3>${escapeHtml(text("mapDetail"))}</h3>
+            <div class="metric"><span>${escapeHtml(text("goldMines"))}</span><strong>${escapeHtml(match.setup.map.goldMines.map((mine) => `${mine.id}@${Math.round(mine.x)},${Math.round(mine.y)}`).join(", "))}</strong></div>
+            <div class="metric"><span>${escapeHtml(text("campBands"))}</span><strong>${escapeHtml(campBands(match))}</strong></div>
+            <div class="metric"><span>${escapeHtml(text("campRoles"))}</span><strong>${campRoleSummary(match.setup.map.neutralCamps, locale)}</strong></div>
+            <div class="metric"><span>${escapeHtml(text("mercCamps"))}</span><strong>${escapeHtml(match.setup.map.mercenaryCamps.map((camp) => `${camp.id}:${camp.hireKind}x${camp.stock}`).join(", ") || text("none"))}</strong></div>
+            <div class="metric"><span>${escapeHtml(text("itemKinds"))}</span><strong>${escapeHtml(itemKinds(match))}</strong></div>
           </section>
           <section>
-            <h3>players</h3>
+            <h3>${escapeHtml(text("players"))}</h3>
             ${Object.entries(match.setup.players)
               .map(
                 ([owner, player]) => `
@@ -239,29 +366,29 @@ function playerBlock(owner: string, player: BenchmarkPlayerResult) {
     .map(([level, count]) => `${level} star:${count}`)
     .join(", ");
   const rows: [string, string | number][] = [
-    ["ai version", player.aiVersion],
-    ["race", player.race],
-    ["first expansion mining", second(player.firstExpansionMiningSecond)],
-    ["first fight", second(player.firstEnemyEngagementSecond)],
-    ["enemy expansion hit", second(player.firstEnemyExpansionAttackSecond)],
-    ["own expansion hit", second(player.firstOwnExpansionAttackedSecond)],
-    ["base builds", player.baseBuildCount],
-    ["neutral kills", player.neutralUnitKills],
-    ["enemy kills", player.enemyUnitKills],
-    ["unit losses", player.unitsLost],
-    ["killed by neutral", player.unitsKilledByNeutral],
-    ["tower builds", player.defenseTowerBuildCount],
-    ["moon wells", player.moonWellBuildCount],
-    ["moon well healing", `${player.moonWellHealingEvents} events / ${player.moonWellHealingHp} hp`],
-    ["item pickups", player.itemPickupCount],
-    ["item uses", player.itemUseCount],
-    ["peak supply", player.peakSupply],
-    ["final supply", player.finalSupply],
-    ["final buildings", player.finalBuildingCount],
-    ["gold income", `${player.totalGoldIncome} (${player.goldMineIncome} mine + ${player.creepBountyIncome} creep)`],
-    ["gold spent", `${player.totalGoldSpent} (${player.unitTrainingGoldSpent} unit + ${player.buildingGoldSpent} building)`],
-    ["upgrade timings", upgrades || "none"],
-    ["star units", stars || "none"],
+    [text("aiVersion"), player.aiVersion],
+    [text("race"), player.race],
+    [text("firstExpansionMining"), second(player.firstExpansionMiningSecond)],
+    [text("firstFight"), second(player.firstEnemyEngagementSecond)],
+    [text("enemyExpansionHit"), second(player.firstEnemyExpansionAttackSecond)],
+    [text("ownExpansionHit"), second(player.firstOwnExpansionAttackedSecond)],
+    [text("baseBuilds"), player.baseBuildCount],
+    [text("neutralKills"), player.neutralUnitKills],
+    [text("enemyKills"), player.enemyUnitKills],
+    [text("unitLosses"), player.unitsLost],
+    [text("killedByNeutral"), player.unitsKilledByNeutral],
+    [text("towerBuilds"), player.defenseTowerBuildCount],
+    [text("moonWells"), player.moonWellBuildCount],
+    [text("moonWellHealing"), `${player.moonWellHealingEvents} ${text("events")} / ${player.moonWellHealingHp} hp`],
+    [text("itemPickups"), player.itemPickupCount],
+    [text("itemUses"), player.itemUseCount],
+    [text("peakSupply"), player.peakSupply],
+    [text("finalSupply"), player.finalSupply],
+    [text("finalBuildings"), player.finalBuildingCount],
+    [text("goldIncome"), `${player.totalGoldIncome} (${player.goldMineIncome} ${text("mine")} + ${player.creepBountyIncome} ${text("creep")})`],
+    [text("goldSpent"), `${player.totalGoldSpent} (${player.unitTrainingGoldSpent} ${text("unit")} + ${player.buildingGoldSpent} ${text("building")})`],
+    [text("upgradeTimings"), upgrades || text("none")],
+    [text("starUnits"), stars || text("none")],
   ];
   return `
     <article class="player-card">
@@ -278,11 +405,11 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 function second(value: number | null) {
-  return value === null ? "none" : `${value}s`;
+  return value === null ? text("none") : `${value}s`;
 }
 
 function formatMs(value: number | undefined) {
-  return value === undefined ? "n/a" : `${value.toFixed(1)}ms`;
+  return value === undefined ? text("notAvailable") : `${value.toFixed(1)}ms`;
 }
 
 function campBands(match: BenchmarkMatchReport) {
@@ -292,7 +419,11 @@ function campBands(match: BenchmarkMatchReport) {
 
 function itemKinds(match: BenchmarkMatchReport) {
   const entries = Object.entries(match.setup.map.items.byKind);
-  return entries.length === 0 ? "none" : entries.map(([kind, count]) => `${kind}:${count}`).join(", ");
+  return entries.length === 0 ? text("none") : entries.map(([kind, count]) => `${kind}:${count}`).join(", ");
+}
+
+function text(key: DashboardTextKey) {
+  return DASHBOARD_TEXT[locale][key];
 }
 
 function formatDate(value: string) {

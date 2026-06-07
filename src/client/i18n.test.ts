@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createI18n, detectLocale, type TranslationKey } from "./i18n";
+import { createI18n, detectLocale, type LabelKey, type TranslationKey } from "./i18n";
 
 describe("client i18n", () => {
   it("selects Chinese for Chinese browser languages", () => {
@@ -27,5 +27,14 @@ describe("client i18n", () => {
 
     expect(en.t("home.signedIn", { name: "Ada" })).toBe("Signed in as Ada.");
     expect(() => en.t("home.signedIn")).toThrow("Missing value name for home.signedIn");
+  });
+
+  it("looks up game object labels and fails loudly for missing labels", () => {
+    const en = createI18n("en");
+    const zh = createI18n("zh");
+
+    expect(en.label("moonWell")).toBe("Moon Well");
+    expect(zh.label("moonWell")).toBe("月井");
+    expect(() => zh.label("missingKind" as LabelKey)).toThrow("Missing zh label for missingKind");
   });
 });

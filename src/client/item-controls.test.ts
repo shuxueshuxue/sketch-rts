@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issueCommand, stepGame } from "../shared/sim";
-import { dropItemCommand, itemHotkey, itemHotkeys, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
+import { dropItemCommand, itemHotkey, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import type { Unit, WorldItem } from "../shared/types";
 
 describe("item controls", () => {
@@ -8,7 +8,6 @@ describe("item controls", () => {
     expect(itemHotkey(0)).toBe("1");
     expect(itemHotkey(5)).toBe("6");
     expect(itemHotkeys(3, new Set([1, 3]))).toEqual(["2", "4", "5"]);
-    expect(itemLabel("lightningRod")).toBe("Lightning Rod");
   });
 
   it("uses and drops carried items through ordinary player commands", () => {

@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { gameShellMarkup } from "./game-shell";
+import { createI18n } from "./i18n";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
-  pointerLockRequiredBody,
-  pointerLockRequiredTitle,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
   shouldSuppressPointerLockMouseDefault,
@@ -14,9 +13,11 @@ import {
 
 describe("pointer lock virtual mouse", () => {
   it("keeps pointer lock behind the blocking gate instead of a top-strip button", () => {
-    expect(gameShellMarkup).not.toContain("data-pointer-lock ");
-    expect(gameShellMarkup).toContain("data-pointer-lock-gate");
-    expect(gameShellMarkup).toContain("data-pointer-lock-gate-action");
+    const markup = gameShellMarkup(createI18n("en"));
+
+    expect(markup).not.toContain("data-pointer-lock ");
+    expect(markup).toContain("data-pointer-lock-gate");
+    expect(markup).toContain("data-pointer-lock-gate-action");
   });
 
   it("moves by relative deltas and stays inside the viewport", () => {
@@ -32,9 +33,13 @@ describe("pointer lock virtual mouse", () => {
   });
 
   it("keeps repeated pointer-lock interruptions as a simple continue prompt", () => {
-    expect(pointerLockRequiredTitle()).toBe("Continue game");
-    expect(pointerLockRequiredBody()).toContain("Mouse lock is paused");
-    expect(pointerLockRequiredBody()).not.toContain("Edge");
+    const en = createI18n("en");
+    const zh = createI18n("zh");
+
+    expect(en.t("pointerLock.title.required")).toBe("Continue game");
+    expect(en.t("pointerLock.body.required")).toContain("Mouse lock is paused");
+    expect(en.t("pointerLock.body.required")).not.toContain("Edge");
+    expect(zh.t("pointerLock.title.required")).toBe("继续游戏");
   });
 
   it("centers the virtual pointer overlay on the locked pointer point", () => {
