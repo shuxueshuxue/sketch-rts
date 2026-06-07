@@ -16,7 +16,7 @@ describe("room history log", () => {
     expect(log.checkpointAtOrBefore(1)).toBeUndefined();
   });
 
-  it("keeps replay frames from the debug replay start tick instead of opening a second ledger", () => {
+  it("keeps replay frames from the debug replay start tick without retaining every old checkpoint", () => {
     const log = new RoomHistoryLog({ frameHistoryLimit: 2 });
     for (let tick = 0; tick < 3; tick += 1) {
       log.recordCheckpoint(checkpoint(tick));
@@ -31,7 +31,7 @@ describe("room history log", () => {
     const trace = log.debugReplayTrace({ id: "trace-history", initialSave: saveAt(2) });
 
     expect(trace.frames.map((candidate) => candidate.tick)).toEqual([2, 3, 4, 5, 6, 7]);
-    expect(trace.checkpoints.map((candidate) => candidate.tick)).toEqual([2, 3, 4, 5, 6, 7]);
+    expect(trace.checkpoints.map((candidate) => candidate.tick)).toEqual([2, 6, 7]);
   });
 
   it("names the default retention window instead of hiding a magic number in room net", () => {

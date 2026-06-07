@@ -3,6 +3,7 @@ import type { SaveGameRecord } from "../shared/savegame";
 import type { CheckpointFrame, CommandFrame } from "../shared/net/types";
 
 export const DEFAULT_ROOM_FRAME_HISTORY_LIMIT = 240;
+const DEBUG_REPLAY_CHECKPOINT_INTERVAL_TICKS = 120;
 
 export type RoomHistoryLogOptions = {
   frameHistoryLimit?: number;
@@ -69,8 +70,16 @@ export class RoomHistoryLog {
     const retainedFloor = this.retainedFloor();
     if (retainedFloor !== undefined) this.frames = this.frames.filter((frame) => frame.tick >= retainedFloor);
     if (this.retainFromTick === undefined && this.frames.length > this.frameHistoryLimit) this.frames.splice(0, this.frames.length - this.frameHistoryLimit);
-    const oldestFrameTick = this.frames[0]?.tick ?? Infinity;
-    this.checkpoints = this.checkpoints.filter((checkpoint) => checkpoint.tick >= oldestFrameTick || (this.retainFromTick !== undefined && checkpoint.tick >= this.retainFromTick));
+    const latestFrameTick = this.frames.at(-1)?.tick;
+    const boundedCheckpointFloor = latestFrameTick === undefined ? undefined : latestFrameTick - this.frameHistoryLimit + 1;
+    this.checkpoints = this.checkpoints.filter((checkpoint) => {
+      if (boundedCheckpointFloor !== undefined && checkpoint.tick >= boundedCheckpointFloor) return true;
+      if (this.retainFromTick === undefined || checkpoint.tick < this.retainFromTick) return false;
+      // @@@room-history-checkpoint-policy - Debug replay needs all command frames, but only sparse checkpoints; spectator catch-up keeps the bounded recent checkpoint window above.
+      if (checkpoint.tick === this.retainFromTick) return true;
+      if (checkpoint.snapshot.match?.winner) return true;
+      return (checkpoint.tick - this.retainFromTick) % DEBUG_REPLAY_CHECKPOINT_INTERVAL_TICKS === 0;
+    });
   }
 
   private retainedFloor(): number | undefined {

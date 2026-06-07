@@ -21,7 +21,7 @@ Replay, savegame, SDK command batching, and room-host commands now move toward t
 Network boundaries now have first-pass protocol primitives:
 
 - `src/server/lockstep-room.ts` provides a sim-free `LockstepRoomCoordinator` for command delay, sequence ordering, frame construction, and checksum recording.
-- `src/server/room-history.ts` owns the hosted room checkpoint/frame history. Spectator catch-up and debug replay both read this history instead of recording separate frame ledgers; the default bounded window is `DEFAULT_ROOM_FRAME_HISTORY_LIMIT = 240`, and debug replay raises the room history retention floor from the replay start tick.
+- `src/server/room-history.ts` owns the hosted room checkpoint/frame history. Spectator catch-up and debug replay both read this history instead of recording separate frame ledgers; the default bounded window is `DEFAULT_ROOM_FRAME_HISTORY_LIMIT = 240`. Debug replay keeps command frames from the replay start tick, while checkpoints remain sparse outside the recent spectator window: replay start, periodic fast-seek checkpoints, and terminal match checkpoints.
 - `src/shared/net/codec.ts` encodes and decodes typed net messages and fails loudly on malformed payloads.
 - `src/shared/net/frame-buffer.ts` stores authoritative frames by tick.
 - `src/client/net/transport.ts`, `websocket-transport.ts`, and `lockstep-client.ts` define a client adapter path where local commands are sent over transport and simulation advances only after server frames arrive.
