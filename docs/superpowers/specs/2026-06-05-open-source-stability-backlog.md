@@ -205,6 +205,7 @@ Closed:
 - #18 AI third and fourth expansions: merged in PR #26.
 - #20 Crash-free sim, AI, and lockstep architecture audit: merged in PR #32 and closed on 2026-06-06. Post-merge evidence included focused command-frame/lockstep tests, `npm run build`, full Vitest, crash inventory, and room-flow YATU.
 - #25 Public in-game chat overlay: merged in PR #34 and closed on 2026-06-06. Evidence included client keyboard tests, room/server chat tests, two-browser Playwright CLI chat YATU, room-flow YATU, `npm run build`, and full Vitest.
+- #24 Browser-language i18n: merged in PR #135 and closed on 2026-06-07. Evidence included focused i18n/deployment tests, default `npm run build`, `SKETCH_RTS_BASE_PATH=/sketch-rts/ npm run build:production`, and Playwright CLI public YATU proving `zh-CN` renders Chinese room/profile text while `en-US` renders English text with console 0 errors / 0 warnings.
 - #68 Local/hosted chat delivery primitive: implemented on branch `codex/issue-68-chat-primitive` on 2026-06-07. Evidence includes `src/shared/chat.test.ts`, static/runtime/server chat tests, `src/shared/net/codec.test.ts`, and `npm run build`.
 - #67 Static/hosted room lifecycle primitive: implemented on branch `codex/issue-67-room-lifecycle-core` on 2026-06-07. Evidence includes `src/shared/room-lifecycle.test.ts`, static/server lifecycle equivalence tests, room host/net/runtime tests, and `npm run build`.
 - Rich-map center objective side balance: merged in PR #35 on 2026-06-06. Evidence included a red/green map objective balance test, post-merge `src/shared/map-objectives.test.ts`, `npm run build`, full Vitest, and pgl 1v1 control `92/100` on seed `current-main-50-2026-06-06` with 50 maps and 64 workers.
@@ -212,10 +213,10 @@ Closed:
 
 Open:
 
-- #24 Browser-language i18n.
+- None in the original open-source stability UI/system backlog.
 
 Still not release-complete:
 
-- #24 still needs full browser-visible UI coverage beyond the first home/create-room i18n slice.
 - The current `origin/main` has fresh pgl 1v1 control evidence after PR #35 (`92/100` on seed `current-main-50-2026-06-06`) and fresh live dashboard evidence after main `bf79f20`.
 - The full pgl gauntlet still fails the 100% script gate on run `2026-06-06T03-05-29-013Z-18mgqzs`, mainly in paired 1v2, probe, and 15v20 combat lanes.
+- After PR #135, main also includes native public base path deployment and a production server bundle. The live public deployment at `https://lexicalmathical.com/sketch-rts/` was verified through HTTPS page load, prefixed API, prefixed WebSocket handshake, and Playwright CLI render proof.
