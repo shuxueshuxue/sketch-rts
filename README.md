@@ -4,8 +4,6 @@
 
 Sketch RTS is an RTS game that runs in your browser, with an AI-native SDK, CLI workflow, and composable scripting system.
 
-It is built around one core gameplay path: player input, internal AI, SDK agents, replays, benchmarks, and multiplayer all produce ordinary command frames for the same simulation. The deployment shape can change, but the gameplay core should not fork.
-
 The project is work in progress. The current focus is stable browser play, deterministic command-frame multiplayer, SDK-controlled AI experimentation, and high-throughput benchmarking.
 
 ## Highlights
@@ -14,7 +12,7 @@ The project is work in progress. The current focus is stable browser play, deter
 - AI-native scripting: AI logic is composed from policy scripts that emit normal player commands instead of mutating the simulation directly.
 - SDK control surface for room creation, scenario reset, command injection, fast-forward, savegames, debug replay, and benchmark-style probes.
 - Flexible deployment: a static browser mode for local play and a hosted server mode for rooms, spectators, WebSocket lockstep, saves, SDK control, and the benchmark dashboard.
-- Multiplayer built on command frames, not duplicated gameplay implementations.
+- Multiplayer built on command frames, with replayable room traffic and deterministic match progression.
 - Hosted rooms have a live room lifecycle stream, so pre-match slot lists update across devices before the match starts.
 - Room URLs use stable hash routes such as `#room=room-id`, so players can refresh or share a room without requiring server-side SPA routes.
 - High-performance AI benchmark tooling with parallel workers and a browser dashboard.
@@ -39,11 +37,9 @@ npm run benchmark:ai        # AI benchmark runner
 npm run play:ai             # exact AI playtest CLI
 ```
 
-For large AI benchmarks, use a remote benchmark host rather than a laptop. Benchmark runs can be published to the dashboard store consumed by `benchmark.html`.
+## Command-Frame Workflow
 
-## One Gameplay Core
-
-Sketch RTS treats commands as the center of the architecture.
+Sketch RTS uses command frames as the shared workflow for play, AI control, replay, and benchmark probes.
 
 ```text
 browser input
@@ -59,16 +55,10 @@ ordinary GameCommand entries
 shared command-frame runtime
         |
         v
-single simulation core
+simulation core
 ```
 
-Static mode and hosted mode are product/deployment choices, not separate gameplay engines:
-
-- Static mode keeps room setup and gameplay inside the browser, using a local adapter over the same command-frame runtime.
-- Hosted mode uses HTTP plus a room lifecycle event stream for setup, and WebSocket room frames for live gameplay.
-- SDK and benchmark flows use the same command and simulation primitives, so an AI decision can be replayed, tested, fast-forwarded, or run in a room without being rewritten.
-
-This is the main invariant: multiple product paths are allowed; one core implementation is required.
+AI policy scripts, SDK agents, and benchmark probes all produce ordinary `GameCommand` entries. That makes AI decisions easy to replay, inspect, fast-forward, and compare across benchmark lanes.
 
 ## Deployment Modes
 
