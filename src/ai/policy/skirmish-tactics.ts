@@ -59,7 +59,10 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (!skirmish) return [];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
-  return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }, options)];
+  const intent = deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot, owner, skirmish, options)
+    ? { type: "move" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }
+    : { type: "attackMove" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y };
+  return [resolveAiCommandIntent(snapshot, owner, intent, options)];
 }
 
 function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
@@ -158,6 +161,18 @@ function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[
     return { allies, enemies: localEnemies };
   }
   return undefined;
+}
+
+function deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot: GameSnapshot, owner: PlayerId, skirmish: { allies: Unit[]; enemies: Unit[] }, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const center = averagePoint(skirmish.allies);
+  const deadBaseOwners = opponentPlayerIds(snapshot, owner, options).filter(
+    (opponent) => buildings(snapshot, opponent).some((building) => distance(building, center) <= 560) && units(snapshot, opponent).length === 0,
+  );
+  if (deadBaseOwners.length === 0) return false;
+  const liveEnemies = skirmish.enemies.filter((enemy) => !deadBaseOwners.includes(enemy.owner));
+  // @@@dead-base-clean-retreat - Once a dead opponent's buildings are only terrain, preservation must not attack-move into them while a live opponent's army owns the field.
+  return liveEnemies.length >= 2 && armyPower(liveEnemies) > armyPower(skirmish.allies) * 1.05;
 }
 
 function dormantNeutralThreatsStillOnRoute(enemies: Unit[], allies: Unit[]) {

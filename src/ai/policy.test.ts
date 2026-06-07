@@ -9197,6 +9197,35 @@ describe("SDK preset AI policy", () => {
     expect(telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
   });
 
+  it("v2 move-retreats out of a dead opponent base when another opponent controls the field", () => {
+    const scene = sketchScene("v2-dead-base-skirmish-move-retreat")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .townHall("v1a", 1500, 500, { id: "v1a-cleared-natural" })
+      .building("v1a", "farm", 3080, 1120)
+      .building("v1a", "barracks", 3140, 1180)
+      .townHall("v1b", 3400, 3400)
+      .unit("v2", "footman", 3000, 1120, { id: "v2-a", order: { type: "attackMove", x: 500, y: 500 } })
+      .unit("v2", "lancer", 3040, 1160, { id: "v2-b", order: { type: "attackMove", x: 500, y: 500 } })
+      .unit("v2", "archer", 2960, 1160, { id: "v2-c", order: { type: "attackMove", x: 500, y: 500 } })
+      .unit("v1b", "footman", 2860, 1160)
+      .unit("v1b", "footman", 2900, 1200)
+      .unit("v1b", "lancer", 2940, 1240)
+      .unit("v1b", "archer", 2980, 1280)
+      .unit("v1b", "contractArcher", 3020, 1320)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["v2-a", "v2-b", "v2-c"] });
+  });
+
   it("v2 kites low-health ranged units away from melee units that have closed the distance", () => {
     const scene = sketchScene("v2-ranged-kite-melee")
       .map("bareDuel")
