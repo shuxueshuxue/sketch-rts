@@ -1,4 +1,4 @@
-import type { GameCommand, GameSnapshot, ItemKind, PlayerId, Unit, WorldItem } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../shared/types";
 
 export function itemHotkey(index: number) {
   return itemHotkeys(index + 1)[index] ?? "";
@@ -10,10 +10,6 @@ export function itemHotkeys(count: number, reservedDigits = new Set<number>()) {
     if (!reservedDigits.has(digit)) keys.push(String(digit));
   }
   return keys;
-}
-
-export function itemLabel(kind: ItemKind) {
-  return kind.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
 }
 
 export function carriedItemsForSelection(snapshot: GameSnapshot, selectedUnits: Unit[]) {

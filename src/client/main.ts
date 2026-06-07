@@ -18,16 +18,14 @@ import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
-import { createBrowserI18n } from "./i18n";
-import { carriedItemsForSelection, dropItemCommand, itemHotkeys, itemLabel, pickupItemCommand, useItemCommand } from "./item-controls";
+import { createBrowserI18n, type LabelKey } from "./i18n";
+import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { drawLevelStar } from "./level-star";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
-  pointerLockRequiredBody,
-  pointerLockRequiredTitle,
   shouldBlockBattlefieldForPointerLock,
   shouldSuppressCanvasMouseDefault,
   shouldSuppressCanvasPointerGesture,
@@ -113,11 +111,11 @@ const SPELL_COMMANDS = [
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
-app.innerHTML = gameShellMarkup;
-
 const i18n = createBrowserI18n();
 const t = i18n.t;
+const tl = i18n.label;
 document.documentElement.lang = i18n.locale;
+app.innerHTML = gameShellMarkup(i18n);
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
@@ -181,8 +179,8 @@ let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
   onRuntimeReady() {
-    menuStatus.textContent = "Server online.";
-    statusLabel.textContent = "Connected. Drag-select workers, right-click gold mines, build a barracks, then train soldiers.";
+    menuStatus.textContent = t("app.serverOnline");
+    statusLabel.textContent = t("app.connectedGuide");
     renderMainMenu();
   },
   onRuntimeError(message) {
@@ -192,37 +190,37 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
 const baseGameAdapter = deploymentRuntime.initialAdapter();
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
-  createCommandButton("Attack Move", "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
-    title: "Attack Move",
-    body: "Selected units move toward a point and fight enemies they meet along the way.",
-    stats: ["Uses all selected units"],
-    requirements: ["Needs at least one selected unit."],
+  createCommandButton(t("command.attackMove.title"), "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
+    title: t("command.attackMove.title"),
+    body: t("command.attackMove.body"),
+    stats: [t("command.attackMove.stats")],
+    requirements: [t("command.attackMove.requirements")],
     hotkey: "A",
   })),
-  createCommandButton("Build", "⌘", "b", canOpenBuildPalette, openBuildPalette, () => ({
-    title: "Build",
-    body: "Open the worker construction palette.",
-    stats: ["Worker command"],
-    requirements: ["Focus a worker."],
+  createCommandButton(t("command.build.title"), "⌘", "b", canOpenBuildPalette, openBuildPalette, () => ({
+    title: t("command.build.title"),
+    body: t("command.build.body"),
+    stats: [t("command.build.stats")],
+    requirements: [t("command.build.requirements")],
     hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(`Build ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey)),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n)),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(`Train ${labelKind(command.kind)}`, command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey)),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n)),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
-    createCommandButton(`Research ${command.label}`, command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0)),
+    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(`Cast ${labelKind(command.ability)}`, command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey)),
+    createCommandButton(t("command.castSpecific", { ability: labelKind(command.ability) }), command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey, i18n)),
   ),
-  createCommandButton("Hire Mercenary", HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary, () => ({
-    title: "Hire Mercenary",
-    body: "Recruit the mercenary currently offered by the selected camp.",
-    stats: ["Uses camp stock", "Instant recruit"],
-    requirements: ["A friendly unit must stand near the camp."],
+  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary, () => ({
+    title: t("command.hire.title"),
+    body: t("command.hire.body"),
+    stats: [t("command.hire.stock"), t("command.hire.instant")],
+    requirements: [t("command.hire.requirements")],
     hotkey: HIRE_COMMAND.hotkey.toUpperCase(),
   })),
 ];
@@ -470,17 +468,17 @@ function renderCreateGameMenu() {
 }
 
 function renderProfileMenu() {
-  menuStatus.textContent = "Local browser identity for LAN rooms.";
+  menuStatus.textContent = t("profile.status");
   const form = document.createElement("form");
   form.className = "profile-form";
   form.dataset.profileForm = "true";
   form.innerHTML = `
-    <label>Display name<input name="name" value="${escapeHtml(localUser.name)}" /></label>
-    <div class="profile-id">User id ${escapeHtml(localUser.id)}</div>
+    <label>${escapeHtml(t("profile.displayName"))}<input name="name" value="${escapeHtml(localUser.name)}" /></label>
+    <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
     <div class="menu-actions">
-      <button type="submit">Save</button>
-      <button type="button" data-regenerate-user>Regenerate id</button>
-      <button type="button" data-back-home>Back</button>
+      <button type="submit">${escapeHtml(t("common.save"))}</button>
+      <button type="button" data-regenerate-user>${escapeHtml(t("profile.regenerate"))}</button>
+      <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
   form.addEventListener("submit", (event) => {
@@ -488,7 +486,7 @@ function renderProfileMenu() {
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
     if (!name) {
-      menuStatus.innerHTML = `<span class="error">Name cannot be empty.</span>`;
+      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("profile.nameEmpty"))}</span>`;
       return;
     }
     localUser = { ...localUser, name };
@@ -509,7 +507,7 @@ function renderProfileMenu() {
 }
 
 async function renderRoomBrowser() {
-  menuStatus.textContent = "Rooms hosted by this server.";
+  menuStatus.textContent = t("roomBrowser.status");
   const rooms = await deploymentRuntime.listRooms(localUser.id);
   const browser = document.createElement("div");
   browser.className = "room-browser";
@@ -520,11 +518,11 @@ async function renderRoomBrowser() {
   `;
   const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
   actions.replaceChildren(
-    menuButton("Create Room", "Choose map, slots, and private/public visibility.", "data-create-room", () => {
+    menuButton(t("roomBrowser.create.title"), t("roomBrowser.create.note"), "data-create-room", () => {
       menuView = "create";
       renderMainMenu();
     }),
-    menuButton("Back", "Return to the main menu.", "data-back-home", () => {
+    menuButton(t("common.back"), t("roomBrowser.back.note"), "data-back-home", () => {
       menuView = "home";
       renderMainMenu();
     }),
@@ -544,8 +542,8 @@ async function renderRoomBrowser() {
 function renderRoomSetup() {
   const setupAction = roomSetupViewAction(currentRoom);
   if (setupAction === "empty") {
-    menuStatus.textContent = "No room selected.";
-    mapList.replaceChildren(menuButton("Create Room", "Create a private or public game room.", "data-create-room", () => {
+    menuStatus.textContent = t("roomSetup.empty");
+    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), t("roomSetup.createMissing.note"), "data-create-room", () => {
       menuView = "create";
       renderMainMenu();
     }));
@@ -562,46 +560,46 @@ function renderRoomSetup() {
   }
   const room = currentRoom!;
   selectedMapId = room.mapId;
-  menuStatus.textContent = `${room.name} - ${room.visibility} - ${room.status}`;
+  menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
   const setup = document.createElement("div");
   setup.className = "room-setup";
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = `
     <div class="room-setup-header">
       <div>
-        <div class="room-section-title">Room</div>
+        <div class="room-section-title">${escapeHtml(t("roomSetup.room"))}</div>
         <div class="room-setup-name">${escapeHtml(room.name)}</div>
       </div>
     </div>
     <div class="room-setup-layout">
-      <section class="room-map-pane" aria-label="Map list">
-        <div class="room-section-title">Maps</div>
+      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
+        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
         <div class="room-map-grid"></div>
       </section>
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
           <div>
-            <div class="room-section-title">Slots</div>
+            <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
             <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(room))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" data-add-player-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Player</button>
-            <button type="button" data-add-ai-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>+ Computer</button>
-            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(room) ? "" : "disabled"}>Remove Slot</button>
-            <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>Close Room</button>
+            <button type="button" data-add-player-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addPlayer"))}</button>
+            <button type="button" data-add-ai-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addAi"))}</button>
+            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(room) ? "" : "disabled"}>${escapeHtml(t("roomSetup.removeSlot"))}</button>
+            <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
           </div>
         </div>
         <div class="slot-list"></div>
       </section>
     </div>
     <div class="menu-actions">
-      <button type="button" data-start-room>Start Match</button>
-      <button type="button" data-back-room-browser>Back to Rooms</button>
+      <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
+      <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>
     </div>
   `;
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
-  startButton.title = startButton.disabled ? "Fill open slots, keep at least two active slots on two teams, and ready human players." : "Start match";
+  startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
   const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
   mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
@@ -626,12 +624,12 @@ function renderRoomSetup() {
 function renderResultsMenu() {
   const result = currentRoom?.result;
   if (!currentRoom || !result) {
-    menuStatus.textContent = "No completed match selected.";
-    mapList.replaceChildren(menuButton("Back Home", "Return to the main menu.", "data-return-home", returnHome));
+    menuStatus.textContent = t("results.noCompleted");
+    mapList.replaceChildren(menuButton(t("results.backHome"), t("roomBrowser.back.note"), "data-return-home", returnHome));
     return;
   }
 
-  menuStatus.textContent = `${currentRoom.name} finished at tick ${result.endedAtTick ?? "?"}.`;
+  menuStatus.textContent = t("results.finished", { name: currentRoom.name, tick: result.endedAtTick ?? "?" });
   const rows = result.slots.map((slot) => {
     const kills = result.stats.unitsKilled[slot.playerId] ?? 0;
     const losses = result.stats.unitsLost[slot.playerId] ?? 0;
@@ -640,9 +638,9 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(slot.controller)}</span>
-        <span>${escapeHtml(slot.team)}</span>
-        <span>${escapeHtml(slot.race)}</span>
+        <span>${escapeHtml(labelKind(slot.controller))}</span>
+        <span>${escapeHtml(labelKind(slot.team))}</span>
+        <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
         <span>${spent}</span>
         <span>${buildings}</span>
@@ -653,14 +651,14 @@ function renderResultsMenu() {
   panel.className = "results-panel";
   panel.dataset.resultsScreen = currentRoom.id;
   panel.innerHTML = `
-    <div class="result-winner" data-result-winner>Winner: ${escapeHtml(result.winner ?? "Draw")}</div>
+    <div class="result-winner" data-result-winner>${escapeHtml(t("results.winner", { winner: result.winner ?? t("results.draw") }))}</div>
     <div class="result-head">
-      <span>Player</span><span>Ctrl</span><span>Team</span><span>Race</span><span>K/L</span><span>Gold</span><span>Bldg</span>
+      <span>${escapeHtml(t("results.player"))}</span><span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span><span>${escapeHtml(t("results.race"))}</span><span>${escapeHtml(t("results.killsLosses"))}</span><span>${escapeHtml(t("results.gold"))}</span><span>${escapeHtml(t("results.buildings"))}</span>
     </div>
     <div class="result-list">${rows.join("")}</div>
     <div class="menu-actions">
-      <button type="button" data-rematch>Rematch</button>
-      <button type="button" data-return-home>Home</button>
+      <button type="button" data-rematch>${escapeHtml(t("results.rematch"))}</button>
+      <button type="button" data-return-home>${escapeHtml(t("common.home"))}</button>
     </div>
   `;
   const completedRoom = currentRoom;
@@ -738,7 +736,7 @@ function mapChoiceButton(mapId: MapId) {
   button.className = `map-button ${selectedMapId === scenario.id ? "selected" : ""}`;
   button.type = "button";
   button.dataset.mapId = scenario.id;
-  button.setAttribute("aria-label", `Choose ${scenario.name}`);
+  button.setAttribute("aria-label", t("map.choose", { name: scenario.name }));
   button.innerHTML = `
     <span class="map-button-name">${escapeHtml(scenario.name)}</span>
     <span class="map-button-note">${escapeHtml(scenario.note)}</span>
@@ -753,22 +751,22 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
   const controllerOptions = ["ai", "open", "closed"]
-    .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${controller}</option>`)
+    .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
-  const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${race}</option>`).join("");
+  const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     ${
       slot.controller === "human"
-        ? `<span class="slot-controller-badge" data-slot-controller-status>human</span>`
-        : `<select data-slot-controller aria-label="Slot controller">${controllerOptions}</select>`
+        ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind("human"))}</span>`
+        : `<select data-slot-controller aria-label="${escapeHtml(t("roomSetup.slotController"))}">${controllerOptions}</select>`
     }
-    <select data-slot-team aria-label="Slot team">
-      ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${team}</option>`).join("")}
+    <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}">
+      ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
-    <select data-slot-race aria-label="Slot race">${raceOptions}</select>
-    <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ready</label>
+    <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
+    <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
     const controller = (event.currentTarget as HTMLSelectElement).value;
@@ -865,26 +863,26 @@ function slotSummaryText(room: RoomState) {
     (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
     { human: 0, ai: 0, open: 0, closed: 0 },
   );
-  const openText = tally.open > 0 ? ` · ${tally.open} open` : "";
-  const closedText = tally.closed > 0 ? ` · ${tally.closed} closed` : "";
-  return `${room.slots.length}/${MAX_ROOM_SLOTS} · ${tally.human} claimed · ${tally.ai} AI${openText}${closedText}`;
+  const openText = tally.open > 0 ? t("roomSetup.summaryOpen", { count: tally.open }) : "";
+  const closedText = tally.closed > 0 ? t("roomSetup.summaryClosed", { count: tally.closed }) : "";
+  return t("roomSetup.summary", { total: room.slots.length, max: MAX_ROOM_SLOTS, human: tally.human, ai: tally.ai, open: openText, closed: closedText });
 }
 
 function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
   const ownedSlot = slotForUser(room, localUser.id);
-  const access = ownedSlot ? `you are ${ownedSlot.playerId}` : action === "watch" ? "watch live" : room.status === "open" ? "open" : "already started";
-  return `${room.mapId} · ${room.status} · ${activeSlotCount(room)} active · ${access}`;
+  const access = ownedSlot ? t("roomCard.access.youAre", { playerId: ownedSlot.playerId }) : action === "watch" ? t("roomCard.access.watch") : room.status === "open" ? t("roomCard.access.open") : t("roomCard.access.alreadyStarted");
+  return `${room.mapId} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
 }
 
 function emptyRoomList() {
   const empty = document.createElement("div");
   empty.className = "empty-room-list";
-  empty.textContent = "No visible rooms.";
+  empty.textContent = t("roomBrowser.noVisible");
   return empty;
 }
 
 function mapCapacityLabel(mapId: MapId) {
-  return mapId === "grandThirty" ? "up to 30" : "2-30 configurable";
+  return mapId === "grandThirty" ? t("map.capacity.grandThirty") : t("map.capacity.configurable");
 }
 
 function slotForUser(room: RoomState, userId: string) {
@@ -933,7 +931,7 @@ async function enterRoom(roomId: string) {
     menuView = "setup";
     renderMainMenu();
   } catch (error) {
-    menuStatus.innerHTML = `<span class="error">Could not enter room: ${escapeHtml(error instanceof Error ? error.message : String(error))}</span>`;
+    menuStatus.innerHTML = `<span class="error">${escapeHtml(t("status.enterRoomFailed", { message: error instanceof Error ? error.message : String(error) }))}</span>`;
     renderMainMenu();
   }
 }
@@ -981,7 +979,7 @@ function syncActiveGameAdapterSnapshot() {
 function syncBeforeCommandProjection() {
   // @@@command-projection-truth - Input events can arrive between render frames; command construction must re-materialize adapter truth before reading selection ids.
   if (syncActiveGameAdapterSnapshot() && snapshot) return true;
-  showInvalidCommand("No active match.");
+  showInvalidCommand(t("status.noActiveMatch"));
   return false;
 }
 
@@ -1071,18 +1069,18 @@ function showPointerLockGate(kind: "guide" | "required") {
   pointerLockGateKind = kind;
   const edge = isEdgeBrowser();
   pointerLockGate.classList.remove("hidden");
-  pointerLockGateTitle.textContent = kind === "guide" ? "Before you play" : pointerLockRequiredTitle();
+  pointerLockGateTitle.textContent = kind === "guide" ? t("pointerLock.title.guide") : t("pointerLock.title.required");
   pointerLockGateBody.innerHTML =
     kind === "guide"
       ? [
-          "Sketch RTS playtest build. Credit: shuxueshuxue.",
-          "Mouse lock keeps camera movement and right-click commands inside the battlefield. Press Escape any time to release it.",
-          edge ? "Microsoft Edge users: turn off <strong>Enable Mouse Gesture</strong> in <code>edge://settings/appearance</code> before playing." : "",
+          t("pointerLock.body.credit"),
+          t("pointerLock.body.mouse"),
+          edge ? t("pointerLock.body.edge") : "",
         ]
           .filter(Boolean)
           .join("<br>")
-      : pointerLockRequiredBody();
-  pointerLockGateAction.textContent = kind === "guide" ? (edge ? "I turned it off, lock mouse" : "Lock mouse to play") : "Continue";
+      : t("pointerLock.body.required");
+  pointerLockGateAction.textContent = kind === "guide" ? (edge ? t("pointerLock.action.edge") : t("pointerLock.action.guide")) : t("common.continue");
 }
 
 function hidePointerLockGate() {
@@ -1104,7 +1102,7 @@ async function requestPointerLock(point: Point, options: { fieldClickOnError: bo
   if (options.fieldClickOnError) {
     pointerLockArmed = true;
     hidePointerLockGate();
-    statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
+    statusLabel.textContent = t("status.pointerLockClick");
   }
   try {
     await canvas.requestPointerLock();
@@ -1129,7 +1127,7 @@ function syncPointerLockState() {
     hidePointerLockGate();
     pointerLockArmed = false;
     pointerLockFieldClickOnError = false;
-    statusLabel.textContent = "Mouse locked. Move normally; Escape releases the cursor.";
+    statusLabel.textContent = t("status.pointerLockLocked");
     return;
   }
   virtualMouse = undefined;
@@ -1140,13 +1138,13 @@ function handlePointerLockError(fieldClickOnError: boolean, error?: unknown) {
   if (fieldClickOnError) {
     pointerLockArmed = true;
     hidePointerLockGate();
-    statusLabel.textContent = "Browser needs one battlefield click to capture the mouse.";
+    statusLabel.textContent = t("status.pointerLockClick");
     return;
   }
   pointerLockArmed = false;
   pointerLockUnavailable = true;
   hidePointerLockGate();
-  const message = error instanceof Error ? `Pointer lock unavailable: ${error.message}` : "Pointer lock unavailable. Battlefield clicks still work.";
+  const message = error instanceof Error ? t("status.pointerLockUnavailableWithMessage", { message: error.message }) : t("status.pointerLockUnavailable");
   showInvalidCommand(message);
 }
 
@@ -1206,7 +1204,7 @@ function onKeyDown(event: KeyboardEvent) {
   }
   if (key === "escape" && buildPaletteOpen) {
     event.preventDefault();
-    closeBuildPalette("Build menu closed.");
+    closeBuildPalette(t("status.buildMenuClosed"));
     return;
   }
   if (key === "tab") {
@@ -1221,12 +1219,12 @@ function onKeyDown(event: KeyboardEvent) {
 
   if (key === "a") {
     event.preventDefault();
-    showInvalidCommand("Attack-move needs selected units.");
+    showInvalidCommand(t("status.attackMoveNeedsUnits"));
     return;
   }
   if (key === "b") {
     event.preventDefault();
-    showInvalidCommand("Build needs a selected worker.");
+    showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
   keys.add(key);
@@ -1409,7 +1407,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
   }
   const unitIds = selectedUnits.map((unit) => unit.id);
   if (unitIds.length === 0) {
-    showInvalidCommand("Select a unit before issuing orders.");
+    showInvalidCommand(t("status.selectUnitBeforeOrders"));
     return;
   }
 
@@ -1420,30 +1418,30 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
   if (item) {
     const command = pickupItemCommand(focusedPlayerUnits(), item);
     if (!command) {
-      showInvalidCommand("Focus a unit before picking up items.");
+      showInvalidCommand(t("status.pickupNeedsFocus"));
       return;
     }
     sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued });
-    statusLabel.textContent = `${itemLabel(item.kind)} pickup ordered.`;
+    statusLabel.textContent = t("status.itemPickup", { item: labelKind(item.kind) });
     return;
   }
   if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
     sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id, queued });
-    statusLabel.textContent = "Workers ordered to mine gold.";
+    statusLabel.textContent = t("status.mineOrdered");
     return;
   }
   if (repairTarget && selectedUnits.some((unit) => unit.kind === "worker")) {
     sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id, queued });
-    statusLabel.textContent = `${labelBuilding(repairTarget)} repair ordered.`;
+    statusLabel.textContent = t("status.repairOrdered", { building: labelBuilding(repairTarget) });
     return;
   }
   if (target) {
     sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
-    statusLabel.textContent = target.owner === "neutral" ? "Attack order issued on wildlings." : "Attack order issued.";
+    statusLabel.textContent = target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
     return;
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
-  statusLabel.textContent = "Move order issued.";
+  statusLabel.textContent = t("status.moveOrdered");
 }
 
 function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
@@ -1451,17 +1449,17 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   const friendlyUnit = hitUnit(world, (unit) => unit.owner === localPlayerId);
   if (friendlyUnit) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: friendlyUnit.x, y: friendlyUnit.y, target: { type: "unit", unitId: friendlyUnit.id } });
-    statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set to follow ${labelAnyKind(friendlyUnit.kind)}.`;
+    statusLabel.textContent = t("status.rallyFollow", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint"), target: labelAnyKind(friendlyUnit.kind) });
     return;
   }
   const resource = hitResource(world);
   if (resource) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: resource.x, y: resource.y, target: { type: "resource", resourceId: resource.id } });
-    statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set to gold mine.`;
+    statusLabel.textContent = t("status.rallyGold", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
     return;
   }
   sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: world.x, y: world.y, target: { type: "point" } });
-  statusLabel.textContent = `${buildings.length > 1 ? "Rally points" : "Rally point"} set.`;
+  statusLabel.textContent = t("status.rallySet", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
 }
 
 function canAttackMove() {
@@ -1506,23 +1504,23 @@ function canHireMercenary() {
 
 function openBuildPalette() {
   if (!canOpenBuildPalette()) {
-    showInvalidCommand("Build needs a selected worker.");
+    showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
   buildPaletteOpen = true;
-  statusLabel.textContent = "Build menu opened. Choose a structure hotkey or command button.";
+  statusLabel.textContent = t("status.buildMenuOpened");
   updateHud();
 }
 
 function beginAttackMoveMode() {
   if (!canAttackMove()) {
-    showInvalidCommand("Attack-move needs selected units.");
+    showInvalidCommand(t("status.attackMoveNeedsUnits"));
     return;
   }
   commandMode = { type: "attackMove" };
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
-  statusLabel.textContent = "Attack-move mode. Left-click ground to advance and fight, right-click or Escape to cancel.";
+  statusLabel.textContent = t("status.attackMoveMode");
   updateHud();
 }
 
@@ -1530,21 +1528,21 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
   if (!snapshot) return;
   const worker = focusedPlayerUnits().find((unit) => unit.kind === "worker");
   if (!worker) {
-    showInvalidCommand("Build needs a selected worker.");
+    showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
   buildPaletteOpen = false;
   commandMode = { type: "build", placement: { workerId: worker.id, buildingKind } };
   shell.classList.add("placement-active");
   shell.classList.remove("targeting-active");
-  statusLabel.textContent = `Choose a ${labelKind(buildingKind)} location. Left-click to place, right-click or Escape to cancel.`;
+  statusLabel.textContent = t("status.chooseBuildingLocation", { building: labelKind(buildingKind) });
   updateHud();
 }
 
 function beginSpellTargeting(ability: AbilityKind) {
   const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
   if (!caster) {
-    showInvalidCommand(`${labelKind(ability)} needs a ready caster.`);
+    showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
   }
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
@@ -1552,8 +1550,8 @@ function beginSpellTargeting(ability: AbilityKind) {
   shell.classList.remove("placement-active");
   statusLabel.textContent =
     ability === "summon"
-      ? "Summon mode. Left-click nearby ground, right-click or Escape to cancel."
-      : `${labelKind(ability)} mode. Left-click a valid unit target, right-click or Escape to cancel.`;
+      ? t("status.summonMode")
+      : t("status.spellMode", { ability: labelKind(ability) });
   updateHud();
 }
 
@@ -1567,7 +1565,7 @@ function confirmBuildPlacement(point: Point) {
     return;
   }
   sendCommand(result.command);
-  statusLabel.textContent = `${labelKind(commandMode.placement.buildingKind)} foundation placed.`;
+  statusLabel.textContent = t("status.foundationPlaced", { building: labelKind(commandMode.placement.buildingKind) });
   clearCommandModeClasses();
   commandMode = undefined;
   updateHud();
@@ -1578,7 +1576,7 @@ function issueAttackMoveAt(point: Point, queued = false) {
   if (!commandMode || commandMode.type !== "attackMove") return;
   const unitIds = selectedPlayerUnits().map((unit) => unit.id);
   if (unitIds.length === 0) {
-    showInvalidCommand("Attack-move needs selected units.");
+    showInvalidCommand(t("status.attackMoveNeedsUnits"));
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1586,7 +1584,7 @@ function issueAttackMoveAt(point: Point, queued = false) {
   }
   const world = screenToWorld(point);
   sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y, queued });
-  statusLabel.textContent = "Attack-move order issued.";
+  statusLabel.textContent = t("status.attackMoveOrdered");
   clearCommandModeClasses();
   commandMode = undefined;
   updateHud();
@@ -1599,7 +1597,7 @@ function issueSpellAt(point: Point) {
   const world = screenToWorld(point);
   if (ability === "summon") {
     sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y });
-    statusLabel.textContent = "Summon order issued.";
+    statusLabel.textContent = t("status.summonOrdered");
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1611,11 +1609,11 @@ function issueSpellAt(point: Point) {
       ? hitUnit(world, (unit) => unit.owner === localPlayerId)
       : hitUnit(world, (unit) => unit.owner !== localPlayerId);
   if (!target) {
-    showInvalidCommand(`${labelKind(ability)} needs a valid unit target.`);
+    showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
     return;
   }
   sendCommand({ type: "cast", unitId: casterId, ability, targetId: target.id });
-  statusLabel.textContent = `${labelKind(ability)} order issued.`;
+  statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
   commandMode = undefined;
   updateHud();
@@ -1627,8 +1625,8 @@ function beginItemTargeting(entry: { item: WorldItem; carrier: Unit }) {
   shell.classList.remove("placement-active");
   statusLabel.textContent =
     entry.item.kind === "stormStaff"
-      ? `${itemLabel(entry.item.kind)} mode. Left-click a target point or unit, right-click or Escape to cancel.`
-      : `${itemLabel(entry.item.kind)} mode. Left-click a valid target, right-click or Escape to cancel.`;
+      ? t("status.itemModePoint", { item: labelKind(entry.item.kind) })
+      : t("status.itemModeTarget", { item: labelKind(entry.item.kind) });
   updateHud();
 }
 
@@ -1640,7 +1638,7 @@ function issueItemAt(point: Point) {
   if (kind === "stormStaff") {
     const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
     sendCommand(target ? { type: "useItem", unitId, itemId, x: target.x, y: target.y } : { type: "useItem", unitId, itemId, x: world.x, y: world.y });
-    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1649,11 +1647,11 @@ function issueItemAt(point: Point) {
   if (kind === "lightningRod") {
     const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
     if (!target) {
-      showInvalidCommand(`${itemLabel(kind)} needs an enemy unit target.`);
+      showInvalidCommand(t("status.itemEnemyUnitTarget", { item: labelKind(kind) }));
       return;
     }
     sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
-    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1662,11 +1660,11 @@ function issueItemAt(point: Point) {
   if (kind === "breachCharge") {
     const target = hitBuilding(world, (building) => building.owner !== localPlayerId);
     if (!target) {
-      showInvalidCommand(`${itemLabel(kind)} needs an enemy building target.`);
+      showInvalidCommand(t("status.itemEnemyBuildingTarget", { item: labelKind(kind) }));
       return;
     }
     sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
-    statusLabel.textContent = `${itemLabel(kind)} used.`;
+    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1679,12 +1677,12 @@ function cancelCommandMode() {
   clearCommandModeClasses();
   statusLabel.textContent =
     canceled === "attackMove"
-      ? "Attack-move canceled."
+      ? t("status.attackMoveCanceled")
       : canceled === "spell"
-        ? "Spell targeting canceled."
+        ? t("status.spellCanceled")
         : canceled === "item"
-          ? "Item targeting canceled."
-          : "Build placement canceled.";
+          ? t("status.itemCanceled")
+          : t("status.buildCanceled");
   updateHud();
 }
 
@@ -1702,37 +1700,37 @@ function train(unitKind: TrainableUnitKind) {
   if (!syncBeforeCommandProjection()) return;
   const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
   if (!building) {
-    showInvalidCommand(`${labelKind(unitKind)} needs a selected production building.`);
+    showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
   sendCommand({ type: "train", buildingId: building.id, unitKind });
-  statusLabel.textContent = `${labelKind(unitKind)} queued.`;
+  statusLabel.textContent = t("status.trainQueued", { unit: labelKind(unitKind) });
 }
 
 function research(upgradeKind: UpgradeKind) {
   if (!syncBeforeCommandProjection()) return;
   const command = researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
   if (!command) {
-    showInvalidCommand(`${labelKind(upgradeKind)} needs a selected research building.`);
+    showInvalidCommand(t("status.researchNeedsBuilding", { upgrade: labelKind(upgradeKind) }));
     return;
   }
   sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind });
-  statusLabel.textContent = `${command.label} started.`;
+  statusLabel.textContent = t("status.researchStarted", { upgrade: labelKind(command.upgradeKind) });
 }
 
 function hireMercenary() {
   if (!syncBeforeCommandProjection()) return;
   const camp = selectedMercenaryCamp();
   if (!camp) {
-    showInvalidCommand("Hire needs a selected mercenary camp.");
+    showInvalidCommand(t("status.hireNeedsCamp"));
     return;
   }
   if (!canHireMercenary()) {
-    showInvalidCommand("Move a unit to the mercenary camp before hiring.");
+    showInvalidCommand(t("status.hireNeedsUnitAtCamp"));
     return;
   }
   sendCommand({ type: "hire", campId: camp.id });
-  statusLabel.textContent = "Mercenary hired.";
+  statusLabel.textContent = t("status.mercenaryHired");
 }
 
 function selectUnitsInBox(start: Point, end: Point, additive = false) {
@@ -1853,12 +1851,12 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
   }
   if (intent.type === "controlGroupReplace") {
     if (selectedIds.size === 0) {
-      showInvalidCommand(`Group ${intent.slot} needs a selection.`);
+      showInvalidCommand(t("status.groupNeedsSelection", { slot: intent.slot }));
       return true;
     }
     replaceControlGroup(controlGroups, intent.slot, selectedIds);
     lastControlGroupRecall = undefined;
-    statusLabel.textContent = `Group ${intent.slot} set.`;
+    statusLabel.textContent = t("status.groupSet", { slot: intent.slot });
     return true;
   }
   selectControlGroup(intent.slot);
@@ -1870,7 +1868,7 @@ function selectControlGroup(slot: number) {
   const ids = recallControlGroup(controlGroups, slot, liveSelectionIds(snapshot));
   if (ids.length === 0) {
     delete controlGroups[slot];
-    showInvalidCommand(`Group ${slot} is empty.`);
+    showInvalidCommand(t("status.groupEmpty", { slot }));
     return;
   }
   const recallTap = controlGroupRecallTap(lastControlGroupRecall, slot, performance.now());
@@ -1879,7 +1877,7 @@ function selectControlGroup(slot: number) {
   focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   selectedCampId = undefined;
   buildPaletteOpen = false;
-  statusLabel.textContent = `Group ${slot} selected.`;
+  statusLabel.textContent = t("status.groupSelected", { slot });
   if (recallTap.shouldCenterCamera) centerCameraOnControlGroup(ids);
   updateHud();
 }
@@ -1898,16 +1896,16 @@ function updateHud() {
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
-  mapReadout.textContent = `Map: ${snapshot.map.width} x ${snapshot.map.height}`;
+  mapReadout.textContent = t("hud.mapReadout", { width: snapshot.map.width, height: snapshot.map.height });
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   if (groups.length > 0) {
     renderSelectionGroups(groups);
   } else if (camp) {
-    selectionLabel.textContent = `Mercenary Camp - ${camp.stock} stock${camp.cooldownRemaining > 0 ? " restocking" : ""}`;
+    selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
   } else {
-    selectionLabel.textContent = "Nothing selected";
+    selectionLabel.textContent = t("hud.nothingSelected");
   }
   let visibleCount = 0;
   for (const button of commandButtons) {
@@ -1959,7 +1957,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
 
 function selectionGroupTitle(group: SelectionGroup) {
   const label = labelAnyKind(group.kind);
-  return `${label} x${group.count}${group.focused ? " - current" : ""}`;
+  return `${label} x${group.count}${group.focused ? t("hud.selectionCurrent") : ""}`;
 }
 
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
@@ -2078,7 +2076,7 @@ function drawMiniBuildingModel(mini: CanvasRenderingContext2D, glyph: BuildingGl
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
   const percent = Math.floor(progress.progress * 100);
-  const label = `${progress.status === "researching" ? "Researching" : "Queued"} ${progress.label} ${romanLevel(progress.targetLevel)}`;
+  const label = t(progress.status === "researching" ? "hud.trainingResearching" : "hud.trainingQueued", { label: `${labelKind(progress.upgradeKind)} ${romanLevel(progress.targetLevel)}` });
   const button = document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
@@ -2087,11 +2085,11 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   button.dataset.researchProgress = progress.upgradeKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
-  const tooltip = upgradeTooltip(progress.upgradeKind, undefined, progress.targetLevel - 1);
+  const tooltip = upgradeTooltip(progress.upgradeKind, undefined, progress.targetLevel - 1, i18n);
   applyTooltip(button, {
     ...tooltip,
     title: label,
-    stats: [`${percent}% complete`, ...tooltip.stats],
+    stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${progress.status === "researching" ? Math.max(6, percent) : percent}%`);
   button.innerHTML = `
@@ -2104,7 +2102,7 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
 
 function renderTrainingProgressButton(progress: TrainingProgressButton) {
   const percent = Math.floor(progress.progress * 100);
-  const label = `${progress.status === "training" ? "Training" : "Queued"} ${labelKind(progress.unitKind)}`;
+  const label = t(progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: labelKind(progress.unitKind) });
   const button = document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
@@ -2113,11 +2111,11 @@ function renderTrainingProgressButton(progress: TrainingProgressButton) {
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
-  const tooltip = unitTooltip(progress.unitKind);
+  const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
   applyTooltip(button, {
     ...tooltip,
     title: label,
-    stats: [`${percent}% complete`, ...tooltip.stats],
+    stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
   button.innerHTML = `
@@ -2144,9 +2142,10 @@ function renderItemDock() {
       button.type = "button";
       button.className = "item-button";
       button.dataset.itemId = item.id;
-      const cooldownText = item.cooldownRemaining > 0 ? ` - recharging ${item.cooldownRemaining}` : "";
-      button.setAttribute("aria-label", `${itemLabel(item.kind)} (${hotkey})${cooldownText}`);
-      applyTooltip(button, itemTooltip(item.kind, hotkey));
+      const itemName = labelKind(item.kind);
+      const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks: item.cooldownRemaining }) : "";
+      button.setAttribute("aria-label", `${itemName} (${hotkey})${cooldownText}`);
+      applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
       button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
       button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
       button.addEventListener("click", () => useCarriedItem(item.id));
@@ -2174,11 +2173,11 @@ function useCarriedItem(itemId: string) {
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
   if (!entry) return;
   if (entry.item.kind === "flameCloak") {
-    showInvalidCommand("Flame Cloak is passive.");
+    showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
     return;
   }
   if (entry.item.cooldownRemaining > 0) {
-    showInvalidCommand(`${itemLabel(entry.item.kind)} is recharging.`);
+    showInvalidCommand(t("status.itemRecharging", { item: labelKind(entry.item.kind) }));
     return;
   }
   if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge") {
@@ -2187,11 +2186,11 @@ function useCarriedItem(itemId: string) {
   }
   const command = useItemCommand(snapshot, localPlayerId, entry.item, entry.carrier);
   if (!command) {
-    showInvalidCommand(`${itemLabel(entry.item.kind)} has no valid target.`);
+    showInvalidCommand(t("status.itemNoTarget", { item: labelKind(entry.item.kind) }));
     return;
   }
   sendCommand(command);
-  statusLabel.textContent = `${itemLabel(entry.item.kind)} used.`;
+  statusLabel.textContent = t("status.itemUsed", { item: labelKind(entry.item.kind) });
 }
 
 function dropCarriedItem(itemId: string, carrierId: string) {
@@ -2200,7 +2199,7 @@ function dropCarriedItem(itemId: string, carrierId: string) {
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
   sendCommand(dropItemCommand(entry.item, entry.carrier));
-  statusLabel.textContent = `${itemLabel(entry.item.kind)} dropped.`;
+  statusLabel.textContent = t("status.itemDropped", { item: labelKind(entry.item.kind) });
 }
 
 function itemIcon(kind: WorldItem["kind"]) {
@@ -2221,7 +2220,7 @@ function draw() {
   if (!snapshot) {
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
-    ctx.fillText("Connecting to Sketch RTS...", 32, 48);
+    ctx.fillText(t("canvas.connecting"), 32, 48);
     return;
   }
   const presentationMarks = createMapPresentation(snapshot);
@@ -2495,7 +2494,7 @@ function drawMercenaryCamps(camps: MercenaryCamp[]) {
     ctx.stroke();
     ctx.font = "11px ui-monospace, monospace";
     ctx.fillStyle = "#704a33";
-    ctx.fillText(`merc ${camp.stock}`, point.x - 24, point.y + 48);
+    ctx.fillText(t("canvas.mercenaryStock", { stock: camp.stock }), point.x - 24, point.y + 48);
     if (camp.cooldownRemaining > 0) drawProgress(point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
   }
 }
@@ -3102,7 +3101,7 @@ function drawBuildPlacementPreview() {
   ctx.setLineDash([]);
   ctx.fillStyle = validPlacement ? "#315f87" : "#9f3a3a";
   ctx.font = "11px ui-monospace, monospace";
-  ctx.fillText(`${commandMode.placement.buildingKind} ${def.cost}g`, point.x - 34, point.y + size / 2 + 22);
+  ctx.fillText(t("canvas.buildPreview", { building: labelKind(commandMode.placement.buildingKind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
   ctx.restore();
 }
 
@@ -3127,7 +3126,7 @@ function drawAttackMovePreview() {
   ctx.stroke();
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillStyle = "#9b2f2f";
-  ctx.fillText("A-move", point.x - 20, point.y + 44);
+  ctx.fillText(t("canvas.attackMove"), point.x - 20, point.y + 44);
   ctx.restore();
 }
 
@@ -3454,12 +3453,12 @@ function labelBuilding(building: Building) {
   return labelKind(building.kind);
 }
 
-function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind) {
-  return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+function labelKind(kind: BuildingKind | TrainableUnitKind | AbilityKind | UpgradeKind | WorldItem["kind"] | string) {
+  return tl(kind as LabelKey);
 }
 
 function labelAnyKind(kind: string) {
-  return kind.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+  return tl(kind as LabelKey);
 }
 
 function romanLevel(level: number) {
