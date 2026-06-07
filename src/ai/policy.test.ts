@@ -2475,6 +2475,41 @@ describe("SDK preset AI policy", () => {
     expect(entry?.command.type === "attack" ? entry.command.unitIds : []).toHaveLength(3);
   });
 
+  it("v2 pauses objective control when worker pressure leaves only a thin residual squad", () => {
+    const scene = sketchScene("v2-worker-pressure-pauses-thin-objective-control")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 900, 500)
+      .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v2-natural", 900, 520, 3000)
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "archer", 790, 650)
+      .unit("v2", "lancer", 820, 680)
+      .unit("v2", "footman", 860, 710)
+      .unit("v2", "archer", 890, 740)
+      .unit("v2", "lancer", 920, 770)
+      .unit("v2", "footman", 950, 800)
+      .townHall("v1a", 3400, 3300)
+      .worker("v1a", 3360, 3300, { id: "far-worker" })
+      .worker("v1a", 3380, 3340)
+      .townHall("v1b", 3400, 3800)
+      .worker("v1b", 3360, 3800)
+      .unit("neutral", "wildling", 1120, 780)
+      .unit("neutral", "thornSlinger", 1160, 820)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure, AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams, memory });
+
+    expect(entries.find((entry) => entry.scriptId === "workerPressure")).toMatchObject({ command: { type: "attack", targetId: "far-worker" } });
+    expect(entries.find((entry) => entry.scriptId === "objectiveControl")).toBeUndefined();
+  });
+
   it("v2 does not send worker pressure through the other opponent's route army", () => {
     const scene = sketchScene("v2-worker-pressure-route-covered-by-other-opponent")
       .map("bareDuel")

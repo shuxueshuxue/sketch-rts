@@ -1169,6 +1169,7 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
   const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
   if (army.length < minimumArmy) return undefined;
+  if (thinResidualObjectiveControlAfterHarass(snapshot, owner, army, options)) return undefined;
   if (objectiveControlShouldYieldToCloseout(snapshot, owner, army, options)) return undefined;
   if (options.version === "v2" && armyCommittedToEnemyObjective(snapshot, owner, army, minimumArmy, options)) return undefined;
   const anchor = averagePoint(army);
@@ -1187,6 +1188,13 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!target) return undefined;
   const stale = staleAttackMovers(army, target.point);
   return stale.length >= minimumArmy ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.point.x, y: target.point.y }, options) : undefined;
+}
+
+function thinResidualObjectiveControlAfterHarass(snapshot: GameSnapshot, owner: PlayerId, army: Unit[], options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const hasActiveHarassClaim = options.memory ? Object.values(options.memory.unitClaims).some((claim) => claim.kind === "harass" && claim.expiresTick >= snapshot.tick) : false;
+  // @@@harass-objective-split - Worker pressure can be the active map job; the leftover four-body squad should not start a second neutral objective in 1v2.
+  return hasActiveHarassClaim && army.length < 6;
 }
 
 function firstClearedExpansionClaimPausesObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
