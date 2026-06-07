@@ -167,6 +167,7 @@ Boundaries:
 - Chat transport is separate from deterministic simulation commands.
 - Chat must not mutate sim state, replay command frames, AI policy, or lockstep determinism.
 - Multiplayer room chat and local/static play should share the same UI component; only the transport edge may differ.
+- Local/static chat and hosted room chat share `src/shared/chat.ts` for text normalization, empty-message rejection, message id construction, and `ChatMessage` creation. Static local chat owns in-memory fanout; server room chat owns WebSocket broadcast; neither redefines message semantics.
 - While the chat input is active, normal game hotkeys and command shortcuts must not fire accidentally.
 
 Acceptance evidence:
@@ -204,6 +205,7 @@ Closed:
 - #18 AI third and fourth expansions: merged in PR #26.
 - #20 Crash-free sim, AI, and lockstep architecture audit: merged in PR #32 and closed on 2026-06-06. Post-merge evidence included focused command-frame/lockstep tests, `npm run build`, full Vitest, crash inventory, and room-flow YATU.
 - #25 Public in-game chat overlay: merged in PR #34 and closed on 2026-06-06. Evidence included client keyboard tests, room/server chat tests, two-browser Playwright CLI chat YATU, room-flow YATU, `npm run build`, and full Vitest.
+- #68 Local/hosted chat delivery primitive: implemented on branch `codex/issue-68-chat-primitive` on 2026-06-07. Evidence includes `src/shared/chat.test.ts`, static/runtime/server chat tests, `src/shared/net/codec.test.ts`, and `npm run build`.
 - Rich-map center objective side balance: merged in PR #35 on 2026-06-06. Evidence included a red/green map objective balance test, post-merge `src/shared/map-objectives.test.ts`, `npm run build`, full Vitest, and pgl 1v1 control `92/100` on seed `current-main-50-2026-06-06` with 50 maps and 64 workers.
 - Fresh pgl dashboard benchmark: run `2026-06-06T03-05-29-013Z-18mgqzs` on 2026-06-06 from main `bf79f20`, seed `post-pr35-dashboard-2026-06-06`, 18 selected maps, 64 workers. The visible dashboard API reports 24/24 1v1 control, 7/12 paired 1v2, 1/3 1v3 probe, 1/3 2v3 probe, 2/5 15v20 combat, and 4/5 10v12 combat.
 
