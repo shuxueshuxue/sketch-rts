@@ -206,3 +206,20 @@ Automated evidence on branch `codex/issue-81-room-schema`:
 - `npm run build`
 
 The standard full-suite command was also attempted twice. Its only failures were existing CPU-budget assertions inside `src/shared/sim.test.ts` when that file ran co-scheduled with the rest of the suite; the same file passed when run alone.
+
+## Room Lifecycle Core Checkpoint - 2026-06-07
+
+Issue #67 closes the static/hosted room lifecycle double-chain. `src/shared/room-lifecycle.ts` now owns the `RoomState` registry and state transitions for create, list, join, leave, map edit, slot edit, slot-count edit, pause/resume, start, reset, finish, close, grand-stress room creation, and save-room adoption.
+
+Deployment-specific code keeps only its adapter work:
+
+- static deployment validates browser inputs, creates the local `Game`, local AI runtime, local command-frame adapter, and local chat fanout;
+- hosted deployment owns saves, replay/debug history, checkpoints, server AI runtime, authoritative frame ticking, listeners, and WebSocket/API transport;
+- neither deployment reimplements room lifecycle semantics directly.
+
+Start/reset are split into lifecycle `prepare*` and commit steps so deployments can materialize their runtime objects before changing room status to `inMatch`. If runtime creation fails, the lifecycle registry does not publish a half-started room.
+
+Automated evidence on branch `codex/issue-67-room-lifecycle-core`:
+
+- `npm test -- --run src/shared/room-lifecycle.test.ts src/server/room-lifecycle-equivalence.test.ts src/client/deployment/static-runtime.test.ts src/client/net/local-adapter.test.ts src/server/room-host.test.ts src/server/room-net.test.ts src/client/deployment/server-runtime.test.ts`
+- `npm run build`
