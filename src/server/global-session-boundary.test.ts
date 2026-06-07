@@ -24,14 +24,16 @@ describe("server global session boundary", () => {
 
   it("fails unknown API routes before the Vite SPA middleware can serve them", () => {
     const source = readFileSync("src/server/index.ts", "utf8");
-    const apiBoundary = source.indexOf('app.use("/api"');
-    const productionFallback = source.indexOf('app.get("*"');
-    const viteMiddleware = source.indexOf("app.use(vite.middlewares)");
+    const apiBoundary = source.indexOf('router.use("/api"');
+    const productionFallback = source.indexOf('router.get("*"');
+    const viteMiddleware = source.indexOf("router.use(vite.middlewares)");
+    const mountedRouter = source.indexOf("app.use(publicMountPath, router)");
 
     expect(apiBoundary).toBeGreaterThan(0);
     expect(source).toContain("Unknown API route");
     expect(productionFallback).toBeGreaterThan(apiBoundary);
     expect(viteMiddleware).toBeGreaterThan(apiBoundary);
+    expect(mountedRouter).toBeGreaterThan(viteMiddleware);
   });
 
   it("keeps save and debug replay payload validation owned by the shared savegame schema", () => {
