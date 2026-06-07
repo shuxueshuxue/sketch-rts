@@ -17,6 +17,7 @@ export type AiPlaytestSetupDescription = {
   scriptedPlayers?: PlayerId[];
   versions?: Partial<Record<PlayerId, AiScriptVersion>>;
   disabledBehaviorsByPlayer?: AiRuntimeState["disabledBehaviorsByPlayer"];
+  thinkInterval?: number;
 };
 
 export function createAiPlaytestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): AiPlaytestSetupDescription {
@@ -139,6 +140,7 @@ function playtestSetupFromBenchmarkMatch(match: BenchmarkMatchInput<AiGameAgent>
     ...(match.winnerMode ? { winnerMode: match.winnerMode } : {}),
     scriptedPlayers,
     versions,
+    thinkInterval: match.thinkInterval,
     ...(disabledBehaviorsByPlayer && Object.keys(disabledBehaviorsByPlayer).length > 0 ? { disabledBehaviorsByPlayer } : {}),
   };
 }

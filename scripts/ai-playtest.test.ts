@@ -341,6 +341,7 @@ describe("AI playtest CLI", () => {
     ]);
     expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b", "v1c"]);
     expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a", "v1b", "v1c"]);
+    expect(persisted.runtime.thinkInterval).toBe(45);
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1", v1b: "v1", v1c: "v1" });
   });
 

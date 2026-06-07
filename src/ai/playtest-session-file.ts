@@ -16,7 +16,7 @@ export function createAiPlaytestFileFromArgs(args: string[]): AiPlaytestFile {
   const setup = createAiPlaytestSetupFromArgs(args, controlledPlayer, enemy);
   const controlledVersion = setup.versions?.[controlledPlayer] ?? ((flag(args, "you-version") ?? "v2") as AiScriptVersion);
   const enemyVersion = setup.versions?.[enemy] ?? ((flag(args, "enemy-version") ?? "v1") as AiScriptVersion);
-  const thinkInterval = numberFlag(args, "think-interval", DEFAULT_AI_THINK_INTERVAL);
+  const thinkInterval = numberFlag(args, "think-interval", setup.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL);
   const assistControlled = boolFlag(args, "assist-you");
   const scriptedPlayers = setup.scriptedPlayers ?? [enemy];
   const versions = { ...Object.fromEntries(scriptedPlayers.map((owner) => [owner, setup.versions?.[owner] ?? enemyVersion])), [controlledPlayer]: controlledVersion } as Partial<Record<PlayerId, AiScriptVersion>>;
