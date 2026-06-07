@@ -178,9 +178,10 @@ That shape is intentionally plain: AI does not get a privileged mutation channel
 The current CLI surface is exposed as project scripts:
 
 ```bash
-npm run play:ai -- new --file /tmp/match.json --map bareDuel --you v2 --opponent v1
+npm run play:ai -- new --file /tmp/match.json --map bareDuel --you v2 --enemy v1
 npm run play:ai -- step-until --file /tmp/match.json --condition tick --tick 1200
 npm run play:ai -- plan --file /tmp/match.json --owner v2
+npm run play:ai -- commands
 
 npm run benchmark:ai
 npm run benchmark:ai-control
@@ -189,6 +190,8 @@ npm run test:sdk-agent-player
 ```
 
 This workflow is useful for exact reproductions: create a save-backed session, print the current snapshot, inspect planner output, step to a tick, and only then change code.
+
+`npm run play:ai -- commands` prints a machine-readable command manifest. The manifest is the same command table used by help text and tactical command parsing, so future tools can discover available actions without scraping help output or duplicating CLI knowledge.
 
 ## Benchmark System
 

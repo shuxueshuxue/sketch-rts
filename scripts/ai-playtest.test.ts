@@ -11,6 +11,43 @@ afterEach(() => {
 });
 
 describe("AI playtest CLI", () => {
+  it("prints a reusable command manifest for CLI tooling and help generation", () => {
+    const manifest = JSON.parse(runPlaytestCli("commands"));
+    const byName = Object.fromEntries(manifest.commands.map((command: { name: string }) => [command.name, command]));
+
+    expect(manifest.version).toBe(1);
+    expect(manifest.commands.map((command: { name: string }) => command.name)).toEqual(
+      expect.arrayContaining(["new", "status", "plan", "step-until", "attack-move", "retreat-wounded", "pickup-item", "raw"]),
+    );
+    expect(byName["attack-move"]).toMatchObject({
+      category: "tactical",
+      summary: expect.stringContaining("attack"),
+      requiredFlags: ["file", "x", "y"],
+      optionalFlags: ["units"],
+    });
+    expect(byName["step-until"]).toMatchObject({
+      category: "stepping",
+      requiredFlags: ["file", "condition"],
+      optionalFlags: expect.arrayContaining(["tick", "seconds", "max-ticks"]),
+    });
+    expect(byName["new"]).toMatchObject({
+      category: "session",
+      requiredFlags: ["file"],
+      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "assist-you"]),
+    });
+    expect(manifest.commands.every((command: { example?: string }) => command.example)).toBe(true);
+  });
+
+  it("generates help from the command manifest instead of a separate command list", () => {
+    const manifest = JSON.parse(runPlaytestCli("commands"));
+    const help = runPlaytestCli("help");
+
+    for (const command of manifest.commands as { name: string; example: string }[]) {
+      expect(help).toContain(`play:ai -- ${command.name}`);
+      expect(help).toContain(command.example);
+    }
+  });
+
   it("prints the persisted AI memory used by manual playtest commands", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);

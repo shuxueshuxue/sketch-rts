@@ -178,9 +178,10 @@ await sdk.roomCommands(
 当前 CLI 表面通过项目 scripts 暴露：
 
 ```bash
-npm run play:ai -- new --file /tmp/match.json --map bareDuel --you v2 --opponent v1
+npm run play:ai -- new --file /tmp/match.json --map bareDuel --you v2 --enemy v1
 npm run play:ai -- step-until --file /tmp/match.json --condition tick --tick 1200
 npm run play:ai -- plan --file /tmp/match.json --owner v2
+npm run play:ai -- commands
 
 npm run benchmark:ai
 npm run benchmark:ai-control
@@ -189,6 +190,8 @@ npm run test:sdk-agent-player
 ```
 
 这个流程适合 exact reproduction：创建 save-backed session，打印当前 snapshot，检查 planner 输出，step 到指定 tick，然后再改代码。
+
+`npm run play:ai -- commands` 会输出机器可读的 command manifest。这个 manifest 和 help 文本、tactical command parser 共用同一张命令表，所以后续工具可以直接发现可用动作，而不用抓 help 文本或复制 CLI 知识。
 
 ## Benchmark 系统
 
