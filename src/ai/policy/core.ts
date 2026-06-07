@@ -280,6 +280,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   if (!forwardMine && missingCombatProduction && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return undefined;
   if (activeMiningBaseCount(snapshot, owner) >= expansionBaseTarget(options)) return undefined;
+  if (shouldDelayThirdExpansionForLiveOpponentArmy(snapshot, owner, options)) return undefined;
   if (options.version === "v2" && activeMiningBaseCount(snapshot, owner) >= 2 && combatUnits(snapshot, owner).length < catchUpExpansionMinimumCombat(snapshot, owner, options)) return undefined;
 
   const mine = forwardMine ?? desiredExpansionMine(snapshot, owner);
@@ -314,6 +315,19 @@ function canBuildReadyClearedFirstExpansionThroughMainPause(snapshot: GameSnapsh
   if (neutralUnitsNear(snapshot, mine, 280).length > 0) return false;
   if (enemyPressure(snapshot, owner, mine, 360, options)) return false;
   return !mainWorkerLineThreat(snapshot, owner, options);
+}
+
+function shouldDelayThirdExpansionForLiveOpponentArmy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (activeMiningBaseCount(snapshot, owner) < 2) return false;
+  const ownCombat = combatUnits(snapshot, owner);
+  if (ownCombat.length >= 8) return false;
+  const ownPower = armyPower(ownCombat);
+  return opponentPlayerIds(snapshot, owner, options).some((opponent) => {
+    const army = combatUnits(snapshot, opponent);
+    // @@@third-expansion-live-army-gate - A third hall is future tempo; before eight fighters, a larger live opponent army is the current 1v2 problem.
+    return army.length >= ownCombat.length + 2 && armyPower(army) > ownPower * 1.1;
+  });
 }
 
 function shouldWaitForOneOnOneFirstExpansionGroup(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

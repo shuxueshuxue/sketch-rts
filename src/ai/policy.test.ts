@@ -7321,6 +7321,53 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 delays a third expansion while a larger 1v2 opponent army is still live", () => {
+    const scene = sketchScene("v2-delay-third-expansion-vs-live-army")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 1120, 820, { id: "v2-natural" })
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "stables", 780, 620)
+      .building("v2", "sanctum", 860, 560)
+      .worker("v2", 520, 540, { id: "v2-builder" })
+      .unit("v2", "footman", 1600, 1400)
+      .unit("v2", "footman", 1640, 1420)
+      .unit("v2", "lancer", 1680, 1440)
+      .unit("v2", "lancer", 1720, 1460)
+      .unit("v2", "archer", 1760, 1480)
+      .unit("v2", "contractArcher", 1800, 1500)
+      .townHall("v1a", 3500, 1450)
+      .worker("v1a", 3480, 1450)
+      .townHall("v1b", 3500, 2850)
+      .unit("v1b", "footman", 2360, 2280)
+      .unit("v1b", "footman", 2400, 2320)
+      .unit("v1b", "lancer", 2440, 2280)
+      .unit("v1b", "lancer", 2480, 2320)
+      .unit("v1b", "archer", 2520, 2280)
+      .unit("v1b", "archer", 2560, 2320)
+      .unit("v1b", "contractArcher", 2600, 2280)
+      .unit("v1b", "footman", 2640, 2320)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-natural-mine", 1120, 820, 4000)
+      .goldMine("v2-third-mine", 1900, 3000, 4000)
+      .goldMine("v1a-main-mine", 3500, 1450, 4000)
+      .goldMine("v1b-main-mine", 3500, 2850, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "build",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 preserves routine spending gold while its army is finishing a nearly cleared expansion camp", () => {
     const scene = sketchScene("v2-nearly-cleared-natural-reserve")
       .map("openClaims")
