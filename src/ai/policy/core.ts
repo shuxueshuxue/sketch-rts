@@ -1892,6 +1892,8 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, recallable, options);
   const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
   if (committedRecall) return committedRecall;
+  const committedTheaterFight = currentCommittedOwner ? committedAttackWaveTheaterFight(snapshot, owner, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
+  if (committedTheaterFight) return committedTheaterFight;
 
   if (options.version === "v2" && movable.length < minimumWaveSize && enemyArmy.length > 2) return undefined;
 
@@ -2002,6 +2004,25 @@ function committedAttackWaveRecall(snapshot: GameSnapshot, owner: PlayerId, sold
   const stale = movable.filter((unit) => distance(unit, rally) > 220);
   // @@@committed-wave-abort - Attack-wave commitment is useful only while the route remains playable; once a 1v2 route is covered, the job must actively become recovery.
   return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options) : undefined;
+}
+
+function committedAttackWaveTheaterFight(snapshot: GameSnapshot, owner: PlayerId, recallable: Unit[], enemyArmy: Unit[], committedOwner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  const committed = recallable.filter((unit) => committedAttackWaveOrderTarget(snapshot, owner, unit, options)?.owner === committedOwner);
+  if (committed.length < 5) return undefined;
+  const center = averagePoint(committed);
+  const ownPower = armyPower(committed);
+  const candidates = enemyArmy
+    .filter((unit) => unit.owner !== committedOwner)
+    .filter((unit) => distance(unit, center) <= 900)
+    .map((unit) => {
+      const localEnemies = enemyArmy.filter((candidate) => candidate.owner !== committedOwner && distance(candidate, unit) <= 520);
+      return { unit, localEnemies, localPower: armyPower(localEnemies) };
+    })
+    .filter(({ localEnemies, localPower }) => localEnemies.length >= 2 && localPower <= ownPower * 1.12);
+  const target = candidates.sort((a, b) => strategicArmyTargetScore(b.unit, center) - strategicArmyTargetScore(a.unit, center))[0]?.unit;
+  // @@@committed-theater-fight - A building closeout remains an army job; if another opponent's army enters that same theater, the closeout squad must become the local unit fight instead of waiting for idle/move units.
+  return target ? { type: "attack", unitIds: committed.map((unit) => unit.id), targetId: target.id } : undefined;
 }
 
 function attackWaveStoplineRecall(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {

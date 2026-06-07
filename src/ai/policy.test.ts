@@ -6325,6 +6325,39 @@ describe("SDK preset AI policy", () => {
     expect(entries[0]).toMatchObject({ scriptId: "attackWave", command: { type: "attack", targetId: "wounded-lancer" } });
   });
 
+  it("retasks a committed building attack squad into a local cross-opponent army fight", () => {
+    const scene = sketchScene("v2-committed-building-attack-local-fight")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 500, 520, { id: "home-a" })
+      .unit("v2", "lancer", 540, 520, { id: "home-b" })
+      .unit("v2", "archer", 580, 520, { id: "home-c" })
+      .unit("v2", "footman", 620, 520, { id: "home-d" })
+      .townHall("v1a", 3400, 2400)
+      .townHall("v1b", 3500, 3300)
+      .building("v1b", "barracks", 3380, 3160, { id: "v1b-barracks" });
+    const waveUnits = ["wave-a", "wave-b", "wave-c", "wave-d", "wave-e"] as const;
+    waveUnits.forEach((id, index) => {
+      scene.unit("v2", index % 3 === 0 ? "footman" : index % 3 === 1 ? "lancer" : "archer", 3160 + index * 28, 3020 + index * 18, {
+        id,
+        order: { type: "attack", targetId: "v1b-barracks" },
+      });
+    });
+    scene.unit("v1a", "lancer", 3260, 2940, { id: "wounded-lancer", hp: 32, order: { type: "attackMove", x: 3380, y: 3160 } });
+    scene.unit("v1a", "footman", 3300, 2980, { order: { type: "attackMove", x: 3380, y: 3160 } });
+    scene.unit("v1a", "archer", 3340, 3010, { order: { type: "attackMove", x: 3380, y: 3160 } });
+    const game = scene.build().createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ scriptId: "attackWave", command: { type: "attack", unitIds: [...waveUnits], targetId: "wounded-lancer" } });
+  });
+
   it("keeps a committed attack wave from being retasked into worker pressure", () => {
     const scene = sketchScene("v2-attack-wave-claim-blocks-worker-pressure")
       .map("bareDuel")
