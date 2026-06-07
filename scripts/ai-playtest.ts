@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner } from "../src/sdk/playtest";
 import { applyAiInteractivePlaytestCommand, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { AI_PLAYTEST_COMMAND_MANIFEST as SHARED_AI_PLAYTEST_COMMAND_MANIFEST, commandFromPlaytestArgs } from "../src/ai/playtest-command-manifest";
+import { runAiPlaytestDiagnosis, type AiPlaytestDiagnosisCheckpoint } from "../src/ai/playtest-diagnosis";
 import { createAiPlaytestFileFromArgs, type AiPlaytestFile } from "../src/ai/playtest-session-file";
 import { planAiRuntimeCommandEntries } from "../src/ai/runtime";
 import { SIM_TICKS_PER_SECOND } from "../src/shared/time";
@@ -24,6 +25,19 @@ if (verb === "new") {
   const created = createAiPlaytestFileFromArgs(args);
   savePlaytestFile(file, created);
   printJson(summarizeAiInteractivePlaytestSession(restoreInteractivePlaytestSession(created.session), created.runtime));
+  process.exit(0);
+}
+
+if (verb === "diagnose") {
+  const file = requiredFlag(args, "file");
+  const diagnosis = runAiPlaytestDiagnosis({
+    args,
+    checkpoints: diagnosisCheckpointsFromArgs(args),
+    planOwners: playerListFlag(args, "plan-owner"),
+  });
+  savePlaytestFile(file, diagnosis.file);
+  const { file: _persistedFile, ...report } = diagnosis;
+  printJson(report);
   process.exit(0);
 }
 
@@ -102,6 +116,29 @@ function loadPlaytestFile(file: string): AiPlaytestFile {
 function savePlaytestFile(file: string, value: AiPlaytestFile) {
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function diagnosisCheckpointsFromArgs(args: string[]): AiPlaytestDiagnosisCheckpoint[] {
+  const checkpoints: AiPlaytestDiagnosisCheckpoint[] = [{ type: "initial" }];
+  for (const tick of numberListFlag(args, "checkpoint-ticks")) checkpoints.push({ type: "tick", tick });
+  for (const seconds of numberListFlag(args, "checkpoint-seconds")) checkpoints.push({ type: "gameSecond", seconds });
+  return checkpoints;
+}
+
+function playerListFlag(args: string[], name: string): PlayerId[] | undefined {
+  const raw = flag(args, name);
+  if (raw === undefined) return undefined;
+  return raw.split(",").map((value) => value.trim()).filter(Boolean) as PlayerId[];
+}
+
+function numberListFlag(args: string[], name: string): number[] {
+  const raw = flag(args, name);
+  if (raw === undefined) return [];
+  return raw.split(",").map((value) => {
+    const parsed = Number(value.trim());
+    if (!Number.isFinite(parsed)) throw new Error(`--${name} must contain finite comma-separated numbers`);
+    return parsed;
+  });
 }
 
 function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspectionOwner {

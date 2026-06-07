@@ -220,6 +220,28 @@ describe("AI playtest CLI", () => {
     });
   });
 
+  it("diagnoses a fresh playtest through the reusable diagnosis primitive", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "diagnosis.json");
+
+    const diagnosis = JSON.parse(runPlaytestCli("diagnose", "--file", file, "--setup", "combat-10v12", "--recipe", "early-mixed", "--you", "v2", "--enemy", "v1a", "--assist-you", "--checkpoint-ticks", "45", "--plan-owner", "v2"));
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(diagnosis.samples.map((sample: { tick: number }) => sample.tick)).toEqual([0, 45]);
+    expect(diagnosis.samples[0].plans.v2.entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          playerId: "v2",
+          scriptId: "attackWave",
+          command: expect.objectContaining({ type: "attackMove" }),
+        }),
+      ])
+    );
+    expect(diagnosis.finalSummary.tick).toBe(45);
+    expect(persisted.session.save.snapshot.tick).toBe(45);
+  });
+
   it("uses the shared AI think interval by default", () => {
     const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
     tempDirs.push(dir);
