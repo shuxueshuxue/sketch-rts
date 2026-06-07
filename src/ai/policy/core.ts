@@ -1865,7 +1865,8 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     if (options.version === "v2" && !isMainPressure && !localUnitFight && armyPower(localEnemies) > armyPower(soldiers) * 1.25) {
       const rally = defensiveRallyPoint(snapshot, owner);
       const stale = soldiers.filter((unit) => distance(unit, rally) > 220);
-      return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options) : undefined;
+      if (stale.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options);
+      return outmatchedPressurePickoffCommand(snapshot, owner, soldiers, localEnemies, options);
     }
     if (options.version === "v2" && isMainPressure && !localUnitFight && armyPower(localEnemies) > armyPower(soldiers) * 1.15) {
       const rally = defensiveRallyPoint(snapshot, owner);
@@ -2276,6 +2277,22 @@ function miningWorkerLineThreatScore(unit: Unit, workers: Unit[], snapshot: Game
   const nearestWorker = nearestEntity(workers, unit);
   const workerPressure = nearestWorker ? Math.max(0, 340 - distance(unit, nearestWorker)) : 0;
   return mainDefenseTargetScore(unit, unit, snapshot, owner) + workerPressure * 1.2;
+}
+
+function outmatchedPressurePickoffCommand(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], localEnemies: Unit[], options: PresetAiPolicyOptions): GameCommand | undefined {
+  const attackers = soldiers.filter(
+    (unit) =>
+      unit.hp >= unit.maxHp * 0.36 &&
+      (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") &&
+      attackWaveReadyUnit(snapshot, owner, unit, options),
+  );
+  if (attackers.length < 3) return undefined;
+  const target = localEnemies
+    .filter((enemy) => enemy.hp <= Math.min(enemy.maxHp * 0.34, 48))
+    .filter((enemy) => attackers.some((unit) => distance(unit, enemy) <= 1_050))
+    .sort((a, b) => a.hp / Math.max(1, a.maxHp) - b.hp / Math.max(1, b.maxHp))[0];
+  // @@@outmatched-base-pickoff - Holding rally is correct against a larger base hit, but idle defenders should still delete reachable wounded attackers.
+  return target ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
 }
 
 function mainDefenseTargetScore(unit: Unit, rally: Point, snapshot: GameSnapshot, owner: PlayerId) {

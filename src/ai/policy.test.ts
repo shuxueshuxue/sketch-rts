@@ -6296,6 +6296,35 @@ describe("SDK preset AI policy", () => {
     expect(entries[0]).toMatchObject({ scriptId: "attackWave", command: { type: "move", unitIds: [...waveUnits], x: 500, y: 500 } });
   });
 
+  it("v2 idle rally defenders focus wounded attackers during outmatched expansion pressure", () => {
+    const scene = sketchScene("v2-expansion-pressure-pickoff")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 760, 960, { id: "v2-natural" })
+      .building("v2", "defenseTower", 840, 1040, { id: "v2-natural-tower" })
+      .unit("v2", "footman", 500, 510, { id: "defender-a" })
+      .unit("v2", "footman", 530, 520, { id: "defender-b" })
+      .unit("v2", "lancer", 480, 530, { id: "defender-c" })
+      .unit("v2", "archer", 520, 470, { id: "defender-d" })
+      .townHall("v1a", 3100, 1450)
+      .townHall("v1b", 3500, 3300);
+    scene.unit("v1a", "lancer", 940, 1060, { id: "wounded-lancer", hp: 14, order: { type: "attackMove", x: 760, y: 960, targetId: "v2-natural-tower" } });
+    scene.unit("v1a", "footman", 970, 1080, { id: "wounded-footman", hp: 38, order: { type: "attackMove", x: 760, y: 960 } });
+    (["footman", "footman", "footman", "lancer", "archer", "archer", "mercenary"] as const).forEach((kind, index) => {
+      scene.unit("v1a", kind, 980 + index * 26, 1010 + index * 18, { order: { type: "attackMove", x: 760, y: 960 } });
+    });
+    const game = scene.build().createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ scriptId: "attackWave", command: { type: "attack", targetId: "wounded-lancer" } });
+  });
+
   it("keeps a committed attack wave from being retasked into worker pressure", () => {
     const scene = sketchScene("v2-attack-wave-claim-blocks-worker-pressure")
       .map("bareDuel")
