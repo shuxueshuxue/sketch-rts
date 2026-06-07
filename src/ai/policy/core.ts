@@ -1030,12 +1030,28 @@ function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: Pl
   if (!buildings(snapshot, owner).some((building) => building.complete && isCoreProductionBuilding(building))) return false;
   const ownCombatCount = combatUnits(snapshot, owner).length;
   // @@@cleared-natural-bank - Once the first natural is cleared, five fighters are enough to stop dribbling the town-hall bank into one more unit.
-  if (opponentPlayerIds(snapshot, owner, options).length >= 2 && ownCombatCount >= 5 && shouldReserveForClearedExpansion(snapshot, owner, options)) return false;
+  if (
+    opponentPlayerIds(snapshot, owner, options).length >= 2 &&
+    ownCombatCount >= 5 &&
+    shouldReserveForClearedExpansion(snapshot, owner, options) &&
+    !shouldSpendClearedNaturalBankOnHomeArmyTraining(snapshot, owner, options)
+  )
+    return false;
   // @@@thin-bank-tempo - A near-ready natural is not worth idling core production when the visible field army is already outnumbering the first squad.
   if (ownCombatCount < 7 && enemyCombatUnits(snapshot, owner, options.teams).length > ownCombatCount) return true;
   // @@@expansion-reserve-training - First natural reserve starts near the hall cost; before that, idle core production loses the map.
   if (availableGold < BUILDING_DEFS.townHall.cost - 80 && availableGold - spendCost >= UNIT_DEFS.worker.cost && ownCombatCount < 6) return true;
   return healingWellPressure(snapshot, owner, mainBase(snapshot, owner), options);
+}
+
+function shouldSpendClearedNaturalBankOnHomeArmyTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  const ownCombat = combatUnits(snapshot, owner);
+  if (ownCombat.length >= 7) return false;
+  const main = mainBase(snapshot, owner);
+  const pressure = enemyCombatUnitsNear(snapshot, owner, main, MAIN_APPROACH_THREAT_RANGE, options.teams);
+  if (pressure.length <= ownCombat.length) return false;
+  // @@@cleared-natural-bank-break - A cleared natural is future economy; a stronger army entering main approach range is the current fight that decides whether the hall ever starts.
+  return armyPower(pressure) > armyPower(ownCombat) * 1.05;
 }
 
 function shouldSpendEarlyFirstExpansionBankOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {

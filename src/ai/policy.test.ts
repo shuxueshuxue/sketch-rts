@@ -4696,6 +4696,66 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "train" });
   });
 
+  it("spends a cleared first-natural bank on training when the five-unit claim is outpowered at home", () => {
+    const scene = sketchScene("v2-cleared-natural-bank-breaks-for-home-army")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 492, 2048, { id: "v2-main" })
+      .building("v2", "barracks", 612, 2148, { id: "v2-barracks" })
+      .building("v2", "archeryRange", 612, 1976, { id: "v2-archery" })
+      .building("v2", "farm", 716, 1948)
+      .building("v2", "farm", 786, 1816)
+      .worker("v2", 468, 2043)
+      .worker("v2", 528, 2082)
+      .worker("v2", 493, 2091)
+      .worker("v2", 500, 2058)
+      .worker("v2", 501, 2025)
+      .worker("v2", 520, 2060)
+      .unit("v2", "footman", 468, 2043, { id: "wounded-claim-footman", hp: 45, order: { type: "move", x: 492, y: 2048 } })
+      .unit("v2", "lancer", 528, 2082, { id: "claim-lancer", hp: 121, order: { type: "move", x: 492, y: 2048 } })
+      .unit("v2", "archer", 493, 2091, { id: "claim-archer", hp: 79, order: { type: "move", x: 492, y: 2048 } })
+      .unit("v2", "footman", 500, 2058, { id: "home-footman-a", order: { type: "move", x: 492, y: 2048 } })
+      .unit("v2", "footman", 501, 2025, { id: "home-footman-b", order: { type: "move", x: 492, y: 2048 } })
+      .townHall("v1a", 3604, 2048)
+      .townHall("v1a", 3300, 2240)
+      .townHall("v1b", 3604, 2600)
+      .townHall("v1b", 3300, 2800)
+      .unit("v1a", "footman", 1378, 2039)
+      .unit("v1a", "footman", 1294, 2081, { hp: 125 })
+      .unit("v1a", "lancer", 1256, 2018, { hp: 107 })
+      .unit("v1a", "footman", 1267, 2052, { hp: 107 })
+      .unit("v1a", "contractArcher", 1416, 2107, { hp: 73 })
+      .unit("v1a", "lancer", 1349, 2059)
+      .unit("v1b", "footman", 1946, 2197, { hp: 61 })
+      .unit("v1b", "footman", 2029, 2036, { hp: 88 })
+      .unit("v1b", "lancer", 1993, 2109)
+      .unit("v1b", "footman", 2024, 2090, { hp: 106 })
+      .unit("v1b", "lancer", 2057, 2104, { hp: 90 })
+      .goldMine("v2-main-mine", 440, 2048, 4000)
+      .goldMine("v2-cleared-natural", 810, 2610, 4000)
+      .goldMine("v1a-main-mine", 3680, 2048, 4000)
+      .goldMine("v1a-natural", 3300, 2240, 4000)
+      .goldMine("v1b-main-mine", 3680, 2600, 4000)
+      .goldMine("v1b-natural", 3300, 2800, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 235;
+    game.players.v2!.supplyUsed = 16;
+    game.players.v2!.supplyCap = 22;
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { expansionClaimTargetId: "v2-cleared-natural", expansionClaimTick: 3300 };
+    for (const unitId of ["wounded-claim-footman", "claim-lancer", "claim-archer"]) {
+      memory.unitClaims[unitId] = { kind: "expansion", targetId: "v2-cleared-natural", x: 810, y: 2610, sinceTick: 3300, expiresTick: 6900 };
+    }
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams, memory })[0];
+
+    expect(command).toMatchObject({ type: "train" });
+  });
+
   it("builds the ready cleared-natural town hall through distant main approach pressure", () => {
     const scene = sketchScene("v2-cleared-natural-build-through-approach-pressure")
       .map("openClaims")
