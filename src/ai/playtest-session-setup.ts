@@ -1,4 +1,5 @@
 import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput } from "./benchmark/control";
+import { createAiGauntletCatalog } from "./benchmark/gauntlet";
 import { createAiVersionBenchmarkInput } from "./benchmark/presets";
 import type { AiGameAgent } from "./game-runner";
 import type { AiRuntimeState } from "./runtime";
@@ -19,6 +20,9 @@ export type AiPlaytestSetupDescription = {
 };
 
 export function createAiPlaytestSetupFromArgs(args: string[], controlledPlayer: PlayerId, enemy: PlayerId): AiPlaytestSetupDescription {
+  const gauntletMatchName = flag(args, "from-gauntlet");
+  if (gauntletMatchName !== undefined) return gauntletPlaytestSetup(args, gauntletMatchName, controlledPlayer);
+
   const crossRaceBenchmarkMatchName = flag(args, "from-cross-race-benchmark");
   if (crossRaceBenchmarkMatchName !== undefined) return crossRaceBenchmarkPlaytestSetup(args, crossRaceBenchmarkMatchName, controlledPlayer);
 
@@ -81,6 +85,28 @@ function crossRaceBenchmarkPlaytestSetup(args: string[], matchName: string, cont
     full: boolFlag(args, "cross-race-full"),
   });
   return setupFromBenchmarkInput(input, matchName, controlledPlayer, "cross-race benchmark");
+}
+
+function gauntletPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
+  const catalog = createAiGauntletCatalog({
+    ...(flag(args, "gauntlet-seed") ? { seed: requiredFlag(args, "gauntlet-seed") } : {}),
+    ...(flag(args, "gauntlet-map-count") ? { mapCount: requiredNumberFlag(args, "gauntlet-map-count") } : {}),
+    full: boolFlag(args, "gauntlet-full"),
+  });
+  const match = catalog.matches.find((candidate) => candidate.name === matchName);
+  if (!match) throw new Error(`Unknown gauntlet match ${matchName}`);
+  return playtestSetupFromBenchmarkMatch(
+    {
+      name: match.name,
+      mapId: match.mapId,
+      agents: match.agents,
+      ...(match.options ? { options: match.options } : {}),
+      maxTicks: match.maxTicks,
+      thinkInterval: match.thinkInterval,
+    },
+    matchName,
+    controlledPlayer,
+  );
 }
 
 function setupFromBenchmarkInput(input: BenchmarkInput<AiGameAgent>, matchName: string, controlledPlayer: PlayerId, label: string): RequiredBenchmarkSetupDescription {

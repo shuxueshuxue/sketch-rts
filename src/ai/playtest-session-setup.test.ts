@@ -46,4 +46,20 @@ describe("AI playtest session setup", () => {
       },
     });
   });
+
+  it("creates exact gauntlet playtest setup descriptions for 1v3 replay", () => {
+    const setup = createAiPlaytestSetupFromArgs(["--from-gauntlet", "internal-only 1v3 lichenCrown 1v3 probe", "--gauntlet-full"], "v2", "v1a");
+
+    expect(setup).toMatchObject({
+      id: "interactive-internal-only-1v3-lichenCrown-1v3-probe",
+      mapId: "lichenCrown",
+      scriptedPlayers: ["v1a", "v1b", "v1c"],
+      versions: { v2: "v2", v1a: "v1", v1b: "v1", v1c: "v1" },
+      options: {
+        players: ["v2", "v1a", "v1b", "v1c"],
+        teams: { v2: "north", v1a: "south", v1b: "south", v1c: "south" },
+        races: { v2: "grove", v1a: "grove", v1b: "grove", v1c: "grove" },
+      },
+    });
+  });
 });

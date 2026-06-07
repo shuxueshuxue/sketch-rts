@@ -33,7 +33,7 @@ describe("AI playtest CLI", () => {
     expect(byName["new"]).toMatchObject({
       category: "session",
       requiredFlags: ["file"],
-      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "assist-you"]),
+      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-gauntlet", "assist-you"]),
     });
     expect(manifest.commands.every((command: { example?: string }) => command.example)).toBe(true);
   });
@@ -323,6 +323,25 @@ describe("AI playtest CLI", () => {
     expect(persisted.session.scriptedPlayers).toEqual(["grove"]);
     expect(persisted.runtime.controlledPlayers).toEqual(["ember", "grove"]);
     expect(persisted.runtime.versions).toMatchObject({ ember: "v2", grove: "v2" });
+  });
+
+  it("creates exact gauntlet 1v3 sessions for assisted v2 replay", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "gauntlet-1v3.json");
+
+    runPlaytestCli("new", "--file", file, "--from-gauntlet", "internal-only 1v3 lichenCrown 1v3 probe", "--gauntlet-full", "--you", "v2", "--assist-you");
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
+      { playerId: "v2", team: "north", race: "grove", controller: "human" },
+      { playerId: "v1a", team: "south", race: "grove", controller: "ai" },
+      { playerId: "v1b", team: "south", race: "grove", controller: "ai" },
+      { playerId: "v1c", team: "south", race: "grove", controller: "ai" },
+    ]);
+    expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b", "v1c"]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a", "v1b", "v1c"]);
+    expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1", v1b: "v1", v1c: "v1" });
   });
 
   it("creates manual side-swapped map sessions with explicit teams", () => {
