@@ -9002,6 +9002,38 @@ describe("SDK preset AI policy", () => {
     expect(entry).toBeUndefined();
   });
 
+  it("v2 retreats worker pressure when another opponent covers the target worker base", () => {
+    const scene = sketchScene("v2-worker-pressure-cross-opponent-base-cover")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 2048)
+      .townHall("v2", 720, 2540)
+      .unit("v2", "footman", 1660, 2050, { id: "pressure-footman-a" })
+      .unit("v2", "footman", 1700, 2080, { id: "pressure-footman-b" })
+      .unit("v2", "lancer", 1720, 2020, { id: "pressure-lancer" })
+      .unit("v2", "contractArcher", 1640, 2090, { id: "pressure-archer" })
+      .townHall("v1a", 3600, 1480)
+      .unit("v1a", "footman", 2060, 2150)
+      .unit("v1a", "footman", 2100, 2180)
+      .unit("v1a", "lancer", 2140, 2120)
+      .unit("v1a", "archer", 2180, 2160)
+      .townHall("v1b", 2138, 2170, { id: "v1b-natural" })
+      .worker("v1b", 2088, 2112, { id: "v1b-covered-worker" })
+      .goldMine("v2-main", 420, 2048, 3000)
+      .goldMine("v2-natural", 720, 2540, 3000)
+      .goldMine("v1a-main", 3600, 1480, 3000)
+      .goldMine("v1b-natural-mine", 2138, 2170, 3000)
+      .build();
+    const game = scene.createGame();
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams })[0];
+
+    expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "move" } });
+  });
+
   it("v2 keeps worker pressure available when the pressure squad is already near its main", () => {
     const scene = sketchScene("v2-worker-pressure-main-local")
       .map("bareDuel")

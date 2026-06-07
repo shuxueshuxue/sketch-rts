@@ -1655,12 +1655,12 @@ function workerPressureRouteCoveredByOtherArmy(snapshot: GameSnapshot, owner: Pl
   const center = averagePoint(soldiers);
   if (distance(center, mainBase(snapshot, owner)) <= 700) return false;
   const targetBase = nearestEntity(buildings(snapshot, target.owner).filter((building) => building.kind === "townHall" && building.complete), target);
-  if (targetBase && distance(target, targetBase) <= 620) return false;
+  const targetAtBase = Boolean(targetBase && distance(target, targetBase) <= 620);
   const blockers = enemyCombatUnits(snapshot, owner, options.teams).filter(
     (enemy) =>
       enemy.owner !== target.owner &&
       distance(enemy, center) <= 2_200 &&
-      (pointToSegmentDistance(enemy, center, target) <= 900 || distance(enemy, target) <= 900),
+      (targetAtBase ? distance(enemy, target) <= 520 : pointToSegmentDistance(enemy, center, target) <= 900 || distance(enemy, target) <= 900),
   );
   // @@@worker-pressure-route-cover - In 1v2, the other opponent's army can make a worker pickoff path unwinnable even when the target owner's base looks open.
   return blockers.length >= 3 && armyPower(blockers) >= armyPower(soldiers) * 0.55;
