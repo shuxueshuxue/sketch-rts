@@ -3,7 +3,7 @@ import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
 import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
 import type { PlayerId } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
-import type { createRoomHost, HostedRoomFrameEvent } from "./room-host";
+import type { createRoomHost, HostedRoomFrameEvent, HostedRoomLifecycleEvent } from "./room-host";
 import { DEFAULT_ROOM_FRAME_HISTORY_LIMIT } from "./room-history";
 
 export type RoomNetSocket = {
@@ -28,6 +28,7 @@ type RoomNetState = {
   nextSyncEventSequence: number;
   nextChatSequence: number;
   unsubscribeFrameEvents?: () => void;
+  unsubscribeLifecycleEvents?: () => void;
 };
 
 export class RoomNetHub {
@@ -70,6 +71,7 @@ export class RoomNetHub {
       if (state.sockets.size === 0) continue;
       if (!this.options.roomHost.hasRoom(roomId)) {
         state.unsubscribeFrameEvents?.();
+        state.unsubscribeLifecycleEvents?.();
         this.rooms.delete(roomId);
         continue;
       }
@@ -159,7 +161,7 @@ export class RoomNetHub {
     const existing = this.rooms.get(roomId);
     if (existing) return existing;
     const created: RoomNetState = {
-      coordinator: new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) }),
+      coordinator: this.createCoordinator(roomId),
       sockets: new Set<RoomNetSocket>(),
       authoritativeChecksums: new Map<number, string>(),
       desyncReports: new Set<string>(),
@@ -169,6 +171,7 @@ export class RoomNetHub {
     };
     if (this.options.frameHistoryLimit !== undefined) this.options.roomHost.setFrameHistoryLimit(roomId, this.options.frameHistoryLimit);
     created.unsubscribeFrameEvents = this.options.roomHost.observeRoomFrames(roomId, (event) => this.publishFrameEvent(roomId, event));
+    created.unsubscribeLifecycleEvents = this.options.roomHost.observeRoomLifecycle(roomId, (event) => this.publishLifecycleEvent(roomId, event));
     this.rooms.set(roomId, created);
     return created;
   }
@@ -179,6 +182,25 @@ export class RoomNetHub {
     this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
     this.broadcast(roomId, { type: "frame", frame: event.frame });
     if (event.room.status === "ended") this.broadcast(roomId, { type: "room", room: event.room });
+  }
+
+  private publishLifecycleEvent(roomId: string, event: HostedRoomLifecycleEvent): void {
+    const state = this.rooms.get(roomId);
+    if (!state) return;
+    if (event.checkpoint) this.resetLockstepSession(roomId, state);
+    this.broadcast(roomId, { type: "room", room: event.room });
+    if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", checkpoint: event.checkpoint });
+  }
+
+  private createCoordinator(roomId: string): LockstepRoomCoordinator {
+    return new LockstepRoomCoordinator({ roomId, ...(this.options.commandDelayTicks !== undefined ? { commandDelayTicks: this.options.commandDelayTicks } : {}) });
+  }
+
+  private resetLockstepSession(roomId: string, state: RoomNetState) {
+    // @@@room-net-epoch-reset - A replacement checkpoint starts a new lockstep epoch; delayed commands and checksum comparisons from the old game cannot cross it.
+    state.coordinator = this.createCoordinator(roomId);
+    state.authoritativeChecksums.clear();
+    state.desyncReports.clear();
   }
 
   private broadcast(roomId: string, message: ServerNetMessage): void {
