@@ -15,6 +15,8 @@ The project is work in progress. The current focus is stable browser play, deter
 - SDK control surface for room creation, scenario reset, command injection, fast-forward, savegames, debug replay, and benchmark-style probes.
 - Flexible deployment: a static browser mode for local play and a hosted server mode for rooms, spectators, WebSocket lockstep, saves, SDK control, and the benchmark dashboard.
 - Multiplayer built on command frames, not duplicated gameplay implementations.
+- Hosted rooms have a live room lifecycle stream, so pre-match slot lists update across devices before the match starts.
+- Room URLs use stable hash routes such as `#room=room-id`, so players can refresh or share a room without requiring server-side SPA routes.
 - High-performance AI benchmark tooling with parallel workers and a browser dashboard.
 
 ## Quick Start
@@ -63,7 +65,7 @@ single simulation core
 Static mode and hosted mode are product/deployment choices, not separate gameplay engines:
 
 - Static mode keeps room setup and gameplay inside the browser, using a local adapter over the same command-frame runtime.
-- Hosted mode uses HTTP for room setup and WebSocket room frames for live gameplay.
+- Hosted mode uses HTTP plus a room lifecycle event stream for setup, and WebSocket room frames for live gameplay.
 - SDK and benchmark flows use the same command and simulation primitives, so an AI decision can be replayed, tested, fast-forwarded, or run in a room without being rewritten.
 
 This is the main invariant: multiple product paths are allowed; one core implementation is required.
@@ -88,12 +90,21 @@ HOST=0.0.0.0 PORT=34573 npm run server
 Hosted mode serves the game and owns the shared room control plane:
 
 - `GET/POST /api/rooms*` for room setup.
+- `GET /api/rooms/:roomId/events` for pre-match room lifecycle updates.
 - `/ws/rooms/:roomId` for live lockstep command frames.
 - Savegame and debug replay endpoints.
 - SDK control endpoints.
 - Benchmark dashboard storage and API.
 
 The hosted path is the right target for LAN play, public multiplayer, SDK-controlled matches, and benchmark dashboards.
+
+Hosted room pages use hash routing inside the browser, for example:
+
+```text
+https://example.com/sketch-rts/#room=room-id
+```
+
+That keeps deployment simple under subpaths such as `/sketch-rts/`: the server only needs to serve the app and API under the mounted base path, while the browser keeps enough room identity to refresh or rejoin without a separate route table.
 
 ## SDK
 
@@ -206,4 +217,3 @@ The benchmark path is deliberately close to the real SDK/runtime path. It should
 Sketch RTS is developed and discussed with the community, including promotion and feedback on [linux.do](https://linux.do/).
 
 The game is deeply inspired by Warcraft III. Thank you to War3 for many of the ideas that shaped the feel of workers, bases, creeping, races, heroes-in-spirit unit readability, and RTS pacing.
-
