@@ -1543,6 +1543,7 @@ describe("sketch RTS simulation", () => {
     expect(guarded.hp).toBe(guarded.maxHp);
     expect(guarded.effects.some((effect) => effect.type === "guardian")).toBe(true);
     expect(game.effects.some((effect) => effect.type === "guardianField" && effect.radius === 280)).toBe(true);
+    expect(game.items.some((item) => item.id === "guardian-scroll")).toBe(false);
 
     stepMany(game, seconds(8.5));
     attacker.cooldown = 0;

@@ -2,6 +2,7 @@ import "./styles.css";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
+import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, type CommandButtonState } from "./command-button-state";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -75,7 +76,7 @@ type CommandButton = {
   element: HTMLButtonElement;
   hotkey: string;
   tooltip: () => GameplayTooltip;
-  isAvailable: () => boolean;
+  state: () => CommandButtonState;
   run: () => void;
 };
 
@@ -193,14 +194,14 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
 const baseGameAdapter = deploymentRuntime.initialAdapter();
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
-  createCommandButton(t("command.attackMove.title"), "⌁", "a", canAttackMove, beginAttackMoveMode, () => ({
+  createCommandButton(t("command.attackMove.title"), "⌁", "a", () => booleanCommandState(canAttackMove()), beginAttackMoveMode, () => ({
     title: t("command.attackMove.title"),
     body: t("command.attackMove.body"),
     stats: [t("command.attackMove.stats")],
     requirements: [t("command.attackMove.requirements")],
     hotkey: "A",
   })),
-  createCommandButton(t("command.build.title"), "⌘", "b", canOpenBuildPalette, openBuildPalette, () => ({
+  createCommandButton(t("command.build.title"), "⌘", "b", () => booleanCommandState(canOpenBuildPalette()), openBuildPalette, () => ({
     title: t("command.build.title"),
     body: t("command.build.body"),
     stats: [t("command.build.stats")],
@@ -208,18 +209,18 @@ const commandButtons: CommandButton[] = [
     hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => canBuild(command.kind), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n)),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => canTrain(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n)),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
-    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => canResearch(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
+    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(t("command.castSpecific", { ability: labelKind(command.ability) }), command.icon, command.hotkey, () => canCast(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey, i18n)),
+    createCommandButton(t("command.castSpecific", { ability: labelKind(command.ability) }), command.icon, command.hotkey, () => abilityButtonState(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey, i18n)),
   ),
-  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, canHireMercenary, hireMercenary, () => ({
+  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
     body: t("command.hire.body"),
     stats: [t("command.hire.stock"), t("command.hire.instant")],
@@ -271,7 +272,7 @@ void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
 
-function createCommandButton(label: string, icon: string, hotkey: string, isAvailable: () => boolean, run: () => void, tooltip: () => GameplayTooltip): CommandButton {
+function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip): CommandButton {
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
@@ -282,7 +283,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, isAvai
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   element.addEventListener("click", run);
   commandDock.append(element);
-  return { element, hotkey, tooltip, isAvailable, run };
+  return { element, hotkey, tooltip, state, run };
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -292,6 +293,44 @@ function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
   element.dataset.tooltipStats = dataset.stats;
   element.dataset.tooltipRequirements = dataset.requirements;
   element.dataset.tooltipHotkey = dataset.hotkey;
+}
+
+function renderCommandButtonState(element: HTMLButtonElement, state: CommandButtonState) {
+  if (state.cooldownTicks !== undefined) element.dataset.cooldownTicks = String(state.cooldownTicks);
+  else delete element.dataset.cooldownTicks;
+  const label = commandButtonStateLabel(state);
+  if (label) element.dataset.disabledLabel = label;
+  else delete element.dataset.disabledLabel;
+  if (state.reason) element.dataset.disabledReason = state.reason;
+  else delete element.dataset.disabledReason;
+}
+
+function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonState): GameplayTooltip {
+  const reason = commandButtonStateRequirement(state);
+  if (!reason) return tooltip;
+  return { ...tooltip, requirements: [reason, ...tooltip.requirements] };
+}
+
+function commandButtonStateLabel(state: CommandButtonState) {
+  if (state.cooldownTicks !== undefined) return t("hud.commandCooldownShort", { ticks: state.cooldownTicks });
+  if (state.reason === "stock") return t("hud.commandNoStockShort");
+  if (state.reason === "gold") return t("hud.commandNoGoldShort");
+  if (state.reason === "supply") return t("hud.commandNoSupplyShort");
+  if (state.reason === "position") return t("hud.commandNeedUnitShort");
+  return undefined;
+}
+
+function commandButtonStateRequirement(state: CommandButtonState) {
+  if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { ticks: state.cooldownTicks });
+  if (state.reason === "stock") return t("hud.commandNoStock");
+  if (state.reason === "gold") return t("hud.commandNoGold");
+  if (state.reason === "supply") return t("hud.commandNoSupply");
+  if (state.reason === "position") return t("hud.commandNeedUnit");
+  return undefined;
+}
+
+function showCommandUnavailable(state: CommandButtonState, fallback: string) {
+  showInvalidCommand(commandButtonStateRequirement(state) ?? fallback);
 }
 
 function showTooltipFromEvent(event: Event) {
@@ -1536,23 +1575,26 @@ function canResearch(upgradeKind: UpgradeKind) {
 }
 
 function canCast(ability: AbilityKind) {
-  return !commandMode && !buildPaletteOpen && focusedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  return abilityButtonState(ability).enabled;
 }
 
 function canHireMercenary() {
+  return hireMercenaryButtonState().enabled;
+}
+
+function abilityButtonState(ability: AbilityKind): CommandButtonState {
+  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
+  return abilityCommandState(focusedPlayerUnits(), ability);
+}
+
+function hireMercenaryButtonState(): CommandButtonState {
   const camp = selectedMercenaryCamp();
-  const player = currentPlayerState();
-  return Boolean(
-    !commandMode &&
-      !buildPaletteOpen &&
-      camp &&
-      player &&
-      camp.stock > 0 &&
-      camp.cooldownRemaining === 0 &&
-      player.gold >= camp.cost &&
-      player.supplyUsed + UNIT_DEFS[camp.hireKind].supplyUsed <= player.supplyCap &&
-      friendlyUnitAtMercenaryCamp(camp),
-  );
+  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
+  return mercenaryHireCommandState({
+    camp,
+    player: currentPlayerState(),
+    hasFriendlyUnitAtCamp: camp ? friendlyUnitAtMercenaryCamp(camp) : false,
+  });
 }
 
 function openBuildPalette() {
@@ -1593,6 +1635,11 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
 }
 
 function beginSpellTargeting(ability: AbilityKind) {
+  const state = abilityButtonState(ability);
+  if (!state.enabled) {
+    showCommandUnavailable(state, t("status.spellNeedsCaster", { ability: labelKind(ability) }));
+    return;
+  }
   const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
   if (!caster) {
     showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
@@ -1778,8 +1825,9 @@ function hireMercenary() {
     showInvalidCommand(t("status.hireNeedsCamp"));
     return;
   }
-  if (!canHireMercenary()) {
-    showInvalidCommand(t("status.hireNeedsUnitAtCamp"));
+  const state = hireMercenaryButtonState();
+  if (!state.enabled) {
+    showCommandUnavailable(state, t("status.hireNeedsUnitAtCamp"));
     return;
   }
   sendCommand({ type: "hire", campId: camp.id });
@@ -1893,12 +1941,12 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
     controlGroups: reservedGroupDigits,
     inventorySlots: inventoryEntries.length,
     inventoryHotkeys: itemHotkeys(inventoryEntries.length, reservedGroupDigits).map(Number),
-    commandHotkeys: new Set(commandButtons.filter((button) => button.isAvailable()).map((button) => button.hotkey)),
+    commandHotkeys: new Set(commandButtons.filter((button) => button.state().visible).map((button) => button.hotkey)),
   });
   if (intent.type === "none") return false;
   if (intent.type === "inventoryUse") return useInventoryItem(intent.index);
   if (intent.type === "commandHotkey") {
-    const command = commandButtons.find((button) => button.hotkey === intent.hotkey && button.isAvailable());
+    const command = commandButtons.find((button) => button.hotkey === intent.hotkey && button.state().visible);
     command?.run();
     return Boolean(command);
   }
@@ -1962,11 +2010,14 @@ function updateHud() {
   }
   let visibleCount = 0;
   for (const button of commandButtons) {
-    const available = button.isAvailable();
-    button.element.hidden = !available;
-    button.element.disabled = !available;
-    applyTooltip(button.element, button.tooltip());
-    if (available) visibleCount += 1;
+    const state = button.state();
+    button.element.hidden = !state.visible;
+    button.element.disabled = !state.enabled;
+    button.element.classList.toggle("command-button-disabled", state.visible && !state.enabled);
+    button.element.classList.toggle("command-button-cooldown", state.cooldownTicks !== undefined);
+    renderCommandButtonState(button.element, state);
+    applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
+    if (state.visible) visibleCount += 1;
   }
   commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
   for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {

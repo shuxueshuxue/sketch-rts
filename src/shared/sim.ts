@@ -73,7 +73,6 @@ const ITEM_PICKUP_RANGE = 72;
 const CURSE_DURATION = seconds(18);
 const SUMMONED_SPIRIT_DURATION = seconds(45);
 const GUARDIAN_SCROLL_DURATION = seconds(7);
-const GUARDIAN_SCROLL_COOLDOWN = seconds(45);
 const LIGHTNING_ROD_COOLDOWN = seconds(18);
 const STORM_STAFF_DURATION = seconds(4.8);
 const STORM_STAFF_TICK_INTERVAL = seconds(1.2);
@@ -1123,7 +1122,7 @@ function activateItem(
       unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL_DURATION });
     });
     addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION, { radius: 280 });
-    item.cooldownRemaining = GUARDIAN_SCROLL_COOLDOWN;
+    consumeItem(game, item);
     return;
   }
   if (item.kind === "breachCharge") {
@@ -1131,7 +1130,7 @@ function activateItem(
     const target = targetId ? game.buildings.find((building) => building.id === targetId && areEnemyOwners(game, carrier.owner, building.owner)) : undefined;
     if (!target || distance(carrier, target) > BREACH_CHARGE_RANGE) return;
     applyAttackDamage(game, carrier, target, BREACH_CHARGE_DAMAGE, BREACH_CHARGE_RANGE);
-    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+    consumeItem(game, item);
     return;
   }
   if (item.kind === "experienceBook") {
@@ -1139,8 +1138,12 @@ function activateItem(
     carrier.xp += 160;
     applyXpLevel(game, carrier);
     addEffect(game, "experienceBurst", carrier.x, carrier.y, 48);
-    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+    consumeItem(game, item);
   }
+}
+
+function consumeItem(game: Game, item: WorldItem) {
+  game.items = game.items.filter((candidate) => candidate.id !== item.id);
 }
 
 function applyChainLightning(game: Game, carrier: Unit, item: WorldItem, firstTarget: Unit) {

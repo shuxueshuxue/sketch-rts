@@ -657,8 +657,8 @@ button {
 
 .chat-overlay {
   position: absolute;
-  left: 18px;
-  top: 104px;
+  left: 24px;
+  top: 34vh;
   width: min(360px, calc(100vw - 36px));
   display: flex;
   flex-direction: column;
@@ -676,13 +676,13 @@ button {
 
 .chat-message {
   max-width: 100%;
-  color: rgba(255, 250, 226, 0.96);
+  color: rgba(21, 28, 20, 0.94);
   font-size: 13px;
   line-height: 1.35;
   overflow-wrap: anywhere;
   text-shadow:
-    0 1px 1px rgba(20, 25, 18, 0.82),
-    0 0 6px rgba(20, 25, 18, 0.45);
+    0 1px 0 rgba(255, 251, 231, 0.82),
+    0 0 5px rgba(255, 251, 231, 0.72);
   transition: opacity 1.2s ease;
 }
 
@@ -691,7 +691,7 @@ button {
 }
 
 .chat-sender {
-  color: #f2c766;
+  color: #6d4a11;
   font-weight: 800;
 }
 
@@ -931,6 +931,39 @@ button {
 .command-button:disabled {
   color: #8f947f;
   background: rgba(246, 241, 214, 0.72);
+}
+
+.command-button-disabled {
+  cursor: not-allowed;
+  opacity: 0.82;
+}
+
+.command-button[data-disabled-label]::after {
+  content: attr(data-disabled-label);
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  max-width: calc(100% - 6px);
+  overflow: hidden;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: rgba(36, 49, 38, 0.82);
+  color: #fffbe7;
+  font-family: ui-monospace, monospace;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-button-cooldown::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(36, 49, 38, 0.24);
+  pointer-events: none;
 }
 
 .tooltip-layer {
