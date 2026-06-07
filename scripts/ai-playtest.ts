@@ -1,19 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner, type SerializedInteractivePlaytestSession } from "../src/sdk/playtest";
-import { applyAiInteractivePlaytestCommand, createAiInteractivePlaytestRuntime, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
+import { restoreInteractivePlaytestSession, serializeInteractivePlaytestSession, type InteractivePlaytestCondition, type InteractivePlaytestUnitInspectionOwner } from "../src/sdk/playtest";
+import { applyAiInteractivePlaytestCommand, inspectAiInteractivePlaytestUnits, stepAiInteractivePlaytestSession, stepAiInteractivePlaytestUntil, summarizeAiInteractivePlaytestSession } from "../src/ai/playtest";
 import { AI_PLAYTEST_COMMAND_MANIFEST as SHARED_AI_PLAYTEST_COMMAND_MANIFEST, commandFromPlaytestArgs } from "../src/ai/playtest-command-manifest";
-import { createAiPlaytestSetupFromArgs } from "../src/ai/playtest-session-setup";
-import { DEFAULT_AI_THINK_INTERVAL, planAiRuntimeCommandEntries } from "../src/ai/runtime";
-import type { AiRuntimeState } from "../src/ai/runtime";
-import { AI_SCRIPT_LIBRARY } from "../src/ai/policy";
+import { createAiPlaytestFileFromArgs, type AiPlaytestFile } from "../src/ai/playtest-session-file";
+import { planAiRuntimeCommandEntries } from "../src/ai/runtime";
 import { SIM_TICKS_PER_SECOND } from "../src/shared/time";
-import type { AiScriptVersion, PlayerId } from "../src/shared/types";
-
-type AiPlaytestFile = {
-  session: SerializedInteractivePlaytestSession;
-  runtime: AiRuntimeState;
-};
+import type { PlayerId } from "../src/shared/types";
 
 const [verb, ...args] = process.argv.slice(2);
 if (!verb || verb === "help" || verb === "--help") {
@@ -28,27 +21,9 @@ if (verb === "commands") {
 
 if (verb === "new") {
   const file = requiredFlag(args, "file");
-  const controlledPlayer = flag(args, "you") ?? "v2";
-  const enemy = flag(args, "enemy") ?? "v1a";
-  const setup = createAiPlaytestSetupFromArgs(args, controlledPlayer, enemy);
-  const controlledVersion = setup.versions?.[controlledPlayer] ?? ((flag(args, "you-version") ?? "v2") as AiScriptVersion);
-  const enemyVersion = setup.versions?.[enemy] ?? ((flag(args, "enemy-version") ?? "v1") as AiScriptVersion);
-  const thinkInterval = numberFlag(args, "think-interval", DEFAULT_AI_THINK_INTERVAL);
-  const assistControlled = boolFlag(args, "assist-you");
-  const scriptedPlayers = setup.scriptedPlayers ?? [enemy];
-  const versions = { ...Object.fromEntries(scriptedPlayers.map((owner) => [owner, setup.versions?.[owner] ?? enemyVersion])), [controlledPlayer]: controlledVersion } as Partial<Record<PlayerId, AiScriptVersion>>;
-  const scriptIdsByPlayer = scriptIdsByPlayerFromArgs(args, controlledPlayer, scriptedPlayers, assistControlled);
-  const session = createInteractivePlaytestSession({
-    id: flag(args, "id") ?? setup.id ?? `interactive-${setup.mapId}-${Date.now()}`,
-    mapId: setup.mapId,
-    controlledPlayer,
-    scriptedPlayers,
-    winnerMode: setup.winnerMode,
-    options: setup.options,
-  });
-  const runtime = createAiInteractivePlaytestRuntime(session, { assistControlled, thinkInterval, versions, ...(Object.keys(scriptIdsByPlayer).length > 0 ? { scriptIdsByPlayer } : {}), ...(setup.policyMode ? { policyMode: setup.policyMode } : {}), ...(setup.disabledBehaviorsByPlayer ? { disabledBehaviorsByPlayer: setup.disabledBehaviorsByPlayer } : {}) });
-  savePlaytestFile(file, { session: serializeInteractivePlaytestSession(session), runtime });
-  printJson(summarizeAiInteractivePlaytestSession(session, runtime));
+  const created = createAiPlaytestFileFromArgs(args);
+  savePlaytestFile(file, created);
+  printJson(summarizeAiInteractivePlaytestSession(restoreInteractivePlaytestSession(created.session), created.runtime));
   process.exit(0);
 }
 
@@ -135,37 +110,12 @@ function unitInspectionOwnerFlag(args: string[]): InteractivePlaytestUnitInspect
   return owner as PlayerId;
 }
 
-function scriptIdsByPlayerFromArgs(args: string[], controlledPlayer: PlayerId, scriptedPlayers: PlayerId[], assistControlled: boolean): Partial<Record<PlayerId, string[]>> {
-  const youScripts = scriptIdsFlag(args, "you-scripts");
-  const enemyScripts = scriptIdsFlag(args, "enemy-scripts");
-  if (youScripts && !assistControlled) throw new Error("--you-scripts requires --assist-you");
-  return {
-    ...(youScripts ? { [controlledPlayer]: youScripts } : {}),
-    ...(enemyScripts ? Object.fromEntries(scriptedPlayers.map((owner) => [owner, enemyScripts])) : {}),
-  };
-}
-
-function scriptIdsFlag(args: string[], name: string): string[] | undefined {
-  const raw = flag(args, name);
-  if (raw === undefined) return undefined;
-  const scriptIds = raw.split(",").map((value) => value.trim()).filter(Boolean);
-  if (scriptIds.length === 0) throw new Error(`--${name} must include at least one script id`);
-  for (const scriptId of scriptIds) {
-    if (!(scriptId in AI_SCRIPT_LIBRARY)) throw new Error(`Unknown AI script id ${scriptId}`);
-  }
-  return scriptIds;
-}
-
 function flag(args: string[], name: string): string | undefined {
   const index = args.indexOf(`--${name}`);
   if (index === -1) return undefined;
   const value = args[index + 1];
   if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for --${name}`);
   return value;
-}
-
-function boolFlag(args: string[], name: string): boolean {
-  return args.includes(`--${name}`);
 }
 
 function requiredFlag(args: string[], name: string): string {
