@@ -11,10 +11,10 @@ describe("WebSocket transport adapter", () => {
     transport.onMessage((message) => received.push(message));
 
     transport.send({ type: "join", roomId: "room-1", playerId: "player" });
-    socket.emitMessage(encodeNetMessage({ type: "hello", roomId: "room-1", playerId: "player", tick: 12 }));
+    socket.emitMessage(encodeNetMessage({ type: "hello", roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }));
 
     expect(socket.sent).toEqual([JSON.stringify({ type: "join", roomId: "room-1", playerId: "player" })]);
-    expect(received).toEqual([{ type: "hello", roomId: "room-1", playerId: "player", tick: 12 }]);
+    expect(received).toEqual([{ type: "hello", roomId: "room-1", playerId: "player", tick: 12, epoch: 4 }]);
   });
 
   it("notifies when the socket opens", () => {

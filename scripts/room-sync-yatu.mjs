@@ -120,17 +120,19 @@ async page => {
       }, { once: true });
     });
     let clientSeq = 0;
+    let epoch = 0;
     window.__sketchRtsRoomSyncCommandErrors = [];
     socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(String(event.data));
+        if (Number.isInteger(message.epoch)) epoch = message.epoch;
         if (message.type === "error") window.__sketchRtsRoomSyncCommandErrors.push(message.message ?? JSON.stringify(message));
       } catch (error) {
         window.__sketchRtsRoomSyncCommandErrors.push(String(error));
       }
     });
     window.__sketchRtsRoomSyncSendCommand = (playerId, command) => {
-      socket.send(JSON.stringify({ type: "command", roomId, playerId, clientSeq, command }));
+      socket.send(JSON.stringify({ type: "command", roomId, playerId, clientSeq, epoch, command }));
       clientSeq += 1;
     };
     window.__sketchRtsRoomSyncCloseCommandSocket = () => socket.close();

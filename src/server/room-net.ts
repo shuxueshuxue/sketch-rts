@@ -22,6 +22,7 @@ export type RoomNetHubOptions = {
 type RoomNetState = {
   coordinator: LockstepRoomCoordinator;
   sockets: Set<RoomNetSocket>;
+  epoch: number;
   authoritativeChecksums: Map<number, string>;
   desyncReports: Set<string>;
   syncEvents: RoomSyncEvent[];
@@ -49,13 +50,6 @@ export class RoomNetHub {
     socket.on("close", () => state.sockets.delete(socket));
   }
 
-  publishRoom(roomId: string): void {
-    const state = this.rooms.get(roomId);
-    if (!state) return;
-    const encoded = encodeNetMessage({ type: "room", room: this.options.roomHost.getRoom(roomId) });
-    for (const socket of [...state.sockets]) this.trySend(state, socket, encoded);
-  }
-
   tickRoom(roomId: string): CommandFrame | undefined {
     if (this.options.roomHost.getRoom(roomId).status !== "inMatch") return undefined;
     const state = this.stateFor(roomId);
@@ -68,11 +62,15 @@ export class RoomNetHub {
   tickConnectedRooms(): Set<string> {
     const ticked = new Set<string>();
     for (const [roomId, state] of this.rooms.entries()) {
-      if (state.sockets.size === 0) continue;
       if (!this.options.roomHost.hasRoom(roomId)) {
-        state.unsubscribeFrameEvents?.();
-        state.unsubscribeLifecycleEvents?.();
-        this.rooms.delete(roomId);
+        if (state.sockets.size === 0) {
+          state.unsubscribeFrameEvents?.();
+          state.unsubscribeLifecycleEvents?.();
+          this.rooms.delete(roomId);
+        }
+        continue;
+      }
+      if (state.sockets.size === 0) {
         continue;
       }
       if (this.options.roomHost.getRoom(roomId).status !== "inMatch") continue;
@@ -105,7 +103,8 @@ export class RoomNetHub {
     const message = decodeClientNetMessage(raw);
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
-      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.snapshot(message.roomId).tick });
+      const state = this.stateFor(message.roomId);
+      this.send(message.roomId, socket, { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.snapshot(message.roomId).tick, epoch: state.epoch });
       return;
     }
     if (message.type === "command") {
@@ -121,6 +120,7 @@ export class RoomNetHub {
       return;
     }
     if (message.type === "syncEvent") {
+      if (!this.acceptsMessageEpoch(this.stateFor(message.roomId), message)) return;
       this.recordSyncEvent(message.roomId, message.event);
       return;
     }
@@ -130,9 +130,11 @@ export class RoomNetHub {
   }
 
   private acceptCommand(message: Extract<ClientNetMessage, { type: "command" }>): void {
+    const state = this.stateFor(message.roomId);
+    if (!this.acceptsMessageEpoch(state, message)) return;
     const snapshot = this.options.roomHost.snapshot(message.roomId);
     this.options.roomHost.admitCommands(message.roomId, [{ playerId: message.playerId, command: message.command }]);
-    this.stateFor(message.roomId).coordinator.acceptCommand({
+    state.coordinator.acceptCommand({
       currentTick: snapshot.tick,
       playerId: message.playerId,
       command: message.command,
@@ -163,6 +165,7 @@ export class RoomNetHub {
     const created: RoomNetState = {
       coordinator: this.createCoordinator(roomId),
       sockets: new Set<RoomNetSocket>(),
+      epoch: 0,
       authoritativeChecksums: new Map<number, string>(),
       desyncReports: new Set<string>(),
       syncEvents: [],
@@ -180,8 +183,7 @@ export class RoomNetHub {
     const state = this.rooms.get(roomId);
     if (!state) return;
     this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
-    this.broadcast(roomId, { type: "frame", frame: event.frame });
-    if (event.room.status === "ended") this.broadcast(roomId, { type: "room", room: event.room });
+    this.broadcast(roomId, { type: "frame", frame: event.frame, epoch: state.epoch });
   }
 
   private publishLifecycleEvent(roomId: string, event: HostedRoomLifecycleEvent): void {
@@ -189,7 +191,7 @@ export class RoomNetHub {
     if (!state) return;
     if (event.checkpoint) this.resetLockstepSession(roomId, state);
     this.broadcast(roomId, { type: "room", room: event.room });
-    if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", checkpoint: event.checkpoint });
+    if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", checkpoint: event.checkpoint, epoch: state.epoch });
   }
 
   private createCoordinator(roomId: string): LockstepRoomCoordinator {
@@ -198,6 +200,7 @@ export class RoomNetHub {
 
   private resetLockstepSession(roomId: string, state: RoomNetState) {
     // @@@room-net-epoch-reset - A replacement checkpoint starts a new lockstep epoch; delayed commands and checksum comparisons from the old game cannot cross it.
+    state.epoch += 1;
     state.coordinator = this.createCoordinator(roomId);
     state.authoritativeChecksums.clear();
     state.desyncReports.clear();
@@ -227,6 +230,8 @@ export class RoomNetHub {
   private sendCheckpointWithFrames(socket: RoomNetSocket, message: Extract<ClientNetMessage, { type: "requestCheckpoint" }>): void {
     const roomId = message.roomId;
     const requestedTick = message.tick;
+    const state = this.stateFor(roomId);
+    if (!this.acceptsMessageEpoch(state, message)) return;
     const checkpoint = requestedTick === undefined ? this.options.roomHost.checkpointRoom(roomId) : this.options.roomHost.checkpointAtOrBefore(roomId, requestedTick) ?? this.options.roomHost.checkpointRoom(roomId);
     const reason = message.reason ?? (requestedTick === undefined ? "manual" : "late-catchup");
     const checkpointClass = checkpointRequestClass(reason);
@@ -240,14 +245,15 @@ export class RoomNetHub {
       checkpointClass,
       ...(message.clientChecksum ? { clientChecksum: message.clientChecksum } : {}),
     });
-    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint: { ...checkpoint, reason, checkpointClass } })) return;
+    if (!this.send(roomId, socket, { type: "checkpoint", checkpoint: { ...checkpoint, reason, checkpointClass }, epoch: state.epoch })) return;
     for (const frame of this.options.roomHost.framesFrom(roomId, checkpoint.tick)) {
-      if (!this.send(roomId, socket, { type: "frame", frame })) return;
+      if (!this.send(roomId, socket, { type: "frame", frame, epoch: state.epoch })) return;
     }
   }
 
   private acceptChecksum(message: Extract<ClientNetMessage, { type: "checksum" }>): void {
     const state = this.stateFor(message.roomId);
+    if (!this.acceptsMessageEpoch(state, message)) return;
     const retainedTicks = [...state.authoritativeChecksums.keys()];
     const oldestRetainedTick = retainedTicks.length > 0 ? Math.min(...retainedTicks) : undefined;
     const latestRetainedTick = retainedTicks.length > 0 ? Math.max(...retainedTicks) : undefined;
@@ -284,7 +290,7 @@ export class RoomNetHub {
       message: `Checksum mismatch at tick ${tick}`,
       checksums,
     });
-    this.broadcast(roomId, { type: "desync", roomId, tick, checksums });
+    this.broadcast(roomId, { type: "desync", roomId, tick, checksums, epoch: state.epoch });
   }
 
   private recordSyncEvent(roomId: string, event: RoomSyncEvent): void {
@@ -299,6 +305,10 @@ export class RoomNetHub {
     state.syncEvents.push(stored);
     const limit = this.options.syncEventLimit ?? 200;
     if (state.syncEvents.length > limit) state.syncEvents.splice(0, state.syncEvents.length - limit);
+  }
+
+  private acceptsMessageEpoch(state: RoomNetState, message: { epoch: number }): boolean {
+    return message.epoch === state.epoch;
   }
 
   private trimChecksumHistory(state: RoomNetState, latestTick: number): void {
