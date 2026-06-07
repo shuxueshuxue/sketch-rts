@@ -30,6 +30,24 @@ export type Game = GameSnapshot & {
   spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number): Unit;
 };
 
+export const GAME_SNAPSHOT_RESTORE_KEYS = [
+  "tick",
+  "match",
+  "map",
+  "teams",
+  "players",
+  "units",
+  "buildings",
+  "resources",
+  "mercenaryCamps",
+  "items",
+  "projectiles",
+  "effects",
+] as const satisfies readonly (keyof GameSnapshot)[];
+
+type RestoredSnapshotKey = (typeof GAME_SNAPSHOT_RESTORE_KEYS)[number];
+const _snapshotRestoreKeysCoverSnapshot: Exclude<keyof GameSnapshot, RestoredSnapshotKey> extends never ? true : never = true;
+
 type SpatialEntity = {
   x: number;
   y: number;
@@ -404,6 +422,40 @@ export function snapshotGame(game: Game): GameSnapshot {
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
   };
+}
+
+export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, nextId: number): void {
+  game.tick = snapshot.tick;
+  game.match = cloneSnapshotValue(snapshot.match);
+  game.map = cloneSnapshotValue(snapshot.map);
+  game.teams = snapshot.teams ? definedTeams(snapshot.teams) : { ...game.teams };
+  game.players = cloneSnapshotValue(snapshot.players);
+  game.units = cloneSnapshotValue(snapshot.units);
+  game.buildings = cloneSnapshotValue(snapshot.buildings);
+  game.resources = cloneSnapshotValue(snapshot.resources);
+  game.mercenaryCamps = cloneSnapshotValue(snapshot.mercenaryCamps);
+  game.items = cloneSnapshotValue(snapshot.items);
+  game.projectiles = cloneSnapshotValue(snapshot.projectiles);
+  game.effects = cloneSnapshotValue(snapshot.effects);
+  game.nextId = nextId;
+  invalidateGameRuntimeCaches(game);
+}
+
+function invalidateGameRuntimeCaches(game: Game): void {
+  delete game.unitSpatial;
+  delete game.unitSpatialByTeam;
+  delete game.buildingSpatial;
+  delete game.buildingSpatialByTeam;
+  delete game.buildingSpatialCount;
+  delete game.entityById;
+}
+
+function cloneSnapshotValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function definedTeams(teams: Partial<Record<PlayerId, string>>): Record<PlayerId, string> {
+  return Object.fromEntries(Object.entries(teams).filter((entry): entry is [PlayerId, string] => typeof entry[1] === "string"));
 }
 
 function updateConstruction(game: Game) {
