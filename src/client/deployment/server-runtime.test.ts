@@ -135,7 +135,7 @@ describe("server deployment runtime", () => {
     const received: string[] = [];
     started.chat.onMessage((message) => received.push(`${message.senderName}: ${message.text}`));
 
-    started.chat.send("push mid", "Ada");
+    started.chat.send(" push mid ", "Ada");
     transport.emit({ type: "chat", message: { id: "chat-room-chat-1", roomId: startedRoom.id, playerId: "player", senderName: "Ada", text: "push mid", sentAt: 1200 } });
 
     expect(transport.sent).toContainEqual({ type: "chat", roomId: startedRoom.id, playerId: "player", senderName: "Ada", text: "push mid" });
