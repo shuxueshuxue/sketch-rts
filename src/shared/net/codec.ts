@@ -46,12 +46,13 @@ function decodeJoinMessage(message: Record<string, unknown>): ClientNetMessage {
 }
 
 function decodeClientCommandMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId) || !isString(message.playerId) || !isGameCommand(message.command)) throw new Error("Malformed client command message");
+  if (!isString(message.roomId) || !isString(message.playerId) || !isGameCommand(message.command) || !isEpoch(message.epoch)) throw new Error("Malformed client command message");
   return {
     type: "command",
     roomId: message.roomId,
     playerId: message.playerId,
     command: message.command,
+    epoch: message.epoch,
     ...(Number.isInteger(message.clientSeq) ? { clientSeq: Number(message.clientSeq) } : {}),
   };
 }
@@ -62,16 +63,17 @@ function decodeClientChatMessage(message: Record<string, unknown>): ClientNetMes
 }
 
 function decodeChecksumMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId) || !isString(message.playerId) || !Number.isInteger(message.tick) || !isString(message.hash)) throw new Error("Malformed client checksum message");
-  return { type: "checksum", roomId: message.roomId, playerId: message.playerId, tick: Number(message.tick), hash: message.hash };
+  if (!isString(message.roomId) || !isString(message.playerId) || !Number.isInteger(message.tick) || !isString(message.hash) || !isEpoch(message.epoch)) throw new Error("Malformed client checksum message");
+  return { type: "checksum", roomId: message.roomId, playerId: message.playerId, tick: Number(message.tick), hash: message.hash, epoch: message.epoch };
 }
 
 function decodeRequestCheckpointMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId) || !isString(message.playerId)) throw new Error("Malformed checkpoint request message");
+  if (!isString(message.roomId) || !isString(message.playerId) || !isEpoch(message.epoch)) throw new Error("Malformed checkpoint request message");
   return {
     type: "requestCheckpoint",
     roomId: message.roomId,
     playerId: message.playerId,
+    epoch: message.epoch,
     ...(Number.isInteger(message.tick) ? { tick: Number(message.tick) } : {}),
     ...(isCheckpointReason(message.reason) ? { reason: message.reason } : {}),
     ...(Number.isInteger(message.clientTick) ? { clientTick: Number(message.clientTick) } : {}),
@@ -80,28 +82,28 @@ function decodeRequestCheckpointMessage(message: Record<string, unknown>): Clien
 }
 
 function decodeSyncEventMessage(message: Record<string, unknown>): ClientNetMessage {
-  if (!isString(message.roomId) || !isRoomSyncEvent(message.event) || message.event.roomId !== message.roomId) throw new Error("Malformed client sync event message");
-  return { type: "syncEvent", roomId: message.roomId, event: message.event };
+  if (!isString(message.roomId) || !isRoomSyncEvent(message.event) || message.event.roomId !== message.roomId || !isEpoch(message.epoch)) throw new Error("Malformed client sync event message");
+  return { type: "syncEvent", roomId: message.roomId, event: message.event, epoch: message.epoch };
 }
 
 function decodeHelloMessage(message: Record<string, unknown>): ServerNetMessage {
-  if (!isString(message.roomId) || !isString(message.playerId) || !Number.isInteger(message.tick)) throw new Error("Malformed server hello message");
-  return { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: Number(message.tick) };
+  if (!isString(message.roomId) || !isString(message.playerId) || !Number.isInteger(message.tick) || !isEpoch(message.epoch)) throw new Error("Malformed server hello message");
+  return { type: "hello", roomId: message.roomId, playerId: message.playerId, tick: Number(message.tick), epoch: message.epoch };
 }
 
 function decodeFrameMessage(message: Record<string, unknown>): ServerNetMessage {
-  if (!isRecord(message.frame)) throw new Error("Malformed server frame message");
-  return { type: "frame", frame: message.frame as CommandFrame };
+  if (!isRecord(message.frame) || !isEpoch(message.epoch)) throw new Error("Malformed server frame message");
+  return { type: "frame", frame: message.frame as CommandFrame, epoch: message.epoch };
 }
 
 function decodeCheckpointMessage(message: Record<string, unknown>): ServerNetMessage {
-  if (!isRecord(message.checkpoint)) throw new Error("Malformed server checkpoint message");
-  return { type: "checkpoint", checkpoint: message.checkpoint as CheckpointFrame };
+  if (!isRecord(message.checkpoint) || !isEpoch(message.epoch)) throw new Error("Malformed server checkpoint message");
+  return { type: "checkpoint", checkpoint: message.checkpoint as CheckpointFrame, epoch: message.epoch };
 }
 
 function decodeDesyncMessage(message: Record<string, unknown>): ServerNetMessage {
-  if (!isString(message.roomId) || !Number.isInteger(message.tick) || !isRecord(message.checksums)) throw new Error("Malformed server desync message");
-  return { type: "desync", roomId: message.roomId, tick: Number(message.tick), checksums: message.checksums as Record<string, string> };
+  if (!isString(message.roomId) || !Number.isInteger(message.tick) || !isRecord(message.checksums) || !isEpoch(message.epoch)) throw new Error("Malformed server desync message");
+  return { type: "desync", roomId: message.roomId, tick: Number(message.tick), checksums: message.checksums as Record<string, string>, epoch: message.epoch };
 }
 
 function decodeErrorMessage(message: Record<string, unknown>): ServerNetMessage {
@@ -129,6 +131,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
+}
+
+function isEpoch(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
 }
 
 function isNonEmptyString(value: unknown): value is string {

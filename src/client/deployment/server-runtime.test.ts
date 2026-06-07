@@ -79,7 +79,7 @@ describe("server deployment runtime", () => {
 
     expect(transport.sent).toEqual([
       { type: "join", roomId: startedRoom.id, playerId: "spectator-viewer" },
-      expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0 }),
+      expect.objectContaining({ type: "requestCheckpoint", roomId: startedRoom.id, playerId: "spectator-viewer", reason: "initial-sync", clientTick: 0, epoch: 0 }),
     ]);
     expect(() => started.adapter.sendCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toThrow("Spectators cannot issue commands");
   });
@@ -120,7 +120,7 @@ describe("server deployment runtime", () => {
     expect(localSnapshot).toBeDefined();
     expect(localSnapshot?.tick).toBe(0);
     expect(localSnapshot?.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
-    expect(transport.sent).toContainEqual({ type: "command", roomId: startedRoom.id, playerId: "player", clientSeq: 0, command });
+    expect(transport.sent).toContainEqual({ type: "command", roomId: startedRoom.id, playerId: "player", clientSeq: 0, command, epoch: 0 });
   });
 
   it("routes public chat through the room transport without using match commands", () => {

@@ -28,6 +28,10 @@ export class CommandFrameBuffer {
       if (frameTick < tick) this.frames.delete(frameTick);
     }
   }
+
+  clear(): void {
+    this.frames.clear();
+  }
 }
 
 function sameFrame(left: CommandFrame, right: CommandFrame) {

@@ -9,10 +9,12 @@ describe("net message codec", () => {
       roomId: "room-1",
       playerId: "player",
       clientSeq: 7,
+      epoch: 2,
       command: { type: "move", unitIds: ["worker"], x: 100, y: 120 },
     };
     const server: ServerNetMessage = {
       type: "frame",
+      epoch: 2,
       frame: {
         roomId: "room-1",
         tick: 10,
@@ -54,6 +56,7 @@ describe("net message codec", () => {
     const event = {
       type: "syncEvent",
       roomId: "room-1",
+      epoch: 3,
       event: {
         kind: "checkpoint-request",
         roomId: "room-1",
@@ -72,6 +75,7 @@ describe("net message codec", () => {
       reason: "frame-apply-error",
       clientTick: 10,
       clientChecksum: "abcd1234",
+      epoch: 3,
     } satisfies ClientNetMessage;
 
     expect(decodeClientNetMessage(encodeNetMessage(event))).toEqual(event);

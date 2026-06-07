@@ -37,6 +37,13 @@ export type HostedRoomFrameEvent = {
 
 export type HostedRoomFrameListener = (event: HostedRoomFrameEvent) => void;
 
+export type HostedRoomLifecycleEvent = {
+  room: RoomState;
+  checkpoint?: CheckpointFrame;
+};
+
+export type HostedRoomLifecycleListener = (event: HostedRoomLifecycleEvent) => void;
+
 export type RoomResetResult = {
   room: RoomState;
   snapshot: GameSnapshot;
@@ -49,7 +56,8 @@ type HostedRoom = {
   aiRuntime?: AiRuntimeState;
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
   debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord };
-  frameListeners?: Set<HostedRoomFrameListener>;
+  frameListeners: Set<HostedRoomFrameListener>;
+  lifecycleListeners: Set<HostedRoomLifecycleListener>;
 };
 
 export type RoomHostOptions = {
@@ -62,6 +70,8 @@ export function createRoomHost(options: RoomHostOptions = {}) {
   const defaultAutoTick = options.autoTick ?? true;
   const rooms = new Map<string, HostedRoom>();
   const saves = new Map<string, SaveGameRecord>();
+  const frameListeners = new Map<string, Set<HostedRoomFrameListener>>();
+  const lifecycleListeners = new Map<string, Set<HostedRoomLifecycleListener>>();
 
   function getHosted(roomId: string): HostedRoom {
     const hosted = rooms.get(roomId);
@@ -78,7 +88,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
   function putRoom(room: RoomState, game?: Game, aiRuntime?: AiRuntimeState): RoomState {
     const storedRoom = { ...room, autoTick: defaultAutoTick };
-    const hosted: HostedRoom = { room: storedRoom, history: createRoomHistory() };
+    const hosted: HostedRoom = { room: storedRoom, history: createRoomHistory(), frameListeners: frameListenerSet(storedRoom.id), lifecycleListeners: lifecycleListenerSet(storedRoom.id) };
     if (game) {
       hosted.game = game;
       if (aiRuntime) hosted.aiRuntime = aiRuntime;
@@ -90,6 +100,24 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
   function createRoomHistory() {
     return new RoomHistoryLog({ ...(options.frameHistoryLimit !== undefined ? { frameHistoryLimit: options.frameHistoryLimit } : {}) });
+  }
+
+  function frameListenerSet(roomId: string) {
+    const listeners = frameListeners.get(roomId) ?? new Set<HostedRoomFrameListener>();
+    frameListeners.set(roomId, listeners);
+    return listeners;
+  }
+
+  function lifecycleListenerSet(roomId: string) {
+    const listeners = lifecycleListeners.get(roomId) ?? new Set<HostedRoomLifecycleListener>();
+    lifecycleListeners.set(roomId, listeners);
+    return listeners;
+  }
+
+  function dropEmptyListenerSets(roomId: string) {
+    if (rooms.has(roomId)) return;
+    if (frameListeners.get(roomId)?.size === 0) frameListeners.delete(roomId);
+    if (lifecycleListeners.get(roomId)?.size === 0) lifecycleListeners.delete(roomId);
   }
 
   return {
@@ -119,10 +147,21 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     },
 
     observeRoomFrames(roomId: string, listener: HostedRoomFrameListener): () => void {
-      const hosted = getHosted(roomId);
-      hosted.frameListeners ??= new Set();
-      hosted.frameListeners.add(listener);
-      return () => hosted.frameListeners?.delete(listener);
+      const listeners = frameListenerSet(roomId);
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+        dropEmptyListenerSets(roomId);
+      };
+    },
+
+    observeRoomLifecycle(roomId: string, listener: HostedRoomLifecycleListener): () => void {
+      const listeners = lifecycleListenerSet(roomId);
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+        dropEmptyListenerSets(roomId);
+      };
     },
 
     setFrameHistoryLimit(roomId: string, frameHistoryLimit: number): void {
@@ -132,12 +171,14 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     pauseRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = { ...hosted.room, autoTick: false };
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     resumeRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = { ...hosted.room, autoTick: true };
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
@@ -145,7 +186,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const hosted = getHosted(roomId);
       if (hosted.room.hostUserId !== userId) throw new Error("Only the room host can close this room");
       const closed: RoomState = { ...hosted.room, status: "closed" };
+      notifyHostedRoomLifecycle(hosted, { room: closed });
       rooms.delete(roomId);
+      dropEmptyListenerSets(roomId);
       return closed;
     },
 
@@ -162,30 +205,35 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     joinRoom(roomId: string, user: LocalUserProfile): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = joinFirstOpenSlot(hosted.room, user);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     leaveRoom(roomId: string, userId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = leaveUserSlot(hosted.room, userId);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     updateSlot(roomId: string, slotId: string, patch: SlotPatch): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = updateRoomSlot(hosted.room, slotId, patch);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     updateMap(roomId: string, mapId: RoomState["mapId"]): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = updateRoomMap(hosted.room, mapId);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     resizeSlots(roomId: string, humanCount: number, aiCount: number): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = resizeRoomSlots(hosted.room, humanCount, aiCount);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
@@ -198,6 +246,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.history = createRoomHistory();
       delete hosted.debugReplay;
       hosted.room = { ...hosted.room, status: "inMatch" };
+      const checkpoint = createHostedCheckpoint(hosted, hosted.game);
+      hosted.history.recordCheckpoint(checkpoint);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room, checkpoint });
       return hosted.room;
     },
 
@@ -219,6 +270,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       delete hosted.debugReplay;
       const { result: _result, ...roomWithoutResult } = hosted.room;
       hosted.room = { ...roomWithoutResult, mapId, status: "inMatch" };
+      const checkpoint = createHostedCheckpoint(hosted, hosted.game);
+      hosted.history.recordCheckpoint(checkpoint);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room, checkpoint });
       return { room: hosted.room, snapshot: snapshotGame(hosted.game) };
     },
 
@@ -320,9 +374,12 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const room = { ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const, autoTick: defaultAutoTick };
       if (rooms.has(room.id)) throw new Error(`Room ${room.id} already exists`);
       const game = restoreGameFromSave(save);
-      const hosted: HostedRoom = { room, history: createRoomHistory(), game, aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions) };
+      const hosted: HostedRoom = { room, history: createRoomHistory(), game, aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions), frameListeners: frameListenerSet(room.id), lifecycleListeners: lifecycleListenerSet(room.id) };
       hosted.frameRuntime = createHostedFrameRuntime(hosted, game);
       rooms.set(room.id, hosted);
+      const checkpoint = createHostedCheckpoint(hosted, game);
+      hosted.history.recordCheckpoint(checkpoint);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room, checkpoint });
       return room;
     },
 
@@ -412,11 +469,13 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
   const snapshot = snapshotGame(game);
-  if (game.match.winner) {
+  const matchEnded = Boolean(game.match.winner);
+  if (matchEnded) {
     hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
     finishHostedRoom(hosted, snapshot);
   }
   if (completedFrame) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
+  if (matchEnded) notifyHostedRoomLifecycle(hosted, { room: hosted.room });
   return completedFrame;
 }
 
@@ -432,7 +491,11 @@ function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
 }
 
 function notifyHostedFrameListeners(hosted: HostedRoom, event: HostedRoomFrameEvent) {
-  for (const listener of [...(hosted.frameListeners ?? [])]) listener(event);
+  for (const listener of [...hosted.frameListeners]) listener(event);
+}
+
+function notifyHostedRoomLifecycle(hosted: HostedRoom, event: HostedRoomLifecycleEvent) {
+  for (const listener of [...hosted.lifecycleListeners]) listener(event);
 }
 
 function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameRuntime<AiRuntimeFramePlannerState> {
