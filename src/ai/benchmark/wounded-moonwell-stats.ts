@@ -1,4 +1,5 @@
 import type { BenchmarkTracker } from "../../sdk/benchmark/core";
+import { isHealingBuildingKind } from "../../shared/catalog";
 import type { Building, GameCommand, PlayerId, Unit, UnitOrder } from "../../shared/types";
 import type { AiGameAgent } from "../game-runner";
 
@@ -71,7 +72,7 @@ export function createWoundedMoonWellStatsTracker(): BenchmarkTracker<AiGameAgen
       const teams = Object.fromEntries(Object.entries(context.match.agents).map(([owner, agent]) => [owner, agent.team]));
       for (const owner of context.players) {
         const ownerStats = (state.owners[owner] ??= emptyOwnerStats());
-        const wells = snapshot.buildings.filter((building) => building.owner === owner && building.kind === "moonWell" && building.complete && building.hp > 0);
+        const wells = snapshot.buildings.filter((building) => building.owner === owner && isHealingBuildingKind(building.kind) && building.complete && building.hp > 0);
         const ownTeam = teams[owner];
         const enemies = snapshot.units.filter((unit) => unit.owner !== owner && unit.owner !== "neutral" && teams[unit.owner] !== ownTeam && isCombatUnit(unit));
         for (const unit of snapshot.units) {

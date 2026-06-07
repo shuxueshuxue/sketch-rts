@@ -147,7 +147,7 @@ function summarizePlayerTimeline(game: Game, owner: PlayerId, team: string): Pla
     if (building.owner !== owner || !building.complete) continue;
     if (building.kind === "townHall") summary.bases += 1;
     else if (building.kind === "defenseTower") summary.towers += 1;
-    else if (building.kind !== "farm" && building.kind !== "moonWell") summary.productionBuildings += 1;
+    else if (building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine") summary.productionBuildings += 1;
     summary.queuedUnits += building.queue.length;
   }
 

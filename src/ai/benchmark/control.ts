@@ -1,16 +1,22 @@
 import { RICH_SCORE_MAP_IDS } from "../../shared/map";
 import type { MapId, PlayerId } from "../../shared/types";
-import type { BenchmarkInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
+import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { ArmyBalanceStats } from "./army-balance-stats";
 import type { AiCommandStats } from "./command-stats";
 import type { ExpansionClaimTimelineStats } from "./expansion-claim-timeline";
 import type { WoundedMoonWellStats } from "./wounded-moonwell-stats";
-import type { AiGameAgent } from "../game-runner";
+import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
+import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { createAiMeleeControlMatches, selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 
 export type AiMeleeControlBenchmarkInput = {
+  input: BenchmarkInput<AiGameAgent>;
+  selection: GauntletMapSelection<MapId>;
+};
+
+export type AiCrossRaceBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
   selection: GauntletMapSelection<MapId>;
 };
@@ -91,6 +97,46 @@ export type AiMeleeControlPlayerDetail = {
 };
 
 export type AiMeleeControlBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers" | "workerHarassment">;
+export type AiCrossRaceBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
+
+export type AiCrossRaceBenchmarkResult = {
+  seed: string;
+  selectedMapIds: string[];
+  emberWins: number;
+  rawMatches: number;
+  winRate: number;
+  elapsedMs: number;
+  cpuMs?: number;
+  workers?: number;
+  byMap: { mapId: string; northWinner: PlayerId | null; southWinner: PlayerId | null; wins: number }[];
+};
+
+export function createAiCrossRaceBenchmarkInput(options: AiCrossRaceBenchmarkOptions = {}): AiCrossRaceBenchmarkInput {
+  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
+    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
+    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
+    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
+  });
+  const controller = options.controller ?? "external-agent";
+  const matchOptions = {
+    controller,
+    ...(options.maxTicks !== undefined ? { maxTicks: options.maxTicks } : {}),
+    ...(options.thinkInterval !== undefined ? { thinkInterval: options.thinkInterval } : {}),
+  };
+  return {
+    selection,
+    input: {
+      name: "AI Cross-Race Benchmark",
+      evaluations: [
+        {
+          name: "v2 ember vs v2 grove",
+          tag: "melee",
+          matches: selection.mapIds.flatMap((mapId) => createAiCrossRaceMatches(mapId, matchOptions)),
+        },
+      ],
+    },
+  };
+}
 
 export function createAiMeleeControlBenchmarkInput(options: AiMeleeControlBenchmarkOptions = {}): AiMeleeControlBenchmarkInput {
   const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
@@ -135,6 +181,65 @@ export async function runAiMeleeControlBenchmarkDetailsParallel(options: AiMelee
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
   return summarizeAiMeleeControlBenchmarkDetails({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+}
+
+export async function runAiCrossRaceBenchmarkParallel(options: AiCrossRaceBenchmarkOptions = {}): Promise<AiCrossRaceBenchmarkResult> {
+  const { input, selection } = createAiCrossRaceBenchmarkInput(options);
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput(input), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  return summarizeAiCrossRaceBenchmark({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+}
+
+export function summarizeAiCrossRaceBenchmark(input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number }): AiCrossRaceBenchmarkResult {
+  const evaluation = input.report.evaluations[0];
+  if (!evaluation) throw new Error("AI cross-race benchmark report must include a cross-race evaluation");
+  const matchesByName = new Map(evaluation.matches.map((match) => [match.name, match]));
+  const byMap = input.selectedMapIds.map((mapId) => {
+    const north = matchesByName.get(`${mapId} ember north`);
+    const south = matchesByName.get(`${mapId} ember south`);
+    if (!north || !south) throw new Error(`Missing side-balanced cross-race matches for ${mapId}`);
+    const northWinner = north.result.winner;
+    const southWinner = south.result.winner;
+    return {
+      mapId,
+      northWinner,
+      southWinner,
+      wins: (northWinner === "ember" ? 1 : 0) + (southWinner === "ember" ? 1 : 0),
+    };
+  });
+  const emberWins = byMap.reduce((total, row) => total + row.wins, 0);
+  const rawMatches = byMap.length * 2;
+  return {
+    seed: input.seed,
+    selectedMapIds: [...input.selectedMapIds],
+    emberWins,
+    rawMatches,
+    winRate: rawMatches > 0 ? emberWins / rawMatches : 0,
+    elapsedMs: input.report.elapsedMs,
+    cpuMs: input.report.cpuMs,
+    ...(input.workers !== undefined ? { workers: input.workers } : {}),
+    byMap,
+  };
+}
+
+function createAiCrossRaceMatches(mapId: MapId, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> = {}) {
+  const controller = options.controller ?? "external-agent";
+  const maxTicks = options.maxTicks ?? 48_000;
+  const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
+  const match = (name: string, teams: { ember: string; grove: string }): BenchmarkMatchInput<AiGameAgent> => ({
+    name,
+    mapId,
+    agents: {
+      ember: { controller, team: teams.ember, race: "ember", version: "v2", versionLabel: "v2 ember" },
+      grove: { controller, team: teams.grove, race: "grove", version: "v2", versionLabel: "v2 grove" },
+    },
+    commandPlanner: createAiGameCommandPlanner(),
+    maxTicks,
+    thinkInterval,
+  });
+  return [match(`${mapId} ember north`, { ember: "north", grove: "south" }), match(`${mapId} ember south`, { ember: "south", grove: "north" })];
 }
 
 export function summarizeAiMeleeControlBenchmark(input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number }): AiMeleeControlBenchmarkResult {

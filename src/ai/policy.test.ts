@@ -54,7 +54,7 @@ describe("SDK preset AI policy", () => {
     expect("ai" in game).toBe(false);
     expect(game.match.stats.goldSpent.player + game.match.stats.goldSpent.enemy).toBeGreaterThan(0);
     expect(game.buildings.some((building) => building.owner === "player" && building.kind === "barracks")).toBe(true);
-    expect(game.buildings.some((building) => building.owner === "enemy" && building.kind === "barracks")).toBe(true);
+    expect(game.buildings.some((building) => building.owner === "enemy" && building.kind === "emberForge")).toBe(true);
     expect(game.units.some((unit) => unit.owner === "player" && unit.kind !== "worker")).toBe(true);
     expect(game.units.some((unit) => unit.owner === "enemy" && unit.kind !== "worker")).toBe(true);
     expect(game.units.some((unit) => unit.owner === "player" && unit.order.type === "attackMove")).toBe(true);

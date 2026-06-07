@@ -1,4 +1,5 @@
 import type { BenchmarkTracker } from "../../sdk/benchmark/core";
+import { isHealingBuildingKind } from "../../shared/catalog";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { PlayerId, Unit, UnitOrder } from "../../shared/types";
 import type { AiGameAgent } from "../game-runner";
@@ -109,7 +110,7 @@ function expansionClaimSample(
 ): ExpansionClaimTimelineSample {
   const center = averagePoint(units);
   const target = { x: claim.x, y: claim.y };
-  const moonWells = buildings.filter((building) => building.owner === owner && building.kind === "moonWell" && building.complete && building.hp > 0);
+  const moonWells = buildings.filter((building) => building.owner === owner && isHealingBuildingKind(building.kind) && building.complete && building.hp > 0);
   return {
     second: roundSecond(tick),
     target,

@@ -109,4 +109,36 @@ describe("AI training choice", () => {
 
     expect(trainingChoice(snapshot, "v2", sanctum, { version: "v2" })).toBe("priest");
   });
+
+  it("uses ember forge production for ember melee instead of grove barracks units", () => {
+    const scene = sketchScene("training-choice-ember-forge")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "emberForge", 700, 620, { id: "forge" });
+    const game = scene.build().createGame();
+    const snapshot = snapshotGame(game);
+    const forge = snapshot.buildings.find((building) => building.id === "forge");
+    if (!forge) throw new Error("missing ember forge");
+
+    expect(trainingChoice(snapshot, "v2", forge, { version: "v2" })).toBe("emberRavager");
+  });
+
+  it("uses ember cinder spire production for support casters before duplicating attackers", () => {
+    const scene = sketchScene("training-choice-ember-spire")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "cinderSpire", 700, 620, { id: "spire" })
+      .unit("v2", "sparkArcher", 760, 620);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = 520;
+    const snapshot = snapshotGame(game);
+    const spire = snapshot.buildings.find((building) => building.id === "spire");
+    if (!spire) throw new Error("missing cinder spire");
+
+    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
+  });
 });

@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, maxUpgradeLevel } from "./catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel } from "./catalog";
 import { buildingPlacementBlocker } from "./build-placement";
 import {
   createBuilding,
@@ -515,7 +515,7 @@ function updateTowerAttacks(game: Game) {
 
 function updateMoonWellHealing(game: Game) {
   for (const building of game.buildings) {
-    if (!building.complete || building.kind !== "moonWell") continue;
+    if (!building.complete || !isHealingBuildingKind(building.kind)) continue;
     building.cooldown = Math.max(0, building.cooldown - 1);
     if (building.cooldown > 0) continue;
     const target = mostWoundedSoldierNear(game, building);

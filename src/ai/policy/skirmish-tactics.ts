@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
@@ -7,7 +7,7 @@ import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, neutralUnit
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
-import { mainBase } from "./world-model";
+import { mainBase, playerState } from "./world-model";
 
 export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   if (behaviorDisabled(options, "skirmishPreservation")) {
@@ -85,14 +85,16 @@ function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCom
 }
 
 function woundedRecoveryPoint(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, retreatPoint: Point): Point {
-  const well = nearestEntity(buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0), unit);
+  const healingKind = healingBuildingKindForRace(playerState(snapshot, owner).race);
+  const healingRange = BUILDING_DEFS[healingKind].attackRange;
+  const well = nearestEntity(buildings(snapshot, owner).filter((building) => isHealingBuildingKind(building.kind) && building.complete && building.hp > 0), unit);
   if (!well) return retreatPoint;
-  if (distance(unit, well) <= BUILDING_DEFS.moonWell.attackRange - 12) return unit;
+  if (distance(unit, well) <= healingRange - 12) return unit;
   const dx = unit.x - well.x;
   const dy = unit.y - well.y;
   const length = Math.hypot(dx, dy) || 1;
   // @@@wounded-healing-ring - Long-term recovery should converge inside healing range without reusing the neutral-leash escape point.
-  const radius = BUILDING_DEFS.moonWell.attackRange * 0.75;
+  const radius = healingRange * 0.75;
   return {
     x: clamp(well.x + (dx / length) * radius, 0, snapshot.map.width),
     y: clamp(well.y + (dy / length) * radius, 0, snapshot.map.height),

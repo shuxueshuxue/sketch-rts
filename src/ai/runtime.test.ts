@@ -60,7 +60,7 @@ describe("shared AI runtime", () => {
     expect(snapshot.match.stats.goldSpent.player).toBeGreaterThan(0);
     expect(snapshot.match.stats.goldSpent.enemy).toBeGreaterThan(0);
     expect(snapshot.buildings.some((building) => building.owner === "player" && building.kind === "barracks")).toBe(true);
-    expect(snapshot.buildings.some((building) => building.owner === "enemy" && building.kind === "barracks")).toBe(true);
+    expect(snapshot.buildings.some((building) => building.owner === "enemy" && building.kind === "emberForge")).toBe(true);
     expect(snapshot.units.some((unit) => unit.owner === "player" && unit.kind !== "worker")).toBe(true);
     expect(snapshot.units.some((unit) => unit.owner === "enemy" && unit.kind !== "worker")).toBe(true);
   });
@@ -359,17 +359,17 @@ describe("shared AI runtime", () => {
       stepGame(game);
     }
 
-    const firstBarracks = game.buildings.find((building) => building.owner === "enemy" && building.kind === "barracks" && building.complete);
-    expect(firstBarracks).toBeDefined();
-    game.buildings = game.buildings.filter((building) => building.id !== firstBarracks!.id);
-    game.buildings.push(createBuilding("building-enemy-forced-extra-farm", "enemy", "farm", firstBarracks!.x, firstBarracks!.y, true));
+    const firstProduction = game.buildings.find((building) => building.owner === "enemy" && building.kind === "emberForge" && building.complete);
+    expect(firstProduction).toBeDefined();
+    game.buildings = game.buildings.filter((building) => building.id !== firstProduction!.id);
+    game.buildings.push(createBuilding("building-enemy-forced-extra-farm", "enemy", "farm", firstProduction!.x, firstProduction!.y, true));
 
     for (let i = 0; i < 500; i += 1) {
       runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
     }
 
-    expect(game.buildings.some((building) => building.owner === "enemy" && building.kind === "barracks" && building.id !== firstBarracks!.id)).toBe(true);
+    expect(game.buildings.some((building) => building.owner === "enemy" && building.kind === "emberForge" && building.id !== firstProduction!.id)).toBe(true);
     expect(game.buildings.filter((building) => building.owner === "enemy" && building.kind === "farm" && !building.complete).length).toBeLessThanOrEqual(1);
   });
 });

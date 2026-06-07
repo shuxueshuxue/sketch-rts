@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UpgradeKind } from "../../shared/types";
 import {
   healingWellPressure,
@@ -260,7 +260,7 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   if (shouldReserveForCoreProductionRecovery(snapshot, owner, options, BUILDING_DEFS.farm.cost)) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && player.gold >= BUILDING_DEFS.defenseTower.cost) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.farm.cost) return undefined;
-  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + BUILDING_DEFS.farm.cost) return undefined;
+  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + BUILDING_DEFS.farm.cost) return undefined;
   if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, BUILDING_DEFS.farm.cost)) return undefined;
   if (shouldReserveForExpansion(snapshot, owner, options) && player.supplyUsed < player.supplyCap && player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS.farm.cost) return undefined;
   if (player.supplyUsed < player.supplyCap && shouldHoldClearedExpansionBank(snapshot, owner, options, BUILDING_DEFS.farm.cost)) return undefined;
@@ -424,7 +424,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   if (shouldTrainBeforeThirdProduction(snapshot, owner, missing, options)) return undefined;
   const player = playerState(snapshot, owner);
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS[missing].cost) return undefined;
-  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + BUILDING_DEFS[missing].cost) return undefined;
+  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + BUILDING_DEFS[missing].cost) return undefined;
   if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, BUILDING_DEFS[missing].cost)) return undefined;
   if (
     shouldReserveForExpansion(snapshot, owner, options) &&
@@ -508,7 +508,7 @@ function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPoli
     return undefined;
   if (needsMainGuardTower(snapshot, owner, options)) return undefined;
   if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + level.cost) return undefined;
-  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + level.cost) return undefined;
+  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + level.cost) return undefined;
   if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, level.cost)) return undefined;
   const reserveClearedExpansion = shouldReserveForClearedExpansion(snapshot, owner, options);
   const priorityWeaponTiming = isV2PriorityWeaponTiming(snapshot, owner, upgradeKind, options);
@@ -619,13 +619,15 @@ function planDefense(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
 
 function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const player = playerState(snapshot, owner);
-  if (player.gold < BUILDING_DEFS.moonWell.cost) return undefined;
+  const healingKind = healingBuildingKind(snapshot, owner);
+  const healingCost = BUILDING_DEFS[healingKind].cost;
+  if (player.gold < healingCost) return undefined;
   if (!hasCoreProduction(snapshot, owner)) return undefined;
   if (options.version === "v2" && hasReachedHealingWellLimit(snapshot, owner)) return undefined;
-  if (buildings(snapshot, owner).some((building) => building.kind === "moonWell" && !building.complete)) return undefined;
+  if (buildings(snapshot, owner).some((building) => building.kind === healingKind && !building.complete)) return undefined;
 
   const main = mainBase(snapshot, owner);
-  const wellsNearMain = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && distance(building, main) < 520).length;
+  const wellsNearMain = healingBuildings(snapshot, owner).filter((building) => distance(building, main) < 520).length;
   const desiredWells = completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 8 ? 2 : 1;
   const uncoveredRecovery = options.version === "v2" && hasUncoveredSettledWoundedRecovery(snapshot, owner, main);
   if (wellsNearMain >= desiredWells && !uncoveredRecovery) return undefined;
@@ -637,44 +639,57 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const wantsWell = uncoveredRecovery || firstWellBeforeExpansionBank || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
-  if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
-  if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
-  if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
-  if (!firstWellBeforeExpansionBank && shouldHoldClearedExpansionBank(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
-  if (!firstWellBeforeExpansionBank && shouldHoldFirstExpansionBank(snapshot, owner, options, BUILDING_DEFS.moonWell.cost)) return undefined;
+  if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
+  if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
+  if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, healingCost)) return undefined;
+  if (!firstWellBeforeExpansionBank && shouldHoldClearedExpansionBank(snapshot, owner, options, healingCost)) return undefined;
+  if (!firstWellBeforeExpansionBank && shouldHoldFirstExpansionBank(snapshot, owner, options, healingCost)) return undefined;
   if (
     !pressured &&
     !firstWellBeforeExpansionBank &&
     shouldReserveForExpansion(snapshot, owner, options) &&
-    player.gold < BUILDING_DEFS.townHall.cost + BUILDING_DEFS.moonWell.cost
+    player.gold < BUILDING_DEFS.townHall.cost + healingCost
   )
     return undefined;
 
   const builder = availableBuilder(snapshot, owner, main, options);
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
-  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "moonWell", x: point.x, y: point.y }, options);
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: healingKind, x: point.x, y: point.y }, options);
 }
 
 function shouldBuildFirstHealingWellBeforeExpansionBank(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
-  if (buildings(snapshot, owner).some((building) => building.kind === "moonWell")) return false;
+  if (healingBuildings(snapshot, owner).length > 0) return false;
   // @@@first-well-before-bank - A far-from-complete expansion bank should not strand wounded defenders without the first healing source.
   const gold = playerState(snapshot, owner).gold;
   if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return gold < BUILDING_DEFS.townHall.cost;
-  return woundedDefenders.length >= 2 && gold < BUILDING_DEFS.townHall.cost - BUILDING_DEFS.moonWell.cost;
+  return woundedDefenders.length >= 2 && gold < BUILDING_DEFS.townHall.cost - BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost;
+}
+
+function healingBuildingKind(snapshot: GameSnapshot, owner: PlayerId) {
+  return healingBuildingKindForRace(playerState(snapshot, owner).race);
+}
+
+function healingBuildings(snapshot: GameSnapshot, owner: PlayerId) {
+  return buildings(snapshot, owner).filter((building) => isHealingBuildingKind(building.kind));
+}
+
+function completeHealingBuildings(snapshot: GameSnapshot, owner: PlayerId) {
+  return healingBuildings(snapshot, owner).filter((building) => building.complete && building.hp > 0);
 }
 
 function hasUncoveredSettledWoundedRecovery(snapshot: GameSnapshot, owner: PlayerId, main: Point) {
-  const wells = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0);
+  const wells = completeHealingBuildings(snapshot, owner);
   if (wells.length === 0) return false;
+  const healingRange = BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange;
   const uncovered = combatUnits(snapshot, owner).filter(
     (unit) =>
       unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
       distance(unit, main) <= 760 &&
       (unit.order.type === "idle" || unit.order.type === "move") &&
-      wells.every((well) => distance(unit, well) > BUILDING_DEFS.moonWell.attackRange),
+      wells.every((well) => distance(unit, well) > healingRange),
   );
   return uncovered.length >= 2;
 }
@@ -688,7 +703,7 @@ function shouldRebuildCombatBeforeHealingWell(snapshot: GameSnapshot, owner: Pla
     if (!unitKind || unitKind === "worker") continue;
     const cost = UNIT_DEFS[unitKind].cost;
     // @@@thin-army-before-healing - A moon well helps wounded units, but with one defender left it must not consume the first rebuild unit.
-    if (player.gold >= cost && player.gold < BUILDING_DEFS.moonWell.cost + cost && canSupply(snapshot, owner, unitKind)) return true;
+    if (player.gold >= cost && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + cost && canSupply(snapshot, owner, unitKind)) return true;
   }
   return false;
 }
@@ -789,7 +804,7 @@ function canHireMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: Mercena
   if (player.gold < camp.cost) return false;
   const missingProduction = options.version === "v2" ? productionBuildingNeedKind(snapshot, owner, options) : undefined;
   if (missingProduction && player.gold < BUILDING_DEFS[missingProduction].cost + camp.cost) return false;
-  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS.moonWell.cost + camp.cost) return false;
+  if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + camp.cost) return false;
   // @@@merc-claim-before-spend - Walking to a cleared mercenary camp is free; only the hire itself competes with first-expansion gold.
   if (shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + camp.cost && !shouldSpendExpansionReserveOnControlledMercenary(snapshot, owner, camp, options)) return false;
   return true;
@@ -917,7 +932,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
       continue;
     if (reserveSensitive && reserveMainGuardTower && !canSpendTowerReserveOnTraining && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveEmergencyTower && !canSpendTowerReserveOnTraining && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
-    if (reserveSensitive && reserveHealingWell && remainingGold < BUILDING_DEFS.moonWell.cost + cost) continue;
+    if (reserveSensitive && reserveHealingWell && remainingGold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + cost) continue;
     if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, cost, remainingGold)) continue;
     if (reserveSensitive && !canSpendEarlyFirstExpansionBankOnTraining && shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)) continue;
     if (reserveSensitive && shouldHoldTwoBaseWeaponUpgradeBank(snapshot, owner, options, remainingGold, cost)) continue;
@@ -1187,7 +1202,7 @@ function recallWoundedClearedExpansionClaim(snapshot: GameSnapshot, owner: Playe
   if (hasEstablishedExpansion(snapshot, owner)) return undefined;
   const mine = activeClearedExpansionClaim(snapshot, owner, options);
   if (!mine || firstNaturalNeedsClearing(snapshot, owner)) return undefined;
-  const wells = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0);
+  const wells = completeHealingBuildings(snapshot, owner);
   if (wells.length === 0) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const wounded = combatUnits(snapshot, owner)
@@ -1200,22 +1215,22 @@ function recallWoundedClearedExpansionClaim(snapshot: GameSnapshot, owner: Playe
     .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 520))
     .filter((unit) => {
       const well = nearestEntity(wells, unit);
-      return Boolean(well && distance(unit, well) > BUILDING_DEFS.moonWell.attackRange - 12);
+      return Boolean(well && distance(unit, well) > BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange - 12);
     });
   if (wounded.length === 0) return undefined;
-  const point = healingRecoveryPoint(snapshot, wounded, wells);
+  const point = healingRecoveryPoint(snapshot, wounded, wells, BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange);
   const stale = wounded.filter((unit) => distance(unit, point) > 110);
   // @@@first-natural-healing-recall - A cleared natural claim should bank the hall, but wounded claimants parked outside moon-well range are dead supply, not map control.
   return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y }, options) : undefined;
 }
 
-function healingRecoveryPoint(snapshot: GameSnapshot, wounded: Unit[], wells: Building[]): Point {
+function healingRecoveryPoint(snapshot: GameSnapshot, wounded: Unit[], wells: Building[], healingRange: number): Point {
   const center = averagePoint(wounded);
   const well = nearestEntity(wells, center) ?? wells[0]!;
   const dx = center.x - well.x;
   const dy = center.y - well.y;
   const length = Math.hypot(dx, dy) || 1;
-  const radius = BUILDING_DEFS.moonWell.attackRange * 0.75;
+  const radius = healingRange * 0.75;
   return {
     x: clamp(well.x + (dx / length) * radius, 0, snapshot.map.width),
     y: clamp(well.y + (dy / length) * radius, 0, snapshot.map.height),
@@ -1264,7 +1279,7 @@ function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, poin
   if (guards.length === 0) return false;
   const averageHpRatio = units.reduce((total, unit) => total + unit.hp / unit.maxHp, 0) / units.length;
   const main = mainBase(snapshot, owner);
-  const hasHealingAtHome = buildings(snapshot, owner).some((building) => building.kind === "moonWell" && building.complete && distance(building, main) <= BUILDING_DEFS.moonWell.attackRange);
+  const hasHealingAtHome = completeHealingBuildings(snapshot, owner).some((building) => distance(building, main) <= BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange);
   // @@@no-well-creep-recovery - Without a healing well, moderate creep wounds do not recover at home; only break the claim when the squad is actually near donation range.
   return averageHpRatio <= (hasHealingAtHome ? 0.68 : 0.6);
 }
@@ -1804,7 +1819,7 @@ function hasMainDefenseLine(snapshot: GameSnapshot, owner: PlayerId, main: Point
   return (
     ownCombat.length >= 2 ||
     buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && building.complete && distance(building, main) <= 520) ||
-    buildings(snapshot, owner).some((building) => building.kind === "moonWell" && building.complete && distance(building, main) <= 520)
+    completeHealingBuildings(snapshot, owner).some((building) => distance(building, main) <= 520)
   );
 }
 

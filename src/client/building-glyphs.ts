@@ -10,6 +10,9 @@ export type BuildingGlyph = {
     | "workshop-gear"
     | "tower-spire"
     | "moon-well"
+    | "ember-forge"
+    | "cinder-spire"
+    | "ember-shrine"
     | "farm-plot";
   marks: BuildingGlyphMark[];
 };
@@ -41,6 +44,9 @@ export const BUILDING_GLYPHS: Record<BuildingKind, BuildingGlyph> = {
   workshop: { frame: "workshop-gear", marks: ["cog", "hammer", "door"] },
   defenseTower: { frame: "tower-spire", marks: ["arrowSlit", "watchEye", "banner"] },
   moonWell: { frame: "moon-well", marks: ["moonRune", "sparkRune", "door"] },
+  emberForge: { frame: "ember-forge", marks: ["crossedBlades", "sparkRune", "hammer"] },
+  cinderSpire: { frame: "cinder-spire", marks: ["sparkRune", "watchEye", "banner"] },
+  emberShrine: { frame: "ember-shrine", marks: ["sparkRune", "moonRune", "door"] },
   farm: { frame: "farm-plot", marks: ["furrows", "scareMark", "door"] },
 };
 

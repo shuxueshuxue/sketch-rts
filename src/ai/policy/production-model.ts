@@ -18,18 +18,18 @@ export function productionBuildingNeedKind(snapshot: GameSnapshot, owner: Player
 
 export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): ProductionBuildingKind | undefined {
   const player = playerState(snapshot, owner);
-  const plan = aiPlaybook().productionPlan;
+  const plan = aiPlaybook(player.race).productionPlan;
   const army = combatUnits(snapshot, owner);
   const armyGates = options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
   const goldGates = [0, 420, 620, 820, 1040];
   const desired = plan.filter((_, index) => index === 0 || army.length >= armyGates[index]! || player.gold > goldGates[index]!);
-  if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell")) return undefined;
+  if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine")) return undefined;
 
   return desired.find((kind) => !buildings(snapshot, owner).some((building) => building.kind === kind));
 }
 
 export function missingCombatProductionKind(snapshot: GameSnapshot, owner: PlayerId): ProductionBuildingKind | undefined {
-  const requiredCombatChain = aiPlaybook().productionPlan.slice(0, 3);
+  const requiredCombatChain = aiPlaybook(playerState(snapshot, owner).race).productionPlan.slice(0, 3);
   return requiredCombatChain.find((kind) => !buildings(snapshot, owner).some((building) => building.kind === kind && building.complete));
 }
 
@@ -52,7 +52,7 @@ export function duplicateCoreProductionReserveKind(snapshot: GameSnapshot, owner
   const minimumCombat = noExpansionMap ? 2 : 6;
   if (units(snapshot, owner).filter((unit) => unit.kind === "worker").length < minimumWorkers || combatUnits(snapshot, owner).length < minimumCombat) return undefined;
   if (buildings(snapshot, owner).some((building) => !building.complete && isCoreProductionBuilding(building))) return undefined;
-  const candidates: ProductionBuildingKind[] = ["barracks", "archeryRange", "stables"];
+  const candidates = aiPlaybook(playerState(snapshot, owner).race).productionPlan.slice(0, 3);
   const counts = new Map(candidates.map((kind) => [kind, buildings(snapshot, owner).filter((building) => building.kind === kind).length]));
   const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
   if (total >= (noExpansionMap ? 3 : 6)) return undefined;

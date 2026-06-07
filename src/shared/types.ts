@@ -12,6 +12,11 @@ export type UnitKind =
   | "lancer"
   | "groveWarden"
   | "emberRavager"
+  | "cinderRunner"
+  | "sparkArcher"
+  | "emberAcolyte"
+  | "ashHexer"
+  | "pyreCaller"
   | "knight"
   | "priest"
   | "summoner"
@@ -31,7 +36,7 @@ export type UnitKind =
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind | WildlingUnitKind>;
-export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "farm";
+export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "emberForge" | "cinderSpire" | "emberShrine" | "farm";
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";

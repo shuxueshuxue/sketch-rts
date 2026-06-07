@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_KINDS } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_KINDS, isHealingBuildingKind } from "../../shared/catalog";
 import type { CreateGameOptions, Game } from "../../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, PlayerId, RaceId, Unit, UpgradeKind } from "../../shared/types";
@@ -270,7 +270,7 @@ function createStandardState<TAgent extends SdkGameAgent>(game: Game, input: Ben
     expansionTownHallIds,
     baseBuildCount: initialBuildingCounts("townHall"),
     defenseTowerBuildCount: initialBuildingCounts("defenseTower"),
-    moonWellBuildCount: initialBuildingCounts("moonWell"),
+    moonWellBuildCount: Object.fromEntries(players.map((owner) => [owner, game.buildings.filter((building) => building.owner === owner && isHealingBuildingKind(building.kind)).length])) as Record<PlayerId, number>,
     moonWellHealingEvents: zeroRecord(players),
     moonWellHealingHp: zeroRecord(players),
     unitTrainingGoldSpent: zeroRecord(players),
@@ -299,7 +299,7 @@ function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owne
     state.buildingGoldSpent[owner] = (state.buildingGoldSpent[owner] ?? 0) + BUILDING_DEFS[command.buildingKind].cost;
     if (command.buildingKind === "townHall") state.baseBuildCount[owner] = (state.baseBuildCount[owner] ?? 0) + 1;
     if (command.buildingKind === "defenseTower") state.defenseTowerBuildCount[owner] = (state.defenseTowerBuildCount[owner] ?? 0) + 1;
-    if (command.buildingKind === "moonWell") state.moonWellBuildCount[owner] = (state.moonWellBuildCount[owner] ?? 0) + 1;
+    if (isHealingBuildingKind(command.buildingKind)) state.moonWellBuildCount[owner] = (state.moonWellBuildCount[owner] ?? 0) + 1;
   }
   if (command.type === "train") state.unitTrainingGoldSpent[owner] = (state.unitTrainingGoldSpent[owner] ?? 0) + UNIT_DEFS[command.unitKind].cost;
   if (command.type === "build" && command.buildingKind === "townHall") {
@@ -339,7 +339,7 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
 }
 
 function recordMoonWellHealing(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, afterUnits: Map<string, Unit>) {
-  const wells = after.buildings.filter((building) => building.kind === "moonWell" && building.complete && building.hp > 0);
+  const wells = after.buildings.filter((building) => isHealingBuildingKind(building.kind) && building.complete && building.hp > 0);
   for (const effect of after.effects) {
     if (effect.type !== "heal" || effect.remaining !== effect.duration || effect.fromX === undefined || effect.fromY === undefined || effect.toX === undefined || effect.toY === undefined) continue;
     const well = wells.find((candidate) => distance(candidate, { x: effect.fromX!, y: effect.fromY! }) <= 1);

@@ -63,6 +63,11 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = {
   lancer: { hp: 130, speed: 3.4, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: [] },
   groveWarden: { hp: 165, speed: 3.0, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   emberRavager: { hp: 118, speed: 3.8, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
+  cinderRunner: { hp: 96, speed: 4.35, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
+  sparkArcher: { hp: 76, speed: 3.15, radius: 16, attackDamage: 12, attackRange: 360, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, xpReward: 30, abilities: [] },
+  emberAcolyte: { hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["heal"] },
+  ashHexer: { hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["curse"] },
+  pyreCaller: { hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 145, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"] },
   knight: { hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: [] },
   priest: { hp: 90, speed: 3, radius: 16, attackDamage: 7, attackRange: 252, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, xpReward: 35, abilities: ["heal"] },
   summoner: { hp: 95, speed: 2.8, radius: 17, attackDamage: 8, attackRange: 273, attackCooldown: seconds(1.9), cost: 150, trainTime: seconds(10.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"] },
@@ -85,17 +90,20 @@ export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contract
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
   townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), trains: ["worker"], researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },
-  barracks: { hp: 620, radius: 40, cost: 170, buildTime: seconds(11), trains: ["footman", "lancer", "groveWarden", "emberRavager"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  barracks: { hp: 620, radius: 40, cost: 170, buildTime: seconds(11), trains: ["footman", "lancer", "groveWarden"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   archeryRange: { hp: 520, radius: 38, cost: 150, buildTime: seconds(10), trains: ["archer"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   stables: { hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), trains: ["raider", "knight"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   sanctum: { hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), trains: ["priest", "summoner", "witch"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 16, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
+  emberForge: { hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), trains: ["emberRavager", "cinderRunner"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  cinderSpire: { hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), trains: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  emberShrine: { hp: 280, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), trains: [], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
 };
 
-const ORDINARY_COMBAT_UNITS: TrainableUnitKind[] = ["footman", "archer", "raider", "lancer", "groveWarden", "emberRavager", "knight", "priest", "summoner", "witch", "golem"];
+const ORDINARY_COMBAT_UNITS: TrainableUnitKind[] = ["footman", "archer", "raider", "lancer", "groveWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller", "knight", "priest", "summoner", "witch", "golem"];
 
 export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
   weaponTraining: {
@@ -140,6 +148,11 @@ export const TRAINABLE_UNIT_KINDS: TrainableUnitKind[] = [
   "lancer",
   "groveWarden",
   "emberRavager",
+  "cinderRunner",
+  "sparkArcher",
+  "emberAcolyte",
+  "ashHexer",
+  "pyreCaller",
   "knight",
   "priest",
   "summoner",
@@ -156,6 +169,9 @@ export const BUILDABLE_BUILDING_KINDS: BuildingKind[] = [
   "workshop",
   "defenseTower",
   "moonWell",
+  "emberForge",
+  "cinderSpire",
+  "emberShrine",
   "farm",
 ];
 
@@ -165,17 +181,27 @@ export const RACE_DEFS: Record<RaceId, RaceDef> = {
   grove: {
     id: "grove",
     name: "Grove Kin",
-    note: "Grass-paper clan with the current shared prototype tech tree.",
-    trainableUnits: TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "emberRavager"),
-    buildableBuildings: BUILDABLE_BUILDING_KINDS,
+    note: "Durable line holders, conventional ranged units, heavy tech, and moon-well recovery.",
+    trainableUnits: ["worker", "footman", "archer", "raider", "lancer", "groveWarden", "knight", "priest", "summoner", "witch", "golem"],
+    buildableBuildings: ["townHall", "barracks", "archeryRange", "stables", "sanctum", "workshop", "defenseTower", "moonWell", "farm"],
     upgrades: UPGRADE_KINDS,
   },
   ember: {
     id: "ember",
     name: "Ember Pact",
-    note: "Ember-themed clan with the current shared prototype tech tree.",
-    trainableUnits: TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "groveWarden"),
-    buildableBuildings: BUILDABLE_BUILDING_KINDS,
-    upgrades: UPGRADE_KINDS,
+    note: "Faster fragile fighters, early support casters, and ember-shrine recovery.",
+    trainableUnits: ["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
+    buildableBuildings: ["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"],
+    upgrades: ["buildingDurability"],
   },
 };
+
+export const HEALING_BUILDING_KINDS: BuildingKind[] = ["moonWell", "emberShrine"];
+
+export function isHealingBuildingKind(kind: string): kind is BuildingKind {
+  return (HEALING_BUILDING_KINDS as readonly string[]).includes(kind);
+}
+
+export function healingBuildingKindForRace(race: RaceId): BuildingKind {
+  return race === "ember" ? "emberShrine" : "moonWell";
+}

@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { opponentPlayerIds } from "./ownership";
@@ -51,19 +51,20 @@ export function needsMainGuardTower(snapshot: GameSnapshot, owner: PlayerId, opt
 
 export function shouldReserveForHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const player = playerState(snapshot, owner);
-  if (player.gold >= BUILDING_DEFS.moonWell.cost || player.gold < BUILDING_DEFS.moonWell.cost - 25) return false;
+  const healingKind = healingBuildingKindForRace(player.race);
+  if (player.gold >= BUILDING_DEFS[healingKind].cost || player.gold < BUILDING_DEFS[healingKind].cost - 25) return false;
   if (!hasCoreProduction(snapshot, owner)) return false;
   if (shouldReserveForEmergencyTower(snapshot, owner, options)) return false;
   if (options.version === "v2" && hasReachedHealingWellLimit(snapshot, owner)) return false;
   const main = mainBase(snapshot, owner);
-  if (buildings(snapshot, owner).some((building) => building.kind === "moonWell" && distance(building, main) < 520)) return false;
-  if (buildings(snapshot, owner).some((building) => building.kind === "moonWell" && !building.complete)) return false;
+  if (buildings(snapshot, owner).some((building) => isHealingBuildingKind(building.kind) && distance(building, main) < 520)) return false;
+  if (buildings(snapshot, owner).some((building) => building.kind === healingKind && !building.complete)) return false;
   if (!healingWellPressure(snapshot, owner, main, options)) return false;
   return combatUnits(snapshot, owner).some((unit) => unit.hp < unit.maxHp * 0.86 && distance(unit, main) <= 720);
 }
 
 export function hasReachedHealingWellLimit(snapshot: GameSnapshot, owner: PlayerId) {
-  return buildings(snapshot, owner).filter((building) => building.kind === "moonWell").length >= AI_MOON_WELL_LIMIT;
+  return buildings(snapshot, owner).filter((building) => isHealingBuildingKind(building.kind)).length >= AI_MOON_WELL_LIMIT;
 }
 
 export function healingWellPressure(snapshot: GameSnapshot, owner: PlayerId, main: Point, options: PresetAiPolicyOptions) {

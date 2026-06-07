@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { createAiMeleeControlBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails } from "./control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails } from "./control";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
 
 describe("AI melee control benchmark", () => {
+  it("creates side-balanced v2 ember versus v2 grove cross-race matches", () => {
+    const { input, selection } = createAiCrossRaceBenchmarkInput({ seed: "cross-race-seed", mapCount: 2 });
+
+    expect(selection.mapIds).toHaveLength(2);
+    expect(input.evaluations).toHaveLength(1);
+    expect(input.evaluations[0]!.name).toBe("v2 ember vs v2 grove");
+    expect(input.evaluations[0]!.matches.map((match) => match.name)).toEqual(selection.mapIds.flatMap((mapId) => [`${mapId} ember north`, `${mapId} ember south`]));
+    expect(input.evaluations[0]!.matches[0]!.agents.ember).toMatchObject({ team: "north", race: "ember", version: "v2", versionLabel: "v2 ember" });
+    expect(input.evaluations[0]!.matches[0]!.agents.grove).toMatchObject({ team: "south", race: "grove", version: "v2", versionLabel: "v2 grove" });
+    expect(input.evaluations[0]!.matches[1]!.agents.ember).toMatchObject({ team: "south", race: "ember", version: "v2", versionLabel: "v2 ember" });
+    expect(input.evaluations[0]!.matches[1]!.agents.grove).toMatchObject({ team: "north", race: "grove", version: "v2", versionLabel: "v2 grove" });
+  });
+
   it("creates side-balanced 1v1 control matches for every selected map", () => {
     const { input, selection } = createAiMeleeControlBenchmarkInput({ seed: "control-seed", mapCount: 3 });
 

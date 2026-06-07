@@ -93,7 +93,7 @@ export function mineAssignmentCounts(workers: Unit[]) {
 }
 
 export function isCoreProductionBuilding(building: Building) {
-  return building.kind !== "townHall" && building.kind !== "farm" && building.kind !== "defenseTower" && building.kind !== "moonWell";
+  return building.kind !== "townHall" && building.kind !== "farm" && building.kind !== "defenseTower" && building.kind !== "moonWell" && building.kind !== "emberShrine";
 }
 
 export function hasCoreProduction(snapshot: GameSnapshot, owner: PlayerId) {

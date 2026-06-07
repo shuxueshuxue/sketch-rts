@@ -89,23 +89,31 @@ function sumPlayerStats(record: PlayerNumberMap) {
 describe("sketch RTS simulation", () => {
   it("defines a production roster with at least 10 distinct unit kinds and 5 building kinds including a tower", () => {
     expect(TRAINABLE_UNIT_KINDS.length).toBeGreaterThanOrEqual(10);
-    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "groveWarden", "emberRavager"]));
+    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "groveWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
     expect(MERCENARY_UNIT_KINDS).toEqual(expect.arrayContaining(["mercenary", "contractArcher", "fieldMedic"]));
     expect(MERCENARY_UNIT_KINDS).toHaveLength(3);
     expect(Object.keys(BUILDING_DEFS).length).toBeGreaterThanOrEqual(5);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(0);
     expect(Object.keys(RACE_DEFS)).toEqual(expect.arrayContaining(["grove", "ember"]));
-    for (const race of Object.values(RACE_DEFS)) {
-      expect("productionPlan" in race).toBe(false);
-      expect("preferredUnits" in race).toBe(false);
-      expect(race.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest"]));
-      expect(race.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "defenseTower", "farm"]));
-      expect(race.upgrades).toEqual(expect.arrayContaining(["weaponTraining", "reinforcedPlating"]));
-    }
-    expect(RACE_DEFS.grove.trainableUnits).toContain("groveWarden");
-    expect(RACE_DEFS.grove.trainableUnits).not.toContain("emberRavager");
-    expect(RACE_DEFS.ember.trainableUnits).toContain("emberRavager");
-    expect(RACE_DEFS.ember.trainableUnits).not.toContain("groveWarden");
+    expect(RACE_DEFS.grove.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest", "groveWarden"]));
+    expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.grove.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "archeryRange", "sanctum", "defenseTower", "moonWell", "farm"]));
+    expect(RACE_DEFS.grove.buildableBuildings).not.toEqual(expect.arrayContaining(["emberForge", "cinderSpire", "emberShrine"]));
+    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.ember.trainableUnits).not.toEqual(expect.arrayContaining(["footman", "archer", "raider", "lancer", "groveWarden", "knight", "priest", "summoner", "witch", "golem"]));
+    expect(RACE_DEFS.ember.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"]));
+    expect(RACE_DEFS.ember.buildableBuildings).not.toEqual(expect.arrayContaining(["barracks", "archeryRange", "stables", "sanctum", "workshop", "moonWell"]));
+  });
+
+  it("keeps ember exclusive unit raw value no stronger than grove analogues", () => {
+    const rawValue = (kind: keyof typeof UNIT_DEFS) => (UNIT_DEFS[kind].hp * UNIT_DEFS[kind].attackDamage) / UNIT_DEFS[kind].cost;
+
+    expect(rawValue("emberRavager")).toBeLessThanOrEqual(rawValue("groveWarden"));
+    expect(rawValue("cinderRunner")).toBeLessThanOrEqual(rawValue("raider"));
+    expect(rawValue("sparkArcher")).toBeLessThanOrEqual(rawValue("archer"));
+    expect(rawValue("emberAcolyte")).toBeLessThanOrEqual(rawValue("priest"));
+    expect(rawValue("ashHexer")).toBeLessThanOrEqual(rawValue("witch"));
+    expect(rawValue("pyreCaller")).toBeLessThanOrEqual(rawValue("summoner"));
   });
 
   it("keeps starts fair and prices paced for the slower five-worker mine economy", () => {
@@ -336,13 +344,13 @@ describe("sketch RTS simulation", () => {
     expect(tower.cost).toBeGreaterThanOrEqual(120);
   });
 
-  it("stores race as player state without changing preset AI production choices", () => {
+  it("stores race as player state and lets preset AI use race-specific production choices", () => {
     const grove = createGame("bareDuel", { aiPlayers: ["enemy"], races: { enemy: "grove" } });
     const ember = createGame("bareDuel", { aiPlayers: ["enemy"], races: { enemy: "ember" } });
     grove.players.enemy.gold = 5000;
     ember.players.enemy.gold = 5000;
     grove.buildings.push(createBuilding("building-enemy-grove-sanctum-proof", "enemy", "sanctum", 3100, 3100, true));
-    ember.buildings.push(createBuilding("building-enemy-ember-sanctum-proof", "enemy", "sanctum", 3100, 3100, true));
+    ember.buildings.push(createBuilding("building-enemy-ember-spire-proof", "enemy", "cinderSpire", 3100, 3100, true));
     const groveRuntime = createAiRuntime(["enemy"], { scripts: [AI_SCRIPT_LIBRARY.training] });
     const emberRuntime = createAiRuntime(["enemy"], { scripts: [AI_SCRIPT_LIBRARY.training] });
 
@@ -350,11 +358,11 @@ describe("sketch RTS simulation", () => {
     stepMany(ember, 50, emberRuntime);
 
     const groveSanctum = grove.buildings.find((building) => building.id === "building-enemy-grove-sanctum-proof")!;
-    const emberSanctum = ember.buildings.find((building) => building.id === "building-enemy-ember-sanctum-proof")!;
+    const emberSpire = ember.buildings.find((building) => building.id === "building-enemy-ember-spire-proof")!;
     expect(grove.players.enemy.race).toBe("grove");
     expect(ember.players.enemy.race).toBe("ember");
     expect(groveSanctum.queue[0]?.unitKind).toBe("priest");
-    expect(emberSanctum.queue[0]?.unitKind).toBe("priest");
+    expect(emberSpire.queue[0]?.unitKind).toBe("sparkArcher");
   });
 
   it("creates a compact 4096 square sample map with authored content inside bounds", () => {
@@ -569,15 +577,15 @@ describe("sketch RTS simulation", () => {
   it("enforces race-specific trainable units through the ordinary train command", () => {
     const game = createGame("bareDuel", { aiPlayers: [], races: { player: "grove", enemy: "ember" } });
     const groveBarracks = createBuilding("grove-barracks", "player", "barracks", 620, 620, true);
-    const emberBarracks = createBuilding("ember-barracks", "enemy", "barracks", 3300, 3300, true);
-    game.buildings.push(groveBarracks, emberBarracks);
+    const emberForge = createBuilding("ember-forge", "enemy", "emberForge", 3300, 3300, true);
+    game.buildings.push(groveBarracks, emberForge);
     game.players.player.gold = 500;
     game.players.enemy.gold = 500;
 
     expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "groveWarden" })).not.toThrow();
-    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "emberRavager" })).toThrow(/race/i);
-    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberBarracks.id, unitKind: "emberRavager" })).not.toThrow();
-    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberBarracks.id, unitKind: "groveWarden" })).toThrow(/race/i);
+    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "emberRavager" })).toThrow(/cannot train/i);
+    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberForge.id, unitKind: "emberRavager" })).not.toThrow();
+    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberForge.id, unitKind: "groveWarden" })).toThrow(/cannot train/i);
   });
 
   it("stacks repeated training commands on one building but produces units serially", () => {

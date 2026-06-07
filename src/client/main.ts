@@ -46,7 +46,7 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
@@ -89,6 +89,9 @@ const BUILD_COMMANDS = [
   { kind: "workshop", icon: "⚙", hotkey: "o" },
   { kind: "defenseTower", icon: "⌖", hotkey: "t" },
   { kind: "moonWell", icon: "◐", hotkey: "m" },
+  { kind: "emberForge", icon: "▰", hotkey: "b" },
+  { kind: "cinderSpire", icon: "♢", hotkey: "c" },
+  { kind: "emberShrine", icon: "◒", hotkey: "m" },
   { kind: "farm", icon: "⌗", hotkey: "e" },
 ] satisfies { kind: BuildingKind; icon: string; hotkey: string }[];
 
@@ -98,6 +101,13 @@ const TRAIN_COMMANDS = [
   { kind: "archer", icon: "⋉", hotkey: "a" },
   { kind: "raider", icon: "◇", hotkey: "r" },
   { kind: "lancer", icon: "↗", hotkey: "l" },
+  { kind: "groveWarden", icon: "◭", hotkey: "v" },
+  { kind: "emberRavager", icon: "◆", hotkey: "v" },
+  { kind: "cinderRunner", icon: "◇", hotkey: "r" },
+  { kind: "sparkArcher", icon: "⋊", hotkey: "a" },
+  { kind: "emberAcolyte", icon: "+", hotkey: "p" },
+  { kind: "ashHexer", icon: "☾", hotkey: "x" },
+  { kind: "pyreCaller", icon: "◎", hotkey: "u" },
   { kind: "knight", icon: "♜", hotkey: "k" },
   { kind: "priest", icon: "+", hotkey: "p" },
   { kind: "summoner", icon: "◎", hotkey: "u" },
@@ -1563,11 +1573,13 @@ function canOpenBuildPalette() {
 }
 
 function canBuild(kind: BuildingKind) {
-  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  const player = currentPlayerState();
+  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canTrain(unitKind: TrainableUnitKind) {
-  return !commandMode && !buildPaletteOpen && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  const player = currentPlayerState();
+  return !commandMode && !buildPaletteOpen && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
@@ -1798,6 +1810,11 @@ function closeBuildPalette(message?: string) {
 
 function train(unitKind: TrainableUnitKind) {
   if (!syncBeforeCommandProjection()) return;
+  const player = currentPlayerState();
+  if (!player || !RACE_DEFS[player.race].trainableUnits.includes(unitKind)) {
+    showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
+    return;
+  }
   const building = focusedPlayerBuildings().find((candidate) => candidate.complete && BUILDING_DEFS[candidate.kind].trains.includes(unitKind));
   if (!building) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
@@ -2155,10 +2172,23 @@ function drawMiniBuildingModel(mini: CanvasRenderingContext2D, glyph: BuildingGl
     mini.lineTo(12, 25);
     mini.lineTo(-12, 25);
     mini.lineTo(-16, -7);
-  } else if (glyph.frame === "moon-well") {
+  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
     mini.ellipse(0, 6, 22, 13, 0, 0, Math.PI * 2);
     mini.moveTo(-18, 2);
     mini.quadraticCurveTo(0, -24, 18, 2);
+  } else if (glyph.frame === "ember-forge") {
+    mini.rect(-24, -17, 48, 36);
+    mini.moveTo(-20, 19);
+    mini.lineTo(20, 19);
+    mini.moveTo(-15, -17);
+    mini.lineTo(0, -27);
+    mini.lineTo(15, -17);
+  } else if (glyph.frame === "cinder-spire") {
+    mini.moveTo(0, -27);
+    mini.lineTo(18, -2);
+    mini.lineTo(11, 25);
+    mini.lineTo(-11, 25);
+    mini.lineTo(-18, -2);
   } else if (glyph.frame === "workshop-gear") {
     for (let i = 0; i < 12; i += 1) {
       const angle = (i / 12) * Math.PI * 2;
@@ -2701,12 +2731,25 @@ function drawBuildingFrame(glyph: BuildingGlyph, point: Point, size: number) {
     ctx.lineTo(point.x + half * 0.38, point.y + half);
     ctx.lineTo(point.x - half * 0.38, point.y + half);
     ctx.lineTo(point.x - half * 0.5, point.y - half * 0.18);
-  } else if (glyph.frame === "moon-well") {
+  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
     ctx.ellipse(point.x, point.y + half * 0.13, half * 0.76, half * 0.43, 0, 0, Math.PI * 2);
     ctx.moveTo(point.x - half * 0.58, point.y + half * 0.02);
     ctx.quadraticCurveTo(point.x, point.y - half * 0.72, point.x + half * 0.58, point.y + half * 0.02);
     ctx.moveTo(point.x - half * 0.44, point.y + half * 0.22);
     ctx.lineTo(point.x + half * 0.44, point.y + half * 0.22);
+  } else if (glyph.frame === "ember-forge") {
+    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
+    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
+    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
+    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.72);
+    ctx.lineTo(point.x, point.y - half);
+    ctx.lineTo(point.x + half * 0.45, point.y - half * 0.72);
+  } else if (glyph.frame === "cinder-spire") {
+    ctx.moveTo(point.x, point.y - half);
+    ctx.lineTo(point.x + half * 0.56, point.y - half * 0.04);
+    ctx.lineTo(point.x + half * 0.34, point.y + half);
+    ctx.lineTo(point.x - half * 0.34, point.y + half);
+    ctx.lineTo(point.x - half * 0.56, point.y - half * 0.04);
   } else {
     ctx.rect(point.x - half * 0.9, point.y - half * 0.45, size * 0.9, size * 0.72);
     ctx.moveTo(point.x - half * 0.9, point.y - half * 0.1);
