@@ -1,4 +1,4 @@
-import { createGame, type Game } from "./sim";
+import { createGame, restoreSnapshotIntoGame, type Game } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { UPGRADE_KINDS } from "./catalog";
 import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
@@ -75,20 +75,8 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
     ...(save.runtime.aiVersions ? { aiVersions: save.runtime.aiVersions } : {}),
   };
   const game = createGame(save.snapshot.map.id, options);
-  game.tick = save.snapshot.tick;
-  game.match = clone(save.snapshot.match);
-  game.map = clone(save.snapshot.map);
-  game.players = normalizeSavedPlayers(save.snapshot.players);
-  game.units = clone(save.snapshot.units);
-  game.buildings = clone(save.snapshot.buildings);
-  game.resources = clone(save.snapshot.resources);
-  game.mercenaryCamps = clone(save.snapshot.mercenaryCamps);
-  game.items = clone(save.snapshot.items);
-  game.projectiles = clone(save.snapshot.projectiles);
-  game.effects = clone(save.snapshot.effects);
-  game.nextId = save.runtime.nextId;
+  restoreSnapshotIntoGame(game, { ...save.snapshot, teams: save.runtime.teams, players: normalizeSavedPlayers(save.snapshot.players) }, save.runtime.nextId);
   game.activePlayers = [...save.runtime.activePlayers];
-  game.teams = { ...save.runtime.teams };
   return game;
 }
 

@@ -1,6 +1,6 @@
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
 import type { CheckpointFrame, CheckpointRequestReason, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../../shared/net/types";
-import type { Game } from "../../shared/sim";
+import { restoreSnapshotIntoGame } from "../../shared/sim";
 import type { GameCommand, PlayerId } from "../../shared/types";
 import type { SimulationEngine } from "../../shared/sim/engine";
 import type { NetTransport } from "./transport";
@@ -127,7 +127,7 @@ export class LockstepClient {
 
   private restoreCheckpoint(checkpoint: CheckpointFrame): void {
     if (checkpoint.roomId !== this.options.roomId) throw new Error(`Received checkpoint for ${checkpoint.roomId} while joined to ${this.options.roomId}`);
-    restoreGameSnapshot(this.options.engine.game, checkpoint);
+    restoreSnapshotIntoGame(this.options.engine.game, checkpoint.snapshot, checkpoint.nextId);
     this.frameBuffer.clear();
     this.emitSyncEvent({
       kind: "checkpoint-restore",
@@ -153,31 +153,6 @@ export class LockstepClient {
   private acceptsServerEpoch(message: { epoch: number }): boolean {
     return message.epoch === this.epoch;
   }
-}
-
-function restoreGameSnapshot(game: Game, checkpoint: CheckpointFrame): void {
-  game.tick = checkpoint.snapshot.tick;
-  game.match = clone(checkpoint.snapshot.match);
-  game.map = clone(checkpoint.snapshot.map);
-  game.players = clone(checkpoint.snapshot.players);
-  game.units = clone(checkpoint.snapshot.units);
-  game.buildings = clone(checkpoint.snapshot.buildings);
-  game.resources = clone(checkpoint.snapshot.resources);
-  game.mercenaryCamps = clone(checkpoint.snapshot.mercenaryCamps);
-  game.items = clone(checkpoint.snapshot.items);
-  game.projectiles = clone(checkpoint.snapshot.projectiles);
-  game.effects = clone(checkpoint.snapshot.effects);
-  game.nextId = checkpoint.nextId;
-  delete game.unitSpatial;
-  delete game.unitSpatialByTeam;
-  delete game.buildingSpatial;
-  delete game.buildingSpatialByTeam;
-  delete game.buildingSpatialCount;
-  delete game.entityById;
-}
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 function errorMessage(error: unknown): string {
