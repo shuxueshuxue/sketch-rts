@@ -117,7 +117,7 @@ export class LockstepClient {
   private restoreCheckpoint(checkpoint: CheckpointFrame): void {
     if (checkpoint.roomId !== this.options.roomId) throw new Error(`Received checkpoint for ${checkpoint.roomId} while joined to ${this.options.roomId}`);
     restoreGameSnapshot(this.options.engine.game, checkpoint);
-    this.frameBuffer.discardBefore(checkpoint.tick);
+    this.frameBuffer.clear();
     this.emitSyncEvent({
       kind: "checkpoint-restore",
       localTick: this.options.engine.game.tick,
