@@ -15,6 +15,17 @@ describe("command frame runtime boundary", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("keeps deployment runtimes from owning raw gameplay frame application", () => {
+    const deploymentFiles = ["src/client/deployment/static-runtime.ts", "src/client/deployment/server-runtime.ts"];
+    const forbidden = ["new CommandFrameRuntime", "applyCommandFrame", "stepGame", "issuePlayerCommand", "commandValidationError"];
+    const offenders = deploymentFiles.flatMap((file) => {
+      const source = readFileSync(file, "utf8");
+      return forbidden.filter((needle) => source.includes(needle)).map((needle) => `${file}: ${needle}`);
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps hosted room tick entry points behind one hosted frame tick primitive", () => {
     const source = readFileSync("src/server/room-host.ts", "utf8");
     const directRuntimeTicks = source.match(/frameRuntime\.tick\(/g) ?? [];

@@ -160,7 +160,7 @@ Adapter frontend YATU proof passed through Playwright CLI against a real local s
 
 - GitHub #38 still needs broad frontend YATU stress for visual/client-state sync.
 - GitHub #42 removes old global session gameplay APIs; closure still needs post-merge verification evidence.
-- GitHub #43 still needs explicit proof that static and server deployments share one gameplay core.
+- None for the command-frame gameplay-core lane. GitHub #43 is closed by the deployment gameplay-core evidence below.
 
 ## Restore Primitive Evidence - 2026-06-07
 
@@ -175,3 +175,27 @@ Coverage:
 
 - `src/shared/sim/restore.test.ts` proves `restoreSnapshotIntoGame` restores the current `GameSnapshot` key set, restores `nextId`, and invalidates all runtime lookup/spatial caches in one place.
 - `src/client/net/lockstep-client.test.ts` proves a lockstep checkpoint restore and a savegame restore from the same snapshot produce equivalent snapshots and checksums.
+
+## Deployment Gameplay-Core Evidence - 2026-06-07
+
+GitHub #43 closes the proof that static and server deployments are distribution modes over one gameplay command-frame core, not separate gameplay implementations.
+
+Flow map:
+
+- Static local room: `main.ts` emits ordinary `GameCommand` through `DeploymentRuntime` -> `StaticSoloDeploymentRuntime` -> `LocalGameAdapter` -> `CommandFrameRuntime` -> `applyCommandFrame` / `stepGame`.
+- Server browser room: `main.ts` emits ordinary `GameCommand` through `DeploymentRuntime` -> `ServerDeploymentRuntime` -> `LockstepRoomGameAdapter` -> `LockstepClient` transport command -> `RoomNetHub` -> `roomHost.tickRoomFrame` -> hosted `CommandFrameRuntime` -> `applyCommandFrame` / `stepGame`; the browser client consumes authoritative frames through `SimulationEngine.advanceFrame`.
+- SDK room command tick: SDK commands enter `roomHost.commandTickRoom`, which admits the same `CommandEnvelope`s and advances through the hosted `CommandFrameRuntime`.
+- Debug replay: hosted room history records the authoritative `CommandFrame`s; replay seek uses `advanceCommandFrameTick` rather than a replay-only command application path.
+- Internal AI: static and hosted runtimes both create AI runtime state from the same policy modules; AI commands are planner output that enters `CommandFrameRuntime` as ordinary player command envelopes before framing.
+
+Allowed adapter differences:
+
+- Static deployment owns local runtime materialization and local render-time ticking because it has no server transport.
+- Server deployment owns WebSocket transport, delayed command coordination, checkpoints, checksum/desync reporting, replay history, and spectator catch-up.
+- These differences stop at adapter/runtime boundaries. They do not redefine command validation, command collision normalization, frame application, AI command inclusion, or simulation stepping.
+
+Automated evidence on branch `codex/issue-43-command-core-proof`:
+
+- `src/server/deployment-command-core.test.ts` proves a representative move command produces equivalent post-frame state in a static local room and a hosted room frame.
+- `src/shared/sim/command-frame-runtime.test.ts` source-boundary tests prove deployment runtimes do not own raw frame application and adapters do not re-own validation/application/stepping.
+- Existing `src/server/room-host.test.ts` coverage proves SDK command ticks, browser room frames, internal AI frames, debug replay, and match-end cleanup stay on the hosted command-frame path.
