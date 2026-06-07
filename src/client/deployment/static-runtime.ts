@@ -69,6 +69,10 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return this.lifecycle.resizeSlots(roomId, input.humanCount, input.aiCount);
   }
 
+  watchRoom(_roomId: string, _onRoom: (room: RoomState) => void): () => void {
+    return () => {};
+  }
+
   async closeRoom(roomId: string, userId: string): Promise<RoomState> {
     return this.lifecycle.closeRoom(roomId, userId);
   }

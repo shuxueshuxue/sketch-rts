@@ -161,6 +161,24 @@ router.get("/api/rooms/:roomId", (request, response) => {
   }
 });
 
+router.get("/api/rooms/:roomId/events", (request, response) => {
+  let room;
+  try {
+    room = roomHost.getRoom(request.params.roomId);
+  } catch (error) {
+    response.status(404).json({ error: errorMessage(error) });
+    return;
+  }
+  response.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+  });
+  writeRoomEvent(response, room);
+  const unobserve = roomHost.observeRoomLifecycle(request.params.roomId, (event) => writeRoomEvent(response, event.room));
+  request.on("close", unobserve);
+});
+
 router.post("/api/rooms/:roomId/join", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!isLocalUserProfile(body.user)) {
@@ -494,6 +512,10 @@ async function watchBenchmarkDashboardRuns() {
 function broadcastBenchmarkDashboardChange(payload: { eventType: string; filename: string }) {
   const frame = `event: benchmark-dashboard-change\ndata: ${JSON.stringify(payload)}\n\n`;
   for (const client of benchmarkDashboardClients) client.write(frame);
+}
+
+function writeRoomEvent(response: Response, room: unknown) {
+  response.write(`data: ${JSON.stringify(room)}\n\n`);
 }
 
 function isTickCount(value: unknown): value is number {

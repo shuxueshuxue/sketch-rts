@@ -5,6 +5,29 @@ import { describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 
 describe("server REST and WebSocket command ingress", () => {
+  it("streams pre-match room lifecycle updates at a real REST boundary", async () => {
+    const port = await freePort();
+    const server = await startServer(port);
+    try {
+      const room = await postJson(`http://127.0.0.1:${port}/api/rooms`, {
+        id: `room-events-${Date.now()}`,
+        host: { id: "host", name: "Host" },
+        mapId: "bareDuel",
+        humanCount: 2,
+        aiCount: 0,
+        visibility: "public",
+      });
+      const events = openRoomEvents(`http://127.0.0.1:${port}/api/rooms/${room.id}/events`);
+
+      await expect(events.nextRoom()).resolves.toMatchObject({ id: room.id, slots: [expect.objectContaining({ name: "Host" }), expect.objectContaining({ controller: "open" })] });
+      await postJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/join`, { user: { id: "guest", name: "Guest" } });
+      await expect(events.nextRoom()).resolves.toMatchObject({ id: room.id, slots: [expect.objectContaining({ name: "Host" }), expect.objectContaining({ name: "Guest" })] });
+      await events.close();
+    } finally {
+      await stopServer(server);
+    }
+  }, 45_000);
+
   it("rejects malformed commands at both real network boundaries", async () => {
     const port = await freePort();
     const server = await startServer(port);
@@ -104,6 +127,46 @@ async function postRawJson(url: string, body: unknown) {
     body: JSON.stringify(body),
   });
   return { status: response.status, body: await response.json() };
+}
+
+function openRoomEvents(url: string) {
+  let abort: AbortController | undefined;
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let buffer = "";
+  const decoder = new TextDecoder();
+  const responsePromise = (async () => {
+    abort = new AbortController();
+    const response = await fetch(url, { signal: abort.signal });
+    if (!response.ok || !response.body) throw new Error(`${url} failed ${response.status}: ${await response.text()}`);
+    reader = response.body.getReader();
+    return reader;
+  })();
+
+  return {
+    async nextRoom() {
+      const stream = await responsePromise;
+      for (;;) {
+        const boundary = buffer.indexOf("\n\n");
+        if (boundary >= 0) {
+          const event = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          const data = event
+            .split("\n")
+            .filter((line) => line.startsWith("data: "))
+            .map((line) => line.slice("data: ".length))
+            .join("\n");
+          if (data) return JSON.parse(data);
+        }
+        const read = await stream.read();
+        if (read.done) throw new Error("Room event stream ended before the next room event");
+        buffer += decoder.decode(read.value, { stream: true });
+      }
+    },
+    async close() {
+      abort?.abort();
+      await reader?.cancel().catch(() => {});
+    },
+  };
 }
 
 async function webSocketMalformedCommand(url: string, roomId: string): Promise<unknown> {

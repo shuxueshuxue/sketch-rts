@@ -51,6 +51,30 @@ describe("server deployment runtime", () => {
     expect(createRoomWebSocketUrl("/sketch-rts/", "room 1", { protocol: "https:", host: "lexicalmathical.com" })).toBe("wss://lexicalmathical.com/sketch-rts/ws/rooms/room%201");
   });
 
+  it("watches pre-match room lifecycle updates through the deployment base path", () => {
+    const sources: FakeRoomEventSource[] = [];
+    const host = { id: "host", name: "Host" };
+    const room = createRoom({ id: "room watch", host, humanCount: 2, aiCount: 0 });
+    const joined = updateRoomSlot(room, "slot-2", { controller: "human", userId: "guest", name: "Guest", ready: true });
+    const runtime = new ServerDeploymentRuntime({
+      publicBasePath: "/sketch-rts/",
+      createRoomEventSource: (path) => {
+        const source = new FakeRoomEventSource(path);
+        sources.push(source);
+        return source;
+      },
+    });
+    const updates: string[] = [];
+
+    const unsubscribe = runtime.watchRoom(room.id, (nextRoom) => updates.push(nextRoom.slots.map((slot) => slot.name).join(",")));
+    sources[0]!.emit(joined);
+    unsubscribe();
+
+    expect(sources[0]!.path).toBe("/sketch-rts/api/rooms/room%20watch/events");
+    expect(updates).toEqual(["Host,Guest"]);
+    expect(sources[0]!.closed).toBe(true);
+  });
+
   it("starts as the slot owned by the current user", async () => {
     const host = { id: "host", name: "Host" };
     const guest = { id: "guest", name: "Guest" };
@@ -175,5 +199,24 @@ class FakeTransport implements NetTransport {
   close(): void {}
   emit(message: ServerNetMessage): void {
     for (const handler of this.handlers) handler(message);
+  }
+}
+
+class FakeRoomEventSource {
+  closed = false;
+  private handlers: ((event: { data: string }) => void)[] = [];
+
+  constructor(readonly path: string) {}
+
+  addEventListener(type: "message" | "error", handler: (event: { data: string }) => void): void {
+    if (type === "message") this.handlers.push(handler);
+  }
+
+  close(): void {
+    this.closed = true;
+  }
+
+  emit(room: unknown): void {
+    for (const handler of this.handlers) handler({ data: JSON.stringify(room) });
   }
 }

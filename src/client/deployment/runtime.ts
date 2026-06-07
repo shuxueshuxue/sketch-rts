@@ -29,6 +29,7 @@ export type DeploymentRuntime = {
   updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState>;
   updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState>;
   updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState>;
+  watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void;
   closeRoom(roomId: string, userId: string): Promise<RoomState>;
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void): Promise<StartedMatch>;
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch;

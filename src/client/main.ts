@@ -34,6 +34,7 @@ import {
 } from "./pointer-lock";
 import { shouldRenderBuildingRally } from "./rally-visual";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
+import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
@@ -151,6 +152,8 @@ let spectatingRoom = false;
 let activeGameAdapter: GameAdapter;
 let activeChat: MatchChat | undefined;
 let activeChatUnsubscribe: (() => void) | undefined;
+let activeRoomUnwatch: (() => void) | undefined;
+let activeRoomWatchId: string | undefined;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 let focusedSelectionId: string | undefined;
@@ -226,6 +229,7 @@ const commandButtons: CommandButton[] = [
 ];
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("hashchange", () => void openRouteFromHash());
 window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
 document.addEventListener("pointerover", showTooltipFromEvent, true);
@@ -263,6 +267,7 @@ canvas.addEventListener("mousemove", onMouseMove);
 canvas.addEventListener("mouseup", onMouseUp);
 
 renderMainMenu();
+void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
 
@@ -354,6 +359,53 @@ function splitTooltipList(value: string | undefined) {
   return value ? value.split("|").filter(Boolean) : [];
 }
 
+function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>) {
+  clearRoomWatch();
+  currentRoom = undefined;
+  currentRoomId = undefined;
+  spectatingRoom = false;
+  menuView = route.screen;
+  replaceRoomRouteHash(route);
+  renderMainMenu();
+}
+
+async function openRouteFromHash() {
+  const route = parseRoomRouteHash(window.location.hash);
+  if (route.screen === "room") {
+    await enterRoom(route.roomId);
+    return;
+  }
+  if (!menuOpen) return;
+  openMenuRoute(route);
+}
+
+function openRoomSetup(room: RoomState) {
+  currentRoom = room;
+  currentRoomId = undefined;
+  menuView = "setup";
+  replaceRoomRouteHash({ screen: "room", roomId: room.id });
+  watchRoomSetup(room.id);
+}
+
+function watchRoomSetup(roomId: string) {
+  if (activeRoomWatchId === roomId) return;
+  clearRoomWatch();
+  activeRoomWatchId = roomId;
+  activeRoomUnwatch = deploymentRuntime.watchRoom(roomId, handleRuntimeRoomUpdate);
+}
+
+function clearRoomWatch() {
+  activeRoomUnwatch?.();
+  activeRoomUnwatch = undefined;
+  activeRoomWatchId = undefined;
+}
+
+function replaceRoomRouteHash(route: RoomRoute) {
+  const hash = formatRoomRouteHash(route);
+  if (window.location.hash === hash) return;
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+}
+
 function renderMainMenu() {
   mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
@@ -391,12 +443,10 @@ function renderMainMenu() {
   menuStatus.textContent = t("home.signedIn", { name: localUser.name });
   mapList.replaceChildren(
     menuButton(t("home.rooms.label"), t("home.rooms.note"), "data-open-room-browser", () => {
-      menuView = "rooms";
-      renderMainMenu();
+      openMenuRoute({ screen: "rooms" });
     }),
     menuButton(t("profile.open.label"), t("profile.open.note", { id: localUser.id.slice(0, 8) }), "data-open-profile", () => {
-      menuView = "profile";
-      renderMainMenu();
+      openMenuRoute({ screen: "profile" });
     }),
   );
 }
@@ -461,8 +511,7 @@ function renderCreateGameMenu() {
   };
   form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
-    menuView = "home";
-    renderMainMenu();
+    openMenuRoute({ screen: "home" });
   });
   mapList.replaceChildren(form);
 }
@@ -491,8 +540,7 @@ function renderProfileMenu() {
     }
     localUser = { ...localUser, name };
     saveLocalUserProfile(localUser);
-    menuView = "home";
-    renderMainMenu();
+    openMenuRoute({ screen: "home" });
   });
   form.querySelector("[data-regenerate-user]")?.addEventListener("click", () => {
     localUser = { id: newUserId(), name: localUser.name };
@@ -500,8 +548,7 @@ function renderProfileMenu() {
     renderMainMenu();
   });
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
-    menuView = "home";
-    renderMainMenu();
+    openMenuRoute({ screen: "home" });
   });
   mapList.replaceChildren(form);
 }
@@ -519,12 +566,10 @@ async function renderRoomBrowser() {
   const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
   actions.replaceChildren(
     menuButton(t("roomBrowser.create.title"), t("roomBrowser.create.note"), "data-create-room", () => {
-      menuView = "create";
-      renderMainMenu();
+      openMenuRoute({ screen: "create" });
     }),
     menuButton(t("common.back"), t("roomBrowser.back.note"), "data-back-home", () => {
-      menuView = "home";
-      renderMainMenu();
+      openMenuRoute({ screen: "home" });
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
@@ -544,8 +589,7 @@ function renderRoomSetup() {
   if (setupAction === "empty") {
     menuStatus.textContent = t("roomSetup.empty");
     mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), t("roomSetup.createMissing.note"), "data-create-room", () => {
-      menuView = "create";
-      renderMainMenu();
+      openMenuRoute({ screen: "create" });
     }));
     return;
   }
@@ -610,8 +654,7 @@ function renderRoomSetup() {
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
-    menuView = "rooms";
-    renderMainMenu();
+    openMenuRoute({ screen: "rooms" });
   });
   mapList.replaceChildren(setup);
   if (pendingRoomMapScrollTop !== undefined) {
@@ -678,7 +721,7 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
     ...input,
   });
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
-  menuView = "setup";
+  openRoomSetup(currentRoom);
   renderMainMenu();
 }
 
@@ -691,6 +734,7 @@ async function selectRoomMap(mapId: MapId) {
 
 async function startCurrentRoom() {
   if (!currentRoom) return;
+  clearRoomWatch();
   if (hasSeenPointerLockGuide()) {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
@@ -834,6 +878,7 @@ function canRemoveLastRoomSlot(room: RoomState) {
 async function closeCurrentRoom() {
   if (!currentRoom) return;
   await deploymentRuntime.closeRoom(currentRoom.id, localUser.id);
+  clearRoomWatch();
   disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
@@ -843,6 +888,7 @@ async function closeCurrentRoom() {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   menuView = "rooms";
+  replaceRoomRouteHash({ screen: "rooms" });
   renderMainMenu();
 }
 
@@ -890,6 +936,7 @@ function slotForUser(room: RoomState, userId: string) {
 }
 
 function returnHome() {
+  clearRoomWatch();
   disconnectActiveMatch();
   currentRoom = undefined;
   currentRoomId = undefined;
@@ -902,6 +949,7 @@ function returnHome() {
   commandMode = undefined;
   buildPaletteOpen = false;
   menuView = "home";
+  replaceRoomRouteHash({ screen: "home" });
   renderMainMenu();
 }
 
@@ -917,6 +965,7 @@ async function enterRoom(roomId: string) {
       return;
     }
     if (room.status === "inMatch") {
+      clearRoomWatch();
       currentRoomId = room.id;
       const started = deploymentRuntime.connectRoom(room, localPlayerId, spectatingRoom, handleRuntimeRoomUpdate);
       activateStartedMatch(started.adapter, started.snapshot, started.chat);
@@ -928,7 +977,7 @@ async function enterRoom(roomId: string) {
       syncPointerLockGate();
       return;
     }
-    menuView = "setup";
+    openRoomSetup(room);
     renderMainMenu();
   } catch (error) {
     menuStatus.innerHTML = `<span class="error">${escapeHtml(t("status.enterRoomFailed", { message: error instanceof Error ? error.message : String(error) }))}</span>`;
@@ -958,8 +1007,10 @@ function disconnectActiveMatch() {
 }
 
 function handleRuntimeRoomUpdate(room: RoomState) {
+  if (currentRoom?.id !== room.id && currentRoomId !== room.id) return;
   currentRoom = room;
   if (room.status === "ended" && room.result) openResults(room);
+  else if (menuOpen && menuView === "setup") renderMainMenu();
 }
 
 function syncActiveGameAdapterSnapshot() {
@@ -984,6 +1035,7 @@ function syncBeforeCommandProjection() {
 }
 
 function openResults(room: RoomState) {
+  clearRoomWatch();
   disconnectActiveMatch();
   releasePointerLockForMenu();
   currentRoom = room;
@@ -999,6 +1051,7 @@ function openResults(room: RoomState) {
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");
   menuView = "results";
+  replaceRoomRouteHash({ screen: "room", roomId: room.id });
   syncMatchActions();
   renderMainMenu();
   updateHud();

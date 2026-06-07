@@ -16,10 +16,17 @@ export type RoomTransport = NetTransport & {
   onOpen?(handler: () => void): void;
 };
 
+export type RoomEventSource = {
+  addEventListener(type: "message", handler: (event: { data: string }) => void): void;
+  addEventListener(type: "error", handler: () => void): void;
+  close(): void;
+};
+
 export type ServerDeploymentRuntimeOptions = {
   publicBasePath?: string;
   fetchJson?: <T>(path: string, body?: unknown) => Promise<T>;
   createRoomTransport?: (roomId: string) => RoomTransport;
+  createRoomEventSource?: (path: string) => RoomEventSource;
   onRuntimeError?: (message: string) => void;
 };
 
@@ -27,6 +34,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   readonly kind = "server" as const;
   private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
+  private readonly createRoomEventSource: (path: string) => RoomEventSource;
   private readonly onRuntimeError: ((message: string) => void) | undefined;
   private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();
@@ -35,6 +43,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     this.publicBasePath = normalizePublicBasePath(options.publicBasePath ?? import.meta.env.BASE_URL);
     this.fetchJson = options.fetchJson ?? requestJson;
     this.createRoomTransport = options.createRoomTransport ?? ((roomId) => createDefaultRoomTransport(roomId, this.publicBasePath));
+    this.createRoomEventSource = options.createRoomEventSource ?? createDefaultRoomEventSource;
     this.onRuntimeError = options.onRuntimeError;
   }
 
@@ -75,6 +84,17 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
 
   async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount });
+  }
+
+  watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void {
+    const source = this.createRoomEventSource(this.path(`/api/rooms/${encodeURIComponent(roomId)}/events`));
+    source.addEventListener("message", (event) => {
+      onRoom(JSON.parse(event.data) as RoomState);
+    });
+    source.addEventListener("error", () => {
+      this.onRuntimeError?.(`Room ${roomId} event stream failed`);
+    });
+    return () => source.close();
   }
 
   async closeRoom(roomId: string, userId: string): Promise<RoomState> {
@@ -131,6 +151,11 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
 
 function createDefaultRoomTransport(roomId: string, publicBasePath: string): RoomTransport {
   return WebSocketTransport.connect(createRoomWebSocketUrl(publicBasePath, roomId, location));
+}
+
+function createDefaultRoomEventSource(path: string): RoomEventSource {
+  if (typeof EventSource === "undefined") throw new Error("EventSource is unavailable in this browser");
+  return new EventSource(path);
 }
 
 export function createRoomWebSocketUrl(publicBasePath: string, roomId: string, loc: Pick<Location, "protocol" | "host">): string {
