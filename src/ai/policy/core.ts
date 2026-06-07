@@ -1615,8 +1615,7 @@ function workerPressureUnits(snapshot: GameSnapshot, owner: PlayerId, soldiers: 
   const center = averagePoint(soldiers);
   if (distance(center, target) <= 900) return soldiers;
   if (activeMiningBaseCount(snapshot, owner) < 2) return [];
-  // @@@thin-two-mine-raid - A distant worker-pressure detachment is paid for by surplus army size; seven bodies still need to move as one group in 1v2.
-  if (soldiers.length < 9) return [];
+  if (soldiers.length < 6) return [];
   return nearestEntities(soldiers, target).slice(0, 3);
 }
 
