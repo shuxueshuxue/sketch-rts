@@ -21,7 +21,7 @@ Replay, savegame, SDK command batching, and room-host commands now move toward t
 Network boundaries now have first-pass protocol primitives:
 
 - `src/server/lockstep-room.ts` provides a sim-free `LockstepRoomCoordinator` for command delay, sequence ordering, frame construction, and checksum recording.
-- `src/server/spectator-sync.ts` owns the checkpoint/frame retention window for late observers and names the default history length as `DEFAULT_SPECTATOR_FRAME_HISTORY_LIMIT = 240`.
+- `src/server/room-history.ts` owns the hosted room checkpoint/frame history. Spectator catch-up and debug replay both read this history instead of recording separate frame ledgers; the default bounded window is `DEFAULT_ROOM_FRAME_HISTORY_LIMIT = 240`. Debug replay keeps command frames from the replay start tick, while checkpoints remain sparse outside the recent spectator window: replay start, periodic fast-seek checkpoints, and terminal match checkpoints.
 - `src/shared/net/codec.ts` encodes and decodes typed net messages and fails loudly on malformed payloads.
 - `src/shared/net/frame-buffer.ts` stores authoritative frames by tick.
 - `src/client/net/transport.ts`, `websocket-transport.ts`, and `lockstep-client.ts` define a client adapter path where local commands are sent over transport and simulation advances only after server frames arrive.
@@ -33,7 +33,7 @@ The room WebSocket path is now wired into the running server:
 - `/ws/rooms/:roomId` is the server gameplay WebSocket path.
 - Bare `/ws` and the removed global session socket are rejected by the server upgrade classifier.
 - `src/server/room-net.ts` accepts typed room messages, sends `hello` and `checkpoint`, records checksums, accepts delayed client commands, broadcasts authoritative frames, and advances the room through `tickRoomFrame`.
-- `src/server/room-net.ts` retains recent authoritative checkpoints and frames so a late observer can request an older checkpoint and replay the frames after it.
+- `src/server/room-net.ts` asks `room-host` for retained authoritative checkpoints and frames so a late observer can request an older checkpoint and replay the frames after it.
 - `src/server/room-host.ts` exposes `tickRoomFrame` and `checkpointRoom`; connected lockstep rooms can be excluded from the ordinary active-room ticker so they are not double-stepped.
 - `src/client/net/lockstep-client.ts` restores checkpoint snapshots into its existing engine, discards buffered frames older than the restored tick, and still advances simulation only from server frames.
 - `src/client/main.ts` starts room matches through `LockstepClient`; room commands no longer call the HTTP room command endpoint, and room gameplay no longer polls HTTP snapshots.

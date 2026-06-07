@@ -354,6 +354,32 @@ describe("room net hub", () => {
     expect(frames.map((frame) => frame.tick)).toEqual([2, 3, 4]);
   });
 
+  it("uses hosted room history for both late observer catch-up and debug replay", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-shared-history", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.enableDebugReplay(room.id, { id: "trace-shared-history" });
+    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 16 });
+    const liveSocket = new FakeSocket();
+    hub.connect(room.id, liveSocket);
+
+    for (let i = 0; i < 5; i += 1) hub.tickRoom(room.id);
+
+    const observer = new FakeSocket();
+    hub.connect(room.id, observer);
+    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: 2, clientTick: 5 }));
+
+    const messages = observer.sent.map((raw) => decodeServerNetMessage(raw));
+    const catchupFrames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
+    const replay = roomHost.readDebugReplay(room.id);
+
+    expect(catchupFrames.map((frame) => frame.tick)).toEqual([2, 3, 4]);
+    expect(replay.frames.map((frame) => frame.tick)).toEqual([0, 1, 2, 3, 4]);
+    expect(replay.frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence, commands: frame.commands }))).toEqual(
+      expect.arrayContaining(catchupFrames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence, commands: frame.commands }))),
+    );
+  });
+
   it("ticks all connected rooms and returns their ids for ordinary ticker exclusion", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const connected = roomHost.createRoom({ id: "room-connected", host: hostUser, mapId: "bareDuel" });

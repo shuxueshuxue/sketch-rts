@@ -5,9 +5,10 @@ import type { AiScript, AiScriptVersion } from "../ai/policy";
 import { createGame, snapshotGame, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { checksumGame } from "../shared/sim/checksum";
-import { createDebugReplayTrace, extractReplayFrameSave, recordReplayFrame, recordReplayCheckpoint, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
+import { extractReplayFrameSave, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../shared/types";
+import { RoomHistoryLog } from "./room-history";
 
 export type RoomTickResult = {
   ticks: number;
@@ -43,19 +44,19 @@ export type RoomResetResult = {
 
 type HostedRoom = {
   room: RoomState;
+  history: RoomHistoryLog;
   game?: Game;
   aiRuntime?: AiRuntimeState;
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
-  debugReplay?: DebugReplayTrace;
+  debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord };
   frameListeners?: Set<HostedRoomFrameListener>;
 };
 
 export type RoomHostOptions = {
   autoTick?: boolean;
   aiScripts?: AiScript[];
+  frameHistoryLimit?: number;
 };
-
-const REPLAY_CHECKPOINT_INTERVAL_TICKS = 120;
 
 export function createRoomHost(options: RoomHostOptions = {}) {
   const defaultAutoTick = options.autoTick ?? true;
@@ -77,7 +78,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
   function putRoom(room: RoomState, game?: Game, aiRuntime?: AiRuntimeState): RoomState {
     const storedRoom = { ...room, autoTick: defaultAutoTick };
-    const hosted: HostedRoom = { room: storedRoom };
+    const hosted: HostedRoom = { room: storedRoom, history: createRoomHistory() };
     if (game) {
       hosted.game = game;
       if (aiRuntime) hosted.aiRuntime = aiRuntime;
@@ -85,6 +86,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     }
     rooms.set(storedRoom.id, hosted);
     return storedRoom;
+  }
+
+  function createRoomHistory() {
+    return new RoomHistoryLog({ ...(options.frameHistoryLimit !== undefined ? { frameHistoryLimit: options.frameHistoryLimit } : {}) });
   }
 
   return {
@@ -118,6 +123,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.frameListeners ??= new Set();
       hosted.frameListeners.add(listener);
       return () => hosted.frameListeners?.delete(listener);
+    },
+
+    setFrameHistoryLimit(roomId: string, frameHistoryLimit: number): void {
+      getHosted(roomId).history.setFrameHistoryLimit(frameHistoryLimit);
     },
 
     pauseRoom(roomId: string): RoomState {
@@ -186,6 +195,8 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.game = createGame(setup.mapId, setup.options);
       hosted.aiRuntime = createHostedAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions);
       hosted.frameRuntime = createHostedFrameRuntime(hosted, hosted.game);
+      hosted.history = createRoomHistory();
+      delete hosted.debugReplay;
       hosted.room = { ...hosted.room, status: "inMatch" };
       return hosted.room;
     },
@@ -204,6 +215,8 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.game = createGame(mapId, mergedOptions);
       hosted.aiRuntime = createHostedAiRuntime(mergedOptions.aiPlayers ?? [], mergedOptions.aiVersions);
       hosted.frameRuntime = createHostedFrameRuntime(hosted, hosted.game);
+      hosted.history = createRoomHistory();
+      delete hosted.debugReplay;
       const { result: _result, ...roomWithoutResult } = hosted.room;
       hosted.room = { ...roomWithoutResult, mapId, status: "inMatch" };
       return { room: hosted.room, snapshot: snapshotGame(hosted.game) };
@@ -253,8 +266,18 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     },
 
     checkpointRoom(roomId: string): CheckpointFrame {
-      const { game } = getLiveGame(roomId);
-      return { roomId, tick: game.tick, snapshot: snapshotGame(game), nextId: game.nextId };
+      const { hosted, game } = getLiveGame(roomId);
+      const checkpoint = createHostedCheckpoint(hosted, game);
+      hosted.history.recordCheckpoint(checkpoint);
+      return checkpoint;
+    },
+
+    checkpointAtOrBefore(roomId: string, tick: number): CheckpointFrame | undefined {
+      return getHosted(roomId).history.checkpointAtOrBefore(tick);
+    },
+
+    framesFrom(roomId: string, tick: number): CommandFrame[] {
+      return getHosted(roomId).history.framesFrom(tick);
     },
 
     saveRoom(roomId: string, input: SaveGameInput): SaveGameRecord {
@@ -267,14 +290,16 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     enableDebugReplay(roomId: string, input: SaveGameInput): DebugReplayTrace {
       const { hosted, game } = getLiveGame(roomId);
       const initialSave = createSaveGameRecord(game, hosted.room, input, new Date(), hosted.aiRuntime?.controlledPlayers ?? [], hosted.aiRuntime?.versions ?? {});
-      hosted.debugReplay = createDebugReplayTrace({ id: input.id, ...(input.label ? { label: input.label } : {}), initialSave });
-      return hosted.debugReplay;
+      hosted.debugReplay = { id: input.id, ...(input.label ? { label: input.label } : {}), initialSave };
+      hosted.history.retainFramesFrom(initialSave.snapshot.tick);
+      hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
+      return hosted.history.debugReplayTrace(hosted.debugReplay);
     },
 
     readDebugReplay(roomId: string): DebugReplayTrace {
-      const trace = getHosted(roomId).debugReplay;
-      if (!trace) throw new Error(`Room ${roomId} is not recording a debug replay`);
-      return trace;
+      const hosted = getHosted(roomId);
+      if (!hosted.debugReplay) throw new Error(`Room ${roomId} is not recording a debug replay`);
+      return hosted.history.debugReplayTrace(hosted.debugReplay);
     },
 
     replayDebugToTick(roomId: string, tick: number): GameSnapshot {
@@ -295,7 +320,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const room = { ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const, autoTick: defaultAutoTick };
       if (rooms.has(room.id)) throw new Error(`Room ${room.id} already exists`);
       const game = restoreGameFromSave(save);
-      const hosted: HostedRoom = { room, game, aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions) };
+      const hosted: HostedRoom = { room, history: createRoomHistory(), game, aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions) };
       hosted.frameRuntime = createHostedFrameRuntime(hosted, game);
       rooms.set(room.id, hosted);
       return room;
@@ -384,12 +409,19 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
   const frameOptions = input.frame ? { frame: input.frame } : {};
-  const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => recordHostedReplayFrame(hosted, input.source, frame) });
-  recordHostedReplayCheckpoint(hosted, game);
+  hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
+  const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
   const snapshot = snapshotGame(game);
-  if (game.match.winner) finishHostedRoom(hosted, snapshot);
+  if (game.match.winner) {
+    hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
+    finishHostedRoom(hosted, snapshot);
+  }
   if (completedFrame) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
   return completedFrame;
+}
+
+function createHostedCheckpoint(hosted: HostedRoom, game: Game): CheckpointFrame {
+  return { roomId: hosted.room.id, tick: game.tick, snapshot: snapshotGame(game), nextId: game.nextId };
 }
 
 function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
@@ -410,15 +442,4 @@ function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameR
     rejectionLabel: "Hosted command rejected",
     ...(hosted.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(game, hosted.aiRuntime) } : {}),
   });
-}
-
-function recordHostedReplayFrame(hosted: HostedRoom, source: ReplayCommandSource, frame: CommandFrame) {
-  if (!hosted.debugReplay) return;
-  recordReplayFrame(hosted.debugReplay, { source, frame });
-}
-
-function recordHostedReplayCheckpoint(hosted: HostedRoom, game: Game) {
-  if (!hosted.debugReplay) return;
-  if (!game.match.winner && game.tick % REPLAY_CHECKPOINT_INTERVAL_TICKS !== 0) return;
-  recordReplayCheckpoint(hosted.debugReplay, game);
 }
