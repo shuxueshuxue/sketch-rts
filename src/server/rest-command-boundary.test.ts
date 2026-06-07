@@ -36,6 +36,33 @@ describe("server REST and WebSocket command ingress", () => {
     }
   }, 45_000);
 
+  it("rejects malformed room reset setup payloads through the shared room schema", async () => {
+    const port = await freePort();
+    const server = await startServer(port);
+    try {
+      const room = await postJson(`http://127.0.0.1:${port}/api/rooms`, {
+        id: `malformed-reset-${Date.now()}`,
+        host: { id: "host", name: "Host" },
+        mapId: "bareDuel",
+        humanCount: 1,
+        aiCount: 1,
+      });
+      await postJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/start`, {});
+
+      await expect(
+        postRawJson(`http://127.0.0.1:${port}/api/rooms/${room.id}/reset`, {
+          mapId: "bareDuel",
+          options: { scenario: { addUnits: [{ id: "bad", owner: "neutral", kind: "wildling", x: 1, y: 2, hp: 9999 }] } },
+        }),
+      ).resolves.toEqual({
+        status: 400,
+        body: { error: "Malformed room reset input" },
+      });
+    } finally {
+      await stopServer(server);
+    }
+  }, 45_000);
+
   it("rejects malformed save and debug replay payloads at real REST boundaries", async () => {
     const port = await freePort();
     const server = await startServer(port);

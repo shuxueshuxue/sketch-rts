@@ -7,13 +7,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
 import type { CommandEnvelope } from "../shared/net/types";
+import { isLocalUserProfile, parseContinueSaveRequest, parseGrandStressRoomRequest, parseMapUpdateRequest, parseResetRoomRequest, parseSlotCountsRequest, parseSlotPatch, roomCreateInputFromRequest } from "../shared/room-schema";
 import { parseSaveGameInput } from "../shared/savegame";
-import type { GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "../shared/types";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub } from "./room-net";
@@ -28,7 +28,6 @@ const app = express();
 const server = createServer(app);
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
-const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
 const roomNetHub = new RoomNetHub({ roomHost });
 
@@ -121,69 +120,31 @@ app.get("/api/rooms", (request, response) => {
 });
 
 app.post("/api/rooms", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (!isLocalUserProfile(body.host)) {
-    response.status(400).json({ error: "Malformed host profile" });
-    return;
-  }
-  if (body.mapId !== undefined && !isMapId(body.mapId)) {
-    response.status(400).json({ error: "Unknown map id" });
-    return;
-  }
-  if (body.slotCount !== undefined && (!Number.isInteger(body.slotCount) || Number(body.slotCount) < 2 || Number(body.slotCount) > 30)) {
-    response.status(400).json({ error: "slotCount must be an integer between 2 and 30" });
-    return;
-  }
-  if (body.humanCount !== undefined && (!Number.isInteger(body.humanCount) || Number(body.humanCount) < 1 || Number(body.humanCount) > 30)) {
-    response.status(400).json({ error: "humanCount must be an integer between 1 and 30" });
-    return;
-  }
-  if (body.aiCount !== undefined && (!Number.isInteger(body.aiCount) || Number(body.aiCount) < 0 || Number(body.aiCount) > 29)) {
-    response.status(400).json({ error: "aiCount must be an integer between 0 and 29" });
-    return;
-  }
-  if (body.visibility !== undefined && !isRoomVisibility(body.visibility)) {
-    response.status(400).json({ error: "visibility must be private or public" });
+  let input;
+  try {
+    input = roomCreateInputFromRequest(request.body, `room-${randomUUID()}`);
+  } catch {
+    response.status(400).json({ error: "Malformed room create input" });
     return;
   }
   try {
-    const room = roomHost.createRoom({
-      id: typeof body.id === "string" ? body.id : `room-${randomUUID()}`,
-      host: body.host,
-      ...(typeof body.name === "string" ? { name: body.name } : {}),
-      ...(isMapId(body.mapId) ? { mapId: body.mapId } : {}),
-      ...(typeof body.slotCount === "number" ? { slotCount: body.slotCount } : {}),
-      ...(typeof body.humanCount === "number" ? { humanCount: body.humanCount } : {}),
-      ...(typeof body.aiCount === "number" ? { aiCount: body.aiCount } : {}),
-      ...(isRoomVisibility(body.visibility) ? { visibility: body.visibility } : {}),
-    });
-    response.json(room);
+    response.json(roomHost.createRoom(input));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
 });
 
 app.post("/api/rooms/grand-thirty", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (!isLocalUserProfile(body.host)) {
-    response.status(400).json({ error: "Malformed host profile" });
+  const body = parseGrandStressRoomRequest(request.body);
+  if (!body) {
+    response.status(400).json({ error: "Malformed grand stress room input" });
     return;
   }
   try {
-    const humanCount = body.humanCount === undefined ? undefined : Number(body.humanCount);
-    const aiCount = body.aiCount === undefined ? undefined : Number(body.aiCount);
-    if (humanCount !== undefined && !Number.isInteger(humanCount)) {
-      response.status(400).json({ error: "humanCount must be an integer" });
-      return;
-    }
-    if (aiCount !== undefined && !Number.isInteger(aiCount)) {
-      response.status(400).json({ error: "aiCount must be an integer" });
-      return;
-    }
     response.json(
-      roomHost.createGrandThirtyRoom(typeof body.id === "string" ? body.id : `room-${randomUUID()}`, body.host, {
-        ...(humanCount !== undefined ? { humanCount } : {}),
-        ...(aiCount !== undefined ? { aiCount } : {}),
+      roomHost.createGrandThirtyRoom(body.id ?? `room-${randomUUID()}`, body.host, {
+        ...(body.humanCount !== undefined ? { humanCount: body.humanCount } : {}),
+        ...(body.aiCount !== undefined ? { aiCount: body.aiCount } : {}),
       }),
     );
   } catch (error) {
@@ -252,9 +213,9 @@ app.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
 });
 
 app.post("/api/rooms/:roomId/map", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (!isMapId(body.mapId)) {
-    response.status(400).json({ error: "Unknown map id" });
+  const body = parseMapUpdateRequest(request.body);
+  if (!body) {
+    response.status(400).json({ error: "Malformed room map input" });
     return;
   }
   try {
@@ -265,17 +226,13 @@ app.post("/api/rooms/:roomId/map", (request, response) => {
 });
 
 app.post("/api/rooms/:roomId/slot-counts", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (!Number.isInteger(body.humanCount) || Number(body.humanCount) < 1 || Number(body.humanCount) > 30) {
-    response.status(400).json({ error: "humanCount must be an integer between 1 and 30" });
-    return;
-  }
-  if (!Number.isInteger(body.aiCount) || Number(body.aiCount) < 0 || Number(body.aiCount) > 29) {
-    response.status(400).json({ error: "aiCount must be an integer between 0 and 29" });
+  const body = parseSlotCountsRequest(request.body);
+  if (!body) {
+    response.status(400).json({ error: "Malformed room slot count input" });
     return;
   }
   try {
-    response.json(roomHost.resizeSlots(request.params.roomId, Number(body.humanCount), Number(body.aiCount)));
+    response.json(roomHost.resizeSlots(request.params.roomId, body.humanCount, body.aiCount));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
@@ -306,18 +263,13 @@ app.post("/api/rooms/:roomId/resume", (request, response) => {
 });
 
 app.post("/api/rooms/:roomId/reset", (request, response) => {
-  const body = request.body as { mapId?: unknown; options?: unknown };
-  if (!isMapId(body.mapId)) {
-    response.status(400).json({ error: "Unknown map id" });
-    return;
-  }
-  const options = parseGameSetupOptions(body.options);
-  if (!options) {
-    response.status(400).json({ error: "Malformed game setup options" });
+  const body = parseResetRoomRequest(request.body);
+  if (!body) {
+    response.status(400).json({ error: "Malformed room reset input" });
     return;
   }
   try {
-    response.json(roomHost.resetRoom(request.params.roomId, body.mapId, options));
+    response.json(roomHost.resetRoom(request.params.roomId, body.mapId, body.options));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
@@ -484,13 +436,13 @@ app.get("/api/savegames/:saveId", (request, response) => {
 });
 
 app.post("/api/savegames/:saveId/continue", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (body.roomId !== undefined && typeof body.roomId !== "string") {
+  const body = parseContinueSaveRequest(request.body);
+  if (!body) {
     response.status(400).json({ error: "Malformed room id" });
     return;
   }
   try {
-    response.json(roomHost.continueSave(request.params.saveId, undefined, typeof body.roomId === "string" ? { roomId: body.roomId } : {}));
+    response.json(roomHost.continueSave(request.params.saveId, undefined, body));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
@@ -540,252 +492,10 @@ function broadcastBenchmarkDashboardChange(payload: { eventType: string; filenam
   for (const client of benchmarkDashboardClients) client.write(frame);
 }
 
-function isNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
-}
-
-function isBuildableBuilding(value: unknown) {
-  return typeof value === "string" && (BUILDABLE_BUILDING_KINDS as readonly string[]).includes(value);
-}
-
-function parseGameSetupOptions(value: unknown): GameSetupOptions | undefined {
-  if (value === undefined) return {};
-  if (!value || typeof value !== "object") return undefined;
-  const source = value as Record<string, unknown>;
-  const options: GameSetupOptions = {};
-  if (source.players !== undefined) {
-    if (!isPlayerArray(source.players)) return undefined;
-    options.players = source.players;
-  }
-  if (source.aiPlayers !== undefined) {
-    if (!isPlayerArray(source.aiPlayers)) return undefined;
-    options.aiPlayers = source.aiPlayers;
-  }
-  if (source.aiVersions !== undefined) {
-    if (!isAiVersionMap(source.aiVersions)) return undefined;
-    options.aiVersions = source.aiVersions;
-  }
-  if (source.teams !== undefined) {
-    if (!isTeamMap(source.teams)) return undefined;
-    options.teams = source.teams;
-  }
-  if (source.races !== undefined) {
-    if (!isRaceMap(source.races)) return undefined;
-    options.races = source.races;
-  }
-  if (source.scenario !== undefined) {
-    const scenario = parseScenarioOverride(source.scenario);
-    if (!scenario) return undefined;
-    options.scenario = scenario;
-  }
-  return options;
-}
-
-function parseScenarioOverride(value: unknown): ScenarioOverride | undefined {
-  if (!value || typeof value !== "object") return undefined;
-  const source = value as Record<string, unknown>;
-  const scenario: ScenarioOverride = {};
-  if (source.replaceDefaultUnits !== undefined) {
-    if (typeof source.replaceDefaultUnits !== "boolean") return undefined;
-    scenario.replaceDefaultUnits = source.replaceDefaultUnits;
-  }
-  if (source.replaceDefaultBuildings !== undefined) {
-    if (typeof source.replaceDefaultBuildings !== "boolean") return undefined;
-    scenario.replaceDefaultBuildings = source.replaceDefaultBuildings;
-  }
-  if (source.replaceDefaultResources !== undefined) {
-    if (typeof source.replaceDefaultResources !== "boolean") return undefined;
-    scenario.replaceDefaultResources = source.replaceDefaultResources;
-  }
-  if (source.replaceDefaultMercenaryCamps !== undefined) {
-    if (typeof source.replaceDefaultMercenaryCamps !== "boolean") return undefined;
-    scenario.replaceDefaultMercenaryCamps = source.replaceDefaultMercenaryCamps;
-  }
-  if (source.replaceDefaultLandmarks !== undefined) {
-    if (typeof source.replaceDefaultLandmarks !== "boolean") return undefined;
-    scenario.replaceDefaultLandmarks = source.replaceDefaultLandmarks;
-  }
-  if (source.addResources !== undefined) {
-    if (!Array.isArray(source.addResources) || !source.addResources.every(isResourceSeed)) return undefined;
-    scenario.addResources = source.addResources;
-  }
-  if (source.addMercenaryCamps !== undefined) {
-    if (!Array.isArray(source.addMercenaryCamps) || !source.addMercenaryCamps.every(isMercenaryCampSeed)) return undefined;
-    scenario.addMercenaryCamps = source.addMercenaryCamps;
-  }
-  if (source.addItems !== undefined) {
-    if (!Array.isArray(source.addItems) || !source.addItems.every(isItemSeed)) return undefined;
-    scenario.addItems = source.addItems;
-  }
-  if (source.addUnits !== undefined) {
-    if (!Array.isArray(source.addUnits) || !source.addUnits.every(isUnitSeed)) return undefined;
-    scenario.addUnits = source.addUnits;
-  }
-  if (source.addBuildings !== undefined) {
-    if (!Array.isArray(source.addBuildings) || !source.addBuildings.every(isBuildingSeed)) return undefined;
-    scenario.addBuildings = source.addBuildings;
-  }
-  if (source.addLandmarks !== undefined) {
-    if (!Array.isArray(source.addLandmarks) || !source.addLandmarks.every(isLandmarkSeed)) return undefined;
-    scenario.addLandmarks = source.addLandmarks;
-  }
-  return scenario;
-}
-
-function isPlayerArray(value: unknown): value is PlayerId[] {
-  return Array.isArray(value) && value.every(isPlayerId);
-}
-
-function isPlayerId(value: unknown): value is PlayerId {
-  return typeof value === "string" && /^[a-zA-Z0-9_-]{1,48}$/.test(value);
-}
-
-function isTeamMap(value: unknown): value is Partial<Record<PlayerId, string>> {
-  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, team]) => isPlayerId(owner) && typeof team === "string");
-}
-
-function isRaceMap(value: unknown): value is Partial<Record<PlayerId, RaceId>> {
-  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, race]) => isPlayerId(owner) && typeof race === "string" && (RACE_IDS as readonly string[]).includes(race));
-}
-
-function isAiVersionMap(value: unknown): value is GameSetupOptions["aiVersions"] {
-  return Boolean(value) && typeof value === "object" && Object.entries(value as Record<string, unknown>).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2"));
-}
-
-function isMapId(value: unknown): value is MapId {
-  return typeof value === "string" && MAP_SCENARIOS.some((scenario) => scenario.id === value);
-}
-
-function isRoomVisibility(value: unknown): value is RoomVisibility {
-  return value === "private" || value === "public";
-}
-
-function isLocalUserProfile(value: unknown): value is LocalUserProfile {
-  if (!value || typeof value !== "object") return false;
-  const profile = value as Record<string, unknown>;
-  return typeof profile.id === "string" && profile.id.length > 0 && typeof profile.name === "string" && profile.name.length > 0;
-}
-
-function parseSlotPatch(value: unknown) {
-  if (!value || typeof value !== "object") return undefined;
-  const source = value as Record<string, unknown>;
-  const patch: { controller?: SlotController; team?: string; race?: RaceId; ready?: boolean; name?: string; userId?: string | undefined } = {};
-  if (source.controller !== undefined) {
-    if (source.controller !== "human" && source.controller !== "ai" && source.controller !== "open" && source.controller !== "closed") return undefined;
-    patch.controller = source.controller;
-  }
-  if (source.team !== undefined) {
-    if (typeof source.team !== "string" || source.team.length === 0) return undefined;
-    patch.team = source.team;
-  }
-  if (source.race !== undefined) {
-    if (typeof source.race !== "string" || !(RACE_IDS as readonly string[]).includes(source.race)) return undefined;
-    patch.race = source.race as RaceId;
-  }
-  if (source.ready !== undefined) {
-    if (typeof source.ready !== "boolean") return undefined;
-    patch.ready = source.ready;
-  }
-  if (source.name !== undefined) {
-    if (typeof source.name !== "string" || source.name.length === 0) return undefined;
-    patch.name = source.name;
-  }
-  if ("userId" in source) {
-    if (source.userId !== undefined && typeof source.userId !== "string") return undefined;
-    patch.userId = source.userId;
-  }
-  return patch;
-}
-
 function isTickCount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 20000;
 }
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
-}
-
-function isResourceSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  return typeof seed.id === "string" && seed.kind === "goldMine" && isNumber(seed.x) && isNumber(seed.y) && isPositiveInteger(seed.amount);
-}
-
-function isMercenaryCampSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  return (
-    typeof seed.id === "string" &&
-    isNumber(seed.x) &&
-    isNumber(seed.y) &&
-    isPositiveNumber(seed.radius) &&
-    typeof seed.hireKind === "string" &&
-    (MERCENARY_UNIT_KINDS as readonly string[]).includes(seed.hireKind) &&
-    isPositiveInteger(seed.cost) &&
-    isPositiveInteger(seed.stock) &&
-    isPositiveInteger(seed.cooldown) &&
-    isNonNegativeInteger(seed.cooldownRemaining)
-  );
-}
-
-function isItemSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  return (
-    typeof seed.id === "string" &&
-    isItemKind(seed.kind) &&
-    isNumber(seed.x) &&
-    isNumber(seed.y) &&
-    (seed.carrierId === undefined || typeof seed.carrierId === "string") &&
-    isNonNegativeInteger(seed.cooldownRemaining)
-  );
-}
-
-function isUnitSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  if (!(typeof seed.id === "string" && isOwner(seed.owner) && isUnitKind(seed.kind) && isNumber(seed.x) && isNumber(seed.y))) return false;
-  const kind = seed.kind;
-  const hp = seed.hp;
-  return hp === undefined || (isPositiveNumber(hp) && hp <= UNIT_DEFS[kind].hp);
-}
-
-function isBuildingSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  return typeof seed.id === "string" && isPlayerId(seed.owner) && isBuildableBuilding(seed.kind) && isNumber(seed.x) && isNumber(seed.y) && (seed.complete === undefined || typeof seed.complete === "boolean");
-}
-
-function isLandmarkSeed(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const seed = value as Record<string, unknown>;
-  return typeof seed.id === "string" && isLandmarkKind(seed.kind) && isNumber(seed.x) && isNumber(seed.y) && isPositiveNumber(seed.size) && isNumber(seed.rotation);
-}
-
-function isOwner(value: unknown) {
-  return isPlayerId(value) || value === "neutral";
-}
-
-function isUnitKind(value: unknown): value is UnitKind {
-  return typeof value === "string" && Object.prototype.hasOwnProperty.call(UNIT_DEFS, value);
-}
-
-function isItemKind(value: unknown): value is ItemKind {
-  return typeof value === "string" && (ITEM_KINDS as readonly string[]).includes(value);
-}
-
-function isLandmarkKind(value: unknown) {
-  return value === "grove" || value === "ridge" || value === "ruin" || value === "ditch" || value === "road" || value === "campMark" || value === "mineScar" || value === "bannerStone";
-}
-
-function isPositiveNumber(value: unknown): value is number {
-  return isNumber(value) && value > 0;
-}
-
-function isPositiveInteger(value: unknown) {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-}
-
-function isNonNegativeInteger(value: unknown) {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
 }
