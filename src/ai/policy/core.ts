@@ -1837,6 +1837,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const soldiers = combatUnits(snapshot, owner);
   const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
   const movable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && attackWaveReadyUnit(snapshot, owner, unit, options));
+  const recallable = soldiers.filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || unit.order.type === "attack") && attackWaveReadyUnit(snapshot, owner, unit, options));
 
   if (options.policyMode === "combat") return planCombatAttackWave(snapshot, owner, movable, enemyArmy, options);
 
@@ -1886,12 +1887,14 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     return mainHold.stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: mainHold.stale.map((unit) => unit.id), x: mainHold.rally.x, y: mainHold.rally.y }, options) : undefined;
   }
 
+  const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
+  const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, recallable, options);
+  const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
+  if (committedRecall) return committedRecall;
+
   if (options.version === "v2" && movable.length < minimumWaveSize && enemyArmy.length > 2) return undefined;
 
   if (movable.length === 0) return undefined;
-  const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
-
-  const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, movable, options);
   const focusedOwner = currentCommittedOwner ?? focusedOpponentOwner(snapshot, owner, options);
   const noWorkerLastFight = noWorkerLastArmyTarget(snapshot, owner, soldiers, movable, enemyArmy, options);
   if (noWorkerLastFight) {
@@ -1940,8 +1943,6 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   }
   const localBaseCommit = outnumberedV2 && !currentCommittedOwner && movable.length >= minimumWaveSize ? locallyBeatableOpponentBaseTarget(snapshot, owner, soldiers, enemyArmy, options) : undefined;
   if (localBaseCommit) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: movable.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y }, options);
-  const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, movable, enemyArmy, currentCommittedOwner, options) : undefined;
-  if (committedRecall) return committedRecall;
   if (options.version === "v2" && !currentCommittedOwner && strongerEnemyArmyStopline(snapshot, owner, soldiers, enemyArmy, options)) return undefined;
 
   const armyTarget = options.version === "v2" ? significantOpponentArmyTarget(snapshot, owner, averagePoint(soldiers), soldiers, options) : undefined;
@@ -2078,18 +2079,27 @@ function deadEconomyRetreatClaimCanRejoin(snapshot: GameSnapshot, owner: PlayerI
   return deadEconomyCloseoutReady(snapshot, owner, options, combatUnits(snapshot, owner));
 }
 
-function committedAttackWaveOwner(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], options: PresetAiPolicyOptions): PlayerId | undefined {
-  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2 || movable.length < 5) return undefined;
+function committedAttackWaveOwner(snapshot: GameSnapshot, owner: PlayerId, recallable: Unit[], options: PresetAiPolicyOptions): PlayerId | undefined {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2 || recallable.length < 5) return undefined;
   const counts = new Map<PlayerId, number>();
-  for (const unit of movable) {
-    if (unit.order.type !== "attackMove") continue;
-    const orderPoint = { x: unit.order.x, y: unit.order.y };
-    const target = nearestEntity(enemyBuildingsNear(snapshot, owner, orderPoint, 520, options.teams), orderPoint);
+  for (const unit of recallable) {
+    const target = committedAttackWaveOrderTarget(snapshot, owner, unit, options);
     if (target) counts.set(target.owner, (counts.get(target.owner) ?? 0) + 1);
   }
   const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-  if (!best || best[1] < Math.ceil(movable.length * 0.55)) return undefined;
+  if (!best || best[1] < Math.ceil(recallable.length * 0.55)) return undefined;
   return buildings(snapshot, best[0]).length > 0 && isOpponentOwner(snapshot, owner, best[0], options) ? best[0] : undefined;
+}
+
+function committedAttackWaveOrderTarget(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions): Building | undefined {
+  const order = unit.order;
+  if (order.type === "attackMove") {
+    const orderPoint = { x: order.x, y: order.y };
+    return nearestEntity(enemyBuildingsNear(snapshot, owner, orderPoint, 520, options.teams), orderPoint);
+  }
+  if (order.type !== "attack") return undefined;
+  const target = allBuildings(snapshot).find((building) => building.id === order.targetId);
+  return target && isOpponentOwner(snapshot, owner, target.owner, options) ? target : undefined;
 }
 
 function focusedOpponentOwner(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): PlayerId | undefined {
