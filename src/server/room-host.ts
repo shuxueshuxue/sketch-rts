@@ -37,6 +37,13 @@ export type HostedRoomFrameEvent = {
 
 export type HostedRoomFrameListener = (event: HostedRoomFrameEvent) => void;
 
+export type HostedRoomLifecycleEvent = {
+  room: RoomState;
+  checkpoint?: CheckpointFrame;
+};
+
+export type HostedRoomLifecycleListener = (event: HostedRoomLifecycleEvent) => void;
+
 export type RoomResetResult = {
   room: RoomState;
   snapshot: GameSnapshot;
@@ -50,6 +57,7 @@ type HostedRoom = {
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
   debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord };
   frameListeners?: Set<HostedRoomFrameListener>;
+  lifecycleListeners?: Set<HostedRoomLifecycleListener>;
 };
 
 export type RoomHostOptions = {
@@ -125,6 +133,13 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return () => hosted.frameListeners?.delete(listener);
     },
 
+    observeRoomLifecycle(roomId: string, listener: HostedRoomLifecycleListener): () => void {
+      const hosted = getHosted(roomId);
+      hosted.lifecycleListeners ??= new Set();
+      hosted.lifecycleListeners.add(listener);
+      return () => hosted.lifecycleListeners?.delete(listener);
+    },
+
     setFrameHistoryLimit(roomId: string, frameHistoryLimit: number): void {
       getHosted(roomId).history.setFrameHistoryLimit(frameHistoryLimit);
     },
@@ -132,12 +147,14 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     pauseRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = { ...hosted.room, autoTick: false };
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     resumeRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = { ...hosted.room, autoTick: true };
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
@@ -145,6 +162,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const hosted = getHosted(roomId);
       if (hosted.room.hostUserId !== userId) throw new Error("Only the room host can close this room");
       const closed: RoomState = { ...hosted.room, status: "closed" };
+      notifyHostedRoomLifecycle(hosted, { room: closed });
       rooms.delete(roomId);
       return closed;
     },
@@ -162,30 +180,35 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     joinRoom(roomId: string, user: LocalUserProfile): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = joinFirstOpenSlot(hosted.room, user);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     leaveRoom(roomId: string, userId: string): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = leaveUserSlot(hosted.room, userId);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     updateSlot(roomId: string, slotId: string, patch: SlotPatch): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = updateRoomSlot(hosted.room, slotId, patch);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     updateMap(roomId: string, mapId: RoomState["mapId"]): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = updateRoomMap(hosted.room, mapId);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
     resizeSlots(roomId: string, humanCount: number, aiCount: number): RoomState {
       const hosted = getHosted(roomId);
       hosted.room = resizeRoomSlots(hosted.room, humanCount, aiCount);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },
 
@@ -198,6 +221,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.history = createRoomHistory();
       delete hosted.debugReplay;
       hosted.room = { ...hosted.room, status: "inMatch" };
+      const checkpoint = createHostedCheckpoint(hosted, hosted.game);
+      hosted.history.recordCheckpoint(checkpoint);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room, checkpoint });
       return hosted.room;
     },
 
@@ -219,6 +245,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       delete hosted.debugReplay;
       const { result: _result, ...roomWithoutResult } = hosted.room;
       hosted.room = { ...roomWithoutResult, mapId, status: "inMatch" };
+      const checkpoint = createHostedCheckpoint(hosted, hosted.game);
+      hosted.history.recordCheckpoint(checkpoint);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room, checkpoint });
       return { room: hosted.room, snapshot: snapshotGame(hosted.game) };
     },
 
@@ -433,6 +462,10 @@ function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
 
 function notifyHostedFrameListeners(hosted: HostedRoom, event: HostedRoomFrameEvent) {
   for (const listener of [...(hosted.frameListeners ?? [])]) listener(event);
+}
+
+function notifyHostedRoomLifecycle(hosted: HostedRoom, event: HostedRoomLifecycleEvent) {
+  for (const listener of [...(hosted.lifecycleListeners ?? [])]) listener(event);
 }
 
 function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameRuntime<AiRuntimeFramePlannerState> {
