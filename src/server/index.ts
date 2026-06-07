@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { expressMountPath, publicBasePathFromEnv } from "../shared/deployment-base";
 import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
@@ -23,24 +24,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const port = Number(process.env.PORT ?? 5173);
 const host = bindHostFromEnv(process.env);
+const publicBasePath = publicBasePathFromEnv(process.env);
+const publicMountPath = expressMountPath(publicBasePath);
 const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
+const router = express.Router();
 const server = createServer(app);
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
 const roomNetHub = new RoomNetHub({ roomHost });
 
-app.use(express.json({ limit: "64kb" }));
+router.use(express.json({ limit: "64kb" }));
 
-app.get("/favicon.ico", (_request, response) => {
+router.get("/favicon.ico", (_request, response) => {
   response
     .type("image/svg+xml")
     .send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#f5f6f7"/><path d="M6 22h20M8 17h16M10 12h12" stroke="#202429" stroke-width="3" stroke-linecap="round"/><path d="M8 25 24 7" stroke="#0969da" stroke-width="3" stroke-linecap="round"/></svg>');
 });
 
 server.on("upgrade", (request, socket, head) => {
-  const route = classifyWebSocketUpgrade(request.url);
+  const route = classifyWebSocketUpgrade(request.url, publicBasePath);
   if (route.type === "room") {
     roomWss.handleUpgrade(request, socket, head, (ws) => {
       roomWss.emit("connection", ws, request, route.roomId);
@@ -65,7 +69,7 @@ roomWss.on("connection", (ws: WebSocket, _request: IncomingMessage, roomId: stri
   });
 });
 
-app.get("/api/catalog", (_request, response) => {
+router.get("/api/catalog", (_request, response) => {
   response.json({
     units: Object.keys(UNIT_DEFS),
     buildings: Object.keys(BUILDING_DEFS),
@@ -74,7 +78,7 @@ app.get("/api/catalog", (_request, response) => {
   });
 });
 
-app.get("/api/benchmark-dashboard/runs", async (_request, response) => {
+router.get("/api/benchmark-dashboard/runs", async (_request, response) => {
   try {
     response.json({ runs: await listBenchmarkDashboardRuns() });
   } catch (error) {
@@ -82,7 +86,7 @@ app.get("/api/benchmark-dashboard/runs", async (_request, response) => {
   }
 });
 
-app.get("/api/benchmark-dashboard/events", (request, response) => {
+router.get("/api/benchmark-dashboard/events", (request, response) => {
   response.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -95,7 +99,7 @@ app.get("/api/benchmark-dashboard/events", (request, response) => {
   });
 });
 
-app.get("/api/benchmark-dashboard/runs/:runId", async (request, response) => {
+router.get("/api/benchmark-dashboard/runs/:runId", async (request, response) => {
   try {
     response.json(await readBenchmarkDashboardRun(request.params.runId));
   } catch (error) {
@@ -103,7 +107,7 @@ app.get("/api/benchmark-dashboard/runs/:runId", async (request, response) => {
   }
 });
 
-app.post("/api/benchmark-dashboard/runs", async (request, response) => {
+router.post("/api/benchmark-dashboard/runs", async (request, response) => {
   const body = request.body as Record<string, unknown>;
   const seed = typeof body.seed === "string" && body.seed.length > 0 ? body.seed : new Date().toISOString();
   const mapCount = Number.isInteger(body.mapCount) && Number(body.mapCount) > 0 ? Number(body.mapCount) : 10;
@@ -114,12 +118,12 @@ app.post("/api/benchmark-dashboard/runs", async (request, response) => {
   }
 });
 
-app.get("/api/rooms", (request, response) => {
+router.get("/api/rooms", (request, response) => {
   const viewerUserId = typeof request.query.userId === "string" ? request.query.userId : undefined;
   response.json({ rooms: roomHost.listRooms(viewerUserId) });
 });
 
-app.post("/api/rooms", (request, response) => {
+router.post("/api/rooms", (request, response) => {
   let input;
   try {
     input = roomCreateInputFromRequest(request.body, `room-${randomUUID()}`);
@@ -134,7 +138,7 @@ app.post("/api/rooms", (request, response) => {
   }
 });
 
-app.post("/api/rooms/grand-thirty", (request, response) => {
+router.post("/api/rooms/grand-thirty", (request, response) => {
   const body = parseGrandStressRoomRequest(request.body);
   if (!body) {
     response.status(400).json({ error: "Malformed grand stress room input" });
@@ -152,7 +156,7 @@ app.post("/api/rooms/grand-thirty", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId", (request, response) => {
+router.get("/api/rooms/:roomId", (request, response) => {
   try {
     response.json(roomHost.getRoom(request.params.roomId));
   } catch (error) {
@@ -160,7 +164,7 @@ app.get("/api/rooms/:roomId", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/join", (request, response) => {
+router.post("/api/rooms/:roomId/join", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!isLocalUserProfile(body.user)) {
     response.status(400).json({ error: "Malformed user profile" });
@@ -173,7 +177,7 @@ app.post("/api/rooms/:roomId/join", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/leave", (request, response) => {
+router.post("/api/rooms/:roomId/leave", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (typeof body.userId !== "string") {
     response.status(400).json({ error: "Malformed user id" });
@@ -186,7 +190,7 @@ app.post("/api/rooms/:roomId/leave", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/close", (request, response) => {
+router.post("/api/rooms/:roomId/close", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (typeof body.userId !== "string") {
     response.status(400).json({ error: "Malformed user id" });
@@ -199,7 +203,7 @@ app.post("/api/rooms/:roomId/close", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
+router.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
   const patch = parseSlotPatch(request.body);
   if (!patch) {
     response.status(400).json({ error: "Malformed slot patch" });
@@ -212,7 +216,7 @@ app.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/map", (request, response) => {
+router.post("/api/rooms/:roomId/map", (request, response) => {
   const body = parseMapUpdateRequest(request.body);
   if (!body) {
     response.status(400).json({ error: "Malformed room map input" });
@@ -225,7 +229,7 @@ app.post("/api/rooms/:roomId/map", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/slot-counts", (request, response) => {
+router.post("/api/rooms/:roomId/slot-counts", (request, response) => {
   const body = parseSlotCountsRequest(request.body);
   if (!body) {
     response.status(400).json({ error: "Malformed room slot count input" });
@@ -238,7 +242,7 @@ app.post("/api/rooms/:roomId/slot-counts", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/start", (request, response) => {
+router.post("/api/rooms/:roomId/start", (request, response) => {
   try {
     response.json(roomHost.startRoom(request.params.roomId));
   } catch (error) {
@@ -246,7 +250,7 @@ app.post("/api/rooms/:roomId/start", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/pause", (request, response) => {
+router.post("/api/rooms/:roomId/pause", (request, response) => {
   try {
     response.json(roomHost.pauseRoom(request.params.roomId));
   } catch (error) {
@@ -254,7 +258,7 @@ app.post("/api/rooms/:roomId/pause", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/resume", (request, response) => {
+router.post("/api/rooms/:roomId/resume", (request, response) => {
   try {
     response.json(roomHost.resumeRoom(request.params.roomId));
   } catch (error) {
@@ -262,7 +266,7 @@ app.post("/api/rooms/:roomId/resume", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/reset", (request, response) => {
+router.post("/api/rooms/:roomId/reset", (request, response) => {
   const body = parseResetRoomRequest(request.body);
   if (!body) {
     response.status(400).json({ error: "Malformed room reset input" });
@@ -275,7 +279,7 @@ app.post("/api/rooms/:roomId/reset", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId/snapshot", (request, response) => {
+router.get("/api/rooms/:roomId/snapshot", (request, response) => {
   try {
     response.json(roomHost.snapshot(request.params.roomId));
   } catch (error) {
@@ -283,7 +287,7 @@ app.get("/api/rooms/:roomId/snapshot", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId/sync-events", (request, response) => {
+router.get("/api/rooms/:roomId/sync-events", (request, response) => {
   try {
     response.json({ events: roomNetHub.syncEventsForRoom(request.params.roomId), summary: roomNetHub.syncSummaryForRoom(request.params.roomId) });
   } catch (error) {
@@ -291,7 +295,7 @@ app.get("/api/rooms/:roomId/sync-events", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/command", (request, response) => {
+router.post("/api/rooms/:roomId/command", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!isCommandEnvelope(body)) {
     response.status(400).json({ error: "Malformed room command" });
@@ -304,7 +308,7 @@ app.post("/api/rooms/:roomId/command", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/commands", (request, response) => {
+router.post("/api/rooms/:roomId/commands", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!Array.isArray(body.commands) || !body.commands.every(isCommandEnvelope)) {
     response.status(400).json({ error: "Malformed room command batch" });
@@ -317,7 +321,7 @@ app.post("/api/rooms/:roomId/commands", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/tick", (request, response) => {
+router.post("/api/rooms/:roomId/tick", (request, response) => {
   const requestedTicks = (request.body as { ticks?: unknown }).ticks;
   if (!isTickCount(requestedTicks)) {
     response.status(400).json({ error: "ticks must be an integer between 1 and 20000" });
@@ -331,7 +335,7 @@ app.post("/api/rooms/:roomId/tick", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/command-tick", (request, response) => {
+router.post("/api/rooms/:roomId/command-tick", (request, response) => {
   const body = request.body as Record<string, unknown>;
   if (!Array.isArray(body.commands) || !body.commands.every(isCommandEnvelope) || !isTickCount(body.ticks)) {
     response.status(400).json({ error: "Malformed room command-tick batch" });
@@ -345,7 +349,7 @@ app.post("/api/rooms/:roomId/command-tick", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId/result", (request, response) => {
+router.get("/api/rooms/:roomId/result", (request, response) => {
   try {
     const room = roomHost.getRoom(request.params.roomId);
     if (room.status !== "ended" || !room.result) {
@@ -358,7 +362,7 @@ app.get("/api/rooms/:roomId/result", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/save", (request, response) => {
+router.post("/api/rooms/:roomId/save", (request, response) => {
   const input = parseSaveGameInput(request.body);
   if (!input) {
     response.status(400).json({ error: "Malformed savegame input" });
@@ -371,7 +375,7 @@ app.post("/api/rooms/:roomId/save", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/debug-replay", (request, response) => {
+router.post("/api/rooms/:roomId/debug-replay", (request, response) => {
   const input = parseSaveGameInput(request.body);
   if (!input) {
     response.status(400).json({ error: "Malformed debug replay input" });
@@ -384,7 +388,7 @@ app.post("/api/rooms/:roomId/debug-replay", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId/debug-replay", (request, response) => {
+router.get("/api/rooms/:roomId/debug-replay", (request, response) => {
   try {
     response.json(roomHost.readDebugReplay(request.params.roomId));
   } catch (error) {
@@ -392,7 +396,7 @@ app.get("/api/rooms/:roomId/debug-replay", (request, response) => {
   }
 });
 
-app.get("/api/rooms/:roomId/debug-replay/ticks/:tick", (request, response) => {
+router.get("/api/rooms/:roomId/debug-replay/ticks/:tick", (request, response) => {
   const tick = Number(request.params.tick);
   if (!Number.isInteger(tick) || tick < 0) {
     response.status(400).json({ error: "tick must be a non-negative integer" });
@@ -405,7 +409,7 @@ app.get("/api/rooms/:roomId/debug-replay/ticks/:tick", (request, response) => {
   }
 });
 
-app.post("/api/rooms/:roomId/debug-replay/ticks/:tick/save", (request, response) => {
+router.post("/api/rooms/:roomId/debug-replay/ticks/:tick/save", (request, response) => {
   const tick = Number(request.params.tick);
   const input = parseSaveGameInput(request.body);
   if (!Number.isInteger(tick) || tick < 0) {
@@ -423,11 +427,11 @@ app.post("/api/rooms/:roomId/debug-replay/ticks/:tick/save", (request, response)
   }
 });
 
-app.get("/api/savegames", (_request, response) => {
+router.get("/api/savegames", (_request, response) => {
   response.json({ saves: roomHost.listSaves() });
 });
 
-app.get("/api/savegames/:saveId", (request, response) => {
+router.get("/api/savegames/:saveId", (request, response) => {
   try {
     response.json(roomHost.readSave(request.params.saveId));
   } catch (error) {
@@ -435,7 +439,7 @@ app.get("/api/savegames/:saveId", (request, response) => {
   }
 });
 
-app.post("/api/savegames/:saveId/continue", (request, response) => {
+router.post("/api/savegames/:saveId/continue", (request, response) => {
   const body = parseContinueSaveRequest(request.body);
   if (!body) {
     response.status(400).json({ error: "Malformed room id" });
@@ -449,7 +453,7 @@ app.post("/api/savegames/:saveId/continue", (request, response) => {
 });
 
 // @@@api-fail-loud-boundary - Register real /api routes above this line; unknown API paths must fail as JSON before the SPA middleware can serve index.html.
-app.use("/api", (_request, response) => {
+router.use("/api", (_request, response) => {
   response.status(404).json({ error: "Unknown API route" });
 });
 
@@ -459,8 +463,8 @@ setInterval(() => {
 }, 50);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(root, "dist")));
-  app.get("*", (_request, response) => {
+  router.use(express.static(path.join(root, "dist")));
+  router.get("*", (_request, response) => {
     response.sendFile(path.join(root, "dist/index.html"));
   });
 } else {
@@ -469,13 +473,15 @@ if (process.env.NODE_ENV === "production") {
     server: { middlewareMode: true, hmr: { port: viteHmrPort(port) } },
     appType: "spa",
   });
-  app.use(vite.middlewares);
+  router.use(vite.middlewares);
 }
+
+app.use(publicMountPath, router);
 
 await watchBenchmarkDashboardRuns();
 
 server.listen(port, host, () => {
-  console.log(`Sketch RTS listening on ${publicListenUrl(host, port)}`);
+  console.log(`Sketch RTS listening on ${publicListenUrl(host, port)}${publicBasePath === "/" ? "" : publicBasePath}`);
 });
 
 async function watchBenchmarkDashboardRuns() {

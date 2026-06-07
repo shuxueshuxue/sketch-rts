@@ -1,6 +1,7 @@
 import { createGame } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import { prepareChatPayload } from "../../shared/chat";
+import { joinPublicPath, normalizePublicBasePath } from "../../shared/deployment-base";
 import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
 import { liveRoomToGameSetup } from "../../shared/room-lifecycle";
 import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
@@ -16,6 +17,7 @@ export type RoomTransport = NetTransport & {
 };
 
 export type ServerDeploymentRuntimeOptions = {
+  publicBasePath?: string;
   fetchJson?: <T>(path: string, body?: unknown) => Promise<T>;
   createRoomTransport?: (roomId: string) => RoomTransport;
   onRuntimeError?: (message: string) => void;
@@ -26,11 +28,13 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
   private readonly onRuntimeError: ((message: string) => void) | undefined;
+  private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
+    this.publicBasePath = normalizePublicBasePath(options.publicBasePath ?? import.meta.env.BASE_URL);
     this.fetchJson = options.fetchJson ?? requestJson;
-    this.createRoomTransport = options.createRoomTransport ?? createDefaultRoomTransport;
+    this.createRoomTransport = options.createRoomTransport ?? ((roomId) => createDefaultRoomTransport(roomId, this.publicBasePath));
     this.onRuntimeError = options.onRuntimeError;
   }
 
@@ -40,45 +44,45 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
 
   async listRooms(viewerUserId?: string): Promise<RoomState[]> {
     const query = viewerUserId ? `?userId=${encodeURIComponent(viewerUserId)}` : "";
-    const result = await this.fetchJson<{ rooms: RoomState[] }>(`/api/rooms${query}`);
+    const result = await this.fetchJson<{ rooms: RoomState[] }>(this.path(`/api/rooms${query}`));
     return result.rooms;
   }
 
   async createRoom(input: CreateRoomInput): Promise<RoomState> {
-    return this.fetchJson<RoomState>("/api/rooms", input);
+    return this.fetchJson<RoomState>(this.path("/api/rooms"), input);
   }
 
   async getRoom(roomId: string): Promise<RoomState> {
-    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}`);
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}`));
   }
 
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
     const existingRoom = await this.getRoom(roomId);
     const ownedSlot = slotForUser(existingRoom, user.id);
-    const room = existingRoom.status === "inMatch" && !ownedSlot ? existingRoom : await this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/join`, { user });
+    const room = existingRoom.status === "inMatch" && !ownedSlot ? existingRoom : await this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/join`), { user });
     const joinedSlot = slotForUser(room, user.id);
     const spectating = room.status === "inMatch" && !joinedSlot;
     return { room, spectating, playerId: joinedSlot?.playerId ?? (spectating ? `spectator-${user.id}` : "player") };
   }
 
   async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
-    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/map`, { mapId });
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/map`), { mapId });
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
-    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/slots/${encodeURIComponent(slotId)}`, patch);
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slots/${encodeURIComponent(slotId)}`), patch);
   }
 
   async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
-    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`, { humanCount, aiCount });
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount });
   }
 
   async closeRoom(roomId: string, userId: string): Promise<RoomState> {
-    return this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/close`, { userId });
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/close`), { userId });
   }
 
   async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
-    const room = await this.fetchJson<RoomState>(`/api/rooms/${encodeURIComponent(roomId)}/start`, {});
+    const room = await this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/start`), {});
     const playerId = slotForUser(room, user.id)?.playerId ?? "player";
     return this.connectRoom(room, playerId, false, onRoom);
   }
@@ -119,10 +123,19 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   close(): void {
     this.emptyAdapter.close();
   }
+
+  private path(pathname: string): string {
+    return joinPublicPath(this.publicBasePath, pathname);
+  }
 }
 
-function createDefaultRoomTransport(roomId: string): RoomTransport {
-  return WebSocketTransport.connect(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/rooms/${encodeURIComponent(roomId)}`);
+function createDefaultRoomTransport(roomId: string, publicBasePath: string): RoomTransport {
+  return WebSocketTransport.connect(createRoomWebSocketUrl(publicBasePath, roomId, location));
+}
+
+export function createRoomWebSocketUrl(publicBasePath: string, roomId: string, loc: Pick<Location, "protocol" | "host">): string {
+  const protocol = loc.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${loc.host}${joinPublicPath(publicBasePath, `/ws/rooms/${encodeURIComponent(roomId)}`)}`;
 }
 
 async function requestJson<T>(path: string, body?: unknown): Promise<T> {

@@ -1,6 +1,7 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import { browserLanguages, detectLocale, type Locale } from "../client/i18n";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
+import { joinPublicPath } from "../shared/deployment-base";
 import { matchWarnings } from "./warnings";
 import { campRoleSummary, dashboardTags, runListMeta, runMatchesTag, runTags } from "./view-model";
 import "./styles.css";
@@ -155,11 +156,11 @@ async function loadDashboard(options: { showLoading?: boolean; preserveSelection
     render();
   }
   try {
-    const { runs } = await requestJson<{ runs: BenchmarkDashboardRunSummary[] }>("/api/benchmark-dashboard/runs");
+    const { runs } = await requestJson<{ runs: BenchmarkDashboardRunSummary[] }>(publicPath("/api/benchmark-dashboard/runs"));
     state.runs = runs;
     const visibleRuns = filteredRuns();
     const selected = (selectedId ? visibleRuns.find((run) => run.id === selectedId) : undefined) ?? visibleRuns[0];
-    state.selectedRun = selected ? await requestJson<BenchmarkDashboardRun>(`/api/benchmark-dashboard/runs/${encodeURIComponent(selected.id)}`) : null;
+    state.selectedRun = selected ? await requestJson<BenchmarkDashboardRun>(publicPath(`/api/benchmark-dashboard/runs/${encodeURIComponent(selected.id)}`)) : null;
     state.error = null;
   } catch (error) {
     state.error = errorMessage(error);
@@ -174,7 +175,7 @@ async function selectRun(id: string) {
   state.error = null;
   render();
   try {
-    state.selectedRun = await requestJson<BenchmarkDashboardRun>(`/api/benchmark-dashboard/runs/${encodeURIComponent(id)}`);
+    state.selectedRun = await requestJson<BenchmarkDashboardRun>(publicPath(`/api/benchmark-dashboard/runs/${encodeURIComponent(id)}`));
   } catch (error) {
     state.error = errorMessage(error);
   } finally {
@@ -234,7 +235,7 @@ function tagButton(tag: string, label: string, selectedTag: string) {
 }
 
 function connectDashboardEvents() {
-  const events = new EventSource("/api/benchmark-dashboard/events");
+  const events = new EventSource(publicPath("/api/benchmark-dashboard/events"));
   events.addEventListener("benchmark-dashboard-change", () => {
     void loadDashboard({ showLoading: false, preserveSelection: false });
   });
@@ -402,6 +403,10 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
   if (!response.ok) throw new Error(await response.text());
   return (await response.json()) as T;
+}
+
+function publicPath(pathname: string) {
+  return joinPublicPath(import.meta.env.BASE_URL, pathname);
 }
 
 function second(value: number | null) {
