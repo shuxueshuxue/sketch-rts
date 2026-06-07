@@ -2461,6 +2461,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "archer", 890, 740, { id: "raid-b" })
       .unit("v2", "lancer", 920, 770, { id: "raid-c" })
       .unit("v2", "footman", 950, 800, { id: "reserve-d" })
+      .unit("v2", "archer", 980, 830, { id: "reserve-e" })
+      .unit("v2", "lancer", 1010, 860, { id: "reserve-f" })
       .townHall("v1a", 3400, 3300)
       .worker("v1a", 3360, 3300, { id: "far-worker" })
       .worker("v1a", 3380, 3340)
@@ -2473,6 +2475,37 @@ describe("SDK preset AI policy", () => {
 
     expect(entry).toMatchObject({ scriptId: "workerPressure", command: { type: "attack", targetId: "far-worker" } });
     expect(entry?.command.type === "attack" ? entry.command.unitIds : []).toHaveLength(3);
+  });
+
+  it("v2 does not split a seven-unit two-mine squad into distant worker pressure", () => {
+    const scene = sketchScene("v2-no-thin-two-mine-worker-pressure-split")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .townHall("v2", 900, 500)
+      .goldMine("v2-main", 420, 520, 3000)
+      .goldMine("v2-natural", 900, 520, 3000)
+      .unit("v2", "footman", 760, 620)
+      .unit("v2", "archer", 790, 650)
+      .unit("v2", "lancer", 820, 680)
+      .unit("v2", "footman", 860, 710)
+      .unit("v2", "archer", 890, 740)
+      .unit("v2", "lancer", 920, 770)
+      .unit("v2", "footman", 950, 800)
+      .townHall("v1a", 3400, 3300)
+      .worker("v1a", 3360, 3300, { id: "far-worker" })
+      .worker("v1a", 3380, 3340)
+      .townHall("v1b", 3400, 3800)
+      .worker("v1b", 3360, 3800)
+      .build();
+    const game = scene.createGame();
+
+    const entry = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.workerPressure], { version: "v2", teams: game.teams })[0];
+
+    expect(entry).toBeUndefined();
   });
 
   it("v2 does not send worker pressure through the other opponent's route army", () => {
@@ -8849,6 +8882,9 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "archer", 850, 610)
       .unit("v2", "footman", 880, 640)
       .unit("v2", "lancer", 910, 670)
+      .unit("v2", "archer", 940, 700)
+      .unit("v2", "footman", 970, 730)
+      .unit("v2", "lancer", 1000, 760)
       .townHall("v1a", 3300, 3300)
       .worker("v1a", 3000, 3180, { id: "nearer-cross-owner-worker" })
       .unit("v1a", "footman", 3160, 3300)
