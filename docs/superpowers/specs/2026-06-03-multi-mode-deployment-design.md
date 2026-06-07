@@ -184,3 +184,25 @@ Notes:
 - Two AI perf tests in `src/shared/sim.test.ts` now use the same CPU-time measurement pattern as the rest of that file instead of wall-clock time, so parallel worker scheduling does not masquerade as sim cost.
 - The benchmark dashboard store test now uses the same explicit 15s timeout budget as the adjacent real-benchmark store test, avoiding a default 5s timeout on a deliberately heavy integration path.
 - Static Vite builds now exclude the server-only benchmark dashboard entrypoint; default/server builds still include it.
+
+## Room Setup Schema Checkpoint - 2026-06-07
+
+Issue #81 closed the remaining room setup validation double-chain. Runtime payload validity for room creation, map changes, slot edits, slot-count changes, room reset setup options, save continuation room ids, and grand stress room creation is owned by `src/shared/room-schema.ts`.
+
+Room slot count constraints are factored below the schema into `src/shared/room-slot-counts.ts`. The schema and the shared room model both call that primitive, so numeric slot ranges and total-count rules are not reimplemented separately in server, static, SDK, or room helper code.
+
+The deployment-specific surfaces keep only transport formatting:
+
+- server REST routes parse request bodies through the shared schema before calling `room-host`;
+- static deployment parses the same create/update inputs before calling shared room helpers;
+- SDK room request types are exported from the same shared schema module instead of redeclared in the SDK client.
+
+Map id validity is tied to the shared map id catalog, with a regression test proving the schema map ids match the visible room setup scenario list. Scenario override validation also lives in the shared schema, so room reset cannot validate unit/building/item/resource seeds through a server-only branch.
+
+Automated evidence on branch `codex/issue-81-room-schema`:
+
+- `npm test -- --run src/shared/sim.test.ts` (97 tests)
+- `npm test -- --run --exclude src/shared/sim.test.ts` (114 files / 838 tests)
+- `npm run build`
+
+The standard full-suite command was also attempted twice. Its only failures were existing CPU-budget assertions inside `src/shared/sim.test.ts` when that file ran co-scheduled with the rest of the suite; the same file passed when run alone.
