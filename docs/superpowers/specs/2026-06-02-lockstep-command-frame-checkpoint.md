@@ -34,8 +34,9 @@ The room WebSocket path is now wired into the running server:
 - Bare `/ws` and the removed global session socket are rejected by the server upgrade classifier.
 - `src/server/room-net.ts` accepts typed room messages, sends `hello` and `checkpoint`, records checksums, accepts delayed client commands, broadcasts authoritative frames, and advances the room through `tickRoomFrame`.
 - `src/server/room-net.ts` asks `room-host` for retained authoritative checkpoints and frames so a late observer can request an older checkpoint and replay the frames after it.
+- Live room structural changes are emitted by `room-host` lifecycle events. `src/server/room-net.ts` subscribes once per connected room and broadcasts room updates from that source. Replacement checkpoints from start/reset begin a new lockstep epoch: delayed commands, authoritative checksum history, and desync suppression keys from the previous epoch are discarded before the checkpoint is sent to clients.
 - `src/server/room-host.ts` exposes `tickRoomFrame` and `checkpointRoom`; connected lockstep rooms can be excluded from the ordinary active-room ticker so they are not double-stepped.
-- `src/client/net/lockstep-client.ts` restores checkpoint snapshots into its existing engine, discards buffered frames older than the restored tick, and still advances simulation only from server frames.
+- `src/client/net/lockstep-client.ts` restores checkpoint snapshots into its existing engine and still advances simulation only from server frames. Checkpoint restore is an epoch boundary on the client: `LockstepClient` clears all buffered frames before consuming post-checkpoint frames, so future frames from a previous room epoch cannot apply after reset/continue recovery.
 - `src/client/main.ts` starts room matches through `LockstepClient`; room commands no longer call the HTTP room command endpoint, and room gameplay no longer polls HTTP snapshots.
 - Public in-match rooms now stay visible in the room browser as spectator entries; spectators connect through room WebSocket without claiming a player slot or POSTing `/join`.
 
