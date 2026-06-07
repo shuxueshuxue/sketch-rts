@@ -27,6 +27,8 @@
     "test:sdk-effect-proof": "tsx scripts/sdk-effect-proof.ts",
     "audit:crash-inventory": "tsx scripts/crash-inventory.ts",
     "build": "tsc --noEmit && vite build",
+    "build:server-bundle": "tsx scripts/build-server-bundle.ts",
+    "build:production": "npm run build && npm run build:server-bundle",
     "build:server": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=server vite build",
     "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build"
   },
@@ -40,6 +42,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.2",
     "@types/ws": "^8.5.13",
+    "esbuild": "^0.28.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

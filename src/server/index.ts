@@ -4,9 +4,7 @@ import { randomUUID } from "node:crypto";
 import { watch } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
-import { createServer as createViteServer } from "vite";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { expressMountPath, publicBasePathFromEnv } from "../shared/deployment-base";
 import { MAP_SCENARIOS } from "../shared/map";
@@ -20,8 +18,7 @@ import { createRoomHost } from "./room-host";
 import { RoomNetHub } from "./room-net";
 import { classifyWebSocketUpgrade } from "./ws-routes";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, "../..");
+const root = process.cwd();
 const port = Number(process.env.PORT ?? 5173);
 const host = bindHostFromEnv(process.env);
 const publicBasePath = publicBasePathFromEnv(process.env);
@@ -468,6 +465,7 @@ if (process.env.NODE_ENV === "production") {
     response.sendFile(path.join(root, "dist/index.html"));
   });
 } else {
+  const { createServer: createViteServer } = await import("vite");
   const vite = await createViteServer({
     root,
     server: { middlewareMode: true, hmr: { port: viteHmrPort(port) } },
