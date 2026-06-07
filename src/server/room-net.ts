@@ -81,6 +81,10 @@ export class RoomNetHub {
     return ticked;
   }
 
+  transportOwnedRoomIds(): Set<string> {
+    return new Set(this.rooms.keys());
+  }
+
   checksumsForTick(roomId: string, tick: number): Record<PlayerId, string> {
     return this.stateFor(roomId).coordinator.checksumsForTick(tick);
   }

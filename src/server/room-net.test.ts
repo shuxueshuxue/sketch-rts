@@ -173,6 +173,22 @@ describe("room net hub", () => {
     expect(staleSocket.sendAttempts).toBe(1);
   });
 
+  it("keeps disconnected lockstep rooms transport-owned so the global auto ticker cannot run them in the background", () => {
+    const roomHost = createRoomHost();
+    const room = roomHost.createRoom({ id: "room-disconnected-lockstep", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+
+    hub.connect(room.id, socket);
+    socket.close();
+    hub.tickConnectedRooms();
+    roomHost.tickActiveRooms(20, { excludeRoomIds: hub.transportOwnedRoomIds() });
+
+    expect(hub.transportOwnedRoomIds()).toEqual(new Set([room.id]));
+    expect(roomHost.snapshot(room.id).tick).toBe(0);
+  });
+
   it("records checksum messages through the coordinator and reports malformed client messages", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-checksum", host: hostUser, mapId: "bareDuel" });
@@ -584,6 +600,7 @@ describe("room net hub", () => {
 class FakeSocket implements RoomNetSocket {
   sent: string[] = [];
   private handlers: ((raw: string) => void)[] = [];
+  private closeHandlers: (() => void)[] = [];
 
   send(data: string): void {
     this.sent.push(data);
@@ -591,10 +608,15 @@ class FakeSocket implements RoomNetSocket {
 
   on(event: "message" | "close", handler: ((raw: string) => void) | (() => void)): void {
     if (event === "message") this.handlers.push(handler as (raw: string) => void);
+    if (event === "close") this.closeHandlers.push(handler as () => void);
   }
 
   emit(raw: string): void {
     for (const handler of this.handlers) handler(raw);
+  }
+
+  close(): void {
+    for (const handler of this.closeHandlers) handler();
   }
 }
 

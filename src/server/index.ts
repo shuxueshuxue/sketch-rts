@@ -473,8 +473,8 @@ router.use("/api", (_request, response) => {
 });
 
 setInterval(() => {
-  const lockstepRoomIds = roomNetHub.tickConnectedRooms();
-  roomHost.tickActiveRooms(1, { excludeRoomIds: lockstepRoomIds });
+  roomNetHub.tickConnectedRooms();
+  roomHost.tickActiveRooms(1, { excludeRoomIds: roomNetHub.transportOwnedRoomIds() });
 }, 50);
 
 if (process.env.NODE_ENV === "production") {
