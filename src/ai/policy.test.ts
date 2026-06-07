@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
-import { runAiGame } from "./game-runner";
+import { runAiGame, runAiGameLoop } from "./game-runner";
 import { createAiRuntime } from "./runtime";
 import { runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
@@ -420,6 +420,35 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory }).find((candidate) => candidate.type === "attackMove");
 
     expect(command).toMatchObject({ type: "attackMove", x: 3600, y: 2620 });
+  });
+
+  it("v2 does not advance the verdigris committed wave past the nearby town hall into deep production", () => {
+    let attackWave: ReturnType<typeof planAiCommandsFromScripts>[number] | undefined;
+    const result = runAiGameLoop(
+      {
+        name: "verdigris committed wave stopline",
+        mapId: "verdigrisSpire",
+        agents: {
+          v2: { controller: "internal-ai", team: "north", race: "grove", version: "v2" },
+          v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
+          v1b: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
+        },
+        maxTicks: 8641,
+        thinkInterval: 45,
+      },
+      {
+        afterCommand({ tick, owner, scriptId, command }) {
+          if (tick === 8640 && owner === "v2" && scriptId === "attackWave") attackWave = command;
+        },
+      },
+    );
+
+    if (attackWave?.type === "attackMove") expect(attackWave.x).toBeLessThanOrEqual(2300);
+    const deepAttackMoveOrders = result.game.units
+      .filter((unit) => unit.owner === "v2" && unit.kind !== "worker")
+      .filter((unit) => unit.order.type === "attackMove" && unit.order.x > 2300)
+      .map((unit) => unit.id);
+    expect(deepAttackMoveOrders).toEqual([]);
   });
 
   it("v2 fights a nearby dead-economy residual army before racing buildings", () => {

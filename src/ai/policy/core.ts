@@ -2437,12 +2437,22 @@ function nearestOpponentObjective(snapshot: GameSnapshot, owner: PlayerId, from:
 }
 
 function nearestOwnedOpponentObjective(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, preferredOwner: PlayerId): Point | undefined {
-  const nonBase = nearestEntity(buildings(snapshot, preferredOwner).filter((building) => isEnemyOwner(snapshot, owner, building.owner, options) && building.kind !== "townHall"), from);
-  if (nonBase) return nonBase;
   const base = nearestEntity(buildings(snapshot, preferredOwner).filter((building) => isEnemyOwner(snapshot, owner, building.owner, options) && building.kind === "townHall"), from);
+  const nonBase = nearestEntity(buildings(snapshot, preferredOwner).filter((building) => isEnemyOwner(snapshot, owner, building.owner, options) && building.kind !== "townHall"), from);
+  if (base && nonBase && shouldStageCommittedObjectiveThroughNearbyBase(snapshot, owner, base, nonBase, from, options)) return base;
+  if (nonBase) return nonBase;
   if (base) return base;
   const army = combatUnits(snapshot, preferredOwner).filter((unit) => isEnemyOwner(snapshot, owner, unit.owner, options));
   return army.length > 0 ? averagePoint(army) : undefined;
+}
+
+function shouldStageCommittedObjectiveThroughNearbyBase(snapshot: GameSnapshot, owner: PlayerId, base: Building, nonBase: Building, from: Point, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const baseDistance = distance(base, from);
+  const nonBaseDistance = distance(nonBase, from);
+  // @@@committed-objective-stage - In 1v2, a nearby hall is a staging objective; jumping to deep production before clearing it overextends the committed wave.
+  return baseDistance <= 900 && nonBaseDistance > baseDistance + 650;
 }
 
 function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, from: Point, soldiers: Unit[], options: PresetAiPolicyOptions): Unit | undefined {
