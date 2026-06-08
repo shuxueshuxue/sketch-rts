@@ -61,6 +61,7 @@ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: Pres
   const hexers = army.filter((unit) => unit.kind === "ashHexer").length;
   const callers = army.filter((unit) => unit.kind === "pyreCaller").length;
   const supportTarget = options.version === "v2" && army.length >= 8 ? 2 : 1;
+  if (acolytes < 1 && army.length >= 5) return "emberAcolyte";
   if (sparkArchers < 1) return "sparkArcher";
   if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
   if (acolytes < 1) return "emberAcolyte";

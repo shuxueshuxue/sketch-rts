@@ -157,4 +157,21 @@ describe("AI training choice", () => {
 
     expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
   });
+
+  it("opens ember cinder spire with an acolyte when a frontline already exists", () => {
+    const scene = sketchScene("training-choice-ember-spire-frontline-acolyte")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "cinderSpire", 700, 620, { id: "spire" });
+    for (let index = 0; index < 5; index += 1) scene.unit("v2", index % 2 === 0 ? "emberRavager" : "cinderRunner", 760 + index * 28, 620 + index * 20);
+    const game = scene.build().createGame();
+    game.players.v2!.gold = 520;
+    const snapshot = snapshotGame(game);
+    const spire = snapshot.buildings.find((building) => building.id === "spire");
+    if (!spire) throw new Error("missing cinder spire");
+
+    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
+  });
 });
