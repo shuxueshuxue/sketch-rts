@@ -100,7 +100,8 @@ Implementation is not complete until current evidence proves all of the followin
 - First pgl benchmark evidence from branch `codex/v3-race-ai` commit `a6ac35e`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `14.82s`, CPU time `724378.129ms`, remote result file `/home/ubuntu/sketch-rts-v3-race-ai-bench/.benchmark-runs/v3-frozen-50-2026-06-08-20260608T024752Z.json`.
 - That first result does not pass: V3 total `62/100`, Grove V3 `38/50`, Ember V3 `24/50`.
 - Local TDD slice after that benchmark adds shared `scorch` simulation state: `sparkArcher` applies scorch, `emberRavager` and `cinderRunner` gain damage into scorched targets, `ashCurse` applies a harsher multiplier to scorched targets, tooltips/effects expose the mechanic, and the spell planner prefers scorched ash-curse targets.
-- Remaining stoplines: rerun pgl benchmark for the scorch slice, then continue raising V3 from `62/100` to at least `90/100` on pgl.
+- pgl stdout benchmark evidence from branch `codex/v3-race-ai` commit `4b90778`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `14.94s`, CPU time `778932.628ms`. This result does not pass: V3 total `69/100`, Grove V3 `38/50`, Ember V3 `31/50`.
+- Remaining stoplines: continue raising V3 from `69/100` to at least `90/100` on pgl; next investigation should focus on the remaining Ember losses plus Grove's unchanged 38/50 lane.
 
 ## Non-Goals
 
