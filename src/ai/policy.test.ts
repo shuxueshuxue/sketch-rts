@@ -1986,6 +1986,40 @@ describe("SDK preset AI policy", () => {
     expect(memory.unitClaims["creep-archer"]).toMatchObject({ kind: "retreat", targetId: "retreat" });
   });
 
+  it("v2 breaks a wounded early creep claim when the one-on-one enemy army has pulled ahead", () => {
+    const scene = sketchScene("v2-neutral-creep-tempo-recovery")
+      .map("wildMarches")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 520, 2048)
+      .townHall("v1", 3400, 2048)
+      .unit("v2", "footman", 720, 2260, { id: "tempo-footman-a", hp: 68, order: { type: "attackMove", x: 820, y: 2260 } })
+      .unit("v2", "lancer", 760, 2280, { id: "tempo-lancer", hp: 88, order: { type: "attackMove", x: 820, y: 2260 } })
+      .unit("v2", "footman", 800, 2260, { id: "tempo-footman-b", hp: 103, order: { type: "attackMove", x: 820, y: 2260 } })
+      .unit("v2", "footman", 840, 2280, { id: "tempo-footman-c", hp: 127, order: { type: "attackMove", x: 820, y: 2260 } })
+      .unit("neutral", "wildling", 820, 2260, { id: "tempo-camp-a" })
+      .unit("neutral", "mossGnawer", 850, 2290, { id: "tempo-camp-b" })
+      .unit("v1", "footman", 2600, 2040)
+      .unit("v1", "footman", 2640, 2070)
+      .unit("v1", "footman", 2680, 2010)
+      .unit("v1", "lancer", 2720, 2040)
+      .unit("v1", "archer", 2760, 2070)
+      .unit("v1", "archer", 2800, 2010)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unit of game.units.filter((candidate) => candidate.owner === "v2" && candidate.kind !== "worker")) {
+      memory.unitClaims[unit.id] = { kind: "creep", targetId: "tempo-camp-a", x: 820, y: 2260, sinceTick: 0, expiresTick: 3600 };
+    }
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.objectiveControl], { version: "v2", teams: game.teams, memory })[0];
+
+    expect(command).toMatchObject({ type: "move" });
+    expect(memory.unitClaims["tempo-footman-a"]).toMatchObject({ kind: "retreat", targetId: "retreat" });
+    expect(memory.unitClaims["tempo-footman-c"]).toMatchObject({ kind: "retreat", targetId: "retreat" });
+  });
+
   it("does not break a first-natural creep claim for moderate wounds before a moon well exists", () => {
     const scene = sketchScene("v2-no-well-moderate-natural-claim")
       .map("openClaims")

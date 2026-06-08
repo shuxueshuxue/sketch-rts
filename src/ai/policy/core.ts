@@ -1288,7 +1288,7 @@ function recallUnsafeObjectiveClaims(snapshot: GameSnapshot, owner: PlayerId, op
   }
   for (const [targetId, group] of groups) {
     if (group.units.length < 3) continue;
-    if (neutralClaimNeedsRecovery(snapshot, owner, group.point, group.units)) {
+    if (neutralClaimNeedsRecovery(snapshot, owner, group.point, group.units, options)) {
       const rally = defensiveRallyPoint(snapshot, owner);
       // @@@neutral-claim-recovery - A creep claim is a commitment, but once the committed squad is badly wounded the correct continuation is recovery, not more camp orders.
       const stale = group.units.filter((unit) => distance(unit, rally) > 220);
@@ -1304,14 +1304,25 @@ function recallUnsafeObjectiveClaims(snapshot: GameSnapshot, owner: PlayerId, op
   return undefined;
 }
 
-function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, point: Point, units: Unit[]) {
+function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, point: Point, units: Unit[], options: PresetAiPolicyOptions) {
   const guards = neutralUnitsNear(snapshot, point, 360);
   if (guards.length === 0) return false;
   const averageHpRatio = units.reduce((total, unit) => total + unit.hp / unit.maxHp, 0) / units.length;
   const main = mainBase(snapshot, owner);
   const hasHealingAtHome = completeHealingBuildings(snapshot, owner).some((building) => distance(building, main) <= BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange);
+  if (earlyWoundedCreepTempoNeedsRecovery(snapshot, owner, units, averageHpRatio, hasHealingAtHome, options)) return true;
   // @@@no-well-creep-recovery - Without a healing well, moderate creep wounds do not recover at home; only break the claim when the squad is actually near donation range.
   return averageHpRatio <= (hasHealingAtHome ? 0.68 : 0.6);
+}
+
+function earlyWoundedCreepTempoNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, units: Unit[], averageHpRatio: number, hasHealingAtHome: boolean, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return false;
+  if (hasHealingAtHome || hasEstablishedExpansion(snapshot, owner) || completeBuildings(snapshot, owner, "townHall").length > 1) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length !== 1) return false;
+  if (units.length > 5 || averageHpRatio > 0.72) return false;
+  const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
+  // @@@early-creep-tempo - A one-base 1v1 creep claim is not free once the only field squad is wounded and the enemy army has already pulled ahead.
+  return enemyArmy.length >= units.length + 2 && armyPower(enemyArmy) >= armyPower(units) * 1.1;
 }
 
 function objectiveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
