@@ -25,20 +25,7 @@ export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: Play
   const desired = plan.filter((_, index) => index === 0 || army.length >= armyGates[index]! || player.gold > goldGates[index]!);
   if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine")) return undefined;
 
-  return firstMissingProductionPlanKind(desired, buildings(snapshot, owner).map((building) => building.kind));
-}
-
-function firstMissingProductionPlanKind(desired: ProductionBuildingKind[], existingKinds: string[]): ProductionBuildingKind | undefined {
-  const existingCounts = new Map<ProductionBuildingKind, number>();
-  for (const kind of desired) existingCounts.set(kind, existingKinds.filter((existing) => existing === kind).length);
-
-  const requiredCounts = new Map<ProductionBuildingKind, number>();
-  for (const kind of desired) {
-    const required = (requiredCounts.get(kind) ?? 0) + 1;
-    requiredCounts.set(kind, required);
-    if ((existingCounts.get(kind) ?? 0) < required) return kind;
-  }
-  return undefined;
+  return desired.find((kind) => !buildings(snapshot, owner).some((building) => building.kind === kind));
 }
 
 export function missingCombatProductionKind(snapshot: GameSnapshot, owner: PlayerId): ProductionBuildingKind | undefined {

@@ -66,20 +66,6 @@ describe("AI production model", () => {
     expect(productionBuildingNeedKind(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe("stables");
   });
 
-  it("counts repeated Ember production plan slots instead of treating building kinds as a set", () => {
-    const scene = sketchScene("production-model-ember-repeated-slots")
-      .map("bareDuel")
-      .replaceDefaults()
-      .player("v2", { team: "north", race: "ember" })
-      .townHall("v2", 500, 500)
-      .building("v2", "emberForge", 620, 620)
-      .building("v2", "cinderSpire", 700, 620);
-    for (let i = 0; i < 7; i += 1) scene.unit("v2", i % 2 === 0 ? "emberRavager" : "sparkArcher", 700 + i * 20, 760);
-    const game = scene.build().createGame();
-
-    expect(productionBuildingNeedKind(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toBe("emberForge");
-  });
-
   it("pauses more production shells until the first core army exists under 1v2 pressure", () => {
     const scene = sketchScene("production-model-core-army-first")
       .map("bareDuel")
