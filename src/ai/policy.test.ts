@@ -5779,6 +5779,41 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 does not spend near-ready first-expansion bank on a controlled combat mercenary", () => {
+    const scene = sketchScene("v2-controlled-merc-does-not-delay-near-ready-natural")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620)
+      .building("v2", "archeryRange", 700, 560)
+      .building("v2", "farm", 560, 700)
+      .building("v2", "farm", 610, 735)
+      .worker("v2", 520, 540)
+      .unit("v2", "footman", 960, 850, { id: "claim-footman" })
+      .unit("v2", "lancer", 1000, 880)
+      .unit("v2", "archer", 1040, 850)
+      .unit("v2", "contractArcher", 980, 860)
+      .townHall("v1", 3300, 3300)
+      .goldMine("v2-main-mine", 560, 540, 4000)
+      .goldMine("v2-cleared-natural", 980, 860, 4000)
+      .goldMine("v1-main-mine", 3340, 3300, 4000)
+      .mercenaryCamp("cleared-contract-archers", 980, 860, { hireKind: "contractArcher", cost: 145, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["claim-footman"] = { kind: "expansion", targetId: "v2-cleared-natural", x: 980, y: 860, sinceTick: 0, expiresTick: 3600 };
+    if (!game.players.v2) throw new Error("missing v2 player");
+    game.players.v2.gold = BUILDING_DEFS.townHall.cost - 30;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.mercenary], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "hire",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
   it("does not hire from a cleared mercenary camp until a friendly unit reaches it", () => {
     const scene = sketchScene("v2-no-remote-merc-hire")
       .map("openClaims")

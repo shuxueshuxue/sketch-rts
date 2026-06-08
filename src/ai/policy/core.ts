@@ -823,8 +823,8 @@ function shouldSpendExpansionReserveOnControlledMercenary(snapshot: GameSnapshot
   if (!shouldReserveForClearedExpansion(snapshot, owner, options)) return false;
   if (playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost) return false;
   if (friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length === 0) return false;
-  // @@@controlled-merc-after-natural - A controlled camp is real value, but not at the exact tick the first cleared town hall can start.
-  return camp.hireKind !== "fieldMedic" || units(snapshot, owner).some((unit) => unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72);
+  // @@@first-expansion-before-merc-hire - Controlled camp value is next spend; a ready cleared natural must not keep losing its hall bank.
+  return false;
 }
 
 function canHireMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {
