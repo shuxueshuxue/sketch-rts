@@ -5,6 +5,30 @@ export type GauntletPlaytestReplay = {
   command: string;
 };
 
+export type GauntletReplayReport = {
+  failed: boolean;
+  playtestName: string;
+  lane: string;
+  controllerCase: string;
+  mapId: string;
+  winnerTeam?: string | null;
+  tick?: number;
+  playtest: GauntletPlaytestReplay;
+};
+
+export type GauntletFailureReplayManifest = {
+  failureCount: number;
+  failures: Array<{
+    name: string;
+    lane: string;
+    controllerCase: string;
+    mapId: string;
+    winnerTeam?: string | null;
+    tick?: number;
+    playtest: GauntletPlaytestReplay;
+  }>;
+};
+
 export function gauntletPlaytestReplay(match: AiGauntletMatch, catalog: Pick<AiGauntletCatalog, "selection" | "selectedRichScoreMapIds">): GauntletPlaytestReplay {
   const args = [
     "new",
@@ -23,6 +47,21 @@ export function gauntletPlaytestReplay(match: AiGauntletMatch, catalog: Pick<AiG
     args,
     command: `npm run play:ai -- ${args.map(shellArg).join(" ")}`,
   };
+}
+
+export function gauntletFailureReplayManifest(reports: GauntletReplayReport[]): GauntletFailureReplayManifest {
+  const failures = reports
+    .filter((report) => report.failed)
+    .map((report) => ({
+      name: report.playtestName,
+      lane: report.lane,
+      controllerCase: report.controllerCase,
+      mapId: report.mapId,
+      ...(report.winnerTeam !== undefined ? { winnerTeam: report.winnerTeam } : {}),
+      ...(report.tick !== undefined ? { tick: report.tick } : {}),
+      playtest: report.playtest,
+    }));
+  return { failureCount: failures.length, failures };
 }
 
 function slug(value: string) {

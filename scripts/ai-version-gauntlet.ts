@@ -4,7 +4,7 @@ import {
   createAiGauntletCatalog,
   type AiGauntletMatch,
 } from "../src/ai/benchmark/gauntlet";
-import { gauntletPlaytestReplay } from "../src/ai/benchmark/gauntlet-cli";
+import { gauntletFailureReplayManifest, gauntletPlaytestReplay } from "../src/ai/benchmark/gauntlet-cli";
 import { runAiGame } from "../src/ai/game-runner";
 import { benchmarkFilterFromArgs, boolFlag, commonAiBenchmarkOptionsFromArgs, printJson } from "./benchmark-cli";
 
@@ -88,6 +88,7 @@ const robustnessSummaries = controllerCaseNames.map((controllerCase) => {
 const scoreOk = summaries.every((summary) => summary.successRate >= 1);
 const oneVThreeOk = oneVThreeReports.every((report) => !report.failed);
 const twoVThreeOk = twoVThreeReports.every((report) => !report.failed);
+const failureManifest = gauntletFailureReplayManifest(reports);
 
 process.stdout.write(
   `${JSON.stringify(
@@ -106,6 +107,8 @@ process.stdout.write(
       oneVThreeSummary: summarizeReports(oneVThreeReports),
       twoVThreeSummary: summarizeReports(twoVThreeReports),
       robustnessSummaries,
+      failureCount: failureManifest.failureCount,
+      failures: failureManifest.failures,
       reports,
     },
     null,
