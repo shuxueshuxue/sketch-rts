@@ -7107,6 +7107,41 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "emberAcolyte" });
   });
 
+  it("v3 ember can spend an early expansion bank on its first spark archer milestone", () => {
+    const scene = sketchScene("v3-ember-first-spark-before-expansion-bank")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 500, 500)
+      .building("v3", "emberForge", 620, 620, { id: "forge" })
+      .building("v3", "cinderSpire", 700, 620, { id: "spire" })
+      .building("v3", "farm", 560, 700)
+      .building("v3", "farm", 590, 700)
+      .building("v3", "farm", 620, 700)
+      .worker("v3", 500, 560)
+      .worker("v3", 520, 560)
+      .worker("v3", 540, 560)
+      .worker("v3", 560, 560)
+      .worker("v3", 580, 560)
+      .worker("v3", 600, 560)
+      .unit("v3", "emberRavager", 760, 620)
+      .unit("v3", "emberRavager", 790, 650)
+      .unit("v3", "emberRavager", 820, 680)
+      .unit("v3", "cinderRunner", 850, 710)
+      .unit("v3", "cinderRunner", 880, 740)
+      .unit("v3", "cinderRunner", 910, 770)
+      .townHall("v2-prod", 3300, 3300)
+      .goldMine("v3-natural-mine", 1320, 780, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v3!.gold = 260;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v3", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "sparkArcher" });
+  });
+
   it("v2 keeps core production training before the first expansion bank is actually close", () => {
     const scene = sketchScene("v2-training-before-distant-expansion-bank")
       .map("openClaims")
