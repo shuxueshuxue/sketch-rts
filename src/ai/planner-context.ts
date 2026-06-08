@@ -38,12 +38,13 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   if (!snapshot.players[owner]) return [];
   const { memoryProvider, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
+  const effectiveVersion = effectivePolicyVersion(version);
   const scripts = scriptsForRequest(request, version);
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
 
-  return planAiCommandEntriesFromScripts(snapshot, owner, scripts, { ...policyOptions, version, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
+  return planAiCommandEntriesFromScripts(snapshot, owner, scripts, { ...policyOptions, version: effectiveVersion, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
     playerId: owner,
     ...(request.source !== undefined ? { source: request.source } : {}),
     scriptId: entry.scriptId,
@@ -55,6 +56,11 @@ function memoryForOwner(owner: PlayerId, memoryProvider: AiMemoryProvider | unde
   const memory = memoryProvider?.get(owner) ?? createAiPolicyMemory();
   memoryProvider?.set?.(owner, memory);
   return memory;
+}
+
+function effectivePolicyVersion(version: AiScriptVersion): AiScriptVersion {
+  if (version === "v2-prod" || version === "v3" || version === "v3-grove" || version === "v3-ember") return "v2";
+  return version;
 }
 
 function scriptsForRequest(request: AiOwnerPlannerRequest, version: AiScriptVersion) {

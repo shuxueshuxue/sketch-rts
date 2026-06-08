@@ -158,6 +158,10 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
 export const AI_SCRIPT_VERSIONS: Record<AiScriptVersion, AiScript[]> = {
   v1: SKETCH_RTS_PRESET_AI_STACK,
   v2: SKETCH_RTS_PRESET_AI_STACK,
+  "v2-prod": SKETCH_RTS_PRESET_AI_STACK,
+  v3: SKETCH_RTS_PRESET_AI_STACK,
+  "v3-grove": SKETCH_RTS_PRESET_AI_STACK,
+  "v3-ember": SKETCH_RTS_PRESET_AI_STACK,
 };
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
