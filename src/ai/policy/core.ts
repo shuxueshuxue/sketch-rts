@@ -463,7 +463,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   const base = mainBase(snapshot, owner);
   const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
-  const index = aiPlaybook(playerState(snapshot, owner).race).productionPlan.indexOf(missing);
+  const index = aiPlaybook().productionPlan.indexOf(missing);
   const point = safeMainBuildPoint(snapshot, owner, index, missing);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: missing, x: point.x, y: point.y }, options);
 }
