@@ -35,6 +35,22 @@ describe("AI version gauntlet CLI", () => {
       },
     });
   });
+
+  it("filters dry-run output to one exact gauntlet match name", () => {
+    const target = {
+      name: "mixed-v2-external score wildMarches official triangle",
+      lane: "score",
+      controllerCase: "mixed-v2-external",
+      mapId: "wildMarches",
+    };
+
+    const focused = JSON.parse(runGauntletCli("--seed", "gauntlet-cli-seed", "--map-count", "2", "--dry-run", "--match", target.name));
+
+    expect(focused).toMatchObject({
+      matchCount: 1,
+      matches: [expect.objectContaining(target)],
+    });
+  });
 });
 
 function runGauntletCli(...args: string[]) {

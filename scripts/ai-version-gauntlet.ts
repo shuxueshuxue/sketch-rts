@@ -5,7 +5,7 @@ import {
   type AiGauntletMatch,
 } from "../src/ai/benchmark/gauntlet";
 import { runAiGame } from "../src/ai/game-runner";
-import { boolFlag, commonAiBenchmarkOptionsFromArgs, printJson } from "./benchmark-cli";
+import { benchmarkFilterFromArgs, boolFlag, commonAiBenchmarkOptionsFromArgs, printJson } from "./benchmark-cli";
 
 const args = process.argv.slice(2);
 if (boolFlag(args, "help") || boolFlag(args, "h")) {
@@ -17,9 +17,10 @@ if (boolFlag(args, "help") || boolFlag(args, "h")) {
 }
 
 const catalog = createAiGauntletCatalog(gauntletOptionsFromSources(args, process.env));
+const selectedMatches = gauntletMatchesFromArgs(catalog.matches, args);
 
 if (boolFlag(args, "dry-run")) {
-  printJson(gauntletDryRunManifest(catalog));
+  printJson(gauntletDryRunManifest(catalog, selectedMatches));
   process.exit(0);
 }
 
@@ -57,13 +58,13 @@ if (boolFlag(args, "runner-probe") || process.env.AI_GAUNTLET_RUNNER_PROBE === "
 
 const started = performance.now();
 const cpuStarted = process.cpuUsage();
-const scoreReports = catalog.matches.filter((match) => match.lane === "score").map((match) => runGauntletMatch(match));
-const oneVThreeReports = catalog.matches.filter((match) => match.lane === "1v3").map((match) => runGauntletMatch(match));
-const twoVThreeReports = catalog.matches.filter((match) => match.lane === "2v3").map((match) => runGauntletMatch(match));
-const robustnessReports = catalog.matches.filter((match) => match.lane === "robustness").map((match) => runGauntletMatch(match));
+const scoreReports = selectedMatches.filter((match) => match.lane === "score").map((match) => runGauntletMatch(match));
+const oneVThreeReports = selectedMatches.filter((match) => match.lane === "1v3").map((match) => runGauntletMatch(match));
+const twoVThreeReports = selectedMatches.filter((match) => match.lane === "2v3").map((match) => runGauntletMatch(match));
+const robustnessReports = selectedMatches.filter((match) => match.lane === "robustness").map((match) => runGauntletMatch(match));
 const reports = [...scoreReports, ...oneVThreeReports, ...twoVThreeReports, ...robustnessReports];
 const cpu = process.cpuUsage(cpuStarted);
-const controllerCaseNames = [...new Set(catalog.matches.map((match) => match.controllerCase))];
+const controllerCaseNames = [...new Set(selectedMatches.map((match) => match.controllerCase))];
 const summaries = controllerCaseNames.map((controllerCase) => {
   const relevant = scoreReports.filter((report) => report.controllerCase === controllerCase);
   return {
@@ -71,7 +72,7 @@ const summaries = controllerCaseNames.map((controllerCase) => {
     wins: relevant.filter((report) => report.winnerTeam === "north").length,
     losses: relevant.filter((report) => report.winnerTeam === "south").length,
     failures: relevant.filter((report) => report.failed).length,
-    successRate: relevant.filter((report) => !report.failed).length / relevant.length,
+    successRate: relevant.filter((report) => !report.failed).length / Math.max(1, relevant.length),
   };
 });
 const robustnessSummaries = controllerCaseNames.map((controllerCase) => {
@@ -168,7 +169,21 @@ function positiveIntegerEnv(raw: string, name: string) {
   return parsed;
 }
 
-function gauntletDryRunManifest(catalog: typeof catalog) {
+function gauntletMatchesFromArgs(matches: AiGauntletMatch[], args: readonly string[]) {
+  const filter = benchmarkFilterFromArgs(args);
+  const selected = matches.filter((match) => {
+    if (filter.matchNames && !filter.matchNames.includes(match.name)) return false;
+    if (filter.mapIds && !filter.mapIds.includes(match.mapId)) return false;
+    return true;
+  });
+  if (filter.matchNames && selected.length !== filter.matchNames.length) {
+    const missing = filter.matchNames.filter((name) => !matches.some((match) => match.name === name));
+    throw new Error(`Unknown gauntlet match ${missing.join(", ")}`);
+  }
+  return selected;
+}
+
+function gauntletDryRunManifest(catalog: typeof catalog, matches: AiGauntletMatch[]) {
   return {
     name: "AI Version Gauntlet",
     gauntletMode: catalog.selection.mode,
@@ -178,8 +193,8 @@ function gauntletDryRunManifest(catalog: typeof catalog) {
     oneVThreeCaseCount: catalog.oneVThreeCaseCount,
     twoVThreeCaseCount: catalog.twoVThreeCaseCount,
     robustnessCaseCount: catalog.robustnessCaseCount,
-    matchCount: catalog.matches.length,
-    matches: catalog.matches.map((match) => ({
+    matchCount: matches.length,
+    matches: matches.map((match) => ({
       name: match.name,
       lane: match.lane,
       controllerCase: match.controllerCase,
