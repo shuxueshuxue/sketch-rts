@@ -5,7 +5,7 @@ on:
     branches: [production]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: sketch-rts-production
@@ -20,6 +20,17 @@ jobs:
       ALIYUN_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require production commit to come from main
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/main"; then
+            echo "::error::Production deploys must use a commit already present on origin/main."
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:
@@ -52,3 +63,20 @@ jobs:
           scp -i ~/.ssh/sketch-rts-production -P "$ALIYUN_PORT" sketch-rts-production.tar.gz scripts/deploy-production.sh "$remote:$remote_dir/"
           ssh -i ~/.ssh/sketch-rts-production -p "$ALIYUN_PORT" "$remote" \
             "set +e; bash '$remote_dir/deploy-production.sh' '$remote_dir/sketch-rts-production.tar.gz' '$GITHUB_SHA'; status=\$?; rm -rf '$remote_dir'; exit \$status"
+
+      - name: Publish GitHub production release package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: production-latest
+          RELEASE_TITLE: Sketch RTS Production
+        run: |
+          set -euo pipefail
+          git tag -f "$RELEASE_TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/$RELEASE_TAG"
+          release_notes="Production deployment for ${GITHUB_SHA}"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes "$release_notes" --latest
+          else
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes "$release_notes" --latest
+          fi
+          gh release upload "$RELEASE_TAG" sketch-rts-production.tar.gz --clobber
