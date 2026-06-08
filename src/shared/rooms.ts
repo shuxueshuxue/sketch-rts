@@ -1,7 +1,7 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
-export const DEFAULT_INTERNAL_AI_VERSION = "v2";
+export const DEFAULT_INTERNAL_AI_VERSION = "v3";
 
 export type CreateRoomInput = {
   id: string;

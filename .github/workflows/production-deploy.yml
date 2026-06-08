@@ -1,0 +1,54 @@
+name: Production Deploy
+
+on:
+  push:
+    branches: [production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sketch-rts-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SKETCH_RTS_BASE_PATH: /sketch-rts/
+      VITE_SKETCH_RTS_BASE_PATH: /sketch-rts/
+      ALIYUN_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build:production
+
+      - name: Pack production artifact
+        run: |
+          set -euo pipefail
+          tar -czf sketch-rts-production.tar.gz dist dist-server
+
+      - name: Install SSH key
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.ALIYUN_SSH_KEY }}" > ~/.ssh/sketch-rts-production
+          chmod 600 ~/.ssh/sketch-rts-production
+          ssh-keyscan -p "$ALIYUN_PORT" "${{ secrets.ALIYUN_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload artifact and deploy script
+        run: |
+          set -euo pipefail
+          remote="${{ secrets.ALIYUN_USER }}@${{ secrets.ALIYUN_HOST }}"
+          remote_dir="/tmp/sketch-rts-deploy-${GITHUB_SHA}"
+          ssh -i ~/.ssh/sketch-rts-production -p "$ALIYUN_PORT" "$remote" "rm -rf '$remote_dir' && mkdir -p '$remote_dir'"
+          scp -i ~/.ssh/sketch-rts-production -P "$ALIYUN_PORT" sketch-rts-production.tar.gz scripts/deploy-production.sh "$remote:$remote_dir/"
+          ssh -i ~/.ssh/sketch-rts-production -p "$ALIYUN_PORT" "$remote" \
+            "bash '$remote_dir/deploy-production.sh' '$remote_dir/sketch-rts-production.tar.gz' '$GITHUB_SHA'"
