@@ -149,6 +149,7 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.focusFire,
   AI_SCRIPT_LIBRARY.workerPressure,
   AI_SCRIPT_LIBRARY.workerPressureCloseout,
+  AI_SCRIPT_LIBRARY.expansionDenial,
   AI_SCRIPT_LIBRARY.objectiveControl,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
@@ -1484,9 +1485,13 @@ function neutralCampItemBonus(item: GameSnapshot["items"][number] | undefined) {
 }
 
 function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
-  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  if (options.version !== "v2") return undefined;
+  const opponents = opponentPlayerIds(snapshot, owner, options);
+  if (opponents.length > 2) return undefined;
+  if (opponents.length < 2 && !oneOnOneExpansionDenialWindow(snapshot, owner, opponents)) return undefined;
   const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove");
   if (soldiers.length < 5) return undefined;
+  if (opponents.length >= 2 && expansionDenialFieldArmyStopline(snapshot, owner, soldiers, options)) return undefined;
   const ownMain = mainBase(snapshot, owner);
   if (nearestOpponentThreat(snapshot, owner, ownMain, 850, options)) return undefined;
   if (ownGuardedNaturalNeedsClearing(snapshot, owner, options)) return undefined;
@@ -1496,6 +1501,16 @@ function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (expansionDenialRouteCovered(snapshot, owner, soldiers, target, options)) return undefined;
   const stale = staleAttackMovers(soldiers, target);
   return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.x, y: target.y }, options) : undefined;
+}
+
+function oneOnOneExpansionDenialWindow(snapshot: GameSnapshot, owner: PlayerId, opponents: PlayerId[]) {
+  return opponents.length === 1 && completeBuildings(snapshot, owner, "townHall").length >= 2;
+}
+
+function expansionDenialFieldArmyStopline(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
+  const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
+  // @@@expansion-denial-field-stopline - In 1v2, expansion denial is a cross-line punish; it is not valid while the combined enemy field army already beats the squad.
+  return armyPower(enemyArmy) > armyPower(soldiers) * 1.15;
 }
 
 function ownClearNaturalNeedsClaiming(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

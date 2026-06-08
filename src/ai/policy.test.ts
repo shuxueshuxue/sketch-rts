@@ -5354,6 +5354,39 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 2200, y: 1750 });
   });
 
+  it("v2 preset denies a one-on-one enemy expansion before taking another neutral camp", () => {
+    const scene = sketchScene("v2-1v1-denies-expansion-before-creep")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 2048, { id: "v2-main" })
+      .townHall("v2", 720, 2540, { id: "v2-natural" })
+      .unit("v2", "footman", 2100, 1020)
+      .unit("v2", "footman", 2140, 1040)
+      .unit("v2", "lancer", 2180, 1060)
+      .unit("v2", "lancer", 2220, 1080)
+      .unit("v2", "archer", 2260, 1100)
+      .unit("v2", "archer", 2300, 1120)
+      .unit("v2", "fieldMedic", 2340, 1140)
+      .townHall("v1", 3400, 2048, { id: "v1-main" })
+      .building("v1", "barracks", 3260, 1960, { id: "v1-barracks" })
+      .building("v1", "townHall", 3376, 2680, { id: "v1-greedy-expansion", complete: false })
+      .worker("v1", 3340, 2640)
+      .worker("v1", 3400, 2720)
+      .unit("neutral", "wildling", 2800, 760, { id: "north-camp-a" })
+      .unit("neutral", "thornSlinger", 2840, 790, { id: "north-camp-b" })
+      .build();
+    const game = scene.createGame();
+
+    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+
+    expect(entries.find((entry) => entry.scriptId === "expansionDenial")).toMatchObject({
+      command: { type: "attackMove", x: 3376, y: 2680 },
+    });
+    expect(entries.find((entry) => entry.scriptId === "objectiveControl")).toBeUndefined();
+  });
+
   it("v2 does not deny an exposed expansion when the route is covered by a much stronger combined army", () => {
     const scene = sketchScene("v2-skips-covered-expansion-denial")
       .map("openClaims")
@@ -5382,6 +5415,67 @@ describe("SDK preset AI policy", () => {
       .unit("v1b", "lancer", 1680, 1900)
       .unit("v1b", "raider", 1720, 1940)
       .unit("v1b", "archer", 1760, 1980)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionDenial], { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "attackMove",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 does not deny an exposed expansion while a different 1v2 army is already stronger in the field", () => {
+    const scene = sketchScene("v2-skips-denial-while-other-army-stronger")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .unit("v2", "footman", 1500, 1500)
+      .unit("v2", "footman", 1540, 1500)
+      .unit("v2", "lancer", 1500, 1540)
+      .unit("v2", "archer", 1540, 1540)
+      .unit("v2", "archer", 1580, 1520)
+      .townHall("v1a", 3300, 3300, { id: "v1a-main" })
+      .building("v1a", "townHall", 2300, 1850, { id: "v1a-greedy-expansion", complete: false })
+      .worker("v1a", 2260, 1820)
+      .townHall("v1b", 3400, 3800, { id: "v1b-main" })
+      .unit("v1b", "footman", 2600, 3200)
+      .unit("v1b", "footman", 2640, 3220)
+      .unit("v1b", "footman", 2680, 3240)
+      .unit("v1b", "lancer", 2720, 3260)
+      .unit("v1b", "lancer", 2760, 3280)
+      .unit("v1b", "archer", 2800, 3300)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionDenial], { version: "v2", teams: game.teams }).find(
+      (candidate) => candidate.type === "attackMove",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v2 does not use the 1v2 expansion-denial primitive in a one-on-three game", () => {
+    const scene = sketchScene("v2-no-1v2-denial-primitive-in-1v3")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .player("v1c", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 1500, 1500)
+      .unit("v2", "footman", 1540, 1500)
+      .unit("v2", "lancer", 1500, 1540)
+      .unit("v2", "archer", 1540, 1540)
+      .unit("v2", "archer", 1580, 1520)
+      .townHall("v1a", 3300, 3300)
+      .building("v1a", "townHall", 2300, 1850, { complete: false })
+      .townHall("v1b", 3400, 3800)
+      .townHall("v1c", 3600, 3000)
       .build();
     const game = scene.createGame();
 
