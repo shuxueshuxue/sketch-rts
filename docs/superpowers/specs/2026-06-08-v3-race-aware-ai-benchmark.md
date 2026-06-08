@@ -107,7 +107,8 @@ Implementation is not complete until current evidence proves all of the followin
 - A second-spark-Archer-before-support probe (`f7fcab6`) was pgl-tested and reverted. It dropped the same seed to `63/100` and Ember V3 to `23/50`, so forcing more early scorch density through cinder-spire training is not safe.
 - An attack-wave yield probe for committed expansion-denial squads (`5476afd`) was pgl-tested and reverted. It fixed the local objective-thrash symptom but dropped the same seed to `62/100` (`Grove 36/50`, `Ember 26/50`), so global attack-wave suppression around enemy expansions is not safe.
 - Repeated Ember production-plan slot probes (`51ee410`, then delayed by `be58fe4`) were pgl-tested and reverted. Counting repeated `emberForge` / `cinderSpire` slots at the 7-unit gate dropped the same seed to `69/100`; delaying repeated slots to 10 units dropped it further to `65/100` (`Ember 25/50`). The current economy/expansion timing cannot absorb extra Ember production-shell spending as a standalone fix.
-- Remaining stoplines: continue raising V3 from `70/100` to at least `90/100` on pgl; next investigation should focus on Ember's 30/50 lane and the remaining Grove-side expansion/economy losses.
+- Routine first healing wells are now delayed while the natural is still creep-guarded unless there is real enemy pressure or a critical defender. pgl evidence from `7ab3af0`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `13.77s`, CPU time `714185.42ms`, V3 total `71/100`, Grove V3 `41/50`, Ember V3 `30/50`.
+- Remaining stoplines: continue raising V3 from `71/100` to at least `90/100` on pgl; next investigation should focus on Ember's 30/50 lane and the remaining Grove-side expansion/economy losses.
 
 ## Non-Goals
 
