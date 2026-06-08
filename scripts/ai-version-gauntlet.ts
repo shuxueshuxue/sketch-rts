@@ -1,14 +1,29 @@
 import {
   AI_GAUNTLET_V1A,
   AI_GAUNTLET_V2,
-  createAiGauntletCatalogFromEnv,
+  createAiGauntletCatalog,
   type AiGauntletMatch,
 } from "../src/ai/benchmark/gauntlet";
 import { runAiGame } from "../src/ai/game-runner";
+import { boolFlag, commonAiBenchmarkOptionsFromArgs, printJson } from "./benchmark-cli";
 
-const catalog = createAiGauntletCatalogFromEnv(process.env);
+const args = process.argv.slice(2);
+if (boolFlag(args, "help") || boolFlag(args, "h")) {
+  console.log(`Usage:
+  npx tsx scripts/ai-version-gauntlet.ts --seed gauntlet-18 --map-count 18 --dry-run
+  npx tsx scripts/ai-version-gauntlet.ts --seed gauntlet-18 --map-count 18 --runner-probe
+  npx tsx scripts/ai-version-gauntlet.ts --full`);
+  process.exit(0);
+}
 
-if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
+const catalog = createAiGauntletCatalog(gauntletOptionsFromSources(args, process.env));
+
+if (boolFlag(args, "dry-run")) {
+  printJson(gauntletDryRunManifest(catalog));
+  process.exit(0);
+}
+
+if (boolFlag(args, "runner-probe") || process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
   const probeMatch = {
     name: "runner probe",
     lane: "robustness",
@@ -28,21 +43,15 @@ if (process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
     [AI_GAUNTLET_V2]: report.commandsByOwner[AI_GAUNTLET_V2] ?? 0,
     [AI_GAUNTLET_V1A]: report.commandsByOwner[AI_GAUNTLET_V1A] ?? 0,
   };
-  process.stdout.write(
-    `${JSON.stringify(
-      {
-        ok: commandCounts[AI_GAUNTLET_V2] > 0 && commandCounts[AI_GAUNTLET_V1A] > 0,
-        gauntletMode: catalog.selection.mode,
-        mapSelectionSeed: catalog.selection.seed,
-        mapId: report.mapId,
-        controllerCase: report.controllerCase,
-        tick: report.tick,
-        commandCounts,
-      },
-      null,
-      2,
-    )}\n`,
-  );
+  printJson({
+    ok: commandCounts[AI_GAUNTLET_V2] > 0 && commandCounts[AI_GAUNTLET_V1A] > 0,
+    gauntletMode: catalog.selection.mode,
+    mapSelectionSeed: catalog.selection.seed,
+    mapId: report.mapId,
+    controllerCase: report.controllerCase,
+    tick: report.tick,
+    commandCounts,
+  });
   process.exit(commandCounts[AI_GAUNTLET_V2] > 0 && commandCounts[AI_GAUNTLET_V1A] > 0 ? 0 : 1);
 }
 
@@ -136,4 +145,58 @@ function summarizeReports(reports: Array<{ failed: boolean }>) {
 
 function robustnessFailed(report: ReturnType<typeof runAiGame>) {
   return (report.commandsByOwner[AI_GAUNTLET_V2] ?? 0) === 0 || (report.goldSpent[AI_GAUNTLET_V2] ?? 0) === 0;
+}
+
+function gauntletOptionsFromSources(args: readonly string[], env: NodeJS.ProcessEnv) {
+  const cli = commonAiBenchmarkOptionsFromArgs(args);
+  return {
+    ...(env.AI_GAUNTLET_SEED ? { seed: env.AI_GAUNTLET_SEED } : {}),
+    ...(env.AI_GAUNTLET_MAP_COUNT ? { mapCount: positiveIntegerEnv(env.AI_GAUNTLET_MAP_COUNT, "AI_GAUNTLET_MAP_COUNT") } : {}),
+    ...(env.AI_GAUNTLET_FULL === "1" ? { full: true } : {}),
+    ...withoutBenchmarkOnlyOptions(cli),
+  };
+}
+
+function withoutBenchmarkOnlyOptions(options: ReturnType<typeof commonAiBenchmarkOptionsFromArgs>) {
+  const { workers: _workers, maxTicks: _maxTicks, thinkInterval: _thinkInterval, ...rest } = options;
+  return rest;
+}
+
+function positiveIntegerEnv(raw: string, name: string) {
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`${name} must be a positive integer`);
+  return parsed;
+}
+
+function gauntletDryRunManifest(catalog: typeof catalog) {
+  return {
+    name: "AI Version Gauntlet",
+    gauntletMode: catalog.selection.mode,
+    mapSelectionSeed: catalog.selection.seed,
+    selectedRichScoreMapIds: catalog.selectedRichScoreMapIds,
+    scoreCaseCount: catalog.scoreCaseCount,
+    oneVThreeCaseCount: catalog.oneVThreeCaseCount,
+    twoVThreeCaseCount: catalog.twoVThreeCaseCount,
+    robustnessCaseCount: catalog.robustnessCaseCount,
+    matchCount: catalog.matches.length,
+    matches: catalog.matches.map((match) => ({
+      name: match.name,
+      lane: match.lane,
+      controllerCase: match.controllerCase,
+      mapId: match.mapId,
+      players: Object.keys(match.agents),
+      agents: Object.fromEntries(
+        Object.entries(match.agents).map(([playerId, agent]) => [
+          playerId,
+          {
+            controller: agent.controller,
+            team: agent.team,
+            race: agent.race,
+            aiVersion: agent.version,
+            ...(agent.disabledBehaviors ? { disabledBehaviors: agent.disabledBehaviors } : {}),
+          },
+        ]),
+      ),
+    })),
+  };
 }
