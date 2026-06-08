@@ -25,12 +25,12 @@ describe("production CD contract", () => {
     expect(workflow).toContain("gh release upload \"$RELEASE_TAG\" sketch-rts-production.tar.gz --clobber");
   });
 
-  it("deploys production only from commits already present on main", () => {
+  it("deploys production only when its tree matches main", () => {
     const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 
-    expect(workflow).toContain("Require production commit to come from main");
+    expect(workflow).toContain("Require production tree to match main");
     expect(workflow).toContain("git fetch --no-tags origin main");
-    expect(workflow).toContain("git merge-base --is-ancestor \"$GITHUB_SHA\" \"origin/main\"");
+    expect(workflow).toContain("git diff --quiet \"$GITHUB_SHA\" \"origin/main\"");
   });
 
   it("allows production pull requests only from main", () => {
