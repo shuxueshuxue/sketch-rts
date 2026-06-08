@@ -105,6 +105,7 @@ Implementation is not complete until current evidence proves all of the followin
 - Shared combat tech is now available from Ember Forge as well as Grove Barracks, but V3 Ember does not use Grove's early two-fighter weapon timing. pgl negative probe `b6f319f` showed that letting Ember take that early timing dropped the same seed to `58/100` (`ember 20/50`), so early Ember tech is a stopline.
 - Routine first-healing-well spending before the first expansion bank was tightened: critical defenders can still force the first well, but ordinary wounded groups must pass the expansion reserve gates. pgl evidence from current head `57a84e4`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `14.57s`, CPU time `717037.509ms`, V3 total `70/100`, Grove V3 `40/50`, Ember V3 `30/50`.
 - A second-spark-Archer-before-support probe (`f7fcab6`) was pgl-tested and reverted. It dropped the same seed to `63/100` and Ember V3 to `23/50`, so forcing more early scorch density through cinder-spire training is not safe.
+- An attack-wave yield probe for committed expansion-denial squads (`5476afd`) was pgl-tested and reverted. It fixed the local objective-thrash symptom but dropped the same seed to `62/100` (`Grove 36/50`, `Ember 26/50`), so global attack-wave suppression around enemy expansions is not safe.
 - Remaining stoplines: continue raising V3 from `70/100` to at least `90/100` on pgl; next investigation should focus on Ember's 30/50 lane and the remaining Grove-side expansion/economy losses.
 
 ## Non-Goals
