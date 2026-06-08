@@ -34,6 +34,10 @@ describe("AI gauntlet CLI helpers", () => {
           winnerTeam: "south",
           tick: 1200,
           playtest: failedReplay,
+          diagnosis: {
+            args: ["diagnose", "--file", ".playtests/gauntlet-failed-match-diagnosis.json", "--from-gauntlet", "failed match", "--assist-you", "--checkpoint-ticks", "1200", "--plan-owner", "v2", "--inspect-owner", "v2"],
+            command: "npm run play:ai -- diagnose --file .playtests/gauntlet-failed-match-diagnosis.json --from-gauntlet \"failed match\" --assist-you --checkpoint-ticks 1200 --plan-owner v2 --inspect-owner v2",
+          },
         },
       ],
     });
