@@ -135,4 +135,6 @@ find "$releases_dir" -mindepth 1 -maxdepth 1 -type d ! -name ".$revision-*" -pri
   | cut -d' ' -f2- \
   | xargs -r rm -rf
 
+find /tmp -maxdepth 1 -type d -name "sketch-rts-deploy-*" -mmin +10 -exec rm -rf {} +
+
 printf 'deployed %s\n' "$revision"

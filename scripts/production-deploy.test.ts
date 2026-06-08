@@ -25,5 +25,6 @@ describe("production CD contract", () => {
     expect(script).toContain(".benchmark-dashboard");
     expect(script).toContain("find \"$releases_dir\"");
     expect(script).toContain("-mindepth 1 -maxdepth 1");
+    expect(script).toContain("sketch-rts-deploy-*");
   });
 });
