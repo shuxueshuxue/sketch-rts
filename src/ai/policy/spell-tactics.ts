@@ -3,7 +3,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/typ
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
-import { enemyCombatUnits, units } from "./snapshot";
+import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
@@ -34,11 +34,21 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     const curseAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "curse");
     if (curseAbility) {
       const def = ABILITY_DEFS[curseAbility];
-      const target = nearestEnemyUnit(snapshot, owner, caster, def.plannerRange, options);
-      if (def.behavior === "curse" && target && !target.effects.some((effect) => effect.type === def.statusType)) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: curseAbility, targetId: target.id }, options));
+      if (def.behavior !== "curse") continue;
+      const target = curseTarget(snapshot, owner, caster, def, options);
+      if (target) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: curseAbility, targetId: target.id }, options));
     }
   }
   return commands;
+}
+
+function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {
+  const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => !target.effects.some((effect) => effect.type === def.statusType));
+  if (def.scorchedDamageMultiplier !== undefined) {
+    const scorched = candidates.filter((target) => target.effects.some((effect) => effect.type === "scorch")).sort((a, b) => distance(a, caster) - distance(b, caster))[0];
+    if (scorched) return scorched;
+  }
+  return candidates.sort((a, b) => distance(a, caster) - distance(b, caster))[0];
 }
 
 export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

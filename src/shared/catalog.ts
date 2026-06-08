@@ -22,7 +22,7 @@ export type UnitDef = {
 export type AbilityDef =
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
-  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; statusType: "curse"; effectType: "curse" };
+  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; scorchedDamageMultiplier?: number; statusType: "curse"; effectType: "curse" | "scorch" };
 
 export type BuildingDef = {
   hp: number;
@@ -101,7 +101,7 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
   emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(11), summonKind: "spirit", summonDuration: seconds(45), effectType: "summon" },
-  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
+  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch" },
 };
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {

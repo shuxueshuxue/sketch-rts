@@ -43,7 +43,7 @@ export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianS
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability";
 
 export type UnitStatusEffect = {
-  type: "curse" | "guardian";
+  type: "curse" | "guardian" | "scorch";
   remaining: number;
   damageMultiplier?: number;
 };
@@ -72,6 +72,7 @@ export type WorldEffect = {
     | "guardianField"
     | "experienceBurst"
     | "flameBurn"
+    | "scorch"
     | "storm";
   x: number;
   y: number;

@@ -42,6 +42,46 @@ describe("AI spell and focus tactics", () => {
     ]);
   });
 
+  it("prefers ash curse on scorched targets when ember has set up the burn window", () => {
+    const game = sketchScene("spell-tactics-ash-curse-scorch-window")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3500, 3500)
+      .unit("v2", "ashHexer", 620, 500, { id: "hexer" })
+      .unit("v1", "footman", 710, 500, { id: "near-plain" })
+      .unit("v1", "raider", 780, 500, { id: "scorched-target" })
+      .build()
+      .createGame();
+    game.units.find((unit) => unit.id === "scorched-target")!.effects.push({ type: "scorch", remaining: 100 });
+
+    expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual([
+      { type: "cast", unitId: "hexer", ability: "ashCurse", targetId: "scorched-target" },
+    ]);
+  });
+
+  it("does not recast curse on the nearest already-cursed target when another target is valid", () => {
+    const game = sketchScene("spell-tactics-curse-valid-target")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3500, 3500)
+      .unit("v2", "witch", 620, 500, { id: "witch" })
+      .unit("v1", "footman", 710, 500, { id: "already-cursed" })
+      .unit("v1", "raider", 780, 500, { id: "valid-target" })
+      .build()
+      .createGame();
+    game.units.find((unit) => unit.id === "already-cursed")!.effects.push({ type: "curse", remaining: 100 });
+
+    expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })).toEqual([
+      { type: "cast", unitId: "witch", ability: "curse", targetId: "valid-target" },
+    ]);
+  });
+
   it("focuses nearby v2 fighters onto one enemy target", () => {
     const game = sketchScene("spell-tactics-focus")
       .map("bareDuel")

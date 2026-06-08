@@ -71,6 +71,7 @@ const HIGH_UPKEEP_GOLD_RATE = 0.4;
 const VETERANCY_STEP = 0.25;
 const ITEM_PICKUP_RANGE = 72;
 const GUARDIAN_SCROLL_DURATION = seconds(7);
+const SCORCH_DURATION = seconds(8);
 const LIGHTNING_ROD_COOLDOWN = seconds(18);
 const STORM_STAFF_DURATION = seconds(4.8);
 const STORM_STAFF_TICK_INTERVAL = seconds(1.2);
@@ -1065,8 +1066,11 @@ function applySummon(game: Game, caster: Unit, x: number, y: number, def: Extrac
 
 function applyCurse(game: Game, caster: Unit, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "curse" }>) {
   if (distance(caster, target) > def.range) return;
+  const damageMultiplier = target.effects.some((effect) => effect.type === "scorch")
+    ? (def.scorchedDamageMultiplier ?? def.damageMultiplier)
+    : def.damageMultiplier;
   target.effects = target.effects.filter((effect) => effect.type !== def.statusType);
-  target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(def.damageMultiplier !== 0.4 ? { damageMultiplier: def.damageMultiplier } : {}) });
+  target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(damageMultiplier !== 0.4 ? { damageMultiplier } : {}) });
   caster.cooldown = def.cooldown;
   addEffect(game, def.effectType, target.x, target.y, 46);
 }
@@ -1233,7 +1237,10 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const target = findTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
   const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
-  if (applyDamage(game, attacker, target, projectile.damage)) addEffect(game, "hit", target.x, target.y, 14);
+  if (applyDamage(game, attacker, target, attackDamageAgainstTarget(attacker, target, projectile.damage))) {
+    applyAttackStatusEffects(game, attacker, target);
+    addEffect(game, "hit", target.x, target.y, 14);
+  }
 }
 
 function projectileAttacker(projectile: Projectile): Building {
@@ -1300,12 +1307,27 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
 }
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
-  if (!applyDamage(game, attacker, target, damage)) return;
+  if (!applyDamage(game, attacker, target, attackDamageAgainstTarget(attacker, target, damage))) return;
+  applyAttackStatusEffects(game, attacker, target);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
   addEffect(game, "hit", to.x, to.y, 14);
+}
+
+function attackDamageAgainstTarget(attacker: Unit | Building, target: Unit | Building, damage: number) {
+  if (!isUnit(attacker) || !isUnit(target) || !target.effects.some((effect) => effect.type === "scorch")) return damage;
+  if (attacker.kind === "emberRavager") return damage + 7;
+  if (attacker.kind === "cinderRunner") return damage + 5;
+  return damage;
+}
+
+function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building) {
+  if (!isUnit(attacker) || !isUnit(target) || attacker.kind !== "sparkArcher") return;
+  target.effects = target.effects.filter((effect) => effect.type !== "scorch");
+  target.effects.push({ type: "scorch", remaining: SCORCH_DURATION });
+  addEffect(game, "scorch", target.x, target.y, 28);
 }
 
 function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {

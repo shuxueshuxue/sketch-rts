@@ -99,7 +99,8 @@ Implementation is not complete until current evidence proves all of the followin
 - Dry-run manifests prove V2-prod is Grove-only and that V3 race selection is randomized.
 - First pgl benchmark evidence from branch `codex/v3-race-ai` commit `a6ac35e`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `14.82s`, CPU time `724378.129ms`, remote result file `/home/ubuntu/sketch-rts-v3-race-ai-bench/.benchmark-runs/v3-frozen-50-2026-06-08-20260608T024752Z.json`.
 - That first result does not pass: V3 total `62/100`, Grove V3 `38/50`, Ember V3 `24/50`.
-- Remaining stoplines: Ember still needs real shared mechanics and V3 policy use; V3 must improve from `62/100` to at least `90/100` on pgl.
+- Local TDD slice after that benchmark adds shared `scorch` simulation state: `sparkArcher` applies scorch, `emberRavager` and `cinderRunner` gain damage into scorched targets, `ashCurse` applies a harsher multiplier to scorched targets, tooltips/effects expose the mechanic, and the spell planner prefers scorched ash-curse targets.
+- Remaining stoplines: rerun pgl benchmark for the scorch slice, then continue raising V3 from `62/100` to at least `90/100` on pgl.
 
 ## Non-Goals
 

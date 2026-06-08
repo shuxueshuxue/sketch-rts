@@ -121,7 +121,7 @@ describe("sketch RTS simulation", () => {
     expect(UNIT_DEFS.ashHexer.abilities).toEqual(["ashCurse"]);
     expect(UNIT_DEFS.pyreCaller.abilities).toEqual(["cinderSoul"]);
     expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: seconds(6) });
-    expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.4, effectDuration: seconds(18), cooldown: seconds(7.5) });
+    expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, effectDuration: seconds(18), cooldown: seconds(7.5) });
     expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(45), cooldown: seconds(11) });
   });
 
@@ -1108,7 +1108,54 @@ describe("sketch RTS simulation", () => {
     expect(hurt.hp).toBe(85);
     const spirit = game.units.find((unit) => unit.owner === "player" && unit.kind === "spirit");
     expect(spirit?.expiresTick).toBe(game.tick - 5 + seconds(45));
-    expect(enemy.effects).toContainEqual({ type: "curse", remaining: seconds(18) - 5 });
+    expect(enemy.effects).toContainEqual({ type: "curse", remaining: seconds(18) - 5, damageMultiplier: 0.45 });
+  });
+
+  it("uses scorch as shared ember combat state instead of a renamed grove spell", () => {
+    const game = sketchScene("ember-scorch-state")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("ember", { team: "north", race: "ember" })
+      .player("grove", { team: "south", race: "grove" })
+      .townHall("ember", 500, 500)
+      .townHall("grove", 3500, 3500)
+      .unit("ember", "sparkArcher", 1000, 1000, { id: "spark" })
+      .unit("ember", "emberRavager", 1030, 1000, { id: "ravager" })
+      .unit("grove", "footman", 1050, 1000, { id: "target" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "target")!;
+
+    issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["spark"], targetId: "target" });
+    stepUntil(game, 40, () => target.effects.some((effect) => effect.type === "scorch"));
+    const hpAfterSpark = target.hp;
+    issuePlayerCommand(game, "ember", { type: "attack", unitIds: ["ravager"], targetId: "target" });
+    stepUntil(game, 40, () => target.hp < hpAfterSpark);
+
+    expect(target.effects.some((effect) => effect.type === "scorch")).toBe(true);
+    expect(game.effects.some((effect) => effect.type === "scorch")).toBe(true);
+    expect(hpAfterSpark - target.hp).toBeGreaterThan(UNIT_DEFS.emberRavager.attackDamage);
+  });
+
+  it("lets ash curse punish already scorched targets more than ordinary curse", () => {
+    const game = sketchScene("ember-scorch-ash-curse")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("ember", { team: "north", race: "ember" })
+      .player("grove", { team: "south", race: "grove" })
+      .townHall("ember", 500, 500)
+      .townHall("grove", 3500, 3500)
+      .unit("ember", "ashHexer", 1000, 1000, { id: "hexer" })
+      .unit("grove", "footman", 1060, 1000, { id: "target" })
+      .build()
+      .createGame();
+    const target = game.units.find((unit) => unit.id === "target")!;
+    target.effects.push({ type: "scorch", remaining: seconds(8) });
+
+    issuePlayerCommand(game, "ember", { type: "cast", unitId: "hexer", ability: "ashCurse", targetId: "target" });
+
+    expect(target.effects.find((effect) => effect.type === "curse")).toMatchObject({ damageMultiplier: 0.3 });
+    expect(game.effects.some((effect) => effect.type === "scorch")).toBe(true);
   });
 
   it("curse directly cuts outgoing attack damage to forty percent for attack and attack-move orders", () => {

@@ -181,7 +181,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
-    if (effect.type === "flameBurn") {
+    if (effect.type === "flameBurn" || effect.type === "scorch") {
       drawFlameBurnEffect(ctx, point, life);
       continue;
     }
