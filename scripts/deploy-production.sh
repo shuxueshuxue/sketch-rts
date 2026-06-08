@@ -25,10 +25,24 @@ if [[ ! -s "$artifact_path" ]]; then
 fi
 
 mkdir -p "$releases_dir" "$shared_dir/.benchmark-dashboard"
+if [[ -d "$deploy_root/.benchmark-dashboard" && ! -L "$deploy_root/.benchmark-dashboard" ]]; then
+  cp -a "$deploy_root/.benchmark-dashboard/." "$shared_dir/.benchmark-dashboard/"
+fi
 
 release_dir="$releases_dir/$revision"
 tmp_release="$releases_dir/.tmp-$revision-$$"
 previous_release="$(readlink -f "$current_link" 2>/dev/null || true)"
+if [[ -z "$previous_release" && -f "$deploy_root/dist-server/index.mjs" && -d "$deploy_root/dist" ]]; then
+  legacy_revision="$(cat "$deploy_root/.deployed-revision" 2>/dev/null || printf 'unknown')"
+  legacy_revision="legacy-${legacy_revision//[^A-Za-z0-9_.-]/-}"
+  previous_release="$releases_dir/$legacy_revision"
+  if [[ ! -d "$previous_release" ]]; then
+    mkdir -p "$previous_release"
+    cp -a "$deploy_root/dist" "$deploy_root/dist-server" "$previous_release/"
+    ln -sfn "$shared_dir/.benchmark-dashboard" "$previous_release/.benchmark-dashboard"
+    printf '%s\n' "$legacy_revision" > "$previous_release/.deployed-revision"
+  fi
+fi
 
 rm -rf "$tmp_release" "$release_dir"
 mkdir -p "$tmp_release"
@@ -95,6 +109,25 @@ if [[ "$healthy" != "1" ]]; then
   fi
   exit 1
 fi
+
+printf '%s\n' "$revision" > "$deploy_root/.deployed-revision"
+if [[ -d "$deploy_root/.benchmark-dashboard" && ! -L "$deploy_root/.benchmark-dashboard" ]]; then
+  rm -rf "$deploy_root/.benchmark-dashboard"
+  ln -sfn "$shared_dir/.benchmark-dashboard" "$deploy_root/.benchmark-dashboard"
+fi
+rm -rf \
+  "$deploy_root/dist" \
+  "$deploy_root/dist-server" \
+  "$deploy_root/docs" \
+  "$deploy_root/scripts" \
+  "$deploy_root/src" \
+  "$deploy_root/benchmark.html" \
+  "$deploy_root/index.html" \
+  "$deploy_root/package-lock.json" \
+  "$deploy_root/package.json" \
+  "$deploy_root/README.md" \
+  "$deploy_root/tsconfig.json" \
+  "$deploy_root/vite.config.ts"
 
 find "$releases_dir" -mindepth 1 -maxdepth 1 -type d ! -name ".$revision-*" -printf '%T@ %p\n' \
   | sort -rn \

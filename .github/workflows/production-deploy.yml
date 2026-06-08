@@ -51,4 +51,4 @@ jobs:
           ssh -i ~/.ssh/sketch-rts-production -p "$ALIYUN_PORT" "$remote" "rm -rf '$remote_dir' && mkdir -p '$remote_dir'"
           scp -i ~/.ssh/sketch-rts-production -P "$ALIYUN_PORT" sketch-rts-production.tar.gz scripts/deploy-production.sh "$remote:$remote_dir/"
           ssh -i ~/.ssh/sketch-rts-production -p "$ALIYUN_PORT" "$remote" \
-            "bash '$remote_dir/deploy-production.sh' '$remote_dir/sketch-rts-production.tar.gz' '$GITHUB_SHA'"
+            "set +e; bash '$remote_dir/deploy-production.sh' '$remote_dir/sketch-rts-production.tar.gz' '$GITHUB_SHA'; status=\$?; rm -rf '$remote_dir'; exit \$status"
