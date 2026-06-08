@@ -23,12 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Require production commit to come from main
+      - name: Require production tree to match main
         run: |
           set -euo pipefail
           git fetch --no-tags origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/main"; then
-            echo "::error::Production deploys must use a commit already present on origin/main."
+          if ! git diff --quiet "$GITHUB_SHA" "origin/main"; then
+            echo "::error::Production deploys must match origin/main. Open a main-to-production PR before deploying."
             exit 1
           fi
 
