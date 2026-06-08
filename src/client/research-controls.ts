@@ -60,7 +60,7 @@ function canResearchAtBuilding(building: Building, upgradeKind: UpgradeKind) {
   return (
     building.complete &&
     building.researchQueue.every((job) => job.upgradeKind !== upgradeKind) &&
-    UPGRADE_DEFS[upgradeKind].buildingKind === building.kind &&
+    UPGRADE_DEFS[upgradeKind].researchBuildingKinds.includes(building.kind) &&
     BUILDING_DEFS[building.kind].researches.includes(upgradeKind)
   );
 }

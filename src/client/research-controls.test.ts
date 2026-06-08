@@ -40,6 +40,19 @@ const player: PlayerState = {
   upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0 },
 };
 
+const emberForge: Building = {
+  ...barracks,
+  id: "ember-forge-1",
+  kind: "emberForge",
+  hp: 560,
+  maxHp: 560,
+};
+
+const emberPlayer: PlayerState = {
+  ...player,
+  race: "ember",
+};
+
 describe("research controls", () => {
   it("shows research buttons for an eligible selected barracks", () => {
     const commands = researchCommandButtonsForSelection([barracks], player);
@@ -47,6 +60,15 @@ describe("research controls", () => {
     expect(commands).toEqual([
       { label: "Weapon Training", icon: "⚔", hotkey: "w", upgradeKind: "weaponTraining", buildingId: "barracks-1" },
       { label: "Reinforced Plating", icon: "▣", hotkey: "p", upgradeKind: "reinforcedPlating", buildingId: "barracks-1" },
+    ]);
+  });
+
+  it("shows shared combat research buttons for an eligible selected ember forge", () => {
+    const commands = researchCommandButtonsForSelection([emberForge], emberPlayer);
+
+    expect(commands).toEqual([
+      { label: "Weapon Training", icon: "⚔", hotkey: "w", upgradeKind: "weaponTraining", buildingId: "ember-forge-1" },
+      { label: "Reinforced Plating", icon: "▣", hotkey: "p", upgradeKind: "reinforcedPlating", buildingId: "ember-forge-1" },
     ]);
   });
 

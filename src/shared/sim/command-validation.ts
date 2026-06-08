@@ -59,7 +59,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const upgrade = UPGRADE_DEFS[command.upgradeKind];
     if (!upgrade) return commandError(`Unknown upgrade ${command.upgradeKind}`);
     if (!RACE_DEFS[player.race].upgrades.includes(command.upgradeKind)) return commandError(`${player.race} race cannot research ${command.upgradeKind}`);
-    if (upgrade.buildingKind !== building.kind || !BUILDING_DEFS[building.kind].researches.includes(command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
+    if (!upgrade.researchBuildingKinds.includes(building.kind) || !BUILDING_DEFS[building.kind].researches.includes(command.upgradeKind)) return commandError(`${building.kind} cannot research ${command.upgradeKind}`);
     const currentLevel = player.upgrades[command.upgradeKind] ?? 0;
     if (currentLevel >= maxUpgradeLevel(command.upgradeKind)) return commandError(`${command.upgradeKind} already at max level`, true);
     if (building.researchQueue.some((job) => job.upgradeKind === command.upgradeKind)) return commandError(`${command.upgradeKind} is already queued`, true);

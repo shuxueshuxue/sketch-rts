@@ -607,7 +607,7 @@ function researchBuilding(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: 
   return buildings(snapshot, owner).find(
     (building) =>
       building.complete &&
-      building.kind === upgrade.buildingKind &&
+      upgrade.researchBuildingKinds.includes(building.kind) &&
       building.researchQueue.length === 0 &&
       BUILDING_DEFS[building.kind].researches.includes(upgradeKind),
   );

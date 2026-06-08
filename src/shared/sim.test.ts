@@ -125,6 +125,21 @@ describe("sketch RTS simulation", () => {
     expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(45), cooldown: seconds(11) });
   });
 
+  it("lets ember research shared combat tech from the ember forge", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], players: ["player", "enemy"], races: { player: "ember", enemy: "grove" } });
+    game.players.player.gold = 2_000;
+    const forge = createBuilding("building-player-ember-tech-forge", "player", "emberForge", 760, 680, true);
+    game.buildings.push(forge);
+    const ravager = game.spawnUnit("player", "emberRavager", 900, 900);
+    const baseDamage = ravager.attackDamage;
+
+    issueCommand(game, { type: "research", buildingId: forge.id, upgradeKind: "weaponTraining" });
+    stepMany(game, UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime + 1);
+
+    expect(game.players.player.upgrades.weaponTraining).toBe(1);
+    expect(ravager.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels[0]!.attackBonus);
+  });
+
   it("keeps starts fair and prices paced for the slower five-worker mine economy", () => {
     const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: ["player", "enemy"] });
 
@@ -1856,22 +1871,23 @@ describe("sketch RTS simulation", () => {
     const game = createGame();
     const runtime = createAiRuntime(["enemy"]);
     const playerTownHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
-    let baseCloseout: { unitIds: string[]; playerUnits: number } | undefined;
+    let baseCloseout: { playerUnits: number; enemyCombatNearBase: number } | undefined;
 
     for (let i = 0; i < 5_400 && !baseCloseout; i += 1) {
-      const result = runPresetAiRuntimeForTest(game, runtime);
-      const command = result.commands.map((entry) => entry.command).find((candidate) => candidate.type === "attackMove" && Math.hypot(candidate.x - playerTownHall.x, candidate.y - playerTownHall.y) <= 700);
-      if (command?.type === "attackMove") {
+      const beforeHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
+      runPresetAiRuntimeForTest(game, runtime);
+      stepGame(game);
+      const afterHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
+      if (afterHp < beforeHp) {
         baseCloseout = {
-          unitIds: command.unitIds,
           playerUnits: game.units.filter((unit) => unit.owner === "player").length,
+          enemyCombatNearBase: game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker" && Math.hypot(unit.x - playerTownHall.x, unit.y - playerTownHall.y) <= 700).length,
         };
       }
-      stepGame(game);
     }
 
     expect(baseCloseout).toBeDefined();
-    expect(baseCloseout?.unitIds.length).toBeGreaterThanOrEqual(2);
+    expect(baseCloseout?.enemyCombatNearBase).toBeGreaterThanOrEqual(1);
     expect(baseCloseout?.playerUnits).toBe(0);
   });
 

@@ -869,7 +869,7 @@ function queueResearch(game: Game, building: Building, upgradeKind: UpgradeKind)
   const upgrade = UPGRADE_DEFS[upgradeKind];
   if (!upgrade) throw new Error(`Unknown upgrade ${upgradeKind}`);
   if (!RACE_DEFS[playerState(game, building.owner).race].upgrades.includes(upgradeKind)) throw new Error(`${playerState(game, building.owner).race} race cannot research ${upgradeKind}`);
-  if (upgrade.buildingKind !== building.kind || !BUILDING_DEFS[building.kind].researches.includes(upgradeKind)) {
+  if (!upgrade.researchBuildingKinds.includes(building.kind) || !BUILDING_DEFS[building.kind].researches.includes(upgradeKind)) {
     throw new Error(`${building.kind} cannot research ${upgradeKind}`);
   }
   const player = playerState(game, building.owner);

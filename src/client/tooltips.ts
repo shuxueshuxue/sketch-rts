@@ -53,8 +53,8 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
       ? tooltipLine(i18n.locale, "attackBonus", level.attackBonus)
       : tooltipLine(i18n.locale, "maxHpBonus", level.maxHpBonus);
   const requirements = level.buildingMaxHpMultiplier
-    ? [researchAtRequirement(upgrade.buildingKind, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
-    : [researchAtRequirement(upgrade.buildingKind, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
+    ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
+    : [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
   return {
     title: `${labelKind(kind, i18n)} ${romanLevel(targetLevel)}`,
     body: UPGRADE_DESCRIPTIONS[i18n.locale][kind],
@@ -105,8 +105,8 @@ function abilityListRequirement(abilities: readonly AbilityKind[], i18n: I18n) {
   return TEXT[i18n.locale].requirements.abilities.replace("{abilities}", abilities.map((ability) => labelKind(ability, i18n)).join(", "));
 }
 
-function researchAtRequirement(buildingKind: BuildingKind, i18n: I18n) {
-  return TEXT[i18n.locale].requirements.researchAt.replace("{building}", labelKind(buildingKind, i18n));
+function researchAtRequirement(buildingKinds: readonly BuildingKind[], i18n: I18n) {
+  return TEXT[i18n.locale].requirements.researchAt.replace("{building}", buildingKinds.map((buildingKind) => labelKind(buildingKind, i18n)).join(" / "));
 }
 
 function providesRequirement(production: string[], locale: Locale) {
