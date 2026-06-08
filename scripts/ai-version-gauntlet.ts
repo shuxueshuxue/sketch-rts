@@ -200,6 +200,7 @@ function gauntletDryRunManifest(catalog: typeof catalog, matches: AiGauntletMatc
       controllerCase: match.controllerCase,
       mapId: match.mapId,
       players: Object.keys(match.agents),
+      playtest: gauntletPlaytestReplay(match, catalog),
       agents: Object.fromEntries(
         Object.entries(match.agents).map(([playerId, agent]) => [
           playerId,
@@ -214,4 +215,36 @@ function gauntletDryRunManifest(catalog: typeof catalog, matches: AiGauntletMatc
       ),
     })),
   };
+}
+
+function gauntletPlaytestReplay(match: AiGauntletMatch, catalog: typeof catalog) {
+  const args = [
+    "new",
+    "--file",
+    `.playtests/gauntlet-${slug(match.name)}.json`,
+    "--from-gauntlet",
+    match.name,
+    "--gauntlet-seed",
+    catalog.selection.seed,
+    ...(catalog.selection.mode === "full" ? ["--gauntlet-full"] : ["--gauntlet-map-count", String(catalog.selectedRichScoreMapIds.length)]),
+    "--you",
+    AI_GAUNTLET_V2,
+    "--assist-you",
+  ];
+  return {
+    args,
+    command: `npm run play:ai -- ${args.map(shellArg).join(" ")}`,
+  };
+}
+
+function slug(value: string) {
+  return value
+    .replaceAll(/([a-z])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-|-$/g, "");
+}
+
+function shellArg(value: string) {
+  return /^[A-Za-z0-9_./:-]+$/.test(value) ? value : `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 }

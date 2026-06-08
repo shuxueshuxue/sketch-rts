@@ -48,7 +48,15 @@ describe("AI version gauntlet CLI", () => {
 
     expect(focused).toMatchObject({
       matchCount: 1,
-      matches: [expect.objectContaining(target)],
+      matches: [
+        expect.objectContaining({
+          ...target,
+          playtest: {
+            args: ["new", "--file", ".playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json", "--from-gauntlet", target.name, "--gauntlet-seed", "gauntlet-cli-seed", "--gauntlet-map-count", "2", "--you", "v2", "--assist-you"],
+            command: "npm run play:ai -- new --file .playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json --from-gauntlet \"mixed-v2-external score wildMarches official triangle\" --gauntlet-seed gauntlet-cli-seed --gauntlet-map-count 2 --you v2 --assist-you",
+          },
+        }),
+      ],
     });
   });
 });
