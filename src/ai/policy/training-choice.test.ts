@@ -125,16 +125,13 @@ describe("AI training choice", () => {
     expect(trainingChoice(snapshot, "v2", forge, { version: "v2" })).toBe("emberRavager");
   });
 
-  it("uses ember cinder spire production to reach two scorch archers before support casters", () => {
+  it("uses ember cinder spire production for support casters before duplicating attackers", () => {
     const scene = sketchScene("training-choice-ember-spire")
       .map("bareDuel")
       .replaceDefaults()
       .player("v2", { team: "north", race: "ember" })
       .townHall("v2", 500, 500)
       .building("v2", "cinderSpire", 700, 620, { id: "spire" })
-      .unit("v2", "emberRavager", 720, 660)
-      .unit("v2", "emberRavager", 750, 690)
-      .unit("v2", "cinderRunner", 780, 720)
       .unit("v2", "sparkArcher", 760, 620);
     const game = scene.build().createGame();
     game.players.v2!.gold = 520;
@@ -142,6 +139,6 @@ describe("AI training choice", () => {
     const spire = snapshot.buildings.find((building) => building.id === "spire");
     if (!spire) throw new Error("missing cinder spire");
 
-    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("sparkArcher");
+    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
   });
 });
