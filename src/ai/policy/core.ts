@@ -586,7 +586,7 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 }
 
 function usesEarlyWeaponTiming(snapshot: GameSnapshot, owner: PlayerId) {
-  return completeBuildings(snapshot, owner).some((building) => BUILDING_DEFS[building.kind].researches.includes("weaponTraining"));
+  return playerState(snapshot, owner).race === "grove";
 }
 
 function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
