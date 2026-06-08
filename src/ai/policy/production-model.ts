@@ -22,10 +22,16 @@ export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: Play
   const army = combatUnits(snapshot, owner);
   const armyGates = options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
   const goldGates = [0, 420, 620, 820, 1040];
-  const desired = plan.filter((_, index) => index === 0 || army.length >= armyGates[index]! || player.gold > goldGates[index]!);
+  const desired = plan.filter((kind, index) => index === 0 || army.length >= productionPlanArmyGate(plan, kind, index, armyGates[index]!, options) || player.gold > goldGates[index]!);
   if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine")) return undefined;
 
   return firstMissingProductionPlanKind(desired, buildings(snapshot, owner).map((building) => building.kind));
+}
+
+function productionPlanArmyGate(plan: ProductionBuildingKind[], kind: ProductionBuildingKind, index: number, baseGate: number, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2") return baseGate;
+  if (!plan.slice(0, index).includes(kind)) return baseGate;
+  return Math.max(baseGate, 10);
 }
 
 function firstMissingProductionPlanKind(desired: ProductionBuildingKind[], existingKinds: string[]): ProductionBuildingKind | undefined {
