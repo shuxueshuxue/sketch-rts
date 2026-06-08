@@ -1,5 +1,5 @@
 import { createAiMeleeControlBenchmarkInput, runAiMeleeControlBenchmarkDetailsParallel, runAiMeleeControlBenchmarkParallel } from "../src/ai/benchmark/control";
-import { boolFlag, commonAiBenchmarkOptionsFromArgs, csvFlag, flag, requiredFlag, requiredNumberFlag, runAiBenchmarkCli } from "./benchmark-cli";
+import { benchmarkFilterFromArgs, boolFlag, commonAiBenchmarkOptionsFromArgs, flag, requiredNumberFlag, runAiBenchmarkCli } from "./benchmark-cli";
 
 const args = process.argv.slice(2);
 
@@ -15,20 +15,13 @@ await runAiBenchmarkCli({
   npm run benchmark:ai-control -- --full --workers 95`,
   optionsFromArgs: controlOptionsFromArgs,
   createInput: createAiMeleeControlBenchmarkInput,
-  run: (options) => (boolFlag(args, "details") ? runAiMeleeControlBenchmarkDetailsParallel(options, controlFilterFromArgs(args)) : runAiMeleeControlBenchmarkParallel(options)),
+  run: (options) => (boolFlag(args, "details") ? runAiMeleeControlBenchmarkDetailsParallel(options, benchmarkFilterFromArgs(args)) : runAiMeleeControlBenchmarkParallel(options)),
 });
 
 function controlOptionsFromArgs(args: readonly string[]) {
   return {
     ...commonAiBenchmarkOptionsFromArgs(args),
     ...(flag(args, "worker-harassment") ? { workerHarassment: workerHarassmentFlag(args) } : {}),
-  };
-}
-
-function controlFilterFromArgs(args: string[]) {
-  return {
-    ...(flag(args, "maps") ? { mapIds: csvFlag(args, "maps") } : {}),
-    ...(flag(args, "match") ? { matchNames: [requiredFlag(args, "match")] } : {}),
   };
 }
 

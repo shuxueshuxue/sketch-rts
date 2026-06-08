@@ -97,7 +97,9 @@ Implementation is not complete until current evidence proves all of the followin
 - The live policy registry intentionally excludes `v2-prod`; direct live policy calls with `v2-prod` fail loudly. `v2-prod` must enter through planner context so benchmark/runtime paths use the frozen dispatch seam.
 - Focused tests prove the frozen subtree cannot import live `src/ai/policy/**` modules.
 - Dry-run manifests prove V2-prod is Grove-only and that V3 race selection is randomized.
-- Remaining stoplines: Ember still needs real shared mechanics and V3 policy use; the 50-map/100-game gate still needs pgl benchmark evidence.
+- First pgl benchmark evidence from branch `codex/v3-race-ai` commit `a6ac35e`: seed `v3-frozen-50-2026-06-08`, 50 maps / 100 matches, workers `95`, wall time `14.82s`, CPU time `724378.129ms`, remote result file `/home/ubuntu/sketch-rts-v3-race-ai-bench/.benchmark-runs/v3-frozen-50-2026-06-08-20260608T024752Z.json`.
+- That first result does not pass: V3 total `62/100`, Grove V3 `38/50`, Ember V3 `24/50`.
+- Remaining stoplines: Ember still needs real shared mechanics and V3 policy use; V3 must improve from `62/100` to at least `90/100` on pgl.
 
 ## Non-Goals
 

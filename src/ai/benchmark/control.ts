@@ -241,7 +241,7 @@ export async function runAiMeleeControlBenchmarkParallel(options: AiMeleeControl
 
 export async function runAiMeleeControlBenchmarkDetailsParallel(options: AiMeleeControlBenchmarkOptions = {}, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): Promise<AiMeleeControlMatchDetailsResult> {
   const { input, selection } = createAiMeleeControlBenchmarkInput(options);
-  const filtered = filterAiMeleeControlBenchmarkInput(input, filter);
+  const filtered = filterBenchmarkInput(input, filter);
   const report = await runBenchmarkParallel(serializableAiBenchmarkInput(filtered), {
     workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
@@ -265,6 +265,16 @@ export async function runAiV3VsProdV2BenchmarkParallel(options: AiV3VsProdV2Benc
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
   return summarizeAiV3VsProdV2Benchmark({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+}
+
+export async function runAiV3VsProdV2BenchmarkDetailsParallel(options: AiV3VsProdV2BenchmarkOptions = {}, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): Promise<AiMeleeControlMatchDetailsResult> {
+  const { input, selection } = createAiV3VsProdV2BenchmarkInput(options);
+  const filtered = filterBenchmarkInput(input, filter);
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput(filtered), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  return summarizeAiMeleeControlBenchmarkDetails({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
 }
 
 export function summarizeAiCrossRaceBenchmark(input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number }): AiCrossRaceBenchmarkResult {
@@ -436,6 +446,10 @@ export function summarizeAiMeleeControlBenchmark(input: { seed: string; selected
 }
 
 export function filterAiMeleeControlBenchmarkInput(input: BenchmarkInput<AiGameAgent>, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): BenchmarkInput<AiGameAgent> {
+  return filterBenchmarkInput(input, filter);
+}
+
+export function filterBenchmarkInput<TAgent extends AiGameAgent>(input: BenchmarkInput<TAgent>, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): BenchmarkInput<TAgent> {
   const mapIds = filter.mapIds ? new Set(filter.mapIds) : undefined;
   const matchNames = filter.matchNames ? new Set(filter.matchNames) : undefined;
   if (!mapIds && !matchNames) return input;

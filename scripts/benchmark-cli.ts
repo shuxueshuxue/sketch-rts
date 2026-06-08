@@ -30,6 +30,11 @@ export type AiBenchmarkCliConfig<TOptions extends CommonAiBenchmarkCliOptions, T
   optionsFromArgs?: (args: readonly string[]) => TOptions;
 };
 
+export type BenchmarkMatchFilter = {
+  mapIds?: string[];
+  matchNames?: string[];
+};
+
 export function flag(args: readonly string[], name: string): string | undefined {
   const index = args.indexOf(`--${name}`);
   if (index === -1) return undefined;
@@ -68,6 +73,13 @@ export function workerCountFromArgs(args: readonly string[]) {
 
 export function printJson(value: unknown) {
   console.log(JSON.stringify(value, null, 2));
+}
+
+export function benchmarkFilterFromArgs(args: readonly string[]): BenchmarkMatchFilter {
+  return {
+    ...(flag(args, "maps") ? { mapIds: csvFlag(args, "maps") } : {}),
+    ...(flag(args, "match") ? { matchNames: [requiredFlag(args, "match")] } : {}),
+  };
 }
 
 export function commonAiBenchmarkOptionsFromArgs(args: readonly string[]): CommonAiBenchmarkCliOptions {

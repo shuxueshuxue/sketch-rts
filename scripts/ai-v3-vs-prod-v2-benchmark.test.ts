@@ -21,6 +21,26 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
     expect(new Set(v3Agents.map((agent) => agent.aiVersion))).toEqual(new Set(["v3 grove", "v3 ember"]));
     expect(new Set(v3Agents.map((agent) => agent.policyVersion))).toEqual(new Set(["v3-grove", "v3-ember"]));
   });
+
+  it("prints focused match diagnostics for one V3 versus frozen V2-prod match", () => {
+    const output = JSON.parse(runV3BenchmarkCli("--seed", "v3-frozen-smoke-2026-06-08", "--map-count", "2", "--match", "wildMarches v3 north", "--max-ticks", "1", "--workers", "1", "--details"));
+
+    expect(output).toMatchObject({
+      seed: "v3-frozen-smoke-2026-06-08",
+      selectedMapIds: ["wildMarches", "emberFen"],
+      matchCount: 1,
+      matches: [
+        {
+          name: "wildMarches v3 north",
+          mapId: "wildMarches",
+          players: {
+            v3: { team: "north", race: "ember" },
+            "v2-prod": { team: "south", race: "grove" },
+          },
+        },
+      ],
+    });
+  });
 });
 
 function runV3BenchmarkCli(...args: string[]) {
