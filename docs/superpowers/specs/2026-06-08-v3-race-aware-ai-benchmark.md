@@ -81,7 +81,7 @@ Full 50-map/100-game benchmark runs belong on `pgl`. Local runs may only be dry-
 
 Implementation is not complete until current evidence proves all of the following:
 
-- Unit tests prove the AI version contract exposes `v2-prod`, `v3`, `v3-grove`, and `v3-ember`.
+- Unit tests prove the AI planner/benchmark version contract accepts `v2-prod`, `v3`, `v3-grove`, and `v3-ember`, while the live script registry does not let `v2-prod` silently alias current V2.
 - Dry-run tests prove V2-prod is Grove-only and V3 is seed-randomized across Grove/Ember.
 - Simulation/catalog tests prove Ember's new mechanic is real shared game state, not AI-only bookkeeping.
 - AI policy tests prove V3 Ember deliberately uses the mechanic in planning.
@@ -89,6 +89,15 @@ Implementation is not complete until current evidence proves all of the followin
 - Local `npm run build` passes.
 - pgl benchmark evidence from the dedicated CLI shows at least 90/100 V3 wins against frozen production Grove V2.
 - The pgl result reports seed, selected maps, worker count, wall time, CPU time, and the exact code revision used.
+
+## Current Status
+
+- `v2-prod` is no longer only a benchmark/version label. It dispatches through `src/ai/policy-v2prod/`, a vendored snapshot of the 2026-06-08 production policy subtree from commit `2521715`.
+- The frozen policy snapshot shares the current gameplay/simulation/catalog core. This preserves one world implementation while freezing the Grove production AI brain.
+- The live policy registry intentionally excludes `v2-prod`; direct live policy calls with `v2-prod` fail loudly. `v2-prod` must enter through planner context so benchmark/runtime paths use the frozen dispatch seam.
+- Focused tests prove the frozen subtree cannot import live `src/ai/policy/**` modules.
+- Dry-run manifests prove V2-prod is Grove-only and that V3 race selection is randomized.
+- Remaining stoplines: Ember still needs real shared mechanics and V3 policy use; the 50-map/100-game gate still needs pgl benchmark evidence.
 
 ## Non-Goals
 

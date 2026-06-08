@@ -10,13 +10,12 @@ import { sketchScene } from "../sdk/scene";
 
 describe("SDK preset AI policy", () => {
   it("exposes named AI script versions for SDK and room adapters", () => {
-    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v2-prod", "v3", "v3-grove", "v3-ember"]);
+    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember"]);
     expect(AI_SCRIPT_VERSIONS.v1.length).toBeGreaterThan(0);
     expect(AI_SCRIPT_VERSIONS.v2.map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v1.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS.v3.map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v2.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS["v3-grove"].map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v3.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS["v3-ember"].map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v3.map((script) => script.id));
-    expect(AI_SCRIPT_VERSIONS["v2-prod"].length).toBeGreaterThan(0);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
     const v1 = planPresetAiCommands(snapshotGame(game), "player", { version: "v1" });
@@ -26,6 +25,12 @@ describe("SDK preset AI policy", () => {
     expect(v1[0]).toMatchObject({ type: "mine" });
     expect(v2[0]).toMatchObject({ type: "mine" });
     expect(v3[0]).toMatchObject({ type: "mine" });
+  });
+
+  it("rejects v2-prod on the live preset policy helper so frozen baseline must use planner context", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+
+    expect(() => planPresetAiCommands(snapshotGame(game), "player", { version: "v2-prod" })).toThrow(/v2-prod.*planner context/i);
   });
 
   it("turns idle workers into ordinary player mine commands", () => {
