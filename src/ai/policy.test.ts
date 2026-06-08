@@ -565,6 +565,34 @@ describe("SDK preset AI policy", () => {
     expect(command).not.toMatchObject({ type: "attack", targetId: "base-side-footman" });
   });
 
+  it("v2 keeps a pre-contact one-on-one army wave as movement instead of chasing a distant front unit", () => {
+    const scene = sketchScene("v2-no-precontact-front-chase")
+      .map("tealFissure")
+      .replaceDefaults()
+      .player("v3", { team: "south", race: "ember" })
+      .player("v2-prod", { team: "north", race: "grove" })
+      .townHall("v3", 492, 2048)
+      .unit("v3", "cinderRunner", 940, 2220, { id: "wave-a", order: { type: "attackMove", x: 2589, y: 2062 } })
+      .unit("v3", "cinderRunner", 966, 2243, { id: "wave-b", order: { type: "attackMove", x: 2589, y: 2062 } })
+      .unit("v3", "emberRavager", 1053, 2181, { id: "wave-c", order: { type: "attackMove", x: 2589, y: 2062 } })
+      .unit("v3", "sparkArcher", 928, 2061, { id: "wave-d", order: { type: "attackMove", x: 2589, y: 2062 } })
+      .unit("v3", "emberRavager", 1048, 2145, { id: "wave-e", order: { type: "attackMove", x: 2589, y: 2062 } })
+      .townHall("v2-prod", 3604, 2048)
+      .building("v2-prod", "barracks", 3484, 1948)
+      .unit("v2-prod", "footman", 2376, 2267, { id: "distant-front" })
+      .unit("v2-prod", "footman", 2950, 2180)
+      .unit("v2-prod", "footman", 2990, 2210)
+      .unit("v2-prod", "archer", 3020, 2240)
+      .unit("v2-prod", "lancer", 3050, 2270)
+      .unit("v2-prod", "lancer", 3090, 2300)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v3", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams })[0];
+
+    expect(command).not.toMatchObject({ type: "attack", targetId: "distant-front" });
+  });
+
   it("v2 does not creep a neutral camp through a stronger route army in one-on-one", () => {
     const scene = sketchScene("v2-no-route-covered-neutral-camp")
       .map("openClaims")

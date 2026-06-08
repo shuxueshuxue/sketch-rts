@@ -2515,7 +2515,7 @@ function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, 
   const ownPower = armyPower(soldiers);
   return army
     // @@@local-significant-target - Direct attack is for local army contact; distant isolated units near a base belong to objective movement, not chase orders.
-    .filter((unit) => distance(unit, from) <= 1_450)
+    .filter((unit) => distance(unit, from) <= 1_050)
     .filter((unit) => armyPower(army.filter((candidate) => distance(candidate, unit) <= 520)) <= ownPower * 0.95)
     .filter((unit) => !routeArmyCoversOpponentTarget(army, from, unit, ownPower))
     .sort((a, b) => strategicArmyTargetScore(b, from) - strategicArmyTargetScore(a, from))[0];
