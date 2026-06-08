@@ -1019,11 +1019,25 @@ function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, op
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
+  if (shouldPrioritizeEmberFirstSpireSupport(snapshot, owner, options, candidates)) {
+    return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
+  }
   if (shouldPrioritizeMatureLateTechTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => matureLateTechTrainingRank(a, snapshot, owner, options) - matureLateTechTrainingRank(b, snapshot, owner, options));
   }
   if (!shouldPrioritizeWoundedPriestTraining(snapshot, owner, options)) return candidates;
   return [...candidates].sort((a, b) => Number(b.kind === "sanctum") - Number(a.kind === "sanctum"));
+}
+
+function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+  if (options.version !== "v2") return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (!candidates.some((building) => building.kind === "cinderSpire")) return false;
+  const army = combatUnits(snapshot, owner);
+  if (army.length < 5) return false;
+  if (!army.some((unit) => unit.kind === "sparkArcher")) return false;
+  // @@@ember-support-milestone - Once Ember has a frontline and first spark, the first acolyte unlocks its race kit instead of adding another melee body.
+  return !army.some((unit) => unit.kind === "emberAcolyte");
 }
 
 function shouldPrioritizeMatureLateTechTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
