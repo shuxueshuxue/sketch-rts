@@ -4,6 +4,7 @@ import {
   createAiGauntletCatalog,
   type AiGauntletMatch,
 } from "../src/ai/benchmark/gauntlet";
+import { gauntletPlaytestReplay } from "../src/ai/benchmark/gauntlet-cli";
 import { runAiGame } from "../src/ai/game-runner";
 import { benchmarkFilterFromArgs, boolFlag, commonAiBenchmarkOptionsFromArgs, printJson } from "./benchmark-cli";
 
@@ -39,7 +40,7 @@ if (boolFlag(args, "runner-probe") || process.env.AI_GAUNTLET_RUNNER_PROBE === "
     thinkInterval: 45,
     sampleInterval: 1_200,
   } satisfies AiGauntletMatch;
-  const report = runGauntletMatch(probeMatch);
+  const report = runGauntletMatch(probeMatch, catalog);
   const commandCounts = {
     [AI_GAUNTLET_V2]: report.commandsByOwner[AI_GAUNTLET_V2] ?? 0,
     [AI_GAUNTLET_V1A]: report.commandsByOwner[AI_GAUNTLET_V1A] ?? 0,
@@ -58,10 +59,10 @@ if (boolFlag(args, "runner-probe") || process.env.AI_GAUNTLET_RUNNER_PROBE === "
 
 const started = performance.now();
 const cpuStarted = process.cpuUsage();
-const scoreReports = selectedMatches.filter((match) => match.lane === "score").map((match) => runGauntletMatch(match));
-const oneVThreeReports = selectedMatches.filter((match) => match.lane === "1v3").map((match) => runGauntletMatch(match));
-const twoVThreeReports = selectedMatches.filter((match) => match.lane === "2v3").map((match) => runGauntletMatch(match));
-const robustnessReports = selectedMatches.filter((match) => match.lane === "robustness").map((match) => runGauntletMatch(match));
+const scoreReports = selectedMatches.filter((match) => match.lane === "score").map((match) => runGauntletMatch(match, catalog));
+const oneVThreeReports = selectedMatches.filter((match) => match.lane === "1v3").map((match) => runGauntletMatch(match, catalog));
+const twoVThreeReports = selectedMatches.filter((match) => match.lane === "2v3").map((match) => runGauntletMatch(match, catalog));
+const robustnessReports = selectedMatches.filter((match) => match.lane === "robustness").map((match) => runGauntletMatch(match, catalog));
 const reports = [...scoreReports, ...oneVThreeReports, ...twoVThreeReports, ...robustnessReports];
 const cpu = process.cpuUsage(cpuStarted);
 const controllerCaseNames = [...new Set(selectedMatches.map((match) => match.controllerCase))];
@@ -116,7 +117,7 @@ if (!scoreOk || !oneVThreeOk || !twoVThreeOk) {
   throw new Error("AI version gauntlet failed: v2 did not satisfy the 1v2 score, 1v3 probe, and 2v3 probe gates in every controller class");
 }
 
-function runGauntletMatch(match: AiGauntletMatch) {
+function runGauntletMatch(match: AiGauntletMatch, catalog: typeof catalog) {
   const report = runAiGame({
     name: match.name,
     mapId: match.mapId,
@@ -132,6 +133,7 @@ function runGauntletMatch(match: AiGauntletMatch) {
     failed: match.lane === "robustness" ? robustnessFailed(report) : report.winnerTeam !== "north",
     lane: match.lane,
     playtestName: match.name,
+    playtest: gauntletPlaytestReplay(match, catalog),
     snapshot: undefined,
   };
 }
@@ -215,36 +217,4 @@ function gauntletDryRunManifest(catalog: typeof catalog, matches: AiGauntletMatc
       ),
     })),
   };
-}
-
-function gauntletPlaytestReplay(match: AiGauntletMatch, catalog: typeof catalog) {
-  const args = [
-    "new",
-    "--file",
-    `.playtests/gauntlet-${slug(match.name)}.json`,
-    "--from-gauntlet",
-    match.name,
-    "--gauntlet-seed",
-    catalog.selection.seed,
-    ...(catalog.selection.mode === "full" ? ["--gauntlet-full"] : ["--gauntlet-map-count", String(catalog.selectedRichScoreMapIds.length)]),
-    "--you",
-    AI_GAUNTLET_V2,
-    "--assist-you",
-  ];
-  return {
-    args,
-    command: `npm run play:ai -- ${args.map(shellArg).join(" ")}`,
-  };
-}
-
-function slug(value: string) {
-  return value
-    .replaceAll(/([a-z])([A-Z])/g, "$1-$2")
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-|-$/g, "");
-}
-
-function shellArg(value: string) {
-  return /^[A-Za-z0-9_./:-]+$/.test(value) ? value : `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 }
