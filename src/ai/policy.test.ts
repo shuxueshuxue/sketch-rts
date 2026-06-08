@@ -5627,6 +5627,36 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 attack wave does not pull a committed expansion-denial squad toward a different objective", () => {
+    const scene = sketchScene("v2-attack-wave-yields-to-expansion-denial")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 2048)
+      .townHall("v2", 720, 2540)
+      .unit("v2", "footman", 2580, 2000, { id: "denial-a", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "footman", 2620, 2020, { id: "denial-b", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "lancer", 2660, 2040, { id: "denial-c", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "lancer", 2700, 2060, { id: "denial-d", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "archer", 2740, 2080, { id: "denial-e", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "archer", 2780, 2100, { id: "denial-f", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .unit("v2", "fieldMedic", 2820, 2120, { id: "denial-g", order: { type: "attackMove", x: 3376, y: 2680 } })
+      .townHall("v1a", 3400, 2048, { id: "v1a-main" })
+      .building("v1a", "barracks", 3260, 1960)
+      .building("v1a", "townHall", 3376, 2680, { id: "v1a-greedy-expansion", complete: false })
+      .worker("v1a", 3340, 2640)
+      .worker("v1a", 3400, 2720)
+      .townHall("v1b", 3400, 3700)
+      .build();
+    const game = scene.createGame();
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams });
+
+    expect(entries.find((entry) => entry.scriptId === "attackWave")).toBeUndefined();
+  });
+
   it("v1 waits on the same farther guarded mercenary objective until it has a fuller squad", () => {
     const scene = sketchScene("v1-waits-far-merc-objective")
       .map("openClaims")

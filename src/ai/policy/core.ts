@@ -1963,6 +1963,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   }
 
   const outnumberedV2 = options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2;
+  if (committedExpansionDenialTarget(snapshot, owner, movable, options)) return undefined;
   const currentCommittedOwner = committedAttackWaveOwner(snapshot, owner, recallable, options);
   const committedRecall = currentCommittedOwner ? committedAttackWaveRecall(snapshot, owner, soldiers, recallable, enemyArmy, currentCommittedOwner, options) : undefined;
   if (committedRecall) return committedRecall;
@@ -2129,6 +2130,16 @@ function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit
   if (unit.order.type !== "move" || unit.hp >= unit.maxHp * 0.58) return true;
   const main = mainBase(snapshot, owner);
   return distance(unit.order, main) >= distance(unit, main);
+}
+
+function committedExpansionDenialTarget(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], options: PresetAiPolicyOptions): Building | undefined {
+  if (options.version !== "v2" || movable.length < 5) return undefined;
+  return enemyBuildings(snapshot, owner, options.teams)
+    .filter((building) => building.kind === "townHall")
+    .filter((building) => !isMainBaseForOwner(snapshot, building.owner, building))
+    .filter((building) => !building.complete || units(snapshot, building.owner).some((unit) => unit.kind === "worker" && distance(unit, building) <= 460))
+    .filter((building) => movable.filter((unit) => unit.order.type === "attackMove" && distance(unit.order, building) <= ATTACK_MOVE_REDIRECT_DISTANCE).length >= 5)
+    .sort((a, b) => distance(a, averagePoint(movable)) - distance(b, averagePoint(movable)))[0];
 }
 
 function shouldHoldSingleUnitWorkerAliveCloseout(snapshot: GameSnapshot, closeout: Building, stale: Unit[], options: PresetAiPolicyOptions) {
