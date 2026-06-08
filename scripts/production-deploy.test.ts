@@ -14,6 +14,17 @@ describe("production CD contract", () => {
     expect(workflow).toContain("scripts/deploy-production.sh");
   });
 
+  it("updates one GitHub release package from the production artifact", () => {
+    const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
+
+    expect(workflow).toContain("contents: write");
+    expect(workflow).toContain("RELEASE_TAG: production-latest");
+    expect(workflow).toContain("gh release view \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release create \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release edit \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release upload \"$RELEASE_TAG\" sketch-rts-production.tar.gz --clobber");
+  });
+
   it("publishes one active server through an atomic release symlink", () => {
     const script = readFileSync("scripts/deploy-production.sh", "utf8");
 
