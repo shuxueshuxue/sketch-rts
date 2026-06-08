@@ -6978,8 +6978,8 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "research", buildingId: "early-tech-barracks", upgradeKind: "weaponTraining" });
   });
 
-  it("v3 ember can research early weapon training from the ember forge", () => {
-    const scene = sketchScene("v3-ember-early-weapon-training")
+  it("v3 ember does not spend the early two-fighter bank on weapon training", () => {
+    const scene = sketchScene("v3-ember-delays-thin-weapon-training")
       .map("bareDuel")
       .replaceDefaults()
       .player("v3", { team: "north", race: "ember" })
@@ -6996,7 +6996,7 @@ describe("SDK preset AI policy", () => {
 
     const command = planPresetAiCommands(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "research", buildingId: "early-tech-forge", upgradeKind: "weaponTraining" });
+    expect(command).not.toMatchObject({ type: "research", buildingId: "early-tech-forge", upgradeKind: "weaponTraining" });
   });
 
   it("v2 delays one-base 1v2 weapon training until it can still afford the next fighter", () => {

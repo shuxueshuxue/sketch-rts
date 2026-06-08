@@ -561,6 +561,7 @@ function planEarlyTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
 
 function isV2PriorityWeaponTiming(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind, options: PresetAiPolicyOptions) {
   if (options.version !== "v2" || upgradeKind !== "weaponTraining") return false;
+  if (!usesEarlyWeaponTiming(snapshot, owner)) return false;
   const currentLevel = upgradeLevel(snapshot, owner, "weaponTraining");
   const weaponUnits = upgradeBenefitingUnits(snapshot, owner, "weaponTraining");
   if (currentLevel === 0) return weaponUnits.length >= 2;
@@ -572,7 +573,7 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (upgradeAvailable(snapshot, owner, "weaponTraining")) {
     const weaponUnits = upgradeBenefitingUnits(snapshot, owner, "weaponTraining");
     const level = upgradeLevel(snapshot, owner, "weaponTraining");
-    if (options.version === "v2" && level === 0 && weaponUnits.length >= 2) return "weaponTraining";
+    if (options.version === "v2" && level === 0 && usesEarlyWeaponTiming(snapshot, owner) && weaponUnits.length >= 2) return "weaponTraining";
     if (weaponUnits.length >= 5 + level * 3 || playerState(snapshot, owner).gold > 780 + level * 360) return "weaponTraining";
   }
   if (upgradeAvailable(snapshot, owner, "reinforcedPlating")) {
@@ -582,6 +583,10 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
     if (platingUnits.length >= (options.version === "v2" ? 8 : 11) + level * 3 || playerState(snapshot, owner).gold > 1_020 + level * 420) return "reinforcedPlating";
   }
   return undefined;
+}
+
+function usesEarlyWeaponTiming(snapshot: GameSnapshot, owner: PlayerId) {
+  return playerState(snapshot, owner).race === "grove";
 }
 
 function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
