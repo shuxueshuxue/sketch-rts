@@ -82,6 +82,8 @@ function woundedRecoveryClusterPoint(snapshot: GameSnapshot, owner: PlayerId, ba
   const healingKind = healingBuildingKindForRace(playerState(snapshot, owner).race);
   const existingWell = nearestEntity(buildings(snapshot, owner).filter((building) => isHealingBuildingKind(building.kind) && building.hp > 0), point);
   if (existingWell && distance(existingWell, point) <= BUILDING_DEFS[healingKind].attackRange) return undefined;
+  // @@@first-healing-anchor - The first healing building is a main-base recovery anchor; only later coverage wells may chase a far wounded cluster.
+  if (!existingWell && distance(point, base) > 360) return undefined;
   // @@@recovery-cluster-well - If wounded fighters are already safely clustering near the main, the healing building should cover that real recovery point.
   return { x: clamp(point.x, 0, snapshot.map.width), y: clamp(point.y, 0, snapshot.map.height) };
 }
