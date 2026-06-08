@@ -696,8 +696,7 @@ function shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot: GameSnaps
   if (options.version !== "v2" || pressured || firstWellBeforeExpansionBank) return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (healingBuildings(snapshot, owner).length > 0) return false;
-  // @@@ember-mobile-healing-bank - Ember can cover critical natural wounds with acolytes; the first static shrine must not reset the first hall bank.
-  if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2) && !hasEmberMobileHealing(snapshot, owner)) return false;
+  if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return false;
   const mine = desiredExpansionMine(snapshot, owner);
   return Boolean(mine && neutralUnitsNear(snapshot, mine, 280).length > 0);
 }
@@ -708,14 +707,8 @@ function shouldBuildFirstHealingWellBeforeExpansionBank(snapshot: GameSnapshot, 
   if (healingBuildings(snapshot, owner).length > 0) return false;
   // @@@first-well-before-bank - A far-from-complete expansion bank should not strand wounded defenders without the first healing source.
   const gold = playerState(snapshot, owner).gold;
-  if (hasEmberMobileHealing(snapshot, owner)) return false;
   if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return gold < BUILDING_DEFS.townHall.cost;
   return false;
-}
-
-function hasEmberMobileHealing(snapshot: GameSnapshot, owner: PlayerId) {
-  if (playerState(snapshot, owner).race !== "ember") return false;
-  return units(snapshot, owner).some((unit) => unit.kind === "emberAcolyte" || unit.kind === "fieldMedic");
 }
 
 function healingBuildingKind(snapshot: GameSnapshot, owner: PlayerId) {

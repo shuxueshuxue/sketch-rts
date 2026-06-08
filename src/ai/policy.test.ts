@@ -8684,42 +8684,6 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
   });
 
-  it("v3 ember does not spend first-expansion gold on a shrine when mobile healing is already covering critical natural wounds", () => {
-    const scene = sketchScene("v3-ember-mobile-healing-before-first-shrine")
-      .map("openClaims")
-      .replaceDefaults()
-      .player("v3", { team: "north", race: "ember" })
-      .player("v2-prod", { team: "south", race: "grove" })
-      .townHall("v3", 492, 2048, { id: "v3-main" })
-      .building("v3", "emberForge", 612, 2148)
-      .building("v3", "cinderSpire", 612, 1976)
-      .building("v3", "farm", 716, 1948)
-      .building("v3", "farm", 856, 1816)
-      .worker("v3", 520, 2080, { id: "v3-builder" })
-      .worker("v3", 555, 2080)
-      .unit("v3", "emberRavager", 735, 2530, { id: "critical-ravager", hp: 18 })
-      .unit("v3", "cinderRunner", 765, 2560, { hp: 72 })
-      .unit("v3", "sparkArcher", 705, 2500)
-      .unit("v3", "emberAcolyte", 690, 2480)
-      .unit("neutral", "wildling", 820, 2600, { hp: 65 })
-      .townHall("v2-prod", 3604, 2048)
-      .goldMine("v3-main-mine", 440, 2048, 4000)
-      .goldMine("v3-natural-mine", 720, 2640, 4000)
-      .goldMine("prod-main-mine", 3680, 2048, 4000)
-      .build();
-    const game = scene.createGame();
-    game.players.v3!.gold = BUILDING_DEFS.townHall.cost - 20;
-    game.players.v3!.supplyUsed = 18;
-    game.players.v3!.supplyCap = 24;
-    const memory = createAiPolicyMemory();
-    memory.strategicPlan = { expansionClaimTargetId: "v3-natural-mine", expansionClaimTick: 4800 };
-    memory.unitClaims["critical-ravager"] = { kind: "expansion", targetId: "v3-natural-mine", x: 720, y: 2640, sinceTick: 4800, expiresTick: 8400 };
-
-    const command = planPresetAiCommandEntries(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams, memory }).find((entry) => entry.scriptId === "healingWell");
-
-    expect(command).toBeUndefined();
-  });
-
   it("v2 adds a recovery moon well when settled wounded defenders are outside existing well range", () => {
     const scene = sketchScene("v2-uncovered-wounded-recovery-moon-well")
       .map("bareDuel")
