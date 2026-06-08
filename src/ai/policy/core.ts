@@ -669,6 +669,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const woundedDefenders = ownCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const firstWellBeforeExpansionBank = shouldBuildFirstHealingWellBeforeExpansionBank(snapshot, owner, woundedDefenders, options);
+  if (shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot, owner, woundedDefenders, pressured, firstWellBeforeExpansionBank, options)) return undefined;
   const wantsWell = uncoveredRecovery || firstWellBeforeExpansionBank || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
@@ -689,6 +690,15 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (!builder) return undefined;
   const point = healingWellPointFor(snapshot, owner, main);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: healingKind, x: point.x, y: point.y }, options);
+}
+
+function shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], pressured: boolean, firstWellBeforeExpansionBank: boolean, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || pressured || firstWellBeforeExpansionBank) return false;
+  if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  if (healingBuildings(snapshot, owner).length > 0) return false;
+  if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return false;
+  const mine = desiredExpansionMine(snapshot, owner);
+  return Boolean(mine && neutralUnitsNear(snapshot, mine, 280).length > 0);
 }
 
 function shouldBuildFirstHealingWellBeforeExpansionBank(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], options: PresetAiPolicyOptions) {

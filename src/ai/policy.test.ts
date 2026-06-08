@@ -8614,6 +8614,37 @@ describe("SDK preset AI policy", () => {
     expect(command).toBeUndefined();
   });
 
+  it("v2 does not build the first healing well for routine creep wounds before the natural is cleared", () => {
+    const scene = sketchScene("v2-no-early-creep-wound-healing-well")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .player("v1a", { team: "south", race: "grove" })
+      .townHall("v2", 492, 2048, { id: "v2-main" })
+      .building("v2", "emberForge", 612, 2148, { id: "v2-forge" })
+      .building("v2", "farm", 716, 1948)
+      .worker("v2", 520, 2080, { id: "v2-builder" })
+      .worker("v2", 555, 2080)
+      .unit("v2", "emberRavager", 720, 2520, { hp: 66 })
+      .unit("v2", "emberRavager", 760, 2540, { hp: 70 })
+      .unit("v2", "sparkArcher", 700, 2480)
+      .unit("neutral", "wildling", 820, 2600)
+      .unit("neutral", "thornSlinger", 860, 2640)
+      .townHall("v1a", 3604, 2048)
+      .goldMine("v2-main-mine", 440, 2048, 4000)
+      .goldMine("v2-natural-mine", 720, 2640, 4000)
+      .goldMine("v1a-main-mine", 3680, 2048, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v2!.gold = 140;
+    game.players.v2!.supplyUsed = 12;
+    game.players.v2!.supplyCap = 16;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams })[0];
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 builds its first moon well for a critically wounded defender before the first expansion starts", () => {
     const scene = sketchScene("v2-first-moon-well-for-critical-defender")
       .map("openClaims")
