@@ -698,7 +698,7 @@ function shouldBuildFirstHealingWellBeforeExpansionBank(snapshot: GameSnapshot, 
   // @@@first-well-before-bank - A far-from-complete expansion bank should not strand wounded defenders without the first healing source.
   const gold = playerState(snapshot, owner).gold;
   if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return gold < BUILDING_DEFS.townHall.cost;
-  return woundedDefenders.length >= 2 && gold < BUILDING_DEFS.townHall.cost - BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost;
+  return false;
 }
 
 function healingBuildingKind(snapshot: GameSnapshot, owner: PlayerId) {

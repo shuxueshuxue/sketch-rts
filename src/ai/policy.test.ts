@@ -8580,8 +8580,8 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
   });
 
-  it("v2 builds its first moon well for wounded defenders before the first expansion bank is near complete", () => {
-    const scene = sketchScene("v2-first-moon-well-before-distant-expansion-bank")
+  it("v2 does not spend the first expansion bank on a moon well for non-critical wounded defenders", () => {
+    const scene = sketchScene("v2-no-first-moon-well-before-expansion-bank")
       .map("openClaims")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
@@ -8611,7 +8611,7 @@ describe("SDK preset AI policy", () => {
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
+    expect(command).toBeUndefined();
   });
 
   it("v2 builds its first moon well for a critically wounded defender before the first expansion starts", () => {
