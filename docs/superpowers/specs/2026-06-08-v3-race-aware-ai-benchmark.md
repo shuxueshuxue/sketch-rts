@@ -58,6 +58,16 @@ npm run benchmark:ai-v3-vs-prod-v2 -- --seed v3-prod-50-2026-06-08 --map-count 5
 npm run benchmark:ai-v3-vs-prod-v2 -- --seed v3-prod-50-2026-06-08 --map-count 50 --dry-run
 ```
 
+The older version benchmark entrypoint uses the same flag style now:
+
+```bash
+npm run benchmark:ai -- --seed version-18 --map-count 18 --workers 95
+npm run benchmark:ai -- --seed version-18 --map-count 18 --dry-run
+npm run benchmark:ai -- --seed version-18 --map-count 18 --parity-probe
+```
+
+Legacy environment variables remain usable for automation, but normal CLI flags are no longer ignored. `--dry-run` must be recognized before any simulation work starts.
+
 Dry-run output must include:
 
 - seed;
@@ -117,6 +127,7 @@ Implementation is not complete until current evidence proves all of the followin
 - An Ember mobile-healing expansion-bank probe (`83a0042`) was pgl-tested and reverted. It skipped first shrine spending when an `emberAcolyte` was already present for critical natural wounds, but the same-seed benchmark stayed at `71/100` and Ember stayed `30/50`; the extra policy branch did not buy progress toward the gate.
 - A pre-contact significant-army-target range probe (`d762d70`) was pgl-tested and reverted. It removed a bad `tealFissure v3 south` local retask where Ember changed a five-unit `attackMove` wave into attacking a footman `1393` units away before contact, but the full same-seed benchmark dropped to `69/100` (`Grove 40/50`, `Ember 29/50`). Do not globally tighten `significantOpponentArmyTarget` range as an isolated fix; it likely removes useful midrange pickoffs elsewhere.
 - A race-aware production-layout probe (`33b98d3`) was pgl-tested and reverted. It fixed a real policy bug where Ember production placement used the default Grove `aiPlaybook()` slots instead of the owner's race playbook, and the focused TDD scene moved `cinderSpire` from the wrong slot to the Ember playbook slot. However the full same-seed pgl benchmark dropped from the current `71/100` line to `63/100` (`Grove 41/50`, `Ember 22/50`). Do not reapply this layout correction as an isolated benchmark change; it needs a broader Ember opening/placement follow-up.
+- CLI unification slice on 2026-06-08: `scripts/ai-version-benchmark.ts` now accepts the shared `--seed`, `--map-count`, `--workers`, `--full`, `--dry-run`, and `--parity-probe` flag surface. The regression test first proved the old script ignored `--dry-run` and fell into a real benchmark run; the implementation now resolves options through shared benchmark CLI helpers before selecting dry-run, parity, or execution mode.
 - Remaining stoplines: continue raising V3 from `71/100` to at least `90/100` on pgl; next investigation should focus on Ember's 30/50 lane and the remaining Grove-side expansion/economy losses.
 
 ## Non-Goals
