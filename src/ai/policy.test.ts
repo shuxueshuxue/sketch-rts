@@ -7107,6 +7107,41 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "emberAcolyte" });
   });
 
+  it("v3 ember breaks a near-expansion bank for the first spark once melee and spire are online", () => {
+    const scene = sketchScene("v3-ember-first-spark-before-late-expansion-conversion")
+      .map("cobaltVale")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 492, 2048, { id: "v3-main" })
+      .building("v3", "emberForge", 578, 2176, { id: "forge" })
+      .building("v3", "cinderSpire", 578, 1976, { id: "spire" })
+      .building("v3", "emberShrine", 406, 2166, { id: "shrine" })
+      .building("v3", "farm", 716, 1948)
+      .building("v3", "farm", 716, 2176)
+      .goldMine("gold-v3-main", 702, 1958, 4000)
+      .goldMine("gold-west-march", 810, 2610, 4000)
+      .goldMine("gold-v2-main", 3394, 1958, 4000)
+      .goldMine("gold-east-march", 3286, 2610, 4000);
+    for (let i = 0; i < 6; i += 1) scene.worker("v3", 560 + i * 18, 2000 + (i % 2) * 28);
+    scene
+      .unit("v3", "emberRavager", 716, 2104)
+      .unit("v3", "emberRavager", 991, 2247)
+      .unit("v3", "emberRavager", 1117, 2181)
+      .unit("v3", "cinderRunner", 1025, 2215)
+      .unit("v3", "cinderRunner", 1206, 2138)
+      .unit("v3", "cinderRunner", 1172, 2133)
+      .townHall("v2-prod", 3604, 2048, { id: "v2-main" })
+      .townHall("v2-prod", 3376, 2680, { id: "v2-natural", complete: false });
+    for (let i = 0; i < 6; i += 1) scene.unit("v2-prod", i % 3 === 0 ? "footman" : i % 3 === 1 ? "lancer" : "archer", 2360 + i * 30, 2270);
+    const game = scene.build().createGame();
+    game.players.v3!.gold = 310;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v3", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "sparkArcher" });
+  });
+
   it("v2 keeps core production training before the first expansion bank is actually close", () => {
     const scene = sketchScene("v2-training-before-distant-expansion-bank")
       .map("openClaims")

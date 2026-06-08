@@ -962,6 +962,8 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     const canSpendExpansionReserveOnTraining = unitKind !== "worker" && shouldSpendExpansionReserveOnTraining(snapshot, owner, options, remainingGold, cost);
     const canSpendEarlyFirstExpansionBankOnTraining =
       unitKind !== "worker" && shouldSpendEarlyFirstExpansionBankOnTraining(snapshot, owner, options, remainingGold, cost);
+    const canSpendEmberFirstSparkExpansionBank =
+      unitKind === "sparkArcher" && shouldSpendEmberFirstSparkExpansionBank(snapshot, owner, options, remainingGold, cost);
     const canSpendProductionReserveOnTraining =
       unitKind !== "worker" && missingProduction ? shouldSpendStrategicBankOnBaseThreatTraining(snapshot, owner, options, remainingGold, cost) : false;
     if (
@@ -970,6 +972,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
       !workerSaturatingEstablishedMines &&
       !canSpendProductionReserveOnTraining &&
       !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
       remainingGold < BUILDING_DEFS[missingProduction].cost + cost
     )
       continue;
@@ -977,9 +980,23 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (reserveSensitive && reserveEmergencyTower && !canSpendTowerReserveOnTraining && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveHealingWell && remainingGold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + cost) continue;
     if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, cost, remainingGold)) continue;
-    if (reserveSensitive && !canSpendEarlyFirstExpansionBankOnTraining && shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)) continue;
+    if (
+      reserveSensitive &&
+      !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
+      shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)
+    )
+      continue;
     if (reserveSensitive && shouldHoldTwoBaseWeaponUpgradeBank(snapshot, owner, options, remainingGold, cost)) continue;
-    if (reserveSensitive && reserveExpansion && !canSpendExpansionReserveOnTraining && !canSpendEarlyFirstExpansionBankOnTraining && remainingGold < BUILDING_DEFS.townHall.cost + cost) continue;
+    if (
+      reserveSensitive &&
+      reserveExpansion &&
+      !canSpendExpansionReserveOnTraining &&
+      !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
+      remainingGold < BUILDING_DEFS.townHall.cost + cost
+    )
+      continue;
     if (reserveSensitive && reserveDuplicateProduction && remainingGold < BUILDING_DEFS[reserveDuplicateProduction].cost + cost) continue;
     if (remainingGold < cost || reservedSupply + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "train", buildingId: building.id, unitKind }, options));
@@ -988,6 +1005,25 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (unitKind === "worker") queuedWorkers += 1;
   }
   return commands;
+}
+
+function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {
+  if (options.version !== "v2") return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
+  if (!completeBuildings(snapshot, owner, "cinderSpire").some((building) => building.queue.length === 0)) return false;
+  if (availableGold < spendCost || availableGold < BUILDING_DEFS.townHall.cost - 30) return false;
+  const army = combatUnits(snapshot, owner);
+  if (army.length < 6) return false;
+  if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
+  // @@@ember-first-scorch-bank - Six melee bodies without scorch are already a committed army; if the enemy expanded first, waiting ten gold for the hall loses the race kit's timing.
+  return opponentEconomyAhead(snapshot, owner, options) || opponentExpansionStartedBeforeOwner(snapshot, owner, options);
+}
+
+function opponentExpansionStartedBeforeOwner(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  const ownTownHalls = buildings(snapshot, owner).filter((building) => building.kind === "townHall").length;
+  return opponentPlayerIds(snapshot, owner, options).some((opponent) => buildings(snapshot, opponent).filter((building) => building.kind === "townHall").length > ownTownHalls);
 }
 
 function shouldSpendUnaffordableTowerReserveOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number) {
