@@ -6439,6 +6439,37 @@ describe("SDK preset AI policy", () => {
     expect(entries).toEqual([]);
   });
 
+  it("releases mercenary claims after the squad has stopped at the cleared camp", () => {
+    const scene = sketchScene("v2-mercenary-claim-completes-at-camp")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 1160, 980, { id: "claimed-a" })
+      .unit("v2", "footman", 1190, 1000, { id: "claimed-b" })
+      .unit("v2", "lancer", 1220, 1020, { id: "claimed-c" })
+      .unit("v2", "lancer", 1250, 1040, { id: "claimed-d" })
+      .unit("v2", "archer", 1280, 1060, { id: "claimed-e" })
+      .unit("v2", "archer", 1310, 1080, { id: "claimed-f" })
+      .unit("v2", "raider", 1340, 1100, { id: "claimed-g" })
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1b", 3400, 3700)
+      .mercenaryCamp("cleared-melee-camp", 1180, 980, { hireKind: "mercenary", cost: 160, stock: 2, cooldownRemaining: 0 })
+      .build();
+    const game = scene.createGame();
+    game.tick = 420;
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["claimed-a", "claimed-b", "claimed-c", "claimed-d", "claimed-e", "claimed-f", "claimed-g"]) {
+      memory.unitClaims[unitId] = { kind: "mercenary", targetId: "cleared-melee-camp", x: 1180, y: 980, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory });
+
+    expect(entries.find((entry) => entry.scriptId === "attackWave")).toMatchObject({ command: { type: "attackMove" } });
+  });
+
   it("keeps a committed attack wave from being tugged into neutral objective control", () => {
     const scene = sketchScene("v2-attack-wave-claim-blocks-creep-tug")
       .map("openClaims")

@@ -257,6 +257,8 @@ function objectiveClaimAbandoned(unit: Unit, claim: AiPolicyUnitClaim, currentTi
   if (claim.kind !== "creep" && claim.kind !== "mercenary" && claim.kind !== "expansion") return false;
   if (currentTick < claim.sinceTick + OBJECTIVE_ABANDON_GRACE_TICKS) return false;
   if (unit.order.type !== "idle") return false;
+  // @@@mercenary-claim-complete - Camps persist after being reached; an idle squad parked on the camp has completed the movement claim.
+  if (claim.kind === "mercenary" && distance(unit, claim) <= 220) return true;
   // @@@abandoned-objective-claim - Long objective claims keep squads stable while walking; once a unit has stopped far from the point, the old claim is stale ownership.
   return distance(unit, claim) > 260;
 }
