@@ -1567,7 +1567,7 @@ function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: P
   const opponents = opponentPlayerIds(snapshot, owner, options);
   if (opponents.length > 2) return undefined;
   if (opponents.length < 2 && !oneOnOneExpansionDenialWindow(snapshot, owner, opponents)) return undefined;
-  const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove");
+  const soldiers = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && !activeUnitClaim(snapshot, owner, unit, options));
   if (soldiers.length < 5) return undefined;
   if (opponents.length >= 2 && expansionDenialFieldArmyStopline(snapshot, owner, soldiers, options)) return undefined;
   const ownMain = mainBase(snapshot, owner);

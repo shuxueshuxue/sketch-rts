@@ -5365,6 +5365,39 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 2200, y: 1750 });
   });
 
+  it("v2 does not recruit retreat-claimed soldiers for cross-map expansion denial", () => {
+    const scene = sketchScene("v2-expansion-denial-respects-retreat-claims")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "ember" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
+      .unit("v2", "footman", 1500, 1500, { id: "retreat-footman-a", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "footman", 1540, 1500, { id: "retreat-footman-b", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "lancer", 1500, 1540, { id: "retreat-lancer", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "archer", 1540, 1540, { id: "retreat-archer-a", order: { type: "move", x: 500, y: 500 } })
+      .unit("v2", "archer", 1580, 1520, { id: "retreat-archer-b", order: { type: "move", x: 500, y: 500 } })
+      .townHall("v1a", 3300, 3300, { id: "v1a-main" })
+      .building("v1a", "townHall", 2200, 1750, { id: "v1a-greedy-expansion", complete: false })
+      .worker("v1a", 2140, 1720)
+      .worker("v1a", 2180, 1800)
+      .townHall("v1b", 3400, 3800, { id: "v1b-main" })
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["retreat-footman-a", "retreat-footman-b", "retreat-lancer", "retreat-archer-a", "retreat-archer-b"]) {
+      memory.unitClaims[unitId] = { kind: "retreat", targetId: "retreat", x: 500, y: 500, sinceTick: 0, expiresTick: 900 };
+    }
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansionDenial], { version: "v2", teams: game.teams, memory }).find(
+      (candidate) => candidate.type === "attackMove",
+    );
+
+    expect(command).toBeUndefined();
+  });
+
   it("v2 preset denies a one-on-one enemy expansion before taking another neutral camp", () => {
     const scene = sketchScene("v2-1v1-denies-expansion-before-creep")
       .map("openClaims")
