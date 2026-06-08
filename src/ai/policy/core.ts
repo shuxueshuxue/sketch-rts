@@ -1017,7 +1017,7 @@ function shouldSpendStrategicBankOnBaseThreatTraining(snapshot: GameSnapshot, ow
 function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const candidates = buildings(snapshot, owner).filter((candidate) => candidate.complete && candidate.queue.length === 0);
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
-    return [...candidates].sort((a, b) => Number(isFirstRangedTrainingBuilding(b, snapshot, owner, options)) - Number(isFirstRangedTrainingBuilding(a, snapshot, owner, options)));
+    return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
   if (shouldPrioritizeEmberFirstSpireSupport(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
@@ -1061,16 +1061,11 @@ function matureLateTechTrainingRank(building: Building, snapshot: GameSnapshot, 
 
 function shouldPrioritizeFirstRangedTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
   if (options.version !== "v2") return false;
-  if (!candidates.some((building) => isFirstRangedTrainingBuilding(building, snapshot, owner, options))) return false;
+  if (!candidates.some((building) => building.kind === "archeryRange")) return false;
   const army = combatUnits(snapshot, owner);
   if (army.length < 3) return false;
   // @@@first-ranged-training - A low-gold melee-only army can keep feeding creep camps; the first ranged unit is a composition milestone, not routine variety.
   return !army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120);
-}
-
-function isFirstRangedTrainingBuilding(building: Building, snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  const unitKind = trainingChoice(snapshot, owner, building, options);
-  return Boolean(unitKind && UNIT_DEFS[unitKind].attackRange > 120);
 }
 
 function shouldHoldTwoBaseWeaponUpgradeBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {
