@@ -5,6 +5,8 @@ import { runAiGame, runAiGameLoop } from "./game-runner";
 import { createAiRuntime } from "./runtime";
 import { runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
+import { safeMainBuildPoint } from "./policy/build-layout";
+import { aiPlaybook } from "./policy/playbook";
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, createAiPolicyMemory, createAiTelemetry, planAiCommandEntriesFromScripts, planAiCommandsFromScripts, planPresetAiCommandEntries, planPresetAiCommands } from "./policy";
 import { sketchScene } from "../sdk/scene";
 
@@ -6997,6 +6999,32 @@ describe("SDK preset AI policy", () => {
     const command = planPresetAiCommands(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams })[0];
 
     expect(command).not.toMatchObject({ type: "research", buildingId: "early-tech-forge", upgradeKind: "weaponTraining" });
+  });
+
+  it("places Ember production buildings using Ember playbook slots", () => {
+    const scene = sketchScene("v3-ember-production-layout-slot")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 500, 500)
+      .worker("v3", 540, 540)
+      .building("v3", "emberForge", 620, 620)
+      .unit("v3", "emberRavager", 760, 620)
+      .unit("v3", "emberRavager", 790, 650)
+      .unit("v3", "cinderRunner", 820, 680)
+      .unit("v3", "cinderRunner", 850, 710)
+      .townHall("v2-prod", 3300, 3300)
+      .build();
+    const game = scene.createGame();
+    game.players.v3!.gold = 500;
+    const snapshot = snapshotGame(game);
+    const emberSlot = aiPlaybook("ember").productionPlan.indexOf("cinderSpire");
+    const expected = safeMainBuildPoint(snapshot, "v3", emberSlot, "cinderSpire");
+
+    const command = planAiCommandsFromScripts(snapshot, "v3", [AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "build", buildingKind: "cinderSpire", x: expected.x, y: expected.y });
   });
 
   it("v2 delays one-base 1v2 weapon training until it can still afford the next fighter", () => {
