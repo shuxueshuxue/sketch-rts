@@ -22,7 +22,7 @@ export type UnitDef = {
 export type AbilityDef =
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
-  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; statusType: "curse"; effectType: "curse" };
+  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; scorchedDamageMultiplier?: number; statusType: "curse"; effectType: "curse" | "scorch" };
 
 export type BuildingDef = {
   hp: number;
@@ -38,7 +38,7 @@ export type BuildingDef = {
 };
 
 export type UpgradeDef = {
-  buildingKind: BuildingKind;
+  researchBuildingKinds: BuildingKind[];
   affectedUnitKinds: TrainableUnitKind[];
   levels: readonly UpgradeLevelDef[];
 };
@@ -101,7 +101,7 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
   emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(11), summonKind: "spirit", summonDuration: seconds(45), effectType: "summon" },
-  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
+  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch" },
 };
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
@@ -113,7 +113,7 @@ export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 16, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
-  emberForge: { hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), trains: ["emberRavager", "cinderRunner"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  emberForge: { hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), trains: ["emberRavager", "cinderRunner"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   cinderSpire: { hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), trains: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   emberShrine: { hp: 280, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), trains: [], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
@@ -123,7 +123,7 @@ const ORDINARY_COMBAT_UNITS: TrainableUnitKind[] = ["footman", "archer", "raider
 
 export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
   weaponTraining: {
-    buildingKind: "barracks",
+    researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 140, researchTime: seconds(34.5), attackBonus: 2, maxHpBonus: 0 },
@@ -132,7 +132,7 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   reinforcedPlating: {
-    buildingKind: "barracks",
+    researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
       { cost: 165, researchTime: seconds(40.5), attackBonus: 0, maxHpBonus: 10 },
@@ -141,7 +141,7 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     ],
   },
   buildingDurability: {
-    buildingKind: "townHall",
+    researchBuildingKinds: ["townHall"],
     affectedUnitKinds: [],
     levels: [
       { cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
@@ -208,7 +208,7 @@ export const RACE_DEFS: Record<RaceId, RaceDef> = {
     note: "Faster fragile fighters, early support casters, and ember-shrine recovery.",
     trainableUnits: ["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
     buildableBuildings: ["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"],
-    upgrades: ["buildingDurability"],
+    upgrades: ["weaponTraining", "reinforcedPlating", "buildingDurability"],
   },
 };
 

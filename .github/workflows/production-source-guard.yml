@@ -1,0 +1,24 @@
+name: Production Source Guard
+
+on:
+  pull_request:
+    branches: [production]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  production-source-guard:
+    name: production-source-guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main as production source
+        if: github.event.pull_request.head.repo.full_name != github.repository || github.head_ref != 'main'
+        run: |
+          echo "::error::Production can only be updated from main."
+          exit 1
+
+      - name: Accept main as production source
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'main'
+        run: echo "Production source is main."

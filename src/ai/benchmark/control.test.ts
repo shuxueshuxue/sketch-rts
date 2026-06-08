@@ -1,8 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails } from "./control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails } from "./control";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
 
 describe("AI melee control benchmark", () => {
+  it("creates side-balanced V3 challenger matches against frozen Grove V2 production", () => {
+    const { input, selection } = createAiV3VsProdV2BenchmarkInput({ seed: "v3-prod-contract-seed", mapCount: 4 });
+
+    expect(selection.mapIds).toHaveLength(4);
+    expect(input.name).toBe("AI V3 vs Frozen Production V2 Benchmark");
+    expect(input.evaluations).toHaveLength(1);
+    expect(input.evaluations[0]!.name).toBe("v3 race-aware vs v2-prod grove");
+    expect(input.evaluations[0]!.matches).toHaveLength(8);
+    expect(input.evaluations[0]!.matches.map((match) => match.name)).toEqual(selection.mapIds.flatMap((mapId) => [`${mapId} v3 north`, `${mapId} v3 south`]));
+
+    const v3Races = input.evaluations[0]!.matches.map((match) => match.agents.v3!.race);
+    expect(new Set(v3Races)).toEqual(new Set(["grove", "ember"]));
+    for (const match of input.evaluations[0]!.matches) {
+      expect(match.agents["v2-prod"]).toMatchObject({ race: "grove", version: "v2-prod", policyVersion: "v2-prod", versionLabel: "v2-prod grove" });
+      expect(match.agents.v3).toMatchObject({ version: "v3", versionLabel: `v3 ${match.agents.v3!.race}` });
+      if (match.name.endsWith("v3 north")) {
+        expect(match.agents.v3!.team).toBe("north");
+        expect(match.agents["v2-prod"]!.team).toBe("south");
+      } else {
+        expect(match.agents.v3!.team).toBe("south");
+        expect(match.agents["v2-prod"]!.team).toBe("north");
+      }
+    }
+  });
+
   it("creates side-balanced v2 ember versus v2 grove cross-race matches", () => {
     const { input, selection } = createAiCrossRaceBenchmarkInput({ seed: "cross-race-seed", mapCount: 2 });
 

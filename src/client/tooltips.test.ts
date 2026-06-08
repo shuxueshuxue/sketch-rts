@@ -27,7 +27,7 @@ describe("gameplay tooltips", () => {
       requirements: ["Ember acolyte must be ready."],
       hotkey: "M",
     });
-    expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
+    expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
     expect(abilityTooltip("cinderSoul", "o").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 45.0s", "Cooldown 11.0s"]));
   });
 
@@ -46,7 +46,7 @@ describe("gameplay tooltips", () => {
 
     expect(tooltip.title).toBe("Reinforced Plating II");
     expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 250 gold", "Research 52.5s", "+15 max HP"]));
-    expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Barracks.", "Affects combat units."]));
+    expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Barracks / Ember Forge.", "Affects combat units."]));
     expect(tooltip.hotkey).toBe("P");
   });
 

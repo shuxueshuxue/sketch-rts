@@ -1,9 +1,9 @@
-import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
+import { UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
-import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
+import { enemyCombatUnits, units } from "./snapshot";
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
@@ -12,43 +12,27 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   const commands: GameCommand[] = [];
   for (const caster of units(snapshot, owner).filter((unit) => unit.cooldown === 0)) {
     const abilities = UNIT_DEFS[caster.kind].abilities;
-    const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
-    if (healAbility) {
-      const def = ABILITY_DEFS[healAbility];
-      const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= def.plannerRange);
+    if (abilities.includes("heal")) {
+      const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);
       if (target) {
-        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
+        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "heal", targetId: target.id }, options));
         continue;
       }
     }
-    const summonAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "summon");
-    if (summonAbility) {
-      const def = ABILITY_DEFS[summonAbility];
-      const target = nearestEnemyUnit(snapshot, owner, caster, def.plannerRange, options);
+    if (abilities.includes("summon")) {
+      const target = nearestEnemyUnit(snapshot, owner, caster, 240, options);
       const hasSpirit = units(snapshot, owner).some((unit) => unit.kind === "spirit" && distance(unit, caster) < 320);
       if (target && !hasSpirit) {
-        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: caster.x + 54, y: caster.y + 28 }, options));
+        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "summon", x: caster.x + 54, y: caster.y + 28 }, options));
         continue;
       }
     }
-    const curseAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "curse");
-    if (curseAbility) {
-      const def = ABILITY_DEFS[curseAbility];
-      if (def.behavior !== "curse") continue;
-      const target = curseTarget(snapshot, owner, caster, def, options);
-      if (target) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: curseAbility, targetId: target.id }, options));
+    if (abilities.includes("curse")) {
+      const target = nearestEnemyUnit(snapshot, owner, caster, 260, options);
+      if (target && !target.effects.some((effect) => effect.type === "curse")) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "curse", targetId: target.id }, options));
     }
   }
   return commands;
-}
-
-function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {
-  const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => !target.effects.some((effect) => effect.type === def.statusType));
-  if (def.scorchedDamageMultiplier !== undefined) {
-    const scorched = candidates.filter((target) => target.effects.some((effect) => effect.type === "scorch")).sort((a, b) => distance(a, caster) - distance(b, caster))[0];
-    if (scorched) return scorched;
-  }
-  return candidates.sort((a, b) => distance(a, caster) - distance(b, caster))[0];
 }
 
 export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -88,7 +72,7 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
 }
 
 function partialTailFocusIsSupportedByStrongerEnemy(fighters: Unit[], attackers: Unit[], target: Unit, enemies: Unit[]) {
-  if (!UNIT_DEFS[target.kind].abilities.some((ability) => ABILITY_DEFS[ability].behavior === "heal") || target.hp < target.maxHp * 0.82) return false;
+  if (!UNIT_DEFS[target.kind].abilities.includes("heal") || target.hp < target.maxHp * 0.82) return false;
   if (attackers.length >= Math.max(5, Math.ceil(fighters.length * 0.65))) return false;
   const support = enemies.filter((enemy) => distance(enemy, target) <= 900);
   if (support.length <= attackers.length + 1) return false;
@@ -157,8 +141,8 @@ function focusFireTargetScore(unit: Unit, fighters: Unit[]) {
 function casterTargetBonus(unit: Unit) {
   const abilities = UNIT_DEFS[unit.kind].abilities;
   let score = 0;
-  if (abilities.some((ability) => ABILITY_DEFS[ability].behavior === "summon")) score += 130;
-  if (abilities.some((ability) => ABILITY_DEFS[ability].behavior === "heal")) score += 115;
-  if (abilities.some((ability) => ABILITY_DEFS[ability].behavior === "curse")) score += 95;
+  if (abilities.includes("summon")) score += 130;
+  if (abilities.includes("heal")) score += 115;
+  if (abilities.includes("curse")) score += 95;
   return score;
 }

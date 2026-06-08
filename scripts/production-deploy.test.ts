@@ -1,0 +1,61 @@
+import { existsSync, readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+describe("production CD contract", () => {
+  it("deploys only from the production branch and serializes releases", () => {
+    const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
+
+    expect(workflow).toContain("branches: [production]");
+    expect(workflow).toContain("concurrency:");
+    expect(workflow).toContain("group: sketch-rts-production");
+    expect(workflow).toContain("cancel-in-progress: false");
+    expect(workflow).toContain("SKETCH_RTS_BASE_PATH: /sketch-rts/");
+    expect(workflow).toContain("npm run build:production");
+    expect(workflow).toContain("scripts/deploy-production.sh");
+  });
+
+  it("updates one GitHub release package from the production artifact", () => {
+    const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
+
+    expect(workflow).toContain("contents: write");
+    expect(workflow).toContain("RELEASE_TAG: production-latest");
+    expect(workflow).toContain("gh release view \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release create \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release edit \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release upload \"$RELEASE_TAG\" sketch-rts-production.tar.gz --clobber");
+  });
+
+  it("deploys production only from commits already present on main", () => {
+    const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
+
+    expect(workflow).toContain("Require production commit to come from main");
+    expect(workflow).toContain("git fetch --no-tags origin main");
+    expect(workflow).toContain("git merge-base --is-ancestor \"$GITHUB_SHA\" \"origin/main\"");
+  });
+
+  it("allows production pull requests only from main", () => {
+    const guardPath = ".github/workflows/production-source-guard.yml";
+    expect(existsSync(guardPath)).toBe(true);
+
+    const workflow = readFileSync(guardPath, "utf8");
+
+    expect(workflow).toContain("branches: [production]");
+    expect(workflow).toContain("Production Source Guard");
+    expect(workflow).toContain("github.head_ref != 'main'");
+    expect(workflow).toContain("Production can only be updated from main.");
+  });
+
+  it("publishes one active server through an atomic release symlink", () => {
+    const script = readFileSync("scripts/deploy-production.sh", "utf8");
+
+    expect(script).toContain("flock");
+    expect(script).toContain("systemctl stop");
+    expect(script).toContain("systemctl start");
+    expect(script).toContain("releases");
+    expect(script).toContain("current");
+    expect(script).toContain(".benchmark-dashboard");
+    expect(script).toContain("find \"$releases_dir\"");
+    expect(script).toContain("-mindepth 1 -maxdepth 1");
+    expect(script).toContain("sketch-rts-deploy-*");
+  });
+});

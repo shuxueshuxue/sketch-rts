@@ -44,12 +44,14 @@ export type BenchmarkAgentManifest = {
   team: string;
   race?: string;
   aiVersion: string;
+  policyVersion?: string;
   policyMode?: string;
   disabledBehaviors?: readonly string[];
   scriptIds?: readonly string[];
 };
 
 type RichBenchmarkAgent = SdkGameAgent & {
+  policyVersion?: string;
   policyMode?: string;
   disabledBehaviors?: readonly string[];
   scriptIds?: readonly string[];
@@ -92,6 +94,7 @@ function describeBenchmarkAgent(agent: SdkGameAgent, plannerOrigin: SdkPlannerOr
     team: agent.team,
     ...(agent.race ? { race: agent.race } : {}),
     aiVersion: agent.versionLabel ?? "unknown",
+    ...(rich.policyVersion ? { policyVersion: rich.policyVersion } : {}),
     ...(rich.policyMode ? { policyMode: rich.policyMode } : {}),
     ...(rich.disabledBehaviors ? { disabledBehaviors: [...rich.disabledBehaviors] } : {}),
     ...(rich.scriptIds ? { scriptIds: [...rich.scriptIds] } : {}),

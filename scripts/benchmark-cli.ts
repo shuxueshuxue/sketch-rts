@@ -1,4 +1,39 @@
 import { availableParallelism } from "node:os";
+import type { SdkGameAgent } from "../src/sdk/game-runner";
+import type { BenchmarkInput } from "../src/sdk/benchmark/core";
+import { describeBenchmarkInput } from "../src/sdk/benchmark/manifest";
+
+export type CommonAiBenchmarkCliOptions = {
+  seed?: string;
+  mapCount?: number;
+  full?: boolean;
+  maxTicks?: number;
+  thinkInterval?: number;
+  workers: number;
+};
+
+export type AiBenchmarkCliSelection = {
+  seed: string;
+  mapIds: readonly string[];
+};
+
+export type AiBenchmarkInputBundle<TAgent extends SdkGameAgent = SdkGameAgent> = {
+  input: BenchmarkInput<TAgent>;
+  selection: AiBenchmarkCliSelection;
+};
+
+export type AiBenchmarkCliConfig<TOptions extends CommonAiBenchmarkCliOptions, TAgent extends SdkGameAgent = SdkGameAgent> = {
+  args: readonly string[];
+  usage: string;
+  createInput: (options: TOptions) => AiBenchmarkInputBundle<TAgent>;
+  run: (options: TOptions) => Promise<unknown> | unknown;
+  optionsFromArgs?: (args: readonly string[]) => TOptions;
+};
+
+export type BenchmarkMatchFilter = {
+  mapIds?: string[];
+  matchNames?: string[];
+};
 
 export function flag(args: readonly string[], name: string): string | undefined {
   const index = args.indexOf(`--${name}`);
@@ -38,4 +73,49 @@ export function workerCountFromArgs(args: readonly string[]) {
 
 export function printJson(value: unknown) {
   console.log(JSON.stringify(value, null, 2));
+}
+
+export function benchmarkFilterFromArgs(args: readonly string[]): BenchmarkMatchFilter {
+  return {
+    ...(flag(args, "maps") ? { mapIds: csvFlag(args, "maps") } : {}),
+    ...(flag(args, "match") ? { matchNames: [requiredFlag(args, "match")] } : {}),
+  };
+}
+
+export function commonAiBenchmarkOptionsFromArgs(args: readonly string[]): CommonAiBenchmarkCliOptions {
+  return {
+    ...(flag(args, "seed") ? { seed: requiredFlag(args, "seed") } : {}),
+    ...(flag(args, "map-count") ? { mapCount: requiredNumberFlag(args, "map-count") } : {}),
+    ...(boolFlag(args, "full") ? { full: true } : {}),
+    ...(flag(args, "max-ticks") ? { maxTicks: requiredNumberFlag(args, "max-ticks") } : {}),
+    ...(flag(args, "think-interval") ? { thinkInterval: requiredNumberFlag(args, "think-interval") } : {}),
+    workers: workerCountFromArgs(args),
+  };
+}
+
+export function aiBenchmarkDryRunManifest<TAgent extends SdkGameAgent>(bundle: AiBenchmarkInputBundle<TAgent>) {
+  return {
+    name: bundle.input.name,
+    seed: bundle.selection.seed,
+    selectedMapIds: bundle.selection.mapIds,
+    matchCount: bundle.input.evaluations.reduce((total, evaluation) => total + evaluation.matches.length, 0),
+    matches: bundle.input.evaluations.flatMap((evaluation) => evaluation.matches.map((match) => match.name)),
+    manifest: describeBenchmarkInput(bundle.input),
+  };
+}
+
+export async function runAiBenchmarkCli<TOptions extends CommonAiBenchmarkCliOptions, TAgent extends SdkGameAgent = SdkGameAgent>(config: AiBenchmarkCliConfig<TOptions, TAgent>) {
+  if (boolFlag(config.args, "help") || boolFlag(config.args, "h")) {
+    console.log(config.usage);
+    return;
+  }
+
+  const options = config.optionsFromArgs ? config.optionsFromArgs(config.args) : (commonAiBenchmarkOptionsFromArgs(config.args) as TOptions);
+
+  if (boolFlag(config.args, "dry-run")) {
+    printJson(aiBenchmarkDryRunManifest(config.createInput(options)));
+    return;
+  }
+
+  printJson(await config.run(options));
 }

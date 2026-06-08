@@ -53,8 +53,8 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
       ? tooltipLine(i18n.locale, "attackBonus", level.attackBonus)
       : tooltipLine(i18n.locale, "maxHpBonus", level.maxHpBonus);
   const requirements = level.buildingMaxHpMultiplier
-    ? [researchAtRequirement(upgrade.buildingKind, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
-    : [researchAtRequirement(upgrade.buildingKind, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
+    ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
+    : [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
   return {
     title: `${labelKind(kind, i18n)} ${romanLevel(targetLevel)}`,
     body: UPGRADE_DESCRIPTIONS[i18n.locale][kind],
@@ -105,8 +105,8 @@ function abilityListRequirement(abilities: readonly AbilityKind[], i18n: I18n) {
   return TEXT[i18n.locale].requirements.abilities.replace("{abilities}", abilities.map((ability) => labelKind(ability, i18n)).join(", "));
 }
 
-function researchAtRequirement(buildingKind: BuildingKind, i18n: I18n) {
-  return TEXT[i18n.locale].requirements.researchAt.replace("{building}", labelKind(buildingKind, i18n));
+function researchAtRequirement(buildingKinds: readonly BuildingKind[], i18n: I18n) {
+  return TEXT[i18n.locale].requirements.researchAt.replace("{building}", buildingKinds.map((buildingKind) => labelKind(buildingKind, i18n)).join(" / "));
 }
 
 function providesRequirement(production: string[], locale: Locale) {
@@ -290,8 +290,8 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     },
     ashCurse: {
       title: "Ash Curse",
-      body: "Briefly weakens an enemy unit with a lighter damage curse.",
-      stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
+      body: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty.",
+      stats: ["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
       requirements: ["Ash hexer must be ready.", "Target an enemy unit."],
     },
   },
@@ -328,8 +328,8 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     },
     ashCurse: {
       title: "灰烬诅咒",
-      body: "短暂削弱敌方单位，降低其攻击伤害。",
-      stats: ["敌方伤害 x0.4", "射程 280", "持续 18.0s", "冷却 7.5s"],
+      body: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。",
+      stats: ["敌方伤害 x0.45", "灼烧目标伤害 x0.3", "射程 280", "持续 18.0s", "冷却 7.5s"],
       requirements: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
     },
   },

@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
+import { AI_SCRIPT_VERSIONS } from "./policy";
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from "./planner-context";
 import type { AiPolicyMemory, AiScript } from "./policy";
 
@@ -48,5 +49,27 @@ describe("AI planner context boundary", () => {
     const playerMemory = memories.player;
     expect(playerMemory).toBeDefined();
     expect(playerMemory!.jobs.map((job) => job.id)).toEqual(["probe-0", "probe-1"]);
+  });
+
+  it("dispatches v2-prod through the frozen policy snapshot instead of the live script registry", () => {
+    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember"]);
+
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const commands = planAiOwnerCommandEntries(snapshotGame(game), { playerId: "player", version: "v2-prod" }, { teams: game.teams });
+
+    expect(commands[0]).toMatchObject({ playerId: "player", scriptId: "economy", command: { type: "mine" } });
+  });
+
+  it("keeps the frozen production policy subtree physically isolated from the live policy modules", () => {
+    expect(existsSync("src/ai/policy-v2prod/core.ts")).toBe(true);
+    const files = readdirSync("src/ai/policy-v2prod").filter((file) => file.endsWith(".ts"));
+    const offenders = files.filter((file) => {
+      const source = readFileSync(`src/ai/policy-v2prod/${file}`, "utf8");
+      return source.includes("../policy/") || source.includes('from "../policy"');
+    });
+    const core = readFileSync("src/ai/policy-v2prod/core.ts", "utf8");
+
+    expect(offenders).toEqual([]);
+    expect(core).toContain('version: "v2"');
   });
 });
