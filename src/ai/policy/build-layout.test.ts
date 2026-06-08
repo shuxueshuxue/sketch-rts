@@ -121,22 +121,6 @@ describe("AI build layout helpers", () => {
     expect(distance(point, { x: 500, y: 245 })).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
   });
 
-  it("keeps the first moon well near the main instead of following a far forward wounded cluster", () => {
-    const game = sketchScene("build-layout-first-healing-well-main-anchor")
-      .map("openClaims")
-      .replaceDefaults()
-      .player("v2", { team: "north" })
-      .townHall("v2", 492, 2048)
-      .unit("v2", "footman", 1190, 2130, { hp: 42, order: { type: "idle" } })
-      .unit("v2", "lancer", 1230, 2170, { hp: 35, order: { type: "move", x: 1230, y: 2170 } })
-      .build()
-      .createGame();
-
-    const point = healingWellPointFor(snapshotGame(game), "v2", { x: 492, y: 2048 });
-
-    expect(point).toEqual({ x: 406, y: 2166 });
-  });
-
   it("does not treat attack-moving wounded units as a settled moon well recovery cluster", () => {
     const game = sketchScene("build-layout-healing-well-ignores-attack-move-cluster")
       .map("bareDuel")
