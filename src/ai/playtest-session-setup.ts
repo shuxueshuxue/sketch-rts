@@ -1,4 +1,4 @@
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput } from "./benchmark/control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput } from "./benchmark/control";
 import { createAiGauntletCatalog } from "./benchmark/gauntlet";
 import { createAiVersionBenchmarkInput } from "./benchmark/presets";
 import type { AiGameAgent } from "./game-runner";
@@ -26,6 +26,9 @@ export function createAiPlaytestSetupFromArgs(args: string[], controlledPlayer: 
 
   const crossRaceBenchmarkMatchName = flag(args, "from-cross-race-benchmark");
   if (crossRaceBenchmarkMatchName !== undefined) return crossRaceBenchmarkPlaytestSetup(args, crossRaceBenchmarkMatchName, controlledPlayer);
+
+  const v3VsProdV2BenchmarkMatchName = flag(args, "from-v3-vs-prod-v2-benchmark");
+  if (v3VsProdV2BenchmarkMatchName !== undefined) return v3VsProdV2BenchmarkPlaytestSetup(args, v3VsProdV2BenchmarkMatchName, controlledPlayer);
 
   const controlBenchmarkMatchName = flag(args, "from-control-benchmark");
   if (controlBenchmarkMatchName !== undefined) return controlBenchmarkPlaytestSetup(args, controlBenchmarkMatchName, controlledPlayer);
@@ -86,6 +89,15 @@ function crossRaceBenchmarkPlaytestSetup(args: string[], matchName: string, cont
     full: boolFlag(args, "cross-race-full"),
   });
   return setupFromBenchmarkInput(input, matchName, controlledPlayer, "cross-race benchmark");
+}
+
+function v3VsProdV2BenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
+  const { input } = createAiV3VsProdV2BenchmarkInput({
+    ...(flag(args, "v3-prod-seed") ? { seed: requiredFlag(args, "v3-prod-seed") } : {}),
+    ...(flag(args, "v3-prod-map-count") ? { mapCount: requiredNumberFlag(args, "v3-prod-map-count") } : {}),
+    full: boolFlag(args, "v3-prod-full"),
+  });
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "V3 versus frozen V2-prod benchmark");
 }
 
 function gauntletPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
