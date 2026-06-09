@@ -48,7 +48,8 @@ function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUni
   const army = combatUnits(snapshot, owner);
   const ravagers = army.filter((unit) => unit.kind === "emberRavager").length;
   const runners = army.filter((unit) => unit.kind === "cinderRunner").length;
-  if (ravagers < 2) return "emberRavager";
+  if (ravagers < 1) return "emberRavager";
+  if (runners < 1) return "cinderRunner";
   if (runners < Math.max(1, Math.ceil(ravagers / 2))) return "cinderRunner";
   return ravagers <= runners ? "emberRavager" : "cinderRunner";
 }

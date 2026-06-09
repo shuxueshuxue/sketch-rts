@@ -2,6 +2,21 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 describe("AI version benchmark CLI", () => {
+  it("accepts the shared benchmark flag surface in dry-run mode", () => {
+    const output = JSON.parse(runVersionBenchmarkCliWithArgs("--seed", "version-cli-flag-seed", "--map-count", "2", "--workers", "3", "--dry-run"));
+
+    expect(output).toMatchObject({
+      name: "AI Version Benchmark",
+      seed: "version-cli-flag-seed",
+      mapCount: 2,
+      full: false,
+      workers: 3,
+      dashboardPath: ".benchmark-dashboard",
+    });
+    expect(output.selectedRichScoreMapIds).toHaveLength(2);
+    expect(output.manifest.evaluationCount).toBe(6);
+  });
+
   it("prints the formal benchmark manifest without running simulations in dry-run mode", () => {
     const output = JSON.parse(runVersionBenchmarkCli({ AI_BENCHMARK_DRY_RUN: "1", AI_GAUNTLET_SEED: "version-cli-seed", AI_GAUNTLET_MAP_COUNT: "2" }));
 
@@ -66,5 +81,13 @@ function runVersionBenchmarkCli(env: Record<string, string>) {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0", AI_BENCHMARK_WORKERS: "1", ...env },
+  });
+}
+
+function runVersionBenchmarkCliWithArgs(...args: string[]) {
+  return execFileSync("npx", ["tsx", "scripts/ai-version-benchmark.ts", ...args], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    env: { ...process.env, FORCE_COLOR: "0" },
   });
 }

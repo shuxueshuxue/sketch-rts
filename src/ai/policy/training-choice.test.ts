@@ -125,6 +125,22 @@ describe("AI training choice", () => {
     expect(trainingChoice(snapshot, "v2", forge, { version: "v2" })).toBe("emberRavager");
   });
 
+  it("mixes a cinder runner after the first ember ravager for early chase tempo", () => {
+    const scene = sketchScene("training-choice-ember-forge-runner-tempo")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "emberForge", 700, 620, { id: "forge" })
+      .unit("v2", "emberRavager", 760, 620);
+    const game = scene.build().createGame();
+    const snapshot = snapshotGame(game);
+    const forge = snapshot.buildings.find((building) => building.id === "forge");
+    if (!forge) throw new Error("missing ember forge");
+
+    expect(trainingChoice(snapshot, "v2", forge, { version: "v2" })).toBe("cinderRunner");
+  });
+
   it("uses ember cinder spire production for support casters before duplicating attackers", () => {
     const scene = sketchScene("training-choice-ember-spire")
       .map("bareDuel")

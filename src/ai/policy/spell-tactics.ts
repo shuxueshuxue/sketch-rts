@@ -20,6 +20,11 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
       }
+      const regroup = healerRegroupCommand(snapshot, owner, caster, def.plannerRange, options);
+      if (regroup) {
+        commands.push(regroup);
+        continue;
+      }
     }
     const summonAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "summon");
     if (summonAbility) {
@@ -40,6 +45,26 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     }
   }
   return commands;
+}
+
+function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (options.version !== "v2" || activeUnitClaim(snapshot, owner, caster, options)) return undefined;
+  const wounded = units(snapshot, owner).filter((unit) => unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
+  const groups = wounded
+    .map((anchor) => wounded.filter((unit) => distance(unit, anchor) <= 260))
+    .filter((group) => group.length >= 2)
+    .map((group) => ({ group, point: averagePoint(group) }))
+    .filter(({ point }) => enemyCombatUnits(snapshot, owner, options.teams).every((enemy) => distance(enemy, point) > 620) && neutralUnitsNear(snapshot, point, 420).length === 0)
+    .sort((a, b) => b.group.length - a.group.length || distance(caster, a.point) - distance(caster, b.point));
+  const target = groups[0]?.point;
+  // @@@healer-regroup - Healers that cannot cast yet should walk to a safe wounded cluster instead of idling at the last hired camp.
+  if (!target || !healerRegroupOrderCanMove(caster, target)) return undefined;
+  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: target.x, y: target.y }, options);
+}
+
+function healerRegroupOrderCanMove(caster: Unit, target: { x: number; y: number }) {
+  if (caster.order.type === "idle") return true;
+  return caster.order.type === "move" && distance(caster.order, target) > 180;
 }
 
 function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {

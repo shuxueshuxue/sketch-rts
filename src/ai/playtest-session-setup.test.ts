@@ -47,6 +47,22 @@ describe("AI playtest session setup", () => {
     });
   });
 
+  it("creates exact V3 versus frozen V2-prod benchmark setup descriptions for race-aware replay", () => {
+    const setup = createAiPlaytestSetupFromArgs(["--from-v3-vs-prod-v2-benchmark", "cobaltVale v3 north", "--v3-prod-seed", "v3-frozen-50-2026-06-08", "--v3-prod-map-count", "50"], "v3", "v2-prod");
+
+    expect(setup).toMatchObject({
+      id: "interactive-cobaltVale-v3-north",
+      mapId: "cobaltVale",
+      scriptedPlayers: ["v2-prod"],
+      versions: { v3: "v3-ember", "v2-prod": "v2-prod" },
+      options: {
+        players: ["v3", "v2-prod"],
+        teams: { v3: "north", "v2-prod": "south" },
+        races: { v3: "ember", "v2-prod": "grove" },
+      },
+    });
+  });
+
   it("creates exact gauntlet playtest setup descriptions for 1v3 replay", () => {
     const setup = createAiPlaytestSetupFromArgs(["--from-gauntlet", "internal-only 1v3 lichenCrown 1v3 probe", "--gauntlet-full"], "v2", "v1a");
 

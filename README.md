@@ -173,8 +173,10 @@ npm run play:ai -- step-until --file /tmp/match.json --condition tick --tick 120
 npm run play:ai -- plan --file /tmp/match.json --owner v2
 npm run play:ai -- commands
 
-npm run benchmark:ai
-npm run benchmark:ai-control
+npm run benchmark:ai -- --seed version-18 --map-count 18 --dry-run
+npm run benchmark:ai -- --seed version-18 --map-count 18 --workers 8
+npm run benchmark:ai-gauntlet -- --seed gauntlet-18 --map-count 18 --dry-run
+npm run benchmark:ai-control -- --seed control-50 --map-count 50 --dry-run
 npm run test:sdk-smoke
 npm run test:sdk-agent-player
 ```

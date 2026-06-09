@@ -19,6 +19,50 @@ describe("AI spell and focus tactics", () => {
     expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "cast", unitId: "priest", ability: "heal", targetId: "wounded" });
   });
 
+  it("moves an idle healer toward a safe wounded group outside heal range", () => {
+    const game = sketchScene("spell-tactics-healer-regroups-to-wounded")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3500, 3500)
+      .unit("v2", "fieldMedic", 1300, 900, { id: "medic" })
+      .unit("v2", "footman", 620, 560, { id: "wounded-a", hp: 38 })
+      .unit("v2", "lancer", 650, 590, { id: "wounded-b", hp: 42 })
+      .unit("v1", "footman", 3300, 3300)
+      .build()
+      .createGame();
+
+    const command = planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["medic"] });
+    expect(command?.type === "move" ? command.x : 0).toBeCloseTo(635, -1);
+    expect(command?.type === "move" ? command.y : 0).toBeCloseTo(575, -1);
+  });
+
+  it("retargets a moving healer when the wounded group has fallen back from the old regroup point", () => {
+    const game = sketchScene("spell-tactics-healer-retargets-wounded")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3500, 3500)
+      .unit("v2", "fieldMedic", 1300, 900, { id: "medic", order: { type: "move", x: 1170, y: 840 } })
+      .unit("v2", "footman", 620, 560, { id: "wounded-a", hp: 38 })
+      .unit("v2", "lancer", 650, 590, { id: "wounded-b", hp: 42 })
+      .unit("v1", "footman", 3300, 3300)
+      .build()
+      .createGame();
+
+    const command = planAbilityCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["medic"] });
+    expect(command?.type === "move" ? command.x : 0).toBeCloseTo(635, -1);
+    expect(command?.type === "move" ? command.y : 0).toBeCloseTo(575, -1);
+  });
+
   it("casts ember-specific support abilities through the same spell planner", () => {
     const game = sketchScene("spell-tactics-ember-abilities")
       .map("bareDuel")

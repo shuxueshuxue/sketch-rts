@@ -33,12 +33,12 @@ describe("AI playtest CLI", () => {
     expect(byName["new"]).toMatchObject({
       category: "session",
       requiredFlags: ["file"],
-      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-gauntlet", "assist-you"]),
+      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-cross-race-benchmark", "from-v3-vs-prod-v2-benchmark", "from-gauntlet", "assist-you"]),
     });
     expect(byName["diagnose"]).toMatchObject({
       category: "planning",
       requiredFlags: ["file"],
-      optionalFlags: expect.arrayContaining(["checkpoint-ticks", "plan-owner", "inspect-owner"]),
+      optionalFlags: expect.arrayContaining(["from-v3-vs-prod-v2-benchmark", "v3-prod-seed", "v3-prod-map-count", "checkpoint-ticks", "plan-owner", "inspect-owner"]),
     });
     expect(manifest.commands.every((command: { example?: string }) => command.example)).toBe(true);
   });

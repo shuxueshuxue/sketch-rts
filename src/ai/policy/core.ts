@@ -586,7 +586,10 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 }
 
 function usesEarlyWeaponTiming(snapshot: GameSnapshot, owner: PlayerId) {
-  return playerState(snapshot, owner).race === "grove";
+  const race = playerState(snapshot, owner).race;
+  if (race === "grove") return true;
+  // @@@ember-two-base-tech - Ember weapon timing is useful after the natural is real; before that it steals the expansion bank.
+  return race === "ember" && activeMiningBaseCount(snapshot, owner) >= 2;
 }
 
 function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
@@ -962,6 +965,8 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     const canSpendExpansionReserveOnTraining = unitKind !== "worker" && shouldSpendExpansionReserveOnTraining(snapshot, owner, options, remainingGold, cost);
     const canSpendEarlyFirstExpansionBankOnTraining =
       unitKind !== "worker" && shouldSpendEarlyFirstExpansionBankOnTraining(snapshot, owner, options, remainingGold, cost);
+    const canSpendEmberFirstSparkExpansionBank =
+      unitKind === "sparkArcher" && shouldSpendEmberFirstSparkExpansionBank(snapshot, owner, options, remainingGold, cost);
     const canSpendProductionReserveOnTraining =
       unitKind !== "worker" && missingProduction ? shouldSpendStrategicBankOnBaseThreatTraining(snapshot, owner, options, remainingGold, cost) : false;
     if (
@@ -970,6 +975,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
       !workerSaturatingEstablishedMines &&
       !canSpendProductionReserveOnTraining &&
       !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
       remainingGold < BUILDING_DEFS[missingProduction].cost + cost
     )
       continue;
@@ -977,9 +983,23 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (reserveSensitive && reserveEmergencyTower && !canSpendTowerReserveOnTraining && remainingGold < BUILDING_DEFS.defenseTower.cost + cost) continue;
     if (reserveSensitive && reserveHealingWell && remainingGold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + cost) continue;
     if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, cost, remainingGold)) continue;
-    if (reserveSensitive && !canSpendEarlyFirstExpansionBankOnTraining && shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)) continue;
+    if (
+      reserveSensitive &&
+      !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
+      shouldHoldFirstExpansionBank(snapshot, owner, options, cost, remainingGold)
+    )
+      continue;
     if (reserveSensitive && shouldHoldTwoBaseWeaponUpgradeBank(snapshot, owner, options, remainingGold, cost)) continue;
-    if (reserveSensitive && reserveExpansion && !canSpendExpansionReserveOnTraining && !canSpendEarlyFirstExpansionBankOnTraining && remainingGold < BUILDING_DEFS.townHall.cost + cost) continue;
+    if (
+      reserveSensitive &&
+      reserveExpansion &&
+      !canSpendExpansionReserveOnTraining &&
+      !canSpendEarlyFirstExpansionBankOnTraining &&
+      !canSpendEmberFirstSparkExpansionBank &&
+      remainingGold < BUILDING_DEFS.townHall.cost + cost
+    )
+      continue;
     if (reserveSensitive && reserveDuplicateProduction && remainingGold < BUILDING_DEFS[reserveDuplicateProduction].cost + cost) continue;
     if (remainingGold < cost || reservedSupply + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "train", buildingId: building.id, unitKind }, options));
@@ -988,6 +1008,25 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
     if (unitKind === "worker") queuedWorkers += 1;
   }
   return commands;
+}
+
+function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {
+  if (options.version !== "v2") return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
+  if (!completeBuildings(snapshot, owner, "cinderSpire").some((building) => building.queue.length === 0)) return false;
+  if (availableGold < spendCost || availableGold < BUILDING_DEFS.townHall.cost - 30) return false;
+  const army = combatUnits(snapshot, owner);
+  if (army.length < 6) return false;
+  if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
+  // @@@ember-first-scorch-bank - Six melee bodies without scorch are already a committed army; if the enemy expanded first, waiting ten gold for the hall loses the race kit's timing.
+  return opponentEconomyAhead(snapshot, owner, options) || opponentExpansionStartedBeforeOwner(snapshot, owner, options);
+}
+
+function opponentExpansionStartedBeforeOwner(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  const ownTownHalls = buildings(snapshot, owner).filter((building) => building.kind === "townHall").length;
+  return opponentPlayerIds(snapshot, owner, options).some((opponent) => buildings(snapshot, opponent).filter((building) => building.kind === "townHall").length > ownTownHalls);
 }
 
 function shouldSpendUnaffordableTowerReserveOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number) {
@@ -1019,11 +1058,25 @@ function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, op
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
+  if (shouldPrioritizeEmberFirstSpireSupport(snapshot, owner, options, candidates)) {
+    return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
+  }
   if (shouldPrioritizeMatureLateTechTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => matureLateTechTrainingRank(a, snapshot, owner, options) - matureLateTechTrainingRank(b, snapshot, owner, options));
   }
   if (!shouldPrioritizeWoundedPriestTraining(snapshot, owner, options)) return candidates;
   return [...candidates].sort((a, b) => Number(b.kind === "sanctum") - Number(a.kind === "sanctum"));
+}
+
+function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+  if (options.version !== "v2") return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (!candidates.some((building) => building.kind === "cinderSpire")) return false;
+  const army = combatUnits(snapshot, owner);
+  if (army.length < 5) return false;
+  if (!army.some((unit) => unit.kind === "sparkArcher")) return false;
+  // @@@ember-support-milestone - Once Ember has a frontline and first spark, the first acolyte unlocks its race kit instead of adding another melee body.
+  return !army.some((unit) => unit.kind === "emberAcolyte");
 }
 
 function shouldPrioritizeMatureLateTechTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
@@ -1517,7 +1570,7 @@ function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: P
   const opponents = opponentPlayerIds(snapshot, owner, options);
   if (opponents.length > 2) return undefined;
   if (opponents.length < 2 && !oneOnOneExpansionDenialWindow(snapshot, owner, opponents)) return undefined;
-  const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove");
+  const soldiers = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && !activeUnitClaim(snapshot, owner, unit, options));
   if (soldiers.length < 5) return undefined;
   if (opponents.length >= 2 && expansionDenialFieldArmyStopline(snapshot, owner, soldiers, options)) return undefined;
   const ownMain = mainBase(snapshot, owner);

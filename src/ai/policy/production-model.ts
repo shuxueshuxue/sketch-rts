@@ -44,18 +44,22 @@ export function duplicateCoreProductionKind(snapshot: GameSnapshot, owner: Playe
 }
 
 export function duplicateCoreProductionReserveKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
-  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  if (options.version !== "v2") return undefined;
+  const opponents = opponentPlayerIds(snapshot, owner, options);
+  const player = playerState(snapshot, owner);
+  const emberOneOnOneScale = player.race === "ember" && opponents.length === 1 && completeBuildings(snapshot, owner, "townHall").length >= 2;
+  if (!emberOneOnOneScale && opponents.length < 2) return undefined;
   if (desiredMissingProductionKind(snapshot, owner, options)) return undefined;
   const noExpansionMap = isOneBaseNoExpansionPressure(snapshot, owner);
   if (!noExpansionMap && completeBuildings(snapshot, owner, "townHall").length < 2) return undefined;
-  const minimumWorkers = noExpansionMap ? 5 : 9;
-  const minimumCombat = noExpansionMap ? 2 : 6;
+  const minimumWorkers = emberOneOnOneScale ? 9 : noExpansionMap ? 5 : 9;
+  const minimumCombat = emberOneOnOneScale ? 15 : noExpansionMap ? 2 : 6;
   if (units(snapshot, owner).filter((unit) => unit.kind === "worker").length < minimumWorkers || combatUnits(snapshot, owner).length < minimumCombat) return undefined;
   if (buildings(snapshot, owner).some((building) => !building.complete && isCoreProductionBuilding(building))) return undefined;
-  const candidates = aiPlaybook(playerState(snapshot, owner).race).productionPlan.slice(0, 3);
+  const candidates = aiPlaybook(player.race).productionPlan.slice(0, emberOneOnOneScale ? 4 : 3);
   const counts = new Map(candidates.map((kind) => [kind, buildings(snapshot, owner).filter((building) => building.kind === kind).length]));
   const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
-  if (total >= (noExpansionMap ? 3 : 6)) return undefined;
+  if (total >= (emberOneOnOneScale ? 4 : noExpansionMap ? 3 : 6)) return undefined;
   return candidates.sort((a, b) => (counts.get(a) ?? 0) - (counts.get(b) ?? 0))[0];
 }
 
