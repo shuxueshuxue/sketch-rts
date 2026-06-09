@@ -7063,6 +7063,31 @@ describe("SDK preset AI policy", () => {
     expect(command).not.toMatchObject({ type: "research", buildingId: "early-tech-forge", upgradeKind: "weaponTraining" });
   });
 
+  it("v3 ember can research weapon training after its first expansion is mining", () => {
+    const scene = sketchScene("v3-ember-two-base-weapon-training")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 500, 500)
+      .goldMine("v3-main-mine", 560, 540, 4000)
+      .townHall("v3", 900, 900)
+      .goldMine("v3-natural-mine", 960, 940, 4000)
+      .building("v3", "emberForge", 620, 620, { id: "two-base-tech-forge" })
+      .building("v3", "farm", 560, 700)
+      .unit("v3", "emberRavager", 760, 620)
+      .unit("v3", "cinderRunner", 790, 650)
+      .townHall("v2-prod", 3300, 3300)
+      .goldMine("v2-prod-main-mine", 3340, 3300, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v3!.gold = 260;
+
+    const command = planPresetAiCommands(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "research", buildingId: "two-base-tech-forge", upgradeKind: "weaponTraining" });
+  });
+
   it("v2 delays one-base 1v2 weapon training until it can still afford the next fighter", () => {
     const scene = sketchScene("v2-one-base-1v2-delays-thin-weapon")
       .map("bareDuel")
@@ -8393,6 +8418,90 @@ describe("SDK preset AI policy", () => {
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", buildingKind: "barracks" });
+  });
+
+  it("v3 ember waits for a full two-base combat group before duplicate core production in one-on-one", () => {
+    const scene = sketchScene("v3-ember-one-on-one-duplicate-production")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 500, 500, { id: "v3-main" })
+      .townHall("v3", 1400, 650, { id: "v3-natural" })
+      .building("v3", "emberForge", 620, 620, { id: "v3-forge" })
+      .building("v3", "cinderSpire", 700, 560, { id: "v3-spire" })
+      .building("v3", "defenseTower", 754, 620)
+      .building("v3", "defenseTower", 1350, 610)
+      .building("v3", "farm", 560, 700)
+      .building("v3", "farm", 610, 735)
+      .building("v3", "farm", 660, 770)
+      .building("v3", "farm", 710, 805)
+      .building("v3", "farm", 560, 850)
+      .building("v3", "farm", 610, 885)
+      .building("v3", "farm", 660, 920)
+      .building("v3", "farm", 710, 955)
+      .worker("v3", 520, 540, { id: "v3-builder" })
+      .worker("v3", 540, 560)
+      .worker("v3", 560, 540)
+      .worker("v3", 580, 560)
+      .worker("v3", 600, 540)
+      .worker("v3", 1420, 660)
+      .worker("v3", 1440, 680)
+      .worker("v3", 1460, 660)
+      .worker("v3", 1480, 680)
+      .townHall("v2-prod", 3300, 3300)
+      .goldMine("v3-main-mine", 560, 540, 4000)
+      .goldMine("v3-natural-mine", 1420, 650, 4000)
+      .goldMine("v2-prod-main-mine", 3340, 3300, 4000);
+    for (let index = 0; index < 12; index += 1) scene.unit("v3", index % 2 === 0 ? "emberRavager" : "cinderRunner", 800 + index * 24, 620 + index * 12);
+    const game = scene.build().createGame();
+    game.players.v3!.gold = 500;
+
+    const command = planPresetAiCommands(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams }).find((candidate) => candidate.type === "build" && candidate.buildingKind === "emberForge");
+
+    expect(command).toBeUndefined();
+  });
+
+  it("v3 ember adds duplicate core production at fifteen combat units in two-base one-on-one", () => {
+    const scene = sketchScene("v3-ember-one-on-one-duplicate-production-ready")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v3", { team: "north", race: "ember" })
+      .player("v2-prod", { team: "south", race: "grove" })
+      .townHall("v3", 500, 500, { id: "v3-main" })
+      .townHall("v3", 1400, 650, { id: "v3-natural" })
+      .building("v3", "emberForge", 620, 620, { id: "v3-forge" })
+      .building("v3", "cinderSpire", 700, 560, { id: "v3-spire" })
+      .building("v3", "defenseTower", 754, 620)
+      .building("v3", "defenseTower", 1350, 610)
+      .building("v3", "farm", 560, 700)
+      .building("v3", "farm", 610, 735)
+      .building("v3", "farm", 660, 770)
+      .building("v3", "farm", 710, 805)
+      .building("v3", "farm", 560, 850)
+      .building("v3", "farm", 610, 885)
+      .building("v3", "farm", 660, 920)
+      .building("v3", "farm", 710, 955)
+      .worker("v3", 520, 540, { id: "v3-builder" })
+      .worker("v3", 540, 560)
+      .worker("v3", 560, 540)
+      .worker("v3", 580, 560)
+      .worker("v3", 600, 540)
+      .worker("v3", 1420, 660)
+      .worker("v3", 1440, 680)
+      .worker("v3", 1460, 660)
+      .worker("v3", 1480, 680)
+      .townHall("v2-prod", 3300, 3300)
+      .goldMine("v3-main-mine", 560, 540, 4000)
+      .goldMine("v3-natural-mine", 1420, 650, 4000)
+      .goldMine("v2-prod-main-mine", 3340, 3300, 4000);
+    for (let index = 0; index < 15; index += 1) scene.unit("v3", index % 2 === 0 ? "emberRavager" : "cinderRunner", 800 + index * 24, 620 + index * 12);
+    const game = scene.build().createGame();
+    game.players.v3!.gold = 500;
+
+    const command = planPresetAiCommands(snapshotGame(game), "v3", { version: "v3-ember", teams: game.teams }).find((candidate) => candidate.type === "build" && candidate.buildingKind === "emberForge");
+
+    expect(command).toMatchObject({ type: "build", buildingKind: "emberForge" });
   });
 
   it("v2 trains its first squad before buying static defense or extra production when outnumbered", () => {

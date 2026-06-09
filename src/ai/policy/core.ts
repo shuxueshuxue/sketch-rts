@@ -586,7 +586,10 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 }
 
 function usesEarlyWeaponTiming(snapshot: GameSnapshot, owner: PlayerId) {
-  return playerState(snapshot, owner).race === "grove";
+  const race = playerState(snapshot, owner).race;
+  if (race === "grove") return true;
+  // @@@ember-two-base-tech - Ember weapon timing is useful after the natural is real; before that it steals the expansion bank.
+  return race === "ember" && activeMiningBaseCount(snapshot, owner) >= 2;
 }
 
 function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
