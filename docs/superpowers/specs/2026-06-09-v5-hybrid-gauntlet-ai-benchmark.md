@@ -124,6 +124,12 @@ Interpretation:
 - Exact `yarrowFen v5 south` showed a fast Grove V5 loss: V5 expanded around 256s but had no durable tower/healing position when V3 Ember and V4-TR mercenary pressure converged, then died around 365s. A near-tower-gold reserve hypothesis was tested with a RED policy test and a temporary base-defense reserve helper, but the exact replay still lost at 357s; that hypothesis was reverted because it added complexity without flipping the real failure.
 - Fresh verification after reverting that failed V5 hypothesis: `npx vitest run src/ai/policy.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/tower-merc-policy.test.ts scripts/ai-v3-vs-prod-v2-benchmark.test.ts scripts/ai-v4-tr-vs-v3-benchmark.test.ts scripts/ai-v5-vs-hybrid-benchmark.test.ts src/ai/benchmark/control.test.ts && npm run build` passed with `393` tests.
 - Follow-up TDD coverage now verifies V4-TR exact benchmark replay flags are present in the playtest command manifest and V5 execution summaries include `byOpponentOrder` for the simultaneous `v3,v4-tr` versus `v4-tr,v3` opponent-slot split.
+- Commit-level pgl dashboard baseline on committed revision `0f00ef1`: `v5-commit-0f00ef1-50-2026-06-09a`, run `2026-06-09T22-51-21-777Z-1ao6p2a`, workers `95`, wall time `21.92s`, CPU time `873605.222ms`, V5 total `52/100`.
+- Commit-level breakdown:
+  - V5 Grove: `27/50`; V5 Ember: `25/50`.
+  - Against V3 Grove: `25/50`; against V3 Ember: `27/50`.
+  - Opponent order `v3,v4-tr`: `32/51`; opponent order `v4-tr,v3`: `20/49`.
+  - Zero-win maps: `copperWeald`, `frostMeadow`, `duskGrove`, `ochreRidge`, `chalkFen`, `amberReach`, `ashVale`, `tealFissure`, `russetBrook`, `bluebellHeath`, `reedBasin`.
 
 ## Non-Goals
 

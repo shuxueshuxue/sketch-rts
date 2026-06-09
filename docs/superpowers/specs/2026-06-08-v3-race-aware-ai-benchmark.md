@@ -161,7 +161,8 @@ Implementation is not complete until current evidence proves all of the followin
   - `v3-frozen-current-audit-50-2026-06-09d`: run `2026-06-09T21-53-56-038Z-1tyj5sn`, wall time `23.48s`, CPU time `635030.587ms`, V3 total `94/100`.
   - `v3-frozen-current-audit-50-2026-06-09e`: run `2026-06-09T21-53-57-179Z-1tojk3o`, wall time `24.59s`, CPU time `640927.297ms`, V3 total `94/100`.
 - Post V4-TR closeout audit on 2026-06-09 confirms shared-core edits did not regress V3: `v3-frozen-current-audit-50-2026-06-09f`, run `2026-06-09T22-19-00-161Z-1uiid6l`, workers `95`, wall time `10.07s`, CPU time `590748.575ms`, V3 total `95/100`.
-- Remaining V3 stoplines are quality margin, not gate blockers: the latest audited seeds are `94/100`, `94/100`, and `95/100`, but this still needs commit-level revision evidence before release tagging.
+- Commit-level pgl dashboard evidence on committed revision `0f00ef1`: `v3-commit-0f00ef1-50-2026-06-09a`, run `2026-06-09T22-50-38-314Z-1c8kbto`, workers `95`, wall time `16.22s`, CPU time `624413.671ms`, V3 total `94/100`.
+- Remaining V3 stoplines are quality margin, not gate blockers: the latest audited seeds are `94/100`, `94/100`, `95/100`, and commit-level `94/100`.
 
 ## Non-Goals
 
