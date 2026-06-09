@@ -52,12 +52,46 @@ describe("AI planner context boundary", () => {
   });
 
   it("dispatches v2-prod through the frozen policy snapshot instead of the live script registry", () => {
-    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember"]);
+    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember", "v4-tr", "v5"]);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
     const commands = planAiOwnerCommandEntries(snapshotGame(game), { playerId: "player", version: "v2-prod" }, { teams: game.teams });
 
     expect(commands[0]).toMatchObject({ playerId: "player", scriptId: "economy", command: { type: "mine" } });
+  });
+
+  it("keeps v5's requested version visible while using the v2 live behavior base", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const seen: Array<{ version: string | undefined; requestedVersion: string | undefined }> = [];
+    const script: AiScript = {
+      id: "v5-version-probe",
+      phase: "tactics",
+      run(_snapshot, _owner, options) {
+        seen.push({ version: options.version, requestedVersion: options.requestedVersion });
+        return undefined;
+      },
+    };
+
+    planAiOwnerCommandEntries(snapshotGame(game), { playerId: "player", version: "v5", scripts: [script] }, { teams: game.teams });
+
+    expect(seen).toEqual([{ version: "v2", requestedVersion: "v5" }]);
+  });
+
+  it("keeps v4-tr on its own live policy behavior version", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const seen: Array<string | undefined> = [];
+    const script: AiScript = {
+      id: "v4-tr-version-probe",
+      phase: "tactics",
+      run(_snapshot, _owner, options) {
+        seen.push(options.version);
+        return undefined;
+      },
+    };
+
+    planAiOwnerCommandEntries(snapshotGame(game), { playerId: "player", version: "v4-tr", scripts: [script] }, { teams: game.teams });
+
+    expect(seen).toEqual(["v4-tr"]);
   });
 
   it("keeps the frozen production policy subtree physically isolated from the live policy modules", () => {

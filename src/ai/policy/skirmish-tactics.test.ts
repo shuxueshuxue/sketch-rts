@@ -93,6 +93,88 @@ describe("AI skirmish tactics", () => {
     expect(command).toBeUndefined();
   });
 
+  it("retreats a disadvantaged squad near a live enemy base", () => {
+    const game = sketchScene("skirmish-tactics-live-base-disadvantage")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .townHall("v1", 3300, 2100)
+      .worker("v1", 3400, 2050)
+      .unit("v2", "footman", 2920, 2140)
+      .unit("v2", "footman", 2960, 2170)
+      .unit("v2", "lancer", 3000, 2200)
+      .unit("v2", "archer", 2880, 2200)
+      .unit("v2", "contractArcher", 2840, 2170)
+      .unit("v1", "footman", 3060, 2120)
+      .unit("v1", "footman", 3100, 2150)
+      .unit("v1", "footman", 3140, 2180)
+      .unit("v1", "lancer", 3180, 2210)
+      .unit("v1", "lancer", 3220, 2240)
+      .unit("v1", "archer", 3120, 2060)
+      .unit("v1", "contractArcher", 3160, 2030)
+      .build()
+      .createGame();
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "attackMove" });
+    expect(command?.type === "attackMove" ? command.x : 9999).toBeLessThan(2920);
+  });
+
+  it("does not pull wounded v4-tr ranged mercenaries out of a dead-economy closeout", () => {
+    const scene = sketchScene("skirmish-tactics-v4-tr-closeout-no-pullback")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v4", { team: "north" })
+      .player("v3", { team: "south" })
+      .townHall("v4", 492, 2048)
+      .townHall("v3", 3604, 2048)
+      .building("v3", "cinderSpire", 3518, 2176)
+      .unit("v4", "contractArcher", 3032, 2197, { id: "wounded-closer", hp: 7, order: { type: "attackMove", x: 3518, y: 2176 } })
+      .unit("v4", "contractArcher", 3060, 2208, { id: "healthy-closer-a", order: { type: "attackMove", x: 3518, y: 2176 } })
+      .unit("v4", "contractArcher", 3088, 2220, { id: "healthy-closer-b", order: { type: "attackMove", x: 3518, y: 2176 } })
+      .unit("v4", "fieldMedic", 3050, 2240, { id: "medic-a", order: { type: "attackMove", x: 3518, y: 2176 } })
+      .unit("v4", "fieldMedic", 3090, 2250, { id: "medic-b", order: { type: "attackMove", x: 3518, y: 2176 } })
+      .unit("v3", "emberRavager", 3180, 2198, { id: "last-defender" });
+    const game = scene.build().createGame();
+
+    const commands = planSkirmishPreservation(snapshotGame(game), "v4", { version: "v4-tr", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
+  it("keeps v4-tr tower merc pressure committed near a live enemy base", () => {
+    const scene = sketchScene("skirmish-tactics-v4-tr-live-base-pressure")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v4", { team: "north" })
+      .player("v3", { team: "south" })
+      .townHall("v4", 492, 2048)
+      .townHall("v3", 3604, 2048)
+      .worker("v3", 3660, 1990)
+      .worker("v3", 3660, 2048)
+      .worker("v3", 3660, 2110)
+      .unit("v4", "contractArcher", 3032, 2050)
+      .unit("v4", "contractArcher", 3060, 2080)
+      .unit("v4", "contractArcher", 3088, 2110)
+      .unit("v4", "fieldMedic", 3050, 2140)
+      .unit("v4", "fieldMedic", 3090, 2170)
+      .unit("v3", "footman", 3180, 2050)
+      .unit("v3", "footman", 3210, 2080)
+      .unit("v3", "footman", 3240, 2110)
+      .unit("v3", "lancer", 3270, 2140)
+      .unit("v3", "lancer", 3300, 2170)
+      .unit("v3", "archer", 3200, 2000)
+      .unit("v3", "contractArcher", 3230, 1970);
+    const game = scene.build().createGame();
+
+    const commands = planSkirmishPreservation(snapshotGame(game), "v4", { version: "v4-tr", teams: game.teams });
+
+    expect(commands).toEqual([]);
+  });
+
   it("sends an idle badly wounded v2 fighter home after the immediate fight is gone", () => {
     const game = sketchScene("skirmish-tactics-idle-wounded-recovery")
       .map("bareDuel")

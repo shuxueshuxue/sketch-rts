@@ -33,12 +33,12 @@ describe("AI playtest CLI", () => {
     expect(byName["new"]).toMatchObject({
       category: "session",
       requiredFlags: ["file"],
-      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-cross-race-benchmark", "from-v3-vs-prod-v2-benchmark", "from-gauntlet", "assist-you"]),
+      optionalFlags: expect.arrayContaining(["map", "from-benchmark", "from-control-benchmark", "from-cross-race-benchmark", "from-v3-vs-prod-v2-benchmark", "from-v4-tr-vs-v3-benchmark", "from-v5-vs-hybrid-benchmark", "from-gauntlet", "assist-you"]),
     });
     expect(byName["diagnose"]).toMatchObject({
       category: "planning",
       requiredFlags: ["file"],
-      optionalFlags: expect.arrayContaining(["from-v3-vs-prod-v2-benchmark", "v3-prod-seed", "v3-prod-map-count", "checkpoint-ticks", "plan-owner", "inspect-owner"]),
+      optionalFlags: expect.arrayContaining(["from-v3-vs-prod-v2-benchmark", "from-v4-tr-vs-v3-benchmark", "v4-tr-seed", "v4-tr-map-count", "from-v5-vs-hybrid-benchmark", "v5-hybrid-seed", "v5-hybrid-map-count", "checkpoint-ticks", "plan-owner", "inspect-owner"]),
     });
     expect(manifest.commands.every((command: { example?: string }) => command.example)).toBe(true);
   });
@@ -350,6 +350,37 @@ describe("AI playtest CLI", () => {
     expect(persisted.runtime.controlledPlayers).toEqual(["v2", "v1a", "v1b", "v1c"]);
     expect(persisted.runtime.thinkInterval).toBe(45);
     expect(persisted.runtime.versions).toMatchObject({ v2: "v2", v1a: "v1", v1b: "v1", v1c: "v1" });
+  });
+
+  it("creates exact V5 hybrid 1v2 benchmark sessions for assisted replay", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sketch-ai-playtest-"));
+    tempDirs.push(dir);
+    const file = join(dir, "v5-hybrid.json");
+
+    runPlaytestCli(
+      "new",
+      "--file",
+      file,
+      "--from-v5-vs-hybrid-benchmark",
+      "thornedDelta v5 north",
+      "--v5-hybrid-seed",
+      "v5-hybrid-cli-seed",
+      "--v5-hybrid-map-count",
+      "4",
+      "--you",
+      "v5",
+      "--assist-you",
+    );
+    const persisted = JSON.parse(readFileSync(file, "utf8"));
+
+    expect(persisted.session.scriptedPlayers.sort()).toEqual(["v3", "v4-tr"]);
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
+      { playerId: "v5", team: "north", race: "ember", controller: "human" },
+      { playerId: "v4-tr", team: "south", race: "grove", controller: "ai" },
+      { playerId: "v3", team: "south", race: "grove", controller: "ai" },
+    ]);
+    expect(persisted.runtime.controlledPlayers).toEqual(["v5", "v4-tr", "v3"]);
+    expect(persisted.runtime.versions).toMatchObject({ v5: "v5", "v4-tr": "v4-tr", v3: "v3-grove" });
   });
 
   it("creates manual side-swapped map sessions with explicit teams", () => {

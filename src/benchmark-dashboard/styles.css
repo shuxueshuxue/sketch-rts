@@ -122,14 +122,16 @@ h2 {
   padding-right: 4px;
 }
 
-.run-pager {
+.run-pager,
+.match-pager {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) 36px;
   gap: 8px;
   align-items: center;
 }
 
-.run-pager button {
+.run-pager button,
+.match-pager button {
   border: 1px solid #d7dce0;
   border-radius: 6px;
   background: #ffffff;
@@ -138,11 +140,13 @@ h2 {
   font-weight: 800;
 }
 
-.run-pager button:disabled {
+.run-pager button:disabled,
+.match-pager button:disabled {
   color: #9aa6b2;
 }
 
-.run-pager span {
+.run-pager span,
+.match-pager span {
   color: #6a737d;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
@@ -285,10 +289,26 @@ h2 {
   font-weight: 800;
 }
 
+.map-strip-detail {
+  border: 1px solid #d7dce0;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 8px 10px;
+}
+
+.map-strip-detail summary {
+  cursor: pointer;
+  color: #57606a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .map-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 8px;
 }
 
 .map-strip span {

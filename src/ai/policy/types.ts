@@ -26,6 +26,7 @@ export type AiTelemetry = {
 export type PresetAiPolicyOptions = {
   teams?: Partial<Record<PlayerId, string>>;
   version?: AiScriptVersion;
+  requestedVersion?: AiScriptVersion;
   policyMode?: "melee" | "combat";
   disabledBehaviors?: AiBehaviorId[];
   telemetry?: AiTelemetry;

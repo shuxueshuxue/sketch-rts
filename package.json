@@ -14,6 +14,8 @@
     "benchmark:ai-control": "tsx scripts/ai-control-benchmark.ts",
     "benchmark:ai-cross-race": "tsx scripts/ai-cross-race-benchmark.ts",
     "benchmark:ai-v3-vs-prod-v2": "tsx scripts/ai-v3-vs-prod-v2-benchmark.ts",
+    "benchmark:ai-v4-tr-vs-v3": "tsx scripts/ai-v4-tr-vs-v3-benchmark.ts",
+    "benchmark:ai-v5-vs-hybrid": "tsx scripts/ai-v5-vs-hybrid-benchmark.ts",
     "benchmark:ai-gauntlet": "tsx scripts/ai-version-gauntlet.ts",
     "play:ai": "tsx scripts/ai-playtest.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",

@@ -56,7 +56,14 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const effectiveVersion = effectivePolicyVersion(version);
   const scripts = scriptsForRequest(request, version);
 
-  return planAiCommandEntriesFromScripts(snapshot, owner, scripts, { ...policyOptions, version: effectiveVersion, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
+  return planAiCommandEntriesFromScripts(snapshot, owner, scripts, {
+    ...policyOptions,
+    version: effectiveVersion,
+    requestedVersion: version,
+    ...(policyMode ? { policyMode } : {}),
+    ...(disabledBehaviors ? { disabledBehaviors } : {}),
+    memory,
+  }).map((entry) => ({
     playerId: owner,
     ...(request.source !== undefined ? { source: request.source } : {}),
     scriptId: entry.scriptId,
@@ -71,7 +78,7 @@ function memoryForOwner(owner: PlayerId, memoryProvider: AiMemoryProvider | unde
 }
 
 function effectivePolicyVersion(version: AiScriptVersion): AiScriptVersion {
-  if (version === "v3" || version === "v3-grove" || version === "v3-ember") return "v2";
+  if (version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5") return "v2";
   return version;
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails } from "./control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails, summarizeAiV5VsHybridBenchmark } from "./control";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
 
 describe("AI melee control benchmark", () => {
@@ -333,6 +333,37 @@ describe("AI melee control benchmark", () => {
       },
     });
   });
+
+  it("summarizes V5 hybrid results by simultaneous opponent slot order", () => {
+    const report = {
+      name: "AI V5 vs Hybrid V3 plus V4-TR Benchmark",
+      startedAt: "2026-06-09T00:00:00.000Z",
+      evaluationCount: 1,
+      matchCount: 2,
+      elapsedMs: 10,
+      cpuMs: 20,
+      evaluations: [
+        {
+          name: "v5 hybrid 1v2 vs v3 plus v4-tr",
+          startedAt: "2026-06-09T00:00:00.000Z",
+          elapsedMs: 10,
+          cpuMs: 20,
+          matchCount: 2,
+          matches: [
+            v5HybridMatch("alpha v5 north", "alpha", "v5", ["v5", "v3", "v4-tr"]),
+            v5HybridMatch("alpha v5 south", "alpha", "v3", ["v5", "v4-tr", "v3"]),
+          ],
+        },
+      ],
+    } as unknown as BenchmarkReport;
+
+    const result = summarizeAiV5VsHybridBenchmark({ seed: "v5-summary-seed", selectedMapIds: ["alpha"], report, workers: 2 });
+
+    expect(result.byOpponentOrder).toEqual({
+      "v3,v4-tr": { wins: 1, matches: 1, winRate: 1 },
+      "v4-tr,v3": { wins: 0, matches: 1, winRate: 0 },
+    });
+  });
 });
 
 function match(name: string, mapId: string, winner: string | null) {
@@ -342,5 +373,30 @@ function match(name: string, mapId: string, winner: string | null) {
     cpuMs: 1,
     setup: { map: { id: mapId } },
     result: { winner },
+  };
+}
+
+function v5HybridMatch(name: string, mapId: string, winner: string | null, playerOrder: string[]) {
+  const players = Object.fromEntries(
+    playerOrder.map((owner) => [
+      owner,
+      {
+        race: owner === "v3" ? "ember" : "grove",
+        aiVersion: owner,
+      },
+    ]),
+  );
+  return {
+    name,
+    elapsedMs: 1,
+    cpuMs: 1,
+    setup: {
+      map: { id: mapId },
+      players,
+    },
+    result: {
+      winner,
+      players,
+    },
   };
 }

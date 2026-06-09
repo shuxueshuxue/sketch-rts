@@ -63,6 +63,22 @@ describe("AI playtest session setup", () => {
     });
   });
 
+  it("creates exact V4-TR versus V3 benchmark setup descriptions for tower-merc replay", () => {
+    const setup = createAiPlaytestSetupFromArgs(["--from-v4-tr-vs-v3-benchmark", "opalFen v4-tr south", "--v4-tr-seed", "v4-tr-current-head-50-2026-06-09", "--v4-tr-map-count", "50"], "v4-tr", "v3");
+
+    expect(setup).toMatchObject({
+      id: "interactive-opalFen-v4-tr-south",
+      mapId: "opalFen",
+      scriptedPlayers: ["v3"],
+      versions: { "v4-tr": "v4-tr", v3: "v3-grove" },
+      options: {
+        players: ["v4-tr", "v3"],
+        teams: { "v4-tr": "south", v3: "north" },
+        races: { "v4-tr": "grove", v3: "grove" },
+      },
+    });
+  });
+
   it("creates exact gauntlet playtest setup descriptions for 1v3 replay", () => {
     const setup = createAiPlaytestSetupFromArgs(["--from-gauntlet", "internal-only 1v3 lichenCrown 1v3 probe", "--gauntlet-full"], "v2", "v1a");
 

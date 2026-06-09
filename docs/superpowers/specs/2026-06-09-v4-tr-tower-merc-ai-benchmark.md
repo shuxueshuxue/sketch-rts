@@ -120,3 +120,30 @@ Implementation is not complete until current evidence proves all of the followin
 - Do not fork simulation or command-frame logic.
 - Do not hide forbidden combat units with labels or alternate wrappers.
 - Do not treat local full benchmark evidence as acceptance evidence.
+
+## Current Status
+
+- `v4-tr` exists as a normal `AiScriptVersion` and uses the shared planner/runtime path. Its script stack keeps economy, recovery, repair, supply, defense, healing well, mercenary, expansion, item/ability, skirmish, focus, objective, worker-defense, closeout, and attack-wave planning, while ordinary combat production is blocked in policy.
+- Focused policy tests cover the core constraint and strategy surface: V4-TR does not train ordinary combat units, still trains workers, builds/repairs towers, builds healing support, expands, claims/hires mercenaries, and performs tower/worker/mercenary closeout through shared planner commands.
+- The dedicated benchmark CLI exists as `npm run benchmark:ai-v4-tr-vs-v3`. Dry-run and dashboard tests prove side-balanced 50-map setup, fixed V4-TR challenger, randomized V3 race, and dashboard writes with `targetPlayerId: "v4-tr"`.
+- TDD slice on 2026-06-09 fixed a real overextension bug: `towerMercWorkerOnlyPickoff` was intended as late worker-only cleanup, but without a tick gate it could pull the first mercenary squad into early worker harassment and lose the opening army. It is now restricted to late worker cleanup while retaining a positive late cleanup test.
+- Current pgl dashboard evidence from branch `codex/v4-tr-benchmark` on 2026-06-09 shows the V4-TR gate passes across three 50-map / 100-match seeds using the dedicated CLI and dashboard store:
+  - `v4-tr-50-2026-06-09a`: run `2026-06-09T05-55-12-257Z-1qcz9s3`, workers `32`, wall time `12.51s`, CPU time `382773.523ms`, V4-TR total `96/100`.
+  - `v4-tr-50-2026-06-09b`: run `2026-06-09T05-56-15-895Z-1qmyvh2`, workers `32`, wall time `13.64s`, CPU time `383679.593ms`, V4-TR total `96/100`.
+  - `v4-tr-50-2026-06-09c`: run `2026-06-09T05-58-58-485Z-1qwyh61`, workers `32`, wall time `15.30s`, CPU time `396748.528ms`, V4-TR total `97/100`.
+  - `v4-tr-50-2026-06-09d`: run `2026-06-09T06-13-59-609Z-1r6y2v0`, workers `32`, wall time `15.26s`, CPU time `407181.012ms`, V4-TR total `96/100`.
+- Current pgl dashboard audit after the V3 enemy-side mercenary objective fix confirms V4-TR still passes against the stronger current V3 opponent:
+  - `v4-tr-current-audit-50-2026-06-09`: run `2026-06-09T20-40-50-144Z-1g49kn2`, workers `95`, wall time `19.71s`, CPU time `563550.393ms`, V4-TR total `94/100`.
+  - `v4-tr-current-audit-50-2026-06-09b`: run `2026-06-09T20-40-50-080Z-13ncqxg`, workers `95`, wall time `19.68s`, CPU time `591959.732ms`, V4-TR total `92/100`.
+  - `v4-tr-current-audit-50-2026-06-09c`: run `2026-06-09T20-45-20-385Z-13xccmf`, workers `95`, wall time `32.19s`, CPU time `595954.745ms`, V4-TR total `92/100`.
+  - `v4-tr-current-audit-50-2026-06-09d`: run `2026-06-09T20-45-21-495Z-133djji`, workers `95`, wall time `30.49s`, CPU time `612892.311ms`, V4-TR total `91/100`.
+- Enemy-base skirmish split on 2026-06-09: V2/V3 now retreat from locally outmatched dives near a live enemy base, but V4-TR keeps the old enemy-base skip because tower/merc pressure loses value if skirmish preservation pulls the merc squad home. A focused regression test first proved the broken V4 behavior by showing a live-base tower/merc squad was being assigned an `attackMove` back to its main; the kept implementation makes that command list empty for V4-TR while preserving the V3 retreat test.
+- Current pgl dashboard evidence after the enemy-base skirmish split, from branch `codex/v4-tr-benchmark` local worktree with workers `95`, confirms V4-TR still meets the gate against current V3:
+  - `v4-tr-current-audit-50-2026-06-09d`: run `2026-06-09T21-54-01-520Z-133djji`, wall time `27.02s`, CPU time `614331.604ms`, V4-TR total `90/100`.
+- Late-closeout reliability slice on 2026-06-09: exact `glassmereFord v4-tr north` from seed `v4-tr-current-audit-50-2026-06-09b` timed out with V4-TR on two bases, huge bank, five merc/medic combat, and no plan because enemy buildings were outside the 2200 siege-tower anchor radius while route-blocking correctly prevented a weak mercenary attack wave. `planTowerMercForwardTower` now lets late two-base/high-bank V4-TR use existing town halls/towers as anchors for distant guarded mercenary-camp tower steps, with the same worker route-block check. The exact replay changed from 2400s timeout to V4-TR win at 989.75s.
+- Residual melee closeout slice on 2026-06-09: follow-up pgl evidence showed the broader forward tower step fixed `marbleGrove`, `glassmereFord`, and `bluebellHeath`, but exposed `ashVale`, `copperWeald`, and `pearlBog` timeouts where enemy economy was dead and one healthy normal melee residual made `workerPressureCloseout` return no command. V4-TR now uses a tightly gated worker swarm only when the enemy has one residual combat unit, at most two buildings, at least ten healthy V4 workers are available, and the target is not a high-level melee carry. Exact replays of those three new failures now end in V4-TR wins.
+- Current pgl dashboard evidence after late-closeout reliability fixes, from branch `codex/v4-tr-benchmark` local worktree with workers `95`, confirms V4-TR clears the 90/100 gate across the audited 50-map / 100-match seeds:
+  - `v4-tr-current-audit-50-2026-06-09b`: run `2026-06-09T22-17-44-852Z-13ncqxg`, wall time `13.41s`, CPU time `600338.751ms`, V4-TR total `91/100`.
+  - `v4-tr-current-audit-50-2026-06-09c`: run `2026-06-09T22-18-18-905Z-13xccmf`, wall time `12.91s`, CPU time `555639.444ms`, V4-TR total `94/100`.
+  - `v4-tr-current-audit-50-2026-06-09d`: run `2026-06-09T22-18-31-996Z-133djji`, wall time `12.65s`, CPU time `585077.673ms`, V4-TR total `92/100`.
+- Remaining V4-TR stoplines are quality margin, not gate blockers: the latest audited low seed is `91/100`, so the next useful work is not broad retreat/preservation changes but specific remaining timeout/loss clusters such as `thornedDelta`, `ochreRidge`, `lanternFord`, and `spruceCircuit`.

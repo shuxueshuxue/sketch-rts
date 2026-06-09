@@ -2,9 +2,114 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { benchmarkDashboardLogsDir, benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordBenchmarkDashboardReportRun, recordAiVersionBenchmarkDashboardRun } from "./dashboard-store";
+import { benchmarkDashboardLogsDir, benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, listBenchmarkDashboardRunsPage, readBenchmarkDashboardRun, readBenchmarkDashboardRunPage, recordBenchmarkDashboardReportRun, recordAiVersionBenchmarkDashboardRun } from "./dashboard-store";
 
 describe("benchmark dashboard store", () => {
+  it("lists dashboard summaries with backend pagination metadata", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-page-"));
+    try {
+      const runsDir = benchmarkDashboardRunsDir({ rootDir });
+      await mkdir(runsDir, { recursive: true });
+      for (let index = 0; index < 5; index += 1) {
+        await writeFile(
+          path.join(runsDir, `run-${index}.json`),
+          JSON.stringify(specializedRunFile({ id: `run-${index}`, createdAt: `2026-01-01T00:0${index}:00.000Z`, tag: index % 2 === 0 ? "melee" : "combat" })),
+        );
+      }
+
+      const page = await listBenchmarkDashboardRunsPage({ rootDir, page: 2, pageSize: 2 });
+
+      expect(page).toMatchObject({
+        page: 2,
+        pageSize: 2,
+        totalRuns: 5,
+        totalPages: 3,
+        tags: ["combat", "melee"],
+      });
+      expect(page.runs.map((run) => run.id)).toEqual(["run-2", "run-1"]);
+      expect(page.runs.every((run) => !("report" in run))).toBe(true);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it("filters dashboard summary pages by tag before slicing", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-tag-page-"));
+    try {
+      const runsDir = benchmarkDashboardRunsDir({ rootDir });
+      await mkdir(runsDir, { recursive: true });
+      for (let index = 0; index < 6; index += 1) {
+        await writeFile(
+          path.join(runsDir, `run-${index}.json`),
+          JSON.stringify(specializedRunFile({ id: `run-${index}`, createdAt: `2026-01-01T00:0${index}:00.000Z`, tag: index % 2 === 0 ? "melee" : "combat" })),
+        );
+      }
+
+      const page = await listBenchmarkDashboardRunsPage({ rootDir, page: 2, pageSize: 2, tag: "melee" });
+
+      expect(page).toMatchObject({
+        page: 2,
+        pageSize: 2,
+        totalRuns: 3,
+        totalPages: 2,
+      });
+      expect(page.runs.map((run) => run.id)).toEqual(["run-0"]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it("reads a dashboard run with backend match pagination", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-match-page-"));
+    try {
+      const runsDir = benchmarkDashboardRunsDir({ rootDir });
+      await mkdir(runsDir, { recursive: true });
+      await writeFile(
+        path.join(runsDir, "paged-run.json"),
+        JSON.stringify(specializedRunFile({ id: "paged-run", createdAt: "2026-01-01T00:00:00.000Z", tag: "melee", matchCount: 5 })),
+      );
+
+      const page = await readBenchmarkDashboardRunPage("paged-run", { rootDir, matchPage: 2, matchPageSize: 2 });
+
+      expect(page).toMatchObject({
+        matchPage: 2,
+        matchPageSize: 2,
+        totalMatches: 5,
+        totalMatchPages: 3,
+      });
+      expect(page.report.evaluations[0]?.matchCount).toBe(5);
+      expect(page.report.evaluations[0]?.matches.map((match) => match.name)).toEqual(["paged-run match 2", "paged-run match 3"]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it("filters a paged dashboard run detail by evaluation tag before slicing matches", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-match-tag-page-"));
+    try {
+      const runsDir = benchmarkDashboardRunsDir({ rootDir });
+      await mkdir(runsDir, { recursive: true });
+      const run = specializedRunFile({ id: "tagged-run", createdAt: "2026-01-01T00:00:00.000Z", tag: "melee", matchCount: 3 });
+      run.report.evaluations.push(specializedRunFile({ id: "tagged-run-combat", createdAt: "2026-01-01T00:00:00.000Z", tag: "combat", matchCount: 4 }).report.evaluations[0]!);
+      run.report.evaluationCount = 2;
+      run.report.matchCount = 7;
+      await writeFile(path.join(runsDir, "tagged-run.json"), JSON.stringify(run));
+
+      const page = await readBenchmarkDashboardRunPage("tagged-run", { rootDir, tag: "combat", matchPage: 1, matchPageSize: 2 });
+
+      expect(page).toMatchObject({
+        matchPage: 1,
+        matchPageSize: 2,
+        totalMatches: 4,
+        totalMatchPages: 2,
+      });
+      expect(page.report.evaluations.map((evaluation) => evaluation.tag)).toEqual(["combat"]);
+      expect(page.report.evaluations[0]?.matches.map((match) => match.name)).toEqual(["tagged-run-combat match 0", "tagged-run-combat match 1"]);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   it("records standard AI benchmark runs and lists latest summaries first", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
     try {
@@ -259,5 +364,45 @@ function minimalBenchmarkPlayers() {
   return {
     v3: { team: "north", firstEnemyEngagementSecond: 2, firstExpansionMiningSecond: null, enemyUnitKills: 1, neutralUnitKills: 0, unitsLost: 0, unitsKilledByNeutral: 0, totalGoldIncome: 500 },
     "v2-prod": { team: "south", firstEnemyEngagementSecond: 3, firstExpansionMiningSecond: null, enemyUnitKills: 0, neutralUnitKills: 0, unitsLost: 1, unitsKilledByNeutral: 0, totalGoldIncome: 400 },
+  };
+}
+
+function specializedRunFile(input: { id: string; createdAt: string; tag: string; matchCount?: number }) {
+  const matchCount = input.matchCount ?? 1;
+  return {
+    id: input.id,
+    kind: "ai-specialized-benchmark",
+    createdAt: input.createdAt,
+    seed: input.id,
+    mapPoolSize: 64,
+    selectedRichScoreMapIds: ["pearlBog"],
+    mapCount: 1,
+    full: false,
+    targetPlayerId: "v3",
+    report: {
+      name: "Paged Specialized Benchmark",
+      startedAt: input.createdAt,
+      evaluationCount: 1,
+      matchCount,
+      elapsedMs: 10,
+      cpuMs: 20,
+      evaluations: [
+        {
+          name: `${input.tag} lane`,
+          tag: input.tag,
+          startedAt: input.createdAt,
+          elapsedMs: 10,
+          cpuMs: 20,
+          matchCount,
+          matches: Array.from({ length: matchCount }, (_, index) => ({
+            name: `${input.id} match ${index}`,
+            elapsedMs: 1,
+            cpuMs: 2,
+            setup: { map: { id: "pearlBog" } },
+            result: { gameSecond: 10, winner: "v3", winnerTeam: "north", players: minimalBenchmarkPlayers() },
+          })),
+        },
+      ],
+    },
   };
 }

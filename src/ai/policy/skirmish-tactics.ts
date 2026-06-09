@@ -25,6 +25,7 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
     for (const command of combatRetreats) recordBehavior(options, "skirmishPreservation", "woundedRangedPullbacks");
     return combatRetreats;
   }
+  if (shouldLetTowerMercCloseoutContinue(snapshot, owner, ownCombat, enemies, options)) return [];
   const commands: GameCommand[] = [];
 
   for (const unit of ownCombat) {
@@ -72,6 +73,25 @@ function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: Pla
   if (buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete).length < 2) return false;
   // @@@dead-economy-skirmish - A no-worker enemy team cannot punish a bad trade economically; do not let preservation reset the closeout army forever.
   return !opponents.some((opponent) => units(snapshot, opponent).filter((unit) => unit.kind === "worker").length > 1);
+}
+
+function shouldLetTowerMercCloseoutContinue(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], options: PresetAiPolicyOptions) {
+  if (options.version !== "v4-tr" || ownCombat.length < 2) return false;
+  const opponents = opponentPlayerIds(snapshot, owner, options);
+  if (opponents.length < 1) return false;
+  const remainingBuildings = enemyBuildings(snapshot, owner, options.teams);
+  if (remainingBuildings.length === 0) return false;
+  const enemyWorkers = opponents.reduce((total, opponent) => total + units(snapshot, opponent).filter((unit) => unit.kind === "worker").length, 0);
+  if (enemyWorkers > 2) return false;
+  const opponentCombat = enemies.filter((unit) => unit.owner !== "neutral");
+  if (opponentCombat.length > Math.max(2, ownCombat.length - 1)) return false;
+  // @@@tower-merc-closeout-preservation - V4-TR's late army is small and mercenary-limited; once the enemy economy is dead, preservation must not oscillate ranged mercs away from the last buildings.
+  return ownCombat.some((unit) => {
+    if (remainingBuildings.some((building) => distance(unit, building) <= 1_000)) return true;
+    if (unit.order.type !== "attackMove") return false;
+    const order = unit.order;
+    return remainingBuildings.some((building) => distance(order, building) <= 720);
+  });
 }
 
 function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
@@ -149,9 +169,11 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
 }
 
 function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], ownBase: Point, options: PresetAiPolicyOptions): { allies: Unit[]; enemies: Unit[] } | undefined {
-  const enemyBase = nearestEnemyBase(snapshot, owner, ownBase, options);
+  const enemyBase = options.version === "v4-tr" ? nearestEnemyBase(snapshot, owner, ownBase, options) : undefined;
   for (const anchor of ownCombat) {
-    if (distance(anchor, ownBase) < 700 || (enemyBase && distance(anchor, enemyBase) < 700)) continue;
+    // @@@enemy-base-skirmish - V2/V3 should preserve bad enemy-base dives; V4-TR wins by keeping tower/merc pressure committed.
+    if (distance(anchor, ownBase) < 700) continue;
+    if (enemyBase && distance(anchor, enemyBase) < 700) continue;
     const allies = ownCombat.filter((unit) => distance(unit, anchor) <= 520);
     if (allies.length < 2) continue;
     const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);

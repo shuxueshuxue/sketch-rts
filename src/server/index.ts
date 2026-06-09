@@ -8,12 +8,13 @@ import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { expressMountPath, publicBasePathFromEnv } from "../shared/deployment-base";
 import { MAP_SCENARIOS } from "../shared/map";
-import { benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
+import { benchmarkDashboardRunsDir, listBenchmarkDashboardRunsPage, readBenchmarkDashboardRunPage, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
 import type { CommandEnvelope } from "../shared/net/types";
 import { isLocalUserProfile, parseContinueSaveRequest, parseGrandStressRoomRequest, parseMapUpdateRequest, parseResetRoomRequest, parseSlotCountsRequest, parseSlotPatch, roomCreateInputFromRequest } from "../shared/room-schema";
 import { parseSaveGameInput } from "../shared/savegame";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
+import { benchmarkDashboardPageOptionsFromQuery } from "./benchmark-dashboard-api";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub } from "./room-net";
 import { classifyWebSocketUpgrade } from "./ws-routes";
@@ -75,9 +76,9 @@ router.get("/api/catalog", (_request, response) => {
   });
 });
 
-router.get("/api/benchmark-dashboard/runs", async (_request, response) => {
+router.get("/api/benchmark-dashboard/runs", async (request, response) => {
   try {
-    response.json({ runs: await listBenchmarkDashboardRuns() });
+    response.json(await listBenchmarkDashboardRunsPage(benchmarkDashboardPageOptionsFromQuery(request.query)));
   } catch (error) {
     response.status(500).json({ error: errorMessage(error) });
   }
@@ -98,7 +99,7 @@ router.get("/api/benchmark-dashboard/events", (request, response) => {
 
 router.get("/api/benchmark-dashboard/runs/:runId", async (request, response) => {
   try {
-    response.json(await readBenchmarkDashboardRun(request.params.runId));
+    response.json(await readBenchmarkDashboardRunPage(request.params.runId, benchmarkDashboardPageOptionsFromQuery(request.query)));
   } catch (error) {
     response.status(404).json({ error: errorMessage(error) });
   }

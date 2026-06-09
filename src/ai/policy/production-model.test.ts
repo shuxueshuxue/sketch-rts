@@ -16,6 +16,18 @@ describe("AI production model", () => {
     expect(productionBuildingNeedKind(snapshotGame(game), "v2", { version: "v2" })).toBe("barracks");
   });
 
+  it("does not request ordinary combat production buildings for v4-tr", () => {
+    const game = sketchScene("production-model-v4-tr-no-combat-production")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v4", { team: "north" })
+      .townHall("v4", 500, 500)
+      .build()
+      .createGame();
+
+    expect(productionBuildingNeedKind(snapshotGame(game), "v4", { version: "v4-tr" })).toBeUndefined();
+  });
+
   it("reserves a duplicate core production building after the combat chain is complete", () => {
     const scene = sketchScene("production-model-duplicate-core")
       .map("bareDuel")

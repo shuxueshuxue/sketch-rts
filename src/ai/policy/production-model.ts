@@ -4,6 +4,7 @@ import { activePlayerIds, activeResources, buildings, combatUnits, completeBuild
 import { opponentPlayerIds } from "./ownership";
 import { aiPlaybook, type ProductionBuildingKind } from "./playbook";
 import type { PresetAiPolicyOptions } from "./types";
+import { isTowerMercPolicy } from "./versions";
 import { hasCoreProduction, isCoreProductionBuilding, playerState } from "./world-model";
 
 export function nextProductionBuildingKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
@@ -17,6 +18,7 @@ export function productionBuildingNeedKind(snapshot: GameSnapshot, owner: Player
 }
 
 export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): ProductionBuildingKind | undefined {
+  if (isTowerMercPolicy(options)) return undefined;
   const player = playerState(snapshot, owner);
   const plan = aiPlaybook(player.race).productionPlan;
   const army = combatUnits(snapshot, owner);

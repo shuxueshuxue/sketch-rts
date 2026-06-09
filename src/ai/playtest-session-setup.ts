@@ -1,4 +1,4 @@
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput } from "./benchmark/control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, createAiV4TrVsV3BenchmarkInput, createAiV5VsHybridBenchmarkInput } from "./benchmark/control";
 import { createAiGauntletCatalog } from "./benchmark/gauntlet";
 import { createAiVersionBenchmarkInput } from "./benchmark/presets";
 import type { AiGameAgent } from "./game-runner";
@@ -29,6 +29,12 @@ export function createAiPlaytestSetupFromArgs(args: string[], controlledPlayer: 
 
   const v3VsProdV2BenchmarkMatchName = flag(args, "from-v3-vs-prod-v2-benchmark");
   if (v3VsProdV2BenchmarkMatchName !== undefined) return v3VsProdV2BenchmarkPlaytestSetup(args, v3VsProdV2BenchmarkMatchName, controlledPlayer);
+
+  const v4TrVsV3BenchmarkMatchName = flag(args, "from-v4-tr-vs-v3-benchmark");
+  if (v4TrVsV3BenchmarkMatchName !== undefined) return v4TrVsV3BenchmarkPlaytestSetup(args, v4TrVsV3BenchmarkMatchName, controlledPlayer);
+
+  const v5VsHybridBenchmarkMatchName = flag(args, "from-v5-vs-hybrid-benchmark");
+  if (v5VsHybridBenchmarkMatchName !== undefined) return v5VsHybridBenchmarkPlaytestSetup(args, v5VsHybridBenchmarkMatchName, controlledPlayer);
 
   const controlBenchmarkMatchName = flag(args, "from-control-benchmark");
   if (controlBenchmarkMatchName !== undefined) return controlBenchmarkPlaytestSetup(args, controlBenchmarkMatchName, controlledPlayer);
@@ -98,6 +104,24 @@ function v3VsProdV2BenchmarkPlaytestSetup(args: string[], matchName: string, con
     full: boolFlag(args, "v3-prod-full"),
   });
   return setupFromBenchmarkInput(input, matchName, controlledPlayer, "V3 versus frozen V2-prod benchmark");
+}
+
+function v4TrVsV3BenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
+  const { input } = createAiV4TrVsV3BenchmarkInput({
+    ...(flag(args, "v4-tr-seed") ? { seed: requiredFlag(args, "v4-tr-seed") } : {}),
+    ...(flag(args, "v4-tr-map-count") ? { mapCount: requiredNumberFlag(args, "v4-tr-map-count") } : {}),
+    full: boolFlag(args, "v4-tr-full"),
+  });
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "V4-TR versus V3 benchmark");
+}
+
+function v5VsHybridBenchmarkPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {
+  const { input } = createAiV5VsHybridBenchmarkInput({
+    ...(flag(args, "v5-hybrid-seed") ? { seed: requiredFlag(args, "v5-hybrid-seed") } : {}),
+    ...(flag(args, "v5-hybrid-map-count") ? { mapCount: requiredNumberFlag(args, "v5-hybrid-map-count") } : {}),
+    full: boolFlag(args, "v5-hybrid-full"),
+  });
+  return setupFromBenchmarkInput(input, matchName, controlledPlayer, "V5 versus hybrid benchmark");
 }
 
 function gauntletPlaytestSetup(args: string[], matchName: string, controlledPlayer: PlayerId): RequiredBenchmarkSetupDescription {

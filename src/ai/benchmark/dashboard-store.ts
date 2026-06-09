@@ -62,6 +62,34 @@ export type BenchmarkDashboardStoreOptions = {
   now?: () => Date;
 };
 
+export type BenchmarkDashboardRunPage = {
+  runs: BenchmarkDashboardRunSummary[];
+  page: number;
+  pageSize: number;
+  totalRuns: number;
+  totalPages: number;
+  tags: string[];
+};
+
+export type BenchmarkDashboardRunPageOptions = BenchmarkDashboardStoreOptions & {
+  page?: number;
+  pageSize?: number;
+  tag?: string;
+};
+
+export type BenchmarkDashboardRunDetailPage = BenchmarkDashboardRun & {
+  matchPage: number;
+  matchPageSize: number;
+  totalMatches: number;
+  totalMatchPages: number;
+};
+
+export type BenchmarkDashboardRunDetailPageOptions = BenchmarkDashboardStoreOptions & {
+  matchPage?: number;
+  matchPageSize?: number;
+  tag?: string;
+};
+
 const BENCHMARK_DASHBOARD_RUN_CONTRACT = "run-contract-v2";
 
 export async function recordAiVersionBenchmarkDashboardRun(
@@ -143,14 +171,68 @@ export async function listBenchmarkDashboardRuns(options: BenchmarkDashboardStor
   return runs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+export async function listBenchmarkDashboardRunsPage(options: BenchmarkDashboardRunPageOptions = {}): Promise<BenchmarkDashboardRunPage> {
+  const runs = await listBenchmarkDashboardRuns(options);
+  const tags = [...new Set(runs.flatMap((run) => run.tags))].sort();
+  const filtered = options.tag && options.tag !== "all" ? runs.filter((run) => run.tags.includes(options.tag!)) : runs;
+  const pageSize = clampInteger(options.pageSize, 24, 1, 100);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = clampInteger(options.page, 1, 1, totalPages);
+  const start = (page - 1) * pageSize;
+  return {
+    runs: filtered.slice(start, start + pageSize),
+    page,
+    pageSize,
+    totalRuns: filtered.length,
+    totalPages,
+    tags,
+  };
+}
+
 export async function readBenchmarkDashboardRun(id: string, options: BenchmarkDashboardStoreOptions = {}): Promise<BenchmarkDashboardRun> {
   return normalizeBenchmarkDashboardRun(JSON.parse(await readFile(path.join(benchmarkDashboardRunsDir(options), `${id}.json`), "utf8")) as BenchmarkDashboardRun);
+}
+
+export async function readBenchmarkDashboardRunPage(id: string, options: BenchmarkDashboardRunDetailPageOptions = {}): Promise<BenchmarkDashboardRunDetailPage> {
+  const run = await readBenchmarkDashboardRun(id, options);
+  const visibleEvaluations = options.tag && options.tag !== "all" ? run.report.evaluations.filter((evaluation) => (evaluation.tag ?? "untagged") === options.tag) : run.report.evaluations;
+  const totalMatches = visibleEvaluations.reduce((total, evaluation) => total + evaluation.matches.length, 0);
+  const matchPageSize = clampInteger(options.matchPageSize, 24, 1, 100);
+  const totalMatchPages = Math.max(1, Math.ceil(totalMatches / matchPageSize));
+  const matchPage = clampInteger(options.matchPage, 1, 1, totalMatchPages);
+  const start = (matchPage - 1) * matchPageSize;
+  const end = start + matchPageSize;
+  const report = {
+    ...run.report,
+    evaluationCount: visibleEvaluations.length,
+    matchCount: totalMatches,
+    evaluations: pageEvaluationsByGlobalMatchRange(visibleEvaluations, start, end),
+  };
+  return { ...run, report, matchPage, matchPageSize, totalMatches, totalMatchPages };
 }
 
 function normalizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRun {
   if (run.kind === "ai-specialized-benchmark") return normalizeSpecializedBenchmarkDashboardRun(run);
   if (run.kind === "ai-version-benchmark") return normalizeAiVersionBenchmarkDashboardRun(run);
   throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+}
+
+function pageEvaluationsByGlobalMatchRange(evaluations: BenchmarkEvaluationReport[], start: number, end: number): BenchmarkEvaluationReport[] {
+  let cursor = 0;
+  const paged: BenchmarkEvaluationReport[] = [];
+  for (const evaluation of evaluations) {
+    const evaluationStart = cursor;
+    const evaluationEnd = cursor + evaluation.matches.length;
+    cursor = evaluationEnd;
+    const sliceStart = Math.max(start, evaluationStart);
+    const sliceEnd = Math.min(end, evaluationEnd);
+    if (sliceStart >= sliceEnd) continue;
+    paged.push({
+      ...evaluation,
+      matches: evaluation.matches.slice(sliceStart - evaluationStart, sliceEnd - evaluationStart),
+    });
+  }
+  return paged;
 }
 
 function normalizeAiVersionBenchmarkDashboardRun(run: AiVersionBenchmarkDashboardRun): AiVersionBenchmarkDashboardRun {
@@ -312,6 +394,11 @@ function formatSecond(value: number | null) {
 
 function formatMs(value: number | undefined) {
   return value === undefined ? "n/a" : `${value}ms`;
+}
+
+function clampInteger(value: number | undefined, fallback: number, min: number, max: number) {
+  const parsed = Number.isFinite(value) ? Math.floor(value!) : fallback;
+  return Math.min(Math.max(parsed, min), max);
 }
 
 function runId(now: Date, seed: string) {

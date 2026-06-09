@@ -1,16 +1,25 @@
-import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
+import type { BenchmarkDashboardRunDetailPage, BenchmarkDashboardRunPage, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import { browserLanguages, detectLocale, type Locale } from "../client/i18n";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { joinPublicPath } from "../shared/deployment-base";
+import { DEFAULT_MATCHES_PER_PAGE, DEFAULT_RUNS_PER_PAGE } from "./page-size";
 import { matchWarnings } from "./warnings";
-import { campRoleSummary, dashboardTags, paginateRuns, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
+import { campRoleSummary, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
   runs: BenchmarkDashboardRunSummary[];
-  selectedRun: BenchmarkDashboardRun | null;
+  tags: string[];
+  selectedRun: BenchmarkDashboardRunDetailPage | null;
   selectedTag: string;
   runPage: number;
+  runPageSize: number;
+  totalRuns: number;
+  totalRunPages: number;
+  matchPage: number;
+  matchPageSize: number;
+  totalMatches: number;
+  totalMatchPages: number;
   loading: boolean;
   error: string | null;
 };
@@ -145,9 +154,22 @@ const locale = detectLocale(browserLanguages());
 document.documentElement.lang = locale;
 document.title = text("title");
 
-const RUNS_PER_PAGE = 24;
-
-const state: DashboardState = { runs: [], selectedRun: null, selectedTag: "all", runPage: 1, loading: false, error: null };
+const state: DashboardState = {
+  runs: [],
+  tags: [],
+  selectedRun: null,
+  selectedTag: "all",
+  runPage: 1,
+  runPageSize: DEFAULT_RUNS_PER_PAGE,
+  totalRuns: 0,
+  totalRunPages: 1,
+  matchPage: 1,
+  matchPageSize: DEFAULT_MATCHES_PER_PAGE,
+  totalMatches: 0,
+  totalMatchPages: 1,
+  loading: false,
+  error: null,
+};
 
 void loadDashboard();
 connectDashboardEvents();
@@ -159,11 +181,17 @@ async function loadDashboard(options: { showLoading?: boolean; preserveSelection
     render();
   }
   try {
-    const { runs } = await requestJson<{ runs: BenchmarkDashboardRunSummary[] }>(publicPath("/api/benchmark-dashboard/runs"));
-    state.runs = runs;
-    const visibleRuns = filteredRuns();
-    const selected = (selectedId ? visibleRuns.find((run) => run.id === selectedId) : undefined) ?? visibleRuns[0];
-    state.selectedRun = selected ? await requestJson<BenchmarkDashboardRun>(publicPath(`/api/benchmark-dashboard/runs/${encodeURIComponent(selected.id)}`)) : null;
+    const page = await requestJson<BenchmarkDashboardRunPage>(benchmarkRunsPagePath());
+    state.runs = page.runs;
+    state.tags = page.tags;
+    state.runPage = page.page;
+    state.runPageSize = page.pageSize;
+    state.totalRuns = page.totalRuns;
+    state.totalRunPages = page.totalPages;
+    const selected = (selectedId ? state.runs.find((run) => run.id === selectedId) : undefined) ?? state.runs[0];
+    if (!selected || selected.id !== selectedId) state.matchPage = 1;
+    state.selectedRun = selected ? await requestRunDetail(selected.id) : null;
+    syncMatchPageState(state.selectedRun);
     state.error = null;
   } catch (error) {
     state.error = errorMessage(error);
@@ -173,12 +201,14 @@ async function loadDashboard(options: { showLoading?: boolean; preserveSelection
   }
 }
 
-async function selectRun(id: string) {
+async function selectRun(id: string, options: { resetMatchPage?: boolean } = {}) {
   state.loading = true;
   state.error = null;
+  if (options.resetMatchPage ?? true) state.matchPage = 1;
   render();
   try {
-    state.selectedRun = await requestJson<BenchmarkDashboardRun>(publicPath(`/api/benchmark-dashboard/runs/${encodeURIComponent(id)}`));
+    state.selectedRun = await requestRunDetail(id);
+    syncMatchPageState(state.selectedRun);
   } catch (error) {
     state.error = errorMessage(error);
   } finally {
@@ -187,13 +217,14 @@ async function selectRun(id: string) {
   }
 }
 
+async function requestRunDetail(id: string) {
+  return requestJson<BenchmarkDashboardRunDetailPage>(benchmarkRunDetailPath(id));
+}
+
 function render() {
-  const tags = dashboardTags(state.runs);
+  const tags = state.tags;
   if (state.selectedTag !== "all" && !tags.includes(state.selectedTag)) state.selectedTag = "all";
-  const visibleRuns = filteredRuns();
-  const page = paginateRuns(visibleRuns, { page: state.runPage, pageSize: RUNS_PER_PAGE });
-  state.runPage = page.page;
-  const selectedId = state.selectedRun && runMatchesTag(state.selectedRun, state.selectedTag) ? state.selectedRun.id : visibleRuns[0]?.id ?? "";
+  const selectedId = state.selectedRun && runMatchesTag(state.selectedRun, state.selectedTag) ? state.selectedRun.id : state.runs[0]?.id ?? "";
   root.innerHTML = `
     <main class="dashboard-shell">
       <aside class="run-list">
@@ -209,9 +240,9 @@ function render() {
           ${tags.map((tag) => tagButton(tag, tag, state.selectedTag)).join("")}
         </div>
         <div class="run-stack">
-          ${visibleRuns.length === 0 ? `<div class="empty">${escapeHtml(text("noRunsForTag"))}</div>` : page.items.map((run) => runListItem(run, selectedId)).join("")}
+          ${state.runs.length === 0 ? `<div class="empty">${escapeHtml(text("noRunsForTag"))}</div>` : state.runs.map((run) => runListItem(run, selectedId)).join("")}
         </div>
-        ${visibleRuns.length > RUNS_PER_PAGE ? runPager(page.page, page.totalPages, visibleRuns.length) : ""}
+        ${state.totalRunPages > 1 ? runPager(state.runPage, state.totalRunPages, state.totalRuns) : ""}
       </aside>
       <section class="detail-panel">
         ${state.error ? `<div class="error">${escapeHtml(state.error)}</div>` : ""}
@@ -225,6 +256,7 @@ function render() {
     button.addEventListener("click", () => {
       state.selectedTag = button.dataset.tag ?? "all";
       state.runPage = 1;
+      state.matchPage = 1;
       void loadDashboard({ showLoading: false, preserveSelection: false });
     });
   }
@@ -234,13 +266,17 @@ function render() {
   for (const button of root.querySelectorAll<HTMLButtonElement>("[data-run-page]")) {
     button.addEventListener("click", () => {
       state.runPage = Number(button.dataset.runPage);
-      render();
+      state.matchPage = 1;
+      void loadDashboard({ showLoading: false, preserveSelection: false });
     });
   }
-}
-
-function filteredRuns() {
-  return state.runs.filter((run) => runMatchesTag(run, state.selectedTag));
+  for (const button of root.querySelectorAll<HTMLButtonElement>("[data-match-page]")) {
+    button.addEventListener("click", () => {
+      if (!state.selectedRun) return;
+      state.matchPage = Number(button.dataset.matchPage);
+      void selectRun(state.selectedRun.id, { resetMatchPage: false });
+    });
+  }
 }
 
 function tagButton(tag: string, label: string, selectedTag: string) {
@@ -271,7 +307,7 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
 
 function runPager(page: number, totalPages: number, totalRuns: number) {
   return `
-    <nav class="run-pager" aria-label="benchmark run pages">
+    <nav class="run-pager" data-dashboard-pager="runs" aria-label="benchmark run pages">
       <button type="button" data-run-page="${page - 1}" ${page <= 1 ? "disabled" : ""}>‹</button>
       <span>${page}/${totalPages} · ${totalRuns}</span>
       <button type="button" data-run-page="${page + 1}" ${page >= totalPages ? "disabled" : ""}>›</button>
@@ -279,7 +315,7 @@ function runPager(page: number, totalPages: number, totalRuns: number) {
   `;
 }
 
-function runDetail(run: BenchmarkDashboardRun) {
+function runDetail(run: BenchmarkDashboardRunDetailPage) {
   const visibleEvaluations = state.selectedTag === "all" ? run.report.evaluations : run.report.evaluations.filter((evaluation) => (evaluation.tag ?? "untagged") === state.selectedTag);
   return `
     <div class="detail-head">
@@ -299,7 +335,10 @@ function runDetail(run: BenchmarkDashboardRun) {
       <div><span>${escapeHtml(text("wallTime"))}</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>
       <div><span>${escapeHtml(text("cpuTime"))}</span><strong>${formatMs(run.report.cpuMs)}</strong></div>
     </div>
-    <div class="map-strip">${run.selectedRichScoreMapIds.map((mapId) => `<span>${escapeHtml(mapId)}</span>`).join("")}</div>
+    <details class="map-strip-detail">
+      <summary>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize} ${escapeHtml(text("maps"))}</summary>
+      <div class="map-strip">${run.selectedRichScoreMapIds.map((mapId) => `<span>${escapeHtml(mapId)}</span>`).join("")}</div>
+    </details>
     <div class="evaluation-list">
       ${visibleEvaluations
         .map(
@@ -312,6 +351,17 @@ function runDetail(run: BenchmarkDashboardRun) {
         )
         .join("")}
     </div>
+    ${run.totalMatchPages > 1 ? matchPager(run.matchPage, run.totalMatchPages, run.totalMatches) : ""}
+  `;
+}
+
+function matchPager(page: number, totalPages: number, totalMatches: number) {
+  return `
+    <nav class="match-pager" data-dashboard-pager="matches" aria-label="benchmark match pages">
+      <button type="button" data-match-page="${page - 1}" ${page <= 1 ? "disabled" : ""}>‹</button>
+      <span>${page}/${totalPages} · ${totalMatches} ${escapeHtml(text("games"))}</span>
+      <button type="button" data-match-page="${page + 1}" ${page >= totalPages ? "disabled" : ""}>›</button>
+    </nav>
   `;
 }
 
@@ -430,6 +480,31 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 function publicPath(pathname: string) {
   return joinPublicPath(import.meta.env.BASE_URL, pathname);
+}
+
+function benchmarkRunsPagePath() {
+  const params = new URLSearchParams({
+    page: String(state.runPage),
+    pageSize: String(state.runPageSize),
+  });
+  if (state.selectedTag !== "all") params.set("tag", state.selectedTag);
+  return publicPath(`/api/benchmark-dashboard/runs?${params.toString()}`);
+}
+
+function benchmarkRunDetailPath(id: string) {
+  const params = new URLSearchParams({
+    matchPage: String(state.matchPage),
+    matchPageSize: String(state.matchPageSize),
+  });
+  if (state.selectedTag !== "all") params.set("tag", state.selectedTag);
+  return publicPath(`/api/benchmark-dashboard/runs/${encodeURIComponent(id)}?${params.toString()}`);
+}
+
+function syncMatchPageState(run: BenchmarkDashboardRunDetailPage | null) {
+  state.matchPage = run?.matchPage ?? 1;
+  state.matchPageSize = run?.matchPageSize ?? DEFAULT_MATCHES_PER_PAGE;
+  state.totalMatches = run?.totalMatches ?? 0;
+  state.totalMatchPages = run?.totalMatchPages ?? 1;
 }
 
 function second(value: number | null) {
