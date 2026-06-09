@@ -9,6 +9,7 @@ import type { ExpansionClaimTimelineStats } from "./expansion-claim-timeline";
 import type { WoundedMoonWellStats } from "./wounded-moonwell-stats";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
+import { recordBenchmarkDashboardReportRun, type BenchmarkDashboardStoreOptions, type SpecializedBenchmarkDashboardRun } from "./dashboard-store";
 import { createAiMeleeControlMatches, selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 
 export type AiMeleeControlBenchmarkInput = {
@@ -265,6 +266,26 @@ export async function runAiV3VsProdV2BenchmarkParallel(options: AiV3VsProdV2Benc
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
   return summarizeAiV3VsProdV2Benchmark({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+}
+
+export async function recordAiV3VsProdV2BenchmarkDashboardRun(options: AiV3VsProdV2BenchmarkOptions = {}, storeOptions: BenchmarkDashboardStoreOptions = {}): Promise<SpecializedBenchmarkDashboardRun> {
+  const { input, selection } = createAiV3VsProdV2BenchmarkInput(options);
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput(input), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  return recordBenchmarkDashboardReportRun(
+    {
+      kind: "ai-specialized-benchmark",
+      seed: selection.seed,
+      mapPoolSize: RICH_SCORE_MAP_IDS.length,
+      selectedRichScoreMapIds: selection.mapIds,
+      targetPlayerId: "v3",
+      report,
+      full: options.full === true,
+    },
+    storeOptions,
+  );
 }
 
 export async function runAiV3VsProdV2BenchmarkDetailsParallel(options: AiV3VsProdV2BenchmarkOptions = {}, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): Promise<AiMeleeControlMatchDetailsResult> {

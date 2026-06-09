@@ -1,17 +1,41 @@
 import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { MapId } from "../../shared/types";
+import type { MapId, PlayerId } from "../../shared/types";
+import type { BenchmarkEvaluationReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import type { AiVersionBenchmarkDashboardReport, AiVersionBenchmarkOptions, BenchmarkEvaluationSummary } from "./presets";
-import { runAiVersionBenchmark, runAiVersionBenchmarkParallel, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
+import { runAiVersionBenchmark, runAiVersionBenchmarkParallel, summarizeCombatEvaluation, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
 
-export type BenchmarkDashboardRun = AiVersionBenchmarkDashboardReport & {
+export type BenchmarkDashboardRunKind = "ai-version-benchmark" | "ai-specialized-benchmark";
+
+type BenchmarkDashboardRunBase = {
   id: string;
-  kind: "ai-version-benchmark";
+  kind: BenchmarkDashboardRunKind;
   createdAt: string;
   seed: string;
+  mapPoolSize: number;
+  selectedRichScoreMapIds: MapId[];
   mapCount: number;
   full: boolean;
+  report: BenchmarkReport;
+  primarySummary: BenchmarkEvaluationSummary;
+  evaluationSummaries: BenchmarkEvaluationSummary[];
+  scoreSummary?: BenchmarkEvaluationSummary;
+  scoreControlSummary?: BenchmarkEvaluationSummary;
+  probeSummaries?: BenchmarkEvaluationSummary[];
+  combatSummaries?: BenchmarkEvaluationSummary[];
 };
+
+export type AiVersionBenchmarkDashboardRun = AiVersionBenchmarkDashboardReport &
+  BenchmarkDashboardRunBase & {
+    kind: "ai-version-benchmark";
+  };
+
+export type SpecializedBenchmarkDashboardRun = BenchmarkDashboardRunBase & {
+  kind: "ai-specialized-benchmark";
+  targetPlayerId: PlayerId;
+};
+
+export type BenchmarkDashboardRun = AiVersionBenchmarkDashboardRun | SpecializedBenchmarkDashboardRun;
 
 export type BenchmarkDashboardRunSummary = {
   id: string;
@@ -22,10 +46,12 @@ export type BenchmarkDashboardRunSummary = {
   tags: string[];
   mapPoolSize: number;
   selectedRichScoreMapIds: MapId[];
-  scoreSummary: BenchmarkEvaluationSummary;
-  scoreControlSummary: BenchmarkEvaluationSummary;
-  probeSummaries: BenchmarkEvaluationSummary[];
-  combatSummaries: BenchmarkEvaluationSummary[];
+  primarySummary: BenchmarkEvaluationSummary;
+  evaluationSummaries: BenchmarkEvaluationSummary[];
+  scoreSummary?: BenchmarkEvaluationSummary;
+  scoreControlSummary?: BenchmarkEvaluationSummary;
+  probeSummaries?: BenchmarkEvaluationSummary[];
+  combatSummaries?: BenchmarkEvaluationSummary[];
   elapsedMs: number;
   cpuMs?: number;
   matchCount: number;
@@ -41,10 +67,10 @@ const BENCHMARK_DASHBOARD_RUN_CONTRACT = "run-contract-v2";
 export async function recordAiVersionBenchmarkDashboardRun(
   options: AiVersionBenchmarkOptions = {},
   storeOptions: BenchmarkDashboardStoreOptions = {},
-): Promise<BenchmarkDashboardRun> {
+): Promise<AiVersionBenchmarkDashboardRun> {
   const now = storeOptions.now?.() ?? new Date();
   const report = options.workers && options.workers > 1 ? await runAiVersionBenchmarkParallel(options) : runAiVersionBenchmark(options);
-  const run: BenchmarkDashboardRun = {
+  const run = normalizeBenchmarkDashboardRun({
     ...report,
     id: runId(now, report.seed),
     kind: "ai-version-benchmark",
@@ -52,7 +78,37 @@ export async function recordAiVersionBenchmarkDashboardRun(
     seed: report.seed,
     mapCount: report.selectedRichScoreMapIds.length,
     full: options.full === true,
-  };
+  } as BenchmarkDashboardRun) as AiVersionBenchmarkDashboardRun;
+  await writeBenchmarkDashboardRun(run, storeOptions);
+  await writeBenchmarkDashboardRunLog(run, storeOptions);
+  return run;
+}
+
+export async function recordBenchmarkDashboardReportRun(
+  input: {
+    kind: "ai-specialized-benchmark";
+    seed: string;
+    mapPoolSize: number;
+    selectedRichScoreMapIds: MapId[];
+    targetPlayerId: PlayerId;
+    report: BenchmarkReport;
+    full?: boolean;
+  },
+  storeOptions: BenchmarkDashboardStoreOptions = {},
+): Promise<SpecializedBenchmarkDashboardRun> {
+  const now = storeOptions.now?.() ?? new Date();
+  const run = normalizeBenchmarkDashboardRun({
+    id: runId(now, input.seed),
+    kind: input.kind,
+    createdAt: now.toISOString(),
+    seed: input.seed,
+    mapPoolSize: input.mapPoolSize,
+    selectedRichScoreMapIds: input.selectedRichScoreMapIds,
+    mapCount: input.selectedRichScoreMapIds.length,
+    full: input.full === true,
+    targetPlayerId: input.targetPlayerId,
+    report: input.report,
+  } as BenchmarkDashboardRun) as SpecializedBenchmarkDashboardRun;
   await writeBenchmarkDashboardRun(run, storeOptions);
   await writeBenchmarkDashboardRunLog(run, storeOptions);
   return run;
@@ -82,25 +138,51 @@ export async function listBenchmarkDashboardRuns(options: BenchmarkDashboardStor
   const runs = await Promise.all(
     files
       .filter((file) => file.endsWith(".json"))
-      .map(async (file) => summarizeBenchmarkDashboardRun(assertCurrentBenchmarkDashboardRun(JSON.parse(await readFile(path.join(dir, file), "utf8")) as BenchmarkDashboardRun))),
+      .map(async (file) => summarizeBenchmarkDashboardRun(normalizeBenchmarkDashboardRun(JSON.parse(await readFile(path.join(dir, file), "utf8")) as BenchmarkDashboardRun))),
   );
   return runs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function readBenchmarkDashboardRun(id: string, options: BenchmarkDashboardStoreOptions = {}): Promise<BenchmarkDashboardRun> {
-  return assertCurrentBenchmarkDashboardRun(JSON.parse(await readFile(path.join(benchmarkDashboardRunsDir(options), `${id}.json`), "utf8")) as BenchmarkDashboardRun);
+  return normalizeBenchmarkDashboardRun(JSON.parse(await readFile(path.join(benchmarkDashboardRunsDir(options), `${id}.json`), "utf8")) as BenchmarkDashboardRun);
 }
 
-function assertCurrentBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRun {
+function normalizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): BenchmarkDashboardRun {
+  if (run.kind === "ai-specialized-benchmark") return normalizeSpecializedBenchmarkDashboardRun(run);
+  if (run.kind === "ai-version-benchmark") return normalizeAiVersionBenchmarkDashboardRun(run);
+  throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+}
+
+function normalizeAiVersionBenchmarkDashboardRun(run: AiVersionBenchmarkDashboardRun): AiVersionBenchmarkDashboardRun {
   if (!run.scoreControlSummary || !Array.isArray(run.probeSummaries) || !Array.isArray(run.combatSummaries)) {
     throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
   }
   const [score, scoreControl] = run.report.evaluations;
   if (!score || !scoreControl) throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+  const scoreSummary = summarizePairedScoreEvaluation(score, scoreControl);
+  const scoreControlSummary = summarizeMeleeControlEvaluation(scoreControl);
+  const probeSummaries = summarizeProbeLaneEvaluations(run.report.evaluations, run.probeSummaries);
+  const combatSummaries = summarizeCombatLaneEvaluations(run.report.evaluations, run.combatSummaries);
   return {
     ...run,
-    scoreSummary: summarizePairedScoreEvaluation(score, scoreControl),
-    scoreControlSummary: summarizeMeleeControlEvaluation(scoreControl),
+    scoreSummary,
+    scoreControlSummary,
+    probeSummaries,
+    combatSummaries,
+    primarySummary: scoreSummary,
+    evaluationSummaries: [scoreSummary, scoreControlSummary, ...probeSummaries, ...combatSummaries],
+  };
+}
+
+function normalizeSpecializedBenchmarkDashboardRun(run: SpecializedBenchmarkDashboardRun): SpecializedBenchmarkDashboardRun {
+  if (!run.targetPlayerId || !Array.isArray(run.report.evaluations)) {
+    throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
+  }
+  const evaluationSummaries = run.report.evaluations.map((evaluation) => summarizeTargetPlayerEvaluation(evaluation, run.targetPlayerId));
+  return {
+    ...run,
+    primarySummary: primarySummaryFor(run.targetPlayerId, evaluationSummaries),
+    evaluationSummaries,
   };
 }
 
@@ -114,10 +196,12 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     tags: benchmarkDashboardRunTags(run),
     mapPoolSize: run.mapPoolSize,
     selectedRichScoreMapIds: run.selectedRichScoreMapIds,
-    scoreSummary: run.scoreSummary,
-    scoreControlSummary: run.scoreControlSummary,
-    probeSummaries: run.probeSummaries,
-    combatSummaries: run.combatSummaries,
+    primarySummary: run.primarySummary,
+    evaluationSummaries: run.evaluationSummaries,
+    ...(run.scoreSummary ? { scoreSummary: run.scoreSummary } : {}),
+    ...(run.scoreControlSummary ? { scoreControlSummary: run.scoreControlSummary } : {}),
+    ...(run.probeSummaries ? { probeSummaries: run.probeSummaries } : {}),
+    ...(run.combatSummaries ? { combatSummaries: run.combatSummaries } : {}),
     elapsedMs: run.report.elapsedMs,
     cpuMs: run.report.cpuMs,
     matchCount: run.report.matchCount,
@@ -145,15 +229,14 @@ function benchmarkDashboardContractDir(options: BenchmarkDashboardStoreOptions =
 }
 
 function benchmarkDashboardRunLog(run: BenchmarkDashboardRun) {
+  const summaryLines = run.evaluationSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`);
   const lines = [
     `${run.report.name}`,
     `id: ${run.id}`,
     `createdAt: ${run.createdAt}`,
     `seed: ${run.seed}`,
-    `score: ${run.scoreSummary.wins}/${run.scoreSummary.matchCount} (${Math.round(run.scoreSummary.successRate * 100)}%)`,
-    `score control: ${run.scoreControlSummary.wins}/${run.scoreControlSummary.matchCount} (${Math.round(run.scoreControlSummary.successRate * 100)}%)`,
-    ...run.probeSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
-    ...run.combatSummaries.map((summary) => `${summary.name}: ${summary.wins}/${summary.matchCount} (${Math.round(summary.successRate * 100)}%)`),
+    `primary: ${run.primarySummary.wins}/${run.primarySummary.matchCount} (${Math.round(run.primarySummary.successRate * 100)}%)`,
+    ...summaryLines,
     `wall time: ${run.report.elapsedMs}ms`,
     `cpu time: ${formatMs(run.report.cpuMs)}`,
     `selected maps: ${run.selectedRichScoreMapIds.join(", ")}`,
@@ -171,6 +254,56 @@ function benchmarkDashboardRunLog(run: BenchmarkDashboardRun) {
     }
   }
   return `${lines.join("\n")}\n`;
+}
+
+function summarizeProbeLaneEvaluations(evaluations: BenchmarkEvaluationReport[], existing: BenchmarkEvaluationSummary[]) {
+  const [oneVThreeProbe, twoVThreeProbe] = evaluations.slice(2, 4);
+  if (!oneVThreeProbe || !twoVThreeProbe) return existing;
+  return [summarizeWinnerTeamEvaluation(oneVThreeProbe, "north"), summarizeWinnerTeamEvaluation(twoVThreeProbe, "north")];
+}
+
+function summarizeCombatLaneEvaluations(evaluations: BenchmarkEvaluationReport[], existing: BenchmarkEvaluationSummary[]) {
+  const [combat15v20, combat10v12] = evaluations.slice(4, 6);
+  if (!combat15v20 || !combat10v12) return existing;
+  return [summarizeCombatEvaluation(combat15v20), summarizeCombatEvaluation(combat10v12)];
+}
+
+function summarizeWinnerTeamEvaluation(evaluation: BenchmarkEvaluationReport, expectedWinnerTeam: string): BenchmarkEvaluationSummary {
+  const wins = evaluation.matches.filter((match) => match.result.winnerTeam === expectedWinnerTeam).length;
+  return evaluationSummary(evaluation, wins);
+}
+
+function summarizeTargetPlayerEvaluation(evaluation: BenchmarkEvaluationReport, targetPlayerId: PlayerId): BenchmarkEvaluationSummary {
+  const wins = evaluation.matches.filter((match) => match.result.winner === targetPlayerId).length;
+  return evaluationSummary(evaluation, wins);
+}
+
+function primarySummaryFor(targetPlayerId: PlayerId, evaluationSummaries: BenchmarkEvaluationSummary[]): BenchmarkEvaluationSummary {
+  if (evaluationSummaries.length === 1) return evaluationSummaries[0]!;
+  const wins = evaluationSummaries.reduce((total, summary) => total + summary.wins, 0);
+  const matchCount = evaluationSummaries.reduce((total, summary) => total + summary.matchCount, 0);
+  const losses = matchCount - wins;
+  return {
+    name: `${targetPlayerId} overall`,
+    wins,
+    losses,
+    failures: losses,
+    successRate: matchCount === 0 ? 0 : wins / matchCount,
+    matchCount,
+  };
+}
+
+function evaluationSummary(evaluation: BenchmarkEvaluationReport, wins: number): BenchmarkEvaluationSummary {
+  const losses = evaluation.matches.length - wins;
+  return {
+    name: evaluation.name,
+    ...(evaluation.tag ? { tag: evaluation.tag } : {}),
+    wins,
+    losses,
+    failures: losses,
+    successRate: evaluation.matches.length === 0 ? 0 : wins / evaluation.matches.length,
+    matchCount: evaluation.matches.length,
+  };
 }
 
 function formatSecond(value: number | null) {

@@ -1,9 +1,12 @@
 import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
 describe("AI V3 versus frozen production V2 benchmark CLI", () => {
   it("prints a dry-run manifest with random V3 races and Grove-only V2-prod", () => {
-    const output = JSON.parse(runV3BenchmarkCli("--seed", "v3-prod-cli-seed", "--map-count", "4", "--dry-run"));
+    const output = JSON.parse(runV3BenchmarkCli(["--seed", "v3-prod-cli-seed", "--map-count", "4", "--dry-run"]));
 
     expect(output).toMatchObject({
       name: "AI V3 vs Frozen Production V2 Benchmark",
@@ -23,7 +26,7 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
   });
 
   it("prints focused match diagnostics for one V3 versus frozen V2-prod match", () => {
-    const output = JSON.parse(runV3BenchmarkCli("--seed", "v3-frozen-smoke-2026-06-08", "--map-count", "2", "--match", "wildMarches v3 north", "--max-ticks", "1", "--workers", "1", "--details"));
+    const output = JSON.parse(runV3BenchmarkCli(["--seed", "v3-frozen-smoke-2026-06-08", "--map-count", "2", "--match", "wildMarches v3 north", "--max-ticks", "1", "--workers", "1", "--details"]));
 
     expect(output).toMatchObject({
       seed: "v3-frozen-smoke-2026-06-08",
@@ -41,12 +44,37 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
       ],
     });
   });
+
+  it("records dashboard runs for standard V3 benchmark executions", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "v3-dashboard-"));
+    try {
+      const output = JSON.parse(runV3BenchmarkCli(["--seed", "v3-dashboard-smoke", "--map-count", "1", "--max-ticks", "1", "--workers", "1", "--dashboard"], { AI_BENCHMARK_DASHBOARD_DIR: rootDir }));
+
+      expect(output).toMatchObject({
+        kind: "ai-specialized-benchmark",
+        seed: "v3-dashboard-smoke",
+        primarySummary: { name: "v3 race-aware vs v2-prod grove", matchCount: 2 },
+        evaluationSummaries: [{ name: "v3 race-aware vs v2-prod grove", matchCount: 2 }],
+        dashboardPath: rootDir,
+      });
+      expect(output.report).toBeUndefined();
+      const storedRun = JSON.parse(await readFile(path.join(rootDir, "run-contract-v2", "runs", `${output.id}.json`), "utf8"));
+      expect(storedRun).toMatchObject({
+        id: output.id,
+        kind: "ai-specialized-benchmark",
+        targetPlayerId: "v3",
+        report: { name: "AI V3 vs Frozen Production V2 Benchmark", matchCount: 2 },
+      });
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
 });
 
-function runV3BenchmarkCli(...args: string[]) {
+function runV3BenchmarkCli(args: string[], env: NodeJS.ProcessEnv = {}) {
   return execFileSync("npx", ["tsx", "scripts/ai-v3-vs-prod-v2-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
-    env: { ...process.env, FORCE_COLOR: "0" },
+    env: { ...process.env, ...env, FORCE_COLOR: "0" },
   });
 }

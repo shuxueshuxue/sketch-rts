@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { benchmarkDashboardLogsDir, benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordAiVersionBenchmarkDashboardRun } from "./dashboard-store";
+import { benchmarkDashboardLogsDir, benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, readBenchmarkDashboardRun, recordBenchmarkDashboardReportRun, recordAiVersionBenchmarkDashboardRun } from "./dashboard-store";
 
 describe("benchmark dashboard store", () => {
   it("records standard AI benchmark runs and lists latest summaries first", async () => {
@@ -28,8 +28,8 @@ describe("benchmark dashboard store", () => {
       expect(summaries[0]?.cpuMs).toBeGreaterThanOrEqual(0);
       expect(summaries[0]?.selectedRichScoreMapIds).toHaveLength(18);
       expect(summaries[0]?.tags).toEqual(["combat", "melee"]);
-      expect(summaries[0]?.probeSummaries.map((summary) => summary.name)).toEqual(["1v3 probe", "2v3 probe"]);
-      expect(summaries[0]?.combatSummaries.map((summary) => summary.name)).toEqual(["15v20 mixed combat", "10v12 mixed combat"]);
+      expect(summaries[0]?.probeSummaries?.map((summary) => summary.name)).toEqual(["1v3 probe", "2v3 probe"]);
+      expect(summaries[0]?.combatSummaries?.map((summary) => summary.name)).toEqual(["15v20 mixed combat", "10v12 mixed combat"]);
 
       const detail = await readBenchmarkDashboardRun(second.id, { rootDir });
       expect(detail.report.cpuMs).toBeGreaterThanOrEqual(0);
@@ -57,6 +57,72 @@ describe("benchmark dashboard store", () => {
       await rm(rootDir, { recursive: true, force: true });
     }
   }, 15_000);
+
+  it("records specialized benchmark reports with target-player evaluation summaries", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
+    try {
+      const run = await recordBenchmarkDashboardReportRun(
+        {
+          kind: "ai-specialized-benchmark",
+          seed: "v3-specialized",
+          mapPoolSize: 64,
+          selectedRichScoreMapIds: ["wildMarches", "emberFen"],
+          targetPlayerId: "v3",
+          report: {
+            name: "AI V3 vs Frozen Production V2 Benchmark",
+            startedAt: "2026-06-09T00:00:00.000Z",
+            evaluationCount: 1,
+            matchCount: 2,
+            elapsedMs: 10,
+            cpuMs: 20,
+            evaluations: [
+              {
+                name: "v3 race-aware vs v2-prod grove",
+                tag: "melee",
+                startedAt: "2026-06-09T00:00:00.000Z",
+                elapsedMs: 10,
+                cpuMs: 20,
+                matchCount: 2,
+                matches: [
+                  {
+                    name: "wildMarches v3 north",
+                    elapsedMs: 1,
+                    cpuMs: 2,
+                    setup: { map: { id: "wildMarches" } },
+                    result: { gameSecond: 10, winner: "v3", winnerTeam: "north", players: minimalBenchmarkPlayers() },
+                  },
+                  {
+                    name: "emberFen v3 south",
+                    elapsedMs: 1,
+                    cpuMs: 2,
+                    setup: { map: { id: "emberFen" } },
+                    result: { gameSecond: 12, winner: "v2-prod", winnerTeam: "north", players: minimalBenchmarkPlayers() },
+                  },
+                ],
+              },
+            ],
+          } as never,
+        },
+        { rootDir, now: () => new Date("2026-06-09T00:00:00.000Z") },
+      );
+
+      expect(run.primarySummary).toMatchObject({ name: "v3 race-aware vs v2-prod grove", wins: 1, losses: 1, failures: 1, successRate: 0.5, matchCount: 2 });
+      await expect(listBenchmarkDashboardRuns({ rootDir })).resolves.toMatchObject([
+        {
+          kind: "ai-specialized-benchmark",
+          seed: "v3-specialized",
+          primarySummary: { wins: 1, matchCount: 2 },
+          evaluationSummaries: [{ name: "v3 race-aware vs v2-prod grove", wins: 1, matchCount: 2 }],
+        },
+      ]);
+      await expect(readBenchmarkDashboardRun(run.id, { rootDir })).resolves.toMatchObject({
+        targetPlayerId: "v3",
+        primarySummary: { wins: 1, matchCount: 2 },
+      });
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
 
   it("derives dashboard summaries from match reports instead of stored summary fields", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "benchmark-dashboard-"));
@@ -188,3 +254,10 @@ describe("benchmark dashboard store", () => {
     }
   });
 });
+
+function minimalBenchmarkPlayers() {
+  return {
+    v3: { team: "north", firstEnemyEngagementSecond: 2, firstExpansionMiningSecond: null, enemyUnitKills: 1, neutralUnitKills: 0, unitsLost: 0, unitsKilledByNeutral: 0, totalGoldIncome: 500 },
+    "v2-prod": { team: "south", firstEnemyEngagementSecond: 3, firstExpansionMiningSecond: null, enemyUnitKills: 0, neutralUnitKills: 0, unitsLost: 1, unitsKilledByNeutral: 0, totalGoldIncome: 400 },
+  };
+}

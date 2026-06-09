@@ -3,13 +3,14 @@ import { browserLanguages, detectLocale, type Locale } from "../client/i18n";
 import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchmark";
 import { joinPublicPath } from "../shared/deployment-base";
 import { matchWarnings } from "./warnings";
-import { campRoleSummary, dashboardTags, runListMeta, runMatchesTag, runTags } from "./view-model";
+import { campRoleSummary, dashboardTags, paginateRuns, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
   runs: BenchmarkDashboardRunSummary[];
   selectedRun: BenchmarkDashboardRun | null;
   selectedTag: string;
+  runPage: number;
   loading: boolean;
   error: string | null;
 };
@@ -144,7 +145,9 @@ const locale = detectLocale(browserLanguages());
 document.documentElement.lang = locale;
 document.title = text("title");
 
-const state: DashboardState = { runs: [], selectedRun: null, selectedTag: "all", loading: false, error: null };
+const RUNS_PER_PAGE = 24;
+
+const state: DashboardState = { runs: [], selectedRun: null, selectedTag: "all", runPage: 1, loading: false, error: null };
 
 void loadDashboard();
 connectDashboardEvents();
@@ -188,6 +191,8 @@ function render() {
   const tags = dashboardTags(state.runs);
   if (state.selectedTag !== "all" && !tags.includes(state.selectedTag)) state.selectedTag = "all";
   const visibleRuns = filteredRuns();
+  const page = paginateRuns(visibleRuns, { page: state.runPage, pageSize: RUNS_PER_PAGE });
+  state.runPage = page.page;
   const selectedId = state.selectedRun && runMatchesTag(state.selectedRun, state.selectedTag) ? state.selectedRun.id : visibleRuns[0]?.id ?? "";
   root.innerHTML = `
     <main class="dashboard-shell">
@@ -204,8 +209,9 @@ function render() {
           ${tags.map((tag) => tagButton(tag, tag, state.selectedTag)).join("")}
         </div>
         <div class="run-stack">
-          ${visibleRuns.length === 0 ? `<div class="empty">${escapeHtml(text("noRunsForTag"))}</div>` : visibleRuns.map((run) => runListItem(run, selectedId)).join("")}
+          ${visibleRuns.length === 0 ? `<div class="empty">${escapeHtml(text("noRunsForTag"))}</div>` : page.items.map((run) => runListItem(run, selectedId)).join("")}
         </div>
+        ${visibleRuns.length > RUNS_PER_PAGE ? runPager(page.page, page.totalPages, visibleRuns.length) : ""}
       </aside>
       <section class="detail-panel">
         ${state.error ? `<div class="error">${escapeHtml(state.error)}</div>` : ""}
@@ -218,11 +224,18 @@ function render() {
   for (const button of root.querySelectorAll<HTMLButtonElement>("[data-tag]")) {
     button.addEventListener("click", () => {
       state.selectedTag = button.dataset.tag ?? "all";
+      state.runPage = 1;
       void loadDashboard({ showLoading: false, preserveSelection: false });
     });
   }
   for (const button of root.querySelectorAll<HTMLButtonElement>("[data-run-id]")) {
     button.addEventListener("click", () => void selectRun(button.dataset.runId ?? ""));
+  }
+  for (const button of root.querySelectorAll<HTMLButtonElement>("[data-run-page]")) {
+    button.addEventListener("click", () => {
+      state.runPage = Number(button.dataset.runPage);
+      render();
+    });
   }
 }
 
@@ -249,10 +262,20 @@ function runListItem(run: BenchmarkDashboardRunSummary, selectedId: string) {
   return `
     <button type="button" class="run-item" data-run-id="${escapeHtml(run.id)}" data-selected="${run.id === selectedId}">
       <span>${escapeHtml(formatDate(run.createdAt))}</span>
-      <strong>${run.scoreSummary.wins}/${run.scoreSummary.matchCount} ${escapeHtml(scoreLabel(run.scoreSummary.name))}</strong>
+      <strong>${run.primarySummary.wins}/${run.primarySummary.matchCount} ${escapeHtml(summaryLabel(run.primarySummary.name))}</strong>
       <small>${runTags(run).map((tag) => `<b>${escapeHtml(tag)}</b>`).join(" ")}</small>
       <em>${escapeHtml(runListMeta(run, locale))}</em>
     </button>
+  `;
+}
+
+function runPager(page: number, totalPages: number, totalRuns: number) {
+  return `
+    <nav class="run-pager" aria-label="benchmark run pages">
+      <button type="button" data-run-page="${page - 1}" ${page <= 1 ? "disabled" : ""}>‹</button>
+      <span>${page}/${totalPages} · ${totalRuns}</span>
+      <button type="button" data-run-page="${page + 1}" ${page >= totalPages ? "disabled" : ""}>›</button>
+    </nav>
   `;
 }
 
@@ -270,10 +293,7 @@ function runDetail(run: BenchmarkDashboardRun) {
       </div>
     </div>
     <div class="summary-grid">
-      ${summaryCell(scoreLabel(run.scoreSummary.name), run.scoreSummary.wins, run.scoreSummary.matchCount, run.scoreSummary.successRate)}
-      ${summaryCell(text("scoreControl"), run.scoreControlSummary.wins, run.scoreControlSummary.matchCount, run.scoreControlSummary.successRate)}
-      ${run.probeSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
-      ${run.combatSummaries.map((summary) => summaryCell(summary.name, summary.wins, summary.matchCount, summary.successRate)).join("")}
+      ${run.evaluationSummaries.map((summary) => summaryCell(summaryLabel(summary.name), summary.wins, summary.matchCount, summary.successRate)).join("")}
       <div><span>${escapeHtml(text("maps"))}</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>
       <div><span>${escapeHtml(text("games"))}</span><strong>${run.report.matchCount}</strong></div>
       <div><span>${escapeHtml(text("wallTime"))}</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>
@@ -301,6 +321,10 @@ function summaryCell(label: string, wins: number, total: number, rate: number) {
 
 function scoreLabel(name: string) {
   return name.replace(/\s*score$/i, "");
+}
+
+function summaryLabel(name: string) {
+  return name === "1v1 score control" ? text("scoreControl") : scoreLabel(name);
 }
 
 function matchDetail(match: BenchmarkMatchReport) {
@@ -336,17 +360,7 @@ function matchDetail(match: BenchmarkMatchReport) {
             <h3>${escapeHtml(text("players"))}</h3>
             ${Object.entries(match.setup.players)
               .map(
-                ([owner, player]) => `
-                  <div class="setup-player">
-                    <strong>${escapeHtml(owner)}</strong>
-                    <span>${escapeHtml(player.team)}</span>
-                    <span>${escapeHtml(player.aiVersion)}</span>
-                    <span>${escapeHtml(player.race)}</span>
-                    <span>${escapeHtml(player.controller)}</span>
-                    <span>${escapeHtml(player.plannerOrigin)}</span>
-                    <span>${escapeHtml(player.traceSource)}</span>
-                  </div>
-                `,
+                ([owner, player]) => setupPlayerRow(owner, player),
               )
               .join("")}
           </section>
@@ -356,6 +370,15 @@ function matchDetail(match: BenchmarkMatchReport) {
         </div>
       </div>
     </details>
+  `;
+}
+
+function setupPlayerRow(owner: string, player: BenchmarkMatchReport["setup"]["players"][string]) {
+  return `
+    <div class="setup-player">
+      <strong>${escapeHtml(owner)}</strong>
+      ${playerSetupCells(player, text("notAvailable")).map((value) => `<span>${escapeHtml(value)}</span>`).join("")}
+    </div>
   `;
 }
 

@@ -1,5 +1,6 @@
 import type { BenchmarkDashboardRun, BenchmarkDashboardRunSummary } from "../ai/benchmark/dashboard-store";
 import type { Locale } from "../client/i18n";
+import type { BenchmarkMatchReport } from "../sdk/benchmark";
 
 const VIEW_MODEL_TEXT = {
   en: {
@@ -18,6 +19,10 @@ const VIEW_MODEL_TEXT = {
 
 export function runListMeta(run: BenchmarkDashboardRunSummary | BenchmarkDashboardRun, locale: Locale = "en") {
   const text = VIEW_MODEL_TEXT[locale];
+  if (!run.scoreControlSummary || !run.probeSummaries || !run.combatSummaries) {
+    const evaluations = run.evaluationSummaries.slice(1).map((summary) => `${summary.wins}/${summary.matchCount} ${summary.name}`);
+    return [...evaluations, `${run.selectedRichScoreMapIds.length}/${run.mapPoolSize} ${text.maps}`].filter(Boolean).join(" · ");
+  }
   const controls = `${run.scoreControlSummary.wins}/${run.scoreControlSummary.matchCount} ${text.control}`;
   const probes = run.probeSummaries
     .map((summary) => `${summary.wins}/${summary.matchCount} ${summary.name.replace(/\s*probe$/i, "")}`)
@@ -45,4 +50,21 @@ export function runTags(run: BenchmarkDashboardRunSummary | BenchmarkDashboardRu
 
 export function runMatchesTag(run: BenchmarkDashboardRunSummary | BenchmarkDashboardRun, tag: string) {
   return tag === "all" || runTags(run).includes(tag);
+}
+
+export function playerSetupCells(player: BenchmarkMatchReport["setup"]["players"][string], unavailable: string) {
+  return [player.team, player.aiVersion, player.race, player.controller, player.plannerOrigin, player.traceSource].map((value) => value ?? unavailable);
+}
+
+export function paginateRuns<T>(items: T[], options: { page: number; pageSize: number }) {
+  const pageSize = Math.max(1, Math.floor(options.pageSize));
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const page = Math.min(Math.max(1, Math.floor(options.page)), totalPages);
+  const start = (page - 1) * pageSize;
+  return {
+    page,
+    pageSize,
+    totalPages,
+    items: items.slice(start, start + pageSize),
+  };
 }

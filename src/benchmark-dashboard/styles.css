@@ -29,7 +29,7 @@ button {
 
 .run-list {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 14px;
   border-right: 1px solid #d7dce0;
   background: #fbfbfc;
@@ -120,6 +120,33 @@ h2 {
 
 .run-stack {
   padding-right: 4px;
+}
+
+.run-pager {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.run-pager button {
+  border: 1px solid #d7dce0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #202429;
+  height: 32px;
+  font-weight: 800;
+}
+
+.run-pager button:disabled {
+  color: #9aa6b2;
+}
+
+.run-pager span {
+  color: #6a737d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  text-align: center;
 }
 
 .run-item {
@@ -399,7 +426,7 @@ h2 {
 
 .setup-player {
   display: grid;
-  grid-template-columns: minmax(70px, 1fr) repeat(4, minmax(0, 0.8fr));
+  grid-template-columns: minmax(70px, 1fr) repeat(6, minmax(0, 0.8fr));
   gap: 6px;
   align-items: baseline;
   min-width: 0;
