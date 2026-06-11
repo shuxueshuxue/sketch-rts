@@ -33,6 +33,26 @@ describe("AI item tactics", () => {
     expect(planItemCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "pickupItem", unitId: "carrier", itemId: "scroll" });
   });
 
+  it("does not assign one carrier to multiple ground item pickups in the same frame", () => {
+    const game = sketchScene("item-tactics-distinct-pickup-carriers")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "knight", 540, 500, { id: "preferred-carrier" })
+      .unit("v2", "footman", 552, 500, { id: "second-carrier" })
+      .item("first-scroll", "guardianScroll", 560, 500)
+      .item("second-scroll", "guardianScroll", 564, 500)
+      .build()
+      .createGame();
+
+    const commands = planItemCommands(snapshotGame(game), "v2", { version: "v2" }).filter((command) => command.type === "pickupItem");
+
+    expect(commands).toHaveLength(2);
+    expect(new Set(commands.map((command) => command.unitId)).size).toBe(2);
+    expect(commands.map((command) => command.itemId).sort()).toEqual(["first-scroll", "second-scroll"]);
+  });
+
   it("feeds experience books to a near-level veteran before a fresh high-stat unit", () => {
     const game = sketchScene("item-tactics-veteran-book")
       .map("bareDuel")

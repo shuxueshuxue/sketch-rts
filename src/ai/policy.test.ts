@@ -11154,6 +11154,73 @@ describe("SDK preset AI policy", () => {
     expect(telemetry.behaviors.skirmishPreservation.disadvantagedRetreats).toBe(1);
   });
 
+  it("v5 skirmish preservation does not reserve healthy rear reinforcements during a forward retreat", () => {
+    const scene = sketchScene("v5-skirmish-retreat-keeps-rear-reinforcements-free")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "ember" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 500)
+      .worker("v5", 450, 500)
+      .unit("v5", "sparkArcher", 1180, 1000, { id: "front-archer", hp: 45 })
+      .unit("v5", "emberAcolyte", 1200, 1040, { id: "front-acolyte", hp: 48 })
+      .unit("v5", "ashHexer", 1220, 1080, { id: "front-hexer", hp: 50 })
+      .unit("v5", "emberRavager", 760, 980, { id: "rear-ravager-a" })
+      .unit("v5", "cinderRunner", 780, 1040, { id: "rear-runner-b" })
+      .townHall("v3", 3400, 3400)
+      .unit("v3", "footman", 1320, 1000)
+      .unit("v3", "footman", 1360, 1040)
+      .unit("v3", "lancer", 1400, 1080)
+      .unit("v3", "archer", 1440, 1120)
+      .unit("v3", "raider", 1480, 1160)
+      .unit("v3", "footman", 1420, 980)
+      .unit("v3", "lancer", 1460, 1020)
+      .unit("v3", "archer", 1500, 1060)
+      .townHall("v4-tr", 3400, 3800)
+      .worker("v4-tr", 3380, 3800)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "attackMove", unitIds: expect.arrayContaining(["front-archer", "front-acolyte", "front-hexer"]) });
+    expect(command && "unitIds" in command ? command.unitIds : []).not.toEqual(expect.arrayContaining(["rear-ravager-a", "rear-runner-b"]));
+  });
+
+  it("v5 grove keeps the existing full local retreat group", () => {
+    const scene = sketchScene("v5-grove-skirmish-keeps-full-retreat-group")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 500)
+      .worker("v5", 450, 500)
+      .unit("v5", "archer", 1180, 1000, { id: "front-archer", hp: 70 })
+      .unit("v5", "footman", 1200, 1040, { id: "front-footman", hp: 90 })
+      .unit("v5", "lancer", 1220, 1080, { id: "front-lancer", hp: 90 })
+      .unit("v5", "raider", 760, 980, { id: "rear-raider-a" })
+      .unit("v5", "footman", 780, 1040, { id: "rear-footman-b" })
+      .townHall("v3", 3400, 3400)
+      .unit("v3", "footman", 1320, 1000)
+      .unit("v3", "footman", 1360, 1040)
+      .unit("v3", "lancer", 1400, 1080)
+      .unit("v3", "archer", 1440, 1120)
+      .unit("v3", "raider", 1480, 1160)
+      .unit("v3", "footman", 1420, 980)
+      .unit("v3", "lancer", 1460, 1020)
+      .unit("v3", "archer", 1500, 1060)
+      .townHall("v4-tr", 3400, 3800)
+      .worker("v4-tr", 3380, 3800)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.skirmishPreservation], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "attackMove", unitIds: expect.arrayContaining(["rear-raider-a", "rear-footman-b"]) });
+  });
+
   it("v2 move-retreats out of a dead opponent base when another opponent controls the field", () => {
     const scene = sketchScene("v2-dead-base-skirmish-move-retreat")
       .map("openClaims")

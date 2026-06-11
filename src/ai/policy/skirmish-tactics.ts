@@ -7,6 +7,7 @@ import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } fro
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
+import { isV5HybridPolicy } from "./versions";
 import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
 
@@ -194,15 +195,29 @@ function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[
     // @@@enemy-base-skirmish - V2/V3 should preserve bad enemy-base dives; V4-TR wins by keeping tower/merc pressure committed.
     if (distance(anchor, ownBase) < 700) continue;
     if (enemyBase && distance(anchor, enemyBase) < 700) continue;
-    const allies = ownCombat.filter((unit) => distance(unit, anchor) <= 520);
-    if (allies.length < 2) continue;
     const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);
     if (localEnemies.length < 2) continue;
+    const allies = localSkirmishAllies(snapshot, owner, ownCombat, anchor, localEnemies, options);
+    if (allies.length < 2) continue;
     if (dormantNeutralThreatsStillOnRoute(localEnemies, allies)) continue;
     if (armyPower(localEnemies) <= armyPower(allies) * 1.05) continue;
     return { allies, enemies: localEnemies };
   }
   return undefined;
+}
+
+function localSkirmishAllies(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], anchor: Unit, localEnemies: Unit[], options: PresetAiPolicyOptions) {
+  const nearbyAllies = ownCombat.filter((unit) => distance(unit, anchor) <= 520);
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return nearbyAllies;
+  if (playerState(snapshot, owner).race !== "ember") return nearbyAllies;
+  const localEnemyIds = new Set(localEnemies.map((unit) => unit.id));
+  const engagedAllies = nearbyAllies.filter(
+    (unit) =>
+      localEnemies.some((enemy) => distance(unit, enemy) <= 520) ||
+      ((unit.order.type === "attack" || unit.order.type === "attackMove") && unit.order.targetId !== undefined && localEnemyIds.has(unit.order.targetId)),
+  );
+  // @@@v5-skirmish-reservation - Hybrid 1v2 preservation must not reserve healthy rear reinforcements before attackWave can commit them.
+  return engagedAllies.length >= 2 ? engagedAllies : nearbyAllies;
 }
 
 function deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot: GameSnapshot, owner: PlayerId, skirmish: { allies: Unit[]; enemies: Unit[] }, options: PresetAiPolicyOptions) {

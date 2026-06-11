@@ -21,10 +21,12 @@ export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, option
     if (command) commands.push(command);
   }
 
+  const assignedPickupCarrierIds = new Set<string>();
   for (const item of nearestEntities(groundItems(snapshot), mainBase(snapshot, owner))) {
-    const carrier = bestItemCarrier(snapshot, owner, item, options);
+    const carrier = bestItemCarrier(snapshot, owner, item, options, assignedPickupCarrierIds);
     if (!carrier) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "pickupItem", unitId: carrier.id, itemId: item.id }, options));
+    assignedPickupCarrierIds.add(carrier.id);
     if (commands.length >= Math.max(1, Math.min(2, ownCombat.length))) break;
   }
   return commands;
@@ -70,11 +72,12 @@ function breachChargeTargetScore(building: Building, carrier: Unit) {
   return productionBonus + towerBonus + woundedBonus - townHallPenalty - distance(building, carrier) / 8;
 }
 
-function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldItem, options: PresetAiPolicyOptions): Unit | undefined {
+function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldItem, options: PresetAiPolicyOptions, assignedPickupCarrierIds = new Set<string>()): Unit | undefined {
   const occupiedCarrierIds = new Set(items(snapshot).flatMap((candidate) => (candidate.carrierId ? [candidate.carrierId] : [])));
   return units(snapshot, owner)
     .filter((unit) => unit.kind !== "worker")
     .filter((unit) => !occupiedCarrierIds.has(unit.id))
+    .filter((unit) => !assignedPickupCarrierIds.has(unit.id))
     .filter((unit) => distance(unit, item) <= 72)
     .sort((a, b) => itemCarrierScore(b, item, options) - itemCarrierScore(a, item, options))[0];
 }
