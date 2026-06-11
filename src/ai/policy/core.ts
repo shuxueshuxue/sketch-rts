@@ -672,6 +672,18 @@ function v5FreshNaturalEmergencyTowerBase(snapshot: GameSnapshot, owner: PlayerI
   if (!mine || distance(mine, natural) > 280) return undefined;
   const enemies = enemyCombatUnitsNear(snapshot, owner, natural, 1_650, options.teams);
   if (enemies.length < 3) return undefined;
+  const closeNaturalEnemies = enemies.filter((enemy) => distance(enemy, natural) <= 1_000);
+  const mainPressure = enemyCombatUnitsNear(snapshot, owner, main, 1_350, options.teams);
+  // @@@main-pressure-before-natural - A fresh natural tower is wrong when the natural is not yet under close contact but the first hit is reaching main production.
+  if (closeNaturalEnemies.length < 3 && mainPressure.length >= 3 && armyPower(mainPressure) > armyPower(ownCombat) * 0.55) return undefined;
+  const ownedTargets = new Map([...units(snapshot, owner), ...buildings(snapshot, owner)].map((entity) => [entity.id, entity]));
+  const mainTargetEnemies = enemies.filter((enemy) => {
+    if (enemy.order.type !== "attack") return false;
+    const target = ownedTargets.get(enemy.order.targetId);
+    return target ? distance(target, main) + 80 < distance(target, natural) : false;
+  });
+  // @@@targeted-main-skirmish - Geometry alone can call the same fight "natural pressure"; the current attack target tells which base is actually being cracked.
+  if (mainTargetEnemies.length >= 3 && armyPower(mainTargetEnemies) > armyPower(ownCombat) * 0.45) return undefined;
   // @@@v5-natural-emergency-tower - In 1v2 the first mining natural is the real front; a main-side tower lets the midgame army die before the second mine pays back.
   return ownCombat.length < 8 || armyPower(enemies) > armyPower(ownCombat) * 0.8 ? natural : undefined;
 }

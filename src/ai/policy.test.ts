@@ -2164,6 +2164,54 @@ describe("SDK preset AI policy", () => {
     expect(Math.hypot(command.x - 820, command.y - 980)).toBeLessThan(Math.hypot(command.x - 500, command.y - 500));
   });
 
+  it("v5 emergency defense guards the main before a fresh natural when the first hit reaches main production", () => {
+    const scene = sketchScene("v5-main-pressure-before-fresh-natural-tower")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "ember" })
+      .player("v3", { team: "south", race: "ember" })
+      .player("v4", { team: "south", race: "grove" })
+      .townHall("v5", 492, 2048, { id: "v5-main" })
+      .townHall("v5", 720, 2540, { id: "v5-natural" })
+      .building("v5", "emberForge", 578, 2176)
+      .building("v5", "cinderSpire", 578, 1976)
+      .worker("v5", 520, 2080, { id: "v5-builder" })
+      .worker("v5", 555, 2080)
+      .worker("v5", 590, 2080)
+      .worker("v5", 690, 2520)
+      .unit("v5", "emberRavager", 1267, 1395)
+      .unit("v5", "emberRavager", 1292, 1370)
+      .unit("v5", "cinderRunner", 1296, 1335)
+      .unit("v5", "cinderRunner", 1129, 1810, { id: "main-lane-runner" })
+      .unit("v5", "contractArcher", 1224, 1742)
+      .unit("v5", "fieldMedic", 1085, 1620)
+      .townHall("v3", 3604, 1475)
+      .unit("v3", "emberRavager", 1106, 1779, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .unit("v3", "emberRavager", 1371, 1817, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .unit("v3", "cinderRunner", 1352, 1772, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .unit("v3", "cinderRunner", 1397, 1835, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .unit("v3", "contractArcher", 1273, 2012, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .unit("v3", "contractArcher", 1320, 1980, { order: { type: "attack", targetId: "main-lane-runner" } })
+      .townHall("v4", 3604, 2621)
+      .goldMine("v5-main-mine", 492, 2048, 4000)
+      .goldMine("v5-natural-mine", 720, 2640, 4000)
+      .goldMine("v3-main-mine", 3604, 1475, 4000)
+      .goldMine("v4-main-mine", 3604, 2621, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v5!.gold = BUILDING_DEFS.defenseTower.cost;
+
+    const command = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.emergencyDefense, AI_SCRIPT_LIBRARY.defense], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    }).find((entry) => entry.command.type === "build")?.command;
+
+    expect(command).toMatchObject({ type: "build", buildingKind: "defenseTower" });
+    if (command?.type !== "build") throw new Error("expected defense tower build");
+    expect(Math.hypot(command.x - 492, command.y - 2048)).toBeLessThan(Math.hypot(command.x - 720, command.y - 2540));
+  });
+
   it("v2 does not spend near-complete first-expansion gold on a moon well", () => {
     const scene = sketchScene("v2-holds-first-expansion-gold-before-moon-well")
       .map("openClaims")
