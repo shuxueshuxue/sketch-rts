@@ -3073,6 +3073,7 @@ function v5MainApproachDetachmentPickoffCommand(snapshot: GameSnapshot, owner: P
   const candidates = enemyArmy
     .filter((enemy) => distance(enemy, main) <= 1_050)
     .filter((enemy) => distance(enemy, main) <= 900 || targetPressuresAlliedAsset(snapshot, owner, enemy, options))
+    .filter((enemy) => !v5UnminedFirstExpansionDirectChaseTarget(snapshot, owner, main, enemy, options))
     .map((enemy) => {
       const localEnemies = enemyArmy.filter((candidate) => distance(candidate, enemy) <= 420);
       const localIds = new Set(localEnemies.map((candidate) => candidate.id));
@@ -3231,9 +3232,19 @@ function significantOpponentArmyTarget(snapshot: GameSnapshot, owner: PlayerId, 
   return army
     // @@@local-significant-target - Direct attack is for local army contact; distant isolated units near a base belong to objective movement, not chase orders.
     .filter((unit) => distance(unit, from) <= 1_450)
+    .filter((unit) => !v5UnminedFirstExpansionDirectChaseTarget(snapshot, owner, from, unit, options))
     .filter((unit) => armyPower(army.filter((candidate) => distance(candidate, unit) <= 520)) <= ownPower * 0.95)
     .filter((unit) => !routeArmyCoversOpponentTarget(army, from, unit, ownPower))
     .sort((a, b) => strategicArmyTargetScore(b, from) - strategicArmyTargetScore(a, from))[0];
+}
+
+function v5UnminedFirstExpansionDirectChaseTarget(snapshot: GameSnapshot, owner: PlayerId, from: Point, target: Unit, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (activeMiningBaseCount(snapshot, owner) >= 2) return false;
+  if (distance(target, from) <= AUTO_ACQUIRE_RANGE + 160) return false;
+  if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && distance(target, building) <= 620)) return false;
+  if (target.attackRange > 100 && targetPressuresAlliedAsset(snapshot, owner, target, options)) return false;
+  return true;
 }
 
 function routeArmyCoversOpponentTarget(enemies: Unit[], from: Point, target: Unit, ownPower: number) {
@@ -3248,6 +3259,7 @@ function isolatedOpponentDetachmentTarget(snapshot: GameSnapshot, owner: PlayerI
   const ownPower = armyPower(soldiers);
   const candidates = enemies
     .filter((enemy) => distance(enemy, center) <= 1_650)
+    .filter((enemy) => !v5UnminedFirstExpansionDirectChaseTarget(snapshot, owner, center, enemy, options))
     .map((enemy) => {
       const localEnemies = enemies.filter((candidate) => distance(candidate, enemy) <= 420);
       const localIds = new Set(localEnemies.map((candidate) => candidate.id));

@@ -694,6 +694,42 @@ describe("SDK preset AI policy", () => {
     expect(command).not.toMatchObject({ type: "attack", targetId: "base-side-footman" });
   });
 
+  it("v5 1v2 does not direct-chase an army target outside its unfinished first expansion defense", () => {
+    const scene = sketchScene("v5-no-unfinished-natural-direct-chase")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "west", race: "grove" })
+      .player("v3", { team: "east", race: "grove" })
+      .player("v4-tr", { team: "east", race: "grove" })
+      .townHall("v5", 500, 2048)
+      .building("v5", "townHall", 760, 2540, { complete: false })
+      .unit("v5", "footman", 820, 2140)
+      .unit("v5", "footman", 850, 2160)
+      .unit("v5", "footman", 880, 2120)
+      .unit("v5", "lancer", 910, 2160)
+      .unit("v5", "lancer", 940, 2120)
+      .unit("v5", "archer", 970, 2160)
+      .unit("v5", "archer", 1000, 2120)
+      .townHall("v3", 3500, 1500)
+      .unit("v3", "footman", 1_520, 2_245, { id: "runaway-footman" })
+      .unit("v3", "footman", 2_550, 2_700)
+      .unit("v3", "lancer", 2_620, 2_760)
+      .unit("v3", "archer", 2_700, 2_820)
+      .townHall("v4-tr", 3500, 2700)
+      .unit("v4-tr", "contractArcher", 2_650, 1_180)
+      .unit("v4-tr", "mercenary", 2_720, 1_240)
+      .goldMine("v5-main-mine", 540, 2048, 4_000)
+      .goldMine("v5-natural-mine", 780, 2540, 4_000)
+      .goldMine("v3-main-mine", 3500, 1500, 4_000)
+      .goldMine("v4-main-mine", 3500, 2700, 4_000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
+
+    expect(command).not.toMatchObject({ type: "attack", targetId: "runaway-footman" });
+  });
+
   it("v2 does not creep a neutral camp through a stronger route army in one-on-one", () => {
     const scene = sketchScene("v2-no-route-covered-neutral-camp")
       .map("openClaims")
