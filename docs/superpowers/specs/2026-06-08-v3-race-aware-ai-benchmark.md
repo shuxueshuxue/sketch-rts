@@ -174,7 +174,11 @@ Implementation is not complete until current evidence proves all of the followin
 - pgl dashboard evidence after veteran-book feed: seed `v3-veteran-book-50-2026-06-10a`, run `2026-06-10T19-40-17-777Z-1818ncr`, workers `95`, wall time `9.12s`, CPU time `593177.622ms`, V3 total `94/100`, Grove V3 `47/50`, Ember V3 `47/50`.
 - Current pgl dashboard gate after the retained veteran-core and dashboard-reporting work: seed `v3-current-gate-50-2026-06-10b`, run `2026-06-10T20-44-52-527Z-11ftklm`, workers `95`, wall time `8.90s`, CPU time `590498.464ms`, V3 total `93/100`; split was Grove V3 `46/50`, Ember V3 `47/50`.
 - Fresh focused verification after veteran-book feed: `npx vitest run src/ai/policy.test.ts src/ai/planner-context.test.ts src/ai/policy/production-model.test.ts src/ai/policy/tower-merc-policy.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/item-tactics.test.ts src/ai/benchmark/control.test.ts scripts/ai-v3-vs-prod-v2-benchmark.test.ts scripts/ai-v4-tr-vs-v3-benchmark.test.ts scripts/ai-playtest.test.ts` passed with `451/451`, and `npm run build` completed successfully.
-- Remaining V3 stoplines are quality margin, not gate blockers: the latest audited seeds include `94/100`, `95/100`, commit-level `94/100`, current-worktree `94/100`, and veteran-core `92/100`.
+- Current pgl dashboard gate on 2026-06-11 from branch `codex/v4-tr-benchmark` after commit `cc421c3`:
+  - `v3-current-gate-50-2026-06-11a`: run `2026-06-11T10-42-24-098Z-1b5itdm`, workers `95`, wall time `9.71s`, CPU time `573577.108ms`, V3 total `93/100`; split Grove V3 `46/50`, Ember V3 `47/50`.
+  - `v3-current-gate-50-2026-06-11b`: run `2026-06-11T10-44-12-761Z-1avj7on`, workers `95`, wall time `11.14s`, CPU time `567868.969ms`, V3 total `93/100`; split Grove V3 `46/50`, Ember V3 `47/50`.
+  - `v3-current-gate-50-2026-06-11c`: run `2026-06-11T10-44-23-722Z-1aljlzo`, workers `95`, wall time `10.36s`, CPU time `579192.808ms`, V3 total `94/100`; split Grove V3 `45/50`, Ember V3 `49/50`.
+- Remaining V3 stoplines are quality margin, not gate blockers: the latest 2026-06-11 audited seeds are `93/100`, `93/100`, and `94/100`; the lowest race split is Grove V3 `45/50`, exactly at the per-race 90% line.
 
 ## Non-Goals
 
