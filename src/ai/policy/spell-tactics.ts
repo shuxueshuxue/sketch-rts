@@ -94,7 +94,8 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
   const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(rememberedTarget, fighters, options) ? rememberedTarget : undefined;
-  const finisherTarget = options.policyMode === "combat" && anchoredRememberedTarget && anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4 ? singleHitFinisherTarget(candidates, fighters) : undefined;
+  const finisherCanInterruptMemory = anchoredRememberedTarget && (options.policyMode !== "combat" || anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4);
+  const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(candidates, fighters) : undefined;
   const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
   const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
   if (!target) return undefined;

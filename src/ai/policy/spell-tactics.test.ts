@@ -205,6 +205,29 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("lets melee focus memory yield to a one-shot finisher", () => {
+    const game = sketchScene("spell-tactics-melee-finisher-before-memory")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "archer", 760, 790, { id: "archer", order: { type: "attack", targetId: "remembered-merc" } })
+      .unit("v2", "contractArcher", 780, 820, { id: "contract-archer", order: { type: "attack", targetId: "remembered-merc" } })
+      .unit("v1", "mercenary", 930, 805, { id: "remembered-merc", hp: 120 })
+      .unit("v1", "mercenary", 950, 820, { id: "one-shot-merc", hp: 1 })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { focusTargetOwner: "v1", focusTargetId: "remembered-merc", focusTargetSinceTick: 0, focusTargetUpdatedTick: 0 };
+
+    expect(planFocusFireCommand(snapshotGame(game), "v2", { version: "v2", teams: game.teams, memory })).toEqual({
+      type: "attack",
+      unitIds: ["archer", "contract-archer"],
+      targetId: "one-shot-merc",
+    });
+  });
+
   it("drops a remembered focus target when only a small tail can still fight it", () => {
     const scene = sketchScene("spell-tactics-drop-stale-focus-tail")
       .map("combatArena")
