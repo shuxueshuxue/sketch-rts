@@ -1721,6 +1721,8 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (options.version === "v2" && (mainBaseNeedsObjectivePause(snapshot, owner, options) || ownedBaseNeedsObjectivePause(snapshot, owner, options))) return undefined;
   const firstNaturalRecovery = recallWoundedClearedExpansionClaim(snapshot, owner, options);
   if (firstNaturalRecovery) return firstNaturalRecovery;
+  const firstExpansionMercenary = v5FirstExpansionLocalMercenaryObjectiveCommand(snapshot, owner, options);
+  if (firstExpansionMercenary) return firstExpansionMercenary;
   if (firstClearedExpansionClaimPausesObjectiveControl(snapshot, owner, options)) return undefined;
   const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
   const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
@@ -1744,6 +1746,30 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!target) return undefined;
   const stale = staleAttackMovers(army, target.point);
   return stale.length >= minimumArmy ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.point.x, y: target.point.y }, options) : undefined;
+}
+
+function v5FirstExpansionLocalMercenaryObjectiveCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (!isV5HybridPolicy(options) || !firstClearedExpansionClaimPausesObjectiveControl(snapshot, owner, options)) return undefined;
+  const army = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && objectiveReadyUnit(snapshot, owner, unit, options));
+  const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
+  if (army.length < minimumArmy) return undefined;
+  const anchor = averagePoint(army);
+  const maxObjectiveDistance = 1_450;
+  const requiredPowerRatio = 1.05;
+  const target = mercenaryCamps(snapshot)
+    .filter((camp) => camp.stock > 0 && camp.cooldownRemaining === 0)
+    .filter((camp) => isLocalFirstMercenaryClaim(snapshot, owner, camp))
+    .map((camp) => ({ camp, guards: neutralGuardsNear(snapshot, camp, 280) }))
+    .filter((candidate) => candidate.guards.length > 0)
+    .filter((candidate) => distance(candidate.camp, anchor) <= maxObjectiveDistance)
+    .filter((candidate) => armyPower(army) >= armyPower(candidate.guards) * requiredPowerRatio)
+    .filter((candidate) => !localEnemyControlNearObjective(snapshot, owner, candidate.camp, army, options))
+    .filter((candidate) => !enemyControlsObjectiveRoute(snapshot, owner, anchor, candidate.camp, army, options))
+    .sort((a, b) => objectiveCampScore(b.camp, b.guards, anchor) - objectiveCampScore(a.camp, a.guards, anchor))[0];
+  if (!target) return undefined;
+  const stale = staleAttackMovers(army, target.camp);
+  // @@@v5-first-expansion-merc-objective - The first-natural pause protects the hall conversion; a local guarded merc camp is the same army-value chain, not a second expansion detour.
+  return stale.length >= minimumArmy ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: target.camp.x, y: target.camp.y }, options) : undefined;
 }
 
 function towerMercCloseoutAvailable(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

@@ -1947,6 +1947,46 @@ describe("SDK preset AI policy", () => {
     expect(entries.find((entry) => entry.scriptId === "attackWave")).toBeUndefined();
   });
 
+  it("v5 can clear a local mercenary objective while holding first-expansion gold", () => {
+    const scene = sketchScene("v5-first-expansion-local-merc-objective")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "west", race: "grove" })
+      .player("v3", { team: "east", race: "grove" })
+      .player("v4", { team: "east", race: "grove" })
+      .townHall("v5", 500, 2048)
+      .building("v5", "barracks", 620, 2100)
+      .unit("v5", "footman", 900, 2160)
+      .unit("v5", "footman", 940, 2200)
+      .unit("v5", "lancer", 980, 2160)
+      .unit("v5", "footman", 1020, 2200)
+      .unit("v5", "lancer", 1060, 2160)
+      .townHall("v3", 3500, 2600)
+      .townHall("v4", 3500, 1500)
+      .unit("neutral", "mossGnawer", 1180, 2060)
+      .unit("neutral", "thornSlinger", 1210, 2090)
+      .mercenaryCamp("local-bow-post", 1180, 2060, { hireKind: "contractArcher", cost: 145, stock: 3, cooldownRemaining: 0 })
+      .goldMine("v5-main-mine", 540, 2048, 4000)
+      .goldMine("v5-natural-mine", 780, 2540, 4000)
+      .goldMine("v3-main-mine", 3500, 2600, 4000)
+      .goldMine("v4-main-mine", 3500, 1500, 4000)
+      .build();
+    const game = scene.createGame();
+    const memory = createAiPolicyMemory();
+    memory.strategicPlan = { expansionClaimTargetId: "v5-natural-mine", expansionClaimTick: 0 };
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.objectiveControl], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+      memory,
+    });
+
+    expect(entries.find((entry) => entry.scriptId === "objectiveControl")).toMatchObject({
+      command: { type: "attackMove", x: 1180, y: 2060 },
+    });
+  });
+
   it("v5 attacks an enemy town hall planted on its cleared natural before clearing another mine", () => {
     const scene = sketchScene("v5-contested-cleared-natural-before-next-mine")
       .map("openClaims")
