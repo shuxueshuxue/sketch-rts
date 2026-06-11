@@ -10279,6 +10279,55 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "build", buildingKind: "moonWell" });
   });
 
+  it("v5 builds the first moon well before a second tower when two-base defenders are wounded", () => {
+    const scene = sketchScene("v5-two-base-wounded-first-moon-well-before-second-tower")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4", { team: "south", race: "grove" })
+      .townHall("v5", 492, 2048, { id: "v5-main" })
+      .townHall("v5", 720, 2540, { id: "v5-natural" })
+      .building("v5", "barracks", 612, 2148, { id: "v5-barracks" })
+      .building("v5", "archeryRange", 612, 1976, { id: "v5-archery" })
+      .building("v5", "farm", 716, 1948)
+      .building("v5", "farm", 856, 1816)
+      .building("v5", "farm", 786, 2148)
+      .building("v5", "defenseTower", 577, 2585, { id: "v5-natural-tower" })
+      .worker("v5", 520, 2080, { id: "v5-builder" })
+      .worker("v5", 555, 2080)
+      .worker("v5", 720, 2580)
+      .worker("v5", 750, 2580)
+      .unit("v5", "footman", 497, 2050, { hp: 54, id: "wounded-footman" })
+      .unit("v5", "lancer", 489, 2014, { hp: 88, id: "wounded-lancer" })
+      .unit("v5", "footman", 461, 2049, { hp: 139, id: "bruised-footman" })
+      .unit("v5", "archer", 455, 2011)
+      .unit("v5", "footman", 701, 2206)
+      .townHall("v3", 3604, 2621)
+      .unit("v3", "footman", 1026, 2354)
+      .unit("v3", "lancer", 1061, 2343)
+      .unit("v3", "footman", 1094, 2357)
+      .townHall("v4", 3604, 1475)
+      .unit("v4", "contractArcher", 1180, 2040)
+      .goldMine("v5-main-mine", 440, 2048, 4000)
+      .goldMine("v5-natural-mine", 720, 2540, 4000)
+      .goldMine("v3-main-mine", 3680, 2621, 4000)
+      .goldMine("v4-main-mine", 3680, 1475, 4000)
+      .build();
+    const game = scene.createGame();
+    game.players.v5!.gold = BUILDING_DEFS.moonWell.cost + 10;
+    game.players.v5!.supplyUsed = 21;
+    game.players.v5!.supplyCap = 38;
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.healingWell, AI_SCRIPT_LIBRARY.defense], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    });
+
+    expect(entries[0]).toMatchObject({ scriptId: "healingWell", command: { type: "build", buildingKind: "moonWell" } });
+  });
+
   it("v2 adds a recovery moon well when settled wounded defenders are outside existing well range", () => {
     const scene = sketchScene("v2-uncovered-wounded-recovery-moon-well")
       .map("bareDuel")

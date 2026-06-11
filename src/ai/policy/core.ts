@@ -965,18 +965,26 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const firstWellBeforeExpansionBank = shouldBuildFirstHealingWellBeforeExpansionBank(snapshot, owner, woundedDefenders, options);
   const firstWellBeforeCatchUpExpansion = shouldBuildFirstHealingWellBeforeCatchUpExpansion(snapshot, owner, woundedDefenders, options);
+  const firstWellBeforeSecondTower = shouldBuildFirstHealingWellBeforeSecondTower(snapshot, owner, woundedDefenders, options);
   if (!isTowerMercPolicy(options) && shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot, owner, woundedDefenders, pressured, firstWellBeforeExpansionBank, options)) return undefined;
   const wantsWell = isTowerMercPolicy(options)
     ? woundedDefenders.length > 0 || (pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86))
     : uncoveredRecovery ||
       firstWellBeforeExpansionBank ||
       firstWellBeforeCatchUpExpansion ||
+      firstWellBeforeSecondTower ||
       woundedDefenders.length >= 2 ||
       (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
-  if (needsMainGuardTower(snapshot, owner, options) && !criticalWoundedFirstHealingWellBeatsDistantMainGuard(snapshot, owner, main, options) && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
-  if (shouldReserveForEmergencyTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
+  if (
+    needsMainGuardTower(snapshot, owner, options) &&
+    !criticalWoundedFirstHealingWellBeatsDistantMainGuard(snapshot, owner, main, options) &&
+    !firstWellBeforeSecondTower &&
+    player.gold < BUILDING_DEFS.defenseTower.cost + healingCost
+  )
+    return undefined;
+  if (shouldReserveForEmergencyTower(snapshot, owner, options) && !firstWellBeforeSecondTower && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
   if (shouldReserveForControlledMercenaryHire(snapshot, owner, options, healingCost)) return undefined;
   if (!firstWellBeforeExpansionBank && shouldHoldClearedExpansionBank(snapshot, owner, options, healingCost)) return undefined;
   if (!firstWellBeforeExpansionBank && shouldHoldFirstExpansionBank(snapshot, owner, options, healingCost)) return undefined;
@@ -1048,6 +1056,16 @@ function shouldBuildFirstHealingWellBeforeCatchUpExpansion(snapshot: GameSnapsho
   if (combatUnits(snapshot, owner).length < 6 || woundedDefenders.length < 2) return false;
   // @@@v5-two-base-first-heal - Once two mines are paying, the first healing source is combat infrastructure; a catch-up third can wait for wounded defenders to become usable supply.
   return true;
+}
+
+function shouldBuildFirstHealingWellBeforeSecondTower(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (completeBuildings(snapshot, owner, "townHall").length < 2) return false;
+  if (healingBuildings(snapshot, owner).length > 0) return false;
+  if (!buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && building.complete)) return false;
+  if (combatUnits(snapshot, owner).length < 5 || woundedDefenders.length < 2) return false;
+  // @@@v5-first-heal-before-second-tower - After the first tower exists, wounded two-base defenders need reusable HP before scarce gold buys another static point.
+  return averageHpRatio(woundedDefenders) <= 0.72 || woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.42);
 }
 
 function healingBuildingKind(snapshot: GameSnapshot, owner: PlayerId) {
