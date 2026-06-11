@@ -15,7 +15,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
     if (healAbility) {
       const def = ABILITY_DEFS[healAbility];
-      const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= def.plannerRange);
+      const target = healTarget(snapshot, owner, caster, def.plannerRange);
       if (target) {
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
@@ -45,6 +45,12 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     }
   }
   return commands;
+}
+
+function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number) {
+  return units(snapshot, owner)
+    .filter((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= healRange)
+    .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || b.maxHp - b.hp - (a.maxHp - a.hp) || distance(a, caster) - distance(b, caster))[0];
 }
 
 function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions): GameCommand | undefined {

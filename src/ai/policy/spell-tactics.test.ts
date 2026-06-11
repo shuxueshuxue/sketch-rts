@@ -19,6 +19,21 @@ describe("AI spell and focus tactics", () => {
     expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "cast", unitId: "priest", ability: "heal", targetId: "wounded" });
   });
 
+  it("casts heal on the most critical nearby wounded allied unit", () => {
+    const game = sketchScene("spell-tactics-heal-critical-target")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "priest", 540, 500, { id: "priest" })
+      .unit("v2", "footman", 570, 500, { id: "mild-wound", hp: 90 })
+      .unit("v2", "footman", 600, 500, { id: "critical-wound", hp: 18 })
+      .build()
+      .createGame();
+
+    expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "cast", unitId: "priest", ability: "heal", targetId: "critical-wound" });
+  });
+
   it("moves an idle healer toward a safe wounded group outside heal range", () => {
     const game = sketchScene("spell-tactics-healer-regroups-to-wounded")
       .map("bareDuel")
