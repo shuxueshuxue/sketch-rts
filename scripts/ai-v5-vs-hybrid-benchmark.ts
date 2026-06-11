@@ -1,4 +1,4 @@
-import { createAiV5VsHybridBenchmarkInput, recordAiV5VsHybridBenchmarkDashboardRun, runAiV5VsHybridBenchmarkDetailsParallel, runAiV5VsHybridBenchmarkParallel } from "../src/ai/benchmark/control";
+import { createAiV5VsHybridBenchmarkInput, recordAiV5VsHybridBenchmarkDashboardRun, runAiV5VsHybridBenchmarkDetailsParallel, runAiV5VsHybridBenchmarkParallel, summarizeAiV5VsHybridBenchmark } from "../src/ai/benchmark/control";
 import { benchmarkFilterFromArgs, boolFlag, runAiBenchmarkCli } from "./benchmark-cli";
 
 const args = process.argv.slice(2);
@@ -15,6 +15,7 @@ await runAiBenchmarkCli({
     if (boolFlag(args, "dashboard")) {
       if (boolFlag(args, "details")) throw new Error("--dashboard cannot be combined with --details");
       const run = await recordAiV5VsHybridBenchmarkDashboardRun(options);
+      const breakdown = summarizeAiV5VsHybridBenchmark({ seed: run.seed, selectedMapIds: run.selectedRichScoreMapIds, report: run.report, workers: options.workers });
       return {
         id: run.id,
         kind: run.kind,
@@ -24,6 +25,9 @@ await runAiBenchmarkCli({
         selectedRichScoreMapIds: run.selectedRichScoreMapIds,
         primarySummary: run.primarySummary,
         evaluationSummaries: run.evaluationSummaries,
+        byV5Race: breakdown.byV5Race,
+        byV3Race: breakdown.byV3Race,
+        byOpponentOrder: breakdown.byOpponentOrder,
         elapsedMs: run.report.elapsedMs,
         cpuMs: run.report.cpuMs,
         workers: options.workers,

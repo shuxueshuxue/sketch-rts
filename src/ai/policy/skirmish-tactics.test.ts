@@ -218,6 +218,50 @@ describe("AI skirmish tactics", () => {
     if (command?.type === "move") expect(distance(command, well)).toBeLessThanOrEqual(BUILDING_DEFS.moonWell.attackRange);
   });
 
+  it("preserves a wounded high-level core fighter before ordinary critical-health retreat", () => {
+    const game = sketchScene("skirmish-tactics-veteran-core-preservation")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .player("v1", { team: "south" })
+      .townHall("v2", 500, 500)
+      .building("v2", "moonWell", 430, 620)
+      .unit("v2", "knight", 940, 900, { id: "veteran-knight", xp: 260, hp: 170, order: { type: "attackMove", x: 1500, y: 1100 } })
+      .unit("v2", "archer", 900, 940, { id: "healthy-archer" })
+      .unit("v1", "footman", 1070, 900)
+      .unit("v1", "lancer", 1110, 930)
+      .townHall("v1", 3300, 3300)
+      .build()
+      .createGame();
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v2", { version: "v2", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["veteran-knight"] });
+  });
+
+  it("v5 preserves a near-star core fighter before it becomes a disposable frontliner", () => {
+    const game = sketchScene("skirmish-tactics-v5-near-star-preservation")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v5", { team: "north" })
+      .player("v3", { team: "south" })
+      .player("v4-tr", { team: "south" })
+      .townHall("v5", 500, 500)
+      .building("v5", "moonWell", 430, 620)
+      .unit("v5", "footman", 940, 900, { id: "near-star-footman", xp: 55, hp: 70, order: { type: "attackMove", x: 1500, y: 1100 } })
+      .unit("v5", "archer", 900, 940, { id: "healthy-archer" })
+      .unit("v3", "footman", 1070, 900)
+      .unit("v4-tr", "lancer", 1110, 930)
+      .townHall("v3", 3300, 3300)
+      .townHall("v4-tr", 3300, 3500)
+      .build()
+      .createGame();
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v5", { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "move", unitIds: ["near-star-footman"] });
+  });
+
   it("does not recall a healthy objective squad before idle neutral camps have engaged", () => {
     const game = sketchScene("skirmish-tactics-idle-neutral-route")
       .map("bareDuel")

@@ -39,6 +39,10 @@ describe("AI V4-TR versus V3 benchmark CLI", () => {
         seed: "v4-dashboard-smoke",
         targetPlayerId: "v4-tr",
         primarySummary: { name: "v4-tr tower merc vs v3 random race", matchCount: 2 },
+        byV3Race: {
+          grove: expect.objectContaining({ matches: expect.any(Number) }),
+          ember: expect.objectContaining({ matches: expect.any(Number) }),
+        },
         dashboardPath: rootDir,
       });
       expect(output.report).toBeUndefined();

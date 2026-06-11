@@ -33,6 +33,21 @@ describe("AI item tactics", () => {
     expect(planItemCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "pickupItem", unitId: "carrier", itemId: "scroll" });
   });
 
+  it("feeds experience books to a near-level veteran before a fresh high-stat unit", () => {
+    const game = sketchScene("item-tactics-veteran-book")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 540, 500, { id: "veteran", xp: 200 })
+      .unit("v2", "knight", 550, 500, { id: "fresh-knight" })
+      .item("book", "experienceBook", 545, 500)
+      .build()
+      .createGame();
+
+    expect(planItemCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "pickupItem", unitId: "veteran", itemId: "book" });
+  });
+
   it("uses high-impact combat items on real units instead of temporary summons when both are in range", () => {
     const game = sketchScene("item-tactics-real-target-before-spirit")
       .map("combatArena")

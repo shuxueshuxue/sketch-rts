@@ -4,7 +4,7 @@ import type { BenchmarkMatchReport, BenchmarkPlayerResult } from "../sdk/benchma
 import { joinPublicPath } from "../shared/deployment-base";
 import { DEFAULT_MATCHES_PER_PAGE, DEFAULT_RUNS_PER_PAGE } from "./page-size";
 import { matchWarnings } from "./warnings";
-import { campRoleSummary, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
+import { campRoleSummary, playerRaceSummaryCells, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
 import "./styles.css";
 
 type DashboardState = {
@@ -330,6 +330,7 @@ function runDetail(run: BenchmarkDashboardRunDetailPage) {
     </div>
     <div class="summary-grid">
       ${run.evaluationSummaries.map((summary) => summaryCell(summaryLabel(summary.name), summary.wins, summary.matchCount, summary.successRate)).join("")}
+      ${playerRaceSummaryCells(run).map((summary) => summaryCell(summary.label, summary.wins, summary.matches, summary.winRate)).join("")}
       <div><span>${escapeHtml(text("maps"))}</span><strong>${run.selectedRichScoreMapIds.length}/${run.mapPoolSize}</strong></div>
       <div><span>${escapeHtml(text("games"))}</span><strong>${run.report.matchCount}</strong></div>
       <div><span>${escapeHtml(text("wallTime"))}</span><strong>${formatMs(run.report.elapsedMs)}</strong></div>

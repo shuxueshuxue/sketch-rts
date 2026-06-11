@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { campRoleSummary, dashboardTags, paginateRuns, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
+import { campRoleSummary, dashboardTags, paginateRuns, playerRaceSummaryCells, playerSetupCells, runListMeta, runMatchesTag, runTags } from "./view-model";
 
 describe("benchmark dashboard view model", () => {
   it("renders probe and combat summaries when the run contains tagged lanes", () => {
@@ -29,6 +29,26 @@ describe("benchmark dashboard view model", () => {
     };
 
     expect(runListMeta(run as never)).toBe("50/64 maps");
+  });
+
+  it("renders player race summaries in stable player and race order", () => {
+    const run = {
+      playerRaceSummaries: {
+        v3: {
+          grove: { wins: 46, losses: 4, matches: 50, winRate: 0.92 },
+          ember: { wins: 46, losses: 4, matches: 50, winRate: 0.92 },
+        },
+        "v2-prod": {
+          grove: { wins: 8, losses: 92, matches: 100, winRate: 0.08 },
+        },
+      },
+    };
+
+    expect(playerRaceSummaryCells(run as never)).toEqual([
+      { label: "v2-prod grove", wins: 8, matches: 100, winRate: 0.08 },
+      { label: "v3 ember", wins: 46, matches: 50, winRate: 0.92 },
+      { label: "v3 grove", wins: 46, matches: 50, winRate: 0.92 },
+    ]);
   });
 
   it("labels unattached neutral camps as route camps instead of free camps", () => {

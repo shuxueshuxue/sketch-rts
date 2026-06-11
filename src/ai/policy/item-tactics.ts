@@ -100,5 +100,7 @@ function experienceBookCarrierScore(unit: Unit, durable: number) {
   const xpNeeded = Math.max(0, nextThreshold - unit.xp);
   const bookXp = 160;
   const willLevel = xpNeeded <= bookXp ? 1 : 0;
-  return willLevel * 90 + Math.max(0, bookXp - xpNeeded) * 0.4 + unit.attackDamage * 1.2 + durable * 2;
+  // @@@veteran-book-feed - An experience book that can push an existing veteran over the next star is core-army investment, not generic stat optimization.
+  const veteranCarry = willLevel * unit.level * 28;
+  return willLevel * 90 + veteranCarry + Math.max(0, bookXp - xpNeeded) * 0.4 + unit.attackDamage * 1.2 + durable * 2;
 }

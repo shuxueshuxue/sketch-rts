@@ -3,10 +3,11 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/typ
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { opponentPlayerIds } from "./ownership";
-import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, neutralUnitsNear, units } from "./snapshot";
+import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } from "./snapshot";
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
+import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
 
 export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
@@ -53,6 +54,11 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (recoveryCommands.length > 0) {
     for (const command of recoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
     return recoveryCommands;
+  }
+  const veteranRecoveryCommands = veteranCoreRecoveryCommands(snapshot, owner, ownCombat, enemies, retreatPoint, options);
+  if (veteranRecoveryCommands.length > 0) {
+    for (const command of veteranRecoveryCommands) recordBehavior(options, "skirmishPreservation", "woundedMeleeSaves");
+    return veteranRecoveryCommands;
   }
   if (shouldLetDeadEconomyCloseoutContinue(snapshot, owner, ownCombat, options)) return [];
 
@@ -122,6 +128,20 @@ function woundedRecoveryPoint(snapshot: GameSnapshot, owner: PlayerId, unit: Uni
     x: clamp(well.x + (dx / length) * radius, 0, snapshot.map.width),
     y: clamp(well.y + (dy / length) * radius, 0, snapshot.map.height),
   };
+}
+
+function veteranCoreRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
+  if (options.version !== "v2") return [];
+  return ownCombat
+    .filter((unit) => unit.hp < unit.maxHp * veteranRecoveryHpRatio(unit, options))
+    .filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove")
+    .filter((unit) => enemies.some((enemy) => distance(enemy, unit) <= 560))
+    .flatMap((unit) => {
+      const recoveryPoint = woundedRecoveryPoint(snapshot, owner, unit, retreatPoint);
+      if (distance(unit, recoveryPoint) <= 110) return [];
+      // @@@veteran-core-preservation - Starred units are accumulated combat capital; recover them before the ordinary critical-health cutoff treats them as disposable bodies.
+      return [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x: recoveryPoint.x, y: recoveryPoint.y }, options)];
+    });
 }
 
 function combatWoundedRetreatCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {

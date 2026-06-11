@@ -7,6 +7,15 @@ import { runAiVersionBenchmark, runAiVersionBenchmarkParallel, summarizeCombatEv
 
 export type BenchmarkDashboardRunKind = "ai-version-benchmark" | "ai-specialized-benchmark";
 
+export type BenchmarkRaceSummary = {
+  wins: number;
+  losses: number;
+  matches: number;
+  winRate: number;
+};
+
+export type BenchmarkPlayerRaceSummaries = Record<PlayerId, Record<string, BenchmarkRaceSummary>>;
+
 type BenchmarkDashboardRunBase = {
   id: string;
   kind: BenchmarkDashboardRunKind;
@@ -23,6 +32,7 @@ type BenchmarkDashboardRunBase = {
   scoreControlSummary?: BenchmarkEvaluationSummary;
   probeSummaries?: BenchmarkEvaluationSummary[];
   combatSummaries?: BenchmarkEvaluationSummary[];
+  playerRaceSummaries?: BenchmarkPlayerRaceSummaries;
 };
 
 export type AiVersionBenchmarkDashboardRun = AiVersionBenchmarkDashboardReport &
@@ -52,6 +62,7 @@ export type BenchmarkDashboardRunSummary = {
   scoreControlSummary?: BenchmarkEvaluationSummary;
   probeSummaries?: BenchmarkEvaluationSummary[];
   combatSummaries?: BenchmarkEvaluationSummary[];
+  playerRaceSummaries?: BenchmarkPlayerRaceSummaries;
   elapsedMs: number;
   cpuMs?: number;
   matchCount: number;
@@ -245,14 +256,17 @@ function normalizeAiVersionBenchmarkDashboardRun(run: AiVersionBenchmarkDashboar
   const scoreControlSummary = summarizeMeleeControlEvaluation(scoreControl);
   const probeSummaries = summarizeProbeLaneEvaluations(run.report.evaluations, run.probeSummaries);
   const combatSummaries = summarizeCombatLaneEvaluations(run.report.evaluations, run.combatSummaries);
+  const playerRaceSummaries = summarizePlayerRaceSummaries(run.report);
+  const { playerRaceSummaries: _storedPlayerRaceSummaries, ...rest } = run;
   return {
-    ...run,
+    ...rest,
     scoreSummary,
     scoreControlSummary,
     probeSummaries,
     combatSummaries,
     primarySummary: scoreSummary,
     evaluationSummaries: [scoreSummary, scoreControlSummary, ...probeSummaries, ...combatSummaries],
+    ...(playerRaceSummaries ? { playerRaceSummaries } : {}),
   };
 }
 
@@ -261,10 +275,13 @@ function normalizeSpecializedBenchmarkDashboardRun(run: SpecializedBenchmarkDash
     throw new Error("Benchmark dashboard run does not use the current benchmark dashboard run contract");
   }
   const evaluationSummaries = run.report.evaluations.map((evaluation) => summarizeTargetPlayerEvaluation(evaluation, run.targetPlayerId));
+  const playerRaceSummaries = summarizePlayerRaceSummaries(run.report);
+  const { playerRaceSummaries: _storedPlayerRaceSummaries, ...rest } = run;
   return {
-    ...run,
+    ...rest,
     primarySummary: primarySummaryFor(run.targetPlayerId, evaluationSummaries),
     evaluationSummaries,
+    ...(playerRaceSummaries ? { playerRaceSummaries } : {}),
   };
 }
 
@@ -284,10 +301,38 @@ export function summarizeBenchmarkDashboardRun(run: BenchmarkDashboardRun): Benc
     ...(run.scoreControlSummary ? { scoreControlSummary: run.scoreControlSummary } : {}),
     ...(run.probeSummaries ? { probeSummaries: run.probeSummaries } : {}),
     ...(run.combatSummaries ? { combatSummaries: run.combatSummaries } : {}),
+    ...(run.playerRaceSummaries ? { playerRaceSummaries: run.playerRaceSummaries } : {}),
     elapsedMs: run.report.elapsedMs,
     cpuMs: run.report.cpuMs,
     matchCount: run.report.matchCount,
   };
+}
+
+function summarizePlayerRaceSummaries(report: BenchmarkReport): BenchmarkPlayerRaceSummaries | undefined {
+  const buckets: Record<PlayerId, Record<string, { wins: number; matches: number }>> = {};
+  for (const evaluation of report.evaluations) {
+    for (const match of evaluation.matches) {
+      for (const [playerId, player] of Object.entries(match.setup.players ?? {})) {
+        buckets[playerId] ??= {};
+        buckets[playerId]![player.race] ??= { wins: 0, matches: 0 };
+        const bucket = buckets[playerId]![player.race]!;
+        bucket.matches += 1;
+        if (match.result.winner === playerId) bucket.wins += 1;
+      }
+    }
+  }
+  const summaries = Object.fromEntries(
+    Object.entries(buckets).map(([playerId, races]) => [
+      playerId,
+      Object.fromEntries(
+        Object.entries(races).map(([race, bucket]) => {
+          const losses = bucket.matches - bucket.wins;
+          return [race, { wins: bucket.wins, losses, matches: bucket.matches, winRate: bucket.matches === 0 ? 0 : bucket.wins / bucket.matches }];
+        }),
+      ),
+    ]),
+  ) as BenchmarkPlayerRaceSummaries;
+  return Object.keys(summaries).length === 0 ? undefined : summaries;
 }
 
 export function benchmarkDashboardRunTags(run: Pick<BenchmarkDashboardRun, "report">) {

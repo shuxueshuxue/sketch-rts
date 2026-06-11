@@ -1,10 +1,11 @@
 import { BUILDING_DEFS } from "../../shared/catalog";
 import type { GameSnapshot, PlayerId } from "../../shared/types";
+import { activeMiningBaseCount } from "./expansion-model";
 import { activePlayerIds, activeResources, buildings, combatUnits, completeBuildings, units } from "./snapshot";
 import { opponentPlayerIds } from "./ownership";
 import { aiPlaybook, type ProductionBuildingKind } from "./playbook";
 import type { PresetAiPolicyOptions } from "./types";
-import { isTowerMercPolicy } from "./versions";
+import { isTowerMercPolicy, isV5HybridPolicy } from "./versions";
 import { hasCoreProduction, isCoreProductionBuilding, playerState } from "./world-model";
 
 export function nextProductionBuildingKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
@@ -20,7 +21,7 @@ export function productionBuildingNeedKind(snapshot: GameSnapshot, owner: Player
 export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): ProductionBuildingKind | undefined {
   if (isTowerMercPolicy(options)) return undefined;
   const player = playerState(snapshot, owner);
-  const plan = aiPlaybook(player.race).productionPlan;
+  const plan = desiredProductionPlan(snapshot, owner, options);
   const army = combatUnits(snapshot, owner);
   const armyGates = options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
   const goldGates = [0, 420, 620, 820, 1040];
@@ -28,6 +29,13 @@ export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: Play
   if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine")) return undefined;
 
   return desired.find((kind) => !buildings(snapshot, owner).some((building) => building.kind === kind));
+}
+
+function desiredProductionPlan(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind[] {
+  const player = playerState(snapshot, owner);
+  const plan = aiPlaybook(player.race).productionPlan;
+  if (!isV5HybridPolicy(options) || player.race !== "grove" || opponentPlayerIds(snapshot, owner, options).length < 2 || activeMiningBaseCount(snapshot, owner) < 2) return plan;
+  return [...plan, "workshop"];
 }
 
 export function missingCombatProductionKind(snapshot: GameSnapshot, owner: PlayerId): ProductionBuildingKind | undefined {

@@ -38,6 +38,21 @@ export function campRoleSummary(camps: { freeCamps: number; guardedCamps: number
   return `${camps.freeCamps} ${text.route} / ${camps.guardedCamps} ${text.guarded}`;
 }
 
+export function playerRaceSummaryCells(run: BenchmarkDashboardRunSummary | BenchmarkDashboardRun) {
+  return Object.entries(run.playerRaceSummaries ?? {})
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([playerId, raceSummaries]) =>
+      Object.entries(raceSummaries)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([race, summary]) => ({
+          label: `${playerId} ${race}`,
+          wins: summary.wins,
+          matches: summary.matches,
+          winRate: summary.winRate,
+        })),
+    );
+}
+
 export function dashboardTags(runs: Array<BenchmarkDashboardRunSummary | BenchmarkDashboardRun>): string[] {
   return [...new Set(runs.flatMap((run) => runTags(run)))].sort();
 }

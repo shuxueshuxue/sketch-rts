@@ -74,6 +74,15 @@ describe("AI V5 versus hybrid V3 plus V4-TR benchmark CLI", () => {
         seed: "v5-dashboard-smoke",
         targetPlayerId: "v5",
         primarySummary: { name: "v5 hybrid 1v2 vs v3 plus v4-tr", matchCount: 2 },
+        byV5Race: {
+          grove: { matches: expect.any(Number) },
+          ember: { matches: expect.any(Number) },
+        },
+        byV3Race: {
+          grove: { matches: expect.any(Number) },
+          ember: { matches: expect.any(Number) },
+        },
+        byOpponentOrder: expect.any(Object),
         dashboardPath: rootDir,
       });
       expect(output.report).toBeUndefined();

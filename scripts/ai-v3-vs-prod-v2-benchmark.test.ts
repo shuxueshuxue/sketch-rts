@@ -55,6 +55,14 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
         seed: "v3-dashboard-smoke",
         primarySummary: { name: "v3 race-aware vs v2-prod grove", matchCount: 2 },
         evaluationSummaries: [{ name: "v3 race-aware vs v2-prod grove", matchCount: 2 }],
+        byV3Race: {
+          grove: expect.objectContaining({ matches: expect.any(Number) }),
+          ember: expect.objectContaining({ matches: expect.any(Number) }),
+        },
+        byMatchup: expect.objectContaining({
+          "grove-vs-grove": expect.objectContaining({ matches: expect.any(Number) }),
+          "ember-vs-grove": expect.objectContaining({ matches: expect.any(Number) }),
+        }),
         dashboardPath: rootDir,
       });
       expect(output.report).toBeUndefined();

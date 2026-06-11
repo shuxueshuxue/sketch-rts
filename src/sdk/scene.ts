@@ -20,6 +20,8 @@ type SceneUnitOptions = {
 
 type SceneBuildingOptions = {
   id?: string;
+  hp?: number;
+  maxHp?: number;
   complete?: boolean;
 };
 
@@ -93,6 +95,8 @@ export class SceneBuilder {
         kind,
         x,
         y,
+        ...(options.hp !== undefined ? { hp: options.hp } : {}),
+        ...(options.maxHp !== undefined ? { maxHp: options.maxHp } : {}),
         complete: options.complete ?? true,
       },
     ];

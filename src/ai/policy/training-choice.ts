@@ -4,6 +4,7 @@ import { combatUnits, completeBuildings, units } from "./snapshot";
 import { aiPlaybook } from "./playbook";
 import { playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
+import { isV5HybridPolicy } from "./versions";
 
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
   const race = playerState(snapshot, owner).race;
@@ -61,6 +62,7 @@ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: Pres
   const hexers = army.filter((unit) => unit.kind === "ashHexer").length;
   const callers = army.filter((unit) => unit.kind === "pyreCaller").length;
   const supportTarget = options.version === "v2" && army.length >= 8 ? 2 : 1;
+  if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
   if (sparkArchers < 1) return "sparkArcher";
   if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
   if (acolytes < 1) return "emberAcolyte";

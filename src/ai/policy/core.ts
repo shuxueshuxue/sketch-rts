@@ -9,6 +9,7 @@ import {
   shouldReserveForEmergencyTower,
   shouldReserveForHealingWell,
 } from "./base-defense-model";
+import { ownedBaseNeedsObjectivePause } from "./base-pressure";
 import { defensiveRallyPoint, healingWellPointFor, legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "./build-layout";
 import { activeUnitClaim } from "./claims";
 import { resolveAiCommandIntent } from "./commands";
@@ -162,6 +163,31 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.attackWave,
 ];
 
+export const V5_HYBRID_AI_STACK: AiScript[] = [
+  AI_SCRIPT_LIBRARY.economy,
+  AI_SCRIPT_LIBRARY.constructionRecovery,
+  AI_SCRIPT_LIBRARY.emergencyDefense,
+  AI_SCRIPT_LIBRARY.supply,
+  AI_SCRIPT_LIBRARY.defense,
+  AI_SCRIPT_LIBRARY.healingWell,
+  AI_SCRIPT_LIBRARY.mercenary,
+  AI_SCRIPT_LIBRARY.expansion,
+  AI_SCRIPT_LIBRARY.economicCatchUp,
+  AI_SCRIPT_LIBRARY.productionBuilding,
+  AI_SCRIPT_LIBRARY.tech,
+  AI_SCRIPT_LIBRARY.training,
+  AI_SCRIPT_LIBRARY.items,
+  AI_SCRIPT_LIBRARY.abilities,
+  AI_SCRIPT_LIBRARY.skirmishPreservation,
+  AI_SCRIPT_LIBRARY.focusFire,
+  AI_SCRIPT_LIBRARY.workerPressure,
+  AI_SCRIPT_LIBRARY.workerPressureCloseout,
+  AI_SCRIPT_LIBRARY.expansionDenial,
+  AI_SCRIPT_LIBRARY.objectiveControl,
+  AI_SCRIPT_LIBRARY.workerDefense,
+  AI_SCRIPT_LIBRARY.attackWave,
+];
+
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
@@ -190,7 +216,7 @@ export const AI_SCRIPT_VERSIONS = {
   "v3-grove": SKETCH_RTS_PRESET_AI_STACK,
   "v3-ember": SKETCH_RTS_PRESET_AI_STACK,
   "v4-tr": V4_TR_TOWER_MERC_AI_STACK,
-  v5: SKETCH_RTS_PRESET_AI_STACK,
+  v5: V5_HYBRID_AI_STACK,
 } satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
@@ -264,9 +290,24 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   }
 
   if (idleWorkers.length === 0) return undefined;
+  const remoteMine = depletedEconomyRemoteMine(snapshot, owner, bases, options);
+  if (remoteMine) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: remoteMine.id }, options);
   const mine = localActiveMineForBase(snapshot, mainBase(snapshot, owner));
   if (!mine) return undefined;
   return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: mine.id }, options);
+}
+
+function depletedEconomyRemoteMine(snapshot: GameSnapshot, owner: PlayerId, bases: Building[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return undefined;
+  if (bases.length === 0) return undefined;
+  if (playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost) return undefined;
+  if (bases.some((base) => localActiveMineForBase(snapshot, base))) return undefined;
+  const anchor = averagePoint(bases);
+  return activeResources(snapshot)
+    .filter((resource) => neutralUnitsNear(snapshot, resource, 360).length === 0)
+    .filter((resource) => !enemyPressure(snapshot, owner, resource, 640, options))
+    .filter((resource) => enemyBuildingsNear(snapshot, owner, resource, 720, options.teams).length === 0)
+    .sort((a, b) => distance(a, anchor) - distance(b, anchor))[0];
 }
 
 function localActiveMineForBase(snapshot: GameSnapshot, base: Point) {
@@ -359,7 +400,10 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const nearbyNeutral = neutralUnitsNear(snapshot, mine, 280).length > 0;
   if (nearbyNeutral) {
     const soldiers = combatUnits(snapshot, owner).filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || (options.version === "v2" && unit.order.type === "attackMove"));
-    if (soldiers.length >= 4 && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
+    if (soldiers.length < 4) return undefined;
+    const enemyControlsMine = localEnemyControlNearObjective(snapshot, owner, mine, soldiers, options) || enemyControlsObjectiveRoute(snapshot, owner, averagePoint(soldiers), mine, soldiers, options);
+    // @@@expansion-clear-enemy-control - Neutral guards are only half the objective; a guarded mine is not claimable while the enemy army owns the same ground.
+    if (!enemyControlsMine && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
     return undefined;
   }
 
@@ -380,9 +424,19 @@ function contestedFirstNaturalTownHallCommand(snapshot: GameSnapshot, owner: Pla
   if (hasEstablishedExpansion(snapshot, owner)) return undefined;
   const target = contestedFirstNaturalTownHall(snapshot, owner, options);
   if (!target) return undefined;
-  const soldiers = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && !activeUnitClaim(snapshot, owner, unit, options));
+  const soldiers = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && stolenNaturalResponseReadyUnit(snapshot, owner, unit, options));
   if (soldiers.length < 4) return undefined;
+  // @@@stolen-natural-route-control - Punishing a stolen natural is an expansion objective; do not walk the first army through an already-owned enemy field.
+  if (localEnemyControlNearObjective(snapshot, owner, target, soldiers, options)) return undefined;
+  if (enemyControlsObjectiveRoute(snapshot, owner, averagePoint(soldiers), target, soldiers, options)) return undefined;
   return { type: "attack", unitIds: soldiers.map((unit) => unit.id), targetId: target.id };
+}
+
+function stolenNaturalResponseReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
+  const claim = activeUnitClaim(snapshot, owner, unit, options);
+  if (!claim) return true;
+  // @@@stolen-natural-retreat-release - A safe stopped retreater is already home; excluding it lets an enemy hall finish on the cleared first natural.
+  return safeStoppedRetreatClaimCanRejoin(snapshot, owner, unit, claim, options);
 }
 
 function contestedFirstNaturalTownHall(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): Building | undefined {
@@ -898,10 +952,15 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const woundedDefenders = ownCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const firstWellBeforeExpansionBank = shouldBuildFirstHealingWellBeforeExpansionBank(snapshot, owner, woundedDefenders, options);
+  const firstWellBeforeCatchUpExpansion = shouldBuildFirstHealingWellBeforeCatchUpExpansion(snapshot, owner, woundedDefenders, options);
   if (!isTowerMercPolicy(options) && shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot, owner, woundedDefenders, pressured, firstWellBeforeExpansionBank, options)) return undefined;
   const wantsWell = isTowerMercPolicy(options)
     ? woundedDefenders.length > 0 || (pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86))
-    : uncoveredRecovery || firstWellBeforeExpansionBank || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
+    : uncoveredRecovery ||
+      firstWellBeforeExpansionBank ||
+      firstWellBeforeCatchUpExpansion ||
+      woundedDefenders.length >= 2 ||
+      (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && !criticalWoundedFirstHealingWellBeatsDistantMainGuard(snapshot, owner, main, options) && player.gold < BUILDING_DEFS.defenseTower.cost + healingCost) return undefined;
@@ -912,6 +971,7 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   if (
     !pressured &&
     !firstWellBeforeExpansionBank &&
+    !firstWellBeforeCatchUpExpansion &&
     shouldReserveForExpansion(snapshot, owner, options) &&
     player.gold < BUILDING_DEFS.townHall.cost + healingCost
   )
@@ -949,7 +1009,33 @@ function shouldBuildFirstHealingWellBeforeExpansionBank(snapshot: GameSnapshot, 
   // @@@first-well-before-bank - A far-from-complete expansion bank should not strand wounded defenders without the first healing source.
   const gold = playerState(snapshot, owner).gold;
   if (woundedDefenders.some((unit) => unit.hp < unit.maxHp * 0.2)) return gold < BUILDING_DEFS.townHall.cost;
+  const clearedMine = activeClearedExpansionClaim(snapshot, owner, options);
+  if (
+    isV5HybridPolicy(options) &&
+    playerState(snapshot, owner).race === "grove" &&
+    opponentPlayerIds(snapshot, owner, options).length >= 2 &&
+    clearedMine &&
+    buildings(snapshot, owner).every((building) => building.kind !== "townHall" || building.complete) &&
+    neutralUnitsNear(snapshot, clearedMine, 280).length === 0 &&
+    !enemyPressure(snapshot, owner, clearedMine, 360, options) &&
+    woundedDefenders.length >= 3 &&
+    averageHpRatio(woundedDefenders) <= 0.68
+  )
+    return gold < BUILDING_DEFS.townHall.cost;
   return false;
+}
+
+function averageHpRatio(units: Unit[]) {
+  return units.reduce((total, unit) => total + unit.hp / unit.maxHp, 0) / Math.max(1, units.length);
+}
+
+function shouldBuildFirstHealingWellBeforeCatchUpExpansion(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (completeBuildings(snapshot, owner, "townHall").length < 2 || activeMiningBaseCount(snapshot, owner) < 2) return false;
+  if (healingBuildings(snapshot, owner).length > 0) return false;
+  if (combatUnits(snapshot, owner).length < 6 || woundedDefenders.length < 2) return false;
+  // @@@v5-two-base-first-heal - Once two mines are paying, the first healing source is combat infrastructure; a catch-up third can wait for wounded defenders to become usable supply.
+  return true;
 }
 
 function healingBuildingKind(snapshot: GameSnapshot, owner: PlayerId) {
@@ -1093,11 +1179,29 @@ function shouldSpendExpansionReserveOnControlledMercenary(snapshot: GameSnapshot
 function canHireMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {
   const player = playerState(snapshot, owner);
   if (player.gold < camp.cost) return false;
+  if (shouldHoldV5FirstClearedExpansionBeforeMercenary(snapshot, owner, camp, options)) return false;
   const missingProduction = options.version === "v2" ? productionBuildingNeedKind(snapshot, owner, options) : undefined;
   if (missingProduction && player.gold < BUILDING_DEFS[missingProduction].cost + camp.cost) return false;
   if (shouldReserveForHealingWell(snapshot, owner, options) && player.gold < BUILDING_DEFS[healingBuildingKind(snapshot, owner)].cost + camp.cost) return false;
   // @@@merc-claim-before-spend - Walking to a cleared mercenary camp is free; only the hire itself competes with first-expansion gold.
   if (shouldReserveForExpansion(snapshot, owner, options) && player.gold < BUILDING_DEFS.townHall.cost + camp.cost && !shouldSpendExpansionReserveOnControlledMercenary(snapshot, owner, camp, options)) return false;
+  return true;
+}
+
+function shouldHoldV5FirstClearedExpansionBeforeMercenary(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {
+  if (!shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
+  return friendlyUnitsAtMercenaryCamp(snapshot, owner, camp).length > 0;
+}
+
+function shouldHoldV5FirstClearedExpansionBank(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
+  if (!hasCoreProduction(snapshot, owner) || combatUnits(snapshot, owner).length < 3) return false;
+  if (playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost) return false;
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine || neutralUnitsNear(snapshot, mine, 280).length > 0 || enemyPressure(snapshot, owner, mine, 360, options)) return false;
+  // @@@v5-first-natural-bank - V5's 1v2 opening loses too much tempo when the already-cleared first hall bank resets into one more unit.
   return true;
 }
 
@@ -1182,7 +1286,7 @@ function mercenaryRoleLimit(kind: MercenaryUnitKind, options?: PresetAiPolicyOpt
   if (options && isTowerMercPolicy(options)) {
     if (kind === "fieldMedic") return 3;
     if (kind === "contractArcher") return 7;
-    return 5;
+    return 7;
   }
   if (kind === "fieldMedic") return 2;
   if (kind === "contractArcher") return 3;
@@ -1298,6 +1402,8 @@ function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: 
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
   if (!completeBuildings(snapshot, owner, "cinderSpire").some((building) => building.queue.length === 0)) return false;
+  // @@@v5-first-spark-bank - First spark is a composition milestone, but not worth resetting an already-cleared first hall bank in 1v2.
+  if (shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
   if (availableGold < spendCost) return false;
   const army = combatUnits(snapshot, owner);
   if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
@@ -1412,6 +1518,13 @@ function shouldSpendExpansionReserveOnTraining(snapshot: GameSnapshot, owner: Pl
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (!buildings(snapshot, owner).some((building) => building.complete && isCoreProductionBuilding(building))) return false;
   const ownCombatCount = combatUnits(snapshot, owner).length;
+  if (
+    isV5HybridPolicy(options) &&
+    ownCombatCount >= 4 &&
+    shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options) &&
+    !shouldSpendClearedNaturalBankOnHomeArmyTraining(snapshot, owner, options)
+  )
+    return false;
   // @@@cleared-natural-bank - Once the first natural is cleared, five fighters are enough to stop dribbling the town-hall bank into one more unit.
   if (
     opponentPlayerIds(snapshot, owner, options).length >= 2 &&
@@ -1432,9 +1545,15 @@ function shouldSpendClearedNaturalBankOnHomeArmyTraining(snapshot: GameSnapshot,
   if (ownCombat.length >= 7) return false;
   const main = mainBase(snapshot, owner);
   const pressure = enemyCombatUnitsNear(snapshot, owner, main, MAIN_APPROACH_THREAT_RANGE, options.teams);
+  const ownPower = armyPower(ownCombat);
+  if (isV5HybridPolicy(options) && playerState(snapshot, owner).race === "ember" && pressure.length >= 3) {
+    const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
+    // @@@v5-bank-break-wave-tail - The first enemies inside main range are enough contact; count the larger wave behind them before idling production for a cleared hall.
+    if (enemyArmy.length > ownCombat.length && armyPower(enemyArmy) > ownPower * 1.05) return true;
+  }
   if (pressure.length <= ownCombat.length) return false;
   // @@@cleared-natural-bank-break - A cleared natural is future economy; a stronger army entering main approach range is the current fight that decides whether the hall ever starts.
-  return armyPower(pressure) > armyPower(ownCombat) * 1.05;
+  return armyPower(pressure) > ownPower * 1.05;
 }
 
 function shouldSpendEarlyFirstExpansionBankOnTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, availableGold: number, spendCost: number) {
@@ -1463,7 +1582,17 @@ function supportHeavyFirstExpansionBankNeedsTraining(snapshot: GameSnapshot, own
 }
 
 function canSpendExpansionRetryBankOnCoreProduction(snapshot: GameSnapshot, owner: PlayerId, missing: ProductionBuildingKind, options: PresetAiPolicyOptions) {
-  return failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) && missingCombatProductionKind(snapshot, owner) === missing;
+  if (failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) && missingCombatProductionKind(snapshot, owner) === missing) return true;
+  return shouldSpendV5TwoBaseCatchUpBankOnCoreProduction(snapshot, owner, missing, options);
+}
+
+function shouldSpendV5TwoBaseCatchUpBankOnCoreProduction(snapshot: GameSnapshot, owner: PlayerId, missing: ProductionBuildingKind, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (activeMiningBaseCount(snapshot, owner) < 2) return false;
+  if (combatUnits(snapshot, owner).length < 6) return false;
+  if (missingCombatProductionKind(snapshot, owner) !== missing) return false;
+  // @@@v5-two-base-tech-before-third - The catch-up third-bank is valid only after the first complete combat production chain exists.
+  return shouldPrioritizeCatchUpExpansionBeforeMacro(snapshot, owner, options);
 }
 
 function failedExpansionAttemptBeforeCoreProduction(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -1531,6 +1660,10 @@ function shouldHoldFirstExpansionBank(snapshot: GameSnapshot, owner: PlayerId, o
 function routineWorkerCount(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const bases = options.version === "v2" ? Math.max(1, activeMiningBaseCount(snapshot, owner)) : completeBuildings(snapshot, owner, "townHall").length;
   // @@@mine-worker-saturation - A mine pays up to five workers; repair/build labor is a separate need, not extra mine income.
+  if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2) {
+    // @@@v5-1v2-labor - One base still needs non-mining labor for towers, repairs, and fast expansion conversion against two opponents.
+    return Math.min(16, bases * 5 + 3);
+  }
   if (options.version === "v2") {
     return Math.min(12, bases * 5);
   }
@@ -1679,7 +1812,7 @@ function recallUnsafeObjectiveClaims(snapshot: GameSnapshot, owner: PlayerId, op
     if (neutralClaimNeedsRecovery(snapshot, owner, group.point, group.units, options)) {
       const rally = defensiveRallyPoint(snapshot, owner);
       // @@@neutral-claim-recovery - A creep claim is a commitment, but once the committed squad is badly wounded the correct continuation is recovery, not more camp orders.
-      const stale = group.units.filter((unit) => distance(unit, rally) > 220);
+      const stale = neutralRecoveryUnitsNeedingRallyOrder(group.units, rally);
       return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options) : undefined;
     }
     if (!localEnemyControlNearObjective(snapshot, owner, group.point, group.units, options) && !enemyControlsObjectiveRoute(snapshot, owner, averagePoint(group.units), group.point, group.units, options)) continue;
@@ -1701,6 +1834,16 @@ function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, poin
   if (earlyWoundedCreepTempoNeedsRecovery(snapshot, owner, units, averageHpRatio, hasHealingAtHome, options)) return true;
   // @@@no-well-creep-recovery - Without a healing well, moderate creep wounds do not recover at home; only break the claim when the squad is actually near donation range.
   return averageHpRatio <= (hasHealingAtHome ? 0.68 : 0.6);
+}
+
+function neutralRecoveryUnitsNeedingRallyOrder(units: Unit[], rally: Point) {
+  return units.filter((unit) => distance(unit, rally) > 220 || orderPointIsAwayFrom(unit, rally, 220));
+}
+
+function orderPointIsAwayFrom(unit: Unit, point: Point, range: number) {
+  if (unit.order.type !== "move" && unit.order.type !== "attackMove") return false;
+  // @@@outbound-recovery-order - A unit can be standing at rally while still carrying an old objective order that will immediately walk it back out.
+  return distance(unit.order, point) > range;
 }
 
 function earlyWoundedCreepTempoNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, units: Unit[], averageHpRatio: number, hasHealingAtHome: boolean, options: PresetAiPolicyOptions) {
@@ -1735,6 +1878,10 @@ function attackMoveTargetsEnemyObjective(snapshot: GameSnapshot, owner: PlayerId
 }
 
 function objectiveControlMinimumArmy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2 && activeMiningBaseCount(snapshot, owner) >= 2) {
+    // @@@v5-two-base-objective-size - In 1v2, a five-unit two-base group is still the home defense core; neutral objectives can wait for a real field pack.
+    return 6;
+  }
   if (options.version === "v2" && !hasEstablishedExpansion(snapshot, owner) && combatUnits(snapshot, owner).length >= 4) return 4;
   return 5;
 }
@@ -1778,42 +1925,6 @@ function mainWorkerLineThreat(snapshot: GameSnapshot, owner: PlayerId, options: 
   return enemies.some((enemy) => workers.some((worker) => distance(enemy, worker) <= 300));
 }
 
-function ownedBaseNeedsObjectivePause(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
-  const main = mainBase(snapshot, owner);
-  for (const base of buildings(snapshot, owner).filter((building) => building.kind === "townHall" && !building.complete && distance(building, main) > 500)) {
-    const enemies = enemyCombatUnitsNear(snapshot, owner, base, 760, options.teams);
-    if (enemies.length < 2) continue;
-    const defenders = combatUnits(snapshot, owner).filter((unit) => distance(unit, base) <= 820);
-    // @@@unfinished-expansion-pause - In 1v2, an unfinished outer hall is a live liability; do not send the field army to creeps while enemies control that pocket.
-    if (armyPower(enemies) >= armyPower(defenders) * 0.35) return true;
-  }
-  for (const base of completeBuildings(snapshot, owner, "townHall")) {
-    if (base.id === (main as Partial<Building>).id) continue;
-    const enemies = enemyCombatUnitsNear(snapshot, owner, base, 700, options.teams);
-    if (enemies.length < 2) continue;
-    const defenders = combatUnits(snapshot, owner).filter((unit) => distance(unit, base) <= 720);
-    if (armyPower(enemies) >= armyPower(defenders) * 0.35) return true;
-  }
-  for (const base of fragileMiningExpansions(snapshot, owner)) {
-    const approaching = enemyCombatUnitsNear(snapshot, owner, base, 1_500, options.teams);
-    if (approaching.length >= 2 && armyPower(approaching) >= 1.8) return true;
-  }
-  return false;
-}
-
-function fragileMiningExpansions(snapshot: GameSnapshot, owner: PlayerId) {
-  const main = mainBase(snapshot, owner);
-  return completeBuildings(snapshot, owner, "townHall").filter((base) => {
-    if (base.id === (main as Partial<Building>).id) return false;
-    const mine = nearestResource(activeResources(snapshot), base);
-    if (!mine || distance(mine, base) > 260) return false;
-    const miners = units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === mine.id);
-    const hasTower = buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && building.complete && distance(building, base) <= 430);
-    return miners.length < 3 || !hasTower;
-  });
-}
-
 function neutralCampObjective(snapshot: GameSnapshot, owner: PlayerId, army: Unit[], anchor: Point, maxDistance: number, requiredPowerRatio: number, options: PresetAiPolicyOptions) {
   const visited = new Set<string>();
   const itemByCarrier = new Map(items(snapshot).flatMap((item) => (item.carrierId ? [[item.carrierId, item]] as const : [])));
@@ -1822,7 +1933,7 @@ function neutralCampObjective(snapshot: GameSnapshot, owner: PlayerId, army: Uni
     if (visited.has(neutral.id)) continue;
     const guards = neutralCampCluster(snapshot, neutral, visited);
     const point = averagePoint(guards);
-    const itemBonus = guards.reduce((total, guard) => total + neutralCampItemBonus(itemByCarrier.get(guard.id)), 0);
+    const itemBonus = guards.reduce((total, guard) => total + neutralCampItemBonus(itemByCarrier.get(guard.id), options), 0);
     if (distance(point, anchor) > maxDistance) continue;
     if (isEnemySideMercenaryObjectiveBeforeExpansion(snapshot, owner, point, options)) continue;
     if (armyPower(army) < armyPower(guards) * requiredPowerRatio) continue;
@@ -1872,9 +1983,9 @@ function neutralCampCluster(snapshot: GameSnapshot, seed: Unit, visited: Set<str
   return guards;
 }
 
-function neutralCampItemBonus(item: GameSnapshot["items"][number] | undefined) {
+function neutralCampItemBonus(item: GameSnapshot["items"][number] | undefined, options: PresetAiPolicyOptions) {
   if (!item) return 0;
-  if (item.kind === "experienceBook") return 80;
+  if (item.kind === "experienceBook") return isV5HybridPolicy(options) ? 140 : 80;
   if (item.kind === "flameCloak" || item.kind === "lightningRod" || item.kind === "stormStaff" || item.kind === "breachCharge") return 95;
   return 55;
 }
@@ -1886,7 +1997,8 @@ function planExpansionDenial(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (opponents.length < 2 && !oneOnOneExpansionDenialWindow(snapshot, owner, opponents)) return undefined;
   const soldiers = combatUnits(snapshot, owner).filter((unit) => (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && !activeUnitClaim(snapshot, owner, unit, options));
   if (soldiers.length < 5) return undefined;
-  if (opponents.length >= 2 && expansionDenialFieldArmyStopline(snapshot, owner, soldiers, options)) return undefined;
+  // @@@v5-local-expansion-denial - V5 1v2 must still hit a naked second-opponent mine; target-local and route checks below own the actual risk.
+  if (opponents.length >= 2 && expansionDenialFieldArmyStopline(snapshot, owner, soldiers, options) && !isV5HybridPolicy(options)) return undefined;
   const ownMain = mainBase(snapshot, owner);
   if (nearestOpponentThreat(snapshot, owner, ownMain, 850, options)) return undefined;
   if (ownGuardedNaturalNeedsClearing(snapshot, owner, options)) return undefined;
@@ -2123,8 +2235,12 @@ function workerPressureCommand(snapshot: GameSnapshot, owner: PlayerId, options:
   if (!target) return undefined;
   const pressureUnits = workerPressureUnits(snapshot, owner, soldiers, target, options);
   if (pressureUnits.length < 3) return undefined;
+  if (workerPressureShouldYieldToTargetArmyFight(snapshot, owner, pressureUnits, target, options)) return undefined;
   if (workerPressureAnsweredByLocalArmy(snapshot, owner, pressureUnits, target, options)) return undefined;
-  if (workerPressureRouteCoveredByOtherArmy(snapshot, owner, pressureUnits, target, options)) {
+  const routeBlockers = workerPressureRouteCoverBlockers(snapshot, owner, pressureUnits, target, options);
+  if (workerPressureRouteCoveredByBlockers(routeBlockers, pressureUnits)) {
+    const blockerTarget = workerPressureWholeArmyBlockerTarget(snapshot, owner, soldiers, pressureUnits, routeBlockers, options);
+    if (blockerTarget) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: pressureUnits.map((unit) => unit.id), targetId: blockerTarget.id }, options);
     const rally = defensiveRallyPoint(snapshot, owner);
     return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: pressureUnits.map((unit) => unit.id), x: rally.x, y: rally.y }, options);
   }
@@ -2132,7 +2248,7 @@ function workerPressureCommand(snapshot: GameSnapshot, owner: PlayerId, options:
     const enemyArmy = enemyCombatUnits(snapshot, owner, options.teams);
     if (pressureUnits.some((unit) => unit.hp < unit.maxHp * 0.36 && enemyArmy.some((enemy) => distance(enemy, unit) <= 380))) return undefined;
   }
-  if (options.memory && target.owner !== "neutral") {
+  if (options.memory && target.owner !== "neutral" && !isV5HybridPolicy(options)) {
     const focusTargetOwner = target.owner;
     options.memory.strategicPlan = {
       ...options.memory.strategicPlan,
@@ -2155,6 +2271,17 @@ function workerPressureUnits(snapshot: GameSnapshot, owner: PlayerId, soldiers: 
   return nearestEntities(soldiers, target).slice(0, 3);
 }
 
+function workerPressureShouldYieldToTargetArmyFight(snapshot: GameSnapshot, owner: PlayerId, pressureUnits: Unit[], target: Unit, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const pressureIds = new Set(pressureUnits.map((unit) => unit.id));
+  const remainingArmy = combatUnits(snapshot, owner).filter((unit) => !pressureIds.has(unit.id));
+  if (remainingArmy.length < 4) return false;
+  if (distance(averagePoint(pressureUnits), averagePoint(remainingArmy)) <= 900) return false;
+  const engagedTargetArmy = combatUnits(snapshot, target.owner).filter((enemy) => remainingArmy.some((ally) => distance(enemy, ally) <= 760));
+  // @@@worker-pressure-target-army-fight - A worker raid is a detachment job; if that same opponent's army is already fighting the main group, preserve force concentration.
+  return engagedTargetArmy.length >= 4 && armyPower(engagedTargetArmy) >= armyPower(remainingArmy) * 0.45;
+}
+
 function workerPressureShouldYieldToMainThreat(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
   if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   if (!mainBaseNeedsObjectivePause(snapshot, owner, options)) return false;
@@ -2170,20 +2297,32 @@ function workerPressureAnsweredByLocalArmy(snapshot: GameSnapshot, owner: Player
   return answer.length >= Math.max(3, soldiers.length - 1) && armyPower(answer) >= armyPower(soldiers) * 0.65;
 }
 
-function workerPressureRouteCoveredByOtherArmy(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], target: Unit, options: PresetAiPolicyOptions) {
-  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+function workerPressureRouteCoverBlockers(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], target: Unit, options: PresetAiPolicyOptions) {
+  if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return [];
   const center = averagePoint(soldiers);
-  if (distance(center, mainBase(snapshot, owner)) <= 700) return false;
+  if (distance(center, mainBase(snapshot, owner)) <= 700) return [];
   const targetBase = nearestEntity(buildings(snapshot, target.owner).filter((building) => building.kind === "townHall" && building.complete), target);
   const targetAtBase = Boolean(targetBase && distance(target, targetBase) <= 620);
-  const blockers = enemyCombatUnits(snapshot, owner, options.teams).filter(
+  return enemyCombatUnits(snapshot, owner, options.teams).filter(
     (enemy) =>
       enemy.owner !== target.owner &&
       distance(enemy, center) <= 2_200 &&
       (targetAtBase ? distance(enemy, target) <= 520 : pointToSegmentDistance(enemy, center, target) <= 900 || distance(enemy, target) <= 900),
   );
+}
+
+function workerPressureRouteCoveredByBlockers(blockers: Unit[], soldiers: Unit[]) {
   // @@@worker-pressure-route-cover - In 1v2, the other opponent's army can make a worker pickoff path unwinnable even when the target owner's base looks open.
   return blockers.length >= 3 && armyPower(blockers) >= armyPower(soldiers) * 0.55;
+}
+
+function workerPressureWholeArmyBlockerTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], pressureUnits: Unit[], blockers: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return undefined;
+  if (pressureUnits.length !== soldiers.length || pressureUnits.length < 10) return undefined;
+  if (armyPower(blockers) > armyPower(pressureUnits) * 1.05) return undefined;
+  const center = averagePoint(pressureUnits);
+  // @@@whole-army-worker-pressure-cover - When local worker pressure has swallowed the whole late army, the covering army is the fight; recalling all units preserves the stale worker target.
+  return blockers.sort((a, b) => strategicArmyTargetScore(b, center) - strategicArmyTargetScore(a, center))[0];
 }
 
 function workerPressureTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions): Unit | undefined {
@@ -2386,7 +2525,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   const mainApproachPickoff = v5MainApproachDetachmentPickoffCommand(snapshot, owner, soldiers, enemyArmy, options);
   if (mainApproachPickoff) return mainApproachPickoff;
 
-  const minimumWaveSize = 5;
+  const minimumWaveSize = attackWaveMinimumSize(snapshot, owner, options);
   if (options.version !== "v2") {
     const closeout = closeoutAttackWaveTarget(snapshot, owner, soldiers, movable, enemyArmy, options, focusedOpponentOwner(snapshot, owner, options));
     if (closeout) {
@@ -2454,6 +2593,7 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
     if (shouldDelayEarlyOneOnOneBasePressure(snapshot, owner, soldiers, closeout, options)) return undefined;
     const workerCleanup = closeoutWorkerCleanupTarget(snapshot, owner, movable, closeout, enemyArmy, options);
     if (workerCleanup) return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: movable.map((unit) => unit.id), targetId: workerCleanup.id }, options);
+    if (shouldDirectAttackDeadEconomyCloseoutBuilding(snapshot, owner, closeout, soldiers, movable, enemyArmy, options)) return { type: "attack", unitIds: movable.map((unit) => unit.id), targetId: closeout.id };
     const stale = staleAttackMovers(movable, closeout);
     if (stale.length > 0) {
       if (shouldHoldSingleUnitWorkerAliveCloseout(snapshot, closeout, stale, options)) return undefined;
@@ -2505,6 +2645,15 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (outnumberedV2 && stale.length < minimumWaveSize) return undefined;
   if (stale.length > 0 && neutralRouteBlocksAttackWave(snapshot, owner, movable, point, options)) return undefined;
   return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y }, options) : undefined;
+}
+
+function attackWaveMinimumSize(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  const firstNatural = desiredExpansionMine(snapshot, owner);
+  if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2 && (activeMiningBaseCount(snapshot, owner) >= 2 || (firstNatural && !firstNaturalNeedsClearing(snapshot, owner)))) {
+    // @@@v5-cleared-natural-wave-size - After the first natural is clear, six fighters are the reusable defense core; ordinary pressure starts at a real seven-unit wave.
+    return 7;
+  }
+  return 5;
 }
 
 function neutralRouteBlocksAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], target: Point, options: PresetAiPolicyOptions) {
@@ -2663,6 +2812,13 @@ function shouldHoldSingleUnitWorkerAliveCloseout(snapshot: GameSnapshot, closeou
   if (options.version !== "v2" || stale.length !== 1) return false;
   // @@@closeout-worker-gate - Base pressure is valid, but one fresh unit should not walk across the map while the target economy still has workers to clean up.
   return units(snapshot, closeout.owner).some((unit) => unit.kind === "worker");
+}
+
+function shouldDirectAttackDeadEconomyCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, closeout: Building, soldiers: Unit[], movable: Unit[], enemyArmy: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || enemyArmy.length > 0) return false;
+  if (!deadEconomyCloseoutReady(snapshot, owner, options, soldiers)) return false;
+  // @@@v5-direct-closeout - V5 timeouts with a veteran core often have no enemy units left; direct target the nearby residual building instead of drifting on attack-move.
+  return distance(averagePoint(movable), closeout) <= 1_800;
 }
 
 function closeoutWorkerCleanupTarget(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], closeout: Building, enemyArmy: Unit[], options: PresetAiPolicyOptions) {

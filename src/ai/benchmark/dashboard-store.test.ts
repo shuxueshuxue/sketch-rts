@@ -193,14 +193,14 @@ describe("benchmark dashboard store", () => {
                     name: "wildMarches v3 north",
                     elapsedMs: 1,
                     cpuMs: 2,
-                    setup: { map: { id: "wildMarches" } },
+                    setup: { map: { id: "wildMarches" }, players: benchmarkSetupPlayers({ v3Race: "grove" }) },
                     result: { gameSecond: 10, winner: "v3", winnerTeam: "north", players: minimalBenchmarkPlayers() },
                   },
                   {
                     name: "emberFen v3 south",
                     elapsedMs: 1,
                     cpuMs: 2,
-                    setup: { map: { id: "emberFen" } },
+                    setup: { map: { id: "emberFen" }, players: benchmarkSetupPlayers({ v3Race: "ember" }) },
                     result: { gameSecond: 12, winner: "v2-prod", winnerTeam: "north", players: minimalBenchmarkPlayers() },
                   },
                 ],
@@ -212,17 +212,38 @@ describe("benchmark dashboard store", () => {
       );
 
       expect(run.primarySummary).toMatchObject({ name: "v3 race-aware vs v2-prod grove", wins: 1, losses: 1, failures: 1, successRate: 0.5, matchCount: 2 });
+      expect(run.playerRaceSummaries).toMatchObject({
+        v3: {
+          grove: { wins: 1, losses: 0, matches: 1, winRate: 1 },
+          ember: { wins: 0, losses: 1, matches: 1, winRate: 0 },
+        },
+        "v2-prod": {
+          grove: { wins: 1, losses: 1, matches: 2, winRate: 0.5 },
+        },
+      });
       await expect(listBenchmarkDashboardRuns({ rootDir })).resolves.toMatchObject([
         {
           kind: "ai-specialized-benchmark",
           seed: "v3-specialized",
           primarySummary: { wins: 1, matchCount: 2 },
           evaluationSummaries: [{ name: "v3 race-aware vs v2-prod grove", wins: 1, matchCount: 2 }],
+          playerRaceSummaries: {
+            v3: {
+              grove: { wins: 1, matches: 1 },
+              ember: { losses: 1, matches: 1 },
+            },
+          },
         },
       ]);
       await expect(readBenchmarkDashboardRun(run.id, { rootDir })).resolves.toMatchObject({
         targetPlayerId: "v3",
         primarySummary: { wins: 1, matchCount: 2 },
+        playerRaceSummaries: {
+          v3: {
+            grove: { wins: 1, matches: 1 },
+            ember: { losses: 1, matches: 1 },
+          },
+        },
       });
     } finally {
       await rm(rootDir, { recursive: true, force: true });
@@ -364,6 +385,13 @@ function minimalBenchmarkPlayers() {
   return {
     v3: { team: "north", firstEnemyEngagementSecond: 2, firstExpansionMiningSecond: null, enemyUnitKills: 1, neutralUnitKills: 0, unitsLost: 0, unitsKilledByNeutral: 0, totalGoldIncome: 500 },
     "v2-prod": { team: "south", firstEnemyEngagementSecond: 3, firstExpansionMiningSecond: null, enemyUnitKills: 0, neutralUnitKills: 0, unitsLost: 1, unitsKilledByNeutral: 0, totalGoldIncome: 400 },
+  };
+}
+
+function benchmarkSetupPlayers(input: { v3Race: "grove" | "ember" }) {
+  return {
+    v3: { team: "north", race: input.v3Race, aiVersion: "v3", controller: "ai", plannerOrigin: "internal", traceSource: "ai" },
+    "v2-prod": { team: "south", race: "grove", aiVersion: "v2", controller: "ai", plannerOrigin: "internal", traceSource: "ai" },
   };
 }
 
