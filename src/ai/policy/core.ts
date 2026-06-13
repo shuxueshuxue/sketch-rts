@@ -3586,8 +3586,17 @@ function miningWorkerLineDefenseCommand(snapshot: GameSnapshot, owner: PlayerId,
       distance(unit, target) <= 900 &&
       unit.hp >= unit.maxHp * 0.36,
   );
+  if (v5WorkerLineTargetCoveredByMixedArmy(snapshot, owner, attackers, target, enemyArmy, options)) return undefined;
   // @@@worker-line-defense - Mining workers are the economy surface; defend the line itself even when the attackers are outside the main rally bubble.
   return attackers.length >= 3 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function v5WorkerLineTargetCoveredByMixedArmy(snapshot: GameSnapshot, owner: PlayerId, attackers: Unit[], target: Unit, enemyArmy: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2 || attackers.length < 5) return false;
+  const localEnemies = enemyArmy.filter((enemy) => distance(enemy, target) <= 520);
+  const localOwners = new Set(localEnemies.map((enemy) => enemy.owner));
+  // @@@v5-worker-line-crossfire - Worker-line defense should not turn a mining rescue into a full-army dive through two opponents' combined local ball.
+  return localOwners.size >= 2 && localEnemies.length >= attackers.length && armyPower(localEnemies) > armyPower(attackers) * 0.95;
 }
 
 function miningWorkerLineThreatScore(unit: Unit, workers: Unit[], snapshot: GameSnapshot, owner: PlayerId) {

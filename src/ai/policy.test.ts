@@ -1445,6 +1445,47 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attack", targetId: "worker-line-raider" });
   });
 
+  it("does not let V5 worker-line defense dive a stronger mixed 1v2 army for a bait target", () => {
+    const scene = sketchScene("v5-worker-line-defense-avoids-mixed-army-bait")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 2050)
+      .townHall("v5", 780, 2620)
+      .worker("v5", 760, 2600, { order: { type: "mine", resourceId: "v5-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v5", 800, 2620, { order: { type: "mine", resourceId: "v5-natural-mine", phase: "gather", timer: 0 } })
+      .unit("v5", "footman", 1360, 2580)
+      .unit("v5", "footman", 1400, 2600)
+      .unit("v5", "lancer", 1440, 2620)
+      .unit("v5", "archer", 1480, 2600)
+      .unit("v5", "contractArcher", 1520, 2620)
+      .unit("v5", "footman", 1560, 2640)
+      .unit("v5", "lancer", 1600, 2660)
+      .unit("v4-tr", "mercenary", 880, 2600, { id: "bait-mercenary", hp: 58, order: { type: "attack", targetId: "unit-v5-worker-1" } })
+      .unit("v3", "footman", 960, 2580)
+      .unit("v3", "footman", 1000, 2600)
+      .unit("v3", "lancer", 1040, 2620)
+      .unit("v3", "lancer", 1080, 2640)
+      .unit("v3", "contractArcher", 1120, 2660)
+      .unit("v3", "contractArcher", 1160, 2680)
+      .unit("v3", "fieldMedic", 1200, 2700)
+      .townHall("v3", 3400, 1500)
+      .townHall("v4-tr", 3400, 2700)
+      .goldMine("v5-natural-mine", 780, 2620, 4000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    }).find((candidate) => candidate.type === "attack" || candidate.type === "attackMove");
+
+    expect(command).not.toMatchObject({ type: "attack", targetId: "bait-mercenary" });
+  });
+
   it("v2 waits for a real wave before crossing the map in ordinary one-on-one pressure", () => {
     const scene = sketchScene("v2-no-single-unit-cross-map-pressure")
       .map("openClaims")
