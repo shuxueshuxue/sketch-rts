@@ -493,8 +493,8 @@ function shouldDelayThirdExpansionForLiveOpponentArmy(snapshot: GameSnapshot, ow
   if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   if (activeMiningBaseCount(snapshot, owner) < 2) return false;
   const ownCombat = combatUnits(snapshot, owner);
-  // @@@v5-third-base-economy - V5's 1v2 target needs the third mine once a real two-base field group exists; V2 keeps the conservative live-army gate.
-  if (isV5HybridPolicy(options) && ownCombat.length >= 5) return false;
+  // @@@v5-third-base-economy - V5 can greed a safe third with five bodies, but not into an enemy-held third-mine pocket.
+  if (isV5HybridPolicy(options) && ownCombat.length >= 5 && !thinV5ThirdMinePocketControlled(snapshot, owner, ownCombat, options)) return false;
   if (ownCombat.length >= 8) return false;
   const ownPower = armyPower(ownCombat);
   return opponentPlayerIds(snapshot, owner, options).some((opponent) => {
@@ -502,6 +502,13 @@ function shouldDelayThirdExpansionForLiveOpponentArmy(snapshot: GameSnapshot, ow
     // @@@third-expansion-live-army-gate - A third hall is future tempo; before eight fighters, a larger live opponent army is the current 1v2 problem.
     return army.length >= ownCombat.length + 2 && armyPower(army) > ownPower * 1.1;
   });
+}
+
+function thinV5ThirdMinePocketControlled(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine) return true;
+  const enemies = enemyCombatUnitsNear(snapshot, owner, mine, 900, options.teams);
+  return enemies.length >= 3 && armyPower(enemies) > armyPower(ownCombat) * 0.75;
 }
 
 function shouldWaitForOneOnOneFirstExpansionGroup(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

@@ -116,6 +116,52 @@ describe("SDK preset AI policy", () => {
     expect(entries.find((entry) => entry.command.type === "research")).toBeUndefined();
   });
 
+  it("v5 delays the third base when a thin two-base army has lost local control of the third mine", () => {
+    const scene = sketchScene("v5-two-base-army-before-third")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 500)
+      .townHall("v5", 900, 700)
+      .building("v5", "barracks", 620, 560)
+      .building("v5", "archeryRange", 700, 560)
+      .building("v5", "stables", 780, 560)
+      .worker("v5", 520, 540, { id: "v5-builder", order: { type: "mine", resourceId: "v5-main-mine", phase: "gather", timer: 0 } })
+      .worker("v5", 900, 700, { order: { type: "mine", resourceId: "v5-natural-mine", phase: "gather", timer: 0 } })
+      .unit("v5", "footman", 1_020, 860)
+      .unit("v5", "footman", 1_060, 880)
+      .unit("v5", "lancer", 1_100, 900)
+      .unit("v5", "archer", 1_140, 880)
+      .unit("v5", "archer", 1_180, 860)
+      .townHall("v3", 3_300, 3_000)
+      .unit("v3", "footman", 2_050, 1_430)
+      .unit("v3", "footman", 2_090, 1_470)
+      .unit("v3", "lancer", 2_130, 1_510)
+      .unit("v3", "lancer", 2_170, 1_550)
+      .unit("v3", "archer", 2_210, 1_590)
+      .unit("v3", "archer", 2_250, 1_630)
+      .unit("v3", "footman", 2_290, 1_670)
+      .townHall("v4-tr", 3_300, 3_500)
+      .goldMine("v5-main-mine", 560, 540, 3000)
+      .goldMine("v5-natural-mine", 900, 700, 3000)
+      .goldMine("v5-third-mine", 1_450, 1_050, 3000)
+      .goldMine("v3-main-mine", 3_340, 3_000, 3000)
+      .goldMine("v4-main-mine", 3_340, 3_500, 3000)
+      .build();
+    const game = scene.createGame();
+    game.players.v5!.gold = BUILDING_DEFS.townHall.cost;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.expansion], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    })[0];
+
+    expect(command).toBeUndefined();
+  });
+
   it("v5 severe no-expansion timing builds missing stables before early weapon timing", () => {
     const scene = sketchScene("v5-severe-no-expansion-stables-before-early-tech")
       .map("bareDuel")
