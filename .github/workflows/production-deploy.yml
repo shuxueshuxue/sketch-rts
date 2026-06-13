@@ -75,8 +75,6 @@ jobs:
           git push --force origin "refs/tags/$RELEASE_TAG"
           release_notes="Production deployment for ${GITHUB_SHA}"
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes "$release_notes" --latest
-          else
-            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes "$release_notes" --latest
+            gh release delete "$RELEASE_TAG" --yes
           fi
-          gh release upload "$RELEASE_TAG" sketch-rts-production.tar.gz --clobber
+          gh release create "$RELEASE_TAG" sketch-rts-production.tar.gz --target "$GITHUB_SHA" --title "$RELEASE_TITLE" --notes "$release_notes" --latest

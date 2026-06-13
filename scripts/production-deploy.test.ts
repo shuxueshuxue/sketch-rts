@@ -20,9 +20,11 @@ describe("production CD contract", () => {
     expect(workflow).toContain("contents: write");
     expect(workflow).toContain("RELEASE_TAG: production-latest");
     expect(workflow).toContain("gh release view \"$RELEASE_TAG\"");
+    expect(workflow).toContain("gh release delete \"$RELEASE_TAG\" --yes");
     expect(workflow).toContain("gh release create \"$RELEASE_TAG\"");
-    expect(workflow).toContain("gh release edit \"$RELEASE_TAG\"");
-    expect(workflow).toContain("gh release upload \"$RELEASE_TAG\" sketch-rts-production.tar.gz --clobber");
+    expect(workflow).toContain("gh release create \"$RELEASE_TAG\" sketch-rts-production.tar.gz");
+    expect(workflow).not.toContain("gh release edit \"$RELEASE_TAG\"");
+    expect(workflow).not.toContain("--clobber");
   });
 
   it("deploys production only when its tree matches main", () => {
@@ -43,6 +45,18 @@ describe("production CD contract", () => {
     expect(workflow).toContain("Production Source Guard");
     expect(workflow).toContain("github.head_ref != 'main'");
     expect(workflow).toContain("Production can only be updated from main.");
+  });
+
+  it("promotes production by moving the production ref to the exact main commit", () => {
+    const workflow = readFileSync(".github/workflows/production-promote.yml", "utf8");
+
+    expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).toContain("main_sha:");
+    expect(workflow).toContain("contents: write");
+    expect(workflow).toContain("git fetch --no-tags origin main production");
+    expect(workflow).toContain('main_tip="$(git rev-parse origin/main)"');
+    expect(workflow).toContain('[[ "$MAIN_SHA" != "$main_tip" ]]');
+    expect(workflow).toContain('git push origin "$MAIN_SHA:refs/heads/production"');
   });
 
   it("publishes one active server through an atomic release symlink", () => {
