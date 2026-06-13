@@ -3325,13 +3325,33 @@ function planCombatAttackWave(snapshot: GameSnapshot, owner: PlayerId, movable: 
 function attackWaveReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return true;
   const claim = activeUnitClaim(snapshot, owner, unit, options);
-  if (claim && claim.kind !== "attack" && !safeStoppedRetreatClaimCanRejoin(snapshot, owner, unit, claim, options) && !deadEconomyRetreatClaimCanRejoin(snapshot, owner, unit, claim, options)) return false;
+  if (
+    claim &&
+    claim.kind !== "attack" &&
+    !safeStoppedRetreatClaimCanRejoin(snapshot, owner, unit, claim, options) &&
+    !deadEconomyRetreatClaimCanRejoin(snapshot, owner, unit, claim, options) &&
+    !v5RetreatClaimCanRescueFocusedExpansionAlly(snapshot, owner, unit, claim, options)
+  )
+    return false;
   if (unit.hp < unit.maxHp * 0.36) return false;
   // @@@no-heal-wave-wounds - In 1v2, moderate wounds are not reusable attack-wave supply until a healing building exists to recover that supply between fights.
   if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2 && completeHealingBuildings(snapshot, owner).length === 0 && unit.hp < unit.maxHp * 0.46) return false;
   if (unit.order.type !== "move" || unit.hp >= unit.maxHp * 0.58) return true;
   const main = mainBase(snapshot, owner);
   return distance(unit.order, main) >= distance(unit, main);
+}
+
+function v5RetreatClaimCanRescueFocusedExpansionAlly(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, claim: { kind: string }, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || claim.kind !== "retreat" || unit.hp < unit.maxHp * 0.55) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const claimedAllies = combatUnits(snapshot, owner).filter((ally) => {
+    const allyClaim = options.memory?.unitClaims[ally.id];
+    return ally.id !== unit.id && allyClaim?.kind === "expansion" && distance(ally, unit) <= 900;
+  });
+  if (claimedAllies.length === 0) return false;
+  const enemies = enemyCombatUnits(snapshot, owner, options.teams);
+  // @@@v5-expansion-rescue - A retreat claim should not keep healthy nearby units walking away while enemies are focus-firing the expansion scout.
+  return claimedAllies.some((ally) => enemies.filter((enemy) => unitOrderTargetId(enemy) === ally.id).length >= 2);
 }
 
 function shouldHoldSingleUnitWorkerAliveCloseout(snapshot: GameSnapshot, closeout: Building, stale: Unit[], options: PresetAiPolicyOptions) {
@@ -3586,8 +3606,17 @@ function miningWorkerLineDefenseCommand(snapshot: GameSnapshot, owner: PlayerId,
       distance(unit, target) <= 900 &&
       unit.hp >= unit.maxHp * 0.36,
   );
+  if (v5WorkerLineTargetCoveredByMixedArmy(snapshot, owner, attackers, target, enemyArmy, options)) return undefined;
   // @@@worker-line-defense - Mining workers are the economy surface; defend the line itself even when the attackers are outside the main rally bubble.
   return attackers.length >= 3 ? resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options) : undefined;
+}
+
+function v5WorkerLineTargetCoveredByMixedArmy(snapshot: GameSnapshot, owner: PlayerId, attackers: Unit[], target: Unit, enemyArmy: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2 || attackers.length < 5) return false;
+  const localEnemies = enemyArmy.filter((enemy) => distance(enemy, target) <= 520);
+  const localOwners = new Set(localEnemies.map((enemy) => enemy.owner));
+  // @@@v5-worker-line-crossfire - Worker-line defense should not turn a mining rescue into a full-army dive through two opponents' combined local ball.
+  return localOwners.size >= 2 && localEnemies.length >= attackers.length && armyPower(localEnemies) > armyPower(attackers) * 0.95;
 }
 
 function miningWorkerLineThreatScore(unit: Unit, workers: Unit[], snapshot: GameSnapshot, owner: PlayerId) {

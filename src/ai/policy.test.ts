@@ -1445,6 +1445,47 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attack", targetId: "worker-line-raider" });
   });
 
+  it("does not let V5 worker-line defense dive a stronger mixed 1v2 army for a bait target", () => {
+    const scene = sketchScene("v5-worker-line-defense-avoids-mixed-army-bait")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "grove" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 2050)
+      .townHall("v5", 780, 2620)
+      .worker("v5", 760, 2600, { order: { type: "mine", resourceId: "v5-natural-mine", phase: "gather", timer: 0 } })
+      .worker("v5", 800, 2620, { order: { type: "mine", resourceId: "v5-natural-mine", phase: "gather", timer: 0 } })
+      .unit("v5", "footman", 1360, 2580)
+      .unit("v5", "footman", 1400, 2600)
+      .unit("v5", "lancer", 1440, 2620)
+      .unit("v5", "archer", 1480, 2600)
+      .unit("v5", "contractArcher", 1520, 2620)
+      .unit("v5", "footman", 1560, 2640)
+      .unit("v5", "lancer", 1600, 2660)
+      .unit("v4-tr", "mercenary", 880, 2600, { id: "bait-mercenary", hp: 58, order: { type: "attack", targetId: "unit-v5-worker-1" } })
+      .unit("v3", "footman", 960, 2580)
+      .unit("v3", "footman", 1000, 2600)
+      .unit("v3", "lancer", 1040, 2620)
+      .unit("v3", "lancer", 1080, 2640)
+      .unit("v3", "contractArcher", 1120, 2660)
+      .unit("v3", "contractArcher", 1160, 2680)
+      .unit("v3", "fieldMedic", 1200, 2700)
+      .townHall("v3", 3400, 1500)
+      .townHall("v4-tr", 3400, 2700)
+      .goldMine("v5-natural-mine", 780, 2620, 4000)
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    }).find((candidate) => candidate.type === "attack" || candidate.type === "attackMove");
+
+    expect(command).not.toMatchObject({ type: "attack", targetId: "bait-mercenary" });
+  });
+
   it("v2 waits for a real wave before crossing the map in ordinary one-on-one pressure", () => {
     const scene = sketchScene("v2-no-single-unit-cross-map-pressure")
       .map("openClaims")
@@ -9255,6 +9296,51 @@ describe("SDK preset AI policy", () => {
     const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.attackWave], { version: "v2", teams: game.teams, memory });
 
     expect(entries.find((entry) => entry.scriptId === "attackWave")).toMatchObject({ command: { type: "attackMove" } });
+  });
+
+  it("lets healthy V5 retreaters rejoin when enemies focus a nearby expansion-claimed ally", () => {
+    const scene = sketchScene("v5-retreaters-rescue-focused-expansion-claim")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "south", race: "ember" })
+      .player("v3", { team: "north", race: "ember" })
+      .player("v4-tr", { team: "north", race: "grove" })
+      .townHall("v5", 500, 2050)
+      .unit("v5", "cinderRunner", 820, 2600, { id: "claimed-runner" })
+      .unit("v5", "sparkArcher", 880, 2050, { id: "retreat-archer", order: { type: "move", x: 500, y: 2050 } })
+      .unit("v5", "emberAcolyte", 850, 2080, { id: "retreat-acolyte", order: { type: "move", x: 500, y: 2050 } })
+      .unit("v5", "emberRavager", 1040, 2280, { id: "free-ravager-a" })
+      .unit("v5", "cinderRunner", 1080, 2310, { id: "free-runner" })
+      .unit("v5", "emberRavager", 1120, 2340, { id: "free-ravager-b" })
+      .unit("v5", "sparkArcher", 1160, 2370, { id: "free-archer" })
+      .unit("v5", "cinderRunner", 1200, 2400, { id: "free-runner-b" })
+      .unit("v3", "emberRavager", 1380, 2560, { id: "target-ravager", order: { type: "attack", targetId: "claimed-runner" } })
+      .unit("v3", "cinderRunner", 1420, 2600, { order: { type: "attack", targetId: "claimed-runner" } })
+      .unit("v3", "sparkArcher", 1460, 2640, { order: { type: "attack", targetId: "claimed-runner" } })
+      .townHall("v3", 3600, 2620)
+      .townHall("v4-tr", 3600, 1475)
+      .goldMine("west-march", 810, 2610, 4000)
+      .build();
+    const game = scene.createGame();
+    game.tick = 6_000;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["claimed-runner"] = { kind: "expansion", targetId: "west-march", x: 810, y: 2610, sinceTick: 3_800, expiresTick: 7_400 };
+    memory.unitClaims["retreat-archer"] = { kind: "retreat", targetId: "retreat", x: 500, y: 2050, sinceTick: 5_900, expiresTick: 6_800 };
+    memory.unitClaims["retreat-acolyte"] = { kind: "retreat", targetId: "retreat", x: 500, y: 2050, sinceTick: 5_900, expiresTick: 6_800 };
+    memory.strategicPlan = { expansionClaimTargetId: "west-march", expansionClaimTick: 3_800 };
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+      memory,
+    });
+
+    expect(entries[0]).toMatchObject({ scriptId: "attackWave" });
+    const command = entries[0]?.command;
+    expect(command?.type === "attack" || command?.type === "attackMove").toBe(true);
+    if (command?.type !== "attack" && command?.type !== "attackMove") throw new Error(`expected attack wave command, got ${command?.type}`);
+    expect(command.unitIds).toEqual(expect.arrayContaining(["retreat-archer", "retreat-acolyte"]));
   });
 
   it("keeps a committed attack wave from being tugged into neutral objective control", () => {
