@@ -17,12 +17,13 @@ describe("SDK preset AI policy", () => {
     expect(AI_SCRIPT_VERSIONS["v3-grove"].map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v3.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS["v3-ember"].map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v3.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS["v4-tr"].map((script) => script.id)).toContain("mercenary");
-    expect(AI_SCRIPT_VERSIONS.v5.map((script) => script.id)).toEqual([
-      ...AI_SCRIPT_VERSIONS.v2.map((script) => script.id).slice(0, AI_SCRIPT_VERSIONS.v2.findIndex((script) => script.id === "productionBuilding")),
-      "economicCatchUp",
-      "earlyTech",
-      ...AI_SCRIPT_VERSIONS.v2.map((script) => script.id).slice(AI_SCRIPT_VERSIONS.v2.findIndex((script) => script.id === "productionBuilding")),
-    ]);
+    const v2ScriptIds = AI_SCRIPT_VERSIONS.v2.map((script) => script.id);
+    const v5ScriptIds = AI_SCRIPT_VERSIONS.v5.map((script) => script.id);
+    const productionIndex = v2ScriptIds.findIndex((scriptId) => scriptId === "productionBuilding");
+    const v5Expected = [...v2ScriptIds.slice(0, productionIndex), "economicCatchUp", "earlyTech", ...v2ScriptIds.slice(productionIndex)];
+    v5Expected.splice(v5Expected.indexOf("objectiveControl"), 1);
+    v5Expected.splice(v5Expected.indexOf("workerPressure"), 0, "objectiveControl");
+    expect(v5ScriptIds).toEqual(v5Expected);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
     const v1 = planPresetAiCommands(snapshotGame(game), "player", { version: "v1" });
@@ -152,6 +153,51 @@ describe("SDK preset AI policy", () => {
     expect(firstTechOrProduction).toMatchObject({
       scriptId: "productionBuilding",
       command: { type: "build", unitId: "v5-builder", buildingKind: "stables" },
+    });
+  });
+
+  it("v5 finishes a nearby damaged objective camp before worker pressure", () => {
+    const scene = sketchScene("v5-objective-before-worker-pressure")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "ember" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 500)
+      .townHall("v5", 720, 700)
+      .worker("v5", 520, 520, { order: { type: "mine", resourceId: "v5-main", phase: "gather", timer: 0 } })
+      .worker("v5", 720, 700, { order: { type: "mine", resourceId: "v5-natural", phase: "gather", timer: 0 } })
+      .unit("v5", "footman", 640, 520)
+      .unit("v5", "footman", 670, 550)
+      .unit("v5", "lancer", 700, 580)
+      .unit("v5", "archer", 730, 610)
+      .unit("v5", "footman", 760, 640)
+      .unit("v5", "contractArcher", 790, 670)
+      .mercenaryCamp("damaged-field-tent", 980, 660, { hireKind: "fieldMedic", stock: 1 })
+      .unit("neutral", "barkMender", 980, 620, { id: "damaged-mender", hp: 20 })
+      .unit("neutral", "wildling", 1030, 660, { id: "damaged-wildling", hp: 28 })
+      .unit("neutral", "stonebackBrute", 950, 700, { id: "damaged-brute", hp: 78 })
+      .townHall("v3", 3000, 3000)
+      .townHall("v4-tr", 1500, 620)
+      .worker("v4-tr", 1430, 620, { id: "exposed-worker" })
+      .goldMine("v5-main", 540, 520, 3000)
+      .goldMine("v5-natural", 740, 700, 3000)
+      .goldMine("v3-main", 3000, 3000, 3000)
+      .goldMine("v4-main", 1500, 620, 3000)
+      .build();
+    const game = scene.createGame();
+    game.players.v5!.gold = 0;
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", AI_SCRIPT_VERSIONS.v5, {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    });
+    const firstTacticalEntry = entries.find((entry) => entry.scriptId === "workerPressure" || entry.scriptId === "objectiveControl");
+
+    expect(firstTacticalEntry).toMatchObject({
+      scriptId: "objectiveControl",
+      command: { type: "attackMove", x: 980, y: 660 },
     });
   });
 
