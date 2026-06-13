@@ -1046,7 +1046,8 @@ function planTowerMercForwardTower(snapshot: GameSnapshot, owner: PlayerId, opti
   if (towers.some((tower) => distance(tower, point) < 150)) return undefined;
   const builder = availableBuilder(snapshot, owner, point, options);
   if (!builder) return undefined;
-  if (distance(main, target.camp) > 1_800 && towerMercWorkerRouteBlocked(snapshot, owner, builder, point)) return undefined;
+  const routeBlock = distance(main, target.camp) > 1_800 ? towerMercWorkerRouteBlock(snapshot, owner, builder, point) : undefined;
+  if (routeBlock) return planTowerMercRouteClearingTower(snapshot, owner, options, routeBlock.point, towers, anchors);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
 }
 
@@ -1065,7 +1066,20 @@ function towerMercForwardCampReachable(
   if (distance(anchor, camp) > 2_600) return false;
   const point = legalBuildPointNear(snapshot, "defenseTower", towerMercForwardTowerPoint(snapshot, camp, anchor));
   const builder = availableBuilder(snapshot, owner, point, options);
-  return Boolean(builder && !towerMercWorkerRouteBlocked(snapshot, owner, builder, point));
+  return Boolean(builder);
+}
+
+function planTowerMercRouteClearingTower(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, routeBlock: Point, towers: Building[], anchors: Point[]): GameCommand | undefined {
+  const towerRange = BUILDING_DEFS.defenseTower.attackRange;
+  if (towers.some((tower) => tower.complete && distance(tower, routeBlock) <= towerRange - 20)) return undefined;
+  const anchor = towerMercForwardTowerAnchor(routeBlock, mainBase(snapshot, owner), anchors);
+  if (distance(anchor, routeBlock) > 2_600) return undefined;
+  // @@@tower-merc-route-clear - A route-blocking neutral camp is the next tower step; otherwise V4-TR can bank gold forever behind its own route safety rule.
+  const point = legalBuildPointNear(snapshot, "defenseTower", towerMercForwardTowerPoint(snapshot, routeBlock, anchor));
+  if (towers.some((tower) => distance(tower, point) < 150)) return undefined;
+  const builder = availableBuilder(snapshot, owner, point, options);
+  if (!builder) return undefined;
+  return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
 }
 
 function towerMercForwardTowerAnchor(camp: Point, main: Point, anchors: Point[]) {
@@ -1108,7 +1122,8 @@ function planTowerMercSiegeTower(snapshot: GameSnapshot, owner: PlayerId, option
     x: clamp(target.x + (dx / length) * (towerRange - 45), 0, snapshot.map.width),
     y: clamp(target.y + (dy / length) * (towerRange - 45), 0, snapshot.map.height),
   });
-  if (towers.some((tower) => distance(tower, point) < 190)) return undefined;
+  const minimumLegalTowerStep = BUILDING_DEFS.defenseTower.radius * 2 + 4;
+  if (towers.some((tower) => distance(tower, point) < minimumLegalTowerStep)) return undefined;
   const builder = availableBuilder(snapshot, owner, point, options);
   if (!builder) return undefined;
   if (towerMercWorkerRouteBlocked(snapshot, owner, builder, point)) return undefined;
@@ -1474,7 +1489,21 @@ function canTowerMercWorkerPreclaimCamp(snapshot: GameSnapshot, owner: PlayerId,
 
 function towerMercWorkerRouteBlocked(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, camp: Point) {
   // @@@tower-merc-route-safety - A distant camp can be safe at the endpoint while the straight worker route still cuts through an uncleared creep pocket.
-  return neutralUnits(snapshot, owner).some((neutral) => pointToSegmentDistance(neutral, worker, camp) <= 220);
+  return Boolean(towerMercWorkerRouteBlock(snapshot, owner, worker, camp));
+}
+
+function towerMercWorkerRouteBlock(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, target: Point) {
+  const visited = new Set<string>();
+  const blocks: { point: Point; distanceFromWorker: number }[] = [];
+  for (const neutral of neutralUnits(snapshot, owner)) {
+    if (visited.has(neutral.id)) continue;
+    if (pointToSegmentDistance(neutral, worker, target) > 220) continue;
+    const guards = neutralCampCluster(snapshot, neutral, visited);
+    const point = averagePoint(guards);
+    if (pointToSegmentDistance(point, worker, target) > 260) continue;
+    blocks.push({ point, distanceFromWorker: distance(worker, point) });
+  }
+  return blocks.sort((a, b) => a.distanceFromWorker - b.distanceFromWorker)[0];
 }
 
 function towerMercDistantRearmCamp(snapshot: GameSnapshot, owner: PlayerId, camp: MercenaryCamp, options: PresetAiPolicyOptions) {

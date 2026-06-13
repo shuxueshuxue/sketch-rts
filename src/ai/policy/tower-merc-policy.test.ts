@@ -202,6 +202,34 @@ describe("V4-TR tower mercenary policy", () => {
     expect(tower).toMatchObject({ type: "build", unitId: "builder", buildingKind: "defenseTower" });
   });
 
+  it("adds a tight siege tower step when an enemy building is barely outside tower range", () => {
+    const game = sketchScene("v4-tr-tight-siege-step")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v4", { team: "north" })
+      .player("v3", { team: "south" })
+      .townHall("v4", 500, 500)
+      .townHall("v4", 900, 500)
+      .tower("v4", 1_000, 500, { id: "front-tower" })
+      .worker("v4", 930, 540, { id: "builder" })
+      .goldMine("depleted-main", 560, 500, 0)
+      .goldMine("depleted-natural", 960, 500, 0)
+      .building("v3", "cinderSpire", 1_500, 500, { id: "enemy-spire" })
+      .build()
+      .createGame();
+    game.players.v4!.gold = 2_400;
+    game.tick = 16_000;
+
+    const tower = planAiCommandEntriesFromScripts(snapshotGame(game), "v4", [AI_SCRIPT_LIBRARY.defense], { version: "v4-tr", teams: game.teams })
+      .map((entry) => entry.command)
+      .find((command) => command.type === "build" && command.buildingKind === "defenseTower");
+
+    expect(tower).toMatchObject({ type: "build", unitId: "builder", buildingKind: "defenseTower" });
+    if (!tower || tower.type !== "build") throw new Error("missing tight siege tower command");
+    expect(Math.hypot(tower.x - 1_000, tower.y - 500)).toBeGreaterThan(64);
+    expect(Math.hypot(tower.x - 1_500, tower.y - 500)).toBeLessThan(480);
+  });
+
   it("spends late bank on a distant guarded mercenary camp tower step from an owned anchor", () => {
     const game = sketchScene("v4-tr-distant-guarded-merc-tower-step")
       .map("bareDuel")
@@ -228,6 +256,37 @@ describe("V4-TR tower mercenary policy", () => {
     expect(tower).toMatchObject({ type: "build", unitId: "builder", buildingKind: "defenseTower" });
     if (!tower || tower.type !== "build") throw new Error("missing distant mercenary tower command");
     expect(Math.hypot(tower.x - 3_100, tower.y - 500)).toBeLessThan(480);
+  });
+
+  it("spends late bank on a route-clearing tower when neutral camps block distant mercenary pressure", () => {
+    const game = sketchScene("v4-tr-banked-route-clearing-tower")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v4", { team: "north" })
+      .player("v3", { team: "south" })
+      .townHall("v4", 500, 500)
+      .townHall("v4", 900, 500)
+      .tower("v4", 1_240, 500)
+      .worker("v4", 940, 540, { id: "builder" })
+      .goldMine("depleted-main", 560, 500, 0)
+      .goldMine("depleted-natural", 960, 500, 0)
+      .unit("neutral", "stonebackBrute", 2_000, 500, { id: "route-brute" })
+      .unit("neutral", "thornSlinger", 2_060, 540, { id: "route-slinger" })
+      .mercenaryCamp("far-camp", 3_100, 500, { hireKind: "contractArcher", cost: 145, stock: 3 })
+      .unit("neutral", "thornSlinger", 3_100, 500)
+      .townHall("v3", 3_700, 500)
+      .build()
+      .createGame();
+    game.players.v4!.gold = 5_000;
+    game.tick = 16_000;
+
+    const tower = planAiCommandEntriesFromScripts(snapshotGame(game), "v4", [AI_SCRIPT_LIBRARY.defense], { version: "v4-tr", teams: game.teams })
+      .map((entry) => entry.command)
+      .find((command) => command.type === "build" && command.buildingKind === "defenseTower");
+
+    expect(tower).toMatchObject({ type: "build", unitId: "builder", buildingKind: "defenseTower" });
+    if (!tower || tower.type !== "build") throw new Error("missing route-clearing tower command");
+    expect(Math.hypot(tower.x - 2_030, tower.y - 520)).toBeLessThan(480);
   });
 
   it("builds healing wells for wounded mercenaries without requiring core production", () => {
