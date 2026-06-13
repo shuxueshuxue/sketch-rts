@@ -6,6 +6,8 @@ describe("production CD contract", () => {
     const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 
     expect(workflow).toContain("branches: [production]");
+    expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).toContain("main_sha:");
     expect(workflow).toContain("concurrency:");
     expect(workflow).toContain("group: sketch-rts-production");
     expect(workflow).toContain("cancel-in-progress: false");
@@ -30,25 +32,21 @@ describe("production CD contract", () => {
   it("deploys production only when its tree matches main", () => {
     const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 
-    expect(workflow).toContain("Require production tree to match main");
+    expect(workflow).toContain("Resolve production deployment revision");
     expect(workflow).toContain("git fetch --no-tags origin main");
-    expect(workflow).toContain("git diff --quiet \"$GITHUB_SHA\" \"origin/main\"");
+    expect(workflow).toContain('deploy_sha="$MAIN_SHA"');
+    expect(workflow).toContain('main_tip="$(git rev-parse origin/main)"');
+    expect(workflow).toContain('git push origin "$deploy_sha:refs/heads/production"');
+    expect(workflow).toContain('git diff --quiet "$deploy_sha" "origin/main"');
+    expect(workflow).toContain('echo "DEPLOY_SHA=$deploy_sha" >> "$GITHUB_ENV"');
   });
 
   it("does not keep a pull-request merge lane for production promotion", () => {
     expect(existsSync(".github/workflows/production-source-guard.yml")).toBe(false);
   });
 
-  it("promotes production by moving the production ref to the exact main commit", () => {
-    const workflow = readFileSync(".github/workflows/production-promote.yml", "utf8");
-
-    expect(workflow).toContain("workflow_dispatch:");
-    expect(workflow).toContain("main_sha:");
-    expect(workflow).toContain("contents: write");
-    expect(workflow).toContain("git fetch --no-tags origin main production");
-    expect(workflow).toContain('main_tip="$(git rev-parse origin/main)"');
-    expect(workflow).toContain('[[ "$MAIN_SHA" != "$main_tip" ]]');
-    expect(workflow).toContain('git push origin "$MAIN_SHA:refs/heads/production"');
+  it("does not split promotion and deployment into separate workflows", () => {
+    expect(existsSync(".github/workflows/production-promote.yml")).toBe(false);
   });
 
   it("publishes one active server through an atomic release symlink", () => {
