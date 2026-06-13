@@ -515,7 +515,7 @@ function updateTowerAttacks(game: Game) {
     if (!building.complete || building.attackDamage <= 0) continue;
     building.cooldown = Math.max(0, building.cooldown - 1);
     if (building.cooldown > 0) continue;
-    const target = nearestEnemyUnit(game, building.owner, building.x, building.y, building.attackRange);
+    const target = nearestEnemyTargetFromPoint(game, building.owner, building, building.attackRange);
     if (!target) continue;
     applyWeaponAttack(game, building, target, building.attackDamage, building.attackRange);
     building.cooldown = building.attackCooldown;
@@ -1612,23 +1612,26 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 
 function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
   if (!isPlayerId(unit.owner)) return undefined;
-  const point = { x: unit.x, y: unit.y };
+  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range);
+}
+
+function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: number; y: number }, range: number): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
-  forEachNearbyEnemyUnit(game, unit.owner, point, range, (candidate) => {
-    const candidateDistance = distanceSquared(unit, candidate);
+  forEachNearbyEnemyUnit(game, owner, point, range, (candidate) => {
+    const candidateDistance = distanceSquared(point, candidate);
     if (candidateDistance > limit) return;
-    const score = targetPriorityScore(game, unit.owner, candidate, candidateDistance);
+    const score = targetPriorityScore(game, owner, candidate, candidateDistance);
     if (score > bestScore) {
       best = candidate;
       bestScore = score;
     }
   });
-  forEachNearbyEnemyBuilding(game, unit.owner, unit, range, (building) => {
-    const candidateDistance = distanceSquared(unit, building);
+  forEachNearbyEnemyBuilding(game, owner, point, range, (building) => {
+    const candidateDistance = distanceSquared(point, building);
     if (candidateDistance > limit) return;
-    const score = targetPriorityScore(game, unit.owner, building, candidateDistance);
+    const score = targetPriorityScore(game, owner, building, candidateDistance);
     if (score > bestScore) {
       best = building;
       bestScore = score;

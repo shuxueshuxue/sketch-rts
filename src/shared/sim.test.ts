@@ -2201,6 +2201,19 @@ describe("sketch RTS simulation", () => {
     expect(game.buildings.some((building) => building.id === "defender-soft-tower")).toBe(false);
     expect(game.units.filter((unit) => unit.owner === "player").length).toBeGreaterThanOrEqual(1);
   });
+
+  it("lets defense towers damage enemy buildings inside their control range", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = [];
+    game.buildings = [];
+    const tower = createBuilding("building-player-tower-building-target", "player", "defenseTower", 500, 500, true);
+    const farm = createBuilding("building-enemy-farm-in-tower-range", "enemy", "farm", 820, 500, true);
+    game.buildings.push(tower, farm);
+
+    stepMany(game, BUILDING_DEFS.defenseTower.attackCooldown + 8);
+
+    expect(farm.hp).toBeLessThan(farm.maxHp);
+  });
 });
 
 function ownersHaveMiningExpansions(game: ReturnType<typeof createGame>, owners: PlayerId[]) {
