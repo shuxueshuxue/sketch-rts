@@ -884,6 +884,39 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attack", targetId: "weak-tower" });
   });
 
+  it("v5 sends a six-unit wave to clean a crippled opponent while another opponent still has workers", () => {
+    const scene = sketchScene("v5-crippled-opponent-six-unit-closeout")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "ember" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 500)
+      .townHall("v5", 720, 900)
+      .unit("v5", "footman", 500, 2140)
+      .unit("v5", "footman", 535, 2180)
+      .unit("v5", "lancer", 570, 2160)
+      .unit("v5", "footman", 605, 2200)
+      .unit("v5", "archer", 555, 2100)
+      .unit("v5", "lancer", 640, 2185)
+      .townHall("v3", 3604, 2621)
+      .worker("v3", 3520, 2600)
+      .worker("v3", 3540, 2640)
+      .unit("v3", "emberRavager", 3514, 2775)
+      .unit("v3", "cinderRunner", 3480, 2768)
+      .building("v4-tr", "defenseTower", 1136, 2147, { id: "crippled-tower", hp: 102 })
+      .build();
+    const game = scene.createGame();
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    }).find((candidate) => candidate.type === "attackMove");
+
+    expect(command).toMatchObject({ type: "attackMove", x: 1136, y: 2147 });
+  });
+
   it("v2 all-ins with its last small army when its own economy is dead", () => {
     const scene = sketchScene("v2-no-worker-last-army-all-in")
       .map("bareDuel")

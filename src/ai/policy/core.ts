@@ -3886,11 +3886,13 @@ function closeoutAttackWaveTarget(snapshot: GameSnapshot, owner: PlayerId, soldi
   const minimumWaveSize = outnumberedV2 ? 7 : 5;
   if (options.version === "v2" && deadEconomyCloseoutReady(snapshot, owner, options, soldiers) && armyPower(enemyArmy) > armyPower(soldiers) * strongerEnemyArmyStoplineRatio(snapshot, owner, soldiers, options)) return undefined;
   const deadEconomyCleanup = options.version === "v2" ? deadEconomyCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
-  const requiredWaveSize = deadEconomyCleanup ? 5 : minimumWaveSize;
+  const crippledCleanup = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
+  // @@@crippled-opponent-closeout - A five-unit cleanup wave is a finish tool after a second base; ordinary seven-unit pressure can still use the same target selection.
+  const crippledSmallCleanup = crippledCleanup && completeBuildings(snapshot, owner, "townHall").length >= 2;
+  const requiredWaveSize = deadEconomyCleanup || crippledSmallCleanup ? 5 : minimumWaveSize;
   if (soldiers.length < requiredWaveSize) return undefined;
   if (outnumberedV2 && movable.length < requiredWaveSize) return undefined;
   if (deadEconomyCleanup) return deadEconomyCleanup;
-  const crippledCleanup = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
   if (crippledCleanup) return crippledCleanup;
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 1.25) return undefined;
   return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner);
@@ -3953,10 +3955,12 @@ function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, f
 }
 
 function crippledOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, soldiers: Unit[], preferredOwner?: PlayerId) {
-  return preferredAttackBuildings(allBuildings(snapshot), preferredOwner)
+  const cleanable = allBuildings(snapshot)
     .filter((building) => isEnemyOwner(snapshot, owner, building.owner, options))
-    .filter((building) => crippledOpponentBuildingIsCleanable(snapshot, owner, building, from, soldiers, options))
-    .sort((a, b) => crippledOpponentCleanupScore(b, from) - crippledOpponentCleanupScore(a, from))[0];
+    .filter((building) => crippledOpponentBuildingIsCleanable(snapshot, owner, building, from, soldiers, options));
+  const preferred = preferredOwner ? cleanable.filter((building) => building.owner === preferredOwner) : [];
+  const candidates = preferred.length > 0 ? preferred : cleanable;
+  return candidates.sort((a, b) => crippledOpponentCleanupScore(b, from) - crippledOpponentCleanupScore(a, from))[0];
 }
 
 function preferredAttackBuildings(candidates: Building[], preferredOwner: PlayerId | undefined) {
