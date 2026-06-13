@@ -9298,6 +9298,51 @@ describe("SDK preset AI policy", () => {
     expect(entries.find((entry) => entry.scriptId === "attackWave")).toMatchObject({ command: { type: "attackMove" } });
   });
 
+  it("lets healthy V5 retreaters rejoin when enemies focus a nearby expansion-claimed ally", () => {
+    const scene = sketchScene("v5-retreaters-rescue-focused-expansion-claim")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "south", race: "ember" })
+      .player("v3", { team: "north", race: "ember" })
+      .player("v4-tr", { team: "north", race: "grove" })
+      .townHall("v5", 500, 2050)
+      .unit("v5", "cinderRunner", 820, 2600, { id: "claimed-runner" })
+      .unit("v5", "sparkArcher", 880, 2050, { id: "retreat-archer", order: { type: "move", x: 500, y: 2050 } })
+      .unit("v5", "emberAcolyte", 850, 2080, { id: "retreat-acolyte", order: { type: "move", x: 500, y: 2050 } })
+      .unit("v5", "emberRavager", 1040, 2280, { id: "free-ravager-a" })
+      .unit("v5", "cinderRunner", 1080, 2310, { id: "free-runner" })
+      .unit("v5", "emberRavager", 1120, 2340, { id: "free-ravager-b" })
+      .unit("v5", "sparkArcher", 1160, 2370, { id: "free-archer" })
+      .unit("v5", "cinderRunner", 1200, 2400, { id: "free-runner-b" })
+      .unit("v3", "emberRavager", 1380, 2560, { id: "target-ravager", order: { type: "attack", targetId: "claimed-runner" } })
+      .unit("v3", "cinderRunner", 1420, 2600, { order: { type: "attack", targetId: "claimed-runner" } })
+      .unit("v3", "sparkArcher", 1460, 2640, { order: { type: "attack", targetId: "claimed-runner" } })
+      .townHall("v3", 3600, 2620)
+      .townHall("v4-tr", 3600, 1475)
+      .goldMine("west-march", 810, 2610, 4000)
+      .build();
+    const game = scene.createGame();
+    game.tick = 6_000;
+    const memory = createAiPolicyMemory();
+    memory.unitClaims["claimed-runner"] = { kind: "expansion", targetId: "west-march", x: 810, y: 2610, sinceTick: 3_800, expiresTick: 7_400 };
+    memory.unitClaims["retreat-archer"] = { kind: "retreat", targetId: "retreat", x: 500, y: 2050, sinceTick: 5_900, expiresTick: 6_800 };
+    memory.unitClaims["retreat-acolyte"] = { kind: "retreat", targetId: "retreat", x: 500, y: 2050, sinceTick: 5_900, expiresTick: 6_800 };
+    memory.strategicPlan = { expansionClaimTargetId: "west-march", expansionClaimTick: 3_800 };
+
+    const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.attackWave], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+      memory,
+    });
+
+    expect(entries[0]).toMatchObject({ scriptId: "attackWave" });
+    const command = entries[0]?.command;
+    expect(command?.type === "attack" || command?.type === "attackMove").toBe(true);
+    if (command?.type !== "attack" && command?.type !== "attackMove") throw new Error(`expected attack wave command, got ${command?.type}`);
+    expect(command.unitIds).toEqual(expect.arrayContaining(["retreat-archer", "retreat-acolyte"]));
+  });
+
   it("keeps a committed attack wave from being tugged into neutral objective control", () => {
     const scene = sketchScene("v2-attack-wave-claim-blocks-creep-tug")
       .map("openClaims")
