@@ -61,7 +61,7 @@ function playerState(overrides: Partial<PlayerState> = {}): PlayerState {
     gold: 500,
     supplyUsed: 0,
     supplyCap: 12,
-    upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0 },
+    upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0 },
     ...overrides,
   };
 }

@@ -3,8 +3,8 @@ import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE
 import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
-import { createBuilding, createInitialResources } from "./map";
-import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
+import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
+import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame } from "./sim";
 import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
@@ -183,6 +183,73 @@ describe("sketch RTS simulation", () => {
     expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 }]);
   });
 
+  it("researches late mobility and range tech as derived unit stats without touching attack speed or towers", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 4_000;
+    const stables = createBuilding("building-player-speed-stables", "player", "stables", 760, 680, true);
+    const workshop = createBuilding("building-player-range-workshop", "player", "workshop", 860, 680, true);
+    const tower = createBuilding("building-player-range-tower", "player", "defenseTower", 960, 680, true);
+    game.buildings.push(stables, workshop, tower);
+    const archer = game.spawnUnit("player", "archer", 900, 900);
+    const baseSpeed = archer.speed;
+    const baseRange = archer.attackRange;
+    const baseCooldown = archer.attackCooldown;
+    const towerRange = tower.attackRange;
+
+    issueCommand(game, { type: "research", buildingId: stables.id, upgradeKind: "speedTraining" });
+    stepMany(game, UPGRADE_DEFS.speedTraining.levels[0]!.researchTime + 1);
+    issueCommand(game, { type: "research", buildingId: workshop.id, upgradeKind: "rangeTraining" });
+    stepMany(game, UPGRADE_DEFS.rangeTraining.levels[0]!.researchTime + 1);
+
+    expect(game.players.player.upgrades.speedTraining).toBe(1);
+    expect(game.players.player.upgrades.rangeTraining).toBe(1);
+    expect(archer.speed).toBeCloseTo(baseSpeed * 1.25, 5);
+    expect(archer.attackRange).toBe(Math.round(baseRange * 1.15));
+    expect(archer.attackCooldown).toBe(baseCooldown);
+    expect(tower.attackRange).toBe(towerRange);
+
+    issueCommand(game, { type: "train", buildingId: stables.id, unitKind: "raider" });
+    stepMany(game, UNIT_DEFS.raider.trainTime + 1);
+    const futureRaider = game.units.find((unit) => unit.owner === "player" && unit.kind === "raider")!;
+    expect(futureRaider.speed).toBeCloseTo(Math.round(UNIT_DEFS.raider.speed * 1.25 * 100) / 100, 5);
+    expect(futureRaider.attackRange).toBe(Math.round(UNIT_DEFS.raider.attackRange * 1.15));
+  });
+
+  it("heals starred owned units with leadership including mercenaries without healing rookies", () => {
+    const game = sketchScene("leadership-regeneration")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north", race: "grove" })
+      .player("enemy", { team: "south", race: "ember" })
+      .townHall("player", 500, 500)
+      .unit("player", "golem", 700, 700, { id: "veteran-golem", xp: 260 })
+      .unit("player", "footman", 740, 700, { id: "rookie-footman" })
+      .unit("player", "contractArcher", 780, 700, { id: "merc-veteran" })
+      .townHall("enemy", 3300, 3300)
+      .build()
+      .createGame();
+    const veteran = game.units.find((unit) => unit.id === "veteran-golem")!;
+    const rookie = game.units.find((unit) => unit.id === "rookie-footman")!;
+    const mercenary = game.units.find((unit) => unit.id === "merc-veteran")!;
+    game.players.player.upgrades.leadership = 3;
+    veteran.hp = 100;
+    rookie.hp = 50;
+    mercenary.level = 3;
+    mercenary.hp = 50;
+
+    expect(leadershipRegenPerSecond(game, veteran)).toBe(9);
+    expect(leadershipRegenPerSecond(game, rookie)).toBe(0);
+    expect(leadershipRegenPerSecond(game, mercenary)).toBe(9);
+
+    stepMany(game, 20);
+
+    expect(veteran.level).toBe(3);
+    expect(veteran.hp).toBeCloseTo(109, 5);
+    expect(rookie.hp).toBe(50);
+    expect(mercenary.hp).toBeCloseTo(59, 5);
+    expect(game.effects.some((effect) => effect.type === "heal")).toBe(false);
+  });
+
   it("tracks which player lost units to neutral creeps", () => {
     const game = sketchScene("neutral-killed-player-unit")
       .map("bareDuel")
@@ -355,6 +422,19 @@ describe("sketch RTS simulation", () => {
     expect(Math.min(...grandMines.map((mine) => mine.amount))).toBe(6_000);
   });
 
+  it("defines isolated V5 economy stress maps outside the rich-score pool", () => {
+    const grid = createGame("goldGrid", { players: ["v5", "v3a", "v3b", "v3c", "v3d", "v3e"], aiPlayers: [] });
+    const pocketCamps = createInitialMercenaryCamps("mercPocket");
+
+    expect(grid.map.width).toBe(4096);
+    expect(grid.map.height).toBe(4096);
+    expect(grid.resources.filter((resource) => resource.kind === "goldMine")).toHaveLength(16);
+    expect(grid.units.filter((unit) => unit.owner === "neutral")).toHaveLength(0);
+    expect(grid.mercenaryCamps).toHaveLength(0);
+    expect(pocketCamps).toHaveLength(3);
+    expect(pocketCamps.map((camp) => camp.hireKind).sort()).toEqual(["contractArcher", "fieldMedic", "mercenary"]);
+  });
+
   it("balances defense towers as durable static control with the release tower damage", () => {
     const tower = BUILDING_DEFS.defenseTower;
     const contractArcher = UNIT_DEFS.contractArcher;
@@ -495,7 +575,7 @@ describe("sketch RTS simulation", () => {
         addResources: [{ id: "gold-agent-pocket", kind: "goldMine", x: 1500, y: 1380, amount: 1234 }],
         addMercenaryCamps: [{ id: "merc-agent-pocket", x: 1580, y: 1400, radius: 30, hireKind: "mercenary", cost: 185, stock: 2, cooldown: seconds(4.5), cooldownRemaining: 0 }],
         addUnits: [{ id: "unit-agent-wildling", owner: "neutral", kind: "wildling", x: 1600, y: 1460 }, woundedSeed],
-        addBuildings: [{ id: "building-agent-farm", owner: "player", kind: "farm", x: 620, y: 640, complete: true }],
+        addBuildings: [{ id: "building-agent-farm", owner: "player", kind: "farm", x: 620, y: 640, hp: 120, maxHp: 180, complete: true }],
         addLandmarks: [{ id: "landmark-agent-banner", kind: "bannerStone", x: 1500, y: 1500, size: 96, rotation: 0.25 }],
       },
     });
@@ -507,7 +587,8 @@ describe("sketch RTS simulation", () => {
     expect(game.mercenaryCamps.find((camp) => camp.id === "merc-agent-pocket")?.stock).toBe(2);
     expect(wildling?.hp).toBe(UNIT_DEFS.wildling.hp);
     expect(game.units.find((unit) => unit.id === "unit-agent-wounded")?.hp).toBe(37);
-    expect(farm?.hp).toBe(BUILDING_DEFS.farm.hp);
+    expect(farm?.hp).toBe(120);
+    expect(farm?.maxHp).toBe(180);
     expect(farm?.buildProgress).toBe(BUILDING_DEFS.farm.buildTime);
     expect(game.map.landmarks.find((landmark) => landmark.id === "landmark-agent-banner")?.kind).toBe("bannerStone");
     expect(game.players.player.supplyCap).toBe(16);

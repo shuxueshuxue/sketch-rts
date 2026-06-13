@@ -14,6 +14,7 @@ type ClaimPolicyOptions = {
 type RecordAiMemoryOptions = {
   owner?: PlayerId;
   teams?: Partial<Record<PlayerId, string>> | undefined;
+  preserveHireCampClaims?: boolean;
 };
 
 type AttackWaveCommand = Extract<GameCommand, { type: "attack" }> | Extract<GameCommand, { type: "attackMove" }>;
@@ -51,6 +52,10 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       continue;
     }
     if (command.type === "hire") {
+      if (options.preserveHireCampClaims) {
+        // @@@hire-keeps-camp-claim - V5 guarded-camp flows need camp movement ownership to survive this planner frame so later scripts do not immediately steal the squad.
+        continue;
+      }
       clearUnitClaimsForTarget(memory, command.campId);
       continue;
     }

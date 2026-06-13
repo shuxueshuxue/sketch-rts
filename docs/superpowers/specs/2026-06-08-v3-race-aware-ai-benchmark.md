@@ -69,7 +69,7 @@ npm run benchmark:ai-gauntlet -- --seed gauntlet-18 --map-count 18 --dry-run --m
 npm run benchmark:ai-gauntlet -- --seed gauntlet-18 --map-count 18 --runner-probe
 ```
 
-Legacy environment variables remain usable for automation, but normal CLI flags are no longer ignored. `--dry-run` must be recognized before any simulation work starts.
+Previous environment variables remain usable for automation, but normal CLI flags are no longer ignored. `--dry-run` must be recognized before any simulation work starts.
 
 Dry-run output must include:
 
@@ -178,7 +178,21 @@ Implementation is not complete until current evidence proves all of the followin
   - `v3-current-gate-50-2026-06-11a`: run `2026-06-11T10-42-24-098Z-1b5itdm`, workers `95`, wall time `9.71s`, CPU time `573577.108ms`, V3 total `93/100`; split Grove V3 `46/50`, Ember V3 `47/50`.
   - `v3-current-gate-50-2026-06-11b`: run `2026-06-11T10-44-12-761Z-1avj7on`, workers `95`, wall time `11.14s`, CPU time `567868.969ms`, V3 total `93/100`; split Grove V3 `46/50`, Ember V3 `47/50`.
   - `v3-current-gate-50-2026-06-11c`: run `2026-06-11T10-44-23-722Z-1aljlzo`, workers `95`, wall time `10.36s`, CPU time `579192.808ms`, V3 total `94/100`; split Grove V3 `45/50`, Ember V3 `49/50`.
-- Remaining V3 stoplines are quality margin, not gate blockers: the latest 2026-06-11 audited seeds are `93/100`, `93/100`, and `94/100`; the lowest race split is Grove V3 `45/50`, exactly at the per-race 90% line.
+- Active-goal pgl audit on 2026-06-11 from the current worktree:
+  - `v3-goal-audit-50-2026-06-11a`: run `2026-06-11T16-40-47-312Z-1jbau3s`, workers `95`, wall time `16.63s`, CPU time `603221.709ms`, V3 total `94/100`; split Grove V3 `47/50`, Ember V3 `47/50`; matchups Grove-vs-Grove `47/50`, Ember-vs-Grove `47/50`.
+- Active-goal pgl audit on 2026-06-12 from current branch `codex/v4-tr-benchmark`, HEAD `2f7cff9` plus the local worktree:
+  - `v3-goal-audit-50-2026-06-12a`: run `2026-06-12T07-24-13-499Z-15zi8pf`, workers `95`, wall time `11.41s`, CPU time `582517.879ms`, V3 total `93/100`; split Grove V3 `45/50`, Ember V3 `48/50`; matchups Grove-vs-Grove `45/50`, Ember-vs-Grove `48/50`.
+- Fresh focused verification after the 2026-06-12 active-goal audit: `npx vitest run src/ai/policy.test.ts src/ai/planner-context.test.ts src/ai/policy/production-model.test.ts src/ai/policy/tower-merc-policy.test.ts src/ai/policy/skirmish-tactics.test.ts src/ai/policy/item-tactics.test.ts src/ai/benchmark/control.test.ts scripts/ai-v3-vs-prod-v2-benchmark.test.ts scripts/ai-v4-tr-vs-v3-benchmark.test.ts scripts/ai-playtest.test.ts` passed with `471/471`, and `npm run build` completed successfully.
+- Regression found and fixed on 2026-06-12: the V5 mercenary-claim ownership slice had accidentally changed live V3 too. Exact `copperWeald v3 north` showed three V3 Grove ranged units held under a `mercenary` claim from `223.5s` to `403.5s` after hiring, while frozen `v2-prod` still used the old claim-clearing behavior. The same exact match flipped from a V2-prod win at `687.4s` with V3 `14` kills / `36` losses to a V3 win at `591.6s` with V3 `36` kills / `14` losses after making ordinary `hire` clear camp claims and preserving the V5 same-frame camp claim only behind the explicit V5 runner option.
+- pgl dashboard evidence after the claim-scope fix:
+  - `v3-current-gate-50-2026-06-12b`: run `2026-06-12T13-02-39-402Z-13nywr4`, workers `95`, wall time `15.85s`, CPU time `608005.625ms`, V3 total `94/100`; split Grove V3 `46/50`, Ember V3 `48/50`.
+  - `v3-goal-audit-50-2026-06-12a`: run `2026-06-12T13-02-41-111Z-15zi8pf`, workers `95`, wall time `16.00s`, CPU time `597930.324ms`, V3 total `93/100`; split Grove V3 `45/50`, Ember V3 `48/50`.
+- Active-goal current-worktree pgl audit on 2026-06-12 after V5 economy-stress work began:
+  - `v3-goal-current-50-2026-06-12a`: workers `95`, wall time `9.90s`, CPU time `573571.053ms`, V3 total `95/100`; split Grove V3 `46/50`, Ember V3 `49/50`; matchups Grove-vs-Grove `46/50`, Ember-vs-Grove `49/50`.
+  - `v3-goal-current-50-2026-06-12b`: workers `95`, wall time `10.64s`, CPU time `588305.065ms`, V3 total `93/100`; split Grove V3 `45/50`, Ember V3 `48/50`; matchups Grove-vs-Grove `45/50`, Ember-vs-Grove `48/50`.
+- Active-goal current-worktree pgl audit on 2026-06-12 after returning from V5 special-map work:
+  - `v3-goal-current-50-2026-06-12a`: dashboard run `2026-06-12T21-37-39-287Z-tuy32t`, workers `95`, wall time `9.86s`, CPU time `571352.425ms`, V3 total `95/100`; split Grove V3 `46/50`, Ember V3 `49/50`; matchups Grove-vs-Grove `46/50`, Ember-vs-Grove `49/50`.
+- Remaining V3 stoplines are quality margin, not gate blockers: the latest 2026-06-12 audited seed is `93/100`; the lowest race split is Grove V3 `45/50`, exactly at the per-race 90% line.
 
 ## Non-Goals
 

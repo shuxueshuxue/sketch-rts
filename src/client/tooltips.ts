@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
-import type { AbilityKind, BuildingKind, ItemKind, TrainableUnitKind, UpgradeKind } from "../shared/types";
+import { leadershipRegenPerSecond } from "../shared/sim";
+import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
 
 export type GameplayTooltip = {
@@ -32,6 +33,28 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
   };
 }
 
+export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: GameSnapshot, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
+  const representative = units[0];
+  const title = `${labelKind(kind, i18n)}${units.length > 1 ? ` x${units.length}` : ""}`;
+  if (!representative) return { title, body: "", stats: [], requirements: [] };
+  const totalHp = units.reduce((sum, unit) => sum + unit.hp, 0);
+  const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
+  const regenValues = units.map((unit) => leadershipRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
+  const maxRegen = Math.max(0, ...regenValues);
+  return {
+    title,
+    body: "",
+    stats: [
+      tooltipLine(i18n.locale, "currentHp", `${formatStatNumber(totalHp)}/${formatStatNumber(totalMaxHp)}`),
+      tooltipLine(i18n.locale, "attack", statRange(units.map((unit) => unit.attackDamage))),
+      tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
+      tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
+      ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
+    ],
+    requirements: [],
+  };
+}
+
 export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
   const tooltip = ABILITY_TOOLTIPS[i18n.locale][ability];
   return { ...tooltip, hotkey: formatHotkey(hotkey) };
@@ -49,11 +72,19 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
   const affected = upgrade.affectedUnitKinds.map((unitKind) => labelKind(unitKind, i18n)).join(", ");
   const effect = level.buildingMaxHpMultiplier
     ? tooltipLine(i18n.locale, "buildingHpBonus", Math.round((level.buildingMaxHpMultiplier - 1) * 100))
+    : level.speedMultiplier
+      ? tooltipLine(i18n.locale, "speedBonus", Math.round((level.speedMultiplier - 1) * 100))
+      : level.attackRangeMultiplier
+        ? tooltipLine(i18n.locale, "unitRangeBonus", Math.round((level.attackRangeMultiplier - 1) * 100))
+        : level.veteranRegenPerStar
+          ? tooltipLine(i18n.locale, "veteranRegenPerStar", level.veteranRegenPerStar)
     : level.attackBonus > 0
       ? tooltipLine(i18n.locale, "attackBonus", level.attackBonus)
       : tooltipLine(i18n.locale, "maxHpBonus", level.maxHpBonus);
   const requirements = level.buildingMaxHpMultiplier
     ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
+    : level.veteranRegenPerStar
+      ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsStarredUnits]
     : [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
   return {
     title: `${labelKind(kind, i18n)} ${romanLevel(targetLevel)}`,
@@ -131,6 +162,17 @@ function formatSeconds(ticks: number) {
   return `${(ticks / 20).toFixed(1)}s`;
 }
 
+function statRange(values: number[]) {
+  const sorted = values.map(formatStatNumber).sort((a, b) => Number(a) - Number(b));
+  const first = sorted[0] ?? "0";
+  const last = sorted[sorted.length - 1] ?? first;
+  return first === last ? first : `${first}-${last}`;
+}
+
+function formatStatNumber(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
 function romanLevel(level: number) {
   return level === 1 ? "I" : level === 2 ? "II" : level === 3 ? "III" : String(level);
 }
@@ -144,17 +186,24 @@ const TEXT = {
       buildingHpBonus: "+{value}% building HP",
       cost: "Cost {value} gold",
       hp: "HP {value}",
+      currentHp: "HP {value}",
       maxHpBonus: "+{value} max HP",
       range: "Range {value}",
       research: "Research {value}",
+      currentRegen: "Regen {value} HP/s",
+      speedBonus: "+{value}% move speed",
+      speed: "Speed {value}",
       supply: "Supply {value}",
       supplyBonus: "Supply +{value}",
       train: "Train {value}",
+      unitRangeBonus: "+{value}% unit range",
+      veteranRegenPerStar: "+{value} HP/s per star",
     },
     requirements: {
       abilities: "Abilities: {abilities}.",
       affectsBuildings: "Affects buildings.",
       affectsCombatUnits: "Affects combat units.",
+      affectsStarredUnits: "Affects starred units.",
       provides: "Provides: {production}.",
       researchAt: "Research at {building}.",
     },
@@ -167,17 +216,24 @@ const TEXT = {
       buildingHpBonus: "+{value}% 建筑生命",
       cost: "花费 {value} 金",
       hp: "生命 {value}",
+      currentHp: "生命 {value}",
       maxHpBonus: "+{value} 最大生命",
       range: "射程 {value}",
       research: "研究 {value}",
+      currentRegen: "回复 {value} 生命/秒",
+      speedBonus: "+{value}% 移动速度",
+      speed: "移速 {value}",
       supply: "人口 {value}",
       supplyBonus: "人口 +{value}",
       train: "训练 {value}",
+      unitRangeBonus: "+{value}% 单位射程",
+      veteranRegenPerStar: "每颗星 +{value} 生命/秒",
     },
     requirements: {
       abilities: "技能：{abilities}。",
       affectsBuildings: "影响建筑。",
       affectsCombatUnits: "影响作战单位。",
+      affectsStarredUnits: "影响有星单位。",
       provides: "提供：{production}。",
       researchAt: "在{building}研究。",
     },
@@ -419,10 +475,16 @@ const UPGRADE_DESCRIPTIONS: Record<Locale, Record<UpgradeKind, string>> = {
     weaponTraining: "Improves attack damage for ordinary combat units.",
     reinforcedPlating: "Improves maximum health for ordinary combat units.",
     buildingDurability: "Improves maximum health for owned buildings.",
+    speedTraining: "Improves movement speed for ordinary combat units.",
+    rangeTraining: "Improves attack range for ordinary combat units, excluding towers.",
+    leadership: "Lets veteran owned units regenerate health based on their star level.",
   },
   zh: {
     weaponTraining: "提升普通作战单位的攻击伤害。",
     reinforcedPlating: "提升普通作战单位的最大生命。",
     buildingDurability: "提升己方建筑的最大生命。",
+    speedTraining: "提升普通作战单位的移动速度。",
+    rangeTraining: "提升普通作战单位的攻击射程，不影响防御塔。",
+    leadership: "让己方有星级单位按星级持续回复生命。",
   },
 };

@@ -1,8 +1,53 @@
 import { describe, expect, it } from "vitest";
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails, summarizeAiV5VsHybridBenchmark } from "./control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, createAiV5EconomyStressBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails, summarizeAiV5VsHybridBenchmark } from "./control";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
 
 describe("AI melee control benchmark", () => {
+  it("creates isolated V5 economy stress matches without map-specific AI agents", () => {
+    const first = createAiV5EconomyStressBenchmarkInput({ seed: "economy-stress-contract", sampleCount: 4, maxTicks: 1 });
+    const second = createAiV5EconomyStressBenchmarkInput({ seed: "economy-stress-contract", sampleCount: 4, maxTicks: 1 });
+
+    expect(first.selection.mapIds).toEqual(["goldGrid", "mercPocket"]);
+    expect(first.input.name).toBe("AI V5 Economy Stress Benchmark");
+    expect(first.input.evaluations.map((evaluation) => evaluation.name)).toEqual(["goldGrid v5 1v5 expansion stress", "mercPocket v5 1v3 mercenary stress"]);
+    expect(first.input.evaluations[0]!.matches).toHaveLength(4);
+    expect(first.input.evaluations[1]!.matches).toHaveLength(4);
+    expect(first.input.evaluations.map(serializableStressEvaluation)).toEqual(second.input.evaluations.map(serializableStressEvaluation));
+
+    const gridMatch = first.input.evaluations[0]!.matches[0]!;
+    expect(gridMatch.mapId).toBe("goldGrid");
+    expect(Object.keys(gridMatch.agents).sort()).toEqual(["v3a", "v3b", "v3c", "v3d", "v3e", "v5"]);
+    expect(gridMatch.agents.v5).toMatchObject({ version: "v5", policyVersion: "v5" });
+    expect(Object.values(gridMatch.agents).filter((agent) => agent.version === "v3")).toHaveLength(5);
+    expect(gridMatch.agents.v5!.team).toBe("v5");
+    expect(Object.entries(gridMatch.agents).filter(([owner]) => owner !== "v5").every(([, agent]) => agent.team === "v3")).toBe(true);
+    expect(gridMatch.options?.scenario?.replaceDefaultResources).toBe(true);
+    expect(gridMatch.options?.scenario?.replaceDefaultBuildings).toBe(true);
+    expect(gridMatch.options?.scenario?.replaceDefaultUnits).toBe(true);
+    expect(gridMatch.options?.scenario?.addResources?.filter((resource) => resource.kind === "goldMine")).toHaveLength(16);
+    expect(gridMatch.options?.scenario?.addBuildings?.filter((building) => building.kind === "townHall")).toHaveLength(6);
+    expect(everyStressBaseHasNearbyMine(gridMatch)).toBe(true);
+    expect(everyV5StressEnemyStartsOutsideRushRange(gridMatch)).toBe(true);
+
+    const sampledV5Bases = new Set(first.input.evaluations[0]!.matches.map((match) => {
+      const hall = match.options?.scenario?.addBuildings?.find((building) => building.owner === "v5" && building.kind === "townHall");
+      if (!hall) throw new Error(`Missing V5 hall for ${match.name}`);
+      return `${hall.x},${hall.y}`;
+    }));
+    expect(sampledV5Bases.size).toBeGreaterThan(1);
+
+    const mercMatch = first.input.evaluations[1]!.matches[0]!;
+    expect(mercMatch.mapId).toBe("mercPocket");
+    expect(Object.keys(mercMatch.agents).sort()).toEqual(["v3a", "v3b", "v3c", "v5"]);
+    expect(mercMatch.options?.scenario?.addMercenaryCamps).toHaveLength(3);
+    expect(mercMatch.options?.scenario?.addUnits?.filter((unit) => unit.owner === "neutral")).toHaveLength(0);
+    expect(everyStressBaseHasNearbyMine(mercMatch)).toBe(true);
+    expect(everyV5StressEnemyStartsOutsideRushRange(mercMatch)).toBe(true);
+
+    const closeSeed = createAiV5EconomyStressBenchmarkInput({ seed: "v5-economy-stress-2026-06-12a", sampleCount: 10, maxTicks: 1 });
+    expect(closeSeed.input.evaluations.flatMap((evaluation) => evaluation.matches).every(everyV5StressEnemyStartsOutsideRushRange)).toBe(true);
+  });
+
   it("creates side-balanced V3 challenger matches against frozen Grove V2 production", () => {
     const { input, selection } = createAiV3VsProdV2BenchmarkInput({ seed: "v3-prod-contract-seed", mapCount: 4 });
 
@@ -365,6 +410,26 @@ describe("AI melee control benchmark", () => {
     });
   });
 });
+
+function serializableStressEvaluation(evaluation: ReturnType<typeof createAiV5EconomyStressBenchmarkInput>["input"]["evaluations"][number]) {
+  return {
+    name: evaluation.name,
+    matches: evaluation.matches.map(({ commandPlanner: _commandPlanner, ...match }) => match),
+  };
+}
+
+function everyStressBaseHasNearbyMine(match: ReturnType<typeof createAiV5EconomyStressBenchmarkInput>["input"]["evaluations"][number]["matches"][number]) {
+  const resources = match.options?.scenario?.addResources ?? [];
+  const halls = match.options?.scenario?.addBuildings?.filter((building) => building.kind === "townHall") ?? [];
+  return halls.every((hall) => resources.some((resource) => Math.hypot(resource.x - hall.x, resource.y - hall.y) < 320));
+}
+
+function everyV5StressEnemyStartsOutsideRushRange(match: ReturnType<typeof createAiV5EconomyStressBenchmarkInput>["input"]["evaluations"][number]["matches"][number]) {
+  const halls = match.options?.scenario?.addBuildings?.filter((building) => building.kind === "townHall") ?? [];
+  const v5Hall = halls.find((hall) => hall.owner === "v5");
+  if (!v5Hall) return false;
+  return halls.filter((hall) => hall.owner !== "v5").every((hall) => Math.hypot(hall.x - v5Hall.x, hall.y - v5Hall.y) >= 900);
+}
 
 function match(name: string, mapId: string, winner: string | null) {
   return {

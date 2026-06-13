@@ -235,7 +235,16 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
   }
   for (const seed of scenario.addBuildings ?? []) {
     claimId(seed.id);
-    game.buildings.push(createBuilding(seed.id, seed.owner, seed.kind, seed.x, seed.y, seed.complete ?? true));
+    const building = createBuilding(seed.id, seed.owner, seed.kind, seed.x, seed.y, seed.complete ?? true);
+    if (seed.maxHp !== undefined) {
+      if (!Number.isFinite(seed.maxHp) || seed.maxHp <= 0) throw new Error(`Invalid scenario maxHp for ${seed.id}`);
+      building.maxHp = seed.maxHp;
+    }
+    if (seed.hp !== undefined) {
+      if (!Number.isFinite(seed.hp) || seed.hp <= 0 || seed.hp > building.maxHp) throw new Error(`Invalid scenario hp for ${seed.id}`);
+      building.hp = seed.hp;
+    }
+    game.buildings.push(building);
   }
   for (const landmark of scenario.addLandmarks ?? []) {
     claimId(landmark.id);
@@ -376,6 +385,7 @@ export function stepGame(game: Game) {
   game.entityById = createEntityIndex(game);
   updateItems(game);
   updateMoonWellHealing(game);
+  updateLeadershipRegeneration(game);
   updateTowerAttacks(game);
   updateUnits(game);
   separateUnits(game);
@@ -536,6 +546,24 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
     targetScore = score;
   });
   return target;
+}
+
+function updateLeadershipRegeneration(game: Game) {
+  for (const unit of game.units) {
+    const regenPerSecond = leadershipRegenPerSecond(game, unit);
+    if (regenPerSecond <= 0 || unit.hp >= unit.maxHp) continue;
+    unit.hp = Math.min(unit.maxHp, unit.hp + regenPerSecond / 20);
+  }
+}
+
+export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
+  if (!isPlayerId(unit.owner) || unit.level <= 0) return 0;
+  const upgrade = UPGRADE_DEFS.leadership;
+  const ownerState = game.players[unit.owner];
+  if (!ownerState) throw new Error(`Missing player state for ${unit.owner}`);
+  const level = ownerState.upgrades.leadership ?? 0;
+  const levelDef = upgrade.levels[level - 1];
+  return (levelDef?.veteranRegenPerStar ?? 0) * Math.min(MAX_UPGRADE_LEVEL, unit.level);
 }
 
 function updateMercenaryCamps(game: Game) {
@@ -1445,6 +1473,8 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_STEP;
   unit.attackDamage = Math.round(base.attackDamage * multiplier);
   unit.maxHp = Math.round(base.maxHp * multiplier);
+  unit.speed = base.speed;
+  unit.attackRange = base.attackRange;
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 
@@ -1452,7 +1482,9 @@ function nonStarUnitStats(game: Game, unit: Unit) {
   const stats = UNIT_DEFS[unit.kind];
   let attackDamage = stats.attackDamage;
   let maxHp = stats.hp;
-  if (!isPlayerId(unit.owner)) return { attackDamage, maxHp };
+  let speed = stats.speed;
+  let attackRange = stats.attackRange;
+  if (!isPlayerId(unit.owner)) return { attackDamage, maxHp, speed, attackRange };
   const upgrades = playerState(game, unit.owner).upgrades;
   for (const upgradeKind of UPGRADE_KINDS) {
     const upgrade = UPGRADE_DEFS[upgradeKind];
@@ -1462,9 +1494,15 @@ function nonStarUnitStats(game: Game, unit: Unit) {
       if (!levelDef) throw new Error(`${upgradeKind} missing level ${level + 1}`);
       attackDamage += levelDef.attackBonus;
       maxHp += levelDef.maxHpBonus;
+      if (levelDef.speedMultiplier) speed = roundUnitScalar(stats.speed * levelDef.speedMultiplier);
+      if (levelDef.attackRangeMultiplier) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
     }
   }
-  return { attackDamage, maxHp };
+  return { attackDamage, maxHp, speed, attackRange };
+}
+
+function roundUnitScalar(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 function updateSupplyState(game: Game) {

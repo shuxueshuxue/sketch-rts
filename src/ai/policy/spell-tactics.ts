@@ -3,10 +3,12 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/typ
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
+import { activeMiningBaseCount } from "./expansion-model";
 import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
+import { isV5HybridPolicy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
@@ -91,15 +93,15 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   }
   if (fighters.length < 2) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
-  const candidates = enemies.filter((enemy) => fighters.some((fighter) => distance(fighter, enemy) <= focusFireJoinRange(fighter)));
+  const candidates = enemies.filter((enemy) => fighters.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, enemy, options)));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
-  const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(rememberedTarget, fighters, options) ? rememberedTarget : undefined;
+  const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(snapshot, owner, rememberedTarget, fighters, options) ? rememberedTarget : undefined;
   const finisherCanInterruptMemory = anchoredRememberedTarget && (options.policyMode !== "combat" || anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4);
-  const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(candidates, fighters) : undefined;
+  const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(snapshot, owner, candidates, fighters, options) : undefined;
   const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
   const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
   if (!target) return undefined;
-  const attackers = focusFireAttackers(fighters, target);
+  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
   // @@@focus-fire-local-odds - Focus fire is a commitment; do not pin a small squad in place when the target is protected by a stronger local group.
   const canPickOffWoundedTarget = focusFireCanPickOffWoundedTarget(attackers, target);
@@ -128,27 +130,50 @@ function partialTailFocusIsSupportedByStrongerEnemy(fighters: Unit[], attackers:
   return armyPower(support) > armyPower(attackers) * 1.12;
 }
 
-function rememberedFocusStillAnchored(target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {
+function rememberedFocusStillAnchored(snapshot: GameSnapshot, owner: PlayerId, target: Unit, fighters: Unit[], options: PresetAiPolicyOptions) {
   if (options.policyMode !== "combat" || fighters.length < 6) return true;
-  const attackers = focusFireAttackers(fighters, target);
+  const attackers = focusFireAttackers(snapshot, owner, fighters, target, options);
   if (rememberedWoundedTargetCanBeFinished(target, attackers)) return true;
   // @@@focus-tail-release - Combat focus memory should stabilize a fight, not let a tiny tail drag the main army out of formation.
   return attackers.length >= Math.max(3, Math.ceil(fighters.length * 0.45));
 }
 
-function focusFireAttackers(fighters: Unit[], target: Unit) {
-  return fighters.filter((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter));
+function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], target: Unit, options: PresetAiPolicyOptions) {
+  return fighters.filter((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options));
 }
 
-function singleHitFinisherTarget(candidates: Unit[], fighters: Unit[]) {
+function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
+  if (distance(fighter, target) <= focusFireJoinRange(fighter)) return true;
+  return v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options);
+}
+
+function singleHitFinisherTarget(snapshot: GameSnapshot, owner: PlayerId, candidates: Unit[], fighters: Unit[], options: PresetAiPolicyOptions) {
   return candidates
-    .filter((target) => focusFireAttackers(fighters, target).some((attacker) => target.hp <= attacker.attackDamage))
+    .filter((target) => focusFireAttackers(snapshot, owner, fighters, target, options).some((attacker) => target.hp <= attacker.attackDamage))
     .sort((a, b) => a.hp - b.hp || focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
 }
 
 function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   const claim = activeUnitClaim(snapshot, owner, unit, options);
-  return !claim || claim.kind === "attack";
+  return !claim || claim.kind === "attack" || v5ArrivedMercenaryClaimCanFight(snapshot, owner, unit, claim, options);
+}
+
+function v5ArrivedMercenaryClaimCanCounterFocus(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
+  const claim = activeUnitClaim(snapshot, owner, fighter, options);
+  if (!claim || !v5ArrivedMercenaryClaimCanFight(snapshot, owner, fighter, claim, options)) return false;
+  if (distance(fighter, target) > 760) return false;
+  if (target.order.type !== "attack") return false;
+  const attackedTargetId = target.order.targetId;
+  const attackedAlly = units(snapshot, owner).find((unit) => unit.id === attackedTargetId);
+  if (!attackedAlly) return false;
+  const attackedClaim = activeUnitClaim(snapshot, owner, attackedAlly, options);
+  // @@@v5-camp-counterfocus - An arrived mercenary claim is still objective ownership, except when ranged attackers are already shooting that exact parked group.
+  return attackedClaim?.kind === "mercenary" && attackedClaim.targetId === claim.targetId && distance(attackedAlly, claim) <= 260;
+}
+
+function v5ArrivedMercenaryClaimCanFight(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, claim: { kind: string; x: number; y: number }, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || activeMiningBaseCount(snapshot, owner) < 2) return false;
+  return claim.kind === "mercenary" && unit.order.type === "attackMove" && distance(unit, claim) <= 220 && distance(unit.order, claim) <= 220;
 }
 
 function soloFinisherTarget(fighter: Unit, enemies: Unit[]) {

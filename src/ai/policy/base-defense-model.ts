@@ -5,8 +5,8 @@ import { opponentPlayerIds } from "./ownership";
 import { missingCombatProductionKind } from "./production-model";
 import { activeResources, buildings, combatUnits, completeBuildings, enemyCombatUnitsNear, units } from "./snapshot";
 import { distance, type Point } from "./spatial";
-import { availableBuilder, hasCoreProduction, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
+import { availableBuilder, hasCoreProduction, mainBase, nearestResource, playerState } from "./world-model";
 
 export const AI_MOON_WELL_LIMIT = 2;
 

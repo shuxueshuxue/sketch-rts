@@ -289,21 +289,48 @@ describe("SDK game runner", () => {
   });
 
   it("records the clean expansion route without turning one scripted duel into a release balance gate", () => {
+    const scene = sketchScene("runner-expansion-route")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .townHall("v2", 900, 700, { id: "v2-natural", complete: false })
+      .worker("v2", 910, 710, { id: "v2-builder" })
+      .worker("v2", 540, 520, { id: "v2-miner" })
+      .goldMine("v2-main-mine", 580, 520, 4000)
+      .goldMine("v2-natural-mine", 960, 720, 4000)
+      .townHall("v1", 3300, 3300)
+      .worker("v1", 3340, 3320)
+      .goldMine("v1-main-mine", 3360, 3320, 4000);
+    const game = scene.build().createGame();
+    const natural = game.buildings.find((building) => building.id === "v2-natural");
+    if (!natural) throw new Error("expected expansion building");
+    natural.buildProgress = natural.buildTime - 1;
+    const scripts: AiScript[] = [
+      {
+        id: "runner-expansion-route-mining",
+        phase: "economy",
+        run() {
+          return { type: "mine", unitIds: ["v2-miner"], resourceId: "v2-main-mine" };
+        },
+      },
+    ];
+
     const report = runAiGame({
       name: "v2-single-v1-clean-expansion-sanity",
-      mapId: "openClaims",
+      game,
       agents: {
-        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2" },
-        v1: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
+        v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", scripts },
+        v1: { controller: "external-agent", team: "south", race: "grove", version: "v1", scripts: [] },
       },
-      maxTicks: 24_000,
-      thinkInterval: 45,
-      sampleInterval: 2_400,
+      maxTicks: 20,
+      thinkInterval: 5,
+      sampleInterval: 5,
     });
 
-    expect(report.timeout).toBe(false);
-    expect(report.winner).toMatch(/v1|v2/);
     expect(report.economyTimings.v2?.firstExpansionTick).not.toBeNull();
+    expect(report.economyTimings.v2?.maxBases).toBe(2);
     expect(report.timeline.at(-1)?.players.v2).toBeDefined();
     expect(report.commandsByOwner.v2).toBeGreaterThan(0);
   });

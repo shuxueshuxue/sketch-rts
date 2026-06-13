@@ -40,7 +40,7 @@ import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
-import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
+import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
@@ -2062,6 +2062,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
       button.dataset.selectionGroup = group.id;
       button.setAttribute("aria-label", selectionGroupTitle(group));
+      applyTooltip(button, selectionGroupTooltip(group));
       const canvas = document.createElement("canvas");
       canvas.width = 34;
       canvas.height = 34;
@@ -2084,6 +2085,14 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
 function selectionGroupTitle(group: SelectionGroup) {
   const label = labelAnyKind(group.kind);
   return `${label} x${group.count}${group.focused ? t("hud.selectionCurrent") : ""}`;
+}
+
+function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
+  if (group.entityType === "unit") {
+    const units = snapshot?.units.filter((unit) => group.ids.includes(unit.id)) ?? [];
+    return unitSelectionTooltip(group.kind, units, snapshot!, i18n);
+  }
+  return buildingTooltip(group.kind, undefined, i18n);
 }
 
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {

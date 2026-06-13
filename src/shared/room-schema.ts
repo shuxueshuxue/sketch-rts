@@ -1,8 +1,8 @@
-import { BUILDABLE_BUILDING_KINDS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
+import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
 import { isMapId } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
 import type { CreateRoomInput, SlotPatch } from "./rooms";
-import type { GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
+import type { BuildingKind, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 
@@ -290,7 +290,13 @@ function isUnitSeed(value: unknown) {
 
 function isBuildingSeed(value: unknown) {
   if (!isRecord(value)) return false;
-  return typeof value.id === "string" && isPlayerId(value.owner) && isBuildableBuilding(value.kind) && isNumber(value.x) && isNumber(value.y) && (value.complete === undefined || typeof value.complete === "boolean");
+  if (!(typeof value.id === "string" && isPlayerId(value.owner) && isBuildableBuilding(value.kind) && isNumber(value.x) && isNumber(value.y))) return false;
+  const maxHp = value.maxHp === undefined ? BUILDING_DEFS[value.kind].hp : value.maxHp;
+  if (!isPositiveNumber(maxHp)) return false;
+  return (
+    (value.complete === undefined || typeof value.complete === "boolean") &&
+    (value.hp === undefined || (isPositiveNumber(value.hp) && value.hp <= maxHp))
+  );
 }
 
 function isLandmarkSeed(value: unknown) {
@@ -310,7 +316,7 @@ function isItemKind(value: unknown): value is ItemKind {
   return typeof value === "string" && (ITEM_KINDS as readonly string[]).includes(value);
 }
 
-function isBuildableBuilding(value: unknown) {
+function isBuildableBuilding(value: unknown): value is BuildingKind {
   return typeof value === "string" && (BUILDABLE_BUILDING_KINDS as readonly string[]).includes(value);
 }
 

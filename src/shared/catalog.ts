@@ -49,6 +49,9 @@ export type UpgradeLevelDef = {
   attackBonus: number;
   maxHpBonus: number;
   buildingMaxHpMultiplier?: number;
+  speedMultiplier?: number;
+  attackRangeMultiplier?: number;
+  veteranRegenPerStar?: number;
 };
 
 export type RaceDef = {
@@ -108,13 +111,13 @@ export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = {
   townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), trains: ["worker"], researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },
   barracks: { hp: 620, radius: 40, cost: 170, buildTime: seconds(11), trains: ["footman", "lancer", "groveWarden"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   archeryRange: { hp: 520, radius: 38, cost: 150, buildTime: seconds(10), trains: ["archer"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  stables: { hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), trains: ["raider", "knight"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  sanctum: { hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), trains: ["priest", "summoner", "witch"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  stables: { hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), trains: ["raider", "knight"], researches: ["speedTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  sanctum: { hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), trains: ["priest", "summoner", "witch"], researches: ["leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), trains: ["golem"], researches: ["rangeTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), trains: [], researches: [], attackDamage: 16, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   emberForge: { hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), trains: ["emberRavager", "cinderRunner"], researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  cinderSpire: { hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), trains: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  cinderSpire: { hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), trains: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"], researches: ["speedTraining", "rangeTraining", "leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   emberShrine: { hp: 280, radius: 30, cost: 115, buildTime: seconds(8.5), trains: [], researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), trains: [], researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
 };
@@ -147,9 +150,36 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
       { cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
     ],
   },
+  speedTraining: {
+    researchBuildingKinds: ["stables", "cinderSpire"],
+    affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    levels: [
+      { cost: 185, researchTime: seconds(46), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.25 },
+      { cost: 285, researchTime: seconds(60), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.38 },
+      { cost: 420, researchTime: seconds(76), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.5 },
+    ],
+  },
+  rangeTraining: {
+    researchBuildingKinds: ["workshop", "cinderSpire"],
+    affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    levels: [
+      { cost: 195, researchTime: seconds(48), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.15 },
+      { cost: 305, researchTime: seconds(64), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.25 },
+      { cost: 450, researchTime: seconds(82), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.35 },
+    ],
+  },
+  leadership: {
+    researchBuildingKinds: ["sanctum", "cinderSpire"],
+    affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    levels: [
+      { cost: 220, researchTime: seconds(52), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 1 },
+      { cost: 340, researchTime: seconds(70), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 2 },
+      { cost: 500, researchTime: seconds(90), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 3 },
+    ],
+  },
 };
 
-export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability"];
+export const UPGRADE_KINDS: UpgradeKind[] = ["weaponTraining", "reinforcedPlating", "buildingDurability", "speedTraining", "rangeTraining", "leadership"];
 export const MAX_UPGRADE_LEVEL = 3;
 export function maxUpgradeLevel(upgradeKind: UpgradeKind) {
   return UPGRADE_DEFS[upgradeKind].levels.length;
@@ -208,7 +238,7 @@ export const RACE_DEFS: Record<RaceId, RaceDef> = {
     note: "Faster fragile fighters, early support casters, and ember-shrine recovery.",
     trainableUnits: ["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
     buildableBuildings: ["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"],
-    upgrades: ["weaponTraining", "reinforcedPlating", "buildingDurability"],
+    upgrades: UPGRADE_KINDS,
   },
 };
 

@@ -32,12 +32,36 @@ const townHall: Building = {
   maxHp: 900,
 };
 
+const stables: Building = {
+  ...barracks,
+  id: "stables-1",
+  kind: "stables",
+  hp: 560,
+  maxHp: 560,
+};
+
+const sanctum: Building = {
+  ...barracks,
+  id: "sanctum-1",
+  kind: "sanctum",
+  hp: 500,
+  maxHp: 500,
+};
+
+const workshop: Building = {
+  ...barracks,
+  id: "workshop-1",
+  kind: "workshop",
+  hp: 580,
+  maxHp: 580,
+};
+
 const player: PlayerState = {
   race: "grove",
   gold: 500,
   supplyUsed: 3,
   supplyCap: 10,
-  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0 },
+  upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0 },
 };
 
 const emberForge: Building = {
@@ -46,6 +70,14 @@ const emberForge: Building = {
   kind: "emberForge",
   hp: 560,
   maxHp: 560,
+};
+
+const cinderSpire: Building = {
+  ...barracks,
+  id: "cinder-spire-1",
+  kind: "cinderSpire",
+  hp: 500,
+  maxHp: 500,
 };
 
 const emberPlayer: PlayerState = {
@@ -77,6 +109,26 @@ describe("research controls", () => {
 
     expect(commands).toEqual([
       { label: "Building Durability", icon: "▥", hotkey: "d", upgradeKind: "buildingDurability", buildingId: "townhall-1" },
+    ]);
+  });
+
+  it("shows late grove research on the late production buildings", () => {
+    const commands = researchCommandButtonsForSelection([stables, sanctum, workshop], player);
+
+    expect(commands).toEqual([
+      { label: "Mobility Training", icon: "↟", hotkey: "m", upgradeKind: "speedTraining", buildingId: "stables-1" },
+      { label: "Range Training", icon: "⌖", hotkey: "r", upgradeKind: "rangeTraining", buildingId: "workshop-1" },
+      { label: "Leadership", icon: "★", hotkey: "l", upgradeKind: "leadership", buildingId: "sanctum-1" },
+    ]);
+  });
+
+  it("shows late ember research on the cinder spire", () => {
+    const commands = researchCommandButtonsForSelection([cinderSpire], emberPlayer);
+
+    expect(commands).toEqual([
+      { label: "Mobility Training", icon: "↟", hotkey: "m", upgradeKind: "speedTraining", buildingId: "cinder-spire-1" },
+      { label: "Range Training", icon: "⌖", hotkey: "r", upgradeKind: "rangeTraining", buildingId: "cinder-spire-1" },
+      { label: "Leadership", icon: "★", hotkey: "l", upgradeKind: "leadership", buildingId: "cinder-spire-1" },
     ]);
   });
 

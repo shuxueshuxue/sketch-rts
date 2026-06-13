@@ -11,9 +11,11 @@ export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Bui
     const dx = threat.x - base.x;
     const dy = threat.y - base.y;
     const length = Math.hypot(dx, dy) || 1;
+    const targetThreatDistance = BUILDING_DEFS.defenseTower.attackRange - 30;
+    const baseOffset = clamp(length - targetThreatDistance, -150, 150);
     preferred = {
-      x: clamp(base.x - (dx / length) * 150, 0, snapshot.map.width),
-      y: clamp(base.y - (dy / length) * 150, 0, snapshot.map.height),
+      x: clamp(base.x + (dx / length) * baseOffset, 0, snapshot.map.width),
+      y: clamp(base.y + (dy / length) * baseOffset, 0, snapshot.map.height),
     };
     return legalBuildPointNear(snapshot, "defenseTower", preferred);
   }
@@ -22,7 +24,36 @@ export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Bui
     x: clamp(base.x + direction * 150, 0, snapshot.map.width),
     y: clamp(base.y + direction * 120, 0, snapshot.map.height),
   };
-  return legalBuildPointNear(snapshot, "defenseTower", preferred);
+  if (distance(base, mainBase(snapshot, owner)) <= 500) return legalBuildPointNear(snapshot, "defenseTower", preferred);
+  return safeTowerPointNear(snapshot, owner, base, preferred);
+}
+
+function safeTowerPointNear(snapshot: GameSnapshot, owner: PlayerId, base: Point, preferred: Point): Point {
+  if (isBuildPlacementClear(snapshot, "defenseTower", preferred) && neutralClearanceScore(snapshot, owner, preferred) >= 360) return preferred;
+  const candidates = [
+    preferred,
+    ...[150, 210, 280, 360, 420].flatMap((radius) =>
+      Array.from({ length: 16 }, (_, index) => {
+        const angle = (index / 16) * Math.PI * 2;
+        return { x: clamp(base.x + Math.cos(angle) * radius, 0, snapshot.map.width), y: clamp(base.y + Math.sin(angle) * radius, 0, snapshot.map.height) };
+      }),
+    ),
+  ];
+  return (
+    candidates
+      .filter((point) => distance(point, base) <= 430)
+      .filter((point) => isBuildPlacementClear(snapshot, "defenseTower", point))
+      .sort((a, b) => towerPointScore(snapshot, owner, b, base, preferred) - towerPointScore(snapshot, owner, a, base, preferred))[0] ?? legalBuildPointNear(snapshot, "defenseTower", preferred)
+  );
+}
+
+function towerPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Point, base: Point, preferred: Point) {
+  return Math.min(neutralClearanceScore(snapshot, owner, point), 620) * 3 - distance(point, preferred) * 0.7 - Math.max(0, distance(point, base) - 300) * 0.8;
+}
+
+function neutralClearanceScore(snapshot: GameSnapshot, owner: PlayerId, point: Point) {
+  const nearestNeutral = nearestEntity(aiSnapshotQuery(snapshot).forPlayer(owner).neutral.units, point);
+  return nearestNeutral ? distance(point, nearestNeutral) : 1_000;
 }
 
 export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot: number, buildingKind: BuildingKind = "farm"): Point {

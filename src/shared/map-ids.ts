@@ -1,4 +1,4 @@
-export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena"] as const;
+export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena", "goldGrid", "mercPocket"] as const;
 export const NON_SCORE_RICH_MAP_IDS = ["stagHollow", "willowCircuit", "quarrySong", "mistHarbor"] as const;
 
 export const AUTHORED_RICH_SCORE_MAP_IDS = [

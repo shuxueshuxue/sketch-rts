@@ -11,6 +11,7 @@ export type ScriptRunnerOptions = {
 export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: PresetAiPolicyOptions = {}, runnerOptions: ScriptRunnerOptions = {}): AiCommandEntry[] {
   if (!snapshot.players[owner] || snapshot.match.winner) return [];
   const policyOptions: AiPolicyContext = { ...options, memory: options.memory ?? createAiPolicyMemory() };
+  const preserveHireCampClaims = policyOptions.requestedVersion === "v5" || policyOptions.version === "v5";
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const commands: AiCommandEntry[] = [];
   const movedUnitIds = new Set<string>();
@@ -20,7 +21,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   for (const script of economyScripts) {
     const scriptCommands = asCommands(script.run(snapshot, owner, policyOptions));
     if (scriptCommands.length > 0) {
-      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams });
+      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
       reserveOrderedUnits(scriptCommands, movedUnitIds);
       if (script.id === "economy") continue;
@@ -33,7 +34,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
-    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams });
+    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }

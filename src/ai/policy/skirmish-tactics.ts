@@ -65,12 +65,31 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
 
   const skirmish = localSkirmish(snapshot, owner, ownCombat, enemies, ownBase, options);
   if (!skirmish) return [];
+  const criticalPickoff = localSkirmishCriticalPickoff(snapshot, owner, skirmish, options);
+  if (criticalPickoff) return [criticalPickoff];
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   const intent = deadOpponentBaseSkirmishNeedsCleanRetreat(snapshot, owner, skirmish, options)
     ? { type: "move" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y }
     : { type: "attackMove" as const, unitIds: skirmish.allies.map((unit) => unit.id), x: retreatPoint.x, y: retreatPoint.y };
   return [resolveAiCommandIntent(snapshot, owner, intent, options)];
+}
+
+function localSkirmishCriticalPickoff(snapshot: GameSnapshot, owner: PlayerId, skirmish: { allies: Unit[]; enemies: Unit[] }, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (!isV5HybridPolicy(options)) return undefined;
+  const target = skirmish.enemies
+    .filter((enemy) => enemy.owner !== "neutral" && enemy.attackRange > 100 && enemy.hp <= enemy.maxHp * 0.18)
+    .sort((a, b) => a.hp - b.hp || b.attackDamage - a.attackDamage)[0];
+  if (!target) return undefined;
+  const attackers = skirmish.allies.filter((ally) => ally.attackDamage > 0 && ally.hp >= ally.maxHp * 0.36 && distance(ally, target) <= skirmishPickoffJoinRange(ally));
+  const volley = attackers.reduce((total, ally) => total + ally.attackDamage, 0);
+  // @@@skirmish-critical-pickoff - Preservation owns this frame; finish an in-range ranged unit before retreating instead of letting focusFire lose the units to conflict filtering.
+  if (attackers.length < 2 || volley < target.hp * 1.35) return undefined;
+  return resolveAiCommandIntent(snapshot, owner, { type: "focusFire", unitIds: attackers.map((unit) => unit.id), targetId: target.id }, options);
+}
+
+function skirmishPickoffJoinRange(unit: Unit) {
+  return unit.attackRange + (unit.attackRange > 100 ? 80 : 95);
 }
 
 function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {

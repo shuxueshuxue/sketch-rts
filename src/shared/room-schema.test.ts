@@ -52,17 +52,18 @@ describe("shared room setup schema", () => {
         scenario: {
           replaceDefaultUnits: true,
           addUnits: [{ id: "unit-a", owner: "neutral", kind: "wildling", x: 10, y: 20, hp: 30 }],
-          addBuildings: [{ id: "tower-a", owner: "player", kind: "defenseTower", x: 40, y: 50, complete: true }],
+          addBuildings: [{ id: "tower-a", owner: "player", kind: "defenseTower", x: 40, y: 50, hp: 90, maxHp: 120, complete: true }],
         },
       }),
     ).toEqual({
       scenario: {
         replaceDefaultUnits: true,
         addUnits: [{ id: "unit-a", owner: "neutral", kind: "wildling", x: 10, y: 20, hp: 30 }],
-        addBuildings: [{ id: "tower-a", owner: "player", kind: "defenseTower", x: 40, y: 50, complete: true }],
+        addBuildings: [{ id: "tower-a", owner: "player", kind: "defenseTower", x: 40, y: 50, hp: 90, maxHp: 120, complete: true }],
       },
     });
     expect(parseGameSetupOptions({ scenario: { addUnits: [{ id: "unit-a", owner: "neutral", kind: "wildling", x: 10, y: 20, hp: 9999 }] } })).toBeUndefined();
+    expect(parseGameSetupOptions({ scenario: { addBuildings: [{ id: "tower-a", owner: "player", kind: "defenseTower", x: 40, y: 50, hp: 9999 }] } })).toBeUndefined();
   });
 
   it("uses the same map id set as the visible room setup catalog", () => {

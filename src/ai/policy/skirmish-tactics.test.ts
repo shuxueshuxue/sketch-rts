@@ -46,6 +46,33 @@ describe("AI skirmish tactics", () => {
     expect(command).toMatchObject({ type: "attackMove" });
   });
 
+  it("v5 finishes a critical local ranged target before preserving a disadvantaged skirmish", () => {
+    const game = sketchScene("skirmish-tactics-v5-critical-local-pickoff")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v5", { team: "north", race: "grove" })
+      .player("v3", { team: "south", race: "ember" })
+      .player("v4-tr", { team: "south", race: "grove" })
+      .townHall("v5", 500, 2048)
+      .townHall("v3", 3400, 2048)
+      .townHall("v4-tr", 3400, 2600)
+      .unit("v5", "archer", 2420, 2100, { id: "v5-archer-a" })
+      .unit("v5", "archer", 2470, 2075, { id: "v5-archer-b" })
+      .unit("v5", "lancer", 2500, 2120, { id: "v5-lancer" })
+      .unit("v5", "fieldMedic", 2440, 2140, { id: "v5-medic" })
+      .unit("v3", "sparkArcher", 2560, 2080, { id: "critical-spark", hp: 12, xp: 220 })
+      .unit("v3", "emberRavager", 2600, 2110)
+      .unit("v3", "cinderRunner", 2630, 2070)
+      .unit("v3", "contractArcher", 2660, 2050)
+      .unit("v3", "emberAcolyte", 2580, 2140)
+      .build()
+      .createGame();
+
+    const command = planSkirmishPreservation(snapshotGame(game), "v5", { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
+
+    expect(command).toMatchObject({ type: "attack", targetId: "critical-spark" });
+  });
+
   it("does not pull a healthy army home from a one-on-one opponent with no workers", () => {
     const scene = sketchScene("skirmish-tactics-dead-economy-no-home-pull")
       .map("bareDuel")

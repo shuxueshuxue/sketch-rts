@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from "../../shared/catalog";
-import type { GameSnapshot, PlayerId } from "../../shared/types";
+import type { Building, GameSnapshot, PlayerId } from "../../shared/types";
 import { activeMiningBaseCount } from "./expansion-model";
 import { activePlayerIds, activeResources, buildings, combatUnits, completeBuildings, units } from "./snapshot";
 import { opponentPlayerIds } from "./ownership";
@@ -23,12 +23,36 @@ export function desiredMissingProductionKind(snapshot: GameSnapshot, owner: Play
   const player = playerState(snapshot, owner);
   const plan = desiredProductionPlan(snapshot, owner, options);
   const army = combatUnits(snapshot, owner);
-  const armyGates = options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
+  const armyGates = desiredProductionArmyGates(snapshot, owner, options);
   const goldGates = [0, 420, 620, 820, 1040];
   const desired = plan.filter((_, index) => index === 0 || army.length >= armyGates[index]! || player.gold > goldGates[index]!);
-  if (buildings(snapshot, owner).some((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine")) return undefined;
+  const blockingIncomplete = buildings(snapshot, owner).filter((building) => !building.complete && building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine");
+  if (blockingIncomplete.length > 0 && !canAddSevereEconomyFirstCoreDuringExpansion(snapshot, owner, options, desired, blockingIncomplete)) return undefined;
 
   return desired.find((kind) => !buildings(snapshot, owner).some((building) => building.kind === kind));
+}
+
+function desiredProductionArmyGates(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (isV5HybridPolicy(options) && playerState(snapshot, owner).race === "grove" && opponentPlayerIds(snapshot, owner, options).length >= 3 && isOneBaseNoExpansionPressure(snapshot, owner)) {
+    // @@@v5-no-expansion-stables-gate - No-expansion 1v3+ cannot scale by town halls; Grove needs its third production shell before the seven-unit v2 timing.
+    return [0, 3, 5, 8, 11];
+  }
+  return options.version === "v2" ? [0, 3, 7, 8, 11] : [0, 3, 6, 8, 11];
+}
+
+function canAddSevereEconomyFirstCoreDuringExpansion(
+  snapshot: GameSnapshot,
+  owner: PlayerId,
+  options: PresetAiPolicyOptions,
+  desired: readonly ProductionBuildingKind[],
+  blockingIncomplete: readonly Building[],
+) {
+  if (!isV5HybridPolicy(options)) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 3) return false;
+  if (hasCoreProduction(snapshot, owner)) return false;
+  if (blockingIncomplete.some((building) => isCoreProductionBuilding(building))) return false;
+  const firstCore = desired[0];
+  return Boolean(firstCore && !buildings(snapshot, owner).some((building) => building.kind === firstCore));
 }
 
 function desiredProductionPlan(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind[] {

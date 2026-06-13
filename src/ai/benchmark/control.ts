@@ -1,5 +1,5 @@
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
-import type { MapId, PlayerId, RaceId } from "../../shared/types";
+import { createInitialMercenaryCamps, createInitialResources, RICH_SCORE_MAP_IDS } from "../../shared/map";
+import type { MapId, PlayerId, RaceId, ScenarioOverride } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
@@ -35,6 +35,11 @@ export type AiV4TrVsV3BenchmarkInput = {
 export type AiV5VsHybridBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
   selection: GauntletMapSelection<MapId>;
+};
+
+export type AiV5EconomyStressBenchmarkInput = {
+  input: BenchmarkInput<AiGameAgent>;
+  selection: { mode: "stress"; seed: string; mapIds: readonly MapId[] };
 };
 
 export type AiMeleeControlBenchmarkResult = {
@@ -117,6 +122,9 @@ export type AiCrossRaceBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed"
 export type AiV3VsProdV2BenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
 export type AiV4TrVsV3BenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
 export type AiV5VsHybridBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
+export type AiV5EconomyStressBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "maxTicks" | "thinkInterval" | "controller" | "workers"> & {
+  sampleCount?: number;
+};
 
 export type AiCrossRaceBenchmarkResult = {
   seed: string;
@@ -173,6 +181,18 @@ export type AiV5VsHybridBenchmarkResult = {
   byMap: AiV5VsHybridMapResult[];
 };
 
+export type AiV5EconomyStressBenchmarkResult = {
+  seed: string;
+  selectedMapIds: string[];
+  v5Wins: number;
+  rawMatches: number;
+  winRate: number;
+  elapsedMs: number;
+  cpuMs?: number;
+  workers?: number;
+  byEvaluation: Record<string, AiV3RaceBreakdown>;
+};
+
 export type AiV3RaceBreakdown = {
   wins: number;
   matches: number;
@@ -209,6 +229,7 @@ export type AiV5VsHybridMapResult = {
 };
 
 const FROZEN_PROD_V2_REVISION = "2521715";
+const V5_ECONOMY_STRESS_MAP_IDS = ["goldGrid", "mercPocket"] as const satisfies readonly MapId[];
 
 export function createAiV3VsProdV2BenchmarkInput(options: AiV3VsProdV2BenchmarkOptions = {}): AiV3VsProdV2BenchmarkInput {
   const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
@@ -288,6 +309,36 @@ export function createAiV5VsHybridBenchmarkInput(options: AiV5VsHybridBenchmarkO
           name: "v5 hybrid 1v2 vs v3 plus v4-tr",
           tag: "melee",
           matches: selection.mapIds.flatMap((mapId, index) => createAiV5VsHybridMatches(mapId, index, matchOptions)),
+        },
+      ],
+    },
+  };
+}
+
+export function createAiV5EconomyStressBenchmarkInput(options: AiV5EconomyStressBenchmarkOptions = {}): AiV5EconomyStressBenchmarkInput {
+  const seed = options.seed ?? "v5-economy-stress";
+  const sampleCount = options.sampleCount ?? 20;
+  const controller = options.controller ?? "external-agent";
+  const matchOptions = {
+    controller,
+    seed,
+    ...(options.maxTicks !== undefined ? { maxTicks: options.maxTicks } : {}),
+    ...(options.thinkInterval !== undefined ? { thinkInterval: options.thinkInterval } : {}),
+  };
+  return {
+    selection: { mode: "stress", seed, mapIds: V5_ECONOMY_STRESS_MAP_IDS },
+    input: {
+      name: "AI V5 Economy Stress Benchmark",
+      evaluations: [
+        {
+          name: "goldGrid v5 1v5 expansion stress",
+          tag: "melee",
+          matches: Array.from({ length: sampleCount }, (_, index) => createAiV5GoldGridStressMatch(index, matchOptions)),
+        },
+        {
+          name: "mercPocket v5 1v3 mercenary stress",
+          tag: "melee",
+          matches: Array.from({ length: sampleCount }, (_, index) => createAiV5MercPocketStressMatch(index, matchOptions)),
         },
       ],
     },
@@ -400,6 +451,15 @@ export async function runAiV5VsHybridBenchmarkParallel(options: AiV5VsHybridBenc
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
   return summarizeAiV5VsHybridBenchmark({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+}
+
+export async function runAiV5EconomyStressBenchmarkParallel(options: AiV5EconomyStressBenchmarkOptions = {}): Promise<AiV5EconomyStressBenchmarkResult> {
+  const { input, selection } = createAiV5EconomyStressBenchmarkInput(options);
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput(input), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  return summarizeAiV5EconomyStressBenchmark({ seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
 }
 
 export async function recordAiV3VsProdV2BenchmarkDashboardRun(options: AiV3VsProdV2BenchmarkOptions = {}, storeOptions: BenchmarkDashboardStoreOptions = {}): Promise<SpecializedBenchmarkDashboardRun> {
@@ -648,6 +708,27 @@ export function summarizeAiV5VsHybridBenchmark(input: { seed: string; selectedMa
   };
 }
 
+export function summarizeAiV5EconomyStressBenchmark(input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number }): AiV5EconomyStressBenchmarkResult {
+  const rows = input.report.evaluations.map((evaluation) => ({
+    name: evaluation.name,
+    wins: evaluation.matches.filter((match) => match.result.winner === "v5").length,
+    matches: evaluation.matches.length,
+  }));
+  const v5Wins = rows.reduce((total, row) => total + row.wins, 0);
+  const rawMatches = rows.reduce((total, row) => total + row.matches, 0);
+  return {
+    seed: input.seed,
+    selectedMapIds: [...input.selectedMapIds],
+    v5Wins,
+    rawMatches,
+    winRate: rawMatches > 0 ? v5Wins / rawMatches : 0,
+    elapsedMs: input.report.elapsedMs,
+    cpuMs: input.report.cpuMs,
+    ...(input.workers !== undefined ? { workers: input.workers } : {}),
+    byEvaluation: Object.fromEntries(rows.map((row) => [row.name, { wins: row.wins, matches: row.matches, winRate: row.matches > 0 ? row.wins / row.matches : 0 }])),
+  };
+}
+
 function createAiCrossRaceMatches(mapId: MapId, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> = {}) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? 48_000;
@@ -741,6 +822,143 @@ function createAiV5VsHybridMatches(mapId: MapId, index: number, options: Pick<Ai
   return [match(`${mapId} v5 north`, "north", "south", 0), match(`${mapId} v5 south`, "south", "north", 1)];
 }
 
+function createAiV5GoldGridStressMatch(index: number, options: Pick<AiV5EconomyStressBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }): BenchmarkMatchInput<AiGameAgent> {
+  const mapId: MapId = "goldGrid";
+  const maxTicks = options.maxTicks ?? 72_000;
+  const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
+  const controller = options.controller ?? "external-agent";
+  const owners = ["v5", "v3a", "v3b", "v3c", "v3d", "v3e"] as const satisfies readonly PlayerId[];
+  const v3Owners = owners.filter((owner) => owner !== "v5");
+  const seats = stressSeats(`${options.seed}:goldGrid:${index}`, 6);
+  const v5Seat = seats[hashString(`${options.seed}:goldGrid:v5:${index}`) % seats.length]!;
+  const v3Seats = seats.filter((seat) => seat !== v5Seat);
+  const placements = new Map<PlayerId, number>([["v5", v5Seat], ...v3Owners.map((owner, seatIndex) => [owner, v3Seats[seatIndex]!] as const)]);
+  const agents: Record<PlayerId, AiGameAgent> = {
+    v5: { controller, team: "v5", race: v5RaceForMatch(options.seed, mapId, index, 0), version: "v5", policyVersion: "v5", versionLabel: "v5 economy stress" },
+  };
+  v3Owners.forEach((owner, ownerIndex) => {
+    const race = v3RaceForMatch(options.seed, mapId, index, ownerIndex);
+    agents[owner] = { controller, team: "v3", race, version: "v3", policyVersion: race === "ember" ? "v3-ember" : "v3-grove", versionLabel: `v3 ${race}` };
+  });
+  return {
+    name: `goldGrid sample ${index + 1}`,
+    mapId,
+    agents,
+    commandPlanner: createAiGameCommandPlanner(),
+    maxTicks,
+    thinkInterval,
+    options: {
+      players: [...owners],
+      teams: { v5: "v5", v3a: "v3", v3b: "v3", v3c: "v3", v3d: "v3", v3e: "v3" },
+      scenario: stressScenarioForPlacements("goldGrid", placements),
+    },
+  };
+}
+
+function createAiV5MercPocketStressMatch(index: number, options: Pick<AiV5EconomyStressBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }): BenchmarkMatchInput<AiGameAgent> {
+  const mapId: MapId = "mercPocket";
+  const maxTicks = options.maxTicks ?? 60_000;
+  const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
+  const controller = options.controller ?? "external-agent";
+  const owners = ["v5", "v3a", "v3b", "v3c"] as const satisfies readonly PlayerId[];
+  const v3Owners = owners.filter((owner) => owner !== "v5");
+  const seats = stressSeats(`${options.seed}:mercPocket:${index}`, 4);
+  const v5Seat = seats[hashString(`${options.seed}:mercPocket:v5:${index}`) % seats.length]!;
+  const v3Seats = seats.filter((seat) => seat !== v5Seat);
+  const placements = new Map<PlayerId, number>([["v5", v5Seat], ...v3Owners.map((owner, seatIndex) => [owner, v3Seats[seatIndex]!] as const)]);
+  const agents: Record<PlayerId, AiGameAgent> = {
+    v5: { controller, team: "v5", race: v5RaceForMatch(options.seed, mapId, index, 0), version: "v5", policyVersion: "v5", versionLabel: "v5 merc stress" },
+  };
+  v3Owners.forEach((owner, ownerIndex) => {
+    const race = v3RaceForMatch(options.seed, mapId, index, ownerIndex);
+    agents[owner] = { controller, team: "v3", race, version: "v3", policyVersion: race === "ember" ? "v3-ember" : "v3-grove", versionLabel: `v3 ${race}` };
+  });
+  return {
+    name: `mercPocket sample ${index + 1}`,
+    mapId,
+    agents,
+    commandPlanner: createAiGameCommandPlanner(),
+    maxTicks,
+    thinkInterval,
+    options: {
+      players: [...owners],
+      teams: { v5: "v5", v3a: "v3", v3b: "v3", v3c: "v3" },
+      scenario: stressScenarioForPlacements("mercPocket", placements),
+    },
+  };
+}
+
+function stressScenarioForPlacements(mapId: "goldGrid" | "mercPocket", placements: Map<PlayerId, number>): ScenarioOverride {
+  const gridMines = createInitialResources("goldGrid");
+  const addResources = mapId === "goldGrid" ? gridMines : [...placements.values()].map((seat) => stressMineForSeat(seat));
+  const addBuildings = [...placements.entries()].map(([owner, seat]) => {
+    const base = stressBaseForSeat(seat);
+    return { id: `building-${owner}-townhall`, owner, kind: "townHall" as const, x: base.x, y: base.y, complete: true };
+  });
+  const addUnits = [...placements.entries()].flatMap(([owner, seat]) => {
+    const base = stressBaseForSeat(seat);
+    return [
+      { id: `unit-${owner}-worker-1`, owner, kind: "worker" as const, x: base.x - 55, y: base.y + 10 },
+      { id: `unit-${owner}-worker-2`, owner, kind: "worker" as const, x: base.x - 10, y: base.y + 65 },
+      { id: `unit-${owner}-worker-3`, owner, kind: "worker" as const, x: base.x + 55, y: base.y + 40 },
+    ];
+  });
+  return {
+    replaceDefaultUnits: true,
+    replaceDefaultBuildings: true,
+    replaceDefaultResources: true,
+    replaceDefaultMercenaryCamps: true,
+    replaceDefaultLandmarks: mapId === "mercPocket",
+    addResources,
+    ...(mapId === "mercPocket" ? { addMercenaryCamps: mercPocketCampsForSeat(requirePlacement(placements, "v5")) } : {}),
+    addBuildings,
+    addUnits,
+  };
+}
+
+function stressSeats(seed: string, count: number) {
+  return shuffledBySeed(stressSeatIndexes(16), seed).slice(0, count);
+}
+
+function stressSeatIndexes(count: number) {
+  return Array.from({ length: count }, (_, index) => index);
+}
+
+function stressMineForSeat(seat: number) {
+  const point = stressPointForSeat(seat);
+  return { id: `gold-stress-${seat + 1}`, kind: "goldMine" as const, x: point.x, y: point.y, amount: 6_000 };
+}
+
+function stressBaseForSeat(seat: number) {
+  const mine = stressPointForSeat(seat);
+  const center = 2_048;
+  const dx = mine.x < center ? -210 : 210;
+  const dy = mine.y < center ? -90 : 90;
+  return { x: mine.x + dx, y: mine.y + dy };
+}
+
+function stressPointForSeat(seat: number) {
+  const lanes = [640, 1_580, 2_520, 3_456];
+  return { x: lanes[seat % 4]!, y: lanes[Math.floor(seat / 4)]! };
+}
+
+function mercPocketCampsForSeat(v5Seat: number) {
+  const base = stressBaseForSeat(v5Seat);
+  const directionX = base.x < 2_048 ? 1 : -1;
+  const directionY = base.y < 2_048 ? 1 : -1;
+  return createInitialMercenaryCamps("mercPocket").map((camp, index) => ({
+    ...camp,
+    x: base.x + directionX * (180 + index * 74),
+    y: base.y + directionY * (140 + (index % 2) * 120),
+  }));
+}
+
+function requirePlacement(placements: Map<PlayerId, number>, owner: PlayerId) {
+  const seat = placements.get(owner);
+  if (seat === undefined) throw new Error(`Missing economy stress placement for ${owner}`);
+  return seat;
+}
+
 function v3RaceForMatch(seed: string, mapId: string, mapIndex: number, sideIndex: number): RaceId {
   return hashString(`${seed}:${mapId}:${mapIndex}:${sideIndex}`) % 2 === 0 ? "grove" : "ember";
 }
@@ -766,6 +984,21 @@ function hashCoin(value: string) {
   const hash = hashString(value);
   // @@@hash-coin - Race sampling must not use only FNV's lowest bit, because fixed string prefixes can deterministically flip it.
   return ((hash ^ (hash >>> 16)) & 1) === 0;
+}
+
+function shuffledBySeed<T>(items: readonly T[], seed: string) {
+  const result = [...items];
+  let state = hashString(seed);
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    state = nextRandomState(state);
+    const swapIndex = state % (index + 1);
+    [result[index], result[swapIndex]] = [result[swapIndex]!, result[index]!];
+  }
+  return result;
+}
+
+function nextRandomState(state: number) {
+  return (Math.imul(state, 1664525) + 1013904223) >>> 0;
 }
 
 function v3RaceFromMatch(match: BenchmarkMatchReport): RaceId {

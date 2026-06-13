@@ -8,6 +8,7 @@ import { averagePoint, distance } from "./spatial";
 import { enemyPressure } from "./threats";
 import { hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
+import { isV5HybridPolicy } from "./versions";
 
 export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
   const townHalls = completeBuildings(snapshot, owner, "townHall");
@@ -56,13 +57,45 @@ export function expansionBaseTarget(options: PresetAiPolicyOptions) {
 
 export function canExpandBeforeFullProductionChain(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return false;
+  if (canTakeSevereEconomyGapFollowupExpansion(snapshot, owner, options)) return true;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
+  if (canTakeSevereEconomyGapFirstExpansion(snapshot, owner, options)) return true;
   if (buildings(snapshot, owner).filter((building) => building.complete && isCoreProductionBuilding(building)).length < 2) return false;
   if (opponentPlayerIds(snapshot, owner, options).length >= 2) return opponentEconomyAhead(snapshot, owner, options);
   const mine = desiredExpansionMine(snapshot, owner);
   if (!mine || enemyPressure(snapshot, owner, mine, 360, options)) return false;
   const remainingNeutralPower = neutralGuardPower(snapshot, mine);
   return remainingNeutralPower <= 0 || expansionIsNearlyCleared(snapshot, owner, mine);
+}
+
+function canTakeSevereEconomyGapFirstExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return false;
+  const opponents = opponentPlayerIds(snapshot, owner, options);
+  if (opponents.length < 3) return false;
+  const ownBases = completeBuildings(snapshot, owner, "townHall").length;
+  const enemyBases = opponents.reduce((total, opponent) => total + completeBuildings(snapshot, opponent, "townHall").length, 0);
+  if (enemyBases < ownBases + 2) return false;
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine) return false;
+  if (neutralUnitsNear(snapshot, mine, 280).length > 0) return false;
+  if (opponentBaseControlsExpansionMine(snapshot, opponents, mine)) return false;
+  return !enemyPressure(snapshot, owner, mine, 360, options);
+}
+
+function canTakeSevereEconomyGapFollowupExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 3) return false;
+  if (activeMiningBaseCount(snapshot, owner) < 2) return false;
+  if (!hasCoreProduction(snapshot, owner)) return false;
+  if (combatUnits(snapshot, owner).length < 5) return false;
+  if (!shouldPrioritizeCatchUpExpansionBeforeMacro(snapshot, owner, options)) return false;
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine || neutralUnitsNear(snapshot, mine, 280).length > 0) return false;
+  return !enemyPressure(snapshot, owner, mine, 360, options);
+}
+
+function opponentBaseControlsExpansionMine(snapshot: GameSnapshot, opponents: readonly PlayerId[], mine: ResourceNode) {
+  return allBuildings(snapshot).some((building) => opponents.includes(building.owner) && building.kind === "townHall" && distance(building, mine) < 900);
 }
 
 export function shouldReserveForExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

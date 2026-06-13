@@ -21,6 +21,9 @@ export const RESEARCH_COMMANDS = [
   { upgradeKind: "weaponTraining", label: "Weapon Training", icon: "⚔", hotkey: "w" },
   { upgradeKind: "reinforcedPlating", label: "Reinforced Plating", icon: "▣", hotkey: "p" },
   { upgradeKind: "buildingDurability", label: "Building Durability", icon: "▥", hotkey: "d" },
+  { upgradeKind: "speedTraining", label: "Mobility Training", icon: "↟", hotkey: "m" },
+  { upgradeKind: "rangeTraining", label: "Range Training", icon: "⌖", hotkey: "r" },
+  { upgradeKind: "leadership", label: "Leadership", icon: "★", hotkey: "l" },
 ] satisfies Omit<ResearchCommandButton, "buildingId">[];
 
 export function researchCommandButtonsForSelection(buildings: Building[], player: PlayerState | undefined): ResearchCommandButton[] {

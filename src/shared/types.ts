@@ -40,7 +40,7 @@ export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" 
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
-export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability";
+export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
   type: "curse" | "guardian" | "scorch";
@@ -264,6 +264,8 @@ export type ScenarioBuildingSeed = {
   kind: BuildingKind;
   x: number;
   y: number;
+  hp?: number;
+  maxHp?: number;
   complete?: boolean;
 };
 

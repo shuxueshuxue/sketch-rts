@@ -21,6 +21,23 @@ describe("AI build layout helpers", () => {
     expect(towerPointFor(snapshotGame(game), "v2", base, { x: 800, y: 500 })).toEqual({ x: 350, y: 500 });
   });
 
+  it("keeps threatened tower placement close enough to cover a longer base approach", () => {
+    const game = sketchScene("build-layout-threat-tower-range-cover")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500, { id: "main-hall" })
+      .build()
+      .createGame();
+    const base = game.buildings.find((building) => building.id === "main-hall");
+    if (!base) throw new Error("missing main hall");
+    const threat = { x: 900, y: 500 };
+
+    const point = towerPointFor(snapshotGame(game), "v2", base, threat);
+
+    expect(distance(point, threat)).toBeLessThanOrEqual(BUILDING_DEFS.defenseTower.attackRange - 20);
+  });
+
   it("moves a defensive tower point away from occupied building space", () => {
     const game = sketchScene("build-layout-occupied-threat-tower")
       .map("bareDuel")
@@ -38,6 +55,26 @@ describe("AI build layout helpers", () => {
     const distance = Math.hypot(point.x - farm.x, point.y - farm.y);
 
     expect(distance).toBeGreaterThanOrEqual(BUILDING_DEFS.defenseTower.radius + BUILDING_DEFS.farm.radius + 4);
+  });
+
+  it("places expansion guard towers away from nearby neutral camps", () => {
+    const game = sketchScene("build-layout-expansion-tower-neutral-space")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v2", { team: "west" })
+      .townHall("v2", 492, 2048)
+      .townHall("v2", 1806, 3056, { id: "third-base" })
+      .unit("neutral", "stonebackBrute", 1906, 3150, { id: "nearby-red-brute" })
+      .build()
+      .createGame();
+    const base = game.buildings.find((building) => building.id === "third-base");
+    const neutral = game.units.find((unit) => unit.id === "nearby-red-brute");
+    if (!base || !neutral) throw new Error("missing neutral tower fixture");
+
+    const point = towerPointFor(snapshotGame(game), "v2", base, undefined);
+
+    expect(distance(point, base)).toBeLessThanOrEqual(430);
+    expect(distance(point, neutral)).toBeGreaterThan(360);
   });
 
   it("places moon wells behind the main base by owner side", () => {

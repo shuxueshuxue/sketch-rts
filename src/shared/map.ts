@@ -31,6 +31,8 @@ export const MAP_SCENARIOS: MapScenario[] = [
   { id: "openClaims", name: "Open Claims", note: "Expansion-focused economy map with no neutral camps blocking the mines.", tags: ["4096", "expansions", "no wild camps"] },
   { id: "campRush", name: "Camp Rush", note: "No-expansion pressure map where neutral camps and mercenaries shape the route.", tags: ["4096", "no expansions", "wild camps"] },
   { id: "combatArena", name: "Combat Arena", note: "Small benchmark arena for mixed-army micro without economy or neutral routing.", tags: ["1600", "combat", "micro"] },
+  { id: "goldGrid", name: "Gold Grid", note: "V5 economy research map with sixteen open gold points for expansion stress tests.", tags: ["4096", "research", "many mines", "no wild camps"] },
+  { id: "mercPocket", name: "Merc Pocket", note: "V5 economy research map with nearby unguarded mercenary camps for hire-tempo stress tests.", tags: ["4096", "research", "mercs", "no wild camps"] },
   { id: "wildMarches", name: "Wild Marches", note: "Neutral-heavy route network where armies read as moving sketches across a compact battlefield.", tags: ["4096", "many camps", "mercs"] },
   { id: "stagHollow", name: "Stag Hollow", note: "Rich official map with guarded mines, red-camp item pressure, and a mercenary loop around the hollow.", tags: ["4096", "score", "many camps", "mercs"] },
   { id: "emberFen", name: "Ember Fen", note: "Rich official map with dense neutral rewards and competing expansion routes through a smoky lowland.", tags: ["4096", "score", "many camps", "mercs"] },
@@ -175,6 +177,7 @@ function titleizeMapId(id: string) {
 
 export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: PlayerId[] = ["player", "enemy"], teams?: Partial<Record<PlayerId, string>>): ResourceNode[] {
   if (mapId === "combatArena") return [];
+  if (mapId === "goldGrid") return goldGridMines();
   if (mapId === "grandThirty") {
     return [
       ...players.map((owner, index) => {
@@ -207,6 +210,8 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
 
 export function createInitialMercenaryCamps(mapId: MapId = DEFAULT_MAP_ID): MercenaryCamp[] {
   if (mapId === "combatArena") return [];
+  if (mapId === "goldGrid") return [];
+  if (mapId === "mercPocket") return mercPocketCamps();
   if (mapId === "bareDuel" || mapId === "openClaims") return [];
   if (mapId === "grandThirty") return grandThirtyMercenaryCamps();
   const camps: MercenaryCamp[] = [
@@ -222,6 +227,7 @@ export function createInitialMercenaryCamps(mapId: MapId = DEFAULT_MAP_ID): Merc
 
 export function createInitialItems(mapId: MapId = DEFAULT_MAP_ID): WorldItem[] {
   if (mapId === "combatArena") return [];
+  if (mapId === "goldGrid" || mapId === "mercPocket") return [];
   if (mapId === "bareDuel" || mapId === "openClaims") return [];
   const items: WorldItem[] = [
     { id: "treasure-center-lightning", kind: "lightningRod", x: 0, y: 0, carrierId: "wildling-center-2", cooldownRemaining: 0 },
@@ -301,6 +307,7 @@ export function createInitialUnits(mapId: MapId = DEFAULT_MAP_ID, players: Playe
   const playerUnits = units.filter((unit) => unit.owner !== "neutral");
   const neutralUnits = units.filter((unit) => unit.owner === "neutral");
   if (mapId === "combatArena") return playerUnits;
+  if (mapId === "goldGrid" || mapId === "mercPocket") return playerUnits;
   if (mapId === "bareDuel" || mapId === "openClaims") return playerUnits;
   if (isRichScoreMap(mapId)) {
     neutralUnits.push(
@@ -638,6 +645,30 @@ function teamLaneMineSafetyPoints(mapSize: number) {
     }
   }
   return points;
+}
+
+function goldGridMines(): ResourceNode[] {
+  const slots = goldGridPoints();
+  return slots.map((point, index) => ({
+    id: `gold-grid-${index + 1}`,
+    kind: "goldMine" as const,
+    x: point.x,
+    y: point.y,
+    amount: 6_000,
+  }));
+}
+
+function goldGridPoints() {
+  const lanes = [640, 1_580, 2_520, 3_456];
+  return lanes.flatMap((y) => lanes.map((x) => ({ x, y })));
+}
+
+function mercPocketCamps(): MercenaryCamp[] {
+  return [
+    { id: "merc-pocket-frontline", x: 840, y: 760, radius: 50, hireKind: "mercenary", cost: UNIT_DEFS.mercenary.cost, stock: 5, cooldown: seconds(9), cooldownRemaining: 0 },
+    { id: "merc-pocket-bow", x: 760, y: 1_020, radius: 50, hireKind: "contractArcher", cost: UNIT_DEFS.contractArcher.cost, stock: 3, cooldown: seconds(16), cooldownRemaining: 0 },
+    { id: "merc-pocket-medic", x: 1_020, y: 840, radius: 50, hireKind: "fieldMedic", cost: UNIT_DEFS.fieldMedic.cost, stock: 3, cooldown: seconds(18), cooldownRemaining: 0 },
+  ];
 }
 
 function hashString(value: string) {

@@ -127,6 +127,49 @@ describe("AI policy command memory claims", () => {
     });
   });
 
+  it("clears camp movement ownership after an ordinary hire transaction", () => {
+    const game = sketchScene("merc-hire-clears-camp-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 1140, 985, { id: "claim-footman" })
+      .unit("neutral", "wildling", 1180, 990, { id: "camp-guard" })
+      .mercenaryCamp("guarded-camp", 1160, 980)
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    recordAiMemoryForCommands(snapshotGame(game), "objectiveControl", [{ type: "attackMove", unitIds: ["claim-footman"], x: 1160, y: 980 }], memory);
+    game.tick = 195;
+
+    recordAiMemoryForCommands(snapshotGame(game), "mercenary", [{ type: "hire", campId: "guarded-camp" }], memory);
+
+    expect(memory.unitClaims["claim-footman"]).toBeUndefined();
+  });
+
+  it("can preserve camp movement ownership for same-frame guarded hire flows", () => {
+    const game = sketchScene("merc-hire-keeps-camp-claim")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north" })
+      .townHall("v2", 500, 500)
+      .unit("v2", "footman", 1140, 985, { id: "claim-footman" })
+      .unit("neutral", "wildling", 1180, 990, { id: "camp-guard" })
+      .mercenaryCamp("guarded-camp", 1160, 980)
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    recordAiMemoryForCommands(snapshotGame(game), "objectiveControl", [{ type: "attackMove", unitIds: ["claim-footman"], x: 1160, y: 980 }], memory);
+    game.tick = 195;
+
+    recordAiMemoryForCommands(snapshotGame(game), "mercenary", [{ type: "hire", campId: "guarded-camp" }], memory, { preserveHireCampClaims: true });
+
+    expect(memory.unitClaims["claim-footman"]).toMatchObject({
+      kind: "mercenary",
+      targetId: "guarded-camp",
+    });
+  });
+
   it("clears expansion army claims once the claimed mine has an owned town hall", () => {
     const game = sketchScene("expansion-claim-complete")
       .map("bareDuel")

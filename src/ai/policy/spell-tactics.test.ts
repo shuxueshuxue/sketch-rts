@@ -181,6 +181,39 @@ describe("AI spell and focus tactics", () => {
     });
   });
 
+  it("lets a v5 two-base mercenary squad chase the ranged unit attacking its arrived camp group", () => {
+    const game = sketchScene("spell-tactics-v5-arrived-merc-counterfire")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v5", { team: "south", race: "grove" })
+      .player("v3", { team: "north", race: "ember" })
+      .player("v4-tr", { team: "north", race: "grove" })
+      .goldMine("v5-main-mine", 500, 500, 4_000)
+      .goldMine("v5-natural-mine", 900, 500, 4_000)
+      .townHall("v5", 500, 500)
+      .townHall("v5", 900, 500)
+      .townHall("v3", 3300, 3300)
+      .townHall("v4-tr", 3400, 3700)
+      .unit("v5", "footman", 1160, 980, { id: "claimed-a", order: { type: "attackMove", x: 1180, y: 980 } })
+      .unit("v5", "footman", 1190, 1000, { id: "claimed-b", order: { type: "attackMove", x: 1180, y: 980 } })
+      .unit("v5", "lancer", 1220, 1020, { id: "claimed-c", order: { type: "attackMove", x: 1180, y: 980 } })
+      .unit("v5", "archer", 1240, 1040, { id: "claimed-d", order: { type: "attackMove", x: 1180, y: 980 } })
+      .unit("v3", "contractArcher", 1580, 1000, { id: "ranged-poker", order: { type: "attack", targetId: "claimed-a" } })
+      .mercenaryCamp("cleared-field-tent", 1180, 980, { hireKind: "contractArcher", cost: 160, stock: 1, cooldownRemaining: 0 })
+      .build()
+      .createGame();
+    const memory = createAiPolicyMemory();
+    for (const unitId of ["claimed-a", "claimed-b", "claimed-c", "claimed-d"]) {
+      memory.unitClaims[unitId] = { kind: "mercenary", targetId: "cleared-field-tent", x: 1180, y: 980, sinceTick: 0, expiresTick: 900 };
+    }
+
+    expect(planFocusFireCommand(snapshotGame(game), "v5", { version: "v2", requestedVersion: "v5", teams: game.teams, memory })).toEqual({
+      type: "attack",
+      unitIds: ["claimed-a", "claimed-b", "claimed-c", "claimed-d"],
+      targetId: "ranged-poker",
+    });
+  });
+
   it("keeps focusing a remembered live target instead of scattering damage every frame", () => {
     const game = sketchScene("spell-tactics-remembered-focus")
       .map("combatArena")
