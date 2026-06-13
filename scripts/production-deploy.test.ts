@@ -35,16 +35,8 @@ describe("production CD contract", () => {
     expect(workflow).toContain("git diff --quiet \"$GITHUB_SHA\" \"origin/main\"");
   });
 
-  it("allows production pull requests only from main", () => {
-    const guardPath = ".github/workflows/production-source-guard.yml";
-    expect(existsSync(guardPath)).toBe(true);
-
-    const workflow = readFileSync(guardPath, "utf8");
-
-    expect(workflow).toContain("branches: [production]");
-    expect(workflow).toContain("Production Source Guard");
-    expect(workflow).toContain("github.head_ref != 'main'");
-    expect(workflow).toContain("Production can only be updated from main.");
+  it("does not keep a pull-request merge lane for production promotion", () => {
+    expect(existsSync(".github/workflows/production-source-guard.yml")).toBe(false);
   });
 
   it("promotes production by moving the production ref to the exact main commit", () => {
