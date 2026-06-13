@@ -182,10 +182,11 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
   AI_SCRIPT_LIBRARY.focusFire,
+  // @@@v5-objective-before-raids - Fresh V5 1v2 armies should finish nearby value camps before peeling into worker raids.
+  AI_SCRIPT_LIBRARY.objectiveControl,
   AI_SCRIPT_LIBRARY.workerPressure,
   AI_SCRIPT_LIBRARY.workerPressureCloseout,
   AI_SCRIPT_LIBRARY.expansionDenial,
-  AI_SCRIPT_LIBRARY.objectiveControl,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
 ];
@@ -492,8 +493,8 @@ function shouldDelayThirdExpansionForLiveOpponentArmy(snapshot: GameSnapshot, ow
   if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   if (activeMiningBaseCount(snapshot, owner) < 2) return false;
   const ownCombat = combatUnits(snapshot, owner);
-  // @@@v5-third-base-economy - V5's 1v2 target needs the third mine once a real two-base field group exists; V2 keeps the conservative live-army gate.
-  if (isV5HybridPolicy(options) && ownCombat.length >= 5) return false;
+  // @@@v5-third-base-economy - V5 can greed a safe third with five bodies, but not into an enemy-held third-mine pocket.
+  if (isV5HybridPolicy(options) && ownCombat.length >= 5 && !thinV5ThirdMinePocketControlled(snapshot, owner, ownCombat, options)) return false;
   if (ownCombat.length >= 8) return false;
   const ownPower = armyPower(ownCombat);
   return opponentPlayerIds(snapshot, owner, options).some((opponent) => {
@@ -501,6 +502,13 @@ function shouldDelayThirdExpansionForLiveOpponentArmy(snapshot: GameSnapshot, ow
     // @@@third-expansion-live-army-gate - A third hall is future tempo; before eight fighters, a larger live opponent army is the current 1v2 problem.
     return army.length >= ownCombat.length + 2 && armyPower(army) > ownPower * 1.1;
   });
+}
+
+function thinV5ThirdMinePocketControlled(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+  const mine = desiredExpansionMine(snapshot, owner);
+  if (!mine) return true;
+  const enemies = enemyCombatUnitsNear(snapshot, owner, mine, 900, options.teams);
+  return enemies.length >= 3 && armyPower(enemies) > armyPower(ownCombat) * 0.75;
 }
 
 function shouldWaitForOneOnOneFirstExpansionGroup(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -1721,10 +1729,11 @@ function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: 
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
   if (!completeBuildings(snapshot, owner, "cinderSpire").some((building) => building.queue.length === 0)) return false;
+  const army = combatUnits(snapshot, owner);
+  if (shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot, owner, options, army, availableGold)) return true;
   // @@@v5-first-spark-bank - First spark is a composition milestone, but not worth resetting an already-cleared first hall bank in 1v2.
   if (shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
   if (availableGold < spendCost) return false;
-  const army = combatUnits(snapshot, owner);
   if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
   if (shouldSpendGuardedNaturalBankOnFirstSpark(snapshot, owner, options, army, availableGold)) return true;
   if (opponentPlayerIds(snapshot, owner, options).length >= 2 && army.length >= 4 && army.filter((unit) => unit.hp < unit.maxHp * 0.72).length >= 2) {
@@ -1735,6 +1744,19 @@ function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: 
   if (army.length < 6) return false;
   // @@@ember-first-scorch-bank - Six melee bodies without scorch are already a committed army; if the enemy expanded first, waiting ten gold for the hall loses the race kit's timing.
   return opponentEconomyAhead(snapshot, owner, options) || opponentExpansionStartedBeforeOwner(snapshot, owner, options);
+}
+
+function shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, army = combatUnits(snapshot, owner), availableGold = playerState(snapshot, owner).gold) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (availableGold < BUILDING_DEFS.townHall.cost - 30 || availableGold >= BUILDING_DEFS.townHall.cost) return false;
+  if (!shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
+  if (army.length < 4 || army.length > 5) return false;
+  if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
+  const enemies = enemyCombatUnits(snapshot, owner, options.teams);
+  if (enemies.length < army.length + 5) return false;
+  // @@@v5-cleared-bank-first-spark - A cleared hall bank is only broken before 320g when V5's melee-only squad is already badly behind both enemy armies.
+  return armyPower(enemies) > armyPower(army) * 1.75;
 }
 
 function shouldSpendGuardedNaturalBankOnFirstSpark(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, army: Unit[], availableGold: number) {
@@ -1816,6 +1838,9 @@ function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, op
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
+  if (shouldPrioritizeEmberFirstSparkUnderArmyDeficit(snapshot, owner, options, candidates)) {
+    return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
+  }
   if (shouldPrioritizeEmberFirstSpireSupport(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
   }
@@ -1849,6 +1874,12 @@ function shouldPrioritizeSevereEconomySustainedCombat(snapshot: GameSnapshot, ow
 
 function severeEconomySustainedCombatTarget(opponentCount: number) {
   return Math.max(6, Math.min(10, opponentCount + 2));
+}
+
+function shouldPrioritizeEmberFirstSparkUnderArmyDeficit(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+  const spire = candidates.find((building) => building.kind === "cinderSpire");
+  if (!spire || trainingChoice(snapshot, owner, spire, options) !== "sparkArcher") return false;
+  return shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot, owner, options);
 }
 
 function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
@@ -3862,11 +3893,13 @@ function closeoutAttackWaveTarget(snapshot: GameSnapshot, owner: PlayerId, soldi
   const minimumWaveSize = outnumberedV2 ? 7 : 5;
   if (options.version === "v2" && deadEconomyCloseoutReady(snapshot, owner, options, soldiers) && armyPower(enemyArmy) > armyPower(soldiers) * strongerEnemyArmyStoplineRatio(snapshot, owner, soldiers, options)) return undefined;
   const deadEconomyCleanup = options.version === "v2" ? deadEconomyCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
-  const requiredWaveSize = deadEconomyCleanup ? 5 : minimumWaveSize;
+  const crippledCleanup = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
+  // @@@crippled-opponent-closeout - A five-unit cleanup wave is a finish tool after a second base; ordinary seven-unit pressure can still use the same target selection.
+  const crippledSmallCleanup = crippledCleanup && completeBuildings(snapshot, owner, "townHall").length >= 2;
+  const requiredWaveSize = deadEconomyCleanup || crippledSmallCleanup ? 5 : minimumWaveSize;
   if (soldiers.length < requiredWaveSize) return undefined;
   if (outnumberedV2 && movable.length < requiredWaveSize) return undefined;
   if (deadEconomyCleanup) return deadEconomyCleanup;
-  const crippledCleanup = options.version === "v2" ? crippledOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner) : undefined;
   if (crippledCleanup) return crippledCleanup;
   if (outnumberedV2 && armyPower(enemyArmy) > armyPower(soldiers) * 1.25) return undefined;
   return weakOpponentCloseoutBuilding(snapshot, owner, averagePoint(movable), options, movable, preferredOwner);
@@ -3929,10 +3962,12 @@ function weakOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, f
 }
 
 function crippledOpponentCloseoutBuilding(snapshot: GameSnapshot, owner: PlayerId, from: Point, options: PresetAiPolicyOptions, soldiers: Unit[], preferredOwner?: PlayerId) {
-  return preferredAttackBuildings(allBuildings(snapshot), preferredOwner)
+  const cleanable = allBuildings(snapshot)
     .filter((building) => isEnemyOwner(snapshot, owner, building.owner, options))
-    .filter((building) => crippledOpponentBuildingIsCleanable(snapshot, owner, building, from, soldiers, options))
-    .sort((a, b) => crippledOpponentCleanupScore(b, from) - crippledOpponentCleanupScore(a, from))[0];
+    .filter((building) => crippledOpponentBuildingIsCleanable(snapshot, owner, building, from, soldiers, options));
+  const preferred = preferredOwner ? cleanable.filter((building) => building.owner === preferredOwner) : [];
+  const candidates = preferred.length > 0 ? preferred : cleanable;
+  return candidates.sort((a, b) => crippledOpponentCleanupScore(b, from) - crippledOpponentCleanupScore(a, from))[0];
 }
 
 function preferredAttackBuildings(candidates: Building[], preferredOwner: PlayerId | undefined) {
