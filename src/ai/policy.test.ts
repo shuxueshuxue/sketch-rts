@@ -2481,6 +2481,54 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "sparkArcher" });
   });
 
+  it("v5 ember spends a cleared near-hall bank on first spark when two enemy armies are far ahead", () => {
+    const scene = sketchScene("v5-cleared-natural-first-spark-army-deficit")
+      .map("spruceCircuit")
+      .replaceDefaults()
+      .player("v5", { team: "south", race: "ember" })
+      .player("v3", { team: "north", race: "grove" })
+      .player("v4-tr", { team: "north", race: "grove" })
+      .townHall("v5", 492, 2048, { id: "v5-main" })
+      .building("v5", "emberForge", 578, 2176, { id: "forge" })
+      .building("v5", "cinderSpire", 578, 1976, { id: "spire" })
+      .building("v5", "farm", 716, 1948)
+      .building("v5", "farm", 716, 2176)
+      .building("v5", "farm", 716, 2404)
+      .goldMine("gold-v5-main", 702, 1958, 4_000)
+      .goldMine("gold-v5-natural", 810, 2610, 4_000)
+      .goldMine("gold-v3-main", 3_500, 1_420, 4_000)
+      .goldMine("gold-v4-main", 3_050, 3_150, 4_000);
+    for (let index = 0; index < 9; index += 1) scene.worker("v5", 560 + index * 18, 2_000 + (index % 2) * 28);
+    scene
+      .unit("v5", "emberRavager", 817, 2603, { hp: 55 })
+      .unit("v5", "cinderRunner", 792, 2628, { hp: 62 })
+      .unit("v5", "emberRavager", 672, 2265)
+      .unit("v5", "cinderRunner", 667, 2230)
+      .townHall("v3", 3_500, 1_420)
+      .townHall("v4-tr", 3_050, 3_150)
+      .unit("v3", "footman", 2388, 839)
+      .unit("v3", "footman", 2355, 824)
+      .unit("v3", "lancer", 2286, 821)
+      .unit("v3", "footman", 2322, 811)
+      .unit("v3", "contractArcher", 2326, 853, { hp: 45 })
+      .unit("v3", "lancer", 2359, 860)
+      .unit("v3", "footman", 3570, 1635)
+      .unit("v3", "archer", 3471, 1314)
+      .unit("v4-tr", "mercenary", 2953, 3175)
+      .unit("v4-tr", "mercenary", 2935, 3106)
+      .unit("v4-tr", "mercenary", 2944, 3141);
+    const game = scene.build().createGame();
+    game.players.v5!.gold = 305;
+
+    const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.training], {
+      version: "v2",
+      requestedVersion: "v5",
+      teams: game.teams,
+    })[0];
+
+    expect(command).toMatchObject({ type: "train", buildingId: "spire", unitKind: "sparkArcher" });
+  });
+
   it("v5 waits for a larger two-base 1v2 group before starting a neutral objective", () => {
     const scene = sketchScene("v5-two-base-objective-group-size")
       .map("openClaims")

@@ -1722,10 +1722,11 @@ function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: 
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return false;
   if (!completeBuildings(snapshot, owner, "cinderSpire").some((building) => building.queue.length === 0)) return false;
+  const army = combatUnits(snapshot, owner);
+  if (shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot, owner, options, army, availableGold)) return true;
   // @@@v5-first-spark-bank - First spark is a composition milestone, but not worth resetting an already-cleared first hall bank in 1v2.
   if (shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
   if (availableGold < spendCost) return false;
-  const army = combatUnits(snapshot, owner);
   if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
   if (shouldSpendGuardedNaturalBankOnFirstSpark(snapshot, owner, options, army, availableGold)) return true;
   if (opponentPlayerIds(snapshot, owner, options).length >= 2 && army.length >= 4 && army.filter((unit) => unit.hp < unit.maxHp * 0.72).length >= 2) {
@@ -1736,6 +1737,19 @@ function shouldSpendEmberFirstSparkExpansionBank(snapshot: GameSnapshot, owner: 
   if (army.length < 6) return false;
   // @@@ember-first-scorch-bank - Six melee bodies without scorch are already a committed army; if the enemy expanded first, waiting ten gold for the hall loses the race kit's timing.
   return opponentEconomyAhead(snapshot, owner, options) || opponentExpansionStartedBeforeOwner(snapshot, owner, options);
+}
+
+function shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, army = combatUnits(snapshot, owner), availableGold = playerState(snapshot, owner).gold) {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  if (playerState(snapshot, owner).race !== "ember") return false;
+  if (availableGold < BUILDING_DEFS.townHall.cost - 30 || availableGold >= BUILDING_DEFS.townHall.cost) return false;
+  if (!shouldHoldV5FirstClearedExpansionBank(snapshot, owner, options)) return false;
+  if (army.length < 4 || army.length > 5) return false;
+  if (army.some((unit) => UNIT_DEFS[unit.kind].attackRange > 120)) return false;
+  const enemies = enemyCombatUnits(snapshot, owner, options.teams);
+  if (enemies.length < army.length + 5) return false;
+  // @@@v5-cleared-bank-first-spark - A cleared hall bank is only broken before 320g when V5's melee-only squad is already badly behind both enemy armies.
+  return armyPower(enemies) > armyPower(army) * 1.75;
 }
 
 function shouldSpendGuardedNaturalBankOnFirstSpark(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, army: Unit[], availableGold: number) {
@@ -1817,6 +1831,9 @@ function trainingBuildingsByPriority(snapshot: GameSnapshot, owner: PlayerId, op
   if (shouldPrioritizeFirstRangedTraining(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "archeryRange") - Number(a.kind === "archeryRange"));
   }
+  if (shouldPrioritizeEmberFirstSparkUnderArmyDeficit(snapshot, owner, options, candidates)) {
+    return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
+  }
   if (shouldPrioritizeEmberFirstSpireSupport(snapshot, owner, options, candidates)) {
     return [...candidates].sort((a, b) => Number(b.kind === "cinderSpire") - Number(a.kind === "cinderSpire"));
   }
@@ -1850,6 +1867,12 @@ function shouldPrioritizeSevereEconomySustainedCombat(snapshot: GameSnapshot, ow
 
 function severeEconomySustainedCombatTarget(opponentCount: number) {
   return Math.max(6, Math.min(10, opponentCount + 2));
+}
+
+function shouldPrioritizeEmberFirstSparkUnderArmyDeficit(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
+  const spire = candidates.find((building) => building.kind === "cinderSpire");
+  if (!spire || trainingChoice(snapshot, owner, spire, options) !== "sparkArcher") return false;
+  return shouldSpendClearedNaturalBankOnFirstSparkUnderArmyDeficit(snapshot, owner, options);
 }
 
 function shouldPrioritizeEmberFirstSpireSupport(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, candidates: Building[]) {
