@@ -3,6 +3,11 @@ export type Locale = "en" | "zh";
 type TranslationValues = Record<string, number | string>;
 
 const EN_TRANSLATIONS = {
+  "art.edition": "THE WOODLAND ATLAS",
+  "art.intro": "Raise a kingdom. Rally your people. Write your own art of war.",
+  "art.footer": "A world worth fighting for.",
+  "art.caption": "The Verdant Marches",
+  "art.captionNote": "Build. Explore. Command.",
   "common.back": "Back",
   "common.cancel": "Cancel",
   "common.continue": "Continue",
@@ -201,6 +206,11 @@ const EN_TRANSLATIONS = {
 export type TranslationKey = keyof typeof EN_TRANSLATIONS;
 
 const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
+  "art.edition": "林野战记 · THE WOODLAND ATLAS",
+  "art.intro": "筑起城邦，集结军队。\n让你的战术，在纸上生长。",
+  "art.footer": "方寸纸上，自有天地。",
+  "art.caption": "苍翠边境",
+  "art.captionNote": "建造 · 探索 · 征战",
   "common.back": "返回",
   "common.cancel": "取消",
   "common.continue": "继续",

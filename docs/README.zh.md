@@ -1,214 +1,196 @@
 # Sketch RTS
 
-[English README](../README.md)
+**手绘风格的浏览器即时战略游戏，也是一套可以编程控制的 AI 对战环境。**
 
-Sketch RTS 是一个运行在浏览器里的 RTS 游戏，带有 AI-native SDK、CLI 工作流，以及可组合的脚本系统。
+[English](../README.md) · [快速开始](#快速开始) · [游戏画面](#游戏画面) · [SDK 与 AI](#sdk-与-ai) · [美术设计](woodland-atlas.md)
 
-项目仍在 WIP。当前重点是稳定的浏览器游玩、确定性的 command-frame 联机、SDK 控制的 AI 实验，以及高吞吐 benchmark。
+![Sketch RTS「林野战记」主菜单](art/woodland-home.png)
 
-## 特色
+建造基地，派农民采金，带领军队探索地图。从近战、远程到施法单位，配合物品与升级，争夺野怪营地和雇佣兵资源。
 
-- 浏览器 RTS：农民、采金、建筑、升级、近战/远程/施法单位、物品、野怪营地、雇佣兵营地、集结点、聊天和房间设置。
-- AI-native 脚本：AI policy script 只发普通玩家命令，不直接改 simulation。
-- SDK 控制面：创建房间、重置场景、读取 snapshot、注入命令、快进 tick、等待 effect、保存/回放 debug trace、运行探针。
-- 灵活部署：静态浏览器模式用于本地游玩；hosted server 模式用于房间、观战、WebSocket lockstep、存档、SDK 控制和 benchmark dashboard。
-- 联机走 command frame，支持可回放的房间流量和确定性的比赛推进。
-- Hosted 房间有实时 room lifecycle stream，开局前的玩家槽位会跨设备更新。
-- 房间 URL 使用稳定 hash route，例如 `#room=room-id`，玩家可以刷新或分享房间，而不需要服务器额外配置 SPA 路由。
-- 高性能 AI benchmark：并行 worker、dashboard、rich score/control/probe/combat 多条 lane。
+你可以直接在浏览器里玩，也可以写一个 AI 来玩。SDK、回放与 AI 基准测试使用同一套按命令帧推进的游戏模拟。
+
+> **项目持续开发中。** 当前在完善浏览器游玩、联机和 AI 工具。新版美术「林野战记 / Woodland Atlas」采用暖纸色地图、墨绿界面与黄铜点缀，单位和建筑使用有明暗与投影的插画造型。
+
+## 可以做什么
+
+| 游玩 | 开发与实验 |
+| --- | --- |
+| 采金、建造基地、训练军队与研究升级 | 通过 TypeScript SDK 控制比赛 |
+| 探索地图，争夺野怪、物品与雇佣兵营地 | 组合 AI 策略，用普通玩家命令控制单位 |
+| 创建房间、与电脑对战、观看服务器上的比赛 | 读取状态、推进模拟、保存和回放比赛 |
+| 在浏览器本地游玩，或使用服务器联机 | 并行对比 AI 版本，在面板中查看结果 |
 
 ## 快速开始
 
+需要 **Node.js 20.19+ 或 22.12+**，以及 npm。
+
 ```bash
+git clone https://github.com/shuxueshuxue/sketch-rts.git
+cd sketch-rts
 npm ci
 npm run dev
 ```
 
-打开 `http://127.0.0.1:5173/`。
+打开 **[localhost:5173](http://127.0.0.1:5173/)**。这会启动包含房间 API 和 SDK 接口的开发服务器。
 
-常用脚本：
+1. 进入「**房间 → 创建房间**」。
+2. 选择地图。初次体验可保留一个人类槽位和一个电脑槽位。
+3. 点击「开始比赛」，按提示锁定鼠标进入战场。
+4. 选中农民，右键金矿开始采金，再建造兵营、训练士兵。
+
+界面根据浏览器语言显示英文或简体中文。
+
+| 操作 | 作用 |
+| --- | --- |
+| 左键单击 / 拖动 | 选择单位或建筑 / 框选多个单位 |
+| 右键 | 根据目标执行移动、采金或攻击 |
+| 选中农民后按 `B` | 打开建造菜单 |
+| 按钮上的快捷键 | 建造、训练、研究或施法 |
+| 方向键 / `WASD` | 移动镜头；当前可用的命令快捷键优先 |
+| `Esc` | 释放鼠标；取消当前目标选择模式 |
+
+## 游戏画面
+
+实际对局：农民正在采金，兵营正在建造，主城队列中正在训练农民。
+
+![Sketch RTS 实际对局：基地、农民、金矿和指令栏](art/woodland-match.png)
+
+<details>
+<summary><strong>展开查看 28 种单位与 12 种建筑图鉴</strong></summary>
+
+![「林野战记」单位和建筑图鉴](art/woodland-catalog.png)
+
+</details>
+
+这套插画由 Canvas 代码绘制，在战场、选中头像和指令按钮中共用。[美术设计说明](woodland-atlas.md)还包含建筑放置预览与改造前的画面。
+
+## 选择运行方式
+
+| 模式 | 适合场景 | 比赛如何运行 |
+| --- | --- | --- |
+| 静态浏览器模式 | 本地与 AI 对战、静态网站托管 | 游戏直接运行在浏览器里，不需要游戏后端 |
+| 服务器模式 | 共享房间、联机、观战、SDK 和基准测试 | 服务器管理房间并协调命令帧 |
+
+### 静态浏览器模式
+
+安装依赖后，可以直接启动不依赖房间后端的本地游戏：
 
 ```bash
-npm run dev:static          # 静态浏览器 runtime
-PORT=34573 npm run server   # hosted server runtime
-npm run build               # 默认/server 生产构建
-npm run build:static        # 静态生产构建
-npm run benchmark:ai        # AI benchmark runner
-npm run play:ai             # exact AI playtest CLI
+npm run dev:static
 ```
 
-## Command-Frame 工作流
+运行 `npm run build:static` 可生成静态站点，再用静态服务器托管 `dist/` 目录。
 
-Sketch RTS 用 command frame 串起浏览器操作、AI 控制、replay 和 benchmark probe。
+<details>
+<summary>Windows PowerShell 命令</summary>
 
-```text
-browser input
-internal AI
-SDK agent
-replay frame
-benchmark worker
-        |
-        v
-ordinary GameCommand entries
-        |
-        v
-shared command-frame runtime
-        |
-        v
-simulation core
+静态模式的 npm 脚本使用 Bash 风格的环境变量写法。在 PowerShell 中请显式设置：
+
+```powershell
+$env:VITE_SKETCH_RTS_DEPLOYMENT = 'static'
+npx vite --host 127.0.0.1 --port 5173
 ```
 
-AI policy script、SDK agent 和 benchmark probe 都产出普通 `GameCommand`。这让 AI 决策可以被 replay、检查、快进，并在不同 benchmark lane 之间对比。
+需要构建静态生产版本时，保留该变量并执行 `npm run build`。切回服务器模式前，执行 `Remove-Item Env:VITE_SKETCH_RTS_DEPLOYMENT` 清除该变量。
 
-## 部署模式
+</details>
 
-### 静态浏览器
+### 服务器模式
 
-```bash
-npm run build:static
-```
-
-静态模式不需要后端。浏览器自己拥有本地房间、本地 AI、command-frame adapter 和比赛流程。
-
-### Hosted Server
+本地开发使用 `npm run dev`。如果要在网络中提供生产构建：
 
 ```bash
 npm run build
-HOST=0.0.0.0 PORT=34573 npm run server
+NODE_ENV=production HOST=0.0.0.0 PORT=34573 npm run server
 ```
 
-Hosted 模式提供共享房间控制面：
+<details>
+<summary>Windows PowerShell 命令</summary>
 
-- `GET/POST /api/rooms*` 用于房间设置。
-- `GET /api/rooms/:roomId/events` 用于开局前的房间生命周期更新。
-- `/ws/rooms/:roomId` 用于实时 lockstep command frames。
-- 存档和 debug replay endpoint。
-- SDK 控制 endpoint。
-- Benchmark dashboard 的存储和 API。
-
-LAN 游玩、公网联机、SDK 控制比赛、benchmark dashboard 都应该走 hosted 模式。
-
-Hosted room 页面在浏览器内使用 hash route，例如：
-
-```text
-https://example.com/sketch-rts/#room=room-id
+```powershell
+npm run build
+$env:NODE_ENV = 'production'
+$env:HOST = '0.0.0.0'
+$env:PORT = '34573'
+npm run server
 ```
 
-这样部署到 `/sketch-rts/` 这类子路径时仍然很直接：服务器只需要在 mounted base path 下提供 app 和 API，浏览器自己保留足够的 room identity，刷新或重新进入时可以回到同一个房间。
+</details>
 
-## SDK
+房间链接使用 `#room=room-id` 这样的哈希路由，也支持部署到子路径。[开发指南](development.md#deployment-modes)列出了服务器接口与各运行模式的职责。
 
-SDK 是给程序控制 RTS 用的，不是为了模拟人类点击。它可以创建房间、重置场景、检查 snapshot、发命令、快进 tick、等待 effect、保存 replay，并运行各种 probe。
+## SDK 与 AI
+
+TypeScript SDK 支持创建房间、重置场景、读取状态、发出命令、推进时间，以及保存和回放比赛。先启动服务器，再从仓库中导入 SDK：
 
 ```ts
-import { SketchRtsSdk } from "./src/sdk/client";
+import { SketchRtsSdk } from './src/sdk/client';
 
-const sdk = new SketchRtsSdk("http://127.0.0.1:5173");
-
+const sdk = new SketchRtsSdk('http://127.0.0.1:5173');
 const room = await sdk.createRoom({
-  id: "sdk-demo",
-  host: { id: "agent-host", name: "Agent Host" },
-  mapId: "bareDuel",
-  visibility: "private",
+  id: 'sdk-demo',
+  host: { id: 'agent-host', name: 'Agent Host' },
+  mapId: 'bareDuel',
+  visibility: 'private',
   humanCount: 1,
   aiCount: 1,
 });
 
-const { snapshot } = await sdk.resetRoom(room.id, "bareDuel", {
-  aiPlayers: ["enemy"],
-  races: { player: "grove", enemy: "ember" },
+const { snapshot } = await sdk.resetRoom(room.id, 'bareDuel', {
+  aiPlayers: ['enemy'],
+  races: { player: 'grove', enemy: 'ember' },
 });
 
-const worker = snapshot.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
-const mine = snapshot.resources.find((resource) => resource.id === "gold-player-main");
-if (!worker || !mine) throw new Error("demo setup missing worker or mine");
+const worker = snapshot.units.find(u => u.owner === 'player' && u.kind === 'worker');
+const mine = snapshot.resources.find(r => r.id === 'gold-player-main');
+if (!worker || !mine) throw new Error('Missing starting worker or mine');
 
-await sdk.roomCommand(room.id, "player", {
-  type: "mine",
+await sdk.roomCommand(room.id, 'player', {
+  type: 'mine',
   unitIds: [worker.id],
   resourceId: mine.id,
 });
-
-const result = await sdk.tickRoomUntil(room.id, {
-  until: (next) => next.players.player.gold > snapshot.players.player.gold,
-  maxTicks: 1400,
-  chunkTicks: 140,
-});
-
-console.log(result.snapshot.players.player.gold);
 ```
 
-## AI 脚本
+AI 策略读取状态快照，输出普通 `GameCommand` 命令。浏览器操作、内置电脑、外部 SDK 智能体、回放和基准测试，都通过共用的命令帧运行时推进游戏。
 
-AI script 是可复用 policy。它读取 snapshot，输出 command-frame entries，可以给内置电脑、SDK 控制的人类槽位、benchmark、replay/debug 流程共用。
-
-```ts
-import { planAiCommandFrameFromSnapshot } from "./src/ai/runtime";
-import { SketchRtsSdk } from "./src/sdk/client";
-
-const sdk = new SketchRtsSdk("http://127.0.0.1:5173");
-const snapshot = await sdk.roomSnapshot("room-id");
-
-const planned = planAiCommandFrameFromSnapshot(
-  snapshot,
-  [{ playerId: "player", source: "external-agent", version: "v2" }],
-  { teams: { player: "north", enemy: "south" } },
-);
-
-await sdk.roomCommands(
-  "room-id",
-  planned.commands.map(({ playerId, command }) => ({ playerId, command })),
-);
-```
-
-这里的优雅点是：AI 没有特权 mutation channel。AI 也必须像玩家一样发命令来玩游戏。
-
-## CLI 工作流
-
-当前 CLI 表面通过项目 scripts 暴露：
+也可以在终端创建一场可复现的 AI 对局：
 
 ```bash
-npm run play:ai -- new --file /tmp/match.json --map bareDuel --you v2 --enemy v1
-npm run play:ai -- step-until --file /tmp/match.json --condition tick --tick 1200
-npm run play:ai -- plan --file /tmp/match.json --owner v2
+npm run play:ai -- new --file .playtest/match.json --map bareDuel --you v2 --enemy v1
+npm run play:ai -- step-until --file .playtest/match.json --condition tick --tick 1200
+npm run play:ai -- plan --file .playtest/match.json --owner v2
 npm run play:ai -- commands
-
-npm run benchmark:ai -- --seed version-18 --map-count 18 --dry-run
-npm run benchmark:ai -- --seed version-18 --map-count 18 --workers 8
-npm run benchmark:ai-gauntlet -- --seed gauntlet-18 --map-count 18 --dry-run
-npm run benchmark:ai-control -- --seed control-50 --map-count 50 --dry-run
-npm run test:sdk-smoke
-npm run test:sdk-agent-player
 ```
 
-这个流程适合 exact reproduction：创建 save-backed session，打印当前 snapshot，检查 planner 输出，step 到指定 tick，然后再改代码。
+最后一条命令会输出机器可读的命令清单。完整 SDK 示例、AI 策略组合、回放与基准测试命令见[开发指南](development.md)。
 
-`npm run play:ai -- commands` 会输出机器可读的 command manifest。这个 manifest 和 help 文本、tactical command parser 共用同一张命令表，所以后续工具可以直接发现可用动作，而不用抓 help 文本或复制 CLI 知识。
+## 开发命令
 
-## Benchmark 系统
+| 命令 | 用途 |
+| --- | --- |
+| `npm run dev` | 启动服务器模式的开发环境 |
+| `npm run build` | TypeScript 检查与前端构建 |
+| `npm run build:production` | 构建前端和服务器包 |
+| `npm test -- --run` | 运行一次完整测试 |
+| `npx vitest --run src/client` | 运行前端测试 |
+| `npm run test:sdk-smoke` | 启动测试服务器并验证 SDK |
+| `npm run benchmark:ai` | 运行 AI 基准测试 |
 
-Benchmark 是 AI 开发的一等循环：
+服务器还提供 `benchmark.html` 基准测试面板。实验设计与测试流程可参考[开发指南](development.md#benchmark-system)和 [AI 规范](ai-spec.md)。
 
-- deterministic benchmark manifest；
-- serial 和 parallel runner；
-- command stats 和 policy telemetry；
-- rich score、control、probe、combat 多条 lane；
-- dashboard JSON/log 存储；
-- 浏览器 dashboard：`benchmark.html`。
+## 后续方向
 
-Benchmark 路径必须贴近真实 SDK/runtime 路径。它测的是实际会玩游戏的 AI，不应该是 benchmark-only 私有实现。
+- 更多种族，以及有差异的科技树与单位能力。
+- 更强的 AI，包括用大语言模型进行侦察分析与策略选择的实验。
+- 更好的断线重连、观战体验与联机性能。
+- 单位动画、更丰富的战斗反馈和更清楚的新手引导。
+- 地图、战役与 Mod 制作工具。
+- 更方便外部智能体使用的 SDK 和 CLI 分发方式。
 
-## Roadmap
+## 致谢
 
-- 更多种族：独立 tech tree、单位辨识度和战略压力。
-- 更强、更变化的 AI，包括 LLM integration：嘲讽、侦察理解、战略针对、对手建模。
-- 更强的联机性能、断线重连、观战体验和公网房间运营。
-- Mod、地图、战役系统，以及配套 authoring tools。
-- 更完整的 SDK/CLI packaging，方便外部 agent 和实验系统接入。
-- 更强的浏览器 UX：控制、快捷键、新手引导、replay 和 accessibility。
+Sketch RTS 会在 [linux.do](https://linux.do/) 与社区交流并收集反馈。
 
-## Credit
-
-Sketch RTS 会在 [linux.do](https://linux.do/) 上宣传和收集反馈，感谢社区的关注与讨论。
-
-游戏深受 Warcraft III 启发。感谢 War3：工人、基地、creeping、种族感、单位可读性和 RTS 节奏都从中借鉴了许多。
+游戏深受 **Warcraft III** 启发：农民与基地、野怪营地、种族差异，以及从小规模军队逐步发展为大战场的节奏。
