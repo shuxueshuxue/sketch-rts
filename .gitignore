@@ -7,4 +7,5 @@ coverage/
 .superpowers/
 .worktrees/
 .playwright-cli/
+.playtest/
 .benchmark-dashboard/

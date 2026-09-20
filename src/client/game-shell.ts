@@ -8,10 +8,14 @@ export function gameShellMarkup(i18n: I18n) {
   <div class="game-shell menu-open">
     <canvas class="game-canvas"></canvas>
     <div class="main-menu" data-main-menu>
-      <div class="menu-title" data-menu-title>Sketch RTS</div>
+      <div class="menu-eyebrow"><svg viewBox="0 0 32 40" aria-hidden="true"><path d="M16 2 29 12v15L16 38 3 27V12Z"/><path d="M16 9v22M9 23h14M12 15l4-6 4 6"/></svg><span>${escapeHtml(t("art.edition"))}</span></div>
+      <h1 class="menu-title" data-menu-title>Sketch RTS</h1>
+      <p class="menu-intro">${escapeHtml(t("art.intro"))}</p>
       <div class="menu-status" data-menu-status>${escapeHtml(t("shell.connectingServer"))}</div>
       <div class="map-list" data-map-list></div>
+      <div class="menu-footer"><span>SKETCH RTS</span><span>${escapeHtml(t("art.footer"))}</span></div>
     </div>
+    <div class="atlas-caption" aria-hidden="true"><span class="atlas-caption-index">FIELD ATLAS / 01</span><span>${escapeHtml(t("art.caption"))}</span><small>${escapeHtml(t("art.captionNote"))}</small></div>
     <div class="top-strip">
       <div class="brand">Sketch RTS</div>
       <div class="resource-readout">${escapeHtml(t("shell.gold"))}: <span data-gold>?</span></div>

@@ -1,6 +1,8 @@
 import "./styles.css";
+import "./atlas-theme.css";
+import { drawAtlasBuilding, drawAtlasUnit, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasCamp, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
-import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
+import { BUILDING_GLYPHS, type BuildingGlyph } from "./building-glyphs";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, type CommandButtonState } from "./command-button-state";
 import {
@@ -38,7 +40,7 @@ import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgress
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
-import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
+import { UNIT_GLYPHS, unitGlyphScale, type UnitGlyph } from "./glyphs";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
@@ -56,6 +58,7 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, Lo
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
@@ -135,7 +138,7 @@ app.innerHTML = gameShellMarkup(i18n);
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
 const mainMenu = requireElement<HTMLDivElement>("[data-main-menu]");
-const menuTitle = requireElement<HTMLDivElement>("[data-menu-title]");
+const menuTitle = requireElement<HTMLHeadingElement>("[data-menu-title]");
 const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
 const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
@@ -222,10 +225,10 @@ const commandButtons: CommandButton[] = [
     hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
@@ -285,7 +288,7 @@ void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
 
-function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip): CommandButton {
+function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait): CommandButton {
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
@@ -294,9 +297,22 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  if (portrait) drawCommandPortrait(element, portrait);
   element.addEventListener("click", run);
   commandDock.append(element);
   return { element, hotkey, tooltip, state, run };
+}
+
+function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
+  const icon = document.createElement("canvas");
+  icon.width = icon.height = 68;
+  icon.className = "command-portrait";
+  icon.setAttribute("aria-hidden", "true");
+  const brush = requireCanvasContext(icon);
+  const center = { x: 34, y: 39 };
+  if (portrait.type === "unit") drawAtlasUnit(brush, UNIT_GLYPHS[portrait.kind], center, 1.13, "#467d6c");
+  else drawAtlasBuilding(brush, BUILDING_GLYPHS[portrait.kind], center, 56, "#467d6c");
+  element.querySelector(".command-icon")?.replaceChildren(icon);
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -2098,128 +2114,10 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
-  mini.save();
-  mini.translate(canvas.width / 2, canvas.height / 2 + 1);
-  mini.scale(group.entityType === "building" ? 0.42 : 0.54, group.entityType === "building" ? 0.42 : 0.54);
-  mini.lineCap = "round";
-  mini.lineJoin = "round";
-  mini.strokeStyle = group.focused ? "#315f87" : "rgba(36, 49, 38, 0.62)";
-  mini.fillStyle = group.focused ? "#fffbe7" : "rgba(255, 250, 226, 0.66)";
-  mini.lineWidth = group.focused ? 3.4 : 2.4;
-  if (group.entityType === "unit") drawMiniUnitModel(mini, UNIT_GLYPHS[group.kind]);
-  else drawMiniBuildingModel(mini, BUILDING_GLYPHS[group.kind]);
-  mini.restore();
-}
-
-function drawMiniUnitModel(mini: CanvasRenderingContext2D, glyph: UnitGlyph) {
-  mini.beginPath();
-  if (glyph.silhouette === "worker-apron") {
-    mini.moveTo(-11, -15);
-    mini.lineTo(9, -13);
-    mini.lineTo(16, 14);
-    mini.lineTo(-13, 16);
-    mini.lineTo(-17, -5);
-  } else if (glyph.silhouette === "shield-triangle") {
-    mini.moveTo(0, -20);
-    mini.lineTo(17, 15);
-    mini.lineTo(-17, 15);
-  } else if (glyph.silhouette === "bow-crest") {
-    mini.moveTo(-14, -16);
-    mini.quadraticCurveTo(18, -18, 14, 15);
-    mini.quadraticCurveTo(-10, 20, -16, -4);
-  } else if (glyph.silhouette === "raider-kite") {
-    mini.moveTo(0, -20);
-    mini.lineTo(18, -2);
-    mini.lineTo(7, 19);
-    mini.lineTo(-15, 10);
-    mini.lineTo(-18, -7);
-  } else if (glyph.silhouette === "lancer-pennant") {
-    mini.moveTo(-15, -14);
-    mini.lineTo(17, -9);
-    mini.lineTo(8, 16);
-    mini.lineTo(-18, 13);
-  } else if (glyph.silhouette === "knight-helm") {
-    mini.arc(0, -2, 17, Math.PI * 0.95, Math.PI * 2.05);
-    mini.lineTo(15, 17);
-    mini.lineTo(-15, 17);
-  } else if (glyph.silhouette === "priest-medallion") {
-    mini.arc(0, 0, 14, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "summoner-ring") {
-    mini.ellipse(0, 0, 17, 13, 0.2, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "witch-crescent") {
-    mini.arc(4, 0, 17, Math.PI * 0.52, Math.PI * 1.58);
-    mini.quadraticCurveTo(-15, 0, 4, -17);
-  } else if (glyph.silhouette === "golem-block") {
-    mini.rect(-17, -17, 34, 34);
-  } else if (glyph.silhouette === "spirit-wisp") {
-    mini.moveTo(0, -18);
-    mini.quadraticCurveTo(18, -4, 4, 18);
-    mini.quadraticCurveTo(-18, 4, 0, -18);
-  } else if (glyph.silhouette === "mercenary-badge") {
-    mini.moveTo(0, -19);
-    mini.lineTo(16, -3);
-    mini.lineTo(8, 18);
-    mini.lineTo(-12, 14);
-    mini.lineTo(-16, -6);
-  } else {
-    mini.moveTo(-15, -15);
-    mini.lineTo(15, 15);
-    mini.moveTo(15, -15);
-    mini.lineTo(-15, 15);
-  }
-  mini.closePath();
-  mini.fill();
-  mini.stroke();
-}
-
-function drawMiniBuildingModel(mini: CanvasRenderingContext2D, glyph: BuildingGlyph) {
-  mini.beginPath();
-  if (glyph.frame === "town-hall") {
-    mini.moveTo(-26, -2);
-    mini.lineTo(0, -24);
-    mini.lineTo(26, -2);
-    mini.lineTo(21, 24);
-    mini.lineTo(-21, 24);
-  } else if (glyph.frame === "tower-spire") {
-    mini.moveTo(0, -27);
-    mini.lineTo(16, -7);
-    mini.lineTo(12, 25);
-    mini.lineTo(-12, 25);
-    mini.lineTo(-16, -7);
-  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
-    mini.ellipse(0, 6, 22, 13, 0, 0, Math.PI * 2);
-    mini.moveTo(-18, 2);
-    mini.quadraticCurveTo(0, -24, 18, 2);
-  } else if (glyph.frame === "ember-forge") {
-    mini.rect(-24, -17, 48, 36);
-    mini.moveTo(-20, 19);
-    mini.lineTo(20, 19);
-    mini.moveTo(-15, -17);
-    mini.lineTo(0, -27);
-    mini.lineTo(15, -17);
-  } else if (glyph.frame === "cinder-spire") {
-    mini.moveTo(0, -27);
-    mini.lineTo(18, -2);
-    mini.lineTo(11, 25);
-    mini.lineTo(-11, 25);
-    mini.lineTo(-18, -2);
-  } else if (glyph.frame === "workshop-gear") {
-    for (let i = 0; i < 12; i += 1) {
-      const angle = (i / 12) * Math.PI * 2;
-      const radius = i % 2 === 0 ? 25 : 18;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      if (i === 0) mini.moveTo(x, y);
-      else mini.lineTo(x, y);
-    }
-  } else {
-    mini.rect(-24, -17, 48, 36);
-    mini.moveTo(-20, 19);
-    mini.lineTo(20, 19);
-  }
-  mini.closePath();
-  mini.fill();
-  mini.stroke();
+  const point = { x: canvas.width / 2, y: canvas.height / 2 + 4 };
+  const color = group.focused ? "#42796e" : "#7c9078";
+  if (group.entityType === "unit") drawAtlasUnit(mini, UNIT_GLYPHS[group.kind], point, 0.61, color);
+  else drawAtlasBuilding(mini, BUILDING_GLYPHS[group.kind], point, 30, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2271,6 +2169,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton) {
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
     <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
   `;
+  drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
   return button;
 }
 
@@ -2361,7 +2260,7 @@ function trainIcon(kind: TrainableUnitKind) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (menuOpen) {
-    drawMenuBackdrop(performance.now());
+    drawMenuBackdrop();
     return;
   }
   drawPaperMap();
@@ -2387,123 +2286,12 @@ function draw() {
   drawMinimap(presentationMarks);
 }
 
-function drawMenuBackdrop(now: number) {
-  ctx.fillStyle = "#f6f1d8";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const t = now / 1000;
-  const stride = 170;
-  ctx.lineWidth = 1;
-  for (let x = -80; x < canvas.width + stride; x += stride) {
-    for (let y = -60; y < canvas.height + stride; y += stride) {
-      const wave = Math.sin(t * 0.45 + x * 0.009 + y * 0.007);
-      ctx.strokeStyle = `rgba(62, 91, 57, ${0.08 + Math.max(0, wave) * 0.06})`;
-      ctx.beginPath();
-      ctx.moveTo(x + 12, y + 72 + wave * 8);
-      ctx.quadraticCurveTo(x + 58, y + 38, x + 112, y + 82 - wave * 7);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(123, 101, 66, 0.12)";
-      ctx.beginPath();
-      ctx.moveTo(x + 104, y + 112);
-      ctx.lineTo(x + 134, y + 96 + wave * 6);
-      ctx.lineTo(x + 158, y + 116);
-      ctx.stroke();
-    }
-  }
-
-  drawMenuRoute(t, canvas.width * 0.12, canvas.height * 0.72, canvas.width * 0.88, canvas.height * 0.28);
-  drawMenuMine(canvas.width * 0.28, canvas.height * 0.28, t);
-  drawMenuCamp(canvas.width * 0.72, canvas.height * 0.68, t);
-  drawMenuSquad(canvas.width * 0.18 + ((t * 34) % (canvas.width * 0.64)), canvas.height * 0.7 - Math.sin(t * 1.3) * 18, "#315f87", t);
-  drawMenuSquad(canvas.width * 0.82 - ((t * 28) % (canvas.width * 0.58)), canvas.height * 0.32 + Math.sin(t * 1.1) * 16, "#963c36", t + 1.7);
-
-  ctx.strokeStyle = "rgba(36, 49, 38, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
-}
-
-function drawMenuRoute(t: number, x1: number, y1: number, x2: number, y2: number) {
-  ctx.save();
-  ctx.strokeStyle = "rgba(78, 67, 48, 0.28)";
-  ctx.lineWidth = 3;
-  ctx.setLineDash([22, 16]);
-  ctx.lineDashOffset = -t * 16;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.bezierCurveTo(canvas.width * 0.42, canvas.height * 0.58, canvas.width * 0.56, canvas.height * 0.42, x2, y2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuMine(x: number, y: number, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(Math.sin(t * 0.7) * 0.03);
-  ctx.strokeStyle = "#8a6418";
-  ctx.fillStyle = "rgba(242, 208, 92, 0.34)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-36, 26);
-  ctx.lineTo(-18, -22);
-  ctx.lineTo(8, 18);
-  ctx.lineTo(30, -28);
-  ctx.lineTo(44, 24);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuCamp(x: number, y: number, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.strokeStyle = "#704a33";
-  ctx.fillStyle = "rgba(255, 250, 226, 0.5)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.ellipse(0, 6, 62 + Math.sin(t * 1.1) * 3, 28, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-34, 24);
-  ctx.lineTo(0, -44);
-  ctx.lineTo(34, 24);
-  ctx.moveTo(-18, 24);
-  ctx.lineTo(-18, -10);
-  ctx.moveTo(18, 24);
-  ctx.lineTo(18, -10);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuSquad(x: number, y: number, color: string, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.strokeStyle = color;
-  ctx.fillStyle = "rgba(255, 250, 226, 0.68)";
-  ctx.lineWidth = 2.5;
-  for (let i = 0; i < 5; i += 1) {
-    const ox = (i - 2) * 24;
-    const oy = Math.sin(t * 4 + i) * 5;
-    ctx.beginPath();
-    ctx.ellipse(ox, oy + 16, 13, 6, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(ox, oy - 16);
-    ctx.lineTo(ox + 12, oy + 12);
-    ctx.lineTo(ox - 12, oy + 12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(ox + 10, oy - 4);
-    ctx.lineTo(ox + 24, oy - 14 + Math.sin(t * 5 + i) * 3);
-    ctx.stroke();
-  }
-  ctx.restore();
+function drawMenuBackdrop() {
+  drawAtlasMenu(ctx, canvas.width, canvas.height);
 }
 
 function drawPaperMap() {
-  ctx.fillStyle = "#f6f1d8";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawAtlasGround(ctx, canvas.width, canvas.height, camera);
   for (const stroke of generateTerrainLinework({ mapId: snapshot?.map.id ?? selectedMapId, camera, width: canvas.width, height: canvas.height })) {
     drawTextureStroke(stroke);
   }
@@ -2522,82 +2310,7 @@ function drawTextureStroke(stroke: TextureStroke) {
 function drawLandmarks(landmarks: TerrainLandmark[]) {
   for (const landmark of landmarks) {
     const point = worldToScreen(landmark);
-    if (!nearScreen(point, landmark.size + 80)) continue;
-    ctx.save();
-    ctx.translate(point.x, point.y);
-    ctx.rotate(landmark.rotation);
-    ctx.lineWidth = 2;
-    if (landmark.kind === "road") {
-      ctx.strokeStyle = "rgba(123, 101, 66, 0.28)";
-      ctx.setLineDash([18, 14]);
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size / 2, 0);
-      ctx.quadraticCurveTo(0, -landmark.size / 8, landmark.size / 2, 0);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else if (landmark.kind === "grove") {
-      ctx.strokeStyle = "rgba(64, 108, 66, 0.34)";
-      for (let i = 0; i < 9; i += 1) {
-        const angle = (i / 9) * Math.PI * 2;
-        const x = Math.cos(angle) * landmark.size * 0.28;
-        const y = Math.sin(angle) * landmark.size * 0.18;
-        ctx.beginPath();
-        ctx.arc(x, y, 16 + (i % 3) * 4, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    } else if (landmark.kind === "ridge") {
-      ctx.strokeStyle = "rgba(84, 90, 68, 0.36)";
-      for (let i = -2; i <= 2; i += 1) {
-        ctx.beginPath();
-        ctx.moveTo(-landmark.size / 2, i * 18);
-        ctx.lineTo(-landmark.size / 4, i * 18 - 18);
-        ctx.lineTo(0, i * 18 + 10);
-        ctx.lineTo(landmark.size / 3, i * 18 - 14);
-        ctx.lineTo(landmark.size / 2, i * 18 + 8);
-        ctx.stroke();
-      }
-    } else if (landmark.kind === "ruin") {
-      ctx.strokeStyle = "rgba(81, 73, 61, 0.42)";
-      ctx.strokeRect(-landmark.size * 0.22, -landmark.size * 0.18, landmark.size * 0.28, landmark.size * 0.22);
-      ctx.strokeRect(landmark.size * 0.02, landmark.size * 0.02, landmark.size * 0.22, landmark.size * 0.2);
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size * 0.35, landmark.size * 0.22);
-      ctx.lineTo(landmark.size * 0.38, -landmark.size * 0.25);
-      ctx.stroke();
-    } else if (landmark.kind === "ditch") {
-      ctx.strokeStyle = "rgba(54, 100, 112, 0.28)";
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size / 2, 0);
-      ctx.bezierCurveTo(-landmark.size / 4, 42, landmark.size / 4, -42, landmark.size / 2, 0);
-      ctx.stroke();
-    } else if (landmark.kind === "campMark") {
-      ctx.strokeStyle = "rgba(112, 74, 51, 0.34)";
-      ctx.beginPath();
-      ctx.arc(0, 0, landmark.size * 0.24, 0, Math.PI * 2);
-      ctx.moveTo(-landmark.size * 0.2, -landmark.size * 0.2);
-      ctx.lineTo(landmark.size * 0.2, landmark.size * 0.2);
-      ctx.moveTo(landmark.size * 0.2, -landmark.size * 0.2);
-      ctx.lineTo(-landmark.size * 0.2, landmark.size * 0.2);
-      ctx.stroke();
-    } else if (landmark.kind === "mineScar") {
-      ctx.strokeStyle = "rgba(184, 133, 31, 0.3)";
-      for (let i = 0; i < 4; i += 1) {
-        ctx.beginPath();
-        ctx.moveTo(-landmark.size * 0.3 + i * 26, landmark.size * 0.22);
-        ctx.lineTo(-landmark.size * 0.18 + i * 26, -landmark.size * 0.2);
-        ctx.stroke();
-      }
-    } else {
-      ctx.strokeStyle = "rgba(46, 58, 47, 0.4)";
-      ctx.strokeRect(-18, -18, 36, 36);
-      ctx.beginPath();
-      ctx.moveTo(0, -landmark.size * 0.32);
-      ctx.lineTo(0, landmark.size * 0.32);
-      ctx.moveTo(-landmark.size * 0.22, -landmark.size * 0.12);
-      ctx.lineTo(landmark.size * 0.22, -landmark.size * 0.12);
-      ctx.stroke();
-    }
-    ctx.restore();
+    if (nearScreen(point, landmark.size + 80)) drawAtlasLandmark(ctx, landmark, point);
   }
 }
 
@@ -2605,17 +2318,12 @@ function drawResources(resources: ResourceNode[]) {
   for (const resource of resources) {
     const point = worldToScreen(resource);
     if (!nearScreen(point, 80)) continue;
-    ctx.strokeStyle = "#b9861b";
-    ctx.fillStyle = "#dcae30";
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 5; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo(point.x - 26 + i * 12, point.y + 22);
-      ctx.lineTo(point.x - 14 + i * 12, point.y - 20);
-      ctx.stroke();
-    }
-    ctx.font = "12px ui-monospace, monospace";
-    ctx.fillText(`${Math.ceil(resource.amount)}`, point.x - 22, point.y + 42);
+    drawAtlasMine(ctx, point);
+    ctx.font = "600 11px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#776443";
+    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), point.x, point.y + 45);
+    ctx.textAlign = "start";
   }
 }
 
@@ -2623,26 +2331,13 @@ function drawMercenaryCamps(camps: MercenaryCamp[]) {
   for (const camp of camps) {
     const point = worldToScreen(camp);
     if (!nearScreen(point, 110)) continue;
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "rgba(255, 250, 226, 0.62)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, camp.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    if (selectedCampId === camp.id) drawSelectionHalo(point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#704a33");
-    ctx.beginPath();
-    ctx.moveTo(point.x - 30, point.y + 24);
-    ctx.lineTo(point.x, point.y - 34);
-    ctx.lineTo(point.x + 30, point.y + 24);
-    ctx.moveTo(point.x - 18, point.y + 24);
-    ctx.lineTo(point.x - 18, point.y - 6);
-    ctx.moveTo(point.x + 18, point.y + 24);
-    ctx.lineTo(point.x + 18, point.y - 6);
-    ctx.stroke();
+    if (selectedCampId === camp.id) drawSelectionHalo(point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#96774a");
+    drawAtlasCamp(ctx, point);
     ctx.font = "11px ui-monospace, monospace";
-    ctx.fillStyle = "#704a33";
-    ctx.fillText(t("canvas.mercenaryStock", { stock: camp.stock }), point.x - 24, point.y + 48);
+    ctx.fillStyle = "#796644";
+    ctx.textAlign = "center";
+    ctx.fillText(t("canvas.mercenaryStock", { stock: camp.stock }), point.x, point.y + 48);
+    ctx.textAlign = "start";
     if (camp.cooldownRemaining > 0) drawProgress(point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
   }
 }
@@ -2664,12 +2359,15 @@ function drawBuildings(buildings: Building[]) {
     ctx.lineWidth = selected ? 4 : 2;
     const size = building.kind === "townHall" ? 76 : 58;
     if (selected) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
+    ctx.save();
+    ctx.globalAlpha = building.complete ? 1 : 0.48;
     drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
+    ctx.restore();
     if (showRally) drawBuildingRally(building, point, rallyPoint);
-    drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
-    if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
+    drawHp(point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
+    if (!building.complete) drawProgress(point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
-      drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
+      drawTrainingProgress(point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
     }
   }
 }
@@ -2699,161 +2397,7 @@ function drawBuildingRally(building: Building, from: Point, to: Point) {
 }
 
 function drawBuildingGlyph(glyph: BuildingGlyph, point: Point, size: number) {
-  drawBuildingFrame(glyph, point, size);
-  for (const mark of glyph.marks) drawBuildingMark(mark, point, size);
-}
-
-function drawBuildingFrame(glyph: BuildingGlyph, point: Point, size: number) {
-  const half = size / 2;
-  ctx.beginPath();
-  if (glyph.frame === "town-hall") {
-    ctx.moveTo(point.x - half, point.y - half * 0.1);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half, point.y - half * 0.1);
-    ctx.lineTo(point.x + half * 0.78, point.y + half);
-    ctx.lineTo(point.x - half * 0.78, point.y + half);
-  } else if (glyph.frame === "barracks-yard") {
-    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
-    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
-  } else if (glyph.frame === "archery-range") {
-    ctx.moveTo(point.x - half, point.y + half * 0.58);
-    ctx.lineTo(point.x - half * 0.65, point.y - half * 0.65);
-    ctx.quadraticCurveTo(point.x, point.y - half, point.x + half * 0.65, point.y - half * 0.65);
-    ctx.lineTo(point.x + half, point.y + half * 0.58);
-  } else if (glyph.frame === "stables-gate") {
-    ctx.rect(point.x - half, point.y - half * 0.5, size, size * 0.82);
-    ctx.moveTo(point.x - half, point.y - half * 0.5);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half, point.y - half * 0.5);
-  } else if (glyph.frame === "sanctum-dome") {
-    ctx.arc(point.x, point.y, half * 0.86, Math.PI, Math.PI * 2);
-    ctx.lineTo(point.x + half * 0.86, point.y + half * 0.62);
-    ctx.lineTo(point.x - half * 0.86, point.y + half * 0.62);
-  } else if (glyph.frame === "workshop-gear") {
-    for (let i = 0; i < 12; i += 1) {
-      const angle = (i / 12) * Math.PI * 2;
-      const radius = i % 2 === 0 ? half * 0.94 : half * 0.72;
-      const x = point.x + Math.cos(angle) * radius;
-      const y = point.y + Math.sin(angle) * radius;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-  } else if (glyph.frame === "tower-spire") {
-    ctx.moveTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.5, point.y - half * 0.18);
-    ctx.lineTo(point.x + half * 0.38, point.y + half);
-    ctx.lineTo(point.x - half * 0.38, point.y + half);
-    ctx.lineTo(point.x - half * 0.5, point.y - half * 0.18);
-  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
-    ctx.ellipse(point.x, point.y + half * 0.13, half * 0.76, half * 0.43, 0, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.58, point.y + half * 0.02);
-    ctx.quadraticCurveTo(point.x, point.y - half * 0.72, point.x + half * 0.58, point.y + half * 0.02);
-    ctx.moveTo(point.x - half * 0.44, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.44, point.y + half * 0.22);
-  } else if (glyph.frame === "ember-forge") {
-    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
-    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
-    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.72);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.45, point.y - half * 0.72);
-  } else if (glyph.frame === "cinder-spire") {
-    ctx.moveTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.56, point.y - half * 0.04);
-    ctx.lineTo(point.x + half * 0.34, point.y + half);
-    ctx.lineTo(point.x - half * 0.34, point.y + half);
-    ctx.lineTo(point.x - half * 0.56, point.y - half * 0.04);
-  } else {
-    ctx.rect(point.x - half * 0.9, point.y - half * 0.45, size * 0.9, size * 0.72);
-    ctx.moveTo(point.x - half * 0.9, point.y - half * 0.1);
-    ctx.lineTo(point.x + half * 0.9, point.y - half * 0.1);
-    ctx.moveTo(point.x, point.y - half * 0.45);
-    ctx.lineTo(point.x, point.y + half * 0.27);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-}
-
-function drawBuildingMark(mark: BuildingGlyphMark, point: Point, size: number) {
-  const half = size / 2;
-  ctx.beginPath();
-  if (mark === "roof") {
-    ctx.moveTo(point.x - half * 0.64, point.y - half * 0.05);
-    ctx.lineTo(point.x, point.y - half * 0.44);
-    ctx.lineTo(point.x + half * 0.64, point.y - half * 0.05);
-  } else if (mark === "banner") {
-    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.62);
-    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.12);
-    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.36);
-    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.5);
-  } else if (mark === "door") {
-    ctx.rect(point.x - half * 0.18, point.y + half * 0.2, half * 0.36, half * 0.38);
-  } else if (mark === "crossedBlades") {
-    ctx.moveTo(point.x - half * 0.45, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.42, point.y - half * 0.42);
-    ctx.moveTo(point.x + half * 0.45, point.y + half * 0.22);
-    ctx.lineTo(point.x - half * 0.42, point.y - half * 0.42);
-  } else if (mark === "target") {
-    ctx.arc(point.x, point.y - half * 0.08, half * 0.28, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.34, point.y - half * 0.08);
-    ctx.lineTo(point.x + half * 0.34, point.y - half * 0.08);
-    ctx.moveTo(point.x, point.y - half * 0.42);
-    ctx.lineTo(point.x, point.y + half * 0.26);
-  } else if (mark === "bowRack") {
-    ctx.arc(point.x - half * 0.45, point.y, half * 0.28, -Math.PI / 2, Math.PI / 2);
-    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.28);
-    ctx.lineTo(point.x - half * 0.45, point.y + half * 0.28);
-  } else if (mark === "horseshoe") {
-    ctx.arc(point.x, point.y, half * 0.28, Math.PI * 0.18, Math.PI * 0.82, true);
-    ctx.moveTo(point.x - half * 0.27, point.y);
-    ctx.lineTo(point.x - half * 0.27, point.y + half * 0.28);
-    ctx.moveTo(point.x + half * 0.27, point.y);
-    ctx.lineTo(point.x + half * 0.27, point.y + half * 0.28);
-  } else if (mark === "rail") {
-    ctx.moveTo(point.x - half * 0.6, point.y + half * 0.18);
-    ctx.lineTo(point.x + half * 0.6, point.y + half * 0.18);
-    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
-    ctx.lineTo(point.x + half * 0.5, point.y + half * 0.36);
-  } else if (mark === "moonRune") {
-    ctx.arc(point.x - half * 0.05, point.y - half * 0.08, half * 0.24, Math.PI * 0.55, Math.PI * 1.55);
-    ctx.arc(point.x + half * 0.08, point.y - half * 0.08, half * 0.18, Math.PI * 1.55, Math.PI * 0.55, true);
-  } else if (mark === "sparkRune") {
-    ctx.moveTo(point.x + half * 0.43, point.y - half * 0.4);
-    ctx.lineTo(point.x + half * 0.43, point.y - half * 0.12);
-    ctx.moveTo(point.x + half * 0.29, point.y - half * 0.26);
-    ctx.lineTo(point.x + half * 0.57, point.y - half * 0.26);
-  } else if (mark === "cog") {
-    ctx.arc(point.x, point.y, half * 0.24, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.34, point.y);
-    ctx.lineTo(point.x + half * 0.34, point.y);
-    ctx.moveTo(point.x, point.y - half * 0.34);
-    ctx.lineTo(point.x, point.y + half * 0.34);
-  } else if (mark === "hammer") {
-    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
-    ctx.lineTo(point.x + half * 0.3, point.y - half * 0.34);
-    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.48);
-    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.16);
-  } else if (mark === "arrowSlit") {
-    ctx.rect(point.x - half * 0.08, point.y - half * 0.18, half * 0.16, half * 0.52);
-  } else if (mark === "watchEye") {
-    ctx.ellipse(point.x, point.y - half * 0.34, half * 0.24, half * 0.12, 0, 0, Math.PI * 2);
-    ctx.moveTo(point.x, point.y - half * 0.46);
-    ctx.lineTo(point.x, point.y - half * 0.22);
-  } else if (mark === "furrows") {
-    for (let i = -2; i <= 2; i += 1) {
-      ctx.moveTo(point.x + i * half * 0.18, point.y - half * 0.38);
-      ctx.lineTo(point.x + i * half * 0.18, point.y + half * 0.25);
-    }
-  } else {
-    ctx.moveTo(point.x - half * 0.32, point.y - half * 0.42);
-    ctx.lineTo(point.x, point.y - half * 0.16);
-    ctx.lineTo(point.x + half * 0.32, point.y - half * 0.42);
-    ctx.moveTo(point.x, point.y - half * 0.16);
-    ctx.lineTo(point.x, point.y + half * 0.24);
-  }
-  ctx.stroke();
+  drawAtlasBuilding(ctx, glyph, point, size, String(ctx.strokeStyle));
 }
 
 function drawUnits(units: Unit[]) {
@@ -2874,7 +2418,7 @@ function drawUnits(units: Unit[]) {
     drawUnitGlyph(UNIT_GLYPHS[unit.kind], point, scale);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    drawHp(point.x, point.y - unit.radius * 1.55, unit.hp, unit.maxHp);
+    drawHp(point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
   }
 }
 
@@ -2925,184 +2469,7 @@ function drawCarriedItems(items: WorldItem[]) {
 }
 
 function drawUnitGlyph(glyph: UnitGlyph, point: Point, scale = 1) {
-  ctx.save();
-  ctx.translate(point.x, point.y);
-  ctx.scale(scale, scale);
-  const localPoint = { x: 0, y: 0 };
-  drawGlyphSilhouette(glyph, localPoint);
-  for (const mark of glyph.marks) drawGlyphMark(mark, localPoint);
-  ctx.restore();
-}
-
-function drawGlyphSilhouette(glyph: UnitGlyph, point: Point) {
-  ctx.beginPath();
-  if (glyph.silhouette === "worker-apron") {
-    ctx.moveTo(point.x - 11, point.y - 15);
-    ctx.lineTo(point.x + 9, point.y - 13);
-    ctx.lineTo(point.x + 16, point.y + 14);
-    ctx.lineTo(point.x - 13, point.y + 16);
-    ctx.lineTo(point.x - 17, point.y - 5);
-  } else if (glyph.silhouette === "shield-triangle") {
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 17, point.y + 15);
-    ctx.lineTo(point.x - 17, point.y + 15);
-  } else if (glyph.silhouette === "bow-crest") {
-    ctx.moveTo(point.x - 14, point.y - 16);
-    ctx.quadraticCurveTo(point.x + 18, point.y - 18, point.x + 14, point.y + 15);
-    ctx.quadraticCurveTo(point.x - 10, point.y + 20, point.x - 16, point.y - 4);
-  } else if (glyph.silhouette === "raider-kite") {
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 18, point.y - 2);
-    ctx.lineTo(point.x + 7, point.y + 19);
-    ctx.lineTo(point.x - 15, point.y + 10);
-    ctx.lineTo(point.x - 18, point.y - 7);
-  } else if (glyph.silhouette === "lancer-pennant") {
-    ctx.moveTo(point.x - 15, point.y - 14);
-    ctx.lineTo(point.x + 17, point.y - 9);
-    ctx.lineTo(point.x + 8, point.y + 16);
-    ctx.lineTo(point.x - 18, point.y + 13);
-  } else if (glyph.silhouette === "knight-helm") {
-    ctx.arc(point.x, point.y - 2, 17, Math.PI * 0.95, Math.PI * 2.05);
-    ctx.lineTo(point.x + 15, point.y + 17);
-    ctx.lineTo(point.x - 15, point.y + 17);
-  } else if (glyph.silhouette === "priest-medallion") {
-    ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "summoner-ring") {
-    ctx.ellipse(point.x, point.y, 17, 13, 0.2, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "witch-crescent") {
-    ctx.arc(point.x + 4, point.y, 17, Math.PI * 0.52, Math.PI * 1.58);
-    ctx.quadraticCurveTo(point.x - 15, point.y, point.x + 4, point.y - 17);
-  } else if (glyph.silhouette === "golem-block") {
-    ctx.rect(point.x - 17, point.y - 17, 34, 34);
-  } else if (glyph.silhouette === "spirit-wisp") {
-    ctx.moveTo(point.x, point.y - 18);
-    ctx.quadraticCurveTo(point.x + 18, point.y - 4, point.x + 4, point.y + 18);
-    ctx.quadraticCurveTo(point.x - 18, point.y + 4, point.x, point.y - 18);
-  } else if (glyph.silhouette === "mercenary-badge") {
-    ctx.moveTo(point.x, point.y - 19);
-    ctx.lineTo(point.x + 16, point.y - 3);
-    ctx.lineTo(point.x + 8, point.y + 18);
-    ctx.lineTo(point.x - 12, point.y + 14);
-    ctx.lineTo(point.x - 16, point.y - 6);
-  } else {
-    ctx.moveTo(point.x - 15, point.y - 15);
-    ctx.lineTo(point.x + 15, point.y + 15);
-    ctx.moveTo(point.x + 15, point.y - 15);
-    ctx.lineTo(point.x - 15, point.y + 15);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-}
-
-function drawGlyphMark(mark: GlyphMark, point: Point) {
-  ctx.beginPath();
-  if (mark === "pick") {
-    ctx.moveTo(point.x - 18, point.y - 11);
-    ctx.lineTo(point.x + 9, point.y + 15);
-    ctx.moveTo(point.x - 20, point.y - 9);
-    ctx.quadraticCurveTo(point.x - 8, point.y - 24, point.x + 4, point.y - 15);
-  } else if (mark === "satchel") {
-    ctx.rect(point.x - 19, point.y + 3, 10, 9);
-    ctx.moveTo(point.x - 17, point.y + 3);
-    ctx.quadraticCurveTo(point.x - 14, point.y - 4, point.x - 11, point.y + 3);
-  } else if (mark === "shieldBar") {
-    ctx.moveTo(point.x - 10, point.y + 2);
-    ctx.lineTo(point.x + 10, point.y + 2);
-    ctx.moveTo(point.x, point.y - 14);
-    ctx.lineTo(point.x, point.y + 13);
-  } else if (mark === "shortSword") {
-    ctx.moveTo(point.x + 10, point.y - 15);
-    ctx.lineTo(point.x + 22, point.y - 24);
-    ctx.moveTo(point.x + 11, point.y - 14);
-    ctx.lineTo(point.x + 17, point.y - 8);
-  } else if (mark === "bow") {
-    ctx.arc(point.x + 14, point.y, 16, -Math.PI / 2, Math.PI / 2);
-    ctx.moveTo(point.x + 14, point.y - 16);
-    ctx.lineTo(point.x + 14, point.y + 16);
-  } else if (mark === "arrow") {
-    ctx.moveTo(point.x - 18, point.y + 2);
-    ctx.lineTo(point.x + 17, point.y - 8);
-    ctx.moveTo(point.x + 17, point.y - 8);
-    ctx.lineTo(point.x + 9, point.y - 11);
-    ctx.moveTo(point.x + 17, point.y - 8);
-    ctx.lineTo(point.x + 11, point.y - 2);
-  } else if (mark === "reins") {
-    ctx.moveTo(point.x - 13, point.y - 5);
-    ctx.quadraticCurveTo(point.x + 2, point.y - 18, point.x + 16, point.y - 1);
-  } else if (mark === "spur") {
-    ctx.moveTo(point.x - 7, point.y + 18);
-    ctx.lineTo(point.x - 16, point.y + 25);
-    ctx.lineTo(point.x - 9, point.y + 23);
-  } else if (mark === "longSpear") {
-    ctx.moveTo(point.x - 20, point.y + 17);
-    ctx.lineTo(point.x + 24, point.y - 22);
-  } else if (mark === "flag") {
-    ctx.moveTo(point.x + 7, point.y - 19);
-    ctx.lineTo(point.x + 22, point.y - 16);
-    ctx.lineTo(point.x + 10, point.y - 7);
-  } else if (mark === "visor") {
-    ctx.moveTo(point.x - 12, point.y - 5);
-    ctx.lineTo(point.x + 12, point.y - 5);
-    ctx.moveTo(point.x - 8, point.y);
-    ctx.lineTo(point.x + 9, point.y);
-  } else if (mark === "towerShield") {
-    ctx.rect(point.x - 20, point.y - 4, 10, 18);
-    ctx.moveTo(point.x - 20, point.y + 3);
-    ctx.lineTo(point.x - 10, point.y + 3);
-  } else if (mark === "halo") {
-    ctx.ellipse(point.x, point.y - 19, 15, 5, 0, 0, Math.PI * 2);
-  } else if (mark === "cross") {
-    ctx.moveTo(point.x - 10, point.y);
-    ctx.lineTo(point.x + 10, point.y);
-    ctx.moveTo(point.x, point.y - 10);
-    ctx.lineTo(point.x, point.y + 10);
-  } else if (mark === "outerRing") {
-    ctx.ellipse(point.x, point.y, 22, 17, -0.2, 0, Math.PI * 2);
-  } else if (mark === "innerSigil") {
-    ctx.moveTo(point.x, point.y - 9);
-    ctx.lineTo(point.x + 8, point.y + 6);
-    ctx.lineTo(point.x - 8, point.y + 6);
-    ctx.closePath();
-  } else if (mark === "crescent") {
-    ctx.arc(point.x - 2, point.y - 1, 16, Math.PI * 0.65, Math.PI * 1.55);
-    ctx.arc(point.x + 5, point.y - 1, 12, Math.PI * 1.55, Math.PI * 0.65, true);
-  } else if (mark === "curseSlash") {
-    ctx.moveTo(point.x - 15, point.y + 14);
-    ctx.lineTo(point.x + 16, point.y - 15);
-  } else if (mark === "rune") {
-    ctx.moveTo(point.x - 6, point.y - 8);
-    ctx.lineTo(point.x + 8, point.y - 8);
-    ctx.lineTo(point.x - 2, point.y + 9);
-    ctx.lineTo(point.x + 10, point.y + 9);
-  } else if (mark === "blockSeams") {
-    ctx.moveTo(point.x - 17, point.y - 2);
-    ctx.lineTo(point.x + 17, point.y - 2);
-    ctx.moveTo(point.x - 3, point.y - 17);
-    ctx.lineTo(point.x - 3, point.y + 17);
-  } else if (mark === "tail") {
-    ctx.moveTo(point.x - 5, point.y + 13);
-    ctx.quadraticCurveTo(point.x - 27, point.y + 24, point.x - 13, point.y + 34);
-  } else if (mark === "spark") {
-    ctx.moveTo(point.x + 18, point.y - 17);
-    ctx.lineTo(point.x + 18, point.y - 5);
-    ctx.moveTo(point.x + 12, point.y - 11);
-    ctx.lineTo(point.x + 24, point.y - 11);
-  } else if (mark === "coinSlash") {
-    ctx.arc(point.x + 13, point.y + 11, 5, 0, Math.PI * 2);
-    ctx.moveTo(point.x + 9, point.y + 15);
-    ctx.lineTo(point.x + 17, point.y + 7);
-  } else if (mark === "scar") {
-    ctx.moveTo(point.x - 11, point.y - 8);
-    ctx.lineTo(point.x + 10, point.y + 10);
-  } else {
-    ctx.moveTo(point.x - 18, point.y - 4);
-    ctx.lineTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 18, point.y - 4);
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x, point.y + 16);
-  }
-  ctx.stroke();
+  drawAtlasUnit(ctx, glyph, point, scale, String(ctx.strokeStyle));
 }
 
 function drawSelectionHalo(x: number, y: number, rx: number, ry: number, color: string) {
@@ -3239,28 +2606,22 @@ function drawBuildPlacementPreview() {
   if (!commandMode || commandMode.type !== "build" || !lastMouse) return;
   const def = BUILDING_DEFS[commandMode.placement.buildingKind];
   const point = lastMouse;
-  const size = 58;
+  const size = commandMode.placement.buildingKind === "townHall" ? 76 : 58;
   const world = screenToWorld(point);
   const placement = snapshot ? buildPlacementCommand(snapshot, commandMode.placement, world) : undefined;
   const validPlacement = !placement || "command" in placement;
   ctx.save();
-  ctx.strokeStyle = validPlacement ? "#315f87" : "#9f3a3a";
-  ctx.fillStyle = validPlacement ? "rgba(49, 95, 135, 0.08)" : "rgba(159, 58, 58, 0.11)";
+  ctx.strokeStyle = validPlacement ? "#387d72" : "#a85644";
   ctx.lineWidth = 2;
   ctx.setLineDash([7, 5]);
   ctx.beginPath();
   ctx.ellipse(point.x, point.y + size / 2 - 3, def.radius, def.radius * 0.36, 0, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
-  ctx.strokeRect(point.x - size / 2, point.y - size / 2, size, size);
-  ctx.beginPath();
-  ctx.moveTo(point.x - size / 2, point.y - size / 2);
-  ctx.lineTo(point.x + size / 2, point.y + size / 2);
-  ctx.moveTo(point.x + size / 2, point.y - size / 2);
-  ctx.lineTo(point.x - size / 2, point.y + size / 2);
-  ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = validPlacement ? "#315f87" : "#9f3a3a";
+  ctx.globalAlpha = 0.62;
+  drawBuildingGlyph(BUILDING_GLYPHS[commandMode.placement.buildingKind], point, size);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = validPlacement ? "#387d72" : "#a85644";
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillText(t("canvas.buildPreview", { building: labelKind(commandMode.placement.buildingKind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
   ctx.restore();
@@ -3348,8 +2709,10 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
-  ctx.fillStyle = "rgba(255, 250, 226, 0.9)";
-  ctx.strokeStyle = "rgba(47, 61, 42, 0.44)";
+  ctx.fillStyle = "#213e37";
+  ctx.fillRect(rect.x - 6, rect.y - 6, rect.width + 12, rect.height + 12);
+  ctx.fillStyle = "#dedcc0";
+  ctx.strokeStyle = "#bca477";
   ctx.lineWidth = 2;
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
   ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
@@ -3439,11 +2802,12 @@ function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {
 }
 
 function drawHp(x: number, y: number, hp: number, maxHp: number) {
-  const width = 34;
-  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
-  ctx.fillRect(x - width / 2, y, width, 4);
-  ctx.fillStyle = hp / maxHp > 0.45 ? "#5d8b4c" : "#a23d34";
-  ctx.fillRect(x - width / 2, y, width * Math.max(0, hp / maxHp), 4);
+  const width = 30;
+  const ratio = Math.max(0, Math.min(1, hp / maxHp));
+  ctx.fillStyle = "#31483a";
+  ctx.fillRect(x - width / 2 - 1, y - 1, width + 2, 5);
+  ctx.fillStyle = ratio > 0.45 ? "#90b781" : "#cd8062";
+  ctx.fillRect(x - width / 2, y, width * ratio, 3);
 }
 
 function drawProgress(x: number, y: number, ratio: number) {
@@ -3634,8 +2998,8 @@ function distance(a: Point, b: Point) {
 }
 
 function ownerInk(owner: Owner | undefined) {
-  if (owner === "player") return "#315f87";
-  if (owner === "enemy") return "#963c36";
+  if (owner === "player") return "#387d72";
+  if (owner === "enemy") return "#a85644";
   if (owner === "enemy2") return "#7f3a70";
   if (!owner || owner === "neutral") return "#704a33";
   const palette = ["#315f87", "#963c36", "#7f3a70", "#5d8b4c", "#b97927", "#596a8c", "#8d5a46", "#2f766f"];
