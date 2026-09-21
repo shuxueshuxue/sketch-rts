@@ -63,7 +63,7 @@ A match in progress: workers gathering gold, a barracks under construction, and 
 
 </details>
 
-The illustrations are drawn with Canvas and reused across the battlefield, portraits, and command buttons. See the [art notes and placement preview](docs/woodland-atlas.md) for a closer look.
+The illustrations are drawn with Canvas and reused across the battlefield, portraits, and command buttons. Their scale, armor, materials, and tier marks come from the live unit catalog, so an expensive heavy unit does not read like a cheaper skirmisher. See the [art notes and value analysis](docs/woodland-atlas.md) for a closer look.
 
 ## Choose a runtime
 
