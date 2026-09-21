@@ -54,7 +54,7 @@ import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, type SlotPatch } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UnitKind, UpgradeKind, WorldItem } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -310,7 +310,7 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   icon.setAttribute("aria-hidden", "true");
   const brush = requireCanvasContext(icon);
   const center = { x: 34, y: 39 };
-  if (portrait.type === "unit") drawAtlasUnit(brush, portrait.kind, UNIT_GLYPHS[portrait.kind], center, 1.13, "#467d6c");
+  if (portrait.type === "unit") drawAtlasUnit(brush, UNIT_GLYPHS[portrait.kind], center, 1.13, "#467d6c");
   else drawAtlasBuilding(brush, BUILDING_GLYPHS[portrait.kind], center, 56, "#467d6c");
   element.querySelector(".command-icon")?.replaceChildren(icon);
 }
@@ -2116,7 +2116,7 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   mini.clearRect(0, 0, canvas.width, canvas.height);
   const point = { x: canvas.width / 2, y: canvas.height / 2 + 4 };
   const color = group.focused ? "#42796e" : "#7c9078";
-  if (group.entityType === "unit") drawAtlasUnit(mini, group.kind, UNIT_GLYPHS[group.kind], point, 0.61, color);
+  if (group.entityType === "unit") drawAtlasUnit(mini, UNIT_GLYPHS[group.kind], point, 0.61, color);
   else drawAtlasBuilding(mini, BUILDING_GLYPHS[group.kind], point, 30, color);
 }
 
@@ -2415,7 +2415,7 @@ function drawUnits(units: Unit[]) {
       ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    drawUnitGlyph(unit.kind, UNIT_GLYPHS[unit.kind], point, scale);
+    drawUnitGlyph(UNIT_GLYPHS[unit.kind], point, scale);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
     drawHp(point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
@@ -2468,8 +2468,8 @@ function drawCarriedItems(items: WorldItem[]) {
   }
 }
 
-function drawUnitGlyph(kind: UnitKind, glyph: UnitGlyph, point: Point, scale = 1) {
-  drawAtlasUnit(ctx, kind, glyph, point, scale, String(ctx.strokeStyle));
+function drawUnitGlyph(glyph: UnitGlyph, point: Point, scale = 1) {
+  drawAtlasUnit(ctx, glyph, point, scale, String(ctx.strokeStyle));
 }
 
 function drawSelectionHalo(x: number, y: number, rx: number, ry: number, color: string) {

@@ -1,7 +1,6 @@
 import type { BuildingGlyph } from "./building-glyphs";
 import type { UnitGlyph } from "./glyphs";
-import { unitVisualProfile, type UnitVisualProfile } from "./unit-visual-profile";
-import type { TerrainLandmark, UnitKind } from "../shared/types";
+import type { TerrainLandmark } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -161,17 +160,8 @@ export function drawAtlasBuilding(c: Brush, glyph: BuildingGlyph, point: Point, 
   });
 }
 
-export function drawAtlasUnit(c: Brush, kind: UnitKind, glyph: UnitGlyph, point: Point, scale: number, color: string) {
-  const profile = unitVisualProfile(kind);
-  const visualScale = scale * Math.min(1.4, profile.bodyScale);
-  if (kind === "emberRavager") drawEmberRavager(c, point, visualScale, color, profile);
-  else if (kind === "knight") drawKnight(c, point, visualScale, color, profile);
-  else drawAtlasUnitLegacy(c, kind, glyph, point, visualScale, color, profile);
-  drawUnitTierBadge(c, point, visualScale, profile);
-}
-
-function drawAtlasUnitLegacy(c: Brush, kind: UnitKind, glyph: UnitGlyph, point: Point, scale: number, color: string, profile: UnitVisualProfile) {
-  sprite(c, `u:${kind}:${glyph.silhouette}:${glyph.marks.join()}:${color}:${profile.tier}`, point, scale, (b) => {
+export function drawAtlasUnit(c: Brush, glyph: UnitGlyph, point: Point, scale: number, color: string) {
+  sprite(c, `u:${glyph.silhouette}:${glyph.marks.join()}:${color}`, point, scale, (b) => {
     const shape = glyph.silhouette;
     const mark = (name: UnitGlyph["marks"][number]) => glyph.marks.includes(name);
     ellipse(b, 2, 16, 17, 6, "#30483630");
@@ -227,7 +217,7 @@ function drawAtlasUnitLegacy(c: Brush, kind: UnitKind, glyph: UnitGlyph, point: 
     const worker = shape === "worker-apron";
     const wild = shape === "wildling-thorns";
     const mage = ["priest-medallion", "summoner-ring", "witch-crescent"].includes(shape) || mark("halo") && wild;
-    const cloth = wild ? "#7d8b57" : worker ? "#b7a176" : unitMaterialColor(profile, color);
+    const cloth = wild ? "#7d8b57" : worker ? "#b7a176" : color;
     polygon(b, [[-8, -9], [7, -9], [12, mage ? 15 : 9], [-12, mage ? 15 : 9]], cloth);
     polygon(b, [[-8, -8], [-1, -7], [-3, 11], [-12, 10]], "#243f3d33", "transparent", 0);
     line(b, [[-8, 5], [9, 5]], "#e0cb8f", 2);
@@ -284,71 +274,6 @@ function drawAtlasUnitLegacy(c: Brush, kind: UnitKind, glyph: UnitGlyph, point: 
     if (mark("curseSlash")) line(b, [[-4, -17], [1, -12]], "#984e43", 1.5);
     if (mark("towerShield")) polygon(b, [[-18, -8], [-8, -11], [-7, 11], [-17, 14]], color, GOLD, 1);
   });
-}
-
-function unitMaterialColor(profile: UnitVisualProfile, fallback: string) {
-  if (profile.accent === "ember") return "#a85c43";
-  if (profile.accent === "brass") return "#b58b4f";
-  if (profile.accent === "wild") return "#71875b";
-  if (profile.accent === "grove") return fallback === "#a85644" ? "#a85c43" : "#467d6c";
-  return fallback;
-}
-
-function drawEmberRavager(c: Brush, point: Point, scale: number, color: string, profile: UnitVisualProfile) {
-  sprite(c, `u:emberRavager:bruiser:${color}:${profile.tier}`, point, scale, (b) => {
-    ellipse(b, 0, 18, 18, 6, "#5b352d42");
-    line(b, [[-8, 7], [-10, 18]], "#543d35", 4);
-    line(b, [[7, 7], [10, 18]], "#543d35", 4);
-    polygon(b, [[-13, -7], [-3, -14], [11, -9], [14, 10], [2, 17], [-15, 9]], "#8e4c3e", "#3d4036", 1.8);
-    polygon(b, [[-16, -8], [-25, -3], [-17, 6], [-8, 1]], "#b96946", "#493a31", 1.4);
-    polygon(b, [[7, -10], [19, -8], [24, 0], [14, 7], [7, 1]], "#c37148", "#493a31", 1.4);
-    line(b, [[-10, 1], [8, 3]], "#e6b45f", 1.8);
-    ellipse(b, -2, -18, 7, 8, "#d69a6d", "#443a32");
-    polygon(b, [[-11, -19], [-7, -29], [1, -34], [11, -27], [10, -17], [2, -23], [-3, -20]], "#4b3e3a", "#352f2d", 1.5);
-    polygon(b, [[-2, -21], [5, -22], [7, -17], [1, -15]], "#efb65d", "#754139", 1);
-    ellipse(b, 3, -19, 1.3, 1.2, "#f6d58a");
-    line(b, [[12, 10], [29, -22]], "#70523c", 3);
-    polygon(b, [[25, -28], [35, -36], [32, -24], [39, -17], [27, -18]], "#d5d9b2", "#3d4036", 1.2);
-    polygon(b, [[28, -18], [38, -11], [31, -5], [24, -12]], "#e77643", "#873f35", 1);
-    polygon(b, [[-8, -2], [-4, -12], [0, -6], [4, -14], [8, -2], [2, 5]], "#f0c46d", "#a6523e", 1);
-    line(b, [[-15, -14], [-19, -21]], "#e6a35b", 2);
-    line(b, [[15, -17], [20, -23]], "#e6a35b", 2);
-  });
-}
-
-function drawKnight(c: Brush, point: Point, scale: number, color: string, profile: UnitVisualProfile) {
-  sprite(c, `u:knight:heavy:${color}:${profile.tier}`, point, scale, (b) => {
-    ellipse(b, 2, 21, 27, 8, "#30483642");
-    polygon(b, [[-22, 2], [5, -3], [25, 4], [19, 15], [-15, 16]], "#9b8d6e", "#4b5144", 1.7);
-    polygon(b, [[13, 1], [16, -14], [25, -17], [31, -8], [27, 1], [20, 8]], "#c2b897", "#4b5144", 1.5);
-    line(b, [[22, -15], [19, -3], [22, 6]], "#545c4d", 3);
-    for (const x of [-17, -8, 11, 20]) line(b, [[x, 11], [x - 2, 22]], "#4d5142", 3);
-    polygon(b, [[-12, -10], [13, -12], [17, 12], [-13, 11]], "#798c85", "#39463f", 1.8);
-    polygon(b, [[-11, -10], [-2, -18], [10, -16], [13, -12]], "#c4d0bb", "#4b5d50", 1.2);
-    line(b, [[-8, -4], [11, -4]], "#d6b267", 1.8);
-    polygon(b, [[-21, -4], [-9, -9], [-8, 13], [-16, 18], [-22, 10]], "#a2b4a0", "#3f594d", 1.6);
-    line(b, [[-19, -2], [-11, -5], [-12, 9], [-17, 13], [-19, -2]], "#e1c67c", 1.4);
-    polygon(b, [[9, -13], [11, -25], [18, -31], [25, -23], [24, -12]], "#aabaae", "#39463f", 1.4);
-    line(b, [[17, -27], [15, -40]], "#d9c27b", 2.2);
-    polygon(b, [[13, -40], [17, -51], [21, -40]], "#d4b168", "#4b5144", 1);
-    line(b, [[29, -13], [42, -35]], "#6e5940", 2.4);
-    polygon(b, [[39, -42], [46, -54], [48, -39], [43, -30]], "#dce2ca", "#4b5144", 1.2);
-    flag(b, 29, -31, "#bd9855", 0.55);
-  });
-}
-
-function drawUnitTierBadge(c: Brush, point: Point, scale: number, profile: UnitVisualProfile) {
-  if (profile.tier < 3) return;
-  const color = profile.accent === "ember" ? "#d9784a" : profile.accent === "wild" ? "#84996a" : profile.accent === "brass" ? GOLD : "#72a391";
-  const pipCount = Math.min(3, profile.tier - 2);
-  c.save();
-  c.translate(point.x + 21 * scale, point.y - 37 * scale);
-  c.scale(scale, scale);
-  for (let index = 0; index < pipCount; index += 1) {
-    const x = (index - (pipCount - 1) / 2) * 7;
-    polygon(c, [[x, -3], [x + 3, 0], [x, 3], [x - 3, 0]], color, "#36473e", 0.7);
-  }
-  c.restore();
 }
 
 function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
@@ -489,7 +414,7 @@ export function drawAtlasMenu(c: Brush, width: number, height: number) {
     drawAtlasBuilding(b, { frame: "farm-plot", marks: [] }, { x: 105, y: 41 }, 100, "#4c7766");
     drawAtlasBuilding(b, { frame: "barracks-yard", marks: [] }, { x: -45, y: 110 }, 110, "#3d7169");
     drawAtlasMine(b, { x: -212, y: -118 });
-    for (let i = 0; i < 5; i++) drawAtlasUnit(b, "footman", { silhouette: "shield-triangle", marks: ["shieldBar", "shortSword"] }, { x: -95 + (i % 3) * 31, y: 192 + Math.floor(i / 3) * 31 }, 1.02, "#3e7369");
+    for (let i = 0; i < 5; i++) drawAtlasUnit(b, { silhouette: "shield-triangle", marks: ["shieldBar", "shortSword"] }, { x: -95 + (i % 3) * 31, y: 192 + Math.floor(i / 3) * 31 }, 1.02, "#3e7369");
     drawAtlasCamp(b, { x: 152, y: -218 }, 1.05);
     // Compass and survey marks frame the illustration like a printed field atlas.
     b.save(); b.translate(303, -265);

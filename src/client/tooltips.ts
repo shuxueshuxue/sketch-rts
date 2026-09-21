@@ -2,7 +2,6 @@ import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
 import { leadershipRegenPerSecond } from "../shared/sim";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
-import { unitVisualProfile } from "./unit-visual-profile";
 
 export type GameplayTooltip = {
   title: string;
@@ -18,14 +17,11 @@ const DEFAULT_I18N = createI18n("en");
 
 export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
   const stats = UNIT_DEFS[kind];
-  const visual = unitVisualProfile(kind);
   return {
     title: labelKind(kind, i18n),
     body: UNIT_DESCRIPTIONS[i18n.locale][kind],
     stats: [
       tooltipLine(i18n.locale, "cost", stats.cost),
-      tooltipLine(i18n.locale, "tier", `T${visual.tier}`),
-      tooltipLine(i18n.locale, "visualValue", visual.valueScore),
       tooltipLine(i18n.locale, "supply", stats.supplyUsed),
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
@@ -45,14 +41,11 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
   const regenValues = units.map((unit) => leadershipRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
   const maxRegen = Math.max(0, ...regenValues);
-  const visual = unitVisualProfile(kind);
   return {
     title,
     body: "",
     stats: [
       tooltipLine(i18n.locale, "currentHp", `${formatStatNumber(totalHp)}/${formatStatNumber(totalMaxHp)}`),
-      tooltipLine(i18n.locale, "tier", `T${visual.tier}`),
-      tooltipLine(i18n.locale, "visualValue", visual.valueScore),
       tooltipLine(i18n.locale, "attack", statRange(units.map((unit) => unit.attackDamage))),
       tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
@@ -201,8 +194,6 @@ const TEXT = {
       speedBonus: "+{value}% move speed",
       speed: "Speed {value}",
       supply: "Supply {value}",
-      tier: "Visual tier {value}",
-      visualValue: "Visual value {value}",
       supplyBonus: "Supply +{value}",
       train: "Train {value}",
       unitRangeBonus: "+{value}% unit range",
@@ -233,8 +224,6 @@ const TEXT = {
       speedBonus: "+{value}% 移动速度",
       speed: "移速 {value}",
       supply: "人口 {value}",
-      tier: "视觉等级 {value}",
-      visualValue: "视觉价值 {value}",
       supplyBonus: "人口 +{value}",
       train: "训练 {value}",
       unitRangeBonus: "+{value}% 单位射程",

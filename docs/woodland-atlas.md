@@ -14,7 +14,7 @@ Sketch RTS 的第一版美术重制：林野战记 / Woodland Atlas。
 
 [查看原版主菜单](art/original-home.png)
 
-![兵种和建筑图鉴与价值排名](art/woodland-catalog.png)
+![兵种和建筑图鉴](art/woodland-catalog.png)
 
 ![实际对局：采金、建造与训练](art/woodland-match.png)
 
@@ -29,25 +29,9 @@ Sketch RTS 的第一版美术重制：林野战记 / Woodland Atlas。
 - 建筑放置时显示半透明的新建筑模型；施工中的建筑同样使用透明度区分。
 - 保留阵营颜色；菜单文案覆盖中文和英文；菜单适配较窄的窗口。
 
-## 价值驱动的单位视觉
-
-这次重制把视觉轮廓和模拟数据接在了一起。每种单位的综合价值由当前 catalog 的生命、每秒伤害、射程、移速、人口、价格、训练时间、技能效用和野怪食物强度计算；它只用于视觉分层，不会改变游戏平衡。
-
-| 层级 | 视觉语言 | 例子 |
-| --- | --- | --- |
-| T0–T1 | 小体量、轻材质、少装饰 | 农民、野外小型生物 |
-| T2–T3 | 专业姿态、远程武器或法器、轻徽记 | 弓手、牧师、召唤者 |
-| T4 | 中型战斗轮廓、明显的武器和阵营色 | 步兵、余火奔袭者、余火掠夺者 |
-| T5 | 大体量、重装材质、三颗价值徽记 | 骑士、魔像、古鹿、雇佣兵 |
-
-余火掠夺者（Ember Ravager）和骑士现在是两个明确的视觉档位：余火掠夺者是 **T4 / 120 金 / 2 人口 / 118 HP**，使用短身、火焰利刃和肩甲；骑士是 **T5 / 190 金 / 3 人口 / 220 HP**，使用更大的骑乘底盘、全身板甲、塔盾和骑枪。它们不再共享同一套骑乘轮廓。
-
-选择单位或把鼠标放到训练按钮上时，提示框会额外显示 `Visual tier` 和 `Visual value`，便于从数值确认画面层级。完整的 28 个单位排名与对比图在上方图鉴中。
-
 ## 实现位置
 
 - [`atlas-art.ts`](../src/client/atlas-art.ts)：Canvas 插画与有上限的图形缓存。缓存分辨率随绘制尺寸调整，供战场、菜单插画和头像共用。
-- [`unit-visual-profile.ts`](../src/client/unit-visual-profile.ts)：从 `UNIT_DEFS` 计算价值排名、视觉层级、材质和体量；`unit-visual-profile.test.ts` 锁定骑士与余火掠夺者的层级差异。
 - [`atlas-theme.css`](../src/client/atlas-theme.css)：界面主题与响应式布局。
 - [`main.ts`](../src/client/main.ts)：渲染接入、头像、指令图标与建造预览。
 - [`game-shell.ts`](../src/client/game-shell.ts)、[`i18n.ts`](../src/client/i18n.ts)：菜单结构与中英文文案。
