@@ -1,0 +1,2 @@
+# Keep source LF on every platform; some tests read files as text.
+* text=auto eol=lf
