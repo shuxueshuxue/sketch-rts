@@ -518,7 +518,7 @@ const ZH_LABELS: Record<LabelKey, string> = {
   human: "人类",
   inMatch: "比赛中",
   knight: "骑士",
-  lancer: "枪骑兵",
+  lancer: "长枪兵",
   leadership: "领导力",
   lightningRod: "闪电权杖",
   mercenary: "雇佣兵",

@@ -56,14 +56,18 @@ A match in progress: workers gathering gold, a barracks under construction, and 
 
 ![Sketch RTS gameplay — illustrated buildings, workers, gold mine, and command HUD](docs/art/woodland-match.png)
 
+A neutral camp guarding a gold mine: a stoneback brute, a thorn slinger, a bark mender, and a glade witch.
+
+![Neutral wildling camp on the battlefield](docs/art/woodland-camp.png)
+
 <details>
-<summary><strong>View all 28 unit designs and 12 building designs</strong></summary>
+<summary><strong>View all 28 unit designs, grouped by faction and tier, and 12 building designs</strong></summary>
 
 ![Woodland Atlas unit and building catalog](docs/art/woodland-catalog.png)
 
 </details>
 
-The illustrations are drawn with Canvas and reused across the battlefield, portraits, and command buttons. See the [art notes and placement preview](docs/woodland-atlas.md) for a closer look.
+The illustrations are drawn with Canvas and reused across the battlefield, portraits, and command buttons. How much gear a unit wears follows its cost: basic troops (≤120 gold) wear cloth and leather, advanced casters and mercenaries (130–160 gold) get trimmed robes and focus items, and elites (190+ gold, 3+ supply) get plate, capes, and plumes. Only stables units — the raider and the knight — ride. See the [art notes and placement preview](docs/woodland-atlas.md) for a closer look.
 
 ## Choose a runtime
 

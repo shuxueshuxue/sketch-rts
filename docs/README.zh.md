@@ -56,14 +56,18 @@ npm run dev
 
 ![Sketch RTS 实际对局：基地、农民、金矿和指令栏](art/woodland-match.png)
 
+守在金矿旁的中立营地：石背蛮兽、荆刺射手、树皮医者和林间女巫。
+
+![战场上的中立野怪营地](art/woodland-camp.png)
+
 <details>
-<summary><strong>展开查看 28 种单位与 12 种建筑图鉴</strong></summary>
+<summary><strong>展开查看 28 种单位（按阵营与等级分组）与 12 种建筑图鉴</strong></summary>
 
 ![「林野战记」单位和建筑图鉴](art/woodland-catalog.png)
 
 </details>
 
-这套插画由 Canvas 代码绘制，在战场、选中头像和指令按钮中共用。[美术设计说明](woodland-atlas.md)还包含建筑放置预览与改造前的画面。
+这套插画由 Canvas 代码绘制，在战场、选中头像和指令按钮中共用。单位装备随价格分级：初级兵（≤120 金）穿布甲皮甲，进阶的法师与雇佣兵（130–160 金）有镶边长袍和法器，精英（≥190 金、3+ 人口）才有板甲、披风和羽饰。只有马厩训练的掠袭者和骑士骑马。[美术设计说明](woodland-atlas.md)还包含建筑放置预览与改造前的画面。
 
 ## 选择运行方式
 

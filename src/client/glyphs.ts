@@ -6,6 +6,8 @@ export type UnitGlyph = {
     | "shield-triangle"
     | "bow-crest"
     | "raider-kite"
+    | "ember-bruiser"
+    | "cinder-skirmisher"
     | "lancer-pennant"
     | "knight-helm"
     | "priest-medallion"
@@ -49,8 +51,8 @@ export const UNIT_GLYPHS: Record<UnitKind, UnitGlyph> = {
   worker: { silhouette: "worker-apron", marks: ["pick", "satchel", "coinSlash"] },
   footman: { silhouette: "shield-triangle", marks: ["shieldBar", "shortSword", "scar"] },
   groveWarden: { silhouette: "shield-triangle", marks: ["shieldBar", "halo", "longSpear"] },
-  emberRavager: { silhouette: "raider-kite", marks: ["shortSword", "spark", "scar"] },
-  cinderRunner: { silhouette: "raider-kite", marks: ["spur", "spark", "shortSword"] },
+  emberRavager: { silhouette: "ember-bruiser", marks: ["shortSword", "spark", "scar"] },
+  cinderRunner: { silhouette: "cinder-skirmisher", marks: ["tail", "spark", "shortSword"] },
   sparkArcher: { silhouette: "bow-crest", marks: ["bow", "arrow", "spark"] },
   emberAcolyte: { silhouette: "priest-medallion", marks: ["halo", "spark", "cross"] },
   ashHexer: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "rune"] },
