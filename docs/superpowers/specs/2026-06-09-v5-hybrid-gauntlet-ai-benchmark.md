@@ -221,6 +221,20 @@ Interpretation:
 - Negative V5 two-base catch-up third experiments on 2026-06-12: exact `wispQuarry v5 north` at `500s` showed V5 Grove with two mining bases, `400g`, five combat units, and a safe unoccupied third mine, but `planExpansion` returned empty because `missingCombatProductionKind = stables` while `productionBuildingNeedKind` was still below its duplicate-stables threshold. A narrow V5 Grove rule allowed a five-fighter catch-up third to precede duplicate `stables`, but the fresh seed `v5-late-upgrades-50-2026-06-12a` dropped from `84/100` to `82/100` in run `2026-06-12T12-37-13-912Z-e6iffm`, losing retained wins on `celadonPass v5 south` and `hazelCircuit v5 south` with no gains. A second variant also released the two-base third bank into training when `mainBaseNeedsObjectivePause` blocked the expansion; it flipped `wispQuarry v5 north` but dropped the same seed further to `81/100` in run `2026-06-12T12-33-33-185Z-e6iffm` with net `+1/-4` flips. Both were reverted. Do not break the two-base third/stables/army bank by simple five-body or main-pressure gates; the aggregate evidence says the current bank is preserving more winning timings than it strands.
 - V5 baseline reset after prerequisite repair on 2026-06-12: the V5 mercenary-claim ownership rule was narrowed so ordinary V2/V3/V4-TR `hire` clears camp claims while V5 keeps the same-frame guarded-camp preservation through an explicit runner option. This fixed a real V3 Grove regression, so the hybrid opponent is stronger again. Fresh pgl seed `v5-late-upgrades-50-2026-06-12a` now scores `80/100` in run `2026-06-12T13-03-49-694Z-e6iffm`, with V5 Grove `40/51`, V5 Ember `40/49`, against V3 Grove `40/50`, against V3 Ember `40/50`, and opponent-order split `42/50` for `v3,v4-tr` versus `38/50` for `v4-tr,v3`. Treat this as the current honest V5 baseline; do not weaken V3 to recover the earlier `84/100`.
 
+### 2026-09-24 Recovery After V4-TR Route-Clearing Towers
+
+`f459512` (V4-TR route-clearing towers plus tower building targeting) dropped retained seed `v5-hybrid-50-2026-06-12` from `82/100` to `58/100`. Bisecting showed the sim targeting change alone kept `82/100`; the loss came from V4-TR no longer banking gold behind its route-safety rule, so both opponents now reach V5 together around `220s`.
+
+Evaluation used five seeds (`v5-hybrid-50-2026-06-12`, `v5-hybrid-50-holdout-a` through `-d`, 500 games, 10 local workers):
+
+- `main` at `d5a5b2d`: `315/500` (`58, 68, 66, 66, 57`).
+- Guarded-expansion incoming-army gate: `338/500`. V5 in 1v2 does not send its army to clear a guarded mine while enemy combat power within `2200` of its main exceeds `0.8x` its own; this was the recurring `~190s` creep, `~220s` double-hit collapse.
+- Plus attack-wave commitment holds: `345/500` (`74, 67, 64, 72, 68`). `locallyBeatableOpponentBaseTarget` and `closeoutAttackWaveTarget` sat on thresholds, so the army flipped between a base strike and the generic wave point every think and never arrived. A detector over 16 games counted ~200 such flips before and 14 after.
+
+Rejected on the same five seeds (each flat or worse, reverted): wider main emergency-tower trigger, releasing the cleared-expansion bank under incoming pressure, gating objectiveControl and expansionDenial on the same incoming check, removing expansionDenial, adding `desperateWorkerFight` to the V5 stack, one-base worker labor `+1` instead of `+3`, and a V5 late-standoff counter push that counts towers.
+
+Remaining losses: about six early double-rush collapses per 100 games, midgame trades against the combined army, and timeouts where V4-TR banks thousands of gold behind forward towers.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.

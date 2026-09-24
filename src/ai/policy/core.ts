@@ -105,6 +105,10 @@ const TOWER_MERC_SIEGE_CLEANUP_TICK = 16_000;
 const TOWER_MERC_WORKER_CLEANUP_TICK = 12_000;
 const TOWER_MERC_ROUTE_NEUTRAL_POWER_RATIO = 1.7;
 const SEVERE_SINGLE_BASE_MAIN_RECALL_TICK = 1_700;
+const GUARDED_EXPANSION_INCOMING_RANGE = 2_200;
+const GUARDED_EXPANSION_INCOMING_RATIO = 0.8;
+const LOCAL_BASE_COMMIT_HOLD_LOCAL_RATIO = 1.25;
+const LOCAL_BASE_COMMIT_HOLD_ROUTE_RATIO = 0.9;
 const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
 
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
@@ -413,6 +417,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
     if (soldiers.length < 4) return undefined;
     const enemyControlsMine = localEnemyControlNearObjective(snapshot, owner, mine, soldiers, options) || enemyControlsObjectiveRoute(snapshot, owner, averagePoint(soldiers), mine, soldiers, options);
     // @@@expansion-clear-enemy-control - Neutral guards are only half the objective; a guarded mine is not claimable while the enemy army owns the same ground.
+    if (guardedExpansionLeavesBaseToIncomingArmy(snapshot, owner, soldiers, options)) return undefined;
     if (!enemyControlsMine && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
     return undefined;
   }
@@ -427,6 +432,18 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const offset = expansionOffset(snapshot, owner);
   const point = legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: point.x, y: point.y }, options);
+}
+
+function guardedExpansionLeavesBaseToIncomingArmy(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
+  // @@@guarded-expansion-incoming-army - Creeping a guarded mine spends HP away from home; when the enemy field army already near the main outweighs ours, the creep fight hands the base to that army.
+  return incomingArmyOutweighsMain(snapshot, owner, combatUnits(snapshot, owner), options);
+}
+
+function incomingArmyOutweighsMain(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const incoming = enemyCombatUnitsNear(snapshot, owner, mainBase(snapshot, owner), GUARDED_EXPANSION_INCOMING_RANGE, options.teams);
+  return armyPower(incoming) > armyPower(ownCombat) * GUARDED_EXPANSION_INCOMING_RATIO;
 }
 
 function contestedFirstNaturalTownHallCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -3185,8 +3202,13 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (options.version === "v2" && !currentCommittedOwner && deadEconomyCloseoutReady(snapshot, owner, options, soldiers) && strongerEnemyArmyStopline(snapshot, owner, soldiers, enemyArmy, options)) {
     return attackWaveStoplineRecall(snapshot, owner, movable, options);
   }
+  // @@@local-base-commit-hold - The beatable-base test sits on a threshold; re-deciding it every think made the army flip between two targets and never arrive.
+  if (outnumberedV2 && heldLocalBaseCommit(snapshot, owner, soldiers, movable, enemyArmy, options)) return undefined;
   const localBaseCommit = outnumberedV2 && !currentCommittedOwner && movable.length >= minimumWaveSize ? locallyBeatableOpponentBaseTarget(snapshot, owner, soldiers, enemyArmy, options) : undefined;
-  if (localBaseCommit) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: movable.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y }, options);
+  if (localBaseCommit) {
+    const stale = isV5HybridPolicy(options) ? staleAttackMovers(movable, localBaseCommit) : movable;
+    return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: localBaseCommit.x, y: localBaseCommit.y }, options) : undefined;
+  }
   if (options.version === "v2" && !currentCommittedOwner && strongerEnemyArmyStopline(snapshot, owner, soldiers, enemyArmy, options)) return undefined;
 
   const armyTarget = options.version === "v2" ? significantOpponentArmyTarget(snapshot, owner, averagePoint(soldiers), soldiers, options) : undefined;
@@ -3196,6 +3218,8 @@ function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: Preset
   if (shouldDelayEarlyOneOnOneBasePressure(snapshot, owner, soldiers, objective, options)) return undefined;
   const point = shouldCloseOutObjective(snapshot, owner, objective, options) ? objective : wavePointFor(snapshot, owner, soldiers, objective);
   const stale = staleAttackMovers(movable, point);
+  // @@@wave-keeps-building-strike - The generic wave is the fallback; re-pointing an army already striking an enemy building made it oscillate with closeout every think.
+  if (isV5HybridPolicy(options) && stale.length > 0 && armyStrikingEnemyBuilding(snapshot, owner, movable, options)) return undefined;
   if (outnumberedV2 && stale.length < minimumWaveSize) return undefined;
   if (stale.length > 0 && neutralRouteBlocksAttackWave(snapshot, owner, movable, point, options)) return undefined;
   return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: stale.map((unit) => unit.id), x: point.x, y: point.y }, options) : undefined;
@@ -3904,6 +3928,30 @@ function noWorkerLastArmyTarget(snapshot: GameSnapshot, owner: PlayerId, soldier
   if (armyPower(enemyArmy) > ownPower * 0.82) return undefined;
   // @@@no-worker-last-army - With no workers left, waiting for the normal five-unit wave is impossible; the last squad must finish weak enemy combat.
   return enemyArmy.sort((a, b) => strategicArmyTargetScore(b, center) - strategicArmyTargetScore(a, center))[0];
+}
+
+function armyStrikingEnemyBuilding(snapshot: GameSnapshot, owner: PlayerId, movable: Unit[], options: PresetAiPolicyOptions) {
+  const striking = movable.filter(
+    (unit) => unit.order.type === "attackMove" && enemyBuildingsNear(snapshot, owner, unit.order, ATTACK_MOVE_REDIRECT_DISTANCE, options.teams).length > 0,
+  );
+  return striking.length >= Math.max(3, movable.length / 2);
+}
+
+function heldLocalBaseCommit(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], movable: Unit[], enemies: Unit[], options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options) || movable.length === 0) return false;
+  const ownPower = armyPower(soldiers);
+  return opponentPlayerIds(snapshot, owner, options).some((opponent) =>
+    buildings(snapshot, opponent)
+      .filter((building) => building.kind === "townHall" || isCoreProductionBuilding(building))
+      .some((target) => {
+        const committed = movable.filter((unit) => unit.order.type === "attackMove" && distance(unit.order, target) <= ATTACK_MOVE_REDIRECT_DISTANCE);
+        if (committed.length < Math.max(3, movable.length / 2)) return false;
+        const center = averagePoint(soldiers);
+        const localPower = armyPower(enemies.filter((unit) => unit.owner === opponent && distance(unit, target) <= 680));
+        const routePower = armyPower(enemies.filter((unit) => unit.owner !== opponent && pointToSegmentDistance(unit, center, target) <= 430 && distance(unit, target) > 620));
+        return localPower <= ownPower * LOCAL_BASE_COMMIT_HOLD_LOCAL_RATIO && routePower <= ownPower * LOCAL_BASE_COMMIT_HOLD_ROUTE_RATIO;
+      }),
+  );
 }
 
 function locallyBeatableOpponentBaseTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], enemies: Unit[], options: PresetAiPolicyOptions): Building | undefined {
