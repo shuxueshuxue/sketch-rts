@@ -266,6 +266,30 @@ Before 300s, when both opponents' fighters together are at least twice V5's army
 
 Keeping the mode on after 300s was worse (`805/1000` capped at 600s, `803/1000` uncapped): it is an opening answer, not a posture.
 
+### 2026-09-25 What Decides The Remaining Losses (No Retained Change)
+
+Analysis of the 179 ten-seed losses of `282cd0b` (timelines, decisive-fight windows, replays and save/load play):
+
+- V4-TR's opening decides most of the score. When V4-TR has no workers left at 300s (it walks them into neutral camps; 387 of 1000 games) V5 wins 98%. Against a V4-TR still on six workers (552 games) V5 wins 71%, and those games hold 158 of the 179 losses. Within them, V5's own state at 300s is identical in wins and losses (army power 12.7, six fighters, nine workers); the enemies are slightly stronger in the losses and the game turns in the 300-420s fights.
+- One town hall at 300s: 222 games at 65% (two halls: 87%). What holds the natural back is the guarded-expansion incoming-army gate (enemies within 2200 of the main outweighing 0.8 of V5's army), often V4-TR's mercenaries idling at their own camp.
+- 121 of the 179 decisive losses happen within 900 of V5's main. There the home defenders match the attackers (median power 14 vs 14), but the enemy is 2.4 times V5 across the map and V5 trades 0.39 of what it loses.
+- Worker feeding: 36 losses lose at least 15 workers before the final minute by rebuilding miners at a base under enemy towers or a parked army (auricDelta south: 93 workers built and killed between 600s and 1260s).
+- Script churn: in a lost fight one army receives five contradictory macro orders in 13s (focus fire, raid recall, a creep camp, home, then a tower break into V3's army).
+
+Tried against these and rejected on the ten tune seeds (baseline `821`):
+
+- clearing the guarded contract-archer camp beside the main during the outnumbered opening: `798` (hollowFord `6/12` -> `12/12`, ironMoss `10/16` -> `16/16`, but russetBrook `14/14` -> `6/14`, saffronFen `20/20` -> `12/20`); the baseline hires the same three archers anyway, about 100s later, after the natural;
+- keeping wounded units swinging within 750 of a town hall: stopped at `149/200` vs `172`;
+- natural clearing without the outnumbered gate: `805`;
+- an arrival-time incoming gate for the natural clear (only enemies that reach the natural before walk-out, kill and walk-home finish): `825`, noise;
+- camp clear plus the arrival gate: `804`;
+- not mining or rebuilding workers at a contested base (enemy tower or stronger local army): stopped at `318/400` vs `338`; narrowed to bases that lost three workers in the last minute: `815`;
+- two fast units hunting V4-TR's lone camp-hiring worker anywhere on the map: `818`;
+- a four-second lease that stops macro scripts re-tasking each other's units: `793`;
+- tower breaker counting every enemy fighter within 1000 of the tower: `792`.
+
+Noise calibration: each of these flips 90-250 of the 1000 games in both directions. The simulation is deterministic, so every game a change touches becomes a new trajectory; a change has to be worth well over 20 games to be seen on ten seeds. mac1 (node 26) reproduces the A100 (node 22) baseline exactly (`821`, same per-seed counts). Ten fresh seeds (`v5-extra-1` through `-10`) give `792/1000` at `282cd0b`.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.
