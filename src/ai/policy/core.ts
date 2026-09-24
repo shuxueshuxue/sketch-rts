@@ -109,6 +109,11 @@ const GUARDED_EXPANSION_INCOMING_RANGE = 2_200;
 const GUARDED_EXPANSION_INCOMING_RATIO = 0.8;
 const LOCAL_BASE_COMMIT_HOLD_LOCAL_RATIO = 1.25;
 const LOCAL_BASE_COMMIT_HOLD_ROUTE_RATIO = 0.9;
+const TOWER_BREAK_RANGE = 900;
+const TOWER_BREAK_GATHER_RANGE = 1_600;
+const TOWER_BREAK_MIN_UNITS = 3;
+const TOWER_BREAK_ARMY_REACH = 700;
+const TOWER_BUILDER_SNIPE_RANGE = 1_300;
 const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
 
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
@@ -131,6 +136,7 @@ export const AI_SCRIPT_LIBRARY = {
   items: { id: "items", phase: "tactics", run: planItemCommands },
   abilities: { id: "abilities", phase: "tactics", run: planAbilityCommands },
   focusFire: { id: "focusFire", phase: "tactics", run: planFocusFireCommand },
+  towerBreaker: { id: "towerBreaker", phase: "tactics", run: planTowerBreaker },
   expansionRegroup: { id: "expansionRegroup", phase: "tactics", run: planExpansionRegroup },
   desperateWorkerFight: { id: "desperateWorkerFight", phase: "tactics", run: planDesperateWorkerFight },
   workerPressure: { id: "workerPressure", phase: "tactics", run: planWorkerPressure },
@@ -186,6 +192,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
   AI_SCRIPT_LIBRARY.focusFire,
+  AI_SCRIPT_LIBRARY.towerBreaker,
   // @@@v5-objective-before-raids - Fresh V5 1v2 armies should finish nearby value camps before peeling into worker raids.
   AI_SCRIPT_LIBRARY.objectiveControl,
   AI_SCRIPT_LIBRARY.workerPressure,
@@ -2193,6 +2200,69 @@ function shouldHoldThinTwoMineDefenseBank(snapshot: GameSnapshot, owner: PlayerI
   const enemies = enemyCombatUnitsNear(snapshot, owner, main, 1_850, options.teams);
   // @@@two-mine-defense-bank - Fresh two-mine income is fake if the next 100g becomes a worker while the first attack reaches an unguarded main.
   return enemies.length >= 2 && armyPower(enemies) > armyPower(ownCombat) * 1.05;
+}
+
+// @@@v5-tower-breaker - V4-TR wins by creeping 200 HP towers into our base, the mine we want, and the ground our army holds; a local group must kill them before they turn every fight.
+function planTowerBreaker(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (!isV5HybridPolicy(options)) return undefined;
+  const ownBuildings = buildings(snapshot, owner);
+  if (ownBuildings.length === 0) return undefined;
+  const snipe = towerBuilderSnipe(snapshot, owner, ownBuildings, options);
+  if (snipe) return snipe;
+  const wantedMine = desiredExpansionMine(snapshot, owner);
+  const army = combatUnits(snapshot, owner);
+  const armyCenter = army.length >= 4 ? averagePoint(army) : undefined;
+  const towers = opponentPlayerIds(snapshot, owner, options)
+    .flatMap((opponent) => buildings(snapshot, opponent).filter((building) => building.kind === "defenseTower"))
+    .map((tower) => ({
+      tower,
+      reach: Math.min(
+        ...ownBuildings.map((building) => distance(building, tower)),
+        wantedMine ? distance(wantedMine, tower) : Number.POSITIVE_INFINITY,
+        armyCenter ? distance(armyCenter, tower) + TOWER_BREAK_RANGE - TOWER_BREAK_ARMY_REACH : Number.POSITIVE_INFINITY,
+      ),
+    }))
+    .filter(({ reach }) => reach <= TOWER_BREAK_RANGE)
+    .sort((a, b) => Number(a.tower.complete) - Number(b.tower.complete) || a.reach - b.reach);
+  for (const { tower } of towers) {
+    const candidates = combatUnits(snapshot, owner).filter(
+      (unit) =>
+        unit.attackDamage > 0 &&
+        unit.hp >= unit.maxHp * 0.4 &&
+        distance(unit, tower) <= TOWER_BREAK_GATHER_RANGE &&
+        (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove" || (unit.order.type === "attack" && unit.order.targetId === tower.id)),
+    );
+    if (candidates.length < TOWER_BREAK_MIN_UNITS) continue;
+    const defenders = enemyCombatUnitsNear(snapshot, owner, tower, 520, options.teams);
+    const coveringTowers = enemyBuildingsNear(snapshot, owner, tower, BUILDING_DEFS.defenseTower.attackRange, options.teams).filter((building) => building.kind === "defenseTower" && building.complete).length;
+    if (armyPower(candidates) < armyPower(defenders) + coveringTowers * 2.4) continue;
+    const idle = candidates.filter((unit) => !(unit.order.type === "attack" && unit.order.targetId === tower.id));
+    if (idle.length === 0) return undefined;
+    if (defenders.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: idle.map((unit) => unit.id), x: tower.x, y: tower.y }, options);
+    return { type: "attack", unitIds: idle.map((unit) => unit.id), targetId: tower.id };
+  }
+  return undefined;
+}
+
+// @@@v5-tower-builder-snipe - Construction advances for any owner worker standing at the site; killing that worker stops a tower before it can shoot.
+function towerBuilderSnipe(snapshot: GameSnapshot, owner: PlayerId, ownBuildings: Building[], options: PresetAiPolicyOptions): GameCommand | undefined {
+  const nearTowerSites = opponentPlayerIds(snapshot, owner, options)
+    .flatMap((opponent) => buildings(snapshot, opponent))
+    .filter((building) => building.kind === "defenseTower" && !building.complete && ownBuildings.some((own) => distance(own, building) <= TOWER_BREAK_RANGE));
+  if (nearTowerSites.length === 0) return undefined;
+  const builders = opponentPlayerIds(snapshot, owner, options)
+    .flatMap((opponent) => units(snapshot, opponent))
+    .filter((unit) => unit.kind === "worker" && nearTowerSites.some((site) => site.owner === unit.owner && distance(unit, site) <= site.radius + 80));
+  for (const builder of builders) {
+    const escorts = enemyCombatUnitsNear(snapshot, owner, builder, 420, options.teams);
+    const hunters = nearestEntities(
+      combatUnits(snapshot, owner).filter((unit) => unit.attackDamage > 0 && unit.hp >= unit.maxHp * 0.5 && (unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "attackMove") && distance(unit, builder) <= TOWER_BUILDER_SNIPE_RANGE),
+      builder,
+    ).slice(0, 3);
+    if (hunters.length < 2 || armyPower(hunters) < armyPower(escorts) * 1.2) continue;
+    return { type: "attack", unitIds: hunters.map((unit) => unit.id), targetId: builder.id };
+  }
+  return undefined;
 }
 
 function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

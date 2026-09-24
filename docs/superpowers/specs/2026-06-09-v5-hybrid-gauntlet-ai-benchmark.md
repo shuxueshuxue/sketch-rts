@@ -235,6 +235,26 @@ Rejected on the same five seeds (each flat or worse, reverted): wider main emerg
 
 Remaining losses: about six early double-rush collapses per 100 games, midgame trades against the combined army, and timeouts where V4-TR banks thousands of gold behind forward towers.
 
+### 2026-09-25 Tower Breaker
+
+Loss analysis of the `345/500` build showed V4-TR winning by creeping 200 HP towers into V5's base: in lost games V4-TR raised 5.1 towers within 700 of V5 buildings (2.3 before 600s) versus 1.2 in won games, and 4.4 of V5's 11.8 lost buildings died inside enemy tower range. Unit auto-targeting prefers units over towers, so V5 fought around the towers while they kept firing.
+
+The new V5-only `towerBreaker` tactic (after `focusFire` in the V5 stack):
+
+- kills the worker standing at an unfinished enemy tower site within 900 of any V5 building (construction advances for any owner worker at the site);
+- otherwise sends every healthy nearby fighter (within 1600, at least three) at the nearest threatening enemy tower (unfinished first), when their power beats local defenders plus covering towers. A tower threatens when it is within 900 of a V5 building, of the mine V5 wants next, or within 700 of the V5 army.
+
+Ten seeds (`v5-hybrid-50-2026-06-12`, `v5-hybrid-50-holdout-a` through `-i`, 1000 games):
+
+- previous build `244d538`: `679/1000` (`74 67 64 72 68 61 70 66 67 70`);
+- tower breaker near V5 buildings only: `739/1000`, every seed up;
+- plus the wanted-mine and army-reach scope: `777/1000`;
+- plus the builder snipe: `791/1000` (`80 84 82 85 74 75 76 74 78 83`); the retained seed is `80/100`.
+
+Noise calibration: unrelated changes move a 1000-game total by about 15-20, so five-seed screens were not trusted. Rejected on ten seeds (flat or worse): removing the routine `defense` towers, earlier weapon or plating upgrades, a home-ground hold for wounded units, HP-aware skirmish retreat odds (`707`), camp-worker sniping, taking a guarded mercenary camp before the natural (`756`-`775`), holding a camp worker, and an opening creep hold (`688`).
+
+Remaining losses on the retained seed: ten early collapses around 280-340s where V4-TR's mercenary army (and V3) reach V5 at about 220s while V5 has three or four units, eight midgame losses, and two timeouts. Separately, V4-TR loses workers to neutral camps in the first 90 seconds in 69 of 100 games; V5 wins 78% of those and 47% against a V4-TR that opens cleanly, so a later V4-TR opening fix will lower this score.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.

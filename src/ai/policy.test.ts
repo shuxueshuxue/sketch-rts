@@ -23,6 +23,7 @@ describe("SDK preset AI policy", () => {
     const v5Expected = [...v2ScriptIds.slice(0, productionIndex), "economicCatchUp", "earlyTech", ...v2ScriptIds.slice(productionIndex)];
     v5Expected.splice(v5Expected.indexOf("objectiveControl"), 1);
     v5Expected.splice(v5Expected.indexOf("workerPressure"), 0, "objectiveControl");
+    v5Expected.splice(v5Expected.indexOf("focusFire") + 1, 0, "towerBreaker");
     expect(v5ScriptIds).toEqual(v5Expected);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
