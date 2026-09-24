@@ -114,6 +114,9 @@ const TOWER_BREAK_GATHER_RANGE = 1_600;
 const TOWER_BREAK_MIN_UNITS = 3;
 const TOWER_BREAK_ARMY_REACH = 700;
 const TOWER_BUILDER_SNIPE_RANGE = 1_300;
+const OUTNUMBERED_ARMY_RATIO = 2;
+const OUTNUMBERED_MIN_ENEMY_FIGHTERS = 5;
+const OUTNUMBERED_OPENING_END_TICK = 300 * 20;
 const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
 
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
@@ -425,6 +428,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
     const enemyControlsMine = localEnemyControlNearObjective(snapshot, owner, mine, soldiers, options) || enemyControlsObjectiveRoute(snapshot, owner, averagePoint(soldiers), mine, soldiers, options);
     // @@@expansion-clear-enemy-control - Neutral guards are only half the objective; a guarded mine is not claimable while the enemy army owns the same ground.
     if (guardedExpansionLeavesBaseToIncomingArmy(snapshot, owner, soldiers, options)) return undefined;
+    if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
     if (!enemyControlsMine && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
     return undefined;
   }
@@ -439,6 +443,16 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
   const offset = expansionOffset(snapshot, owner);
   const point = legalBuildPointNear(snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "townHall", x: point.x, y: point.y }, options);
+}
+
+// @@@v5-army-first-outnumbered - V5 sees both opponents' armies. When they open army-heavy (together at least twice V5's army), the next worker, well, upgrade or routine tower is a fighter the first wave kills: spend on fighters and do not start creep fights until the pressure is beaten.
+function v5OutnumberedOpening(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  if (!isV5HybridPolicy(options)) return false;
+  if (snapshot.tick > OUTNUMBERED_OPENING_END_TICK) return false;
+  if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
+  const enemies = enemyCombatUnits(snapshot, owner, options.teams);
+  if (enemies.length < OUTNUMBERED_MIN_ENEMY_FIGHTERS) return false;
+  return armyPower(enemies) > armyPower(combatUnits(snapshot, owner)) * OUTNUMBERED_ARMY_RATIO;
 }
 
 function guardedExpansionLeavesBaseToIncomingArmy(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
@@ -547,6 +561,7 @@ function shouldWaitForOneOnOneFirstExpansionGroup(snapshot: GameSnapshot, owner:
 }
 
 function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   if (behaviorDisabled(options, "economicCatchUp")) {
     recordBehavior(options, "economicCatchUp", "disabledSkips");
     return undefined;
@@ -744,6 +759,7 @@ function v5FreshNaturalEmergencyTowerBase(snapshot: GameSnapshot, owner: PlayerI
 }
 
 function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, reserveOptions: { forcePriorityWeaponTiming?: boolean } = {}): GameCommand | undefined {
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   const upgradeKind = nextUpgradeKind(snapshot, owner, options);
   if (!upgradeKind) return undefined;
   if (upgradeKind !== "weaponTraining" && missingCombatProductionKind(snapshot, owner)) return undefined;
@@ -843,6 +859,7 @@ function shouldHoldSevereEconomyMissingProductionBeforeUtility(
 }
 
 function planEarlyTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   const upgradeKind = nextUpgradeKind(snapshot, owner, options);
   if (!upgradeKind || !isV2PriorityWeaponTiming(snapshot, owner, upgradeKind, options)) return undefined;
   const level = nextUpgradeLevelDef(snapshot, owner, upgradeKind);
@@ -944,6 +961,7 @@ function researchBuilding(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: 
 }
 
 function planDefense(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   const player = playerState(snapshot, owner);
   if (player.gold < BUILDING_DEFS.defenseTower.cost) return undefined;
   if (shouldHoldSevereEconomyOpeningBundle(snapshot, owner, options, player.gold)) return undefined;
@@ -1170,6 +1188,7 @@ function towerMercSiegeTargetScore(building: Building, anchor: Point) {
 }
 
 function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   const player = playerState(snapshot, owner);
   const healingKind = healingBuildingKind(snapshot, owner);
   const healingCost = BUILDING_DEFS[healingKind].cost;
@@ -2162,6 +2181,7 @@ function routineWorkerCount(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   // @@@mine-worker-saturation - A mine pays up to five workers; repair/build labor is a separate need, not extra mine income.
   if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2) {
     // @@@v5-1v2-labor - One base still needs non-mining labor for towers, repairs, and fast expansion conversion against two opponents.
+    if (v5OutnumberedOpening(snapshot, owner, options)) return Math.min(units(snapshot, owner).filter((unit) => unit.kind === "worker").length, bases * 5 + 3);
     return Math.min(16, bases * 5 + 3);
   }
   if (options.version === "v2") {
@@ -2279,6 +2299,7 @@ function planObjectiveControl(snapshot: GameSnapshot, owner: PlayerId, options: 
   const minimumArmy = objectiveControlMinimumArmy(snapshot, owner, options);
   if (army.length < minimumArmy) return undefined;
   if (objectiveControlShouldYieldToCloseout(snapshot, owner, army, options)) return undefined;
+  if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   if (options.version === "v2" && armyCommittedToEnemyObjective(snapshot, owner, army, minimumArmy, options)) return undefined;
   const anchor = averagePoint(army);
   const maxObjectiveDistance = options.version === "v2" ? 1_450 : 900;

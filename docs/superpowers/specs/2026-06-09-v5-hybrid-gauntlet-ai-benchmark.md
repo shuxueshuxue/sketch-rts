@@ -255,6 +255,17 @@ Noise calibration: unrelated changes move a 1000-game total by about 15-20, so f
 
 Remaining losses on the retained seed: ten early collapses around 280-340s where V4-TR's mercenary army (and V3) reach V5 at about 220s while V5 has three or four units, eight midgame losses, and two timeouts. Separately, V4-TR loses workers to neutral camps in the first 90 seconds in 69 of 100 games; V5 wins 78% of those and 47% against a V4-TR that opens cleanly, so a later V4-TR opening fix will lower this score.
 
+### 2026-09-25 Army First When Outnumbered
+
+Found by replaying the early-collapse games by hand (reedBasin, graniteBloom, heatherCircuit on the retained seed) and by reading the opponents' attack rules: V3 treats V5 as its only opponent (1v1 rules) and V4-TR attacks as soon as it has five hired fighters. In every early collapse both opponents opened army-heavy (about six fighters between them at 150s against V5's three) while V5 kept building workers, a well, tech and creeping its natural into the first wave.
+
+Before 300s, when both opponents' fighters together are at least twice V5's army (five or more of them), V5 now stops adding workers, skips the healing well, upgrades, early tech, economic catch-up and routine towers, and does not start creep fights. In all three replayed games V5 then held the first wave at home and was alive and expanding at 420-480s.
+
+- ten seeds: `791/1000` -> `821/1000` (`90 82 81 85 75 83 81 82 80 82`); the retained seed is `90/100`;
+- untouched final seeds (`v5-final-1` through `-5`): `398/500` -> `410/500`.
+
+Keeping the mode on after 300s was worse (`805/1000` capped at 600s, `803/1000` uncapped): it is an opening answer, not a posture.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.
