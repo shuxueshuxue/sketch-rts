@@ -301,6 +301,10 @@ Small but positive on all three independent seed sets:
 
 Together `+21` over 2500 games, inside the per-set noise but never negative.
 
+Still open after it: of 39 games that sat on one hall at 300s, 34 still do. Between 150s and 300s their expansion is held by real danger rather than by far-away armies: an enemy army within 1550 of the main (92 checks), fewer than four idle fighters (64), the outnumbered opening (62) and the unfinished production chain (52). These games are decided by the first home defense against a healthy V4-TR plus V3.
+
+Rejected the same night: judging armies by damage per second instead of damage per hit for V5 only (a mercenary lands 31 per second, twice a footman, and was scored as 1.35 footmen): fresh seeds `799` -> `773`, tune seeds flat. Seeing the enemy as stronger made V5 more careful, and the caution cost more than the fights it avoided.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.
