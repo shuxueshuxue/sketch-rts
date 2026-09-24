@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
+import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import {
   healingWellPressure,
   hasReachedHealingWellLimit,
@@ -105,7 +106,6 @@ const TOWER_MERC_SIEGE_CLEANUP_TICK = 16_000;
 const TOWER_MERC_WORKER_CLEANUP_TICK = 12_000;
 const TOWER_MERC_ROUTE_NEUTRAL_POWER_RATIO = 1.7;
 const SEVERE_SINGLE_BASE_MAIN_RECALL_TICK = 1_700;
-const GUARDED_EXPANSION_INCOMING_RANGE = 2_200;
 const GUARDED_EXPANSION_INCOMING_RATIO = 0.8;
 const LOCAL_BASE_COMMIT_HOLD_LOCAL_RATIO = 1.25;
 const LOCAL_BASE_COMMIT_HOLD_ROUTE_RATIO = 0.9;
@@ -427,7 +427,7 @@ function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetA
     if (soldiers.length < 4) return undefined;
     const enemyControlsMine = localEnemyControlNearObjective(snapshot, owner, mine, soldiers, options) || enemyControlsObjectiveRoute(snapshot, owner, averagePoint(soldiers), mine, soldiers, options);
     // @@@expansion-clear-enemy-control - Neutral guards are only half the objective; a guarded mine is not claimable while the enemy army owns the same ground.
-    if (guardedExpansionLeavesBaseToIncomingArmy(snapshot, owner, soldiers, options)) return undefined;
+    if (guardedExpansionLeavesBaseToIncomingArmy(snapshot, owner, soldiers, mine, options)) return undefined;
     if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
     if (!enemyControlsMine && canClearGuardedExpansion(snapshot, mine, soldiers, options)) return resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: soldiers.map((unit) => unit.id), x: mine.x, y: mine.y }, options);
     return undefined;
@@ -455,16 +455,17 @@ function v5OutnumberedOpening(snapshot: GameSnapshot, owner: PlayerId, options: 
   return armyPower(enemies) > armyPower(combatUnits(snapshot, owner)) * OUTNUMBERED_ARMY_RATIO;
 }
 
-function guardedExpansionLeavesBaseToIncomingArmy(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], options: PresetAiPolicyOptions) {
-  // @@@guarded-expansion-incoming-army - Creeping a guarded mine spends HP away from home; when the enemy field army already near the main outweighs ours, the creep fight hands the base to that army.
-  return incomingArmyOutweighsMain(snapshot, owner, combatUnits(snapshot, owner), options);
-}
-
-function incomingArmyOutweighsMain(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], options: PresetAiPolicyOptions) {
+function guardedExpansionLeavesBaseToIncomingArmy(snapshot: GameSnapshot, owner: PlayerId, soldiers: Unit[], mine: ResourceNode, options: PresetAiPolicyOptions) {
   if (!isV5HybridPolicy(options)) return false;
   if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
-  const incoming = enemyCombatUnitsNear(snapshot, owner, mainBase(snapshot, owner), GUARDED_EXPANSION_INCOMING_RANGE, options.teams);
-  return armyPower(incoming) > armyPower(ownCombat) * GUARDED_EXPANSION_INCOMING_RATIO;
+  // @@@guarded-expansion-arrival - A natural clear is a short job: walk out, kill the guards, walk home. Only enemies that can reach the natural inside that window can punish it; a merc ball idling at its own camp across the map is not incoming.
+  const main = mainBase(snapshot, owner);
+  const slowest = Math.min(...soldiers.map((unit) => unit.speed)) * SIM_TICKS_PER_SECOND;
+  const guards = neutralUnitsNear(snapshot, mine, 280);
+  const squadDps = soldiers.reduce((total, unit) => total + unit.attackDamage / Math.max(1, unit.attackCooldown / SIM_TICKS_PER_SECOND), 0);
+  const jobSeconds = (distance(averagePoint(soldiers), mine) + distance(mine, main)) / slowest + guards.reduce((total, unit) => total + unit.hp, 0) / Math.max(1, squadDps);
+  const incoming = enemyCombatUnits(snapshot, owner, options.teams).filter((enemy) => distance(enemy, mine) / (enemy.speed * SIM_TICKS_PER_SECOND) <= jobSeconds);
+  return armyPower(incoming) > armyPower(combatUnits(snapshot, owner)) * GUARDED_EXPANSION_INCOMING_RATIO;
 }
 
 function contestedFirstNaturalTownHallCommand(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

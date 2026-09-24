@@ -281,7 +281,6 @@ Tried against these and rejected on the ten tune seeds (baseline `821`):
 - clearing the guarded contract-archer camp beside the main during the outnumbered opening: `798` (hollowFord `6/12` -> `12/12`, ironMoss `10/16` -> `16/16`, but russetBrook `14/14` -> `6/14`, saffronFen `20/20` -> `12/20`); the baseline hires the same three archers anyway, about 100s later, after the natural;
 - keeping wounded units swinging within 750 of a town hall: stopped at `149/200` vs `172`;
 - natural clearing without the outnumbered gate: `805`;
-- an arrival-time incoming gate for the natural clear (only enemies that reach the natural before walk-out, kill and walk-home finish): `825`, noise;
 - camp clear plus the arrival gate: `804`;
 - not mining or rebuilding workers at a contested base (enemy tower or stronger local army): stopped at `318/400` vs `338`; narrowed to bases that lost three workers in the last minute: `815`;
 - two fast units hunting V4-TR's lone camp-hiring worker anywhere on the map: `818`;
@@ -289,6 +288,18 @@ Tried against these and rejected on the ten tune seeds (baseline `821`):
 - tower breaker counting every enemy fighter within 1000 of the tower: `792`.
 
 Noise calibration: each of these flips 90-250 of the 1000 games in both directions. The simulation is deterministic, so every game a change touches becomes a new trajectory; a change has to be worth well over 20 games to be seen on ten seeds. mac1 (node 26) reproduces the A100 (node 22) baseline exactly (`821`, same per-seed counts). Ten fresh seeds (`v5-extra-1` through `-10`) give `792/1000` at `282cd0b`.
+
+### 2026-09-25 Natural Clear Against Arriving Armies
+
+The guarded-natural clear no longer waits on every enemy within 2200 of the main. The clear is a short job: walk out, kill the guards, walk home. V5 now counts only enemies whose own speed brings them to the natural inside that time (slowest squad member for the walks, squad damage against guard HP for the kill), and still refuses when those outweigh 0.8 of its army. A mercenary ball idling at V4-TR's camp across the map no longer freezes V5 on one base.
+
+Small but positive on all three independent seed sets:
+
+- ten tune seeds: `821/1000` -> `825/1000` (`91 84 81 82 76 87 81 84 79 80`);
+- ten fresh seeds (`v5-extra-1` through `-10`): `792/1000` -> `799/1000`;
+- untouched final seeds: `410/500` -> `420/500` (`85 85 86 80 84`).
+
+Together `+21` over 2500 games, inside the per-set noise but never negative.
 
 ## Non-Goals
 
