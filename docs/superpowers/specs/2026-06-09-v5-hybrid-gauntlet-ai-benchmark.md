@@ -305,6 +305,8 @@ Still open after it: of 39 games that sat on one hall at 300s, 34 still do. Betw
 
 Rejected the same night: judging armies by damage per second instead of damage per hit for V5 only (a mercenary lands 31 per second, twice a footman, and was scored as 1.35 footmen): fresh seeds `799` -> `773`, tune seeds flat. Seeing the enemy as stronger made V5 more careful, and the caution cost more than the fights it avoided.
 
+Replayed by hand (thornedDelta south, `v5-hybrid-50-holdout-e`): V5 clears its natural at 190-210s with three or four units, loses one and leaves three badly wounded with no healing building, then trains nothing from 220s to 260s while it banks the town hall, and meets V4-TR's eight-unit mercenary wave at 310s with five wounded units and 50 gold. Spending that bank on a shrine and fighters instead gave nine units at 300s and turned the first V4-TR approach away, but the game was still lost by 417s: the nine Ember units split across the base and V4-TR's mercenaries (about 166 damage per second against their 114) took them apart. As a rule ("no town-hall bank during the outnumbered opening") it was flat: fresh seeds `799` -> `794`, first seven tune seeds `582` -> `577`.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.
