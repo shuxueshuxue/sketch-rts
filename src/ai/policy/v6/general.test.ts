@@ -124,8 +124,8 @@ describe("v6 general", () => {
   });
 
   it("sends an army that has idled at its rally for a minute and a half against defenders it only matches", () => {
-    // Twelve at V3's hall stand 1000 from V5's: they defend it at half, 6, and 8 footmen match that but do not clear it.
-    const { game } = board("v6-general-idle", { v6Footmen: 8, enemyFootmen: 12, enemyAt: "home" });
+    // Thirty at V3's hall stand 1000 from V5's: they defend it at half, 15, and 20 footmen match that but do not clear it.
+    const { game } = board("v6-general-idle", { v6Footmen: 20, enemyFootmen: 30, enemyAt: "home" });
     game.tick = 600 * 20;
     const fresh = steady();
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory: fresh });
@@ -139,7 +139,7 @@ describe("v6 general", () => {
   });
 
   it("marches as one group: a unit trained after it set out waits at the rally, and a worn-out group comes home", () => {
-    const { game } = board("v6-general-group", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
+    const { game } = board("v6-general-group", { v6Footmen: 20, enemyFootmen: 3, enemyAt: "farHome" });
     const memory = steady();
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.general?.mode).toBe("attack");
@@ -153,7 +153,7 @@ describe("v6 general", () => {
     expect(Math.hypot(recruitMove!.x - 500, recruitMove!.y - 500)).toBeCloseTo(380, 0);
     expect(moves.find((move) => move.unitIds.includes("v6-footman-0"))).toMatchObject({ x: 3_400, y: 2_150 });
 
-    game.units = game.units.filter((unit) => !["v6-footman-0", "v6-footman-1", "v6-footman-2", "v6-footman-3", "v6-footman-4", "v6-footman-5", "v6-footman-6", "v6-footman-7"].includes(unit.id));
+    game.units = game.units.filter((unit) => !Array.from({ length: 11 }, (_, index) => `v6-footman-${index}`).includes(unit.id));
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.plays?.["general:retreat:worn"]).toBe(1);
     expect(memory.v6?.general?.mode).toBe("hold");
@@ -170,6 +170,17 @@ describe("v6 general", () => {
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-expansion" });
     expect(memory.v6?.plays?.["general:attack:expansion"]).toBe(1);
+  });
+
+  it("does not march on an enemy main with a small army, however empty the main stands; an expansion needs no such floor", () => {
+    const small = board("v6-general-floor-small", { v6Footmen: 12, enemyFootmen: 3, enemyAt: "farHome" });
+    const memory = steady();
+    planV6General(small.snapshot, "v6", { ...V6, teams: small.game.teams, memory });
+    expect(memory.v6?.general?.mode).not.toBe("attack");
+    const big = board("v6-general-floor-big", { v6Footmen: 20, enemyFootmen: 3, enemyAt: "farHome" });
+    const bigMemory = steady();
+    planV6General(big.snapshot, "v6", { ...V6, teams: big.game.teams, memory: bigMemory });
+    expect(bigMemory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-hall" });
   });
 
   it("pulses at an enemy main: gathers out of reach with its summons held, then strikes once most casters can cast", () => {
@@ -221,7 +232,7 @@ describe("v6 general", () => {
   });
 
   it("breaks off an attack as soon as another army closes in, before it arrives", () => {
-    const { game, snapshot } = board("v6-general-incoming", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
+    const { game, snapshot } = board("v6-general-incoming", { v6Footmen: 20, enemyFootmen: 3, enemyAt: "farHome" });
     const memory = steady();
     planV6General(snapshot, "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-hall" });
@@ -229,8 +240,8 @@ describe("v6 general", () => {
       unit.x = 3_000;
       unit.y = 2_300;
     }
-    // Twenty of V3's 1500 away: not in the fight yet, and first seen standing, so the attack goes on.
-    const relief = Array.from({ length: 20 }, (_, index) => game.spawnUnit("v3", "footman", 3_000 + (index % 5) * 20, 3_800 + Math.floor(index / 5) * 20));
+    // Thirty of V3's 1500 away: not in the fight yet, and first seen standing, so the attack goes on.
+    const relief = Array.from({ length: 30 }, (_, index) => game.spawnUnit("v3", "footman", 3_000 + (index % 5) * 20, 3_800 + Math.floor(index / 5) * 20));
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.general?.mode).toBe("attack");
     // Now they come: 1200 away and closing, still out of the fight, and V6 walks away before they reach it.
@@ -241,7 +252,7 @@ describe("v6 general", () => {
   });
 
   it("attacks the cheaper enemy base once it clearly outweighs what defends it, and walks back when the fight turns", () => {
-    const { game, snapshot } = board("v6-general-attack", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
+    const { game, snapshot } = board("v6-general-attack", { v6Footmen: 20, enemyFootmen: 3, enemyAt: "farHome" });
     const memory = steady();
     const [move] = attackMoves(planV6General(snapshot, "v6", { ...V6, teams: game.teams, memory }));
     expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-hall" });

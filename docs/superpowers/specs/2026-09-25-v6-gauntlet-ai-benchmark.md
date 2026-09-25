@@ -82,5 +82,5 @@ If this should count as a balance bug rather than play, the direct levers are:
 Any of these changes the V6 result, so re-run this benchmark after changing it.
 
 The summon was rebalanced on 2026-09-25 (spirits last 60s, cooldown 40s, summoners 180 gold) and shooters lost 15% of
-their health; knights and golems got heavy armor. Under those rules V6 was rebuilt and scores 900/1000 on the tune seeds
-(2026-09-26); see the design notes for how.
+their health; knights and golems got heavy armor. Under those rules V6 was rebuilt: on 2026-09-26 it wins 955/1000 tune, 959/1000 fresh and 471/500 final games
+(2385/2500, 95.4%); see the design notes for how.

@@ -54,6 +54,8 @@ const JOIN_RANGE = 700;
 const WORN_SHARE = 0.5;
 // After a retreat the army regroups at home before it may set out again (AMAI heals its army between attacks).
 const REGROUP_TICKS = 30 * 20;
+// The least army (march strength, about eleven summoners with their spirits) that goes for an enemy main.
+const MAIN_ATTACK_FLOOR = 18;
 const RETREAT_LINE = 0.8;
 // Out in the open the army meets attackers only with this edge; under its towers or at its hall it always fights.
 const FIELD_EDGE = 1.15;
@@ -125,7 +127,10 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const idle = current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= IDLE_TICKS;
   const marching = marchStrength(available) * (1 + profile.aggression);
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
-  if (target && regrouped && (marching >= target.need || (idle && marching >= target.defended))) {
+  // A main is a long walk into two armies' reach: V6 marched four summoners at an enemy main 3165 away at 240s because both
+  // armies had left it, met them on the way, and came home to lose its own. An expansion needs no such floor.
+  const ready = !isMain(intel, target?.base) || marching >= MAIN_ATTACK_FLOOR;
+  if (target && regrouped && ready && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
     return attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base));
   }
@@ -267,7 +272,8 @@ function isSummoner(unit: Unit) {
   return unit.kind === "summoner" || unit.kind === "pyreCaller";
 }
 
-function isMain(intel: V6Intel, base: V6BaseIntel) {
+function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
+  if (!base) return false;
   const enemy = intel.enemies.find((candidate) => candidate.owner === base.owner);
   return Boolean(enemy && mainHall(enemy)?.id === base.hall.id);
 }

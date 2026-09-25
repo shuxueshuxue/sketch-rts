@@ -173,3 +173,13 @@ general returned early with its pulse still gathering, and the casters held thei
 at home without a spirit for twenty minutes. And the general only ever attacked halls, so an opponent down to one farm
 and one unit outlived the game while V6 stood at home with 124 units (the closeout's detachment was spirits, which expired
 on the way).
+| No attack on an enemy main below march strength 18 (about eleven summoners with their spirits); expansions exempt | 955 | fresh 959, final 471/500 |
+
+The early losses that were left were one mistake: with both enemy armies out of their bases and walking toward V6, the
+gate saw an empty main and sent V6's four summoners 3165 paces at it; they met the armies on the way and came home to
+lose the main. A floor for mains only (an expansion is still fair game at any size) took the tune score from 929 to 955.
+Over all 2500 games (tune, fresh and final seeds) V6 now wins 2385, 95.4%, with no shooter ever trained or hired.
+
+Also tried and dropped on the way: a warning tower at the hall a stronger push heads for (912); leaving a target alone
+for 90s after an army drove V6 off it (923); witches and ash hexers after the late casters (never bought: the caster
+ceiling is never reached, so the result was identical).
