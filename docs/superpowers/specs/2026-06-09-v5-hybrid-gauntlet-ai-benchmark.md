@@ -307,6 +307,22 @@ Rejected the same night: judging armies by damage per second instead of damage p
 
 Replayed by hand (thornedDelta south, `v5-hybrid-50-holdout-e`): V5 clears its natural at 190-210s with three or four units, loses one and leaves three badly wounded with no healing building, then trains nothing from 220s to 260s while it banks the town hall, and meets V4-TR's eight-unit mercenary wave at 310s with five wounded units and 50 gold. Spending that bank on a shrine and fighters instead gave nine units at 300s and turned the first V4-TR approach away, but the game was still lost by 417s: the nine Ember units split across the base and V4-TR's mercenaries (about 166 damage per second against their 114) took them apart. As a rule ("no town-hall bank during the outnumbered opening") it was flat: fresh seeds `799` -> `794`, first seven tune seeds `582` -> `577`.
 
+### 2026-09-25 V5 Fight Arena
+
+The 1v2 benchmark could not rate a fighting change: any behaviour change sends 90-250 of the 1000 games down a new path, so a real gain in fights disappears in the reshuffle. `scripts/ai-v5-arena.ts` captures the moment ten seconds before V5's worst 30 seconds of each tune game (every fighter with its health, experience and carried items, every complete building, both sides' upgrades, no workers, no gold) and replays it on the same map with the real V5, V3 and V4-TR policies for 90 seconds (`src/ai/benchmark/v5-arena.ts`; scenario gold, upgrades and `hpRatio` seeds in the simulation). The score is enemy unit value killed minus V5 unit value lost; the V5 building value lost is reported next to it.
+
+Ten tune seeds give 654 unique fights (identical games repeat across seeds). Each is run in six one- or two-pixel variants, 3924 replays in about 45 seconds on the A100. At `3cb7fed`:
+
+- all fights: V5 trades `1.54` (enemy value killed per value lost), net `+264` per fight;
+- fights from lost games (118): `1.13`, and V5 loses 569 building value per fight;
+- home defense (101 fights, V5 army at its hall with enemies inside 1200): net `+282`, `416` building value lost per fight; open field (324): `+291`; V5 attacking an enemy hall (229): `+218`, trade `1.44`.
+
+A paired per-fight comparison has a standard error of about 5 per fight on home defense and 13-15 on the field and attack sets, so a change must be worth roughly 25 value per fight to be seen.
+
+First module results on it: focusing the enemy with the most damage per second per remaining health was neutral to slightly worse; holding march leaders until the group caught up was `+4` per fight (standard error 8), neutral. The heaviest home losses are fights V5 was never going to win (six fighters against fifteen, eight against twenty-three), so the home-defense gap is army size when the wave lands more than fighting.
+
+Rejected before the arena, on the full benchmark: a V5 commander that owns the army while a wave is on or closing on a town hall. Engaging the wave itself lost `147` wins over eight tune seeds (it chased enemies 1300 away and fed new units in one at a time); holding the point and fighting only attackers kept 3 of 12 sample wins; only recalling far squads and pausing errands scored `770` tune and `740` fresh (pausing alone `780`, recalling alone `792`). The existing base-defense logic plus V3's own stopline (V3 turns back from a strong army at home) beat every version of it.
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.

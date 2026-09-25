@@ -3,7 +3,7 @@ import { createRoom } from "../shared/rooms";
 import { createSaveGameRecord, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import { createGame, type Game } from "../shared/sim";
 import { seconds } from "../shared/time";
-import type { BuildingKind, GameSetupOptions, ItemKind, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, TerrainLandmark, UnitKind, UnitOrder, WorldItem } from "../shared/types";
+import type { BuildingKind, GameSetupOptions, ItemKind, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, ScenarioPlayerSeed, TerrainLandmark, UnitKind, UnitOrder, WorldItem } from "../shared/types";
 
 type ScenePlayerOptions = {
   team?: string;
@@ -14,6 +14,7 @@ type ScenePlayerOptions = {
 type SceneUnitOptions = {
   id?: string;
   hp?: number;
+  hpRatio?: number;
   xp?: number;
   order?: UnitOrder;
 };
@@ -56,6 +57,11 @@ export class SceneBuilder {
     return this;
   }
 
+  playerState(owner: PlayerId, seed: ScenarioPlayerSeed) {
+    this.scenario.players = { ...(this.scenario.players ?? {}), [owner]: seed };
+    return this;
+  }
+
   replaceDefaults() {
     this.scenario.replaceDefaultUnits = true;
     this.scenario.replaceDefaultBuildings = true;
@@ -75,6 +81,7 @@ export class SceneBuilder {
         x,
         y,
         ...(options.hp !== undefined ? { hp: options.hp } : {}),
+        ...(options.hpRatio !== undefined ? { hpRatio: options.hpRatio } : {}),
         ...(options.xp !== undefined ? { xp: options.xp } : {}),
         ...(options.order ? { order: options.order } : {}),
       },

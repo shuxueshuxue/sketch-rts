@@ -254,6 +254,8 @@ export type ScenarioUnitSeed = {
   x: number;
   y: number;
   hp?: number;
+  // Health as a share of the unit's maximum once its upgrades and level are applied.
+  hpRatio?: number;
   xp?: number;
   order?: UnitOrder;
 };
@@ -269,7 +271,14 @@ export type ScenarioBuildingSeed = {
   complete?: boolean;
 };
 
+export type ScenarioPlayerSeed = {
+  gold?: number;
+  upgrades?: Partial<Record<UpgradeKind, number>>;
+};
+
 export type ScenarioOverride = {
+  // Applied before units are added, so seeded units start with these upgrades.
+  players?: Partial<Record<PlayerId, ScenarioPlayerSeed>>;
   replaceDefaultUnits?: boolean;
   replaceDefaultBuildings?: boolean;
   replaceDefaultResources?: boolean;

@@ -13,7 +13,7 @@ import {
   trainTimeFor,
 } from "./map";
 import { seconds } from "./time";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -205,6 +205,19 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     ids.add(id);
   };
 
+  for (const [owner, seed] of Object.entries(scenario.players ?? {}) as [PlayerId, ScenarioPlayerSeed][]) {
+    const player = game.players[owner];
+    if (!player) throw new Error(`Unknown scenario player ${owner}`);
+    if (seed.gold !== undefined) {
+      if (!Number.isFinite(seed.gold) || seed.gold < 0) throw new Error(`Invalid scenario gold for ${owner}`);
+      player.gold = seed.gold;
+    }
+    for (const [upgradeKind, level] of Object.entries(seed.upgrades ?? {}) as [UpgradeKind, number][]) {
+      if (!Number.isInteger(level) || level < 0) throw new Error(`Invalid scenario ${upgradeKind} level for ${owner}`);
+      player.upgrades[upgradeKind] = level;
+    }
+  }
+
   for (const resource of scenario.addResources ?? []) {
     claimId(resource.id);
     game.resources.push({ ...resource });
@@ -229,6 +242,10 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     if (seed.hp !== undefined) {
       if (!Number.isFinite(seed.hp) || seed.hp <= 0 || seed.hp > unit.maxHp) throw new Error(`Invalid scenario hp for ${seed.id}`);
       unit.hp = seed.hp;
+    }
+    if (seed.hpRatio !== undefined) {
+      if (!Number.isFinite(seed.hpRatio) || seed.hpRatio <= 0 || seed.hpRatio > 1) throw new Error(`Invalid scenario hpRatio for ${seed.id}`);
+      unit.hp = Math.max(1, Math.round(unit.maxHp * seed.hpRatio));
     }
     if (seed.order) unit.order = { ...seed.order };
     game.units.push(unit);
