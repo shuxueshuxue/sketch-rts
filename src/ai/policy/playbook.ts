@@ -1,6 +1,4 @@
 import type { BuildingKind, RaceId, TrainableUnitKind } from "../../shared/types";
-import type { PresetAiPolicyOptions } from "./types";
-import { isV6Policy } from "./versions";
 
 export type ProductionBuildingKind = Exclude<BuildingKind, "townHall" | "farm" | "defenseTower" | "moonWell" | "emberShrine">;
 
@@ -28,24 +26,6 @@ const EMBER_PLAYBOOK: AiPlaybook = {
   },
 };
 
-// @@@v6-summoner-core - V6 trains no shooters. Its army is summoners (Grove) or pyre callers (Ember) keeping their spirits
-// up; replayed on V6's worst fights at equal gold, that army traded 2.6 to 1 where any melee army traded 0.2-0.35 and even
-// the archers V6 may not train traded 0.9. Melee mixed in only diluted it, so the plan is the caster building alone.
-const V6_GROVE_PLAYBOOK: AiPlaybook = {
-  productionPlan: ["sanctum"],
-  unitsByBuilding: { sanctum: ["summoner"] },
-};
-
-const V6_EMBER_PLAYBOOK: AiPlaybook = {
-  productionPlan: ["cinderSpire"],
-  unitsByBuilding: { cinderSpire: ["pyreCaller"] },
-};
-
-export function v6SummonerBuildingKind(race: RaceId) {
-  return race === "ember" ? "cinderSpire" : "sanctum";
-}
-
-export function aiPlaybook(race: RaceId = "grove", options: PresetAiPolicyOptions = {}) {
-  if (isV6Policy(options)) return race === "ember" ? V6_EMBER_PLAYBOOK : V6_GROVE_PLAYBOOK;
+export function aiPlaybook(race: RaceId = "grove") {
   return race === "ember" ? EMBER_PLAYBOOK : GROVE_PLAYBOOK;
 }

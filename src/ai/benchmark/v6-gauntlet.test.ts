@@ -27,7 +27,7 @@ describe("v6 gauntlet benchmark", () => {
       result: {
         winner,
         players: { v6: { race: "grove" }, v3: { race: "ember" }, v5: { race: "grove" } },
-        trackers: { unitRosterStats: { owners: { v6: v6Roster } } },
+        trackers: { unitRosterStats: { owners: { v6: v6Roster } }, aiCommandStats: { owners: { v6: { scripts: { v6Raid: { commands: name.startsWith("m") ? 3 : 0 }, attackWave: { commands: 5 } } } } } },
       },
     });
     const clean = { orderedByKind: { footman: 9 }, peakByKind: { footman: 6 } };
@@ -47,6 +47,7 @@ describe("v6 gauntlet benchmark", () => {
     } as unknown as BenchmarkReport;
     const result = summarizeAiV6GauntletBenchmark({ seed: "s", selectedMapIds: ["m", "n"], report });
     expect(result).toMatchObject({ v6Wins: 2, rawMatches: 4, lossesTo: { v3: 1, v5: 1, timeout: 0 }, shooterViolations: ["m v6 south", "n v6 north"] });
+    expect(result.plays).toEqual({ v6Raid: { won: 1, lost: 1 } });
     expect(result.byMap).toEqual([
       { mapId: "m", northWinner: "v6", southWinner: "v5", wins: 1 },
       { mapId: "n", northWinner: "v3", southWinner: "v6", wins: 1 },

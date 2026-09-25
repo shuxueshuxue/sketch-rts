@@ -414,7 +414,7 @@ describe("AI spell and focus tactics", () => {
       .townHall("v2", 500, 500)
       .unit("v2", "archer", 660, 720, { id: "last-archer" })
       .unit("v1", "summoner", 940, 760, { id: "killable-summoner", hp: 6 })
-      .unit("v1", "contractArcher", 900, 720, { id: "healthy-archer", hp: 95 })
+      .unit("v1", "contractArcher", 900, 720, { id: "healthy-archer", hp: 81 })
       .unit("v1", "priest", 910, 780, { id: "wounded-priest", hp: 40 })
       .build()
       .createGame();

@@ -6,6 +6,7 @@ import { createArmyBalanceStatsTracker } from "./army-balance-stats";
 import { createAiCommandStatsTracker } from "./command-stats";
 import { createExpansionClaimTimelineTracker } from "./expansion-claim-timeline";
 import { createUnitRosterStatsTracker } from "./unit-roster-stats";
+import { createV6DoctrineTracker } from "./v6-doctrine-stats";
 import { createWoundedMoonWellStatsTracker } from "./wounded-moonwell-stats";
 
 type SerializedAiGameAgent = Omit<AiGameAgent, "scripts"> & {
@@ -21,6 +22,7 @@ export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedA
     createArmyBalanceStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createExpansionClaimTimelineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createUnitRosterStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
+    createV6DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
   ];
   return runBenchmarkMatch({ ...match, agents: reviveAgents(match.agents), commandPlanner: createAiGameCommandPlanner() }, trackers);
 }

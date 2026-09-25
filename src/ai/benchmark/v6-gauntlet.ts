@@ -7,7 +7,9 @@ import { SHOOTER_UNIT_KINDS } from "../policy/versions";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { filterBenchmarkInput, hashCoin, summarizeAiMeleeControlBenchmarkDetails, v3RaceForMatch, type AiMeleeControlMatchDetailsResult } from "./control";
 import { selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
+import type { AiCommandStats } from "./command-stats";
 import type { UnitRosterStats } from "./unit-roster-stats";
+import type { V6DoctrineStats } from "./v6-doctrine-stats";
 
 // @@@v6-gauntlet - V6 alone against V3 and the shooter V5 on one team, side-balanced on the rich score maps. V6 may never
 // train or hire a shooter (archer, spark archer, contract archer); every game is checked for it.
@@ -29,6 +31,11 @@ export type AiV6GauntletBenchmarkResult = {
   winRate: number;
   lossesTo: { v3: number; v5: number; timeout: number };
   shooterViolations: string[];
+  // How many games each V6 module acted in (issued at least one command), split by result: the play-style profile.
+  plays: Record<string, { won: number; lost: number }>;
+  // Results split by the personality and strategy V6 drew.
+  byProfile: Record<string, Tally>;
+  byStrategy: Record<string, Tally>;
   elapsedMs: number;
   cpuMs: number;
   workers?: number;
@@ -128,6 +135,9 @@ export function summarizeAiV6GauntletBenchmark(input: { seed: string; selectedMa
       timeout: rows.filter((row) => !row.won && row.winner !== "v3" && row.winner !== "v5").length,
     },
     shooterViolations: evaluation.matches.filter(v6FieldedShooter).map((match) => match.name),
+    plays: v6Plays(evaluation.matches),
+    byProfile: tallyBy(evaluation.matches, (doctrine) => doctrine.profileId),
+    byStrategy: tallyBy(evaluation.matches, (doctrine) => doctrine.strategyId),
     elapsedMs: input.report.elapsedMs,
     cpuMs: input.report.cpuMs,
     ...(input.workers !== undefined ? { workers: input.workers } : {}),
@@ -145,6 +155,33 @@ export function summarizeAiV6GauntletBenchmark(input: { seed: string; selectedMa
 
 function raceOf(match: BenchmarkMatchReport, owner: string): RaceId {
   return match.result.players[owner]?.race === "ember" ? "ember" : "grove";
+}
+
+function v6Plays(matches: BenchmarkMatchReport[]) {
+  const plays: Record<string, { won: number; lost: number }> = {};
+  for (const match of matches) {
+    const scripts = (match.result.trackers.aiCommandStats as AiCommandStats | undefined)?.owners.v6?.scripts ?? {};
+    for (const [scriptId, stats] of Object.entries(scripts)) {
+      if (!scriptId.startsWith("v6") || stats.commands === 0) continue;
+      const tally = (plays[scriptId] ??= { won: 0, lost: 0 });
+      if (match.result.winner === "v6") tally.won += 1;
+      else tally.lost += 1;
+    }
+  }
+  return plays;
+}
+
+function tallyBy(matches: BenchmarkMatchReport[], key: (doctrine: NonNullable<V6DoctrineStats>) => string): Record<string, Tally> {
+  const groups: Record<string, Tally> = {};
+  for (const match of matches) {
+    const doctrine = match.result.trackers.v6Doctrine as V6DoctrineStats | undefined;
+    if (!doctrine) continue;
+    const tally = (groups[key(doctrine)] ??= { wins: 0, matches: 0, winRate: 0 });
+    tally.matches += 1;
+    if (match.result.winner === "v6") tally.wins += 1;
+    tally.winRate = tally.wins / tally.matches;
+  }
+  return groups;
 }
 
 function v6FieldedShooter(match: BenchmarkMatchReport) {

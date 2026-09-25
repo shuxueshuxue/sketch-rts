@@ -33,8 +33,8 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       const def = ABILITY_DEFS[summonAbility];
       const target = nearestEnemyUnit(snapshot, owner, caster, def.plannerRange, options);
       const hasSpirit = units(snapshot, owner).some((unit) => unit.kind === "spirit" && distance(unit, caster) < 320);
-      // @@@v6-standing-spirits - A summon costs only the summoner's time: a spirit lasts 45s and the spell is back in 11s, so a
-      // summoner that casts whenever it can keeps four spirits up, free of gold and supply. The shared rule waits for an enemy
+      // @@@v6-standing-spirits - A summon costs only the summoner's time: a spirit lasts 60s and the spell is back in 40s, so a
+      // summoner that casts whenever it can keeps one or two spirits up, free of gold and supply. The shared rule waits for an enemy
       // inside 240 and stops at one spirit nearby.
       if (isV6Policy(options) || (target && !hasSpirit)) {
         const point = isV6Policy(options) ? v6SummonPoint(snapshot, owner, caster, def.plannerRange, options) : { x: caster.x + 54, y: caster.y + 28 };
