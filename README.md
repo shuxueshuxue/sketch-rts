@@ -21,6 +21,21 @@ Play in the browser, face a computer opponent, or write one yourself. The SDK, r
 | Set up rooms, play against AI, and spectate hosted matches | Inspect snapshots, advance simulation ticks, and save or replay matches |
 | Run locally in the browser or share a hosted server | Compare AI versions with parallel benchmarks and a dashboard |
 
+## Races and units
+
+Both races build town halls, farms, and defense towers, train workers, and can hire mercenaries (mercenary, contract archer, field medic) at neutral camps. Everything else differs.
+
+| | Grove Kin | Ember Pact |
+| --- | --- | --- |
+| Basic troops | Footman, lancer, grove warden (barracks); archer (archery range); raider (stables) | Ember ravager, cinder runner (ember forge); spark archer (cinder spire) |
+| Casters | Priest, summoner, witch (sanctum) | Ember acolyte, ash hexer, pyre caller (cinder spire) |
+| Elites | Knight (stables); golem (workshop) | Ash chieftain, cinder revenant (ashen hall) |
+| Healing building | Moon well | Ember shrine |
+
+- **Heavy armor.** The four elites take half damage from shooters and casters and 70% from towers. Melee blows land in full.
+- **Ember's elites have their own jobs.** The ash chieftain deals 50% extra damage to casters and summoned units. The cinder revenant has less health but regenerates 7 health per second.
+- **Units fight back.** A unit hit while it has no orders turns on its attacker, and idle soldiers within 300 come to help, so a shooter can't pick off an idle army from outside its reach. A unit that starts its own chase gives up after 600 and walks back. Move orders and orders you give yourself are never overridden.
+
 ## Quick start
 
 Use **Node.js 20.19+ or 22.12+** and npm.
@@ -61,7 +76,7 @@ A neutral camp guarding a gold mine: a stoneback brute, a thorn slinger, a bark 
 ![Neutral wildling camp on the battlefield](docs/art/woodland-camp.png)
 
 <details>
-<summary><strong>View all 28 unit designs, grouped by faction and tier, and 12 building designs</strong></summary>
+<summary><strong>View all 30 unit designs, grouped by faction and tier, and 13 building designs</strong></summary>
 
 ![Woodland Atlas unit and building catalog](docs/art/woodland-catalog.png)
 
@@ -183,6 +198,15 @@ The last command prints the machine-readable command manifest. Full examples, AI
 | `npm run benchmark:ai` | Run AI benchmarks |
 
 The hosted server also serves the benchmark dashboard at `benchmark.html`. See [the developer guide](docs/development.md#benchmark-system) and [AI specifications](docs/ai-spec.md) for experiment design and benchmark workflows.
+
+### Adding a unit or building
+
+A unit or building lives in two places:
+
+1. **Rules:** a row in `UNIT_RULES` or `BUILDING_RULES` in [`src/shared/catalog.ts`](src/shared/catalog.ts). The row holds the stats, the building that trains the unit (`trainedAt`), its race, and any special rules as data (`armor`, `casterSlayer`, `regenPerSecond`). Unit and building kinds, each building's training list, and each race's roster are derived from these rows.
+2. **Card:** an entry in [`src/client/content/`](src/client/content/). The card holds the English and Chinese name and description, the command icon and hotkey, the glyph, the art tier, and the function that draws it. Labels, tooltips, the command card, and the unit sheet all read from the cards.
+
+If a card is missing, TypeScript reports it. `src/client/content/cards.test.ts` checks that every name and description exists in both languages, that each unit is trained at a building its race can build, and that no building or build menu repeats a hotkey. To see every unit and building drawn by the game's own code, run `npx vite` and open `/unit-sheet.html`.
 
 ## Roadmap
 
