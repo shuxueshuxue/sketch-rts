@@ -6,6 +6,7 @@ import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { ArmyBalanceStats } from "./army-balance-stats";
 import type { AiCommandStats } from "./command-stats";
 import type { ExpansionClaimTimelineStats } from "./expansion-claim-timeline";
+import type { UnitRosterStats } from "./unit-roster-stats";
 import type { WoundedMoonWellStats } from "./wounded-moonwell-stats";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
@@ -85,6 +86,7 @@ export type AiMeleeControlMatchDetail = {
   woundedMoonWellStats?: WoundedMoonWellStats;
   armyBalanceStats?: ArmyBalanceStats;
   expansionClaimTimeline?: ExpansionClaimTimelineStats;
+  unitRosterStats?: UnitRosterStats;
 };
 
 export type AiMeleeControlPlayerDetail = {
@@ -959,7 +961,7 @@ function requirePlacement(placements: Map<PlayerId, number>, owner: PlayerId) {
   return seat;
 }
 
-function v3RaceForMatch(seed: string, mapId: string, mapIndex: number, sideIndex: number): RaceId {
+export function v3RaceForMatch(seed: string, mapId: string, mapIndex: number, sideIndex: number): RaceId {
   return hashString(`${seed}:${mapId}:${mapIndex}:${sideIndex}`) % 2 === 0 ? "grove" : "ember";
 }
 
@@ -980,7 +982,7 @@ function hashString(value: string) {
   return hash >>> 0;
 }
 
-function hashCoin(value: string) {
+export function hashCoin(value: string) {
   const hash = hashString(value);
   // @@@hash-coin - Race sampling must not use only FNV's lowest bit, because fixed string prefixes can deterministically flip it.
   return ((hash ^ (hash >>> 16)) & 1) === 0;
@@ -1103,5 +1105,6 @@ function controlMatchDetail(match: BenchmarkMatchReport): AiMeleeControlMatchDet
     ...(match.result.trackers.woundedMoonWellStats ? { woundedMoonWellStats: match.result.trackers.woundedMoonWellStats as WoundedMoonWellStats } : {}),
     ...(match.result.trackers.armyBalanceStats ? { armyBalanceStats: match.result.trackers.armyBalanceStats as ArmyBalanceStats } : {}),
     ...(match.result.trackers.expansionClaimTimeline ? { expansionClaimTimeline: match.result.trackers.expansionClaimTimeline as ExpansionClaimTimelineStats } : {}),
+    ...(match.result.trackers.unitRosterStats ? { unitRosterStats: match.result.trackers.unitRosterStats as UnitRosterStats } : {}),
   };
 }

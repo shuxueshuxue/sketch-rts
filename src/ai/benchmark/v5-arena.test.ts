@@ -79,6 +79,6 @@ describe("v5 arena", () => {
 
     game.units = game.units.filter((unit) => unit.id !== "v4-mercenary");
     const result = scoreArena(scenario, snapshotGame(game));
-    expect(result).toMatchObject({ v5Start: UNIT_DEFS.footman.cost, enemyStart: UNIT_DEFS.footman.cost + UNIT_DEFS.mercenary.cost, v5Lost: 0, enemyLost: UNIT_DEFS.mercenary.cost, outcome: "loss" });
+    expect(result).toMatchObject({ subjectStart: UNIT_DEFS.footman.cost, enemyStart: UNIT_DEFS.footman.cost + UNIT_DEFS.mercenary.cost, subjectLost: 0, enemyLost: UNIT_DEFS.mercenary.cost, outcome: "loss" });
   });
 });

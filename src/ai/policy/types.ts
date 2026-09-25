@@ -43,6 +43,8 @@ export type AiScript = {
   id: string;
   phase: "economy" | "tactics";
   run: LocalScript;
+  // Units only this script may move or send to attack; every other script's orders for them are dropped.
+  claimsUnits?: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => ReadonlySet<string>;
 };
 
 export type AiCommandEntry = {

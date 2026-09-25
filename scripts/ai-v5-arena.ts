@@ -1,9 +1,11 @@
-// V5 fight arena: capture real 1v2 fights, then replay them in isolation.
-//   capture: tsx scripts/ai-v5-arena.ts capture --seed <seed> [--names "a|b"] [--shard i --shards n] > scenarios.jsonl
+// Fight arena: capture real 1v2 fights, then replay them in isolation.
+//   capture: tsx scripts/ai-v5-arena.ts capture --seed <seed> [--subject v5|v6] [--names "a|b"] [--shard i --shards n] > scenarios.jsonl
+//            (v5: its 1v2 benchmark against V3 and V4-TR; v6: the V6 gauntlet against V3 and V5)
 //   run:     tsx scripts/ai-v5-arena.ts run --scenarios scenarios.jsonl [--shard i --shards n] > results.jsonl
 import { readFileSync } from "node:fs";
 import { createAiV5VsHybridBenchmarkInput } from "../src/ai/benchmark/control";
-import { arenaMatch, captureArenaScenario, scoreArena, type ArenaScenario } from "../src/ai/benchmark/v5-arena";
+import { arenaMatch, arenaSubject, captureArenaScenario, scoreArena, type ArenaScenario } from "../src/ai/benchmark/v5-arena";
+import { createAiV6GauntletBenchmarkInput } from "../src/ai/benchmark/v6-gauntlet";
 import { runAiGameLoop } from "../src/ai/game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../src/ai/runtime";
 import { UNIT_DEFS } from "../src/shared/catalog";
@@ -27,21 +29,23 @@ else if (mode === "trace") trace(flag("scenarios") ?? "", flag("id") ?? "");
 else throw new Error("usage: ai-v5-arena.ts capture|run|trace ...");
 
 function capture(seed: string) {
-  const { input } = createAiV5VsHybridBenchmarkInput({ seed, mapCount: 50 });
+  const subject = flag("subject") ?? "v5";
+  if (subject !== "v5" && subject !== "v6") throw new Error(`Unknown arena subject ${subject}`);
+  const { input } = subject === "v6" ? createAiV6GauntletBenchmarkInput({ seed, mapCount: 50 }) : createAiV5VsHybridBenchmarkInput({ seed, mapCount: 50 });
   const names = flag("names")?.split("|");
   const matches = input.evaluations
     .flatMap((evaluation) => evaluation.matches)
     .filter((match) => !names || names.includes(match.name))
     .filter((_, index) => index % shards === shard);
   for (const match of matches) {
-    const v5 = Object.entries(match.agents).find(([, agent]) => agent.version === "v5")![0];
+    const subjectOwner = Object.entries(match.agents).find(([, agent]) => agent.version === subject)![0];
     const snapshots = new Map<number, GameSnapshot>();
     const losses: { second: number; value: number }[] = [];
     const loop = runAiGameLoop(match as never, {
       afterStep({ before, after }) {
         if (after.tick % SNAPSHOT_EVERY_TICKS === 0) snapshots.set(after.tick / 20, JSON.parse(JSON.stringify(after)) as GameSnapshot);
         const alive = new Set(after.units.map((unit) => unit.id));
-        for (const unit of before.units) if (unit.owner === v5 && unit.kind !== "worker" && !alive.has(unit.id)) losses.push({ second: after.tick / 20, value: UNIT_DEFS[unit.kind].cost || 100 });
+        for (const unit of before.units) if (unit.owner === subjectOwner && unit.kind !== "worker" && !alive.has(unit.id)) losses.push({ second: after.tick / 20, value: UNIT_DEFS[unit.kind].cost || 100 });
       },
     });
     let best = { second: -1, value: 0 };
@@ -56,7 +60,8 @@ function capture(seed: string) {
     const winner = loop.game.match.winner as string | null;
     const scenario = captureArenaScenario({
       id: `${seed}|${match.name}|${at}`,
-      source: { seed, match: match.name, second: at, outcome: winner === v5 ? "win" : "loss" },
+      subject: subjectOwner,
+      source: { seed, match: match.name, second: at, outcome: winner === subjectOwner ? "win" : "loss" },
       match: match as never,
       snapshot,
     });
@@ -76,11 +81,11 @@ function run(path: string) {
 function trace(path: string, id: string) {
   const scenario = readFileSync(path, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as ArenaScenario).find((candidate) => candidate.id === id);
   if (!scenario) throw new Error(`No arena scenario ${id}`);
-  const v5 = Object.entries(scenario.agents).find(([, agent]) => agent.version === "v5")![0];
+  const subjectOwner = arenaSubject(scenario);
   const orders: string[] = [];
   runAiGameLoop(arenaMatch(scenario, { thinkInterval: DEFAULT_AI_THINK_INTERVAL }) as never, {
     afterCommand({ tick, owner, command, scriptId }) {
-      if (owner !== v5 || !("unitIds" in command)) return;
+      if (owner !== subjectOwner || !("unitIds" in command)) return;
       const target = "x" in command ? `${Math.round(command.x)},${Math.round(command.y)}` : "targetId" in command ? String(command.targetId) : "";
       orders.push(`${(tick / 20).toFixed(1)} ${scriptId} ${command.type} n${command.unitIds.length} ${target}`);
     },

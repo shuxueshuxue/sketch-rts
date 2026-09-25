@@ -12,7 +12,7 @@ export const AI_MOON_WELL_LIMIT = 2;
 
 export function shouldReserveForCoreProductionRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, spendCost: number) {
   if (options.version !== "v2" || hasCoreProduction(snapshot, owner)) return false;
-  const missing = missingCombatProductionKind(snapshot, owner);
+  const missing = missingCombatProductionKind(snapshot, owner, options);
   if (!missing) return false;
   const main = completeBuildings(snapshot, owner, "townHall")[0];
   if (!main || !availableBuilder(snapshot, owner, main)) return false;

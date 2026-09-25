@@ -7,7 +7,7 @@ import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } fro
 import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
 
@@ -18,7 +18,8 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   }
 
   const ownBase = mainBase(snapshot, owner);
-  const ownCombat = combatUnits(snapshot, owner);
+  // V6's spirits are free and expire on their own: they fight to the end instead of walking home wounded.
+  const ownCombat = combatUnits(snapshot, owner).filter((unit) => !(isV6Policy(options) && unit.kind === "spirit"));
   // @@@creep-preservation - Neutral camps are real combat threats; v2 must stop donating wounded units while creeping.
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const retreatPoint = skirmishRetreatPoint(snapshot, owner, enemies, ownBase);

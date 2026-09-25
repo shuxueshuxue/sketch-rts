@@ -78,7 +78,7 @@ function memoryForOwner(owner: PlayerId, memoryProvider: AiMemoryProvider | unde
 }
 
 function effectivePolicyVersion(version: AiScriptVersion): AiScriptVersion {
-  if (version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5") return "v2";
+  if (version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6") return "v2";
   return version;
 }
 

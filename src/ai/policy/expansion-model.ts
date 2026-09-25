@@ -109,7 +109,7 @@ export function shouldReserveForExpansion(snapshot: GameSnapshot, owner: PlayerI
   if (neutralUnitsNear(snapshot, mine, 280).length > 0) return options.version === "v2" && (expansionIsNearlyCleared(snapshot, owner, mine) || activeGuardedFirstNatural(snapshot, owner, mine, options));
   if (enemyPressure(snapshot, owner, mine, 360, options)) return false;
   if (completeBuildings(snapshot, owner, "townHall").length >= 2) return shouldPrioritizeCatchUpExpansionBeforeMacro(snapshot, owner, options);
-  const missingProduction = missingCombatProductionKind(snapshot, owner);
+  const missingProduction = missingCombatProductionKind(snapshot, owner, options);
   if (!missingProduction) return true;
   if (canExpandBeforeFullProductionChain(snapshot, owner, options)) return true;
   return options.version === "v2" && hasCoreProduction(snapshot, owner) && opponentEconomyAhead(snapshot, owner, options);

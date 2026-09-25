@@ -1,21 +1,22 @@
 import { UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { combatUnits, completeBuildings, units } from "./snapshot";
-import { aiPlaybook } from "./playbook";
+import { aiPlaybook, v6SummonerBuildingKind } from "./playbook";
 import { playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV5ShooterCorePolicy, isV6Policy } from "./versions";
 
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
   const race = playerState(snapshot, owner).race;
-  if (isV5HybridPolicy(options)) {
+  if (isV5ShooterCorePolicy(options)) {
     const rangedCore = v5RangedCoreChoice(snapshot, owner, building);
     if (rangedCore !== "default") return rangedCore;
   }
+  if (isV6Policy(options)) return v6SummonerCoreChoice(snapshot, owner, building);
   if (building.kind === "emberForge") return emberForgeChoice(snapshot, owner);
   if (building.kind === "cinderSpire") return emberSpireChoice(snapshot, owner, options);
   if (building.kind === "barracks") return soldierChoice(snapshot, owner);
-  if (building.kind === "archeryRange") return "archer";
+  if (building.kind === "archeryRange") return isV6Policy(options) ? undefined : "archer";
   if (building.kind === "stables") {
     const knights = units(snapshot, owner).filter((unit) => unit.kind === "knight").length;
     const raiders = units(snapshot, owner).filter((unit) => unit.kind === "raider").length;
@@ -65,6 +66,17 @@ function v5RangedCoreChoice(snapshot: GameSnapshot, owner: PlayerId, building: B
   return "default";
 }
 
+// V6 trains summoners from its caster building; anything else it owns fills in only until that building stands.
+function v6SummonerCoreChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building): TrainableUnitKind | undefined {
+  if (building.kind === "sanctum") return "summoner";
+  if (building.kind === "cinderSpire") return "pyreCaller";
+  if (building.kind === "archeryRange" || completeBuildings(snapshot, owner, v6SummonerBuildingKind(playerState(snapshot, owner).race)).length > 0) return undefined;
+  if (building.kind === "barracks" || building.kind === "emberForge") return soldierChoice(snapshot, owner);
+  if (building.kind === "stables") return "raider";
+  if (building.kind === "workshop") return "golem";
+  return undefined;
+}
+
 function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUnitKind {
   const army = combatUnits(snapshot, owner);
   const ravagers = army.filter((unit) => unit.kind === "emberRavager").length;
@@ -82,15 +94,16 @@ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: Pres
   const hexers = army.filter((unit) => unit.kind === "ashHexer").length;
   const callers = army.filter((unit) => unit.kind === "pyreCaller").length;
   const supportTarget = options.version === "v2" && army.length >= 8 ? 2 : 1;
+  const shooters = !isV6Policy(options);
   if (isV5HybridPolicy(options) && shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
-  if (sparkArchers < 1) return "sparkArcher";
+  if (shooters && sparkArchers < 1) return "sparkArcher";
   if (shouldPrioritizeWoundedPriestTraining(snapshot, owner, options) && acolytes < supportTarget) return "emberAcolyte";
   if (acolytes < 1) return "emberAcolyte";
   if (hexers < 1) return "ashHexer";
   if (callers < 1) return "pyreCaller";
   if (options.version === "v2" && callers < supportTarget) return "pyreCaller";
   if (options.version === "v2" && hexers < supportTarget) return "ashHexer";
-  if (sparkArchers < army.length / 3) return "sparkArcher";
+  if (shooters && sparkArchers < army.length / 3) return "sparkArcher";
   return "emberAcolyte";
 }
 

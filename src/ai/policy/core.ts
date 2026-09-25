@@ -75,7 +75,8 @@ import { behaviorDisabled, recordBehavior } from "./telemetry";
 import { enemyPressure, nearestOpponentThreat } from "./threats";
 import { shouldPrioritizeWoundedPriestTraining, trainingChoice } from "./training-choice";
 import type { AiCommandEntry, AiPolicyContext, AiScript, AiScriptVersion, PresetAiPolicyOptions } from "./types";
-import { isTowerMercPolicy, isV5HybridPolicy } from "./versions";
+import { planV6CasterScreen, v6ScreenedCasterIds } from "./v6-caster-screen";
+import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy, isV6Policy, SHOOTER_UNIT_KINDS } from "./versions";
 import {
   availableBuilder,
   canSupply,
@@ -152,6 +153,7 @@ export const AI_SCRIPT_LIBRARY = {
   objectiveControl: { id: "objectiveControl", phase: "tactics", run: planObjectiveControl },
   workerDefense: { id: "workerDefense", phase: "tactics", run: planWorkerDefense },
   attackWave: { id: "attackWave", phase: "tactics", run: planAttackWave },
+  casterScreen: { id: "casterScreen", phase: "tactics", run: planV6CasterScreen, claimsUnits: v6ScreenedCasterIds },
 } satisfies Record<string, AiScript>;
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
@@ -207,6 +209,9 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.attackWave,
 ];
 
+// V6 runs V5's playbook with its summoners handed to the caster screen.
+export const V6_AI_STACK: AiScript[] = V5_HYBRID_AI_STACK.flatMap((script) => (script.id === "abilities" ? [script, AI_SCRIPT_LIBRARY.casterScreen] : [script]));
+
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
@@ -236,6 +241,7 @@ export const AI_SCRIPT_VERSIONS = {
   "v3-ember": SKETCH_RTS_PRESET_AI_STACK,
   "v4-tr": V4_TR_TOWER_MERC_AI_STACK,
   v5: V5_HYBRID_AI_STACK,
+  v6: V6_AI_STACK,
 } satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
@@ -273,7 +279,7 @@ function livePresetPolicyVersion(version: AiScriptVersion): Exclude<AiScriptVers
 }
 
 function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">): Exclude<AiScriptVersion, "v2-prod"> {
-  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" ? "v2" : version;
+  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" ? "v2" : version;
 }
 
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
@@ -402,7 +408,7 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
 function planExpansion(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (resources(snapshot).length <= activePlayerIds(snapshot).length) return undefined;
   const forwardMine = desiredForwardExpansionMine(snapshot, owner, options);
-  const missingCombatProduction = isTowerMercPolicy(options) ? undefined : missingCombatProductionKind(snapshot, owner);
+  const missingCombatProduction = isTowerMercPolicy(options) ? undefined : missingCombatProductionKind(snapshot, owner, options);
   if (!forwardMine && missingCombatProduction && failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options)) return undefined;
   if (!forwardMine && missingCombatProduction && !canExpandBeforeFullProductionChain(snapshot, owner, options)) return undefined;
   if (buildings(snapshot, owner).some((building) => building.kind === "townHall" && !building.complete)) return undefined;
@@ -591,7 +597,7 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
       return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: point.x, y: point.y }, options);
     }
   }
-  const missingProduction = missingCombatProductionKind(snapshot, owner);
+  const missingProduction = missingCombatProductionKind(snapshot, owner, options);
   const mainThreat = nearestOpponentThreat(snapshot, owner, main, 680, options);
   if (
     options.version === "v2" &&
@@ -675,7 +681,7 @@ function planProductionBuilding(snapshot: GameSnapshot, owner: PlayerId, options
   const base = mainBase(snapshot, owner);
   const builder = availableBuilder(snapshot, owner, base, options);
   if (!builder) return undefined;
-  const index = aiPlaybook().productionPlan.indexOf(missing);
+  const index = aiPlaybook("grove", options).productionPlan.indexOf(missing);
   const point = safeMainBuildPoint(snapshot, owner, index, missing);
   return resolveAiCommandIntent(snapshot, owner, { type: "build", unitId: builder.id, buildingKind: missing, x: point.x, y: point.y }, options);
 }
@@ -765,7 +771,7 @@ function planTech(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPoli
   if (v5OutnumberedOpening(snapshot, owner, options)) return undefined;
   const upgradeKind = nextUpgradeKind(snapshot, owner, options);
   if (!upgradeKind) return undefined;
-  if (upgradeKind !== "weaponTraining" && missingCombatProductionKind(snapshot, owner)) return undefined;
+  if (upgradeKind !== "weaponTraining" && missingCombatProductionKind(snapshot, owner, options)) return undefined;
   const level = nextUpgradeLevelDef(snapshot, owner, upgradeKind);
   if (!level) return undefined;
   const player = playerState(snapshot, owner);
@@ -907,7 +913,7 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 // value per fight for range, 90 for speed, 55 for weapons and 42 for plating: reach outranges the melee that chases it,
 // speed lets archers walk away from mercenaries. Those two go first once there are shooters to carry them.
 function nextV5ShooterUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): UpgradeKind | undefined {
-  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  if (!isV5ShooterCorePolicy(options)) return undefined;
   const shooters = combatUnits(snapshot, owner).filter((unit) => unit.attackRange > 100 && unit.attackDamage > 0).length;
   for (const upgradeKind of ["rangeTraining", "speedTraining"] as const) {
     if (!v5LateUpgradeResearchable(snapshot, owner, upgradeKind)) continue;
@@ -1618,6 +1624,7 @@ function friendlyUnitsAtMercenaryCamp(snapshot: GameSnapshot, owner: PlayerId, c
 }
 
 function mercenaryRoleLimit(kind: MercenaryUnitKind, options?: PresetAiPolicyOptions) {
+  if (options && isV6Policy(options) && SHOOTER_UNIT_KINDS.has(kind)) return 0;
   if (options && isTowerMercPolicy(options)) {
     if (kind === "fieldMedic") return 3;
     if (kind === "contractArcher") return 7;
@@ -2119,7 +2126,7 @@ function supportHeavyFirstExpansionBankNeedsTraining(snapshot: GameSnapshot, own
 }
 
 function canSpendExpansionRetryBankOnCoreProduction(snapshot: GameSnapshot, owner: PlayerId, missing: ProductionBuildingKind, options: PresetAiPolicyOptions) {
-  if (failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) && missingCombatProductionKind(snapshot, owner) === missing) return true;
+  if (failedExpansionAttemptBeforeCoreProduction(snapshot, owner, options) && missingCombatProductionKind(snapshot, owner, options) === missing) return true;
   return shouldSpendV5TwoBaseCatchUpBankOnCoreProduction(snapshot, owner, missing, options);
 }
 
@@ -2127,7 +2134,7 @@ function shouldSpendV5TwoBaseCatchUpBankOnCoreProduction(snapshot: GameSnapshot,
   if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   if (activeMiningBaseCount(snapshot, owner) < 2) return false;
   if (combatUnits(snapshot, owner).length < 6) return false;
-  if (missingCombatProductionKind(snapshot, owner) !== missing) return false;
+  if (missingCombatProductionKind(snapshot, owner, options) !== missing) return false;
   // @@@v5-two-base-tech-before-third - The catch-up third-bank is valid only after the first complete combat production chain exists.
   return shouldPrioritizeCatchUpExpansionBeforeMacro(snapshot, owner, options);
 }
@@ -2135,7 +2142,7 @@ function shouldSpendV5TwoBaseCatchUpBankOnCoreProduction(snapshot: GameSnapshot,
 function failedExpansionAttemptBeforeCoreProduction(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return false;
   if (options.memory?.strategicPlan?.expansionAttemptTick === undefined) return false;
-  if (!missingCombatProductionKind(snapshot, owner)) return false;
+  if (!missingCombatProductionKind(snapshot, owner, options)) return false;
   if (completeBuildings(snapshot, owner, "townHall").length !== 1) return false;
   // @@@cleared-expansion-retry - Attempt memory marks a failed claim only while the natural is still blocked; once it is cleared, the bank should finish the hall.
   if (shouldReserveForClearedExpansion(snapshot, owner, options)) return false;

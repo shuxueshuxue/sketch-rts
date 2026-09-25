@@ -8,7 +8,7 @@ import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./sna
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV6Policy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
@@ -33,8 +33,12 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       const def = ABILITY_DEFS[summonAbility];
       const target = nearestEnemyUnit(snapshot, owner, caster, def.plannerRange, options);
       const hasSpirit = units(snapshot, owner).some((unit) => unit.kind === "spirit" && distance(unit, caster) < 320);
-      if (target && !hasSpirit) {
-        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: caster.x + 54, y: caster.y + 28 }, options));
+      // @@@v6-standing-spirits - A summon costs only the summoner's time: a spirit lasts 45s and the spell is back in 11s, so a
+      // summoner that casts whenever it can keeps four spirits up, free of gold and supply. The shared rule waits for an enemy
+      // inside 240 and stops at one spirit nearby.
+      if (isV6Policy(options) || (target && !hasSpirit)) {
+        const point = isV6Policy(options) ? v6SummonPoint(snapshot, owner, caster, def.plannerRange, options) : { x: caster.x + 54, y: caster.y + 28 };
+        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: point.x, y: point.y }, options));
         continue;
       }
     }
@@ -77,6 +81,8 @@ function healerRegroupOrderCanMove(caster: Unit, target: { x: number; y: number 
 
 function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {
   const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => !target.effects.some((effect) => effect.type === def.statusType));
+  // A curse takes 55-60% off one unit's damage for 18s: spend it on the hardest hitter in reach, not the nearest body.
+  if (isV6Policy(options)) return candidates.sort((a, b) => damagePerSecond(b) - damagePerSecond(a) || distance(a, caster) - distance(b, caster))[0];
   if (def.scorchedDamageMultiplier !== undefined) {
     const scorched = candidates.filter((target) => target.effects.some((effect) => effect.type === "scorch")).sort((a, b) => distance(a, caster) - distance(b, caster))[0];
     if (scorched) return scorched;
@@ -218,4 +224,18 @@ function casterTargetBonus(unit: Unit) {
   if (abilities.some((ability) => ABILITY_DEFS[ability].behavior === "heal")) score += 115;
   if (abilities.some((ability) => ABILITY_DEFS[ability].behavior === "curse")) score += 95;
   return score;
+}
+
+// Spirits appear toward the fight (the nearest enemy, else the spirits already up), so they do not walk past their summoner.
+function v6SummonPoint(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, reach: number, options: PresetAiPolicyOptions) {
+  const spirits = units(snapshot, owner).filter((unit) => unit.kind === "spirit" && distance(unit, caster) <= 700);
+  const toward = nearestEnemyUnit(snapshot, owner, caster, 900, options) ?? (spirits.length > 0 ? averagePoint(spirits) : undefined);
+  const gap = toward ? distance(caster, toward) : 0;
+  if (!toward || gap < 1) return { x: caster.x + 54, y: caster.y + 28 };
+  const length = Math.min(reach, gap);
+  return { x: caster.x + ((toward.x - caster.x) / gap) * length, y: caster.y + ((toward.y - caster.y) / gap) * length };
+}
+
+function damagePerSecond(unit: Unit) {
+  return unit.attackDamage / Math.max(1, unit.attackCooldown);
 }

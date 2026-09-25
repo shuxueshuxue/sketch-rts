@@ -10,7 +10,7 @@ import { sketchScene } from "../sdk/scene";
 
 describe("SDK preset AI policy", () => {
   it("exposes named AI script versions for SDK and room adapters", () => {
-    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember", "v4-tr", "v5"]);
+    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember", "v4-tr", "v5", "v6"]);
     expect(AI_SCRIPT_VERSIONS.v1.length).toBeGreaterThan(0);
     expect(AI_SCRIPT_VERSIONS.v2.map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v1.map((script) => script.id));
     expect(AI_SCRIPT_VERSIONS.v3.map((script) => script.id)).toEqual(AI_SCRIPT_VERSIONS.v2.map((script) => script.id));

@@ -7,7 +7,8 @@ import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 // @@@v5-arena - A fight replayed on its own. The 1v2 benchmark decides a game by everything that happened before and
 // after a fight, so a better fight often shows up as noise. The arena keeps only the armies, buildings, upgrades and
 // carried items of one real moment and lets the real policies play it out for a short window: micro and squad changes
-// get a signal that is not buried under the rest of the game.
+// get a signal that is not buried under the rest of the game. The subject is the player whose fights these are: V5 in its
+// 1v2 benchmark, V6 in the V6 gauntlet.
 
 export const ARENA_SECONDS = 90;
 
@@ -17,6 +18,7 @@ export type ArenaItemSeed = { id: string; kind: ItemKind; carrierId: string };
 
 export type ArenaScenario = {
   id: string;
+  subject?: PlayerId;
   source: { seed: string; match: string; second: number; outcome: string };
   mapId: MapId;
   agents: Record<string, AiGameAgent>;
@@ -29,16 +31,17 @@ export type ArenaScenario = {
 export type ArenaResult = {
   id: string;
   outcome: string;
-  v5Start: number;
+  subjectStart: number;
   enemyStart: number;
-  v5Lost: number;
+  subjectLost: number;
   enemyLost: number;
-  v5BuildingsLost: number;
+  subjectBuildingsLost: number;
   enemyBuildingsLost: number;
 };
 
 export function captureArenaScenario(input: {
   id: string;
+  subject?: PlayerId;
   source: ArenaScenario["source"];
   match: BenchmarkMatchInput<AiGameAgent>;
   snapshot: GameSnapshot;
@@ -50,6 +53,7 @@ export function captureArenaScenario(input: {
   const fighterIds = new Set(fighters.map((unit) => unit.id));
   return {
     id: input.id,
+    ...(input.subject ? { subject: input.subject } : {}),
     source: input.source,
     mapId: match.mapId,
     agents: match.agents,
@@ -88,21 +92,28 @@ export function arenaMatch(scenario: ArenaScenario, options: { thinkInterval: nu
 }
 
 export function scoreArena(scenario: ArenaScenario, final: GameSnapshot): ArenaResult {
-  const v5 = Object.entries(scenario.agents).find(([, agent]) => agent.version === "v5")?.[0];
-  if (!v5) throw new Error(`Arena scenario ${scenario.id} has no v5 agent`);
+  const subject = arenaSubject(scenario);
   const alive = new Set(final.units.map((unit) => unit.id));
   const standing = new Set(final.buildings.map((building) => building.id));
-  const value = (kind: UnitKind) => UNIT_DEFS[kind].cost || 100;
-  const units = (mine: boolean) => scenario.units.filter((unit) => (unit.owner === v5) === mine);
-  const buildings = (mine: boolean) => scenario.buildings.filter((building) => (building.owner === v5) === mine);
+  // Summoned spirits cost nothing, so losing one costs nothing.
+  const value = (kind: UnitKind) => UNIT_DEFS[kind].cost;
+  const units = (mine: boolean) => scenario.units.filter((unit) => (unit.owner === subject) === mine);
+  const buildings = (mine: boolean) => scenario.buildings.filter((building) => (building.owner === subject) === mine);
   return {
     id: scenario.id,
     outcome: scenario.source.outcome,
-    v5Start: units(true).reduce((total, unit) => total + value(unit.kind), 0),
+    subjectStart: units(true).reduce((total, unit) => total + value(unit.kind), 0),
     enemyStart: units(false).reduce((total, unit) => total + value(unit.kind), 0),
-    v5Lost: units(true).filter((unit) => !alive.has(unit.id)).reduce((total, unit) => total + value(unit.kind), 0),
+    subjectLost: units(true).filter((unit) => !alive.has(unit.id)).reduce((total, unit) => total + value(unit.kind), 0),
     enemyLost: units(false).filter((unit) => !alive.has(unit.id)).reduce((total, unit) => total + value(unit.kind), 0),
-    v5BuildingsLost: buildings(true).filter((building) => !standing.has(building.id)).reduce((total, building) => total + BUILDING_DEFS[building.kind].cost, 0),
+    subjectBuildingsLost: buildings(true).filter((building) => !standing.has(building.id)).reduce((total, building) => total + BUILDING_DEFS[building.kind].cost, 0),
     enemyBuildingsLost: buildings(false).filter((building) => !standing.has(building.id)).reduce((total, building) => total + BUILDING_DEFS[building.kind].cost, 0),
   };
+}
+
+// Scenarios captured before subjects existed are V5's.
+export function arenaSubject(scenario: ArenaScenario): PlayerId {
+  const subject = scenario.subject ?? Object.entries(scenario.agents).find(([, agent]) => agent.version === "v5")?.[0];
+  if (!subject || !scenario.agents[subject]) throw new Error(`Arena scenario ${scenario.id} has no subject player`);
+  return subject;
 }
