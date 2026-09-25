@@ -80,10 +80,15 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const { profile } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
   const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
-  if (front.length === 0) return [];
+  const rally = rallyPoint(intel);
+  if (front.length === 0) {
+    // No front left (every spirit gone): a gathering pulse is over, or its casters would hold their summons forever and
+    // no front would ever come back (44 pyre callers stood at home without a spirit for twenty minutes).
+    if (memory.general?.stage === "gather") memory.general = { mode: "hold", target: rally };
+    return [];
+  }
   const available = intel.army.filter((unit) => !busy.has(unit.id));
   const strength = strengthOf(available);
-  const rally = rallyPoint(intel);
   const current = memory.general;
 
   const defense = defendTarget(intel);
@@ -152,7 +157,7 @@ function toward(from: Point, to: Point, length: number): Point {
 function attackTarget(intel: V6Intel): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
   const choices = intel.enemies.flatMap((enemy) => {
     const main = mainHall(enemy);
-    return enemy.bases.map((base) => {
+    return targetBases(enemy, intel).map((base) => {
       // An expansion is judged by what stands at it: the owner's army back at its main is the fall-back rule's business.
       // Played by hand, killing each new hall as it went up kept both opponents on one base and six workers.
       const expansion = base.hall.id !== main?.id;
@@ -311,7 +316,17 @@ function rallyPoint(intel: V6Intel): Point {
 }
 
 function findBase(intel: V6Intel, hallId: string | undefined) {
-  return intel.enemies.flatMap((enemy) => enemy.bases).find((base) => base.hall.id === hallId);
+  return intel.enemies.flatMap((enemy) => targetBases(enemy, intel)).find((base) => base.hall.id === hallId);
+}
+
+// What V6 attacks of an opponent: its halls, or, once no hall is left, the building nearest V6's home. An opponent down
+// to one farm and one unit still counts; the general only ever looked for halls, and V6 stood at home with 124 units
+// for twenty-four minutes while the closeout's spirits expired on the way to the farm.
+function targetBases(enemy: V6Intel["enemies"][number], intel: V6Intel): V6BaseIntel[] {
+  if (enemy.bases.length > 0 || enemy.buildings.length === 0) return enemy.bases;
+  const building = enemy.buildings.reduce((best, candidate) => (distance(candidate, intel.home) < distance(best, intel.home) ? candidate : best));
+  const defenders = enemy.army.filter((unit) => distance(unit, building) <= 700);
+  return [{ hall: building, owner: enemy.owner, workers: [], towers: [], defenders, defense: strengthOf(defenders) }];
 }
 
 function enemyTowersNear(intel: V6Intel, point: Point, range: number) {

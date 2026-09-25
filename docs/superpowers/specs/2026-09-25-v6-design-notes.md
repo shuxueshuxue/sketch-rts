@@ -166,3 +166,10 @@ Later the same day, on top of 900:
 
 Tried and not kept: counting armies that arrive before an expansion falls (888); clearing a far base site only when V6
 outweighs every enemy army (899). Fresh seeds, never tuned on, gave 906 for the 900 build.
+| A gathering pulse ends when its front is gone; a hall-less opponent's last building is a target | 929 | timeouts 16 → 5 |
+
+The timeouts that remained at 918 were two bugs, not stalemates. When every spirit died while the army gathered, the
+general returned early with its pulse still gathering, and the casters held their summons for good: 44 pyre callers stood
+at home without a spirit for twenty minutes. And the general only ever attacked halls, so an opponent down to one farm
+and one unit outlived the game while V6 stood at home with 124 units (the closeout's detachment was spirits, which expired
+on the way).

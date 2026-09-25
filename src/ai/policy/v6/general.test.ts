@@ -198,6 +198,28 @@ describe("v6 general", () => {
     expect(planAbilityCommands(snapshotGame(game), "v6", options()).filter((command) => command.type === "cast").length).toBe(4);
   });
 
+  it("ends a gathering pulse once its front is gone, so its casters summon again", () => {
+    const { game } = board("v6-general-pulse-empty", { v6Footmen: 0, enemyFootmen: 3, enemyAt: "farHome" });
+    const summoners = Array.from({ length: 4 }, (_, index) => game.spawnUnit("v6", "summoner", 760 + index * 30, 700));
+    for (const summoner of summoners) summoner.cooldown = 0;
+    const memory = steady();
+    memory.v6!.general = { mode: "attack", target: { x: 3_400, y: 2_150 }, targetHallId: "v5-hall", stage: "gather", stageSince: 0 };
+    const options = { ...V6, teams: game.teams, memory };
+    planV6General(snapshotGame(game), "v6", options);
+    expect(memory.v6?.general?.stage).toBeUndefined();
+    expect(planAbilityCommands(snapshotGame(game), "v6", options).filter((command) => command.type === "cast").length).toBe(4);
+  });
+
+  it("goes after an opponent's last building once it has no hall left", () => {
+    const { game } = board("v6-general-last-farm", { v6Footmen: 10, enemyFootmen: 0, enemyAt: "home" });
+    game.buildings = game.buildings.filter((building) => building.id !== "v3-hall" && building.id !== "v5-hall");
+    game.buildings.push(createBuilding("v5-farm", "v5", "farm", 3_450, 2_880, true));
+    game.spawnUnit("v5", "footman", 3_420, 2_900);
+    const memory = steady();
+    planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
+    expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-farm" });
+  });
+
   it("breaks off an attack as soon as another army closes in, before it arrives", () => {
     const { game, snapshot } = board("v6-general-incoming", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
     const memory = steady();
