@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel } from "./catalog";
 import { buildingPlacementBlocker } from "./build-placement";
 import {
   createBuilding,
@@ -412,7 +412,7 @@ export function stepGame(game: Game) {
   game.entityById = createEntityIndex(game);
   updateItems(game);
   updateMoonWellHealing(game);
-  updateLeadershipRegeneration(game);
+  updateRegeneration(game);
   updateTowerAttacks(game);
   updateUnits(game);
   separateUnits(game);
@@ -575,12 +575,17 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
   return target;
 }
 
-function updateLeadershipRegeneration(game: Game) {
+function updateRegeneration(game: Game) {
   for (const unit of game.units) {
-    const regenPerSecond = leadershipRegenPerSecond(game, unit);
+    const regenPerSecond = unitRegenPerSecond(game, unit);
     if (regenPerSecond <= 0 || unit.hp >= unit.maxHp) continue;
     unit.hp = Math.min(unit.maxHp, unit.hp + regenPerSecond / 20);
   }
+}
+
+// A unit's own regeneration (the cinder revenant's) plus what leadership gives its veterans.
+export function unitRegenPerSecond(game: GameSnapshot, unit: Unit) {
+  return (UNIT_DEFS[unit.kind].regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit);
 }
 
 export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
@@ -1337,10 +1342,17 @@ function updateUnitStatusEffects(game: Game) {
 
 function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
   if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
-    launchProjectile(game, attacker, target, damage);
+    launchProjectile(game, attacker, target, heavyArmoredDamage(attacker, target, damage));
     return;
   }
   applyAttackDamage(game, attacker, target, damage, attackRange);
+}
+
+// Heavy armor is settled when the shot is fired, so a shot still counts as a shooter's after its shooter has died.
+function heavyArmoredDamage(attacker: Unit | Building, target: Unit | Building, damage: number) {
+  if (!isUnit(target) || UNIT_DEFS[target.kind].armor !== "heavy") return damage;
+  const multiplier = isUnit(attacker) ? HEAVY_ARMOR_DAMAGE.rangedUnit : attacker.kind === "defenseTower" ? HEAVY_ARMOR_DAMAGE.tower : 1;
+  return Math.max(1, Math.round(damage * multiplier));
 }
 
 function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
@@ -1378,10 +1390,18 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
 }
 
 function attackDamageAgainstTarget(attacker: Unit | Building, target: Unit | Building, damage: number) {
-  if (!isUnit(attacker) || !isUnit(target) || !target.effects.some((effect) => effect.type === "scorch")) return damage;
-  if (attacker.kind === "emberRavager") return damage + 7;
-  if (attacker.kind === "cinderRunner") return damage + 5;
-  return damage;
+  if (!isUnit(attacker) || !isUnit(target)) return damage;
+  const slayer = UNIT_DEFS[attacker.kind].casterSlayer;
+  const dealt = slayer && isCasterOrSummoned(target) ? Math.round(damage * slayer) : damage;
+  if (!target.effects.some((effect) => effect.type === "scorch")) return dealt;
+  if (attacker.kind === "emberRavager") return dealt + 7;
+  if (attacker.kind === "cinderRunner") return dealt + 5;
+  return dealt;
+}
+
+// What the ash chieftain hunts: anything summoned, and any unit with a spell.
+function isCasterOrSummoned(unit: Unit) {
+  return unit.expiresTick !== undefined || UNIT_DEFS[unit.kind].abilities.length > 0;
 }
 
 function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building) {

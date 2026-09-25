@@ -1,6 +1,8 @@
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
-import { leadershipRegenPerSecond } from "../shared/sim";
+import { unitRegenPerSecond } from "../shared/sim";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
+import { BUILDING_CARDS } from "./content/buildings";
+import { TRAINED_UNIT_CARDS } from "./content/units";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
 
 export type GameplayTooltip = {
@@ -19,7 +21,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
   const stats = UNIT_DEFS[kind];
   return {
     title: labelKind(kind, i18n),
-    body: UNIT_DESCRIPTIONS[i18n.locale][kind],
+    body: TRAINED_UNIT_CARDS[kind].description[i18n.locale],
     stats: [
       tooltipLine(i18n.locale, "cost", stats.cost),
       tooltipLine(i18n.locale, "supply", stats.supplyUsed),
@@ -39,7 +41,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   if (!representative) return { title, body: "", stats: [], requirements: [] };
   const totalHp = units.reduce((sum, unit) => sum + unit.hp, 0);
   const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
-  const regenValues = units.map((unit) => leadershipRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
+  const regenValues = units.map((unit) => unitRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
   const maxRegen = Math.max(0, ...regenValues);
   return {
     title,
@@ -107,7 +109,7 @@ export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n 
   ];
   return {
     title: labelKind(kind, i18n),
-    body: BUILDING_DESCRIPTIONS[i18n.locale][kind],
+    body: BUILDING_CARDS[kind].description[i18n.locale],
     stats: [
       tooltipLine(i18n.locale, "cost", def.cost),
       tooltipLine(i18n.locale, "build", formatSeconds(def.buildTime)),
@@ -239,78 +241,6 @@ const TEXT = {
     },
   },
 } as const;
-
-const UNIT_DESCRIPTIONS: Record<Locale, Record<TrainableUnitKind, string>> = {
-  en: {
-    worker: "Worker. Gathers gold, builds structures, repairs the economy, and can defend itself only in a pinch.",
-    footman: "Front-line melee soldier for early fights and body-blocking fragile units.",
-    archer: "Light ranged unit. Strong when kept behind melee units, fragile if caught.",
-    raider: "Fast melee harasser for chasing workers and punishing isolated targets.",
-    lancer: "Reach melee fighter with a slightly longer attack range than ordinary infantry.",
-    groveWarden: "Durable grove infantry that holds the line better than basic soldiers.",
-    emberRavager: "Aggressive ember infantry with strong close-range damage.",
-    cinderRunner: "Fast ember melee unit for chasing weak targets and forcing fights.",
-    sparkArcher: "Fragile ember ranged unit with quick pressure and shorter reach.",
-    emberAcolyte: "Ember support caster with a targeted heal for wounded allies.",
-    ashHexer: "Ember debuff caster that weakens enemy damage through curse.",
-    pyreCaller: "Ember summoner that creates temporary spirits near the fight.",
-    knight: "Heavy cavalry for decisive fights and base pressure.",
-    priest: "Support caster with a targeted heal for wounded allies.",
-    summoner: "Caster that creates a temporary spirit at a target point.",
-    witch: "Debuff caster that weakens enemy damage through curse.",
-    golem: "Slow heavy siege body with high health and strong melee damage.",
-  },
-  zh: {
-    worker: "农民。采集金矿、建造建筑、修理经济体系，紧急时也能勉强自卫。",
-    footman: "前排近战士兵，用于早期交战并保护脆弱单位。",
-    archer: "轻型远程单位。站在近战单位后方时很强，被贴身时很脆。",
-    raider: "高速近战骚扰单位，用于追击农民并惩罚落单目标。",
-    lancer: "长柄近战单位，攻击距离比普通步兵稍长。",
-    groveWarden: "耐久的林地步兵，比基础士兵更适合顶线。",
-    emberRavager: "进攻性的余烬步兵，近距离伤害很强。",
-    cinderRunner: "高速余烬近战单位，用于追击弱目标并强行开战。",
-    sparkArcher: "脆弱的余烬远程单位，压制速度快但射程较短。",
-    emberAcolyte: "余烬支援施法者，可以对受伤友军进行定点治疗。",
-    ashHexer: "余烬减益施法者，通过诅咒削弱敌方伤害。",
-    pyreCaller: "余烬召唤者，可以在战斗附近召唤临时灵体。",
-    knight: "重骑兵，用于决定性会战和基地压制。",
-    priest: "支援施法者，可以对受伤友军进行定点治疗。",
-    summoner: "施法者，可以在目标点召唤临时灵体。",
-    witch: "减益施法者，通过诅咒削弱敌方伤害。",
-    golem: "缓慢的重型攻坚单位，生命值高，近战伤害强。",
-  },
-};
-
-const BUILDING_DESCRIPTIONS: Record<Locale, Record<BuildingKind, string>> = {
-  en: {
-    townHall: "Main economy building. Trains workers, receives gold, researches building durability, and provides base supply.",
-    barracks: "Core military building that trains melee soldiers and researches army upgrades.",
-    archeryRange: "Ranged production building that trains archers.",
-    stables: "Mounted unit production building for fast raiders and heavy knights.",
-    sanctum: "Caster production building for priests, summoners, and witches.",
-    workshop: "Heavy unit production building that trains golems.",
-    defenseTower: "Static defense that fires at nearby enemy units.",
-    moonWell: "Support building that periodically heals wounded friendly soldiers nearby.",
-    emberForge: "Ember military building that trains ravagers and cinder runners.",
-    cinderSpire: "Ember support building that trains ranged units and casters.",
-    emberShrine: "Ember support building that periodically heals wounded friendly soldiers nearby.",
-    farm: "Supply building. Build more farms before training past the cap.",
-  },
-  zh: {
-    townHall: "主要经济建筑。训练农民、接收金矿、研究建筑耐久，并提供基础人口。",
-    barracks: "核心军事建筑。训练近战士兵，并研究军队升级。",
-    archeryRange: "远程生产建筑，用于训练弓箭手。",
-    stables: "骑乘单位生产建筑，用于高速掠袭者和重骑士。",
-    sanctum: "施法者生产建筑，用于牧师、召唤师和女巫。",
-    workshop: "重型单位生产建筑，用于训练魔像。",
-    defenseTower: "静态防御建筑，会攻击附近敌方单位。",
-    moonWell: "支援建筑，会周期性治疗附近受伤友方士兵。",
-    emberForge: "余烬军事建筑，用于训练劫掠者和奔袭者。",
-    cinderSpire: "余烬支援建筑，用于训练远程单位和施法者。",
-    emberShrine: "余烬支援建筑，会周期性治疗附近受伤友方士兵。",
-    farm: "人口建筑。超过人口上限前需要建造更多农场。",
-  },
-};
 
 const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
   en: {

@@ -1,4 +1,5 @@
 import type { BuildingKind } from "../shared/types";
+import { mapBuildingCards } from "./content/buildings";
 
 export type BuildingGlyph = {
   frame:
@@ -13,6 +14,7 @@ export type BuildingGlyph = {
     | "ember-forge"
     | "cinder-spire"
     | "ember-shrine"
+    | "ashen-hall"
     | "farm-plot";
   marks: BuildingGlyphMark[];
 };
@@ -35,20 +37,7 @@ export type BuildingGlyphMark =
   | "furrows"
   | "scareMark";
 
-export const BUILDING_GLYPHS: Record<BuildingKind, BuildingGlyph> = {
-  townHall: { frame: "town-hall", marks: ["roof", "banner", "door"] },
-  barracks: { frame: "barracks-yard", marks: ["crossedBlades", "banner", "door"] },
-  archeryRange: { frame: "archery-range", marks: ["target", "bowRack", "banner"] },
-  stables: { frame: "stables-gate", marks: ["horseshoe", "rail", "door"] },
-  sanctum: { frame: "sanctum-dome", marks: ["moonRune", "sparkRune", "banner"] },
-  workshop: { frame: "workshop-gear", marks: ["cog", "hammer", "door"] },
-  defenseTower: { frame: "tower-spire", marks: ["arrowSlit", "watchEye", "banner"] },
-  moonWell: { frame: "moon-well", marks: ["moonRune", "sparkRune", "door"] },
-  emberForge: { frame: "ember-forge", marks: ["crossedBlades", "sparkRune", "hammer"] },
-  cinderSpire: { frame: "cinder-spire", marks: ["sparkRune", "watchEye", "banner"] },
-  emberShrine: { frame: "ember-shrine", marks: ["sparkRune", "moonRune", "door"] },
-  farm: { frame: "farm-plot", marks: ["furrows", "scareMark", "door"] },
-};
+export const BUILDING_GLYPHS: Record<BuildingKind, BuildingGlyph> = mapBuildingCards((card) => card.glyph);
 
 export function buildingGlyphFingerprint(glyph: BuildingGlyph) {
   return `${glyph.frame}:${glyph.marks.join(",")}`;

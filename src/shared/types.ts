@@ -1,42 +1,17 @@
+import type { BUILDING_RULES, UNIT_RULES } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
 
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
 export type MapId = (typeof MAP_IDS)[number];
 export type RaceId = "grove" | "ember";
-export type UnitKind =
-  | "worker"
-  | "footman"
-  | "archer"
-  | "raider"
-  | "lancer"
-  | "groveWarden"
-  | "emberRavager"
-  | "cinderRunner"
-  | "sparkArcher"
-  | "emberAcolyte"
-  | "ashHexer"
-  | "pyreCaller"
-  | "knight"
-  | "priest"
-  | "summoner"
-  | "witch"
-  | "golem"
-  | "spirit"
-  | "mercenary"
-  | "contractArcher"
-  | "fieldMedic"
-  | "wildling"
-  | "mossGnawer"
-  | "thornSlinger"
-  | "barkMender"
-  | "stonebackBrute"
-  | "gladeWitch"
-  | "ancientStag";
+// Unit and building kinds are the rows of the catalog's rule tables (shared/catalog.ts); a trainable unit is one with a
+// building that trains it.
+export type UnitKind = keyof typeof UNIT_RULES;
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
-export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind | WildlingUnitKind>;
-export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "emberForge" | "cinderSpire" | "emberShrine" | "farm";
+export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
+export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";

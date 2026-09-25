@@ -2,7 +2,6 @@ import "./styles.css";
 import "./atlas-theme.css";
 import { drawAtlasBuilding, drawAtlasUnit, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasCamp, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
-import { BUILDING_GLYPHS, type BuildingGlyph } from "./building-glyphs";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, type CommandButtonState } from "./command-button-state";
 import {
@@ -48,7 +47,9 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDING_CARDS } from "./content/buildings";
+import { TRAINED_UNIT_CARDS } from "./content/units";
 import { MAP_SCENARIOS } from "../shared/map";
 import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
@@ -83,40 +84,10 @@ type CommandButton = {
   run: () => void;
 };
 
-const BUILD_COMMANDS = [
-  { kind: "townHall", icon: "⌂", hotkey: "h" },
-  { kind: "barracks", icon: "▱", hotkey: "b" },
-  { kind: "archeryRange", icon: "⌁", hotkey: "r" },
-  { kind: "stables", icon: "⌂", hotkey: "s" },
-  { kind: "sanctum", icon: "✣", hotkey: "c" },
-  { kind: "workshop", icon: "⚙", hotkey: "o" },
-  { kind: "defenseTower", icon: "⌖", hotkey: "t" },
-  { kind: "moonWell", icon: "◐", hotkey: "m" },
-  { kind: "emberForge", icon: "▰", hotkey: "b" },
-  { kind: "cinderSpire", icon: "♢", hotkey: "c" },
-  { kind: "emberShrine", icon: "◒", hotkey: "m" },
-  { kind: "farm", icon: "⌗", hotkey: "e" },
-] satisfies { kind: BuildingKind; icon: string; hotkey: string }[];
+// The command card's build and train buttons come from the building and unit cards, in catalog order.
+const BUILD_COMMANDS = BUILDABLE_BUILDING_KINDS.map((kind) => ({ kind, ...BUILDING_CARDS[kind].command }));
 
-const TRAIN_COMMANDS = [
-  { kind: "worker", icon: "⌘", hotkey: "w" },
-  { kind: "footman", icon: "△", hotkey: "f" },
-  { kind: "archer", icon: "⋉", hotkey: "a" },
-  { kind: "raider", icon: "◇", hotkey: "r" },
-  { kind: "lancer", icon: "↗", hotkey: "l" },
-  { kind: "groveWarden", icon: "◭", hotkey: "v" },
-  { kind: "emberRavager", icon: "◆", hotkey: "v" },
-  { kind: "cinderRunner", icon: "◇", hotkey: "r" },
-  { kind: "sparkArcher", icon: "⋊", hotkey: "a" },
-  { kind: "emberAcolyte", icon: "+", hotkey: "p" },
-  { kind: "ashHexer", icon: "☾", hotkey: "x" },
-  { kind: "pyreCaller", icon: "◎", hotkey: "u" },
-  { kind: "knight", icon: "♜", hotkey: "k" },
-  { kind: "priest", icon: "+", hotkey: "p" },
-  { kind: "summoner", icon: "◎", hotkey: "u" },
-  { kind: "witch", icon: "☾", hotkey: "c" },
-  { kind: "golem", icon: "▣", hotkey: "g" },
-] satisfies { kind: TrainableUnitKind; icon: string; hotkey: string }[];
+const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UNIT_CARDS[kind].command }));
 
 const SPELL_COMMANDS = [
   { ability: "heal", icon: "+", hotkey: "h" },
@@ -311,7 +282,7 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const brush = requireCanvasContext(icon);
   const center = { x: 34, y: 39 };
   if (portrait.type === "unit") drawAtlasUnit(brush, portrait.kind, center, 1.13, "#467d6c");
-  else drawAtlasBuilding(brush, BUILDING_GLYPHS[portrait.kind], center, 56, "#467d6c");
+  else drawAtlasBuilding(brush, portrait.kind, center, 56, "#467d6c");
   element.querySelector(".command-icon")?.replaceChildren(icon);
 }
 
@@ -2117,7 +2088,7 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const point = { x: canvas.width / 2, y: canvas.height / 2 + 4 };
   const color = group.focused ? "#42796e" : "#7c9078";
   if (group.entityType === "unit") drawAtlasUnit(mini, group.kind, point, 0.61, color);
-  else drawAtlasBuilding(mini, BUILDING_GLYPHS[group.kind], point, 30, color);
+  else drawAtlasBuilding(mini, group.kind, point, 30, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2361,7 +2332,7 @@ function drawBuildings(buildings: Building[]) {
     if (selected) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
-    drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
+    drawBuildingGlyph(building.kind, point, size);
     ctx.restore();
     if (showRally) drawBuildingRally(building, point, rallyPoint);
     drawHp(point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
@@ -2396,8 +2367,8 @@ function drawBuildingRally(building: Building, from: Point, to: Point) {
   ctx.restore();
 }
 
-function drawBuildingGlyph(glyph: BuildingGlyph, point: Point, size: number) {
-  drawAtlasBuilding(ctx, glyph, point, size, String(ctx.strokeStyle));
+function drawBuildingGlyph(kind: BuildingKind, point: Point, size: number) {
+  drawAtlasBuilding(ctx, kind, point, size, String(ctx.strokeStyle));
 }
 
 function drawUnits(units: Unit[]) {
@@ -2615,7 +2586,7 @@ function drawBuildPlacementPreview() {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.globalAlpha = 0.62;
-  drawBuildingGlyph(BUILDING_GLYPHS[commandMode.placement.buildingKind], point, size);
+  drawBuildingGlyph(commandMode.placement.buildingKind, point, size);
   ctx.globalAlpha = 1;
   ctx.fillStyle = validPlacement ? "#387d72" : "#a85644";
   ctx.font = "11px ui-monospace, monospace";

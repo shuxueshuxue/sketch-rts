@@ -1,23 +1,13 @@
 // Dev-only catalog page (unit-sheet.html): draws every unit and building with
 // the in-game painters, grouped by faction and art tier, at gameplay scale.
 import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
-import { BUILDING_GLYPHS } from "./building-glyphs";
+import { BUILDING_CARDS } from "./content/buildings";
+import { UNIT_CARDS } from "./content/units";
 import { unitGlyphScale } from "./glyphs";
-import { createI18n, type LabelKey } from "./i18n";
-import { UNIT_ART, type UnitArtTier } from "./unit-art";
-import { BUILDABLE_BUILDING_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { UNIT_ART, UNIT_ART_TIERS, type UnitArtTier } from "./unit-art";
+import { BUILDABLE_BUILDING_KINDS, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import type { BuildingKind, UnitKind } from "../shared/types";
 
-const zh = createI18n("zh");
-const CREEP_NAMES: Partial<Record<UnitKind, string>> = {
-  wildling: "林间野人",
-  mossGnawer: "苔鼠",
-  thornSlinger: "荆刺射手",
-  barkMender: "树皮医者",
-  stonebackBrute: "石背蛮兽",
-  gladeWitch: "林间女巫",
-  ancientStag: "远古巨鹿",
-};
 const TIER_LABELS: Record<UnitArtTier, string> = { civilian: "平民", basic: "初级", advanced: "进阶", elite: "精英" };
 const TIER_NOTES: Record<UnitArtTier, string> = {
   civilian: "工具与布衣",
@@ -32,16 +22,16 @@ const CREEP_NOTES: Record<UnitArtTier, string> = {
   elite: "营地食物 3–5 · 大型野兽与首领",
 };
 
-const GROUPS: { title: string; kinds: UnitKind[]; color: string; creep?: boolean; summon?: boolean }[] = [
-  { title: "林野族 · Grove Kin", color: "#387d72", kinds: ["worker", "footman", "archer", "lancer", "groveWarden", "raider", "priest", "summoner", "witch", "knight", "golem"] },
-  { title: "余烬盟约 · Ember Pact", color: "#a85644", kinds: ["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"] },
-  { title: "雇佣兵 · Hired Swords", color: "#387d72", kinds: ["mercenary", "contractArcher", "fieldMedic"] },
+const GROUPS: { title: string; kinds: readonly UnitKind[]; color: string; creep?: boolean; summon?: boolean }[] = [
+  { title: "林野族 · Grove Kin", color: "#387d72", kinds: RACE_DEFS.grove.trainableUnits },
+  { title: "余烬盟约 · Ember Pact", color: "#a85644", kinds: RACE_DEFS.ember.trainableUnits },
+  { title: "雇佣兵 · Hired Swords", color: "#387d72", kinds: MERCENARY_UNIT_KINDS },
   { title: "召唤物 · Summoned", color: "#387d72", summon: true, kinds: ["spirit"] },
-  { title: "中立生物 · Wildlings", color: "#704a33", creep: true, kinds: ["wildling", "mossGnawer", "thornSlinger", "barkMender", "stonebackBrute", "gladeWitch", "ancientStag"] },
+  { title: "中立生物 · Wildlings", color: "#704a33", creep: true, kinds: (Object.keys(UNIT_CARDS) as UnitKind[]).filter((kind) => UNIT_CARDS[kind].art.faction === "wild") },
 ];
 
 function unitName(kind: UnitKind) {
-  return CREEP_NAMES[kind] ?? zh.label(kind as LabelKey);
+  return UNIT_CARDS[kind].name.zh;
 }
 
 function unitStats(kind: UnitKind) {
@@ -77,8 +67,8 @@ function unitCard(kind: UnitKind, color: string) {
 }
 
 function buildingCard(kind: BuildingKind) {
-  return canvasCard(zh.label(kind as LabelKey), kind, "", (c, w, h) => {
-    drawAtlasBuilding(c, BUILDING_GLYPHS[kind], { x: w / 2, y: h * 0.55 }, 82, "#387d72");
+  return canvasCard(BUILDING_CARDS[kind].name.zh, kind, "", (c, w, h) => {
+    drawAtlasBuilding(c, kind, { x: w / 2, y: h * 0.55 }, 82, "#387d72");
   });
 }
 
@@ -94,7 +84,7 @@ function render() {
     <p class="lede">同一套画法，用于战场、建造菜单、训练队列与选中头像。按价格与人口分级：初级兵轻装，进阶兵有镶边与法器，精英才有板甲、披风和坐骑甲胄。只有马厩训练的掠袭者与骑士骑马。体型按实际碰撞半径缩放。</p></header>`;
   GROUPS.forEach((group, groupIndex) => {
     const el = section(groupIndex + 1, group.title);
-    const tiers = [...new Set(group.kinds.map((kind) => UNIT_ART[kind].tier))];
+    const tiers = UNIT_ART_TIERS.filter((tier) => group.kinds.some((kind) => UNIT_ART[kind].tier === tier));
     for (const tier of tiers) {
       const row = document.createElement("div");
       row.className = `sheet-row tier-${tier}`;
