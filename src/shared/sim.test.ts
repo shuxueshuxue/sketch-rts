@@ -1298,6 +1298,8 @@ describe("sketch RTS simulation", () => {
 
   it("does not let non-AI player casters spend manual spell cooldowns automatically", () => {
     const game = createGame();
+    // The centre camp zaps whoever stands here with its treasure, and the witch would answer with its weapon.
+    game.units = game.units.filter((unit) => unit.owner !== "neutral");
     const witch = game.spawnUnit("player", "witch", 2000, 2000);
     const enemy = game.spawnUnit("enemy", "raider", 2240, 2000);
 
@@ -1822,6 +1824,8 @@ describe("sketch RTS simulation", () => {
       .build()
       .createGame();
     const targets = ["storm-a", "storm-b"].map((id) => game.units.find((unit) => unit.id === id)!);
+    // Training dummies: golems that can fight would walk out of the storm to answer the caster.
+    for (const target of targets) target.attackDamage = 0;
     const hpBefore = targets.reduce((sum, unit) => sum + unit.hp, 0);
 
     issueCommand(game, { type: "useItem", unitId: "storm-caster", itemId: "storm-staff", x: 1210, y: 900 });

@@ -236,6 +236,17 @@ Assist must be stable. Being attacked can create or refresh a target/assist stat
 
 Leash still matters. Called allies should help inside the camp's defendable area, then return home once the fight is over or the target leaves the leash. Assist should make camps coherent, not turn one arrow into permanent map-wide pursuit.
 
+## Player Unit Aggro
+
+Player units follow the same contract, so a shooter parked between its attack range and the 230 acquisition range is not free damage. Before this rule an idle army could be shot to death without moving, and ranged armies won lopsided trades against melee purely by standing at that distance.
+
+- Retaliation: a damaged soldier that is acting on its own turns on its attacker, including a tower or a caster that hit it from outside acquisition range.
+- Call for help: every hit (on a soldier, a worker or a building, and even a killing hit) also wakes the idle soldiers of the same owner within 300 of the victim, plus the building's radius. Workers and units with no weapon never fight back themselves.
+- Commands win. Only self-directed behaviour answers: an idle unit, an attack-move without a target, or an attack the unit picked itself. A `move`, an explicit `attack`, and worker jobs are never overridden, so retreats, focus fire and kiting stay in the controller's hands. An attack-move keeps its destination and resumes it after the fight.
+- Commitment: a unit already hitting its target keeps it. A unit still walking to its target switches to the attacker only when the attacker scores higher under the ordinary target priority, so an arrow from a tower cannot pull a soldier off the soldier it is chasing.
+- Guard leash: self-directed attacks (idle acquisition, retaliation, answering a call) remember where the unit stood. Once the chase takes the unit more than 600 from that point without the target in reach, it walks back. Commanded attacks and attack-moves are not leashed. One raider must not drag a base's defenders across the map.
+- Threat: target priority adds a bonus, worth about 100px of distance, for an enemy currently attacking a unit or building of the scorer's side. Towers and idle soldiers shoot the unit hitting the farm, not the bystander next to it.
+
 ## Static Defense, Tech, And Repair
 
 Static defense is a simulation balance contract, not an AI excuse to ignore worker-line threats. A guarded main should still need army response, but a completed tower near the worker line should make one-ranged-unit harassment expensive instead of free.
