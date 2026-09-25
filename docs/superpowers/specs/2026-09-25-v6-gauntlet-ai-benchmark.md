@@ -80,3 +80,7 @@ If this should count as a balance bug rather than play, the direct levers are:
 - give spirits supply.
 
 Any of these changes the V6 result, so re-run this benchmark after changing it.
+
+The summon was rebalanced on 2026-09-25 (spirits last 60s, cooldown 40s, summoners 180 gold) and shooters lost 15% of
+their health; knights and golems got heavy armor. Under those rules V6 was rebuilt and scores 900/1000 on the tune seeds
+(2026-09-26); see the design notes for how.

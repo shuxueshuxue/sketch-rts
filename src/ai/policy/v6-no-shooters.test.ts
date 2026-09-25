@@ -10,7 +10,7 @@ import { SHOOTER_UNIT_KINDS } from "./versions";
 describe("v6 fields no shooters", () => {
   it("wants no shooter in any phase of any strategy", () => {
     for (const strategy of V6_STRATEGIES) {
-      const kinds = strategy.phases.flatMap((phase) => phase.wants.flatMap((want) => ("unit" in want ? [want.unit] : "front" in want ? [want.front.chaser, want.front.holder] : [])));
+      const kinds = [...strategy.phases.flatMap((phase) => phase.wants.flatMap((want) => ("unit" in want ? [want.unit] : []))), ...strategy.raids.flatMap((raid) => raid.kinds)];
       expect(kinds.filter((kind) => SHOOTER_UNIT_KINDS.has(kind)), strategy.id).toEqual([]);
     }
   });

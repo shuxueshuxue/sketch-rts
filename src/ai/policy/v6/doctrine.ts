@@ -6,7 +6,7 @@ import type { BuildingKind, RaceId, TrainableUnitKind, UpgradeKind } from "../..
 // A strategy is a list of phases, like AMAI's per-tier build sequences (TFT/Human/BuildSequence.ai). A phase is what V6
 // wants to own while it lasts, each want with a priority: so many units of a kind, a building, towers, a base count, an
 // upgrade. Wants are standing orders, not one-off purchases: a unit that dies is simply missing again. The first phase
-// holds the base while the economy grows; later phases add a front, more bases and a siege piece.
+// holds the base while the economy grows; later phases add casters, bases and what rides beside the host.
 
 export type V6Profile = {
   id: string;
@@ -17,13 +17,8 @@ export type V6Profile = {
   raidAppetite: number;
 };
 
-// A reactive front: the count is split between a unit that can catch shooters and one that holds a line, by how much of
-// the enemy army is shooters (AMAI's SetBuildReact).
-export type V6ReactiveFront = { chaser: TrainableUnitKind; holder: TrainableUnitKind };
-
 export type V6Want =
   | { unit: TrainableUnitKind; count: number; priority: number }
-  | { front: V6ReactiveFront; count: number; priority: number }
   | { building: BuildingKind; count: number; priority: number }
   | { towers: "main" | "outposts"; count: number; priority: number }
   | { bases: number; priority: number }
@@ -64,19 +59,20 @@ export const V6_PROFILES: V6Profile[] = [
 const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, minSecond: 300, cooldownSeconds: 90 };
 const RUNNERS: V6RaidPlan = { kinds: ["cinderRunner", "emberRavager"], size: 4, minSecond: 300, cooldownSeconds: 90 };
 
-const GROVE_FRONT: V6ReactiveFront = { chaser: "raider", holder: "footman" };
-const EMBER_FRONT: V6ReactiveFront = { chaser: "cinderRunner", holder: "emberRavager" };
-
-// Every strategy opens on the caster core and one tower: against V5's shooters and V3 together, free spirits were the
-// only early army that traded well, and a melee front alone melted in the first combined push around minute five. A
-// second early tower bought little (a tower is one footman that cannot move) and cost the workers and the natural. The
-// last phase's caster count is a ceiling V6 is not meant to reach: production never idles for want of a target. The front comes in phase two, in front of the summoners, reacting to what the enemy fields;
-// phase three brings the siege piece and more bases. Strategies differ in their front, their raids and their siege.
+// Every strategy is a caster host: casters and their free spirits, nothing in front of them. Against V5's shooters and V3
+// together, spirits were the only early army that traded well. The first rewrite opened with a main tower and put a melee
+// front before the casters in phase two; with the same casters and neither, the two hosts went from 31% and 49% of the
+// tune games to 92% and 95% (a tower is one footman that cannot move, and a front melts in the first combined push). The
+// last phase's caster count is a ceiling V6 is not meant to reach: production never idles for want of a target.
+// Strategies differ in what rides beside the host (raiding parties, the speed to use them) and in their race.
 // Like AMAI's build sequences, a phase restates the bases of the one before, and the natural outranks the phase's army:
 // one mine against two opponents' four is a lost game however well the army fights (V6 played whole games on one mine,
-// the summoners and the front buying every coin before the hall's 320 ever stood in the bank).
+// the casters buying every coin before the hall's 320 ever stood in the bank).
 export const V6_STRATEGIES: V6Strategy[] = [
   {
+    // Played by hand on chalkFen (V6 north, won at 1322s): summoners and nothing else in front of them, the natural as
+    // soon as the spirits have cleared its camp, a second sanctum at the first spare gold, a third base once the army
+    // stands. No early tower and no melee front: every coin of those was a summoner fewer when the first push came.
     id: "grove-spirit-host",
     race: "grove",
     weight: 3,
@@ -84,35 +80,27 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "summoner", count: 4, priority: 65 },
-          { towers: "main", count: 1, priority: 62 },
-          { bases: 2, priority: 55 },
-          { unit: "summoner", count: 6, priority: 50 },
+          { bases: 2, priority: 60 },
+          { unit: "summoner", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
-        advanceSupply: 26,
+        advanceSupply: 30,
       },
       {
         wants: [
-          { front: GROVE_FRONT, count: 4, priority: 60 },
-          { unit: "summoner", count: 12, priority: 56 },
-          { towers: "outposts", count: 1, priority: 52 },
-          { building: "sanctum", count: 2, priority: 50 },
-          { unit: "priest", count: 1, priority: 45 },
           { bases: 2, priority: 66 },
-          { bases: 3, priority: 40 },
+          { unit: "summoner", count: 14, priority: 56 },
+          { building: "sanctum", count: 2, priority: 54 },
+          { bases: 3, priority: 45 },
         ],
         advanceShare: 0.75,
         advanceSupply: 55,
       },
       {
         wants: [
-          { front: GROVE_FRONT, count: 4, priority: 58 },
-          { building: "workshop", count: 1, priority: 54 },
-          { unit: "golem", count: 3, priority: 52 },
-          { unit: "summoner", count: 30, priority: 50 },
-          { unit: "priest", count: 2, priority: 45 },
+          { unit: "summoner", count: 30, priority: 52 },
+          { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
-          { bases: 3, priority: 48 },
           { bases: 4, priority: 35 },
         ],
         advanceShare: 1,
@@ -122,6 +110,9 @@ export const V6_STRATEGIES: V6Strategy[] = [
     raids: [],
   },
   {
+    // The spirit host's army with a raiding party beside it: four raiders (stables, and the speed they need to get in and
+    // out) hunt workers while the summoners hold the map. The old opening (a main tower, then a melee front) won half its
+    // games while the same summoners without them won nine in ten.
     id: "grove-raider-host",
     race: "grove",
     weight: 2,
@@ -129,32 +120,30 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "summoner", count: 4, priority: 65 },
-          { towers: "main", count: 1, priority: 62 },
-          { bases: 2, priority: 55 },
-          { unit: "summoner", count: 6, priority: 50 },
+          { bases: 2, priority: 60 },
+          { unit: "summoner", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
-        advanceSupply: 26,
+        advanceSupply: 30,
       },
       {
         wants: [
-          { unit: "raider", count: 4, priority: 60 },
-          { unit: "summoner", count: 12, priority: 56 },
-          { upgrade: "speedTraining", level: 1, priority: 52 },
-          { towers: "outposts", count: 1, priority: 50 },
           { bases: 2, priority: 66 },
-          { bases: 3, priority: 40 },
+          { unit: "summoner", count: 14, priority: 56 },
+          { unit: "raider", count: 4, priority: 54 },
+          { building: "sanctum", count: 2, priority: 52 },
+          { upgrade: "speedTraining", level: 1, priority: 50 },
+          { bases: 3, priority: 45 },
         ],
         advanceShare: 0.75,
         advanceSupply: 55,
       },
       {
         wants: [
-          { unit: "raider", count: 5, priority: 58 },
-          { unit: "knight", count: 3, priority: 54 },
-          { unit: "summoner", count: 30, priority: 50 },
-          { unit: "priest", count: 2, priority: 45 },
-          { bases: 3, priority: 48 },
+          { unit: "summoner", count: 28, priority: 52 },
+          { unit: "raider", count: 5, priority: 50 },
+          { bases: 3, priority: 50 },
+          { towers: "outposts", count: 1, priority: 44 },
           { bases: 4, priority: 35 },
         ],
         advanceShare: 1,
@@ -164,6 +153,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
     raids: [RAIDERS],
   },
   {
+    // Ember's copy of the grove spirit host: pyre callers only, the natural early, a second spire, then a third base.
     id: "ember-pyre-host",
     race: "ember",
     weight: 3,
@@ -171,34 +161,27 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "pyreCaller", count: 4, priority: 65 },
-          { towers: "main", count: 1, priority: 62 },
-          { bases: 2, priority: 55 },
-          { unit: "pyreCaller", count: 6, priority: 50 },
+          { bases: 2, priority: 60 },
+          { unit: "pyreCaller", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
-        advanceSupply: 26,
+        advanceSupply: 30,
       },
       {
         wants: [
-          { front: EMBER_FRONT, count: 4, priority: 60 },
-          { unit: "pyreCaller", count: 12, priority: 56 },
-          { towers: "outposts", count: 1, priority: 52 },
-          { building: "cinderSpire", count: 2, priority: 50 },
-          { unit: "emberAcolyte", count: 1, priority: 45 },
           { bases: 2, priority: 66 },
-          { bases: 3, priority: 40 },
+          { unit: "pyreCaller", count: 14, priority: 56 },
+          { building: "cinderSpire", count: 2, priority: 54 },
+          { bases: 3, priority: 45 },
         ],
         advanceShare: 0.75,
         advanceSupply: 55,
       },
       {
         wants: [
-          { front: EMBER_FRONT, count: 6, priority: 58 },
           { unit: "pyreCaller", count: 30, priority: 52 },
-          { unit: "ashHexer", count: 2, priority: 48 },
-          { unit: "emberAcolyte", count: 2, priority: 45 },
+          { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
-          { bases: 3, priority: 48 },
           { bases: 4, priority: 35 },
         ],
         advanceShare: 1,
@@ -208,6 +191,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
     raids: [],
   },
   {
+    // Ember's raiding host: the pyre host's army, with four cinder runners (and the spire's speed training) hunting workers.
     id: "ember-runner-host",
     race: "ember",
     weight: 2,
@@ -215,32 +199,30 @@ export const V6_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "pyreCaller", count: 4, priority: 65 },
-          { towers: "main", count: 1, priority: 62 },
-          { bases: 2, priority: 55 },
-          { unit: "pyreCaller", count: 6, priority: 50 },
+          { bases: 2, priority: 60 },
+          { unit: "pyreCaller", count: 8, priority: 50 },
         ],
         advanceShare: 0.75,
-        advanceSupply: 26,
+        advanceSupply: 30,
       },
       {
         wants: [
-          { unit: "cinderRunner", count: 4, priority: 60 },
-          { unit: "pyreCaller", count: 12, priority: 56 },
-          { upgrade: "speedTraining", level: 1, priority: 52 },
-          { towers: "outposts", count: 1, priority: 50 },
           { bases: 2, priority: 66 },
-          { bases: 3, priority: 40 },
+          { unit: "pyreCaller", count: 14, priority: 56 },
+          { unit: "cinderRunner", count: 4, priority: 54 },
+          { building: "cinderSpire", count: 2, priority: 52 },
+          { upgrade: "speedTraining", level: 1, priority: 50 },
+          { bases: 3, priority: 45 },
         ],
         advanceShare: 0.75,
         advanceSupply: 55,
       },
       {
         wants: [
-          { unit: "cinderRunner", count: 5, priority: 58 },
-          { unit: "emberRavager", count: 4, priority: 54 },
-          { unit: "pyreCaller", count: 30, priority: 50 },
-          { unit: "ashHexer", count: 2, priority: 45 },
-          { bases: 3, priority: 48 },
+          { unit: "pyreCaller", count: 28, priority: 52 },
+          { unit: "cinderRunner", count: 5, priority: 50 },
+          { bases: 3, priority: 50 },
+          { towers: "outposts", count: 1, priority: 44 },
           { bases: 4, priority: 35 },
         ],
         advanceShare: 1,

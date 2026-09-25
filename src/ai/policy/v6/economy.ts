@@ -6,13 +6,12 @@ import { activeMiningBaseCount } from "../expansion-model";
 import { buildings, units } from "../snapshot";
 import { distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy, SHOOTER_UNIT_KINDS } from "../versions";
+import { isV6Policy } from "../versions";
 import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
-import { strengthOf } from "./strength";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
 // come first, as in AMAI. Then the current phase of the strategy states its wants; each want that is not met becomes a
@@ -32,7 +31,6 @@ type Economy = {
   own: Building[];
   workers: Unit[];
   bases: Building[];
-  shooterShare: number;
   threatened?: { hall: Building; threat: number };
 };
 
@@ -89,8 +87,6 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   const own = buildings(snapshot, owner);
   const bases = intel.ownHalls;
   const threatened = threatenedHall(intel);
-  const enemyArmy = intel.enemies.flatMap((enemy) => enemy.army);
-  const shooterShare = enemyArmy.length > 0 ? strengthOf(enemyArmy.filter((unit) => SHOOTER_UNIT_KINDS.has(unit.kind))) / Math.max(0.01, strengthOf(enemyArmy)) : 0.5;
   const economy: Omit<Economy, "phase"> = {
     snapshot,
     owner,
@@ -100,7 +96,6 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     own,
     workers: units(snapshot, owner).filter((unit) => unit.kind === "worker"),
     bases,
-    shooterShare,
     ...(threatened ? { threatened } : {}),
   };
   return { ...economy, phase: currentPhase(economy) };
@@ -133,22 +128,15 @@ function currentPhase(economy: Omit<Economy, "phase">): V6Phase {
 function unitShare(economy: Omit<Economy, "phase">, phase: V6Phase) {
   const targets = new Map<TrainableUnitKind, number>();
   for (const want of phase.wants) {
-    for (const [kind, count] of unitTargets(economy, want)) targets.set(kind, Math.max(targets.get(kind) ?? 0, count));
+    for (const [kind, count] of unitTargets(want)) targets.set(kind, Math.max(targets.get(kind) ?? 0, count));
   }
   const total = [...targets.values()].reduce((sum, count) => sum + count, 0);
   if (total === 0) return 1;
   return [...targets].reduce((sum, [kind, count]) => sum + Math.min(count, have(economy, kind)), 0) / total;
 }
 
-// The front splits between a unit that catches shooters and one that holds a line, by the shooters' share of the enemy army.
-function unitTargets(economy: Omit<Economy, "phase">, want: V6Want): [TrainableUnitKind, number][] {
-  if ("unit" in want) return [[want.unit, want.count]];
-  if (!("front" in want)) return [];
-  const chasers = Math.round(want.count * Math.min(0.75, Math.max(0.25, 0.25 + economy.shooterShare * 0.6)));
-  return [
-    [want.front.chaser, chasers],
-    [want.front.holder, want.count - chasers],
-  ];
+function unitTargets(want: V6Want): [TrainableUnitKind, number][] {
+  return "unit" in want ? [[want.unit, want.count]] : [];
 }
 
 function have(economy: Omit<Economy, "phase">, kind: TrainableUnitKind) {
@@ -195,9 +183,9 @@ function wantGoals(economy: Economy): Goal[] {
   const claimed = new Set<string>();
   const wants = [...economy.phase.wants].sort((a, b) => b.priority - a.priority);
   for (const want of wants) {
-    const priority = want.priority + (economy.threatened && ("unit" in want || "front" in want) ? THREAT_BONUS : 0);
-    if ("unit" in want || "front" in want) {
-      for (const [kind, count] of unitTargets(economy, want)) goals.push(...unitGoals(economy, kind, count - have(economy, kind), priority, claimed));
+    const priority = want.priority + (economy.threatened && "unit" in want ? THREAT_BONUS : 0);
+    if ("unit" in want) {
+      goals.push(...unitGoals(economy, want.unit, want.count - have(economy, want.unit), priority, claimed));
     } else if ("building" in want) {
       if (economy.own.filter((building) => building.kind === want.building).length < want.count) goals.push(...buildingGoal(economy, want.building, priority));
     } else if ("towers" in want) {
@@ -279,8 +267,9 @@ function towerPoint(snapshot: GameSnapshot, owner: PlayerId, hall: Building, fac
 
 // The next expansion goes to the nearest free mine once its camp is cleared (the general clears it) and no enemy is near.
 function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
+  // A hall on a mined-out mine is no base: counting it left eleven workers idle when V6's main ran dry.
   const halls = economy.own.filter((building) => building.kind === "townHall");
-  if (halls.length >= target || halls.some((hall) => !hall.complete) || economy.threatened) return [];
+  if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete) || economy.threatened) return [];
   const mine = nextExpansionMine(economy.snapshot, economy.intel);
   if (!mine || mineGuards(economy.snapshot, mine).length > 0) return [];
   const offset = expansionOffset(economy.snapshot, economy.owner);
@@ -305,7 +294,7 @@ function capacityGoals(economy: Economy): Goal[] {
   if (producers.length === 0 || producers.some((building) => !building.complete || building.queue.length === 0)) return [];
   const waiting = [...economy.phase.wants]
     .sort((a, b) => b.priority - a.priority)
-    .flatMap((want) => unitTargets(economy, want))
+    .flatMap((want) => unitTargets(want))
     .find(([kind, count]) => have(economy, kind) < count);
   const kind = waiting && producerFor(economy, waiting[0]);
   if (!kind || economy.own.filter((building) => building.kind === kind).length >= MAX_PRODUCERS_PER_KIND) return [];

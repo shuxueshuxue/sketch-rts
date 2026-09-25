@@ -26,11 +26,18 @@ import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 //      let V6 punish an opponent that had just broken its army on V6's towers; the loose one won three times as often.
 //      An army that has stood at its rally for a minute and a half only needs to match the defenders: V6 once held an
 //      even army for sixteen minutes while its starving opponents rebuilt thirty archers, and the game ran out.
+//      Strike and fall back: armies within reach of the target count in full, those further out at half, and an attack
+//      breaks off as soon as another army closes in rather than when it arrives. Played by hand, V6 wiped V5's army at
+//      V5's hall and was gone before V3's came; the same attack kept going lost everything to V3 fifteen seconds later.
 //   5. Otherwise creep the strongest camp it beats with room to spare, far from enemy armies, for stars and items.
 //   6. Otherwise hold at a rally in front of the main.
 
 const LOCAL_RANGE = 900;
 const TARGET_REGION = 1_800;
+// Armies within the local range of the target defend it in full; further out, within the target region, at this share.
+const FAR_DEFENDER_SHARE = 0.5;
+// Another army closing in within this range of the attack counts against it before it arrives.
+const INCOMING_RANGE = 1_500;
 const RALLY_STEP = 380;
 const ATTACK_MARGIN = 1.3;
 const IDLE_TICKS = 90 * 20;
@@ -84,8 +91,12 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     const center = marching.length > 0 ? averagePoint(marching) : undefined;
     const facing = center ? enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
-    if (target && center && !worn && strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE) return attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options);
-    recordPlay(memory, worn ? "general:retreat:worn" : "general:retreat");
+    const gaps = center ? enemyGaps(intel, center) : {};
+    const incoming = center ? closingPower(intel, center, gaps, current.enemyGaps ?? {}) : 0;
+    const holds = strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE;
+    const outrun = strengthOf(group) * (1 + profile.aggression) < (facing + incoming) * RETREAT_LINE;
+    if (target && center && !worn && holds && !outrun) return attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps);
+    recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
     memory.retreatedAt = snapshot.tick;
   }
 
@@ -130,15 +141,32 @@ function toward(from: Point, to: Point, length: number): Point {
 }
 
 function attackTarget(intel: V6Intel): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
-  const choices = intel.enemies.flatMap((enemy) =>
-    enemy.bases.map((base) => {
-      const defenders = intel.enemies.reduce((total, other) => total + strengthOf(other.army.filter((unit) => distance(unit, base.hall) <= TARGET_REGION)), 0);
-      const why = enemy.power < 2 ? "beaten" : enemy.state === "creeping" || enemy.state === "away" ? "armyAway" : "stronger";
+  const choices = intel.enemies.flatMap((enemy) => {
+    const main = mainHall(enemy);
+    return enemy.bases.map((base) => {
+      // An expansion is judged by what stands at it: the owner's army back at its main is the fall-back rule's business.
+      // Played by hand, killing each new hall as it went up kept both opponents on one base and six workers.
+      const expansion = base.hall.id !== main?.id;
+      const defenders = intel.enemies.reduce(
+        (total, other) =>
+          total +
+          strengthOf(other.army.filter((unit) => distance(unit, base.hall) <= LOCAL_RANGE)) +
+          (expansion ? 0 : strengthOf(other.army.filter((unit) => distance(unit, base.hall) > LOCAL_RANGE && distance(unit, base.hall) <= TARGET_REGION)) * FAR_DEFENDER_SHARE),
+        0,
+      );
+      const why = enemy.power < 2 ? "beaten" : expansion ? "expansion" : enemy.state === "creeping" || enemy.state === "away" ? "armyAway" : "stronger";
       const defended = defenders + base.towers.length * TOWER_STRENGTH;
       return { base, need: defended * ATTACK_MARGIN + 2, defended, why };
-    }),
-  );
+    });
+  });
   return choices.sort((a, b) => a.need - b.need)[0];
+}
+
+// An opponent's main is the hall its other buildings stand around.
+function mainHall(enemy: V6Intel["enemies"][number]) {
+  return enemy.bases
+    .map((base) => ({ hall: base.hall, around: enemy.buildings.filter((building) => distance(building, base.hall) <= 700).length }))
+    .sort((a, b) => b.around - a.around)[0]?.hall;
 }
 
 type Camp = { center: Point; strength: number };
@@ -162,11 +190,20 @@ function expansionCamp(snapshot: GameSnapshot, intel: V6Intel, camps: Camp[], st
 }
 
 // The strongest camp V6 beats with room to spare, nearer ones first; it sticks with the camp it chose until it is cleared.
+// Only camps on V6's side of the map (nearer its halls than any enemy hall) unless V6 outweighs every enemy army together:
+// V6 went creeping 2150 from home beside V5's natural, and V5's army, 1900 away when it set out, caught it at the camp.
 function creepCamp(intel: V6Intel, camps: Camp[], strength: number, chosen: Point | undefined): Point | undefined {
-  const beatable = camps.filter((camp) => camp.strength <= strength * CREEP_SHARE);
+  const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
+  const beatable = camps.filter((camp) => camp.strength <= strength * CREEP_SHARE && (dominant || onOwnSide(intel, camp.center)));
   const kept = chosen && beatable.find((camp) => distance(camp.center, chosen) <= CAMP_RADIUS);
   if (kept) return kept.center;
   return beatable.sort((a, b) => b.strength - distance(b.center, intel.home) / 500 - (a.strength - distance(a.center, intel.home) / 500))[0]?.center;
+}
+
+function onOwnSide(intel: V6Intel, point: Point) {
+  const own = Math.min(...[intel.home, ...intel.ownHalls].map((hall) => distance(hall, point)));
+  const enemy = Math.min(Infinity, ...intel.enemies.flatMap((enemy) => enemy.bases.map((base) => distance(base.hall, point))));
+  return own < enemy;
 }
 
 // The group that set out, and any of V6's units that have reached it since (spirits cast on the way, stragglers).
@@ -178,8 +215,8 @@ function attackGroup(available: Unit[], front: Unit[], ids: string[]): Unit[] {
   return available.filter((unit) => ids.includes(unit.id) || distance(unit, center) <= JOIN_RANGE);
 }
 
-function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext): GameCommand[] {
-  memory.general = { mode: "attack", target: { x: target.hall.x, y: target.hall.y }, targetHallId: target.hall.id, group: group.map((unit) => unit.id), groupStart };
+function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext, gaps: Record<string, number> = {}): GameCommand[] {
+  memory.general = { mode: "attack", target: { x: target.hall.x, y: target.hall.y }, targetHallId: target.hall.id, group: group.map((unit) => unit.id), groupStart, enemyGaps: gaps };
   const marching = front.filter((unit) => group.includes(unit));
   const waiting = front.filter((unit) => !group.includes(unit));
   return [...orderUnits(snapshot, owner, "attack", marching, target.hall, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
@@ -203,6 +240,21 @@ function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: 
   });
   if (straying.length === 0) return [];
   return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: straying.map((unit) => unit.id), x: point.x, y: point.y }, options)];
+}
+
+// How far each enemy army's center stands from the attack.
+function enemyGaps(intel: V6Intel, center: Point): Record<string, number> {
+  return Object.fromEntries(intel.enemies.filter((enemy) => enemy.center).map((enemy) => [enemy.owner, distance(enemy.center!, center)]));
+}
+
+// The armies not yet in the fight that are within reach and nearer than at the last look: what arrives next.
+function closingPower(intel: V6Intel, center: Point, gaps: Record<string, number>, before: Record<string, number>) {
+  return intel.enemies.reduce((total, enemy) => {
+    const gap = gaps[enemy.owner];
+    const was = before[enemy.owner];
+    if (gap === undefined || was === undefined || gap > INCOMING_RANGE || gap >= was) return total;
+    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE));
+  }, 0);
 }
 
 function rallyPoint(intel: V6Intel): Point {

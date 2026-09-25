@@ -8,7 +8,7 @@ import { planV6Economy, rankV6Goals } from "./economy";
 
 const V6 = { version: "v2", requestedVersion: "v6" } as const;
 
-type Base = { gold: number; buildings?: ("barracks" | "stables" | "sanctum")[]; army?: UnitKind[]; creep?: boolean; farms?: number; enemyAtBase?: number; enemyArchers?: number; enemyFootmen?: number; natural?: boolean };
+type Base = { gold: number; buildings?: ("barracks" | "stables" | "sanctum")[]; army?: UnitKind[]; creep?: boolean; farms?: number; enemyAtBase?: number; enemyArchers?: number; enemyFootmen?: number; natural?: boolean; mainGold?: number; naturalHall?: boolean; thirdMine?: boolean };
 
 function base(name: string, options: Base & { phase?: number }) {
   let scene = sketchScene(name)
@@ -19,7 +19,7 @@ function base(name: string, options: Base & { phase?: number }) {
     .player("v5", { team: "south", race: "grove" })
     .playerState("v6", { gold: options.gold })
     .townHall("v6", 600, 600, { id: "v6-hall" })
-    .goldMine("v6-mine", 600, 800, 6_000)
+    .goldMine("v6-mine", 600, 800, options.mainGold ?? 6_000)
     .townHall("v3", 3_400, 3_300)
     .townHall("v5", 3_400, 2_150);
   (options.buildings ?? []).forEach((kind, index) => (scene = scene.building("v6", kind, 820, 460 + index * 110, { id: `v6-${kind}` })));
@@ -30,6 +30,8 @@ function base(name: string, options: Base & { phase?: number }) {
   for (let index = 0; index < (options.enemyArchers ?? 0); index += 1) scene = scene.unit("v5", "archer", 3_200 + index * 30, 2_300);
   for (let index = 0; index < (options.enemyFootmen ?? 0); index += 1) scene = scene.unit("v3", "footman", 3_200 + index * 30, 3_150);
   if (options.natural) scene = scene.goldMine("v6-natural", 700, 1_350, 6_000);
+  if (options.naturalHall) scene = scene.townHall("v6", 700, 1_550, { id: "v6-natural-hall" });
+  if (options.thirdMine) scene = scene.goldMine("v6-third", 1_500, 900, 6_000);
   if (options.creep) scene = scene.unit("neutral", "wildling", 900, 1_050, { id: "near-creep" });
   const game = scene.build().createGame();
   const memory = createAiPolicyMemory();
@@ -42,36 +44,34 @@ function of<T extends GameCommand["type"]>(commands: GameCommand[], type: T) {
 }
 
 describe("v6 economy", () => {
-  it("opens on the caster core: it lays down the sanctum its summoners need, then saves for the tower", () => {
-    const { plan } = base("v6-econ-opening", { gold: 250 });
+  it("opens on the caster core: the sanctum its summoners need, and no tower before them", () => {
+    const { plan } = base("v6-econ-opening", { gold: 450 });
     expect(of(plan(), "build").map((command) => command.buildingKind)).toEqual(["sanctum"]);
   });
 
-  it("splits its front toward shooter chasers when the enemy army is shooters", () => {
-    const { plan } = base("v6-econ-react", { gold: 1_000, buildings: ["barracks", "stables", "sanctum"], enemyArchers: 6, phase: 1 });
-    const trained = of(plan(), "train").map((command) => command.unitKind);
-    expect(trained).toContain("raider");
-    expect(trained).toContain("footman");
-    const { plan: meleePlan } = base("v6-econ-react-melee", { gold: 1_000, buildings: ["barracks", "stables", "sanctum"], army: ["raider", "raider"], enemyFootmen: 6, phase: 1 });
-    // Against an all-melee enemy the raiders already out are enough; the rest of the front is footmen.
-    const meleeTrained = of(meleePlan(), "train").map((command) => command.unitKind);
-    expect(meleeTrained).toContain("footman");
-    expect(meleeTrained).not.toContain("raider");
-  });
-
-  it("moves to the second phase once most of its summoners stand, and asks for the front's producers", () => {
-    const { plan, memory } = base("v6-econ-phase-two", { gold: 600, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner", "summoner", "summoner"] });
-    expect(of(plan(), "build").map((command) => command.buildingKind).filter((kind) => kind === "barracks" || kind === "stables").length).toBeGreaterThan(0);
+  it("moves to the second phase once most of its summoners stand, and asks for a second sanctum", () => {
+    const { plan, memory } = base("v6-econ-phase-two", { gold: 600, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner"] });
+    expect(of(plan(), "build").map((command) => command.buildingKind)).toContain("sanctum");
     expect(memory.v6?.phase).toBe(1);
     expect(memory.v6?.plays?.["phase:2"]).toBe(1);
   });
 
   it("still takes the natural in the second phase, ahead of more summoners", () => {
-    // The front already stands and gold covers one hall and the worker trained ahead of it: before the natural was
-    // restated in phase two, a summoner (56) took the gold ahead of the third-base want (40) every time.
-    const army: UnitKind[] = ["summoner", "summoner", "summoner", "summoner", "summoner", "raider", "raider", "footman", "footman"];
-    const { plan } = base("v6-econ-natural", { gold: BUILDING_DEFS.townHall.cost + UNIT_DEFS.worker.cost, buildings: ["barracks", "stables", "sanctum"], army, farms: 6, natural: true, phase: 1 });
+    // Gold covers one hall and the worker trained ahead of it: before the natural was restated in phase two, a summoner
+    // (56) took the gold ahead of the third-base want (40) every time.
+    const army: UnitKind[] = ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner", "summoner"];
+    const { plan } = base("v6-econ-natural", { gold: BUILDING_DEFS.townHall.cost + UNIT_DEFS.worker.cost, buildings: ["sanctum"], army, farms: 6, natural: true, phase: 1 });
     expect(of(plan(), "build").map((command) => command.buildingKind)).toContain("townHall");
+  });
+
+  it("takes another base when its main's mine runs dry, though the dry hall still stands", () => {
+    // Two halls meet the opening's two bases only while both still have gold: counting the dry main left eleven workers
+    // idle when V6's main ran out.
+    const twoHalls = { gold: 1_000, buildings: ["sanctum" as const], army: ["summoner", "summoner", "summoner"] as UnitKind[], farms: 5, natural: true, naturalHall: true, thirdMine: true };
+    const { plan: dry } = base("v6-econ-dry-main", { ...twoHalls, mainGold: 0 });
+    expect(of(dry(), "build").map((command) => command.buildingKind)).toContain("townHall");
+    const { plan: rich } = base("v6-econ-rich-main", twoHalls);
+    expect(of(rich(), "build").map((command) => command.buildingKind)).not.toContain("townHall");
   });
 
   it("puts a tower up at a base under attack ahead of everything but farms, and never where it reaches a standing camp", () => {

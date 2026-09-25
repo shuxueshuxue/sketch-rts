@@ -131,3 +131,27 @@ The phased rewrite followed this plan and first scored 154 of 1000 tune games; t
 - **An attack is a group.** The units that set out, plus spirits and stragglers that reach them; anything trained afterwards waits at the rally. The group comes home when it has lost half its starting strength (AMAI's harass rule, applied to attacks), and the army regroups for 30s before it may set out again. Before this, V6 walked every new unit across the map alone and fed 5000 gold into a base that lost 115. This was the largest single gain of the day: 380 to 447.
 
 Tune scores along the way (1000 games each): phased first cut 154; arch4's workers, gate, one tower and caster caps 309; personalities neutral 401; three style-only personalities, arrival strength and the idle-army attack 380; attack groups with regroup 447. By race, ember wins 52% and grove 37%; grove-spirit-host (33%) is the weakest strategy.
+
+## What hand play said (2026-09-26)
+
+Playing V6 by hand on chalkFen (V6 north, grove, seed v5-hybrid-50-2026-06-12), step by step with replays from saved
+orders, won at 1322s the game the AI lost at 936s. What won it:
+
+- **Summoners and nothing in front of them.** Sanctum first, summoners from 45s, the natural once the spirits had cleared
+  its camp (185s), a second sanctum at 420s. No early tower and no melee front.
+- **Every new enemy hall killed while it was young.** By 700s both opponents were on one base and six workers.
+- **Hit one army, then leave before the other comes.** At 780s the whole army wiped V5's fourteen archers at V5's hall and
+  walked away; the same attack pressed on lost everything to V3's army fifteen seconds later.
+- **Forward towers, then the counterattack.** V3 attacked into three towers and fresh spirits and lost two thirds of its
+  army; V6 went straight to V3's hall and ended V3 at 1300s.
+
+Carried into the AI, each change judged on the 1000 tune games (baseline 458 with heavy armor in the sim):
+
+| Change | Tune | Note |
+|---|---|---|
+| Caster hosts open like the hand game (no tower, no front); halls on dry mines do not count as bases | 762 | spirit host 31% → 92%, pyre host 49% → 95% |
+| Raider and runner hosts on the same caster core, their raiding party beside it | 876 | runner 55% → 86%, raider 51% → 73% |
+| Strike and fall back (far armies at half, break off when another army closes in); creep only on V6's side | 886 | timeouts 48 → 17 |
+| An enemy expansion is judged only by the units at it | 900 | |
+
+Tried and not kept: four heavies (knights, cinder revenants) in every late phase, 864.
