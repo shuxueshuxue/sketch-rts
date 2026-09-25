@@ -39,7 +39,7 @@ export type V6PolicyMemory = {
   retreatedAt?: number;
   raid?: { unitIds: string[]; startStrength?: number; targetHallId: string; targetOwner: PlayerId; reason: string; sinceTick: number; phase: "travel" | "strike" | "home" };
   closeout?: { unitIds: string[]; targetId: string; sinceTick: number };
-  general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number> };
+  general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number>; stage?: "gather" | "strike"; stageSince?: number };
   casualties?: { count: number; lastChangeTick: number };
   plays?: Record<string, number>;
 };

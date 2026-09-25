@@ -63,7 +63,8 @@ const RUNNERS: V6RaidPlan = { kinds: ["cinderRunner", "emberRavager"], size: 4, 
 // together, spirits were the only early army that traded well. The first rewrite opened with a main tower and put a melee
 // front before the casters in phase two; with the same casters and neither, the two hosts went from 31% and 49% of the
 // tune games to 92% and 95% (a tower is one footman that cannot move, and a front melts in the first combined push). The
-// last phase's caster count is a ceiling V6 is not meant to reach: production never idles for want of a target.
+// last phase's caster count is a ceiling V6 is not meant to reach: production never idles for want of a target (at 30,
+// V6 sat on 3000 gold beside a V5 it could not break; past 81 supply its income is taxed the same whatever it adds).
 // Strategies differ in what rides beside the host (raiding parties, the speed to use them) and in their race.
 // Like AMAI's build sequences, a phase restates the bases of the one before, and the natural outranks the phase's army:
 // one mine against two opponents' four is a lost game however well the army fights (V6 played whole games on one mine,
@@ -98,7 +99,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "summoner", count: 30, priority: 52 },
+          { unit: "summoner", count: 44, priority: 52 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
           { bases: 4, priority: 35 },
@@ -110,9 +111,10 @@ export const V6_STRATEGIES: V6Strategy[] = [
     raids: [],
   },
   {
-    // The spirit host's army with a raiding party beside it: four raiders (stables, and the speed they need to get in and
-    // out) hunt workers while the summoners hold the map. The old opening (a main tower, then a melee front) won half its
-    // games while the same summoners without them won nine in ten.
+    // The spirit host's army with a raiding party beside it: a few raiders hunt workers while the summoners hold the map.
+    // The old opening (a main tower, then a melee front) won half its games while the same summoners without them won nine
+    // in ten. The party comes after the second sanctum, and without the stables' speed training: raiders already outrun
+    // everything V3 and V5 field.
     id: "grove-raider-host",
     race: "grove",
     weight: 2,
@@ -130,9 +132,8 @@ export const V6_STRATEGIES: V6Strategy[] = [
         wants: [
           { bases: 2, priority: 66 },
           { unit: "summoner", count: 14, priority: 56 },
-          { unit: "raider", count: 4, priority: 54 },
-          { building: "sanctum", count: 2, priority: 52 },
-          { upgrade: "speedTraining", level: 1, priority: 50 },
+          { building: "sanctum", count: 2, priority: 54 },
+          { unit: "raider", count: 3, priority: 50 },
           { bases: 3, priority: 45 },
         ],
         advanceShare: 0.75,
@@ -140,7 +141,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "summoner", count: 28, priority: 52 },
+          { unit: "summoner", count: 44, priority: 52 },
           { unit: "raider", count: 5, priority: 50 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
@@ -179,7 +180,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "pyreCaller", count: 30, priority: 52 },
+          { unit: "pyreCaller", count: 44, priority: 52 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },
           { bases: 4, priority: 35 },
@@ -219,7 +220,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "pyreCaller", count: 28, priority: 52 },
+          { unit: "pyreCaller", count: 44, priority: 52 },
           { unit: "cinderRunner", count: 5, priority: 50 },
           { bases: 3, priority: 50 },
           { towers: "outposts", count: 1, priority: 44 },

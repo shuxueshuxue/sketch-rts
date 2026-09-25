@@ -4,6 +4,7 @@ import { snapshotGame } from "../../../shared/sim";
 import { sketchScene } from "../../../sdk/scene";
 import type { GameCommand } from "../../../shared/types";
 import { createAiPolicyMemory, type AiPolicyMemory } from "../../memory";
+import { planAbilityCommands } from "../spell-tactics";
 import { planV6General } from "./general";
 
 const V6 = { version: "v2", requestedVersion: "v6" } as const;
@@ -171,6 +172,32 @@ describe("v6 general", () => {
     expect(memory.v6?.plays?.["general:attack:expansion"]).toBe(1);
   });
 
+  it("pulses at an enemy main: gathers out of reach with its summons held, then strikes once most casters can cast", () => {
+    const { game } = board("v6-general-pulse", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
+    const summoners = Array.from({ length: 4 }, (_, index) => game.spawnUnit("v6", "summoner", 760 + index * 30, 700));
+    for (const summoner of summoners) summoner.cooldown = 400;
+    const memory = steady();
+    const options = () => ({ ...V6, teams: game.teams, memory });
+    const [gather] = attackMoves(planV6General(snapshotGame(game), "v6", options()));
+    expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-hall", stage: "gather" });
+    // It walks to a point 850 short of V5's hall, not at the hall.
+    expect(Math.hypot(gather!.x - 3_400, gather!.y - 2_150)).toBeCloseTo(850, 0);
+
+    // At the gathering point with every spell back: a ready summoner still holds its summon while gathering...
+    for (const unit of game.units.filter((candidate) => candidate.owner === "v6" && candidate.kind !== "worker")) {
+      unit.x = gather!.x;
+      unit.y = gather!.y;
+      unit.cooldown = 0;
+    }
+    expect(planAbilityCommands(snapshotGame(game), "v6", options()).filter((command) => command.type === "cast")).toEqual([]);
+    // ...and the army goes in together, casting as it goes.
+    const [strike] = attackMoves(planV6General(snapshotGame(game), "v6", options()));
+    expect(memory.v6?.general?.stage).toBe("strike");
+    expect(strike).toMatchObject({ x: 3_400, y: 2_150 });
+    expect(memory.v6?.plays?.["general:pulse"]).toBe(1);
+    expect(planAbilityCommands(snapshotGame(game), "v6", options()).filter((command) => command.type === "cast").length).toBe(4);
+  });
+
   it("breaks off an attack as soon as another army closes in, before it arrives", () => {
     const { game, snapshot } = board("v6-general-incoming", { v6Footmen: 14, enemyFootmen: 3, enemyAt: "farHome" });
     const memory = steady();
@@ -196,7 +223,8 @@ describe("v6 general", () => {
     const memory = steady();
     const [move] = attackMoves(planV6General(snapshot, "v6", { ...V6, teams: game.teams, memory }));
     expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-hall" });
-    expect(move).toMatchObject({ x: 3_400, y: 2_150 });
+    // V5's hall is its main: the army first gathers short of it (the pulse).
+    expect(Math.hypot(move!.x - 3_400, move!.y - 2_150)).toBeCloseTo(850, 0);
 
     for (const unit of game.units.filter((candidate) => candidate.id.startsWith("v6-footman-"))) {
       unit.x = 3_000;

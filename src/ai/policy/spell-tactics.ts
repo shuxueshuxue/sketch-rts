@@ -36,7 +36,9 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       // @@@v6-standing-spirits - A summon costs only the summoner's time: a spirit lasts 60s and the spell is back in 40s, so a
       // summoner that casts whenever it can keeps one or two spirits up, free of gold and supply. The shared rule waits for an enemy
       // inside 240 and stops at one spirit nearby.
-      if (isV6Policy(options) || (target && !hasSpirit)) {
+      // V6 gathering for a pulse holds its summons until the strike, unless an enemy is already on the caster.
+      const holding = isV6Policy(options) && options.memory?.v6?.general?.stage === "gather" && options.memory.v6.general.mode === "attack" && !nearestEnemyUnit(snapshot, owner, caster, 400, options);
+      if (!holding && (isV6Policy(options) || (target && !hasSpirit))) {
         const point = isV6Policy(options) ? v6SummonPoint(snapshot, owner, caster, def.plannerRange, options) : { x: caster.x + 54, y: caster.y + 28 };
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: point.x, y: point.y }, options));
         continue;

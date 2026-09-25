@@ -29,6 +29,9 @@ import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 //      Strike and fall back: armies within reach of the target count in full, those further out at half, and an attack
 //      breaks off as soon as another army closes in rather than when it arrives. Played by hand, V6 wiped V5's army at
 //      V5's hall and was gone before V3's came; the same attack kept going lost everything to V3 fifteen seconds later.
+//      Against an opponent's main the attack is a pulse: the army gathers out of the towers' and shooters' reach with the
+//      casters holding their summons, and goes in once most of them can cast, every spirit at once. Summoners that cast
+//      the moment their spell came back fed V5's thirty archers one spirit at a time for twenty-five minutes.
 //   5. Otherwise creep the strongest camp it beats with room to spare, far from enemy armies, for stars and items.
 //   6. Otherwise hold at a rally in front of the main.
 
@@ -39,6 +42,12 @@ const FAR_DEFENDER_SHARE = 0.5;
 // Another army closing in within this range of the attack counts against it before it arrives.
 const INCOMING_RANGE = 1_500;
 const RALLY_STEP = 380;
+// The pulse: where the army gathers (from the target hall, toward the army), when it goes, and how long it may wait.
+const STAGE_DISTANCE = 850;
+const STRIKE_READY_SHARE = 0.75;
+const GATHERED_SHARE = 0.8;
+const GATHERED_RANGE = 350;
+const GATHER_TICKS = 45 * 20;
 const ATTACK_MARGIN = 1.3;
 const IDLE_TICKS = 90 * 20;
 const JOIN_RANGE = 700;
@@ -95,7 +104,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     const incoming = center ? closingPower(intel, center, gaps, current.enemyGaps ?? {}) : 0;
     const holds = strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + profile.aggression) < (facing + incoming) * RETREAT_LINE;
-    if (target && center && !worn && holds && !outrun) return attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps);
+    if (target && center && !worn && holds && !outrun) return attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps, isMain(intel, target));
     recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
     memory.retreatedAt = snapshot.tick;
   }
@@ -113,7 +122,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
   if (target && regrouped && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
-    return attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options);
+    return attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base));
   }
 
   const camp = creepCamp(intel, camps, strength, current?.mode === "creep" ? current.target : undefined);
@@ -215,11 +224,47 @@ function attackGroup(available: Unit[], front: Unit[], ids: string[]): Unit[] {
   return available.filter((unit) => ids.includes(unit.id) || distance(unit, center) <= JOIN_RANGE);
 }
 
-function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext, gaps: Record<string, number> = {}): GameCommand[] {
-  memory.general = { mode: "attack", target: { x: target.hall.x, y: target.hall.y }, targetHallId: target.hall.id, group: group.map((unit) => unit.id), groupStart, enemyGaps: gaps };
+function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, group: Unit[], front: Unit[], target: V6BaseIntel, rally: Point, groupStart: number, options: AiPolicyContext, gaps: Record<string, number> = {}, main = false): GameCommand[] {
   const marching = front.filter((unit) => group.includes(unit));
   const waiting = front.filter((unit) => !group.includes(unit));
-  return [...orderUnits(snapshot, owner, "attack", marching, target.hall, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
+  const pulse = main ? pulseStage(snapshot, memory, group, marching, target) : undefined;
+  memory.general = {
+    mode: "attack",
+    target: { x: target.hall.x, y: target.hall.y },
+    targetHallId: target.hall.id,
+    group: group.map((unit) => unit.id),
+    groupStart,
+    enemyGaps: gaps,
+    ...(pulse ? { stage: pulse.stage, stageSince: pulse.since } : {}),
+  };
+  const goal = pulse?.stage === "gather" ? pulse.point : target.hall;
+  return [...orderUnits(snapshot, owner, "attack", marching, goal, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
+}
+
+// Gather out of reach until most casters can summon (or the wait runs out), then strike; a new attack gathers again.
+function pulseStage(snapshot: GameSnapshot, memory: V6PolicyMemory, group: Unit[], marching: Unit[], target: V6BaseIntel) {
+  const current = memory.general?.mode === "attack" && memory.general.targetHallId === target.hall.id ? memory.general : undefined;
+  const center = marching.length > 0 ? averagePoint(marching) : target.hall;
+  const point = toward(target.hall, center, STAGE_DISTANCE);
+  if (current?.stage === "strike") return { stage: "strike" as const, since: current.stageSince ?? snapshot.tick, point };
+  const since = current?.stage === "gather" ? (current.stageSince ?? snapshot.tick) : snapshot.tick;
+  const casters = group.filter(isSummoner);
+  const ready = casters.filter((unit) => unit.cooldown === 0).length >= casters.length * STRIKE_READY_SHARE;
+  const gathered = marching.filter((unit) => distance(unit, point) <= GATHERED_RANGE).length >= marching.length * GATHERED_SHARE;
+  if ((ready && gathered) || snapshot.tick - since >= GATHER_TICKS) {
+    recordPlay(memory, "general:pulse");
+    return { stage: "strike" as const, since: snapshot.tick, point };
+  }
+  return { stage: "gather" as const, since, point };
+}
+
+function isSummoner(unit: Unit) {
+  return unit.kind === "summoner" || unit.kind === "pyreCaller";
+}
+
+function isMain(intel: V6Intel, base: V6BaseIntel) {
+  const enemy = intel.enemies.find((candidate) => candidate.owner === base.owner);
+  return Boolean(enemy && mainHall(enemy)?.id === base.hall.id);
 }
 
 function order(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext): GameCommand[] {

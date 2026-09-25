@@ -155,3 +155,14 @@ Carried into the AI, each change judged on the 1000 tune games (baseline 458 wit
 | An enemy expansion is judged only by the units at it | 900 | |
 
 Tried and not kept: four heavies (knights, cinder revenants) in every late phase, 864.
+
+Later the same day, on top of 900:
+
+| Change | Tune | Note |
+|---|---|---|
+| Raider host: party after the second sanctum, no speed training | 903 | noise, kept for the simpler build |
+| Late casters up to 44 (from 30/28) | 913 | V6 had banked 3000 gold beside a V5 it could not break |
+| Pulse against a main: gather 850 out, summons held, strike when three quarters can cast | 918 | a 1500s siege of V5's thirty archers ended at 1622s |
+
+Tried and not kept: counting armies that arrive before an expansion falls (888); clearing a far base site only when V6
+outweighs every enemy army (899). Fresh seeds, never tuned on, gave 906 for the 900 build.
