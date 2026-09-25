@@ -115,6 +115,8 @@ const TOWER_BREAK_MIN_UNITS = 3;
 const TOWER_BREAK_ARMY_REACH = 700;
 const TOWER_BUILDER_SNIPE_RANGE = 1_300;
 const OUTNUMBERED_ARMY_RATIO = 2;
+const V5_SHOOTER_UPGRADE_BASE = 4;
+const V5_SHOOTER_UPGRADE_STEP = 3;
 const OUTNUMBERED_MIN_ENEMY_FIGHTERS = 5;
 const OUTNUMBERED_OPENING_END_TICK = 300 * 20;
 const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "priest", "emberAcolyte"]);
@@ -882,6 +884,8 @@ function isV2PriorityWeaponTiming(snapshot: GameSnapshot, owner: PlayerId, upgra
 }
 
 function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): UpgradeKind | undefined {
+  const shooterUpgrade = nextV5ShooterUpgradeKind(snapshot, owner, options);
+  if (shooterUpgrade) return shooterUpgrade;
   if (upgradeAvailable(snapshot, owner, "weaponTraining")) {
     const weaponUnits = upgradeBenefitingUnits(snapshot, owner, "weaponTraining");
     const level = upgradeLevel(snapshot, owner, "weaponTraining");
@@ -896,6 +900,19 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   }
   const v5LateUpgrade = nextV5LateUpgradeKind(snapshot, owner, options);
   if (v5LateUpgrade) return v5LateUpgrade;
+  return undefined;
+}
+
+// @@@v5-shooter-upgrades - Priced in the arena on V5's own fights with a shooter army, one more level was worth about 93
+// value per fight for range, 90 for speed, 55 for weapons and 42 for plating: reach outranges the melee that chases it,
+// speed lets archers walk away from mercenaries. Those two go first once there are shooters to carry them.
+function nextV5ShooterUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): UpgradeKind | undefined {
+  if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return undefined;
+  const shooters = combatUnits(snapshot, owner).filter((unit) => unit.attackRange > 100 && unit.attackDamage > 0).length;
+  for (const upgradeKind of ["rangeTraining", "speedTraining"] as const) {
+    if (!v5LateUpgradeResearchable(snapshot, owner, upgradeKind)) continue;
+    if (shooters >= V5_SHOOTER_UPGRADE_BASE + upgradeLevel(snapshot, owner, upgradeKind) * V5_SHOOTER_UPGRADE_STEP) return upgradeKind;
+  }
   return undefined;
 }
 

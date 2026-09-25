@@ -524,7 +524,7 @@ describe("SDK preset AI policy", () => {
     expect(entries).toEqual([]);
   });
 
-  it("v5 severe two-mine pressure trains combat before another worker once combat gold is ready", () => {
+  it("v5 severe two-mine pressure trains a shooter before another worker once its gold is ready", () => {
     const scene = sketchScene("v5-severe-two-mine-combat-before-worker")
       .map("bareDuel")
       .replaceDefaults()
@@ -535,7 +535,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v5", 500, 500)
       .townHall("v5", 900, 700)
       .building("v5", "barracks", 620, 560, { id: "v5-barracks" })
-      .building("v5", "archeryRange", 700, 560)
+      .building("v5", "archeryRange", 700, 560, { id: "v5-range" })
       .tower("v5", 650, 500)
       .worker("v5", 520, 540, { order: { type: "mine", resourceId: "v5-main-mine", phase: "gather", timer: 0 } })
       .worker("v5", 540, 560, { order: { type: "mine", resourceId: "v5-main-mine", phase: "gather", timer: 0 } })
@@ -553,7 +553,7 @@ describe("SDK preset AI policy", () => {
     for (let index = 0; index < 2; index += 1) scene.unit("v5", "footman", 700 + index * 28, 620);
     for (let index = 0; index < 5; index += 1) scene.unit("v3a", index % 2 === 0 ? "footman" : "lancer", 930 + index * 34, 610 + (index % 2) * 28);
     const game = scene.build().createGame();
-    game.players.v5!.gold = UNIT_DEFS.lancer.cost;
+    game.players.v5!.gold = UNIT_DEFS.archer.cost;
 
     const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.training], {
       version: "v2",
@@ -561,7 +561,8 @@ describe("SDK preset AI policy", () => {
       teams: game.teams,
     });
 
-    expect(entries[0]?.command).toEqual({ type: "train", buildingId: "v5-barracks", unitKind: "lancer" });
+    // With a range standing, the barracks stays idle: V5 fights with shooters.
+    expect(entries[0]?.command).toEqual({ type: "train", buildingId: "v5-range", unitKind: "archer" });
   });
 
   it("lets V5 keep training one-base workers beyond the ordinary saturated mine count", () => {
@@ -2233,7 +2234,7 @@ describe("SDK preset AI policy", () => {
     expect(v5Entries.find((entry) => entry.scriptId === "expansion")?.command).toMatchObject({ type: "build", buildingKind: "townHall" });
   });
 
-  it("v5 restores missing two-base core production before banking for a catch-up third", () => {
+  it("v5 banks for a catch-up third once its range and barracks core stands", () => {
     const scene = sketchScene("v5-two-base-core-production-before-third-bank")
       .map("openClaims")
       .replaceDefaults()
@@ -2278,7 +2279,8 @@ describe("SDK preset AI policy", () => {
       teams: game.teams,
     });
 
-    expect(entries.find((entry) => entry.scriptId === "productionBuilding")?.command).toMatchObject({ type: "build", unitId: "v5-builder", buildingKind: "stables" });
+    // Range and barracks are the whole core of a shooter army; a third shooter building waits behind the catch-up hall.
+    expect(entries.find((entry) => entry.scriptId === "productionBuilding")).toBeUndefined();
   });
 
   it("v5 grove adds workshop tech after its two-base 1v2 core army and caster chain are online", () => {
@@ -2371,6 +2373,7 @@ describe("SDK preset AI policy", () => {
       .building("v5", "stables", 780, 560)
       .building("v5", "barracks", 620, 640)
       .building("v5", "archeryRange", 700, 640)
+      .building("v5", "archeryRange", 700, 720)
       .building("v5", "stables", 780, 640)
       .building("v5", "sanctum", 860, 560)
       .building("v5", "workshop", 940, 560, { id: "v5-workshop" })
@@ -5960,7 +5963,7 @@ describe("SDK preset AI policy", () => {
     const production = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
 
     expect(expansion).toBeUndefined();
-    expect(production).toMatchObject({ type: "build", buildingKind: "barracks" });
+    expect(production).toMatchObject({ type: "build", buildingKind: "archeryRange" });
   });
 
   it("v5 banks two-mine worker gold for the first core production building when severely outnumbered", () => {
@@ -6049,7 +6052,8 @@ describe("SDK preset AI policy", () => {
       .goldMine("v3c-main-mine", 3340, 3800, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v5!.gold = 155;
+    // Short of the 150g range that opens V5 production, still above a worker.
+    game.players.v5!.gold = BUILDING_DEFS.archeryRange.cost - 5;
     for (const worker of game.units.filter((unit) => unit.owner === "v5" && unit.kind === "worker")) {
       worker.order = { type: "mine", resourceId: "v5-main-mine", phase: "toMine", timer: 0 };
     }
@@ -6086,7 +6090,7 @@ describe("SDK preset AI policy", () => {
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "build", buildingKind: "barracks" });
+    expect(command).toMatchObject({ type: "build", buildingKind: "archeryRange" });
   });
 
   it("v5 builds first core production while a severe-economy opening tower is still incomplete", () => {
@@ -6116,7 +6120,7 @@ describe("SDK preset AI policy", () => {
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "build", buildingKind: "barracks" });
+    expect(command).toMatchObject({ type: "build", buildingKind: "archeryRange" });
   });
 
   it("v5 banks worker gold while the severe-economy first core production is still building", () => {
@@ -6189,7 +6193,7 @@ describe("SDK preset AI policy", () => {
       .player("v3b", { team: "south", race: "ember" })
       .player("v3c", { team: "south", race: "grove" })
       .townHall("v5", 500, 500, { id: "v5-main" })
-      .building("v5", "emberForge", 620, 620, { id: "v5-forge" })
+      .building("v5", "cinderSpire", 620, 620, { id: "v5-spire" })
       .worker("v5", 520, 540, { id: "v5-worker-a" })
       .worker("v5", 540, 560, { id: "v5-worker-b" })
       .unit("v5", "mercenary", 620, 540)
@@ -6210,7 +6214,7 @@ describe("SDK preset AI policy", () => {
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.training], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "train", buildingId: "v5-forge", unitKind: "emberRavager" });
+    expect(command).toMatchObject({ type: "train", buildingId: "v5-spire", unitKind: "sparkArcher" });
   });
 
   it("v5 banks worker gold for the first trained combat unit after early mercenary tempo", () => {
@@ -6382,12 +6386,12 @@ describe("SDK preset AI policy", () => {
       .player("v3b", { team: "south", race: "ember" })
       .player("v3c", { team: "south", race: "grove" })
       .townHall("v5", 500, 500, { id: "v5-main" })
-      .building("v5", "barracks", 620, 620, { id: "v5-barracks" })
+      .building("v5", "archeryRange", 620, 620, { id: "v5-range" })
       .worker("v5", 520, 540, { id: "v5-worker-a" })
       .worker("v5", 540, 560, { id: "v5-worker-b" })
       .worker("v5", 560, 540)
       .worker("v5", 580, 560)
-      .unit("v5", "footman", 650, 620)
+      .unit("v5", "archer", 650, 620)
       .townHall("v3a", 3300, 3000)
       .townHall("v3b", 3300, 3400)
       .townHall("v3c", 3300, 3800)
@@ -6397,11 +6401,11 @@ describe("SDK preset AI policy", () => {
       .goldMine("v3c-main-mine", 3340, 3800, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v5!.gold = 100;
+    game.players.v5!.gold = UNIT_DEFS.archer.cost;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.training], { version: "v2", requestedVersion: "v5", teams: game.teams })[0];
 
-    expect(command).toMatchObject({ type: "train", buildingId: "v5-barracks", unitKind: "footman" });
+    expect(command).toMatchObject({ type: "train", buildingId: "v5-range", unitKind: "archer" });
   });
 
   it("v5 keeps core combat production ahead of two-mine worker saturation when severely outnumbered", () => {

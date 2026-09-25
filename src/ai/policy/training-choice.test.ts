@@ -158,22 +158,19 @@ describe("AI training choice", () => {
     expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("emberAcolyte");
   });
 
-  it("lets v5 ember train an acolyte before the first spark when the core is wounded", () => {
-    const scene = sketchScene("training-choice-v5-ember-wounded-first-acolyte")
-      .map("bareDuel")
-      .replaceDefaults()
-      .player("v5", { team: "north", race: "ember" })
-      .townHall("v5", 500, 500)
-      .building("v5", "cinderSpire", 700, 620, { id: "spire" })
-      .unit("v5", "emberRavager", 760, 620, { hp: 48 })
-      .unit("v5", "cinderRunner", 790, 650, { hp: 42 })
-      .unit("v5", "emberRavager", 820, 680, { hp: 64 });
-    const game = scene.build().createGame();
-    game.players.v5!.gold = 520;
-    const snapshot = snapshotGame(game);
-    const spire = snapshot.buildings.find((building) => building.id === "spire");
-    if (!spire) throw new Error("missing cinder spire");
-
-    expect(trainingChoice(snapshot, "v5", spire, { version: "v2", requestedVersion: "v5" })).toBe("emberAcolyte");
+  it("keeps a v5 ember spire on spark archers until six fighters stand, then adds one acolyte", () => {
+    const spireChoice = (army: number) => {
+      let scene = sketchScene(`training-choice-v5-ember-spire-${army}`)
+        .map("bareDuel")
+        .replaceDefaults()
+        .player("v5", { team: "north", race: "ember" })
+        .townHall("v5", 500, 500)
+        .building("v5", "cinderSpire", 700, 620, { id: "spire" });
+      for (let index = 0; index < army; index += 1) scene = scene.unit("v5", "sparkArcher", 760 + index * 24, 620, { hp: 40 });
+      const snapshot = snapshotGame(scene.build().createGame());
+      return trainingChoice(snapshot, "v5", snapshot.buildings.find((building) => building.id === "spire")!, { version: "v2", requestedVersion: "v5" });
+    };
+    expect(spireChoice(3)).toBe("sparkArcher");
+    expect(spireChoice(6)).toBe("emberAcolyte");
   });
 });

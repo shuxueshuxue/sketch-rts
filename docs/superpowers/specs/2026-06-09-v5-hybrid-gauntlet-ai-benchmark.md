@@ -323,6 +323,29 @@ First module results on it: focusing the enemy with the most damage per second p
 
 Rejected before the arena, on the full benchmark: a V5 commander that owns the army while a wave is on or closing on a town hall. Engaging the wave itself lost `147` wins over eight tune seeds (it chased enemies 1300 away and fed new units in one at a time); holding the point and fighting only attackers kept 3 of 12 sample wins; only recalling far squads and pausing errands scored `770` tune and `740` fresh (pausing alone `780`, recalling alone `792`). The existing base-defense logic plus V3's own stopline (V3 turns back from a strong army at home) beat every version of it.
 
+### 2026-09-25 Ranged Core
+
+The arena answered a question the 1v2 benchmark never could: what V5's army should be made of. Replaying the same 654 fights with V5's own units swapped:
+
+- its archers swapped for melee: trade `1.54` -> `1.11`, about `-245` value per fight on every kind of fight;
+- its melee swapped for archers (Grove) or spark archers (Ember), at the same or slightly higher cost: trade `2.61`, net value per fight nearly doubled, fights won `2754` -> `3151` of `3924`, `+422` per fight in home defense;
+- keeping two melee bodies in front of the archers: worse than none (`2.15`), because the melee runs ahead and pulls the shooters in.
+
+V3 and V4-TR field footmen, ravagers and mercenaries that run at a kiting line and die on the way in. V5 now builds its shooter building first (archery range for Grove, cinder spire for Ember), trains from barracks or forges only until that building stands, adds more ranges or spires (up to three) where it used to duplicate core production, and keeps its spire on spark archers with one acolyte once six fighters stand.
+
+Two more arena-priced modules ride on it:
+
+- stutter step: a shooter whose weapon is reloading steps away from a melee attacker by exactly the distance it can walk before the next shot (`2.61` -> `2.75` trade on shooter armies; `+64` per fight on home defense, `+46` attacking);
+- upgrades priced on shooter armies, per extra level: range `+93` per fight, speed `+90`, weapons `+55`, plating `+42`. Range and speed training now come first once four shooters stand (three more per level).
+
+Results (1000-game sets, fresh and final seeds untouched while building):
+
+- ten tune seeds: `825` -> `918` (ranged core) -> `935` (with stutter step and shooter upgrades), per seed `93 95 95 94 91 91 93 96 91 96`;
+- ten fresh seeds (`v5-extra-1` through `-10`): `799` -> `915` -> `930` (with stutter step) -> `941`;
+- untouched final seeds: `420/500` -> `477/500` (`92 99 95 95 96`).
+
+Together `2353/2500` (94.1%), from `2044/2500` (81.8%).
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.

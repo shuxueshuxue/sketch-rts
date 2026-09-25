@@ -190,7 +190,34 @@ function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: 
   };
 }
 
+// @@@v5-stutter-step - A shooter reloading next to a melee attacker is taking free swings. While its weapon is on cooldown it
+// steps away exactly as far as it can walk before the next shot is ready, then fires again: no damage lost, fewer hits taken.
+const STUTTER_MIN_STEP = 30;
+const STUTTER_MAX_STEP = 160;
+const STUTTER_THREAT_MARGIN = 60;
+const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "emberAcolyte", "fieldMedic"]);
+
+function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
+  const threat = enemies
+    .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN)
+    .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
+  if (!threat) return undefined;
+  const step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown);
+  if (step < STUTTER_MIN_STEP) return undefined;
+  const dx = unit.x - threat.x;
+  const dy = unit.y - threat.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const homeX = safePoint.x - unit.x;
+  const homeY = safePoint.y - unit.y;
+  const homeLength = Math.hypot(homeX, homeY) || 1;
+  const x = clamp(unit.x + (dx / length) * step + (homeX / homeLength) * step * 0.3, 0, snapshot.map.width);
+  const y = clamp(unit.y + (dy / length) * step + (homeY / homeLength) * step * 0.3, 0, snapshot.map.height);
+  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x, y }, options);
+}
+
 function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (isV5HybridPolicy(options)) return v5StutterStepCommand(snapshot, owner, unit, enemies, safePoint, options);
   if (options.version !== "v2" || unit.attackRange <= 100 || unit.hp >= unit.maxHp * 0.82) return undefined;
   const closeMelee = enemies
     .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= Math.max(75, enemy.attackRange + enemy.radius + unit.radius))

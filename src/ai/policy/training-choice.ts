@@ -8,6 +8,10 @@ import { isV5HybridPolicy } from "./versions";
 
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
   const race = playerState(snapshot, owner).race;
+  if (isV5HybridPolicy(options)) {
+    const rangedCore = v5RangedCoreChoice(snapshot, owner, building);
+    if (rangedCore !== "default") return rangedCore;
+  }
   if (building.kind === "emberForge") return emberForgeChoice(snapshot, owner);
   if (building.kind === "cinderSpire") return emberSpireChoice(snapshot, owner, options);
   if (building.kind === "barracks") return soldierChoice(snapshot, owner);
@@ -43,6 +47,22 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
   }
   if (building.kind === "workshop") return "golem";
   return undefined;
+}
+
+// @@@v5-ranged-core - Replayed on its own, every captured V5 fight traded 2.6 to 1 with its melee swapped for archers and
+// 1.1 to 1 with its archers swapped for melee (1.5 as built). V3 and V4-TR bring footmen, ravagers and mercenaries that
+// run at a kiting line and die on the way in.
+// A melee front made it worse again (2.15 to 1 with two melee kept): melee bodies run ahead and pull the shooters in.
+// Barracks and forges only fill the gap until the first shooter building stands.
+function v5RangedCoreChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building): TrainableUnitKind | undefined | "default" {
+  const army = combatUnits(snapshot, owner);
+  const shooterBuilding = playerState(snapshot, owner).race === "ember" ? "cinderSpire" : "archeryRange";
+  if (building.kind === "barracks" || building.kind === "emberForge") return completeBuildings(snapshot, owner, shooterBuilding).length > 0 ? undefined : "default";
+  if (building.kind === "cinderSpire") {
+    const acolytes = army.filter((unit) => unit.kind === "emberAcolyte").length;
+    return army.length >= 6 && acolytes < 1 ? "emberAcolyte" : "sparkArcher";
+  }
+  return "default";
 }
 
 function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUnitKind {
