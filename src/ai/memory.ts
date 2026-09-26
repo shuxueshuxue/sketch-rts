@@ -39,7 +39,7 @@ export type V6PolicyMemory = {
   retreatedAt?: number;
   raid?: { unitIds: string[]; startStrength?: number; targetHallId: string; targetOwner: PlayerId; reason: string; sinceTick: number; phase: "travel" | "strike" | "home" };
   closeout?: { unitIds: string[]; targetId: string; sinceTick: number };
-  general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number>; stage?: "gather" | "strike"; stageSince?: number };
+  general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number>; stage?: "gather" | "strike"; stageSince?: number; leash?: number };
   casualties?: { count: number; lastChangeTick: number };
   // The camp V7 is creeping (see v7-creeping): where it stood, the gathering point, the stage and the group; and a camp
   // given up, not tried again until the tick given.

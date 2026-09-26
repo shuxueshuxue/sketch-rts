@@ -95,12 +95,18 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const strength = strengthOf(available);
   const current = memory.general;
 
-  const defense = defendTarget(intel);
+  const defense = isV7Policy(options) ? v7DefendTarget(intel) : defendTarget(intel);
   if (defense) {
     if (isV7Policy(options)) delete memory.creep;
-    if (defense.inCover || strength >= defense.threat * FIELD_EDGE) return order(snapshot, owner, memory, "defend", front, defense.point, options);
+    const edge = current?.mode === "defend" ? defense.stay : defense.edge;
+    // V7's badly wounded step back to the hall behind the line (see v7-one-voice); the rest hold it.
+    const wounded = isV7Policy(options) ? front.filter((unit) => unit.hp < unit.maxHp * V7_WOUNDED_SHARE && unit.expiresTick === undefined) : [];
+    const line = front.filter((unit) => !wounded.includes(unit));
+    // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
+    if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
+    if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
-    return order(snapshot, owner, memory, "guard", front, defense.guard, options);
+    return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
   }
 
   if (current?.mode === "attack") {
@@ -199,7 +205,40 @@ function defendTarget(intel: V6Intel) {
   const point = averagePoint(intrusion.attackers);
   const hall = intel.ownHalls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, point) < distance(best, point) ? candidate : best), undefined) ?? intel.home;
   const inCover = intrusion.attackers.some((unit) => distance(unit, hall) <= HALL_COVER || intel.ownTowers.some((tower) => distance(tower, unit) <= tower.attackRange + TOWER_COVER));
-  return { point, threat: intrusion.threat, inCover, guard: toward(hall, point, GUARD_STEP) };
+  return { point, field: point, threat: intrusion.threat, inCover, cover: 0, edge: FIELD_EDGE, stay: FIELD_EDGE, guard: toward(hall, point, GUARD_STEP), leash: undefined, hall };
+}
+
+// @@@v7-defend - With a clear edge (FIELD_EDGE) V7 marches at the attackers' middle as V6 does and destroys them there:
+// held at its hall instead, it let V3's summoners walk away whole (cedarPass, 8:10) where marching out had cut 23 units
+// to 7. Short of that edge V7 defends a base at the base, since the attackers' middle can stand a thousand paces out:
+// V7's five ravagers chased spark archers and a medic 700 from their main and died one by one (wispQuarry, 4:50), and four
+// footmen swung between that middle and a guard point behind the hall, walking 700 paces under seven archers' fire
+// (mapleCircuit, 4:20). So the army stands just in front of the threatened hall, on the attackers' side, and fights what
+// comes within its leash there, under the hall's towers and beside its workers. The main is always fought for; an
+// outlying hall only with the army and the towers covering it worth most of the threat, else the army falls back to the
+// main (against two armies V7 met them at a towerless natural, five against thirteen, and lost the army and the workers).
+// Once it fights there it stays until the fight turns well against it: at a single bar, nine footmen swung between the
+// natural and the main every second as the count wavered around it (duskGrove, 6:50). And a unit that has chased past the
+// leash walks back: sent back fighting, it took up the chase again on the way (the last of them died 920 out).
+const V7_DEFEND_EDGE = 0.9;
+const V7_DEFEND_STAY = 0.6;
+const V7_WOUNDED_SHARE = 0.35;
+const V7_DEFEND_STEP = 200;
+const V7_DEFEND_LEASH = 450;
+
+function v7DefendTarget(intel: V6Intel) {
+  const intrusion = intel.intrusion;
+  if (!intrusion) return undefined;
+  const attackers = averagePoint(intrusion.attackers);
+  const hall = intel.ownHalls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, attackers) < distance(best, attackers) ? candidate : best), undefined) ?? intel.home;
+  const towers = intel.ownTowers.filter((tower) => distance(tower, hall) <= tower.attackRange + TOWER_COVER);
+  const main = distance(hall, intel.home) < 1;
+  return { point: toward(hall, attackers, V7_DEFEND_STEP), field: attackers, threat: intrusion.threat, inCover: main, cover: towers.length * TOWER_STRENGTH, edge: V7_DEFEND_EDGE, stay: V7_DEFEND_STAY, guard: toward(intel.home, attackers, V7_DEFEND_STEP), leash: V7_DEFEND_LEASH, hall };
+}
+
+function stepBack(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {
+  const walking = wounded.filter((unit) => distance(unit, hall) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, hall) <= ORDER_SLACK));
+  return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: hall.x, y: hall.y }, options)] : [];
 }
 
 function toward(from: Point, to: Point, length: number): Point {
@@ -326,24 +365,30 @@ function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
   return Boolean(enemy && mainHall(enemy)?.id === base.hall.id);
 }
 
-function order(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext): GameCommand[] {
+function order(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leash?: number): GameCommand[] {
   const holdingSince = mode === "hold" ? (memory.general?.mode === "hold" ? (memory.general.holdingSince ?? snapshot.tick) : snapshot.tick) : undefined;
-  memory.general = { mode, target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}) };
-  return orderUnits(snapshot, owner, mode, front, point, options);
+  memory.general = { mode, target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}), ...(leash !== undefined ? { leash } : {}) };
+  return orderUnits(snapshot, owner, mode, front, point, options, leash);
 }
 
-function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext): GameCommand[] {
+function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leashOverride?: number): GameCommand[] {
   // Holding and guarding keep the army on a short leash: a unit chasing a retreating enemy out past the towers is called
   // back (spirits chased V5's raiders from the rally to 1400 paces from home, and died there to the archers behind them).
-  const leash = mode === "guard" || mode === "hold" ? GUARD_LEASH : LOCAL_RANGE;
+  const leash = leashOverride ?? (mode === "guard" || mode === "hold" ? GUARD_LEASH : LOCAL_RANGE);
   const straying = front.filter((unit) => {
     if ((mode === "hold" || mode === "guard") && distance(unit, point) <= 350 && (unit.order.type === "idle" || unit.order.type === "attack")) return false;
     const going = unit.order.type === "attackMove" && distance(unit.order, point) <= ORDER_SLACK;
     const fighting = unit.order.type === "attack" && distance(unit, point) <= leash;
     return !going && !fighting;
   });
-  if (straying.length === 0) return [];
-  return [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: straying.map((unit) => unit.id), x: point.x, y: point.y }, options)];
+  // Past an explicit leash a unit breaks off and walks back; inside it, it fights its way back to the point.
+  const breaking = leashOverride === undefined ? [] : straying.filter((unit) => distance(unit, point) > leashOverride);
+  const returning = straying.filter((unit) => !breaking.includes(unit));
+  const walking = breaking.filter((unit) => !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
+  return [
+    ...(walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : []),
+    ...(returning.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: returning.map((unit) => unit.id), x: point.x, y: point.y }, options)] : []),
+  ];
 }
 
 // How far each enemy army's center stands from the attack.

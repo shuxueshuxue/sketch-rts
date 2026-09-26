@@ -58,6 +58,15 @@ function naturalBoard(name: string, options: { footmen: { x: number; y: number; 
   return { game, memory, plan: () => planV6General(snapshotGame(game), "v6", { ...V7, teams: game.teams, memory }) };
 }
 
+const NATURAL = { x: 500, y: 1_500 };
+const AT_NATURAL = [
+  { x: 600, y: 1_450 },
+  { x: 620, y: 1_470 },
+  { x: 640, y: 1_450 },
+  { x: 600, y: 1_480 },
+  { x: 620, y: 1_430 },
+];
+
 function attackMoves(commands: GameCommand[]) {
   return commands.filter((command): command is Extract<GameCommand, { type: "attackMove" }> => command.type === "attackMove");
 }
@@ -206,6 +215,48 @@ describe("v6 general", () => {
     // Fourteen enemy footmen in all: five is too few to cross the map, twelve is enough.
     expect(deny(5)).not.toBe("attack");
     expect(deny(12)).toBe("attack");
+  });
+
+  it("V7 meets attackers at its natural just in front of the hall, and walks a unit that chased past the leash back", () => {
+    const { game, memory, plan } = naturalBoard("v7-general-defend-natural", { footmen: [...AT_NATURAL, { x: 1_300, y: 1_900 }], attackers: 6 });
+    game.units.find((unit) => unit.id === "v7-footman-5")!.order = { type: "attack", targetId: "v3-footman-0" };
+    const commands = plan();
+    expect(memory.v6?.general?.mode).toBe("defend");
+    const point = memory.v6!.general!.target!;
+    // Six against six: two hundred paces in front of the hall, toward the attackers, not at their middle (about 530 out).
+    expect(Math.hypot(point.x - NATURAL.x, point.y - NATURAL.y)).toBeCloseTo(200, 0);
+    expect(point.x).toBeGreaterThan(NATURAL.x);
+    const back = commands.find((command) => command.type === "move");
+    expect(back).toMatchObject({ unitIds: ["v7-footman-5"], x: point.x, y: point.y });
+    expect(attackMoves(commands).flatMap((command) => command.unitIds)).not.toContain("v7-footman-5");
+  });
+
+  it("V7 marches at attackers it clearly outweighs, and destroys them where they stand", () => {
+    const { memory, plan } = naturalBoard("v7-general-defend-field", { footmen: AT_NATURAL, attackers: 3 });
+    plan();
+    expect(memory.v6?.general?.mode).toBe("defend");
+    const point = memory.v6!.general!.target!;
+    expect(Math.hypot(point.x - (900 + 30), point.y - 1_700)).toBeLessThan(5);
+  });
+
+  it("V7 falls back to its main from a natural whose attackers outweigh what stands there, but stays at a fight it has taken until it turns well against it", () => {
+    const three = AT_NATURAL.slice(0, 3);
+    const fresh = naturalBoard("v7-general-natural-fallback", { footmen: three, attackers: 4 });
+    fresh.plan();
+    expect(fresh.memory.v6?.general?.mode).toBe("guard");
+    const guard = fresh.memory.v6!.general!.target!;
+    expect(Math.hypot(guard.x - 500, guard.y - 500)).toBeLessThanOrEqual(200 + 1);
+    const holding = naturalBoard("v7-general-natural-stay", { footmen: three, attackers: 4 });
+    holding.memory.v6!.general = { mode: "defend", target: { x: 680, y: 1_580 } };
+    holding.plan();
+    expect(holding.memory.v6?.general?.mode).toBe("defend");
+  });
+
+  it("V7 steps its badly wounded back to the hall behind the line while the rest hold it", () => {
+    const { plan } = naturalBoard("v7-general-defend-wounded", { footmen: [...AT_NATURAL, { x: 700, y: 1_600, hp: 40 }], attackers: 5 });
+    const commands = plan();
+    expect(commands.find((command) => command.type === "move")).toMatchObject({ unitIds: ["v7-footman-5"], x: NATURAL.x, y: NATURAL.y });
+    expect(attackMoves(commands).flatMap((command) => command.unitIds)).not.toContain("v7-footman-5");
   });
 
   it("V7 clears no further mine's guard while its natural rises and the phase wants no third base", () => {

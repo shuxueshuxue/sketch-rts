@@ -80,6 +80,7 @@ import { planV6Closeout, v6CloseoutUnitIds } from "./v6/closeout";
 import { planV6Economy } from "./v6/economy";
 import { planV6General } from "./v6/general";
 import { v7CreepGroupIds } from "./v7/creep";
+import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -149,6 +150,8 @@ export const AI_SCRIPT_LIBRARY = {
   items: { id: "items", phase: "tactics", run: planItemCommands },
   abilities: { id: "abilities", phase: "tactics", run: planAbilityCommands },
   focusFire: { id: "focusFire", phase: "tactics", run: planFocusFireCommand },
+  v7FocusFire: { id: "focusFire", phase: "tactics", run: planV7FocusFire },
+  v7Skirmish: { id: "skirmishPreservation", phase: "tactics", run: planV7Skirmish },
   towerBreaker: { id: "towerBreaker", phase: "tactics", run: planTowerBreaker },
   expansionRegroup: { id: "expansionRegroup", phase: "tactics", run: planExpansionRegroup },
   desperateWorkerFight: { id: "desperateWorkerFight", phase: "tactics", run: planDesperateWorkerFight },
@@ -240,7 +243,13 @@ export const V6_AI_STACK: AiScript[] = [
 ];
 
 // V7 starts as V6's stack; it plays both races and must hold against any pair of V3, V5 and V6.
-export const V7_AI_STACK: AiScript[] = [...V6_AI_STACK];
+// Its focus fire keeps to the general's defense leash (see v7-leash), and while the general holds ground the skirmish script
+// leaves the front to it (see v7-one-voice).
+const V7_REPLACEMENTS = new Map<AiScript, AiScript>([
+  [AI_SCRIPT_LIBRARY.focusFire, AI_SCRIPT_LIBRARY.v7FocusFire],
+  [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.v7Skirmish],
+]);
+export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMENTS.get(script) ?? script);
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
