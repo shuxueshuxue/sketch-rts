@@ -7,6 +7,7 @@ import { shouldRenderBuildingRally } from "./rally-visual";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
+import type { UnitMotionSmoother } from "./unit-motion";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Owner, ResourceNode, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
@@ -45,6 +46,8 @@ export type WorldFrame = {
   /** Animation clock in milliseconds (flames, auras, bobbing items). */
   now: number;
   facing: UnitFacingTracker;
+  /** Glides charging riders between snapshots by `now` (see unit-motion); without it units are drawn at their snapshot spots. */
+  motion?: UnitMotionSmoother;
   labels: WorldLabels;
   selectedIds?: ReadonlySet<string>;
   selectedCampId?: string;
@@ -58,6 +61,7 @@ type Painter = {
   height: number;
   now: number;
   facing: UnitFacingTracker;
+  motion: UnitMotionSmoother | undefined;
   labels: WorldLabels;
   selectedIds: ReadonlySet<string>;
   selectedCampId: string | undefined;
@@ -75,11 +79,13 @@ export function drawWorld(frame: WorldFrame) {
     height: frame.view.height / zoom,
     now: frame.now,
     facing: frame.facing,
+    motion: frame.motion,
     labels: frame.labels,
     selectedIds: frame.selectedIds ?? NO_SELECTION,
     selectedCampId: frame.selectedCampId,
   };
   const { ctx, snapshot } = painter;
+  painter.motion?.update(snapshot, painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
   drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
@@ -90,7 +96,17 @@ export function drawWorld(frame: WorldFrame) {
   drawBuildings(painter, snapshot.buildings);
   drawUnits(painter, snapshot.units);
   drawCarriedItems(painter, snapshot.items);
-  renderWorldEffects({ ctx, effects: snapshot.effects, worldToScreen: (point) => worldToScreen(painter, point), nearScreen: (point, pad) => nearScreen(painter, point, pad) });
+  const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
+  renderWorldEffects({
+    ctx,
+    effects: snapshot.effects,
+    worldToScreen: (point) => worldToScreen(painter, point),
+    nearScreen: (point, pad) => nearScreen(painter, point, pad),
+    unitPosition: (id) => {
+      const unit = unitsById.get(id);
+      return unit ? drawnPosition(painter, unit) : undefined;
+    },
+  });
   ctx.restore();
 }
 
@@ -230,7 +246,8 @@ function drawUnits(painter: Painter, units: Unit[]) {
   trackUnitFacing(painter.facing, painter.snapshot);
   for (const unit of units) {
     const shake = hitFeedbackOffset(painter.snapshot, unit, unit.radius);
-    const point = worldToScreen(painter, { x: unit.x + shake.x, y: unit.y + shake.y });
+    const at = drawnPosition(painter, unit);
+    const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y });
     const scale = unitGlyphScale(unit.radius);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
     const selected = painter.selectedIds.has(unit.id);
@@ -250,6 +267,11 @@ function drawUnits(painter: Painter, units: Unit[]) {
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
     drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
   }
+}
+
+// Where a unit is drawn this frame: its snapshot spot, or on its glide when it charges (see unit-motion).
+function drawnPosition(painter: Painter, unit: Unit): Point {
+  return painter.motion ? painter.motion.position(unit, painter.now) : unit;
 }
 
 function hasCarriedItem(snapshot: GameSnapshot, unit: Unit, kind: WorldItem["kind"]) {
@@ -292,7 +314,9 @@ function drawItems(painter: Painter, items: WorldItem[]) {
 function drawCarriedItems(painter: Painter, items: WorldItem[]) {
   for (const item of items) {
     if (!item.carrierId) continue;
-    const point = worldToScreen(painter, item);
+    // A carried item rides with its carrier as drawn (on its glide while it charges).
+    const carrier = painter.motion ? painter.snapshot.units.find((unit) => unit.id === item.carrierId) : undefined;
+    const point = worldToScreen(painter, carrier ? drawnPosition(painter, carrier) : item);
     if (!nearScreen(painter, point, 60)) continue;
     drawItemGlyph(painter.ctx, item, { x: point.x + 12, y: point.y - 34 }, painter.now, true);
   }

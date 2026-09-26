@@ -39,6 +39,7 @@ import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
+import { UnitMotionSmoother } from "./unit-motion";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
@@ -142,6 +143,7 @@ let activeRoomWatchId: string | undefined;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 const unitFacing = new UnitFacingTracker();
+const unitMotion = new UnitMotionSmoother();
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 const controlGroups: ControlGroups = {};
@@ -2302,6 +2304,7 @@ function draw() {
     view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height },
     now: performance.now(),
     facing: unitFacing,
+    motion: unitMotion,
     labels: worldLabels,
     selectedIds,
     ...(selectedCampId ? { selectedCampId } : {}),

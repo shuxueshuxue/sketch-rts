@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import { seconds } from "../shared/time";
 import type { UnitKind, WorldEffect } from "../shared/types";
 
@@ -10,6 +10,8 @@ type RenderWorldEffectsOptions = {
   effects: WorldEffect[];
   worldToScreen: (point: Point) => Point;
   nearScreen: (point: Point, pad: number) => boolean;
+  /** Where a unit is drawn (world point), for effects that follow one (a charging rider's trail). */
+  unitPosition?: (unitId: string) => Point | undefined;
 };
 
 type EffectRenderContext = {
@@ -69,9 +71,28 @@ export function hammerEffectFrame(kind: HammerEffectKind, life: number, remainin
 }
 
 export function renderWorldEffects(options: RenderWorldEffectsOptions) {
-  const { ctx, effects, worldToScreen, nearScreen } = options;
+  const { ctx, effects, worldToScreen, nearScreen, unitPosition } = options;
   const renderer = { ctx, worldToScreen };
   for (const effect of effects) {
+    if (effect.type === "chargeTrail" && hasEffectVector(effect)) {
+      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
+      const to = worldToScreen({ x: effect.toX, y: effect.toY });
+      const life = effect.remaining / effect.duration;
+      const followed = effect.unitId ? unitPosition?.(effect.unitId) : undefined;
+      const rider = followed ? worldToScreen(followed) : estimatedRider(from, to, life, effect.sourceKind);
+      if (!nearScreen(rider, 140) && !nearScreen(from, 140)) continue;
+      drawChargeTrail(ctx, chargeTrailFrame(from, rider, to, life, riderRadius(effect.sourceKind)));
+      continue;
+    }
+
+    if (effect.type === "chargeImpact" && hasEffectVector(effect)) {
+      const point = worldToScreen(effect);
+      if (!nearScreen(point, 90)) continue;
+      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
+      drawChargeImpact(ctx, chargeImpactFrame(point, from, effect.remaining / effect.duration));
+      continue;
+    }
+
     if (effect.type === "projectile" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
       const to = worldToScreen({ x: effect.toX, y: effect.toY });
@@ -597,10 +618,11 @@ function strokePolyline(ctx: CanvasRenderingContext2D, points: Point[]) {
 export type ProjectileLook = "arrow" | "orb" | "streak";
 
 // @@@projectile-look - The shooter's rules pick the missile: a unit with a spell throws a small spell orb (its weapon is
-// weak), any other ranged unit and a tower shoot an arrow. Item blasts carry no shooter and keep the old streak.
+// weak), any other ranged unit and a tower shoot an arrow (a rider's charge is no spell). Item blasts carry no shooter
+// and keep the old streak.
 export function projectileLook(sourceKind: WorldEffect["sourceKind"]): ProjectileLook {
   if (!sourceKind) return "streak";
-  if (isUnitKind(sourceKind) && UNIT_DEFS[sourceKind].abilities.length > 0) return "orb";
+  if (isUnitKind(sourceKind) && hasSpell(sourceKind)) return "orb";
   return "arrow";
 }
 
@@ -794,6 +816,211 @@ function drawProjectileTrail(ctx: CanvasRenderingContext2D, from: Point, to: Poi
   ctx.fill();
   ctx.stroke();
   ctx.restore();
+}
+
+// @@@charge-trail - A charging rider leaves speed lines streaming off its back and a wake of dust kicked up along the
+// ground it has covered, the newest puffs small and thick at its hooves, the older ones spread and thin; both fade as
+// the dash runs out. On impact (chargeImpact) a flash of gold rays and sparks thrown forward bursts on the target inside
+// a ring of dust rolling outward. Everything is placed from the effect's own numbers (no randomness, no clock), so a
+// frame drawn twice is drawn the same, in the browser and in recordings alike.
+const CHARGE_STREAKS = [
+  { side: -0.85, length: 0.72 },
+  { side: -0.4, length: 1 },
+  { side: 0.05, length: 0.86 },
+  { side: 0.45, length: 0.96 },
+  { side: 0.9, length: 0.66 },
+] as const;
+const CHARGE_STREAK_REACH = 96;
+const CHARGE_DUST_SPACING = 24;
+const CHARGE_DUST_REACH = 260;
+const DUST = { r: 150, g: 122, b: 84 };
+const DUST_EDGE = { r: 104, g: 80, b: 50 };
+const INK = { r: 36, g: 49, b: 38 };
+const SPARK_HOT = { r: 255, g: 246, b: 204 };
+const SPARK = { r: 242, g: 184, b: 60 };
+
+export type ChargeTrailFrame = {
+  streaks: { from: Point; to: Point; alpha: number; width: number }[];
+  puffs: { x: number; y: number; rx: number; ry: number; alpha: number }[];
+};
+
+export function chargeTrailFrame(start: Point, rider: Point, target: Point, life: number, radius: number): ChargeTrailFrame {
+  const heading = unitVector(start, target) ?? unitVector(start, rider) ?? { x: 1, y: 0 };
+  const across = { x: -heading.y, y: heading.x };
+  const traveled = Math.hypot(rider.x - start.x, rider.y - start.y);
+  // Full strength while the rider runs, easing out over the dash's last third.
+  const strength = Math.max(0, Math.min(1, life * 3));
+  const back = { x: rider.x - heading.x * radius * 0.7, y: rider.y - heading.y * radius * 0.7 };
+  const streakReach = Math.min(CHARGE_STREAK_REACH, traveled + radius);
+  const streaks = CHARGE_STREAKS.map((streak, index) => {
+    const from = { x: back.x + across.x * streak.side * radius, y: back.y + across.y * streak.side * radius };
+    const length = streakReach * streak.length;
+    return {
+      from,
+      to: { x: from.x - heading.x * length, y: from.y - heading.y * length },
+      alpha: (0.34 + 0.18 * (index % 2)) * strength,
+      width: index === 2 ? 2.4 : 1.6,
+    };
+  }).filter((streak) => streak.alpha > 0.01 && streakReach > 2);
+  const ground = radius * 0.72;
+  const puffs: ChargeTrailFrame["puffs"] = [];
+  const wake = Math.min(traveled, CHARGE_DUST_REACH);
+  for (let behind = CHARGE_DUST_SPACING * 0.5, index = 0; behind <= wake; behind += CHARGE_DUST_SPACING, index += 1) {
+    const age = behind / CHARGE_DUST_REACH;
+    const sway = Math.sin(index * 2.39 + 0.7) * radius * 0.35;
+    const rx = radius * (0.34 + age * 0.9);
+    puffs.push({
+      x: rider.x - heading.x * behind + across.x * sway,
+      y: rider.y - heading.y * behind + across.y * sway + ground,
+      rx,
+      ry: rx * 0.5,
+      alpha: (0.46 * (1 - age) + 0.04) * strength,
+    });
+  }
+  return { streaks, puffs: puffs.filter((puff) => puff.alpha > 0.01) };
+}
+
+function drawChargeTrail(ctx: CanvasRenderingContext2D, frame: ChargeTrailFrame) {
+  ctx.save();
+  // Oldest dust first, so the fresh puffs at the hooves sit on top.
+  for (const puff of [...frame.puffs].reverse()) {
+    ctx.fillStyle = rgba(DUST, puff.alpha * 0.55);
+    ctx.strokeStyle = rgba(DUST_EDGE, puff.alpha);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(puff.x, puff.y, puff.rx, puff.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.lineCap = "round";
+  for (const streak of frame.streaks) {
+    const gradient = ctx.createLinearGradient(streak.from.x, streak.from.y, streak.to.x, streak.to.y);
+    gradient.addColorStop(0, rgba(INK, streak.alpha));
+    gradient.addColorStop(1, rgba(INK, 0));
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = streak.width;
+    ctx.beginPath();
+    ctx.moveTo(streak.from.x, streak.from.y);
+    ctx.lineTo(streak.to.x, streak.to.y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Without the rider's drawn position (an effect drawn on its own), guess it from the dash's progress.
+function estimatedRider(from: Point, to: Point, life: number, sourceKind: WorldEffect["sourceKind"]): Point {
+  const heading = unitVector(from, to);
+  if (!heading) return from;
+  const run = Math.max(0, Math.hypot(to.x - from.x, to.y - from.y) - riderRadius(sourceKind) * 2) * Math.max(0, Math.min(1, 1 - life));
+  return { x: from.x + heading.x * run, y: from.y + heading.y * run };
+}
+
+function riderRadius(sourceKind: WorldEffect["sourceKind"]) {
+  return sourceKind && isUnitKind(sourceKind) ? UNIT_DEFS[sourceKind].radius : 18;
+}
+
+const CHARGE_RAYS = 8;
+const CHARGE_SPARKS = [-1.05, -0.62, -0.28, 0, 0.3, 0.66, 1.1] as const;
+
+export type ChargeImpactFrame = {
+  ring: { x: number; y: number; rx: number; ry: number; alpha: number };
+  rays: { from: Point; to: Point; alpha: number }[];
+  sparks: { from: Point; to: Point; alpha: number }[];
+  clods: { x: number; y: number; r: number; alpha: number }[];
+};
+
+export function chargeImpactFrame(point: Point, rider: Point, life: number): ChargeImpactFrame {
+  const clamped = Math.max(0, Math.min(1, life));
+  const burst = 1 - clamped;
+  const heading = unitVector(rider, point) ?? { x: 1, y: 0 };
+  const angle = Math.atan2(heading.y, heading.x);
+  const flash = Math.max(0, (clamped - 0.35) / 0.65);
+  const rays = flash > 0
+    ? Array.from({ length: CHARGE_RAYS }, (_, index) => {
+        const ray = angle + (index / CHARGE_RAYS) * Math.PI * 2;
+        const inner = 8 + burst * 12;
+        const outer = inner + 14 + burst * 30 * (index % 2 === 0 ? 1 : 0.55);
+        return {
+          from: { x: point.x + Math.cos(ray) * inner, y: point.y + Math.sin(ray) * inner * 0.8 },
+          to: { x: point.x + Math.cos(ray) * outer, y: point.y + Math.sin(ray) * outer * 0.8 },
+          alpha: flash,
+        };
+      })
+    : [];
+  const sparks = CHARGE_SPARKS.map((spread, index) => {
+    const direction = angle + spread;
+    const reach = 14 + burst * (46 + (index % 3) * 12);
+    const fall = burst * burst * 10;
+    const head = { x: point.x + Math.cos(direction) * reach, y: point.y + Math.sin(direction) * reach * 0.8 + fall };
+    return { from: { x: head.x - Math.cos(direction) * 10, y: head.y - Math.sin(direction) * 8 }, to: head, alpha: clamped };
+  });
+  const ringRx = 18 + burst * 50;
+  const clods = Array.from({ length: 6 }, (_, index) => {
+    const around = angle + Math.PI * (0.2 + index * 0.32);
+    return {
+      x: point.x + Math.cos(around) * ringRx * 0.92,
+      y: point.y + 12 + Math.sin(around) * ringRx * 0.36,
+      r: 2.5 + (index % 3) + burst * 3,
+      alpha: clamped * 0.8,
+    };
+  });
+  return { ring: { x: point.x, y: point.y + 12, rx: ringRx, ry: ringRx * 0.38, alpha: clamped }, rays, sparks, clods };
+}
+
+function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFrame) {
+  const { ring } = frame;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.fillStyle = rgba(DUST, ring.alpha * 0.22);
+  ctx.strokeStyle = rgba(DUST_EDGE, ring.alpha * 0.75);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.ellipse(ring.x, ring.y, ring.rx, ring.ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  for (const clod of frame.clods) {
+    ctx.fillStyle = rgba(DUST, clod.alpha * 0.7);
+    ctx.strokeStyle = rgba(DUST_EDGE, clod.alpha);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(clod.x, clod.y, clod.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  if (frame.rays.length > 0) {
+    ctx.shadowColor = rgba(SPARK, 0.7);
+    ctx.shadowBlur = 10;
+    for (const ray of frame.rays) {
+      ctx.strokeStyle = rgba(SPARK, ray.alpha * 0.85);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(ray.from.x, ray.from.y);
+      ctx.lineTo(ray.to.x, ray.to.y);
+      ctx.stroke();
+      ctx.strokeStyle = rgba(SPARK_HOT, ray.alpha);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+  }
+  for (const spark of frame.sparks) {
+    ctx.strokeStyle = rgba(SPARK, spark.alpha);
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(spark.from.x, spark.from.y);
+    ctx.lineTo(spark.to.x, spark.to.y);
+    ctx.stroke();
+    ctx.fillStyle = rgba(SPARK_HOT, spark.alpha);
+    ctx.beginPath();
+    ctx.arc(spark.to.x, spark.to.y, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function unitVector(from: Point, to: Point): Point | undefined {
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  return length > 0.001 ? { x: (to.x - from.x) / length, y: (to.y - from.y) / length } : undefined;
 }
 
 function mixRgb(from: { r: number; g: number; b: number }, to: { r: number; g: number; b: number }, amount: number) {

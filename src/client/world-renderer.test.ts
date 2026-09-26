@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setScratchCanvasFactory } from "./art/scratch-canvas";
 import { UnitFacingTracker } from "./unit-facing";
+import { UnitMotionSmoother } from "./unit-motion";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
 import { sketchScene } from "../sdk/scene";
-import { snapshotGame } from "../shared/sim";
+import { snapshotGame, stepGame } from "../shared/sim";
 import type { GameSnapshot } from "../shared/types";
 
 type Call = { name: string; args: unknown[] };
@@ -161,6 +162,50 @@ describe("world renderer", () => {
     trackUnitFacing(twice, snapshot);
     expect(twice.facing("south-footman")).toBe(once.facing("south-footman"));
     expect(once.facing("south-footman")).toBe(-1);
+  });
+
+  it("glides a charging rider between snapshots on the frame clock when given a smoother, its trail with it", () => {
+    const game = sketchScene("charge")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("north", { team: "north", race: "grove" })
+      .player("south", { team: "south", race: "ember" })
+      .unit("north", "raider", 300, 300, { id: "rider" })
+      .unit("south", "footman", 720, 300, { id: "foe" })
+      .build()
+      .createGame();
+    let previous = snapshotGame(game);
+    let current = previous;
+    for (let step = 0; step < 10 && current.units.find((unit) => unit.id === "rider")!.order.type !== "charge"; step += 1) {
+      stepGame(game);
+      previous = current;
+      current = snapshotGame(game);
+    }
+    const before = previous.units.find((unit) => unit.id === "rider")!;
+    const after = current.units.find((unit) => unit.id === "rider")!;
+    expect(after.order.type).toBe("charge");
+    expect(current.effects.some((effect) => effect.type === "chargeTrail" && effect.unitId === "rider")).toBe(true);
+    const riderX = (drawn: { calls: Call[] }) => {
+      const draws = spriteDraws(drawn.calls);
+      return Math.min(...draws.map((call) => (call.args[1] as number) + (call.args[3] as number) / 2));
+    };
+
+    // The glide starts when the new tick is first drawn and runs one tick's time (50 ms here).
+    const motion = new UnitMotionSmoother(50);
+    drawWorld(frame(previous, { motion, now: 1000 }));
+    const arriving = frame(current, { motion, now: 1050 });
+    drawWorld(arriving);
+    expect(riderX(arriving)).toBeCloseTo(before.x);
+    const halfway = frame(current, { motion, now: 1075 });
+    drawWorld(halfway);
+    expect(riderX(halfway)).toBeCloseTo((before.x + after.x) / 2);
+    // The trail's speed lines leave from the rider as drawn, not from its snapshot spot ahead.
+    const lines = halfway.calls.filter((call) => call.name === "moveTo").map((call) => call.args[0] as number);
+    expect(lines.some((x) => x > before.x && x < (before.x + after.x) / 2)).toBe(true);
+
+    const plain = frame(current);
+    drawWorld(plain);
+    expect(riderX(plain)).toBeCloseTo(after.x);
   });
 
   it("inks the two default seats and neutrals in fixed colours and any other owner from one palette", () => {

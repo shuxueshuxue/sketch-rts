@@ -50,6 +50,14 @@ describe("unit facing", () => {
     expect(nextFacing({ facing: -1, anchorX: 100 }, at(100, attackMove), { x: 100 + FACING_TURN_DISTANCE * 10, y: 0 }).facing).toBe(1);
   });
 
+  it("faces the unit it charges, whichever way it was facing before the dash", () => {
+    const charge: UnitOrder = { type: "charge", targetId: "enemy", ticks: 3, resume: { type: "attack", targetId: "enemy" } };
+    const tracker = new UnitFacingTracker();
+    const rider = { id: "rider", x: 400, y: 0, order: charge } as Unit;
+    tracker.update([rider], (id) => (id === "enemy" ? { x: 100, y: 0 } : undefined));
+    expect(tracker.facing("rider")).toBe(-1);
+  });
+
   it("remembers facing per unit between frames and forgets units that are gone", () => {
     const tracker = new UnitFacingTracker();
     const unit = (id: string, x: number) => ({ id, x, y: 0, order: idle }) as Unit;

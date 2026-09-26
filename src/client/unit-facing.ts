@@ -12,8 +12,8 @@ export type FacingState = { facing: Facing; anchorX: number };
 export const FACING_TURN_DISTANCE = 3;
 
 /**
- * Where a unit faces this frame: toward the enemy it is attacking, otherwise the way it last moved sideways. A unit
- * that stops keeps its facing.
+ * Where a unit faces this frame: toward the enemy it is attacking or charging, otherwise the way it last moved sideways.
+ * A unit that stops keeps its facing.
  */
 export function nextFacing(previous: FacingState | undefined, unit: Pick<Unit, "x" | "order">, target: Point | undefined): FacingState {
   if (target && Math.abs(target.x - unit.x) >= FACING_TURN_DISTANCE) return { facing: target.x < unit.x ? -1 : 1, anchorX: unit.x };
@@ -27,7 +27,7 @@ export function nextFacing(previous: FacingState | undefined, unit: Pick<Unit, "
 }
 
 export function attackTargetId(order: UnitOrder) {
-  return order.type === "attack" || order.type === "attackMove" ? order.targetId : undefined;
+  return order.type === "attack" || order.type === "attackMove" || order.type === "charge" ? order.targetId : undefined;
 }
 
 /** Remembers each unit's facing between frames; units that are gone are forgotten. */
