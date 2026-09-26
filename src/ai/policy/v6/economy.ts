@@ -164,7 +164,11 @@ function workerGoals(economy: Economy): Goal[] {
   const rising = economy.own.filter((building) => building.kind === "townHall" && !building.complete).length;
   const next = economy.phase.wants.some((want) => "bases" in want && want.bases > halls) ? 1 : 0;
   const soldiers = economy.intel.army.filter((unit) => unit.kind !== "spirit").length;
-  const target = Math.min(WORKER_CAP, Math.max(MIN_WORKERS, (activeMiningBaseCount(economy.snapshot, economy.owner) + rising + next) * WORKERS_PER_MINE + 1), MIN_WORKERS + soldiers);
+  // While the phase's units still wait on their tier, the army is a few stand-ins and the gold goes to farms: pacing the
+  // workers to that army held V6 at nine workers until minute four. The mines alone set the target until the bar is met.
+  const waitingOnTier = economy.phase.wants.some((want) => "unit" in want && !tierUnlocked(economy.snapshot, economy.owner, want.unit));
+  const paced = waitingOnTier ? WORKER_CAP : MIN_WORKERS + soldiers;
+  const target = Math.min(WORKER_CAP, Math.max(MIN_WORKERS, (activeMiningBaseCount(economy.snapshot, economy.owner) + rising + next) * WORKERS_PER_MINE + 1), paced);
   if (economy.workers.length + queued >= target) return [];
   const early = economy.workers.length < MIN_WORKERS;
   return economy.bases

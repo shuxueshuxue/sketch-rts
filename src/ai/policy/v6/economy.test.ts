@@ -95,10 +95,15 @@ describe("v6 economy", () => {
   });
 
   it("trains the next base's workers ahead of its hall, but no faster than the army grows", () => {
-    const { plan } = base("v6-econ-workers", { gold: 500, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner"], farms: 5 });
+    const { plan } = base("v6-econ-workers", { gold: 500, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner"], farms: ONE_FARM_SHORT + 1 });
     expect(of(plan(), "train").map((command) => command.unitKind)).toContain("worker");
-    const { plan: bare } = base("v6-econ-workers-bare", { gold: 500, buildings: ["sanctum"], farms: 5 });
+    const { plan: bare } = base("v6-econ-workers-bare", { gold: 500, buildings: ["sanctum"], farms: ONE_FARM_SHORT + 1 });
     expect(of(bare(), "train").map((command) => command.unitKind)).not.toContain("worker");
+  });
+
+  it("keeps training workers without an army while the phase's units still wait on their tier", () => {
+    const { plan } = base("v6-econ-workers-tier", { gold: 500, buildings: ["sanctum"], farms: ONE_FARM_SHORT - 1 });
+    expect(of(plan(), "train").map((command) => command.unitKind)).toContain("worker");
   });
 
   it("builds a farm first when supply runs short", () => {
