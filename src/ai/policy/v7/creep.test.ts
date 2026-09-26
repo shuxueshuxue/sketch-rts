@@ -80,7 +80,7 @@ describe("V7 creeping", () => {
     expect(Math.hypot(staging.x - choice!.camp.center.x, staging.y - choice!.camp.center.y)).toBeGreaterThan(200);
     const gathering = continueV7Creep(snapshot(), "v7", front(snapshot()), camps, intelOf(snapshot(), options), options)!;
     expect(memory.v6!.creep!.stage).toBe("gather");
-    expect(of(gathering.commands, "attackMove")).toEqual([expect.objectContaining({ x: staging.x, y: staging.y })]);
+    expect(of(gathering.commands, "move")).toEqual([expect.objectContaining({ x: staging.x, y: staging.y })]);
     // Everyone at the staging point: in they go, together, at the camp.
     for (const unit of game.units.filter((candidate) => candidate.owner === "v7" && candidate.kind === "footman")) {
       unit.x = staging.x;

@@ -31,7 +31,12 @@ import { combatRating, strengthOf } from "../v6/strength";
 // brutes to a healer.)
 const CAMP_LINK = 300;
 const FORCE_MARGIN = 1.5;
-const STAGING_GAP = 230;
+// @@@v7-creep-walk - The group walks to its staging point and waits there without picking fights. An attack-move takes on
+// any creep within the auto-acquire range (230) of the walker, and the route was only kept 260 from other camps: four
+// ravagers drifting a little off the line took the natural's camp on the way to another and lost two there
+// (cobaltVale, 2:40). A plain move is only stopped by a creep that attacks it first, at 150; idle at the staging point the
+// group again acquires within 230, so the point stands that far out from the camp's edge and a margin more.
+const STAGING_GAP = 300;
 const ROUTE_CLEARANCE = 260;
 const GATHERED_RANGE = 180;
 const GATHERED_SHARE = 0.8;
@@ -164,8 +169,8 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
   }
   const commands: GameCommand[] = [];
   if (state.stage === "gather") {
-    const walking = group.filter((unit) => distance(unit, staging) > GATHERED_RANGE && !heading(unit, staging, "attackMove"));
-    if (walking.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: walking.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
+    const walking = group.filter((unit) => distance(unit, staging) > GATHERED_RANGE && !heading(unit, staging, "move"));
+    if (walking.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
     return { commands, point: staging };
   }
   // In the camp: the badly wounded step back to the staging point (the creeps leash home), the rest fight on.
