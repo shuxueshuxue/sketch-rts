@@ -1011,7 +1011,7 @@ describe("sketch RTS simulation", () => {
     stepMany(game, 1);
 
     const projectile = game.effects.find((effect) => effect.type === "projectile");
-    expect(projectile).toMatchObject({ fromX: archer.x, fromY: archer.y, toX: target.x, toY: target.y });
+    expect(projectile).toMatchObject({ fromX: archer.x, fromY: archer.y, toX: target.x, toY: target.y, sourceKind: "archer" });
 
     stepMany(game, 24);
 
