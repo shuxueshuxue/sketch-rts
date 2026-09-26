@@ -46,7 +46,7 @@ import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, uni
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { renderWorldEffects } from "./effect-renderer";
+import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
 import { BUILDING_CARDS } from "./content/buildings";
@@ -2394,6 +2394,8 @@ function drawUnits(units: Unit[]) {
       ctx.stroke();
     }
     drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), unitFacing.facing(unit.id));
+    const scorch = unit.effects.find((effect) => effect.type === "scorch");
+    if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, performance.now(), scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
     drawHp(point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);

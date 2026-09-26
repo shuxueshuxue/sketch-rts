@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { seconds } from "../shared/time";
 import type { UnitKind, WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -192,7 +193,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "flameBurn" || effect.type === "scorch") {
-      drawFlameBurnEffect(ctx, point, life);
+      drawFlameBurnEffect(ctx, point, life, effect.remaining);
       continue;
     }
 
@@ -501,30 +502,87 @@ function drawExperienceBurstEffect(ctx: CanvasRenderingContext2D, point: Point, 
   ctx.restore();
 }
 
-function drawFlameBurnEffect(ctx: CanvasRenderingContext2D, point: Point, life: number) {
+// @@@flame-burn - A burn is fire on the body, not a blast ring: flame tongues lick up from the target's feet, embers
+// drift off, and a faint scorch mark stays on the ground while it fades.
+const FLAME_TONGUES: readonly { dx: number; base: number; height: number; width: number }[] = [
+  { dx: -9, base: 12, height: 14, width: 7 },
+  { dx: -3, base: 13, height: 22, width: 8 },
+  { dx: 4, base: 12, height: 19, width: 8 },
+  { dx: 10, base: 11, height: 12, width: 6 },
+  { dx: 0, base: 5, height: 11, width: 5 },
+];
+
+function drawFlameBurnEffect(ctx: CanvasRenderingContext2D, point: Point, life: number, tick: number) {
   const flare = 1 - life;
+  const strength = Math.min(1, life * 1.6);
+  const rise = Math.min(1, flare * 4);
   ctx.save();
-  ctx.lineCap = "round";
-  ctx.shadowColor = "rgba(205, 84, 42, 0.48)";
-  ctx.shadowBlur = 12;
-  ctx.strokeStyle = `rgba(179, 66, 45, ${0.42 + life * 0.34})`;
-  ctx.fillStyle = `rgba(218, 92, 42, ${0.07 + life * 0.12})`;
-  ctx.lineWidth = 3;
+  ctx.fillStyle = `rgba(74, 44, 28, ${0.16 * life})`;
   ctx.beginPath();
-  ctx.arc(point.x, point.y, 22 + flare * 28, 0, Math.PI * 2);
+  ctx.ellipse(point.x, point.y + 13, 15, 5.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
-  ctx.strokeStyle = `rgba(247, 171, 78, ${0.5 + life * 0.28})`;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 7; i += 1) {
-    const angle = i * 0.9 + flare * 2;
-    const base = 20 + flare * 20;
-    ctx.beginPath();
-    ctx.moveTo(point.x + Math.cos(angle) * base, point.y + Math.sin(angle) * base);
-    ctx.quadraticCurveTo(point.x + Math.cos(angle + 0.35) * (base + 10), point.y + Math.sin(angle + 0.35) * (base + 10), point.x + Math.cos(angle + 0.1) * (base + 22), point.y + Math.sin(angle + 0.1) * (base + 22));
-    ctx.stroke();
-  }
+  const glow = ctx.createRadialGradient(point.x, point.y + 4, 0, point.x, point.y + 4, 24);
+  glow.addColorStop(0, `rgba(247, 150, 62, ${0.26 * strength})`);
+  glow.addColorStop(1, "rgba(247, 150, 62, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y + 4, 24, 0, Math.PI * 2);
+  ctx.fill();
+  FLAME_TONGUES.forEach((tongue, index) => {
+    const flicker = 0.78 + 0.22 * Math.sin(tick * 0.9 + index * 1.7);
+    drawFlameTongue(ctx, point.x + tongue.dx, point.y + tongue.base, tongue.height * rise * flicker, tongue.width, Math.sin(tick * 0.6 + index) * 2, strength * 0.85);
+  });
+  drawEmbers(ctx, point, flare, tick, 5, strength);
   ctx.restore();
+}
+
+/** Small flames that stay on a scorched unit for as long as the scorch lasts, fading over its last second. */
+export function drawScorchedUnitFlames(ctx: CanvasRenderingContext2D, point: Point, radius: number, now: number, remainingTicks: number) {
+  const strength = Math.min(1, remainingTicks / seconds(1)) * 0.6;
+  const tick = now / 50;
+  const spread = radius * 0.45;
+  ctx.save();
+  drawFlameTongue(ctx, point.x - spread, point.y + 4, 9 + Math.sin(tick * 0.8) * 2, 5, Math.sin(tick * 0.5) * 1.5, strength);
+  drawFlameTongue(ctx, point.x + spread * 0.6, point.y + 1, 12 + Math.sin(tick * 0.7 + 2) * 2.5, 6, Math.sin(tick * 0.45 + 1) * 1.5, strength);
+  drawEmbers(ctx, { x: point.x, y: point.y - 6 }, (tick / 40) % 1, tick, 3, strength);
+  ctx.restore();
+}
+
+function drawFlameTongue(ctx: CanvasRenderingContext2D, x: number, baseY: number, height: number, width: number, lean: number, alpha: number) {
+  if (height < 1 || alpha <= 0) return;
+  const tipX = x + lean;
+  const tipY = baseY - height;
+  const gradient = ctx.createLinearGradient(0, baseY, 0, tipY);
+  gradient.addColorStop(0, `rgba(186, 56, 38, ${alpha})`);
+  gradient.addColorStop(0.45, `rgba(236, 124, 48, ${alpha})`);
+  gradient.addColorStop(1, `rgba(255, 214, 110, ${alpha * 0.85})`);
+  ctx.fillStyle = gradient;
+  flameTonguePath(ctx, x, baseY, tipX, tipY, width, height);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 242, 196, ${alpha * 0.7})`;
+  flameTonguePath(ctx, x + lean * 0.2, baseY, x + lean * 0.6, baseY - height * 0.5, width * 0.42, height * 0.5);
+  ctx.fill();
+}
+
+function flameTonguePath(ctx: CanvasRenderingContext2D, x: number, baseY: number, tipX: number, tipY: number, width: number, height: number) {
+  ctx.beginPath();
+  ctx.moveTo(x - width / 2, baseY);
+  ctx.bezierCurveTo(x - width * 0.7, baseY - height * 0.45, tipX - width * 0.15, tipY + height * 0.25, tipX, tipY);
+  ctx.bezierCurveTo(tipX + width * 0.2, tipY + height * 0.3, x + width * 0.7, baseY - height * 0.4, x + width / 2, baseY);
+  ctx.quadraticCurveTo(x, baseY + width * 0.35, x - width / 2, baseY);
+  ctx.closePath();
+}
+
+function drawEmbers(ctx: CanvasRenderingContext2D, point: Point, phase: number, tick: number, count: number, strength: number) {
+  for (let index = 0; index < count; index += 1) {
+    const t = (phase + index * 0.19) % 1;
+    const x = point.x + Math.sin(index * 2.3 + tick * 0.25) * (5 + index * 2);
+    const y = point.y + 6 - t * 34;
+    ctx.fillStyle = `rgba(255, ${190 - index * 12}, 90, ${(1 - t) * 0.8 * strength})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function strokePolyline(ctx: CanvasRenderingContext2D, points: Point[]) {
