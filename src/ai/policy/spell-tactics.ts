@@ -8,7 +8,7 @@ import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./sna
 import { averagePoint, distance } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy, isV6Policy } from "./versions";
+import { isV5HybridPolicy, isV6Policy, isV7Policy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
@@ -83,6 +83,10 @@ function healerRegroupOrderCanMove(caster: Unit, target: { x: number; y: number 
 
 function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {
   const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => !target.effects.some((effect) => effect.type === def.statusType));
+  // @@@v7-curse-summoned - The witch's curse also deals 100 damage to a summoned unit, which kills an 85 hp spirit outright:
+  // one spirit less for the rest of its minute beats taking 60% off a soldier's damage for 18s.
+  const summoned = def.summonedDamage && isV7Policy(options) ? candidates.filter((target) => target.expiresTick !== undefined).sort((a, b) => distance(a, caster) - distance(b, caster))[0] : undefined;
+  if (summoned) return summoned;
   // A curse takes 55-60% off one unit's damage for 18s: spend it on the hardest hitter in reach, not the nearest body.
   if (isV6Policy(options)) return candidates.sort((a, b) => damagePerSecond(b) - damagePerSecond(a) || distance(a, caster) - distance(b, caster))[0];
   if (def.scorchedDamageMultiplier !== undefined) {

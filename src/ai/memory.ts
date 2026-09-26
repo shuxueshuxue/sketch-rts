@@ -41,6 +41,8 @@ export type V6PolicyMemory = {
   closeout?: { unitIds: string[]; targetId: string; sinceTick: number };
   general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number>; stage?: "gather" | "strike"; stageSince?: number };
   casualties?: { count: number; lastChangeTick: number };
+  // The tick of the backline's last think, and the gap before it: how soon the next think comes (V7's hold-fire).
+  backline?: { lastThinkTick: number; thinkGap?: number };
   plays?: Record<string, number>;
 };
 
