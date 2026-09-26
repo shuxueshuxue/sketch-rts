@@ -79,6 +79,7 @@ import { planV6CasterScreen, v6ScreenedCasterIds } from "./v6/backline";
 import { planV6Closeout, v6CloseoutUnitIds } from "./v6/closeout";
 import { planV6Economy } from "./v6/economy";
 import { planV6General } from "./v6/general";
+import { v7CreepGroupIds } from "./v7/creep";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -162,7 +163,7 @@ export const AI_SCRIPT_LIBRARY = {
   v6Backline: { id: "v6Backline", phase: "tactics", run: planV6CasterScreen, claimsUnits: v6ScreenedCasterIds },
   v6Raid: { id: "v6Raid", phase: "tactics", run: planV6Raid, claimsUnits: v6RaidUnitIds },
   v6Closeout: { id: "v6Closeout", phase: "tactics", run: planV6Closeout, claimsUnits: v6CloseoutUnitIds },
-  v6General: { id: "v6General", phase: "tactics", run: planV6General },
+  v6General: { id: "v6General", phase: "tactics", run: planV6General, claimsUnits: v7CreepGroupIds },
   v6Economy: { id: "v6Economy", phase: "economy", run: planV6Economy },
 } satisfies Record<string, AiScript>;
 

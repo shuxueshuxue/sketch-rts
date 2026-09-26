@@ -3,10 +3,11 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/
 import { resolveAiCommandIntent } from "../commands";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy } from "../versions";
+import { isV6Policy, isV7Policy } from "../versions";
 import { isBacklineKind } from "./backline";
 import { enemyPowerNear, nextExpansionMine, readV6Intel, type V6BaseIntel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
+import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
 import { v6Doctrine } from "./select";
 import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 
@@ -56,6 +57,7 @@ const WORN_SHARE = 0.5;
 const REGROUP_TICKS = 30 * 20;
 // The least army (march strength, about eleven summoners with their spirits) that goes for an enemy main.
 const MAIN_ATTACK_FLOOR = 18;
+const V7_FAR_ATTACK_SHARE = 0.7;
 const RETREAT_LINE = 0.8;
 // Out in the open the army meets attackers only with this edge; under its towers or at its hall it always fights.
 const FIELD_EDGE = 1.15;
@@ -95,6 +97,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
 
   const defense = defendTarget(intel);
   if (defense) {
+    if (isV7Policy(options)) delete memory.creep;
     if (defense.inCover || strength >= defense.threat * FIELD_EDGE) return order(snapshot, owner, memory, "defend", front, defense.point, options);
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
     return order(snapshot, owner, memory, "guard", front, defense.guard, options);
@@ -117,7 +120,22 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   }
 
   const camps = creepCamps(snapshot, intel);
-  const natural = expansionCamp(snapshot, intel, camps, strength);
+  // V7 creeps with its own procedure (see v7-creeping): a camp under way is finished first, the natural's guard next.
+  const v7Camps = isV7Policy(options) ? neutralCamps(snapshot) : [];
+  const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) === 0);
+  const v7NearHome = v7Reachable.filter((camp) => [intel.home, ...intel.ownHalls].some((hall) => distance(hall, camp.center) <= V7_HOME_REACH));
+  if (isV7Policy(options)) {
+    const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
+    if (under) return creepOrders(memory, under);
+    const mine = nextExpansionMine(snapshot, intel);
+    const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, v7Reachable, options, mine) : undefined;
+    if (guard) {
+      startV7Creep(snapshot, front, guard, options);
+      const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
+      if (started) return creepOrders(memory, started);
+    }
+  }
+  const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
   if (natural) {
     if (current?.mode !== "creep" || !current.target || distance(current.target, natural) > CAMP_RADIUS) recordPlay(memory, "general:clearExpansion");
     return order(snapshot, owner, memory, "creep", front, natural, options);
@@ -130,17 +148,37 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // A main is a long walk into two armies' reach: V6 marched four summoners at an enemy main 3165 away at 240s because both
   // armies had left it, met them on the way, and came home to lose its own. An expansion needs no such floor.
   const ready = !isMain(intel, target?.base) || marching >= MAIN_ATTACK_FLOOR;
-  if (target && regrouped && ready && (marching >= target.need || (idle && marching >= target.defended))) {
+  // @@@v7-far-attack - Against two opponents a march across the map meets both armies on the way: V7 sent five ravagers at
+  // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
+  // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
+  const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
+  const committed = !farOff || marching >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0) * V7_FAR_ATTACK_SHARE;
+  if (target && regrouped && ready && committed && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
     return attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base));
   }
 
+  if (isV7Policy(options)) {
+    const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
+    const choice = chooseV7Camp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
+    if (choice) {
+      startV7Creep(snapshot, front, choice, options);
+      const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
+      if (started) return creepOrders(memory, started);
+    }
+    return order(snapshot, owner, memory, "hold", front, rally, options);
+  }
   const camp = creepCamp(intel, camps, strength, current?.mode === "creep" ? current.target : undefined);
   if (camp) {
     if (current?.mode !== "creep" || !current.target || distance(current.target, camp) > CAMP_RADIUS) recordPlay(memory, "general:creep");
     return order(snapshot, owner, memory, "creep", front, camp, options);
   }
   return order(snapshot, owner, memory, "hold", front, rally, options);
+}
+
+function creepOrders(memory: V6PolicyMemory, under: { commands: GameCommand[]; point: Point }): GameCommand[] {
+  memory.general = { mode: "creep", target: { x: under.point.x, y: under.point.y } };
+  return under.commands;
 }
 
 // The attackers, the hall they are nearest, and whether any of them is already where the towers or the hall's defenders

@@ -8,6 +8,7 @@ import { planAbilityCommands } from "../spell-tactics";
 import { planV6General } from "./general";
 
 const V6 = { version: "v2", requestedVersion: "v6" } as const;
+const V7 = { version: "v2", requestedVersion: "v7" } as const;
 
 function steady(): AiPolicyMemory {
   const memory = createAiPolicyMemory();
@@ -170,6 +171,22 @@ describe("v6 general", () => {
     planV6General(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory });
     expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-expansion" });
     expect(memory.v6?.plays?.["general:attack:expansion"]).toBe(1);
+  });
+
+  it("V7 goes after a far expansion only with most of the two opponents' armies together behind it", () => {
+    const deny = (footmen: number) => {
+      const { game } = board(`v7-general-far-${footmen}`, { v6Footmen: 0, enemyFootmen: 0, enemyAt: "home" });
+      for (let index = 0; index < footmen; index += 1) game.spawnUnit("v6", "footman", 800 + (index % 5) * 30, 800 + Math.floor(index / 5) * 30);
+      game.buildings.push(createBuilding("v5-expansion", "v5", "townHall", 2_000, 1_800, false));
+      for (let index = 0; index < 2; index += 1) game.spawnUnit("v5", "footman", 2_050 + index * 30, 1_850);
+      for (let index = 0; index < 12; index += 1) game.spawnUnit("v5", "footman", 3_250 + (index % 4) * 30, 2_150 + Math.floor(index / 4) * 30);
+      const memory = steady();
+      planV6General(snapshotGame(game), "v6", { ...V7, teams: game.teams, memory });
+      return memory.v6?.general?.mode;
+    };
+    // Fourteen enemy footmen in all: five is too few to cross the map, twelve is enough.
+    expect(deny(5)).not.toBe("attack");
+    expect(deny(12)).toBe("attack");
   });
 
   it("does not march on an enemy main with a small army, however empty the main stands; an expansion needs no such floor", () => {

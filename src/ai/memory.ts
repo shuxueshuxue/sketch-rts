@@ -41,6 +41,10 @@ export type V6PolicyMemory = {
   closeout?: { unitIds: string[]; targetId: string; sinceTick: number };
   general?: { mode: "defend" | "guard" | "attack" | "creep" | "hold"; target?: { x: number; y: number }; targetHallId?: string; holdingSince?: number; group?: string[]; groupStart?: number; enemyGaps?: Record<string, number>; stage?: "gather" | "strike"; stageSince?: number };
   casualties?: { count: number; lastChangeTick: number };
+  // The camp V7 is creeping (see v7-creeping): where it stood, the gathering point, the stage and the group; and a camp
+  // given up, not tried again until the tick given.
+  creep?: { center: { x: number; y: number }; reach: number; staging: { x: number; y: number }; stage: "gather" | "engage"; since: number; group: string[] };
+  creepRetry?: { center: { x: number; y: number }; until: number };
   // The tick of the backline's last think, and the gap before it: how soon the next think comes (V7's hold-fire).
   backline?: { lastThinkTick: number; thinkGap?: number };
   plays?: Record<string, number>;
