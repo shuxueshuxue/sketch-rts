@@ -21,7 +21,7 @@ describe("gameplay tooltips", () => {
       requirements: ["Priest or field medic must be ready."],
       hotkey: "H",
     });
-    expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
+    expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
     expect(abilityTooltip("emberMend", "m")).toMatchObject({
       title: "Ember Mend",
       stats: expect.arrayContaining(["Restores 55 HP", "Range 240", "Cooldown 6.0s"]),
@@ -29,7 +29,7 @@ describe("gameplay tooltips", () => {
       hotkey: "M",
     });
     expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
-    expect(abilityTooltip("cinderSoul", "o").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 45.0s", "Cooldown 11.0s"]));
+    expect(abilityTooltip("cinderSoul", "o").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"]));
   });
 
   it("describes items with use conditions and damage numbers", () => {

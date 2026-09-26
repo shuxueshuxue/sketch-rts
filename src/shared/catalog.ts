@@ -37,7 +37,19 @@ export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
 export type AbilityDef =
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
-  | { behavior: "curse"; range: number; plannerRange: number; cooldown: number; effectDuration: number; damageMultiplier: number; scorchedDamageMultiplier?: number; statusType: "curse"; effectType: "curse" | "scorch" };
+  | {
+      behavior: "curse";
+      range: number;
+      plannerRange: number;
+      cooldown: number;
+      effectDuration: number;
+      damageMultiplier: number;
+      scorchedDamageMultiplier?: number;
+      // Damage dealt at once to a summoned target (a spirit has 85 hp): the witch's answer to a summoner's free army.
+      summonedDamage?: number;
+      statusType: "curse";
+      effectType: "curse" | "scorch";
+    };
 
 export type BuildingRules = {
   race?: RaceId;
@@ -129,7 +141,7 @@ export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMe
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
   summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
-  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, statusType: "curse", effectType: "curse" },
+  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: 100, statusType: "curse", effectType: "curse" },
   emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
   ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch" },

@@ -170,7 +170,7 @@ export const GROVE_UNITS = {
   },
   witch: {
     name: { en: "Witch", zh: "女巫" },
-    description: { en: "Debuff caster that weakens enemy damage through curse.", zh: "减益施法者，通过诅咒削弱敌方伤害。" },
+    description: { en: "Debuff caster that weakens enemy damage through curse; a cursed summoned unit also takes 100 damage.", zh: "减益施法者，通过诅咒削弱敌方伤害；被诅咒的召唤物还会受到 100 点伤害。" },
     command: { icon: "☾", hotkey: "c" },
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "spark"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },

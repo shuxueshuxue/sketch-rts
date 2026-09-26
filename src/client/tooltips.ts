@@ -253,13 +253,13 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     summon: {
       title: "Summon",
       body: "Creates a spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Cooldown 11.0s"],
+      stats: ["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"],
       requirements: ["Summoner must be ready.", "Target a nearby point."],
     },
     curse: {
       title: "Curse",
-      body: "Weakens an enemy unit so its attacks deal less damage.",
-      stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
+      body: "Weakens an enemy unit so its attacks deal less damage. A summoned unit also takes 100 damage.",
+      stats: ["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
       requirements: ["Witch must be ready.", "Target an enemy unit."],
     },
     emberMend: {
@@ -271,7 +271,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     cinderSoul: {
       title: "Cinder Soul",
       body: "Creates a shorter-lived spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Duration 45.0s", "Cooldown 11.0s"],
+      stats: ["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"],
       requirements: ["Pyre caller must be ready.", "Target a nearby point."],
     },
     ashCurse: {
@@ -291,13 +291,13 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     summon: {
       title: "召唤",
       body: "在附近地面目标点召唤一个灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "冷却 11.0s"],
+      stats: ["召唤 1 个灵体", "射程 260", "持续 60.0s", "冷却 40.0s"],
       requirements: ["召唤师必须准备就绪。", "目标必须是附近点位。"],
     },
     curse: {
       title: "诅咒",
-      body: "削弱敌方单位，使其攻击造成更少伤害。",
-      stats: ["敌方伤害 x0.4", "射程 280", "持续 18.0s", "冷却 7.5s"],
+      body: "削弱敌方单位，使其攻击造成更少伤害。召唤物还会受到 100 点伤害。",
+      stats: ["敌方伤害 x0.4", "对召唤物 100 伤害", "射程 280", "持续 18.0s", "冷却 7.5s"],
       requirements: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
     },
     emberMend: {
@@ -309,7 +309,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     cinderSoul: {
       title: "余火魂灵",
       body: "在附近地面目标点召唤一个持续时间较短的灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "持续 45.0s", "冷却 11.0s"],
+      stats: ["召唤 1 个灵体", "射程 260", "持续 60.0s", "冷却 40.0s"],
       requirements: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
     },
     ashCurse: {

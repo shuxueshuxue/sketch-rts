@@ -1139,6 +1139,7 @@ function applyCurse(game: Game, caster: Unit, target: Unit, def: Extract<(typeof
   target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(damageMultiplier !== 0.4 ? { damageMultiplier } : {}) });
   caster.cooldown = def.cooldown;
   addEffect(game, def.effectType, target.x, target.y, 46);
+  if (def.summonedDamage && target.expiresTick !== undefined) applyDamage(game, caster, target, def.summonedDamage);
 }
 
 function outgoingDamageMultiplier(unit: Unit) {
