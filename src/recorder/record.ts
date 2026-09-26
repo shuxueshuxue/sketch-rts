@@ -4,6 +4,7 @@ import { setScratchCanvasFactory } from "../client/art/scratch-canvas";
 import { PAPER_BASE } from "../client/atlas-art";
 import { createI18n, type Locale } from "../client/i18n";
 import { UnitFacingTracker } from "../client/unit-facing";
+import { UnitMotionSmoother } from "../client/unit-motion";
 import { drawWorld, trackUnitFacing, worldLabelsFor } from "../client/world-renderer";
 import { snapshotGame } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
@@ -79,6 +80,8 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
   });
   const facing = new UnitFacingTracker();
   trackUnitFacing(facing, game);
+  // Charging riders glide between ticks by the frame clock, as in the client (see unit-motion).
+  const motion = new UnitMotionSmoother();
   const canvas = createCanvas(options.width, options.height);
   const ctx = canvas.getContext("2d");
   const camera = new RecorderCamera(options.camera, options);
@@ -111,6 +114,7 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       now: (index * 1000) / options.fps,
       facing,
       labels,
+      motion,
     });
     const frame: RecordedFrame = {
       index,
