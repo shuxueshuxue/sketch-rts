@@ -37,4 +37,10 @@ describe("client i18n", () => {
     expect(zh.label("moonWell")).toBe("月井");
     expect(() => zh.label("missingKind" as LabelKey)).toThrow("Missing zh label for missingKind");
   });
+
+  it("names autocast the same way on the status line as on the spell tooltips", () => {
+    expect(createI18n("zh").t("status.autocastOn", { ability: "冲锋" })).toBe("冲锋：自动施法已开启。");
+    expect(createI18n("zh").t("status.autocastOff", { ability: "冲锋" })).toBe("冲锋：自动施法已关闭。");
+    expect(createI18n("en").t("status.autocastOff", { ability: "Charge" })).toBe("Charge autocast off.");
+  });
 });
