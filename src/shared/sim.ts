@@ -1263,7 +1263,9 @@ function dashToward(unit: Unit, target: { x: number; y: number }, step: number, 
 // - summon: when an enemy that is fighting, or any enemy player's unit, comes near and none of the caster's summons stands
 //   beside it;
 // - charge: the rider's own target when it is a unit inside the window, or, idle or attack-moving, the nearest enemy unit
-//   inside it.
+//   inside it that no rider of its side is already charging (the nearest of all only when every one is taken): picking
+//   the nearest alone, a line of twelve riders all charged the same ravager, the last four landed on a corpse, and the
+//   wing, bunched on one spot, was cut down.
 const AUTOCAST_EVERY_TICKS = 2;
 const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove"]);
 const SUMMON_ALERT_MARGIN = 100;
@@ -1358,12 +1360,15 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
     return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) ? target : undefined;
   }
   if (order.type !== "idle" && order.type !== "attackMove") return undefined;
-  let best: Unit | undefined;
+  const charged = new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
+  let free: Unit | undefined;
+  let any: Unit | undefined;
   forEachNearbyUnit(game, rider, def.range, (candidate) => {
     if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def)) return;
-    if (!best || distance(rider, candidate) < distance(rider, best)) best = candidate;
+    if (!any || distance(rider, candidate) < distance(rider, any)) any = candidate;
+    if (!charged.has(candidate.id) && (!free || distance(rider, candidate) < distance(rider, free))) free = candidate;
   });
-  return best;
+  return free ?? any;
 }
 
 function outgoingDamageMultiplier(unit: Unit) {
