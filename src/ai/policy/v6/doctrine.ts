@@ -70,7 +70,7 @@ const RUNNERS: V6RaidPlan = { kinds: ["cinderRunner", "emberRavager"], size: 4, 
 // Strategies differ in what rides beside the host (raiding parties, the speed to use them) and in their race.
 // Like AMAI's build sequences, a phase restates the bases of the one before, and the natural outranks the phase's army:
 // one mine against two opponents' four is a lost game however well the army fights (V6 played whole games on one mine,
-// the casters buying every coin before the hall's 320 ever stood in the bank).
+// the casters buying every coin before the hall's price ever stood in the bank).
 export const V6_STRATEGIES: V6Strategy[] = [
   {
     // Played by hand on chalkFen (V6 north, won at 1322s): summoners and nothing else in front of them, the natural as

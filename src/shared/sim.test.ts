@@ -599,7 +599,7 @@ describe("sketch RTS simulation", () => {
     expect(farm?.maxHp).toBe(180);
     expect(farm?.buildProgress).toBe(BUILDING_DEFS.farm.buildTime);
     expect(game.map.landmarks.find((landmark) => landmark.id === "landmark-agent-banner")?.kind).toBe("bannerStone");
-    expect(game.players.player.supplyCap).toBe(16);
+    expect(game.players.player.supplyCap).toBe(BUILDING_DEFS.townHall.supplyProvided + BUILDING_DEFS.farm.supplyProvided);
   });
 
   it("lets workers mine gold into their town hall", () => {
@@ -781,7 +781,10 @@ describe("sketch RTS simulation", () => {
   it("counts queued training jobs against the supply cap", () => {
     const game = createGame();
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
-    for (let i = 0; i < 6; i += 1) {
+    // Fill the cap but for one worker's room.
+    const used = game.units.filter((unit) => unit.owner === "player").reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0);
+    const room = game.players.player.supplyCap - used - UNIT_DEFS.worker.supplyUsed;
+    for (let i = 0; i < room; i += 1) {
       game.spawnUnit("player", "worker", townHall.x + 90 + i * 8, townHall.y + 90);
     }
     game.players.player.gold = 5000;
@@ -1966,7 +1969,8 @@ describe("sketch RTS simulation", () => {
     const playerTownHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
     let baseCloseout: { playerUnits: number; enemyCombatNearBase: number } | undefined;
 
-    for (let i = 0; i < 5_400 && !baseCloseout; i += 1) {
+    // Supply is dear (farms and halls are the tech), so the enemy's first real army takes a while to come.
+    for (let i = 0; i < 12_000 && !baseCloseout; i += 1) {
       const beforeHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
       runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
@@ -2031,8 +2035,8 @@ describe("sketch RTS simulation", () => {
     expect(result.game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
     expect(result.game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
     // Whether a building falls in 30 minutes depends on the balance of the day (the 85% shooter and 60s/40s summon patch
-    // turned this mirror into a 40-for-43 stalemate); the duel only has to be a real fight.
-    expect(result.game.match.stats.unitsKilled.player + result.game.match.stats.unitsKilled.enemy).toBeGreaterThan(20);
+    // turned this mirror into a 40-for-43 stalemate, dear supply into a slower one); the duel only has to be a real fight.
+    expect(result.game.match.stats.unitsKilled.player + result.game.match.stats.unitsKilled.enemy).toBeGreaterThan(10);
     expect(result.game.mercenaryCamps.length).toBe(0);
     expect(result.game.units.some((unit) => unit.owner === "neutral")).toBe(false);
     expect(totalMercenaryKills).toBe(0);

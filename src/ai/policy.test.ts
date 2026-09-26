@@ -2643,7 +2643,7 @@ describe("SDK preset AI policy", () => {
       .unit("v4-tr", "mercenary", 2935, 3106)
       .unit("v4-tr", "mercenary", 2944, 3141);
     const game = scene.build().createGame();
-    game.players.v5!.gold = 305;
+    game.players.v5!.gold = BUILDING_DEFS.townHall.cost - 15;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v5", [AI_SCRIPT_LIBRARY.training], {
       version: "v2",
@@ -3148,7 +3148,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const v2State = game.players.v2;
     if (!v2State) throw new Error("missing v2 state");
-    v2State.gold = 285;
+    v2State.gold = BUILDING_DEFS.townHall.cost - 35;
 
     const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.healingWell], { version: "v2", teams: game.teams });
 
@@ -3191,7 +3191,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     const v2State = game.players.v2;
     if (!v2State) throw new Error("missing v2 state");
-    v2State.gold = 285;
+    v2State.gold = BUILDING_DEFS.townHall.cost - 35;
 
     const entries = planAiCommandEntriesFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
 
@@ -3717,6 +3717,10 @@ describe("SDK preset AI policy", () => {
       races: { v2: "grove", v1a: "grove", v1b: "ember" },
     });
 
+    // A farm up already, so supply does not come first.
+    const hall = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall")!;
+    game.buildings.push(createBuilding("building-v2-early-farm", "v2", "farm", hall.x, hall.y - 160, true));
+    game.players.v2!.supplyCap += BUILDING_DEFS.farm.supplyProvided;
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build" && candidate.buildingKind === "barracks");
     const nearestNeutralDistance =
       command?.type === "build"
@@ -5878,6 +5882,9 @@ describe("SDK preset AI policy", () => {
     const game = createGame("openClaims", { aiPlayers: [] });
     game.players.player.gold = 5000;
     game.buildings.push(createBuilding("building-player-expanded-townhall", "player", "townHall", 1800, 1800, true));
+    // A farm up already, so supply does not come first.
+    game.buildings.push(createBuilding("building-player-early-farm", "player", "farm", 300, 1_900, true));
+    game.players.player.supplyCap += BUILDING_DEFS.farm.supplyProvided;
     const mine = game.resources[0]!;
     for (const worker of game.units.filter((unit) => unit.owner === "player" && unit.kind === "worker")) {
       worker.order = { type: "mine", resourceId: mine.id, phase: "toMine", timer: 0 };
@@ -5897,6 +5904,9 @@ describe("SDK preset AI policy", () => {
       races: { v2: "grove", v1a: "grove", v1b: "ember" },
     });
     game.players.v2!.gold = 1200;
+    // A farm up already, so supply does not come first.
+    game.buildings.push(createBuilding("building-v2-early-farm", "v2", "farm", 300, 1_900, true));
+    game.players.v2!.supplyCap += BUILDING_DEFS.farm.supplyProvided;
     const mine = game.resources[0]!;
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) {
       worker.order = { type: "mine", resourceId: mine.id, phase: "toMine", timer: 0 };
@@ -6780,7 +6790,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
     if (!game.players.v2) throw new Error("missing v2 player");
-    game.players.v2.gold = 250;
+    game.players.v2.gold = BUILDING_DEFS.townHall.cost - 70;
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) {
       worker.order = { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 };
     }
@@ -6869,7 +6879,7 @@ describe("SDK preset AI policy", () => {
       .goldMine("v1-main-mine", 3340, 3300, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 340;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost + 20;
     for (const worker of game.units.filter((unit) => unit.owner === "v2" && unit.kind === "worker")) {
       worker.order = { type: "mine", resourceId: "v2-main-mine", phase: "toMine", timer: 0 };
     }
@@ -10257,7 +10267,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v2-prod", 3376, 2680, { id: "v2-natural", complete: false });
     for (let i = 0; i < 6; i += 1) scene.unit("v2-prod", i % 3 === 0 ? "footman" : i % 3 === 1 ? "lancer" : "archer", 2360 + i * 30, 2270);
     const game = scene.build().createGame();
-    game.players.v3!.gold = 310;
+    game.players.v3!.gold = BUILDING_DEFS.townHall.cost - 10;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v3", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams })[0];
 
@@ -10594,7 +10604,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
     if (!game.players.v2) throw new Error("missing v2 player");
-    game.players.v2.gold = 260;
+    game.players.v2.gold = BUILDING_DEFS.townHall.cost - 60;
 
     const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
 
@@ -10687,7 +10697,7 @@ describe("SDK preset AI policy", () => {
       .goldMine("v1b-main-mine", 3340, 3800, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 330;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost + 10;
     const memory = createAiPolicyMemory();
     memory.strategicPlan = { expansionAttemptTick: 3600 };
 
@@ -11238,7 +11248,7 @@ describe("SDK preset AI policy", () => {
       .goldMine("v1b-main-mine", 3340, 3800, 4000)
       .build();
     const game = scene.createGame();
-    game.players.v2!.gold = 340;
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost + 20;
 
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.expansion], { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 
@@ -11429,7 +11439,7 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
     if (!game.players.v2) throw new Error("missing v2 player");
-    game.players.v2.gold = 340;
+    game.players.v2.gold = BUILDING_DEFS.townHall.cost + 20;
 
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 

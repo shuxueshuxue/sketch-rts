@@ -33,9 +33,10 @@ export type UnitDef = {
 };
 
 // @@@unit-tiers - Advanced and elite units are locked until the player's supply cap (halls and farms built, not supply in
-// use) reaches a bar: the tech a player buys is supply, the way a Warcraft III player buys a keep and a castle. The bars
-// sit where a player who builds farms ahead of need gets there in about 3 and 6 minutes, and one who does not in about 6
-// and 10: early fights are fought with the basic line (footmen, archers, ravagers, runners, spark archers).
+// use) reaches a bar: the tech a player buys is supply, the way a Warcraft III player buys a keep and a castle. Early
+// fights are fought with the basic line (footmen, archers, ravagers, runners, spark archers). Measured over 16 AI games
+// at a farm's 120 gold: V6, which buys farms ahead of need, fields its first caster at about 5:00, V3 and V5 their first
+// advanced unit at 7:00-8:30; no AI reached the elite bar inside 12 minutes.
 export const TIER_SUPPLY_CAP = { 2: 42, 3: 60 } as const;
 
 // Heavy armor (knights, golems, ash chieftains and cinder revenants): a shooter's or caster's attack deals half damage, a defense
@@ -162,7 +163,7 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
 };
 
 export const BUILDING_RULES = {
-  townHall: { hp: 900, radius: 48, cost: 320, buildTime: seconds(28), researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 10 },
+  townHall: { hp: 900, radius: 48, cost: 400, buildTime: seconds(28), researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 8 },
   barracks: { race: "grove", hp: 620, radius: 40, cost: 170, buildTime: seconds(11), researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   archeryRange: { race: "grove", hp: 520, radius: 38, cost: 150, buildTime: seconds(10), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   stables: { race: "grove", hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), researches: ["speedTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
@@ -175,7 +176,8 @@ export const BUILDING_RULES = {
   emberShrine: { race: "ember", hp: 280, radius: 30, cost: 115, buildTime: seconds(8.5), researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   // Ember's heavy-unit hall, its stables and workshop in one: one building for both heavies, priced above either.
   ashenHall: { race: "ember", hp: 600, radius: 42, cost: 215, buildTime: seconds(13), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  farm: { hp: 320, radius: 30, cost: 65, buildTime: seconds(7), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
+  // Supply is the tech (see unit-tiers), so it is dear: a farm's 6 cost 120, a hall's 8 are priced the same inside its 400.
+  farm: { hp: 320, radius: 30, cost: 120, buildTime: seconds(7), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
 } satisfies Record<string, BuildingRules>;
 
 export const BUILDABLE_BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];

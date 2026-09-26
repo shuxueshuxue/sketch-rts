@@ -2228,7 +2228,7 @@ function shouldHoldFirstExpansionBank(snapshot: GameSnapshot, owner: PlayerId, o
     // @@@ready-hall-bank - Five seconds before the first expansion hall, distant pressure is not a reason to reset the economy timing with one routine unit.
     return immediateEnemies.length < 3 || armyPower(immediateEnemies) <= armyPower(combatUnits(snapshot, owner)) * 1.05;
   }
-  // @@@first-expansion-bank - Once the natural is ready and the 320 gold is within reach, routine spending must stop unless the main is still naked under direct pressure.
+  // @@@first-expansion-bank - Once the natural is ready and the hall's price is within reach, routine spending must stop unless the main is still naked under direct pressure.
   return !directMainPressure || mainGuarded || combatUnits(snapshot, owner).length >= 8;
 }
 
