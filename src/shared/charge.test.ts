@@ -69,6 +69,16 @@ describe("cavalry charge", () => {
     expect(charged(false)).toBe(0);
   });
 
+  it("spreads a line's charges over the enemies inside the window instead of piling onto the nearest", () => {
+    const game = duel();
+    const riders = [0, 1, 2, 3].map((index) => game.spawnUnit("player", "raider", 500, 440 + index * 40));
+    const foes = [0, 1, 2, 3].map((index) => game.spawnUnit("enemy", "footman", 900 + index * 10, 440 + index * 40));
+    steps(game, 2);
+    const targets = riders.map((rider) => (rider.order.type === "charge" ? rider.order.targetId : undefined));
+    expect(targets.every((target) => target !== undefined)).toBe(true);
+    expect(new Set(targets).size).toBe(foes.length);
+  });
+
   it("does not charge a creep minding its camp, nor while riding where it was told", () => {
     const creep = duel();
     const rider = creep.spawnUnit("player", "raider", 500, 500);
