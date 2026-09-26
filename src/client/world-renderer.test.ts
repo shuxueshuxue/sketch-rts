@@ -4,13 +4,15 @@ import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
 import { sketchScene } from "../sdk/scene";
+import { ABILITY_DEFS } from "../shared/catalog";
 import { snapshotGame, stepGame } from "../shared/sim";
 import type { GameSnapshot } from "../shared/types";
 
-type Call = { name: string; args: unknown[] };
+type Call = { name: string; args: unknown[]; at?: Transform };
 type Transform = { a: number; b: number; c: number; d: number; e: number; f: number };
 
-// A 2D context that records every call; it keeps only the transform, which the atlas reads for sprite resolution.
+// A 2D context that records every call; it keeps only the transform, which the atlas reads for sprite resolution and
+// each drawImage carries (a unit turned to face left is drawn mirrored about its own spot).
 function recordingContext() {
   const calls: Call[] = [];
   let transform: Transform = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
@@ -33,7 +35,7 @@ function recordingContext() {
       if (key in target) return target[key];
       const method = methods[key];
       return (...args: unknown[]) => {
-        calls.push({ name: key, args });
+        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : { name: key, args });
         return method?.(...(args as never[]));
       };
     },
@@ -165,13 +167,15 @@ describe("world renderer", () => {
   });
 
   it("glides a charging rider between snapshots on the frame clock when given a smoother, its trail with it", () => {
+    const charge = ABILITY_DEFS.charge;
+    if (charge.behavior !== "charge") throw new Error("charge is not a charge");
     const game = sketchScene("charge")
       .map("bareDuel")
       .replaceDefaults()
       .player("north", { team: "north", race: "grove" })
       .player("south", { team: "south", race: "ember" })
       .unit("north", "raider", 300, 300, { id: "rider" })
-      .unit("south", "footman", 720, 300, { id: "foe" })
+      .unit("south", "footman", 300 + (charge.minRange + charge.range) / 2, 300, { id: "foe" })
       .build()
       .createGame();
     let previous = snapshotGame(game);
@@ -185,9 +189,10 @@ describe("world renderer", () => {
     const after = current.units.find((unit) => unit.id === "rider")!;
     expect(after.order.type).toBe("charge");
     expect(current.effects.some((effect) => effect.type === "chargeTrail" && effect.unitId === "rider")).toBe(true);
+    // The leftmost sprite in world space: the foe stands east of the rider, drawn mirrored once it turns to face it.
     const riderX = (drawn: { calls: Call[] }) => {
       const draws = spriteDraws(drawn.calls);
-      return Math.min(...draws.map((call) => (call.args[1] as number) + (call.args[3] as number) / 2));
+      return Math.min(...draws.map((call) => call.at!.e + call.at!.a * ((call.args[1] as number) + (call.args[3] as number) / 2)));
     };
 
     // The glide starts when the new tick is first drawn and runs one tick's time (50 ms here).

@@ -8,7 +8,7 @@ const CAVALRY: UnitKind[] = ["raider", "knight"];
 
 // The lines lock together first; a scripted cue then sends horsemen waiting behind the Ember line into its archers,
 // each rider at an archer of its own (an attack-move would let them peel off into the nearest melee instead). The riders
-// wait more than a charge's reach (500) from every enemy, so their autocast charge cannot go off before the cue; once
+// wait more than a charge's reach (the catalog range) from every enemy, so their autocast charge cannot go off before the cue; once
 // they ride in, it goes off by itself as their archer comes inside that reach.
 export const cavalryFlank = defineRecordingScene({
   name: "cavalry-flank",

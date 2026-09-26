@@ -5,7 +5,8 @@ import { defineRecordingScene } from "../scene";
 const MID_Y = 2048;
 
 // A Grove cavalry wing rides at an Ember infantry line. Nobody is told to charge: the riders only attack-move, and each
-// one's charge goes off on its own (autocast) as an enemy comes inside 300-500; the two lines then fight it out.
+// one's charge goes off on its own (autocast) as an enemy comes inside the charge window (the catalog's minRange to
+// range); the two lines then fight it out.
 export const cavalryCharge = defineRecordingScene({
   name: "cavalry-charge",
   description: "Grove raiders and knights attack-move into an Ember infantry line; their charges go off on their own, then the melee.",

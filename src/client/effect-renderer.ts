@@ -919,8 +919,10 @@ function riderRadius(sourceKind: WorldEffect["sourceKind"]) {
   return sourceKind && isUnitKind(sourceKind) ? UNIT_DEFS[sourceKind].radius : 18;
 }
 
-const CHARGE_RAYS = 8;
-const CHARGE_SPARKS = [-1.05, -0.62, -0.28, 0, 0.3, 0.66, 1.1] as const;
+// The blow lands hard but it is only two blows' worth: a short flash, a few sparks, a puff of dust.
+const CHARGE_RAYS = 6;
+const CHARGE_SPARKS = [-0.6, -0.2, 0.2, 0.6] as const;
+const CHARGE_CLODS = 4;
 
 export type ChargeImpactFrame = {
   ring: { x: number; y: number; rx: number; ry: number; alpha: number };
@@ -934,46 +936,46 @@ export function chargeImpactFrame(point: Point, rider: Point, life: number): Cha
   const burst = 1 - clamped;
   const heading = unitVector(rider, point) ?? { x: 1, y: 0 };
   const angle = Math.atan2(heading.y, heading.x);
-  const flash = Math.max(0, (clamped - 0.35) / 0.65);
+  const flash = Math.max(0, (clamped - 0.5) / 0.5);
   const rays = flash > 0
     ? Array.from({ length: CHARGE_RAYS }, (_, index) => {
         const ray = angle + (index / CHARGE_RAYS) * Math.PI * 2;
-        const inner = 8 + burst * 12;
-        const outer = inner + 14 + burst * 30 * (index % 2 === 0 ? 1 : 0.55);
+        const inner = 6 + burst * 6;
+        const outer = inner + 6 + burst * 12 * (index % 2 === 0 ? 1 : 0.6);
         return {
           from: { x: point.x + Math.cos(ray) * inner, y: point.y + Math.sin(ray) * inner * 0.8 },
           to: { x: point.x + Math.cos(ray) * outer, y: point.y + Math.sin(ray) * outer * 0.8 },
-          alpha: flash,
+          alpha: flash * 0.6,
         };
       })
     : [];
   const sparks = CHARGE_SPARKS.map((spread, index) => {
     const direction = angle + spread;
-    const reach = 14 + burst * (46 + (index % 3) * 12);
-    const fall = burst * burst * 10;
+    const reach = 8 + burst * (20 + (index % 2) * 8);
+    const fall = burst * burst * 6;
     const head = { x: point.x + Math.cos(direction) * reach, y: point.y + Math.sin(direction) * reach * 0.8 + fall };
-    return { from: { x: head.x - Math.cos(direction) * 10, y: head.y - Math.sin(direction) * 8 }, to: head, alpha: clamped };
+    return { from: { x: head.x - Math.cos(direction) * 6, y: head.y - Math.sin(direction) * 5 }, to: head, alpha: clamped * 0.8 };
   });
-  const ringRx = 18 + burst * 50;
-  const clods = Array.from({ length: 6 }, (_, index) => {
-    const around = angle + Math.PI * (0.2 + index * 0.32);
+  const ringRx = 12 + burst * 26;
+  const clods = Array.from({ length: CHARGE_CLODS }, (_, index) => {
+    const around = angle + Math.PI * (0.3 + index * 0.45);
     return {
-      x: point.x + Math.cos(around) * ringRx * 0.92,
+      x: point.x + Math.cos(around) * ringRx * 0.9,
       y: point.y + 12 + Math.sin(around) * ringRx * 0.36,
-      r: 2.5 + (index % 3) + burst * 3,
-      alpha: clamped * 0.8,
+      r: 1.5 + (index % 2) + burst * 1.5,
+      alpha: clamped * 0.6,
     };
   });
-  return { ring: { x: point.x, y: point.y + 12, rx: ringRx, ry: ringRx * 0.38, alpha: clamped }, rays, sparks, clods };
+  return { ring: { x: point.x, y: point.y + 12, rx: ringRx, ry: ringRx * 0.38, alpha: clamped * 0.7 }, rays, sparks, clods };
 }
 
 function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFrame) {
   const { ring } = frame;
   ctx.save();
   ctx.lineCap = "round";
-  ctx.fillStyle = rgba(DUST, ring.alpha * 0.22);
-  ctx.strokeStyle = rgba(DUST_EDGE, ring.alpha * 0.75);
-  ctx.lineWidth = 2.5;
+  ctx.fillStyle = rgba(DUST, ring.alpha * 0.18);
+  ctx.strokeStyle = rgba(DUST_EDGE, ring.alpha * 0.6);
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.ellipse(ring.x, ring.y, ring.rx, ring.ry, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -987,32 +989,27 @@ function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFram
     ctx.fill();
     ctx.stroke();
   }
-  if (frame.rays.length > 0) {
-    ctx.shadowColor = rgba(SPARK, 0.7);
-    ctx.shadowBlur = 10;
-    for (const ray of frame.rays) {
-      ctx.strokeStyle = rgba(SPARK, ray.alpha * 0.85);
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(ray.from.x, ray.from.y);
-      ctx.lineTo(ray.to.x, ray.to.y);
-      ctx.stroke();
-      ctx.strokeStyle = rgba(SPARK_HOT, ray.alpha);
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
+  for (const ray of frame.rays) {
+    ctx.strokeStyle = rgba(SPARK, ray.alpha * 0.85);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ray.from.x, ray.from.y);
+    ctx.lineTo(ray.to.x, ray.to.y);
+    ctx.stroke();
+    ctx.strokeStyle = rgba(SPARK_HOT, ray.alpha);
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
   }
   for (const spark of frame.sparks) {
     ctx.strokeStyle = rgba(SPARK, spark.alpha);
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(spark.from.x, spark.from.y);
     ctx.lineTo(spark.to.x, spark.to.y);
     ctx.stroke();
     ctx.fillStyle = rgba(SPARK_HOT, spark.alpha);
     ctx.beginPath();
-    ctx.arc(spark.to.x, spark.to.y, 1.6, 0, Math.PI * 2);
+    ctx.arc(spark.to.x, spark.to.y, 1.1, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();

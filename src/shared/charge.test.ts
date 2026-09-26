@@ -6,6 +6,9 @@ import { checkCommandLegality } from "./sim/command-validation";
 import type { Unit } from "./types";
 
 const CHARGE = ABILITY_DEFS.charge as Extract<AbilityDef, { behavior: "charge" }>;
+// Riders stand at x 500; a foe at INSIDE is in the middle of the charge window.
+const INSIDE = 500 + (CHARGE.minRange + CHARGE.range) / 2;
+const WINDOW_TEXT = `${CHARGE.minRange} to ${CHARGE.range}`;
 
 function duel() {
   const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [] });
@@ -31,12 +34,12 @@ describe("cavalry charge", () => {
   it("dashes at a unit inside the window, strikes it for twice a blow, and fights on", () => {
     const game = duel();
     const raider = game.spawnUnit("player", "raider", 500, 500);
-    const footman = game.spawnUnit("enemy", "footman", 900, 500);
+    const footman = game.spawnUnit("enemy", "footman", INSIDE, 500);
     issueCommand(game, { type: "setAutocast", unitIds: [raider.id], ability: "charge", enabled: false });
     issueCommand(game, { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id });
     expect(raider.order.type).toBe("charge");
     expect(game.effects.some((effect) => effect.type === "chargeTrail" && effect.unitId === raider.id)).toBe(true);
-    // 400 away at 30 a tick: on it well inside a second, far sooner than it could ride there.
+    // Mid-window at dashSpeed a tick: on it well inside a second, far sooner than it could ride there.
     steps(game, 16);
     expect(footman.hp).toBe(footman.maxHp - chargeBlow(raider));
     expect(Math.hypot(raider.x - footman.x, raider.y - footman.y)).toBeLessThanOrEqual(raider.attackRange);
@@ -45,14 +48,14 @@ describe("cavalry charge", () => {
     expect(game.effects.some((effect) => effect.type === "chargeImpact")).toBe(true);
   });
 
-  it("only charges a unit from 300 to 500 away", () => {
-    for (const gap of [250, 550]) {
+  it("only charges a unit inside the window", () => {
+    for (const gap of [CHARGE.minRange - 50, CHARGE.range + 50]) {
       const game = duel();
       const raider = game.spawnUnit("player", "raider", 500, 500);
       const footman = game.spawnUnit("enemy", "footman", 500 + gap, 500);
       const command = { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id } as const;
-      expect(checkCommandLegality(snapshotGame(game), "player", command)).toMatchObject({ message: expect.stringContaining("300 to 500") });
-      expect(() => issueCommand(game, command)).toThrow(/300 to 500/);
+      expect(checkCommandLegality(snapshotGame(game), "player", command)).toMatchObject({ message: expect.stringContaining(WINDOW_TEXT) });
+      expect(() => issueCommand(game, command)).toThrow(WINDOW_TEXT);
     }
   });
 
@@ -60,7 +63,7 @@ describe("cavalry charge", () => {
     const charged = (autocast: boolean) => {
       const game = duel();
       const raider = game.spawnUnit("player", "raider", 500, 500);
-      const footman = game.spawnUnit("enemy", "footman", 920, 500);
+      const footman = game.spawnUnit("enemy", "footman", INSIDE + 20, 500);
       if (!autocast) issueCommand(game, { type: "setAutocast", unitIds: [raider.id], ability: "charge", enabled: false });
       steps(game, 24);
       return footman.maxHp - footman.hp;
@@ -72,7 +75,7 @@ describe("cavalry charge", () => {
   it("spreads a line's charges over the enemies inside the window instead of piling onto the nearest", () => {
     const game = duel();
     const riders = [0, 1, 2, 3].map((index) => game.spawnUnit("player", "raider", 500, 440 + index * 40));
-    const foes = [0, 1, 2, 3].map((index) => game.spawnUnit("enemy", "footman", 900 + index * 10, 440 + index * 40));
+    const foes = [0, 1, 2, 3].map((index) => game.spawnUnit("enemy", "footman", INSIDE + index * 10, 440 + index * 40));
     steps(game, 2);
     const targets = riders.map((rider) => (rider.order.type === "charge" ? rider.order.targetId : undefined));
     expect(targets.every((target) => target !== undefined)).toBe(true);
@@ -82,15 +85,16 @@ describe("cavalry charge", () => {
   it("does not charge a creep minding its camp, nor while riding where it was told", () => {
     const creep = duel();
     const rider = creep.spawnUnit("player", "raider", 500, 500);
-    creep.spawnUnit("neutral", "wildling", 900, 500);
+    creep.spawnUnit("neutral", "wildling", INSIDE, 500);
     steps(creep, 20);
     expect(rider.order.type).not.toBe("charge");
     expect(abilityCooldown(rider, "charge")).toBe(0);
 
     const moving = duel();
     const passer = moving.spawnUnit("player", "raider", 500, 500);
-    moving.spawnUnit("enemy", "footman", 900, 700);
-    issueCommand(moving, { type: "move", unitIds: [passer.id], x: 900, y: 300 });
+    // Riding off sideways, the foe stays inside the window for these 20 ticks.
+    moving.spawnUnit("enemy", "footman", INSIDE, 500);
+    issueCommand(moving, { type: "move", unitIds: [passer.id], x: 500, y: 300 });
     steps(moving, 20);
     expect(abilityCooldown(passer, "charge")).toBe(0);
   });
@@ -98,7 +102,7 @@ describe("cavalry charge", () => {
   it("finishes the dash before an order given during it", () => {
     const game = duel();
     const knight = game.spawnUnit("player", "knight", 500, 500);
-    const footman = game.spawnUnit("enemy", "footman", 900, 500);
+    const footman = game.spawnUnit("enemy", "footman", INSIDE, 500);
     issueCommand(game, { type: "cast", unitId: knight.id, ability: "charge", targetId: footman.id });
     steps(game, 2);
     issueCommand(game, { type: "move", unitIds: [knight.id], x: 200, y: 200 });
@@ -111,7 +115,7 @@ describe("cavalry charge", () => {
   it("lets the enemy's rider charge too", () => {
     const game = duel();
     const raider = game.spawnUnit("enemy", "raider", 500, 500);
-    const footman = game.spawnUnit("player", "footman", 900, 500);
+    const footman = game.spawnUnit("player", "footman", INSIDE, 500);
     issuePlayerCommand(game, "enemy", { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id });
     steps(game, 16);
     expect(footman.hp).toBeLessThan(footman.maxHp);

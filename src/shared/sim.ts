@@ -1272,7 +1272,7 @@ const SUMMON_ALERT_MARGIN = 100;
 const SUMMON_COMPANY_RANGE = 320;
 const SUMMON_STEP = 60;
 const CHARGE_STOP_SHARE = 0.8;
-const CHARGE_IMPACT_TICKS = 18;
+const CHARGE_IMPACT_TICKS = 12;
 
 function autocastStep(game: Game, unit: Unit) {
   if (game.tick % AUTOCAST_EVERY_TICKS !== 0 || !AUTOCAST_ORDERS.has(unit.order.type)) return;
