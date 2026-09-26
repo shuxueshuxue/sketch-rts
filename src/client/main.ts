@@ -50,6 +50,7 @@ import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type 
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
+import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
@@ -205,7 +206,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(
+    withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
       command.icon,
       command.hotkey,
@@ -214,7 +215,7 @@ const commandButtons: CommandButton[] = [
       () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
       undefined,
       () => toggleAutocast(command.ability),
-    ),
+    ), command.ability),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -288,6 +289,17 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   return { element, hotkey, tooltip, state, run, ...(contextAction ? { contextAction } : {}) };
 }
 
+// @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
+// player cannot switch gets none.
+function withAutocastRing(button: CommandButton, ability: AbilityKind) {
+  if (!canAutocast(ability)) return button;
+  const ring = document.createElement("span");
+  ring.className = "autocast-ring";
+  ring.setAttribute("aria-hidden", "true");
+  button.element.append(ring);
+  return button;
+}
+
 function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const icon = document.createElement("canvas");
   icon.width = icon.height = 68;
@@ -318,6 +330,8 @@ function renderCommandButtonState(element: HTMLButtonElement, state: CommandButt
   else delete element.dataset.disabledLabel;
   if (state.reason) element.dataset.disabledReason = state.reason;
   else delete element.dataset.disabledReason;
+  if (state.autocast) element.dataset.autocast = state.autocast;
+  else delete element.dataset.autocast;
 }
 
 function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonState): GameplayTooltip {

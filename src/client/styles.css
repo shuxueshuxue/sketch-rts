@@ -966,6 +966,80 @@ button {
   pointer-events: none;
 }
 
+/* @@@autocast-ring - Warcraft III's autocast border: while a spell's autocast is on, two sparks of gold, each a bright
+   head on a fading tail, chase each other round its button. On for only some of the selection: a still, dashed ring.
+   The glow sits on the ring and the masked band on its ::before, since a filter on the masked box would be cut away
+   with it. Bright heads read on the dark buttons, the amber tails and dark edge on the pale ones. */
+@property --autocast-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.autocast-ring {
+  position: absolute;
+  inset: -4px;
+  z-index: 1;
+  display: none;
+  border-radius: 6px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(255, 196, 64, 0.9)) drop-shadow(0 0 1px rgba(90, 58, 10, 0.85));
+}
+
+.autocast-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--autocast-turn),
+    rgba(185, 134, 27, 0) 0deg,
+    rgba(185, 134, 27, 0.6) 70deg,
+    #ffd76a 112deg,
+    #fffbe0 124deg,
+    rgba(255, 215, 106, 0) 134deg,
+    rgba(185, 134, 27, 0) 180deg,
+    rgba(185, 134, 27, 0.6) 250deg,
+    #ffd76a 292deg,
+    #fffbe0 304deg,
+    rgba(255, 215, 106, 0) 314deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: autocast-turn 1.6s linear infinite;
+}
+
+.command-button[data-autocast="on"],
+.command-button[data-autocast="mixed"] {
+  border-color: #c9a45a;
+}
+
+.command-button[data-autocast="on"] .autocast-ring,
+.command-button[data-autocast="mixed"] .autocast-ring {
+  display: block;
+}
+
+.command-button[data-autocast="mixed"] .autocast-ring::before {
+  background: repeating-conic-gradient(from 22.5deg, #e8c060 0deg 22deg, rgba(185, 134, 27, 0) 22deg 45deg);
+  animation: none;
+}
+
+@keyframes autocast-turn {
+  to {
+    --autocast-turn: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* A still, whole ring of gold says "on" without anything moving. */
+  .command-button[data-autocast="on"] .autocast-ring::before {
+    background: linear-gradient(135deg, #fffbe0, #ffd76a 45%, #b9861b);
+    animation: none;
+  }
+}
+
 .tooltip-layer {
   position: fixed;
   left: 0;
