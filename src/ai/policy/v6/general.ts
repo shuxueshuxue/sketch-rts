@@ -127,7 +127,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (isV7Policy(options)) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
-    const mine = nextExpansionMine(snapshot, intel);
+    const mine = v7WantsBase(snapshot, owner, options) ? nextExpansionMine(snapshot, intel) : undefined;
     const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, v7Reachable, options, mine) : undefined;
     if (guard) {
       startV7Creep(snapshot, front, guard, options);
@@ -174,6 +174,16 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     return order(snapshot, owner, memory, "creep", front, camp, options);
   }
   return order(snapshot, owner, memory, "hold", front, rally, options);
+}
+
+// @@@v7-wanted-base - The next expansion's guard is cleared only while the phase wants a base V7 has not started. With its
+// natural rising, V7 walked its six footmen 2100 from home to the third mine's camp (duskGrove, 3:45); three ravagers killed
+// the natural's five builders and miners meanwhile, and the footmen, hurrying back, met the second army on the way.
+function v7WantsBase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): boolean {
+  const phases = v6Doctrine(snapshot, owner, options).strategy.phases;
+  const phase = phases[Math.min(v6Memory(options).phase ?? 0, phases.length - 1)];
+  const wanted = Math.max(0, ...(phase?.wants ?? []).map((want) => ("bases" in want ? want.bases : 0)));
+  return wanted > snapshot.buildings.filter((building) => building.owner === owner && building.kind === "townHall").length;
 }
 
 function creepOrders(memory: V6PolicyMemory, under: { commands: GameCommand[]; point: Point }): GameCommand[] {

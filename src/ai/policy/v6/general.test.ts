@@ -39,6 +39,25 @@ function board(name: string, options: { v6Footmen: number; enemyFootmen: number;
   return { game, snapshot: snapshotGame(game) };
 }
 
+// V7 (in the "v6" seat) with its main at (500, 500) and a natural at (500, 1500); V3's footmen come at the natural from the
+// south-east, their middle about 490 from it.
+function naturalBoard(name: string, options: { footmen: { x: number; y: number; hp?: number }[]; attackers: number; naturalComplete?: boolean; thirdMineCamp?: boolean }) {
+  let scene = sketchScene(name)
+    .map("openClaims")
+    .replaceDefaults()
+    .player("v6", { team: "north", race: "grove" })
+    .player("v3", { team: "south", race: "grove" })
+    .townHall("v6", 500, 500, { id: "v6-hall" })
+    .townHall("v6", 500, 1_500, { id: "v6-natural", complete: options.naturalComplete ?? true })
+    .townHall("v3", 3_400, 3_300, { id: "v3-hall" });
+  options.footmen.forEach((unit, index) => (scene = scene.unit("v6", "footman", unit.x, unit.y, { id: `v7-footman-${index}`, ...(unit.hp !== undefined ? { hp: unit.hp } : {}) })));
+  for (let index = 0; index < options.attackers; index += 1) scene = scene.unit("v3", "footman", 900 + index * 30, 1_700, { id: `v3-footman-${index}` });
+  if (options.thirdMineCamp) scene = scene.goldMine("third-mine", 1_500, 700, 6_000).unit("neutral", "wildling", 1_600, 700, { id: "third-guard" });
+  const game = scene.build().createGame();
+  const memory = steady();
+  return { game, memory, plan: () => planV6General(snapshotGame(game), "v6", { ...V7, teams: game.teams, memory }) };
+}
+
 function attackMoves(commands: GameCommand[]) {
   return commands.filter((command): command is Extract<GameCommand, { type: "attackMove" }> => command.type === "attackMove");
 }
@@ -187,6 +206,18 @@ describe("v6 general", () => {
     // Fourteen enemy footmen in all: five is too few to cross the map, twelve is enough.
     expect(deny(5)).not.toBe("attack");
     expect(deny(12)).toBe("attack");
+  });
+
+  it("V7 clears no further mine's guard while its natural rises and the phase wants no third base", () => {
+    const home = [0, 1, 2, 3, 4, 5].map((index) => ({ x: 700 + (index % 3) * 30, y: 650 + Math.floor(index / 3) * 30 }));
+    const rising = naturalBoard("v7-general-no-third-guard", { footmen: home, attackers: 0, naturalComplete: false, thirdMineCamp: true });
+    rising.plan();
+    expect(rising.memory.v6?.plays?.["general:clearExpansion"]).toBeUndefined();
+    // Without the natural's hall standing, the same mine is the base V7 wants next, and its guard is cleared.
+    const { game, memory } = naturalBoard("v7-general-third-guard-wanted", { footmen: home, attackers: 0, thirdMineCamp: true });
+    game.buildings.splice(game.buildings.findIndex((building) => building.id === "v6-natural"), 1);
+    planV6General(snapshotGame(game), "v6", { ...V7, teams: game.teams, memory });
+    expect(memory.v6?.plays?.["general:clearExpansion"]).toBe(1);
   });
 
   it("does not march on an enemy main with a small army, however empty the main stands; an expansion needs no such floor", () => {
