@@ -10,9 +10,9 @@ const V7 = { version: "v2", requestedVersion: "v7" } as const;
 
 type Creep = { kind: UnitKind; x: number; y: number };
 
-function scene(name: string, footmen: { x: number; y: number; hp?: number }[], creeps: Creep[]) {
-  let built = sketchScene(name).map("openClaims").replaceDefaults().player("v7", { team: "north", race: "grove" }).player("rival", { team: "south", race: "grove" }).townHall("v7", 400, 1_000).townHall("rival", 3_600, 3_600);
-  footmen.forEach((unit, index) => (built = built.unit("v7", "footman", unit.x, unit.y, { id: `footman-${index}`, ...(unit.hp !== undefined ? { hp: unit.hp } : {}) })));
+function scene(name: string, footmen: { x: number; y: number; hp?: number }[], creeps: Creep[], soldier: UnitKind = "footman") {
+  let built = sketchScene(name).map("openClaims").replaceDefaults().player("v7", { team: "north", race: soldier === "footman" ? "grove" : "ember" }).player("rival", { team: "south", race: "grove" }).townHall("v7", 400, 1_000).townHall("rival", 3_600, 3_600);
+  footmen.forEach((unit, index) => (built = built.unit("v7", soldier, unit.x, unit.y, { id: `footman-${index}`, ...(unit.hp !== undefined ? { hp: unit.hp } : {}) })));
   creeps.forEach((creep, index) => (built = built.unit("neutral", creep.kind, creep.x, creep.y, { id: `creep-${index}` })));
   const game = built.build().createGame();
   const memory = createAiPolicyMemory();
@@ -140,6 +140,28 @@ describe("V7 creeping", () => {
     const blockedCamps = neutralCamps(blocked.snapshot());
     const small = blockedCamps.filter((camp) => camp.creeps.length === 2);
     expect(chooseV7Camp(blocked.snapshot(), front(blocked.snapshot()), blockedCamps, small, blocked.options)).toBeUndefined();
+  });
+
+  it("weighs its group against a camp by what it fights with, not by what it cost", () => {
+    const four = [
+      { x: 700, y: 1_000 },
+      { x: 720, y: 1_030 },
+      { x: 740, y: 970 },
+      { x: 700, y: 960 },
+    ];
+    // Rated 2.33: four footmen (4.0) take it with the margin, four ravagers (4.8 by price, 3.8 by health and damage) do not.
+    const camp: Creep[] = [
+      { kind: "stonebackBrute", x: 1_500, y: 1_000 },
+      { kind: "thornSlinger", x: 1_540, y: 1_040 },
+      { kind: "thornSlinger", x: 1_560, y: 980 },
+      { kind: "wildling", x: 1_520, y: 960 },
+    ];
+    const footmen = scene("v7-creep-rating-footmen", four, camp);
+    const footmenCamps = neutralCamps(footmen.snapshot());
+    expect(chooseV7Camp(footmen.snapshot(), front(footmen.snapshot()), footmenCamps, footmenCamps, footmen.options)).toBeDefined();
+    const ravagers = scene("v7-creep-rating-ravagers", four, camp, "emberRavager");
+    const ravagerCamps = neutralCamps(ravagers.snapshot());
+    expect(chooseV7Camp(ravagers.snapshot(), front(ravagers.snapshot()), ravagerCamps, ravagerCamps, ravagers.options)).toBeUndefined();
   });
 
   it("chooses no camp while the group is scattered: it assembles first", () => {

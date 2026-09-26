@@ -13,6 +13,14 @@ export const TOWER_STRENGTH = 1.3;
 const CASTER_STRENGTH: Partial<Record<Unit["kind"], number>> = { summoner: 0.6, pyreCaller: 0.6, priest: 0.8, emberAcolyte: 0.8, fieldMedic: 0.9, witch: 0.9, ashHexer: 0.9 };
 const FOOTMAN_RATING = Math.sqrt(UNIT_DEFS.footman.hp * (UNIT_DEFS.footman.attackDamage / (UNIT_DEFS.footman.attackCooldown / 20)));
 
+// A fighter's worth by its own hit points and damage (a footman is 1), whatever it cost; casters as in unitStrength. What a
+// camp's creeps answer to: by price an ember ravager is 1.2 footmen, by hit points and damage 0.95 (see v7-creep-force).
+export function combatRating(unit: Unit) {
+  if (unit.kind === "worker") return 0;
+  const base = CASTER_STRENGTH[unit.kind] ?? Math.sqrt(unit.maxHp * (unit.attackDamage / Math.max(1, unit.attackCooldown / 20))) / FOOTMAN_RATING;
+  return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level);
+}
+
 export function unitStrength(unit: Unit) {
   if (unit.kind === "worker") return 0;
   const cost = UNIT_DEFS[unit.kind].cost;

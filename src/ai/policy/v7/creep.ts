@@ -6,7 +6,7 @@ import type { AiPolicyContext } from "../types";
 import { isV7Policy } from "../versions";
 import { recordPlay, v6Memory } from "../v6/memory";
 import { enemyPowerNear, type V6Intel } from "../v6/intel";
-import { strengthOf } from "../v6/strength";
+import { combatRating, strengthOf } from "../v6/strength";
 
 // @@@v7-creeping - V7 creeps the way a player does: it picks a camp its gathered group beats, walks there on a route that
 // passes no other camp, waits outside the camp until the group stands together, goes in together and stays until the
@@ -21,6 +21,14 @@ import { strengthOf } from "../v6/strength";
 // Measured in isolation (every camp on the gauntlet maps, fought by footmen arriving together): the least force that
 // wins is about the camp's rating plus one footman (a 2.0 camp takes 3 footmen and costs one, a 6.9 camp 8), so a group
 // goes in with the camp's rating plus FORCE_MARGIN.
+//
+// @@@v7-creep-force - The group is weighed against a camp by what it fights with (combatRating), not by what it cost.
+// Creeps cast their spells too since autocast, and a camp with a glade witch now takes a footman more: an ember group,
+// its ravagers 1.2 footmen by price but 0.95 by hit points and damage, took a 6.9 camp on price and lost seven ravagers
+// to it (sableRun, 9:20), and under autocast V7 ember fell from 423 to 350 of 500 while grove held. Against enemy armies
+// the group is still weighed by price, the currency of every army decision. (Asking more of a camp for its cursers, and
+// striking a camp's casters first, were tried beside it and lost games: fewer camps, and riders cut down walking through
+// brutes to a healer.)
 const CAMP_LINK = 300;
 const FORCE_MARGIN = 1.5;
 const STAGING_GAP = 230;
@@ -74,6 +82,10 @@ export function neutralCamps(snapshot: GameSnapshot): Camp[] {
     camps.push({ center, creeps: members, strength: strengthOf(members), reach: Math.max(0, ...members.map((unit) => distance(home(unit), center))) });
   }
   return camps;
+}
+
+function creepForce(units: readonly Unit[]) {
+  return units.reduce((total, unit) => total + combatRating(unit), 0);
 }
 
 export function forceFor(camp: Camp) {
@@ -131,14 +143,14 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
     if (!camp) recordPlay(memory, "creep:cleared");
     return undefined;
   }
-  const force = strengthOf(group);
+  const force = creepForce(group);
   const giveUp = (why: string) => {
     memory.creepRetry = { center: camp.center, until: snapshot.tick + RETRY_TICKS };
     delete memory.creep;
     recordPlay(memory, `creep:${why}`);
     return undefined;
   };
-  if (enemyPowerNear(intel, camp.center, ENEMY_RANGE) > force * ENEMY_SHARE) return giveUp("enemy");
+  if (enemyPowerNear(intel, camp.center, ENEMY_RANGE) > strengthOf(group) * ENEMY_SHARE) return giveUp("enemy");
   if (state.stage === "engage" && force < camp.strength * ABORT_SHARE) return giveUp("abort");
   const staging = state.staging;
   if (state.stage === "gather") {
@@ -161,7 +173,8 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
   const fighting = group.filter((unit) => !wounded.includes(unit));
   const stepping = wounded.filter((unit) => distance(unit, staging) > GATHERED_RANGE && !heading(unit, staging, "move"));
   if (stepping.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stepping.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
-  const joining = fighting.filter((unit) => unit.order.type !== "attack" && !heading(unit, camp.center, "attackMove"));
+  // A rider in the middle of a charge is fighting already: an order now would only wait for the dash and then undo it.
+  const joining = fighting.filter((unit) => unit.order.type !== "attack" && unit.order.type !== "charge" && !heading(unit, camp.center, "attackMove"));
   if (joining.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: joining.map((unit) => unit.id), x: camp.center.x, y: camp.center.y }, options));
   return { commands, point: camp.center };
 }
@@ -173,7 +186,7 @@ export function chooseV7Camp(snapshot: GameSnapshot, front: Unit[], camps: Camp[
   const from = averagePoint(front);
   // Scattered units walk their own routes: the group assembles first (the general holds it at the rally point).
   if (front.some((unit) => distance(unit, from) > ASSEMBLED_RANGE)) return undefined;
-  const force = strengthOf(front);
+  const force = creepForce(front);
   const retry = memory.creepRetry && memory.creepRetry.until > snapshot.tick ? memory.creepRetry : undefined;
   const open = candidates.filter((camp) => forceFor(camp) <= force && (!retry || distance(camp.center, retry.center) > CAMP_LINK) && clearStaging(camp, from, camps) !== undefined);
   if (expansionMine) {
