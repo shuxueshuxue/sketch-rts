@@ -9,3 +9,4 @@ coverage/
 .playwright-cli/
 .playtest/
 .benchmark-dashboard/
+recordings/

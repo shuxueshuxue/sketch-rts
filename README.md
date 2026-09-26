@@ -200,6 +200,7 @@ The last command prints the machine-readable command manifest. Full examples, AI
 | `npx vitest --run src/client` | Run the frontend tests |
 | `npm run test:sdk-smoke` | Start a test server and run SDK smoke checks |
 | `npm run benchmark:ai` | Run AI benchmarks |
+| `npm run record -- --scene infantry-clash` | Film a scene to GIF/MP4 without a browser |
 
 The hosted server also serves the benchmark dashboard at `benchmark.html`. See [the developer guide](docs/development.md#benchmark-system) and [AI specifications](docs/ai-spec.md) for experiment design and benchmark workflows.
 
@@ -211,6 +212,19 @@ A unit or building lives in two places:
 2. **Card:** an entry in [`src/client/content/`](src/client/content/). The card holds the English and Chinese name and description, the command icon and hotkey, the glyph, the art tier, and the function that draws it. Labels, tooltips, the command card, and the unit sheet all read from the cards.
 
 If a card is missing, TypeScript reports it. `src/client/content/cards.test.ts` checks that every name and description exists in both languages, that each unit is trained at a building its race can build, and that no building or build menu repeats a hotkey. To see every unit and building drawn by the game's own code, run `npx vite` and open `/unit-sheet.html`.
+
+### Recording clips
+
+`npm run record` films a scene in Node, with no browser: it runs the match on the same command-frame runtime as a local game and draws every frame with the client's own world renderer ([`src/client/world-renderer.ts`](src/client/world-renderer.ts)), so units, buildings, terrain, missiles, effects and unit facing look exactly as they do in the game. Frames are drawn with `@napi-rs/canvas`; GIFs are encoded in JavaScript and MP4s by the `ffmpeg` on your `PATH`.
+
+```bash
+npm run record -- --list
+npm run record -- --scene infantry-clash --seconds 14 --size 1280x720 --out clip.mp4 --out clip.gif --gif-size 640x360
+npm run record -- --scene cavalry-flank --follow 'owner=north,kind=raider|knight' --zoom 1.2
+npm run record -- --scene ./my-scene.ts --camera 2048,2048,1.5 --hide-orders
+```
+
+A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](src/recorder/scene.ts)): `createGame` builds the opening state with `sketchScene`, units can start with orders, `commands` adds scripted orders on cue, and `ai` hands players to the preset AI. The built-in scenes in [`src/recorder/scenes/`](src/recorder/scenes/) are worked examples. `--camera x,y[,zoom]` fixes the camera on a world point; `--follow` keeps the centre of some units in frame. Run `npm run record -- --help` for every option.
 
 ## Roadmap
 
