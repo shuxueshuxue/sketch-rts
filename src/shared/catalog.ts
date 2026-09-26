@@ -28,7 +28,15 @@ export type UnitDef = {
   casterSlayer?: number;
   // Innate health regeneration, on top of leadership's.
   regenPerSecond?: number;
+  // Advanced (2) and elite (3) units; see TIER_SUPPLY_CAP. No tier: trainable from the start.
+  tier?: 2 | 3;
 };
+
+// @@@unit-tiers - Advanced and elite units are locked until the player's supply cap (halls and farms built, not supply in
+// use) reaches a bar: the tech a player buys is supply, the way a Warcraft III player buys a keep and a castle. The bars
+// sit where a player who builds farms ahead of need gets there in about 3 and 6 minutes, and one who does not in about 6
+// and 10: early fights are fought with the basic line (footmen, archers, ravagers, runners, spark archers).
+export const TIER_SUPPLY_CAP = { 2: 42, 3: 60 } as const;
 
 // Heavy armor (knights, golems, ash chieftains and cinder revenants): a shooter's or caster's attack deals half damage, a defense
 // tower's 70%. Melee blows land in full.
@@ -97,25 +105,25 @@ export const UNIT_RULES = {
   worker: { trainedAt: "townHall", hp: 70, speed: 3, radius: 15, attackDamage: 5, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, xpReward: 20, abilities: [] },
   footman: { trainedAt: "barracks", race: "grove", hp: 145, speed: 3.1, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   archer: { trainedAt: "archeryRange", race: "grove", hp: 72, speed: 3, radius: 16, attackDamage: 13, attackRange: 399, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, xpReward: 30, abilities: [] },
-  raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 48, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: [] },
+  raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 48, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: [], tier: 2 },
   lancer: { trainedAt: "barracks", race: "grove", hp: 130, speed: 3.4, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: [] },
   groveWarden: { trainedAt: "barracks", race: "grove", hp: 165, speed: 3.0, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   emberRavager: { trainedAt: "emberForge", race: "ember", hp: 118, speed: 3.8, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   cinderRunner: { trainedAt: "emberForge", race: "ember", hp: 96, speed: 4.35, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   sparkArcher: { trainedAt: "cinderSpire", race: "ember", hp: 65, speed: 3.15, radius: 16, attackDamage: 12, attackRange: 360, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, xpReward: 30, abilities: [] },
-  emberAcolyte: { trainedAt: "cinderSpire", race: "ember", hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["emberMend"] },
-  ashHexer: { trainedAt: "cinderSpire", race: "ember", hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["ashCurse"] },
-  pyreCaller: { trainedAt: "cinderSpire", race: "ember", hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 174, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["cinderSoul"] },
-  knight: { trainedAt: "stables", race: "grove", hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: [], armor: "heavy" },
-  priest: { trainedAt: "sanctum", race: "grove", hp: 90, speed: 3, radius: 16, attackDamage: 7, attackRange: 252, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, xpReward: 35, abilities: ["heal"] },
-  summoner: { trainedAt: "sanctum", race: "grove", hp: 95, speed: 2.8, radius: 17, attackDamage: 8, attackRange: 273, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"] },
-  witch: { trainedAt: "sanctum", race: "grove", hp: 92, speed: 3.1, radius: 16, attackDamage: 8, attackRange: 315, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, xpReward: 35, abilities: ["curse"] },
-  golem: { trainedAt: "workshop", race: "grove", hp: 340, speed: 2.1, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, xpReward: 60, abilities: [], armor: "heavy" },
+  emberAcolyte: { trainedAt: "cinderSpire", race: "ember", hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["emberMend"], tier: 2 },
+  ashHexer: { trainedAt: "cinderSpire", race: "ember", hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["ashCurse"], tier: 2 },
+  pyreCaller: { trainedAt: "cinderSpire", race: "ember", hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 174, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["cinderSoul"], tier: 2 },
+  knight: { trainedAt: "stables", race: "grove", hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: [], armor: "heavy", tier: 3 },
+  priest: { trainedAt: "sanctum", race: "grove", hp: 90, speed: 3, radius: 16, attackDamage: 7, attackRange: 252, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, xpReward: 35, abilities: ["heal"], tier: 2 },
+  summoner: { trainedAt: "sanctum", race: "grove", hp: 95, speed: 2.8, radius: 17, attackDamage: 8, attackRange: 273, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"], tier: 2 },
+  witch: { trainedAt: "sanctum", race: "grove", hp: 92, speed: 3.1, radius: 16, attackDamage: 8, attackRange: 315, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, xpReward: 35, abilities: ["curse"], tier: 2 },
+  golem: { trainedAt: "workshop", race: "grove", hp: 340, speed: 2.1, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, xpReward: 60, abilities: [], armor: "heavy", tier: 3 },
   // Ember's heavies, raised in the ashen hall and heavy-armored like the grove's knight and golem, but built for
   // other jobs. The chieftain hunts casters and what they summon (half again as much damage to both); the revenant is
   // light for an elite and burns its wounds away, back to full health in about twenty seconds.
-  ashChieftain: { trainedAt: "ashenHall", race: "ember", hp: 210, speed: 3.3, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, xpReward: 45, abilities: [], armor: "heavy", casterSlayer: 1.5 },
-  cinderRevenant: { trainedAt: "ashenHall", race: "ember", hp: 150, speed: 3.5, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, xpReward: 50, abilities: [], armor: "heavy", regenPerSecond: 7 },
+  ashChieftain: { trainedAt: "ashenHall", race: "ember", hp: 210, speed: 3.3, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, xpReward: 45, abilities: [], armor: "heavy", casterSlayer: 1.5, tier: 3 },
+  cinderRevenant: { trainedAt: "ashenHall", race: "ember", hp: 150, speed: 3.5, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, xpReward: 50, abilities: [], armor: "heavy", regenPerSecond: 7, tier: 3 },
   spirit: { hp: 85, speed: 3.5, radius: 15, attackDamage: 13, attackRange: 55, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 0, abilities: [] },
   mercenary: { hp: 155, speed: 3.7, radius: 18, attackDamage: 28, attackRange: 62, attackCooldown: seconds(0.9), cost: 160, trainTime: seconds(0.05), supplyUsed: 2, xpReward: 36, abilities: [] },
   contractArcher: { hp: 81, speed: 3.2, radius: 16, attackDamage: 19, attackRange: 441, attackCooldown: seconds(1.35), cost: 145, trainTime: seconds(0.05), supplyUsed: 2, xpReward: 34, abilities: [] },
@@ -130,6 +138,12 @@ export const UNIT_RULES = {
 } satisfies Record<string, UnitDef>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
+
+// The supply cap a player needs before it can train this kind (0 for the basic line, workers and hired units).
+export function requiredSupplyCap(kind: UnitKind): number {
+  const tier = UNIT_DEFS[kind].tier;
+  return tier ? TIER_SUPPLY_CAP[tier] : 0;
+}
 const UNIT_KINDS = Object.keys(UNIT_DEFS) as UnitKind[];
 
 export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].trainedAt !== undefined) as TrainableUnitKind[];

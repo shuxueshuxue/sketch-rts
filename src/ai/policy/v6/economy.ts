@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../../shared/catalog";
+import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../../shared/types";
 import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build-layout";
 import { resolveAiCommandIntent } from "../commands";
@@ -7,7 +7,7 @@ import { buildings, units } from "../snapshot";
 import { distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy } from "../versions";
-import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed } from "../world-model";
+import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
@@ -205,6 +205,7 @@ function wantGoals(economy: Economy): Goal[] {
 // ahead of them (AMAI's RefreshNeeded).
 function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
   if (missing <= 0) return [];
+  if (!tierUnlocked(economy.snapshot, economy.owner, kind)) return lockedUnitGoals(economy, kind, missing, priority, claimed);
   const makers = economy.own.filter((building) => BUILDING_DEFS[building.kind].trains.includes(kind));
   if (makers.length === 0) {
     const maker = producerFor(economy, kind);
@@ -218,6 +219,25 @@ function unitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, p
       claimed.add(building.id);
       return [goal(`unit:${kind}`, priority, UNIT_DEFS[kind].cost, true, () => train(economy, building, kind))];
     });
+}
+
+// @@@v6-tech-up - A want whose tier is still locked is met two ways at once: farms ahead of need until the supply cap
+// reaches the bar (the tech V6 buys), and the strategy's basic soldier in the missing units' place meanwhile, so the
+// opening still has an army. The units' own building goes up once one more farm would reach the bar.
+function lockedUnitGoals(economy: Economy, kind: TrainableUnitKind, missing: number, priority: number, claimed: Set<string>): Goal[] {
+  const bar = requiredSupplyCap(kind);
+  const cap = playerState(economy.snapshot, economy.owner).supplyCap;
+  const maker = producerFor(economy, kind);
+  const makerGoals = maker && cap + BUILDING_DEFS.farm.supplyProvided >= bar && !economy.own.some((building) => building.kind === maker) ? buildingGoal(economy, maker, priority) : [];
+  const standIn = economy.strategy.standIn;
+  return [...techFarmGoal(economy, priority), ...makerGoals, ...unitGoals(economy, standIn, missing - have(economy, standIn), priority - 1, claimed)];
+}
+
+function techFarmGoal(economy: Economy, priority: number): Goal[] {
+  const farms = economy.own.filter((building) => building.kind === "farm");
+  if (farms.some((farm) => !farm.complete) || farms.length >= FARM_LIMIT) return [];
+  const point = safeMainBuildPoint(economy.snapshot, economy.owner, farms.length + 4, "farm");
+  return [goal("farm:tier", priority, BUILDING_DEFS.farm.cost, true, (used) => build(economy, "farm", point, used))];
 }
 
 function producerFor(economy: Economy, kind: TrainableUnitKind): BuildingKind | undefined {
@@ -295,7 +315,7 @@ function capacityGoals(economy: Economy): Goal[] {
   const waiting = [...economy.phase.wants]
     .sort((a, b) => b.priority - a.priority)
     .flatMap((want) => unitTargets(want))
-    .find(([kind, count]) => have(economy, kind) < count);
+    .find(([kind, count]) => have(economy, kind) < count && tierUnlocked(economy.snapshot, economy.owner, kind));
   const kind = waiting && producerFor(economy, waiting[0]);
   if (!kind || economy.own.filter((building) => building.kind === kind).length >= MAX_PRODUCERS_PER_KIND) return [];
   return buildingGoal(economy, kind, 30).map((candidate) => ({ ...candidate, id: `capacity:${kind}`, save: false }));

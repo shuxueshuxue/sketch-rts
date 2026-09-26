@@ -1,13 +1,15 @@
-import { UNIT_DEFS } from "../shared/catalog";
-import type { AbilityKind, MercenaryCamp, PlayerState, Unit } from "../shared/types";
+import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
+import type { AbilityKind, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
 
-export type CommandButtonDisabledReason = "cooldown" | "stock" | "gold" | "supply" | "position" | "missing";
+export type CommandButtonDisabledReason = "cooldown" | "stock" | "gold" | "supply" | "position" | "missing" | "tier";
 
 export type CommandButtonState = {
   visible: boolean;
   enabled: boolean;
   cooldownTicks?: number;
   reason?: CommandButtonDisabledReason;
+  // The supply cap a locked unit waits for (reason "tier").
+  supplyCap?: number;
 };
 
 export const HIDDEN_COMMAND_STATE: CommandButtonState = { visible: false, enabled: false };
@@ -24,6 +26,14 @@ export function abilityCommandState(units: readonly Unit[], ability: AbilityKind
   if (ready) return ENABLED_COMMAND_STATE;
   const cooldownTicks = Math.min(...casters.map((unit) => unit.cooldown));
   return { visible: true, enabled: false, cooldownTicks, reason: "cooldown" };
+}
+
+// A unit the player could train but whose tier is still locked stays on the card, greyed, with the supply cap it waits for.
+export function trainCommandState(unitKind: TrainableUnitKind, player: PlayerState | undefined, trainable: boolean): CommandButtonState {
+  if (!trainable) return HIDDEN_COMMAND_STATE;
+  const supplyCap = requiredSupplyCap(unitKind);
+  if (player && player.supplyCap < supplyCap) return { visible: true, enabled: false, reason: "tier", supplyCap };
+  return ENABLED_COMMAND_STATE;
 }
 
 export function mercenaryHireCommandState(input: {

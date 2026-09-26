@@ -44,6 +44,8 @@ export type V6Strategy = {
   weight: number;
   phases: V6Phase[];
   raids: V6RaidPlan[];
+  // The basic soldier trained in place of a unit whose tier is still locked, as many as are missing (see v6-tech-up).
+  standIn: TrainableUnitKind;
 };
 
 // Personalities vary style, not how much risk V6 takes. Every knob was tried on its own over the tune seeds: less
@@ -109,6 +111,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
     ],
     raids: [],
+    standIn: "footman",
   },
   {
     // The spirit host's army with a raiding party beside it: a few raiders hunt workers while the summoners hold the map.
@@ -152,6 +155,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
     ],
     raids: [RAIDERS],
+    standIn: "footman",
   },
   {
     // Ember's copy of the grove spirit host: pyre callers only, the natural early, a second spire, then a third base.
@@ -190,6 +194,7 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
     ],
     raids: [],
+    standIn: "emberRavager",
   },
   {
     // Ember's raiding host: the pyre host's army, with four cinder runners (and the spire's speed training) hunting workers.
@@ -231,5 +236,6 @@ export const V6_STRATEGIES: V6Strategy[] = [
       },
     ],
     raids: [RUNNERS],
+    standIn: "emberRavager",
   },
 ];

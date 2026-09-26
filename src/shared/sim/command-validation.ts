@@ -1,5 +1,5 @@
 import { buildingPlacementBlocker } from "../build-placement";
-import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap } from "../catalog";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
 
@@ -49,6 +49,8 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`);
     if (!BUILDING_DEFS[building.kind].trains.includes(command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind}`);
     if (!RACE_DEFS[player.race].trainableUnits.includes(command.unitKind)) return commandError(`${player.race} race cannot train ${command.unitKind}`);
+    const cap = requiredSupplyCap(command.unitKind);
+    if (player.supplyCap < cap) return commandError(`Need a supply cap of ${cap} to train ${command.unitKind}`, true);
     if (!canSupply(snapshot, owner, command.unitKind)) return commandError(`Need more supply to train ${command.unitKind}`, true);
     return canSpendGold(snapshot, owner, UNIT_DEFS[command.unitKind].cost) ? undefined : commandError(`Need ${UNIT_DEFS[command.unitKind].cost} gold`, true);
   }

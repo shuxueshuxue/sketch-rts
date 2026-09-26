@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { abilityCommandState, mercenaryHireCommandState } from "./command-button-state";
+import { abilityCommandState, mercenaryHireCommandState, trainCommandState } from "./command-button-state";
+import { TIER_SUPPLY_CAP } from "../shared/catalog";
 import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
 
 describe("command button state", () => {
+  it("greys a unit whose tier is locked, with the supply cap it waits for, and hides one the player cannot train", () => {
+    const [advanced, elite] = [TIER_SUPPLY_CAP[2], TIER_SUPPLY_CAP[3]];
+    const early = playerState({ gold: 500, supplyUsed: 8, supplyCap: advanced - 1 });
+    expect(trainCommandState("summoner", early, true)).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: advanced });
+    expect(trainCommandState("knight", playerState({ gold: 500, supplyUsed: 8, supplyCap: elite - 1 }), true)).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: elite });
+    expect(trainCommandState("footman", early, true)).toEqual({ visible: true, enabled: true });
+    expect(trainCommandState("summoner", playerState({ gold: 500, supplyUsed: 8, supplyCap: advanced }), true)).toEqual({ visible: true, enabled: true });
+    expect(trainCommandState("summoner", early, false)).toEqual({ visible: false, enabled: false });
+  });
+
   it("keeps a selected caster ability visible while disabling it during cooldown", () => {
     expect(abilityCommandState([unit("priest", 75)], "heal")).toEqual({
       visible: true,

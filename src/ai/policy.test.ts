@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, TIER_SUPPLY_CAP } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
 import { runAiGame, runAiGameLoop } from "./game-runner";
 import { createAiRuntime } from "./runtime";
@@ -2366,6 +2366,7 @@ describe("SDK preset AI policy", () => {
       .player("v3", { team: "south", race: "ember" })
       .player("v4-tr", { team: "south", race: "grove" })
       .townHall("v5", 500, 500)
+      .farmsPastTiers("v5", 100, 2_000)
       .townHall("v5", 900, 900)
       .townHall("v5", 1300, 1100)
       .building("v5", "barracks", 620, 560)
@@ -6886,6 +6887,7 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("target", { team: "south", race: "ember" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
       .building("v2", "stables", 740, 660, { id: "v2-stables" })
@@ -6923,6 +6925,7 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
       .building("v2", "stables", 780, 620, { id: "v2-stables" })
@@ -6947,7 +6950,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.build().createGame();
     game.players.v2!.gold = UNIT_DEFS.priest.cost;
     game.players.v2!.supplyUsed = 18;
-    game.players.v2!.supplyCap = 40;
+    game.players.v2!.supplyCap = TIER_SUPPLY_CAP[3]; // the farms past the tiers
 
     const commands = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.training], { version: "v2", teams: game.teams });
 
@@ -7728,6 +7731,7 @@ describe("SDK preset AI policy", () => {
       .player("v1a", { team: "south", race: "grove" })
       .player("v1b", { team: "south", race: "ember" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .townHall("v2", 1380, 650, { id: "v2-natural" })
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
@@ -10197,6 +10201,7 @@ describe("SDK preset AI policy", () => {
       .player("v3", { team: "north", race: "ember" })
       .player("v2-prod", { team: "south", race: "grove" })
       .townHall("v3", 500, 500)
+      .farmsPastTiers("v3", 100, 2_000)
       .building("v3", "emberForge", 620, 620, { id: "forge" })
       .building("v3", "cinderSpire", 700, 620, { id: "spire" })
       .building("v3", "farm", 560, 700)
@@ -11439,6 +11444,7 @@ describe("SDK preset AI policy", () => {
       .player("v1a", { team: "south", race: "grove" })
       .player("v1b", { team: "south", race: "ember" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .townHall("v2", 1400, 650, { id: "v2-natural" })
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
@@ -12134,6 +12140,7 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 620, { id: "v2-archery" })
       .building("v2", "stables", 780, 620, { id: "v2-stables" })
@@ -12154,7 +12161,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     game.players.v2!.gold = 700;
     game.players.v2!.supplyUsed = 11;
-    game.players.v2!.supplyCap = 40;
+    game.players.v2!.supplyCap = TIER_SUPPLY_CAP[3]; // the farms past the tiers
 
     const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find((candidate) => candidate.type === "build");
 
@@ -13349,6 +13356,7 @@ describe("SDK preset AI policy", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "ember" })
       .townHall("v2", 500, 500, { id: "v2-main" })
+      .farmsPastTiers("v2", 100, 2_000)
       .townHall("v2", 1350, 620, { id: "v2-natural" })
       .building("v2", "barracks", 620, 620, { id: "v2-barracks" })
       .building("v2", "archeryRange", 700, 560, { id: "v2-archery" })
@@ -13381,7 +13389,7 @@ describe("SDK preset AI policy", () => {
     const game = scene.createGame();
     game.players.v2!.gold = 340;
     game.players.v2!.supplyUsed = 16;
-    game.players.v2!.supplyCap = 28;
+    game.players.v2!.supplyCap = TIER_SUPPLY_CAP[3]; // the farms past the tiers
 
     const commands = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
 

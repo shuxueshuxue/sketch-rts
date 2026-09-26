@@ -1,12 +1,20 @@
-import { UNIT_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { combatUnits, completeBuildings, units } from "./snapshot";
 import { aiPlaybook } from "./playbook";
-import { playerState } from "./world-model";
+import { playerState, tierUnlocked } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 
+// A choice whose tier is still locked falls back to what the same building can already make (a spire's spark archers
+// before its casters), or to nothing.
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
+  const choice = preferredTrainingChoice(snapshot, owner, building, options);
+  if (!choice || tierUnlocked(snapshot, owner, choice)) return choice;
+  return BUILDING_DEFS[building.kind].trains.find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
+}
+
+function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions): TrainableUnitKind | undefined {
   const race = playerState(snapshot, owner).race;
   if (isV5ShooterCorePolicy(options)) {
     const rangedCore = v5RangedCoreChoice(snapshot, owner, building);

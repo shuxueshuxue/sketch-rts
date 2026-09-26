@@ -98,6 +98,7 @@ import {
   playerState,
   projectedSupplyUsed,
   queuedUnitCount,
+  tierBarWaitedOn,
 } from "./world-model";
 
 const AUTO_ACQUIRE_RANGE = 230;
@@ -415,7 +416,9 @@ function planSupply(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   const player = playerState(snapshot, owner);
   const farms = buildings(snapshot, owner).filter((building) => building.kind === "farm");
   if (farms.some((building) => !building.complete)) return undefined;
-  if (farms.length >= SUPPLY_BUILDING_LIMIT || player.supplyCap - player.supplyUsed > 5 || player.gold < BUILDING_DEFS.farm.cost) return undefined;
+  // A production building waiting on its tier's bar buys farms ahead of need, the way a player buys the keep.
+  const techBar = tierBarWaitedOn(snapshot, owner);
+  if (farms.length >= SUPPLY_BUILDING_LIMIT || (player.supplyCap - player.supplyUsed > 5 && techBar === undefined) || player.gold < BUILDING_DEFS.farm.cost) return undefined;
   if (shouldReserveForCoreProductionRecovery(snapshot, owner, options, BUILDING_DEFS.farm.cost)) return undefined;
   if (shouldHoldV5SevereNoExpansionStablesBank(snapshot, owner, options, player.gold, BUILDING_DEFS.farm.cost)) return undefined;
   if (shouldHoldV5SevereExtraMainTowerBank(snapshot, owner, options, player.gold, BUILDING_DEFS.farm.cost)) return undefined;

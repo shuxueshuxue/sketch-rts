@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "./catalog";
 import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
@@ -190,6 +190,10 @@ describe("sketch RTS simulation", () => {
     const workshop = createBuilding("building-player-range-workshop", "player", "workshop", 860, 680, true);
     const tower = createBuilding("building-player-range-tower", "player", "defenseTower", 960, 680, true);
     game.buildings.push(stables, workshop, tower);
+    // Raiders are advanced units: farms lift the cap past their bar (the cap is recounted on the next building or death).
+    const farms = Math.ceil(requiredSupplyCap("raider") / BUILDING_DEFS.farm.supplyProvided);
+    for (let index = 0; index < farms; index += 1) game.buildings.push(createBuilding(`building-player-range-farm-${index}`, "player", "farm", 400 + index * 64, 1_000, true));
+    game.players.player.supplyCap += farms * BUILDING_DEFS.farm.supplyProvided;
     const archer = game.spawnUnit("player", "archer", 900, 900);
     const baseSpeed = archer.speed;
     const baseRange = archer.attackRange;
@@ -454,6 +458,10 @@ describe("sketch RTS simulation", () => {
     grove.players.enemy.gold = 5000;
     ember.players.enemy.gold = 5000;
     grove.buildings.push(createBuilding("building-enemy-grove-sanctum-proof", "enemy", "sanctum", 3100, 3100, true));
+    // The sanctum's casters are advanced units: farms lift the grove player's cap past their bar.
+    const farms = Math.ceil(requiredSupplyCap("priest") / BUILDING_DEFS.farm.supplyProvided);
+    for (let index = 0; index < farms; index += 1) grove.buildings.push(createBuilding(`building-enemy-grove-farm-${index}`, "enemy", "farm", 2_700 + index * 64, 3_400, true));
+    grove.players.enemy.supplyCap += farms * BUILDING_DEFS.farm.supplyProvided;
     ember.buildings.push(createBuilding("building-enemy-ember-spire-proof", "enemy", "cinderSpire", 3100, 3100, true));
     const groveRuntime = createAiRuntime(["enemy"], { scripts: [AI_SCRIPT_LIBRARY.training] });
     const emberRuntime = createAiRuntime(["enemy"], { scripts: [AI_SCRIPT_LIBRARY.training] });

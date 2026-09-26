@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS, UNIT_DEFS } from "../../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from "../../../shared/catalog";
 import { snapshotGame } from "../../../shared/sim";
 import { sketchScene } from "../../../sdk/scene";
 import type { GameCommand, UnitKind } from "../../../shared/types";
@@ -39,14 +39,26 @@ function base(name: string, options: Base & { phase?: number }) {
   return { game, memory, plan: () => planV6Economy(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory }) };
 }
 
+// Farms beside the one hall that leave the cap one farm short of the summoners' bar.
+const ONE_FARM_SHORT = Math.ceil((requiredSupplyCap("summoner") - BUILDING_DEFS.townHall.supplyProvided) / BUILDING_DEFS.farm.supplyProvided) - 1;
+
 function of<T extends GameCommand["type"]>(commands: GameCommand[], type: T) {
   return commands.filter((command): command is Extract<GameCommand, { type: T }> => command.type === type);
 }
 
 describe("v6 economy", () => {
-  it("opens on the caster core: the sanctum its summoners need, and no tower before them", () => {
-    const { plan } = base("v6-econ-opening", { gold: 450 });
-    expect(of(plan(), "build").map((command) => command.buildingKind)).toEqual(["sanctum"]);
+  it("opens on the basic line while its casters are locked: a barracks for footmen and a farm toward the bar, no sanctum or tower", () => {
+    const { plan } = base("v6-econ-opening", { gold: 450, farms: ONE_FARM_SHORT - 1 });
+    expect(of(plan(), "build").map((command) => command.buildingKind).sort()).toEqual(["barracks", "farm"]);
+  });
+
+  it("puts the sanctum up once one more farm reaches the casters' bar, and trains footmen in the summoners' place until then", () => {
+    const { plan } = base("v6-econ-sanctum-timing", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT });
+    const commands = plan();
+    expect(of(commands, "build").map((command) => command.buildingKind)).toContain("sanctum");
+    expect(of(commands, "train").map((command) => command.unitKind)).toContain("footman");
+    const early = base("v6-econ-sanctum-early", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT - 1 }).plan();
+    expect(of(early, "build").map((command) => command.buildingKind)).not.toContain("sanctum");
   });
 
   it("moves to the second phase once most of its summoners stand, and asks for a second sanctum", () => {
@@ -101,16 +113,16 @@ describe("v6 economy", () => {
     const waitSeconds = (seconds: number) => {
       for (let second = 0; second < seconds; second += 1) {
         game.tick += 20;
-        priority("build:sanctum");
+        priority("farm:tier");
       }
     };
-    const start = priority("build:sanctum")!;
+    const start = priority("farm:tier")!;
     waitSeconds(60);
-    expect(priority("build:sanctum")).toBe(start + 10);
+    expect(priority("farm:tier")).toBe(start + 10);
     // Unseen for three seconds it keeps its wait; unseen for twelve it starts over.
     game.tick += 3 * 20;
-    expect(priority("build:sanctum")).toBe(start + 10);
+    expect(priority("farm:tier")).toBe(start + 10);
     game.tick += 12 * 20;
-    expect(priority("build:sanctum")).toBe(start);
+    expect(priority("farm:tier")).toBe(start);
   });
 });

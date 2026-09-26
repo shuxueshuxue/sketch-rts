@@ -45,7 +45,28 @@ describe("AI training choice", () => {
     if (!range || !stables) throw new Error("missing production building");
 
     expect(trainingChoice(snapshot, "v2", range)).toBe("archer");
-    expect(trainingChoice(snapshot, "v2", stables)).toBe("raider");
+    // Raiders and knights are both locked below a supply cap of 42: the stables waits.
+    expect(trainingChoice(snapshot, "v2", stables)).toBeUndefined();
+    const teched = snapshotGame(scene.farmsPastTiers("v2", 150, 150).build().createGame());
+    expect(trainingChoice(teched, "v2", teched.buildings.find((building) => building.id === "stables")!)).toBe("raider");
+  });
+
+  it("falls back to what a building can already make while its choice's tier is locked", () => {
+    const scene = sketchScene("training-choice-tier-fallback")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "ember" })
+      .townHall("v2", 500, 500)
+      .building("v2", "cinderSpire", 700, 620, { id: "spire" })
+      .building("v2", "emberForge", 780, 620, { id: "forge" })
+      .unit("v2", "sparkArcher", 760, 620);
+    for (let i = 0; i < 6; i += 1) scene.unit("v2", "emberRavager", 800 + i * 24, 700);
+    const snapshot = snapshotGame(scene.build().createGame());
+    const spire = snapshot.buildings.find((building) => building.id === "spire")!;
+    // The spire would add a support caster; at a cap of 10 its casters are locked, so it makes spark archers.
+    expect(trainingChoice(snapshot, "v2", spire, { version: "v2" })).toBe("sparkArcher");
+    const teched = snapshotGame(scene.farmsPastTiers("v2", 150, 150).build().createGame());
+    expect(trainingChoice(teched, "v2", teched.buildings.find((building) => building.id === "spire")!, { version: "v2" })).toBe("emberAcolyte");
   });
 
   it("lets v2 add a second round of casters once the army reaches the late-game mix", () => {
@@ -54,6 +75,7 @@ describe("AI training choice", () => {
       .replaceDefaults()
       .player("v2", { team: "north" })
       .townHall("v2", 500, 500)
+      .farmsPastTiers("v2", 150, 150)
       .building("v2", "sanctum", 700, 620, { id: "sanctum" })
       .unit("v2", "priest", 760, 620)
       .unit("v2", "summoner", 790, 650)
@@ -74,6 +96,7 @@ describe("AI training choice", () => {
       .replaceDefaults()
       .player("v2", { team: "north" })
       .townHall("v2", 500, 500)
+      .farmsPastTiers("v2", 150, 150)
       .building("v2", "sanctum", 700, 620, { id: "sanctum" })
       .unit("v2", "priest", 760, 620)
       .unit("v2", "summoner", 790, 650);
@@ -93,6 +116,7 @@ describe("AI training choice", () => {
       .replaceDefaults()
       .player("v2", { team: "north" })
       .townHall("v2", 500, 500)
+      .farmsPastTiers("v2", 150, 150)
       .building("v2", "sanctum", 700, 620, { id: "sanctum" })
       .unit("v2", "priest", 760, 620)
       .unit("v2", "summoner", 790, 650)
@@ -147,6 +171,7 @@ describe("AI training choice", () => {
       .replaceDefaults()
       .player("v2", { team: "north", race: "ember" })
       .townHall("v2", 500, 500)
+      .farmsPastTiers("v2", 150, 150)
       .building("v2", "cinderSpire", 700, 620, { id: "spire" })
       .unit("v2", "sparkArcher", 760, 620);
     const game = scene.build().createGame();
@@ -165,6 +190,7 @@ describe("AI training choice", () => {
         .replaceDefaults()
         .player("v5", { team: "north", race: "ember" })
         .townHall("v5", 500, 500)
+      .farmsPastTiers("v5", 150, 150)
         .building("v5", "cinderSpire", 700, 620, { id: "spire" });
       for (let index = 0; index < army; index += 1) scene = scene.unit("v5", "sparkArcher", 760 + index * 24, 620, { hp: 40 });
       const snapshot = snapshotGame(scene.build().createGame());

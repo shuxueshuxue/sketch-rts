@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
 import { unitRegenPerSecond } from "../shared/sim";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
 import { BUILDING_CARDS } from "./content/buildings";
@@ -30,7 +30,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "range", stats.attackRange),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
     ],
-    requirements: stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [],
+    requirements: [...(stats.tier ? [tierRequirement(stats.tier, requiredSupplyCap(kind), i18n)] : []), ...(stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [])],
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -134,6 +134,10 @@ function labelKind(kind: string, i18n: I18n) {
   return i18n.label(kind as LabelKey);
 }
 
+function tierRequirement(tier: 2 | 3, cap: number, i18n: I18n) {
+  return TEXT[i18n.locale].requirements[tier === 2 ? "tierAdvanced" : "tierElite"].replace("{cap}", String(cap));
+}
+
 function abilityListRequirement(abilities: readonly AbilityKind[], i18n: I18n) {
   return TEXT[i18n.locale].requirements.abilities.replace("{abilities}", abilities.map((ability) => labelKind(ability, i18n)).join(", "));
 }
@@ -208,6 +212,8 @@ const TEXT = {
       affectsStarredUnits: "Affects starred units.",
       provides: "Provides: {production}.",
       researchAt: "Research at {building}.",
+      tierAdvanced: "Advanced unit: needs a supply cap of {cap}.",
+      tierElite: "Elite unit: needs a supply cap of {cap}.",
     },
   },
   zh: {
@@ -238,6 +244,8 @@ const TEXT = {
       affectsStarredUnits: "影响有星单位。",
       provides: "提供：{production}。",
       researchAt: "在{building}研究。",
+      tierAdvanced: "进阶兵种：人口上限需达到 {cap}。",
+      tierElite: "高级兵种：人口上限需达到 {cap}。",
     },
   },
 } as const;

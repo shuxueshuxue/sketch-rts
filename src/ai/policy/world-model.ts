@@ -1,4 +1,4 @@
-import { UNIT_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 import { activeUnitClaim } from "./claims";
@@ -62,6 +62,23 @@ export function mainBaseX(snapshot: GameSnapshot, owner: PlayerId) {
 
 export function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: keyof typeof UNIT_DEFS) {
   return projectedSupplyUsed(snapshot, owner) + UNIT_DEFS[unitKind].supplyUsed <= playerState(snapshot, owner).supplyCap;
+}
+
+// @@@ai-unit-tiers - Advanced and elite units wait for the supply cap to reach their tier's bar (TIER_SUPPLY_CAP).
+export function tierUnlocked(snapshot: GameSnapshot, owner: PlayerId, unitKind: keyof typeof UNIT_DEFS) {
+  return playerState(snapshot, owner).supplyCap >= requiredSupplyCap(unitKind);
+}
+
+// The lowest tier bar a finished production building of the owner is waiting on (a sanctum before 42), if any: the farms
+// that lift the cap to it are what the building's units cost first.
+export function tierBarWaitedOn(snapshot: GameSnapshot, owner: PlayerId): number | undefined {
+  const cap = playerState(snapshot, owner).supplyCap;
+  const bars = buildings(snapshot, owner)
+    .filter((building) => building.complete)
+    .flatMap((building) => BUILDING_DEFS[building.kind].trains)
+    .map(requiredSupplyCap)
+    .filter((bar) => bar > cap);
+  return bars.length > 0 ? Math.min(...bars) : undefined;
 }
 
 export function playerState(snapshot: GameSnapshot, owner: PlayerId) {

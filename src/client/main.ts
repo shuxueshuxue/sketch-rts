@@ -3,7 +3,7 @@ import "./atlas-theme.css";
 import { drawAtlasBuilding, drawAtlasUnit, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasCamp, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
-import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, type CommandButtonState } from "./command-button-state";
+import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -199,7 +199,7 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
@@ -316,6 +316,7 @@ function commandButtonStateLabel(state: CommandButtonState) {
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
+  if (state.reason === "tier") return t("hud.commandTierShort", { cap: state.supplyCap ?? 0 });
   if (state.reason === "position") return t("hud.commandNeedUnitShort");
   return undefined;
 }
@@ -325,6 +326,7 @@ function commandButtonStateRequirement(state: CommandButtonState) {
   if (state.reason === "stock") return t("hud.commandNoStock");
   if (state.reason === "gold") return t("hud.commandNoGold");
   if (state.reason === "supply") return t("hud.commandNoSupply");
+  if (state.reason === "tier") return t("hud.commandTier", { cap: state.supplyCap ?? 0 });
   if (state.reason === "position") return t("hud.commandNeedUnit");
   return undefined;
 }
