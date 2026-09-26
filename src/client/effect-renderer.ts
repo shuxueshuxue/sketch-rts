@@ -1,6 +1,8 @@
-import type { WorldEffect } from "../shared/types";
+import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import type { UnitKind, WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
+type Rgb = { r: number; g: number; b: number };
 
 type RenderWorldEffectsOptions = {
   ctx: CanvasRenderingContext2D;
@@ -74,6 +76,14 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       const to = worldToScreen({ x: effect.toX, y: effect.toY });
       if (!nearScreen(to, 90) && !nearScreen(from, 90)) continue;
       const progress = 1 - effect.remaining / effect.duration;
+      const look = projectileLook(effect.sourceKind);
+      if (look !== "streak") {
+        const sourceKind = effect.sourceKind!;
+        const launch = launchPoint(from, to, sourceKind);
+        if (look === "arrow") drawArrow(ctx, arrowFrame(launch, to, progress, isUnitKind(sourceKind) ? 1 : TOWER_ARROW_SCALE));
+        else drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        continue;
+      }
       const head = {
         x: from.x + (to.x - from.x) * progress,
         y: from.y + (to.y - from.y) * progress,
@@ -526,7 +536,156 @@ function strokePolyline(ctx: CanvasRenderingContext2D, points: Point[]) {
   ctx.stroke();
 }
 
-// @@@projectile-trail - Ranged attacks should read as short fading motion, not a source-to-target debug line.
+export type ProjectileLook = "arrow" | "orb" | "streak";
+
+// @@@projectile-look - The shooter's rules pick the missile: a unit with a spell throws a small spell orb (its weapon is
+// weak), any other ranged unit and a tower shoot an arrow. Item blasts carry no shooter and keep the old streak.
+export function projectileLook(sourceKind: WorldEffect["sourceKind"]): ProjectileLook {
+  if (!sourceKind) return "streak";
+  if (isUnitKind(sourceKind) && UNIT_DEFS[sourceKind].abilities.length > 0) return "orb";
+  return "arrow";
+}
+
+function isUnitKind(kind: NonNullable<WorldEffect["sourceKind"]>): kind is UnitKind {
+  return kind in UNIT_DEFS;
+}
+
+const LAUNCH_REACH = 0.8;
+
+/** Missiles leave from the shooter's edge (its catalog radius toward the target), not from the middle of its body. */
+export function launchPoint(from: Point, to: Point, sourceKind: NonNullable<WorldEffect["sourceKind"]>): Point {
+  const radius = isUnitKind(sourceKind) ? UNIT_DEFS[sourceKind].radius : BUILDING_DEFS[sourceKind].radius;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return from;
+  const reach = Math.min(radius * LAUNCH_REACH, length / 2);
+  return { x: from.x + (dx / length) * reach, y: from.y + (dy / length) * reach };
+}
+
+const ARROW_LENGTH = 22;
+const TOWER_ARROW_SCALE = 1.2;
+const ARROW_ARC_RATIO = 0.12;
+const ARROW_MAX_ARC = 36;
+
+export type ArrowFrame = { tip: Point; tail: Point; angle: number; length: number };
+
+/** An arrow lobbed along a shallow arc from shooter to target: its tip rides the arc and it points along its path. */
+export function arrowFrame(from: Point, to: Point, progress: number, scale = 1): ArrowFrame {
+  const p = Math.max(0, Math.min(1, progress));
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const lift = Math.min(ARROW_MAX_ARC, Math.hypot(dx, dy) * ARROW_ARC_RATIO);
+  const tip = { x: from.x + dx * p, y: from.y + dy * p - 4 * lift * p * (1 - p) };
+  const angle = Math.atan2(dy - 4 * lift * (1 - 2 * p), dx);
+  const length = ARROW_LENGTH * scale;
+  return { tip, tail: { x: tip.x - Math.cos(angle) * length, y: tip.y - Math.sin(angle) * length }, angle, length };
+}
+
+function drawArrow(ctx: CanvasRenderingContext2D, frame: ArrowFrame) {
+  const { tip, tail, angle, length } = frame;
+  const ux = Math.cos(angle);
+  const uy = Math.sin(angle);
+  const px = -uy;
+  const py = ux;
+  const headLength = length * 0.3;
+  const headHalf = length * 0.14;
+  const neck = { x: tip.x - ux * headLength, y: tip.y - uy * headLength };
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(60, 50, 35, 0.2)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tail.x - ux * length * 0.7, tail.y - uy * length * 0.7);
+  ctx.lineTo(tail.x, tail.y);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#5b4127";
+  ctx.lineWidth = Math.max(1.6, length * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(tail.x, tail.y);
+  ctx.lineTo(neck.x, neck.y);
+  ctx.stroke();
+
+  ctx.fillStyle = "#34403b";
+  ctx.strokeStyle = "#1f2a24";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(neck.x + px * headHalf, neck.y + py * headHalf);
+  ctx.lineTo(neck.x + ux * headLength * 0.25, neck.y + uy * headLength * 0.25);
+  ctx.lineTo(neck.x - px * headHalf, neck.y - py * headHalf);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  const vane = length * 0.24;
+  const spread = length * 0.13;
+  ctx.fillStyle = "#efe6cc";
+  ctx.strokeStyle = "rgba(60, 50, 35, 0.7)";
+  for (const side of [1, -1]) {
+    ctx.beginPath();
+    ctx.moveTo(tail.x + ux * vane, tail.y + uy * vane);
+    ctx.lineTo(tail.x + px * spread * side + ux * vane * 0.35, tail.y + py * spread * side + uy * vane * 0.35);
+    ctx.lineTo(tail.x + px * spread * side - ux * 1.5, tail.y + py * spread * side - uy * 1.5);
+    ctx.lineTo(tail.x, tail.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+export type SpellOrbPalette = { glow: Rgb; core: Rgb };
+
+const SPELL_ORB_PALETTES: Record<"grove" | "ember" | "unaligned", SpellOrbPalette> = {
+  grove: { glow: { r: 64, g: 164, b: 136 }, core: { r: 228, g: 255, b: 242 } },
+  ember: { glow: { r: 222, g: 108, b: 48 }, core: { r: 255, g: 238, b: 204 } },
+  unaligned: { glow: { r: 132, g: 112, b: 196 }, core: { r: 242, g: 236, b: 255 } },
+};
+
+export function spellOrbPalette(sourceKind: NonNullable<WorldEffect["sourceKind"]>): SpellOrbPalette {
+  const race = isUnitKind(sourceKind) ? UNIT_DEFS[sourceKind].race : undefined;
+  return SPELL_ORB_PALETTES[race ?? "unaligned"];
+}
+
+// A caster's weapon is a pinprick next to its spell, so its orb stays small and faint: smaller than an arrow's head
+// to tail, and never brighter than the spell effects drawn above.
+function drawSpellOrb(ctx: CanvasRenderingContext2D, from: Point, to: Point, progress: number, palette: SpellOrbPalette) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const ux = dx / length;
+  const uy = dy / length;
+  const bob = Math.sin(progress * Math.PI * 3) * 1.5;
+  const head = { x: from.x + dx * progress - uy * bob, y: from.y + dy * progress + ux * bob };
+  const fade = Math.min(1, progress * 6, (1 - progress) * 8 + 0.35);
+  ctx.save();
+  for (let index = 3; index >= 1; index -= 1) {
+    ctx.fillStyle = rgba(palette.glow, (0.3 - index * 0.07) * fade);
+    ctx.beginPath();
+    ctx.arc(head.x - ux * index * 5, head.y - uy * index * 5, 2.2 - index * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const glow = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 7);
+  glow.addColorStop(0, rgba(palette.glow, 0.42 * fade));
+  glow.addColorStop(1, rgba(palette.glow, 0));
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(head.x, head.y, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = rgba(palette.core, 0.85 * fade);
+  ctx.strokeStyle = rgba(palette.glow, 0.6 * fade);
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(head.x, head.y, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+// @@@projectile-trail - Item blasts read as short fading motion, not a source-to-target debug line.
 function drawProjectileTrail(ctx: CanvasRenderingContext2D, from: Point, to: Point, head: Point, progress: number, life: number) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;

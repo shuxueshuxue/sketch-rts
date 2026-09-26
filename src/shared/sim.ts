@@ -1379,6 +1379,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
     fromY: projectile.fromY,
     toX: projectile.toX,
     toY: projectile.toY,
+    sourceKind: attacker.kind,
   });
 }
 
@@ -1526,7 +1527,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;

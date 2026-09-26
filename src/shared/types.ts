@@ -61,6 +61,8 @@ export type WorldEffect = {
   damage?: number;
   radius?: number;
   tickEvery?: number;
+  /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt. Presentation only. */
+  sourceKind?: UnitKind | BuildingKind;
 };
 
 export type Projectile = {
