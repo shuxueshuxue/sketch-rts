@@ -1,4 +1,5 @@
 import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit";
+import { createScratchCanvas } from "./art/scratch-canvas";
 import { BUILDING_CARDS } from "./content/buildings";
 import { UNIT_CARDS } from "./content/units";
 import type { BuildingKind, TerrainLandmark, UnitKind } from "../shared/types";
@@ -10,13 +11,13 @@ const MAX_SPRITES = 256;
 // Cache at a resolution suited to the drawing size, including the enlarged
 // title illustration. Team colors and marks keep faction variants distinct.
 // A mirrored draw flips the cached image about the sprite's own vertical axis.
+// The resolution follows the brush's own zoom too, so a zoomed-in view (the recorder's camera) stays crisp.
 function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false) {
-  const density = Math.max(2, Math.min(6, Math.ceil(scale * 2)));
+  const density = Math.max(2, Math.min(6, Math.ceil(scale * brushZoom(c) * 2)));
   const cacheKey = `${key}:${density}`;
   let source = sprites.get(cacheKey);
   if (!source) {
-    source = document.createElement("canvas");
-    source.width = source.height = 128 * density;
+    source = createScratchCanvas(128 * density, 128 * density);
     const brush = source.getContext("2d")!;
     brush.scale(density, density);
     brush.translate(64, 64);
@@ -34,6 +35,11 @@ function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brus
   c.scale(-1, 1);
   c.drawImage(source, -64 * scale, -64 * scale, 128 * scale, 128 * scale);
   c.restore();
+}
+
+function brushZoom(c: Brush) {
+  const transform = c.getTransform();
+  return Math.hypot(transform.a, transform.b);
 }
 
 export function drawAtlasBuilding(c: Brush, kind: BuildingKind, point: Point, size: number, color: string) {
@@ -138,12 +144,15 @@ export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
   });
 }
 
+/** The paper's own colour, under the washes and specks of the ground tile. */
+export const PAPER_BASE = "#e8e3ca";
+
 let groundTile: HTMLCanvasElement | undefined;
 export function drawAtlasGround(c: Brush, width: number, height: number, camera: Point) {
   if (!groundTile) {
-    groundTile = document.createElement("canvas"); groundTile.width = groundTile.height = 512;
+    groundTile = createScratchCanvas(512, 512);
     const b = groundTile.getContext("2d")!;
-    b.fillStyle = "#e8e3ca"; b.fillRect(0, 0, 512, 512);
+    b.fillStyle = PAPER_BASE; b.fillRect(0, 0, 512, 512);
     let seed = 19027;
     const random = () => { seed = Math.imul(seed, 1664525) + 1013904223 | 0; return (seed >>> 0) / 4294967296; };
     for (let i = 0; i < 18; i++) {
@@ -166,7 +175,7 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
 let menuScene: HTMLCanvasElement | undefined;
 export function drawAtlasMenu(c: Brush, width: number, height: number) {
   if (!menuScene || menuScene.width !== width || menuScene.height !== height) {
-    menuScene = document.createElement("canvas"); menuScene.width = width; menuScene.height = height;
+    menuScene = createScratchCanvas(width, height);
     const b = menuScene.getContext("2d")!;
     drawAtlasGround(b, width, height, { x: 0, y: 0 });
     b.lineJoin = b.lineCap = "round";

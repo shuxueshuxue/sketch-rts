@@ -1,6 +1,6 @@
 import "./styles.css";
 import "./atlas-theme.css";
-import { drawAtlasBuilding, drawAtlasUnit, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasCamp, drawAtlasMenu } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasUnit, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
@@ -24,7 +24,6 @@ import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities
 import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
-import { drawLevelStar } from "./level-star";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import {
   isMicrosoftEdgeUserAgent,
@@ -35,19 +34,16 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
-import { shouldRenderBuildingRally } from "./rally-visual";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
-import { unitGlyphScale } from "./glyphs";
 import { UnitFacingTracker } from "./unit-facing";
-import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
-import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
+import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
+import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
@@ -60,7 +56,7 @@ import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, type SlotPatch } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -103,6 +99,7 @@ const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 const i18n = createBrowserI18n();
 const t = i18n.t;
 const tl = i18n.label;
+const worldLabels = worldLabelsFor(i18n);
 document.documentElement.lang = i18n.locale;
 app.innerHTML = gameShellMarkup(i18n);
 
@@ -2292,351 +2289,39 @@ function draw() {
     drawMenuBackdrop();
     return;
   }
-  drawPaperMap();
   if (!snapshot) {
+    drawPaperMap(ctx, selectedMapId, camera, canvas.width, canvas.height);
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
     ctx.fillText(t("canvas.connecting"), 32, 48);
     return;
   }
-  const presentationMarks = createMapPresentation(snapshot);
-  drawLandmarks(snapshot.map.landmarks);
-  drawResources(snapshot.resources);
-  drawMercenaryCamps(snapshot.mercenaryCamps);
-  drawItems(snapshot.items);
-  drawBuildings(snapshot.buildings);
-  drawUnits(snapshot.units);
-  drawCarriedItems(snapshot.items);
-  drawEffects(snapshot.effects);
+  drawWorld({
+    ctx,
+    snapshot,
+    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height },
+    now: performance.now(),
+    facing: unitFacing,
+    labels: worldLabels,
+    selectedIds,
+    ...(selectedCampId ? { selectedCampId } : {}),
+  });
   drawBuildPlacementPreview();
   drawAttackMovePreview();
   drawSpellPreview();
   drawSelectionBox();
-  drawMinimap(presentationMarks);
+  drawMinimap(createMapPresentation(snapshot));
 }
 
 function drawMenuBackdrop() {
   drawAtlasMenu(ctx, canvas.width, canvas.height);
 }
 
-function drawPaperMap() {
-  drawAtlasGround(ctx, canvas.width, canvas.height, camera);
-  for (const stroke of generateTerrainLinework({ mapId: snapshot?.map.id ?? selectedMapId, camera, width: canvas.width, height: canvas.height })) {
-    drawTextureStroke(stroke);
-  }
-}
-
-function drawTextureStroke(stroke: TextureStroke) {
-  if (stroke.points.length === 0) return;
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.width;
-  ctx.beginPath();
-  ctx.moveTo(stroke.points[0]!.x, stroke.points[0]!.y);
-  for (const point of stroke.points.slice(1)) ctx.lineTo(point.x, point.y);
-  ctx.stroke();
-}
-
-function drawLandmarks(landmarks: TerrainLandmark[]) {
-  for (const landmark of landmarks) {
-    const point = worldToScreen(landmark);
-    if (nearScreen(point, landmark.size + 80)) drawAtlasLandmark(ctx, landmark, point);
-  }
-}
-
-function drawResources(resources: ResourceNode[]) {
-  for (const resource of resources) {
-    const point = worldToScreen(resource);
-    if (!nearScreen(point, 80)) continue;
-    drawAtlasMine(ctx, point);
-    ctx.font = "600 11px ui-monospace, monospace";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#776443";
-    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), point.x, point.y + 45);
-    ctx.textAlign = "start";
-  }
-}
-
-function drawMercenaryCamps(camps: MercenaryCamp[]) {
-  for (const camp of camps) {
-    const point = worldToScreen(camp);
-    if (!nearScreen(point, 110)) continue;
-    if (selectedCampId === camp.id) drawSelectionHalo(point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#96774a");
-    drawAtlasCamp(ctx, point);
-    ctx.font = "11px ui-monospace, monospace";
-    ctx.fillStyle = "#796644";
-    ctx.textAlign = "center";
-    ctx.fillText(t("canvas.mercenaryStock", { stock: camp.stock }), point.x, point.y + 48);
-    ctx.textAlign = "start";
-    if (camp.cooldownRemaining > 0) drawProgress(point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
-  }
-}
-
-function drawBuildings(buildings: Building[]) {
-  for (const building of buildings) {
-    const shake = hitFeedbackOffset(building, building.radius);
-    const point = worldToScreen({ x: building.x + shake.x, y: building.y + shake.y });
-    const selected = selectedIds.has(building.id);
-    const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
-    const rallyPoint = worldToScreen({ x: building.rallyX, y: building.rallyY });
-    const showRally = shouldRenderBuildingRally({ selected, trainable });
-    if (!nearScreen(point, 120)) {
-      if (showRally) drawBuildingRally(building, point, rallyPoint);
-      continue;
-    }
-    ctx.strokeStyle = ownerInk(building.owner);
-    ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
-    ctx.lineWidth = selected ? 4 : 2;
-    const size = building.kind === "townHall" ? 76 : 58;
-    if (selected) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
-    ctx.save();
-    ctx.globalAlpha = building.complete ? 1 : 0.48;
-    drawBuildingGlyph(building.kind, point, size);
-    ctx.restore();
-    if (showRally) drawBuildingRally(building, point, rallyPoint);
-    drawHp(point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
-    if (!building.complete) drawProgress(point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
-    if (building.complete && building.queue[0]) {
-      drawTrainingProgress(point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
-    }
-  }
-}
-
-function drawBuildingRally(building: Building, from: Point, to: Point) {
-  const ink = building.rallyTarget?.type === "resource" ? "#b9861b" : building.rallyTarget?.type === "unit" ? "#5d8b4c" : "#315f87";
-  ctx.save();
-  ctx.strokeStyle = ink;
-  ctx.fillStyle = ink;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 5]);
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.arc(to.x, to.y, 7, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(to.x, to.y - 16);
-  ctx.lineTo(to.x, to.y + 8);
-  ctx.lineTo(to.x + 15, to.y - 8);
-  ctx.lineTo(to.x, to.y - 8);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawBuildingGlyph(kind: BuildingKind, point: Point, size: number) {
-  drawAtlasBuilding(ctx, kind, point, size, String(ctx.strokeStyle));
-}
-
-function drawUnits(units: Unit[]) {
-  const positions = new Map<string, Point>();
-  for (const entity of [...units, ...(snapshot?.buildings ?? [])]) positions.set(entity.id, entity);
-  unitFacing.update(units, (id) => positions.get(id));
-  for (const unit of units) {
-    const shake = hitFeedbackOffset(unit, unit.radius);
-    const point = worldToScreen({ x: unit.x + shake.x, y: unit.y + shake.y });
-    const scale = unitGlyphScale(unit.radius);
-    if (!nearScreen(point, Math.max(60, unit.radius * 3))) continue;
-    ctx.strokeStyle = ownerInk(unit.owner);
-    ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
-    ctx.lineWidth = selectedIds.has(unit.id) ? 4 : 2;
-    if (hasCarriedItem(unit, "flameCloak")) drawFlameCloakAura(point, performance.now(), unit.radius);
-    if (selectedIds.has(unit.id)) {
-      ctx.beginPath();
-      ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), unitFacing.facing(unit.id));
-    const scorch = unit.effects.find((effect) => effect.type === "scorch");
-    if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, performance.now(), scorch.remaining);
-    if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
-    if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    drawHp(point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
-  }
-}
-
-function hasCarriedItem(unit: Unit, kind: WorldItem["kind"]) {
-  return snapshot?.items.some((item) => item.kind === kind && item.carrierId === unit.id) ?? false;
-}
-
-function drawFlameCloakAura(point: Point, now: number, radius: number) {
-  const pulse = 0.55 + Math.sin(now / 140) * 0.14;
-  ctx.save();
-  ctx.strokeStyle = `rgba(150, 60, 54, ${pulse})`;
-  ctx.fillStyle = "rgba(242, 137, 75, 0.12)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 13, radius + 14, (radius + 14) * 0.42, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(242, 137, 75, 0.72)";
-  for (let index = 0; index < 5; index += 1) {
-    const angle = now / 260 + index * 1.26;
-    const x = point.x + Math.cos(angle) * (radius + 8);
-    const y = point.y + 13 + Math.sin(angle) * (radius * 0.34);
-    ctx.beginPath();
-    ctx.moveTo(x, y + 5);
-    ctx.quadraticCurveTo(x - 5, y - 3, x + 1, y - 11);
-    ctx.quadraticCurveTo(x + 6, y - 3, x + 3, y + 5);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawItems(items: WorldItem[]) {
-  for (const item of items) {
-    if (item.carrierId) continue;
-    const point = worldToScreen(item);
-    if (!nearScreen(point, 42)) continue;
-    drawItemGlyph(item, point, performance.now(), false);
-  }
-}
-
-function drawCarriedItems(items: WorldItem[]) {
-  for (const item of items) {
-    if (!item.carrierId) continue;
-    const point = worldToScreen(item);
-    if (!nearScreen(point, 60)) continue;
-    drawItemGlyph(item, { x: point.x + 12, y: point.y - 34 }, performance.now(), true);
-  }
-}
-
-function drawSelectionHalo(x: number, y: number, rx: number, ry: number, color: string) {
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 250, 226, 0.8)";
-  ctx.beginPath();
-  ctx.ellipse(x - 2, y - 3, rx * 0.82, ry * 0.7, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawCarriedGold(x: number, y: number) {
-  ctx.save();
-  ctx.strokeStyle = "#8a6418";
-  ctx.fillStyle = "#f2d05c";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x - 6, y - 24);
-  ctx.lineTo(x + 2, y - 34);
-  ctx.lineTo(x + 10, y - 23);
-  ctx.lineTo(x + 1, y - 18);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawItemGlyph(item: WorldItem, point: Point, now: number, carried: boolean) {
-  const bob = carried ? Math.sin(now / 180 + point.x * 0.03) * 2.5 : 0;
-  const x = point.x;
-  const y = point.y + bob;
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (item.kind === "lightningRod") {
-    ctx.strokeStyle = "#315f87";
-    ctx.fillStyle = "#9ed8ff";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(x - 3, y + 9);
-    ctx.lineTo(x + 6, y - 11);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x + 3, y - 13);
-    ctx.lineTo(x + 11, y - 6);
-    ctx.lineTo(x + 6, y - 6);
-    ctx.lineTo(x + 12, y + 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "stormStaff") {
-    ctx.strokeStyle = "#596073";
-    ctx.fillStyle = "#d6d4f2";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 9);
-    ctx.lineTo(x + 5, y - 10);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 5, 0.15, Math.PI * 1.8);
-    ctx.stroke();
-  } else if (item.kind === "flameCloak") {
-    ctx.strokeStyle = "#963c36";
-    ctx.fillStyle = "rgba(242, 137, 75, 0.72)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 8);
-    ctx.quadraticCurveTo(x - 13, y - 4, x - 4, y - 12);
-    ctx.quadraticCurveTo(x + 12, y - 4, x + 7, y + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "guardianScroll") {
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "#fff6d0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.rect(x - 8, y - 6, 16, 12);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y - 2);
-    ctx.lineTo(x + 5, y - 2);
-    ctx.moveTo(x - 4, y + 3);
-    ctx.lineTo(x + 4, y + 3);
-    ctx.stroke();
-  } else if (item.kind === "breachCharge") {
-    ctx.strokeStyle = "#5f3a24";
-    ctx.fillStyle = "#d28445";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 2, y - 7);
-    ctx.quadraticCurveTo(x + 2, y - 13, x + 7, y - 9);
-    ctx.stroke();
-  } else {
-    ctx.strokeStyle = "#8a6418";
-    ctx.fillStyle = "#f2d05c";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 10);
-    ctx.lineTo(x + 8, y);
-    ctx.lineTo(x, y + 10);
-    ctx.lineTo(x - 8, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-  if (carried) {
-    ctx.strokeStyle = "rgba(49, 95, 135, 0.36)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(x, y + 13, 10, 3.2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawEffects(effects: GameSnapshot["effects"]) {
-  renderWorldEffects({ ctx, effects, worldToScreen, nearScreen });
-}
-
 function drawBuildPlacementPreview() {
   if (!commandMode || commandMode.type !== "build" || !lastMouse) return;
   const def = BUILDING_DEFS[commandMode.placement.buildingKind];
   const point = lastMouse;
-  const size = commandMode.placement.buildingKind === "townHall" ? 76 : 58;
+  const size = buildingGlyphSize(commandMode.placement.buildingKind);
   const world = screenToWorld(point);
   const placement = snapshot ? buildPlacementCommand(snapshot, commandMode.placement, world) : undefined;
   const validPlacement = !placement || "command" in placement;
@@ -2649,7 +2334,7 @@ function drawBuildPlacementPreview() {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.globalAlpha = 0.62;
-  drawBuildingGlyph(commandMode.placement.buildingKind, point, size);
+  drawAtlasBuilding(ctx, commandMode.placement.buildingKind, point, size, String(ctx.strokeStyle));
   ctx.globalAlpha = 1;
   ctx.fillStyle = validPlacement ? "#387d72" : "#a85644";
   ctx.font = "11px ui-monospace, monospace";
@@ -2921,39 +2606,6 @@ function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {
   ctx.restore();
 }
 
-function drawHp(x: number, y: number, hp: number, maxHp: number) {
-  const width = 30;
-  const ratio = Math.max(0, Math.min(1, hp / maxHp));
-  ctx.fillStyle = "#31483a";
-  ctx.fillRect(x - width / 2 - 1, y - 1, width + 2, 5);
-  ctx.fillStyle = ratio > 0.45 ? "#90b781" : "#cd8062";
-  ctx.fillRect(x - width / 2, y, width * ratio, 3);
-}
-
-function drawProgress(x: number, y: number, ratio: number) {
-  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
-  ctx.fillRect(x - 28, y, 56, 5);
-  ctx.fillStyle = "#315f87";
-  ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
-}
-
-function drawTrainingProgress(x: number, y: number, remaining: number, unitKind: TrainableUnitKind, queueLength: number) {
-  const total = UNIT_DEFS[unitKind].trainTime;
-  drawProgress(x, y, 1 - remaining / total);
-  ctx.fillStyle = "#315f87";
-  ctx.font = "9px ui-monospace, monospace";
-  const countText = trainingQueueCountText(queueLength);
-  ctx.fillText(`${labelKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
-}
-
-function hitFeedbackOffset(entity: Unit | Building, scale: number): Point {
-  if (!snapshot) return { x: 0, y: 0 };
-  const hit = snapshot.effects.find((effect) => effect.type === "hit" && distance(effect, entity) <= scale + 8);
-  if (!hit) return { x: 0, y: 0 };
-  const pulse = Math.sin(hit.remaining * 1.7) * Math.max(2, scale * 0.18);
-  return { x: pulse, y: -pulse * 0.35 };
-}
-
 function updateCamera() {
   if (menuOpen) return;
   const speed = keys.has("shift") ? 24 : 14;
@@ -3129,17 +2781,6 @@ function romanLevel(level: number) {
 
 function distance(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function ownerInk(owner: Owner | undefined) {
-  if (owner === "player") return "#387d72";
-  if (owner === "enemy") return "#a85644";
-  if (owner === "enemy2") return "#7f3a70";
-  if (!owner || owner === "neutral") return "#704a33";
-  const palette = ["#315f87", "#963c36", "#7f3a70", "#5d8b4c", "#b97927", "#596a8c", "#8d5a46", "#2f766f"];
-  let hash = 0;
-  for (const char of owner) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length]!;
 }
 
 function loadLocalUserProfile(): LocalUserProfile {
