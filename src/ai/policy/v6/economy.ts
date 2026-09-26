@@ -7,7 +7,7 @@ import { buildings, units } from "../snapshot";
 import { distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy } from "../versions";
-import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, tierUnlocked } from "../world-model";
+import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
@@ -39,7 +39,8 @@ const MIN_WORKERS = 6;
 const WORKERS_PER_MINE = 5;
 const FARM_LIMIT = 15;
 const MAX_PRODUCERS_PER_KIND = 3;
-const FLOAT_GOLD = 350;
+// Gold piling past this many basic soldiers' worth buys another producer (see capacityGoals).
+const FLOAT_SOLDIERS = 3.5;
 const MAX_TOWERS_AT_HALL = 3;
 const TOWER_REACH_FROM_HALL = 520;
 const HALL_THREAT_RANGE = 800;
@@ -309,7 +310,7 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
 // Gold piling up while every producer is busy buys another producer of whatever the phase still waits on most (AMAI's
 // factory count follows income the same way).
 function capacityGoals(economy: Economy): Goal[] {
-  if (playerState(economy.snapshot, economy.owner).gold < FLOAT_GOLD) return [];
+  if (playerState(economy.snapshot, economy.owner).gold < soldiersWorth(FLOAT_SOLDIERS)) return [];
   const producers = economy.own.filter((building) => isCoreProductionBuilding(building));
   if (producers.length === 0 || producers.some((building) => !building.complete || building.queue.length === 0)) return [];
   const waiting = [...economy.phase.wants]

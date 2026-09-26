@@ -2,7 +2,7 @@ import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { combatUnits, completeBuildings, units } from "./snapshot";
 import { aiPlaybook } from "./playbook";
-import { playerState, tierUnlocked } from "./world-model";
+import { playerState, soldiersWorth, tierUnlocked } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 
@@ -104,7 +104,7 @@ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: Pres
 
 function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const gold = playerState(snapshot, owner).gold;
-  if (gold > 520) return true;
+  if (gold > soldiersWorth(5.2)) return true;
   if (options.version !== "v2") return false;
   return completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 10 && gold >= UNIT_DEFS.knight.cost;
 }
@@ -120,7 +120,7 @@ function v2LateCasterTarget(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   if (options.version !== "v2") return { priests: 1, summoners: 1, witches: 1 };
   const army = combatUnits(snapshot, owner);
   const gold = playerState(snapshot, owner).gold;
-  if (army.length < 8 && gold < 480) return { priests: 1, summoners: 1, witches: 1 };
+  if (army.length < 8 && gold < soldiersWorth(4.8)) return { priests: 1, summoners: 1, witches: 1 };
   return { priests: 2, summoners: 2, witches: 2 };
 }
 

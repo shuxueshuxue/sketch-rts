@@ -6,7 +6,7 @@ import { opponentPlayerIds } from "./ownership";
 import { aiPlaybook, type ProductionBuildingKind } from "./playbook";
 import type { PresetAiPolicyOptions } from "./types";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
-import { hasCoreProduction, isCoreProductionBuilding, playerState } from "./world-model";
+import { hasCoreProduction, isCoreProductionBuilding, playerState, soldiersWorth } from "./world-model";
 
 const V5_SHOOTER_BUILDING_TARGET = 3;
 
@@ -78,7 +78,7 @@ export function needsDuplicateCoreProduction(snapshot: GameSnapshot, owner: Play
 
 export function duplicateCoreProductionKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
   const candidate = duplicateCoreProductionReserveKind(snapshot, owner, options);
-  if (!candidate || (!isOneBaseNoExpansionPressure(snapshot, owner) && playerState(snapshot, owner).gold < 260)) return undefined;
+  if (!candidate || (!isOneBaseNoExpansionPressure(snapshot, owner) && playerState(snapshot, owner).gold < soldiersWorth(2.6))) return undefined;
   return candidate;
 }
 

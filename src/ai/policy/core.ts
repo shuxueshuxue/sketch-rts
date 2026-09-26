@@ -98,6 +98,7 @@ import {
   playerState,
   projectedSupplyUsed,
   queuedUnitCount,
+  soldiersWorth,
   tierBarWaitedOn,
 } from "./world-model";
 
@@ -927,7 +928,7 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
     const weaponUnits = upgradeBenefitingUnits(snapshot, owner, "weaponTraining");
     const level = upgradeLevel(snapshot, owner, "weaponTraining");
     if (options.version === "v2" && level === 0 && usesEarlyWeaponTiming(snapshot, owner) && weaponUnits.length >= 2) return "weaponTraining";
-    if (weaponUnits.length >= 5 + level * 3 || playerState(snapshot, owner).gold > 780 + level * 360) return "weaponTraining";
+    if (weaponUnits.length >= 5 + level * 3 || playerState(snapshot, owner).gold > soldiersWorth(7.8 + level * 3.6)) return "weaponTraining";
   }
   if (upgradeAvailable(snapshot, owner, "reinforcedPlating")) {
     if (upgradeLevel(snapshot, owner, "weaponTraining") < 1) return undefined;
@@ -1056,7 +1057,7 @@ function planDefense(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     // @@@main-guard-range - The reserve gate already treats an approaching army as main pressure; defense must be able to spend that reserved tower bank.
     const threat = nearestOpponentThreat(snapshot, owner, base, threatRange, options);
     const alreadyCovered = towers.some((tower) => distance(tower, base) < 430);
-    const wantsExpansionGuard = hasCoreProduction && bases.length > 1 && !alreadyCovered && (player.gold > 460 || shouldGuardFreshMiningExpansion(snapshot, owner, base, options));
+    const wantsExpansionGuard = hasCoreProduction && bases.length > 1 && !alreadyCovered && (player.gold > soldiersWorth(4.6) || shouldGuardFreshMiningExpansion(snapshot, owner, base, options));
     if (!threat && !wantsExpansionGuard) continue;
     if (threat && alreadyCovered) continue;
 
@@ -1204,7 +1205,7 @@ function planTowerMercSiegeTower(snapshot: GameSnapshot, owner: PlayerId, option
   if (!isTowerMercPolicy(options)) return undefined;
   const bankedLateGame = snapshot.tick >= TOWER_MERC_SIEGE_CLEANUP_TICK && completeBuildings(snapshot, owner, "townHall").length >= 2 && playerState(snapshot, owner).gold >= 2_000;
   if (activeMiningBaseCount(snapshot, owner) < 2 && !bankedLateGame) return undefined;
-  if (playerState(snapshot, owner).gold < BUILDING_DEFS.defenseTower.cost + 420) return undefined;
+  if (playerState(snapshot, owner).gold < BUILDING_DEFS.defenseTower.cost + soldiersWorth(4.2)) return undefined;
   const anchors = [...completeBuildings(snapshot, owner, "townHall"), ...towers.filter((tower) => tower.complete)];
   const target = towerMercSiegeTarget(snapshot, owner, anchors, options);
   if (!target) return undefined;
@@ -1470,7 +1471,7 @@ function shouldMercenaryYieldToCloseout(snapshot: GameSnapshot, owner: PlayerId,
 
 function shouldYieldMercenaryMoveToTrainingBacklog(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   if (options.version !== "v2") return false;
-  if (playerState(snapshot, owner).gold < 480) return false;
+  if (playerState(snapshot, owner).gold < soldiersWorth(4.8)) return false;
   if (activeMiningBaseCount(snapshot, owner) < 2 && combatUnits(snapshot, owner).length < 8) return false;
   // @@@merc-move-yields-to-production - Free camp walking is useful, but a late bank with idle core production must turn into army first.
   return planTraining(snapshot, owner, options).some(

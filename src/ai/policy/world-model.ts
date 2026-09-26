@@ -64,6 +64,12 @@ export function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: key
   return projectedSupplyUsed(snapshot, owner) + UNIT_DEFS[unitKind].supplyUsed <= playerState(snapshot, owner).supplyCap;
 }
 
+// @@@gold-in-soldiers - A bank the AI waits for is written in basic soldiers (a footman's price), not in gold, so it follows
+// the price list: make every unit a fifth dearer and every bank grows with it. Rounded, so a whole bank stays whole.
+export function soldiersWorth(count: number) {
+  return Math.round(count * UNIT_DEFS.footman.cost);
+}
+
 // @@@ai-unit-tiers - Advanced and elite units wait for the supply cap to reach their tier's bar (TIER_SUPPLY_CAP).
 export function tierUnlocked(snapshot: GameSnapshot, owner: PlayerId, unitKind: keyof typeof UNIT_DEFS) {
   return playerState(snapshot, owner).supplyCap >= requiredSupplyCap(unitKind);
