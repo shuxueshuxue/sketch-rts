@@ -52,7 +52,7 @@ describe("AI planner context boundary", () => {
   });
 
   it("dispatches v2-prod through the frozen policy snapshot instead of the live script registry", () => {
-    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember", "v4-tr", "v5", "v6"]);
+    expect(Object.keys(AI_SCRIPT_VERSIONS)).toEqual(["v1", "v2", "v3", "v3-grove", "v3-ember", "v4-tr", "v5", "v6", "v7"]);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
     const commands = planAiOwnerCommandEntries(snapshotGame(game), { playerId: "player", version: "v2-prod" }, { teams: game.teams });

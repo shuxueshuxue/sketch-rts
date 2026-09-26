@@ -211,7 +211,7 @@ export type OwnerNumberMap = Record<Owner, number> & {
   neutral: number;
 };
 
-export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6";
+export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7";
 
 export type GameSetupOptions = {
   aiPlayers?: PlayerId[];

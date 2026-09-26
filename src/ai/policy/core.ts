@@ -236,6 +236,9 @@ export const V6_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.workerDefense,
 ];
 
+// V7 starts as V6's stack; it plays both races and must hold against any pair of V3, V5 and V6.
+export const V7_AI_STACK: AiScript[] = [...V6_AI_STACK];
+
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
@@ -266,6 +269,7 @@ export const AI_SCRIPT_VERSIONS = {
   "v4-tr": V4_TR_TOWER_MERC_AI_STACK,
   v5: V5_HYBRID_AI_STACK,
   v6: V6_AI_STACK,
+  v7: V7_AI_STACK,
 } satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
@@ -303,7 +307,7 @@ function livePresetPolicyVersion(version: AiScriptVersion): Exclude<AiScriptVers
 }
 
 function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">): Exclude<AiScriptVersion, "v2-prod"> {
-  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" ? "v2" : version;
+  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" ? "v2" : version;
 }
 
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

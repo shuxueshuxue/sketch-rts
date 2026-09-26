@@ -1,11 +1,12 @@
 // Fight arena: capture real 1v2 fights, then replay them in isolation.
-//   capture: tsx scripts/ai-v5-arena.ts capture --seed <seed> [--subject v5|v6] [--names "a|b"] [--shard i --shards n] > scenarios.jsonl
-//            (v5: its 1v2 benchmark against V3 and V4-TR; v6: the V6 gauntlet against V3 and V5)
+//   capture: tsx scripts/ai-v5-arena.ts capture --seed <seed> [--subject v5|v6|v7] [--names "a|b"] [--shard i --shards n] > scenarios.jsonl
+//            (v5: its 1v2 benchmark against V3 and V4-TR; v6: the V6 gauntlet against V3 and V5; v7: the V7 gauntlet)
 //   run:     tsx scripts/ai-v5-arena.ts run --scenarios scenarios.jsonl [--shard i --shards n] > results.jsonl
 import { readFileSync } from "node:fs";
 import { createAiV5VsHybridBenchmarkInput } from "../src/ai/benchmark/control";
 import { arenaMatch, arenaSubject, captureArenaScenario, scoreArena, type ArenaScenario } from "../src/ai/benchmark/v5-arena";
 import { createAiV6GauntletBenchmarkInput } from "../src/ai/benchmark/v6-gauntlet";
+import { createAiV7GauntletBenchmarkInput } from "../src/ai/benchmark/v7-gauntlet";
 import { runAiGameLoop } from "../src/ai/game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../src/ai/runtime";
 import { UNIT_DEFS } from "../src/shared/catalog";
@@ -30,8 +31,8 @@ else throw new Error("usage: ai-v5-arena.ts capture|run|trace ...");
 
 function capture(seed: string) {
   const subject = flag("subject") ?? "v5";
-  if (subject !== "v5" && subject !== "v6") throw new Error(`Unknown arena subject ${subject}`);
-  const { input } = subject === "v6" ? createAiV6GauntletBenchmarkInput({ seed, mapCount: 50 }) : createAiV5VsHybridBenchmarkInput({ seed, mapCount: 50 });
+  if (subject !== "v5" && subject !== "v6" && subject !== "v7") throw new Error(`Unknown arena subject ${subject}`);
+  const { input } = subject === "v7" ? createAiV7GauntletBenchmarkInput({ seed, mapCount: 50 }) : subject === "v6" ? createAiV6GauntletBenchmarkInput({ seed, mapCount: 50 }) : createAiV5VsHybridBenchmarkInput({ seed, mapCount: 50 });
   const names = flag("names")?.split("|");
   const matches = input.evaluations
     .flatMap((evaluation) => evaluation.matches)
