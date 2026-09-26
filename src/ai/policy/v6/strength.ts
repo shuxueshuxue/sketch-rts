@@ -1,5 +1,5 @@
 import { ABILITY_DEFS, UNIT_DEFS } from "../../../shared/catalog";
-import type { Unit } from "../../../shared/types";
+import type { Building, Unit } from "../../../shared/types";
 
 // @@@v6-strength - One strength currency for every V6 decision (attack, retreat, defend, creep, raid): a unit is worth its
 // price in hundreds of gold, scaled by the health it has left and its veterancy stars. Creeps and spirits have no price, so
@@ -19,6 +19,12 @@ export function combatRating(unit: Unit) {
   if (unit.kind === "worker") return 0;
   const base = CASTER_STRENGTH[unit.kind] ?? Math.sqrt(unit.maxHp * (unit.attackDamage / Math.max(1, unit.attackCooldown / 20))) / FOOTMAN_RATING;
   return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level);
+}
+
+// A tower by the same hit points times damage rating as a fighter (about one footman for a defense tower).
+export function structureRating(building: Pick<Building, "hp" | "attackDamage" | "attackCooldown">) {
+  if (building.attackDamage <= 0) return 0;
+  return Math.sqrt(building.hp * (building.attackDamage / Math.max(1, building.attackCooldown / 20))) / FOOTMAN_RATING;
 }
 
 export function unitStrength(unit: Unit) {
