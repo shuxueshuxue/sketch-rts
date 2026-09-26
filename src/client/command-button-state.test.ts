@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { abilityCommandState, mercenaryHireCommandState, trainCommandState } from "./command-button-state";
+import { abilityCommandState, autocastSwitch, autocastToggle, mercenaryHireCommandState, trainCommandState } from "./command-button-state";
 import { TIER_SUPPLY_CAP } from "../shared/catalog";
 import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
 
@@ -20,12 +20,41 @@ describe("command button state", () => {
       enabled: false,
       cooldownTicks: 75,
       reason: "cooldown",
+      autocast: "on",
     });
   });
 
   it("enables a caster's spell while only its weapon is cooling down", () => {
     const priest = { ...unit("priest", undefined), cooldown: 20 };
-    expect(abilityCommandState([priest], "heal")).toEqual({ visible: true, enabled: true });
+    expect(abilityCommandState([priest], "heal")).toEqual({ visible: true, enabled: true, autocast: "on" });
+  });
+
+  it("shows the charge on a rider's card, with its autocast switch read over the whole selection", () => {
+    const raider = unit("raider", undefined);
+    const knight = { ...unit("knight", undefined), id: "knight-1", autocast: { charge: false } };
+    expect(abilityCommandState([raider], "charge")).toEqual({ visible: true, enabled: true, autocast: "on" });
+    expect(abilityCommandState([raider], "charge", [raider, knight])).toEqual({ visible: true, enabled: true, autocast: "mixed" });
+    expect(abilityCommandState([unit("footman", undefined)], "charge", [raider])).toEqual({ visible: false, enabled: false });
+  });
+
+  it("switches autocast Warcraft III's way: all on unless every selected caster already has it on", () => {
+    const on = (id: string) => ({ ...unit("raider", undefined), id });
+    const off = (id: string) => ({ ...unit("knight", undefined), id, autocast: { charge: false } });
+    const footman = unit("footman", undefined);
+
+    expect(autocastSwitch([on("a"), on("b")], "charge")).toBe("on");
+    expect(autocastToggle([on("a"), on("b"), footman], "charge")).toEqual({ unitIds: ["a", "b"], enabled: false });
+
+    expect(autocastSwitch([on("a"), off("b")], "charge")).toBe("mixed");
+    expect(autocastToggle([on("a"), off("b")], "charge")).toEqual({ unitIds: ["a", "b"], enabled: true });
+
+    expect(autocastSwitch([off("a"), off("b")], "charge")).toBe("off");
+    expect(autocastToggle([off("a"), off("b")], "charge")).toEqual({ unitIds: ["a", "b"], enabled: true });
+
+    expect(autocastSwitch([footman], "charge")).toBeUndefined();
+    expect(autocastToggle([footman], "charge")).toBeUndefined();
+    // A switch only speaks for the ability it names: a priest's heal switched off leaves a witch's curse on.
+    expect(autocastSwitch([{ ...unit("priest", undefined), autocast: { heal: false } }, unit("witch", undefined)], "curse")).toBe("on");
   });
 
   it("keeps selected mercenary camps visible while explaining unavailable hire states", () => {

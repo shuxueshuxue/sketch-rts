@@ -3,7 +3,8 @@ import "./atlas-theme.css";
 import { drawAtlasBuilding, drawAtlasUnit, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasCamp, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
-import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
+import { abilityCommandState, autocastToggle, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -47,9 +48,10 @@ import { trainingProgressButtonsForSelection, trainingQueueCountText, type Train
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
-import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
+import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
-import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
 import { MAP_SCENARIOS } from "../shared/map";
@@ -84,6 +86,8 @@ type CommandButton = {
   tooltip: () => GameplayTooltip;
   state: () => CommandButtonState;
   run: () => void;
+  // Right-click on the button (a spell's autocast switch).
+  contextAction?: () => void;
 };
 
 // The command card's build and train buttons come from the building and unit cards, in catalog order.
@@ -91,14 +95,7 @@ const BUILD_COMMANDS = BUILDABLE_BUILDING_KINDS.map((kind) => ({ kind, ...BUILDI
 
 const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UNIT_CARDS[kind].command }));
 
-const SPELL_COMMANDS = [
-  { ability: "heal", icon: "+", hotkey: "h" },
-  { ability: "summon", icon: "◎", hotkey: "u" },
-  { ability: "curse", icon: "☾", hotkey: "c" },
-  { ability: "emberMend", icon: "+", hotkey: "m" },
-  { ability: "cinderSoul", icon: "◎", hotkey: "o" },
-  { ability: "ashCurse", icon: "☾", hotkey: "x" },
-] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
+const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
@@ -208,7 +205,16 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(t("command.castSpecific", { ability: labelKind(command.ability) }), command.icon, command.hotkey, () => abilityButtonState(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey, i18n)),
+    createCommandButton(
+      t("command.castSpecific", { ability: labelKind(command.ability) }),
+      command.icon,
+      command.hotkey,
+      () => abilityButtonState(command.ability),
+      () => beginSpellTargeting(command.ability),
+      () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
+      undefined,
+      () => toggleAutocast(command.ability),
+    ),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -262,7 +268,7 @@ void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
 
-function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait): CommandButton {
+function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
@@ -273,8 +279,13 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
   element.addEventListener("click", run);
+  // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
+  element.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    contextAction?.();
+  });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run };
+  return { element, hotkey, tooltip, state, run, ...(contextAction ? { contextAction } : {}) };
 }
 
 function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
@@ -295,6 +306,7 @@ function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
   element.dataset.tooltipBody = dataset.body;
   element.dataset.tooltipStats = dataset.stats;
   element.dataset.tooltipRequirements = dataset.requirements;
+  element.dataset.tooltipNotes = dataset.notes;
   element.dataset.tooltipHotkey = dataset.hotkey;
 }
 
@@ -366,12 +378,14 @@ function tooltipTarget(target: EventTarget | null) {
 function renderTooltip(target: HTMLElement) {
   const stats = splitTooltipList(target.dataset.tooltipStats);
   const requirements = splitTooltipList(target.dataset.tooltipRequirements);
+  const notes = splitTooltipList(target.dataset.tooltipNotes);
   const hotkey = target.dataset.tooltipHotkey;
   tooltipLayer.innerHTML = `
     <div class="tooltip-title">${escapeHtml(target.dataset.tooltipTitle ?? "")}${hotkey ? `<span>${escapeHtml(hotkey)}</span>` : ""}</div>
     ${target.dataset.tooltipBody ? `<div class="tooltip-body">${escapeHtml(target.dataset.tooltipBody)}</div>` : ""}
     ${stats.length > 0 ? `<div class="tooltip-stats">${stats.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
     ${requirements.length > 0 ? `<div class="tooltip-requirements">${requirements.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
+    ${notes.length > 0 ? `<div class="tooltip-notes">${notes.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
   `;
   tooltipLayer.classList.remove("hidden");
 }
@@ -1470,6 +1484,13 @@ function onMouseUp(event: MouseEvent) {
     selectionEnd = undefined;
     return;
   }
+  if (event.button === 2 && document.pointerLockElement === canvas) {
+    const target = virtualContextTargetAt(point);
+    if (target) {
+      openVirtualContextMenu(target);
+      return;
+    }
+  }
   if (event.button === 2) {
     issueContextCommand(point, event.shiftKey);
     return;
@@ -1591,7 +1612,16 @@ function canHireMercenary() {
 
 function abilityButtonState(ability: AbilityKind): CommandButtonState {
   if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
-  return abilityCommandState(focusedPlayerUnits(), ability);
+  return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits());
+}
+
+function toggleAutocast(ability: AbilityKind) {
+  if (!syncBeforeCommandProjection()) return;
+  if (!abilityButtonState(ability).visible) return;
+  const toggle = autocastToggle(selectedPlayerUnits(), ability);
+  if (!toggle) return;
+  sendCommand({ type: "setAutocast", unitIds: toggle.unitIds, ability, enabled: toggle.enabled });
+  statusLabel.textContent = t(toggle.enabled ? "status.autocastOn" : "status.autocastOff", { ability: labelKind(ability) });
 }
 
 function hireMercenaryButtonState(): CommandButtonState {
@@ -1656,10 +1686,13 @@ function beginSpellTargeting(ability: AbilityKind) {
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
   const behavior = ABILITY_DEFS[ability].behavior;
+  const reach = chargeWindow(ability);
   statusLabel.textContent =
     behavior === "summon"
       ? t("status.summonMode")
-      : t("status.spellMode", { ability: labelKind(ability) });
+      : reach
+        ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange, max: reach.range })
+        : t("status.spellMode", { ability: labelKind(ability) });
   updateHud();
 }
 
@@ -1721,7 +1754,13 @@ function issueSpellAt(point: Point) {
     showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
     return;
   }
-  sendCommand({ type: "cast", unitId: casterId, ability, targetId: target.id });
+  const reach = chargeWindow(ability);
+  const caster = reach ? chargeRiderFor(readyChargers(selectedPlayerUnits(), ability), target, reach, casterId) : { id: casterId };
+  if (!caster) {
+    showInvalidCommand(t("status.chargeOutOfWindow", { ability: labelKind(ability), min: reach!.minRange, max: reach!.range }));
+    return;
+  }
+  sendCommand({ type: "cast", unitId: caster.id, ability, targetId: target.id });
   statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2633,6 +2672,11 @@ function drawSpellPreview() {
   if (!commandMode || commandMode.type !== "spell" || !lastMouse) return;
   const point = lastMouse;
   const ability = commandMode.targeting.ability;
+  const reach = chargeWindow(ability);
+  if (reach) {
+    drawChargePreview(point, ability, reach, commandMode.targeting.casterId);
+    return;
+  }
   const behavior = ABILITY_DEFS[ability].behavior;
   const color = behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
   const fill = behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
@@ -2666,6 +2710,91 @@ function drawSpellPreview() {
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillStyle = color;
   ctx.fillText(labelKind(ability), point.x - 20, point.y + 44);
+  ctx.restore();
+}
+
+// @@@charge-preview - While a charge is being aimed, every ready rider shows its window: the ring band between the
+// shortest and longest charge. The rider that would take the hovered enemy (see chargeRiderFor) is drawn strong with a
+// lane to it; a hovered enemy no rider can reach is marked out of reach.
+const CHARGE_PREVIEW_INK = { band: "rgba(212, 180, 119, 0.12)", ring: "#b9861b", reach: "#387d72", miss: "#a85644" } as const;
+
+function drawChargePreview(point: Point, ability: AbilityKind, reach: ChargeWindow, preferredId: string) {
+  const riders = readyChargers(selectedPlayerUnits(), ability);
+  const world = screenToWorld(point);
+  const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
+  const rider = target ? chargeRiderFor(riders, target, reach, preferredId) : undefined;
+  const lead = rider ?? riders.reduce<Unit | undefined>((best, candidate) => (!best || distance(candidate, world) < distance(best, world) ? candidate : best), undefined);
+  ctx.save();
+  for (const candidate of riders) drawChargeWindow(worldToScreen(candidate), reach, candidate === lead);
+  const ink = target ? (rider ? CHARGE_PREVIEW_INK.reach : CHARGE_PREVIEW_INK.miss) : CHARGE_PREVIEW_INK.ring;
+  if (target && rider) {
+    const from = worldToScreen(rider);
+    const to = worldToScreen(target);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 6]);
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const mark = target ? worldToScreen(target) : point;
+  ctx.strokeStyle = ink;
+  ctx.fillStyle = target ? `${ink}22` : "rgba(185, 134, 27, 0.08)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(mark.x, mark.y, target ? target.radius + 10 : 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Two chevrons pointing in: the rider's lunge.
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(mark.x + side * 30, mark.y - 9);
+    ctx.lineTo(mark.x + side * 21, mark.y);
+    ctx.lineTo(mark.x + side * 30, mark.y + 9);
+    ctx.stroke();
+  }
+  if (target && !rider) {
+    ctx.beginPath();
+    ctx.moveTo(mark.x - 9, mark.y - 9);
+    ctx.lineTo(mark.x + 9, mark.y + 9);
+    ctx.moveTo(mark.x + 9, mark.y - 9);
+    ctx.lineTo(mark.x - 9, mark.y + 9);
+    ctx.stroke();
+  }
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.fillStyle = ink;
+  ctx.fillText(labelKind(ability), point.x - 20, point.y + 44);
+  ctx.restore();
+}
+
+function drawChargeWindow(center: Point, reach: ChargeWindow, lead: boolean) {
+  if (!nearScreen(center, reach.range)) return;
+  ctx.save();
+  ctx.globalAlpha = lead ? 1 : 0.45;
+  ctx.fillStyle = CHARGE_PREVIEW_INK.band;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.range, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, reach.minRange, 0, Math.PI * 2, true);
+  ctx.fill();
+  ctx.strokeStyle = CHARGE_PREVIEW_INK.ring;
+  ctx.lineWidth = lead ? 2 : 1.5;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.range, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.minRange, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (lead) {
+    ctx.font = "10px ui-monospace, monospace";
+    ctx.fillStyle = CHARGE_PREVIEW_INK.ring;
+    ctx.textAlign = "center";
+    ctx.fillText(String(reach.minRange), center.x, center.y - reach.minRange - 4);
+    ctx.fillText(String(reach.range), center.x, center.y - reach.range - 4);
+  }
   ctx.restore();
 }
 
@@ -2886,6 +3015,20 @@ function virtualTooltipTargetAt(point: Point) {
 
 function virtualClickableTargetAt(point: Point) {
   return virtualClickableTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
+}
+
+// A button under the pointer-lock cursor, disabled or not: a right-click on it is the button's, never a battlefield order.
+function virtualContextTargetAt(point: Point) {
+  return virtualContextTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
+}
+
+function openVirtualContextMenu(target: HTMLElement) {
+  const command = commandButtons.find((button) => button.element === target);
+  if (command) {
+    command.contextAction?.();
+    return;
+  }
+  target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
 }
 
 function screenToWorld(point: Point): Point {

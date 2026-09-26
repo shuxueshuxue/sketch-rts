@@ -24,6 +24,13 @@ export type TrainedUnitCard = UnitCard & {
   command: CommandButton;
 };
 
+// A unit ability: its name, the words on its tooltip, and its command button (the numbers come from the catalog).
+export type AbilityCard = {
+  name: Localized;
+  description: Localized;
+  command: CommandButton;
+};
+
 export type BuildingCard = {
   name: Localized;
   description: Localized;

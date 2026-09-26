@@ -1,4 +1,5 @@
-import type { BuildingKind, UnitKind } from "../shared/types";
+import type { AbilityKind, BuildingKind, UnitKind } from "../shared/types";
+import { mapAbilityCards } from "./content/abilities";
 import { mapBuildingCards } from "./content/buildings";
 import { mapUnitCards } from "./content/units";
 
@@ -122,10 +123,14 @@ const EN_TRANSLATIONS = {
   "status.attackMoveOrdered": "Attack-move order issued.",
   "status.attackOrdered": "Attack order issued.",
   "status.attackWildlingsOrdered": "Attack order issued on wildlings.",
+  "status.autocastOff": "{ability} autocast off.",
+  "status.autocastOn": "{ability} autocast on.",
   "status.buildCanceled": "Build placement canceled.",
   "status.buildMenuClosed": "Build menu closed.",
   "status.buildMenuOpened": "Build menu opened. Choose a structure hotkey or command button.",
   "status.buildNeedsWorker": "Build needs a selected worker.",
+  "status.chargeMode": "{ability} mode. Left-click an enemy unit {min} to {max} away, right-click or Escape to cancel.",
+  "status.chargeOutOfWindow": "{ability} needs an enemy unit {min} to {max} away from a ready rider.",
   "status.chooseBuildingLocation": "Choose a {building} location. Left-click to place, right-click or Escape to cancel.",
   "status.enterRoomFailed": "Could not enter room: {message}",
   "status.foundationPlaced": "{building} foundation placed.",
@@ -327,10 +332,14 @@ const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
   "status.attackMoveOrdered": "攻击移动命令已下达。",
   "status.attackOrdered": "攻击命令已下达。",
   "status.attackWildlingsOrdered": "已对野怪下达攻击命令。",
+  "status.autocastOff": "{ability}：自动施放已关闭。",
+  "status.autocastOn": "{ability}：自动施放已开启。",
   "status.buildCanceled": "建筑放置已取消。",
   "status.buildMenuClosed": "建造菜单已关闭。",
   "status.buildMenuOpened": "建造菜单已打开。选择建筑快捷键或命令按钮。",
   "status.buildNeedsWorker": "建造需要选中农民。",
+  "status.chargeMode": "{ability} 模式。左键点击 {min} 到 {max} 距离内的敌方单位，右键或 Esc 取消。",
+  "status.chargeOutOfWindow": "{ability} 的目标必须是离可用骑兵 {min} 到 {max} 距离的敌方单位。",
   "status.chooseBuildingLocation": "选择 {building} 的建造位置。左键放置，右键或 Esc 取消。",
   "status.enterRoomFailed": "无法进入房间：{message}",
   "status.foundationPlaced": "{building} 地基已放置。",
@@ -424,18 +433,13 @@ const EN_LABELS = {
   breachCharge: "Breach Charge",
   buildingDurability: "Building Durability",
   closed: "Closed",
-  curse: "Curse",
-  ashCurse: "Ash Curse",
-  cinderSoul: "Cinder Soul",
   east: "East",
   ember: "Ember",
-  emberMend: "Ember Mend",
   ended: "Ended",
   experienceBook: "Experience Book",
   flameCloak: "Flame Cloak",
   grove: "Grove",
   guardianScroll: "Guardian Scroll",
-  heal: "Heal",
   human: "Human",
   inMatch: "In Match",
   leadership: "Leadership",
@@ -449,31 +453,25 @@ const EN_LABELS = {
   south: "South",
   speedTraining: "Mobility Training",
   stormStaff: "Storm Staff",
-  summon: "Summon",
   weaponTraining: "Weapon Training",
   west: "West",
 } as const;
 
-// Unit and building names live on their cards (client/content); everything else is labelled here.
-export type LabelKey = keyof typeof EN_LABELS | UnitKind | BuildingKind;
+// Unit, building and ability names live on their cards (client/content); everything else is labelled here.
+export type LabelKey = keyof typeof EN_LABELS | UnitKind | BuildingKind | AbilityKind;
 
 const ZH_LABELS: Record<keyof typeof EN_LABELS, string> = {
   ai: "电脑",
   breachCharge: "破城炸药",
   buildingDurability: "建筑耐久",
   closed: "关闭",
-  curse: "诅咒",
-  ashCurse: "灰烬诅咒",
-  cinderSoul: "余火魂灵",
   east: "东",
   ember: "余烬",
-  emberMend: "余烬疗愈",
   ended: "已结束",
   experienceBook: "经验书",
   flameCloak: "烈焰斗篷",
   grove: "林地",
   guardianScroll: "守护卷轴",
-  heal: "治疗",
   human: "人类",
   inMatch: "比赛中",
   leadership: "领导力",
@@ -487,7 +485,6 @@ const ZH_LABELS: Record<keyof typeof EN_LABELS, string> = {
   south: "南",
   speedTraining: "机动训练",
   stormStaff: "风暴法杖",
-  summon: "召唤",
   weaponTraining: "武器训练",
   west: "西",
 };
@@ -497,8 +494,8 @@ const LABELS: Record<Locale, Record<LabelKey, string>> = {
   zh: { ...ZH_LABELS, ...cardNames("zh") },
 };
 
-function cardNames(locale: Locale): Record<UnitKind | BuildingKind, string> {
-  return { ...mapUnitCards((card) => card.name[locale]), ...mapBuildingCards((card) => card.name[locale]) };
+function cardNames(locale: Locale): Record<UnitKind | BuildingKind | AbilityKind, string> {
+  return { ...mapUnitCards((card) => card.name[locale]), ...mapBuildingCards((card) => card.name[locale]), ...mapAbilityCards((card) => card.name[locale]) };
 }
 
 export function detectLocale(languages: readonly string[] = []): Locale {

@@ -133,6 +133,7 @@ input[type="checkbox"] { accent-color: var(--atlas-gold); }
 .tooltip-title { color: #e2c690; font-weight: 600; }
 .tooltip-stats { color: #bbc8ab; }
 .tooltip-requirements { color: #dab995; }
+.tooltip-notes { color: var(--atlas-gold); }
 .pointer-lock-gate { background: #142f2740; backdrop-filter: blur(2px); }
 .pointer-lock-panel { padding: 30px; gap: 20px; box-sizing: border-box; box-shadow: 0 16px 80px #1a352f33; }
 .pointer-lock-panel h2 { color: var(--atlas-paper); font-family: Georgia, "SimSun", serif; font-weight: 400; font-size: 26px; }

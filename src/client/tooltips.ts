@@ -1,6 +1,9 @@
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
 import { unitRegenPerSecond } from "../shared/sim";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
+import type { AutocastSwitch } from "./command-button-state";
+import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
@@ -10,6 +13,8 @@ export type GameplayTooltip = {
   body: string;
   stats: string[];
   requirements: string[];
+  // How the player works the button beyond a click (a spell's autocast switch).
+  notes?: string[];
   hotkey?: string | undefined;
 };
 
@@ -57,9 +62,39 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   };
 }
 
-export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
-  const tooltip = ABILITY_TOOLTIPS[i18n.locale][ability];
-  return { ...tooltip, hotkey: formatHotkey(hotkey) };
+// A spell's words come from its card, its numbers from the catalog; `autocast` is how its switch stands on the selected
+// units, when the player can switch it.
+export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, autocast?: AutocastSwitch): GameplayTooltip {
+  const text = TEXT[i18n.locale];
+  return {
+    title: labelKind(ability, i18n),
+    body: ABILITY_CARDS[ability].description[i18n.locale],
+    stats: abilityStats(ability, i18n.locale),
+    requirements: ABILITY_REQUIREMENTS[i18n.locale][ability].map((line) => fillAbilityNumbers(line, ability)),
+    ...(autocast ? { notes: [text.autocast[autocast], text.autocast.toggle] } : {}),
+    hotkey: formatHotkey(hotkey),
+  };
+}
+
+function abilityStats(ability: AbilityKind, locale: Locale) {
+  const def = ABILITY_DEFS[ability];
+  const cooldown = tooltipLine(locale, "cooldown", formatSeconds(def.cooldown));
+  if (def.behavior === "heal") return [tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
+  if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
+  if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
+  return [
+    tooltipLine(locale, "enemyDamage", def.damageMultiplier),
+    ...(def.summonedDamage ? [tooltipLine(locale, "summonedDamage", def.summonedDamage)] : []),
+    ...(def.scorchedDamageMultiplier ? [tooltipLine(locale, "scorchedDamage", def.scorchedDamageMultiplier)] : []),
+    tooltipLine(locale, "range", def.range),
+    tooltipLine(locale, "duration", formatSeconds(def.effectDuration)),
+    cooldown,
+  ];
+}
+
+function fillAbilityNumbers(line: string, ability: AbilityKind) {
+  const def = ABILITY_DEFS[ability];
+  return def.behavior === "charge" ? line.replace("{min}", String(def.minRange)).replace("{max}", String(def.range)) : line;
 }
 
 export function itemTooltip(kind: ItemKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
@@ -123,7 +158,7 @@ export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n 
 }
 
 export function tooltipText(tooltip: GameplayTooltip) {
-  return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements].filter(Boolean).join("\n");
+  return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements, ...(tooltip.notes ?? [])].filter(Boolean).join("\n");
 }
 
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {
@@ -160,12 +195,13 @@ export function formatTooltipDataset(tooltip: GameplayTooltip) {
     body: tooltip.body,
     stats: tooltip.stats.join("|"),
     requirements: tooltip.requirements.join("|"),
+    notes: (tooltip.notes ?? []).join("|"),
     hotkey: tooltip.hotkey ?? "",
   };
 }
 
 function formatSeconds(ticks: number) {
-  return `${(ticks / 20).toFixed(1)}s`;
+  return `${(ticks / SIM_TICKS_PER_SECOND).toFixed(1)}s`;
 }
 
 function statRange(values: number[]) {
@@ -204,6 +240,14 @@ const TEXT = {
       train: "Train {value}",
       unitRangeBonus: "+{value}% unit range",
       veteranRegenPerStar: "+{value} HP/s per star",
+      restoresHp: "Restores {value} HP",
+      summonsSpirit: "Summons 1 spirit",
+      enemyDamage: "Enemy damage x{value}",
+      summonedDamage: "{value} damage to summoned units",
+      scorchedDamage: "Scorched enemy damage x{value}",
+      chargeDamage: "Strikes for x{value} its attack",
+      duration: "Duration {value}",
+      cooldown: "Cooldown {value}",
     },
     requirements: {
       abilities: "Abilities: {abilities}.",
@@ -214,6 +258,12 @@ const TEXT = {
       researchAt: "Research at {building}.",
       tierAdvanced: "Advanced unit: needs a supply cap of {cap}.",
       tierElite: "Elite unit: needs a supply cap of {cap}.",
+    },
+    autocast: {
+      on: "Autocast: on",
+      off: "Autocast: off",
+      mixed: "Autocast: on for some",
+      toggle: "Right-click: autocast on/off",
     },
   },
   zh: {
@@ -236,6 +286,14 @@ const TEXT = {
       train: "训练 {value}",
       unitRangeBonus: "+{value}% 单位射程",
       veteranRegenPerStar: "每颗星 +{value} 生命/秒",
+      restoresHp: "恢复 {value} 生命",
+      summonsSpirit: "召唤 1 个灵体",
+      enemyDamage: "敌方伤害 x{value}",
+      summonedDamage: "对召唤物 {value} 伤害",
+      scorchedDamage: "灼烧目标伤害 x{value}",
+      chargeDamage: "伤害为普攻 x{value}",
+      duration: "持续 {value}",
+      cooldown: "冷却 {value}",
     },
     requirements: {
       abilities: "技能：{abilities}。",
@@ -247,97 +305,34 @@ const TEXT = {
       tierAdvanced: "进阶兵种：人口上限需达到 {cap}。",
       tierElite: "高级兵种：人口上限需达到 {cap}。",
     },
+    autocast: {
+      on: "自动施法：开",
+      off: "自动施法：关",
+      mixed: "自动施法：部分开启",
+      toggle: "右键：开/关自动施法",
+    },
   },
 } as const;
 
-const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
+// What a spell's button needs besides a ready caster ({min} and {max}: a charge's window, filled from the catalog).
+const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
   en: {
-    heal: {
-      title: "Heal",
-      body: "Restores health to an allied unit in range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 12.0s"],
-      requirements: ["Priest or field medic must be ready."],
-    },
-    summon: {
-      title: "Summon",
-      body: "Creates a spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"],
-      requirements: ["Summoner must be ready.", "Target a nearby point."],
-    },
-    curse: {
-      title: "Curse",
-      body: "Weakens an enemy unit so its attacks deal less damage. A summoned unit also takes 100 damage.",
-      stats: ["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
-      requirements: ["Witch must be ready.", "Target an enemy unit."],
-    },
-    emberMend: {
-      title: "Ember Mend",
-      body: "Quickly restores health to an allied unit at shorter range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 12.0s"],
-      requirements: ["Ember acolyte must be ready."],
-    },
-    cinderSoul: {
-      title: "Cinder Soul",
-      body: "Creates a shorter-lived spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"],
-      requirements: ["Pyre caller must be ready.", "Target a nearby point."],
-    },
-    ashCurse: {
-      title: "Ash Curse",
-      body: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty.",
-      stats: ["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
-      requirements: ["Ash hexer must be ready.", "Target an enemy unit."],
-    },
-    charge: {
-      title: "Charge",
-      body: "Dashes at an enemy unit and strikes it for twice a normal blow.",
-      stats: ["Damage x2 of an attack", "Range 300-500", "Cooldown 15.0s"],
-      requirements: ["Raider or knight must be ready.", "Target an enemy unit 300 to 500 away."],
-    },
+    heal: ["Priest or field medic must be ready."],
+    summon: ["Summoner must be ready.", "Target a nearby point."],
+    curse: ["Witch must be ready.", "Target an enemy unit."],
+    emberMend: ["Ember acolyte must be ready."],
+    cinderSoul: ["Pyre caller must be ready.", "Target a nearby point."],
+    ashCurse: ["Ash hexer must be ready.", "Target an enemy unit."],
+    charge: ["Raider or knight must be ready.", "Target an enemy unit {min} to {max} away."],
   },
   zh: {
-    heal: {
-      title: "治疗",
-      body: "为射程内的友方单位恢复生命。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 12.0s"],
-      requirements: ["牧师或战地医师必须准备就绪。"],
-    },
-    summon: {
-      title: "召唤",
-      body: "在附近地面目标点召唤一个灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "持续 60.0s", "冷却 40.0s"],
-      requirements: ["召唤师必须准备就绪。", "目标必须是附近点位。"],
-    },
-    curse: {
-      title: "诅咒",
-      body: "削弱敌方单位，使其攻击造成更少伤害。召唤物还会受到 100 点伤害。",
-      stats: ["敌方伤害 x0.4", "对召唤物 100 伤害", "射程 280", "持续 18.0s", "冷却 7.5s"],
-      requirements: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
-    },
-    emberMend: {
-      title: "余烬疗愈",
-      body: "以较短射程快速治疗友方单位。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 12.0s"],
-      requirements: ["余烬侍僧必须准备就绪。"],
-    },
-    cinderSoul: {
-      title: "余火魂灵",
-      body: "在附近地面目标点召唤一个持续时间较短的灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "持续 60.0s", "冷却 40.0s"],
-      requirements: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
-    },
-    ashCurse: {
-      title: "灰烬诅咒",
-      body: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。",
-      stats: ["敌方伤害 x0.45", "灼烧目标伤害 x0.3", "射程 280", "持续 18.0s", "冷却 7.5s"],
-      requirements: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
-    },
-    charge: {
-      title: "冲锋",
-      body: "冲向一个敌方单位，造成两倍普通攻击的伤害。",
-      stats: ["伤害为普攻 x2", "距离 300-500", "冷却 15.0s"],
-      requirements: ["掠袭者或骑士必须准备就绪。", "目标必须是 300 到 500 距离内的敌方单位。"],
-    },
+    heal: ["牧师或战地医师必须准备就绪。"],
+    summon: ["召唤师必须准备就绪。", "目标必须是附近点位。"],
+    curse: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
+    emberMend: ["余烬侍僧必须准备就绪。"],
+    cinderSoul: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
+    ashCurse: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
+    charge: ["掠袭者或骑士必须准备就绪。", "目标必须是 {min} 到 {max} 距离内的敌方单位。"],
   },
 };
 

@@ -7,6 +7,9 @@ import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 // The tooltips state the heal cooldown the catalog holds (they said 6.0s for a while after heals went to 12s).
 const HEAL_COOLDOWN_SECONDS = (ABILITY_DEFS.heal.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
+const CHARGE = ABILITY_DEFS.charge;
+if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
+const CHARGE_COOLDOWN_SECONDS = (CHARGE.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
   it("describes trainable units with live catalog stats", () => {
@@ -35,6 +38,35 @@ describe("gameplay tooltips", () => {
     });
     expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
     expect(abilityTooltip("cinderSoul", "o").stats).toEqual(expect.arrayContaining(["Summons 1 spirit", "Range 260", "Duration 60.0s", "Cooldown 40.0s"]));
+  });
+
+  it("describes the charge with its window, blow and cooldown from the catalog, in both languages", () => {
+    expect(abilityTooltip("charge", "r")).toMatchObject({
+      title: "Charge",
+      body: expect.stringContaining("twice"),
+      stats: [`Strikes for x${CHARGE.damageMultiplier} its attack`, `Range ${CHARGE.minRange}-${CHARGE.range}`, `Cooldown ${CHARGE_COOLDOWN_SECONDS}s`],
+      requirements: ["Raider or knight must be ready.", `Target an enemy unit ${CHARGE.minRange} to ${CHARGE.range} away.`],
+      hotkey: "R",
+    });
+    expect(abilityTooltip("charge", "r", createI18n("zh"))).toMatchObject({
+      title: "冲锋",
+      stats: [`伤害为普攻 x${CHARGE.damageMultiplier}`, `射程 ${CHARGE.minRange}-${CHARGE.range}`, `冷却 ${CHARGE_COOLDOWN_SECONDS}s`],
+      requirements: ["掠袭者或骑士必须准备就绪。", `目标必须是 ${CHARGE.minRange} 到 ${CHARGE.range} 距离内的敌方单位。`],
+    });
+  });
+
+  it("tells how a spell's autocast stands and that a right-click switches it, only when asked", () => {
+    expect(abilityTooltip("charge", "r").notes).toBeUndefined();
+    expect(abilityTooltip("charge", "r", undefined, "on").notes).toEqual(["Autocast: on", "Right-click: autocast on/off"]);
+    expect(abilityTooltip("heal", "h", undefined, "off").notes).toEqual(["Autocast: off", "Right-click: autocast on/off"]);
+    expect(abilityTooltip("curse", "c", undefined, "mixed").notes).toEqual(["Autocast: on for some", "Right-click: autocast on/off"]);
+    expect(abilityTooltip("charge", "r", createI18n("zh"), "on").notes).toEqual(["自动施法：开", "右键：开/关自动施法"]);
+    expect(tooltipText(abilityTooltip("charge", "r", undefined, "off"))).toContain("Right-click: autocast on/off");
+  });
+
+  it("names a rider's charge on its training tooltip (a missing label once broke the whole command card)", () => {
+    expect(unitTooltip("raider", "r").requirements).toContain("Abilities: Charge.");
+    expect(unitTooltip("knight", "k", createI18n("zh")).requirements).toContain("技能：冲锋。");
   });
 
   it("describes items with use conditions and damage numbers", () => {
