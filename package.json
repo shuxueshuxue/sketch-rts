@@ -21,6 +21,7 @@
     "benchmark:ai-v7-gauntlet": "tsx scripts/ai-v7-gauntlet-benchmark.ts",
     "benchmark:ai-gauntlet": "tsx scripts/ai-version-gauntlet.ts",
     "play:ai": "tsx scripts/ai-playtest.ts",
+    "record": "tsx src/recorder/cli.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",
     "test:sdk-ai-ab": "vitest --run src/ai/ab-test.test.ts",
     "test:sdk-ai-policy": "vitest --run src/ai/policy.test.ts",
@@ -47,10 +48,12 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.9",
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.2",
     "@types/ws": "^8.5.13",
     "esbuild": "^0.28.0",
+    "gifenc": "^1.0.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
