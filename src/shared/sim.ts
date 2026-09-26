@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker } from "./build-placement";
@@ -30,6 +30,15 @@ export type Game = GameSnapshot & {
   buildingSpatialCount?: number;
   entityById?: Map<string, Unit | Building>;
   spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number): Unit;
+  // Campaign games only (see story/); a standard match has neither (nor `variants`) and takes none of their paths.
+  // Told of every hit as it lands, so a script can tell who struck whom. It watches; it never changes the game.
+  observer?: SimObserver;
+  // The script decides who wins: the last team standing with buildings does not end the match.
+  scriptedVictory?: boolean;
+};
+
+export type SimObserver = {
+  hit(attacker: Unit | Building, target: Unit | Building, damage: number, hpBefore: number): void;
 };
 
 export const GAME_SNAPSHOT_RESTORE_KEYS = [
@@ -45,6 +54,7 @@ export const GAME_SNAPSHOT_RESTORE_KEYS = [
   "items",
   "projectiles",
   "effects",
+  "variants",
 ] as const satisfies readonly (keyof GameSnapshot)[];
 
 type RestoredSnapshotKey = (typeof GAME_SNAPSHOT_RESTORE_KEYS)[number];
@@ -475,6 +485,8 @@ export function snapshotGame(game: Game): GameSnapshot {
     items: game.items.map((item) => ({ ...item })),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
+    // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
+    ...(game.variants ? { variants: { ...game.variants } } : {}),
   };
 }
 
@@ -491,6 +503,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.items = cloneSnapshotValue(snapshot.items);
   game.projectiles = cloneSnapshotValue(snapshot.projectiles);
   game.effects = cloneSnapshotValue(snapshot.effects);
+  if (snapshot.variants) game.variants = cloneSnapshotValue(snapshot.variants);
+  else delete game.variants;
   game.nextId = nextId;
   invalidateGameRuntimeCaches(game);
 }
@@ -604,8 +618,10 @@ function updateRegeneration(game: Game) {
 
 // A unit's own regeneration (the cinder revenant's) plus what leadership gives its veterans.
 export function unitRegenPerSecond(game: GameSnapshot, unit: Unit) {
-  return (UNIT_DEFS[unit.kind].regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit);
+  return (unitRules(game, unit).regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit);
 }
+
+export { unitRules };
 
 export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
   if (!isPlayerId(unit.owner) || unit.level <= 0) return 0;
@@ -1533,7 +1549,7 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const target = findTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
   const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
-  if (applyDamage(game, attacker, target, attackDamageAgainstTarget(attacker, target, projectile.damage))) {
+  if (applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage))) {
     applyAttackStatusEffects(game, attacker, target);
     addEffect(game, "hit", target.x, target.y, 14);
   }
@@ -1572,15 +1588,15 @@ function updateUnitStatusEffects(game: Game) {
 
 function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
   if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
-    launchProjectile(game, attacker, target, heavyArmoredDamage(attacker, target, damage));
+    launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, damage));
     return;
   }
   applyAttackDamage(game, attacker, target, damage, attackRange);
 }
 
 // Heavy armor is settled when the shot is fired, so a shot still counts as a shooter's after its shooter has died.
-function heavyArmoredDamage(attacker: Unit | Building, target: Unit | Building, damage: number) {
-  if (!isUnit(target) || UNIT_DEFS[target.kind].armor !== "heavy") return damage;
+function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+  if (!isUnit(target) || unitRules(game, target).armor !== "heavy") return damage;
   const multiplier = isUnit(attacker) ? HEAVY_ARMOR_DAMAGE.rangedUnit : attacker.kind === "defenseTower" ? HEAVY_ARMOR_DAMAGE.tower : 1;
   return Math.max(1, Math.round(damage * multiplier));
 }
@@ -1611,7 +1627,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
 }
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
-  if (!applyDamage(game, attacker, target, attackDamageAgainstTarget(attacker, target, damage))) return;
+  if (!applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, damage))) return;
   applyAttackStatusEffects(game, attacker, target);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
@@ -1620,9 +1636,9 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   addEffect(game, "hit", to.x, to.y, 14);
 }
 
-function attackDamageAgainstTarget(attacker: Unit | Building, target: Unit | Building, damage: number) {
+function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
   if (!isUnit(attacker) || !isUnit(target)) return damage;
-  const slayer = UNIT_DEFS[attacker.kind].casterSlayer;
+  const slayer = unitRules(game, attacker).casterSlayer;
   const dealt = slayer && isCasterOrSummoned(target) ? Math.round(damage * slayer) : damage;
   if (!target.effects.some((effect) => effect.type === "scorch")) return dealt;
   if (attacker.kind === "emberRavager") return dealt + 7;
@@ -1646,6 +1662,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return false;
   const hpBefore = target.hp;
   target.hp -= damage;
+  game.observer?.hit(attacker, target, damage, hpBefore);
   if (hpBefore > 0 && isUnit(target) && target.owner === "neutral") triggerNeutralAssist(game, target, attacker);
   if (hpBefore > 0 && isPlayerId(target.owner)) triggerPlayerAggro(game, target, attacker);
   if (hpBefore > 0 && target.hp <= 0) {
@@ -1766,12 +1783,12 @@ function isUnit(entity: Unit | Building): entity is Unit {
 
 function awardKillXp(game: Game, attacker: Unit, target: Unit) {
   if (attacker.owner === "neutral" || !areEnemyOwners(game, attacker.owner, target.owner)) return;
-  attacker.xp += UNIT_DEFS[target.kind].xpReward;
+  attacker.xp += unitRules(game, target).xpReward;
   applyXpLevel(game, attacker);
 }
 
 function awardNeutralGoldBounty(game: Game, owner: PlayerId, target: Unit) {
-  const bounty = UNIT_DEFS[target.kind].goldBounty ?? 0;
+  const bounty = unitRules(game, target).goldBounty ?? 0;
   if (bounty <= 0) return;
   playerState(game, owner).gold += bounty;
 }
@@ -1784,6 +1801,7 @@ function starLevelForXp(xp: number) {
 }
 
 function applyXpLevel(game: Game, unit: Unit) {
+  if (unit.variant !== undefined && game.variants?.[unit.variant]?.heroic) return;
   const nextLevel = starLevelForXp(unit.xp);
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
@@ -1802,7 +1820,7 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
 }
 
 function nonStarUnitStats(game: Game, unit: Unit) {
-  const stats = UNIT_DEFS[unit.kind];
+  const stats = unitRules(game, unit);
   let attackDamage = stats.attackDamage;
   let maxHp = stats.hp;
   let speed = stats.speed;
@@ -1841,7 +1859,7 @@ function updateSupplyState(game: Game) {
 function projectedSupplyUsed(game: Game, owner: PlayerId) {
   const unitSupply = game.units
     .filter((unit) => unit.owner === owner)
-    .reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0);
+    .reduce((total, unit) => total + unitRules(game, unit).supplyUsed, 0);
   const queuedSupply = game.buildings
     .filter((building) => building.owner === owner)
     .flatMap((building) => building.queue)
@@ -2033,7 +2051,7 @@ function dropItemsFromDeadUnits(game: Game, deadUnits: Unit[]) {
 }
 
 function updateVictory(game: Game) {
-  if (game.match.winner) return;
+  if (game.match.winner || game.scriptedVictory) return;
   const buildingTeams = new Set<string>();
   const buildingOwnersByTeam = new Map<string, PlayerId>();
   for (const building of game.buildings) {
@@ -2050,6 +2068,81 @@ function updateVictory(game: Game) {
   const winnerTeam = [...contendingTeams][0]!;
   game.match.winner = buildingOwnersByTeam.get(winnerTeam) ?? null;
   game.match.endedAtTick = game.tick;
+}
+
+// @@@story-hooks - What a campaign script may do to its game besides giving orders (see story/world): bring on a unit of
+// its own, re-derive a unit whose variant it rewrote (a hero that levelled or took up a relic), strike with a power of its
+// own, paint an effect, and take a unit off the stage. A standard match never calls them.
+
+export function spawnVariantUnit(game: Game, owner: Owner, variant: string, x: number, y: number, id?: string): Unit {
+  const rules = game.variants?.[variant];
+  if (!rules) throw new Error(`Unknown unit variant ${variant}`);
+  const unitId = id ?? `unit-${owner}-${variant}-${game.nextId}`;
+  if (id === undefined) game.nextId += 1;
+  else if (game.units.some((unit) => unit.id === id) || game.buildings.some((building) => building.id === id)) throw new Error(`Duplicate unit id ${id}`);
+  const unit = createUnit(unitId, owner, rules.base, x, y);
+  unit.variant = variant;
+  unit.hp = rules.hp;
+  takeVariantFrame(unit, rules);
+  applyUnitUpgrades(game, unit);
+  game.units.push(unit);
+  updateSupplyState(game);
+  return unit;
+}
+
+// After the unit's variant rules changed: its numbers again, keeping the share of health it had.
+export function refreshUnitStats(game: Game, unit: Unit) {
+  const rules = unitRules(game, unit);
+  const share = unit.hp / Math.max(1, unit.maxHp);
+  if (unit.variant !== undefined) takeVariantFrame(unit, rules);
+  if (isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
+  unit.hp = Math.max(1, Math.min(unit.maxHp, Math.round(unit.maxHp * share)));
+}
+
+// A variant's body and weapon, which upgrades and stars do not touch; hit points, damage, speed and range are then
+// derived as any unit's are.
+function takeVariantFrame(unit: Unit, rules: UnitDef) {
+  unit.maxHp = rules.hp;
+  unit.hp = Math.min(unit.hp, rules.hp);
+  unit.speed = rules.speed;
+  unit.radius = rules.radius;
+  unit.attackDamage = rules.attackDamage;
+  unit.attackRange = rules.attackRange;
+  unit.attackCooldown = rules.attackCooldown;
+}
+
+// A blow from a script's power: `melee` and `ranged` land as a weapon's would (the swipe or the bolt is drawn), `spell`
+// only as a hit. It counts as the source's blow for kills, experience, bounty and the victim's call for help, and armor
+// and curses count as ever. The source may be a unit that has since died, or a point of the source's side.
+export function strikeUnit(game: Game, source: Unit | Building | { id: string; owner: PlayerId; x: number; y: number }, target: Unit | Building, damage: number, style: "melee" | "ranged" | "spell") {
+  const attacker = "hp" in source ? source : (findTarget(game, source.id) ?? scriptSource(source));
+  const dealt = Math.max(1, Math.round(damage));
+  if (style === "spell") {
+    if (applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, dealt))) addEffect(game, "hit", target.x, target.y, 14);
+    return;
+  }
+  applyAttackDamage(game, attacker, target, style === "ranged" ? heavyArmoredDamage(game, attacker, target, dealt) : dealt, style === "ranged" ? RANGED_ATTACK_RANGE_THRESHOLD + 1 : 0);
+}
+
+// A source no longer on the field (a caster dead before its fire fell) strikes as its side, from where it stood: an
+// unarmed building of that side, so no tower's armor rule and no call for help applies to it.
+function scriptSource(source: { id: string; owner: PlayerId; x: number; y: number }): Building {
+  const stand = projectileAttacker({ id: source.id, owner: source.owner, attackerId: source.id, targetId: source.id, fromX: source.x, fromY: source.y, toX: source.x, toY: source.y, damage: 0, remaining: 0, duration: 0 });
+  return { ...stand, kind: "farm" };
+}
+
+export function addWorldEffect(game: Game, type: WorldEffect["type"], x: number, y: number, ticks: number, vectors?: Parameters<typeof addEffect>[5]) {
+  addEffect(game, type, x, y, ticks, vectors);
+}
+
+// Takes the unit off the stage without a death (no kill, no loss): a scene's extras leaving, a hero stepping out.
+export function removeUnit(game: Game, unitId: string) {
+  const unit = game.units.find((candidate) => candidate.id === unitId);
+  if (!unit) return;
+  dropItemsFromDeadUnits(game, [unit]);
+  game.units = game.units.filter((candidate) => candidate.id !== unitId);
+  game.entityById?.delete(unitId);
+  updateSupplyState(game);
 }
 
 function isPlayerId(owner: Unit["owner"]): owner is PlayerId {
