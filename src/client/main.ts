@@ -40,6 +40,7 @@ import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { unitGlyphScale } from "./glyphs";
+import { UnitFacingTracker } from "./unit-facing";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
@@ -144,6 +145,7 @@ let activeRoomUnwatch: (() => void) | undefined;
 let activeRoomWatchId: string | undefined;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
+const unitFacing = new UnitFacingTracker();
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 const controlGroups: ControlGroups = {};
@@ -2374,6 +2376,9 @@ function drawBuildingGlyph(kind: BuildingKind, point: Point, size: number) {
 }
 
 function drawUnits(units: Unit[]) {
+  const positions = new Map<string, Point>();
+  for (const entity of [...units, ...(snapshot?.buildings ?? [])]) positions.set(entity.id, entity);
+  unitFacing.update(units, (id) => positions.get(id));
   for (const unit of units) {
     const shake = hitFeedbackOffset(unit, unit.radius);
     const point = worldToScreen({ x: unit.x + shake.x, y: unit.y + shake.y });
@@ -2388,7 +2393,7 @@ function drawUnits(units: Unit[]) {
       ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle));
+    drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), unitFacing.facing(unit.id));
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
     drawHp(point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
