@@ -2,13 +2,15 @@ import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit"
 import { BUILDING_CARDS } from "./content/buildings";
 import { UNIT_CARDS } from "./content/units";
 import type { BuildingKind, TerrainLandmark, UnitKind } from "../shared/types";
+import type { Facing } from "./unit-facing";
 
 const sprites = new Map<string, HTMLCanvasElement>();
 const MAX_SPRITES = 256;
 
 // Cache at a resolution suited to the drawing size, including the enlarged
 // title illustration. Team colors and marks keep faction variants distinct.
-function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void) {
+// A mirrored draw flips the cached image about the sprite's own vertical axis.
+function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brush: Brush) => void, mirrored = false) {
   const density = Math.max(2, Math.min(6, Math.ceil(scale * 2)));
   const cacheKey = `${key}:${density}`;
   let source = sprites.get(cacheKey);
@@ -23,7 +25,15 @@ function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brus
     if (sprites.size >= MAX_SPRITES) sprites.delete(sprites.keys().next().value!);
     sprites.set(cacheKey, source);
   }
-  c.drawImage(source, point.x - 64 * scale, point.y - 64 * scale, 128 * scale, 128 * scale);
+  if (!mirrored) {
+    c.drawImage(source, point.x - 64 * scale, point.y - 64 * scale, 128 * scale, 128 * scale);
+    return;
+  }
+  c.save();
+  c.translate(point.x, point.y);
+  c.scale(-1, 1);
+  c.drawImage(source, -64 * scale, -64 * scale, 128 * scale, 128 * scale);
+  c.restore();
 }
 
 export function drawAtlasBuilding(c: Brush, kind: BuildingKind, point: Point, size: number, color: string) {
@@ -36,13 +46,14 @@ export function drawAtlasBuilding(c: Brush, kind: BuildingKind, point: Point, si
   });
 }
 
-export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string) {
+/** Unit models face right; facing -1 draws the mirror image, facing left. */
+export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1) {
   sprite(c, `u:${kind}:${color}`, point, scale, (b) => {
     const card = UNIT_CARDS[kind];
     if (card.art.bearing === "foot" && kind !== "wildling") ellipse(b, 2, 16, 17, 6, "#30483630");
     else if (kind === "wildling" || kind === "mossGnawer" || kind === "spirit") ellipse(b, 2, 15, 14, 5, "#30483630");
     card.paint(b, color);
-  });
+  }, facing === -1);
 }
 
 function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
