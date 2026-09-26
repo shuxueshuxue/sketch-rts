@@ -43,9 +43,15 @@ export const TIER_SUPPLY_CAP = { 2: 42, 3: 60 } as const;
 // tower's 70%. Melee blows land in full.
 export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
 
-export type AbilityDef =
+// Whether a unit casts the ability on its own (see autocast): "on" and "off" are the default of an ability the player can
+// switch, "none" one that is only ever cast by hand. As in Warcraft III, nearly every unit ability starts on.
+export type AutocastDefault = "on" | "off" | "none";
+
+export type AbilityDef = { autocast: AutocastDefault } & (
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
+  // A dash at an enemy unit between minRange and range away, striking it for damageMultiplier times the weapon's blow.
+  | { behavior: "charge"; minRange: number; range: number; plannerRange: number; cooldown: number; damageMultiplier: number; dashSpeed: number; maxDashTicks: number; effectType: "chargeTrail" }
   | {
       behavior: "curse";
       range: number;
@@ -58,7 +64,8 @@ export type AbilityDef =
       summonedDamage?: number;
       statusType: "curse";
       effectType: "curse" | "scorch";
-    };
+    }
+);
 
 export type BuildingRules = {
   race?: RaceId;
@@ -106,7 +113,7 @@ export const UNIT_RULES = {
   worker: { trainedAt: "townHall", hp: 70, speed: 3, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, xpReward: 20, abilities: [] },
   footman: { trainedAt: "barracks", race: "grove", hp: 145, speed: 3.1, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   archer: { trainedAt: "archeryRange", race: "grove", hp: 72, speed: 3, radius: 16, attackDamage: 13, attackRange: 399, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, xpReward: 30, abilities: [] },
-  raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 48, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: [], tier: 2 },
+  raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 48, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: ["charge"], tier: 2 },
   lancer: { trainedAt: "barracks", race: "grove", hp: 130, speed: 3.4, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: [] },
   groveWarden: { trainedAt: "barracks", race: "grove", hp: 165, speed: 3.0, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   emberRavager: { trainedAt: "emberForge", race: "ember", hp: 118, speed: 3.8, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
@@ -115,7 +122,7 @@ export const UNIT_RULES = {
   emberAcolyte: { trainedAt: "cinderSpire", race: "ember", hp: 78, speed: 3.1, radius: 16, attackDamage: 6, attackRange: 240, attackCooldown: seconds(1.8), cost: 130, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: ["emberMend"], tier: 2 },
   ashHexer: { trainedAt: "cinderSpire", race: "ember", hp: 82, speed: 3.2, radius: 16, attackDamage: 7, attackRange: 300, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, xpReward: 34, abilities: ["ashCurse"], tier: 2 },
   pyreCaller: { trainedAt: "cinderSpire", race: "ember", hp: 88, speed: 2.95, radius: 17, attackDamage: 7, attackRange: 260, attackCooldown: seconds(1.9), cost: 174, trainTime: seconds(9.5), supplyUsed: 2, xpReward: 35, abilities: ["cinderSoul"], tier: 2 },
-  knight: { trainedAt: "stables", race: "grove", hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: [], armor: "heavy", tier: 3 },
+  knight: { trainedAt: "stables", race: "grove", hp: 220, speed: 3.6, radius: 22, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, xpReward: 45, abilities: ["charge"], armor: "heavy", tier: 3 },
   priest: { trainedAt: "sanctum", race: "grove", hp: 90, speed: 3, radius: 16, attackDamage: 7, attackRange: 252, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, xpReward: 35, abilities: ["heal"], tier: 2 },
   summoner: { trainedAt: "sanctum", race: "grove", hp: 95, speed: 2.8, radius: 17, attackDamage: 8, attackRange: 273, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, xpReward: 35, abilities: ["summon"], tier: 2 },
   witch: { trainedAt: "sanctum", race: "grove", hp: 92, speed: 3.1, radius: 16, attackDamage: 8, attackRange: 315, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, xpReward: 35, abilities: ["curse"], tier: 2 },
@@ -151,19 +158,30 @@ export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
-export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse"];
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge"];
 
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
   // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
   // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
-  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal" },
-  summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
-  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: 100, statusType: "curse", effectType: "curse" },
-  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal" },
-  cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
-  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch" },
+  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
+  summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
+  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: 100, statusType: "curse", effectType: "curse", autocast: "on" },
+  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
+  cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
+  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch", autocast: "on" },
+  // The cavalry's charge: from 300 to 500 away, a dash of about half a second and a blow of twice the weapon's.
+  charge: { behavior: "charge", minRange: 300, range: 500, plannerRange: 480, cooldown: seconds(15), damageMultiplier: 2, dashSpeed: 30, maxDashTicks: seconds(1.5), effectType: "chargeTrail", autocast: "on" },
 };
+
+// A spell, as against a blow of the body like the charge: what a caster is, and what the ash chieftain hunts.
+export function isSpell(ability: AbilityKind) {
+  return ABILITY_DEFS[ability].behavior !== "charge";
+}
+
+export function hasSpell(kind: UnitKind) {
+  return UNIT_DEFS[kind].abilities.some(isSpell);
+}
 
 export const BUILDING_RULES = {
   townHall: { hp: 900, radius: 48, cost: 400, buildTime: seconds(28), researches: ["buildingDurability"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 8 },

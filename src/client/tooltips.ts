@@ -255,7 +255,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     heal: {
       title: "Heal",
       body: "Restores health to an allied unit in range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
+      stats: ["Restores 55 HP", "Range 240", "Cooldown 12.0s"],
       requirements: ["Priest or field medic must be ready."],
     },
     summon: {
@@ -273,7 +273,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     emberMend: {
       title: "Ember Mend",
       body: "Quickly restores health to an allied unit at shorter range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
+      stats: ["Restores 55 HP", "Range 240", "Cooldown 12.0s"],
       requirements: ["Ember acolyte must be ready."],
     },
     cinderSoul: {
@@ -288,12 +288,18 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
       stats: ["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
       requirements: ["Ash hexer must be ready.", "Target an enemy unit."],
     },
+    charge: {
+      title: "Charge",
+      body: "Dashes at an enemy unit and strikes it for twice a normal blow.",
+      stats: ["Damage x2 of an attack", "Range 300-500", "Cooldown 15.0s"],
+      requirements: ["Raider or knight must be ready.", "Target an enemy unit 300 to 500 away."],
+    },
   },
   zh: {
     heal: {
       title: "治疗",
       body: "为射程内的友方单位恢复生命。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
+      stats: ["恢复 55 生命", "射程 240", "冷却 12.0s"],
       requirements: ["牧师或战地医师必须准备就绪。"],
     },
     summon: {
@@ -311,7 +317,7 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
     emberMend: {
       title: "余烬疗愈",
       body: "以较短射程快速治疗友方单位。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
+      stats: ["恢复 55 生命", "射程 240", "冷却 12.0s"],
       requirements: ["余烬侍僧必须准备就绪。"],
     },
     cinderSoul: {
@@ -325,6 +331,12 @@ const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
       body: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。",
       stats: ["敌方伤害 x0.45", "灼烧目标伤害 x0.3", "射程 280", "持续 18.0s", "冷却 7.5s"],
       requirements: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
+    },
+    charge: {
+      title: "冲锋",
+      body: "冲向一个敌方单位，造成两倍普通攻击的伤害。",
+      stats: ["伤害为普攻 x2", "距离 300-500", "冷却 15.0s"],
+      requirements: ["掠袭者或骑士必须准备就绪。", "目标必须是 300 到 500 距离内的敌方单位。"],
     },
   },
 };

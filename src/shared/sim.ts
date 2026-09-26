@@ -1,5 +1,6 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
+import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker } from "./build-placement";
 import {
   createBuilding,
@@ -14,7 +15,7 @@ import {
   trainTimeFor,
 } from "./map";
 import { seconds } from "./time";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -360,6 +361,17 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "setAutocast") {
+    if (!canAutocast(command.ability)) throw new Error(`${command.ability} cannot be autocast`);
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (!UNIT_DEFS[unit.kind].abilities.includes(command.ability)) continue;
+      const autocast = withAutocast(unit, command.ability, command.enabled);
+      if (autocast) unit.autocast = autocast;
+      else delete unit.autocast;
+    }
+    return;
+  }
+
   if (command.type === "hire") {
     hireMercenary(game, owner, command.campId);
     return;
@@ -442,7 +454,13 @@ export function snapshotGame(game: Game): GameSnapshot {
     map: game.map,
     teams: { ...game.teams },
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
-    units: game.units.map((unit) => ({ ...unit, ...(unit.abilityCooldowns ? { abilityCooldowns: { ...unit.abilityCooldowns } } : {}), order: { ...unit.order }, orderQueue: unit.orderQueue?.map((order) => ({ ...order })) ?? [] })),
+    units: game.units.map((unit) => ({
+      ...unit,
+      ...(unit.abilityCooldowns ? { abilityCooldowns: { ...unit.abilityCooldowns } } : {}),
+      ...(unit.autocast ? { autocast: { ...unit.autocast } } : {}),
+      order: { ...unit.order },
+      orderQueue: unit.orderQueue?.map((order) => ({ ...order })) ?? [],
+    })),
     buildings: game.buildings.map((building) => {
       const { rallyTarget, ...rest } = building;
       return {
@@ -633,6 +651,11 @@ function updateUnits(game: Game) {
     }
     activateQueuedOrder(unit);
     if (updateNeutralLeash(game, unit)) continue;
+    autocastStep(game, unit);
+    if (unit.order.type === "charge") {
+      updateChargeOrder(game, unit);
+      continue;
+    }
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
       if (distance(unit, unit.order) < 5) unit.order = { type: "idle" };
@@ -678,6 +701,11 @@ function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
   // @@@command-queue - Queued orders live in simulation state so local, lockstep, replay, and SDK paths share one behavior.
   if (queued) {
     unit.orderQueue = [...(unit.orderQueue ?? []), order];
+    return;
+  }
+  // A charge runs its course (half a second or so): an order given during the dash waits for it (see charge).
+  if (unit.order.type === "charge") {
+    unit.orderQueue = [order];
     return;
   }
   unit.order = order;
@@ -1118,6 +1146,13 @@ function castAbility(
     applyCurse(game, caster, ability, target, def);
     return;
   }
+  if (def.behavior === "charge") {
+    const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, unit.owner, owner)) : undefined;
+    if (!target) throw new Error("Charge requires an enemy unit target");
+    if (!inChargeWindow(caster, target, def)) throw new Error(`Charge target must be ${def.minRange} to ${def.range} away`);
+    startCharge(game, caster, ability, target, def, true);
+    return;
+  }
   if (!isNumber(x) || !isNumber(y)) throw new Error("Summon requires a target point");
   applySummon(game, caster, ability, x, y, def);
 }
@@ -1148,6 +1183,187 @@ function applyCurse(game: Game, caster: Unit, ability: AbilityKind, target: Unit
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
   addEffect(game, def.effectType, target.x, target.y, 46);
   if (def.summonedDamage && target.expiresTick !== undefined) applyDamage(game, caster, target, def.summonedDamage);
+}
+
+type ChargeDef = Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "charge" }>;
+
+// @@@charge - The cavalry's charge: at an enemy unit between minRange and range away the rider dashes (dashSpeed a tick,
+// about half a second over the window), and on reaching it strikes once for damageMultiplier times its weapon's blow, as
+// any melee blow lands (curse and armor count as ever). The dash runs its course: an order given meanwhile waits for it
+// (see assignUnitOrder), and a dash that has not arrived after maxDashTicks is given up. The rider then takes up `resume`:
+// what it was doing, now aimed at the unit it charged.
+function inChargeWindow(caster: Unit, target: Unit, def: ChargeDef) {
+  const gap = distance(caster, target);
+  return gap >= def.minRange && gap <= def.range;
+}
+
+function startCharge(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: ChargeDef, commanded: boolean) {
+  const current = caster.order.type === "charge" ? caster.order.resume : caster.order;
+  // Charged from a standstill on its own, the rider keeps an idle unit's leash back to where it stood.
+  const resume: SettledUnitOrder =
+    current.type === "attackMove"
+      ? { type: "attackMove", x: current.x, y: current.y, targetId: target.id }
+      : current.type === "attack" && current.leashX !== undefined && current.leashY !== undefined
+        ? { type: "attack", targetId: target.id, leashX: current.leashX, leashY: current.leashY }
+        : current.type === "idle" && !commanded
+          ? { type: "attack", targetId: target.id, leashX: caster.x, leashY: caster.y }
+          : { type: "attack", targetId: target.id };
+  caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
+  caster.order = { type: "charge", targetId: target.id, ticks: 0, resume };
+  if (commanded) caster.orderQueue = [];
+  const expected = Math.max(1, Math.ceil((distance(caster, target) - caster.attackRange) / def.dashSpeed));
+  addEffect(game, def.effectType, caster.x, caster.y, expected, { fromX: caster.x, fromY: caster.y, toX: target.x, toY: target.y, owner: caster.owner, sourceKind: caster.kind, unitId: caster.id });
+}
+
+function updateChargeOrder(game: Game, unit: Unit) {
+  const order = unit.order;
+  if (order.type !== "charge") return;
+  const ability = UNIT_DEFS[unit.kind].abilities.find((candidate) => ABILITY_DEFS[candidate].behavior === "charge");
+  const def = ability ? ABILITY_DEFS[ability] : undefined;
+  const target = findTarget(game, order.targetId);
+  if (!def || def.behavior !== "charge" || !target || !isUnit(target) || target.hp <= 0) {
+    endCharge(unit, order.resume);
+    return;
+  }
+  order.ticks += 1;
+  const gap = distance(unit, target);
+  if (gap > unit.attackRange) {
+    // Stop at striking distance, not on top of the target.
+    dashToward(unit, target, Math.min(def.dashSpeed, gap - unit.attackRange * CHARGE_STOP_SHARE), game.map);
+    if (distance(unit, target) > unit.attackRange && order.ticks < def.maxDashTicks) return;
+  }
+  if (distance(unit, target) <= unit.attackRange) {
+    const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit) * def.damageMultiplier));
+    applyAttackDamage(game, unit, target, damage, unit.attackRange);
+    addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id });
+    unit.cooldown = unit.attackCooldown;
+  }
+  endCharge(unit, order.resume);
+}
+
+function endCharge(unit: Unit, resume: SettledUnitOrder) {
+  const next = unit.orderQueue?.shift();
+  unit.order = next ?? resume;
+}
+
+function dashToward(unit: Unit, target: { x: number; y: number }, step: number, map: GameMap) {
+  const gap = distance(unit, target);
+  if (gap <= 0 || step <= 0) return;
+  const move = Math.min(step, gap);
+  unit.x = clamp(unit.x + ((target.x - unit.x) / gap) * move, 0, map.width);
+  unit.y = clamp(unit.y + ((target.y - unit.y) / gap) * move, 0, map.height);
+}
+
+// @@@autocast-step - Each ready ability a unit has switched on (see autocast) looks for its moment, as Warcraft III units
+// do: only while the unit is idle, attacking or attack-moving, never under a move the player gave. A creep minding its
+// camp is nobody's target until it fights: a rider passing a camp does not charge it, a witch does not curse it.
+// - heal: the ally in reach missing the most health, if it misses at least half a heal;
+// - curse: an enemy in reach that is fighting (or any, while the caster fights), not already cursed; a summoned unit first
+//   when the curse kills those, then the caster's own target, then the nearest;
+// - summon: when an enemy that is fighting, or any enemy player's unit, comes near and none of the caster's summons stands
+//   beside it;
+// - charge: the rider's own target when it is a unit inside the window, or, idle or attack-moving, the nearest enemy unit
+//   inside it.
+const AUTOCAST_EVERY_TICKS = 2;
+const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove"]);
+const SUMMON_ALERT_MARGIN = 100;
+const SUMMON_COMPANY_RANGE = 320;
+const SUMMON_STEP = 60;
+const CHARGE_STOP_SHARE = 0.8;
+const CHARGE_IMPACT_TICKS = 18;
+
+function autocastStep(game: Game, unit: Unit) {
+  if (game.tick % AUTOCAST_EVERY_TICKS !== 0 || !AUTOCAST_ORDERS.has(unit.order.type)) return;
+  for (const ability of UNIT_DEFS[unit.kind].abilities) {
+    if (abilityCooldown(unit, ability) > 0 || !autocastEnabled(unit, ability)) continue;
+    const def = ABILITY_DEFS[ability];
+    if (def.behavior === "heal") {
+      const target = autocastHealTarget(game, unit, def);
+      if (target) return applyHeal(game, unit, ability, target, def);
+    } else if (def.behavior === "curse") {
+      const target = autocastCurseTarget(game, unit, def);
+      if (target) return applyCurse(game, unit, ability, target, def);
+    } else if (def.behavior === "summon") {
+      const point = autocastSummonPoint(game, unit, def);
+      if (point) return applySummon(game, unit, ability, point.x, point.y, def);
+    } else {
+      const target = autocastChargeTarget(game, unit, def);
+      if (target) return startCharge(game, unit, ability, target, def, false);
+    }
+  }
+}
+
+// Fighting: attacking, charging, or attack-moving onto a target.
+function isEngaged(unit: Unit) {
+  return unit.order.type === "attack" || unit.order.type === "charge" || (unit.order.type === "attackMove" && unit.order.targetId !== undefined);
+}
+
+// An enemy the unit's own spells and charges may pick: a player's unit, or a creep that is already fighting.
+function isAutocastFoe(game: Game, caster: Unit, candidate: Unit) {
+  return candidate.hp > 0 && areEnemyOwners(game, caster.owner, candidate.owner) && (candidate.owner !== "neutral" || isEngaged(candidate));
+}
+
+function autocastHealTarget(game: Game, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "heal" }>) {
+  let best: Unit | undefined;
+  let bestMissing = def.healAmount / 2;
+  forEachNearbyUnit(game, caster, def.range, (candidate) => {
+    if (candidate.hp <= 0 || areEnemyOwners(game, caster.owner, candidate.owner) || distance(caster, candidate) > def.range) return;
+    const missing = candidate.maxHp - candidate.hp;
+    if (missing < bestMissing || (missing === bestMissing && best)) return;
+    best = candidate;
+    bestMissing = missing;
+  });
+  return best;
+}
+
+function autocastCurseTarget(game: Game, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "curse" }>) {
+  const casterFights = isEngaged(caster);
+  const own = caster.order.type === "attack" || caster.order.type === "attackMove" ? caster.order.targetId : undefined;
+  let best: Unit | undefined;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  forEachNearbyUnit(game, caster, def.range, (candidate) => {
+    if (!isAutocastFoe(game, caster, candidate) || distance(caster, candidate) > def.range) return;
+    if (!casterFights && !isEngaged(candidate)) return;
+    if (candidate.effects.some((effect) => effect.type === def.statusType)) return;
+    const score = (def.summonedDamage && candidate.expiresTick !== undefined ? 2_000 : 0) + (candidate.id === own ? 1_000 : 0) - distance(caster, candidate);
+    if (score <= bestScore) return;
+    best = candidate;
+    bestScore = score;
+  });
+  return best;
+}
+
+function autocastSummonPoint(game: Game, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "summon" }>) {
+  let foe: Unit | undefined;
+  forEachNearbyUnit(game, caster, def.range + SUMMON_ALERT_MARGIN, (candidate) => {
+    if (!isAutocastFoe(game, caster, candidate) || distance(caster, candidate) > def.range + SUMMON_ALERT_MARGIN) return;
+    if (!foe || distance(caster, candidate) < distance(caster, foe)) foe = candidate;
+  });
+  if (!foe) return undefined;
+  let company = false;
+  forEachNearbyUnit(game, caster, SUMMON_COMPANY_RANGE, (candidate) => {
+    if (candidate.owner === caster.owner && candidate.kind === def.summonKind && distance(caster, candidate) <= SUMMON_COMPANY_RANGE) company = true;
+  });
+  if (company) return undefined;
+  const gap = distance(caster, foe);
+  const step = Math.min(SUMMON_STEP, gap);
+  return gap > 0 ? { x: caster.x + ((foe.x - caster.x) / gap) * step, y: caster.y + ((foe.y - caster.y) / gap) * step } : { x: caster.x, y: caster.y };
+}
+
+function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
+  const order = rider.order;
+  const own = order.type === "attack" || order.type === "attackMove" ? order.targetId : undefined;
+  if (own) {
+    const target = findTarget(game, own);
+    return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) ? target : undefined;
+  }
+  if (order.type !== "idle" && order.type !== "attackMove") return undefined;
+  let best: Unit | undefined;
+  forEachNearbyUnit(game, rider, def.range, (candidate) => {
+    if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def)) return;
+    if (!best || distance(rider, candidate) < distance(rider, best)) best = candidate;
+  });
+  return best;
 }
 
 function outgoingDamageMultiplier(unit: Unit) {
@@ -1411,7 +1627,7 @@ function attackDamageAgainstTarget(attacker: Unit | Building, target: Unit | Bui
 
 // What the ash chieftain hunts: anything summoned, and any unit with a spell.
 function isCasterOrSummoned(unit: Unit) {
-  return unit.expiresTick !== undefined || UNIT_DEFS[unit.kind].abilities.length > 0;
+  return unit.expiresTick !== undefined || hasSpell(unit.kind);
 }
 
 function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building) {
@@ -1533,7 +1749,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;

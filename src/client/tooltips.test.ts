@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
 import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip } from "./tooltips";
+import { ABILITY_DEFS } from "../shared/catalog";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
+
+// The tooltips state the heal cooldown the catalog holds (they said 6.0s for a while after heals went to 12s).
+const HEAL_COOLDOWN_SECONDS = (ABILITY_DEFS.heal.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
   it("describes trainable units with live catalog stats", () => {
@@ -17,14 +22,14 @@ describe("gameplay tooltips", () => {
     expect(abilityTooltip("heal", "h")).toMatchObject({
       title: "Heal",
       body: expect.stringContaining("allied"),
-      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", "Cooldown 6.0s"]),
+      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", `Cooldown ${HEAL_COOLDOWN_SECONDS}s`]),
       requirements: ["Priest or field medic must be ready."],
       hotkey: "H",
     });
     expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
     expect(abilityTooltip("emberMend", "m")).toMatchObject({
       title: "Ember Mend",
-      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", "Cooldown 6.0s"]),
+      stats: expect.arrayContaining(["Restores 55 HP", "Range 240", `Cooldown ${HEAL_COOLDOWN_SECONDS}s`]),
       requirements: ["Ember acolyte must be ready."],
       hotkey: "M",
     });
@@ -107,7 +112,7 @@ describe("gameplay tooltips", () => {
     });
     expect(abilityTooltip("heal", "h", zh)).toMatchObject({
       title: "治疗",
-      stats: expect.arrayContaining(["恢复 55 生命", "射程 240", "冷却 6.0s"]),
+      stats: expect.arrayContaining(["恢复 55 生命", "射程 240", `冷却 ${HEAL_COOLDOWN_SECONDS}s`]),
       requirements: ["牧师或战地医师必须准备就绪。"],
     });
     expect(itemTooltip("lightningRod", "1", zh).requirements).toEqual(["需要射程内可见的敌方单位。"]);

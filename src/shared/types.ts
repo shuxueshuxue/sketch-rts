@@ -13,7 +13,7 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse";
+export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
@@ -48,7 +48,9 @@ export type WorldEffect = {
     | "experienceBurst"
     | "flameBurn"
     | "scorch"
-    | "storm";
+    | "storm"
+    | "chargeTrail"
+    | "chargeImpact";
   x: number;
   y: number;
   remaining: number;
@@ -63,6 +65,8 @@ export type WorldEffect = {
   tickEvery?: number;
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt. Presentation only. */
   sourceKind?: UnitKind | BuildingKind;
+  /** The unit an effect follows (a charging rider's trail). Presentation only. */
+  unitId?: string;
 };
 
 export type Projectile = {
@@ -87,7 +91,12 @@ export type UnitOrder =
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
-  | { type: "pickupItem"; itemId: string };
+  | { type: "pickupItem"; itemId: string }
+  // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
+  | { type: "charge"; targetId: string; ticks: number; resume: SettledUnitOrder };
+
+// Any order but a charge.
+export type SettledUnitOrder = Exclude<UnitOrder, { type: "charge" }>;
 
 export type RallyTarget =
   | { type: "point" }
@@ -112,6 +121,8 @@ export type Unit = {
   cooldown: number;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
   abilityCooldowns?: Partial<Record<AbilityKind, number>>;
+  // Autocast switched away from its ability's default (see autocast): true on, false off; an absent ability keeps the default.
+  autocast?: Partial<Record<AbilityKind, boolean>>;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -317,6 +328,7 @@ export type GameCommand =
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
+  | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }

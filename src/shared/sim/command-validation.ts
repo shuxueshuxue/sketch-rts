@@ -1,4 +1,5 @@
 import { abilityCooldown } from "../ability-cooldowns";
+import { canAutocast } from "../autocast";
 import { buildingPlacementBlocker } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap } from "../catalog";
 import type { Game } from "../sim";
@@ -80,6 +81,14 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     return canSpendGold(snapshot, owner, camp.cost) ? undefined : commandError(`Need ${camp.cost} gold`, true);
   }
   if (command.type === "cast") return castError(snapshot, owner, command);
+  if (command.type === "setAutocast") {
+    if (!canAutocast(command.ability)) return commandError(`${command.ability} cannot be autocast`);
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && UNIT_DEFS[unit.kind].abilities.includes(command.ability))
+      ? undefined
+      : commandError(`None of those units has ${command.ability}`);
+  }
   if (command.type === "pickupItem") {
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
@@ -144,8 +153,12 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     const caster = currentUnit(game, owner, command.unitId);
     if (!caster) return undefined;
     const behavior = ABILITY_DEFS[command.ability].behavior;
-    if ((behavior === "heal" || behavior === "curse") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
+    if ((behavior === "heal" || behavior === "curse" || behavior === "charge") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
     return command;
+  }
+  if (command.type === "setAutocast") {
+    const unitIds = currentUnitIds(game, owner, command.unitIds);
+    return unitIds.length > 0 ? { ...command, unitIds } : undefined;
   }
   if (command.type === "pickupItem") {
     if (!hasCurrentUnit(game, owner, command.unitId)) return undefined;
@@ -223,6 +236,13 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
       : commandError("Curse requires an enemy unit target");
+  }
+  if (behavior === "charge") {
+    const def = ABILITY_DEFS[command.ability];
+    const target = command.targetId ? snapshot.units.find((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner)) : undefined;
+    if (!target || def.behavior !== "charge") return commandError("Charge requires an enemy unit target");
+    const gap = Math.hypot(target.x - caster.x, target.y - caster.y);
+    return gap >= def.minRange && gap <= def.range ? undefined : commandError(`Charge target must be ${def.minRange} to ${def.range} away`, true);
   }
   return Number.isFinite(command.x) && Number.isFinite(command.y) ? undefined : commandError("Summon requires a target point");
 }
