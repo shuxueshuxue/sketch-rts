@@ -4,9 +4,9 @@ import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build
 import { resolveAiCommandIntent } from "../commands";
 import { activeMiningBaseCount } from "../expansion-model";
 import { buildings, units } from "../snapshot";
-import { distance, type Point } from "../spatial";
+import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy } from "../versions";
+import { isV6Policy, isV7Policy } from "../versions";
 import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
@@ -118,7 +118,8 @@ function currentPhase(economy: Omit<Economy, "phase">): V6Phase {
   while (index < phases.length - 1) {
     const phase = phases[index]!;
     const supply = playerState(economy.snapshot, economy.owner).supplyUsed;
-    if (unitShare(economy, phase) < phase.advanceShare && supply < phase.advanceSupply) break;
+    const basesShort = activeMiningBaseCount(economy.snapshot, economy.owner) < (phase.advanceBases ?? 0);
+    if ((unitShare(economy, phase) < phase.advanceShare || basesShort) && supply < phase.advanceSupply) break;
     index += 1;
     recordPlay(memory, `phase:${index + 1}`);
   }
@@ -178,9 +179,21 @@ function workerGoals(economy: Economy): Goal[] {
 
 // A base under attack gets another tower while the fight is on, ahead of everything but farms.
 function threatGoals(economy: Economy): Goal[] {
-  const threatened = economy.threatened;
+  const threatened = economy.threatened ?? (isV7Policy(economy.options) ? outweighingPush(economy) : undefined);
   if (!threatened || towersAt(economy, threatened.hall) >= MAX_TOWERS_AT_HALL || towerRising(economy)) return [];
-  return towerGoal(economy, threatened.hall, 92, "tower:underFire");
+  return towerGoal(economy, threatened.hall, 92, economy.threatened ? "tower:underFire" : "tower:ahead");
+}
+
+// @@@v7-tower-ahead - V7 does not wait for attackers to reach a building. Armies pushing toward it that outweigh its own
+// get a tower at the hall they head for while they are still on the way: traced, V5's archers and hired mercenaries walked
+// through V7's footmen at 5:00, and the tower V6's rule raises under fire went up after the workers were dead.
+function outweighingPush(economy: Economy): { hall: Building; threat: number } | undefined {
+  const pushing = economy.intel.enemies.filter((enemy) => enemy.state === "pushing" && enemy.center);
+  const threat = pushing.reduce((total, enemy) => total + enemy.power, 0);
+  if (pushing.length === 0 || threat <= economy.intel.power) return undefined;
+  const center = averagePoint(pushing.map((enemy) => enemy.center!));
+  const hall = [...economy.intel.ownHalls].sort((a, b) => distance(a, center) - distance(b, center))[0];
+  return hall ? { hall, threat } : undefined;
 }
 
 function wantGoals(economy: Economy): Goal[] {

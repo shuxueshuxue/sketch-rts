@@ -7,8 +7,9 @@ import { createAiPolicyMemory } from "../../memory";
 import { planV6Economy, rankV6Goals } from "./economy";
 
 const V6 = { version: "v2", requestedVersion: "v6" } as const;
+const V7 = { version: "v2", requestedVersion: "v7" } as const;
 
-type Base = { gold: number; buildings?: ("barracks" | "stables" | "sanctum")[]; army?: UnitKind[]; creep?: boolean; farms?: number; enemyAtBase?: number; enemyArchers?: number; enemyFootmen?: number; natural?: boolean; mainGold?: number; naturalHall?: boolean; thirdMine?: boolean };
+type Base = { gold: number; buildings?: ("barracks" | "stables" | "sanctum")[]; army?: UnitKind[]; creep?: boolean; farms?: number; enemyAtBase?: number; enemyArchers?: number; enemyFootmen?: number; natural?: boolean; mainGold?: number; naturalHall?: boolean; thirdMine?: boolean; enemyPushing?: number; v7?: boolean };
 
 function base(name: string, options: Base & { phase?: number }) {
   let scene = sketchScene(name)
@@ -29,6 +30,8 @@ function base(name: string, options: Base & { phase?: number }) {
   for (let index = 0; index < (options.enemyAtBase ?? 0); index += 1) scene = scene.unit("v3", "footman", 950 + index * 30, 1_150);
   for (let index = 0; index < (options.enemyArchers ?? 0); index += 1) scene = scene.unit("v5", "archer", 3_200 + index * 30, 2_300);
   for (let index = 0; index < (options.enemyFootmen ?? 0); index += 1) scene = scene.unit("v3", "footman", 3_200 + index * 30, 3_150);
+  // On the way in: within 1300 of the hall, farther than 750 from every building.
+  for (let index = 0; index < (options.enemyPushing ?? 0); index += 1) scene = scene.unit("v3", "footman", 600 + index * 30, 1_800);
   if (options.natural) scene = scene.goldMine("v6-natural", 700, 1_350, 6_000);
   if (options.naturalHall) scene = scene.townHall("v6", 700, 1_550, { id: "v6-natural-hall" });
   if (options.thirdMine) scene = scene.goldMine("v6-third", 1_500, 900, 6_000);
@@ -36,7 +39,13 @@ function base(name: string, options: Base & { phase?: number }) {
   const game = scene.build().createGame();
   const memory = createAiPolicyMemory();
   memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-spirit-host", decidedTick: 0 }, ...(options.phase !== undefined ? { phase: options.phase } : {}) };
-  return { game, memory, plan: () => planV6Economy(snapshotGame(game), "v6", { ...V6, teams: game.teams, memory }) };
+  const version = options.v7 ? V7 : V6;
+  return {
+    game,
+    memory,
+    plan: () => planV6Economy(snapshotGame(game), "v6", { ...version, teams: game.teams, memory }),
+    goals: () => rankV6Goals(snapshotGame(game), "v6", { ...version, teams: game.teams, memory }).map((candidate) => candidate.id),
+  };
 }
 
 // Farms beside the one hall that leave the cap one farm short of the summoners' bar.
@@ -104,6 +113,31 @@ describe("v6 economy", () => {
   it("keeps training workers without an army while the phase's units still wait on their tier", () => {
     const { plan } = base("v6-econ-workers-tier", { gold: 500, buildings: ["sanctum"], farms: ONE_FARM_SHORT - 1 });
     expect(of(plan(), "train").map((command) => command.unitKind)).toContain("worker");
+  });
+
+  it("V7 opens on footmen and the natural, buying no farm ahead of need; V6 goes for the casters' bar", () => {
+    const v7 = base("v7-econ-opening", { gold: 1_000, natural: true, v7: true });
+    expect(v7.goals()).toEqual(expect.arrayContaining(["build:barracks", "bases:2"]));
+    expect(v7.goals()).not.toContain("farm:tier");
+    expect(base("v6-econ-opening-tier", { gold: 1_000, natural: true }).goals()).toContain("farm:tier");
+  });
+
+  it("V7 leaves its opening only once the natural stands as well as the footmen", () => {
+    const footmen: UnitKind[] = ["footman", "footman", "footman", "footman", "footman"];
+    const oneBase = base("v7-econ-one-base", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    oneBase.plan();
+    expect(oneBase.memory.v6?.phase ?? 0).toBe(0);
+    const twoBases = base("v7-econ-two-bases", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, naturalHall: true, v7: true });
+    twoBases.plan();
+    expect(twoBases.memory.v6?.phase).toBe(1);
+  });
+
+  it("V7 puts a tower up ahead of an army that outweighs its own and is still on the way; V6 waits for it to arrive", () => {
+    const v7 = base("v7-econ-tower-ahead", { gold: 600, buildings: ["barracks"], enemyPushing: 3, v7: true });
+    expect(of(v7.plan(), "build").map((command) => command.buildingKind)).toContain("defenseTower");
+    expect(v7.memory.v6?.plays?.["tower:ahead"]).toBe(1);
+    const v6 = base("v6-econ-tower-waits", { gold: 600, buildings: ["barracks"], enemyPushing: 3 });
+    expect(of(v6.plan(), "build").map((command) => command.buildingKind)).not.toContain("defenseTower");
   });
 
   it("builds a farm first when supply runs short", () => {

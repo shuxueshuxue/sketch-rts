@@ -29,6 +29,8 @@ export type V6Phase = {
   // The next phase opens once this share of the phase's unit wants stands, or supply reaches the bar (AMAI's tier block).
   advanceShare: number;
   advanceSupply: number;
+  // The next phase also waits for this many mining bases (the supply bar still opens it regardless).
+  advanceBases?: number;
 };
 
 export type V6RaidPlan = {
@@ -239,3 +241,31 @@ export const V6_STRATEGIES: V6Strategy[] = [
     standIn: "emberRavager",
   },
 ];
+
+// V7 plays V6's strategies behind its own opening. An earlier third base (in the first caster phase, ahead of the second
+// round of casters) was tried: V7's losses sit on two halls from 4:00 to 15:00 while the pair behind it grows to four, but
+// the third mine is the map's middle between the two of them: over the same two seeds V7 won 115 of 200 with it and
+// 135 without.
+export function v7Phases(strategy: V6Strategy): V6Phase[] {
+  return [v7OpeningPhase(strategy), ...strategy.phases];
+}
+
+// @@@v7-creep-expand-opening - Played by hand under the supply tiers (wispQuarry, V7 grove against V6 and V3): five
+// footmen cleared the two small camps and the natural's guard by 2:50, the natural stood at 4:40, and at 8:00 V7 had 22
+// workers on two mines to V6's 15, V6 having spent its first minutes on farms toward the casters' bar. V7 opens that way:
+// its race's basic soldier and the natural before anything that waits on a tier, so no farm is bought ahead of need until
+// both stand. Then the strategy's own phases (casters, farms toward their bar) follow. Shooters beside the footmen were
+// tried against the pushes V3 and V5 bring at 5:00-6:00 (archers and hired contract archers): over the same two seeds
+// V7 won 71 of 200 with them and 132 without.
+export function v7OpeningPhase(strategy: V6Strategy): V6Phase {
+  return {
+    wants: [
+      { unit: strategy.standIn, count: 4, priority: 66 },
+      { bases: 2, priority: 64 },
+      { unit: strategy.standIn, count: 6, priority: 50 },
+    ],
+    advanceShare: 0.66,
+    advanceBases: 2,
+    advanceSupply: 34,
+  };
+}
