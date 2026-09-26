@@ -103,7 +103,7 @@ export type RaceDef = {
 };
 
 export const UNIT_RULES = {
-  worker: { trainedAt: "townHall", hp: 70, speed: 3, radius: 15, attackDamage: 5, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, xpReward: 20, abilities: [] },
+  worker: { trainedAt: "townHall", hp: 70, speed: 3, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, xpReward: 20, abilities: [] },
   footman: { trainedAt: "barracks", race: "grove", hp: 145, speed: 3.1, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   archer: { trainedAt: "archeryRange", race: "grove", hp: 72, speed: 3, radius: 16, attackDamage: 13, attackRange: 399, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, xpReward: 30, abilities: [] },
   raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 48, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: [], tier: 2 },
