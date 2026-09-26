@@ -140,6 +140,25 @@ describe("v6 economy", () => {
     expect(of(v6.plan(), "build").map((command) => command.buildingKind)).not.toContain("defenseTower");
   });
 
+  it("V7 leaves its opening at 5:00 even when the natural has not fallen", () => {
+    const footmen: UnitKind[] = ["footman", "footman", "footman", "footman", "footman"];
+    const early = base("v7-econ-opening-early", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    early.game.tick = 290 * 20;
+    early.plan();
+    expect(early.memory.v6?.phase ?? 0).toBe(0);
+    const due = base("v7-econ-opening-due", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    due.game.tick = 300 * 20;
+    due.plan();
+    expect(due.memory.v6?.phase).toBe(1);
+  });
+
+  it("V7 trains no workers for a base it has not started, where V6 trains that base's five ahead", () => {
+    const v7 = base("v7-econ-no-early-workers", { gold: 500, buildings: ["barracks"], natural: true, v7: true });
+    expect(of(v7.plan(), "train").map((command) => command.unitKind)).not.toContain("worker");
+    const v6 = base("v6-econ-early-workers", { gold: 500, buildings: ["barracks"], natural: true });
+    expect(of(v6.plan(), "train").map((command) => command.unitKind)).toContain("worker");
+  });
+
   it("builds a farm first when supply runs short", () => {
     const { plan } = base("v6-econ-farm", { gold: 400, buildings: ["barracks"], army: ["footman", "footman", "footman", "footman", "footman", "footman", "footman"], farms: 0 });
     expect(of(plan(), "build")[0]).toMatchObject({ buildingKind: "farm" });

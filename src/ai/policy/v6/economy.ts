@@ -119,7 +119,8 @@ function currentPhase(economy: Omit<Economy, "phase">): V6Phase {
     const phase = phases[index]!;
     const supply = playerState(economy.snapshot, economy.owner).supplyUsed;
     const basesShort = activeMiningBaseCount(economy.snapshot, economy.owner) < (phase.advanceBases ?? 0);
-    if ((unitShare(economy, phase) < phase.advanceShare || basesShort) && supply < phase.advanceSupply) break;
+    const due = phase.advanceBy !== undefined && economy.snapshot.tick >= phase.advanceBy * 20;
+    if ((unitShare(economy, phase) < phase.advanceShare || basesShort) && supply < phase.advanceSupply && !due) break;
     index += 1;
     recordPlay(memory, `phase:${index + 1}`);
   }
@@ -163,7 +164,9 @@ function workerGoals(economy: Economy): Goal[] {
   const queued = economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === "worker").length, 0);
   const halls = economy.own.filter((building) => building.kind === "townHall").length;
   const rising = economy.own.filter((building) => building.kind === "townHall" && !building.complete).length;
-  const next = economy.phase.wants.some((want) => "bases" in want && want.bases > halls) ? 1 : 0;
+  // V7 trains a base's workers once its hall is rising, not while it is only wanted: five fill a mine (measured: 375 gold a
+  // minute from five, not a coin more from six to twelve), and a natural that never came left five idling at the main.
+  const next = !isV7Policy(economy.options) && economy.phase.wants.some((want) => "bases" in want && want.bases > halls) ? 1 : 0;
   const soldiers = economy.intel.army.filter((unit) => unit.kind !== "spirit").length;
   // While the phase's units still wait on their tier, the army is a few stand-ins and the gold goes to farms: pacing the
   // workers to that army held V6 at nine workers until minute four. The mines alone set the target until the bar is met.

@@ -31,6 +31,9 @@ export type V6Phase = {
   advanceSupply: number;
   // The next phase also waits for this many mining bases (the supply bar still opens it regardless).
   advanceBases?: number;
+  // The next phase opens at this game second whatever else stands: a phase whose natural never falls must not hold the
+  // game forever (V7 against V7 sat in its opening for 19 minutes, six footmen short of a guard they could not beat).
+  advanceBy?: number;
 };
 
 export type V6RaidPlan = {
@@ -267,5 +270,6 @@ export function v7OpeningPhase(strategy: V6Strategy): V6Phase {
     advanceShare: 0.66,
     advanceBases: 2,
     advanceSupply: 34,
+    advanceBy: 300,
   };
 }
