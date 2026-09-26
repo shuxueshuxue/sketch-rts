@@ -45,8 +45,6 @@ export type V6PolicyMemory = {
   // given up, not tried again until the tick given.
   creep?: { center: { x: number; y: number }; reach: number; staging: { x: number; y: number }; stage: "gather" | "engage"; since: number; group: string[] };
   creepRetry?: { center: { x: number; y: number }; until: number };
-  // The tick of the backline's last think, and the gap before it: how soon the next think comes (V7's hold-fire).
-  backline?: { lastThinkTick: number; thinkGap?: number };
   plays?: Record<string, number>;
 };
 

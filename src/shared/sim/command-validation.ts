@@ -1,3 +1,4 @@
+import { abilityCooldown } from "../ability-cooldowns";
 import { buildingPlacementBlocker } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap } from "../catalog";
 import type { Game } from "../sim";
@@ -211,7 +212,7 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   const caster = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner);
   if (!caster) return commandError(`Unknown ${owner} caster ${command.unitId}`, true);
   if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
-  if (caster.cooldown > 0) return commandError(`${caster.kind} is on cooldown`, true);
+  if (abilityCooldown(caster, command.ability) > 0) return commandError(`${caster.kind} is on cooldown`, true);
   const behavior = ABILITY_DEFS[command.ability].behavior;
   if (behavior === "heal") {
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))

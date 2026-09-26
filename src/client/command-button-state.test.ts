@@ -15,12 +15,17 @@ describe("command button state", () => {
   });
 
   it("keeps a selected caster ability visible while disabling it during cooldown", () => {
-    expect(abilityCommandState([unit("priest", 75)], "heal")).toEqual({
+    expect(abilityCommandState([unit("priest", { heal: 75 })], "heal")).toEqual({
       visible: true,
       enabled: false,
       cooldownTicks: 75,
       reason: "cooldown",
     });
+  });
+
+  it("enables a caster's spell while only its weapon is cooling down", () => {
+    const priest = { ...unit("priest", undefined), cooldown: 20 };
+    expect(abilityCommandState([priest], "heal")).toEqual({ visible: true, enabled: true });
   });
 
   it("keeps selected mercenary camps visible while explaining unavailable hire states", () => {
@@ -42,7 +47,7 @@ describe("command button state", () => {
   });
 });
 
-function unit(kind: Unit["kind"], cooldown: number): Unit {
+function unit(kind: Unit["kind"], abilityCooldowns: Unit["abilityCooldowns"]): Unit {
   return {
     id: `${kind}-1`,
     owner: "player",
@@ -55,7 +60,8 @@ function unit(kind: Unit["kind"], cooldown: number): Unit {
     attackDamage: 8,
     attackRange: 90,
     attackCooldown: 10,
-    cooldown,
+    cooldown: 0,
+    ...(abilityCooldowns ? { abilityCooldowns } : {}),
     radius: 14,
     carryingGold: 0,
     kills: 0,

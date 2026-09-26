@@ -154,10 +154,13 @@ export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contract
 export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse"];
 
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
-  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
+  // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
+  // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
+  // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
+  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal" },
   summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
   curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: 100, statusType: "curse", effectType: "curse" },
-  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(6), healAmount: 55, effectType: "heal" },
+  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon" },
   ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch" },
 };

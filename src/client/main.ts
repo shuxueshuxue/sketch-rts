@@ -48,6 +48,7 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
+import { abilityCooldown } from "../shared/ability-cooldowns";
 import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
@@ -1646,7 +1647,7 @@ function beginSpellTargeting(ability: AbilityKind) {
     showCommandUnavailable(state, t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
   }
-  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && abilityCooldown(unit, ability) <= 0);
   if (!caster) {
     showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;

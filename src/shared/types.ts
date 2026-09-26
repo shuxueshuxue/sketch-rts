@@ -108,7 +108,10 @@ export type Unit = {
   attackDamage: number;
   attackRange: number;
   attackCooldown: number;
+  // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;
+  // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
+  abilityCooldowns?: Partial<Record<AbilityKind, number>>;
   radius: number;
   carryingGold: number;
   kills: number;

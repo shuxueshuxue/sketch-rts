@@ -4,7 +4,7 @@ import { enemyBuildings, hostileCombatUnits, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { V6PolicyMemory } from "../../memory";
 import type { AiPolicyContext, PresetAiPolicyOptions } from "../types";
-import { isV6Policy, isV7Policy } from "../versions";
+import { isV6Policy } from "../versions";
 import { mainBase } from "../world-model";
 import { v6Memory } from "./memory";
 
@@ -22,9 +22,6 @@ const FALLBACK_STEP = 320;
 const SHOOTER_MARGIN = 90;
 const REPOSITION_SLACK = 60;
 const MIN_SCREEN = 3;
-const HOLD_FIRE_MARGIN = 40;
-// The step back outlasts the think gap by a little, so the caster is still moving (not shooting) when the next think comes.
-const HOLD_FIRE_SLACK_TICKS = 3;
 
 const BACKLINE_KINDS = new Set(["summoner", "pyreCaller", "priest", "witch", "emberAcolyte", "ashHexer", "fieldMedic"]);
 
@@ -39,8 +36,6 @@ export function v6ScreenedCasterIds(snapshot: GameSnapshot, owner: PlayerId, opt
 
 export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
-  // Read every think, casters or not, so the gap is the last think's and not the last one that had casters.
-  const thinkGap = thinkGapTicks(snapshot, options);
   const casters = units(snapshot, owner).filter(isBacklineKind);
   if (casters.length === 0) return [];
   const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
@@ -50,37 +45,11 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   const post = generalPost(v6Memory(options).general, home);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
-    const hold = isV7Policy(options) && thinkGap !== undefined ? holdFireStep(caster, enemies, thinkGap) : undefined;
-    if (hold) {
-      commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: hold.x, y: hold.y }, options));
-      continue;
-    }
     const anchor = screenAnchor(caster, front, enemies, towers, home, post);
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
   }
   return commands;
-}
-
-// @@@v7-hold-fire - A caster's spell and its weapon share one cooldown, and a weapon with a target in reach fires on the
-// tick the cooldown runs out. A caster in a fight therefore swings its staff (7-8 damage) every time its spell comes back
-// and never casts again: traced by hand, five witches standing among enemy spirits cursed four times in a whole battle.
-// V7's casters hold their fire instead. One whose cooldown runs out before the next think steps back from the nearest foe
-// (a moving unit does not shoot), and the next think finds it ready and casts: a witch kills a spirit every 7.5s, a
-// summoner recasts every 40s. How soon the next think comes is read off the gap between the last two, not assumed.
-function holdFireStep(caster: Unit, enemies: Unit[], thinkGap: number): Point | undefined {
-  if (caster.cooldown <= 0 || caster.cooldown > thinkGap) return undefined;
-  const foe = enemies.filter((enemy) => distance(enemy, caster) <= caster.attackRange + HOLD_FIRE_MARGIN).sort((a, b) => distance(a, caster) - distance(b, caster))[0];
-  if (!foe) return undefined;
-  return step(caster, away(caster, foe), caster.speed * (thinkGap + HOLD_FIRE_SLACK_TICKS));
-}
-
-function thinkGapTicks(snapshot: GameSnapshot, options: AiPolicyContext): number | undefined {
-  const memory = v6Memory(options);
-  const last = memory.backline?.lastThinkTick;
-  const gap = last !== undefined && snapshot.tick > last ? snapshot.tick - last : memory.backline?.thinkGap;
-  memory.backline = { lastThinkTick: snapshot.tick, ...(gap !== undefined ? { thinkGap: gap } : {}) };
-  return gap;
 }
 
 // A front of one or two spirits chasing something is no screen: with fewer than three bodies nearby the casters go back to

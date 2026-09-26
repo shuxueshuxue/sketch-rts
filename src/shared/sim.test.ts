@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { canCast } from "./ability-cooldowns";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "./catalog";
 import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
@@ -9,7 +10,9 @@ import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-const AI_DUEL_CPU_BUDGET_MS = 4_500;
+// The whole duel's CPU, AI and sim together. With spells on their own cooldowns the wildMarches duel runs 32k ticks (18k
+// before) at the same 0.15-0.19 ms a tick on a loaded runner; the budget keeps the old headroom over that length.
+const AI_DUEL_CPU_BUDGET_MS = 8_000;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
   const elapsed = process.cpuUsage(started);
@@ -120,7 +123,7 @@ describe("sketch RTS simulation", () => {
     expect(UNIT_DEFS.emberAcolyte.abilities).toEqual(["emberMend"]);
     expect(UNIT_DEFS.ashHexer.abilities).toEqual(["ashCurse"]);
     expect(UNIT_DEFS.pyreCaller.abilities).toEqual(["cinderSoul"]);
-    expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: seconds(6) });
+    expect(ABILITY_DEFS.emberMend).toMatchObject({ behavior: "heal", range: 240, plannerRange: 220, healAmount: 55, cooldown: ABILITY_DEFS.heal.cooldown });
     expect(ABILITY_DEFS.ashCurse).toMatchObject({ behavior: "curse", range: 280, plannerRange: 260, damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, effectDuration: seconds(18), cooldown: seconds(7.5) });
     expect(ABILITY_DEFS.cinderSoul).toMatchObject({ behavior: "summon", range: 260, plannerRange: 240, summonDuration: seconds(60), cooldown: seconds(40) });
   });
@@ -1316,7 +1319,7 @@ describe("sketch RTS simulation", () => {
 
     stepMany(game, 1);
 
-    expect(witch.cooldown).toBe(0);
+    expect(canCast(witch)).toBe(true);
     expect(enemy.effects.some((effect) => effect.type === "curse")).toBe(false);
     expect(game.effects.some((effect) => effect.type === "curse")).toBe(false);
   });
@@ -1336,7 +1339,7 @@ describe("sketch RTS simulation", () => {
     expect(ally.hp).toBeGreaterThan(35);
     expect(game.units.some((unit) => unit.owner === "enemy" && unit.kind === "spirit")).toBe(true);
     expect(player.effects.some((effect) => effect.type === "curse")).toBe(true);
-    expect([priest, summoner, witch].some((caster) => caster.cooldown > 0)).toBe(true);
+    expect([priest, summoner, witch].some((caster) => !canCast(caster))).toBe(true);
   });
 
   it("lets enemy AI hire mercenaries from a camp and proves they join combat by scoring a kill", () => {

@@ -1,3 +1,4 @@
+import { abilityCooldown } from "../shared/ability-cooldowns";
 import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
 import type { AbilityKind, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
 
@@ -22,9 +23,9 @@ export function booleanCommandState(enabled: boolean): CommandButtonState {
 export function abilityCommandState(units: readonly Unit[], ability: AbilityKind): CommandButtonState {
   const casters = units.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability));
   if (casters.length === 0) return HIDDEN_COMMAND_STATE;
-  const ready = casters.find((unit) => unit.cooldown <= 0);
+  const ready = casters.find((unit) => abilityCooldown(unit, ability) <= 0);
   if (ready) return ENABLED_COMMAND_STATE;
-  const cooldownTicks = Math.min(...casters.map((unit) => unit.cooldown));
+  const cooldownTicks = Math.min(...casters.map((unit) => abilityCooldown(unit, ability)));
   return { visible: true, enabled: false, cooldownTicks, reason: "cooldown" };
 }
 

@@ -35,6 +35,7 @@ Both races build town halls, farms, and defense towers, train workers, and can h
 - **Supply is the tech.** Advanced units need a supply cap of 42 and elites 60: the cap counts the halls and farms built, not the supply in use. A farm costs 120 gold for 6 supply, a town hall 400 for 8. A locked unit stays on the card, greyed, with the cap it waits for.
 - **Upkeep.** From 51 supply in use, gold mined comes in at 70%; from 81, at 40%.
 - **Heavy armor.** The four elites take half damage from shooters and casters and 70% from towers. Melee blows land in full.
+- **Spells have their own cooldowns.** As in Warcraft III, a caster casts whenever its spell is ready, whatever its weapon is doing, and casting leaves the weapon free. A heal restores 55 health every 12 seconds.
 - **The witch's curse** takes 60% off a unit's damage for 18 seconds and deals 100 damage to a summoned unit, enough to kill a spirit.
 - **Ember's elites have their own jobs.** The ash chieftain deals 50% extra damage to casters and summoned units. The cinder revenant has less health but regenerates 7 health per second.
 - **Units fight back.** A unit hit while it has no orders turns on its attacker, and idle soldiers within 300 come to help, so a shooter can't pick off an idle army from outside its reach. A unit that starts its own chase gives up after 600 and walks back. Move orders and orders you give yourself are never overridden.

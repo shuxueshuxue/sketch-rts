@@ -1,3 +1,4 @@
+import { canCast } from "../../../shared/ability-cooldowns";
 import type { V6PolicyMemory } from "../../memory";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
@@ -346,7 +347,7 @@ function pulseStage(snapshot: GameSnapshot, memory: V6PolicyMemory, group: Unit[
   if (current?.stage === "strike") return { stage: "strike" as const, since: current.stageSince ?? snapshot.tick, point };
   const since = current?.stage === "gather" ? (current.stageSince ?? snapshot.tick) : snapshot.tick;
   const casters = group.filter(isSummoner);
-  const ready = casters.filter((unit) => unit.cooldown === 0).length >= casters.length * STRIKE_READY_SHARE;
+  const ready = casters.filter(canCast).length >= casters.length * STRIKE_READY_SHARE;
   const gathered = marching.filter((unit) => distance(unit, point) <= GATHERED_RANGE).length >= marching.length * GATHERED_SHARE;
   if ((ready && gathered) || snapshot.tick - since >= GATHER_TICKS) {
     recordPlay(memory, "general:pulse");
