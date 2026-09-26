@@ -1,7 +1,7 @@
 import { abilityCooldown } from "../ability-cooldowns";
 import { canAutocast } from "../autocast";
 import { buildingPlacementBlocker } from "../build-placement";
-import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap } from "../catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
 
@@ -258,7 +258,7 @@ function canSpendGold(snapshot: GameSnapshot, owner: PlayerId, amount: number) {
 }
 
 function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) {
-  const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0);
+  const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + unitRules(snapshot, unit).supplyUsed, 0);
   const queuedSupply = snapshot.buildings
     .filter((building) => building.owner === owner)
     .flatMap((building) => building.queue)

@@ -147,6 +147,43 @@ export const UNIT_RULES = {
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
 
+// @@@unit-variants - A campaign's own units (a hero, a boss, a beast of its story) are variants of a catalog unit, as
+// Warcraft III's custom units copy a base unit's row: a variant names its base kind and restates only the numbers it
+// changes. The unit still has its base kind, so every table keyed by kind (the AIs' heuristics, command validation,
+// the tooltips) takes it for its base, as any subtype passes for its supertype; the sim, which knows variants, plays it
+// by its own numbers. Its abilities are its base's: a campaign's own powers are scripts (see story/). Variants live in
+// the game that uses them (Game.variants), never in these tables, so no campaign can move the balance of any other game.
+export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "casterSlayer" | "regenPerSecond">>;
+
+export type UnitVariantDef = UnitVariantStats & {
+  base: UnitKind;
+  // A hero grows by its campaign's rules (levels, gear) instead of the veterancy stars kills give an ordinary unit.
+  heroic?: boolean;
+};
+
+// A variant's full rules: its base kind's row with the variant's numbers laid over it.
+export type VariantRules = UnitDef & { base: UnitKind; heroic?: boolean };
+
+// The rules a unit plays by: its kind's catalog row, or its variant's. A game (or a snapshot of one) carries its own
+// variants; a view without them takes a variant for its base kind.
+export function unitRules(game: { variants?: Readonly<Record<string, VariantRules>> }, unit: { kind: UnitKind; variant?: string }): UnitDef {
+  if (unit.variant === undefined || !game.variants) return UNIT_DEFS[unit.kind];
+  const rules = game.variants[unit.variant];
+  if (!rules) throw new Error(`Unknown unit variant ${unit.variant}`);
+  return rules;
+}
+
+export function resolveVariant(def: UnitVariantDef): VariantRules {
+  const { base, heroic, ...stats } = def;
+  const rules: VariantRules = { ...UNIT_DEFS[base], ...definedStats(stats), base };
+  if (heroic) rules.heroic = true;
+  return rules;
+}
+
+function definedStats(stats: UnitVariantStats): UnitVariantStats {
+  return Object.fromEntries(Object.entries(stats).filter(([, value]) => value !== undefined)) as UnitVariantStats;
+}
+
 // The supply cap a player needs before it can train this kind (0 for the basic line, workers and hired units).
 export function requiredSupplyCap(kind: UnitKind): number {
   const tier = UNIT_DEFS[kind].tier;

@@ -1,4 +1,4 @@
-import type { BUILDING_RULES, UNIT_RULES } from "./catalog";
+import type { BUILDING_RULES, UNIT_RULES, VariantRules } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
 
 export type PlayerId = string;
@@ -107,6 +107,8 @@ export type Unit = {
   id: string;
   owner: Owner;
   kind: UnitKind;
+  // A campaign unit's variant id (see unit-variants): it plays by its variant's numbers and is drawn by its own model.
+  variant?: string;
   x: number;
   y: number;
   homeX?: number;
@@ -347,6 +349,8 @@ export type GameSnapshot = {
   items: WorldItem[];
   projectiles: Projectile[];
   effects: WorldEffect[];
+  // A campaign game's own units' rules, by variant id (see unit-variants). A standard match has none.
+  variants?: Record<string, VariantRules>;
 };
 
 export type LocalUserProfile = {

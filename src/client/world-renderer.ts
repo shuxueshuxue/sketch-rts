@@ -1,4 +1,4 @@
-import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasUnit } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasUnit } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -8,6 +8,9 @@ import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
+import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "./story-renderer";
+import type { PropPainter, UnitModel } from "../story/cast";
+import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Owner, ResourceNode, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
@@ -51,6 +54,13 @@ export type WorldFrame = {
   labels: WorldLabels;
   selectedIds?: ReadonlySet<string>;
   selectedCampId?: string;
+  /** A campaign's own units' models, by variant (see story/cast); without it a variant is drawn as its base kind. */
+  models?: (variant: string) => UnitModel | undefined;
+  /** A campaign's scenery painters, by prop kind (see story/stage props). */
+  props?: (kind: string) => PropPainter | undefined;
+  /** The story's stage (see story/stage): bubbles, titles, objectives and the rest, drawn over the world. */
+  story?: StageView;
+  locale?: "zh" | "en";
 };
 
 type Painter = {
@@ -65,6 +75,7 @@ type Painter = {
   labels: WorldLabels;
   selectedIds: ReadonlySet<string>;
   selectedCampId: string | undefined;
+  models: WorldFrame["models"];
 };
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
@@ -83,6 +94,7 @@ export function drawWorld(frame: WorldFrame) {
     labels: frame.labels,
     selectedIds: frame.selectedIds ?? NO_SELECTION,
     selectedCampId: frame.selectedCampId,
+    models: frame.models,
   };
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
@@ -90,9 +102,11 @@ export function drawWorld(frame: WorldFrame) {
   ctx.scale(zoom, zoom);
   drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
   drawLandmarks(painter, snapshot.map.landmarks);
+  if (frame.story && frame.props) drawStoryProps(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);
   drawMercenaryCamps(painter, snapshot.mercenaryCamps);
   drawItems(painter, snapshot.items);
+  if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
   drawBuildings(painter, snapshot.buildings);
   drawUnits(painter, snapshot.units);
   drawCarriedItems(painter, snapshot.items);
@@ -108,6 +122,26 @@ export function drawWorld(frame: WorldFrame) {
     },
   });
   ctx.restore();
+  if (frame.story) {
+    const storyPainter = {
+      ctx,
+      view: frame.story,
+      locale: frame.locale ?? "zh",
+      width: frame.view.width,
+      height: frame.view.height,
+      zoom,
+      project: (point: Point) => {
+        const at = worldToScreen(painter, point);
+        return { x: at.x * zoom, y: at.y * zoom };
+      },
+      unitAt: (unitId: string) => {
+        const unit = unitsById.get(unitId);
+        return unit ? { ...drawnPosition(painter, unit), radius: unit.radius } : undefined;
+      },
+    };
+    drawStoryAir(storyPainter);
+    drawStoryScreen(storyPainter);
+  }
 }
 
 /** Feeds the tracker every unit's facing for this snapshot; calling it twice for one snapshot changes nothing. */
@@ -260,7 +294,9 @@ function drawUnits(painter: Painter, units: Unit[]) {
       ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id));
+    const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
+    if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
+    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id));
     const scorch = unit.effects.find((effect) => effect.type === "scorch");
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);

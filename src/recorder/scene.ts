@@ -1,7 +1,9 @@
 import type { CommandEnvelope } from "../shared/net/types";
 import type { Game } from "../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import type { AiScriptVersion, PlayerId, UnitKind } from "../shared/types";
+import type { AiScriptVersion, GameSnapshot, PlayerId, UnitKind } from "../shared/types";
+import type { PropPainter, UnitModel } from "../story/cast";
+import type { StageView } from "../story/stage";
 
 /** Which units a following camera keeps in frame; every field narrows, and an empty selector means every player unit. */
 export type UnitSelector = {
@@ -38,6 +40,20 @@ export type RecordingScene = {
   commands?: (game: Game) => CommandEnvelope[];
   ai?: { players: PlayerId[]; version?: AiScriptVersion };
   defaults?: RecordingDefaults;
+  // A story to film instead of a plain match (see story/director): it runs the game, and its stage and camera are drawn.
+  story?: () => StoryDriver;
+};
+
+/** A running story as the recorder sees it: one tick at a time, a stage to draw, the models of its own units. */
+export type StoryDriver = {
+  game: Game;
+  advance(): void;
+  readonly finished: boolean;
+  view(): StageView;
+  models(variant: string): UnitModel | undefined;
+  props(kind: string): PropPainter | undefined;
+  // Where the camera rests when the stage asks for nothing in particular (the party, usually).
+  focus(snapshot: GameSnapshot): { x: number; y: number } | undefined;
 };
 
 export function defineRecordingScene(scene: RecordingScene): RecordingScene {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveVariant } from "../catalog";
 import { createGame, restoreSnapshotIntoGame, snapshotGame, stepGame, GAME_SNAPSHOT_RESTORE_KEYS } from "../sim";
 
 describe("game snapshot restoration", () => {
@@ -43,8 +44,12 @@ describe("game snapshot restoration", () => {
   });
 
   it("tracks the complete GameSnapshot key set", () => {
-    const snapshot = snapshotGame(createGame("bareDuel", { aiPlayers: [] }));
+    // A campaign game's snapshot carries its units' variants; a standard match's has no such key at all.
+    const campaign = createGame("bareDuel", { aiPlayers: [] });
+    campaign.variants = { "test/champion": resolveVariant({ base: "footman" }) };
+    const snapshot = snapshotGame(campaign);
 
     expect([...GAME_SNAPSHOT_RESTORE_KEYS].sort()).toEqual(Object.keys(snapshot).sort());
+    expect(Object.keys(snapshotGame(createGame("bareDuel", { aiPlayers: [] }))).sort()).toEqual(GAME_SNAPSHOT_RESTORE_KEYS.filter((key) => key !== "variants").sort());
   });
 });

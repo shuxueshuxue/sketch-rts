@@ -14,6 +14,7 @@ const USAGE = `Record a scene headlessly with the game's own renderer.
 
   --scene <name|path>   a built-in scene (see --list) or a module exporting a RecordingScene
   --seconds <n>         length of the clip (scene default, else 20)
+  --from <n>            start filming n seconds into the match (the match runs up to there undrawn)
   --fps <n>             frames per second (scene default, else 20; the match runs 20 ticks a second)
   --size <WxH>          frame size in pixels (scene default, else 1280x720)
   --camera <x,y[,zoom]> fixed camera: the world point at the centre of the frame
@@ -35,6 +36,7 @@ async function main(argv: string[]) {
     options: {
       scene: { type: "string" },
       seconds: { type: "string" },
+      from: { type: "string" },
       fps: { type: "string" },
       size: { type: "string" },
       camera: { type: "string" },
@@ -85,6 +87,7 @@ async function main(argv: string[]) {
     camera,
     locale,
     hideOrderMarkers: values["hide-orders"] ?? false,
+    ...(values.from ? { from: startSecond(values.from) } : {}),
     onProgress: (frame, total) => {
       if (frame % Math.max(1, Math.round(fps)) === 0 || frame === total) console.log(`  frame ${frame}/${total}`);
     },
@@ -99,6 +102,12 @@ async function main(argv: string[]) {
       console.log("    a large GIF: --gif-size 640x360 (or a fixed camera) shrinks it; the .mp4 is far smaller");
     }
   }
+}
+
+function startSecond(value: string) {
+  const from = Number(value);
+  if (!Number.isFinite(from) || from < 0) throw new Error(`--from must be zero or more seconds, got ${value}`);
+  return from;
 }
 
 function cameraFrom(values: { camera?: string | undefined; follow?: string | undefined; zoom?: string | undefined; lag?: string | undefined }, sceneCamera: CameraSpec | undefined): CameraSpec {

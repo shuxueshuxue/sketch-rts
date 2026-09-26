@@ -62,6 +62,23 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
   }, facing === -1);
 }
 
+/** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
+export function drawAtlasModel(c: Brush, key: string, model: { paint: (b: Brush, team: string) => void; shadow?: "foot" | "mounted" | "beast" | "huge" | "none" }, point: Point, scale: number, color: string, facing: Facing = 1) {
+  sprite(c, `m:${key}:${color}`, point, scale, (b) => {
+    const shadow = model.shadow ?? "foot";
+    if (shadow === "foot") ellipse(b, 2, 16, 17, 6, "#30483630");
+    else if (shadow === "mounted") ellipse(b, 2, 17, 22, 5.5, "#30483630");
+    else if (shadow === "beast") ellipse(b, 2, 15, 20, 5, "#30483630");
+    else if (shadow === "huge") ellipse(b, 2, 18, 30, 8, "#30483638");
+    model.paint(b, color);
+  }, facing === -1);
+}
+
+/** A piece of a story's scenery (see story/stage props), cached per kind and state like the units. */
+export function drawAtlasProp(c: Brush, key: string, paint: (b: Brush) => void, point: Point, scale: number, flip = false) {
+  sprite(c, `p:${key}`, point, scale, paint, flip);
+}
+
 function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
   c.save(); c.translate(x, y); c.scale(size, size);
   ellipse(c, 5, 4, 16, 6, "#304f3b19");
