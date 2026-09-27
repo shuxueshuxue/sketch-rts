@@ -81,6 +81,7 @@ import { planV6Economy } from "./v6/economy";
 import { planV6General } from "./v6/general";
 import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
+import { planV8Charge } from "./v8/charge";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -168,6 +169,7 @@ export const AI_SCRIPT_LIBRARY = {
   v6Closeout: { id: "v6Closeout", phase: "tactics", run: planV6Closeout, claimsUnits: v6CloseoutUnitIds },
   v6General: { id: "v6General", phase: "tactics", run: planV6General, claimsUnits: v7CreepGroupIds },
   v6Economy: { id: "v6Economy", phase: "economy", run: planV6Economy },
+  v8Charge: { id: "v8Charge", phase: "tactics", run: planV8Charge },
 } satisfies Record<string, AiScript>;
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
@@ -254,7 +256,8 @@ export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMEN
 // V8 starts as V7's stack, against V5 and V7 with neither a shooter nor a summoner (see v8-forbidden-units). Its general
 // alone moves its army (see v8-one-voice): the shared tower breaker, which sent the same footmen at a tower every other
 // think while the general sent them at the hall behind it, is left out, and the general takes the tower first itself.
-export const V8_AI_STACK: AiScript[] = V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker);
+// Its riders' charges are its own (see v8-charge), aimed last so that a rider dashes out of whatever order it was given.
+export const V8_AI_STACK: AiScript[] = [...V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker), AI_SCRIPT_LIBRARY.v8Charge];
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
