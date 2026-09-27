@@ -51,6 +51,10 @@ const GATHERED_SHARE = 0.8;
 const GATHERED_RANGE = 350;
 const GATHER_TICKS = 45 * 20;
 const ATTACK_MARGIN = 1.3;
+// @@@v8-attack-margin - V8 sets out only against a base it outweighs 1.6 times (the rest 1.3): in V8's lost games its army
+// went down attacking enemy bases between minutes 6 and 14, and the push that followed took its home. With the wider edge
+// V8 won 1168 of 2000 games against 1120 (and 972 against 940 before it fielded knights).
+const V8_ATTACK_MARGIN = 1.6;
 const IDLE_TICKS = 90 * 20;
 const JOIN_RANGE = 700;
 const WORN_SHARE = 0.5;
@@ -148,7 +152,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     return order(snapshot, owner, memory, "creep", front, natural, options);
   }
 
-  const target = attackTarget(intel);
+  const target = attackTarget(intel, isV8Policy(options) ? V8_ATTACK_MARGIN : ATTACK_MARGIN);
   const idle = current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= IDLE_TICKS;
   const marching = marchStrength(available) * (1 + profile.aggression);
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
@@ -247,7 +251,7 @@ function toward(from: Point, to: Point, length: number): Point {
   return gap < 1 ? from : { x: from.x + ((to.x - from.x) / gap) * Math.min(length, gap), y: from.y + ((to.y - from.y) / gap) * Math.min(length, gap) };
 }
 
-function attackTarget(intel: V6Intel): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
+function attackTarget(intel: V6Intel, margin: number): { base: V6BaseIntel; need: number; defended: number; why: string } | undefined {
   const choices = intel.enemies.flatMap((enemy) => {
     const main = mainHall(enemy);
     return targetBases(enemy, intel).map((base) => {
@@ -263,7 +267,7 @@ function attackTarget(intel: V6Intel): { base: V6BaseIntel; need: number; defend
       );
       const why = enemy.power < 2 ? "beaten" : expansion ? "expansion" : enemy.state === "creeping" || enemy.state === "away" ? "armyAway" : "stronger";
       const defended = defenders + base.towers.length * TOWER_STRENGTH;
-      return { base, need: defended * ATTACK_MARGIN + 2, defended, why };
+      return { base, need: defended * margin + 2, defended, why };
     });
   });
   return choices.sort((a, b) => a.need - b.need)[0];
