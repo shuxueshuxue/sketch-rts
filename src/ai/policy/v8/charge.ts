@@ -14,9 +14,7 @@ import { isV8Policy } from "../versions";
 // autocast off, each think every ready rider not walking under a move order charges the most valuable unit in its
 // window: a shooter or a caster first (V5's archers step back from a rider that walks; a charge closes on them at once),
 // then a worker, then any other fighter or a creep that is fighting; never a summoned spirit; and not a unit under an
-// enemy tower whose reach the rider is not already in. Two riders share a target only when there is no other. At even gold,
-// ten knights charging the nearest body, the spirits in front, lost to eleven summoners keeping two spirits each; aimed
-// past the spirits at the summoners, the same ten won with three standing.
+// enemy tower whose reach the rider is not already in. Two riders share a target only when there is no other.
 
 const CHARGE_MARGIN = 20;
 
