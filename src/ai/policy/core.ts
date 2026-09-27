@@ -251,8 +251,10 @@ const V7_REPLACEMENTS = new Map<AiScript, AiScript>([
 ]);
 export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMENTS.get(script) ?? script);
 
-// V8 starts as V7's stack; it must hold against any pair of V3, V5 and V7 without a summoner (see v8-no-summoners).
-export const V8_AI_STACK: AiScript[] = [...V7_AI_STACK];
+// V8 starts as V7's stack, against V5 and V7 with neither a shooter nor a summoner (see v8-forbidden-units). Its general
+// alone moves its army (see v8-one-voice): the shared tower breaker, which sent the same footmen at a tower every other
+// think while the general sent them at the hall behind it, is left out, and the general takes the tower first itself.
+export const V8_AI_STACK: AiScript[] = V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker);
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,

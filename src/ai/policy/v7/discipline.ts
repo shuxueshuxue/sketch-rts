@@ -4,6 +4,7 @@ import { distance } from "../spatial";
 import { planFocusFireCommand } from "../spell-tactics";
 import type { PresetAiPolicyOptions } from "../types";
 import { isBacklineKind } from "../v6/backline";
+import { isV8Policy } from "../versions";
 
 // @@@v7-leash - While V7's general defends a base on a leash (see v7-defend), focus fire works inside it: only units within
 // the leash join, and only on a target within it. The runner keeps a later script from re-ordering a unit the general moved
@@ -31,10 +32,13 @@ export function planV7FocusFire(snapshot: GameSnapshot, owner: PlayerId, options
 // halls under ten archers' fire (mapleCircuit). The general steps its own wounded back to the hall behind the line.
 const HOLDING_MODES = new Set(["defend", "guard", "hold"]);
 
+// @@@v8-one-voice - V8's general says where its fighters go in every mode, attacking included: the skirmish script pulled
+// single wounded footmen from an attack at V5's main back to V8's own main across the map, one by one, each shot down on
+// the way (heatherCircuit, 17:30).
 export function planV7Skirmish(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands = planSkirmishPreservation(snapshot, owner, options);
   const mode = options.memory?.v6?.general?.mode;
-  if (!mode || !HOLDING_MODES.has(mode)) return commands;
+  if (!mode || (!HOLDING_MODES.has(mode) && !isV8Policy(options))) return commands;
   const casters = new Set(snapshot.units.filter((unit) => unit.owner === owner && isBacklineKind(unit)).map((unit) => unit.id));
   return commands.flatMap((command): GameCommand[] => {
     if (!("unitIds" in command)) return [command];

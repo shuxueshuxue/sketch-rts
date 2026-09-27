@@ -4,7 +4,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/
 import { resolveAiCommandIntent } from "../commands";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy, isV7Policy } from "../versions";
+import { isV6Policy, isV7Policy, isV8Policy } from "../versions";
 import { isBacklineKind } from "./backline";
 import { enemyPowerNear, nextExpansionMine, readV6Intel, type V6BaseIntel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
@@ -335,7 +335,7 @@ function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
     enemyGaps: gaps,
     ...(pulse ? { stage: pulse.stage, stageSince: pulse.since } : {}),
   };
-  const goal = pulse?.stage === "gather" ? pulse.point : target.hall;
+  const goal = pulse?.stage === "gather" ? pulse.point : isV8Policy(options) ? (guardingTower(target) ?? target.hall) : target.hall;
   return [...orderUnits(snapshot, owner, "attack", marching, goal, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
 }
 
@@ -354,6 +354,11 @@ function pulseStage(snapshot: GameSnapshot, memory: V6PolicyMemory, group: Unit[
     return { stage: "strike" as const, since: snapshot.tick, point };
   }
   return { stage: "gather" as const, since, point };
+}
+
+// The tower guarding a base, nearest its hall: V8 takes it before the hall (see v8-one-voice).
+function guardingTower(base: V6BaseIntel) {
+  return base.towers.filter((tower) => tower.complete).sort((a, b) => distance(a, base.hall) - distance(b, base.hall))[0];
 }
 
 function isSummoner(unit: Unit) {
