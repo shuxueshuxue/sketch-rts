@@ -1,6 +1,6 @@
 import type { RaceId } from "../../shared/types";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
-import { SUMMONING_UNIT_KINDS } from "../policy/versions";
+import { V8_FORBIDDEN_UNIT_KINDS } from "../policy/versions";
 import type { AiMeleeControlMatchDetailsResult } from "./control";
 import {
   createSubjectGauntletInput,
@@ -13,8 +13,8 @@ import {
   type SubjectGauntletResult,
 } from "./subject-gauntlet";
 
-// @@@v8-gauntlet - V8 alone against a pair drawn from V5+V7, V3+V7 and V3+V5, blind to which is which (see
-// subject-gauntlet for the procedure). The report counts the games in which V8 fielded a summoning unit, which it must not.
+// @@@v8-gauntlet - V8 alone against V5 and V7 together in every game, blind to which is which (see subject-gauntlet for
+// the procedure). The report counts the games in which V8 fielded a shooter or a summoner, which it must not.
 
 export type AiV8GauntletBenchmarkOptions = SubjectGauntletOptions;
 export type AiV8GauntletBenchmarkInput = SubjectGauntletInput;
@@ -27,31 +27,27 @@ export type AiV8GauntletBenchmarkResult = {
   v8Wins: number;
   rawMatches: number;
   winRate: number;
-  lossesTo: { v3: number; v5: number; v7: number; timeout: number };
+  lossesTo: { v5: number; v7: number; timeout: number };
   byPair: Record<string, Tally>;
   byV8Race: Record<RaceId, Tally>;
   byStrategy: Record<string, Tally>;
   plays: Record<string, { won: number; lost: number }>;
-  summonerGames: number;
+  forbiddenGames: number;
   elapsedMs: number;
   cpuMs: number;
   workers?: number;
   byMap: SubjectGauntletResult["byMap"];
 };
 
-export const V8_OPPONENT_PAIRS = [
-  ["v5", "v7"],
-  ["v3", "v7"],
-  ["v3", "v5"],
-] as const;
+export const V8_OPPONENT_PAIRS = [["v5", "v7"]] as const;
 
 export const V8_GAUNTLET: SubjectGauntlet = {
   subject: "v8",
   pairs: V8_OPPONENT_PAIRS,
   doctrineTracker: "v8Doctrine",
-  watchedKinds: SUMMONING_UNIT_KINDS,
-  name: "AI V8 vs pairs of V3, V5 and V7 Benchmark",
-  evaluationName: "v8 1v2 vs pairs of v3, v5, v7",
+  watchedKinds: V8_FORBIDDEN_UNIT_KINDS,
+  name: "AI V8 vs V5 and V7 Benchmark",
+  evaluationName: "v8 1v2 vs v5+v7",
 };
 
 export function createAiV8GauntletBenchmarkInput(options: AiV8GauntletBenchmarkOptions = {}): AiV8GauntletBenchmarkInput {
@@ -78,12 +74,12 @@ function asV8Result(result: SubjectGauntletResult): AiV8GauntletBenchmarkResult 
     v8Wins: wins,
     rawMatches: result.rawMatches,
     winRate: result.winRate,
-    lossesTo: { v3: lossesTo.v3 ?? 0, v5: lossesTo.v5 ?? 0, v7: lossesTo.v7 ?? 0, timeout: lossesTo.timeout ?? 0 },
+    lossesTo: { v5: lossesTo.v5 ?? 0, v7: lossesTo.v7 ?? 0, timeout: lossesTo.timeout ?? 0 },
     byPair: result.byPair,
     byV8Race: byRace,
     byStrategy: result.byStrategy,
     plays: result.plays,
-    summonerGames: watchedGames,
+    forbiddenGames: watchedGames,
     elapsedMs: result.elapsedMs,
     cpuMs: result.cpuMs,
     ...(result.workers !== undefined ? { workers: result.workers } : {}),

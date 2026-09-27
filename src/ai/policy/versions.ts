@@ -38,8 +38,11 @@ export function isV8Policy(options: PresetAiPolicyOptions) {
 
 export const SHOOTER_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(["archer", "sparkArcher", "contractArcher"]);
 
-// @@@v8-no-summoners - V8 never trains or hires a unit that summons (the grove summoner, the Ember pyre caller, and any
-// other unit whose ability summons): what it fields fights with its own body. Read from the catalog, not listed by hand.
+// Units whose ability summons (the grove summoner, the Ember pyre caller, and any other): read from the catalog.
 export const SUMMONING_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(
   (Object.keys(UNIT_DEFS) as UnitKind[]).filter((kind) => UNIT_DEFS[kind].abilities.some((ability) => ABILITY_DEFS[ability].behavior === "summon")),
 );
+
+// @@@v8-forbidden-units - V8 never trains or hires a shooter or a summoner: its army fights at arm's length, with healers
+// and cursers behind it (casters are not shooters, as for V6), and towers.
+export const V8_FORBIDDEN_UNIT_KINDS: ReadonlySet<UnitKind> = new Set([...SHOOTER_UNIT_KINDS, ...SUMMONING_UNIT_KINDS]);
