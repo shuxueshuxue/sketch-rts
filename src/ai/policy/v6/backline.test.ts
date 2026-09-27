@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ABILITY_DEFS } from "../../../shared/catalog";
 import { snapshotGame } from "../../../shared/sim";
 import { sketchScene } from "../../../sdk/scene";
 import type { GameCommand } from "../../../shared/types";
@@ -49,6 +50,35 @@ describe("v6 backline", () => {
     const [command] = planV6CasterScreen(snapshot, "v6", { ...V6, teams: game.teams, memory }) as Extract<GameCommand, { type: "move" }>[];
     expect(command).toMatchObject({ type: "move", unitIds: ["summoner"] });
     expect(Math.hypot(command!.x - 880, command!.y - 1_500)).toBeLessThan(200);
+  });
+
+  // @@@v8-caster-reach
+  it("stands V8's healer and curser a short step behind its fighting front, where a heal reaches it and a curse the enemy", () => {
+    let scene = sketchScene("v8-screen-reach")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v8", { team: "north", race: "grove" })
+      .player("v5", { team: "south", race: "grove" })
+      .player("v7", { team: "south", race: "ember" })
+      .townHall("v8", 500, 1_500)
+      .townHall("v5", 3_300, 3_300)
+      .townHall("v7", 3_300, 3_800)
+      .unit("v8", "priest", 1_600, 1_480, { id: "priest" })
+      .unit("v8", "witch", 1_600, 1_520, { id: "witch" });
+    for (let index = 0; index < 4; index += 1) scene = scene.unit("v8", "footman", 1_960, 1_440 + index * 30);
+    for (let index = 0; index < 4; index += 1) scene = scene.unit("v5", "archer", 2_050, 1_450 + index * 30);
+    const game = scene.build().createGame();
+    const snapshot = snapshotGame(game);
+    const commands = planV6CasterScreen(snapshot, "v8", { version: "v2", requestedVersion: "v8", teams: game.teams, memory: createAiPolicyMemory() }) as Extract<GameCommand, { type: "move" }>[];
+    const footmen = snapshot.units.filter((unit) => unit.kind === "footman");
+    const archers = snapshot.units.filter((unit) => unit.kind === "archer");
+    const front = { x: footmen.reduce((sum, unit) => sum + unit.x, 0) / footmen.length, y: footmen.reduce((sum, unit) => sum + unit.y, 0) / footmen.length };
+    expect(commands.map((command) => command.unitIds[0]).sort()).toEqual(["priest", "witch"]);
+    for (const command of commands) {
+      expect(Math.hypot(command.x - front.x, command.y - front.y)).toBeLessThanOrEqual(ABILITY_DEFS.heal.plannerRange);
+      expect(Math.min(...archers.map((archer) => Math.hypot(command.x - archer.x, command.y - archer.y)))).toBeLessThanOrEqual(ABILITY_DEFS.curse.plannerRange);
+      expect(command.x).toBeLessThan(front.x);
+    }
   });
 
   it("drops every other script's orders for the summoners it owns", () => {

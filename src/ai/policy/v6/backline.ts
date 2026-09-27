@@ -4,7 +4,7 @@ import { enemyBuildings, hostileCombatUnits, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { V6PolicyMemory } from "../../memory";
 import type { AiPolicyContext, PresetAiPolicyOptions } from "../types";
-import { isV6Policy } from "../versions";
+import { isV6Policy, isV8Policy } from "../versions";
 import { mainBase } from "../world-model";
 import { v6Memory } from "./memory";
 
@@ -22,6 +22,12 @@ const FALLBACK_STEP = 320;
 const SHOOTER_MARGIN = 90;
 const REPOSITION_SLACK = 60;
 const MIN_SCREEN = 3;
+
+// @@@v8-caster-reach - V8's casters heal and curse, and a heal is cast on a wounded unit within 220, a curse on an enemy
+// within 260: stood where V6 keeps its summoners, behind the front and out of every shooter's reach (90 beyond the 399 of
+// V5's archers), V8's priests and witches watched its footmen fight 400 paces away and never cast (mallowRun, 8:30). V8's
+// casters keep a short step behind the front, inside the shooters' and towers' reach along with it.
+const V8_SCREEN_DEPTH = 110;
 
 const BACKLINE_KINDS = new Set(["summoner", "pyreCaller", "priest", "witch", "emberAcolyte", "ashHexer", "fieldMedic"]);
 
@@ -45,7 +51,7 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   const post = generalPost(v6Memory(options).general, home);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
-    const anchor = screenAnchor(caster, front, enemies, towers, home, post);
+    const anchor = screenAnchor(caster, front, enemies, towers, home, post, isV8Policy(options));
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
   }
@@ -54,12 +60,13 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
 
 // A front of one or two spirits chasing something is no screen: with fewer than three bodies nearby the casters go back to
 // the general's post instead of following them across the map (they did, and died 1300 from home).
-function screenAnchor(caster: Unit, frontLine: Unit[], enemies: Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point): Point | undefined {
+function screenAnchor(caster: Unit, frontLine: Unit[], enemies: Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point, close: boolean): Point | undefined {
   const screen = frontLine.filter((unit) => distance(unit, caster) <= FRONT_GROUP_RANGE);
   const front = screen.length >= MIN_SCREEN ? averagePoint(screen) : undefined;
   const threats = enemies.filter((enemy) => distance(enemy, front ?? caster) <= THREAT_RANGE);
   if (threats.length === 0) return front ? step(front, home, FOLLOW_DEPTH) : post;
   const threat = averagePoint(threats);
+  if (close && front) return step(front, away(front, threat), V8_SCREEN_DEPTH);
   let anchor = front ? step(front, away(front, threat), SCREEN_DEPTH) : step(post, home, FALLBACK_STEP / 2);
   // Behind the front is not enough if a shooter or tower still reaches that spot: keep backing off toward home.
   for (let tries = 0; tries < 4 && inReach(anchor, threats, towers); tries += 1) anchor = step(anchor, home, FALLBACK_STEP / 2);
