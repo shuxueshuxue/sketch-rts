@@ -197,16 +197,20 @@ export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contract
 
 export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge"];
 
+// What a curse deals at once to a summoned unit (a spirit has 85 hp): both races' curses are the answer to a summoner's
+// free army, so they share the one number.
+const CURSE_SUMMONED_DAMAGE = 100;
+
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
   // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
   // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
   heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
-  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: 100, statusType: "curse", effectType: "curse", autocast: "on" },
+  curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "curse", autocast: "on" },
   emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
-  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, statusType: "curse", effectType: "scorch", autocast: "on" },
+  ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "scorch", autocast: "on" },
   // The cavalry's charge: from 180 to 300 away, a dash of under half a second and a blow of twice the weapon's.
   charge: { behavior: "charge", minRange: 180, range: 300, plannerRange: 288, cooldown: seconds(15), damageMultiplier: 2, dashSpeed: 30, maxDashTicks: seconds(1.5), effectType: "chargeTrail", autocast: "on" },
 };

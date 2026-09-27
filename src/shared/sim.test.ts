@@ -1221,6 +1221,30 @@ describe("sketch RTS simulation", () => {
     expect(enemy.effects).toContainEqual({ type: "curse", remaining: seconds(18) - 5, damageMultiplier: 0.45 });
   });
 
+  it("strikes a summoned unit with either race's curse for the same damage, enough to end a spirit", () => {
+    const curse = ABILITY_DEFS.curse as Extract<(typeof ABILITY_DEFS)["curse"], { behavior: "curse" }>;
+    const ashCurse = ABILITY_DEFS.ashCurse as Extract<(typeof ABILITY_DEFS)["ashCurse"], { behavior: "curse" }>;
+    expect(ashCurse.summonedDamage).toBe(curse.summonedDamage);
+    expect(ashCurse.summonedDamage).toBeGreaterThanOrEqual(UNIT_DEFS.spirit.hp);
+    const game = sketchScene("ash-curse-summoned")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { race: "ember" })
+      .player("enemy", { race: "grove" })
+      .townHall("player", 500, 500)
+      .townHall("enemy", 3500, 3500)
+      .unit("player", "ashHexer", 2000, 2000, { id: "ash-hexer" })
+      .unit("enemy", "spirit", 2200, 2000, { id: "enemy-spirit" })
+      .build()
+      .createGame();
+    game.units.find((unit) => unit.id === "enemy-spirit")!.expiresTick = game.tick + seconds(60);
+
+    issueCommand(game, { type: "cast", unitId: "ash-hexer", ability: "ashCurse", targetId: "enemy-spirit" });
+    stepMany(game, 2);
+
+    expect(game.units.some((unit) => unit.id === "enemy-spirit")).toBe(false);
+  });
+
   it("uses scorch as shared ember combat state instead of a renamed grove spell", () => {
     const game = sketchScene("ember-scorch-state")
       .map("bareDuel")

@@ -34,7 +34,10 @@ export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
   },
   ashCurse: {
     name: { en: "Ash Curse", zh: "灰烬诅咒" },
-    description: { en: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty.", zh: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。" },
+    description: {
+      en: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty. A summoned unit also takes 100 damage.",
+      zh: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。召唤物还会受到 100 点伤害。",
+    },
     command: { icon: "☾", hotkey: "x" },
   },
   charge: {
