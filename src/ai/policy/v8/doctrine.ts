@@ -13,7 +13,10 @@ const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, minSecond: 3
 
 export const V8_STRATEGIES: V6Strategy[] = [
   {
-    // Raiders that charge, priests and witches behind them; knights once the third tier opens.
+    // Raiders that charge, priests and witches behind them, and from the second phase knights ahead of all else: the
+    // economy buys the farms to the elite bar for them. Left in the third phase, which opens at supply 70 while V8 stood
+    // near 40, knights never came (none in 56 games by 12:00); wanted from the second, they came in 31 of 55 by 10:00,
+    // and the grove line won 614 of 1000 games against 541.
     id: "grove-cavalry-line",
     race: "grove",
     weight: 1,
@@ -31,7 +34,8 @@ export const V8_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { bases: 2, priority: 66 },
-          { unit: "raider", count: 12, priority: 60 },
+          { unit: "knight", count: 6, priority: 61 },
+          { unit: "raider", count: 8, priority: 58 },
           { unit: "priest", count: 3, priority: 56 },
           { unit: "witch", count: 3, priority: 55 },
           { building: "stables", count: 2, priority: 52 },
@@ -43,8 +47,8 @@ export const V8_STRATEGIES: V6Strategy[] = [
       },
       {
         wants: [
-          { unit: "raider", count: 16, priority: 55 },
-          { unit: "knight", count: 10, priority: 55 },
+          { unit: "knight", count: 12, priority: 57 },
+          { unit: "raider", count: 12, priority: 55 },
           { unit: "priest", count: 4, priority: 53 },
           { unit: "witch", count: 4, priority: 53 },
           { upgrade: "weaponTraining", level: 2, priority: 51 },
@@ -79,8 +83,8 @@ export const V8_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { bases: 2, priority: 66 },
-          { unit: "emberRavager", count: 12, priority: 60 },
-          { unit: "ashChieftain", count: 4, priority: 58 },
+          { unit: "ashChieftain", count: 6, priority: 61 },
+          { unit: "emberRavager", count: 10, priority: 58 },
           { unit: "emberAcolyte", count: 3, priority: 56 },
           { unit: "ashHexer", count: 3, priority: 55 },
           { building: "emberForge", count: 2, priority: 52 },
@@ -93,7 +97,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "emberRavager", count: 16, priority: 55 },
-          { unit: "ashChieftain", count: 8, priority: 55 },
+          { unit: "ashChieftain", count: 10, priority: 57 },
           { unit: "cinderRevenant", count: 6, priority: 54 },
           { unit: "emberAcolyte", count: 4, priority: 53 },
           { unit: "ashHexer", count: 4, priority: 53 },
