@@ -251,6 +251,9 @@ const V7_REPLACEMENTS = new Map<AiScript, AiScript>([
 ]);
 export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMENTS.get(script) ?? script);
 
+// V8 starts as V7's stack; it must hold against any pair of V3, V5 and V7 without a summoner (see v8-no-summoners).
+export const V8_AI_STACK: AiScript[] = [...V7_AI_STACK];
+
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
@@ -282,6 +285,7 @@ export const AI_SCRIPT_VERSIONS = {
   v5: V5_HYBRID_AI_STACK,
   v6: V6_AI_STACK,
   v7: V7_AI_STACK,
+  v8: V8_AI_STACK,
 } satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
@@ -319,7 +323,7 @@ function livePresetPolicyVersion(version: AiScriptVersion): Exclude<AiScriptVers
 }
 
 function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">): Exclude<AiScriptVersion, "v2-prod"> {
-  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" ? "v2" : version;
+  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" || version === "v8" ? "v2" : version;
 }
 
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

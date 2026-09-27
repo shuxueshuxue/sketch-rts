@@ -16,7 +16,11 @@ export function createV7DoctrineTracker(): BenchmarkTracker<AiGameAgent, V6Doctr
   return doctrineTracker("v7Doctrine", "v7");
 }
 
-function doctrineTracker(id: string, version: "v6" | "v7"): BenchmarkTracker<AiGameAgent, V6DoctrineStats, V6DoctrineStats> {
+export function createV8DoctrineTracker(): BenchmarkTracker<AiGameAgent, V6DoctrineStats, V6DoctrineStats> {
+  return doctrineTracker("v8Doctrine", "v8");
+}
+
+function doctrineTracker(id: string, version: "v6" | "v7" | "v8"): BenchmarkTracker<AiGameAgent, V6DoctrineStats, V6DoctrineStats> {
   return {
     id,
     create: ({ game, match }) => {
