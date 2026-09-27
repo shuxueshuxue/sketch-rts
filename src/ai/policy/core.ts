@@ -257,7 +257,13 @@ export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMEN
 // alone moves its army (see v8-one-voice): the shared tower breaker, which sent the same footmen at a tower every other
 // think while the general sent them at the hall behind it, is left out, and the general takes the tower first itself.
 // Its riders' charges are its own (see v8-charge), aimed last so that a rider dashes out of whatever order it was given.
-export const V8_AI_STACK: AiScript[] = [...V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker), AI_SCRIPT_LIBRARY.v8Charge];
+// @@@v8-no-closeout - Nor does V8 send the closeout's detachment after a beaten opponent's last buildings: three to six
+// fighters walked 2500 paces past the living opponent's archers to a farm, thirteen times in one game (sableRun, 12:00 to
+// 18:00), each shot down on the way. The general takes a beaten opponent's buildings with the whole army, as any target.
+export const V8_AI_STACK: AiScript[] = [
+  ...V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker && script !== AI_SCRIPT_LIBRARY.v6Closeout),
+  AI_SCRIPT_LIBRARY.v8Charge,
+];
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
