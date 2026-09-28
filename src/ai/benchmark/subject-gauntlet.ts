@@ -133,6 +133,47 @@ export async function runSubjectGauntletParallel(gauntlet: SubjectGauntlet, opti
   return summarizeSubjectGauntlet(gauntlet, { seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
 }
 
+// The whole pool of a several-seed run: its wall time, the games' CPU, how many games, how many workers.
+export type SubjectGauntletPool = {
+  seeds: string[];
+  games: number;
+  elapsedMs: number;
+  cpuMs: number;
+  workers?: number;
+};
+
+// @@@gauntlet-seed-pool - Several seeds' games in one worker pool. A seed alone pays the pool's start-up and then waits
+// on its slowest games with most workers idle; pooled, the workers stay busy until the last seed's games run out. A game
+// is the same input as in its own seed's run, and nothing a game reads survives it in a worker, so each seed's result is
+// the one its own run gives, apart from the timings: a seed's elapsedMs is its longest game, and the pool's wall is
+// reported apart.
+export async function runSubjectGauntletSeedsParallel(
+  gauntlet: SubjectGauntlet,
+  options: SubjectGauntletOptions,
+  seeds: readonly string[],
+): Promise<{ results: SubjectGauntletResult[]; pool: SubjectGauntletPool }> {
+  const bundles = seeds.map((seed) => createSubjectGauntletInput(gauntlet, { ...options, seed }));
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput({ name: gauntlet.name, evaluations: bundles.map((bundle) => bundle.input.evaluations[0]!) }), {
+    workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
+    ...(options.workers !== undefined ? { workers: options.workers } : {}),
+  });
+  const results = bundles.map((bundle, index) => {
+    const evaluation = report.evaluations[index]!;
+    const seedReport: BenchmarkReport = { ...report, evaluationCount: 1, matchCount: evaluation.matchCount, elapsedMs: evaluation.elapsedMs, cpuMs: evaluation.cpuMs, evaluations: [evaluation] };
+    return summarizeSubjectGauntlet(gauntlet, { seed: bundle.selection.seed, selectedMapIds: bundle.selection.mapIds, report: seedReport, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+  });
+  return {
+    results,
+    pool: {
+      seeds: bundles.map((bundle) => bundle.selection.seed),
+      games: report.matchCount,
+      elapsedMs: report.elapsedMs,
+      cpuMs: report.cpuMs,
+      ...(options.workers !== undefined ? { workers: options.workers } : {}),
+    },
+  };
+}
+
 export async function runSubjectGauntletDetailsParallel(gauntlet: SubjectGauntlet, options: SubjectGauntletOptions = {}, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): Promise<AiMeleeControlMatchDetailsResult> {
   const { input, selection } = createSubjectGauntletInput(gauntlet, options);
   const report = await runBenchmarkParallel(serializableAiBenchmarkInput(filterBenchmarkInput(input, filter)), {

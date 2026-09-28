@@ -6,8 +6,10 @@ import {
   createSubjectGauntletInput,
   runSubjectGauntletDetailsParallel,
   runSubjectGauntletParallel,
+  runSubjectGauntletSeedsParallel,
   summarizeSubjectGauntlet,
   type SubjectGauntlet,
+  type SubjectGauntletPool,
   type SubjectGauntletInput,
   type SubjectGauntletOptions,
   type SubjectGauntletResult,
@@ -56,6 +58,12 @@ export function createAiV8GauntletBenchmarkInput(options: AiV8GauntletBenchmarkO
 
 export async function runAiV8GauntletBenchmarkParallel(options: AiV8GauntletBenchmarkOptions = {}): Promise<AiV8GauntletBenchmarkResult> {
   return asV8Result(await runSubjectGauntletParallel(V8_GAUNTLET, options));
+}
+
+// Several seeds in one worker pool (see @@@gauntlet-seed-pool): each seed's result as its own run reports it, and the pool.
+export async function runAiV8GauntletBenchmarkSeedsParallel(options: AiV8GauntletBenchmarkOptions, seeds: readonly string[]): Promise<{ results: AiV8GauntletBenchmarkResult[]; pool: SubjectGauntletPool }> {
+  const { results, pool } = await runSubjectGauntletSeedsParallel(V8_GAUNTLET, options, seeds);
+  return { results: results.map(asV8Result), pool };
 }
 
 export function runAiV8GauntletBenchmarkDetailsParallel(options: AiV8GauntletBenchmarkOptions = {}, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): Promise<AiMeleeControlMatchDetailsResult> {
