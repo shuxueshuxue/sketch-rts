@@ -1,7 +1,7 @@
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_KINDS, isHealingBuildingKind } from "../../shared/catalog";
 import type { CreateGameOptions, Game } from "../../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
-import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, PlayerId, RaceId, Unit, UpgradeKind } from "../../shared/types";
+import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, Owner, PlayerId, RaceId, Unit, UpgradeKind } from "../../shared/types";
 import { analyzeGameMapObjectives, type SdkMapObjectiveReport } from "../map-analysis";
 import { runGameLoop, traceSourceFor, type SdkAgentController, type SdkCommandSource, type SdkGameAgent, type SdkGameCommandPlanner, type SdkPlannerOrigin } from "../game-runner";
 
@@ -220,15 +220,21 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
   let setup!: BenchmarkMatchSetup;
   let standard!: StandardBenchmarkState;
   let trackerStates: { tracker: BenchmarkTracker<TAgent>; state: unknown }[] = [];
+  // @@@items-between-commands - A command's item pickups and uses are read against the items as the last command or step
+  // left them, kept here, so no command needs a copy of the world (see onCommand in game-runner).
+  let items!: ItemStates;
   const loop = runGameLoop(input, {
     beforeLoop({ game, players }) {
       setup = benchmarkSetup(game, input);
       standard = createStandardState(game, input, players);
       trackerStates = trackers.map((tracker) => ({ tracker, state: tracker.create ? tracker.create({ game, match: input, players }) : undefined }));
+      items = itemStates(game);
     },
-    afterCommand(context) {
+    onCommand(context) {
       updateStandardOnCommand(standard, context.game, context.owner, context.command);
-      recordItemTransitions(standard, context.before, context.after);
+      const next = itemStates(context.game);
+      recordItemTransitions(standard, items, next);
+      items = next;
       const benchmarkContext: BenchmarkCommandContext<TAgent> = {
         game: context.game,
         match: input,
@@ -244,7 +250,9 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
       for (const tracker of trackerStates) tracker.tracker.onCommand?.(tracker.state, benchmarkContext);
     },
     afterStep({ game, players, before, after }) {
-      updateStandardAfterStep(standard, before, after);
+      const next = itemStates(after);
+      updateStandardAfterStep(standard, before, after, items, next);
+      items = next;
       for (const entry of trackerStates) entry.tracker.afterStep?.(entry.state, { game, match: input, players, before, after });
     },
   });
@@ -308,7 +316,7 @@ function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owne
   }
 }
 
-function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot) {
+function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, itemsBefore: ItemStates, itemsAfter: ItemStates) {
   const beforeBuildings = new Map(before.buildings.map((building) => [building.id, building]));
   const afterBuildings = new Map(after.buildings.map((building) => [building.id, building]));
   const beforeUnits = new Map(before.units.map((unit) => [unit.id, unit]));
@@ -335,7 +343,7 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
     state.creepBountyIncome[owner] = (state.creepBountyIncome[owner] ?? 0) + bounty;
     state.goldMineIncome[owner] = (state.goldMineIncome[owner] ?? 0) + mined;
   }
-  recordItemTransitions(state, before, after);
+  recordItemTransitions(state, itemsBefore, itemsAfter);
 }
 
 function recordMoonWellHealing(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, afterUnits: Map<string, Unit>) {
@@ -356,27 +364,37 @@ function recordMoonWellHealing(state: StandardBenchmarkState, before: GameSnapsh
   }
 }
 
-function recordItemTransitions(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot) {
-  const beforeItems = new Map(before.items.map((item) => [item.id, item]));
-  const afterItems = new Map(after.items.map((item) => [item.id, item]));
-  const beforeUnits = new Map(before.units.map((unit) => [unit.id, unit]));
-  const afterUnits = new Map(after.units.map((unit) => [unit.id, unit]));
+// What the item counts read of a moment of the game: each item's carrier, the owner of that carrier (when the carrier is on
+// the board), and its cooldown.
+type ItemState = { id: string; carrierId: string | undefined; carrierOwner: Owner | undefined; cooldownRemaining: number };
+type ItemStates = { items: ItemState[]; byId: Map<string, ItemState> };
 
+function itemStates(world: Pick<GameSnapshot, "items" | "units">): ItemStates {
+  // Units are looked up by id only when an item is carried, and like a Map of them the last unit with an id wins.
+  let ownerById: Map<string, Owner> | undefined;
+  const items = world.items.map((item) => {
+    if (item.carrierId) ownerById ??= new Map(world.units.map((unit) => [unit.id, unit.owner]));
+    return { id: item.id, carrierId: item.carrierId, carrierOwner: item.carrierId ? ownerById!.get(item.carrierId) : undefined, cooldownRemaining: item.cooldownRemaining };
+  });
+  return { items, byId: new Map(items.map((item) => [item.id, item])) };
+}
+
+function recordItemTransitions(state: StandardBenchmarkState, before: ItemStates, after: ItemStates) {
   for (const item of after.items) {
-    const previous = beforeItems.get(item.id);
+    const previous = before.byId.get(item.id);
     if (!previous || previous.carrierId || !item.carrierId) continue;
-    const carrier = afterUnits.get(item.carrierId);
-    if (!carrier || carrier.owner === "neutral") continue;
-    state.itemPickupCount[carrier.owner] = (state.itemPickupCount[carrier.owner] ?? 0) + 1;
+    const owner = item.carrierOwner;
+    if (owner === undefined || owner === "neutral") continue;
+    state.itemPickupCount[owner] = (state.itemPickupCount[owner] ?? 0) + 1;
   }
 
   for (const item of before.items) {
     if (!item.carrierId) continue;
-    const carrier = beforeUnits.get(item.carrierId);
-    if (!carrier || carrier.owner === "neutral") continue;
-    const next = afterItems.get(item.id);
+    const owner = item.carrierOwner;
+    if (owner === undefined || owner === "neutral") continue;
+    const next = after.byId.get(item.id);
     if (!next || next.cooldownRemaining > item.cooldownRemaining) {
-      state.itemUseCount[carrier.owner] = (state.itemUseCount[carrier.owner] ?? 0) + 1;
+      state.itemUseCount[owner] = (state.itemUseCount[owner] ?? 0) + 1;
     }
   }
 }

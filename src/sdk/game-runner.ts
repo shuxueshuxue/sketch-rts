@@ -102,13 +102,16 @@ export type SdkGameLoopContext = {
   teams: Record<PlayerId, string>;
 };
 
-export type SdkGameLoopCommandContext = SdkGameLoopContext & {
+export type SdkGameLoopCommandEvent = SdkGameLoopContext & {
   tick: number;
   owner: PlayerId;
   source: SdkCommandSource;
   plannerOrigin: SdkPlannerOrigin;
   scriptId: string;
   command: GameCommand;
+};
+
+export type SdkGameLoopCommandContext = SdkGameLoopCommandEvent & {
   before: GameSnapshot;
   after: GameSnapshot;
 };
@@ -120,8 +123,15 @@ export type SdkGameLoopStepContext = SdkGameLoopContext & {
 
 export type SdkGameLoopHooks = {
   beforeLoop?: (context: SdkGameLoopContext) => void;
+  // After every issued command, with copies of the world just before and just after it.
   afterCommand?: (context: SdkGameLoopCommandContext) => void;
+  // After every issued command (and after afterCommand), without the copies: for a hook that reads the game itself, as
+  // the command left it, and keeps what it needs. A copy of the world per command is most of what a command costs.
+  onCommand?: (context: SdkGameLoopCommandEvent) => void;
+  // After every step, with copies of the world just before and just after it.
   afterStep?: (context: SdkGameLoopStepContext) => void;
+  // After every step (and after afterStep), without the copies, for a hook that reads the game itself.
+  onStep?: (context: SdkGameLoopContext) => void;
 };
 
 export type SdkGameLoopResult = SdkGameLoopContext & {
@@ -144,10 +154,10 @@ export function runGame<TAgent extends SdkGameAgent = SdkGameAgent>(input: SdkGa
       timeline = [summarizeTimelineSample(game, teams)];
       economyTimings = initializeEconomyTimings(game, players);
     },
-    afterCommand({ tick, owner, source, scriptId, command }) {
+    onCommand({ tick, owner, source, scriptId, command }) {
       recordCommand(tick, owner, source, scriptId, command, commandCounts, commandsByOwner, commandTrace, input.trace?.commands === true);
     },
-    afterStep({ game, players, teams }) {
+    onStep({ game, players, teams }) {
       updateEconomyTimings(economyTimings, game, players);
       if (game.tick % sampleInterval === 0 || game.match.winner) timeline.push(summarizeTimelineSample(game, teams));
     },
@@ -208,7 +218,7 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
   // command. Nothing changes the game between one step's `after` and the next step's `before` (or the first command's
   // `before`), nor between one command's `after` and the next command's `before`, so one copy serves both; the hooks and
   // the benchmark's trackers only read them. `current` is a copy of the game as it stands, while nothing has changed it
-  // since. Without an afterStep hook no step is copied at all.
+  // since. Without an afterStep hook no step is copied at all, without an afterCommand hook no command.
   let current: GameSnapshot | undefined;
   while (game.tick < input.maxTicks && !game.match.winner) {
     if (game.tick % input.thinkInterval === 0) {
@@ -218,6 +228,7 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
       frameRuntime.tick();
       normalizeWinnerForMode(game, teams, input.winnerMode ?? "match");
       current = undefined;
+      hooks.onStep?.(loopContext);
       continue;
     }
     const before = current ?? snapshotGame(game);
@@ -226,6 +237,7 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
     const after = snapshotGame(game);
     hooks.afterStep({ ...loopContext, before, after });
     current = after;
+    hooks.onStep?.(loopContext);
   }
 
   const cpu = process.cpuUsage(cpuStarted);
@@ -317,8 +329,8 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
       teams: loopContext.teams,
     });
   });
-  const afterCommand = hooks.afterCommand;
-  if (!afterCommand) {
+  const { afterCommand, onCommand } = hooks;
+  if (!afterCommand && !onCommand) {
     const { commands } = frameRuntime.issue(planned, {}, { checksum: false });
     return commands.length === 0 ? current : undefined;
   }
@@ -327,12 +339,10 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
     planned,
     {
       beforeIssue() {
-        latest ??= snapshotGame(game);
+        if (afterCommand) latest ??= snapshotGame(game);
       },
       afterIssue(entry) {
-        const before = latest!;
-        latest = snapshotGame(game);
-        afterCommand({
+        const event: SdkGameLoopCommandEvent = {
           ...loopContext,
           tick: game.tick,
           owner: entry.playerId,
@@ -340,9 +350,15 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
           plannerOrigin: "local-command-planner",
           scriptId: entry.scriptId,
           command: entry.command,
-          before,
-          after: latest,
-        });
+        };
+        if (afterCommand) {
+          const before = latest!;
+          latest = snapshotGame(game);
+          afterCommand({ ...event, before, after: latest });
+        } else {
+          latest = undefined;
+        }
+        onCommand?.(event);
       },
     },
     { checksum: false },
