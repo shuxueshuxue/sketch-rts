@@ -168,7 +168,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
   const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
-  const committed = !farOff || marching >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0) * V7_FAR_ATTACK_SHARE;
+  const opposing = isV8Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
+  const committed = !farOff || marching >= opposing * V7_FAR_ATTACK_SHARE;
   if (target && regrouped && ready && committed && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
     return attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base));
@@ -244,6 +245,16 @@ function v7DefendTarget(intel: V6Intel) {
   const towers = intel.ownTowers.filter((tower) => distance(tower, hall) <= tower.attackRange + TOWER_COVER);
   const main = distance(hall, intel.home) < 1;
   return { point: toward(hall, attackers, V7_DEFEND_STEP), field: attackers, threat: intrusion.threat, inCover: main, cover: towers.length * TOWER_STRENGTH, edge: V7_DEFEND_EDGE, stay: V7_DEFEND_STAY, guard: toward(intel.home, attackers, V7_DEFEND_STEP), leash: V7_DEFEND_LEASH, hall };
+}
+
+// @@@v8-in-time - What can meet V8 at a far target is the enemy army nearer that target than V8's own is: the rest arrives
+// after the fight. Weighed against both opponents' whole armies, V8 never went for V7's fresh north-ridge hall while V7's
+// footmen stood 1200 from it and V5's archers 2000 (cloverRun, 5:00; briarToll, 5:20). Played by hand, six and seven
+// ravagers took the hall, its tower and its workers both times, and on cloverRun the AI, playing on, won the game it had
+// lost. Counting only those, V8 won 1321 of 2000 games against 1225 (342 of 500 on unseen seeds against 297).
+function respondingPower(intel: V6Intel, target: V6BaseIntel, front: Unit[]): number {
+  const march = front.length > 0 ? distance(averagePoint(front), target.hall) : 0;
+  return intel.enemies.reduce((total, enemy) => total + strengthOf(enemy.army.filter((unit) => distance(unit, target.hall) <= march)), 0);
 }
 
 function stepBack(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {

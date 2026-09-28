@@ -406,4 +406,33 @@ describe("v8 general", () => {
     expect(chasing.memory.v6?.general).toMatchObject({ mode: "defend", leash: 450 });
     expect(moved(chasing.commands, "v8-outlier")).toBe(true);
   });
+
+  // @@@v8-in-time
+  it("goes for a far expansion that only the enemy army nearer to it than V8 can defend in time", () => {
+    const planWith = (v7Guards: number) => {
+      let scene = sketchScene(`v8-in-time-${v7Guards}`)
+        .map("openClaims")
+        .replaceDefaults()
+        .player("v8", { team: "north", race: "ember" })
+        .player("v7", { team: "south", race: "grove" })
+        .player("v5", { team: "south", race: "grove" })
+        .townHall("v8", 3_300, 2_000, { id: "v8-hall" })
+        .townHall("v7", 500, 1_500, { id: "v7-hall" })
+        .building("v7", "barracks", 650, 1_350, { id: "v7-barracks" })
+        .townHall("v7", 1_600, 600, { id: "v7-expansion" })
+        .townHall("v5", 500, 2_700, { id: "v5-hall" });
+      for (let index = 0; index < 6; index += 1) scene = scene.unit("v8", "emberRavager", 3_000 + index * 30, 1_900, { id: `v8-ravager-${index}` });
+      // V7's guards 1300 from its expansion, V8's ravagers 1900; V5's twelve archers 2400 from it, at their own main.
+      for (let index = 0; index < v7Guards; index += 1) scene = scene.unit("v7", "footman", 600 + index * 30, 1_500, { id: `v7-footman-${index}` });
+      for (let index = 0; index < 12; index += 1) scene = scene.unit("v5", "archer", 700 + (index % 4) * 30, 2_800 + Math.floor(index / 4) * 30, { id: `v5-archer-${index}` });
+      const game = scene.build().createGame();
+      const memory = createAiPolicyMemory();
+      memory.v6 = { doctrine: { profileId: "steady", strategyId: "ember-ravager-line", decidedTick: 0 } };
+      planV6General(snapshotGame(game), "v8", { ...V8, teams: game.teams, memory });
+      return memory.v6?.general;
+    };
+    expect(planWith(2)).toMatchObject({ mode: "attack", targetHallId: "v7-expansion" });
+    // Sixteen guards nearer to it are worth more than the ravagers: V8 stays.
+    expect(planWith(16)?.mode).not.toBe("attack");
+  });
 });
