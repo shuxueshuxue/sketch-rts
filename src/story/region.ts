@@ -1,3 +1,5 @@
+import { detCos, detSin } from "../shared/det-math";
+
 // A place a script talks about: a circle or a box on the map, as a value it can pass around and test units against.
 export type Point = { x: number; y: number };
 
@@ -31,7 +33,7 @@ export function ring(center: Point, radius: number, index: number, count: number
   if (count <= 1) return { ...center };
   const r = radius * Math.sqrt((index + 0.5) / count);
   const angle = index * 2.399963;
-  return { x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r };
+  return { x: center.x + detCos(angle) * r, y: center.y + detSin(angle) * r };
 }
 
 export function distance(a: Point, b: Point) {
