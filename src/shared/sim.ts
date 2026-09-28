@@ -1953,14 +1953,10 @@ function nearestCompleteTownHall(game: Game, owner: Unit["owner"], x: number, y:
   }, undefined);
 }
 
+// The first enemy in range in the spatial index's order (not the nearest, despite the name).
 function nearestEnemyInRange(game: Game, unit: Unit, range: number) {
   const limit = range * range;
-  let found: Unit | undefined;
-  forEachNearbyUnit(game, unit, range, (candidate) => {
-    if (found) return;
-    if (areEnemyOwners(game, unit.owner, candidate.owner) && distanceSquared(unit, candidate) <= limit) found = candidate;
-  });
-  return found;
+  return firstNearbyUnit(game, unit, range, (candidate) => areEnemyOwners(game, unit.owner, candidate.owner) && distanceSquared(unit, candidate) <= limit);
 }
 
 function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, range: number) {
@@ -2286,6 +2282,23 @@ function createEntityIndex(game: Game) {
 
 function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
   forEachNearbyEntity(game.unitSpatial, game.units, point, range, visit);
+}
+
+// The first unit near the point that passes the test, visiting in forEachNearbyUnit's order and stopping there.
+function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: number, test: (unit: Unit) => boolean): Unit | undefined {
+  const index = game.unitSpatial;
+  if (!index) return game.units.find(test);
+  const radius = Math.ceil(range / index.cellSize);
+  const bx = Math.floor(point.x / index.cellSize);
+  const by = Math.floor(point.y / index.cellSize);
+  for (let ox = -radius; ox <= radius; ox += 1) {
+    for (let oy = -radius; oy <= radius; oy += 1) {
+      const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
+      if (!bucket) continue;
+      for (const unit of bucket) if (test(unit)) return unit;
+    }
+  }
+  return undefined;
 }
 
 function forEachNearbyBuilding(game: Game, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
