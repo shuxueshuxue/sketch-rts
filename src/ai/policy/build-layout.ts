@@ -62,17 +62,41 @@ export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot
   const xSteps = [120, 190, 260, 330].map((x) => x + Math.floor(slot / 4) * 34);
   const ySteps = [100, -100, 180, -180, 260, -260].map((y) => y + (slot % 2 === 0 ? 0 : 28));
   const candidates = xSteps.flatMap((x) => ySteps.map((y) => ({ x: clamp(base.x + direction * x, 0, snapshot.map.width), y: clamp(base.y + y, 0, snapshot.map.height) })));
-  return candidates
-    .filter((point) => isBuildPlacementClear(snapshot, buildingKind, point))
-    .sort((a, b) => mainBuildPointScore(snapshot, owner, b, base) - mainBuildPointScore(snapshot, owner, a, base))[0] ?? legalBuildPointNear(snapshot, buildingKind, base);
+  // @@@scored-once - Each candidate is scored once and the sort compares the stored scores: the comparator returns the
+  // same numbers as scoring inside it did, so the order (and the pick) is the same, for a sixth of the scoring.
+  const neutrals = neutralUnitsOf(snapshot);
+  const ownBuildings = buildings(snapshot, owner);
+  return (
+    candidates
+      .filter((point) => isBuildPlacementClear(snapshot, buildingKind, point))
+      .map((point) => ({ point, score: mainBuildPointScore(neutrals, ownBuildings, point, base) }))
+      .sort((a, b) => b.score - a.score)[0]?.point ?? legalBuildPointNear(snapshot, buildingKind, base)
+  );
 }
 
-function mainBuildPointScore(snapshot: GameSnapshot, owner: PlayerId, point: Point, base: Point) {
-  const neutralDistance = nearestEntity(aiSnapshotQuery(snapshot).forPlayer(owner).neutral.units, point);
-  const ownBuildingDistance = nearestEntity(buildings(snapshot, owner), point);
-  const neutralScore = neutralDistance ? Math.min(distance(point, neutralDistance), 520) * 3 : 1_560;
-  const spacingPenalty = ownBuildingDistance ? Math.max(0, 135 - distance(point, ownBuildingDistance)) * 5 : 0;
+function mainBuildPointScore(neutrals: Unit[], ownBuildings: Building[], point: Point, base: Point) {
+  const neutralDistance = nearestDistance(neutrals, point);
+  const ownBuildingDistance = nearestDistance(ownBuildings, point);
+  const neutralScore = neutralDistance !== undefined ? Math.min(neutralDistance, 520) * 3 : 1_560;
+  const spacingPenalty = ownBuildingDistance !== undefined ? Math.max(0, 135 - ownBuildingDistance) * 5 : 0;
   return neutralScore - spacingPenalty - distance(point, base) * 0.25;
+}
+
+// The neutral units in snapshot order: what forPlayer(owner).neutral.units lists, without building the rest of the view.
+function neutralUnitsOf(snapshot: GameSnapshot): Unit[] {
+  return snapshot.units.filter((unit) => unit.owner === "neutral");
+}
+
+// The distance from `point` to the nearest of `entities`, or undefined when there are none. The scores above used
+// distance(point, nearestEntity(list, point)) on a list made for the call; that is this minimum (distance is symmetric),
+// found without sorting the list.
+function nearestDistance(entities: readonly Point[], point: Point): number | undefined {
+  let nearest: number | undefined;
+  for (const entity of entities) {
+    const gap = distance(point, entity);
+    if (nearest === undefined || gap < nearest) nearest = gap;
+  }
+  return nearest;
 }
 
 export function healingWellPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Point): Point {
