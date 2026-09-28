@@ -8,7 +8,8 @@
 // Usage: npx tsx scripts/sim-perf-fixed-set.ts [--mode bench|loop] [--shard i/n] [--games 0,3,7] [--list]
 //   bench (default) plays each game the way the gauntlet benchmark's workers do (runBenchmarkMatch with the workers'
 //   trackers); loop plays it the way the .playtest probes do (runAiGameLoop with an afterStep hook reading `after`).
-// One JSON line per game, then a summary line: games, CPU-s total and per game, and one digest over all fingerprints.
+// One JSON line per game (with planS: the CPU seconds each AI version spent planning), then a summary line: games, CPU-s
+// total and per game, and one digest over all fingerprints.
 import { createHash } from "node:crypto";
 import { createArmyBalanceStatsTracker } from "../src/ai/benchmark/army-balance-stats";
 import { createAiCommandStatsTracker } from "../src/ai/benchmark/command-stats";
@@ -20,6 +21,7 @@ import { createWoundedMoonWellStatsTracker } from "../src/ai/benchmark/wounded-m
 import { createAiGameCommandPlanner, runAiGameLoop, type AiGameAgent } from "../src/ai/game-runner";
 import { runBenchmarkMatch, type BenchmarkMatchInput, type BenchmarkTracker } from "../src/sdk/benchmark/core";
 import type { Game } from "../src/shared/sim";
+import type { SdkGameCommandPlanner } from "../src/sdk/game-runner";
 import type { GameSnapshot } from "../src/shared/types";
 
 // Five seeds x four games: each seed's first map in both races, plus two maps further down the list (one per race), and
@@ -92,6 +94,20 @@ function fold(chain: Chain, game: Game) {
   chain.cpuUs += used.user + used.system;
 }
 
+// The planner the benchmark uses, timed per AI version: CPU seconds spent planning, by the version's label ("v8", "v5"...).
+// Timing only; the commands are the planner's own.
+function timedPlanner(planS: Record<string, number>): SdkGameCommandPlanner<AiGameAgent> {
+  const planner = createAiGameCommandPlanner();
+  return (context) => {
+    const started = process.cpuUsage();
+    const commands = planner(context);
+    const used = process.cpuUsage(started);
+    const version = (context.agent.versionLabel ?? context.agent.version).split(" ")[0]!;
+    planS[version] = (planS[version] ?? 0) + (used.user + used.system) / 1e6;
+    return commands;
+  };
+}
+
 function workerTrackers(): BenchmarkTracker<AiGameAgent>[] {
   // The same trackers, in the same order, as the gauntlet's parallel worker (src/ai/benchmark/parallel-worker.ts).
   return [
@@ -106,7 +122,7 @@ function workerTrackers(): BenchmarkTracker<AiGameAgent>[] {
   ];
 }
 
-function playBench(match: BenchmarkMatchInput<AiGameAgent>, chain: Chain) {
+function playBench(match: BenchmarkMatchInput<AiGameAgent>, chain: Chain, planS: Record<string, number>) {
   const fingerprint: BenchmarkTracker<AiGameAgent, null, null> = {
     id: "fingerprint",
     afterStep: (_state, { game }) => {
@@ -117,14 +133,14 @@ function playBench(match: BenchmarkMatchInput<AiGameAgent>, chain: Chain) {
       return null;
     },
   };
-  const report = runBenchmarkMatch({ ...match, commandPlanner: createAiGameCommandPlanner() }, [...workerTrackers(), fingerprint as unknown as BenchmarkTracker<AiGameAgent>]);
+  const report = runBenchmarkMatch({ ...match, commandPlanner: timedPlanner(planS) }, [...workerTrackers(), fingerprint as unknown as BenchmarkTracker<AiGameAgent>]);
   return { cpuMs: report.cpuMs, elapsedMs: report.elapsedMs, winner: report.result.winner, tick: report.result.tick, report: sha(canonical(report.result)) };
 }
 
-function playLoop(match: BenchmarkMatchInput<AiGameAgent>, chain: Chain) {
+function playLoop(match: BenchmarkMatchInput<AiGameAgent>, chain: Chain, planS: Record<string, number>) {
   // As the .playtest probes read a game: count each side's units every 10 s from the `after` snapshot.
   const counts: number[][] = [];
-  const loop = runAiGameLoop({ ...match, commandPlanner: createAiGameCommandPlanner() } as never, {
+  const loop = runAiGameLoop({ ...match, commandPlanner: timedPlanner(planS) } as never, {
     afterStep({ game, after }: { game: Game; after: GameSnapshot }) {
       if (after.tick % 200 === 0) counts.push(Object.keys(match.agents).map((owner) => after.units.filter((unit) => unit.owner === owner).length));
       if (game.tick % DIGEST_EVERY === 0) fold(chain, game);
@@ -138,12 +154,13 @@ let cpuTotal = 0;
 const digests: string[] = [];
 for (const { index, seed, match } of chosen) {
   const chain: Chain = { hash: "", cpuUs: 0 };
-  const played = mode === "loop" ? playLoop(match, chain) : playBench(match, chain);
+  const planS: Record<string, number> = {};
+  const played = mode === "loop" ? playLoop(match, chain, planS) : playBench(match, chain, planS);
   // The run's own CPU without the fingerprint's digests, which are this harness's cost, not the game's.
   const cpuS = (played.cpuMs - chain.cpuUs / 1000) / 1000;
   cpuTotal += cpuS;
   const fingerprint = sha(`${played.winner}|${played.tick}|${chain.hash}|${played.report}`).slice(0, 16);
   digests.push(`${index}:${fingerprint}`);
-  console.log(JSON.stringify({ index, seed, name: match.name, mode, winner: played.winner, endTick: played.tick, cpuS: Number(cpuS.toFixed(3)), wallS: Number((played.elapsedMs / 1000).toFixed(3)), fingerprint }));
+  console.log(JSON.stringify({ index, seed, name: match.name, mode, winner: played.winner, endTick: played.tick, cpuS: Number(cpuS.toFixed(3)), wallS: Number((played.elapsedMs / 1000).toFixed(3)), planS: Object.fromEntries(Object.entries(planS).sort().map(([version, seconds]) => [version, Number(seconds.toFixed(3))])), fingerprint }));
 }
 console.log(JSON.stringify({ summary: true, mode, games: chosen.length, cpuS: Number(cpuTotal.toFixed(3)), cpuSPerGame: Number((cpuTotal / Math.max(1, chosen.length)).toFixed(3)), digest: sha(digests.join(",")).slice(0, 16) }));
