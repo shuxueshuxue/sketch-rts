@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
+import { detCos, detSin } from "../../../shared/det-math";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../../shared/types";
 import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build-layout";
 import { resolveAiCommandIntent } from "../commands";
@@ -300,7 +301,7 @@ function towerGoal(economy: Economy, hall: Building, priority: number, play: str
 // Towers face the enemy, and never go where they would reach a creep camp that still stands (it would wake the camp).
 function towerPoint(snapshot: GameSnapshot, owner: PlayerId, hall: Building, facing: Point | undefined): Point | undefined {
   const creeps = snapshot.units.filter((unit) => unit.owner === "neutral");
-  const ring = Array.from({ length: 8 }, (_, index) => ({ x: hall.x + Math.cos((index / 8) * Math.PI * 2) * 180, y: hall.y + Math.sin((index / 8) * Math.PI * 2) * 180 }));
+  const ring = Array.from({ length: 8 }, (_, index) => ({ x: hall.x + detCos((index / 8) * Math.PI * 2) * 180, y: hall.y + detSin((index / 8) * Math.PI * 2) * 180 }));
   return [towerPointFor(snapshot, owner, hall, facing), ...ring]
     .map((candidate) => legalBuildPointNear(snapshot, "defenseTower", candidate))
     .find((candidate) => distance(candidate, hall) <= TOWER_REACH_FROM_HALL && creeps.every((creep) => distance(creep, candidate) > CREEP_CLEARANCE));

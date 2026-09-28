@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { isBuildPlacementClear } from "../../shared/build-placement";
+import { detCos, detSin } from "../../shared/det-math";
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { aiSnapshotQuery, buildings } from "./snapshot";
 import { clamp, distance, nearestEntity, type Point } from "./spatial";
@@ -35,7 +36,7 @@ function safeTowerPointNear(snapshot: GameSnapshot, owner: PlayerId, base: Point
     ...[150, 210, 280, 360, 420].flatMap((radius) =>
       Array.from({ length: 16 }, (_, index) => {
         const angle = (index / 16) * Math.PI * 2;
-        return { x: clamp(base.x + Math.cos(angle) * radius, 0, snapshot.map.width), y: clamp(base.y + Math.sin(angle) * radius, 0, snapshot.map.height) };
+        return { x: clamp(base.x + detCos(angle) * radius, 0, snapshot.map.width), y: clamp(base.y + detSin(angle) * radius, 0, snapshot.map.height) };
       }),
     ),
   ];
@@ -165,7 +166,7 @@ export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, 
   const offsets = [72, 104, 140, 180, 230, 290, 360, 440, 520, 640, 800, 1_000].flatMap((radius) =>
     Array.from({ length: 16 }, (_, index) => {
       const angle = (index / 16) * Math.PI * 2;
-      return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+      return { x: detCos(angle) * radius, y: detSin(angle) * radius };
     }),
   );
   return (

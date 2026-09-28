@@ -2,6 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MER
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker } from "./build-placement";
+import { detCos, detSin } from "./det-math";
 import {
   createBuilding,
   createInitialBuildings,
@@ -569,7 +570,7 @@ function updateTraining(game: Game) {
     if (job.remaining > 0) continue;
     building.queue.shift();
     const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
-    const unit = game.spawnUnit(building.owner, job.unitKind, building.x + Math.cos(angle) * 80, building.y + Math.sin(angle) * 80);
+    const unit = game.spawnUnit(building.owner, job.unitKind, building.x + detCos(angle) * 80, building.y + detSin(angle) * 80);
     unit.order = rallyOrderForUnit(game, building, unit);
   }
 }

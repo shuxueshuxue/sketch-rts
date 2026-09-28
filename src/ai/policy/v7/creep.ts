@@ -1,3 +1,4 @@
+import { detCos, detSin } from "../../../shared/det-math";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import type { V6PolicyMemory } from "../../memory";
 import { resolveAiCommandIntent } from "../commands";
@@ -102,8 +103,13 @@ export function forceFor(camp: Camp) {
 export function stagingPoint(camp: Camp, from: Point, turn = 0): Point {
   const gap = distance(camp.center, from);
   const length = camp.reach + STAGING_GAP;
-  const base = gap < 1 ? 0 : Math.atan2(from.y - camp.center.y, from.x - camp.center.x);
-  return { x: camp.center.x + Math.cos(base + turn) * length, y: camp.center.y + Math.sin(base + turn) * length };
+  // The direction from the camp to the group turned by `turn`, as a rotated unit vector: the same point as
+  // cos/sin(atan2(dy, dx) + turn), computed with det-math so it is the same on every platform (see @@@det-math).
+  const dx = gap < 1 ? 1 : (from.x - camp.center.x) / gap;
+  const dy = gap < 1 ? 0 : (from.y - camp.center.y) / gap;
+  const cos = detCos(turn);
+  const sin = detSin(turn);
+  return { x: camp.center.x + (dx * cos - dy * sin) * length, y: camp.center.y + (dx * sin + dy * cos) * length };
 }
 
 // The first staging point around the camp, facing the group first, that no other camp crowds and that the group reaches

@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
+import { detCos, detSin } from "./det-math";
 import { GENERATED_RICH_SCORE_MAP_IDS, RICH_SCORE_MAP_IDS } from "./map-ids";
 import { seconds } from "./time";
 import type { Building, BuildingKind, GameMap, MapId, MercenaryCamp, MercenaryUnitKind, Owner, PlayerId, ResourceNode, TrainableUnitKind, Unit, UnitKind, WorldItem } from "./types";
@@ -547,8 +548,8 @@ function richGeneratedPoint(mapId: MapId, x: number, y: number, mapSize: number)
   const shiftY = (((seed >>> 9) % 241) - 120) * (mapSize / AUTHOR_MAP_SIZE);
   const stretchedX = localX * scaleX;
   const stretchedY = localY * scaleY;
-  const rotatedX = stretchedX * Math.cos(angle) - stretchedY * Math.sin(angle) + stretchedY * shear;
-  const rotatedY = stretchedX * Math.sin(angle) + stretchedY * Math.cos(angle) + stretchedX * shear * 0.5;
+  const rotatedX = stretchedX * detCos(angle) - stretchedY * detSin(angle) + stretchedY * shear;
+  const rotatedY = stretchedX * detSin(angle) + stretchedY * detCos(angle) + stretchedX * shear * 0.5;
   const clamp = mapSize === AUTHOR_MAP_SIZE ? clampAuthor : clampStandard;
   // @@@rich-map-family - Seeded transforms keep every generated official map fair but stop them from being cloned objective routes.
   return keepAwayFromStartingMines({ x: clamp(center + rotatedX + shiftX), y: clamp(center + rotatedY + shiftY) }, mapSize, clamp);
@@ -613,7 +614,7 @@ function keepNeutralUnitsAwayFromPlayerStarts(units: Unit[], mapId: MapId, playe
         const candidates = [radial];
         for (let angleIndex = 0; angleIndex < 16; angleIndex += 1) {
           const angle = (Math.PI * 2 * angleIndex) / 16;
-          candidates.push({ x: clamp(point.x + Math.cos(angle) * safeGap), y: clamp(point.y + Math.sin(angle) * safeGap) });
+          candidates.push({ x: clamp(point.x + detCos(angle) * safeGap), y: clamp(point.y + detSin(angle) * safeGap) });
         }
         const best = candidates.reduce((winner, candidate) => (nearestSafetyGap(candidate) > nearestSafetyGap(winner) ? candidate : winner), radial);
         x = best.x;
@@ -1090,6 +1091,6 @@ function wildlingCamp(mapId: MapId, prefix: string, x: number, y: number, kinds:
   return kinds.map((kind, index) => {
     const angle = (Math.PI * 2 * index) / Math.max(1, kinds.length);
     const radius = index === 0 ? 0 : 44 + (index % 2) * 16;
-    return createUnit(`${prefix}-${index + 1}`, "neutral", kind, point.x + Math.cos(angle) * radius, point.y + Math.sin(angle) * radius);
+    return createUnit(`${prefix}-${index + 1}`, "neutral", kind, point.x + detCos(angle) * radius, point.y + detSin(angle) * radius);
   });
 }
