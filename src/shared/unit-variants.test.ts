@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveVariant, UNIT_DEFS, unitRules } from "./catalog";
+import { resolveVariant, UNIT_DEFS, UPGRADE_DEFS, unitRules } from "./catalog";
 import { createGame, issuePlayerCommand, refreshUnitStats, restoreSnapshotIntoGame, snapshotGame, spawnVariantUnit, stepGame } from "./sim";
 import { createBuilding } from "./map";
 import { checkCommandLegality } from "./sim/command-validation";
@@ -40,10 +40,11 @@ describe("unit variants", () => {
     game.players.north!.upgrades.weaponTraining = 1;
     game.variants = { "test/champion": resolveVariant({ base: "footman", attackDamage: 40 }) };
     const champion = spawnVariantUnit(game, "north", "test/champion", 1000, 1000);
-    expect(champion.attackDamage).toBe(42);
+    const weapons = UPGRADE_DEFS.weaponTraining.levels[0]!.attackMultiplier!;
+    expect(champion.attackDamage).toBe(Math.round(40 * weapons));
     game.variants["test/champion"] = resolveVariant({ base: "footman", attackDamage: 50, hp: 300 });
     refreshUnitStats(game, champion);
-    expect(champion.attackDamage).toBe(52);
+    expect(champion.attackDamage).toBe(Math.round(50 * weapons));
     expect(champion.maxHp).toBe(300);
   });
 

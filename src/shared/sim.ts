@@ -1833,8 +1833,8 @@ function nonStarUnitStats(game: Game, unit: Unit) {
     for (let level = 0; level < (upgrades[upgradeKind] ?? 0); level += 1) {
       const levelDef = upgrade.levels[level];
       if (!levelDef) throw new Error(`${upgradeKind} missing level ${level + 1}`);
-      attackDamage += levelDef.attackBonus;
-      maxHp += levelDef.maxHpBonus;
+      if (levelDef.attackMultiplier) attackDamage = stats.attackDamage * levelDef.attackMultiplier;
+      if (levelDef.maxHpMultiplier) maxHp = stats.hp * levelDef.maxHpMultiplier;
       if (levelDef.speedMultiplier) speed = roundUnitScalar(stats.speed * levelDef.speedMultiplier);
       if (levelDef.attackRangeMultiplier) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
     }

@@ -12343,7 +12343,7 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "research", upgradeKind: "weaponTraining" });
     if (command?.type !== "research") throw new Error("expected research command");
     issuePlayerCommand(game, "v2", command);
-    expect(game.players.v2.gold).toBe(760);
+    expect(game.players.v2.gold).toBe(900 - UPGRADE_DEFS.weaponTraining.levels[0]!.cost);
   });
 
   it("can start cheap combat tech while v2 is economically outnumbered", () => {

@@ -140,7 +140,7 @@ describe("sketch RTS simulation", () => {
     stepMany(game, UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime + 1);
 
     expect(game.players.player.upgrades.weaponTraining).toBe(1);
-    expect(ravager.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels[0]!.attackBonus);
+    expect(ravager.attackDamage).toBe(Math.round(baseDamage * UPGRADE_DEFS.weaponTraining.levels[0]!.attackMultiplier!));
   });
 
   it("keeps starts fair and prices paced for the slower five-worker mine economy", () => {
@@ -174,16 +174,16 @@ describe("sketch RTS simulation", () => {
 
   it("keeps tech cheaper to start but slower to complete", () => {
     expect(UPGRADE_DEFS.weaponTraining.levels).toEqual([
-      { cost: 140, researchTime: seconds(34.5), attackBonus: 2, maxHpBonus: 0 },
-      { cost: 215, researchTime: seconds(46.5), attackBonus: 3, maxHpBonus: 0 },
-      { cost: 320, researchTime: seconds(60), attackBonus: 3, maxHpBonus: 0 },
+      { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
+      { cost: 175, researchTime: seconds(46.5), attackMultiplier: 1.3 },
+      { cost: 200, researchTime: seconds(60), attackMultiplier: 1.45 },
     ]);
     expect(UPGRADE_DEFS.reinforcedPlating.levels).toEqual([
-      { cost: 165, researchTime: seconds(40.5), attackBonus: 0, maxHpBonus: 10 },
-      { cost: 250, researchTime: seconds(52.5), attackBonus: 0, maxHpBonus: 15 },
-      { cost: 360, researchTime: seconds(66), attackBonus: 0, maxHpBonus: 20 },
+      { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
+      { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
+      { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ]);
-    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 }]);
+    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 260, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 }]);
   });
 
   it("researches late mobility and range tech as derived unit stats without touching attack speed or towers", () => {
@@ -1082,8 +1082,8 @@ describe("sketch RTS simulation", () => {
     }
     for (let i = 0; i < 4; i += 1) killWith(game, knight, "ancientStag", "neutral");
 
-    const techAttack = UNIT_DEFS.knight.attackDamage + UPGRADE_DEFS.weaponTraining.levels.reduce((sum, level) => sum + level.attackBonus, 0);
-    const techHp = UNIT_DEFS.knight.hp + UPGRADE_DEFS.reinforcedPlating.levels.reduce((sum, level) => sum + level.maxHpBonus, 0);
+    const techAttack = UNIT_DEFS.knight.attackDamage * UPGRADE_DEFS.weaponTraining.levels[2]!.attackMultiplier!;
+    const techHp = UNIT_DEFS.knight.hp * UPGRADE_DEFS.reinforcedPlating.levels[2]!.maxHpMultiplier!;
     expect(knight.level).toBe(3);
     expect(knight.attackDamage).toBe(Math.round(techAttack * 1.75));
     expect(knight.maxHp).toBe(Math.round(techHp * 1.75));
@@ -1501,7 +1501,7 @@ describe("sketch RTS simulation", () => {
     stepMany(game, UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime + 1);
 
     expect(game.players.player.upgrades.weaponTraining).toBe(1);
-    expect(veteran.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels[0]!.attackBonus);
+    expect(veteran.attackDamage).toBe(Math.round(baseDamage * UPGRADE_DEFS.weaponTraining.levels[0]!.attackMultiplier!));
 
     issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "weaponTraining" });
     stepMany(game, UPGRADE_DEFS.weaponTraining.levels[1]!.researchTime + 1);
@@ -1509,12 +1509,12 @@ describe("sketch RTS simulation", () => {
     stepMany(game, UPGRADE_DEFS.weaponTraining.levels[2]!.researchTime + 1);
 
     expect(game.players.player.upgrades.weaponTraining).toBe(3);
-    expect(veteran.attackDamage).toBe(baseDamage + UPGRADE_DEFS.weaponTraining.levels.reduce((sum, level) => sum + level.attackBonus, 0));
+    expect(veteran.attackDamage).toBe(Math.round(baseDamage * UPGRADE_DEFS.weaponTraining.levels[2]!.attackMultiplier!));
 
     issueCommand(game, { type: "research", buildingId: barracks.id, upgradeKind: "reinforcedPlating" });
     stepMany(game, UPGRADE_DEFS.reinforcedPlating.levels[0]!.researchTime + 1);
     expect(game.players.player.upgrades.reinforcedPlating).toBe(1);
-    expect(veteran.maxHp).toBe(baseHp + UPGRADE_DEFS.reinforcedPlating.levels[0]!.maxHpBonus);
+    expect(veteran.maxHp).toBe(Math.round(baseHp * UPGRADE_DEFS.reinforcedPlating.levels[0]!.maxHpMultiplier!));
 
     issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
     stepMany(game, 180);

@@ -115,9 +115,9 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
         ? tooltipLine(i18n.locale, "unitRangeBonus", Math.round((level.attackRangeMultiplier - 1) * 100))
         : level.veteranRegenPerStar
           ? tooltipLine(i18n.locale, "veteranRegenPerStar", level.veteranRegenPerStar)
-    : level.attackBonus > 0
-      ? tooltipLine(i18n.locale, "attackBonus", level.attackBonus)
-      : tooltipLine(i18n.locale, "maxHpBonus", level.maxHpBonus);
+    : level.attackMultiplier
+      ? tooltipLine(i18n.locale, "attackBonus", Math.round((level.attackMultiplier - 1) * 100))
+      : tooltipLine(i18n.locale, "maxHpBonus", Math.round(((level.maxHpMultiplier ?? 1) - 1) * 100));
   const requirements = level.buildingMaxHpMultiplier
     ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
     : level.veteranRegenPerStar
@@ -223,13 +223,13 @@ const TEXT = {
   en: {
     stats: {
       attack: "Attack {value}",
-      attackBonus: "+{value} attack",
+      attackBonus: "+{value}% attack",
       build: "Build {value}",
       buildingHpBonus: "+{value}% building HP",
       cost: "Cost {value} gold",
       hp: "HP {value}",
       currentHp: "HP {value}",
-      maxHpBonus: "+{value} max HP",
+      maxHpBonus: "+{value}% max HP",
       range: "Range {value}",
       research: "Research {value}",
       currentRegen: "Regen {value} HP/s",
@@ -269,13 +269,13 @@ const TEXT = {
   zh: {
     stats: {
       attack: "攻击 {value}",
-      attackBonus: "+{value} 攻击",
+      attackBonus: "+{value}% 攻击",
       build: "建造 {value}",
       buildingHpBonus: "+{value}% 建筑生命",
       cost: "花费 {value} 金",
       hp: "生命 {value}",
       currentHp: "生命 {value}",
-      maxHpBonus: "+{value} 最大生命",
+      maxHpBonus: "+{value}% 最大生命",
       range: "射程 {value}",
       research: "研究 {value}",
       currentRegen: "回复 {value} 生命/秒",

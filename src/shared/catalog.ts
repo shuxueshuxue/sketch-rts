@@ -92,8 +92,8 @@ export type UpgradeDef = {
 export type UpgradeLevelDef = {
   cost: number;
   researchTime: number;
-  attackBonus: number;
-  maxHpBonus: number;
+  attackMultiplier?: number;
+  maxHpMultiplier?: number;
   buildingMaxHpMultiplier?: number;
   speedMultiplier?: number;
   attackRangeMultiplier?: number;
@@ -250,57 +250,64 @@ export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = Object.fromEntri
 
 const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "worker");
 
+// @@@share-of-own-stats - Weapons and plating scale each unit's own attack and health, as speed and range already do. A flat
+// +2 attack / +10 health was worth a tenth of a raider's price but a thirtieth of a knight's (plating: 1% of a knight's, 0
+// of a chieftain's), so tech pushed every army toward cheap mass. Each +15% level is worth 8-11% of the gold of the units it
+// reaches (equal-gold mirror duels, ten unit kinds, 8 to 24 units), and a level reaches every unit alive when it completes
+// or trained after: about 3,500 gold of units for an army that keeps fighting, 2-5 times what stands at that moment. The
+// prices return about 1.8 times their gold on that reach, as weapons I and II already did for light units.
+
 export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
   weaponTraining: {
     researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 140, researchTime: seconds(34.5), attackBonus: 2, maxHpBonus: 0 },
-      { cost: 215, researchTime: seconds(46.5), attackBonus: 3, maxHpBonus: 0 },
-      { cost: 320, researchTime: seconds(60), attackBonus: 3, maxHpBonus: 0 },
+      { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
+      { cost: 175, researchTime: seconds(46.5), attackMultiplier: 1.3 },
+      { cost: 200, researchTime: seconds(60), attackMultiplier: 1.45 },
     ],
   },
   reinforcedPlating: {
     researchBuildingKinds: ["barracks", "emberForge"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 165, researchTime: seconds(40.5), attackBonus: 0, maxHpBonus: 10 },
-      { cost: 250, researchTime: seconds(52.5), attackBonus: 0, maxHpBonus: 15 },
-      { cost: 360, researchTime: seconds(66), attackBonus: 0, maxHpBonus: 20 },
+      { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
+      { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
+      { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ],
   },
   buildingDurability: {
     researchBuildingKinds: ["townHall"],
     affectedUnitKinds: [],
     levels: [
-      { cost: 260, researchTime: seconds(54), attackBonus: 0, maxHpBonus: 0, buildingMaxHpMultiplier: 1.2 },
+      { cost: 260, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
     ],
   },
   speedTraining: {
     researchBuildingKinds: ["stables", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 185, researchTime: seconds(46), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.25 },
-      { cost: 285, researchTime: seconds(60), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.38 },
-      { cost: 420, researchTime: seconds(76), attackBonus: 0, maxHpBonus: 0, speedMultiplier: 1.5 },
+      { cost: 185, researchTime: seconds(46), speedMultiplier: 1.25 },
+      { cost: 285, researchTime: seconds(60), speedMultiplier: 1.38 },
+      { cost: 420, researchTime: seconds(76), speedMultiplier: 1.5 },
     ],
   },
   rangeTraining: {
     researchBuildingKinds: ["workshop", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 195, researchTime: seconds(48), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.15 },
-      { cost: 305, researchTime: seconds(64), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.25 },
-      { cost: 450, researchTime: seconds(82), attackBonus: 0, maxHpBonus: 0, attackRangeMultiplier: 1.35 },
+      { cost: 195, researchTime: seconds(48), attackRangeMultiplier: 1.15 },
+      { cost: 305, researchTime: seconds(64), attackRangeMultiplier: 1.25 },
+      { cost: 450, researchTime: seconds(82), attackRangeMultiplier: 1.35 },
     ],
   },
   leadership: {
     researchBuildingKinds: ["sanctum", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 220, researchTime: seconds(52), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 1 },
-      { cost: 340, researchTime: seconds(70), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 2 },
-      { cost: 500, researchTime: seconds(90), attackBonus: 0, maxHpBonus: 0, veteranRegenPerStar: 3 },
+      { cost: 220, researchTime: seconds(52), veteranRegenPerStar: 1 },
+      { cost: 340, researchTime: seconds(70), veteranRegenPerStar: 2 },
+      { cost: 500, researchTime: seconds(90), veteranRegenPerStar: 3 },
     ],
   },
 };

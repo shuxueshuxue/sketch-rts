@@ -83,7 +83,7 @@ describe("gameplay tooltips", () => {
     const tooltip = upgradeTooltip("reinforcedPlating", "p", 1);
 
     expect(tooltip.title).toBe("Reinforced Plating II");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 250 gold", "Research 52.5s", "+15 max HP"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 210 gold", "Research 52.5s", "+30% max HP"]));
     expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Barracks / Ember Forge.", "Affects combat units."]));
     expect(tooltip.hotkey).toBe("P");
   });
