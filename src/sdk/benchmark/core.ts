@@ -329,43 +329,56 @@ type StepUnit = Pick<Unit, "id" | "owner" | "kind" | "x" | "y" | "hp" | "radius"
 type StepBuilding = Pick<Building, "id" | "owner" | "x" | "y" | "hp" | "radius">;
 type StepState = {
   units: StepUnit[];
-  unitsById: Map<string, StepUnit>;
-  buildingsById: Map<string, StepBuilding>;
+  buildings: StepBuilding[];
   players: Partial<Record<PlayerId, { gold: number; upgrades: UpgradeLevels }>>;
   goldSpent: GameSnapshot["match"]["stats"]["goldSpent"];
   neutralUnitsKilled: GameSnapshot["match"]["stats"]["neutralUnitsKilled"];
 };
 
 function stepState(game: Game): StepState {
-  const units = game.units.map(({ id, owner, kind, x, y, hp, radius }) => ({ id, owner, kind, x, y, hp, radius }));
   return {
-    units,
-    unitsById: new Map(units.map((unit) => [unit.id, unit])),
-    buildingsById: new Map(game.buildings.map(({ id, owner, x, y, hp, radius }) => [id, { id, owner, x, y, hp, radius }])),
+    units: game.units.map(({ id, owner, kind, x, y, hp, radius }) => ({ id, owner, kind, x, y, hp, radius })),
+    buildings: game.buildings.map(({ id, owner, x, y, hp, radius }) => ({ id, owner, x, y, hp, radius })),
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { gold: player.gold, upgrades: { ...player.upgrades } }])),
     goldSpent: { ...game.match.stats.goldSpent },
     neutralUnitsKilled: { ...game.match.stats.neutralUnitsKilled },
   };
 }
 
+// A value worked out on first ask and kept.
+function lazily<T>(make: () => T): () => T {
+  let value: T | undefined;
+  let made = false;
+  return () => {
+    if (!made) {
+      value = make();
+      made = true;
+    }
+    return value as T;
+  };
+}
+
 function updateStandardAfterStep(state: StandardBenchmarkState, before: StepState, after: GameSnapshot, itemsBefore: ItemStates, itemsAfter: ItemStates) {
-  const beforeBuildings = before.buildingsById;
-  const afterBuildings = new Map(after.buildings.map((building) => [building.id, building]));
-  const beforeUnits = before.unitsById;
-  const afterUnits = new Map(after.units.map((unit) => [unit.id, unit]));
-  const missingNeutralUnits = before.units.filter((unit) => unit.owner === "neutral" && !afterUnits.has(unit.id));
+  // @@@step-maps-on-demand - The by-id maps and the missing neutrals are only read before a player's first engagement or
+  // expansion hit, when a neutral dies, or when a well heals, so they are built the first time one of those asks, from
+  // the same lists and in the same order (the game does not move while the counts run).
+  const beforeBuildings = lazily(() => new Map(before.buildings.map((building) => [building.id, building])));
+  const afterBuildings = lazily(() => new Map(after.buildings.map((building) => [building.id, building])));
+  const beforeUnits = lazily(() => new Map(before.units.map((unit) => [unit.id, unit])));
+  const afterUnits = lazily(() => new Map(after.units.map((unit) => [unit.id, unit])));
+  const missingNeutralUnits = lazily(() => before.units.filter((unit) => unit.owner === "neutral" && !afterUnits().has(unit.id)));
   recordMoonWellHealing(state, before.units, after, afterUnits);
   for (const owner of state.players) {
     state.peakSupply[owner] = Math.max(state.peakSupply[owner] ?? 0, after.players[owner]?.supplyUsed ?? 0);
     if (state.firstExpansionMiningSecond[owner] === null && miningBaseCount(after, owner) > 1) state.firstExpansionMiningSecond[owner] = tickSecond(after.tick);
     recordUpgradeSeconds(state, owner, before, after);
     if (state.firstEnemyEngagementSecond[owner] === null) {
-      state.firstEnemyEngagementSecond[owner] = firstDamagingEnemyEngagementSecond(state, owner, beforeUnits, beforeBuildings, afterUnits, afterBuildings, after.tick) ?? firstEngagementSecond(after, owner, state.teams);
+      state.firstEnemyEngagementSecond[owner] = firstDamagingEnemyEngagementSecond(state, owner, beforeUnits(), beforeBuildings(), afterUnits(), afterBuildings(), after.tick) ?? firstEngagementSecond(after, owner, state.teams);
     }
-    if (state.firstEnemyExpansionAttackSecond[owner] === null && attacksOpponentExpansion(state, owner, beforeBuildings, afterBuildings, after.units)) {
+    if (state.firstEnemyExpansionAttackSecond[owner] === null && attacksOpponentExpansion(state, owner, beforeBuildings(), afterBuildings(), after.units)) {
       state.firstEnemyExpansionAttackSecond[owner] = tickSecond(after.tick);
     }
-    if (state.firstOwnExpansionAttackedSecond[owner] === null && ownExpansionDamaged(state, owner, beforeBuildings, afterBuildings)) {
+    if (state.firstOwnExpansionAttackedSecond[owner] === null && ownExpansionDamaged(state, owner, beforeBuildings(), afterBuildings())) {
       state.firstOwnExpansionAttackedSecond[owner] = tickSecond(after.tick);
     }
     const spent = (after.match.stats.goldSpent[owner] ?? 0) - (before.goldSpent[owner] ?? 0);
@@ -378,7 +391,7 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: StepStat
   recordItemTransitions(state, itemsBefore, itemsAfter);
 }
 
-function recordMoonWellHealing(state: StandardBenchmarkState, beforeUnits: StepUnit[], after: GameSnapshot, afterUnits: Map<string, Unit>) {
+function recordMoonWellHealing(state: StandardBenchmarkState, beforeUnits: StepUnit[], after: GameSnapshot, afterUnitsById: () => Map<string, Unit>) {
   const wells = after.buildings.filter((building) => isHealingBuildingKind(building.kind) && building.complete && building.hp > 0);
   for (const effect of after.effects) {
     if (effect.type !== "heal" || effect.remaining !== effect.duration || effect.fromX === undefined || effect.fromY === undefined || effect.toX === undefined || effect.toY === undefined) continue;
@@ -387,7 +400,7 @@ function recordMoonWellHealing(state: StandardBenchmarkState, beforeUnits: StepU
     let healedHp = 0;
     for (const beforeUnit of beforeUnits) {
       if (beforeUnit.owner !== well.owner || beforeUnit.kind === "worker" || distance(beforeUnit, { x: effect.toX, y: effect.toY }) > 2) continue;
-      const afterUnit = afterUnits.get(beforeUnit.id);
+      const afterUnit = afterUnitsById().get(beforeUnit.id);
       if (!afterUnit) continue;
       healedHp = Math.max(healedHp, Math.max(0, afterUnit.hp - beforeUnit.hp));
     }
@@ -402,12 +415,12 @@ type ItemState = { id: string; carrierId: string | undefined; carrierOwner: Owne
 type ItemStates = { items: ItemState[]; byId: Map<string, ItemState> };
 
 function itemStates(world: Pick<GameSnapshot, "items" | "units">): ItemStates {
-  // Units are looked up by id only when an item is carried, and like a Map of them the last unit with an id wins.
-  let ownerById: Map<string, Owner> | undefined;
-  const items = world.items.map((item) => {
-    if (item.carrierId) ownerById ??= new Map(world.units.map((unit) => [unit.id, unit.owner]));
-    return { id: item.id, carrierId: item.carrierId, carrierOwner: item.carrierId ? ownerById!.get(item.carrierId) : undefined, cooldownRemaining: item.cooldownRemaining };
-  });
+  // The carriers' owners, found in one pass over the units; like a Map of them, the last unit with an id wins.
+  const carrierIds = new Set<string>();
+  for (const item of world.items) if (item.carrierId) carrierIds.add(item.carrierId);
+  const ownerById = new Map<string, Owner>();
+  if (carrierIds.size > 0) for (const unit of world.units) if (carrierIds.has(unit.id)) ownerById.set(unit.id, unit.owner);
+  const items = world.items.map((item) => ({ id: item.id, carrierId: item.carrierId, carrierOwner: item.carrierId ? ownerById.get(item.carrierId) : undefined, cooldownRemaining: item.cooldownRemaining }));
   return { items, byId: new Map(items.map((item) => [item.id, item])) };
 }
 
@@ -538,10 +551,10 @@ function recordUpgradeSeconds(state: StandardBenchmarkState, owner: PlayerId, be
   }
 }
 
-function neutralBountyForOwner(before: StepState, after: GameSnapshot, owner: PlayerId, missingNeutralUnits: StepUnit[]) {
+function neutralBountyForOwner(before: StepState, after: GameSnapshot, owner: PlayerId, missingNeutralUnits: () => StepUnit[]) {
   const killDelta = (after.match.stats.neutralUnitsKilled[owner] ?? 0) - (before.neutralUnitsKilled[owner] ?? 0);
   if (killDelta <= 0) return 0;
-  return missingNeutralUnits.slice(0, killDelta).reduce((total, unit) => total + (UNIT_DEFS[unit.kind].goldBounty ?? 0), 0);
+  return missingNeutralUnits().slice(0, killDelta).reduce((total, unit) => total + (UNIT_DEFS[unit.kind].goldBounty ?? 0), 0);
 }
 
 function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, StepBuilding>, afterBuildings: Map<string, Building>, units: Unit[]) {
