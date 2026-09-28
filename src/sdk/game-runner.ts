@@ -128,6 +128,9 @@ export type SdkGameLoopHooks = {
   // After every issued command (and after afterCommand), without the copies: for a hook that reads the game itself, as
   // the command left it, and keeps what it needs. A copy of the world per command is most of what a command costs.
   onCommand?: (context: SdkGameLoopCommandEvent) => void;
+  // Just before every step, after the tick's commands, without copies: for a hook that keeps what it needs of the world
+  // the step starts from.
+  beforeStep?: (context: SdkGameLoopContext) => void;
   // After every step, with copies of the world just before and just after it.
   afterStep?: (context: SdkGameLoopStepContext) => void;
   // After every step (and after afterStep), without the copies, for a hook that reads the game itself.
@@ -224,6 +227,7 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
     if (game.tick % input.thinkInterval === 0) {
       current = issueDueAgentCommands(frameRuntime, game, input, loopContext, hooks, current);
     }
+    hooks.beforeStep?.(loopContext);
     if (!hooks.afterStep) {
       frameRuntime.tick();
       normalizeWinnerForMode(game, teams, input.winnerMode ?? "match");

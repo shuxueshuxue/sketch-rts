@@ -1,7 +1,7 @@
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_KINDS, isHealingBuildingKind } from "../../shared/catalog";
 import type { CreateGameOptions, Game } from "../../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
-import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, Owner, PlayerId, RaceId, Unit, UpgradeKind } from "../../shared/types";
+import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, Owner, PlayerId, RaceId, Unit, UpgradeKind, UpgradeLevels } from "../../shared/types";
 import { analyzeGameMapObjectives, type SdkMapObjectiveReport } from "../map-analysis";
 import { runGameLoop, traceSourceFor, type SdkAgentController, type SdkCommandSource, type SdkGameAgent, type SdkGameCommandPlanner, type SdkPlannerOrigin } from "../game-runner";
 
@@ -53,8 +53,8 @@ export type BenchmarkCommandContext<TAgent extends SdkGameAgent = SdkGameAgent> 
   command: GameCommand;
 };
 
+// `after` is the game itself as the step left it (the same as `game`), not a copy: read it during the call.
 export type BenchmarkStepContext<TAgent extends SdkGameAgent = SdkGameAgent> = BenchmarkTrackerContext<TAgent> & {
-  before: GameSnapshot;
   after: GameSnapshot;
 };
 
@@ -223,6 +223,9 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
   // @@@items-between-commands - A command's item pickups and uses are read against the items as the last command or step
   // left them, kept here, so no command needs a copy of the world (see onCommand in game-runner).
   let items!: ItemStates;
+  // @@@step-without-copies - The same for steps: what the standard counts read of the world before a step is kept in
+  // beforeStep (see StepState), and they and the trackers read the world after it from the game itself.
+  let stepBefore!: StepState;
   const loop = runGameLoop(input, {
     beforeLoop({ game, players }) {
       setup = benchmarkSetup(game, input);
@@ -249,11 +252,14 @@ export function runBenchmarkMatch<TAgent extends SdkGameAgent>(input: BenchmarkM
       };
       for (const tracker of trackerStates) tracker.tracker.onCommand?.(tracker.state, benchmarkContext);
     },
-    afterStep({ game, players, before, after }) {
-      const next = itemStates(after);
-      updateStandardAfterStep(standard, before, after, items, next);
+    beforeStep({ game }) {
+      stepBefore = stepState(game);
+    },
+    onStep({ game, players }) {
+      const next = itemStates(game);
+      updateStandardAfterStep(standard, stepBefore, game, items, next);
       items = next;
-      for (const entry of trackerStates) entry.tracker.afterStep?.(entry.state, { game, match: input, players, before, after });
+      for (const entry of trackerStates) entry.tracker.afterStep?.(entry.state, { game, match: input, players, after: game });
     },
   });
 
@@ -316,13 +322,39 @@ function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owne
   }
 }
 
-function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, itemsBefore: ItemStates, itemsAfter: ItemStates) {
-  const beforeBuildings = new Map(before.buildings.map((building) => [building.id, building]));
+// What the standard counts read of the world before a step: each unit's and building's place, size and health, each
+// player's gold and upgrades, and the two stats they difference. Units keep their order (the neutral bounty takes the
+// first ones missing) and, like a Map of them, the last of an id wins.
+type StepUnit = Pick<Unit, "id" | "owner" | "kind" | "x" | "y" | "hp" | "radius">;
+type StepBuilding = Pick<Building, "id" | "owner" | "x" | "y" | "hp" | "radius">;
+type StepState = {
+  units: StepUnit[];
+  unitsById: Map<string, StepUnit>;
+  buildingsById: Map<string, StepBuilding>;
+  players: Partial<Record<PlayerId, { gold: number; upgrades: UpgradeLevels }>>;
+  goldSpent: GameSnapshot["match"]["stats"]["goldSpent"];
+  neutralUnitsKilled: GameSnapshot["match"]["stats"]["neutralUnitsKilled"];
+};
+
+function stepState(game: Game): StepState {
+  const units = game.units.map(({ id, owner, kind, x, y, hp, radius }) => ({ id, owner, kind, x, y, hp, radius }));
+  return {
+    units,
+    unitsById: new Map(units.map((unit) => [unit.id, unit])),
+    buildingsById: new Map(game.buildings.map(({ id, owner, x, y, hp, radius }) => [id, { id, owner, x, y, hp, radius }])),
+    players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { gold: player.gold, upgrades: { ...player.upgrades } }])),
+    goldSpent: { ...game.match.stats.goldSpent },
+    neutralUnitsKilled: { ...game.match.stats.neutralUnitsKilled },
+  };
+}
+
+function updateStandardAfterStep(state: StandardBenchmarkState, before: StepState, after: GameSnapshot, itemsBefore: ItemStates, itemsAfter: ItemStates) {
+  const beforeBuildings = before.buildingsById;
   const afterBuildings = new Map(after.buildings.map((building) => [building.id, building]));
-  const beforeUnits = new Map(before.units.map((unit) => [unit.id, unit]));
+  const beforeUnits = before.unitsById;
   const afterUnits = new Map(after.units.map((unit) => [unit.id, unit]));
   const missingNeutralUnits = before.units.filter((unit) => unit.owner === "neutral" && !afterUnits.has(unit.id));
-  recordMoonWellHealing(state, before, after, afterUnits);
+  recordMoonWellHealing(state, before.units, after, afterUnits);
   for (const owner of state.players) {
     state.peakSupply[owner] = Math.max(state.peakSupply[owner] ?? 0, after.players[owner]?.supplyUsed ?? 0);
     if (state.firstExpansionMiningSecond[owner] === null && miningBaseCount(after, owner) > 1) state.firstExpansionMiningSecond[owner] = tickSecond(after.tick);
@@ -336,7 +368,7 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
     if (state.firstOwnExpansionAttackedSecond[owner] === null && ownExpansionDamaged(state, owner, beforeBuildings, afterBuildings)) {
       state.firstOwnExpansionAttackedSecond[owner] = tickSecond(after.tick);
     }
-    const spent = (after.match.stats.goldSpent[owner] ?? 0) - (before.match.stats.goldSpent[owner] ?? 0);
+    const spent = (after.match.stats.goldSpent[owner] ?? 0) - (before.goldSpent[owner] ?? 0);
     const bounty = neutralBountyForOwner(before, after, owner, missingNeutralUnits);
     const goldDelta = (after.players[owner]?.gold ?? 0) - (before.players[owner]?.gold ?? 0);
     const mined = Math.max(0, goldDelta + spent - bounty);
@@ -346,14 +378,14 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: GameSnap
   recordItemTransitions(state, itemsBefore, itemsAfter);
 }
 
-function recordMoonWellHealing(state: StandardBenchmarkState, before: GameSnapshot, after: GameSnapshot, afterUnits: Map<string, Unit>) {
+function recordMoonWellHealing(state: StandardBenchmarkState, beforeUnits: StepUnit[], after: GameSnapshot, afterUnits: Map<string, Unit>) {
   const wells = after.buildings.filter((building) => isHealingBuildingKind(building.kind) && building.complete && building.hp > 0);
   for (const effect of after.effects) {
     if (effect.type !== "heal" || effect.remaining !== effect.duration || effect.fromX === undefined || effect.fromY === undefined || effect.toX === undefined || effect.toY === undefined) continue;
     const well = wells.find((candidate) => distance(candidate, { x: effect.fromX!, y: effect.fromY! }) <= 1);
     if (!well) continue;
     let healedHp = 0;
-    for (const beforeUnit of before.units) {
+    for (const beforeUnit of beforeUnits) {
       if (beforeUnit.owner !== well.owner || beforeUnit.kind === "worker" || distance(beforeUnit, { x: effect.toX, y: effect.toY }) > 2) continue;
       const afterUnit = afterUnits.get(beforeUnit.id);
       if (!afterUnit) continue;
@@ -494,7 +526,7 @@ function playerResult<TAgent extends SdkGameAgent>(owner: PlayerId, snapshot: Ga
   };
 }
 
-function recordUpgradeSeconds(state: StandardBenchmarkState, owner: PlayerId, before: GameSnapshot, after: GameSnapshot) {
+function recordUpgradeSeconds(state: StandardBenchmarkState, owner: PlayerId, before: StepState, after: GameSnapshot) {
   for (const kind of UPGRADE_KINDS) {
     const beforeLevel = before.players[owner]?.upgrades[kind] ?? 0;
     const afterLevel = after.players[owner]?.upgrades[kind] ?? 0;
@@ -506,13 +538,13 @@ function recordUpgradeSeconds(state: StandardBenchmarkState, owner: PlayerId, be
   }
 }
 
-function neutralBountyForOwner(before: GameSnapshot, after: GameSnapshot, owner: PlayerId, missingNeutralUnits: Unit[]) {
-  const killDelta = (after.match.stats.neutralUnitsKilled[owner] ?? 0) - (before.match.stats.neutralUnitsKilled[owner] ?? 0);
+function neutralBountyForOwner(before: StepState, after: GameSnapshot, owner: PlayerId, missingNeutralUnits: StepUnit[]) {
+  const killDelta = (after.match.stats.neutralUnitsKilled[owner] ?? 0) - (before.neutralUnitsKilled[owner] ?? 0);
   if (killDelta <= 0) return 0;
   return missingNeutralUnits.slice(0, killDelta).reduce((total, unit) => total + (UNIT_DEFS[unit.kind].goldBounty ?? 0), 0);
 }
 
-function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, Building>, afterBuildings: Map<string, Building>, units: Unit[]) {
+function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, StepBuilding>, afterBuildings: Map<string, Building>, units: Unit[]) {
   for (const opponent of state.players.filter((candidate) => state.teams[candidate] !== state.teams[owner])) {
     for (const id of state.expansionTownHallIds[opponent] ?? []) {
       const before = beforeBuildings.get(id);
@@ -524,7 +556,7 @@ function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId
   return false;
 }
 
-function ownExpansionDamaged(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, Building>, afterBuildings: Map<string, Building>) {
+function ownExpansionDamaged(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, StepBuilding>, afterBuildings: Map<string, Building>) {
   for (const id of state.expansionTownHallIds[owner] ?? []) {
     const before = beforeBuildings.get(id);
     const after = afterBuildings.get(id);
@@ -542,8 +574,8 @@ function firstEngagementSecond(snapshot: GameSnapshot, owner: PlayerId, teams: R
 function firstDamagingEnemyEngagementSecond(
   state: StandardBenchmarkState,
   owner: PlayerId,
-  beforeUnits: Map<string, Unit>,
-  beforeBuildings: Map<string, Building>,
+  beforeUnits: Map<string, StepUnit>,
+  beforeBuildings: Map<string, StepBuilding>,
   afterUnits: Map<string, Unit>,
   afterBuildings: Map<string, Building>,
   tick: number,
@@ -559,12 +591,12 @@ function firstDamagingEnemyEngagementSecond(
 
 function damagedPlayerEntities(
   state: StandardBenchmarkState,
-  beforeUnits: Map<string, Unit>,
-  beforeBuildings: Map<string, Building>,
+  beforeUnits: Map<string, StepUnit>,
+  beforeBuildings: Map<string, StepBuilding>,
   afterUnits: Map<string, Unit>,
   afterBuildings: Map<string, Building>,
 ) {
-  const damaged: (Unit | Building)[] = [];
+  const damaged: (StepUnit | StepBuilding)[] = [];
   for (const before of beforeUnits.values()) {
     if (!trackedPlayer(state, before.owner)) continue;
     const after = afterUnits.get(before.id);
@@ -581,7 +613,7 @@ function damagedPlayerEntities(
 function possibleDamageAttackers(
   state: StandardBenchmarkState,
   victimOwner: PlayerId,
-  target: Unit | Building,
+  target: StepUnit | StepBuilding,
   afterUnits: Map<string, Unit>,
   afterBuildings: Map<string, Building>,
 ) {
