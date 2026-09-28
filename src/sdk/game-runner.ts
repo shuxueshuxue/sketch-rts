@@ -317,8 +317,7 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
   current: GameSnapshot | undefined,
 ): GameSnapshot | undefined {
   if (!input.commandPlanner) return current;
-  // The planners get a copy of their own: an AI may keep or annotate what it is handed, so this one is never shared.
-  const snapshot = snapshotGame(game);
+  const snapshot = plannerView(game);
   const planned = playersOf(input).flatMap((owner) => {
     const agent = input.agents[owner];
     if (!agent) return [];
@@ -368,6 +367,31 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
     { checksum: false },
   );
   return latest;
+}
+
+// @@@planner-view - What the planners read each think: the game's own units, buildings, players and so on, in lists of
+// their own, instead of a deep copy of the world (snapshotGame, ~3% of a benchmark game). The planners run while the game
+// stands still (every command is applied after all of them have planned) and only read what they are handed: with the
+// view deep-frozen no planner wrote to it over the fixed set, and no AI memory kept anything of it past its think. The
+// lists are copies because the planners reorder some of them in place (claims.ts sorts resources and mercenary camps);
+// the view object is new each think, so caches keyed by it stay per think. snapshotGame also turns a missing orderQueue
+// into [], which no planner reads.
+function plannerView(game: Game): GameSnapshot {
+  return {
+    tick: game.tick,
+    match: game.match,
+    map: game.map,
+    teams: { ...game.teams },
+    players: game.players,
+    units: game.units.slice(),
+    buildings: game.buildings.slice(),
+    resources: game.resources.slice(),
+    mercenaryCamps: game.mercenaryCamps.slice(),
+    items: game.items.slice(),
+    projectiles: game.projectiles.slice(),
+    effects: game.effects.slice(),
+    ...(game.variants ? { variants: { ...game.variants } } : {}),
+  };
 }
 
 function recordCommand(
