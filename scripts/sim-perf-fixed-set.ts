@@ -8,8 +8,8 @@
 // Usage: npx tsx scripts/sim-perf-fixed-set.ts [--mode bench|loop] [--shard i/n] [--games 0,3,7] [--list]
 //   bench (default) plays each game the way the gauntlet benchmark's workers do (runBenchmarkMatch with the workers'
 //   trackers); loop plays it the way the .playtest probes do (runAiGameLoop with an afterStep hook reading `after`).
-// One JSON line per game (with planS: the CPU seconds each AI version spent planning), then a summary line: games, CPU-s
-// total and per game, and one digest over all fingerprints.
+// One JSON line per game (with planS: the CPU seconds each AI version spent planning; game and report: the fingerprint's
+// two halves), then a summary line: games, CPU-s total and per game, and one digest over all fingerprints.
 import { createHash } from "node:crypto";
 import { createArmyBalanceStatsTracker } from "../src/ai/benchmark/army-balance-stats";
 import { createAiCommandStatsTracker } from "../src/ai/benchmark/command-stats";
@@ -160,7 +160,10 @@ for (const { index, seed, match } of chosen) {
   const cpuS = (played.cpuMs - chain.cpuUs / 1000) / 1000;
   cpuTotal += cpuS;
   const fingerprint = sha(`${played.winner}|${played.tick}|${chain.hash}|${played.report}`).slice(0, 16);
+  // The two halves apart: a change to what the report counts (not to the game) moves `report` and leaves `game` as it was.
+  const game = sha(`${played.winner}|${played.tick}|${chain.hash}`).slice(0, 16);
+  const report = played.report.slice(0, 16);
   digests.push(`${index}:${fingerprint}`);
-  console.log(JSON.stringify({ index, seed, name: match.name, mode, winner: played.winner, endTick: played.tick, cpuS: Number(cpuS.toFixed(3)), wallS: Number((played.elapsedMs / 1000).toFixed(3)), planS: Object.fromEntries(Object.entries(planS).sort().map(([version, seconds]) => [version, Number(seconds.toFixed(3))])), fingerprint }));
+  console.log(JSON.stringify({ index, seed, name: match.name, mode, winner: played.winner, endTick: played.tick, cpuS: Number(cpuS.toFixed(3)), wallS: Number((played.elapsedMs / 1000).toFixed(3)), planS: Object.fromEntries(Object.entries(planS).sort().map(([version, seconds]) => [version, Number(seconds.toFixed(3))])), fingerprint, game, report }));
 }
 console.log(JSON.stringify({ summary: true, mode, games: chosen.length, cpuS: Number(cpuTotal.toFixed(3)), cpuSPerGame: Number((cpuTotal / Math.max(1, chosen.length)).toFixed(3)), digest: sha(digests.join(",")).slice(0, 16) }));
