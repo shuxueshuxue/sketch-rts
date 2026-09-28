@@ -368,17 +368,19 @@ function updateStandardAfterStep(state: StandardBenchmarkState, before: StepStat
   const afterUnits = lazily(() => new Map(after.units.map((unit) => [unit.id, unit])));
   const missingNeutralUnits = lazily(() => before.units.filter((unit) => unit.owner === "neutral" && !afterUnits().has(unit.id)));
   recordMoonWellHealing(state, before.units, after, afterUnits);
+  const waiting = state.players.filter((owner) => state.firstEnemyEngagementSecond[owner] === null);
+  const damagingEngaged = lazily(() => damagingEngagementOwners(state, waiting, beforeUnits(), beforeBuildings(), afterUnits(), afterBuildings()));
   for (const owner of state.players) {
     state.peakSupply[owner] = Math.max(state.peakSupply[owner] ?? 0, after.players[owner]?.supplyUsed ?? 0);
     if (state.firstExpansionMiningSecond[owner] === null && miningBaseCount(after, owner) > 1) state.firstExpansionMiningSecond[owner] = tickSecond(after.tick);
     recordUpgradeSeconds(state, owner, before, after);
     if (state.firstEnemyEngagementSecond[owner] === null) {
-      state.firstEnemyEngagementSecond[owner] = firstDamagingEnemyEngagementSecond(state, owner, beforeUnits(), beforeBuildings(), afterUnits(), afterBuildings(), after.tick) ?? firstEngagementSecond(after, owner, state.teams);
+      state.firstEnemyEngagementSecond[owner] = (damagingEngaged().has(owner) ? tickSecond(after.tick) : null) ?? firstEngagementSecond(after, owner, state.teams);
     }
-    if (state.firstEnemyExpansionAttackSecond[owner] === null && attacksOpponentExpansion(state, owner, beforeBuildings(), afterBuildings(), after.units)) {
+    if (state.firstEnemyExpansionAttackSecond[owner] === null && attacksOpponentExpansion(state, owner, beforeBuildings, afterBuildings, after.units)) {
       state.firstEnemyExpansionAttackSecond[owner] = tickSecond(after.tick);
     }
-    if (state.firstOwnExpansionAttackedSecond[owner] === null && ownExpansionDamaged(state, owner, beforeBuildings(), afterBuildings())) {
+    if (state.firstOwnExpansionAttackedSecond[owner] === null && ownExpansionDamaged(state, owner, beforeBuildings, afterBuildings)) {
       state.firstOwnExpansionAttackedSecond[owner] = tickSecond(after.tick);
     }
     const spent = (after.match.stats.goldSpent[owner] ?? 0) - (before.goldSpent[owner] ?? 0);
@@ -557,11 +559,11 @@ function neutralBountyForOwner(before: StepState, after: GameSnapshot, owner: Pl
   return missingNeutralUnits().slice(0, killDelta).reduce((total, unit) => total + (UNIT_DEFS[unit.kind].goldBounty ?? 0), 0);
 }
 
-function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, StepBuilding>, afterBuildings: Map<string, Building>, units: Unit[]) {
+function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: () => Map<string, StepBuilding>, afterBuildings: () => Map<string, Building>, units: Unit[]) {
   for (const opponent of state.players.filter((candidate) => state.teams[candidate] !== state.teams[owner])) {
     for (const id of state.expansionTownHallIds[opponent] ?? []) {
-      const before = beforeBuildings.get(id);
-      const after = afterBuildings.get(id);
+      const before = beforeBuildings().get(id);
+      const after = afterBuildings().get(id);
       if (!before || !after || after.hp >= before.hp) continue;
       if (units.some((unit) => unit.owner === owner && (distance(unit, after) <= unit.attackRange + 20 || (unit.order.type === "attack" && unit.order.targetId === id)))) return true;
     }
@@ -569,10 +571,10 @@ function attacksOpponentExpansion(state: StandardBenchmarkState, owner: PlayerId
   return false;
 }
 
-function ownExpansionDamaged(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: Map<string, StepBuilding>, afterBuildings: Map<string, Building>) {
+function ownExpansionDamaged(state: StandardBenchmarkState, owner: PlayerId, beforeBuildings: () => Map<string, StepBuilding>, afterBuildings: () => Map<string, Building>) {
   for (const id of state.expansionTownHallIds[owner] ?? []) {
-    const before = beforeBuildings.get(id);
-    const after = afterBuildings.get(id);
+    const before = beforeBuildings().get(id);
+    const after = afterBuildings().get(id);
     if (before && after && after.hp < before.hp) return true;
   }
   return false;
@@ -584,22 +586,33 @@ function firstEngagementSecond(snapshot: GameSnapshot, owner: PlayerId, teams: R
   return own.some((unit) => enemies.some((enemy) => distance(unit, enemy) <= Math.max(unit.attackRange, enemy.attackRange) + unit.radius + enemy.radius + 18)) ? tickSecond(snapshot.tick) : null;
 }
 
-function firstDamagingEnemyEngagementSecond(
+// @@@engagement-once-per-step - The players, of those still waiting on their first engagement, that a damaging exchange
+// this step engages: the victim of a player's unit or building that lost health or died with a possible attacker, and
+// every waiting player owning one of its possible attackers. One scan serves every waiting player (it was one per player).
+function damagingEngagementOwners(
   state: StandardBenchmarkState,
-  owner: PlayerId,
+  waiting: PlayerId[],
   beforeUnits: Map<string, StepUnit>,
   beforeBuildings: Map<string, StepBuilding>,
   afterUnits: Map<string, Unit>,
   afterBuildings: Map<string, Building>,
-  tick: number,
 ) {
+  const engaged = new Set<PlayerId>();
+  if (waiting.length === 0) return engaged;
   for (const target of damagedPlayerEntities(state, beforeUnits, beforeBuildings, afterUnits, afterBuildings)) {
-    const victimOwner = target.owner;
-    const attackers = possibleDamageAttackers(state, victimOwner, target, afterUnits, afterBuildings);
-    if (attackers.length === 0) continue;
-    if (owner === victimOwner || attackers.some((attacker) => attacker.owner === owner)) return tickSecond(tick);
+    const victimOwner = target.owner as PlayerId;
+    let attacked = false;
+    for (const attackers of [afterUnits.values(), afterBuildings.values()] as Iterable<Unit | Building>[]) {
+      for (const attacker of attackers) {
+        if (!isPossibleDamageAttacker(state, victimOwner, target, attacker)) continue;
+        attacked = true;
+        if (waiting.includes(attacker.owner as PlayerId)) engaged.add(attacker.owner as PlayerId);
+      }
+    }
+    if (attacked && waiting.includes(victimOwner)) engaged.add(victimOwner);
+    if (waiting.every((owner) => engaged.has(owner))) break;
   }
-  return null;
+  return engaged;
 }
 
 function damagedPlayerEntities(
@@ -623,18 +636,10 @@ function damagedPlayerEntities(
   return damaged;
 }
 
-function possibleDamageAttackers(
-  state: StandardBenchmarkState,
-  victimOwner: PlayerId,
-  target: StepUnit | StepBuilding,
-  afterUnits: Map<string, Unit>,
-  afterBuildings: Map<string, Building>,
-) {
-  return [...afterUnits.values(), ...afterBuildings.values()].filter((attacker) => {
-    if (!trackedPlayer(state, attacker.owner) || state.teams[attacker.owner] === state.teams[victimOwner]) return false;
-    if ("order" in attacker && (attacker.order.type === "attack" || attacker.order.type === "attackMove") && attacker.order.targetId === target.id) return true;
-    return attacker.attackDamage > 0 && distance(attacker, target) <= attacker.attackRange + attacker.radius + target.radius + 28;
-  });
+function isPossibleDamageAttacker(state: StandardBenchmarkState, victimOwner: PlayerId, target: StepUnit | StepBuilding, attacker: Unit | Building) {
+  if (!trackedPlayer(state, attacker.owner) || state.teams[attacker.owner] === state.teams[victimOwner]) return false;
+  if ("order" in attacker && (attacker.order.type === "attack" || attacker.order.type === "attackMove") && attacker.order.targetId === target.id) return true;
+  return attacker.attackDamage > 0 && distance(attacker, target) <= attacker.attackRange + attacker.radius + target.radius + 28;
 }
 
 function trackedPlayer(state: StandardBenchmarkState, owner: string): owner is PlayerId {
