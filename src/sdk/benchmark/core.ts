@@ -317,8 +317,11 @@ function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owne
   }
   if (command.type === "train") state.unitTrainingGoldSpent[owner] = (state.unitTrainingGoldSpent[owner] ?? 0) + UNIT_DEFS[command.unitKind].cost;
   if (command.type === "build" && command.buildingKind === "townHall") {
-    const nextId = `building-${owner}-townHall-${game.nextId}`;
-    if (nextId !== state.mainTownHallIds[owner]) state.expansionTownHallIds[owner]?.add(nextId);
+    // @@@expansion-hall-id - This runs after the command, so a hall it placed is on the board: the owner's town hall
+    // standing where the command put it (two halls cannot share a spot). The id used to be guessed from game.nextId, which
+    // the build had already moved past the hall's number, so no hall ever matched and both expansion counts stayed null.
+    const hall = game.buildings.find((building) => building.owner === owner && building.kind === "townHall" && building.x === command.x && building.y === command.y);
+    if (hall && hall.id !== state.mainTownHallIds[owner]) state.expansionTownHallIds[owner]?.add(hall.id);
   }
 }
 
