@@ -6,6 +6,7 @@ import { createArmyBalanceStatsTracker } from "./army-balance-stats";
 import { createAiCommandStatsTracker } from "./command-stats";
 import { createExpansionClaimTimelineTracker } from "./expansion-claim-timeline";
 import { createUnitRosterStatsTracker } from "./unit-roster-stats";
+import { nudgedPlanner, type GauntletNudge } from "./nudge";
 import { createV6DoctrineTracker, createV7DoctrineTracker, createV8DoctrineTracker } from "./v6-doctrine-stats";
 import { createWoundedMoonWellStatsTracker } from "./wounded-moonwell-stats";
 
@@ -15,7 +16,8 @@ type SerializedAiGameAgent = Omit<AiGameAgent, "scripts"> & {
 
 const SCRIPT_BY_ID = Object.fromEntries(Object.values(AI_SCRIPT_LIBRARY).map((script) => [script.id, script]));
 
-export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedAiGameAgent>): BenchmarkMatchReport {
+// A gauntlet's nudged replay carries its nudge (see @@@gauntlet-nudge); the planner made here applies it.
+export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedAiGameAgent> & { nudge?: GauntletNudge }): BenchmarkMatchReport {
   const trackers = [
     createAiCommandStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createWoundedMoonWellStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
@@ -26,7 +28,9 @@ export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedA
     createV7DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createV8DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
   ];
-  return runBenchmarkMatch({ ...match, agents: reviveAgents(match.agents), commandPlanner: createAiGameCommandPlanner() }, trackers);
+  const agents = reviveAgents(match.agents);
+  const planner = createAiGameCommandPlanner();
+  return runBenchmarkMatch({ ...match, agents, commandPlanner: match.nudge ? nudgedPlanner(planner, agents, match.nudge) : planner }, trackers);
 }
 
 function reviveAgents(agents: Record<PlayerId, SerializedAiGameAgent>): Record<PlayerId, AiGameAgent> {

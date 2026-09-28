@@ -1,10 +1,12 @@
 import { RICH_SCORE_MAP_IDS } from "../../shared/map";
+import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { MapId, RaceId, UnitKind } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { filterBenchmarkInput, hashCoin, summarizeAiMeleeControlBenchmarkDetails, type AiMeleeControlMatchDetailsResult } from "./control";
+import { nudgedPlanner, nudgedVersion, type GauntletNudge } from "./nudge";
 import { selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 import type { AiCommandStats } from "./command-stats";
 import type { UnitRosterStats } from "./unit-roster-stats";
@@ -33,7 +35,17 @@ export type SubjectGauntlet = {
   evaluationName: string;
 };
 
-export type SubjectGauntletOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
+export type SubjectGauntletOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers"> & {
+  // Play every game this many times, each replay nudged once (see @@@gauntlet-nudge); 0 or absent plays each game once.
+  nudges?: number;
+  // The game second from which a replay's nudge lands (default 60).
+  nudgeAt?: number;
+};
+
+// A gauntlet game; a nudged replay carries its nudge, which the parallel worker applies to the planner it makes.
+export type SubjectGauntletMatch = BenchmarkMatchInput<AiGameAgent> & { nudge?: GauntletNudge };
+
+const DEFAULT_NUDGE_AT_SECONDS = 60;
 
 export type SubjectGauntletInput = {
   input: BenchmarkInput<AiGameAgent>;
@@ -59,8 +71,14 @@ export type SubjectGauntletResult = {
   elapsedMs: number;
   cpuMs: number;
   workers?: number;
-  byMap: { mapId: string; grove: { pair: string; winner: string | null }; ember: { pair: string; winner: string | null }; wins: number }[];
+  // A nudged bench: replays per game and the nudge second. Every count above is over all replays; a map's race entry
+  // lists each replay's winner (its `winner` is replay 0's) and its wins count every replay's.
+  nudges?: number;
+  nudgeAt?: number;
+  byMap: { mapId: string; grove: SubjectGauntletMapGame; ember: SubjectGauntletMapGame; wins: number }[];
 };
+
+export type SubjectGauntletMapGame = { pair: string; winner: string | null; nudges?: (string | null)[] };
 
 const RACES: readonly RaceId[] = ["grove", "ember"];
 
@@ -85,12 +103,12 @@ export function createSubjectGauntletInput(gauntlet: SubjectGauntlet, options: S
   };
 }
 
-function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: number, options: SubjectGauntletOptions & { seed: string }): BenchmarkMatchInput<AiGameAgent>[] {
+function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: number, options: SubjectGauntletOptions & { seed: string }): SubjectGauntletMatch[] {
   const controller = options.controller ?? "external-agent";
   const subject = gauntlet.subject;
   // The map's two games face different pairs; over the maps every pair meets both of the subject's races equally often.
   const pairOffset = hashIndex(`${subject}-pair:${options.seed}:${mapId}:${index}`, gauntlet.pairs.length);
-  return RACES.map((race, raceIndex) => {
+  return RACES.flatMap((race, raceIndex): SubjectGauntletMatch[] => {
     const key = `${options.seed}:${mapId}:${index}:${race}`;
     const pair = gauntlet.pairs[(pairOffset + raceIndex) % gauntlet.pairs.length]!;
     const [first, second] = hashCoin(`${subject}-ids:${key}`) ? pair : [pair[1], pair[0]];
@@ -98,7 +116,7 @@ function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: nu
     const self: AiGameAgent = { controller, team: `${subject}-side`, race, version: subject, policyVersion: subject, versionLabel: `${subject} ${race}` };
     const p1 = opponent(first, "rivals", `${subject}-p1:${key}`, controller);
     const p2 = opponent(second, "rivals", `${subject}-p2:${key}`, controller);
-    return {
+    const game: SubjectGauntletMatch = {
       name: `${mapId} ${subject} ${race}`,
       mapId,
       agents: subjectFirstSide ? { [subject]: self, p1, p2 } : { p1, p2, [subject]: self },
@@ -106,7 +124,18 @@ function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: nu
       maxTicks: options.maxTicks ?? 48_000,
       thinkInterval: options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL,
     };
+    const nudges = options.nudges ?? 0;
+    if (nudges <= 0) return [game];
+    // K replays of the same game (same draws), replay k nudging subject, pair[0], pair[1], subject... in turn.
+    return Array.from({ length: nudges }, (_, k) => {
+      const nudge: GauntletNudge = { k, atTick: (options.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS) * SIM_TICKS_PER_SECOND, who: nudgedVersion([subject, ...pair], k) };
+      return { ...game, name: nudgedMatchName(game.name, k), commandPlanner: nudgedPlanner(createAiGameCommandPlanner(), game.agents, nudge), nudge };
+    });
   });
+}
+
+function nudgedMatchName(name: string, k: number) {
+  return `${name} nudge ${k}`;
 }
 
 function opponent(version: OpponentVersion, team: string, raceKey: string, controller: NonNullable<AiGameAgent["controller"]>): AiGameAgent {
@@ -130,7 +159,11 @@ export async function runSubjectGauntletParallel(gauntlet: SubjectGauntlet, opti
     workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
-  return summarizeSubjectGauntlet(gauntlet, { seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+  return summarizeSubjectGauntlet(gauntlet, { seed: selection.seed, selectedMapIds: selection.mapIds, report, ...(options.workers !== undefined ? { workers: options.workers } : {}), ...nudgeSummaryOptions(options) });
+}
+
+function nudgeSummaryOptions(options: SubjectGauntletOptions): { nudges?: number; nudgeAt?: number } {
+  return (options.nudges ?? 0) > 0 ? { nudges: options.nudges!, nudgeAt: options.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS } : {};
 }
 
 // The whole pool of a several-seed run: its wall time, the games' CPU, how many games, how many workers.
@@ -160,7 +193,7 @@ export async function runSubjectGauntletSeedsParallel(
   const results = bundles.map((bundle, index) => {
     const evaluation = report.evaluations[index]!;
     const seedReport: BenchmarkReport = { ...report, evaluationCount: 1, matchCount: evaluation.matchCount, elapsedMs: evaluation.elapsedMs, cpuMs: evaluation.cpuMs, evaluations: [evaluation] };
-    return summarizeSubjectGauntlet(gauntlet, { seed: bundle.selection.seed, selectedMapIds: bundle.selection.mapIds, report: seedReport, ...(options.workers !== undefined ? { workers: options.workers } : {}) });
+    return summarizeSubjectGauntlet(gauntlet, { seed: bundle.selection.seed, selectedMapIds: bundle.selection.mapIds, report: seedReport, ...(options.workers !== undefined ? { workers: options.workers } : {}), ...nudgeSummaryOptions(options) });
   });
   return {
     results,
@@ -197,7 +230,7 @@ function pairOf(match: BenchmarkMatchReport, subject: SubjectVersion): string {
     .join("+");
 }
 
-export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number }): SubjectGauntletResult {
+export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { seed: string; selectedMapIds: readonly string[]; report: BenchmarkReport; workers?: number; nudges?: number; nudgeAt?: number }): SubjectGauntletResult {
   const subject = gauntlet.subject;
   const evaluation = input.report.evaluations[0];
   if (!evaluation) throw new Error(`AI ${subject} gauntlet report must include an evaluation`);
@@ -231,7 +264,20 @@ export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { see
     elapsedMs: input.report.elapsedMs,
     cpuMs: input.report.cpuMs,
     ...(input.workers !== undefined ? { workers: input.workers } : {}),
+    ...(input.nudges !== undefined ? { nudges: input.nudges, nudgeAt: input.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS } : {}),
     byMap: input.selectedMapIds.map((mapId) => {
+      if (input.nudges !== undefined) {
+        const replays = (race: RaceId) =>
+          Array.from({ length: input.nudges! }, (_, k) => {
+            const match = byName.get(nudgedMatchName(`${mapId} ${subject} ${race}`, k));
+            if (!match) throw new Error(`Missing ${subject} ${race} replay ${k} for ${mapId}`);
+            return match;
+          });
+        const grove = replays("grove");
+        const ember = replays("ember");
+        const game = (games: BenchmarkMatchReport[]) => ({ pair: pairOf(games[0]!, subject), winner: versionOf(games[0]!, games[0]!.result.winner), nudges: games.map((match) => versionOf(match, match.result.winner)) });
+        return { mapId, grove: game(grove), ember: game(ember), wins: [...grove, ...ember].filter((match) => match.result.winner === subject).length };
+      }
       const grove = byName.get(`${mapId} ${subject} grove`);
       const ember = byName.get(`${mapId} ${subject} ember`);
       if (!grove || !ember) throw new Error(`Missing ${subject} matches for ${mapId}`);

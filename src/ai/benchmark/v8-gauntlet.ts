@@ -38,6 +38,8 @@ export type AiV8GauntletBenchmarkResult = {
   elapsedMs: number;
   cpuMs: number;
   workers?: number;
+  nudges?: number;
+  nudgeAt?: number;
   byMap: SubjectGauntletResult["byMap"];
 };
 
@@ -91,6 +93,7 @@ function asV8Result(result: SubjectGauntletResult): AiV8GauntletBenchmarkResult 
     elapsedMs: result.elapsedMs,
     cpuMs: result.cpuMs,
     ...(result.workers !== undefined ? { workers: result.workers } : {}),
+    ...(result.nudges !== undefined ? { nudges: result.nudges, nudgeAt: result.nudgeAt } : {}),
     byMap: result.byMap,
   };
 }
