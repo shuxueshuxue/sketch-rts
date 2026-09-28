@@ -430,6 +430,33 @@ describe("v8 general", () => {
     expect(memory.v6?.general?.mode).toBe("attack");
   });
 
+  // @@@v8-tower-wait
+  it("waits behind a hall two towers guard while shooters raid it, and meets a melee raid as ever", () => {
+    const planAgainst = (kind: "archer" | "footman") => {
+      let scene = sketchScene(`v8-tower-wait-${kind}`)
+        .map("openClaims")
+        .replaceDefaults()
+        .player("v8", { team: "north", race: "grove" })
+        .player("v5", { team: "south", race: "grove" })
+        .townHall("v8", 1_000, 1_000, { id: "v8-hall" })
+        .building("v8", "defenseTower", 1_150, 1_100, { id: "v8-tower-0" })
+        .building("v8", "defenseTower", 1_100, 1_150, { id: "v8-tower-1" })
+        .townHall("v5", 3_400, 3_300, { id: "v5-hall" });
+      for (let index = 0; index < 6; index += 1) scene = scene.unit("v8", "raider", 1_000 + (index % 3) * 30, 1_150 + Math.floor(index / 3) * 30, { id: `v8-raider-${index}` });
+      for (let index = 0; index < 8; index += 1) scene = scene.unit("v5", kind, 1_500 + (index % 4) * 30, 1_450 + Math.floor(index / 4) * 30, { id: `v5-raider-${index}` });
+      const game = scene.build().createGame();
+      const memory = createAiPolicyMemory();
+      memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
+      planV6General(snapshotGame(game), "v8", { ...V8, teams: game.teams, memory });
+      return memory.v6?.general;
+    };
+    const waiting = planAgainst("archer");
+    expect(waiting?.mode).toBe("guard");
+    expect(waiting!.target!.x).toBeLessThan(1_000);
+    expect(waiting!.target!.y).toBeLessThan(1_000);
+    expect(planAgainst("footman")?.mode).toBe("defend");
+  });
+
   // @@@v8-in-time
   it("goes for a far expansion that only the enemy army nearer to it than V8 can defend in time", () => {
     const planWith = (v7Guards: number) => {

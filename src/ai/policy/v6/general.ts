@@ -112,6 +112,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     // V7's badly wounded step back to the hall behind the line (see v7-one-voice); the rest hold it.
     const wounded = isV7Policy(options) ? front.filter((unit) => unit.hp < unit.maxHp * V7_WOUNDED_SHARE && unit.expiresTick === undefined) : [];
     const line = front.filter((unit) => !wounded.includes(unit));
+    if (isV8Policy(options) && waitsForTowers(intel, defense, strength)) return towerWait(snapshot, owner, memory, line, defense, options);
     // With a clear edge V7 meets the attackers where they stand and destroys them (see v7-defend).
     if (isV7Policy(options) && strength >= defense.threat * FIELD_EDGE) return [...order(snapshot, owner, memory, "defend", line, defense.field, options), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
     if (defense.inCover || strength + defense.cover >= defense.threat * edge) return [...order(snapshot, owner, memory, "defend", line, defense.point, options, defense.leash), ...stepBack(snapshot, owner, wounded, defense.hall, options)];
@@ -255,6 +256,29 @@ function v7DefendTarget(intel: V6Intel) {
 function respondingPower(intel: V6Intel, target: V6BaseIntel, front: Unit[]): number {
   const march = front.length > 0 ? distance(averagePoint(front), target.hall) : 0;
   return intel.enemies.reduce((total, enemy) => total + strengthOf(enemy.army.filter((unit) => distance(unit, target.hall) <= march)), 0);
+}
+
+// @@@v8-tower-wait - Shooters raiding a hall that two towers guard are the towers' work. V8's melee stood in front of its
+// towers, took the first arrows, and chased the archers out past the towers' reach: the towers' hits called it too (a hit
+// building calls idle soldiers within 330). Played by hand with the army 400 behind the hall, out of both calls, the towers
+// killed eight of V5's spark archers and its medic while V8 lost nothing, and the ravagers finished the rest (runeMeadow,
+// graniteBloom, hollowFord). V8 waits there until the raid is worth less than half its army, then defends as ever.
+const V8_TOWER_WAIT_STEP = 400;
+const V8_TOWER_WAIT_SHARE = 0.5;
+const V8_SHOOTER_SHARE = 0.6;
+
+function waitsForTowers(intel: V6Intel, defense: { cover: number; threat: number }, strength: number): boolean {
+  const attackers = intel.intrusion?.attackers ?? [];
+  const total = strengthOf(attackers);
+  const shooters = strengthOf(attackers.filter((unit) => unit.attackRange > SHOOTER_REACH));
+  return total > 0 && shooters >= total * V8_SHOOTER_SHARE && defense.cover >= 2 * TOWER_STRENGTH && defense.threat > strength * V8_TOWER_WAIT_SHARE;
+}
+
+function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, line: Unit[], defense: { hall: Point; field: Point }, options: AiPolicyContext): GameCommand[] {
+  const point = toward(defense.hall, defense.field, -V8_TOWER_WAIT_STEP);
+  memory.general = { mode: "guard", target: { x: point.x, y: point.y } };
+  const walking = line.filter((unit) => distance(unit, point) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
+  return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : [];
 }
 
 function stepBack(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {
