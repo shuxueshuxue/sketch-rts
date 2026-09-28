@@ -407,6 +407,29 @@ describe("v8 general", () => {
     expect(moved(chasing.commands, "v8-outlier")).toBe(true);
   });
 
+  // @@@v8-approach
+  it("does not take its own march toward a standing army for that army coming at it", () => {
+    let scene = sketchScene("v8-approach")
+      .map("openClaims")
+      .replaceDefaults()
+      .player("v8", { team: "north", race: "grove" })
+      .player("v5", { team: "south", race: "grove" })
+      .townHall("v8", 500, 500, { id: "v8-hall" })
+      .townHall("v5", 3_400, 1_600, { id: "v5-hall" });
+    const group = Array.from({ length: 6 }, (_, index) => `v8-raider-${index}`);
+    group.forEach((id, index) => (scene = scene.unit("v8", "raider", 2_000 + index * 30, 1_000, { id })));
+    // V5's twelve footmen stand 1100 from V8's raiders, where they stood at the last look; the raiders came 300 nearer.
+    for (let index = 0; index < 12; index += 1) scene = scene.unit("v5", "footman", 2_000 + (index % 4) * 30, 2_100 + Math.floor(index / 4) * 30, { id: `v5-footman-${index}` });
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory();
+    memory.v6 = {
+      doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 },
+      general: { mode: "attack", target: { x: 3_400, y: 1_600 }, targetHallId: "v5-hall", group, groupStart: 0, enemyGaps: { v5: 1_400 }, enemyCenters: { v5: { x: 2_045, y: 2_130 } } },
+    };
+    planV6General(snapshotGame(game), "v8", { ...V8, teams: game.teams, memory });
+    expect(memory.v6?.general?.mode).toBe("attack");
+  });
+
   // @@@v8-in-time
   it("goes for a far expansion that only the enemy army nearer to it than V8 can defend in time", () => {
     const planWith = (v7Guards: number) => {
