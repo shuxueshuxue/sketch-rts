@@ -1486,6 +1486,39 @@ describe("sketch RTS simulation", () => {
     expect(game.units.some((unit) => unit.owner === "player" && unit.kind === "mercenary")).toBe(true);
   });
 
+  // @@@hold-position
+  it("holds its ground: strikes what comes within its reach, never chases the shooter hitting it", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const holder = game.spawnUnit("player", "footman", 1_000, 1_000);
+    const archer = game.spawnUnit("enemy", "archer", 1_300, 1_000);
+    issueCommand(game, { type: "holdPosition", unitIds: [holder.id] });
+    issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [archer.id], targetId: holder.id });
+    stepMany(game, 60);
+    expect(holder.hp).toBeLessThan(holder.maxHp);
+    expect(Math.hypot(holder.x - 1_000, holder.y - 1_000)).toBeLessThan(1);
+    expect(holder.order.type).toBe("hold");
+    expect(archer.hp).toBe(archer.maxHp);
+
+    const footman = game.spawnUnit("enemy", "footman", 1_000 + UNIT_DEFS.footman.attackRange - 4, 1_000);
+    footman.order = { type: "idle" };
+    const before = footman.hp;
+    stepMany(game, 40);
+    expect(footman.hp).toBeLessThan(before);
+    expect(Math.hypot(holder.x - 1_000, holder.y - 1_000)).toBeLessThan(1);
+  });
+
+  it("stops a unit where it stands", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const unit = game.spawnUnit("player", "footman", 1_000, 1_000);
+    issueCommand(game, { type: "move", unitIds: [unit.id], x: 1_600, y: 1_000 });
+    stepMany(game, 10);
+    issueCommand(game, { type: "stop", unitIds: [unit.id] });
+    const x = unit.x;
+    stepMany(game, 20);
+    expect(unit.order.type).toBe("idle");
+    expect(Math.abs(unit.x - x)).toBeLessThan(1);
+  });
+
   it("researches three expensive levels of shared tech through ordinary commands", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 3_000;

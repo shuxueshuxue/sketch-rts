@@ -92,6 +92,8 @@ export type UnitOrder =
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
   | { type: "pickupItem"; itemId: string }
+  // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
+  | { type: "hold"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; ticks: number; resume: SettledUnitOrder };
 
@@ -323,6 +325,8 @@ export type GameCommand =
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "stop"; unitIds: string[] }
+  | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }

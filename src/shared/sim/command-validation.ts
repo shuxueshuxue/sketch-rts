@@ -17,7 +17,7 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
-  if (command.type === "move" || command.type === "attackMove") return missingUnitError(snapshot, owner, command.unitIds);
+  if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition") return missingUnitError(snapshot, owner, command.unitIds);
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
   if (command.type === "mine") return missingUnitError(snapshot, owner, command.unitIds) ?? (snapshot.resources.some((resource) => resource.id === command.resourceId) ? undefined : commandError(`Unknown resource ${command.resourceId}`, true));
   if (command.type === "repair") {
@@ -110,7 +110,7 @@ function commandError(message: string, transient = false): CommandLegalityError 
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
-  if (command.type === "move" || command.type === "attackMove") {
+  if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 ? { ...command, unitIds } : undefined;
   }

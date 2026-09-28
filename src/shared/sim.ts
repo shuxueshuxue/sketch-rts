@@ -314,6 +314,22 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "stop") {
+    for (const unit of unitsByIds(game, command.unitIds, owner)) assignUnitOrder(unit, { type: "idle" });
+    return;
+  }
+
+  // @@@hold-position - A unit told to hold its ground stays where it stands: it strikes whatever comes within its own reach
+  // and nothing further, does not turn on an attacker out of reach, and does not dash. An idle or attack-moving unit
+  // chases whoever shoots it (see player-aggro), which lets a shooter draw a whole army out after it.
+  if (command.type === "holdPosition") {
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (unit.kind === "worker") continue;
+      assignUnitOrder(unit, { type: "hold", x: unit.x, y: unit.y }, command.queued);
+    }
+    return;
+  }
+
   if (command.type === "attack") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
@@ -681,6 +697,10 @@ function updateUnits(game: Game) {
       updateAttackMoveOrder(game, unit);
       continue;
     }
+    if (unit.order.type === "hold") {
+      updateHoldOrder(game, unit);
+      continue;
+    }
     if (unit.order.type === "follow") {
       updateFollowOrder(game, unit);
       continue;
@@ -765,6 +785,14 @@ function updateNeutralLeash(game: Game, unit: Unit) {
   moveToward(unit, home.x, home.y, game.map);
   if (distance(unit, home) <= NEUTRAL_RETURN_STOP_RANGE) unit.order = { type: "idle" };
   return true;
+}
+
+function updateHoldOrder(game: Game, unit: Unit) {
+  if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
+  const target = nearestEnemyTarget(game, unit, unit.attackRange);
+  if (!target) return;
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
+  unit.cooldown = unit.attackCooldown;
 }
 
 function updateAttackMoveOrder(game: Game, unit: Unit) {
@@ -1283,7 +1311,7 @@ function dashToward(unit: Unit, target: { x: number; y: number }, step: number, 
 //   the nearest alone, a line of twelve riders all charged the same ravager, the last four landed on a corpse, and the
 //   wing, bunched on one spot, was cut down.
 const AUTOCAST_EVERY_TICKS = 2;
-const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove"]);
+const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove", "hold"]);
 const SUMMON_ALERT_MARGIN = 100;
 const SUMMON_COMPANY_RANGE = 320;
 const SUMMON_STEP = 60;
@@ -1304,7 +1332,7 @@ function autocastStep(game: Game, unit: Unit) {
     } else if (def.behavior === "summon") {
       const point = autocastSummonPoint(game, unit, def);
       if (point) return applySummon(game, unit, ability, point.x, point.y, def);
-    } else {
+    } else if (unit.order.type !== "hold") {
       const target = autocastChargeTarget(game, unit, def);
       if (target) return startCharge(game, unit, ability, target, def, false);
     }
