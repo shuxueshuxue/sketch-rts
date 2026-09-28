@@ -369,3 +369,41 @@ describe("v6 general", () => {
     expect(memory.v6?.plays?.["general:retreat"]).toBe(1);
   });
 });
+
+const V8 = { version: "v2", requestedVersion: "v8" } as const;
+
+// V8's main at (500, 500) with two raiders beside it, and four of V5's archers (or footmen) pushing at it; V8 defends the
+// main with its leash (it is too weak to meet them out in the field). A third raider, 700 out, is chasing a lone V5 unit.
+function v8Board(name: string, options: { outlier: { x: number; y: number }; lone: "archer" | "footman"; attackers: "archer" | "footman" }) {
+  let scene = sketchScene(name)
+    .map("openClaims")
+    .replaceDefaults()
+    .player("v8", { team: "north", race: "grove" })
+    .player("v5", { team: "south", race: "grove" })
+    .townHall("v8", 500, 500, { id: "v8-hall" })
+    .townHall("v5", 3_400, 3_300, { id: "v5-hall" })
+    .unit("v8", "raider", 560, 520, { id: "v8-raider-0" })
+    .unit("v8", "raider", 590, 540, { id: "v8-raider-1" });
+  for (let index = 0; index < 4; index += 1) scene = scene.unit("v5", options.attackers, 900 + index * 30, 700, { id: `v5-attacker-${index}` });
+  scene = scene.unit("v5", options.lone, options.outlier.x + 150, options.outlier.y + 50, { id: "v5-lone" });
+  const { outlier } = options;
+  scene = scene.unit("v8", "raider", outlier.x, outlier.y, { id: "v8-outlier", order: { type: "attack", targetId: "v5-lone" } });
+  const game = scene.build().createGame();
+  const memory = createAiPolicyMemory();
+  memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
+  return { memory, commands: planV6General(snapshotGame(game), "v8", { ...V8, teams: game.teams, memory }) };
+}
+
+const moved = (commands: GameCommand[], id: string) => commands.some((command) => command.type === "move" && command.unitIds.includes(id));
+
+describe("v8 general", () => {
+  // @@@v8-no-back-to-shooters
+  it("does not walk a fighter back past its defense leash while a shooter has it in reach", () => {
+    const shot = v8Board("v8-no-back-shot", { outlier: { x: 1_300, y: 900 }, lone: "archer", attackers: "archer" });
+    expect(shot.memory.v6?.general).toMatchObject({ mode: "defend", leash: 450 });
+    expect(moved(shot.commands, "v8-outlier")).toBe(false);
+    const chasing = v8Board("v8-no-back-melee", { outlier: { x: 1_300, y: 900 }, lone: "footman", attackers: "footman" });
+    expect(chasing.memory.v6?.general).toMatchObject({ mode: "defend", leash: 450 });
+    expect(moved(chasing.commands, "v8-outlier")).toBe(true);
+  });
+});
