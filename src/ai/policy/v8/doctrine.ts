@@ -62,7 +62,10 @@ export const V8_STRATEGIES: V6Strategy[] = [
       },
     ],
     raids: [RAIDERS],
-    standIn: "footman",
+    // @@@v8-lancer-stand-in - The opening's soldier is the lancer, not the footman: chasing V5's archers, footmen hit the
+    // one they chased 6% of the time, the slowest of V8's fighters (3.1 to the archers' 3.0); the lancer walks 3.4 and
+    // strikes from 74. With it V8 won 1225 of 2000 games against 1195 (297 of 500 on unseen seeds against 292).
+    standIn: "lancer",
   },
   {
     // Ravagers, acolytes and hexers, with ash chieftains as soon as the tier opens; cinder revenants later.
