@@ -1,5 +1,5 @@
 import type { CommandEnvelope, CommandFrame } from "../net/types";
-import { snapshotGame, stepGame, type Game } from "../sim";
+import { stepGame, type Game } from "../sim";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
 import type { GameCommand } from "../types";
@@ -112,11 +112,12 @@ export class CommandFrameRuntime<State = unknown> {
 
   private validate(commands: CommandEnvelope[], options: { purpose: ValidationPurpose; rejectionLabel?: RuntimeFrameOptions["rejectionLabel"] }): void {
     if (commands.length === 0) return;
-    const snapshot = snapshotGame(this.options.game);
+    // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in frame.ts).
+    const game = this.options.game;
     for (const [index, entry] of commands.entries()) {
-      const currentCommand = narrowFrameCommandToLiveOperands(this.options.game, entry.playerId, entry.command);
+      const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
       if (!currentCommand) continue;
-      const legality = checkCommandLegality(snapshot, entry.playerId, currentCommand);
+      const legality = checkCommandLegality(game, entry.playerId, currentCommand);
       if (legality && (options.purpose === "admission" || !legality.transient)) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${legality.message}`);
     }
   }

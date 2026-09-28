@@ -40,7 +40,8 @@ export class SdkCommandFrameRuntime {
     this.runtime = new CommandFrameRuntime({ game, roomId: options.roomId ?? "sdk", rejectionLabel: "SDK command frame rejected" });
   }
 
-  issue<Source extends string = string>(planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}): CommandFrameResult<Source> {
+  // `checksum: false` skips hashing the whole world after the frame, for callers that never read it (the game runner).
+  issue<Source extends string = string>(planned: CommandFrameEntry<Source>[], hooks: CommandFrameHooks<Source> = {}, options: { checksum?: boolean } = {}): CommandFrameResult<Source> {
     if (this.game.match.winner) return { commands: [] };
     const issued = normalizeCommandFrameEntries(planned);
 
@@ -65,7 +66,7 @@ export class SdkCommandFrameRuntime {
       },
     );
 
-    return { commands: issued, ...(appliedFrame ? { frame: appliedFrame } : {}), checksum: checksumGame(this.game) };
+    return { commands: issued, ...(appliedFrame ? { frame: appliedFrame } : {}), ...(options.checksum === false ? {} : { checksum: checksumGame(this.game) }) };
   }
 
   tick(): void {

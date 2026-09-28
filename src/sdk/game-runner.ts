@@ -204,15 +204,28 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
   const cpuStarted = process.cpuUsage();
   hooks.beforeLoop?.(loopContext);
 
+  // @@@snapshot-reuse - A snapshot copies the whole world, and the hooks want one before and after every step and every
+  // command. Nothing changes the game between one step's `after` and the next step's `before` (or the first command's
+  // `before`), nor between one command's `after` and the next command's `before`, so one copy serves both; the hooks and
+  // the benchmark's trackers only read them. `current` is a copy of the game as it stands, while nothing has changed it
+  // since. Without an afterStep hook no step is copied at all.
+  let current: GameSnapshot | undefined;
   while (game.tick < input.maxTicks && !game.match.winner) {
     if (game.tick % input.thinkInterval === 0) {
-      issueDueAgentCommands(frameRuntime, game, input, loopContext, hooks);
+      current = issueDueAgentCommands(frameRuntime, game, input, loopContext, hooks, current);
     }
-    const before = snapshotGame(game);
+    if (!hooks.afterStep) {
+      frameRuntime.tick();
+      normalizeWinnerForMode(game, teams, input.winnerMode ?? "match");
+      current = undefined;
+      continue;
+    }
+    const before = current ?? snapshotGame(game);
     frameRuntime.tick();
     normalizeWinnerForMode(game, teams, input.winnerMode ?? "match");
     const after = snapshotGame(game);
-    hooks.afterStep?.({ ...loopContext, before, after });
+    hooks.afterStep({ ...loopContext, before, after });
+    current = after;
   }
 
   const cpu = process.cpuUsage(cpuStarted);
@@ -277,14 +290,18 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+// Plans and issues this tick's commands; returns a copy of the game as it stands afterwards when one was made on the way
+// (the last command's `after`, or `current` when nothing was issued), else undefined (see @@@snapshot-reuse).
 function issueDueAgentCommands<TAgent extends SdkGameAgent>(
   frameRuntime: SdkCommandFrameRuntime,
   game: Game,
   input: SdkGameRunInput<TAgent>,
   loopContext: SdkGameLoopContext,
   hooks: SdkGameLoopHooks,
-) {
-  if (!input.commandPlanner) return;
+  current: GameSnapshot | undefined,
+): GameSnapshot | undefined {
+  if (!input.commandPlanner) return current;
+  // The planners get a copy of their own: an AI may keep or annotate what it is handed, so this one is never shared.
   const snapshot = snapshotGame(game);
   const planned = playersOf(input).flatMap((owner) => {
     const agent = input.agents[owner];
@@ -300,25 +317,37 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
       teams: loopContext.teams,
     });
   });
-  let beforeCommand = snapshotGame(game);
-  frameRuntime.issue(planned, {
-    beforeIssue() {
-      beforeCommand = snapshotGame(game);
+  const afterCommand = hooks.afterCommand;
+  if (!afterCommand) {
+    const { commands } = frameRuntime.issue(planned, {}, { checksum: false });
+    return commands.length === 0 ? current : undefined;
+  }
+  let latest = current;
+  frameRuntime.issue(
+    planned,
+    {
+      beforeIssue() {
+        latest ??= snapshotGame(game);
+      },
+      afterIssue(entry) {
+        const before = latest!;
+        latest = snapshotGame(game);
+        afterCommand({
+          ...loopContext,
+          tick: game.tick,
+          owner: entry.playerId,
+          source: requireCommandSource(entry),
+          plannerOrigin: "local-command-planner",
+          scriptId: entry.scriptId,
+          command: entry.command,
+          before,
+          after: latest,
+        });
+      },
     },
-    afterIssue(entry) {
-      hooks.afterCommand?.({
-        ...loopContext,
-        tick: game.tick,
-        owner: entry.playerId,
-        source: requireCommandSource(entry),
-        plannerOrigin: "local-command-planner",
-        scriptId: entry.scriptId,
-        command: entry.command,
-        before: beforeCommand,
-        after: snapshotGame(game),
-      });
-    },
-  });
+    { checksum: false },
+  );
+  return latest;
 }
 
 function recordCommand(
