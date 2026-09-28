@@ -68,15 +68,23 @@ export type SnapshotQuery = {
   forPlayer(owner: PlayerId): SnapshotPlayerView;
 };
 
+// @@@query-memo - A query reads a snapshot, which nobody changes while it is read (the AI planners never write their
+// snapshot's units or buildings), so each owner's units, combat units and buildings, and the active players, are filtered
+// once per query. Every call still returns an array of its own, in the same order: callers sort and splice what they get.
 export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQueryOptions = {}): SnapshotQuery {
   const teamFor = (owner: Owner) => (owner === "neutral" ? "neutral" : options.teams?.[owner] ?? owner);
   const isOpponent = (owner: PlayerId, other: Owner) => other !== "neutral" && teamFor(owner) !== teamFor(other);
+  let activePlayers: PlayerId[] | undefined;
+  const unitsByOwner = new Map<PlayerId, Unit[]>();
+  const combatUnitsByOwner = new Map<PlayerId, Unit[]>();
+  const buildingsByOwner = new Map<PlayerId, Building[]>();
   return {
     snapshot,
     teamFor,
     isOpponent,
     activePlayerIds() {
-      return Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
+      activePlayers ??= Object.keys(snapshot.players).filter((owner) => snapshot.units.some((unit) => unit.owner === owner) || snapshot.buildings.some((building) => building.owner === owner));
+      return activePlayers.slice();
     },
     opponentPlayerIds(owner) {
       return this.activePlayerIds().filter((candidate) => isOpponent(owner, candidate));
@@ -122,13 +130,19 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return snapshot.buildings;
     },
     unitsFor(owner) {
-      return snapshot.units.filter((unit) => unit.owner === owner);
+      let units = unitsByOwner.get(owner);
+      if (!units) unitsByOwner.set(owner, (units = snapshot.units.filter((unit) => unit.owner === owner)));
+      return units.slice();
     },
     combatUnitsFor(owner) {
-      return this.unitsFor(owner).filter((unit) => unit.kind !== "worker");
+      let units = combatUnitsByOwner.get(owner);
+      if (!units) combatUnitsByOwner.set(owner, (units = this.unitsFor(owner).filter((unit) => unit.kind !== "worker")));
+      return units.slice();
     },
     buildingsFor(owner) {
-      return snapshot.buildings.filter((building) => building.owner === owner);
+      let buildings = buildingsByOwner.get(owner);
+      if (!buildings) buildingsByOwner.set(owner, (buildings = snapshot.buildings.filter((building) => building.owner === owner)));
+      return buildings.slice();
     },
     completeBuildingsFor(owner, kind) {
       return this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind));

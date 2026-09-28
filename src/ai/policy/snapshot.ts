@@ -3,9 +3,12 @@ import { createSnapshotQuery, type SnapshotQuery } from "../../sdk/snapshot-quer
 
 const noTeamsQueryKey = {};
 const snapshotQueryCache = new WeakMap<GameSnapshot, WeakMap<object, SnapshotQuery>>();
+// The last query handed out: a plan asks for the same snapshot's query thousands of times in a row, so it skips the maps.
+let lastQuery: { snapshot: GameSnapshot; key: object; query: SnapshotQuery } | undefined;
 
 export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<PlayerId, string>>) {
   const key = teams ?? noTeamsQueryKey;
+  if (lastQuery && lastQuery.snapshot === snapshot && lastQuery.key === key) return lastQuery.query;
   let byTeams = snapshotQueryCache.get(snapshot);
   if (!byTeams) {
     byTeams = new WeakMap<object, SnapshotQuery>();
@@ -16,6 +19,7 @@ export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<P
     query = createSnapshotQuery(snapshot, teams ? { teams } : {});
     byTeams.set(key, query);
   }
+  lastQuery = { snapshot, key, query };
   return query;
 }
 
