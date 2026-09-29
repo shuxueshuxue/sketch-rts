@@ -9,7 +9,7 @@ export function isTowerMercPolicy(options: PresetAiPolicyOptions) {
 // V5's hybrid playbook (economy, expansions, camps, towers, army control). V6 and V7 are built on it, so this is true for
 // all three; what only V5 does is gated by isV5ShooterCorePolicy, what V6 built by isV6Policy.
 export function isV5HybridPolicy(options: PresetAiPolicyOptions) {
-  return options.requestedVersion === "v5" || options.requestedVersion === "v6" || options.requestedVersion === "v7" || options.requestedVersion === "v8";
+  return options.requestedVersion === "v5" || options.requestedVersion === "v6" || options.requestedVersion === "v7" || options.requestedVersion === "v8" || options.requestedVersion === "v9";
 }
 
 export function isV5ShooterCorePolicy(options: PresetAiPolicyOptions) {
@@ -20,7 +20,7 @@ export function isV5ShooterCorePolicy(options: PresetAiPolicyOptions) {
 // allowed: they are not shooters. V7 runs on the machinery V6 built (doctrine, economy, general, backline, raids), so this
 // is true for V7 too; what only V7 does is gated by isV7Policy.
 export function isV6Policy(options: PresetAiPolicyOptions) {
-  return options.requestedVersion === "v6" || options.requestedVersion === "v7" || options.requestedVersion === "v8";
+  return options.requestedVersion === "v6" || options.requestedVersion === "v7" || options.requestedVersion === "v8" || options.requestedVersion === "v9";
 }
 
 // @@@v7-blind - V7 plays 1v2 against any pair of V3, V5 and V6, as either race, and must tell what it faces from the board
@@ -28,12 +28,20 @@ export function isV6Policy(options: PresetAiPolicyOptions) {
 // V8 runs on V7's machinery, so this is true for V8 too; what only V8 does is gated by isV8Policy, and a change meant for
 // V8 alone must never go behind this gate (V7 is V8's frozen opponent).
 export function isV7Policy(options: PresetAiPolicyOptions) {
-  return options.requestedVersion === "v7" || options.requestedVersion === "v8";
+  return options.requestedVersion === "v7" || options.requestedVersion === "v8" || options.requestedVersion === "v9";
 }
 
 // @@@v8-blind - V8 plays 1v2 against any pair of V3, V5 and V7, as either race, under V7's blindness rule.
+// V9 runs on V8's machinery, so this is true for V9 too; what only V9 does is gated by isV9Policy, and a change meant for
+// V9 alone must never go behind this gate (V8 is V9's frozen opponent).
 export function isV8Policy(options: PresetAiPolicyOptions) {
-  return options.requestedVersion === "v8";
+  return options.requestedVersion === "v8" || options.requestedVersion === "v9";
+}
+
+// @@@v9-blind - V9 plays 1v3 against V5, V7 and V8 together, as either race, under V7's blindness rule, and may train or
+// hire any unit: no kind is forbidden to it.
+export function isV9Policy(options: PresetAiPolicyOptions) {
+  return options.requestedVersion === "v9";
 }
 
 export const SHOOTER_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(["archer", "sparkArcher", "contractArcher"]);

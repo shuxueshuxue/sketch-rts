@@ -12,20 +12,22 @@ import type { AiCommandStats } from "./command-stats";
 import type { UnitRosterStats } from "./unit-roster-stats";
 import type { V6DoctrineStats } from "./v6-doctrine-stats";
 
-// @@@subject-gauntlet - One version (the subject) alone against a pair of others, on the rich score maps. Every map is
-// played twice, once with the subject as each race, against different pairs; which side of the map it starts on is drawn
-// per game. The opponents play under neutral ids (p1, p2), shuffled per game, so nothing on the board (owners, unit and
+// @@@subject-gauntlet - One version (the subject) alone against a group of others (a pair for V7 and V8, three for V9),
+// on the rich score maps. Every map is played twice, once with the subject as each race, against different groups when
+// there are several; which side of the map it starts on is drawn per game, and its rivals share the other side. The
+// opponents play under neutral ids (p1, p2, p3), shuffled per game, so nothing on the board (owners, unit and
 // building ids, team keys) names their version: the subject has to read what it faces from what their armies do. The
 // report maps the ids back through each player's version label, which only the benchmark sees. V7's gauntlet and V8's
 // are the same procedure with a different subject and pool; every draw is keyed by the subject's name, so a gauntlet's
 // games never change when another subject is added.
 
-export type SubjectVersion = "v7" | "v8";
-export type OpponentVersion = "v3" | "v5" | "v6" | "v7";
+export type SubjectVersion = "v7" | "v8" | "v9";
+export type OpponentVersion = "v3" | "v5" | "v6" | "v7" | "v8";
 
 export type SubjectGauntlet = {
   subject: SubjectVersion;
-  pairs: readonly (readonly [OpponentVersion, OpponentVersion])[];
+  // The rival groups the subject meets, one per game, in turn over the maps.
+  groups: readonly (readonly OpponentVersion[])[];
   // A tracker whose state names the strategy the subject drew (see v6-doctrine-stats).
   doctrineTracker: string;
   // Kinds whose fielding the report counts per game (shooters for V7, summoners for V8): allowed or not, it shows the style.
@@ -106,32 +108,40 @@ export function createSubjectGauntletInput(gauntlet: SubjectGauntlet, options: S
 function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: number, options: SubjectGauntletOptions & { seed: string }): SubjectGauntletMatch[] {
   const controller = options.controller ?? "external-agent";
   const subject = gauntlet.subject;
-  // The map's two games face different pairs; over the maps every pair meets both of the subject's races equally often.
-  const pairOffset = hashIndex(`${subject}-pair:${options.seed}:${mapId}:${index}`, gauntlet.pairs.length);
+  // The map's two games face different groups; over the maps every group meets both of the subject's races equally often.
+  const groupOffset = hashIndex(`${subject}-pair:${options.seed}:${mapId}:${index}`, gauntlet.groups.length);
   return RACES.flatMap((race, raceIndex): SubjectGauntletMatch[] => {
     const key = `${options.seed}:${mapId}:${index}:${race}`;
-    const pair = gauntlet.pairs[(pairOffset + raceIndex) % gauntlet.pairs.length]!;
-    const [first, second] = hashCoin(`${subject}-ids:${key}`) ? pair : [pair[1], pair[0]];
+    const group = gauntlet.groups[(groupOffset + raceIndex) % gauntlet.groups.length]!;
     const subjectFirstSide = hashCoin(`${subject}-side:${key}`);
     const self: AiGameAgent = { controller, team: `${subject}-side`, race, version: subject, policyVersion: subject, versionLabel: `${subject} ${race}` };
-    const p1 = opponent(first, "rivals", `${subject}-p1:${key}`, controller);
-    const p2 = opponent(second, "rivals", `${subject}-p2:${key}`, controller);
+    const rivals = Object.fromEntries(
+      rivalOrder(group, `${subject}-ids:${key}`).map((version, rival) => [`p${rival + 1}`, opponent(version, "rivals", `${subject}-p${rival + 1}:${key}`, controller)]),
+    );
     const game: SubjectGauntletMatch = {
       name: `${mapId} ${subject} ${race}`,
       mapId,
-      agents: subjectFirstSide ? { [subject]: self, p1, p2 } : { p1, p2, [subject]: self },
+      agents: subjectFirstSide ? { [subject]: self, ...rivals } : { ...rivals, [subject]: self },
       commandPlanner: createAiGameCommandPlanner(),
       maxTicks: options.maxTicks ?? 48_000,
       thinkInterval: options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL,
     };
     const nudges = options.nudges ?? 0;
     if (nudges <= 0) return [game];
-    // K replays of the same game (same draws), replay k nudging subject, pair[0], pair[1], subject... in turn.
+    // K replays of the same game (same draws), replay k nudging the subject and each of its group in turn.
     return Array.from({ length: nudges }, (_, k) => {
-      const nudge: GauntletNudge = { k, atTick: (options.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS) * SIM_TICKS_PER_SECOND, who: nudgedVersion([subject, ...pair], k) };
+      const nudge: GauntletNudge = { k, atTick: (options.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS) * SIM_TICKS_PER_SECOND, who: nudgedVersion([subject, ...group], k) };
       return { ...game, name: nudgedMatchName(game.name, k), commandPlanner: nudgedPlanner(createAiGameCommandPlanner(), game.agents, nudge), nudge };
     });
   });
+}
+
+// Which rival plays under p1, p2...: a coin for a pair (the draw V7's and V8's gauntlets have always made), a keyed shuffle
+// for a larger group.
+function rivalOrder(group: readonly OpponentVersion[], key: string): OpponentVersion[] {
+  if (group.length === 2) return hashCoin(key) ? [...group] : [group[1]!, group[0]!];
+  const rank = (version: OpponentVersion) => hashIndex(`${key}:${version}`, 1 << 30);
+  return [...group].sort((a, b) => rank(a) - rank(b));
 }
 
 function nudgedMatchName(name: string, k: number) {
@@ -247,7 +257,7 @@ export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { see
     return { wins, matches: subset.length, winRate: subset.length > 0 ? wins / subset.length : 0 };
   };
   const wins = rows.filter((row) => row.won).length;
-  const opponents = [...new Set(gauntlet.pairs.flat())].sort();
+  const opponents = [...new Set(gauntlet.groups.flat())].sort();
   return {
     seed: input.seed,
     selectedMapIds: [...input.selectedMapIds],
@@ -256,7 +266,7 @@ export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { see
     rawMatches: rows.length,
     winRate: rows.length > 0 ? wins / rows.length : 0,
     lossesTo: { ...Object.fromEntries(opponents.map((version) => [version, rows.filter((row) => row.winner === version).length])), timeout: rows.filter((row) => !row.won && row.winner === null).length },
-    byPair: Object.fromEntries(gauntlet.pairs.map((pair) => [...pair].sort().join("+")).map((pair) => [pair, tally(rows.filter((row) => row.pair === pair))])),
+    byPair: Object.fromEntries(gauntlet.groups.map((group) => [...group].sort().join("+")).map((group) => [group, tally(rows.filter((row) => row.pair === group))])),
     byRace: { grove: tally(rows.filter((row) => row.race === "grove")), ember: tally(rows.filter((row) => row.race === "ember")) },
     byStrategy: tallyByStrategy(rows.map((row) => row.match), gauntlet),
     plays: subjectPlays(evaluation.matches, subject),

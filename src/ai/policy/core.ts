@@ -265,6 +265,9 @@ export const V8_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.v8Charge,
 ];
 
+// V9 starts as V8's stack, against V5, V7 and V8 together, with no unit kind forbidden (see v9-blind).
+export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK];
+
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
@@ -297,6 +300,7 @@ export const AI_SCRIPT_VERSIONS = {
   v6: V6_AI_STACK,
   v7: V7_AI_STACK,
   v8: V8_AI_STACK,
+  v9: V9_AI_STACK,
 } satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
@@ -334,7 +338,7 @@ function livePresetPolicyVersion(version: AiScriptVersion): Exclude<AiScriptVers
 }
 
 function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">): Exclude<AiScriptVersion, "v2-prod"> {
-  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" || version === "v8" ? "v2" : version;
+  return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" || version === "v8" || version === "v9" ? "v2" : version;
 }
 
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

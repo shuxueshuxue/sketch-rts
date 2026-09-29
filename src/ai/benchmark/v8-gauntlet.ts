@@ -47,7 +47,7 @@ export const V8_OPPONENT_PAIRS = [["v5", "v7"]] as const;
 
 export const V8_GAUNTLET: SubjectGauntlet = {
   subject: "v8",
-  pairs: V8_OPPONENT_PAIRS,
+  groups: V8_OPPONENT_PAIRS,
   doctrineTracker: "v8Doctrine",
   watchedKinds: V8_FORBIDDEN_UNIT_KINDS,
   name: "AI V8 vs V5 and V7 Benchmark",

@@ -48,7 +48,7 @@ export const V7_OPPONENT_PAIRS = [
 
 export const V7_GAUNTLET: SubjectGauntlet = {
   subject: "v7",
-  pairs: V7_OPPONENT_PAIRS,
+  groups: V7_OPPONENT_PAIRS,
   doctrineTracker: "v7Doctrine",
   watchedKinds: SHOOTER_UNIT_KINDS,
   name: "AI V7 vs pairs of V3, V5 and V6 Benchmark",

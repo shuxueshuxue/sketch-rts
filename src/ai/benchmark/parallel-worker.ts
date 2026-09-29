@@ -7,7 +7,7 @@ import { createAiCommandStatsTracker } from "./command-stats";
 import { createExpansionClaimTimelineTracker } from "./expansion-claim-timeline";
 import { createUnitRosterStatsTracker } from "./unit-roster-stats";
 import { nudgedPlanner, type GauntletNudge } from "./nudge";
-import { createV6DoctrineTracker, createV7DoctrineTracker, createV8DoctrineTracker } from "./v6-doctrine-stats";
+import { createV6DoctrineTracker, createV7DoctrineTracker, createV8DoctrineTracker, createV9DoctrineTracker } from "./v6-doctrine-stats";
 import { createWoundedMoonWellStatsTracker } from "./wounded-moonwell-stats";
 
 type SerializedAiGameAgent = Omit<AiGameAgent, "scripts"> & {
@@ -27,6 +27,7 @@ export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedA
     createV6DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createV7DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createV8DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
+    createV9DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
   ];
   const agents = reviveAgents(match.agents);
   const planner = createAiGameCommandPlanner();
