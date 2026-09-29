@@ -65,6 +65,11 @@ const REGROUP_TICKS = 30 * 20;
 // The least army (march strength, about eleven summoners with their spirits) that goes for an enemy main.
 const MAIN_ATTACK_FLOOR = 18;
 const V7_FAR_ATTACK_SHARE = 0.7;
+// @@@v9-far-attack - V9 goes after a far base only outweighing what can reach it first: at 0.7 of it, five ravagers set out
+// for V8's natural against V8's five nearer it (5.0 to 4.8), met them under two towers raised while they walked, and all
+// five died for three of V8's (cobaltVale, generated, 4:45); V9 trailed for the rest of the game. At 1.2, V9 won 6424 of
+// 8000 nudged duels against V8 against 5866.
+const V9_FAR_ATTACK_SHARE = 1.2;
 const RETREAT_LINE = 0.8;
 // Out in the open the army meets attackers only with this edge; under its towers or at its hall it always fights.
 const FIELD_EDGE = 1.15;
@@ -182,7 +187,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
   const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
   const opposing = isV8Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
-  const committed = !farOff || marching >= opposing * V7_FAR_ATTACK_SHARE;
+  const committed = !farOff || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
   if (target && regrouped && ready && committed && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
     return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base)));

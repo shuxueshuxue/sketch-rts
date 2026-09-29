@@ -217,6 +217,24 @@ describe("v6 general", () => {
     expect(deny(12)).toBe("attack");
   });
 
+  it("V9 goes after a far expansion only outweighing the armies nearer it than its own, where V8 goes at seven tenths of them", () => {
+    const deny = (requestedVersion: "v8" | "v9", footmen: number) => {
+      const { game } = board(`v9-general-far-${requestedVersion}-${footmen}`, { v6Footmen: 0, enemyFootmen: 0, enemyAt: "home" });
+      for (let index = 0; index < footmen; index += 1) game.spawnUnit("v6", "footman", 800 + (index % 5) * 30, 800 + Math.floor(index / 5) * 30);
+      game.buildings.push(createBuilding("v5-expansion", "v5", "townHall", 2_000, 1_800, false));
+      for (let index = 0; index < 2; index += 1) game.spawnUnit("v5", "footman", 2_050 + index * 30, 1_850);
+      for (let index = 0; index < 12; index += 1) game.spawnUnit("v5", "footman", 3_250 + (index % 4) * 30, 2_150 + Math.floor(index / 4) * 30);
+      const memory = createAiPolicyMemory();
+      memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
+      planV6General(snapshotGame(game), "v6", { version: "v2", requestedVersion, teams: game.teams, memory });
+      return memory.v6?.general?.mode;
+    };
+    // Fourteen enemy footmen nearer the expansion than the attackers: V8 goes with twelve, V9 waits for eighteen.
+    expect(deny("v8", 12)).toBe("attack");
+    expect(deny("v9", 12)).not.toBe("attack");
+    expect(deny("v9", 18)).toBe("attack");
+  });
+
   it("V7 meets attackers at its natural just in front of the hall, and walks a unit that chased past the leash back", () => {
     const { game, memory, plan } = naturalBoard("v7-general-defend-natural", { footmen: [...AT_NATURAL, { x: 1_300, y: 1_900 }], attackers: 6 });
     game.units.find((unit) => unit.id === "v7-footman-5")!.order = { type: "attack", targetId: "v3-footman-0" };
