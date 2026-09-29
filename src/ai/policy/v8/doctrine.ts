@@ -15,12 +15,18 @@ import type { V6RaidPlan, V6Strategy } from "../v6/doctrine";
 // supply reaches the bar.
 const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, cooldownSeconds: 90 };
 
-// @@@v8-towers-first - Two towers at the main before the second hall. Every game V8 loses, its army collapses in one
-// fight, at 8:00 in the median, and in the earliest third V5's archers and hired mercenaries come at 4:30-5:30 against
-// four worn melee; V5 never walks into a tower's reach (480 against the archers' 399). By hand, a tower at 3:00 with the
-// army held behind it broke that raid without losing a soldier (seven of V5's archers at runeMeadow, four at briarToll).
-// Over 8000 nudged replays of the tune seeds, towers first alone won 45 more games than before and lost 57 fewer to V5.
-const MAIN_TOWERS = { towers: "main", count: 2, priority: 61 } as const;
+// @@@v8-towers-first - A tower at the main before the second hall, and one at the second hall as soon as it stands, ahead
+// of the army. Every game V8 loses, its army collapses in one fight, at 8:00 in the median, and in the earliest third V5's
+// archers and hired mercenaries come at 4:30-5:30 against four worn melee; V5 never walks into a tower's reach (480
+// against the archers' 399). By hand, a tower at 3:00 with the army held behind it broke that raid without losing a
+// soldier (seven of V5's archers at runeMeadow, four at briarToll); at silverRidge, a tower at the natural with the army
+// beside it broke V7's five footmen, who had killed six of its miners at 5:30 in the AI's own game.
+// @@@v8-natural-tower - Two towers at the main (won 45 more of 8000 nudged tune games than none) left the natural bare
+// until the late phase's outposts, 14:00 in the median. One at each hall instead: nudged tune seeds 6120 -> 6270, 40
+// unseen seeds 6051 -> 6240, final seeds 1525 -> 1560 (of 2000), fewer losses to both opponents in each. The towers V8
+// raises under fire stay worth more than any of these (without them 5845 of 8000).
+const MAIN_TOWERS = { towers: "main", count: 1, priority: 61 } as const;
+const NATURAL_TOWER = { towers: "outposts", count: 1, priority: 61 } as const;
 
 export const V8_STRATEGIES: V6Strategy[] = [
   {
@@ -37,6 +43,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
           { unit: "priest", count: 2, priority: 65 },
           MAIN_TOWERS,
           { bases: 2, priority: 60 },
+          NATURAL_TOWER,
           { unit: "raider", count: 6, priority: 58 },
           { unit: "witch", count: 2, priority: 56 },
         ],
@@ -91,6 +98,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
           { unit: "emberAcolyte", count: 2, priority: 65 },
           MAIN_TOWERS,
           { bases: 2, priority: 60 },
+          NATURAL_TOWER,
           { unit: "emberRavager", count: 8, priority: 58 },
           { unit: "ashHexer", count: 2, priority: 56 },
         ],

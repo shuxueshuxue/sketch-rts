@@ -3,13 +3,17 @@ import { V6_STRATEGIES, v7OpeningPhase } from "../v6/doctrine";
 import { V8_STRATEGIES } from "./doctrine";
 
 describe("v8 doctrine", () => {
-  it("raises two towers at the main before the second base, in both lines", () => {
+  it("raises one tower at the main before the second base, and one at the second base ahead of the army, in both lines", () => {
     for (const strategy of V8_STRATEGIES) {
       const wants = strategy.phases[0]!.wants;
-      const towers = wants.find((want) => "towers" in want && want.towers === "main" && want.count === 2);
+      const main = wants.find((want) => "towers" in want && want.towers === "main");
+      const natural = wants.find((want) => "towers" in want && want.towers === "outposts");
       const bases = wants.find((want) => "bases" in want && want.bases === 2);
-      expect(towers, strategy.id).toBeDefined();
-      expect(towers!.priority, strategy.id).toBeGreaterThan(bases!.priority);
+      const army = Math.max(...wants.filter((want) => "unit" in want && want.count > 2).map((want) => want.priority));
+      expect(main && "count" in main ? main.count : undefined, strategy.id).toBe(1);
+      expect(natural && "count" in natural ? natural.count : undefined, strategy.id).toBe(1);
+      expect(main!.priority, strategy.id).toBeGreaterThan(bases!.priority);
+      expect(natural!.priority, strategy.id).toBeGreaterThan(army);
     }
   });
 
