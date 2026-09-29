@@ -359,6 +359,13 @@ export function createBuilding(
   };
 }
 
+// @@@unit-shape - A unit has every field from birth, in this order, the ones it has no value for yet set to undefined; it
+// never gains or loses one later. The engine and the AIs read units in their hottest loops (separation, target search,
+// planning), and V8 makes those reads fast only while the objects share one hidden class. A field added when a unit first
+// needed it (variant, abilityCooldowns, autocast, expiresTick, in whatever order that happened) split units into several
+// shapes, and a delete dropped a unit into a slow dictionary: separating 125 units took 34 us, against 10 us for the same
+// units in one shape. JSON (snapshots, saves, the net) drops the undefined fields; a unit read back gets them again from
+// withUnitShape.
 export function createUnit(
   id: string,
   owner: Owner,
@@ -390,7 +397,17 @@ export function createUnit(
     effects: [],
     order: { type: "idle" },
     orderQueue: [],
+    variant: undefined,
+    abilityCooldowns: undefined,
+    autocast: undefined,
+    expiresTick: undefined,
   };
+}
+
+// A unit read back from JSON, in the one shape of createUnit's (see @@@unit-shape): its own fields over a fresh unit's, with
+// the optional fields it lacks left undefined rather than filled in.
+export function withUnitShape(unit: Unit): Unit {
+  return Object.assign(createUnit(unit.id, unit.owner, unit.kind, unit.x, unit.y), { homeX: undefined, homeY: undefined, orderQueue: undefined }, unit);
 }
 
 export function buildTimeFor(kind: BuildingKind) {

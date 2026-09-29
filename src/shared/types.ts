@@ -110,7 +110,7 @@ export type Unit = {
   owner: Owner;
   kind: UnitKind;
   // A campaign unit's variant id (see unit-variants): it plays by its variant's numbers and is drawn by its own model.
-  variant?: string;
+  variant?: string | undefined;
   x: number;
   y: number;
   homeX?: number;
@@ -124,15 +124,15 @@ export type Unit = {
   // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
-  abilityCooldowns?: Partial<Record<AbilityKind, number>>;
+  abilityCooldowns?: Partial<Record<AbilityKind, number>> | undefined;
   // Autocast switched away from its ability's default (see autocast): true on, false off; an absent ability keeps the default.
-  autocast?: Partial<Record<AbilityKind, boolean>>;
+  autocast?: Partial<Record<AbilityKind, boolean>> | undefined;
   radius: number;
   carryingGold: number;
   kills: number;
   xp: number;
   level: number;
-  expiresTick?: number;
+  expiresTick?: number | undefined;
   effects: UnitStatusEffect[];
   order: UnitOrder;
   orderQueue?: UnitOrder[];

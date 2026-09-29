@@ -166,7 +166,7 @@ export type VariantRules = UnitDef & { base: UnitKind; heroic?: boolean };
 
 // The rules a unit plays by: its kind's catalog row, or its variant's. A game (or a snapshot of one) carries its own
 // variants; a view without them takes a variant for its base kind.
-export function unitRules(game: { variants?: Readonly<Record<string, VariantRules>> }, unit: { kind: UnitKind; variant?: string }): UnitDef {
+export function unitRules(game: { variants?: Readonly<Record<string, VariantRules>> }, unit: { kind: UnitKind; variant?: string | undefined }): UnitDef {
   if (unit.variant === undefined || !game.variants) return UNIT_DEFS[unit.kind];
   const rules = game.variants[unit.variant];
   if (!rules) throw new Error(`Unknown unit variant ${unit.variant}`);

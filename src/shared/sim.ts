@@ -14,6 +14,7 @@ import {
   createMap,
   DEFAULT_MAP_ID,
   trainTimeFor,
+  withUnitShape,
 } from "./map";
 import { seconds } from "./time";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
@@ -394,7 +395,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
       if (!UNIT_DEFS[unit.kind].abilities.includes(command.ability)) continue;
       const autocast = withAutocast(unit, command.ability, command.enabled);
       if (autocast) unit.autocast = autocast;
-      else delete unit.autocast;
+      else unit.autocast = undefined;
     }
     return;
   }
@@ -513,7 +514,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.map = cloneSnapshotValue(snapshot.map);
   game.teams = snapshot.teams ? definedTeams(snapshot.teams) : { ...game.teams };
   game.players = cloneSnapshotValue(snapshot.players);
-  game.units = cloneSnapshotValue(snapshot.units);
+  game.units = cloneSnapshotValue(snapshot.units).map(withUnitShape);
   game.buildings = cloneSnapshotValue(snapshot.buildings);
   game.resources = cloneSnapshotValue(snapshot.resources);
   game.mercenaryCamps = cloneSnapshotValue(snapshot.mercenaryCamps);
@@ -680,7 +681,7 @@ function updateUnits(game: Game) {
     if (unit.abilityCooldowns) {
       const left = tickedAbilityCooldowns(unit.abilityCooldowns);
       if (left) unit.abilityCooldowns = left;
-      else delete unit.abilityCooldowns;
+      else unit.abilityCooldowns = undefined;
     }
     activateQueuedOrder(unit);
     if (updateNeutralLeash(game, unit)) continue;
