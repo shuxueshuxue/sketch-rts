@@ -1,4 +1,5 @@
 import type { Building, BuildingKind, GameSnapshot, MercenaryCamp, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../../shared/types";
+import { createRangeIndex } from "./range-index";
 
 export type SnapshotQueryOptions = {
   teams?: Partial<Record<PlayerId, string>>;
@@ -71,7 +72,11 @@ export type SnapshotQuery = {
 // @@@query-memo - A query reads a snapshot, which nobody changes while it is read (the AI planners never write their
 // snapshot's units, buildings or items), so each owner's units, combat units, buildings, hostile combat units and player
 // view, and the active players, are worked out once per query. Every call still returns arrays (and view objects) of its
-// own, in the same order: callers sort and splice what they get.
+// own, in the same order: callers sort and splice what they get. The same holds for the lookups a planner makes once per
+// unit, which were a scan of every unit each and made a big army's think grow with its square: units and buildings by id
+// come from a map of the first one per id (the one find returns; ids are unique anyway), neutrals near a point from the
+// neutral units alone, and opponents or hostiles near a point from a range index of that owner's opponents or hostiles
+// (@@@range-index). Each answers what the scan answered, in the same order.
 export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQueryOptions = {}): SnapshotQuery {
   const teamFor = (owner: Owner) => (owner === "neutral" ? "neutral" : options.teams?.[owner] ?? owner);
   const isOpponent = (owner: PlayerId, other: Owner) => other !== "neutral" && teamFor(owner) !== teamFor(other);
@@ -81,6 +86,15 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
   const buildingsByOwner = new Map<PlayerId, Building[]>();
   const hostileCombatUnitsByOwner = new Map<PlayerId, Unit[]>();
   const viewByOwner = new Map<PlayerId, SnapshotPlayerView>();
+  let unitsById: Map<string, Unit> | undefined;
+  let buildingsById: Map<string, Building> | undefined;
+  let neutralUnits: Unit[] | undefined;
+  const nearIndexes = new Map<string, (point: EntityPoint, range: number) => Unit[]>();
+  const unitsNear = (key: string, matches: (unit: Unit) => boolean) => {
+    let near = nearIndexes.get(key);
+    if (!near) nearIndexes.set(key, (near = createRangeIndex(snapshot.units.filter(matches))));
+    return near;
+  };
   return {
     snapshot,
     teamFor,
@@ -93,10 +107,12 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return this.activePlayerIds().filter((candidate) => isOpponent(owner, candidate));
     },
     unitById(id) {
-      return snapshot.units.find((unit) => unit.id === id);
+      unitsById ??= firstById(snapshot.units);
+      return unitsById.get(id);
     },
     buildingById(id) {
-      return snapshot.buildings.find((building) => building.id === id);
+      buildingsById ??= firstById(snapshot.buildings);
+      return buildingsById.get(id);
     },
     resourceById(id) {
       return snapshot.resources.find((resource) => resource.id === id);
@@ -151,16 +167,17 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return this.buildingsFor(owner).filter((building) => building.complete && (kind === undefined || building.kind === kind));
     },
     neutralUnitsNear(point, range) {
-      return snapshot.units.filter((unit) => unit.owner === "neutral" && distance(unit, point) <= range);
+      neutralUnits ??= snapshot.units.filter((unit) => unit.owner === "neutral");
+      return neutralUnits.filter((unit) => distance(unit, point) <= range);
     },
     opponentUnitsNear(owner, point, range) {
-      return snapshot.units.filter((unit) => isOpponent(owner, unit.owner) && distance(unit, point) <= range);
+      return unitsNear(`opponent ${owner}`, (unit) => isOpponent(owner, unit.owner))(point, range);
     },
     opponentBuildingsNear(owner, point, range) {
       return snapshot.buildings.filter((building) => isOpponent(owner, building.owner) && distance(building, point) <= range);
     },
     hostileUnitsNear(owner, point, range) {
-      return snapshot.units.filter((unit) => (isOpponent(owner, unit.owner) || unit.owner === "neutral") && distance(unit, point) <= range);
+      return unitsNear(`hostile ${owner}`, (unit) => isOpponent(owner, unit.owner) || unit.owner === "neutral")(point, range);
     },
     hostileCombatUnitsFor(owner) {
       let units = hostileCombatUnitsByOwner.get(owner);
@@ -201,6 +218,12 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       };
     },
   };
+}
+
+function firstById<T extends { id: string }>(entities: T[]) {
+  const byId = new Map<string, T>();
+  for (const entity of entities) if (!byId.has(entity.id)) byId.set(entity.id, entity);
+  return byId;
 }
 
 function entityView(snapshot: GameSnapshot, ownerMatches: (owner: Owner) => boolean): SnapshotPlayerEntityView {
