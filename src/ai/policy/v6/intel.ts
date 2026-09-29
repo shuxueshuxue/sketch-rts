@@ -1,7 +1,7 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { opponentPlayerIds } from "../ownership";
 import { buildings, units } from "../snapshot";
-import { averagePoint, distance, type Point } from "../spatial";
+import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { PresetAiPolicyOptions } from "../types";
 import { strengthOf, TOWER_STRENGTH } from "./strength";
 
@@ -104,10 +104,13 @@ function readEnemy(snapshot: GameSnapshot, enemy: PlayerId, ownBuildings: Buildi
   return { owner: enemy, army, ...(center ? { center } : {}), power: strengthOf(army), state: enemyState(army, center, halls, ownBuildings, neutrals), bases, buildings: enemyBuildings, workers };
 }
 
+// Range questions of the whole enemy army through withinRangeOf (@@@range-grid): per own building here, per creep in
+// enemyState; the same units in the same order as the filters over every enemy unit they replace.
 function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[]): V6Intrusion | undefined {
   const army = enemies.flatMap((enemy) => enemy.army);
+  const armyNear = withinRangeOf(army, INTRUSION_RANGE);
   const attacked = ownBuildings
-    .map((building) => ({ building, threat: strengthOf(army.filter((unit) => distance(unit, building) <= INTRUSION_RANGE)) }))
+    .map((building) => ({ building, threat: strengthOf(armyNear(building)) }))
     .filter(({ threat }) => threat > 0)
     .sort((a, b) => b.threat - a.threat)[0];
   if (!attacked) return undefined;
@@ -118,7 +121,9 @@ function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[]): V6Int
 function enemyState(army: Unit[], center: Point | undefined, halls: Building[], ownBuildings: Building[], neutrals: Unit[]): V6EnemyState {
   if (!center || army.length === 0) return "none";
   if (ownBuildings.some((building) => distance(building, center) <= PUSH_RANGE)) return "pushing";
-  const inCreepContact = army.filter((unit) => neutrals.some((neutral) => distance(neutral, unit) <= CREEP_CONTACT)).length;
+  // The army units some creep is within CREEP_CONTACT of, found from each creep's side.
+  const armyNear = withinRangeOf(army, CREEP_CONTACT);
+  const inCreepContact = new Set(neutrals.flatMap((neutral) => armyNear(neutral))).size;
   if (inCreepContact >= Math.max(2, army.length * 0.4)) return "creeping";
   if (halls.some((hall) => distance(hall, center) <= HOME_RANGE)) return "home";
   return "away";
