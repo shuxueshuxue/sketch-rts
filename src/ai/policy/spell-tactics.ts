@@ -9,7 +9,8 @@ import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./sna
 import { anyWithinRangeOf, averagePoint, distance, type Point } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy, isV6Policy, isV7Policy } from "./versions";
+import { unitStrength } from "./v6/strength";
+import { isV5HybridPolicy, isV6Policy, isV7Policy, isV8Policy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
@@ -22,7 +23,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
     if (healAbility) {
       const def = ABILITY_DEFS[healAbility];
-      const target = healTarget(snapshot, owner, caster, def.plannerRange);
+      const target = (isV8Policy(options) && def.behavior === "heal" ? v8HealTarget(snapshot, owner, caster, def) : undefined) ?? healTarget(snapshot, owner, caster, def.plannerRange);
       if (target) {
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
@@ -64,6 +65,26 @@ function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healR
   return units(snapshot, owner)
     .filter((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= healRange)
     .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || b.maxHp - b.hp - (a.maxHp - a.hp) || distance(a, caster) - distance(b, caster))[0];
+}
+
+// @@@v8-heal-worth - V8 heals the soldier it would miss most: its worth at full health (price and stars, the v6-strength
+// currency) times the share of its health it has lost, among soldiers missing half a heal or more (less would waste
+// most of it). The shared rule heals the lowest share under 70% whoever it is, and the engine's autocast whoever misses the
+// most health, so a three-star veteran and a rookie that both stand at half health were one to them. Workers only get the
+// shared rule's heal, when no soldier wants one. Over nudged replays V8 won 6301 of 8000 tune games against 6270, 6267 of
+// 8000 on 40 unseen seeds against 6240, and 1582 of 2000 on the final seeds against 1559.
+function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: { plannerRange: number; healAmount: number }) {
+  let best: Unit | undefined;
+  let bestPriority = 0;
+  for (const unit of units(snapshot, owner)) {
+    if (unit.kind === "worker" || unit.maxHp - unit.hp < def.healAmount / 2 || distance(unit, caster) > def.plannerRange) continue;
+    const priority = unitStrength({ ...unit, hp: unit.maxHp }) * (1 - unit.hp / unit.maxHp);
+    if (priority > bestPriority) {
+      best = unit;
+      bestPriority = priority;
+    }
+  }
+  return best;
 }
 
 // enemyNear: whether some enemy combat unit is within 620 of a point (not every one beyond it).
