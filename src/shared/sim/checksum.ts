@@ -2,6 +2,11 @@ import type { Game } from "../sim";
 import { canonicalGameState } from "./canonical";
 export { canonicalGameState, type CanonicalGameState } from "./canonical";
 
+// Which way checksumGame hashes, for anything that stores a checksum to compare later. 1: keys and ids ordered by
+// localeCompare (locale-dependent); 2: by code unit (see @@@canonical-order). Checksums of different versions cannot be
+// compared: the same game mostly hashes differently under each.
+export const CHECKSUM_VERSION = 2;
+
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
 }

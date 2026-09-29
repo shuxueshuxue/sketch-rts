@@ -1,6 +1,6 @@
 import type { CommandEnvelope } from "../shared/net/types";
 import { createGame, restoreSnapshotIntoGame, snapshotGame, type Game } from "../shared/sim";
-import { checksumGame } from "../shared/sim/checksum";
+import { CHECKSUM_VERSION, checksumGame } from "../shared/sim/checksum";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 import type { StoryEvent } from "./events";
@@ -42,7 +42,8 @@ export type GameState = {
 
 export type Checkpoint<Vars> = { label: string; tick: number; game: GameState; vars: Vars; random: number; stage: StageMemory };
 
-export type StorySave<Vars> = { story: string; checkpoint: Checkpoint<Vars>; inputs: LoggedInput[]; tick: number; checksum: string };
+// checksumVersion: the CHECKSUM_VERSION `checksum` was made with (absent in saves from before it, which were version 1).
+export type StorySave<Vars> = { story: string; checkpoint: Checkpoint<Vars>; inputs: LoggedInput[]; tick: number; checksum: string; checksumVersion?: number };
 
 // What the player's side may do: what a human at the keyboard could.
 export type PlayerControls = {
@@ -178,7 +179,7 @@ export class Director<Vars = unknown> {
   }
 
   save(): StorySave<Vars> {
-    return clone({ story: this.options.id, checkpoint: this.checkpointTaken, inputs: this.log, tick: this.game.tick, checksum: checksumGame(this.game) });
+    return clone({ story: this.options.id, checkpoint: this.checkpointTaken, inputs: this.log, tick: this.game.tick, checksum: checksumGame(this.game), checksumVersion: CHECKSUM_VERSION });
   }
 
   // Rebuilds a story from a save: the checkpoint's game, the story resumed at the checkpoint's label, and the inputs
@@ -186,6 +187,9 @@ export class Director<Vars = unknown> {
   // of the story (or the story is not deterministic) and loading fails.
   static load<Vars>(options: Omit<DirectorOptions<Vars>, "game" | "vars">, save: StorySave<Vars>): Director<Vars> {
     if (save.story !== options.id) throw new Error(`Save belongs to story ${save.story}, not ${options.id}`);
+    // A save hashed another way cannot be checked by this build: say so, rather than that it does not replay.
+    const checksumVersion = save.checksumVersion ?? 1;
+    if (checksumVersion !== CHECKSUM_VERSION) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
     const game = reviveGame(save.checkpoint.game);
     const director = new Director<Vars>({ ...options, game, vars: clone(save.checkpoint.vars) }, clone(save.checkpoint));
     director.replaying = clone(save.inputs);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "../shared/sim";
-import { checksumGame } from "../shared/sim/checksum";
+import { CHECKSUM_VERSION, checksumGame } from "../shared/sim/checksum";
 import { defineUnit, enlist } from "./cast";
 import { Director, type PlayerControls } from "./director";
 import { race, spawn, type Operation } from "./kernel";
@@ -125,6 +125,17 @@ describe("director", () => {
     const save = director.save();
     const tampered = { ...save, inputs: save.inputs.slice(1) };
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, tampered)).toThrow(/does not replay/);
+  });
+
+  it("refuses a save hashed by another checksum version, and says so", () => {
+    const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale, pilot, seed: 7 });
+    director.begin();
+    advanceUntil(director, () => director.vars.log.some((entry) => entry.startsWith("second")));
+    const save = director.save();
+    expect(save.checksumVersion).toBe(CHECKSUM_VERSION);
+    // A save from before checksum versions (version 1) carries none.
+    const { checksumVersion: _version, ...older } = save;
+    expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, older)).toThrow(/checksum version 1; this build checks version 2/);
   });
 
   it("offers every event to a waiting script in turn, so a loop on `on` misses none", () => {

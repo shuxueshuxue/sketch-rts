@@ -32,16 +32,25 @@ function canonicalize(value: unknown): unknown {
   return Object.fromEntries(
     Object.entries(value)
       .filter(([, entry]) => entry !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => compareCodeUnits(left, right))
       .map(([key, entry]) => [key, canonicalize(entry)]),
   );
 }
 
 function canonicalizeArray(value: unknown[]) {
   const normalized = value.map((entry) => canonicalize(entry));
-  if (normalized.every(hasStringId)) return normalized.sort((left, right) => left.id.localeCompare(right.id));
-  if (normalized.every((entry) => typeof entry === "string" || typeof entry === "number" || typeof entry === "boolean")) return [...normalized].sort((left, right) => String(left).localeCompare(String(right)));
+  if (normalized.every(hasStringId)) return normalized.sort((left, right) => compareCodeUnits(left.id, right.id));
+  if (normalized.every((entry) => typeof entry === "string" || typeof entry === "number" || typeof entry === "boolean")) return [...normalized].sort((left, right) => compareCodeUnits(String(left), String(right)));
   return normalized;
+}
+
+// @@@canonical-order - Keys and ids sort by UTF-16 code unit, the same on every machine. They used to sort by
+// localeCompare, which collates by the machine's locale and ICU: under lt-LT (y between i and j) a new game's keys came out
+// in another order and the same game hashed differently, so a client in that locale reported a desync against the server
+// on every check. The new order changes most checksums (157 of 196 states sampled from four gauntlet games; a fresh game's
+// often stays the same): see CHECKSUM_VERSION.
+function compareCodeUnits(left: string, right: string) {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function hasStringId(value: unknown): value is { id: string } {

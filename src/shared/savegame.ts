@@ -1,5 +1,5 @@
 import { createGame, restoreSnapshotIntoGame, type Game } from "./sim";
-import { checksumGame } from "./sim/checksum";
+import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { UPGRADE_KINDS } from "./catalog";
 import type { AiScriptVersion, GameSnapshot, PlayerId, PlayerStateMap, RoomState, UpgradeLevels } from "./types";
 
@@ -18,7 +18,10 @@ export type SaveGameRecord = {
     teams: Record<PlayerId, string>;
     aiPlayers: PlayerId[];
     aiVersions?: Partial<Record<PlayerId, AiScriptVersion>>;
+    // The game's checksum when saved, for comparing against later (restoring does not check it), and the
+    // CHECKSUM_VERSION it was made with (absent: version 1). Older saves stay loadable: the schema is unchanged.
     checksum?: string;
+    checksumVersion?: number;
   };
 };
 
@@ -60,6 +63,7 @@ export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGam
       aiPlayers: [...aiPlayers],
       aiVersions: { ...aiVersions },
       checksum: checksumGame(game),
+      checksumVersion: CHECKSUM_VERSION,
     },
   };
 }
