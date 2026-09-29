@@ -106,7 +106,7 @@ describe("gameplay tooltips", () => {
     });
     expect(upgradeTooltip("rangeTraining", "r", 2).stats).toEqual(expect.arrayContaining(["+35% unit range"]));
     expect(upgradeTooltip("leadership", "l", 2)).toMatchObject({
-      stats: expect.arrayContaining(["+3 HP/s per star"]),
+      stats: expect.arrayContaining(["+3/7/12 HP/s at 1/2/3 stars"]),
       requirements: expect.arrayContaining(["Affects starred units."]),
     });
   });
@@ -117,11 +117,11 @@ describe("gameplay tooltips", () => {
 
     expect(unitSelectionTooltip("golem", [veteran], snapshot)).toMatchObject({
       title: "Golem",
-      stats: expect.arrayContaining(["HP 100/300", "Attack 50", "Range 48", "Speed 2.2", "Regen +9 HP/s"]),
+      stats: expect.arrayContaining(["HP 100/300", "Attack 50", "Range 48", "Speed 2.2", "Regen +12 HP/s"]),
     });
 
     const zh = createI18n("zh");
-    expect(unitSelectionTooltip("golem", [veteran], snapshot, zh).stats).toEqual(expect.arrayContaining(["回复 +9 生命/秒"]));
+    expect(unitSelectionTooltip("golem", [veteran], snapshot, zh).stats).toEqual(expect.arrayContaining(["回复 +12 生命/秒"]));
   });
 
   it("describes buildings without relying on self-label text", () => {
@@ -150,7 +150,7 @@ describe("gameplay tooltips", () => {
     expect(itemTooltip("lightningRod", "1", zh).requirements).toEqual(["需要射程内可见的敌方单位。"]);
     expect(upgradeTooltip("buildingDurability", "d", 0, zh).requirements).toEqual(["在城镇大厅研究。", "影响建筑。"]);
     expect(upgradeTooltip("leadership", "l", 2, zh)).toMatchObject({
-      stats: expect.arrayContaining(["每颗星 +3 生命/秒"]),
+      stats: expect.arrayContaining(["1/2/3 星 +3/7/12 生命/秒"]),
       requirements: expect.arrayContaining(["影响有星单位。"]),
     });
     expect(buildingTooltip("barracks", "b", zh).requirements[0]).toContain("提供：步兵");

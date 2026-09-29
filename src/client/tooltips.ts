@@ -113,14 +113,14 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
       ? tooltipLine(i18n.locale, "speedBonus", Math.round((level.speedMultiplier - 1) * 100))
       : level.attackRangeMultiplier
         ? tooltipLine(i18n.locale, "unitRangeBonus", Math.round((level.attackRangeMultiplier - 1) * 100))
-        : level.veteranRegenPerStar
-          ? tooltipLine(i18n.locale, "veteranRegenPerStar", level.veteranRegenPerStar)
+        : level.veteranRegenByStars
+          ? tooltipLine(i18n.locale, "veteranRegenByStars", level.veteranRegenByStars.join("/"))
     : level.attackMultiplier
       ? tooltipLine(i18n.locale, "attackBonus", Math.round((level.attackMultiplier - 1) * 100))
       : tooltipLine(i18n.locale, "maxHpBonus", Math.round(((level.maxHpMultiplier ?? 1) - 1) * 100));
   const requirements = level.buildingMaxHpMultiplier
     ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
-    : level.veteranRegenPerStar
+    : level.veteranRegenByStars
       ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsStarredUnits]
     : [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
   return {
@@ -239,7 +239,7 @@ const TEXT = {
       supplyBonus: "Supply +{value}",
       train: "Train {value}",
       unitRangeBonus: "+{value}% unit range",
-      veteranRegenPerStar: "+{value} HP/s per star",
+      veteranRegenByStars: "+{value} HP/s at 1/2/3 stars",
       restoresHp: "Restores {value} HP",
       summonsSpirit: "Summons 1 spirit",
       enemyDamage: "Enemy damage x{value}",
@@ -285,7 +285,7 @@ const TEXT = {
       supplyBonus: "人口 +{value}",
       train: "训练 {value}",
       unitRangeBonus: "+{value}% 单位射程",
-      veteranRegenPerStar: "每颗星 +{value} 生命/秒",
+      veteranRegenByStars: "1/2/3 星 +{value} 生命/秒",
       restoresHp: "恢复 {value} 生命",
       summonsSpirit: "召唤 1 个灵体",
       enemyDamage: "敌方伤害 x{value}",

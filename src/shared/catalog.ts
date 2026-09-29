@@ -97,7 +97,8 @@ export type UpgradeLevelDef = {
   buildingMaxHpMultiplier?: number;
   speedMultiplier?: number;
   attackRangeMultiplier?: number;
-  veteranRegenPerStar?: number;
+  // Health a second for a veteran of one, two and three stars.
+  veteranRegenByStars?: readonly [number, number, number];
 };
 
 export type RaceDef = {
@@ -304,10 +305,15 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
   leadership: {
     researchBuildingKinds: ["sanctum", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
+    // @@@leadership-by-stars - A second and a third star are worth more than the first. One star regenerates 1, 2 and 3
+    // health a second by the research's level, as it always did; two stars 3, 5 and 7; three stars 6, 9 and 12. A single
+    // three-star veteran repays the first level on its own: 6 a second for 200 gold, where a moon well gives 3.3 for 115.
+    // Each later level adds one a second per star, for armies with many veterans. At one a second per star for 220 gold,
+    // the two to four stars a gauntlet army carries at 5-13 minutes regenerated half of what a well bought for the gold.
     levels: [
-      { cost: 220, researchTime: seconds(52), veteranRegenPerStar: 1 },
-      { cost: 340, researchTime: seconds(70), veteranRegenPerStar: 2 },
-      { cost: 500, researchTime: seconds(90), veteranRegenPerStar: 3 },
+      { cost: 200, researchTime: seconds(52), veteranRegenByStars: [1, 3, 6] },
+      { cost: 300, researchTime: seconds(70), veteranRegenByStars: [2, 5, 9] },
+      { cost: 450, researchTime: seconds(90), veteranRegenByStars: [3, 7, 12] },
     ],
   },
 };

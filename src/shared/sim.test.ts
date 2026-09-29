@@ -244,17 +244,43 @@ describe("sketch RTS simulation", () => {
     mercenary.level = 3;
     mercenary.hp = 50;
 
-    expect(leadershipRegenPerSecond(game, veteran)).toBe(9);
+    expect(leadershipRegenPerSecond(game, veteran)).toBe(12);
     expect(leadershipRegenPerSecond(game, rookie)).toBe(0);
-    expect(leadershipRegenPerSecond(game, mercenary)).toBe(9);
+    expect(leadershipRegenPerSecond(game, mercenary)).toBe(12);
 
     stepMany(game, 20);
 
     expect(veteran.level).toBe(3);
-    expect(veteran.hp).toBeCloseTo(109, 5);
+    expect(veteran.hp).toBeCloseTo(112, 5);
     expect(rookie.hp).toBe(50);
-    expect(mercenary.hp).toBeCloseTo(59, 5);
+    expect(mercenary.hp).toBeCloseTo(62, 5);
     expect(game.effects.some((effect) => effect.type === "heal")).toBe(false);
+  });
+
+  it("gives leadership's second and third stars more than the first, one star as it always was", () => {
+    const game = sketchScene("leadership-by-stars")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("player", { team: "north", race: "grove" })
+      .player("enemy", { team: "south", race: "ember" })
+      .townHall("player", 500, 500)
+      .unit("player", "footman", 700, 700, { id: "veteran" })
+      .townHall("enemy", 3300, 3300)
+      .build()
+      .createGame();
+    const veteran = game.units.find((unit) => unit.id === "veteran")!;
+    const byLevel = [1, 2, 3].map((leadership) => {
+      game.players.player.upgrades.leadership = leadership;
+      return [1, 2, 3].map((stars) => {
+        veteran.level = stars;
+        return leadershipRegenPerSecond(game, veteran);
+      });
+    });
+    expect(byLevel).toEqual([
+      [1, 3, 6],
+      [2, 5, 9],
+      [3, 7, 12],
+    ]);
   });
 
   it("tracks which player lost units to neutral creeps", () => {

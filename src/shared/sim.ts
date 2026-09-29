@@ -649,7 +649,7 @@ export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
   if (!ownerState) throw new Error(`Missing player state for ${unit.owner}`);
   const level = ownerState.upgrades.leadership ?? 0;
   const levelDef = upgrade.levels[level - 1];
-  return (levelDef?.veteranRegenPerStar ?? 0) * Math.min(MAX_UPGRADE_LEVEL, unit.level);
+  return levelDef?.veteranRegenByStars?.[Math.min(MAX_UPGRADE_LEVEL, unit.level) - 1] ?? 0;
 }
 
 function updateMercenaryCamps(game: Game) {
