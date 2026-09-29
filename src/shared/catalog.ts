@@ -325,6 +325,15 @@ export function maxUpgradeLevel(upgradeKind: UpgradeKind) {
 }
 export const XP_STAR_THRESHOLDS = [60, 130, 260] as const;
 
+// @@@construction-hp - A building under construction starts at a tenth of its health and gains the rest as the work goes
+// (Warcraft III's rule): a site is easy to knock down, and what it lost while rising stays lost when it stands. A site used
+// to stand at full health from the first second, so a hall still rising took as long to kill as a finished one.
+export const CONSTRUCTION_START_HP_SHARE = 0.1;
+
+export function constructionStartHp(maxHp: number) {
+  return Math.max(1, Math.round(maxHp * CONSTRUCTION_START_HP_SHARE));
+}
+
 export const RACE_IDS: RaceId[] = ["grove", "ember"];
 
 function raceDef(id: RaceId, name: string, note: string): RaceDef {

@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker } from "./build-placement";
@@ -373,6 +373,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
     const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
     applyDerivedBuildingStats(game, building);
+    building.hp = constructionStartHp(building.maxHp);
     game.nextId += 1;
     game.buildings.push(building);
     worker.order = { type: "move", x: command.x - BUILD_RANGE + 10, y: command.y };
@@ -552,11 +553,15 @@ function updateConstruction(game: Game) {
       (unit) => unit.owner === building.owner && unit.kind === "worker" && distance(unit, building) <= BUILD_RANGE + 20,
     );
     if (builders.length === 0) continue;
-    building.buildProgress += builders.length;
+    // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
+    // same share of the health it started without.
+    const before = building.buildProgress;
+    building.buildProgress = Math.min(building.buildTime, building.buildProgress + builders.length);
+    const gained = ((building.buildProgress - before) / Math.max(1, building.buildTime)) * (building.maxHp - constructionStartHp(building.maxHp));
+    building.hp = Math.min(building.maxHp, building.hp + gained);
     if (building.buildProgress >= building.buildTime) {
       applyDerivedBuildingStats(game, building);
       building.complete = true;
-      building.hp = building.maxHp;
       for (const builder of builders) builder.order = { type: "idle" };
       updateSupplyState(game);
     }

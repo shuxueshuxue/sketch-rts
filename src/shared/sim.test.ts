@@ -824,6 +824,40 @@ describe("sketch RTS simulation", () => {
     expect(() => issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" })).toThrow(/supply/i);
   });
 
+  // @@@construction-hp
+  it("starts a construction site at a tenth of its health, grows it with the work, and keeps damage taken while it rose", () => {
+    const build = (damage: number) => {
+      const game = createGame("bareDuel");
+      const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+      game.players.player.gold = 1000;
+      const x = worker.x + 160;
+      const y = worker.y;
+      issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x, y });
+      const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
+      const start = farm.hp;
+      let half: number | undefined;
+      for (let tick = 0; tick < 2_000 && !farm.complete; tick += 1) {
+        stepGame(game);
+        if (half === undefined && farm.buildProgress >= farm.buildTime / 2) {
+          half = farm.hp;
+          farm.hp -= damage;
+          // No gold: the builder, idle once the farm stands, would repair it at once.
+          game.players.player.gold = 0;
+        }
+      }
+      return { start, half: half!, end: farm.hp, maxHp: farm.maxHp, complete: farm.complete };
+    };
+    const clean = build(0);
+    expect(clean.start).toBe(Math.round(BUILDING_DEFS.farm.hp * 0.1));
+    expect(clean.half).toBeGreaterThan(clean.maxHp * 0.5);
+    expect(clean.half).toBeLessThan(clean.maxHp * 0.6);
+    expect(clean.complete).toBe(true);
+    expect(clean.end).toBeCloseTo(clean.maxHp, 5);
+    const hurt = build(40);
+    expect(hurt.complete).toBe(true);
+    expect(hurt.end).toBeCloseTo(hurt.maxHp - 40, 5);
+  });
+
   it("reassigns AI workers to resume stalled construction", () => {
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
     const runtime = createAiRuntime(["enemy"]);

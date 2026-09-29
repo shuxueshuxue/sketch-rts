@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
+import { BUILDING_DEFS, UNIT_DEFS, constructionStartHp } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { GENERATED_RICH_SCORE_MAP_IDS, RICH_SCORE_MAP_IDS } from "./map-ids";
 import { seconds } from "./time";
@@ -342,7 +342,7 @@ export function createBuilding(
     kind,
     x,
     y,
-    hp: def.hp,
+    hp: complete ? def.hp : constructionStartHp(def.hp),
     maxHp: def.hp,
     radius: def.radius,
     complete,
