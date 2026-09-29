@@ -91,7 +91,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!isV6Policy(options)) return [];
   const memory = v6Memory(options);
   const intel = readV6Intel(snapshot, owner, options);
-  const { profile } = v6Doctrine(snapshot, owner, options);
+  const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
   const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
   const rally = rallyPoint(intel);
@@ -120,7 +120,13 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
   }
 
-  if (current?.mode === "attack") {
+  if (current?.mode === "attack" && current.quick) {
+    const target = findBase(intel, current.targetHallId);
+    const strikers = front.filter((unit) => (current.group ?? []).includes(unit.id));
+    if (target && !target.hall.complete && strikers.length > 0 && quickStrikeHolds(intel, strikers, target, profile.aggression)) return quickStrike(snapshot, owner, memory, strikers, available, target, rally, options);
+    recordPlay(memory, !target || target.hall.complete ? "general:quick:done" : "general:retreat:quick");
+    memory.retreatedAt = snapshot.tick;
+  } else if (current?.mode === "attack") {
     const target = findBase(intel, current.targetHallId);
     const group = attackGroup(available, front, current.group ?? []);
     const marching = group.filter((unit) => front.includes(unit));
@@ -134,6 +140,11 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps, isMain(intel, target)));
     recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
     memory.retreatedAt = snapshot.tick;
+  }
+
+  if (isV8Policy(options) && strategy.risingStrike) {
+    const rising = risingHallAttack(snapshot, owner, memory, intel, available, front, rally, profile.aggression, options);
+    if (rising) return rising;
   }
 
   const camps = creepCamps(snapshot, intel);
@@ -279,6 +290,60 @@ function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemo
   memory.general = { mode: "guard", target: { x: point.x, y: point.y } };
   const walking = line.filter((unit) => distance(unit, point) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
   return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : [];
+}
+
+// @@@v8-rising-first - An enemy hall still rising is V8's first business, ahead of the camp it is creeping, in the lines
+// whose doctrine takes it (risingStrike). V7's second hall standing at 5:00 is the first split between V8's wins and
+// losses (77% against 47%). Played by hand on the games V8 loses whatever small thing changes (none of six nudged
+// replays won at 2, 4, 6 or 8 minutes), killing that hall by 5:10 won all four such games (runeMeadow, celadonPass,
+// frostMeadow and sundialReach, the last on an unseen seed), each over every nudged replay of the hand-off, and every
+// one where it stood was lost. A finished hall waits for the ordinary order of things: struck finished, V7 raised a tower
+// beside it within seconds and its army and V5's arrived before it fell (quietMire, auricDelta).
+// @@@v8-quick-strike - It is a quick strike, weighed against the defenders that can reach the hall before it falls, not
+// against every army in the region: an army answers once the strike is at the hall, and has as long as the hall's hit
+// points last to arrive. Every think the strike weighs this again with the armies where they stand, and turns back once
+// one would arrive in time. Weighed like an ordinary attack, V8 set out 30 seconds late and turned back when V7's
+// footmen, 1000 away, started toward it (marbleGrove, 4:36); by hand the same five lancers walked straight at the hall
+// at 3:50 and razed it by 4:30 while those footmen stood at home. The strikers walk (a fight on the way is lost time)
+// and strike the hall itself; the rest of the army holds the rally.
+function risingHallAttack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, aggression: number, options: AiPolicyContext): GameCommand[] | undefined {
+  const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
+  if (!regrouped || front.length < QUICK_MIN) return undefined;
+  const center = averagePoint(front);
+  const target = intel.enemies
+    .flatMap((enemy) => enemy.bases)
+    .filter((base) => !base.hall.complete && !isMain(intel, base) && quickStrikeHolds(intel, front, base, aggression))
+    .sort((a, b) => distance(center, a.hall) - distance(center, b.hall))[0];
+  if (!target) return undefined;
+  recordPlay(memory, "general:attack:rising");
+  delete memory.creep;
+  return quickStrike(snapshot, owner, memory, front, available, target, rally, options);
+}
+
+const QUICK_MIN = 3;
+const QUICK_STRIKE_RANGE = 300;
+
+// Whether the strikers outweigh (by V8's attack margin) the towers at the hall and every enemy fighter that can walk to it
+// before the strikers bring it down.
+function quickStrikeHolds(intel: V6Intel, strikers: Unit[], target: V6BaseIntel, aggression: number) {
+  const hall = target.hall;
+  const perTick = strikers.reduce((total, unit) => total + unit.attackDamage / Math.max(1, unit.attackCooldown), 0);
+  const window = hall.hp / Math.max(perTick, 0.01);
+  const inTime = intel.enemies.flatMap((enemy) => enemy.army).filter((unit) => Math.max(0, distance(unit, hall) - unit.attackRange) / Math.max(unit.speed, 0.1) <= window);
+  return marchStrength(strikers) * (1 + aggression) >= (strengthOf(inTime) + target.towers.length * TOWER_STRENGTH) * V8_ATTACK_MARGIN;
+}
+
+function quickStrike(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, strikers: Unit[], available: Unit[], target: V6BaseIntel, rally: Point, options: AiPolicyContext): GameCommand[] {
+  memory.general = { mode: "attack", target: { x: target.hall.x, y: target.hall.y }, targetHallId: target.hall.id, group: strikers.map((unit) => unit.id), groupStart: marchStrength(strikers), quick: true };
+  const hall = target.hall;
+  const near = strikers.filter((unit) => distance(unit, hall) <= QUICK_STRIKE_RANGE && !(unit.order.type === "attack" && unit.order.targetId === hall.id));
+  const far = strikers.filter((unit) => distance(unit, hall) > QUICK_STRIKE_RANGE && !(unit.order.type === "move" && distance(unit.order, hall) <= ORDER_SLACK));
+  const rest = available.filter((unit) => !strikers.includes(unit));
+  return [
+    ...(near.length > 0 ? [{ type: "attack", unitIds: near.map((unit) => unit.id), targetId: hall.id } satisfies GameCommand] : []),
+    ...(far.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: far.map((unit) => unit.id), x: hall.x, y: hall.y }, options)] : []),
+    ...orderUnits(snapshot, owner, "hold", rest, rally, options),
+  ];
 }
 
 function stepBack(snapshot: GameSnapshot, owner: PlayerId, wounded: Unit[], hall: Point, options: AiPolicyContext): GameCommand[] {

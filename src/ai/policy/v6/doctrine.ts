@@ -51,6 +51,8 @@ export type V6Strategy = {
   raids: V6RaidPlan[];
   // The basic soldier trained in place of a unit whose tier is still locked, as many as are missing (see v6-tech-up).
   standIn: TrainableUnitKind;
+  // Whether the general goes straight at an enemy hall still rising (see v8-quick-strike).
+  risingStrike?: boolean;
 };
 
 // Personalities vary style, not how much risk V6 takes. Every knob was tried on its own over the tune seeds: less

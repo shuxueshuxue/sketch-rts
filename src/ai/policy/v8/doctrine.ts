@@ -11,6 +11,13 @@ import type { V6RaidPlan, V6Strategy } from "../v6/doctrine";
 
 const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, minSecond: 300, cooldownSeconds: 90 };
 
+// @@@v8-towers-first - Two towers at the main before the second hall. Every game V8 loses, its army collapses in one
+// fight, at 8:00 in the median, and in the earliest third V5's archers and hired mercenaries come at 4:30-5:30 against
+// four worn melee; V5 never walks into a tower's reach (480 against the archers' 399). By hand, a tower at 3:00 with the
+// army held behind it broke that raid without losing a soldier (seven of V5's archers at runeMeadow, four at briarToll).
+// Over 8000 nudged replays of the tune seeds, towers first alone won 45 more games than before and lost 57 fewer to V5.
+const MAIN_TOWERS = { towers: "main", count: 2, priority: 61 } as const;
+
 export const V8_STRATEGIES: V6Strategy[] = [
   {
     // Raiders that charge, priests and witches behind them, and from the second phase knights ahead of all else: the
@@ -24,6 +31,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "priest", count: 2, priority: 65 },
+          MAIN_TOWERS,
           { bases: 2, priority: 60 },
           { unit: "raider", count: 6, priority: 58 },
           { unit: "witch", count: 2, priority: 56 },
@@ -76,6 +84,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
       {
         wants: [
           { unit: "emberAcolyte", count: 2, priority: 65 },
+          MAIN_TOWERS,
           { bases: 2, priority: 60 },
           { unit: "emberRavager", count: 8, priority: 58 },
           { unit: "ashHexer", count: 2, priority: 56 },
@@ -116,5 +125,10 @@ export const V8_STRATEGIES: V6Strategy[] = [
     ],
     raids: [],
     standIn: "emberRavager",
+    // @@@v8-ember-rising-strike - The ravager line strikes rising halls; the cavalry line does not. Over 8000 nudged
+    // replays of the tune seeds, towers first plus the strike won 92 more ember games and 33 fewer grove games than
+    // the baseline, towers first alone 17 and 28 more; with the strike in the ravager line only, 8000 nudged replays of
+    // 40 unseen seeds won 207 more (ember 175, grove 32).
+    risingStrike: true,
   },
 ];
