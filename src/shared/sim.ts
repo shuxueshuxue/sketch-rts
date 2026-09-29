@@ -17,6 +17,7 @@ import {
   withUnitShape,
 } from "./map";
 import { seconds } from "./time";
+import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
@@ -1898,7 +1899,8 @@ function projectedSupplyUsed(game: Game, owner: PlayerId) {
 }
 
 function unitsByIds(game: Game, unitIds: string[], owner: PlayerId) {
-  const units = unitIds.map((id) => game.units.find((unit) => unit.id === id && unit.owner === owner));
+  const unit = ownUnitLookup(game.units, owner, unitIds.length);
+  const units = unitIds.map((id) => unit(id));
   const missing = units.findIndex((unit) => !unit);
   if (missing >= 0) throw new Error(`Unknown ${owner} unit ${unitIds[missing]}`);
   return units as Unit[];

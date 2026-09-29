@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../shared/types";
+import { ownUnitLookup } from "../../shared/unit-lookup";
 import { createSnapshotQuery, type SnapshotQueryOptions } from "../snapshot/query";
 
 export type SdkUnitSelector = "all" | "combat" | "workers" | string[];
@@ -59,8 +60,9 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
 
 export function selectedUnitIds(snapshot: GameSnapshot, owner: PlayerId, selector: SdkUnitSelector): string[] {
   if (Array.isArray(selector)) {
+    const ownUnit = ownUnitLookup(snapshot.units, owner, selector.length);
     for (const id of selector) {
-      const unit = snapshot.units.find((candidate) => candidate.id === id && candidate.owner === owner);
+      const unit = ownUnit(id);
       if (!unit) throw new Error(`Unknown ${owner} unit ${id}`);
     }
     return selector;

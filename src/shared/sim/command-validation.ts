@@ -4,6 +4,7 @@ import { buildingPlacementBlocker } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
+import { ownUnitLookup } from "../unit-lookup";
 
 export type CommandLegalityError = {
   message: string;
@@ -120,12 +121,12 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     return { ...command, unitIds };
   }
   if (command.type === "mine") {
-    const unitIds = currentUnitIds(game, owner, command.unitIds).filter((unitId) => currentUnit(game, owner, unitId)?.kind === "worker");
+    const unitIds = currentWorkerIds(game, owner, command.unitIds);
     if (unitIds.length === 0 || !game.resources.some((resource) => resource.id === command.resourceId)) return undefined;
     return { ...command, unitIds };
   }
   if (command.type === "repair") {
-    const unitIds = currentUnitIds(game, owner, command.unitIds).filter((unitId) => currentUnit(game, owner, unitId)?.kind === "worker");
+    const unitIds = currentWorkerIds(game, owner, command.unitIds);
     const building = currentBuilding(game, owner, command.buildingId);
     if (unitIds.length === 0 || !building) return undefined;
     return { ...command, unitIds };
@@ -176,12 +177,19 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
 }
 
 function missingUnitError(snapshot: GameSnapshot, owner: PlayerId, unitIds: string[]) {
-  const missing = unitIds.find((unitId) => !snapshot.units.some((unit) => unit.id === unitId && unit.owner === owner));
+  const unit = ownUnitLookup(snapshot.units, owner, unitIds.length);
+  const missing = unitIds.find((unitId) => !unit(unitId));
   return missing ? commandError(`Unknown ${owner} unit ${missing}`, true) : undefined;
 }
 
 function currentUnitIds(game: Game, owner: PlayerId, unitIds: string[]) {
-  return unitIds.filter((id) => hasCurrentUnit(game, owner, id));
+  const unit = ownUnitLookup(game.units, owner, unitIds.length);
+  return unitIds.filter((id) => !!unit(id));
+}
+
+function currentWorkerIds(game: Game, owner: PlayerId, unitIds: string[]) {
+  const unit = ownUnitLookup(game.units, owner, unitIds.length);
+  return unitIds.filter((id) => unit(id)?.kind === "worker");
 }
 
 function currentBuildingIds(game: Game, owner: PlayerId, buildingIds: string[]) {
