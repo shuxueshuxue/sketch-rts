@@ -233,7 +233,16 @@ export type OwnerNumberMap = Record<Owner, number> & {
 
 export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9";
 
+// A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
+export type GeneratedLayoutKind = "ring" | "sides";
+export type GeneratedLayoutOptions = {
+  seed: string;
+  // Drawn from the seed when absent; "sides" needs exactly two teams.
+  kind?: GeneratedLayoutKind;
+};
+
 export type GameSetupOptions = {
+  layout?: GeneratedLayoutOptions;
   aiPlayers?: PlayerId[];
   aiVersions?: Partial<Record<PlayerId, AiScriptVersion>>;
   players?: PlayerId[];

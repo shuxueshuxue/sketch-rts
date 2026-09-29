@@ -35,6 +35,9 @@ export type SubjectGauntlet = {
   // The benchmark's and its evaluation's names in reports.
   name: string;
   evaluationName: string;
+  // Each map's games are played on a layout generated from the seed and the map (see @@@generated-map) instead of the map
+  // id's own; the id then only names the game.
+  generatedLayouts?: boolean;
 };
 
 export type SubjectGauntletOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers"> & {
@@ -121,6 +124,7 @@ function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: nu
     const game: SubjectGauntletMatch = {
       name: `${mapId} ${subject} ${race}`,
       mapId,
+      ...(gauntlet.generatedLayouts ? { options: { layout: { seed: `${subject}-layout:${options.seed}:${mapId}:${index}` } } } : {}),
       agents: subjectFirstSide ? { [subject]: self, ...rivals } : { ...rivals, [subject]: self },
       commandPlanner: createAiGameCommandPlanner(),
       maxTicks: options.maxTicks ?? 48_000,

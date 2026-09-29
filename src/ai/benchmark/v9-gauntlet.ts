@@ -17,7 +17,8 @@ import {
 // @@@v9-gauntlet - V9 alone against V8, V5 and V7 together in every game (1v3, four players on the map), blind to which
 // is which (see subject-gauntlet for the procedure). V9 may field any unit; the report counts the games in which it
 // fielded a shooter or a summoner (V8's forbidden kinds), to show the style it plays. The report is the subject
-// gauntlet's own.
+// gauntlet's own. Every game is played on a generated layout (see @@@generated-map): four players on the authored maps
+// shared three contested mines and one natural, and one arrangement of starts stood for all fifty maps.
 
 export type AiV9GauntletBenchmarkOptions = SubjectGauntletOptions;
 export type AiV9GauntletBenchmarkInput = SubjectGauntletInput;
@@ -32,6 +33,7 @@ export const V9_GAUNTLET: SubjectGauntlet = {
   watchedKinds: V8_FORBIDDEN_UNIT_KINDS,
   name: "AI V9 vs V5, V7 and V8 Benchmark",
   evaluationName: "v9 1v3 vs v5+v7+v8",
+  generatedLayouts: true,
 };
 
 export function createAiV9GauntletBenchmarkInput(options: AiV9GauntletBenchmarkOptions = {}): AiV9GauntletBenchmarkInput {

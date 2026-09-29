@@ -13,9 +13,11 @@ import {
   createUnit,
   createMap,
   DEFAULT_MAP_ID,
+  STANDARD_MAP_SIZE,
   trainTimeFor,
   withUnitShape,
 } from "./map";
+import { generateMap } from "./generated-map";
 import { seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
@@ -129,16 +131,18 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const aiPlayers = options.aiPlayers ?? ["enemy"];
   const activePlayers = uniquePlayers(options.players ?? [...DEFAULT_PLAYERS, ...aiPlayers]);
   const teams = Object.fromEntries(activePlayers.map((owner, index) => [owner, options.teams?.[owner] ?? DEFAULT_TEAMS[owner] ?? `team-${index + 1}`]));
+  // A generated layout replaces the map id's own starts, mines, camps and scenery (see @@@generated-map); the id names it.
+  const generated = options.layout ? generateMap(options.layout, activePlayers, teams) : undefined;
   const game = {
     tick: 0,
     match: createMatchState(activePlayers),
-    map: createMap(mapId),
+    map: generated ? { ...createMap(mapId), width: STANDARD_MAP_SIZE, height: STANDARD_MAP_SIZE, landmarks: generated.landmarks } : createMap(mapId),
     players: createPlayerStates(activePlayers, options),
-    units: createInitialUnits(mapId, activePlayers, teams),
-    buildings: createInitialBuildings(activePlayers, mapId, teams),
-    resources: createInitialResources(mapId, activePlayers, teams),
-    mercenaryCamps: createInitialMercenaryCamps(mapId),
-    items: createInitialItems(mapId),
+    units: generated?.units ?? createInitialUnits(mapId, activePlayers, teams),
+    buildings: generated?.buildings ?? createInitialBuildings(activePlayers, mapId, teams),
+    resources: generated?.resources ?? createInitialResources(mapId, activePlayers, teams),
+    mercenaryCamps: generated?.mercenaryCamps ?? createInitialMercenaryCamps(mapId),
+    items: generated?.items ?? createInitialItems(mapId),
     projectiles: [],
     effects: [],
     nextId: RUNTIME_ID_START,
