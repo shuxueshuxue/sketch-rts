@@ -87,7 +87,7 @@ export function planV6Raid(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 function startRaid(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, memory: V6PolicyMemory, options: AiPolicyContext): GameCommand[] {
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const plan = strategy.raids[0];
-  if (!plan || snapshot.tick < plan.minSecond * 20 || snapshot.tick < (memory.raidCooldownUntil ?? 0)) return [];
+  if (!plan || snapshot.tick < (plan.minSecond ?? 0) * 20 || snapshot.tick < (memory.raidCooldownUntil ?? 0)) return [];
   if (intel.enemies.some((enemy) => enemy.state === "pushing")) return [];
   const trigger = raidTrigger(snapshot, intel, memory);
   if (!trigger) return [];

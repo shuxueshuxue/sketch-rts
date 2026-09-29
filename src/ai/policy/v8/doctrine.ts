@@ -9,7 +9,11 @@ import type { V6RaidPlan, V6Strategy } from "../v6/doctrine";
 // footmen's (3.1, grove wardens 3.0) won 32% and the cinder runners' (fast, but 96 hp) 30%, against 40% for the riders
 // and 35% for the ravagers; with those two alone V8 went from 682 wins to 780.
 
-const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, minSecond: 300, cooldownSeconds: 90 };
+// @@@v8-no-clock - V8 reads no game clock to decide when a phase opens or a raid may start: a fixed second holds one
+// map's and one pair of opponents' tempo and nothing else's. Its raid waits on the raiders themselves (a tier-2 unit
+// the supply bar already holds back), and its opening moves on once the natural stands, the army is mostly there or
+// supply reaches the bar.
+const RAIDERS: V6RaidPlan = { kinds: ["raider", "knight"], size: 4, cooldownSeconds: 90 };
 
 // @@@v8-towers-first - Two towers at the main before the second hall. Every game V8 loses, its army collapses in one
 // fight, at 8:00 in the median, and in the earliest third V5's archers and hired mercenaries come at 4:30-5:30 against
@@ -74,6 +78,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
     // one they chased 6% of the time, the slowest of V8's fighters (3.1 to the archers' 3.0); the lancer walks 3.4 and
     // strikes from 74. With it V8 won 1225 of 2000 games against 1195 (297 of 500 on unseen seeds against 292).
     standIn: "lancer",
+    opensOnState: true,
   },
   {
     // Ravagers, acolytes and hexers, with ash chieftains as soon as the tier opens; cinder revenants later.
@@ -125,6 +130,7 @@ export const V8_STRATEGIES: V6Strategy[] = [
     ],
     raids: [],
     standIn: "emberRavager",
+    opensOnState: true,
     // @@@v8-ember-rising-strike - The ravager line strikes rising halls; the cavalry line does not. Over 8000 nudged
     // replays of the tune seeds, towers first plus the strike won 92 more ember games and 33 fewer grove games than
     // the baseline, towers first alone 17 and 28 more; with the strike in the ravager line only, 8000 nudged replays of

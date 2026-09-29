@@ -39,7 +39,8 @@ export type V6Phase = {
 export type V6RaidPlan = {
   kinds: TrainableUnitKind[];
   size: number;
-  minSecond: number;
+  // Not before this game second; a plan without it waits on its squad alone (see v8-no-clock).
+  minSecond?: number;
   cooldownSeconds: number;
 };
 
@@ -53,6 +54,8 @@ export type V6Strategy = {
   standIn: TrainableUnitKind;
   // Whether the general goes straight at an enemy hall still rising (see v8-quick-strike).
   risingStrike?: boolean;
+  // Whether the opening a strategy plays behind moves on by game state alone, never by the clock (see v8-no-clock).
+  opensOnState?: boolean;
 };
 
 // Personalities vary style, not how much risk V6 takes. Every knob was tried on its own over the tune seeds: less
@@ -272,6 +275,6 @@ export function v7OpeningPhase(strategy: V6Strategy): V6Phase {
     advanceShare: 0.66,
     advanceBases: 2,
     advanceSupply: 34,
-    advanceBy: 300,
+    ...(strategy.opensOnState ? {} : { advanceBy: 300 }),
   };
 }
