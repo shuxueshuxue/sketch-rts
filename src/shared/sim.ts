@@ -2021,10 +2021,30 @@ function aggressorBonus(game: Game, owner: Owner, target: Unit | Building) {
 }
 
 function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building) {
-  const pendingDamage = game.projectiles
-    .filter((projectile) => projectile.owner === attackerOwner && projectile.targetId === target.id)
-    .reduce((total, projectile) => total + projectile.damage, 0);
+  let pendingDamage = 0;
+  for (const projectile of projectilesAt(game, target.id)) if (projectile.owner === attackerOwner) pendingDamage += projectile.damage;
   return target.hp - pendingDamage;
+}
+
+// @@@projectiles-by-target - The shots in flight at a target, in the order game.projectiles holds them. Target choice asks
+// for every candidate of every unit, and filtering all projectiles each time made a big fight's step grow with units x
+// shots in the air. The engine only ever replaces the array (the shots that landed, a restore) or pushes a new shot onto
+// it, so an index kept for one array stays right by taking in the shots pushed since; a replaced array gets its own. The
+// sums above add the same shots in the same order as a filter would.
+const projectilesByTarget = new WeakMap<Projectile[], { indexed: number; byTarget: Map<string, Projectile[]> }>();
+const NO_PROJECTILES: Projectile[] = [];
+
+function projectilesAt(game: Game, targetId: string): Projectile[] {
+  const projectiles = game.projectiles;
+  let index = projectilesByTarget.get(projectiles);
+  if (!index || index.indexed > projectiles.length) projectilesByTarget.set(projectiles, (index = { indexed: 0, byTarget: new Map() }));
+  for (; index.indexed < projectiles.length; index.indexed += 1) {
+    const projectile = projectiles[index.indexed]!;
+    const atTarget = index.byTarget.get(projectile.targetId);
+    if (atTarget) atTarget.push(projectile);
+    else index.byTarget.set(projectile.targetId, [projectile]);
+  }
+  return index.byTarget.get(targetId) ?? NO_PROJECTILES;
 }
 
 function targetPriorityBase(target: Unit | Building) {
