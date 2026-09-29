@@ -21,6 +21,8 @@ import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, M
 
 export type GeneratedMap = {
   kind: GeneratedLayoutKind;
+  // The map is size by size; every distance inside it is in the game's own units, whatever the size.
+  size: number;
   starts: Record<PlayerId, { baseX: number; baseY: number; mineX: number; mineY: number }>;
   buildings: Building[];
   units: Unit[];
@@ -35,8 +37,10 @@ type Point = { x: number; y: number };
 type CampTier = "easy" | "medium" | "strong" | "hard";
 type Camp = { at: Point; tier: CampTier; item?: ItemKind };
 
-const SIZE = STANDARD_MAP_SIZE;
-const CENTER = SIZE / 2;
+// Rings of four are drawn on the standard map or larger (a ladder map for four is bigger than one for two); facing teams
+// on the standard map or a little larger.
+const RING_SIZES = [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512, STANDARD_MAP_SIZE + 1_024];
+const SIDES_SIZES = [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512];
 const EDGE = 90;
 const INNER = 260;
 const MINE_GOLD = 6_000;
@@ -88,7 +92,7 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
   const teamOrder = [...new Set(players.map((player) => teams[player] ?? player))];
   const kind = options.kind ?? (teamOrder.length === 2 && random() < 1 / 3 ? "sides" : "ring");
   if (kind === "sides" && teamOrder.length !== 2) throw new Error(`A sides layout needs two teams, not ${teamOrder.length}`);
-  const field = new Field(random);
+  const field = new Field(random, pick(random, kind === "sides" ? SIDES_SIZES : RING_SIZES));
   if (kind === "sides") sidesLayout(field, players, teams, teamOrder);
   else ringLayout(field, players, teams, teamOrder);
   return assemble(kind, field, players);
@@ -112,7 +116,13 @@ class Field {
   readonly majorItem: ItemKind;
   readonly mercKind: MercenaryUnitKind;
 
-  constructor(readonly random: () => number) {
+  readonly center: number;
+
+  constructor(
+    readonly random: () => number,
+    readonly size: number,
+  ) {
+    this.center = size / 2;
     this.easyKinds = pick(random, CAMP_KINDS.easy);
     this.mediumKinds = pick(random, CAMP_KINDS.medium);
     this.strongKinds = pick(random, CAMP_KINDS.strong);
@@ -127,7 +137,7 @@ class Field {
   }
 
   inside(points: Point[], margin = INNER) {
-    return points.every((point) => point.x >= margin && point.y >= margin && point.x <= SIZE - margin && point.y <= SIZE - margin);
+    return points.every((point) => point.x >= margin && point.y >= margin && point.x <= this.size - margin && point.y <= this.size - margin);
   }
 
   // A mine's copies: apart from every mine and from one another, at least `fromMains` from every main mine and
@@ -178,6 +188,13 @@ class Field {
 
 // @@@generated-ring - One slot is drawn and turned around the center for every player; teammates take neighbouring slots.
 function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]) {
+  const SIZE = field.size;
+  const CENTER = field.center;
+  const polar = (radius: number, angle: number): Point => ({ x: CENTER + detCos(angle) * radius, y: CENTER + detSin(angle) * radius });
+  const turnAround = (point: Point, angle: number): Point => {
+    const offset = rotate(sub(point, { x: CENTER, y: CENTER }), angle);
+    return { x: CENTER + offset.x, y: CENTER + offset.y };
+  };
   const count = Math.max(2, players.length);
   const turn = (Math.PI * 2) / count;
   const offsetRoll = field.random();
@@ -260,6 +277,8 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
 // down the middle, the route camps, the mercenary posts, the hard camp) is mirrored onto the other half. Half the maps
 // turn the whole field a quarter, so the teams face each other top and bottom.
 function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]) {
+  const SIZE = field.size;
+  const CENTER = field.center;
   const margin = SIZE * field.between(0.1, 0.13);
   // The natural stays clear of the contested mines down the middle line.
   // Straight in from the start, the natural keeps NATURAL_MAIN_SPACING from its main mine (210 in from the start).
@@ -330,8 +349,8 @@ function assemble(kind: GeneratedLayoutKind, field: Field, players: PlayerId[]):
   for (const player of players) {
     const start = field.starts.get(player);
     if (!start) throw new Error(`No start for ${player}`);
-    const base = clampPoint(start.base);
-    const mine = clampPoint(start.mine);
+    const base = clampPoint(start.base, field.size);
+    const mine = clampPoint(start.mine, field.size);
     starts[player] = { baseX: base.x, baseY: base.y, mineX: mine.x, mineY: mine.y };
     buildings.push(createBuilding(`building-${player}-townhall`, player, "townHall", base.x, base.y, true));
     units.push(
@@ -342,11 +361,11 @@ function assemble(kind: GeneratedLayoutKind, field: Field, players: PlayerId[]):
     resources.push({ id: `gold-${player}-main`, kind: "goldMine", x: mine.x, y: mine.y, amount: MINE_GOLD });
   }
   field.mines
-    .map(clampPoint)
+    .map((mine) => clampPoint(mine, field.size))
     .forEach((mine, index) => resources.push({ id: `gold-gen-${index + 1}`, kind: "goldMine", x: mine.x, y: mine.y, amount: MINE_GOLD }));
   const items: WorldItem[] = [];
   field.camps.forEach((camp, index) => {
-    const at = clampPoint(camp.at);
+    const at = clampPoint(camp.at, field.size);
     const kinds = campKinds(field, camp.tier);
     const creeps = kinds.map((unitKind, member) => {
       const spread = (member / kinds.length) * Math.PI * 2 + 0.3;
@@ -356,15 +375,15 @@ function assemble(kind: GeneratedLayoutKind, field: Field, players: PlayerId[]):
     if (camp.item) items.push({ id: `treasure-gen-${index + 1}`, kind: camp.item, x: 0, y: 0, carrierId: creeps[0]!.id, cooldownRemaining: 0 });
   });
   const mercenaryCamps: MercenaryCamp[] = field.mercs.map((merc, index) => {
-    const at = clampPoint(merc.at);
+    const at = clampPoint(merc.at, field.size);
     return { id: `merc-gen-${index + 1}`, x: at.x, y: at.y, radius: 50, hireKind: merc.kind, cost: UNIT_DEFS[merc.kind].cost, stock: 3, cooldown: seconds(16), cooldownRemaining: 0 };
   });
   const landmarks: TerrainLandmark[] = [
     ...resources.map((mine) => ({ id: `gen-scar-${mine.id}`, kind: "mineScar" as const, x: mine.x, y: mine.y, size: 200, rotation: 0.3 })),
-    ...field.camps.map((camp, index) => ({ id: `gen-camp-${index + 1}`, kind: "campMark" as const, ...clampPoint(camp.at), size: 200, rotation: 0.2 })),
+    ...field.camps.map((camp, index) => ({ id: `gen-camp-${index + 1}`, kind: "campMark" as const, ...clampPoint(camp.at, field.size), size: 200, rotation: 0.2 })),
     ...field.scenery,
   ];
-  return { kind, starts, buildings, units, resources, mercenaryCamps, items, landmarks };
+  return { kind, size: field.size, starts, buildings, units, resources, mercenaryCamps, items, landmarks };
 }
 
 function campKinds(field: Field, tier: CampTier) {
@@ -374,19 +393,9 @@ function campKinds(field: Field, tier: CampTier) {
   return field.hardKinds;
 }
 
-// A point turned around the map's center.
-function turnAround(point: Point, angle: number): Point {
-  const offset = rotate(sub(point, { x: CENTER, y: CENTER }), angle);
-  return { x: CENTER + offset.x, y: CENTER + offset.y };
-}
-
 // The point beyond `mine` on the far side from `from` (a guard stands between its mine and the open map).
 function mirrorAway(mine: Point, from: Point): Point {
   return { x: mine.x * 2 - from.x, y: mine.y * 2 - from.y };
-}
-
-function polar(radius: number, angle: number): Point {
-  return { x: CENTER + detCos(angle) * radius, y: CENTER + detSin(angle) * radius };
 }
 
 function heading(angle: number): Point {
@@ -428,8 +437,8 @@ function roundPoint(point: Point): Point {
   return { x: Math.round(point.x), y: Math.round(point.y) };
 }
 
-function clampPoint(point: Point): Point {
-  return { x: Math.round(Math.max(EDGE, Math.min(SIZE - EDGE, point.x))), y: Math.round(Math.max(EDGE, Math.min(SIZE - EDGE, point.y))) };
+function clampPoint(point: Point, size: number): Point {
+  return { x: Math.round(Math.max(EDGE, Math.min(size - EDGE, point.x))), y: Math.round(Math.max(EDGE, Math.min(size - EDGE, point.y))) };
 }
 
 function pick<T>(random: () => number, choices: readonly T[]): T {

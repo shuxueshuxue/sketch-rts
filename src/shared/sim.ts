@@ -13,7 +13,6 @@ import {
   createUnit,
   createMap,
   DEFAULT_MAP_ID,
-  STANDARD_MAP_SIZE,
   trainTimeFor,
   withUnitShape,
 } from "./map";
@@ -136,7 +135,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const game = {
     tick: 0,
     match: createMatchState(activePlayers),
-    map: generated ? { ...createMap(mapId), width: STANDARD_MAP_SIZE, height: STANDARD_MAP_SIZE, landmarks: generated.landmarks } : createMap(mapId),
+    map: generated ? { ...createMap(mapId), width: generated.size, height: generated.size, landmarks: generated.landmarks } : createMap(mapId),
     players: createPlayerStates(activePlayers, options),
     units: generated?.units ?? createInitialUnits(mapId, activePlayers, teams),
     buildings: generated?.buildings ?? createInitialBuildings(activePlayers, mapId, teams),

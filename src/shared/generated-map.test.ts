@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { generateMap } from "./generated-map";
-import { STANDARD_MAP_SIZE } from "./map";
 import { createGame } from "./sim";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
@@ -53,8 +52,8 @@ describe("generated maps", () => {
         for (const thing of [...map.units, ...map.buildings, ...map.resources, ...map.mercenaryCamps]) {
           expect(thing.x).toBeGreaterThanOrEqual(0);
           expect(thing.y).toBeGreaterThanOrEqual(0);
-          expect(thing.x).toBeLessThanOrEqual(STANDARD_MAP_SIZE);
-          expect(thing.y).toBeLessThanOrEqual(STANDARD_MAP_SIZE);
+          expect(thing.x).toBeLessThanOrEqual(map.size);
+          expect(thing.y).toBeLessThanOrEqual(map.size);
         }
         for (const item of map.items) expect(map.units.some((unit) => unit.id === item.carrierId)).toBe(true);
       }
