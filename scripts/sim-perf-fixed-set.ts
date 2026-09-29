@@ -16,22 +16,15 @@ import { createAiCommandStatsTracker } from "../src/ai/benchmark/command-stats";
 import { createExpansionClaimTimelineTracker } from "../src/ai/benchmark/expansion-claim-timeline";
 import { createUnitRosterStatsTracker } from "../src/ai/benchmark/unit-roster-stats";
 import { createV6DoctrineTracker, createV7DoctrineTracker, createV8DoctrineTracker } from "../src/ai/benchmark/v6-doctrine-stats";
-import { createAiV8GauntletBenchmarkInput } from "../src/ai/benchmark/v8-gauntlet";
 import { createWoundedMoonWellStatsTracker } from "../src/ai/benchmark/wounded-moonwell-stats";
 import { createAiGameCommandPlanner, runAiGameLoop, type AiGameAgent } from "../src/ai/game-runner";
 import { runBenchmarkMatch, type BenchmarkMatchInput, type BenchmarkTracker } from "../src/sdk/benchmark/core";
 import type { Game } from "../src/shared/sim";
 import type { SdkGameCommandPlanner } from "../src/sdk/game-runner";
 import type { GameSnapshot } from "../src/shared/types";
+import { fixedSetGames } from "./sim-perf-games";
 
-// Five seeds x four games: each seed's first map in both races, plus two maps further down the list (one per race), and
-// the game the first profile was taken on (duskGrove v8 ember, v5-extra-3, 18:40).
-const SEEDS = ["v5-extra-1", "v5-extra-3", "v5-hybrid-50-holdout-a", "v5-hybrid-50-2026-06-12", "v5-extra-7"];
-const INDICES = [0, 1, 33, 66];
-const EXTRA_NAMES: Record<string, string[]> = { "v5-extra-3": ["duskGrove v8 ember"] };
 const DIGEST_EVERY = 600;
-
-type FixedGame = { seed: string; match: BenchmarkMatchInput<AiGameAgent> };
 
 const args = process.argv.slice(2);
 const flag = (name: string) => {
@@ -41,12 +34,7 @@ const flag = (name: string) => {
 const mode = flag("mode") ?? "bench";
 const [shard, shards] = (flag("shard") ?? "0/1").split("/").map(Number) as [number, number];
 
-const games: FixedGame[] = SEEDS.flatMap((seed) => {
-  const matches = createAiV8GauntletBenchmarkInput({ seed, mapCount: 50 }).input.evaluations[0]!.matches;
-  const picked = INDICES.map((index) => matches[index]!);
-  for (const name of EXTRA_NAMES[seed] ?? []) if (!picked.some((match) => match.name === name)) picked.push(matches.find((match) => match.name === name)!);
-  return picked.map((match) => ({ seed, match }));
-});
+const games = fixedSetGames();
 const wanted = flag("games")?.split(",").map(Number);
 const chosen = games.map((game, index) => ({ ...game, index })).filter(({ index }) => (wanted ? wanted.includes(index) : index % shards === shard));
 

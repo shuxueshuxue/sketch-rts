@@ -1,0 +1,21 @@
+// The fixed set of V8 gauntlet games the sim-perf scripts play (sim-perf-fixed-set, sim-scale-probe), by index.
+import { createAiV8GauntletBenchmarkInput } from "../src/ai/benchmark/v8-gauntlet";
+import type { AiGameAgent } from "../src/ai/game-runner";
+import type { BenchmarkMatchInput } from "../src/sdk/benchmark/core";
+
+// Five seeds x four games: each seed's first map in both races, plus two maps further down the list (one per race), and
+// the game the first profile was taken on (duskGrove v8 ember, v5-extra-3, 18:40).
+const SEEDS = ["v5-extra-1", "v5-extra-3", "v5-hybrid-50-holdout-a", "v5-hybrid-50-2026-06-12", "v5-extra-7"];
+const INDICES = [0, 1, 33, 66];
+const EXTRA_NAMES: Record<string, string[]> = { "v5-extra-3": ["duskGrove v8 ember"] };
+
+export type FixedGame = { seed: string; match: BenchmarkMatchInput<AiGameAgent> };
+
+export function fixedSetGames(): FixedGame[] {
+  return SEEDS.flatMap((seed) => {
+    const matches = createAiV8GauntletBenchmarkInput({ seed, mapCount: 50 }).input.evaluations[0]!.matches;
+    const picked = INDICES.map((index) => matches[index]!);
+    for (const name of EXTRA_NAMES[seed] ?? []) if (!picked.some((match) => match.name === name)) picked.push(matches.find((match) => match.name === name)!);
+    return picked.map((match) => ({ seed, match }));
+  });
+}
