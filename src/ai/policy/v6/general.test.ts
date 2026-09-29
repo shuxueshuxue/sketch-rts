@@ -235,6 +235,20 @@ describe("v6 general", () => {
     expect(deny("v9", 22)).toBe("attack");
   });
 
+  it("V9 creeps no camp near home while an enemy army worth half its own pushes at its bases", () => {
+    const mode = (pushers: number) => {
+      const { game } = board(`v9-general-pushed-${pushers}`, { v6Footmen: 6, enemyFootmen: 12, enemyAt: "home", campAt: { x: 400, y: 1_500 } });
+      // Between the call range of V9's buildings (750) and the push range (1300).
+      for (let index = 0; index < pushers; index += 1) game.spawnUnit("v5", "footman", 1_500 + index * 30, 200);
+      const memory = createAiPolicyMemory();
+      memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
+      planV6General(snapshotGame(game), "v6", { version: "v2", requestedVersion: "v9", teams: game.teams, memory });
+      return memory.v6?.general?.mode;
+    };
+    expect(mode(0)).toBe("creep");
+    expect(mode(4)).toBe("hold");
+  });
+
   it("V7 meets attackers at its natural just in front of the hall, and walks a unit that chased past the leash back", () => {
     const { game, memory, plan } = naturalBoard("v7-general-defend-natural", { footmen: [...AT_NATURAL, { x: 1_300, y: 1_900 }], attackers: 6 });
     game.units.find((unit) => unit.id === "v7-footman-5")!.order = { type: "attack", targetId: "v3-footman-0" };

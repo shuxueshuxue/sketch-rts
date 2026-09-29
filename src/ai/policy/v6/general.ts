@@ -70,6 +70,11 @@ const V7_FAR_ATTACK_SHARE = 0.7;
 // five died for three of V8's (cobaltVale, generated, 4:45); V9 trailed for the rest of the game. Of 8000 nudged duels
 // against V8 V9 won 5866 at 0.7, 6424 at 1.2, 6536 at 1.5 and 6332 at 2 (on forty unseen seeds 6307 at 1.2, 6493 at 1.5).
 const V9_FAR_ATTACK_SHARE = 1.5;
+// @@@v9-home-first - V9 does not go creeping while an enemy army worth half its own pushes at its bases: at 8:00 V8's army
+// of 11 walked at V9's natural, 1165 from it, while V9's army of 9 set out for camps 1000 the other way; V8 reached the
+// natural at 8:40, V9 came back to it in pieces and lost six of eight (marbleGrove, generated). Without the creeping V9
+// won 6591 of 8000 nudged duels against V8 against 6536, and 6536 against 6493 on forty unseen seeds.
+const V9_PUSHED_SHARE = 0.5;
 const RETREAT_LINE = 0.8;
 // Out in the open the army meets attackers only with this edge; under its towers or at its hall it always fights.
 const FIELD_EDGE = 1.15;
@@ -158,7 +163,9 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const v7Camps = isV7Policy(options) ? neutralCamps(snapshot) : [];
   const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) === 0);
   const v7NearHome = v7Reachable.filter((camp) => [intel.home, ...intel.ownHalls].some((hall) => distance(hall, camp.center) <= V7_HOME_REACH));
-  if (isV7Policy(options)) {
+  // V9 creeps nothing while an enemy army worth half its own pushes at its bases (see v9-home-first).
+  const pushed = isV9Policy(options) && intel.enemies.some((enemy) => enemy.state === "pushing" && enemy.power >= strength * V9_PUSHED_SHARE);
+  if (isV7Policy(options) && !pushed) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
     const mine = v7WantsBase(snapshot, owner, options) ? nextExpansionMine(snapshot, intel) : undefined;
@@ -195,7 +202,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
 
   if (isV7Policy(options)) {
     const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
-    const choice = chooseV7Camp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
+    const choice = pushed ? undefined : chooseV7Camp(snapshot, front, v7Camps, v7NearHome.filter((candidate) => dominant || onOwnSide(intel, candidate.center)), options);
     if (choice) {
       startV7Creep(snapshot, front, choice, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
