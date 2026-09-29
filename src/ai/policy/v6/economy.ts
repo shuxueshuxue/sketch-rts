@@ -7,7 +7,8 @@ import { activeMiningBaseCount } from "../expansion-model";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy, isV7Policy } from "../versions";
+import { isV6Policy, isV7Policy, isV8Policy } from "../versions";
+import { v8WantsWell, v8WellPoint } from "../v8/well";
 import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
@@ -80,7 +81,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wantGoals(economy), ...capacityGoals(economy)]);
+  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...capacityGoals(economy)]);
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -179,6 +180,15 @@ function workerGoals(economy: Economy): Goal[] {
   return economy.bases
     .filter((hall) => hall.queue.length === 0)
     .map((hall) => goal(`worker@${hall.id}`, early ? 85 : 70, UNIT_DEFS.worker.cost, false, () => train(economy, hall, "worker")));
+}
+
+// V8's well while nothing heals its wounded army (see v8-well), ahead of its soldiers.
+function wellGoals(economy: Economy): Goal[] {
+  if (!isV8Policy(economy.options)) return [];
+  const kind = v8WantsWell(economy.snapshot, economy.owner);
+  if (!kind) return [];
+  const point = legalBuildPointNear(economy.snapshot, kind, v8WellPoint(economy.intel));
+  return [goal("well", 67, BUILDING_DEFS[kind].cost, true, (used) => build(economy, kind, point, used, "well"))];
 }
 
 // A base under attack gets another tower while the fight is on, ahead of everything but farms.
