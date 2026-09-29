@@ -538,4 +538,22 @@ describe("v8 general", () => {
     expect(memory.v6?.general?.quick).toBe(true);
     expect(memory.v6?.plays?.["general:attack:rising"]).toBe(1);
   });
+
+  it("V9 walks its attack round a camp in the way, where V8 walks straight through it", () => {
+    const heading = (requestedVersion: "v8" | "v9") => {
+      const { game } = board(`v9-general-march-${requestedVersion}`, { v6Footmen: 10, enemyFootmen: 0, enemyAt: "home", campAt: { x: 2_150, y: 1_850 } });
+      game.buildings = game.buildings.filter((building) => building.id !== "v3-hall" && building.id !== "v5-hall");
+      game.buildings.push(createBuilding("v5-farm", "v5", "farm", 3_450, 2_880, true));
+      game.spawnUnit("v5", "footman", 3_420, 2_900);
+      const memory = createAiPolicyMemory();
+      memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
+      const [move] = attackMoves(planV6General(snapshotGame(game), "v6", { version: "v2", requestedVersion, teams: game.teams, memory }));
+      expect(memory.v6?.general).toMatchObject({ mode: "attack", targetHallId: "v5-farm" });
+      return move!;
+    };
+    expect(heading("v8")).toMatchObject({ x: 3_450, y: 2_880 });
+    const v9 = heading("v9");
+    expect(Math.hypot(v9.x - 2_175, v9.y - 1_870)).toBeGreaterThan(450);
+    expect(v9.unitIds).toHaveLength(10);
+  });
 });

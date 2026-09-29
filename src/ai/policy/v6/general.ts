@@ -5,12 +5,13 @@ import { resolveAiCommandIntent } from "../commands";
 import { enemyUnits } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy, isV7Policy, isV8Policy } from "../versions";
+import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { isBacklineKind } from "./backline";
 import { enemyPowerNear, nextExpansionMine, readV6Intel, type V6BaseIntel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
 import { v6Doctrine } from "./select";
+import { marchArrived, marchHeading } from "../v9/march";
 import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 
 // @@@v6-general - One commander for the main army, deciding like AMAI's attack thread (races.eai attack_sequence_all and
@@ -501,20 +502,26 @@ function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: 
   // games against 1173.
   const shooters = isV8Policy(options) && leashOverride !== undefined ? enemyUnits(snapshot, owner, options.teams).filter((enemy) => enemy.attackRange > SHOOTER_REACH) : [];
   const underFire = (unit: Unit) => shooters.some((enemy) => distance(enemy, unit) <= enemy.attackRange + FIRE_MARGIN);
+  // V9's units still on the way walk round the camps in it (see v9-march-round-camps); every other unit heads for the point.
+  const heading = isV9Policy(options) ? marchHeading(snapshot, front, point) : point;
+  const aim = (unit: Unit) => (heading === point || marchArrived(unit, point) ? point : heading);
   const straying = front.filter((unit) => {
     if ((mode === "hold" || mode === "guard") && distance(unit, point) <= 350 && (unit.order.type === "idle" || unit.order.type === "attack")) return false;
-    const going = unit.order.type === "attackMove" && distance(unit.order, point) <= ORDER_SLACK;
+    const going = unit.order.type === "attackMove" && distance(unit.order, aim(unit)) <= ORDER_SLACK;
     const fighting = (unit.order.type === "attack" && distance(unit, point) <= leash) || (underFire(unit) && (unit.order.type === "attack" || (unit.order.type === "attackMove" && unit.order.targetId !== undefined)));
     return !going && !fighting;
   });
   // Past an explicit leash a unit breaks off and walks back; inside it, it fights its way back to the point.
   const breaking = leashOverride === undefined ? [] : straying.filter((unit) => distance(unit, point) > leashOverride && !underFire(unit));
   const returning = straying.filter((unit) => !breaking.includes(unit));
-  const walking = breaking.filter((unit) => !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
-  return [
-    ...(walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : []),
-    ...(returning.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds: returning.map((unit) => unit.id), x: point.x, y: point.y }, options)] : []),
-  ];
+  const walking = breaking.filter((unit) => !(unit.order.type === "move" && distance(unit.order, aim(unit)) <= ORDER_SLACK));
+  // Units bound for the same point share one order.
+  const send = (type: "move" | "attackMove", units: Unit[]) => {
+    const bound = new Map<Point, string[]>();
+    for (const unit of units) bound.set(aim(unit), [...(bound.get(aim(unit)) ?? []), unit.id]);
+    return [...bound].map(([target, ids]) => resolveAiCommandIntent(snapshot, owner, { type, unitIds: ids, x: target.x, y: target.y }, options));
+  };
+  return [...send("move", walking), ...send("attackMove", returning)];
 }
 
 // How far each enemy army's center stands from the attack.
