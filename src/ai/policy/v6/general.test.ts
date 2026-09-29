@@ -517,7 +517,7 @@ describe("v8 general", () => {
     expect(planWith(0).general?.quick).toBeUndefined();
   });
 
-  it("leaves a rising expansion to the ordinary order of things in the cavalry line", () => {
+  it("strikes a rising expansion in the cavalry line too (see v8-grove-rising-strike)", () => {
     let scene = sketchScene("v8-quick-strike-cavalry")
       .map("openClaims")
       .replaceDefaults()
@@ -535,7 +535,7 @@ describe("v8 general", () => {
     const memory = createAiPolicyMemory();
     memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 } };
     planV6General(snapshotGame(game), "v8", { ...V8, teams: game.teams, memory });
-    expect(memory.v6?.general?.quick).toBeUndefined();
-    expect(memory.v6?.plays?.["general:attack:rising"]).toBeUndefined();
+    expect(memory.v6?.general?.quick).toBe(true);
+    expect(memory.v6?.plays?.["general:attack:rising"]).toBe(1);
   });
 });

@@ -26,7 +26,7 @@ describe("v8 doctrine", () => {
     for (const strategy of V6_STRATEGIES) expect(v7OpeningPhase(strategy).advanceBy, strategy.id).toBe(300);
   });
 
-  it("strikes rising halls in the ravager line only", () => {
-    expect(Object.fromEntries(V8_STRATEGIES.map((strategy) => [strategy.id, strategy.risingStrike ?? false]))).toEqual({ "grove-cavalry-line": false, "ember-ravager-line": true });
+  it("strikes rising halls in both lines", () => {
+    expect(Object.fromEntries(V8_STRATEGIES.map((strategy) => [strategy.id, strategy.risingStrike ?? false]))).toEqual({ "grove-cavalry-line": true, "ember-ravager-line": true });
   });
 });

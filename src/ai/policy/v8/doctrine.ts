@@ -86,6 +86,11 @@ export const V8_STRATEGIES: V6Strategy[] = [
     // strikes from 74. With it V8 won 1225 of 2000 games against 1195 (297 of 500 on unseen seeds against 292).
     standIn: "lancer",
     opensOnState: true,
+    // @@@v8-grove-rising-strike - Since a hall under construction starts at a tenth of its health (see construction-hp),
+    // the cavalry line strikes rising halls too: it held its lancers at the rally from 3:19 to 5:30 while V7's center
+    // hall rose from 90 (umberCauseway, 4:30); by hand five lancers razed it by 4:50 without a loss and the AI won the
+    // game it had lost. Nudged tune games 6737 -> 6889 of 8000 (grove 3399 -> 3551, ember unchanged).
+    risingStrike: true,
   },
   {
     // Ravagers, acolytes and hexers, with ash chieftains as soon as the tier opens; cinder revenants later.
@@ -139,10 +144,11 @@ export const V8_STRATEGIES: V6Strategy[] = [
     raids: [],
     standIn: "emberRavager",
     opensOnState: true,
-    // @@@v8-ember-rising-strike - The ravager line strikes rising halls; the cavalry line does not. Over 8000 nudged
-    // replays of the tune seeds, towers first plus the strike won 92 more ember games and 33 fewer grove games than
-    // the baseline, towers first alone 17 and 28 more; with the strike in the ravager line only, 8000 nudged replays of
-    // 40 unseen seeds won 207 more (ember 175, grove 32).
+    // @@@v8-ember-rising-strike - The ravager line strikes rising halls. While a rising hall still had its full health,
+    // over 8000 nudged replays of the tune seeds towers first plus the strike won 92 more ember games and 33 fewer grove
+    // games than the baseline, towers first alone 17 and 28 more; with the strike in the ravager line only, 8000 nudged
+    // replays of 40 unseen seeds won 207 more (ember 175, grove 32). The cavalry line took it later (see
+    // v8-grove-rising-strike).
     risingStrike: true,
   },
 ];
