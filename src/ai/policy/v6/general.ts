@@ -269,11 +269,15 @@ function respondingPower(intel: V6Intel, target: V6BaseIntel, front: Unit[]): nu
   return intel.enemies.reduce((total, enemy) => total + strengthOf(enemy.army.filter((unit) => distance(unit, target.hall) <= march)), 0);
 }
 
-// @@@v8-tower-wait - Shooters raiding a hall that two towers guard are the towers' work. V8's melee stood in front of its
+// @@@v8-tower-wait - Shooters raiding a hall that a tower guards are the tower's work. V8's melee stood in front of its
 // towers, took the first arrows, and chased the archers out past the towers' reach: the towers' hits called it too (a hit
 // building calls idle soldiers within 330). Played by hand with the army 400 behind the hall, out of both calls, the towers
 // killed eight of V5's spark archers and its medic while V8 lost nothing, and the ravagers finished the rest (runeMeadow,
 // graniteBloom, hollowFord). V8 waits there until the raid is worth less than half its army, then defends as ever.
+// One tower is enough since V8 raises one per hall (v8-towers-first): asking for two, the rule no longer fired at the
+// main, and in the games settled between 2:00 and 4:00 (nudged replays) the lost ones had lost 1.7 fighters to V5 at home
+// by 5:30 against 0.1 in the won ones. With one tower: 6466 -> 6522 of 8000 nudged tune games, losses to V5 -49.
+const V8_TOWER_WAIT_TOWERS = 1;
 const V8_TOWER_WAIT_STEP = 400;
 const V8_TOWER_WAIT_SHARE = 0.5;
 const V8_SHOOTER_SHARE = 0.6;
@@ -282,7 +286,7 @@ function waitsForTowers(intel: V6Intel, defense: { cover: number; threat: number
   const attackers = intel.intrusion?.attackers ?? [];
   const total = strengthOf(attackers);
   const shooters = strengthOf(attackers.filter((unit) => unit.attackRange > SHOOTER_REACH));
-  return total > 0 && shooters >= total * V8_SHOOTER_SHARE && defense.cover >= 2 * TOWER_STRENGTH && defense.threat > strength * V8_TOWER_WAIT_SHARE;
+  return total > 0 && shooters >= total * V8_SHOOTER_SHARE && defense.cover >= V8_TOWER_WAIT_TOWERS * TOWER_STRENGTH && defense.threat > strength * V8_TOWER_WAIT_SHARE;
 }
 
 function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, line: Unit[], defense: { hall: Point; field: Point }, options: AiPolicyContext): GameCommand[] {
