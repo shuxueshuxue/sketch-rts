@@ -6,7 +6,7 @@ import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
 import { activeMiningBaseCount } from "./expansion-model";
 import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
-import { averagePoint, distance } from "./spatial";
+import { averagePoint, distance, type Point } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV6Policy, isV7Policy } from "./versions";
@@ -106,13 +106,15 @@ export function planFocusFireCommand(snapshot: GameSnapshot, owner: PlayerId, op
   }
   if (fighters.length < 2) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
-  const candidates = enemies.filter((enemy) => fighters.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, enemy, options)));
+  const canJoin = focusFireJoinIndex(snapshot, owner, fighters, options);
+  const candidates = enemies.filter((enemy) => canJoin(enemy));
   const rememberedTarget = options.memory?.strategicPlan?.focusTargetId ? candidates.find((candidate) => candidate.id === options.memory?.strategicPlan?.focusTargetId) : undefined;
   const anchoredRememberedTarget = rememberedTarget && rememberedFocusStillAnchored(snapshot, owner, rememberedTarget, fighters, options) ? rememberedTarget : undefined;
   const finisherCanInterruptMemory = anchoredRememberedTarget && (options.policyMode !== "combat" || anchoredRememberedTarget.hp <= anchoredRememberedTarget.maxHp * 0.4);
-  const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(snapshot, owner, candidates, fighters, options) : undefined;
+  const center = averagePoint(fighters);
+  const finisherTarget = finisherCanInterruptMemory ? singleHitFinisherTarget(candidates, canJoin, center) : undefined;
   const freshCandidates = rememberedTarget && !anchoredRememberedTarget ? candidates.filter((candidate) => candidate.id !== rememberedTarget.id) : candidates;
-  const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
+  const target = finisherTarget ?? anchoredRememberedTarget ?? freshCandidates.sort((a, b) => focusFireTargetScore(b, center) - focusFireTargetScore(a, center))[0];
   if (!target) return undefined;
   const attackers = focusFireAttackers(snapshot, owner, fighters, target, options);
   const localEnemies = enemies.filter((enemy) => distance(enemy, target) <= 520);
@@ -160,15 +162,55 @@ function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter
   return v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options);
 }
 
-function singleHitFinisherTarget(snapshot: GameSnapshot, owner: PlayerId, candidates: Unit[], fighters: Unit[], options: PresetAiPolicyOptions) {
+// @@@focus-join-index - Whether some fighter can join a target (focusFireCanJoinTarget), and passes an extra test, without
+// testing every fighter: in a big fight, testing every enemy against every fighter was most of a think. The fighters sit in
+// a grid of cells as wide as the longest join range (plus 1, so rounding cannot drop a pair the full test takes), and a
+// target tests only the fighters in the 3x3 cells around it; any other fighter is out of its join range. The v5
+// arrived-mercenary exception is not a matter of range, so the fighters that may take it are tested against every target,
+// as before. Every test is the same pure one, so the answer is the same; only the fighters that cannot pass go untested.
+function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: Unit[], options: PresetAiPolicyOptions) {
+  const cell = Math.max(...fighters.map(focusFireJoinRange)) + 1;
+  const cells = new Map<number, Unit[]>();
+  for (const fighter of fighters) {
+    const key = focusFireCellKey(Math.floor(fighter.x / cell), Math.floor(fighter.y / cell));
+    const bucket = cells.get(key);
+    if (bucket) bucket.push(fighter);
+    else cells.set(key, [fighter]);
+  }
+  const counterFocusers = fighters.filter((fighter) => v5ArrivedMercenaryCounterFocuser(snapshot, owner, fighter, options));
+  return (target: Unit, test?: (fighter: Unit) => boolean) => {
+    const cx = Math.floor(target.x / cell);
+    const cy = Math.floor(target.y / cell);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return fighters.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
+    for (let x = cx - 1; x <= cx + 1; x += 1) {
+      for (let y = cy - 1; y <= cy + 1; y += 1) {
+        const bucket = cells.get(focusFireCellKey(x, y));
+        if (bucket?.some((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter) && (!test || test(fighter)))) return true;
+      }
+    }
+    return counterFocusers.some((fighter) => v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options) && (!test || test(fighter)));
+  };
+}
+
+function focusFireCellKey(x: number, y: number) {
+  return x * 4096 + y;
+}
+
+function singleHitFinisherTarget(candidates: Unit[], canJoin: ReturnType<typeof focusFireJoinIndex>, center: Point) {
   return candidates
-    .filter((target) => focusFireAttackers(snapshot, owner, fighters, target, options).some((attacker) => target.hp <= attacker.attackDamage))
-    .sort((a, b) => a.hp - b.hp || focusFireTargetScore(b, fighters) - focusFireTargetScore(a, fighters))[0];
+    .filter((target) => canJoin(target, (attacker) => target.hp <= attacker.attackDamage))
+    .sort((a, b) => a.hp - b.hp || focusFireTargetScore(b, center) - focusFireTargetScore(a, center))[0];
 }
 
 function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   const claim = activeUnitClaim(snapshot, owner, unit, options);
   return !claim || claim.kind === "attack" || v5ArrivedMercenaryClaimCanFight(snapshot, owner, unit, claim, options);
+}
+
+// The part of v5ArrivedMercenaryClaimCanCounterFocus that depends on the fighter alone.
+function v5ArrivedMercenaryCounterFocuser(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, options: PresetAiPolicyOptions) {
+  const claim = activeUnitClaim(snapshot, owner, fighter, options);
+  return !!claim && v5ArrivedMercenaryClaimCanFight(snapshot, owner, fighter, claim, options);
 }
 
 function v5ArrivedMercenaryClaimCanCounterFocus(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
@@ -217,8 +259,8 @@ function focusFireJoinRange(unit: Unit) {
   return unit.attackRange + (unit.attackRange > 100 ? 80 : 95);
 }
 
-function focusFireTargetScore(unit: Unit, fighters: Unit[]) {
-  const center = averagePoint(fighters);
+// center: the fighters' averagePoint, taken once per think rather than once per comparison of a sort.
+function focusFireTargetScore(unit: Unit, center: Point) {
   const missingHp = Math.max(0, unit.maxHp - unit.hp);
   const threat = unit.attackDamage * 5 + (unit.attackRange > 100 ? 28 : 0);
   return casterTargetBonus(unit) + missingHp * 2.4 + threat - distance(unit, center) * 0.18;
