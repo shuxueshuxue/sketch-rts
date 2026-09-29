@@ -6,13 +6,17 @@ import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
 import { activeMiningBaseCount } from "./expansion-model";
 import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
-import { averagePoint, distance, type Point } from "./spatial";
+import { anyWithinRangeOf, averagePoint, distance, type Point } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV6Policy, isV7Policy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
+  // Whether an enemy stands within 620 of a healer's regroup point: every wounded group of every healer asks, and testing
+  // the whole enemy army each time grew with healers x groups x enemies. One grid serves the think (@@@range-grid).
+  let enemyWithin620: ((point: Point) => boolean) | undefined;
+  const regroupPointHasEnemy = (point: Point) => (enemyWithin620 ??= anyWithinRangeOf(enemyCombatUnits(snapshot, owner, options.teams), 620))(point);
   for (const caster of units(snapshot, owner).filter(canCast)) {
     const abilities = UNIT_DEFS[caster.kind].abilities;
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
@@ -23,7 +27,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
       }
-      const regroup = healerRegroupCommand(snapshot, owner, caster, def.plannerRange, options);
+      const regroup = healerRegroupCommand(snapshot, owner, caster, def.plannerRange, regroupPointHasEnemy, options);
       if (regroup) {
         commands.push(regroup);
         continue;
@@ -62,14 +66,15 @@ function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healR
     .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || b.maxHp - b.hp - (a.maxHp - a.hp) || distance(a, caster) - distance(b, caster))[0];
 }
 
-function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions): GameCommand | undefined {
+// enemyNear: whether some enemy combat unit is within 620 of a point (not every one beyond it).
+function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, enemyNear: (point: Point) => boolean, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version !== "v2" || activeUnitClaim(snapshot, owner, caster, options)) return undefined;
   const wounded = units(snapshot, owner).filter((unit) => unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
   const groups = wounded
     .map((anchor) => wounded.filter((unit) => distance(unit, anchor) <= 260))
     .filter((group) => group.length >= 2)
     .map((group) => ({ group, point: averagePoint(group) }))
-    .filter(({ point }) => enemyCombatUnits(snapshot, owner, options.teams).every((enemy) => distance(enemy, point) > 620) && neutralUnitsNear(snapshot, point, 420).length === 0)
+    .filter(({ point }) => !enemyNear(point) && neutralUnitsNear(snapshot, point, 420).length === 0)
     .sort((a, b) => b.group.length - a.group.length || distance(caster, a.point) - distance(caster, b.point));
   const target = groups[0]?.point;
   // @@@healer-regroup - Healers that cannot cast yet should walk to a safe wounded cluster instead of idling at the last hired camp.

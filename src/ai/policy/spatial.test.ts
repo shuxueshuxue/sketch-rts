@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { distance, withinRangeOf, type Point } from "./spatial";
+import { anyWithinRangeOf, distance, withinRangeOf, type Point } from "./spatial";
 
-describe("withinRangeOf", () => {
-  it("returns exactly what filtering by distance returns, in the same order, on the grid and without it", () => {
+describe("withinRangeOf and anyWithinRangeOf", () => {
+  it("answer exactly what filtering by distance answers, in the same order, on the grid and without it", () => {
     let seed = 7;
     const random = () => {
       seed = (seed * 1103515245 + 12345) % 2147483648;
@@ -17,7 +17,11 @@ describe("withinRangeOf", () => {
       items.push({ id: -5, x: Number.NaN, y: 10 }, { id: -6, x: Number.POSITIVE_INFINITY, y: 10 });
       const near = withinRangeOf(items, range);
       const points: Point[] = [items[0]!, { x: 0, y: 0 }, { x: -range / 2, y: 10 }, { x: Number.NaN, y: 0 }, { x: Number.POSITIVE_INFINITY, y: 10 }, { x: 10, y: Number.NEGATIVE_INFINITY }, ...scatter(60)];
-      for (const point of points) expect(near(point)).toEqual(items.filter((item) => distance(item, point) <= range));
+      const anyNear = anyWithinRangeOf(items, range);
+      for (const point of points) {
+        expect(near(point)).toEqual(items.filter((item) => distance(item, point) <= range));
+        expect(anyNear(point)).toBe(!items.every((item) => distance(item, point) > range));
+      }
     }
   });
 });

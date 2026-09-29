@@ -35,12 +35,12 @@ export function withinRangeOf<T extends Point>(items: T[], range: number): (poin
   const plain = (point: Point) => items.filter((item) => distance(item, point) <= range);
   if (items.length < RANGE_GRID_MIN_ITEMS) return plain;
   const cell = range + 1;
-  let grid: { cells: Map<number, number[]>; offGrid: number[] } | undefined;
+  let grid: PointGrid<number> | undefined;
   return (point) => {
     const cx = Math.floor(point.x / cell);
     const cy = Math.floor(point.y / cell);
     if (!Number.isFinite(cx) || !Number.isFinite(cy)) return plain(point);
-    grid ??= indexCells(items, cell);
+    grid ??= pointGrid(items.map((_, index) => index), (index) => items[index]!, cell);
     const hits: number[] = [];
     for (let x = cx - 1; x <= cx + 1; x += 1) {
       for (let y = cy - 1; y <= cy + 1; y += 1) {
@@ -52,20 +52,45 @@ export function withinRangeOf<T extends Point>(items: T[], range: number): (poin
   };
 }
 
-function indexCells(items: Point[], cell: number) {
-  const cells = new Map<number, number[]>();
-  const offGrid: number[] = [];
-  for (let index = 0; index < items.length; index += 1) {
-    const x = Math.floor(items[index]!.x / cell);
-    const y = Math.floor(items[index]!.y / cell);
+// Whether some item is within range of a point, as !items.every((item) => distance(item, point) > range), for many points
+// against the same items (see @@@range-grid). It keeps the items rather than their places in the array, so a reordering of
+// the array meanwhile (shared snapshot lists get sorted in place here and there) does not matter; the items must stay the
+// same ones.
+export function anyWithinRangeOf(items: Point[], range: number): (point: Point) => boolean {
+  const near = (item: Point, point: Point) => !(distance(item, point) > range);
+  if (items.length < RANGE_GRID_MIN_ITEMS) return (point) => items.some((item) => near(item, point));
+  const cell = range + 1;
+  let grid: PointGrid<Point> | undefined;
+  return (point) => {
+    const cx = Math.floor(point.x / cell);
+    const cy = Math.floor(point.y / cell);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return items.some((item) => near(item, point));
+    grid ??= pointGrid(items, (item) => item, cell);
+    for (let x = cx - 1; x <= cx + 1; x += 1) {
+      for (let y = cy - 1; y <= cy + 1; y += 1) {
+        if (grid.cells.get(gridCellKey(x, y))?.some((item) => near(item, point))) return true;
+      }
+    }
+    return grid.offGrid.some((item) => near(item, point));
+  };
+}
+
+type PointGrid<T> = { cells: Map<number, T[]>; offGrid: T[] };
+
+function pointGrid<T>(entries: T[], at: (entry: T) => Point, cell: number): PointGrid<T> {
+  const cells = new Map<number, T[]>();
+  const offGrid: T[] = [];
+  for (const entry of entries) {
+    const x = Math.floor(at(entry).x / cell);
+    const y = Math.floor(at(entry).y / cell);
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      offGrid.push(index);
+      offGrid.push(entry);
       continue;
     }
     const key = gridCellKey(x, y);
     const bucket = cells.get(key);
-    if (bucket) bucket.push(index);
-    else cells.set(key, [index]);
+    if (bucket) bucket.push(entry);
+    else cells.set(key, [entry]);
   }
   return { cells, offGrid };
 }
