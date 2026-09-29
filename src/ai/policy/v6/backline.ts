@@ -1,7 +1,7 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
 import { enemyBuildings, hostileCombatUnits, units } from "../snapshot";
-import { averagePoint, distance, type Point } from "../spatial";
+import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { V6PolicyMemory } from "../../memory";
 import type { AiPolicyContext, PresetAiPolicyOptions } from "../types";
 import { isV6Policy, isV8Policy } from "../versions";
@@ -49,9 +49,11 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
   const home = mainBase(snapshot, owner);
   const post = generalPost(v6Memory(options).general, home);
+  const frontNear = withinRangeOf(front, FRONT_GROUP_RANGE);
+  const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
-    const anchor = screenAnchor(caster, front, enemies, towers, home, post, isV8Policy(options));
+    const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, isV8Policy(options));
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
   }
@@ -60,10 +62,11 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
 
 // A front of one or two spirits chasing something is no screen: with fewer than three bodies nearby the casters go back to
 // the general's post instead of following them across the map (they did, and died 1300 from home).
-function screenAnchor(caster: Unit, frontLine: Unit[], enemies: Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point, close: boolean): Point | undefined {
-  const screen = frontLine.filter((unit) => distance(unit, caster) <= FRONT_GROUP_RANGE);
+// frontNear, threatsNear: the front line within FRONT_GROUP_RANGE and the enemies within THREAT_RANGE of a point, in order.
+function screenAnchor(caster: Unit, frontNear: (point: Point) => Unit[], threatsNear: (point: Point) => Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point, close: boolean): Point | undefined {
+  const screen = frontNear(caster);
   const front = screen.length >= MIN_SCREEN ? averagePoint(screen) : undefined;
-  const threats = enemies.filter((enemy) => distance(enemy, front ?? caster) <= THREAT_RANGE);
+  const threats = threatsNear(front ?? caster);
   if (threats.length === 0) return front ? step(front, home, FOLLOW_DEPTH) : post;
   const threat = averagePoint(threats);
   if (close && front) return step(front, away(front, threat), V8_SCREEN_DEPTH);

@@ -4,7 +4,7 @@ import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { opponentPlayerIds } from "./ownership";
 import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } from "./snapshot";
-import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
+import { averagePoint, clamp, distance, nearestEntity, withinRangeOf, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV6Policy } from "./versions";
@@ -238,13 +238,15 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
 
 function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], ownBase: Point, options: PresetAiPolicyOptions): { allies: Unit[]; enemies: Unit[] } | undefined {
   const enemyBase = options.version === "v4-tr" ? nearestEnemyBase(snapshot, owner, ownBase, options) : undefined;
+  const enemiesNear = withinRangeOf(enemies, 560);
+  const alliesNear = withinRangeOf(ownCombat, 520);
   for (const anchor of ownCombat) {
     // @@@enemy-base-skirmish - V2/V3 should preserve bad enemy-base dives; V4-TR wins by keeping tower/merc pressure committed.
     if (distance(anchor, ownBase) < 700) continue;
     if (enemyBase && distance(anchor, enemyBase) < 700) continue;
-    const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);
+    const localEnemies = enemiesNear(anchor);
     if (localEnemies.length < 2) continue;
-    const allies = localSkirmishAllies(snapshot, owner, ownCombat, anchor, localEnemies, options);
+    const allies = localSkirmishAllies(snapshot, owner, alliesNear(anchor), localEnemies, options);
     if (allies.length < 2) continue;
     if (dormantNeutralThreatsStillOnRoute(localEnemies, allies)) continue;
     if (armyPower(localEnemies) <= armyPower(allies) * 1.05) continue;
@@ -253,8 +255,8 @@ function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[
   return undefined;
 }
 
-function localSkirmishAllies(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], anchor: Unit, localEnemies: Unit[], options: PresetAiPolicyOptions) {
-  const nearbyAllies = ownCombat.filter((unit) => distance(unit, anchor) <= 520);
+// nearbyAllies: the own combat units within 520 of the anchor, in their order.
+function localSkirmishAllies(snapshot: GameSnapshot, owner: PlayerId, nearbyAllies: Unit[], localEnemies: Unit[], options: PresetAiPolicyOptions) {
   if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return nearbyAllies;
   if (playerState(snapshot, owner).race !== "ember") return nearbyAllies;
   const localEnemyIds = new Set(localEnemies.map((unit) => unit.id));
