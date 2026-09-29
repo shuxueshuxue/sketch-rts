@@ -259,17 +259,7 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   // A strong camp on each route between starts and the middle.
   const route = field.place(() => inWedge(0.2, 1), (camps) => fromStart(camps[0]!, CONTESTED_START_SPACING, 1_800) && field.campFits(camps, [], CONTESTED_START_SPACING));
   if (route) field.camps.push(...route.map((at) => ({ at, tier: "strong" as const })));
-  // Scenery (it does not stand in anyone's way): a road from every start toward the middle, groves and ridges around it.
-  copies(base).forEach((at, slot) => {
-    const angle = firstAngle + slot * turn;
-    const grove = turnAround(polar(radius * 0.72, firstAngle - turn * 0.3), slot * turn);
-    const ridge = turnAround(polar(radius * 0.55, firstAngle + turn * 0.3), slot * turn);
-    field.scenery.push(
-      { id: `gen-road-${slot}`, kind: "road", ...roundPoint({ x: (at.x + CENTER) / 2, y: (at.y + CENTER) / 2 }), size: 520, rotation: angle },
-      { id: `gen-grove-${slot}`, kind: "grove", ...roundPoint(grove), size: 360, rotation: angle * 0.7 },
-      { id: `gen-ridge-${slot}`, kind: "ridge", ...roundPoint(ridge), size: 420, rotation: angle + 0.4 },
-    );
-  });
+  decorate(field, copies);
 }
 
 // @@@generated-sides - The two teams face each other across the map, each on its edge, spread along it. Every player has
@@ -334,11 +324,67 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   }
   const merc = field.place(() => both({ x: SIZE * field.between(0.3, 0.44), y: SIZE * field.between(0.15, 0.85) }), (posts) => field.mercFits(posts));
   if (merc) field.mercs.push(...merc.map((at) => ({ at, kind: field.mercKind })));
-  field.scenery.push(
-    { id: "gen-road-middle", kind: "road", x: CENTER, y: CENTER, size: 700, rotation: quarter ? 0 : Math.PI / 2 },
-    { id: "gen-ridge-a", kind: "ridge", ...place({ x: SIZE * 0.3, y: SIZE * 0.5 }), size: 420, rotation: 0.3 },
-    { id: "gen-ridge-b", kind: "ridge", ...place({ x: SIZE * 0.7, y: SIZE * 0.5 }), size: 420, rotation: -0.3 },
-  );
+  decorate(field, (point) => {
+    const unturned = quarter ? { x: point.y, y: point.x } : point;
+    return both(unturned);
+  });
+}
+
+// @@@generated-scenery - Scenery stands in no one's way (the game has no terrain to block a unit), but it reads the map for
+// the eye: roads along the spanning tree of the starts, the mines and the middle, forests on the open ground between them,
+// ridges out toward the edges, ruins in an empty middle and banner stones at the mercenary posts, with the layout's own
+// symmetry.
+function decorate(field: Field, copies: (point: Point) => Point[]) {
+  const { size, center } = field;
+  const nodes = [...field.bases, ...field.mines, { x: center, y: center }];
+  const joined = new Set([0]);
+  const roads: Point[] = [];
+  while (joined.size < nodes.length) {
+    let best: [number, number, number] | undefined;
+    for (const from of joined) {
+      nodes.forEach((to, index) => {
+        if (joined.has(index)) return;
+        const length = distance(nodes[from]!, to);
+        if (!best || length < best[2]) best = [from, index, length];
+      });
+    }
+    const [from, to, length] = best!;
+    joined.add(to);
+    const a = nodes[from]!;
+    const b = nodes[to]!;
+    const pieces = Math.max(1, Math.ceil(length / 650));
+    const rotation = Math.round(Math.atan2(b.y - a.y, b.x - a.x) * 100) / 100;
+    for (let piece = 0; piece < pieces; piece += 1) {
+      const at = roundPoint({ x: a.x + ((b.x - a.x) * (piece + 0.5)) / pieces, y: a.y + ((b.y - a.y) * (piece + 0.5)) / pieces });
+      roads.push(at);
+      field.scenery.push({ id: `gen-road-${field.scenery.length + 1}`, kind: "road", ...at, size: Math.round(length / pieces + 60), rotation });
+    }
+  }
+  const taken = () => [
+    ...field.bases.map((at) => ({ at, room: 520 })),
+    ...[...field.mains, ...field.mines].map((at) => ({ at, room: 380 })),
+    ...field.camps.map((camp) => ({ at: camp.at, room: 320 })),
+    ...field.mercs.map((merc) => ({ at: merc.at, room: 300 })),
+    ...roads.map((at) => ({ at, room: 240 })),
+    ...field.scenery.filter((mark) => mark.kind !== "road").map((mark) => ({ at: { x: mark.x, y: mark.y }, room: 380 })),
+  ];
+  const open = (points: Point[]) => {
+    const busy = taken();
+    return field.inside(points, 150) && apart(points, 380) && points.every((point) => busy.every((thing) => distance(point, thing.at) >= thing.room));
+  };
+  const scatter = (kind: TerrainLandmark["kind"], count: number, draw: () => Point, sizes: [number, number]) => {
+    for (let index = 0; index < count; index += 1) {
+      const spots = field.place(() => copies(draw()), open);
+      if (!spots) continue;
+      const markSize = Math.round(field.between(sizes[0], sizes[1]));
+      const rotation = Math.round(field.between(0, Math.PI) * 100) / 100;
+      for (const at of spots) field.scenery.push({ id: `gen-${kind}-${field.scenery.length + 1}`, kind, ...at, size: markSize, rotation });
+    }
+  };
+  scatter("grove", 6, () => ({ x: field.between(0, size), y: field.between(0, size) }), [300, 480]);
+  scatter("ridge", 2, () => ({ x: field.between(0, size), y: field.random() < 0.5 ? field.between(0, size * 0.18) : field.between(size * 0.82, size) }), [360, 480]);
+  if (!field.mines.some((mine) => distance(mine, { x: center, y: center }) < 300)) scatter("ruin", 1, () => ({ x: center + field.between(-260, 260), y: center + field.between(-260, 260) }), [220, 280]);
+  for (const merc of field.mercs) field.scenery.push({ id: `gen-stone-${field.scenery.length + 1}`, kind: "bannerStone", x: merc.at.x + 70, y: merc.at.y - 50, size: 140, rotation: 0.2 });
 }
 
 function assemble(kind: GeneratedLayoutKind, field: Field, players: PlayerId[]): GeneratedMap {
