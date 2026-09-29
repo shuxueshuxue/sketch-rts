@@ -1,8 +1,8 @@
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
 import { isMapId } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
-import type { CreateRoomInput, SlotPatch } from "./rooms";
-import type { BuildingKind, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
+import { ROOM_AI_VERSIONS, type CreateRoomInput, type SlotPatch } from "./rooms";
+import type { BuildingKind, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 
@@ -151,6 +151,10 @@ export function parseSlotPatch(value: unknown): SlotPatch | undefined {
     if (!isRaceId(value.race)) return undefined;
     patch.race = value.race;
   }
+  if (value.aiVersion !== undefined) {
+    if (!(ROOM_AI_VERSIONS as readonly unknown[]).includes(value.aiVersion)) return undefined;
+    patch.aiVersion = value.aiVersion as RoomAiVersion;
+  }
   if (value.ready !== undefined) {
     if (typeof value.ready !== "boolean") return undefined;
     patch.ready = value.ready;
@@ -253,7 +257,7 @@ function isRaceId(value: unknown): value is RaceId {
 }
 
 function isAiVersionMap(value: unknown): value is GameSetupOptions["aiVersions"] {
-  return isRecord(value) && Object.entries(value).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2"));
+  return isRecord(value) && Object.entries(value).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2" || (ROOM_AI_VERSIONS as readonly unknown[]).includes(version)));
 }
 
 function isResourceSeed(value: unknown) {

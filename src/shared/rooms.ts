@@ -1,7 +1,8 @@
-import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
+import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
-export const DEFAULT_INTERNAL_AI_VERSION = "v5";
+export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v5";
+export const ROOM_AI_VERSIONS: RoomAiVersion[] = ["v5", "v7", "v8"];
 
 export type CreateRoomInput = {
   id: string;
@@ -21,7 +22,7 @@ export type GrandStressRoomOptions = {
 
 type EditableRoomSlot = Omit<RoomSlot, "userId"> & { userId?: string | undefined };
 
-export type SlotPatch = Partial<Pick<RoomSlot, "controller" | "team" | "race" | "ready" | "name">> & { userId?: string | undefined };
+export type SlotPatch = Partial<Pick<RoomSlot, "controller" | "team" | "race" | "ready" | "name" | "aiVersion">> & { userId?: string | undefined };
 
 export function createRoom(input: CreateRoomInput): RoomState {
   const { humanCount, aiCount, slotCount } = assertRoomSlotCounts(input);
@@ -145,7 +146,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
     options: {
       players: playerSlots.map((slot) => slot.playerId),
       aiPlayers: playerSlots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId),
-      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, DEFAULT_INTERNAL_AI_VERSION])),
+      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION])),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race as RaceId])),
     },

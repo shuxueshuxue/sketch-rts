@@ -56,7 +56,7 @@ import { MAP_SCENARIOS } from "../shared/map";
 import { isMapId } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
-import { canStartRoom, type SlotPatch } from "../shared/rooms";
+import { canStartRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -868,6 +868,7 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   const controllerOptions = ["ai", "open", "closed"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
+  const aiOptions = ROOM_AI_VERSIONS.map((version) => `<option value="${version}" ${(slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION) === version ? "selected" : ""}>${version.toUpperCase()}</option>`).join("");
   const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
@@ -881,6 +882,7 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
       ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
     <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
+    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}">${aiOptions}</select>` : ""}
     <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
@@ -892,6 +894,9 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   });
   row.querySelector<HTMLSelectElement>("[data-slot-race]")?.addEventListener("change", (event) => {
     void updateCurrentRoomSlot(slot.id, { race: (event.currentTarget as HTMLSelectElement).value });
+  });
+  row.querySelector<HTMLSelectElement>("[data-slot-ai]")?.addEventListener("change", (event) => {
+    void updateCurrentRoomSlot(slot.id, { aiVersion: (event.currentTarget as HTMLSelectElement).value });
   });
   row.querySelector<HTMLInputElement>("[data-slot-ready]")?.addEventListener("change", (event) => {
     void updateCurrentRoomSlot(slot.id, { ready: (event.currentTarget as HTMLInputElement).checked });

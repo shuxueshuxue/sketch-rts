@@ -27,6 +27,14 @@ describe("room model", () => {
     expect(setup.options.teams).toMatchObject({ player: "north", enemy: "north", "player-4": "south" });
   });
 
+  it("starts each AI slot with the computer player chosen for it, V5 when none is", () => {
+    let room = createRoom({ id: "room-ai-versions", host, slotCount: 4 });
+    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "south", aiVersion: "v8" });
+    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "south", aiVersion: "v7" });
+    room = updateRoomSlot(room, "slot-4", { controller: "ai", team: "south" });
+    expect(roomToGameSetup(room).options.aiVersions).toEqual({ enemy: "v8", enemy2: "v7", "player-4": "v5" });
+  });
+
   it("lets the same local user rejoin their claimed slot without requiring an open slot", () => {
     const room = createRoom({ id: "room-rejoin", host, slotCount: 2 });
 

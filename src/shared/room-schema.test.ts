@@ -35,6 +35,8 @@ describe("shared room setup schema", () => {
       ready: false,
     });
     expect(parseSlotPatch({ controller: "bot" })).toBeUndefined();
+    expect(parseSlotPatch({ aiVersion: "v8" })).toEqual({ aiVersion: "v8" });
+    expect(parseSlotPatch({ aiVersion: "v6" })).toBeUndefined();
     expect(parseSlotCountsRequest({ humanCount: 2, aiCount: 3 })).toEqual({ humanCount: 2, aiCount: 3 });
     expect(parseSlotCountsRequest({ humanCount: 0, aiCount: 3 })).toBeUndefined();
     expect(parseSlotCountsRequest({ humanCount: 30, aiCount: 29 })).toBeUndefined();

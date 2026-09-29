@@ -364,10 +364,15 @@ export type LocalUserProfile = {
 
 export type SlotController = "human" | "ai" | "open" | "closed";
 
+// The computer players a room offers, per AI slot.
+export type RoomAiVersion = "v5" | "v7" | "v8";
+
 export type RoomSlot = {
   id: string;
   playerId: PlayerId;
   controller: SlotController;
+  // An AI slot's computer player (unset: the room default).
+  aiVersion?: RoomAiVersion;
   userId?: string;
   name: string;
   team: string;
