@@ -26,7 +26,7 @@ export type DeploymentRuntime = {
   createRoom(input: CreateRoomInput): Promise<RoomState>;
   getRoom(roomId: string): Promise<RoomState>;
   enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }>;
-  updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState>;
+  updateRoomMap(roomId: string, mapId: MapId, layoutSeed?: string): Promise<RoomState>;
   updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState>;
   updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState>;
   watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void;

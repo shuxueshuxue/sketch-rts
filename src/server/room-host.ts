@@ -225,9 +225,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return hosted.room;
     },
 
-    updateMap(roomId: string, mapId: RoomState["mapId"]): RoomState {
+    updateMap(roomId: string, mapId: RoomState["mapId"], layoutSeed?: string): RoomState {
       const hosted = getHosted(roomId);
-      hosted.room = lifecycle.updateMap(roomId, mapId);
+      hosted.room = lifecycle.updateMap(roomId, mapId, layoutSeed);
       notifyHostedRoomLifecycle(hosted, { room: hosted.room });
       return hosted.room;
     },

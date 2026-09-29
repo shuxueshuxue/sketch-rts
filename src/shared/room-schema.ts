@@ -7,7 +7,7 @@ import type { BuildingKind, GameSetupOptions, ItemKind, LocalUserProfile, MapId,
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
 
 export type CreateRoomRequest = Omit<CreateRoomInput, "id"> & { id?: string };
-export type MapUpdateRequest = { mapId: MapId };
+export type MapUpdateRequest = { mapId: MapId; layoutSeed?: string };
 export type SlotCountsRequest = { humanCount: number; aiCount: number };
 export type ResetRoomRequest = { mapId: MapId; options: GameSetupOptions };
 export type ContinueSaveRequest = { roomId?: string };
@@ -82,7 +82,9 @@ export function parseGrandStressRoomRequest(value: unknown): (GrandStressRoomReq
 
 export function parseMapUpdateRequest(value: unknown): MapUpdateRequest | undefined {
   if (!isRecord(value) || !isMapId(value.mapId)) return undefined;
-  return { mapId: value.mapId };
+  if (value.layoutSeed === undefined) return { mapId: value.mapId };
+  if (typeof value.layoutSeed !== "string" || value.layoutSeed.length === 0 || value.layoutSeed.length > 64) return undefined;
+  return { mapId: value.mapId, layoutSeed: value.layoutSeed };
 }
 
 export function parseSlotCountsRequest(value: unknown): SlotCountsRequest | undefined {

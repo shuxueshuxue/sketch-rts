@@ -155,6 +155,15 @@ describe("room model", () => {
     expect(() => updateRoomMap({ ...updated, status: "inMatch" }, "bareDuel")).toThrow("Cannot edit map after match start");
   });
 
+  it("plays a generated layout when the room names a seed, and the map's own when it drops it", () => {
+    const room = updateRoomMap(createRoom({ id: "room-generated", host }), "wildMarches", "seed-1");
+    expect(room.layoutSeed).toBe("seed-1");
+    expect(roomToGameSetup(room).options.layout).toEqual({ seed: "seed-1" });
+    const plain = updateRoomMap(room, "wildMarches");
+    expect(plain.layoutSeed).toBeUndefined();
+    expect(roomToGameSetup(plain).options.layout).toBeUndefined();
+  });
+
   it("records immutable match results from the simulation snapshot", () => {
     const room = createRoom({ id: "room-results", host });
     const game = createGame(room.mapId, roomToGameSetup(room).options);

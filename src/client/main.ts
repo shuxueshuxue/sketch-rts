@@ -164,6 +164,8 @@ let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
 let selectedMapId: MapId = "verdantCrossroads";
+// Set while the room plays a generated layout (see @@@generated-map).
+let selectedLayoutSeed: string | undefined;
 let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
@@ -675,6 +677,7 @@ function renderRoomSetup() {
   }
   const room = currentRoom!;
   selectedMapId = room.mapId;
+  selectedLayoutSeed = room.layoutSeed;
   menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
   const setup = document.createElement("div");
   setup.className = "room-setup";
@@ -716,7 +719,7 @@ function renderRoomSetup() {
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
   const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
-  mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
+  mapGrid.replaceChildren(generatedMapButton(), ...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...room.slots.map(slotRow));
   setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
@@ -796,10 +799,11 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
   renderMainMenu();
 }
 
-async function selectRoomMap(mapId: MapId) {
+async function selectRoomMap(mapId: MapId, layoutSeed?: string) {
   selectedMapId = mapId;
+  selectedLayoutSeed = layoutSeed;
   pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
-  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId);
+  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId, layoutSeed);
   renderMainMenu();
 }
 
@@ -829,6 +833,7 @@ async function startCurrentRoom() {
 
 async function createReplayRoom(room: RoomState) {
   selectedMapId = room.mapId;
+  selectedLayoutSeed = room.layoutSeed;
   await createLocalRoom();
 }
 
@@ -848,7 +853,7 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
 function mapChoiceButton(mapId: MapId) {
   const scenario = MAP_SCENARIOS.find((candidate) => candidate.id === mapId)!;
   const button = document.createElement("button");
-  button.className = `map-button ${selectedMapId === scenario.id ? "selected" : ""}`;
+  button.className = `map-button ${!selectedLayoutSeed && selectedMapId === scenario.id ? "selected" : ""}`;
   button.type = "button";
   button.dataset.mapId = scenario.id;
   button.setAttribute("aria-label", t("map.choose", { name: scenario.name }));
@@ -858,6 +863,23 @@ function mapChoiceButton(mapId: MapId) {
     <span class="map-button-tags">${[mapCapacityLabel(scenario.id), ...scenario.tags].map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
   `;
   button.addEventListener("click", () => void selectRoomMap(scenario.id));
+  return button;
+}
+
+// A new generated layout each click (see @@@generated-map), named by the map chosen before it.
+function generatedMapButton() {
+  const button = document.createElement("button");
+  button.className = `map-button ${selectedLayoutSeed ? "selected" : ""}`;
+  button.type = "button";
+  button.dataset.generatedMap = "true";
+  button.setAttribute("aria-label", t("map.generated"));
+  const seedTag = selectedLayoutSeed ? `<span>${escapeHtml(t("map.generatedSeed", { seed: selectedLayoutSeed }))}</span>` : "";
+  button.innerHTML = `
+    <span class="map-button-name">${escapeHtml(t("map.generated"))}</span>
+    <span class="map-button-note">${escapeHtml(t("map.generatedNote"))}</span>
+    <span class="map-button-tags"><span>ladder</span>${seedTag}</span>
+  `;
+  button.addEventListener("click", () => void selectRoomMap(selectedMapId, Math.random().toString(36).slice(2, 10)));
   return button;
 }
 

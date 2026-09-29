@@ -405,6 +405,8 @@ export type RoomState = {
   hostUserId: string;
   visibility: RoomVisibility;
   mapId: MapId;
+  // When set, the match is played on the layout generated from this seed (see @@@generated-map); the map id names it.
+  layoutSeed?: string;
   status: RoomStatus;
   autoTick: boolean;
   slots: RoomSlot[];

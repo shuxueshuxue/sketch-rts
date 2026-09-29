@@ -61,9 +61,10 @@ export function updateRoomSlot(room: RoomState, slotId: string, patch: SlotPatch
   };
 }
 
-export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
+export function updateRoomMap(room: RoomState, mapId: MapId, layoutSeed?: string): RoomState {
   if (room.status !== "open") throw new Error("Cannot edit map after match start");
-  return { ...room, mapId };
+  const { layoutSeed: _previous, ...rest } = room;
+  return layoutSeed ? { ...rest, mapId, layoutSeed } : { ...rest, mapId };
 }
 
 export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: number): RoomState {
@@ -149,6 +150,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
       aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION])),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race as RaceId])),
+      ...(room.layoutSeed ? { layout: { seed: room.layoutSeed } } : {}),
     },
   };
 }
