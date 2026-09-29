@@ -106,7 +106,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const strength = strengthOf(available);
   const current = memory.general;
 
-  const defense = isV7Policy(options) ? v7DefendTarget(intel) : defendTarget(intel);
+  const defense = isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel);
   if (defense) {
     if (isV7Policy(options)) delete memory.creep;
     const edge = current?.mode === "defend" ? defense.stay : defense.edge;
@@ -250,11 +250,16 @@ const V7_WOUNDED_SHARE = 0.35;
 const V7_DEFEND_STEP = 200;
 const V7_DEFEND_LEASH = 450;
 
-function v7DefendTarget(intel: V6Intel) {
+// @@@v9-defend-rising - V9 defends a hall still rising like one standing: counting only standing halls, V9's army stood in
+// front of its main while V8's four ravagers razed its natural 600 paces away, rising since 3:08 (emberFen, generated,
+// 3:50), with four ravagers of its own to meet them.
+function v7DefendTarget(intel: V6Intel, options: AiPolicyContext) {
   const intrusion = intel.intrusion;
   if (!intrusion) return undefined;
   const attackers = averagePoint(intrusion.attackers);
-  const hall = intel.ownHalls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, attackers) < distance(best, attackers) ? candidate : best), undefined) ?? intel.home;
+  const rising = isV9Policy(options) && intrusion.building.kind === "townHall" && !intrusion.building.complete;
+  const halls = rising ? [...intel.ownHalls, intrusion.building] : intel.ownHalls;
+  const hall = halls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, attackers) < distance(best, attackers) ? candidate : best), undefined) ?? intel.home;
   const towers = intel.ownTowers.filter((tower) => distance(tower, hall) <= tower.attackRange + TOWER_COVER);
   const main = distance(hall, intel.home) < 1;
   return { point: toward(hall, attackers, V7_DEFEND_STEP), field: attackers, threat: intrusion.threat, inCover: main, cover: towers.length * TOWER_STRENGTH, edge: V7_DEFEND_EDGE, stay: V7_DEFEND_STAY, guard: toward(intel.home, attackers, V7_DEFEND_STEP), leash: V7_DEFEND_LEASH, hall };
