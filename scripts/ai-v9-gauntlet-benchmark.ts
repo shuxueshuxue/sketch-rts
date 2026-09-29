@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createAiV9GauntletBenchmarkInput, runAiV9GauntletBenchmarkDetailsParallel, runAiV9GauntletBenchmarkParallel, runAiV9GauntletBenchmarkSeedsParallel } from "../src/ai/benchmark/v9-gauntlet";
+import type { OpponentVersion } from "../src/ai/benchmark/subject-gauntlet";
 import { benchmarkFilterFromArgs, boolFlag, commonAiBenchmarkOptionsFromArgs, csvFlag, flag, printJson, requiredFlag, requiredNumberFlag, runAiBenchmarkCli } from "./benchmark-cli";
 
 const args = process.argv.slice(2);
@@ -9,7 +10,15 @@ const options = () => ({
   ...commonAiBenchmarkOptionsFromArgs(args),
   ...(flag(args, "nudges") ? { nudges: requiredNumberFlag(args, "nudges") } : {}),
   ...(flag(args, "nudge-at") ? { nudgeAt: requiredNumberFlag(args, "nudge-at") } : {}),
+  // --rivals v8 | v5,v7 | ...: another group than V5, V7 and V8 together (see v9Gauntlet).
+  ...(flag(args, "rivals") ? { rivals: rivals(csvFlag(args, "rivals")) } : {}),
 });
+
+function rivals(names: string[]): OpponentVersion[] {
+  const known: OpponentVersion[] = ["v3", "v5", "v6", "v7", "v8"];
+  for (const name of names) if (!known.includes(name as OpponentVersion)) throw new Error(`Unknown rival ${name}`);
+  return names as OpponentVersion[];
+}
 
 if (flag(args, "seeds")) {
   // Several seeds, one worker pool (see @@@gauntlet-seed-pool). Each seed's result goes to <out-dir>/<label>-<seed>.log as

@@ -26,6 +26,15 @@ describe("v9 gauntlet benchmark", () => {
     expect(v9Firsts).toEqual(new Set([true, false]));
   });
 
+  it("plays the same procedure against another group while V9 is developed", () => {
+    const { input } = createAiV9GauntletBenchmarkInput({ seed: "v9-duel", mapCount: 4, rivals: ["v8"] });
+    for (const match of input.evaluations.flatMap((evaluation) => evaluation.matches)) {
+      expect(Object.keys(match.agents).sort()).toEqual(["p1", "v9"]);
+      expect(match.agents.p1).toMatchObject({ version: "v8" });
+      expect(match.options?.layout?.seed).toBeTruthy();
+    }
+  });
+
   it("nudges V9 and each rival in turn", () => {
     const { input } = createAiV9GauntletBenchmarkInput({ seed: "v9-nudge", mapCount: 3, nudges: 4 });
     const nudged = input.evaluations.flatMap((evaluation) => evaluation.matches).slice(0, 4) as { nudge?: { who: string } }[];
