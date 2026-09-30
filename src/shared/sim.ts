@@ -1,7 +1,8 @@
 import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
-import { buildingPlacementBlocker } from "./build-placement";
+import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
+import { isWalkable, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
 import {
   createBuilding,
@@ -135,7 +136,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const game = {
     tick: 0,
     match: createMatchState(activePlayers),
-    map: generated ? { ...createMap(mapId), width: generated.size, height: generated.size, landmarks: generated.landmarks } : createMap(mapId),
+    map: generated ? { ...createMap(mapId), width: generated.size, height: generated.size, landmarks: generated.landmarks, ...(generated.terrain ? { terrain: generated.terrain } : {}) } : createMap(mapId),
     players: createPlayerStates(activePlayers, options),
     units: generated?.units ?? createInitialUnits(mapId, activePlayers, teams),
     buildings: generated?.buildings ?? createInitialBuildings(activePlayers, mapId, teams),
@@ -148,7 +149,9 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     activePlayers,
     teams,
     spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number) {
-      const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, x, y);
+      // A unit comes out on walkable ground (see @@@terrain): beside a hall backed onto a forest, at its nearest edge.
+      const at = walkableGoal(this.map, x, y);
+      const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
       this.nextId += 1;
       applyUnitUpgrades(this, unit);
       this.units.push(unit);
@@ -373,6 +376,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (!RACE_DEFS[playerState(game, owner).race].buildableBuildings.includes(command.buildingKind)) throw new Error(`${playerState(game, owner).race} race cannot build ${command.buildingKind}`);
     const blocker = buildingPlacementBlocker(game, command.buildingKind, command);
     if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
+    if (terrainBlocksPlacement(game.map, command.buildingKind, command)) throw new Error(`${command.buildingKind} placement is on blocked ground`);
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
     const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
     applyDerivedBuildingStats(game, building);
@@ -701,7 +705,7 @@ function updateUnits(game: Game) {
     }
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
-      if (distance(unit, unit.order) < 5) unit.order = { type: "idle" };
+      if (distance(unit, walkableGoal(game.map, unit.order.x, unit.order.y)) < 5) unit.order = { type: "idle" };
       continue;
     }
     if (unit.order.type === "attackMove") {
@@ -825,7 +829,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
     return;
   }
   moveToward(unit, order.x, order.y, game.map);
-  if (distance(unit, order) < 8) unit.order = { type: "idle" };
+  if (distance(unit, walkableGoal(game.map, order.x, order.y)) < 8) unit.order = { type: "idle" };
 }
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
@@ -1305,8 +1309,12 @@ function dashToward(unit: Unit, target: { x: number; y: number }, step: number, 
   const gap = distance(unit, target);
   if (gap <= 0 || step <= 0) return;
   const move = Math.min(step, gap);
-  unit.x = clamp(unit.x + ((target.x - unit.x) / gap) * move, 0, map.width);
-  unit.y = clamp(unit.y + ((target.y - unit.y) / gap) * move, 0, map.height);
+  const x = clamp(unit.x + ((target.x - unit.x) / gap) * move, 0, map.width);
+  const y = clamp(unit.y + ((target.y - unit.y) / gap) * move, 0, map.height);
+  // A dash stops at blocked ground (see @@@terrain).
+  if (map.terrain && !isWalkable(map, x, y)) return;
+  unit.x = x;
+  unit.y = y;
 }
 
 // @@@autocast-step - Each ready ability a unit has switched on (see autocast) looks for its moment, as Warcraft III units
@@ -2269,10 +2277,19 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;
   const push = (minDistance - length) / 2;
-  a.x = clamp(a.x - nx * push, 0, game.map.width);
-  a.y = clamp(a.y - ny * push, 0, game.map.height);
-  b.x = clamp(b.x + nx * push, 0, game.map.width);
-  b.y = clamp(b.y + ny * push, 0, game.map.height);
+  const ax = clamp(a.x - nx * push, 0, game.map.width);
+  const ay = clamp(a.y - ny * push, 0, game.map.height);
+  const bx = clamp(b.x + nx * push, 0, game.map.width);
+  const by = clamp(b.y + ny * push, 0, game.map.height);
+  // Neither is pushed onto blocked ground (see @@@terrain): the one by a wall stays and the other gives way.
+  if (!game.map.terrain || isWalkable(game.map, ax, ay)) {
+    a.x = ax;
+    a.y = ay;
+  }
+  if (!game.map.terrain || isWalkable(game.map, bx, by)) {
+    b.x = bx;
+    b.y = by;
+  }
 }
 
 function numericBucketKey(x: number, y: number) {
@@ -2389,6 +2406,10 @@ function forEachNearbyEntity<T extends SpatialEntity>(
 }
 
 function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
+  if (map.terrain) {
+    walkToward(unit, x, y, map);
+    return;
+  }
   const dx = x - unit.x;
   const dy = y - unit.y;
   const length = Math.hypot(dx, dy);
@@ -2399,6 +2420,29 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
   }
   unit.x = clamp(unit.x + (dx / length) * unit.speed, 0, map.width);
   unit.y = clamp(unit.y + (dy / length) * unit.speed, 0, map.height);
+}
+
+// @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
+// for the farthest cell it sees on the way (see terrain steerPoint), and a goal in a forest or on rock is its nearest
+// walkable cell. A step that would end on blocked ground slides along it on one axis, or waits; a unit that stands on
+// blocked ground (only a seeded scenario puts one there) walks out.
+function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
+  const goal = walkableGoal(map, x, y);
+  const aim = steerPoint(map, unit, goal);
+  const dx = aim.x - unit.x;
+  const dy = aim.y - unit.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  if (length === 0) return;
+  const nextX = clamp(length <= unit.speed ? aim.x : unit.x + (dx / length) * unit.speed, 0, map.width);
+  const nextY = clamp(length <= unit.speed ? aim.y : unit.y + (dy / length) * unit.speed, 0, map.height);
+  if (isWalkable(map, nextX, nextY) || !isWalkable(map, unit.x, unit.y)) {
+    unit.x = nextX;
+    unit.y = nextY;
+  } else if (isWalkable(map, nextX, unit.y)) {
+    unit.x = nextX;
+  } else if (isWalkable(map, unit.x, nextY)) {
+    unit.y = nextY;
+  }
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {

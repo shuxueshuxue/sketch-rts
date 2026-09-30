@@ -1,5 +1,6 @@
 import type { BUILDING_RULES, UNIT_RULES, VariantRules } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
+import type { Terrain } from "./terrain";
 
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
@@ -319,6 +320,8 @@ export type GameMap = {
   width: number;
   height: number;
   landmarks: TerrainLandmark[];
+  // Ground a unit cannot cross (see @@@terrain); a map without it is open everywhere.
+  terrain?: Terrain;
 };
 
 export type TerrainLandmark = {

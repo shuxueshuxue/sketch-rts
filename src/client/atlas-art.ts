@@ -79,6 +79,11 @@ export function drawAtlasProp(c: Brush, key: string, paint: (b: Brush) => void, 
   sprite(c, `p:${key}`, point, scale, paint, flip);
 }
 
+/** One tree of the atlas, its foot at (x, y). */
+export function drawAtlasTree(c: Brush, x: number, y: number, size: number, tone = 0) {
+  tree(c, x, y, size, tone);
+}
+
 function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
   c.save(); c.translate(x, y); c.scale(size, size);
   ellipse(c, 5, 4, 16, 6, "#304f3b19");

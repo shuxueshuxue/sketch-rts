@@ -1,6 +1,6 @@
 import { abilityCooldown } from "../ability-cooldowns";
 import { canAutocast } from "../autocast";
-import { buildingPlacementBlocker } from "../build-placement";
+import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
@@ -35,6 +35,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!RACE_DEFS[player.race].buildableBuildings.includes(command.buildingKind)) return commandError(`${player.race} race cannot build ${command.buildingKind}`);
     const blocker = buildingPlacementBlocker(snapshot, command.buildingKind, command);
     if (blocker) return commandError(`${command.buildingKind} placement is too close to ${blocker.kind}`, true);
+    if (terrainBlocksPlacement(snapshot.map, command.buildingKind, command)) return commandError(`${command.buildingKind} placement is on blocked ground`);
     return canSpendGold(snapshot, owner, BUILDING_DEFS[command.buildingKind].cost) ? undefined : commandError(`Need ${BUILDING_DEFS[command.buildingKind].cost} gold`, true);
   }
   if (command.type === "setRally") {

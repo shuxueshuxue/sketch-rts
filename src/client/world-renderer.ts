@@ -4,6 +4,7 @@ import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
 import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
+import { drawTerrain } from "./terrain-art";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
@@ -100,7 +101,13 @@ export function drawWorld(frame: WorldFrame) {
   painter.motion?.update(snapshot, painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
-  drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
+  if (snapshot.map.terrain) {
+    // A map with terrain is its own ground (see @@@terrain-art): the paper under it, no map id's linework.
+    drawAtlasGround(ctx, painter.width, painter.height, painter.camera);
+    drawTerrain(ctx, snapshot.map.terrain, painter.camera, painter.width, painter.height);
+  } else {
+    drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
+  }
   drawLandmarks(painter, snapshot.map.landmarks);
   if (frame.story && frame.props) drawStoryProps(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);

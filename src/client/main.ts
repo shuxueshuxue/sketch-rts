@@ -25,6 +25,7 @@ import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
+import { terrainMinimap } from "./terrain-art";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -2550,6 +2551,11 @@ function drawMinimap(marks: MapPresentationMark[]) {
   ctx.strokeStyle = "#bca477";
   ctx.lineWidth = 2;
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+  if (snapshot.map.terrain) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(terrainMinimap(snapshot.map.terrain), rect.x, rect.y, rect.width, rect.height);
+    ctx.imageSmoothingEnabled = true;
+  }
   ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
   for (const mark of marks) {
     const point = projectWorldToRect(mark, snapshot.map, rect);

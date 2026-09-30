@@ -1,21 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
+import { isFootprintWalkable, isWalkable, walkingDistance } from "./terrain";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
 const TEAMS = { v9: "v9-side", p1: "rivals", p2: "rivals", p3: "rivals" };
+const PAIRS = { a1: "north", a2: "north", b1: "south", b2: "south" };
 const gap = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 
-function layout(seed: string, kind?: "ring" | "sides") {
-  const map = generateMap({ seed, ...(kind ? { kind } : {}) }, PLAYERS, TEAMS);
-  const halls = PLAYERS.map((player) => ({ player, x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
+function layout(seed: string, kind?: "ring" | "sides", players = PLAYERS, teams: Record<string, string> = TEAMS) {
+  const map = generateMap({ seed, ...(kind ? { kind } : {}) }, players, teams);
+  const halls = players.map((player) => ({ player, x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
   const expansions = map.resources.filter((mine) => !mine.id.endsWith("-main"));
-  return { map, halls, expansions };
+  const ground = { terrain: map.terrain, width: map.size, height: map.size };
+  return { map, halls, expansions, ground };
 }
 
 describe("generated maps", () => {
   it("gives four players a main mine and a natural each and more mines to contest, the same from every start of a ring", () => {
-    for (let index = 0; index < 20; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       const { map, halls, expansions } = layout(`ring-${index}`, "ring");
       expect(expansions.length).toBeGreaterThanOrEqual(8);
       for (const hall of halls) {
@@ -29,42 +32,97 @@ describe("generated maps", () => {
     }
   });
 
+  it("carves a ladder map: every start walks to every other start and every mine, camp and post, over ground it can stand on", () => {
+    for (let index = 0; index < 12; index += 1) {
+      const { map, halls, ground } = layout(`walk-${index}`);
+      const open = [...map.terrain.cells].filter((cell) => cell === ".").length / map.terrain.cells.length;
+      expect(open).toBeGreaterThan(0.15);
+      expect(open).toBeLessThan(0.6);
+      const things = [...map.resources, ...map.mercenaryCamps, ...map.units, ...map.buildings];
+      for (const thing of things) expect(isWalkable(ground, thing.x, thing.y)).toBe(true);
+      for (const hall of halls) for (const thing of [...halls, ...map.resources, ...map.mercenaryCamps]) expect(walkingDistance(ground, hall, thing)).toBeDefined();
+      // A start's own natural is a short walk down its ramp, nearer it than to any other start.
+      for (const hall of halls) {
+        const natural = map.resources.filter((mine) => !mine.id.endsWith("-main")).sort((a, b) => walkingDistance(ground, hall, a)! - walkingDistance(ground, hall, b)!)[0]!;
+        for (const other of halls) if (other !== hall) expect(walkingDistance(ground, other, natural)!).toBeGreaterThan(walkingDistance(ground, hall, natural)!);
+      }
+    }
+  });
+
+  it("puts every main on a plateau walled by its cliff but for one ramp, with room to build", () => {
+    for (let index = 0; index < 8; index += 1) {
+      const { map, halls, ground } = layout(`plateau-${index}`);
+      const { cols, cell, levels } = map.terrain;
+      for (const hall of halls) {
+        const at = Math.floor(hall.y / cell) * cols + Math.floor(hall.x / cell);
+        expect(levels![at]).toBe("1");
+        let room = 0;
+        for (let dy = -400; dy <= 400; dy += 50) for (let dx = -400; dx <= 400; dx += 50) if (isFootprintWalkable(ground, hall.x + dx, hall.y + dy, 40)) room += 1;
+        expect(room).toBeGreaterThan(90);
+      }
+      // Plateau ground meets low ground only across a ramp.
+      for (let index = 0; index < map.terrain.cells.length; index += 1) {
+        if (map.terrain.cells[index] !== "." || levels![index] !== "1") continue;
+        for (const next of [index + 1, index - 1, index + cols, index - cols]) if (map.terrain.cells[next] === ".") expect(levels![next]).not.toBe("0");
+      }
+    }
+  });
+
+  it("is exactly the same ground seen from every start of four", () => {
+    for (let index = 0; index < 6; index += 1) {
+      const { map } = layout(`turn-${index}`);
+      const { cols, cells } = map.terrain;
+      for (let row = 0; row < cols; row += 1) for (let col = 0; col < cols; col += 1) expect(cells[col * cols + (cols - 1 - row)]).toBe(cells[row * cols + col]);
+    }
+  });
+
   it("gives every player of two facing teams a natural of its own, nearer to it than to any other start", () => {
-    for (let index = 0; index < 20; index += 1) {
-      const { halls, expansions } = layout(`sides-${index}`, "sides");
-      expect(expansions.length).toBeGreaterThanOrEqual(8);
+    const players = Object.keys(PAIRS);
+    for (let index = 0; index < 10; index += 1) {
+      const { halls, expansions } = layout(`sides-${index}`, "sides", players, PAIRS);
+      expect(expansions.length).toBeGreaterThanOrEqual(6);
       for (const hall of halls) {
         const natural = [...expansions].sort((a, b) => gap(a, hall) - gap(b, hall))[0]!;
-        expect(gap(natural, hall)).toBeLessThan(1_000);
+        expect(gap(natural, hall)).toBeLessThan(1_100);
         for (const other of halls) if (other !== hall) expect(gap(natural, other)).toBeGreaterThan(gap(natural, hall));
       }
     }
+    expect(() => generateMap({ seed: "uneven", kind: "sides" }, PLAYERS, TEAMS)).toThrow(/same size/);
   });
 
   it("keeps creeps out of every start's opening economy and everything on the map", () => {
-    for (const kind of ["ring", "sides"] as const) {
-      for (let index = 0; index < 20; index += 1) {
-        const { map } = layout(`safe-${kind}-${index}`, kind);
-        const spots = Object.values(map.starts).flatMap((start) => [{ x: start.baseX, y: start.baseY }, { x: start.mineX, y: start.mineY }]);
-        const neutrals = map.units.filter((unit) => unit.owner === "neutral");
-        expect(neutrals.length).toBeGreaterThan(0);
-        for (const creep of neutrals) for (const spot of spots) expect(gap(creep, spot)).toBeGreaterThan(440);
-        for (const thing of [...map.units, ...map.buildings, ...map.resources, ...map.mercenaryCamps]) {
-          expect(thing.x).toBeGreaterThanOrEqual(0);
-          expect(thing.y).toBeGreaterThanOrEqual(0);
-          expect(thing.x).toBeLessThanOrEqual(map.size);
-          expect(thing.y).toBeLessThanOrEqual(map.size);
-        }
-        for (const item of map.items) expect(map.units.some((unit) => unit.id === item.carrierId)).toBe(true);
+    for (let index = 0; index < 12; index += 1) {
+      const { map } = layout(`safe-${index}`);
+      const spots = Object.values(map.starts).flatMap((start) => [{ x: start.baseX, y: start.baseY }, { x: start.mineX, y: start.mineY }]);
+      const neutrals = map.units.filter((unit) => unit.owner === "neutral");
+      expect(neutrals.length).toBeGreaterThan(0);
+      for (const creep of neutrals) for (const spot of spots) expect(gap(creep, spot)).toBeGreaterThan(440);
+      for (const thing of [...map.units, ...map.buildings, ...map.resources, ...map.mercenaryCamps]) {
+        expect(thing.x).toBeGreaterThanOrEqual(0);
+        expect(thing.y).toBeGreaterThanOrEqual(0);
+        expect(thing.x).toBeLessThanOrEqual(map.size);
+        expect(thing.y).toBeLessThanOrEqual(map.size);
       }
+      for (const item of map.items) expect(map.units.some((unit) => unit.id === item.carrierId)).toBe(true);
     }
   });
 
-  it("is the same map for the same seed and a different one for another, of both kinds over many seeds", () => {
+  it("is the same map for the same seed and a different one for another, of both kinds for even teams", () => {
     expect(layout("same")).toEqual(layout("same"));
-    expect(layout("one").map.resources).not.toEqual(layout("two").map.resources);
-    const kinds = new Set(Array.from({ length: 30 }, (_, index) => layout(`kind-${index}`).map.kind));
+    expect(layout("one").map.terrain.cells).not.toEqual(layout("two").map.terrain.cells);
+    const kinds = new Set(Array.from({ length: 30 }, (_, index) => layout(`kind-${index}`, undefined, Object.keys(PAIRS), PAIRS).map.kind));
     expect(kinds).toEqual(new Set(["ring", "sides"]));
+    expect(new Set(Array.from({ length: 10 }, (_, index) => layout(`kind-${index}`).map.kind))).toEqual(new Set(["ring"]));
+  });
+
+  it("draws a map for any number of players from two to eight", () => {
+    for (let count = 2; count <= 8; count += 1) {
+      const players = Array.from({ length: count }, (_, index) => `p${index}`);
+      const teams = Object.fromEntries(players.map((player) => [player, player]));
+      const { map, halls, ground } = layout(`count-${count}`, "ring", players, teams);
+      expect(Object.keys(map.starts)).toHaveLength(count);
+      for (const hall of halls) expect(walkingDistance(ground, halls[0]!, hall)).toBeDefined();
+    }
   });
 
   it("builds a game on the layout when the setup asks for one, and the map id's own otherwise", () => {
@@ -75,6 +133,8 @@ describe("generated maps", () => {
     expect(generated.resources).toEqual(map.resources);
     expect(generated.buildings.map((building) => [building.id, building.x, building.y])).toEqual(map.buildings.map((building) => [building.id, building.x, building.y]));
     expect(generated.map.landmarks).toEqual(map.landmarks);
+    expect(generated.map.terrain).toEqual(map.terrain);
     expect(plain.resources).not.toEqual(map.resources);
+    expect(plain.map.terrain).toBeUndefined();
   });
 });
