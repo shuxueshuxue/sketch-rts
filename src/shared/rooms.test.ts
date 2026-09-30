@@ -148,20 +148,30 @@ describe("room model", () => {
 
   it("keeps map choice as editable room setup state before match start", () => {
     const room = createRoom({ id: "room-map", host });
-    const updated = updateRoomMap(room, "wildMarches");
+    const updated = updateRoomMap(room, "campRush");
 
-    expect(updated.mapId).toBe("wildMarches");
-    expect(roomToGameSetup(updated).mapId).toBe("wildMarches");
+    expect(updated.mapId).toBe("campRush");
+    expect(roomToGameSetup(updated).mapId).toBe("campRush");
     expect(() => updateRoomMap({ ...updated, status: "inMatch" }, "bareDuel")).toThrow("Cannot edit map after match start");
   });
 
   it("plays a generated layout when the room names a seed, and the map's own when it drops it", () => {
-    const room = updateRoomMap(createRoom({ id: "room-generated", host }), "wildMarches", "seed-1");
+    const room = updateRoomMap(createRoom({ id: "room-generated", host }), "verdantCrossroads", "seed-1");
     expect(room.layoutSeed).toBe("seed-1");
     expect(roomToGameSetup(room).options.layout).toEqual({ seed: "seed-1" });
-    const plain = updateRoomMap(room, "wildMarches");
+    const plain = updateRoomMap(room, "verdantCrossroads");
     expect(plain.layoutSeed).toBeUndefined();
     expect(roomToGameSetup(plain).options.layout).toBeUndefined();
+  });
+
+  it("plays a ladder room on its own layout seed, or on the one its id seeds when it has none", () => {
+    const created = createRoom({ id: "room-ladder", host, mapId: "ladder", layoutSeed: "seed-2" });
+    expect(created.layoutSeed).toBe("seed-2");
+    expect(roomToGameSetup(created)).toMatchObject({ mapId: "ladder", options: { layout: { seed: "seed-2" } } });
+    const unseeded = updateRoomMap(created, "ladder");
+    expect(unseeded.layoutSeed).toBeUndefined();
+    expect(roomToGameSetup(unseeded).options.layout).toEqual({ seed: "room-ladder" });
+    expect(roomToGameSetup(updateRoomMap(unseeded, "ladder", "seed-3")).options.layout).toEqual({ seed: "seed-3" });
   });
 
   it("records immutable match results from the simulation snapshot", () => {

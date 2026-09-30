@@ -14,6 +14,7 @@ import {
   createUnit,
   createMap,
   DEFAULT_MAP_ID,
+  LADDER_MAP_ID,
   trainTimeFor,
   withUnitShape,
 } from "./map";
@@ -132,7 +133,9 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const activePlayers = uniquePlayers(options.players ?? [...DEFAULT_PLAYERS, ...aiPlayers]);
   const teams = Object.fromEntries(activePlayers.map((owner, index) => [owner, options.teams?.[owner] ?? DEFAULT_TEAMS[owner] ?? `team-${index + 1}`]));
   // A generated layout replaces the map id's own starts, mines, camps and scenery (see @@@generated-map); the id names it.
-  const generated = options.layout ? generateMap(options.layout, activePlayers, teams) : undefined;
+  // The ladder map has none of its own: a game on it without a layout is drawn from the seed "ladder".
+  const layout = options.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
+  const generated = layout ? generateMap(layout, activePlayers, teams) : undefined;
   const game = {
     tick: 0,
     match: createMatchState(activePlayers),

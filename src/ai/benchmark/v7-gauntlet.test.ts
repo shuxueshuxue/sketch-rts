@@ -7,6 +7,8 @@ describe("v7 gauntlet benchmark", () => {
     const { input, selection } = createAiV7GauntletBenchmarkInput({ seed: "v7-input", mapCount: 12 });
     const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
     expect(matches.map((match) => match.name)).toEqual(selection.mapIds.flatMap((mapId) => [`${mapId} v7 grove`, `${mapId} v7 ember`]));
+    expect(matches.every((match) => match.mapId === "ladder")).toBe(true);
+    expect(matches.map((match) => match.options?.layout?.seed)).toEqual(selection.mapIds.flatMap((slot, index) => [`v7-layout:v7-input:${slot}:${index}`, `v7-layout:v7-input:${slot}:${index}`]));
     const pairs = new Set<string>();
     const firstIds = new Set<string>();
     const v7Firsts = new Set<boolean>();
@@ -30,8 +32,8 @@ describe("v7 gauntlet benchmark", () => {
     expect(firstIds.size).toBeGreaterThan(1);
     expect(v7Firsts).toEqual(new Set([true, false]));
     // A map's two games face different pairs.
-    for (const mapId of selection.mapIds) {
-      const [grove, ember] = matches.filter((match) => match.mapId === mapId).map((match) => [match.agents.p1!.version, match.agents.p2!.version].sort().join("+"));
+    for (const slot of selection.mapIds) {
+      const [grove, ember] = matches.filter((match) => match.name.startsWith(`${slot} `)).map((match) => [match.agents.p1!.version, match.agents.p2!.version].sort().join("+"));
       expect(grove).not.toBe(ember);
     }
   });

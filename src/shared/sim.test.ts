@@ -10,8 +10,8 @@ import { seconds } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-// The whole duel's CPU, AI and sim together. With spells on their own cooldowns the wildMarches duel runs 32k ticks (18k
-// before) at the same 0.15-0.19 ms a tick on a loaded runner; the budget keeps the old headroom over that length.
+// The whole duel's CPU, AI and sim together. With spells on their own cooldowns a duel on a map with camps ran 32k ticks
+// (18k before) at the same 0.15-0.19 ms a tick on a loaded runner; the budget keeps the old headroom over that length.
 const AI_DUEL_CPU_BUDGET_MS = 8_000;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
@@ -441,7 +441,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps map gold mines lean enough that expansions and harassment matter", () => {
-    const regularMaps = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "wildMarches"] as const;
+    const regularMaps = ["verdantCrossroads", "bareDuel", "openClaims", "campRush"] as const;
 
     for (const mapId of regularMaps) {
       const mines = createInitialResources(mapId, ["player", "enemy"]);
@@ -449,13 +449,16 @@ describe("sketch RTS simulation", () => {
       expect(Math.max(...mines.map((mine) => mine.amount))).toBe(6_000);
       expect(Math.min(...mines.map((mine) => mine.amount))).toBe(6_000);
     }
+    const ladderMines = createGame("ladder", { aiPlayers: [] }).resources;
+    expect(ladderMines.length).toBeGreaterThan(2);
+    expect(ladderMines.every((mine) => mine.amount === 6_000)).toBe(true);
 
     const grandMines = createInitialResources("grandThirty", Array.from({ length: 30 }, (_, index) => `p${index + 1}`));
     expect(Math.max(...grandMines.map((mine) => mine.amount))).toBe(6_000);
     expect(Math.min(...grandMines.map((mine) => mine.amount))).toBe(6_000);
   });
 
-  it("defines isolated V5 economy stress maps outside the rich-score pool", () => {
+  it("defines isolated V5 economy stress maps apart from the ladder map", () => {
     const grid = createGame("goldGrid", { players: ["v5", "v3a", "v3b", "v3c", "v3d", "v3e"], aiPlayers: [] });
     const pocketCamps = createInitialMercenaryCamps("mercPocket");
 
@@ -2010,7 +2013,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("seeds normal neutral maps with real treasure carried by wildlings", () => {
-    const game = createGame("wildMarches", { aiPlayers: [] });
+    const game = createGame("verdantCrossroads", { aiPlayers: [] });
     const carriedItems = game.items.filter((item) => item.carrierId);
 
     expect(carriedItems.length).toBeGreaterThanOrEqual(3);
@@ -2022,7 +2025,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("guards normal mercenary camps with nearby wildlings", () => {
-    for (const mapId of ["verdantCrossroads", "campRush", "wildMarches"] as const) {
+    for (const mapId of ["verdantCrossroads", "campRush"] as const) {
       const game = createGame(mapId, { aiPlayers: [] });
       for (const camp of game.mercenaryCamps) {
         const nearestGuardDistance = Math.min(...game.units.filter((unit) => unit.owner === "neutral").map((unit) => distance(unit, camp)));
@@ -2174,8 +2177,8 @@ describe("sketch RTS simulation", () => {
     expect(totalNeutralKills).toBeGreaterThan(0);
   });
 
-  it("runs a fast two-AI duel on a neutral-heavy map variant", () => {
-    const result = runTwoAiDuel("wildMarches");
+  it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
+    const result = runTwoAiDuel("ladder");
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
@@ -2186,7 +2189,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast three-AI free-for-all with a real third faction economy and winner", () => {
-    const game = createGame("wildMarches", { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"] });
+    const game = createGame("verdantCrossroads", { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"] });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
     const started = process.cpuUsage();
 
@@ -2223,7 +2226,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast 1v2 allied-AI match without allied target acquisition", () => {
-    const game = createGame("wildMarches", {
+    const game = createGame("verdantCrossroads", {
       players: ["player", "enemy", "enemy2"],
       aiPlayers: ["player", "enemy", "enemy2"],
       teams: { player: "north", enemy: "south", enemy2: "south" },

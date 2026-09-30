@@ -58,8 +58,8 @@ describe("det-math", () => {
   });
 
   it("gives the recorded bits for the angles the game uses", () => {
-    // Trained units spawn at (nextId * 47 mod 360) degrees; rings of 16 and 8 points; rich-map rotations; creep camps;
-    // V7 staging turns.
+    // Trained units spawn at (nextId * 47 mod 360) degrees; rings of 16 and 8 points; small rotations; creep camps; V7
+    // staging turns.
     expect(digest(Array.from({ length: 360 }, (_, degrees) => degrees * (Math.PI / 180)))).toBe("a2e044fbe5b00554");
     expect(digest(Array.from({ length: 16 }, (_, index) => (Math.PI * 2 * index) / 16))).toBe("8a2952e5549c336d");
     expect(digest(Array.from({ length: 8 }, (_, index) => (index / 8) * Math.PI * 2))).toBe("ebc0237198c696e6");

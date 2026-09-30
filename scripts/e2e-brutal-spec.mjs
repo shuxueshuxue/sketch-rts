@@ -145,12 +145,19 @@ async page => {
     activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
     must(activeRoomId, "room setup did not expose room id");
   };
-  const startLocalRoom = async (mapId, viaKeyboardIndex = null) => {
+  const startLocalRoom = async (mapId, viaKeyboard = false) => {
     await enterRoomSetup();
-    if (viaKeyboardIndex !== null) {
-      await page.keyboard.press(String(viaKeyboardIndex + 1));
+    if (viaKeyboard) {
+      // The ladder tile's number key draws a new layout.
+      await page.keyboard.press("1");
+    } else if (mapId === "ladder") {
+      await page.click("[data-map-id='ladder']");
     } else {
-      await page.click("[data-map-id='" + mapId + "']");
+      // Room setup offers only the ladder map; a fixed map (a test fixture) is set through the room API.
+      await page.evaluate(async ({ roomId, mapId }) => {
+        const res = await fetch("/api/rooms/" + roomId + "/map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId }) });
+        if (!res.ok) throw new Error(await res.text());
+      }, { roomId: requireActiveRoomId(), mapId });
     }
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
@@ -249,8 +256,8 @@ async page => {
   must((await page.locator("[data-map-id]").count()) === 0, "home menu should not expose the direct map picker");
   await enterRoomSetup();
   const setupMenuButtons = await page.locator("[data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
-  must(setupMenuButtons.length === menuCatalog.maps.length, "room setup does not expose every catalog map");
-  for (const map of menuCatalog.maps) must(setupMenuButtons.includes(map.id), "room setup missing map " + map.id);
+  must(setupMenuButtons.length === 1 && setupMenuButtons[0] === "ladder", "room setup should offer only the ladder map: " + JSON.stringify(setupMenuButtons));
+  must(menuCatalog.maps.some((map) => map.id === "ladder"), "catalog does not expose the ladder map");
 
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
   await sleep(260);
@@ -258,19 +265,18 @@ async page => {
   must(menuBackdropA.hash !== menuBackdropB.hash, "main menu background is not visibly animated");
 
   const mapSelectionProof = [];
-  for (let index = 0; index < menuCatalog.maps.length; index += 1) {
-    const map = menuCatalog.maps[index];
+  for (const via of ["click", "keyboard-number"]) {
     await page.reload();
     activeRoomId = undefined;
     await waitForMenu();
-    await startLocalRoom(map.id, index === 1 ? index : null);
+    await startLocalRoom("ladder", via === "keyboard-number");
     const current = await snapshot();
     const readout = await text("[data-map-readout]");
     const terrain = await visibleTerrainProof();
-    must(current.map.id === map.id, "menu selection did not start map " + map.id + "; saw " + current.map.id);
-    must(readout?.includes(current.map.width + " x " + current.map.height), "map readout does not expose selected map size after selecting " + map.id);
-    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "selected map " + map.id + " terrain linework is missing or too dense: " + JSON.stringify(terrain));
-    mapSelectionProof.push({ id: map.id, via: index === 1 ? "keyboard-number" : "click", terrain });
+    must(current.map.id === "ladder" && current.map.terrain, "room setup did not start a ladder layout; saw " + current.map.id);
+    must(readout?.includes(current.map.width + " x " + current.map.height), "map readout does not expose the ladder map's size after a " + via + " draw");
+    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "ladder map terrain is missing or too dense after a " + via + " draw: " + JSON.stringify(terrain));
+    mapSelectionProof.push({ id: current.map.id, via, size: current.map.width, terrain });
   }
 
   await page.reload();

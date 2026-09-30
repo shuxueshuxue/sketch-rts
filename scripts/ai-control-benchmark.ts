@@ -10,8 +10,8 @@ await runAiBenchmarkCli({
   npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --worker-harassment 0
   npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --worker-harassment 1
   npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --dry-run
-  npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --maps amberReach,saltwindBasin,quietMire --details
-  npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --match "amberReach 1v1 control south" --details
+  npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --maps ladder-07,ladder-21,ladder-40 --details
+  npm run benchmark:ai-control -- --seed moonwell-layout-50-2026-06-04 --map-count 50 --match "ladder-07 1v1 control south" --details
   npm run benchmark:ai-control -- --full --workers 95`,
   optionsFromArgs: controlOptionsFromArgs,
   createInput: createAiMeleeControlBenchmarkInput,

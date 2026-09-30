@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { runBenchmark } from "../../sdk/benchmark";
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
+import { LADDER_MAP_ID, LADDER_SLOT_IDS } from "../../shared/map";
 import { runAiGame } from "../game-runner";
-import { createAiVersionBenchmarkInput, runAiVersionBenchmarkParallel, selectGauntletRichScoreMaps, summarizeCombatEvaluation, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
+import { createAiVersionBenchmarkInput, gauntletMapOf, runAiVersionBenchmarkParallel, selectGauntletMaps, summarizeCombatEvaluation, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
 
 const MAPS = Array.from({ length: 24 }, (_, index) => `map${index + 1}`);
 
 describe("AI benchmark presets", () => {
-  it("samples eighteen rich maps by default for the full benchmark bundle", () => {
-    const selection = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_SEED: "daily-sample" });
+  it("samples eighteen maps by default for the full benchmark bundle", () => {
+    const selection = selectGauntletMaps(MAPS, { AI_GAUNTLET_SEED: "daily-sample" });
 
     expect(selection.mode).toBe("sample");
     expect(selection.mapIds).toHaveLength(18);
@@ -17,15 +17,32 @@ describe("AI benchmark presets", () => {
   });
 
   it("uses a fresh random seed when no benchmark seed is supplied", () => {
-    const first = selectGauntletRichScoreMaps(MAPS);
-    const second = selectGauntletRichScoreMaps(MAPS);
+    const first = selectGauntletMaps(MAPS);
+    const second = selectGauntletMaps(MAPS);
 
     expect(first.seed).not.toBe(second.seed);
   });
 
-  it("keeps the stable rich score pool at sixty-four maps", () => {
-    expect(RICH_SCORE_MAP_IDS).toHaveLength(64);
-    expect(new Set(RICH_SCORE_MAP_IDS).size).toBe(64);
+  it("keeps the ladder slot pool at sixty-four named maps", () => {
+    expect(LADDER_SLOT_IDS).toHaveLength(64);
+    expect(new Set(LADDER_SLOT_IDS).size).toBe(64);
+    expect([LADDER_SLOT_IDS[0], LADDER_SLOT_IDS[63]]).toEqual(["ladder-01", "ladder-64"]);
+  });
+
+  it("plays every melee game on the ladder map, one layout per slot shared by the slot's games", () => {
+    const preset = createAiVersionBenchmarkInput({ seed: "ladder-layouts", mapCount: 18 });
+    const melee = preset.input.evaluations.filter((evaluation) => evaluation.tag === "melee").flatMap((evaluation) => evaluation.matches);
+    const layoutsBySlot = new Map<string, Set<string>>();
+    for (const match of melee) {
+      expect(match.mapId).toBe(LADDER_MAP_ID);
+      const seed = match.options?.layout?.seed ?? "";
+      expect(seed).toMatch(new RegExp(`^layout:ladder-layouts:${gauntletMapOf(match)}:\\d+$`));
+      layoutsBySlot.set(gauntletMapOf(match), (layoutsBySlot.get(gauntletMapOf(match)) ?? new Set()).add(seed));
+    }
+    expect([...layoutsBySlot.keys()].sort()).toEqual([...preset.selection.mapIds].sort());
+    expect([...layoutsBySlot.values()].every((seeds) => seeds.size === 1)).toBe(true);
+    expect(new Set([...layoutsBySlot.values()].map((seeds) => [...seeds][0])).size).toBe(18);
+    expect(createAiVersionBenchmarkInput({ seed: "ladder-layouts", mapCount: 18 }).input.evaluations[0]!.matches.map((match) => match.options?.layout?.seed)).toEqual(preset.input.evaluations[0]!.matches.map((match) => match.options?.layout?.seed));
   });
 
   it("builds the visible benchmark as melee score/probes plus tagged combat micro lanes", () => {
@@ -45,7 +62,7 @@ describe("AI benchmark presets", () => {
     expect(preset.input.evaluations[0]!.matches[0]!.agents.v1c).toBeUndefined();
     expect(preset.input.evaluations[0]!.matches.filter((match) => match.agents.v2?.disabledBehaviors?.includes("workerHarassment")).length).toBe(6);
     expect(preset.input.evaluations[1]!.matches).toHaveLength(24);
-    expect(preset.input.evaluations[1]!.matches.map((match) => match.mapId)).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
+    expect(preset.input.evaluations[1]!.matches.map(gauntletMapOf)).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [gauntletMapOf(match), gauntletMapOf(match)]));
     expect(preset.input.evaluations[1]!.matches[0]!.agents).toMatchObject({
       v2: { version: "v2", versionLabel: "v2", team: "north" },
       v1a: { version: "v1", team: "south" },
@@ -82,10 +99,10 @@ describe("AI benchmark presets", () => {
     expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.scripts).toBeUndefined();
     expect(preset.input.evaluations[4]!.matches[0]!.agents.v2?.policyMode).toBe("combat");
     expect(preset.input.evaluations[4]!.matches[0]!.agents.v1a?.policyMode).toBe("combat");
-    const allMatchMapIds = [preset.input.evaluations[0]!, ...preset.input.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map((match) => match.mapId));
-    expect(allMatchMapIds).toHaveLength(18);
-    expect(new Set(allMatchMapIds).size).toBe(18);
-    expect(allMatchMapIds).toEqual(preset.selection.mapIds);
+    const allMatchMaps = [preset.input.evaluations[0]!, ...preset.input.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map(gauntletMapOf));
+    expect(allMatchMaps).toHaveLength(18);
+    expect(new Set(allMatchMaps).size).toBe(18);
+    expect(allMatchMaps).toEqual(preset.selection.mapIds);
     expect([...thinkIntervals]).toEqual([15]);
   });
 
@@ -136,11 +153,12 @@ describe("AI benchmark presets", () => {
   it("allocates score and probe maps from one eighteen-map random sample", () => {
     const preset = createAiVersionBenchmarkInput({ seed: "api-dashboard-smoke", mapCount: 18 });
 
-    const allMatchMapIds = [preset.input.evaluations[0]!, ...preset.input.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map((match) => match.mapId));
-    const scoreControlMapIds = preset.input.evaluations[1]!.matches.map((match) => match.mapId);
+    const allMatchMaps = [preset.input.evaluations[0]!, ...preset.input.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map(gauntletMapOf));
+    const scoreControlMaps = preset.input.evaluations[1]!.matches.map(gauntletMapOf);
     expect(preset.selection.mapIds).toHaveLength(18);
-    expect(allMatchMapIds).toEqual(preset.selection.mapIds);
-    expect(scoreControlMapIds).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [match.mapId, match.mapId]));
+    expect(preset.selection.mapIds.every((slot) => LADDER_SLOT_IDS.includes(slot))).toBe(true);
+    expect(allMatchMaps).toEqual(preset.selection.mapIds);
+    expect(scoreControlMaps).toEqual(preset.input.evaluations[0]!.matches.flatMap((match) => [gauntletMapOf(match), gauntletMapOf(match)]));
   });
 
   it("requires each 1v2 score win to pass both same-map side-balanced 1v1 controls", () => {
@@ -157,14 +175,14 @@ describe("AI benchmark presets", () => {
             name: "map-a 1v2",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-a" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winnerTeam: "north", players: { v2: { enemyUnitKills: 9 } } } as never,
           },
           {
             name: "map-b 1v2",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-b" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winnerTeam: "north", players: { v2: { enemyUnitKills: 9 } } } as never,
           },
         ],
@@ -181,28 +199,28 @@ describe("AI benchmark presets", () => {
             name: "map-a 1v1 control north",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-a" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winner: "v2", winnerTeam: "north", players: { v2: { enemyUnitKills: 7 }, v1a: { unitsLost: 7, unitsKilledByNeutral: 0 } } } as never,
           },
           {
             name: "map-a 1v1 control south",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-a" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winner: "v2", winnerTeam: "south", players: { v2: { enemyUnitKills: 7 }, v1a: { unitsLost: 7, unitsKilledByNeutral: 0 } } } as never,
           },
           {
             name: "map-b 1v1 control north",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-b" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winner: "v1a", winnerTeam: "south", players: { v2: { enemyUnitKills: 1 }, v1a: { unitsLost: 1, unitsKilledByNeutral: 0 } } } as never,
           },
           {
             name: "map-b 1v1 control south",
             elapsedMs: 0,
             cpuMs: 0,
-            setup: { map: { id: "map-b" } } as never,
+            setup: { map: { id: "ladder" } } as never,
             result: { winner: "v1a", winnerTeam: "north", players: { v2: { enemyUnitKills: 0 }, v1a: { unitsLost: 0, unitsKilledByNeutral: 0 } } } as never,
           },
         ],

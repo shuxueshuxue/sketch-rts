@@ -150,18 +150,18 @@ async page => {
   await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   must((await page.locator("[data-create-game-form] input[name='privateRoom']").isChecked()) === true, "new rooms should default to private/local shape");
-  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("wildMarches");
+  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("ladder");
   await page.locator("[data-submit-create-game]").click();
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
   const roomSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
   must(roomSetupId, "room setup did not expose room id");
-  must((await page.locator("[data-map-id='wildMarches']").count()) === 1, "room setup missing map selection");
+  must((await page.locator("[data-map-id]").count()) === 1 && (await page.locator("[data-map-id='ladder']").count()) === 1, "room setup should offer only the ladder map");
   const roomSetupLayoutProof = await page.evaluate(() => {
     const setup = document.querySelector("[data-room-setup]");
     const layout = document.querySelector(".room-setup-layout");
     const mapPane = document.querySelector(".room-map-pane");
     const slotPane = document.querySelector(".room-slot-pane");
-    const selectedMap = document.querySelector("[data-map-id='wildMarches']");
+    const selectedMap = document.querySelector("[data-map-id='ladder']");
     const layoutRect = layout?.getBoundingClientRect();
     const mapRect = mapPane?.getBoundingClientRect();
     const slotRect = slotPane?.getBoundingClientRect();
@@ -200,30 +200,21 @@ async page => {
   must(roomSetupLayoutProof.slotSummary.includes("2/30") && roomSetupLayoutProof.slotSummary.includes("1 AI"), "slot summary did not expose current room composition: " + JSON.stringify(roomSetupLayoutProof));
   const privateRoomProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
+    return { visibility: room.visibility, mapId: room.mapId, layoutSeed: room.layoutSeed, slots: room.slots.length };
   }, roomSetupId);
   must(privateRoomProof.visibility === "private", "private checkbox did not create a private room: " + JSON.stringify(privateRoomProof));
-  must(privateRoomProof.mapId === "wildMarches", "create form did not use selected map: " + JSON.stringify(privateRoomProof));
-  const mapScrollBeforeClick = await page.evaluate(() => {
-    const grid = document.querySelector(".room-map-grid");
-    if (!grid) throw new Error("map grid missing");
-    grid.scrollTop = Math.floor(grid.scrollHeight * 0.55);
-    const rect = grid.getBoundingClientRect();
-    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + Math.min(rect.height - 20, 120))?.closest("[data-map-id]");
-    if (!target) throw new Error("no visible map button after scrolling");
-    return { before: grid.scrollTop, mapId: target.getAttribute("data-map-id") };
-  });
-  must(mapScrollBeforeClick.before > 0 && mapScrollBeforeClick.mapId, "map list did not scroll before click: " + JSON.stringify(mapScrollBeforeClick));
-  await page.locator("[data-map-id='" + mapScrollBeforeClick.mapId + "']").click();
-  await page.waitForFunction(async ({ roomId, mapId }) => {
+  must(privateRoomProof.mapId === "ladder" && privateRoomProof.layoutSeed, "create form did not create a room on a ladder layout: " + JSON.stringify(privateRoomProof));
+  // Clicking the ladder tile draws a new layout for the room.
+  await page.locator("[data-map-id='ladder']").click();
+  await page.waitForFunction(async ({ roomId, seed }) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return room.mapId === mapId;
-  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
-  const mapScrollAfterClick = await page.evaluate(() => document.querySelector(".room-map-grid")?.scrollTop ?? -1);
-  must(
-    Math.abs(mapScrollAfterClick - mapScrollBeforeClick.before) <= 2,
-    "clicking a map should not move the map list scrollbar: " + JSON.stringify({ mapScrollBeforeClick, mapScrollAfterClick }),
-  );
+    return room.mapId === "ladder" && Boolean(room.layoutSeed) && room.layoutSeed !== seed;
+  }, { roomId: roomSetupId, seed: privateRoomProof.layoutSeed }, { timeout: 5000 });
+  const ladderRerollProof = await page.evaluate(async ({ roomId, before }) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return { before, after: room.layoutSeed, tileText: document.querySelector("[data-map-id='ladder']")?.textContent ?? "" };
+  }, { roomId: roomSetupId, before: privateRoomProof.layoutSeed });
+  must(ladderRerollProof.tileText.includes(ladderRerollProof.after), "ladder tile did not show the room's new layout seed: " + JSON.stringify(ladderRerollProof));
   const privateLobbyProof = await page.evaluate(async (roomId) => {
     const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
     const publicLobby = await (await fetch("/api/rooms")).json();
@@ -302,7 +293,7 @@ async page => {
   await page.waitForFunction(async ({ roomId, mapId }) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return room.status === "inMatch" && room.mapId === mapId;
-  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
+  }, { roomId: roomSetupId, mapId: "ladder" }, { timeout: 5000 });
   await page.reload();
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
   await page.locator("[data-open-room-browser]").click();
@@ -314,7 +305,7 @@ async page => {
     const res = await fetch("/api/rooms/" + roomId + "/snapshot");
     return res.json();
   }, roomSetupId);
-  must(snapshot.map.id === mapScrollBeforeClick.mapId, "room start did not use selected map");
+  must(snapshot.map.id === "ladder" && snapshot.map.terrain, "room start did not use the ladder map and its layout");
   must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
   const researchProof = await page.evaluate(async (roomId) => {
     const reset = await fetch("/api/rooms/" + roomId + "/reset", {
@@ -577,7 +568,7 @@ async page => {
     profileId: persistedProfile.id,
     roomSetupId,
     map: snapshot.map.id,
-    mapScrollProof: { before: mapScrollBeforeClick.before, after: mapScrollAfterClick, mapId: mapScrollBeforeClick.mapId },
+    ladderRerollProof,
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,

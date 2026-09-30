@@ -127,8 +127,8 @@ describe("generated maps", () => {
 
   it("builds a game on the layout when the setup asks for one, and the map id's own otherwise", () => {
     const setup = { players: PLAYERS, teams: TEAMS, races: { v9: "grove", p1: "ember", p2: "grove", p3: "ember" } } as const;
-    const plain = createGame("emberFen", setup);
-    const generated = createGame("emberFen", { ...setup, layout: { seed: "game" } });
+    const plain = createGame("verdantCrossroads", setup);
+    const generated = createGame("verdantCrossroads", { ...setup, layout: { seed: "game" } });
     const map = generateMap({ seed: "game" }, PLAYERS, TEAMS);
     expect(generated.resources).toEqual(map.resources);
     expect(generated.buildings.map((building) => [building.id, building.x, building.y])).toEqual(map.buildings.map((building) => [building.id, building.x, building.y]));
@@ -136,5 +136,19 @@ describe("generated maps", () => {
     expect(generated.map.terrain).toEqual(map.terrain);
     expect(plain.resources).not.toEqual(map.resources);
     expect(plain.map.terrain).toBeUndefined();
+  });
+
+  it("always plays the ladder map on a generated layout: the setup's, or the one the seed \"ladder\" draws", () => {
+    const setup = { players: PLAYERS, teams: TEAMS, races: { v9: "grove", p1: "ember", p2: "grove", p3: "ember" } } as const;
+    const unseeded = createGame("ladder", setup);
+    const seeded = createGame("ladder", { ...setup, layout: { seed: "game" } });
+    const ladderMap = generateMap({ seed: "ladder" }, PLAYERS, TEAMS);
+    const gameMap = generateMap({ seed: "game" }, PLAYERS, TEAMS);
+    expect(unseeded.map).toMatchObject({ id: "ladder", name: "Ladder Map", width: ladderMap.size, height: ladderMap.size });
+    expect(unseeded.resources).toEqual(ladderMap.resources);
+    expect(unseeded.map.terrain).toEqual(ladderMap.terrain);
+    expect(seeded.map.id).toBe("ladder");
+    expect(seeded.resources).toEqual(gameMap.resources);
+    expect(seeded.map.terrain).toEqual(gameMap.terrain);
   });
 });

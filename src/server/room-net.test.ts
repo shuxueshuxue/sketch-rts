@@ -468,11 +468,16 @@ describe("room net hub", () => {
     hub.tickRoom(room.id);
     socket.sent = [];
 
-    roomHost.resetRoom(room.id, "wildMarches", { aiPlayers: [] });
+    roomHost.resetRoom(room.id, "ladder", { aiPlayers: [] });
 
     const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
-    expect(messages).toContainEqual(expect.objectContaining({ type: "room", room: expect.objectContaining({ id: room.id, status: "inMatch", mapId: "wildMarches" }) }));
-    expect(messages).toContainEqual(expect.objectContaining({ type: "checkpoint", checkpoint: expect.objectContaining({ roomId: room.id, tick: 0, snapshot: expect.objectContaining({ tick: 0, map: expect.objectContaining({ id: "wildMarches" }) }) }) }));
+    expect(messages).toContainEqual(expect.objectContaining({ type: "room", room: expect.objectContaining({ id: room.id, status: "inMatch", mapId: "ladder" }) }));
+    expect(messages).toContainEqual(
+      expect.objectContaining({
+        type: "checkpoint",
+        checkpoint: expect.objectContaining({ roomId: room.id, tick: 0, snapshot: expect.objectContaining({ tick: 0, map: expect.objectContaining({ id: "ladder", terrain: expect.objectContaining({ cells: expect.any(String) }) }) }) }),
+      }),
+    );
   });
 
   it("drops delayed commands from the previous lockstep epoch after reset", () => {

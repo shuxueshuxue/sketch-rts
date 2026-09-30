@@ -1,24 +1,24 @@
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
-import type { MapId, RaceId } from "../../shared/types";
+import type { RaceId } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { SHOOTER_UNIT_KINDS } from "../policy/versions";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { filterBenchmarkInput, hashCoin, summarizeAiMeleeControlBenchmarkDetails, v3RaceForMatch, type AiMeleeControlMatchDetailsResult } from "./control";
-import { selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
+import { gauntletLadderGame, selectGauntletLadderMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 import type { AiCommandStats } from "./command-stats";
 import type { UnitRosterStats } from "./unit-roster-stats";
 import type { V6DoctrineStats } from "./v6-doctrine-stats";
 
-// @@@v6-gauntlet - V6 alone against V3 and the shooter V5 on one team, side-balanced on the rich score maps. V6 may never
-// train or hire a shooter (archer, spark archer, contract archer); every game is checked for it.
+// @@@v6-gauntlet - V6 alone against V3 and the shooter V5 on one team, side-balanced on generated ladder maps (see
+// @@@gauntlet-ladder-game). V6 may never train or hire a shooter (archer, spark archer, contract archer); every game is
+// checked for it.
 
 export type AiV6GauntletBenchmarkOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers">;
 
 export type AiV6GauntletBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 type Tally = { wins: number; matches: number; winRate: number };
@@ -46,11 +46,7 @@ export type AiV6GauntletBenchmarkResult = {
 };
 
 export function createAiV6GauntletBenchmarkInput(options: AiV6GauntletBenchmarkOptions = {}): AiV6GauntletBenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   return {
     selection,
     input: {
@@ -59,33 +55,33 @@ export function createAiV6GauntletBenchmarkInput(options: AiV6GauntletBenchmarkO
         {
           name: "v6 1v2 vs v3 plus v5",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createAiV6GauntletMatches(mapId, index, { ...options, seed: selection.seed })),
+          matches: selection.mapIds.flatMap((slot, index) => createAiV6GauntletMatches(slot, index, { ...options, seed: selection.seed })),
         },
       ],
     },
   };
 }
 
-function createAiV6GauntletMatches(mapId: MapId, index: number, options: AiV6GauntletBenchmarkOptions & { seed: string }): BenchmarkMatchInput<AiGameAgent>[] {
+function createAiV6GauntletMatches(slot: string, index: number, options: AiV6GauntletBenchmarkOptions & { seed: string }): BenchmarkMatchInput<AiGameAgent>[] {
   const controller = options.controller ?? "external-agent";
   const match = (name: string, v6Team: string, opponentTeam: string, sideIndex: number): BenchmarkMatchInput<AiGameAgent> => {
-    const key = `${options.seed}:${mapId}:${index}:${sideIndex}`;
+    const key = `${options.seed}:${slot}:${index}:${sideIndex}`;
     const v6Race: RaceId = hashCoin(`v6:${key}`) ? "grove" : "ember";
     const v5Race: RaceId = hashCoin(`v6-ally-v5:${key}`) ? "grove" : "ember";
-    const v3Race = v3RaceForMatch(options.seed, mapId, index, sideIndex);
+    const v3Race = v3RaceForMatch(options.seed, slot, index, sideIndex);
     const v6: AiGameAgent = { controller, team: v6Team, race: v6Race, version: "v6", policyVersion: "v6", versionLabel: `v6 ${v6Race}` };
     const v3: AiGameAgent = { controller, team: opponentTeam, race: v3Race, version: "v3", policyVersion: v3Race === "ember" ? "v3-ember" : "v3-grove", versionLabel: `v3 ${v3Race}` };
     const v5: AiGameAgent = { controller, team: opponentTeam, race: v5Race, version: "v5", policyVersion: "v5", versionLabel: `v5 ${v5Race}` };
     return {
       name,
-      mapId,
+      ...gauntletLadderGame(options.seed, slot, index),
       agents: hashCoin(`v6-opponents:${key}`) ? { v6, v5, v3 } : { v6, v3, v5 },
       commandPlanner: createAiGameCommandPlanner(),
       maxTicks: options.maxTicks ?? 48_000,
       thinkInterval: options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL,
     };
   };
-  return [match(`${mapId} v6 north`, "north", "south", 0), match(`${mapId} v6 south`, "south", "north", 1)];
+  return [match(`${slot} v6 north`, "north", "south", 0), match(`${slot} v6 south`, "south", "north", 1)];
 }
 
 export async function runAiV6GauntletBenchmarkParallel(options: AiV6GauntletBenchmarkOptions = {}): Promise<AiV6GauntletBenchmarkResult> {

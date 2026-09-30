@@ -4,7 +4,7 @@ import { createGame, restoreSnapshotIntoGame, snapshotGame, stepGame, GAME_SNAPS
 
 describe("game snapshot restoration", () => {
   it("restores every snapshot field and invalidates runtime lookup caches", () => {
-    const source = createGame("wildMarches", { players: ["player", "enemy", "enemy2"], aiPlayers: [], teams: { player: "north", enemy: "south", enemy2: "east" } });
+    const source = createGame("ladder", { players: ["player", "enemy", "enemy2"], aiPlayers: [], teams: { player: "north", enemy: "south", enemy2: "east" } });
     for (let i = 0; i < 3; i += 1) stepGame(source);
     source.match.winner = "enemy2";
     source.nextId = 9876;

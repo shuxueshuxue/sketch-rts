@@ -1,4 +1,5 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
+import { LADDER_MAP_ID } from "./map-ids";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
 export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v5";
@@ -9,6 +10,8 @@ export type CreateRoomInput = {
   host: LocalUserProfile;
   name?: string;
   mapId?: MapId;
+  // The generated layout the room plays (see @@@generated-map); a ladder room without one plays the one its id seeds.
+  layoutSeed?: string;
   slotCount?: number;
   humanCount?: number;
   aiCount?: number;
@@ -47,6 +50,7 @@ export function createRoom(input: CreateRoomInput): RoomState {
     hostUserId: input.host.id,
     visibility: input.visibility ?? "public",
     mapId: input.mapId ?? "verdantCrossroads",
+    ...(input.layoutSeed ? { layoutSeed: input.layoutSeed } : {}),
     status: "open",
     autoTick: true,
     slots,
@@ -141,6 +145,8 @@ export function canStartRoom(room: RoomState) {
 export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameSetupOptions; playerSlots: RoomSlot[] } {
   if (!canStartRoom(room)) throw new Error("Room is not ready to start");
   const playerSlots = activeRoomSlots(room);
+  // A room on the ladder map that never drew a layout plays the one its own id seeds.
+  const layoutSeed = room.layoutSeed ?? (room.mapId === LADDER_MAP_ID ? room.id : undefined);
   return {
     mapId: room.mapId,
     playerSlots,
@@ -150,7 +156,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
       aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION])),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race as RaceId])),
-      ...(room.layoutSeed ? { layout: { seed: room.layoutSeed } } : {}),
+      ...(layoutSeed ? { layout: { seed: layoutSeed } } : {}),
     },
   };
 }

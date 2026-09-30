@@ -1,25 +1,26 @@
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
+import { LADDER_MAP_ID } from "../../shared/map";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
-import type { MapId, RaceId, UnitKind } from "../../shared/types";
+import type { RaceId, UnitKind } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { filterBenchmarkInput, hashCoin, summarizeAiMeleeControlBenchmarkDetails, type AiMeleeControlMatchDetailsResult } from "./control";
 import { nudgedPlanner, nudgedVersion, type GauntletNudge } from "./nudge";
-import { selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
+import { selectGauntletLadderMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 import type { AiCommandStats } from "./command-stats";
 import type { UnitRosterStats } from "./unit-roster-stats";
 import type { V6DoctrineStats } from "./v6-doctrine-stats";
 
 // @@@subject-gauntlet - One version (the subject) alone against a group of others (a pair for V7 and V8, three for V9),
-// on the rich score maps. Every map is played twice, once with the subject as each race, against different groups when
-// there are several; which side of the map it starts on is drawn per game, and its rivals share the other side. The
-// opponents play under neutral ids (p1, p2, p3), shuffled per game, so nothing on the board (owners, unit and
-// building ids, team keys) names their version: the subject has to read what it faces from what their armies do. The
-// report maps the ids back through each player's version label, which only the benchmark sees. V7's gauntlet and V8's
-// are the same procedure with a different subject and pool; every draw is keyed by the subject's name, so a gauntlet's
-// games never change when another subject is added.
+// on generated ladder maps (see @@@generated-map): each ladder slot drawn is one layout, seeded by the subject, the
+// gauntlet's seed, the slot and its place in the draw. Every map is played twice, once with the subject as each race,
+// against different groups when there are several; which side of the map it starts on is drawn per game, and its rivals
+// share the other side. The opponents play under neutral ids (p1, p2, p3), shuffled per game, so nothing on the board
+// (owners, unit and building ids, team keys) names their version: the subject has to read what it faces from what their
+// armies do. The report maps the ids back through each player's version label, which only the benchmark sees. V7's
+// gauntlet and V8's are the same procedure with a different subject and pool; every draw is keyed by the subject's name,
+// so a gauntlet's games never change when another subject is added.
 
 export type SubjectVersion = "v7" | "v8" | "v9";
 export type OpponentVersion = "v3" | "v5" | "v6" | "v7" | "v8";
@@ -35,9 +36,6 @@ export type SubjectGauntlet = {
   // The benchmark's and its evaluation's names in reports.
   name: string;
   evaluationName: string;
-  // Each map's games are played on a layout generated from the seed and the map (see @@@generated-map) instead of the map
-  // id's own; the id then only names the game.
-  generatedLayouts?: boolean;
 };
 
 export type SubjectGauntletOptions = Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full" | "maxTicks" | "thinkInterval" | "controller" | "workers"> & {
@@ -54,7 +52,7 @@ const DEFAULT_NUDGE_AT_SECONDS = 60;
 
 export type SubjectGauntletInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 type Tally = { wins: number; matches: number; winRate: number };
@@ -88,11 +86,7 @@ export type SubjectGauntletMapGame = { pair: string; winner: string | null; nudg
 const RACES: readonly RaceId[] = ["grove", "ember"];
 
 export function createSubjectGauntletInput(gauntlet: SubjectGauntlet, options: SubjectGauntletOptions = {}): SubjectGauntletInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   return {
     selection,
     input: {
@@ -101,20 +95,20 @@ export function createSubjectGauntletInput(gauntlet: SubjectGauntlet, options: S
         {
           name: gauntlet.evaluationName,
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createSubjectMatches(gauntlet, mapId, index, { ...options, seed: selection.seed })),
+          matches: selection.mapIds.flatMap((slot, index) => createSubjectMatches(gauntlet, slot, index, { ...options, seed: selection.seed })),
         },
       ],
     },
   };
 }
 
-function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: number, options: SubjectGauntletOptions & { seed: string }): SubjectGauntletMatch[] {
+function createSubjectMatches(gauntlet: SubjectGauntlet, slot: string, index: number, options: SubjectGauntletOptions & { seed: string }): SubjectGauntletMatch[] {
   const controller = options.controller ?? "external-agent";
   const subject = gauntlet.subject;
   // The map's two games face different groups; over the maps every group meets both of the subject's races equally often.
-  const groupOffset = hashIndex(`${subject}-pair:${options.seed}:${mapId}:${index}`, gauntlet.groups.length);
+  const groupOffset = hashIndex(`${subject}-pair:${options.seed}:${slot}:${index}`, gauntlet.groups.length);
   return RACES.flatMap((race, raceIndex): SubjectGauntletMatch[] => {
-    const key = `${options.seed}:${mapId}:${index}:${race}`;
+    const key = `${options.seed}:${slot}:${index}:${race}`;
     const group = gauntlet.groups[(groupOffset + raceIndex) % gauntlet.groups.length]!;
     const subjectFirstSide = hashCoin(`${subject}-side:${key}`);
     const self: AiGameAgent = { controller, team: `${subject}-side`, race, version: subject, policyVersion: subject, versionLabel: `${subject} ${race}` };
@@ -122,9 +116,9 @@ function createSubjectMatches(gauntlet: SubjectGauntlet, mapId: MapId, index: nu
       rivalOrder(group, `${subject}-ids:${key}`).map((version, rival) => [`p${rival + 1}`, opponent(version, "rivals", `${subject}-p${rival + 1}:${key}`, controller)]),
     );
     const game: SubjectGauntletMatch = {
-      name: `${mapId} ${subject} ${race}`,
-      mapId,
-      ...(gauntlet.generatedLayouts ? { options: { layout: { seed: `${subject}-layout:${options.seed}:${mapId}:${index}` } } } : {}),
+      name: `${slot} ${subject} ${race}`,
+      mapId: LADDER_MAP_ID,
+      options: { layout: { seed: `${subject}-layout:${options.seed}:${slot}:${index}` } },
       agents: subjectFirstSide ? { [subject]: self, ...rivals } : { ...rivals, [subject]: self },
       commandPlanner: createAiGameCommandPlanner(),
       maxTicks: options.maxTicks ?? 48_000,

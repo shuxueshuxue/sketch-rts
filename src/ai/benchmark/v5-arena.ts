@@ -1,7 +1,7 @@
 import { sketchScene } from "../../sdk/scene";
 import type { BenchmarkMatchInput } from "../../sdk/benchmark/core";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
-import type { BuildingKind, GameSnapshot, ItemKind, MapId, PlayerId, RaceId, UnitKind, UpgradeKind } from "../../shared/types";
+import type { BuildingKind, GameSnapshot, GeneratedLayoutOptions, ItemKind, MapId, PlayerId, RaceId, UnitKind, UpgradeKind } from "../../shared/types";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 
 // @@@v5-arena - A fight replayed on its own. The 1v2 benchmark decides a game by everything that happened before and
@@ -21,6 +21,8 @@ export type ArenaScenario = {
   subject?: PlayerId;
   source: { seed: string; match: string; second: number; outcome: string };
   mapId: MapId;
+  // The generated layout the game was on (every ladder game has one), so the fight is replayed on the same ground.
+  layout?: GeneratedLayoutOptions;
   agents: Record<string, AiGameAgent>;
   players: Record<string, { team: string; race: RaceId; upgrades: Partial<Record<UpgradeKind, number>> }>;
   units: ArenaUnitSeed[];
@@ -56,6 +58,7 @@ export function captureArenaScenario(input: {
     ...(input.subject ? { subject: input.subject } : {}),
     source: input.source,
     mapId: match.mapId,
+    ...(match.options?.layout ? { layout: match.options.layout } : {}),
     agents: match.agents,
     players: Object.fromEntries(
       owners.map((owner) => {
@@ -83,7 +86,7 @@ export function arenaMatch(scenario: ArenaScenario, options: { thinkInterval: nu
   return {
     name: `arena ${scenario.id}`,
     mapId: scenario.mapId,
-    options: scene.toGameSetup(),
+    options: { ...scene.toGameSetup(), ...(scenario.layout ? { layout: scenario.layout } : {}) },
     agents: scenario.agents,
     commandPlanner: createAiGameCommandPlanner(),
     maxTicks: ARENA_SECONDS * 20,

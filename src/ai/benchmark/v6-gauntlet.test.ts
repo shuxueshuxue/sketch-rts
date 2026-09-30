@@ -7,6 +7,8 @@ describe("v6 gauntlet benchmark", () => {
     const { input, selection } = createAiV6GauntletBenchmarkInput({ seed: "v6-input", mapCount: 4 });
     const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
     expect(matches.map((match) => match.name)).toEqual(selection.mapIds.flatMap((mapId) => [`${mapId} v6 north`, `${mapId} v6 south`]));
+    expect(matches.every((match) => match.mapId === "ladder")).toBe(true);
+    expect(matches.map((match) => match.options?.layout?.seed)).toEqual(selection.mapIds.flatMap((slot, index) => [`layout:v6-input:${slot}:${index}`, `layout:v6-input:${slot}:${index}`]));
     for (const match of matches) {
       const { v6, v3, v5 } = match.agents;
       expect(Object.keys(match.agents).sort()).toEqual(["v3", "v5", "v6"]);

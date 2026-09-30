@@ -19,17 +19,19 @@ describe("static solo deployment runtime", () => {
     const runtime = new StaticSoloDeploymentRuntime();
 
     await expect(runtime.createRoom({ id: "room-invalid", host, mapId: "missing-map" as never })).rejects.toThrow("Malformed room create input");
+    await expect(runtime.createRoom({ id: "room-invalid-seed", host, mapId: "ladder", layoutSeed: "" })).rejects.toThrow("Malformed room create input");
+    await expect(runtime.createRoom({ id: "room-ladder", host, mapId: "ladder", layoutSeed: "seed-1" })).resolves.toMatchObject({ mapId: "ladder", layoutSeed: "seed-1" });
   });
 
   it("uses shared room helpers for map, slot, and slot-count edits", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-setup", host, humanCount: 1, aiCount: 1 });
 
-    await runtime.updateRoomMap("room-setup", "wildMarches");
+    await runtime.updateRoomMap("room-setup", "ladder", "seed-1");
     await runtime.updateRoomSlotCounts("room-setup", 1, 2);
     const room = await runtime.updateRoomSlot("room-setup", "slot-2", { controller: "ai", team: "south" });
 
-    expect(room.mapId).toBe("wildMarches");
+    expect(room).toMatchObject({ mapId: "ladder", layoutSeed: "seed-1" });
     expect(room.slots).toHaveLength(3);
     expect(room.slots[1]).toMatchObject({ controller: "ai", team: "south", ready: true });
   });

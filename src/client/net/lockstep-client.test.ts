@@ -223,7 +223,7 @@ describe("lockstep client", () => {
     const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [], teams: { player: "north", enemy: "south" } });
     const transport = new FakeTransport();
     new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
-    const checkpointGame = createGame("wildMarches", { players: ["player", "enemy"], aiPlayers: [], teams: { player: "north", enemy: "south" } });
+    const checkpointGame = createGame("ladder", { players: ["player", "enemy"], aiPlayers: [], teams: { player: "north", enemy: "south" } });
     checkpointGame.tick = 18;
     checkpointGame.nextId = 4321;
     checkpointGame.players.player.gold = 2222;
@@ -240,7 +240,7 @@ describe("lockstep client", () => {
       remaining: 10,
       duration: 24,
     });
-    const room = { ...createRoom({ id: "room-1", host: { id: "host", name: "Host" }, mapId: "wildMarches" }), status: "inMatch" as const };
+    const room = { ...createRoom({ id: "room-1", host: { id: "host", name: "Host" }, mapId: "ladder" }), status: "inMatch" as const };
     const save = createSaveGameRecord(checkpointGame, room, { id: "save-equivalent" }, new Date("2026-06-07T00:00:00.000Z"), []);
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: checkpointGame.tick, snapshot: snapshotGame(checkpointGame), nextId: checkpointGame.nextId }, epoch: 0 });
@@ -313,7 +313,7 @@ describe("lockstep client", () => {
     const oldEpochUnit = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
     expect(oldEpochUnit).toBeDefined();
     client.receiveFrame({ roomId: "room-1", tick: 1, sequence: 1, commands: [{ playerId: "player", command: { type: "move", unitIds: [oldEpochUnit!.id], x: oldEpochUnit!.x + 100, y: oldEpochUnit!.y } }] });
-    const checkpointGame = createGame("wildMarches", { aiPlayers: [] });
+    const checkpointGame = createGame("campRush", { aiPlayers: [] });
     checkpointGame.tick = 0;
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 0, snapshot: checkpointGame, nextId: checkpointGame.nextId }, epoch: 0 });
@@ -322,7 +322,7 @@ describe("lockstep client", () => {
     client.updateToRenderTime();
 
     expect(client.currentSnapshot().tick).toBe(1);
-    expect(client.currentSnapshot().map.id).toBe("wildMarches");
+    expect(client.currentSnapshot().map.id).toBe("campRush");
     expect(client.currentSnapshot().units.find((unit) => unit.id === oldEpochUnit!.id)?.order).toEqual({ type: "idle" });
   });
 
@@ -331,7 +331,7 @@ describe("lockstep client", () => {
     const transport = new FakeTransport();
     const errors: string[] = [];
     const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, onError: (message) => errors.push(message) });
-    const checkpointGame = createGame("wildMarches", { aiPlayers: [] });
+    const checkpointGame = createGame("campRush", { aiPlayers: [] });
     checkpointGame.tick = 0;
 
     transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 0, snapshot: checkpointGame, nextId: checkpointGame.nextId }, epoch: 1 });
@@ -340,7 +340,7 @@ describe("lockstep client", () => {
     client.sendCommand({ type: "move", unitIds: [], x: 10, y: 10 });
 
     expect(errors).toEqual([]);
-    expect(client.currentSnapshot().map.id).toBe("wildMarches");
+    expect(client.currentSnapshot().map.id).toBe("campRush");
     expect(client.updateToRenderTime()).toBe(false);
     expect(transport.sent).toContainEqual({ type: "command", roomId: "room-1", playerId: "player", clientSeq: 0, epoch: 1, command: { type: "move", unitIds: [], x: 10, y: 10 } });
     expect(transport.sent).not.toContainEqual(expect.objectContaining({ type: "requestCheckpoint", reason: "server-desync" }));

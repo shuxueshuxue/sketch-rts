@@ -28,6 +28,10 @@ export function parseCreateRoomRequest(value: unknown): CreateRoomRequest | unde
     if (!isMapId(value.mapId)) return undefined;
     input.mapId = value.mapId;
   }
+  if (value.layoutSeed !== undefined) {
+    if (!isLayoutSeed(value.layoutSeed)) return undefined;
+    input.layoutSeed = value.layoutSeed;
+  }
   if (value.slotCount !== undefined) {
     if (typeof value.slotCount !== "number") return undefined;
     input.slotCount = value.slotCount;
@@ -83,8 +87,12 @@ export function parseGrandStressRoomRequest(value: unknown): (GrandStressRoomReq
 export function parseMapUpdateRequest(value: unknown): MapUpdateRequest | undefined {
   if (!isRecord(value) || !isMapId(value.mapId)) return undefined;
   if (value.layoutSeed === undefined) return { mapId: value.mapId };
-  if (typeof value.layoutSeed !== "string" || value.layoutSeed.length === 0 || value.layoutSeed.length > 64) return undefined;
+  if (!isLayoutSeed(value.layoutSeed)) return undefined;
   return { mapId: value.mapId, layoutSeed: value.layoutSeed };
+}
+
+function isLayoutSeed(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= 64;
 }
 
 export function parseSlotCountsRequest(value: unknown): SlotCountsRequest | undefined {

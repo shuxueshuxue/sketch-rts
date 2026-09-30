@@ -79,7 +79,7 @@ export const AI_MATRIX_CASES: AiMatrixCase[] = [
   },
   {
     name: "1v2 expansion neutral",
-    mapId: "wildMarches",
+    mapId: "verdantCrossroads",
     options: { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"], teams: { player: "north", enemy: "south", enemy2: "south" }, races: THREE_PLAYER_RACES },
     activePlayers: ["player", "enemy", "enemy2"],
     requireExpansionByTeam: true,
@@ -90,7 +90,7 @@ export const AI_MATRIX_CASES: AiMatrixCase[] = [
   },
   {
     name: "1v1v1 expansion neutral",
-    mapId: "wildMarches",
+    mapId: "verdantCrossroads",
     options: { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"], races: THREE_PLAYER_RACES },
     activePlayers: ["player", "enemy", "enemy2"],
     requireExpansionByTeam: false,

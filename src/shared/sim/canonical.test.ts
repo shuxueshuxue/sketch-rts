@@ -42,10 +42,10 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Recorded on mac1 (node 26, arm64) under en-US, lt-LT and et-EE, and checked on the A100 (node 22, x64). The rich map
-    // is laid out with det-math.
+    // Recorded on mac1 (node 26, arm64) under en-US, lt-LT and et-EE, and checked on the A100 (node 22, x64). The ladder
+    // map is laid out with det-math (its checksum recorded on mac1).
     expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("329c28e2");
-    const rich = createGame("emberFen", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" } });
-    expect(checksumGame(rich)).toBe("c73b6fae");
+    const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
+    expect(checksumGame(ladder)).toBe("f49b8bcd");
   });
 });

@@ -1,78 +1,15 @@
+// Fixed maps kept as test, research and campaign fixtures; players play the ladder map.
 export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena", "goldGrid", "mercPocket"] as const;
-export const NON_SCORE_RICH_MAP_IDS = ["stagHollow", "willowCircuit", "quarrySong", "mistHarbor"] as const;
 
-export const AUTHORED_RICH_SCORE_MAP_IDS = [
-  "wildMarches",
-  "emberFen",
-  "thornedDelta",
-  "silverRidge",
-  "ashVale",
-  "reedBasin",
-  "frostMeadow",
-  "sunkenOrchard",
-  "cedarPass",
-  "moonlitCauseway",
-  "briarToll",
-  "amberReach",
-  "lichenCrown",
-  "obsidianBrook",
-  "sableRun",
-  "fernBarrow",
-  "glassmereFord",
-  "cinderHeath",
-  "runeMeadow",
-  "saltwindBasin",
-  "verdigrisSpire",
-  "pineTangle",
-  "pearlBog",
-  "ironMoss",
-  "duskGrove",
-  "hollowFord",
-  "copperWeald",
-  "opalFen",
-  "ivoryTarn",
-  "mallowRun",
-  "graniteBloom",
-  "rainbarrow",
-  "umberCauseway",
-  "tealFissure",
-  "saffronFen",
-  "mirrorHeath",
-  "basaltMeadow",
-  "juniperDelta",
-  "ochreRidge",
-  "quietMire",
-  "lanternFord",
-  "viridianToll",
-  "marbleGrove",
-  "sundialReach",
-  "heatherCircuit",
-  "chalkFen",
-  "russetBrook",
-  "celadonPass",
-  "plumTarn",
-  "wispQuarry",
-  "brackenFord",
-  "mossglassRun",
-  "auricDelta",
-  "bluebellHeath",
-  "cairnCauseway",
-  "foxgloveMire",
-] as const;
+// The ladder map: every game on it is played on a War3-style ladder map generated from its layout seed (see
+// @@@generated-map).
+export const LADDER_MAP_ID = "ladder" as const;
 
-export const GENERATED_RICH_SCORE_MAP_IDS = [
-  "cobaltVale",
-  "pearlCircuit",
-  "yarrowFen",
-  "copperFen",
-  "cloverRun",
-  "hazelCircuit",
-  "spruceCircuit",
-  "mapleCircuit",
-] as const;
+export const MAP_IDS = [...BASE_MAP_IDS, LADDER_MAP_ID, "grandThirty"] as const;
 
-export const RICH_SCORE_MAP_IDS = [...AUTHORED_RICH_SCORE_MAP_IDS, ...GENERATED_RICH_SCORE_MAP_IDS] as const;
-export const MAP_IDS = [...BASE_MAP_IDS, ...NON_SCORE_RICH_MAP_IDS, ...RICH_SCORE_MAP_IDS, "grandThirty"] as const;
+// The gauntlets' map pool: each slot names one generated ladder map and seeds its layout. Slots are plain names, not map
+// ids; every gauntlet game is played on the ladder map.
+export const LADDER_SLOT_IDS: readonly string[] = Array.from({ length: 64 }, (_, index) => `ladder-${String(index + 1).padStart(2, "0")}`);
 
 export function isMapId(value: unknown): value is (typeof MAP_IDS)[number] {
   return typeof value === "string" && (MAP_IDS as readonly string[]).includes(value);

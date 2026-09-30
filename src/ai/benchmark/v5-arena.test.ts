@@ -81,4 +81,15 @@ describe("v5 arena", () => {
     const result = scoreArena(scenario, snapshotGame(game));
     expect(result).toMatchObject({ subjectStart: UNIT_DEFS.footman.cost, enemyStart: UNIT_DEFS.footman.cost + UNIT_DEFS.mercenary.cost, subjectLost: 0, enemyLost: UNIT_DEFS.mercenary.cost, outcome: "loss" });
   });
+
+  it("replays a ladder game's fight on the layout the game was played on", () => {
+    const { match, snapshot } = sourceMatch();
+    const ladderMatch = { ...match, mapId: "ladder" as const, options: { ...match.options, layout: { seed: "arena-ground" } } };
+    const scenario = captureArenaScenario({ id: "ladder-moment", source: { seed: "s", match: match.name, second: 0, outcome: "loss" }, match: ladderMatch, snapshot });
+    const replay = arenaMatch(scenario, { thinkInterval: 15 });
+
+    expect(scenario.layout).toEqual({ seed: "arena-ground" });
+    expect(replay).toMatchObject({ mapId: "ladder", options: { layout: { seed: "arena-ground" } } });
+    expect(captureArenaScenario({ id: "plain", source: { seed: "s", match: match.name, second: 0, outcome: "loss" }, match, snapshot }).layout).toBeUndefined();
+  });
 });

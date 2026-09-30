@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, createAiV5EconomyStressBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails, summarizeAiV5VsHybridBenchmark } from "./control";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV3VsProdV2BenchmarkInput, createAiV5EconomyStressBenchmarkInput, filterBenchmarkInput, summarizeAiMeleeControlBenchmark, summarizeAiMeleeControlBenchmarkDetails, summarizeAiV5VsHybridBenchmark } from "./control";
 import type { BenchmarkReport } from "../../sdk/benchmark/core";
 
 describe("AI melee control benchmark", () => {
@@ -84,6 +84,7 @@ describe("AI melee control benchmark", () => {
     expect(input.evaluations[0]!.matches[0]!.agents.grove).toMatchObject({ team: "south", race: "grove", version: "v2", versionLabel: "v2 grove" });
     expect(input.evaluations[0]!.matches[1]!.agents.ember).toMatchObject({ team: "south", race: "ember", version: "v2", versionLabel: "v2 ember" });
     expect(input.evaluations[0]!.matches[1]!.agents.grove).toMatchObject({ team: "north", race: "grove", version: "v2", versionLabel: "v2 grove" });
+    expect(input.evaluations[0]!.matches.map((match) => match.options?.layout?.seed)).toEqual(selection.mapIds.flatMap((slot, index) => [`layout:cross-race-seed:${slot}:${index}`, `layout:cross-race-seed:${slot}:${index}`]));
   });
 
   it("creates side-balanced 1v1 control matches for every selected map", () => {
@@ -96,6 +97,23 @@ describe("AI melee control benchmark", () => {
     expect(input.evaluations[0]!.matches[0]!.agents.v2).toMatchObject({ team: "north", race: "grove", version: "v2" });
     expect(input.evaluations[0]!.matches[1]!.agents.v2).toMatchObject({ team: "south", race: "grove", version: "v2" });
     expect(input.evaluations[0]!.matches[1]!.agents.v1a).toMatchObject({ team: "north", race: "grove", version: "v1" });
+    // Every game is on the ladder map; a slot's two sides play the one layout its slot and place in the draw seed.
+    const [north, south, nextNorth] = input.evaluations[0]!.matches;
+    expect(input.evaluations[0]!.matches.every((match) => match.mapId === "ladder")).toBe(true);
+    expect(north!.options?.layout).toEqual({ seed: `layout:control-seed:${selection.mapIds[0]}:0` });
+    expect(south!.options?.layout).toEqual(north!.options?.layout);
+    expect(nextNorth!.options?.layout).toEqual({ seed: `layout:control-seed:${selection.mapIds[1]}:1` });
+  });
+
+  it("filters games by their ladder slot or by a fixed map's id", () => {
+    const { input, selection } = createAiMeleeControlBenchmarkInput({ seed: "control-seed", mapCount: 3 });
+    const bySlot = filterBenchmarkInput(input, { mapIds: [selection.mapIds[1]!] });
+    const byLadder = filterBenchmarkInput(input, { mapIds: ["ladder"] });
+    const byOtherMap = filterBenchmarkInput(input, { mapIds: ["bareDuel"] });
+
+    expect(bySlot.evaluations[0]!.matches.map((match) => match.name)).toEqual([`${selection.mapIds[1]} 1v1 control north`, `${selection.mapIds[1]} 1v1 control south`]);
+    expect(byLadder.evaluations[0]!.matches).toHaveLength(6);
+    expect(byOtherMap.evaluations[0]!.matches).toHaveLength(0);
   });
 
   it("can force worker harassment fully on or off instead of using the alternating release gate", () => {

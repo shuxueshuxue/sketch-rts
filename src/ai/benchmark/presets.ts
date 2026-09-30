@@ -1,6 +1,6 @@
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
+import { LADDER_MAP_ID, LADDER_SLOT_IDS } from "../../shared/map";
 import type { MapId, PlayerId, RaceId } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkInput, BenchmarkReport, BenchmarkMatchInput } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
@@ -8,7 +8,9 @@ import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { SdkAgentController } from "../../sdk/game-runner";
 import { COMBAT_SCENARIO_RECIPES, createCombatScenarioSetup, type CombatScenarioRecipe } from "../../sdk/scenarios/combat";
 
-export type GauntletMapSelection<TMapId extends string> = {
+// The maps a gauntlet plays, drawn from its pool: for every gauntlet the pool is LADDER_SLOT_IDS, so each entry is a
+// ladder slot, the name of one generated ladder map (see gauntletLadderGame). Reports list and key the maps by it.
+export type GauntletMapSelection<TMapId extends string = string> = {
   mode: "sample" | "full";
   seed: string;
   mapIds: TMapId[];
@@ -32,7 +34,8 @@ export type WorkerHarassmentBenchmarkMode = 0 | 0.5 | 1;
 export type AiVersionBenchmarkDashboardReport = {
   seed: string;
   mapPoolSize: number;
-  selectedRichScoreMapIds: MapId[];
+  // The ladder slots played (the field keeps its name so the dashboard reads older runs).
+  selectedRichScoreMapIds: string[];
   scoreSummary: BenchmarkEvaluationSummary;
   scoreControlSummary: BenchmarkEvaluationSummary;
   probeSummaries: BenchmarkEvaluationSummary[];
@@ -88,27 +91,45 @@ function aiBenchmarkAgents(players: PlayerId[], options: AiBenchmarkAgentOptions
   ) as Record<PlayerId, AiGameAgent>;
 }
 
-export function selectGauntletRichScoreMaps<TMapId extends string>(mapIds: readonly TMapId[], env: GauntletSelectionEnv = {}): GauntletMapSelection<TMapId> {
+// Draws a gauntlet's maps from a pool of ladder slots: a seeded sample, or the whole pool.
+export function selectGauntletMaps<TMapId extends string>(slots: readonly TMapId[], env: GauntletSelectionEnv = {}): GauntletMapSelection<TMapId> {
   const seed = env.AI_GAUNTLET_SEED ?? randomSeed();
-  if (env.AI_GAUNTLET_FULL === "1") return { mode: "full", seed, mapIds: [...mapIds] };
+  if (env.AI_GAUNTLET_FULL === "1") return { mode: "full", seed, mapIds: [...slots] };
 
-  const sampleSize = Math.min(parseSampleSize(env.AI_GAUNTLET_MAP_COUNT), mapIds.length);
-  return { mode: "sample", seed, mapIds: shuffledBySeed(mapIds, seed).slice(0, sampleSize) };
+  const sampleSize = Math.min(parseSampleSize(env.AI_GAUNTLET_MAP_COUNT), slots.length);
+  return { mode: "sample", seed, mapIds: shuffledBySeed(slots, seed).slice(0, sampleSize) };
+}
+
+export function selectGauntletLadderMaps(options: Pick<AiVersionBenchmarkOptions, "seed" | "mapCount" | "full"> = {}): GauntletMapSelection {
+  return selectGauntletMaps(LADDER_SLOT_IDS, {
+    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
+    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
+    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
+  });
+}
+
+// @@@gauntlet-ladder-game - A gauntlet game on a ladder slot is played on the ladder map, on the layout generated from the
+// gauntlet's seed, the slot and its place in the draw: the same seed replays the same maps, and every game of a slot (both
+// sides of a side-balanced pair) plays the same one.
+export function gauntletLadderGame(seed: string, slot: string, index: number): { mapId: MapId; options: { layout: { seed: string } } } {
+  return { mapId: LADDER_MAP_ID, options: { layout: { seed: `layout:${seed}:${slot}:${index}` } } };
+}
+
+// The map a gauntlet game is on, as its name starts with it: the ladder slot (every ladder game's map id is the same).
+export function gauntletMapOf(match: { name: string }) {
+  const space = match.name.indexOf(" ");
+  return space === -1 ? match.name : match.name.slice(0, space);
 }
 
 export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions = {}) {
-  const env: GauntletSelectionEnv = {};
-  if (options.seed !== undefined) env.AI_GAUNTLET_SEED = options.seed;
-  if (options.mapCount !== undefined) env.AI_GAUNTLET_MAP_COUNT = String(options.mapCount);
-  if (options.full) env.AI_GAUNTLET_FULL = "1";
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], env);
+  const selection = selectGauntletLadderMaps(options);
   const allocatedMaps = allocateGauntletBenchmarkMaps(selection.mapIds);
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
   const controller = options.controller ?? "external-agent";
-  const match = (name: string, mapId: MapId, players: PlayerId[], index: number): BenchmarkMatchInput<AiGameAgent> => ({
+  const match = (name: string, slot: string, players: PlayerId[], index: number): BenchmarkMatchInput<AiGameAgent> => ({
     name,
-    mapId,
+    ...gauntletLadderGame(selection.seed, slot, index),
     agents: aiBenchmarkAgents(players, { controller, disableV2WorkerHarassment: index % 2 === 1 }),
     commandPlanner: createAiGameCommandPlanner(),
     maxTicks,
@@ -120,22 +141,22 @@ export function createAiVersionBenchmarkInput(options: AiVersionBenchmarkOptions
       {
         name: "1v2 score",
         tag: "melee",
-        matches: allocatedMaps.score.map((mapId, index) => match(`${mapId} 1v2`, mapId, [V2, V1A, V1B], index)),
+        matches: allocatedMaps.score.map((slot, index) => match(`${slot} 1v2`, slot, [V2, V1A, V1B], index)),
       },
       {
         name: "1v1 score control",
         tag: "melee",
-        matches: allocatedMaps.score.flatMap((mapId, index) => createAiMeleeControlMatches(mapId, index, { controller, maxTicks, thinkInterval })),
+        matches: allocatedMaps.score.flatMap((slot, index) => createAiMeleeControlMatches(selection.seed, slot, index, { controller, maxTicks, thinkInterval })),
       },
       {
         name: "1v3 probe",
         tag: "melee",
-        matches: allocatedMaps.oneVThreeProbe.map((mapId, index) => match(`${mapId} 1v3`, mapId, [V2, V1A, V1B, V1C], index)),
+        matches: allocatedMaps.oneVThreeProbe.map((slot, index) => match(`${slot} 1v3`, slot, [V2, V1A, V1B, V1C], index)),
       },
       {
         name: "2v3 probe",
         tag: "melee",
-        matches: allocatedMaps.twoVThreeProbe.map((mapId, index) => match(`${mapId} 2v3`, mapId, [V2, V2B, V1A, V1B, V1C], index)),
+        matches: allocatedMaps.twoVThreeProbe.map((slot, index) => match(`${slot} 2v3`, slot, [V2, V2B, V1A, V1B, V1C], index)),
       },
       {
         name: "15v20 mixed combat",
@@ -166,23 +187,23 @@ export function allocateGauntletBenchmarkMaps<TMapId extends string>(mapIds: rea
   };
 }
 
-export function createAiMeleeControlMatches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval" | "workerHarassment"> = {}) {
+export function createAiMeleeControlMatches(seed: string, slot: string, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval" | "workerHarassment"> = {}) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? DEFAULT_MAX_TICKS;
   const thinkInterval = options.thinkInterval ?? DEFAULT_THINK_INTERVAL;
   const disableV2WorkerHarassment = workerHarassmentDisabledForIndex(options.workerHarassment ?? 0.5, index);
   const match = (name: string, agents: Record<PlayerId, AiGameAgent>): BenchmarkMatchInput<AiGameAgent> => ({
     name,
-    mapId,
+    ...gauntletLadderGame(seed, slot, index),
     agents,
     commandPlanner: createAiGameCommandPlanner(),
     maxTicks,
     thinkInterval,
   });
   return [
-    match(`${mapId} 1v1 control north`, aiBenchmarkAgents([V2, V1A], { controller, disableV2WorkerHarassment })),
+    match(`${slot} 1v1 control north`, aiBenchmarkAgents([V2, V1A], { controller, disableV2WorkerHarassment })),
     match(
-      `${mapId} 1v1 control south`,
+      `${slot} 1v1 control south`,
       // @@@Side-balanced control - the same map must be checked from both start teams, otherwise spawn bias looks like AI strength.
       aiBenchmarkAgents([V1A, V2], { controller, disableV2WorkerHarassment, teams: { [V2]: "south", [V1A]: "north" } }),
     ),
@@ -210,12 +231,12 @@ export async function runAiVersionBenchmarkParallel(options: AiVersionBenchmarkO
   return aiVersionBenchmarkDashboardReport(selection.mapIds, selection.seed, report);
 }
 
-function aiVersionBenchmarkDashboardReport(selectedRichScoreMapIds: MapId[], seed: string, report: BenchmarkReport): AiVersionBenchmarkDashboardReport {
+function aiVersionBenchmarkDashboardReport(selectedRichScoreMapIds: string[], seed: string, report: BenchmarkReport): AiVersionBenchmarkDashboardReport {
   const [score, scoreControl, oneVThreeProbe, twoVThreeProbe, combat15v20, combat10v12] = report.evaluations;
   if (!score || !scoreControl || !oneVThreeProbe || !twoVThreeProbe || !combat15v20 || !combat10v12) throw new Error("AI version benchmark preset must produce paired melee score, probe, and combat evaluations");
   return {
     seed,
-    mapPoolSize: RICH_SCORE_MAP_IDS.length,
+    mapPoolSize: LADDER_SLOT_IDS.length,
     selectedRichScoreMapIds,
     scoreSummary: summarizePairedScoreEvaluation(score, scoreControl),
     scoreControlSummary: summarizeMeleeControlEvaluation(scoreControl),
@@ -262,15 +283,15 @@ function summarizeEvaluation(evaluation: BenchmarkEvaluationReport, expectedWinn
 }
 
 export function summarizePairedScoreEvaluation(scoreEvaluation: BenchmarkEvaluationReport, controlEvaluation: BenchmarkEvaluationReport): BenchmarkEvaluationSummary {
-  const controlsByMapId = new Map<string, BenchmarkEvaluationReport["matches"]>();
+  const controlsByMap = new Map<string, BenchmarkEvaluationReport["matches"]>();
   for (const match of controlEvaluation.matches) {
-    const controls = controlsByMapId.get(match.setup.map.id) ?? [];
+    const controls = controlsByMap.get(gauntletMapOf(match)) ?? [];
     controls.push(match);
-    controlsByMapId.set(match.setup.map.id, controls);
+    controlsByMap.set(gauntletMapOf(match), controls);
   }
   const wins = scoreEvaluation.matches.filter((match) => {
-    const controls = controlsByMapId.get(match.setup.map.id);
-    if (!controls?.length) throw new Error(`Missing 1v1 score control for ${match.setup.map.id}`);
+    const controls = controlsByMap.get(gauntletMapOf(match));
+    if (!controls?.length) throw new Error(`Missing 1v1 score control for ${gauntletMapOf(match)}`);
     return match.result.winnerTeam === "north" && controls.length === 2 && controls.every(v2WonControl);
   }).length;
   const losses = scoreEvaluation.matches.length - wins;

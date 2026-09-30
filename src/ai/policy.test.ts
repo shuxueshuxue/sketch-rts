@@ -1125,12 +1125,12 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 3600, y: 2620 });
   });
 
-  it("v2 does not advance the verdigris committed wave past the nearby town hall into deep production", () => {
+  it("v2 does not advance a committed 1v2 wave past the nearby town hall into deep production", () => {
     let attackWave: ReturnType<typeof planAiCommandsFromScripts>[number] | undefined;
     const result = runAiGameLoop(
       {
-        name: "verdigris committed wave stopline",
-        mapId: "verdigrisSpire",
+        name: "committed wave stopline",
+        mapId: "verdantCrossroads",
         agents: {
           v2: { controller: "internal-ai", team: "north", race: "grove", version: "v2" },
           v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
@@ -2570,7 +2570,7 @@ describe("SDK preset AI policy", () => {
 
   it("v5 ember spends a guarded first-expansion bank on its first spark support", () => {
     const scene = sketchScene("v5-guarded-natural-first-spark")
-      .map("cobaltVale")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v5", { team: "north", race: "ember" })
       .player("v3", { team: "south", race: "grove" })
@@ -2608,7 +2608,7 @@ describe("SDK preset AI policy", () => {
 
   it("v5 ember spends a cleared near-hall bank on first spark when two enemy armies are far ahead", () => {
     const scene = sketchScene("v5-cleared-natural-first-spark-army-deficit")
-      .map("spruceCircuit")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v5", { team: "south", race: "ember" })
       .player("v3", { team: "north", race: "grove" })
@@ -3238,10 +3238,10 @@ describe("SDK preset AI policy", () => {
     expect(entries.some((entry) => entry.command.type === "train" && entry.command.unitKind !== "worker")).toBe(true);
   });
 
-  it("v2 keeps combat production active before the first expansion bank in the copperWeald control timing", () => {
+  it("v2 keeps combat production active before the first expansion bank in the 1v1 control timing", () => {
     const report = runAiGame({
-      name: "copperWeald first expansion training timing",
-      mapId: "copperWeald",
+      name: "first expansion training timing",
+      mapId: "verdantCrossroads",
       agents: {
         v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", versionLabel: "v2" },
         v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1", versionLabel: "v1" },
@@ -3710,7 +3710,7 @@ describe("SDK preset AI policy", () => {
   });
 
   it("places early main-base production away from nearby neutral camps on multiplayer starts", () => {
-    const game = createGame("wildMarches", {
+    const game = createGame("verdantCrossroads", {
       players: ["v2", "v1a", "v1b"],
       aiPlayers: [],
       teams: { v2: "north", v1a: "south", v1b: "south" },
@@ -3762,7 +3762,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 pulls a wounded melee unit out of a neutral camp instead of donating it while creeping", () => {
     const scene = sketchScene("v2-neutral-creep-wounded-melee-save")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -3829,7 +3829,7 @@ describe("SDK preset AI policy", () => {
 
   it("does not let objective control keep sending a sliced remnant squad after creep-preservation retreats", () => {
     const scene = sketchScene("v2-neutral-creep-sliced-squad")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -3855,7 +3855,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 breaks a neutral camp claim when the committed squad is too wounded to keep creeping", () => {
     const scene = sketchScene("v2-neutral-creep-claim-recovery")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -3913,7 +3913,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 breaks a wounded early creep claim when the one-on-one enemy army has pulled ahead", () => {
     const scene = sketchScene("v2-neutral-creep-tempo-recovery")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -3973,7 +3973,7 @@ describe("SDK preset AI policy", () => {
 
   it("does not treat a nearby neutral camp as main-base pressure for attack-wave rally logic", () => {
     const scene = sketchScene("v2-neutral-camp-not-main-pressure")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -4027,7 +4027,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 does not send leftover ranged units as an attack wave while the main group is recovering", () => {
     const scene = sketchScene("v2-no-leftover-ranged-attack-wave")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -4055,7 +4055,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 keeps expansion regroup from pulling defenders away while the main worker line is under attack", () => {
     const scene = sketchScene("v2-main-mine-does-not-regroup-to-expansion")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -4089,7 +4089,7 @@ describe("SDK preset AI policy", () => {
 
   it("does not reassign wounded units that are already moving home into another neutral objective", () => {
     const scene = sketchScene("v2-neutral-creep-recovery-commitment")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
@@ -4114,7 +4114,7 @@ describe("SDK preset AI policy", () => {
 
   it("does not count wounded attack movers as ready for a fresh neutral objective", () => {
     const scene = sketchScene("v2-wounded-attack-movers-not-fresh-objective-power")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
@@ -4139,7 +4139,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 waits for a full first squad before taking neutral objectives", () => {
     const scene = sketchScene("v2-no-first-three-neutral-objective")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
@@ -4160,7 +4160,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 still takes a locally safe neutral objective while globally outpowered in a 1v2", () => {
     const scene = sketchScene("v2-local-objective-while-globally-outpowered")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
@@ -7237,7 +7237,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 trains cheap recovery workers when the main is pressured and it cannot afford soldiers", () => {
     const scene = sketchScene("v2-cheap-worker-recovery-under-main-pressure")
-      .map("wildMarches")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "grove" })
       .player("v1a", { team: "south", race: "grove" })
@@ -10241,7 +10241,7 @@ describe("SDK preset AI policy", () => {
 
   it("v3 ember breaks a near-expansion bank for the first spark once melee and spire are online", () => {
     const scene = sketchScene("v3-ember-first-spark-before-late-expansion-conversion")
-      .map("cobaltVale")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v3", { team: "north", race: "ember" })
       .player("v2-prod", { team: "south", race: "grove" })
@@ -10276,7 +10276,7 @@ describe("SDK preset AI policy", () => {
 
   it("v2 ember spends wounded 1v2 melee recovery gold on its first spark", () => {
     const scene = sketchScene("v2-ember-wounded-1v2-first-spark-recovery")
-      .map("cobaltVale")
+      .map("verdantCrossroads")
       .replaceDefaults()
       .player("v2", { team: "north", race: "ember" })
       .player("v1a", { team: "south", race: "grove" })
@@ -10344,10 +10344,10 @@ describe("SDK preset AI policy", () => {
     expect(commands).toContainEqual(expect.objectContaining({ type: "train" }));
   });
 
-  it("v2 does not spend the cinderHeath first-expansion window on early stables", () => {
+  it("v2 does not spend a catch-up first-expansion window on early stables", () => {
     const report = runAiGame({
-      name: "cinderHeath catch-up expansion production timing",
-      mapId: "cinderHeath",
+      name: "catch-up expansion production timing",
+      mapId: "verdantCrossroads",
       agents: {
         v2: {
           controller: "external-agent",
@@ -11315,10 +11315,10 @@ describe("SDK preset AI policy", () => {
     expect(command).toMatchObject({ type: "attackMove", x: 930, y: 930 });
   });
 
-  it("v2 keeps moving toward its guarded natural on sundial reach instead of bouncing home from neutral pressure", () => {
+  it("v2 keeps moving toward its guarded natural in a 1v2 instead of bouncing home from neutral pressure", () => {
     const players = ["v2", "v1a", "v1b"] as const;
     const teams = { v2: "north", v1a: "south", v1b: "south" };
-    const game = createGame("sundialReach", {
+    const game = createGame("verdantCrossroads", {
       players: [...players],
       aiPlayers: [...players],
       teams,

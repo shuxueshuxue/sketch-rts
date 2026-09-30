@@ -163,7 +163,7 @@ describe("SDK game runner", () => {
     } as const;
     const internal = runAiGame({
       name: "runner-frame-internal",
-      mapId: "wildMarches",
+      mapId: "verdantCrossroads",
       agents,
       maxTicks: 3600,
       thinkInterval: 45,
@@ -171,7 +171,7 @@ describe("SDK game runner", () => {
     });
     const mixed = runAiGame({
       name: "runner-frame-mixed",
-      mapId: "wildMarches",
+      mapId: "verdantCrossroads",
       agents: { ...agents, v2: { ...agents.v2, controller: "external-agent" } },
       maxTicks: 3600,
       thinkInterval: 45,
@@ -185,8 +185,8 @@ describe("SDK game runner", () => {
 
   it("can disable worker pressure through an agent strategy parameter", () => {
     const report = runAiGame({
-      name: "bluebell-worker-pressure-disabled",
-      mapId: "bluebellHeath",
+      name: "ladder-worker-pressure-disabled",
+      mapId: "ladder",
       agents: {
         v2: { controller: "external-agent", team: "north", race: "grove", version: "v2", disabledBehaviors: ["workerHarassment"] },
         v1a: { controller: "external-agent", team: "south", race: "grove", version: "v1" },

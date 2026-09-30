@@ -7,6 +7,9 @@ describe("v9 gauntlet benchmark", () => {
     const { input, selection } = createAiV9GauntletBenchmarkInput({ seed: "v9-input", mapCount: 12 });
     const matches = input.evaluations.flatMap((evaluation) => evaluation.matches);
     expect(matches.map((match) => match.name)).toEqual(selection.mapIds.flatMap((mapId) => [`${mapId} v9 grove`, `${mapId} v9 ember`]));
+    // Every game is on the ladder map; a slot's two games play the layout the subject, seed, slot and draw place seed.
+    expect(matches.every((match) => match.mapId === "ladder")).toBe(true);
+    expect(matches.map((match) => match.options?.layout?.seed)).toEqual(selection.mapIds.flatMap((slot, index) => [`v9-layout:v9-input:${slot}:${index}`, `v9-layout:v9-input:${slot}:${index}`]));
     const firstIds = new Set<string>();
     const v9Firsts = new Set<boolean>();
     for (const match of matches) {

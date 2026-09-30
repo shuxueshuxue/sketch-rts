@@ -53,8 +53,7 @@ import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, R
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
-import { MAP_SCENARIOS } from "../shared/map";
-import { isMapId } from "../shared/map-ids";
+import { isMapId, LADDER_MAP_ID } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
@@ -164,9 +163,9 @@ let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
-let selectedMapId: MapId = "verdantCrossroads";
-// Set while the room plays a generated layout (see @@@generated-map).
-let selectedLayoutSeed: string | undefined;
+// Players play the ladder map, a fresh layout (see @@@generated-map) until a room names its own.
+let selectedMapId: MapId = LADDER_MAP_ID;
+let selectedLayoutSeed: string | undefined = newLayoutSeed();
 let commandMode: CommandMode | undefined;
 let buildPaletteOpen = false;
 let pointerLockGateKind: "guide" | "required" = "guide";
@@ -535,7 +534,7 @@ function renderCreateGameMenu() {
       <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
       <label>${escapeHtml(t("roomCreate.map.label"))}
         <select name="mapId">
-          ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)} - ${escapeHtml(mapCapacityLabel(scenario.id))}</option>`).join("")}
+          <option value="${LADDER_MAP_ID}" selected>${escapeHtml(t("map.generated"))} - ${escapeHtml(mapCapacityLabel(LADDER_MAP_ID))}</option>
         </select>
       </label>
       <div class="create-count-grid">
@@ -569,6 +568,8 @@ function renderCreateGameMenu() {
     void createConfiguredRoom({
       name,
       mapId,
+      // Every new room draws a new ladder layout.
+      layoutSeed: newLayoutSeed(),
       humanCount: slotCounts.humanCount,
       aiCount: slotCounts.aiCount,
       visibility: data.get("privateRoom") === "on" ? "private" : "public",
@@ -720,7 +721,7 @@ function renderRoomSetup() {
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
   const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
-  mapGrid.replaceChildren(generatedMapButton(), ...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
+  mapGrid.replaceChildren(generatedMapButton());
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...room.slots.map(slotRow));
   setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
@@ -786,10 +787,10 @@ function renderResultsMenu() {
 }
 
 async function createLocalRoom() {
-  await createConfiguredRoom({ name: `${localUser.name}'s Room`, mapId: selectedMapId, humanCount: 1, aiCount: 1, visibility: "private" });
+  await createConfiguredRoom({ name: `${localUser.name}'s Room`, mapId: selectedMapId, ...(selectedLayoutSeed ? { layoutSeed: selectedLayoutSeed } : {}), humanCount: 1, aiCount: 1, visibility: "private" });
 }
 
-async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
+async function createConfiguredRoom(input: { name: string; mapId: MapId; layoutSeed?: string; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
   currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
     host: localUser,
@@ -851,37 +852,30 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   return button;
 }
 
-function mapChoiceButton(mapId: MapId) {
-  const scenario = MAP_SCENARIOS.find((candidate) => candidate.id === mapId)!;
-  const button = document.createElement("button");
-  button.className = `map-button ${!selectedLayoutSeed && selectedMapId === scenario.id ? "selected" : ""}`;
-  button.type = "button";
-  button.dataset.mapId = scenario.id;
-  button.setAttribute("aria-label", t("map.choose", { name: scenario.name }));
-  button.innerHTML = `
-    <span class="map-button-name">${escapeHtml(scenario.name)}</span>
-    <span class="map-button-note">${escapeHtml(scenario.note)}</span>
-    <span class="map-button-tags">${[mapCapacityLabel(scenario.id), ...scenario.tags].map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
-  `;
-  button.addEventListener("click", () => void selectRoomMap(scenario.id));
-  return button;
-}
-
-// A new generated layout each click (see @@@generated-map), named by the map chosen before it.
+// The ladder map, the only map a room offers: each click draws a new layout (see @@@generated-map).
 function generatedMapButton() {
   const button = document.createElement("button");
-  button.className = `map-button ${selectedLayoutSeed ? "selected" : ""}`;
+  button.className = `map-button ${selectedMapId === LADDER_MAP_ID ? "selected" : ""}`;
   button.type = "button";
+  button.dataset.mapId = LADDER_MAP_ID;
   button.dataset.generatedMap = "true";
   button.setAttribute("aria-label", t("map.generated"));
-  const seedTag = selectedLayoutSeed ? `<span>${escapeHtml(t("map.generatedSeed", { seed: selectedLayoutSeed }))}</span>` : "";
+  const seedTag = selectedMapId === LADDER_MAP_ID && selectedLayoutSeed ? `<span>${escapeHtml(t("map.generatedSeed", { seed: selectedLayoutSeed }))}</span>` : "";
   button.innerHTML = `
     <span class="map-button-name">${escapeHtml(t("map.generated"))}</span>
     <span class="map-button-note">${escapeHtml(t("map.generatedNote"))}</span>
-    <span class="map-button-tags"><span>ladder</span>${seedTag}</span>
+    <span class="map-button-tags"><span>${escapeHtml(mapCapacityLabel(LADDER_MAP_ID))}</span>${seedTag}</span>
   `;
-  button.addEventListener("click", () => void selectRoomMap(selectedMapId, Math.random().toString(36).slice(2, 10)));
+  button.addEventListener("click", () => void rerollLadderMap());
   return button;
+}
+
+function rerollLadderMap() {
+  return selectRoomMap(LADDER_MAP_ID, newLayoutSeed());
+}
+
+function newLayoutSeed() {
+  return Math.random().toString(36).slice(2, 10);
 }
 
 function slotRow(slot: RoomState["slots"][number], index: number) {
@@ -1340,11 +1334,10 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (menuOpen) {
-    const mapIndex = Number(key) - 1;
-    const scenario = MAP_SCENARIOS[mapIndex];
-    if (scenario && menuView === "setup") {
+    // The map tile's number key: the ladder map is tile 1, and pressing it draws a new layout.
+    if (key === "1" && menuView === "setup") {
       event.preventDefault();
-      void selectRoomMap(scenario.id);
+      void rerollLadderMap();
     }
     return;
   }

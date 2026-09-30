@@ -1,5 +1,5 @@
 // Fingerprints standard matches, to show an engine change moved none of them. It plays the V7 gauntlet's matches (V7
-// against pairs of V3, V5 and V6, both races, on the ladder's rich maps) exactly as the benchmark does, and prints one
+// against pairs of V3, V5 and V6, both races, on generated ladder maps) exactly as the benchmark does, and prints one
 // line per match: the winner, the last tick, and the game's canonical checksum every 1000 ticks and at the end. Run it
 // on two trees with the same arguments: identical output means every one of those games went the same, tick for tick.
 //
