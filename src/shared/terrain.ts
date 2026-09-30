@@ -161,7 +161,30 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
 
-type Field = { dist: Int32Array; next: Int32Array };
+// The cells a walk from `from` to `goal` passes, down the whole map's field toward the goal (every `every`-th cell's
+// center, the goal last), or undefined when no walk joins them. A map without terrain walks the straight line.
+export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Point, every = 2): Point[] | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return [goal];
+  const state = runtime(terrain);
+  const start = padAt(state, from.x, from.y);
+  const target = padAt(state, goal.x, goal.y);
+  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  const field = exactField(state, target);
+  if (field.dist[start]! >= UNREACHED) return undefined;
+  const route: Point[] = [];
+  let at = start;
+  for (let step = 1; at !== target && step < state.walk.length; step += 1) {
+    at = nextStep(state, field, at);
+    if (at < 0) return undefined;
+    if (step % every === 0) route.push(centerOf(state, at));
+  }
+  route.push(goal);
+  return route;
+}
+
+// `used`: when the field was last asked for, by the runtime's clock (the least recently used goes first).
+type Field = { dist: Int32Array; next: Int32Array; used: number };
 
 type TerrainRuntime = {
   terrain: Terrain;
@@ -172,6 +195,7 @@ type TerrainRuntime = {
   clearance: Uint16Array;
   fields: Map<number, Field>;
   spare: Field[];
+  clock: number;
   nearest: Map<number, number>;
   // Dial's buckets, kept between fields.
   buckets: Int32Array[];
@@ -212,6 +236,7 @@ function createRuntime(terrain: Terrain): TerrainRuntime {
     walk,
     clearance: new Uint16Array(count),
     fields: new Map(),
+    clock: 0,
     spare: [],
     nearest: new Map(),
     buckets: Array.from({ length: 8 }, () => new Int32Array(count)),
@@ -377,19 +402,28 @@ function blockField(state: TerrainRuntime, target: number): Field {
 }
 
 function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
+  state.clock += 1;
   const known = state.fields.get(key);
   if (known) {
-    state.fields.delete(key);
-    state.fields.set(key, known);
+    known.used = state.clock;
     return known;
   }
-  const field = build();
-  state.fields.set(key, field);
-  if (state.fields.size > FIELD_CACHE) {
-    const oldest = state.fields.keys().next().value!;
-    state.spare.push(state.fields.get(oldest)!);
-    state.fields.delete(oldest);
+  // Only a new field looks for the one to drop (a hit is one write, not a reorder of the map).
+  if (state.fields.size >= FIELD_CACHE) {
+    let oldest: number | undefined;
+    let oldestUse = Infinity;
+    for (const [candidate, field] of state.fields) {
+      if (field.used < oldestUse) {
+        oldestUse = field.used;
+        oldest = candidate;
+      }
+    }
+    state.spare.push(state.fields.get(oldest!)!);
+    state.fields.delete(oldest!);
   }
+  const field = build();
+  field.used = state.clock;
+  state.fields.set(key, field);
   return field;
 }
 
@@ -397,7 +431,7 @@ function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
 // corner cut), grown no farther than `reach` cells from `center` in either direction.
 function grow(state: TerrainRuntime, sources: number[], center: number, reach: number): Field {
   const { walk, offsets, buckets, tops, width } = state;
-  const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length) };
+  const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
   const dist = field.dist;
   dist.fill(UNREACHED);
   field.next.fill(UNKNOWN);
