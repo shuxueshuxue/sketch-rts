@@ -15,7 +15,7 @@ export function terrainBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined
 }
 
 export function isBuildPlacementClear(snapshot: Pick<GameSnapshot, "buildings"> & { map?: Pick<GameMap, "terrain"> }, kind: BuildingKind, point: { x: number; y: number }) {
-  return !buildingPlacementBlocker(snapshot, kind, point) && !terrainBlocksPlacement(snapshot.map, kind, point);
+  return !terrainBlocksPlacement(snapshot.map, kind, point) && !buildingPlacementBlocker(snapshot, kind, point);
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {

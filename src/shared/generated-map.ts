@@ -300,16 +300,24 @@ function ringSymmetry(size: number, count: number, firstAngle: number): Symmetry
   };
   const quarter = count === 4;
   const half = count === 2;
-  // The first slot's wedge, between these two headings (no atan2: it rounds differently on different machines).
+  // The first slot's wedge, between these two headings (no atan2: it rounds differently on different machines), and the
+  // turn back from every slot's wedge, worked out once.
   const low = heading(firstAngle - turn / 2);
   const high = heading(firstAngle + turn / 2);
-  const inFirstWedge = (offset: Point) => (count === 2 ? cross(low, offset) >= 0 : cross(low, offset) >= 0 && cross(offset, high) > 0);
+  const inFirstWedge = (x: number, y: number) => (count === 2 ? low.x * y - low.y * x >= 0 : low.x * y - low.y * x >= 0 && x * high.y - y * high.x > 0);
+  const backs = Array.from({ length: count }, (_, slot) => heading(-slot * turn));
+  const exact = quarter || half;
   return {
     copies: (point) => Array.from({ length: count }, (_, slot) => turnAround(point, slot * turn)),
+    // Where the grid is made exactly symmetric (see orbit) any copy stands for itself.
     canonical: (point) => {
-      for (let slot = 0; slot < count; slot += 1) {
-        const back = rotate(sub(point, { x: center, y: center }), -slot * turn);
-        if (inFirstWedge(back)) return { x: center + back.x, y: center + back.y };
+      if (exact) return point;
+      const ox = point.x - center;
+      const oy = point.y - center;
+      for (const back of backs) {
+        const x = ox * back.x - oy * back.y;
+        const y = ox * back.y + oy * back.x;
+        if (inFirstWedge(x, y)) return { x: center + x, y: center + y };
       }
       return point;
     },
@@ -330,10 +338,10 @@ function ringSymmetry(size: number, count: number, firstAngle: number): Symmetry
 
 function mirrorSymmetry(size: number, quarter: boolean): Symmetry {
   const mirror = (point: Point): Point => (quarter ? { x: point.x, y: size - point.y } : { x: size - point.x, y: point.y });
-  const near = (point: Point) => (quarter ? point.y <= size / 2 : point.x <= size / 2);
   return {
     copies: (point) => [point, mirror(point)],
-    canonical: (point) => (near(point) ? point : mirror(point)),
+    // The grid is made exactly symmetric (see orbit): any copy stands for itself.
+    canonical: (point) => point,
     orbit: (col, row, cells) => [[col, row], quarter ? [col, cells - 1 - row] : [cells - 1 - col, row]],
   };
 }
@@ -1007,10 +1015,6 @@ function patchNoise(seed: number, point: Point, scale: number) {
 // The point beyond `mine` on the far side from `from` (a guard stands between its mine and the open map).
 function mirrorAway(mine: Point, from: Point): Point {
   return { x: mine.x * 2 - from.x, y: mine.y * 2 - from.y };
-}
-
-function cross(a: Point, b: Point) {
-  return a.x * b.y - a.y * b.x;
 }
 
 function heading(angle: number): Point {

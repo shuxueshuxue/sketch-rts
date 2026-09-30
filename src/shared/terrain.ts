@@ -22,13 +22,22 @@ type Point = { x: number; y: number };
 
 const WALKABLE = new Set([".", ","]);
 const UNREACHED = 0x3fffffff;
+const UNKNOWN = -2;
 // Orthogonal and diagonal steps of the flow fields, in fifths of a cell (7/5 for the square root of two).
 const STRAIGHT = 5;
 const DIAGONAL = 7;
-// A walk looks this many cells along its flow for the farthest cell it can see, and heads there.
+// @@@terrain-steering - A walk that cannot see its goal follows a flow field down to it: it looks this many cells along
+// the flow and heads for that cell if it sees it (one sight line, not one a cell), else for the cell a few steps along.
 const LOOKAHEAD = 16;
-// Fields kept per terrain; the least recently used goes first.
-const FIELD_CACHE = 96;
+const SHORT_LOOK = 3;
+// A goal within NEAR cells gets a field of its own, grown no farther than LOCAL cells round it (a way round that leaves
+// that square takes the whole map's field); a farther goal shares the field of its BLOCK-cell square, which brings the
+// walk within NEAR of it just as well.
+const NEAR = 12;
+const LOCAL = 24;
+const BLOCK = 4;
+// Fields kept per terrain; the least recently used goes first and its arrays serve the next one.
+const FIELD_CACHE = 128;
 
 export function terrainCellKind(char: string | undefined): TerrainCellKind {
   if (char === ",") return "shallow";
@@ -47,7 +56,8 @@ export function isWalkableChar(char: string | undefined) {
 export function isWalkable(map: Pick<GameMap, "terrain">, x: number, y: number) {
   const terrain = map.terrain;
   if (!terrain) return true;
-  return walkableIndex(runtime(terrain), cellIndexAt(terrain, x, y));
+  const state = runtime(terrain);
+  return state.walk[padAt(state, x, y)] === 1;
 }
 
 export function cellIndexAt(terrain: Terrain, x: number, y: number) {
@@ -79,7 +89,7 @@ export function isFootprintWalkable(map: Pick<GameMap, "terrain">, x: number, y:
       const nearX = Math.max(col * size, Math.min(x, (col + 1) * size));
       const nearY = Math.max(row * size, Math.min(y, (row + 1) * size));
       if ((nearX - x) * (nearX - x) + (nearY - y) * (nearY - y) >= radius * radius) continue;
-      if (!state.walkable[row * terrain.cols + col]) return false;
+      if (state.walk[pad(state, col, row)] !== 1) return false;
     }
   }
   return true;
@@ -93,50 +103,49 @@ export function walkableGoal(map: Pick<GameMap, "terrain" | "width" | "height">,
   const state = runtime(terrain);
   const cx = Math.min(Math.max(x, 0), map.width);
   const cy = Math.min(Math.max(y, 0), map.height);
-  const index = cellIndexAt(terrain, Math.min(cx, terrain.cols * terrain.cell - 0.001), Math.min(cy, terrain.rows * terrain.cell - 0.001));
-  if (walkableIndex(state, index)) return { x: cx, y: cy };
-  const nearest = nearestWalkableCell(terrain, state, index);
-  return nearest < 0 ? { x: cx, y: cy } : cellCenter(terrain, nearest);
+  const at = padAt(state, Math.min(cx, terrain.cols * terrain.cell - 0.001), Math.min(cy, terrain.rows * terrain.cell - 0.001));
+  if (state.walk[at] === 1) return { x: cx, y: cy };
+  const nearest = nearestWalkable(state, at);
+  return nearest < 0 ? { x: cx, y: cy } : centerOf(state, nearest);
 }
 
 // Whether a unit could walk the straight segment from a to b without touching a blocked cell.
 export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Point) {
   const terrain = map.terrain;
   if (!terrain) return true;
-  return clearSegment(terrain, runtime(terrain), a.x, a.y, b.x, b.y);
+  return clearSegment(runtime(terrain), a.x, a.y, b.x, b.y);
 }
 
-// Where a unit at `from` walking to `goal` should head this tick: the goal itself when it sees it, otherwise the farthest
-// cell it sees along the flow toward the goal. `goal` should be walkable (see walkableGoal).
+// Where a unit at `from` walking to `goal` should head this tick: the goal itself when it sees it, otherwise a cell down
+// the flow toward the goal (see @@@terrain-steering). `goal` should be walkable (see walkableGoal).
 export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point): Point {
   const terrain = map.terrain;
   if (!terrain) return goal;
   const state = runtime(terrain);
-  if (clearSegment(terrain, state, from.x, from.y, goal.x, goal.y)) return goal;
-  const start = cellIndexAt(terrain, from.x, from.y);
-  const target = cellIndexAt(terrain, goal.x, goal.y);
-  if (start < 0 || target < 0 || !state.walkable[target]) return goal;
-  if (!state.walkable[start]) {
+  if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
+  const start = padAt(state, from.x, from.y);
+  const target = padAt(state, goal.x, goal.y);
+  if (start < 0 || state.walk[target] !== 1) return goal;
+  if (state.walk[start] !== 1) {
     // Standing where it cannot (nothing puts a unit there but a seeded scenario): out by the nearest way.
-    const out = nearestWalkableCell(terrain, state, start);
-    return out < 0 ? goal : cellCenter(terrain, out);
+    const out = nearestWalkable(state, start);
+    return out < 0 ? goal : centerOf(state, out);
   }
-  const field = flowField(terrain, state, target);
-  if (field[start]! >= UNREACHED) return goal;
-  const chain: number[] = [];
+  const field = fieldToward(state, start, target);
+  if (!field) return goal;
   let at = start;
-  for (let step = 0; step < LOOKAHEAD && at !== target; step += 1) {
-    const next = downhill(terrain, state, field, at);
+  let short = -1;
+  for (let step = 1; step <= LOOKAHEAD; step += 1) {
+    const next = nextStep(state, field, at);
     if (next < 0) break;
-    chain.push(next);
     at = next;
+    if (step === SHORT_LOOK) short = at;
+    if (field.dist[at] === 0) break;
   }
-  for (let index = chain.length - 1; index >= 0; index -= 1) {
-    const cell = chain[index]!;
-    const center = cell === target ? goal : cellCenter(terrain, cell);
-    if (index === 0 || clearSegment(terrain, state, from.x, from.y, center.x, center.y)) return center;
-  }
-  return goal;
+  if (at === start) return goal;
+  const far = at === target ? goal : centerOf(state, at);
+  if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
+  return short === target ? goal : centerOf(state, short);
 }
 
 // The walking distance (in world units, along the flow) from a point to a goal, or undefined when no walk joins them. A
@@ -145,115 +154,147 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   const terrain = map.terrain;
   if (!terrain) return Math.sqrt((from.x - goal.x) ** 2 + (from.y - goal.y) ** 2);
   const state = runtime(terrain);
-  const start = cellIndexAt(terrain, from.x, from.y);
-  const target = cellIndexAt(terrain, goal.x, goal.y);
-  if (start < 0 || target < 0 || !state.walkable[start] || !state.walkable[target]) return undefined;
-  const cost = flowField(terrain, state, target)[start]!;
+  const start = padAt(state, from.x, from.y);
+  const target = padAt(state, goal.x, goal.y);
+  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  const cost = exactField(state, target).dist[start]!;
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
 
+type Field = { dist: Int32Array; next: Int32Array };
+
 type TerrainRuntime = {
-  walkable: Uint8Array;
+  terrain: Terrain;
+  // The grid with a blocked border cell all round (cols + 2 wide), so no step ever needs a bounds check.
+  width: number;
+  walk: Uint8Array;
   // Chebyshev distance in cells to the nearest blocked cell (or the map's edge): 0 on a blocked cell.
   clearance: Uint16Array;
-  fields: Map<number, Int32Array>;
+  fields: Map<number, Field>;
+  spare: Field[];
   nearest: Map<number, number>;
+  // Dial's buckets, kept between fields.
+  buckets: Int32Array[];
+  tops: Int32Array;
+  offsets: Int32Array;
 };
 
 // @@@terrain-runtime - What the terrain's queries need, built once per terrain and kept beside it (never in the game's
 // state): the walkable cells, their clearance, and the flow fields and nearest cells asked for so far. Every one is a pure
 // function of the terrain, so whether it was cached changes nothing a unit does.
 const runtimes = new WeakMap<Terrain, TerrainRuntime>();
+let lastTerrain: Terrain | undefined;
+let lastRuntime: TerrainRuntime | undefined;
 
 function runtime(terrain: Terrain): TerrainRuntime {
-  const known = runtimes.get(terrain);
-  if (known) return known;
-  const count = terrain.cols * terrain.rows;
-  const walkable = new Uint8Array(count);
-  for (let index = 0; index < count; index += 1) walkable[index] = WALKABLE.has(terrain.cells[index]!) ? 1 : 0;
-  const state: TerrainRuntime = { walkable, clearance: clearanceOf(terrain, walkable), fields: new Map(), nearest: new Map() };
-  runtimes.set(terrain, state);
+  if (terrain === lastTerrain) return lastRuntime!;
+  let state = runtimes.get(terrain);
+  if (!state) {
+    state = createRuntime(terrain);
+    runtimes.set(terrain, state);
+  }
+  lastTerrain = terrain;
+  lastRuntime = state;
   return state;
 }
 
-function walkableIndex(state: TerrainRuntime, index: number) {
-  return index >= 0 && state.walkable[index] === 1;
+function createRuntime(terrain: Terrain): TerrainRuntime {
+  const width = terrain.cols + 2;
+  const count = width * (terrain.rows + 2);
+  const walk = new Uint8Array(count);
+  for (let row = 0; row < terrain.rows; row += 1) {
+    for (let col = 0; col < terrain.cols; col += 1) if (WALKABLE.has(terrain.cells[row * terrain.cols + col]!)) walk[(row + 1) * width + col + 1] = 1;
+  }
+  const offsets = Int32Array.from([1, width, -1, -width, width + 1, width - 1, -width - 1, -width + 1]);
+  const state: TerrainRuntime = {
+    terrain,
+    width,
+    walk,
+    clearance: new Uint16Array(count),
+    fields: new Map(),
+    spare: [],
+    nearest: new Map(),
+    buckets: Array.from({ length: 8 }, () => new Int32Array(count)),
+    tops: new Int32Array(8),
+    offsets,
+  };
+  fillClearance(state);
+  return state;
 }
 
-function clearanceOf(terrain: Terrain, walkable: Uint8Array) {
-  const { cols, rows } = terrain;
-  const clearance = new Uint16Array(cols * rows);
-  const queue = new Int32Array(cols * rows);
-  let head = 0;
+function pad(state: TerrainRuntime, col: number, row: number) {
+  return (row + 1) * state.width + col + 1;
+}
+
+// The padded index of the cell under a point, or -1 off the map.
+function padAt(state: TerrainRuntime, x: number, y: number) {
+  const { terrain } = state;
+  const col = Math.floor(x / terrain.cell);
+  const row = Math.floor(y / terrain.cell);
+  if (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows) return -1;
+  return (row + 1) * state.width + col + 1;
+}
+
+function centerOf(state: TerrainRuntime, at: number): Point {
+  const col = (at % state.width) - 1;
+  const row = Math.floor(at / state.width) - 1;
+  return { x: (col + 0.5) * state.terrain.cell, y: (row + 0.5) * state.terrain.cell };
+}
+
+// Diagonal steps (offsets 4 to 7) never cut a corner: both cells beside the step must be walkable.
+function stepAllowed(state: TerrainRuntime, at: number, direction: number) {
+  if (direction < 4) return true;
+  const { walk, width } = state;
+  const dx = direction === 4 || direction === 7 ? 1 : -1;
+  const dy = direction === 4 || direction === 5 ? width : -width;
+  return walk[at + dx] === 1 && walk[at + dy] === 1;
+}
+
+function fillClearance(state: TerrainRuntime) {
+  const { walk, clearance, offsets } = state;
+  const queue = new Int32Array(walk.length);
   let tail = 0;
-  for (let index = 0; index < cols * rows; index += 1) {
-    const col = index % cols;
-    const row = (index - col) / cols;
-    if (!walkable[index]) continue;
-    // The map's edge blocks like a wall: a border cell is one cell from it.
-    if (col === 0 || row === 0 || col === cols - 1 || row === rows - 1) {
-      clearance[index] = 1;
-      queue[tail++] = index;
+  // Blocked cells (the border among them) seed their walkable neighbours at 1.
+  for (let at = 0; at < walk.length; at += 1) {
+    if (walk[at] !== 1) continue;
+    for (let direction = 0; direction < 8; direction += 1) {
+      if (walk[at + offsets[direction]!] === 1) continue;
+      clearance[at] = 1;
+      queue[tail++] = at;
+      break;
     }
   }
-  for (let index = 0; index < cols * rows; index += 1) {
-    if (walkable[index] || clearance[index]) continue;
-    // Blocked cells seed their walkable neighbours at 1.
-    const col = index % cols;
-    const row = (index - col) / cols;
-    for (let dy = -1; dy <= 1; dy += 1) {
-      for (let dx = -1; dx <= 1; dx += 1) {
-        const c = col + dx;
-        const r = row + dy;
-        if (c < 0 || r < 0 || c >= cols || r >= rows) continue;
-        const next = r * cols + c;
-        if (walkable[next] && !clearance[next]) {
-          clearance[next] = 1;
-          queue[tail++] = next;
-        }
-      }
+  for (let head = 0; head < tail; head += 1) {
+    const at = queue[head]!;
+    const value = clearance[at]! + 1;
+    for (let direction = 0; direction < 8; direction += 1) {
+      const next = at + offsets[direction]!;
+      if (walk[next] !== 1 || clearance[next] !== 0) continue;
+      clearance[next] = value;
+      queue[tail++] = next;
     }
   }
-  while (head < tail) {
-    const index = queue[head++]!;
-    const col = index % cols;
-    const row = (index - col) / cols;
-    const value = clearance[index]! + 1;
-    for (let dy = -1; dy <= 1; dy += 1) {
-      for (let dx = -1; dx <= 1; dx += 1) {
-        const c = col + dx;
-        const r = row + dy;
-        if (c < 0 || r < 0 || c >= cols || r >= rows) continue;
-        const next = r * cols + c;
-        if (walkable[next] && !clearance[next]) {
-          clearance[next] = value;
-          queue[tail++] = next;
-        }
-      }
-    }
-  }
-  return clearance;
 }
 
 // Whether the segment crosses only walkable cells. It steps from cell to cell, but across open ground it leaps: a cell
 // whose clearance is k has every cell within k - 1 of it walkable, so the walk jumps to the edge of that square.
-function clearSegment(terrain: Terrain, state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
+function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
+  const { terrain, walk, clearance, width } = state;
   const size = terrain.cell;
+  let at = padAt(state, ax, ay);
+  const end = padAt(state, bx, by);
+  if (at < 0 || end < 0 || walk[at] !== 1 || walk[end] !== 1) return false;
+  if (at === end) return true;
   const dx = bx - ax;
   const dy = by - ay;
   const length = Math.sqrt(dx * dx + dy * dy);
-  let index = cellIndexAt(terrain, ax, ay);
-  if (!walkableIndex(state, index)) return false;
-  const end = cellIndexAt(terrain, bx, by);
-  if (!walkableIndex(state, end)) return false;
-  if (length === 0 || index === end) return true;
   const ux = dx / length;
   const uy = dy / length;
   let t = 0;
   for (let guard = 0; guard < 2 * (terrain.cols + terrain.rows) + 8; guard += 1) {
-    const col = index % terrain.cols;
-    const row = (index - col) / terrain.cols;
-    const reach = state.clearance[index]! - 1;
+    const col = (at % width) - 1;
+    const row = Math.floor(at / width) - 1;
+    const reach = clearance[at]! - 1;
     // The walkable square around the cell, and where the segment leaves it.
     const left = (col - reach) * size;
     const right = (col + reach + 1) * size;
@@ -268,135 +309,159 @@ function clearSegment(terrain: Terrain, state: TerrainRuntime, ax: number, ay: n
     const leaveX = exitX <= exitY;
     const leaveY = exitY <= exitX;
     t += exit;
-    // The cell the segment enters as it leaves the square (both across a corner it passes exactly).
-    const qx = ax + ux * t;
-    const qy = ay + uy * t;
-    let nextCol = Math.floor(qx / size);
-    let nextRow = Math.floor(qy / size);
+    // The cell the segment enters as it leaves the square (across a corner it passes exactly, the diagonal one).
+    let nextCol = Math.floor((ax + ux * t) / size);
+    let nextRow = Math.floor((ay + uy * t) / size);
     if (leaveX) nextCol = ux > 0 ? Math.max(nextCol, col + reach + 1) : Math.min(nextCol, col - reach - 1);
     if (leaveY) nextRow = uy > 0 ? Math.max(nextRow, row + reach + 1) : Math.min(nextRow, row - reach - 1);
+    if (nextCol < 0 || nextRow < 0 || nextCol >= terrain.cols || nextRow >= terrain.rows) return false;
     // Through a corner exactly: both cells beside it must be open, or the walk would squeeze between two blocks.
-    if (leaveX && leaveY && (!walkableAt(terrain, state, ux > 0 ? col + reach : col - reach, nextRow) || !walkableAt(terrain, state, nextCol, uy > 0 ? row + reach : row - reach))) return false;
-    if (!insideGrid(terrain, nextCol, nextRow)) return false;
-    index = nextRow * terrain.cols + nextCol;
-    if (!state.walkable[index]) return false;
-    if (index === end) return true;
+    if (leaveX && leaveY && (walk[pad(state, ux > 0 ? col + reach : col - reach, nextRow)] !== 1 || walk[pad(state, nextCol, uy > 0 ? row + reach : row - reach)] !== 1)) return false;
+    at = pad(state, nextCol, nextRow);
+    if (walk[at] !== 1) return false;
+    if (at === end) return true;
   }
   return false;
 }
 
-function insideGrid(terrain: Terrain, col: number, row: number) {
-  return col >= 0 && row >= 0 && col < terrain.cols && row < terrain.rows;
-}
-
-function walkableAt(terrain: Terrain, state: TerrainRuntime, col: number, row: number) {
-  return insideGrid(terrain, col, row) && state.walkable[row * terrain.cols + col] === 1;
-}
-
-// The neighbour one step down the field (the fixed neighbour order breaks ties), or -1 at the bottom.
-const NEIGHBOURS = [
-  [1, 0, STRAIGHT],
-  [0, 1, STRAIGHT],
-  [-1, 0, STRAIGHT],
-  [0, -1, STRAIGHT],
-  [1, 1, DIAGONAL],
-  [-1, 1, DIAGONAL],
-  [-1, -1, DIAGONAL],
-  [1, -1, DIAGONAL],
-] as const;
-
-function downhill(terrain: Terrain, state: TerrainRuntime, field: Int32Array, index: number) {
-  const col = index % terrain.cols;
-  const row = (index - col) / terrain.cols;
+// The neighbour one step down the field (the fixed order of directions breaks ties), or -1 at the bottom; remembered in
+// the field, so a cell is worked out once.
+function nextStep(state: TerrainRuntime, field: Field, at: number) {
+  const known = field.next[at]!;
+  if (known !== UNKNOWN) return known;
+  const { walk, offsets } = state;
+  const dist = field.dist;
   let best = -1;
-  let bestCost = field[index]!;
-  for (const [dx, dy] of NEIGHBOURS) {
-    const c = col + dx;
-    const r = row + dy;
-    if (!walkableAt(terrain, state, c, r)) continue;
-    // No cutting a corner between two blocked cells.
-    if (dx !== 0 && dy !== 0 && (!walkableAt(terrain, state, col + dx, row) || !walkableAt(terrain, state, col, row + dy))) continue;
-    const next = r * terrain.cols + c;
-    if (field[next]! < bestCost) {
-      bestCost = field[next]!;
-      best = next;
-    }
+  let bestCost = dist[at]!;
+  for (let direction = 0; direction < 8; direction += 1) {
+    const next = at + offsets[direction]!;
+    if (walk[next] !== 1 || dist[next]! >= bestCost || !stepAllowed(state, at, direction)) continue;
+    bestCost = dist[next]!;
+    best = next;
   }
+  field.next[at] = best;
   return best;
 }
 
-// @@@terrain-flow - The walking cost from every cell to one goal cell (Dial's algorithm over eight neighbours, no corner
-// cut), kept per goal; a walk goes downhill on it.
-function flowField(terrain: Terrain, state: TerrainRuntime, goal: number): Int32Array {
-  const known = state.fields.get(goal);
+// The field a walk from `start` to `target` follows (see NEAR, LOCAL, BLOCK): undefined when no walk joins them.
+function fieldToward(state: TerrainRuntime, start: number, target: number): Field | undefined {
+  const width = state.width;
+  const gap = Math.max(Math.abs((start % width) - (target % width)), Math.abs(Math.floor(start / width) - Math.floor(target / width)));
+  if (gap > NEAR) {
+    const coarse = blockField(state, target);
+    if (coarse.dist[start]! < UNREACHED) return coarse;
+  } else {
+    const local = cached(state, target + state.walk.length, () => grow(state, [target], target, LOCAL));
+    if (local.dist[start]! < UNREACHED) return local;
+  }
+  const exact = exactField(state, target);
+  return exact.dist[start]! < UNREACHED ? exact : undefined;
+}
+
+function exactField(state: TerrainRuntime, target: number): Field {
+  return cached(state, target, () => grow(state, [target], target, Infinity));
+}
+
+// The field down to every walkable cell of the BLOCK-cell square the target stands in.
+function blockField(state: TerrainRuntime, target: number): Field {
+  const width = state.width;
+  const col = Math.floor(((target % width) - 1) / BLOCK) * BLOCK;
+  const row = Math.floor((Math.floor(target / width) - 1) / BLOCK) * BLOCK;
+  return cached(state, 2 * state.walk.length + row * width + col, () => {
+    const sources: number[] = [];
+    for (let r = row; r < row + BLOCK && r < state.terrain.rows; r += 1) {
+      for (let c = col; c < col + BLOCK && c < state.terrain.cols; c += 1) if (state.walk[pad(state, c, r)] === 1) sources.push(pad(state, c, r));
+    }
+    return grow(state, sources, target, Infinity);
+  });
+}
+
+function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
+  const known = state.fields.get(key);
   if (known) {
-    state.fields.delete(goal);
-    state.fields.set(goal, known);
+    state.fields.delete(key);
+    state.fields.set(key, known);
     return known;
   }
-  const { cols, rows } = terrain;
-  const field = new Int32Array(cols * rows).fill(UNREACHED);
-  const buckets: number[][] = Array.from({ length: 8 }, () => []);
-  field[goal] = 0;
-  buckets[0]!.push(goal);
-  let pending = 1;
+  const field = build();
+  state.fields.set(key, field);
+  if (state.fields.size > FIELD_CACHE) {
+    const oldest = state.fields.keys().next().value!;
+    state.spare.push(state.fields.get(oldest)!);
+    state.fields.delete(oldest);
+  }
+  return field;
+}
+
+// @@@terrain-flow - The walking cost from every cell to the nearest source (Dial's algorithm over eight neighbours, no
+// corner cut), grown no farther than `reach` cells from `center` in either direction.
+function grow(state: TerrainRuntime, sources: number[], center: number, reach: number): Field {
+  const { walk, offsets, buckets, tops, width } = state;
+  const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length) };
+  const dist = field.dist;
+  dist.fill(UNREACHED);
+  field.next.fill(UNKNOWN);
+  tops.fill(0);
+  const centerCol = center % width;
+  const centerRow = Math.floor(center / width);
+  let pending = 0;
+  for (const source of sources) {
+    dist[source] = 0;
+    buckets[0]![tops[0]!++] = source;
+    pending += 1;
+  }
   for (let cost = 0; pending > 0; cost += 1) {
-    const bucket = buckets[cost & 7]!;
-    while (bucket.length > 0) {
-      const index = bucket.pop()!;
+    const slot = cost & 7;
+    const bucket = buckets[slot]!;
+    while (tops[slot]! > 0) {
+      const at = bucket[--tops[slot]!]!;
       pending -= 1;
-      if (field[index] !== cost) continue;
-      const col = index % cols;
-      const row = (index - col) / cols;
-      for (const [dx, dy, step] of NEIGHBOURS) {
-        const c = col + dx;
-        const r = row + dy;
-        if (c < 0 || r < 0 || c >= cols || r >= rows) continue;
-        const next = r * cols + c;
-        if (!state.walkable[next]) continue;
-        if (dx !== 0 && dy !== 0 && (!state.walkable[row * cols + c] || !state.walkable[r * cols + col])) continue;
-        const reached = cost + step;
-        if (reached < field[next]!) {
-          field[next] = reached;
-          buckets[reached & 7]!.push(next);
-          pending += 1;
-        }
+      if (dist[at] !== cost) continue;
+      for (let direction = 0; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1) continue;
+        const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL);
+        if (reached >= dist[next]! || !stepAllowed(state, at, direction)) continue;
+        if (reach !== Infinity && (Math.abs((next % width) - centerCol) > reach || Math.abs(Math.floor(next / width) - centerRow) > reach)) continue;
+        dist[next] = reached;
+        const into = reached & 7;
+        buckets[into]![tops[into]!++] = next;
+        pending += 1;
       }
     }
   }
-  state.fields.set(goal, field);
-  if (state.fields.size > FIELD_CACHE) state.fields.delete(state.fields.keys().next().value!);
   return field;
 }
 
 // The walkable cell whose center is nearest the given cell's center (the lowest index among equals), or -1 when none is.
-function nearestWalkableCell(terrain: Terrain, state: TerrainRuntime, index: number): number {
-  if (index >= 0 && state.walkable[index]) return index;
-  const known = state.nearest.get(index);
+function nearestWalkable(state: TerrainRuntime, at: number): number {
+  if (at >= 0 && state.walk[at] === 1) return at;
+  const known = state.nearest.get(at);
   if (known !== undefined) return known;
-  const { cols, rows } = terrain;
-  const col = index < 0 ? 0 : index % cols;
-  const row = index < 0 ? 0 : (index - col) / cols;
+  const { terrain, width } = state;
+  const col = at < 0 ? 0 : (at % width) - 1;
+  const row = at < 0 ? 0 : Math.floor(at / width) - 1;
   let best = -1;
   let bestDistance = Infinity;
-  const limit = Math.max(cols, rows);
+  const limit = Math.max(terrain.cols, terrain.rows);
   for (let ring = 1; ring <= limit; ring += 1) {
     // A cell on this ring is at least `ring` cells away; stop once none can beat the best.
     if (ring * ring > bestDistance) break;
     for (let r = row - ring; r <= row + ring; r += 1) {
       for (let c = col - ring; c <= col + ring; c += 1) {
         if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring) continue;
-        if (!walkableAt(terrain, state, c, r)) continue;
+        if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
+        const index = pad(state, c, r);
+        if (state.walk[index] !== 1) continue;
         const gap = (c - col) * (c - col) + (r - row) * (r - row);
-        const at = r * cols + c;
-        if (gap < bestDistance || (gap === bestDistance && at < best)) {
+        if (gap < bestDistance || (gap === bestDistance && index < best)) {
           bestDistance = gap;
-          best = at;
+          best = index;
         }
       }
     }
   }
   if (state.nearest.size > 4_096) state.nearest.clear();
-  state.nearest.set(index, best);
+  state.nearest.set(at, best);
   return best;
 }

@@ -705,7 +705,7 @@ function updateUnits(game: Game) {
     }
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
-      if (distance(unit, walkableGoal(game.map, unit.order.x, unit.order.y)) < 5) unit.order = { type: "idle" };
+      if (distanceToGoal(game.map, unit, unit.order.x, unit.order.y) < 5) unit.order = { type: "idle" };
       continue;
     }
     if (unit.order.type === "attackMove") {
@@ -829,7 +829,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
     return;
   }
   moveToward(unit, order.x, order.y, game.map);
-  if (distance(unit, walkableGoal(game.map, order.x, order.y)) < 8) unit.order = { type: "idle" };
+  if (distanceToGoal(game.map, unit, order.x, order.y) < 8) unit.order = { type: "idle" };
 }
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
@@ -2427,7 +2427,7 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
 // walkable cell. A step that would end on blocked ground slides along it on one axis, or waits; a unit that stands on
 // blocked ground (only a seeded scenario puts one there) walks out.
 function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
-  const goal = walkableGoal(map, x, y);
+  const goal = x >= 0 && y >= 0 && x <= map.width && y <= map.height && isWalkable(map, x, y) ? { x, y } : walkableGoal(map, x, y);
   const aim = steerPoint(map, unit, goal);
   const dx = aim.x - unit.x;
   const dy = aim.y - unit.y;
@@ -2447,6 +2447,12 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+// How far a unit stands from where a walk to (x, y) ends (see walkableGoal): the point itself on open ground.
+function distanceToGoal(map: GameMap, unit: Unit, x: number, y: number) {
+  if (!map.terrain || isWalkable(map, x, y)) return Math.hypot(unit.x - x, unit.y - y);
+  return distance(unit, walkableGoal(map, x, y));
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {
