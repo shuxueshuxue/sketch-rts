@@ -1,5 +1,6 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { opponentPlayerIds } from "../ownership";
+import { walkingDistance } from "../../../shared/terrain";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { PresetAiPolicyOptions } from "../types";
@@ -142,8 +143,39 @@ export function nextExpansionMine(snapshot: GameSnapshot, intel: V6Intel) {
     .sort((a, b) => distance(a, intel.home) - distance(b, intel.home))[0];
 }
 
+// @@@v9-expansion-mine - V9's next mine: the one nearest its halls on foot, no hall on it, no enemy hall within 900 of it
+// and enemy soldiers within 800 of it worth under half V9's army (see v9-contested-creep). With V6's rule (no enemy hall
+// within 1200, no enemy soldier within 1100) V9 found no mine to take at 6:00-9:00 in 33 of 50 games against three: the
+// mines between it and its neighbours stand within 1200 of their naturals, and some rival's soldiers are always about.
+const V9_ENEMY_HALL_CLEARANCE = 900;
+const V9_MINE_ENEMY_RANGE = 800;
+
+export function v9ExpansionMine(snapshot: GameSnapshot, intel: V6Intel) {
+  const halls = snapshot.buildings.filter((building) => building.kind === "townHall");
+  const enemyHalls = intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall));
+  const tolerance = v9ExpansionTolerance(intel);
+  const own: Point[] = intel.ownHalls.length > 0 ? intel.ownHalls : [intel.home];
+  return snapshot.resources
+    .filter((mine) => mine.amount > 0 && halls.every((hall) => distance(hall, mine) > 340) && enemyHalls.every((hall) => distance(hall, mine) > V9_ENEMY_HALL_CLEARANCE))
+    .filter((mine) => enemyPowerNear(intel, mine, V9_MINE_ENEMY_RANGE) <= tolerance)
+    .map((mine) => ({ mine, walk: Math.min(...own.map((hall) => walkingDistance(snapshot.map, hall, mine) ?? Infinity)) }))
+    .filter((entry) => entry.walk < Infinity)
+    .sort((a, b) => a.walk - b.walk)[0]?.mine;
+}
+
 export function mineGuards(snapshot: GameSnapshot, mine: Point) {
   return snapshot.units.filter((unit) => unit.owner === "neutral" && distance(unit, mine) <= 350);
+}
+
+// @@@v9-contested-creep - V9 creeps an expansion's guard and takes the mine with enemy soldiers about, as long as they are
+// worth less than half its army: holding off until none stood within 1200 of the camp, V9 never took its natural on the
+// ladder maps while a rival's archers wandered past it, stayed in its opening (which waits on the second base) with six
+// lancers and banked a thousand gold by 6:35 (emberFen, v5-extra-1, hand-played); the same rule froze the rival whose
+// natural's guard stood within 1200 of V9's rally the same way. Half is where a creep under way already gives up.
+export const V9_CREEP_ENEMY_SHARE = 0.5;
+
+export function v9ExpansionTolerance(intel: V6Intel) {
+  return intel.power * V9_CREEP_ENEMY_SHARE;
 }
 
 export function enemyPowerNear(intel: V6Intel, point: Point, range: number) {

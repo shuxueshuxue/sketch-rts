@@ -7,11 +7,12 @@ import { activeMiningBaseCount } from "../expansion-model";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
-import { isV6Policy, isV7Policy, isV8Policy } from "../versions";
+import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { v8WantsWell, v8WellPoint } from "../v8/well";
+import { v9ExpansionCovered } from "../v9/front";
 import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
-import { mineGuards, nextExpansionMine, readV6Intel, type V6Intel } from "./intel";
+import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
 
@@ -289,7 +290,8 @@ function towerWantGoals(economy: Economy, where: "main" | "outposts", count: num
   const main = economy.bases[0];
   if (!main) return [];
   if (where === "main") return towersAt(economy, main) < count ? towerGoal(economy, main, priority, "tower:main") : [];
-  const outpost = economy.bases.slice(1).find((hall) => towersAt(economy, hall) < count);
+  // V9 keeps its full count at its first outpost (the natural, its front) and at most V9_LATER_OUTPOST_TOWERS at later ones.
+  const outpost = economy.bases.slice(1).find((hall, index) => towersAt(economy, hall) < (isV9Policy(economy.options) && index > 0 ? Math.min(count, V9_LATER_OUTPOST_TOWERS) : count));
   return outpost ? towerGoal(economy, outpost, priority, "tower:outpost") : [];
 }
 
@@ -317,13 +319,21 @@ function towerPoint(snapshot: GameSnapshot, owner: PlayerId, hall: Building, fac
     .find((candidate) => distance(candidate, hall) <= TOWER_REACH_FROM_HALL && creeps.every((creep) => distance(creep, candidate) > CREEP_CLEARANCE));
 }
 
+const V9_THREAT_CLEARANCE = 1_500;
+const V9_LATER_OUTPOST_TOWERS = 2;
+
 // The next expansion goes to the nearest free mine once its camp is cleared (the general clears it) and no enemy is near.
 function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
   // A hall on a mined-out mine is no base: counting it left eleven workers idle when V6's main ran dry.
   const halls = economy.own.filter((building) => building.kind === "townHall");
-  if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete) || economy.threatened) return [];
-  const mine = nextExpansionMine(economy.snapshot, economy.intel);
+  if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete)) return [];
+  // V9 expands under a threat elsewhere (see v9-bases-first); only one near the mine holds it back.
+  if (economy.threatened && !isV9Policy(economy.options)) return [];
+  const mine = isV9Policy(economy.options) ? v9ExpansionMine(economy.snapshot, economy.intel) : nextExpansionMine(economy.snapshot, economy.intel);
+  if (economy.threatened && mine && distance(economy.threatened.hall, mine) < V9_THREAT_CLEARANCE) return [];
   if (!mine || mineGuards(economy.snapshot, mine).length > 0) return [];
+  // V9 raises a hall only with its army or a tower by the mine (see v9-front).
+  if (isV9Policy(economy.options) && !v9ExpansionCovered(economy.snapshot, economy.owner, economy.intel, mine)) return [];
   const offset = expansionOffset(economy.snapshot, economy.owner);
   const point = legalBuildPointNear(economy.snapshot, "townHall", { x: mine.x + offset.x, y: mine.y + offset.y });
   return [goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true, (used) => build(economy, "townHall", point, used, "expand"))];

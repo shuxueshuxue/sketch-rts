@@ -7,10 +7,11 @@ import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { isBacklineKind } from "./backline";
-import { enemyPowerNear, nextExpansionMine, readV6Intel, type V6BaseIntel, type V6Intel } from "./intel";
+import { enemyPowerNear, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, type V6BaseIntel, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
 import { v6Doctrine } from "./select";
+import { v9FrontPoint } from "../v9/front";
 import { marchArrived, marchHeading } from "../v9/march";
 import { marchStrength, strengthOf, TOWER_STRENGTH } from "./strength";
 
@@ -64,6 +65,12 @@ const WORN_SHARE = 0.5;
 const REGROUP_TICKS = 30 * 20;
 // The least army (march strength, about eleven summoners with their spirits) that goes for an enemy main.
 const MAIN_ATTACK_FLOOR = 18;
+// @@@v9-strike-from-fortress - Once its towers stand (see v9-fortress), V9 goes for an opponent's main with far less: its
+// home is the towers' to hold, and the one opponent it can finish is the weak one. By hand, eleven lancers razed a rival
+// main's tower, archers and workers at 9:40 (ladder-39, v5-extra-11) and that rival never mined again, while the AI held
+// them at home for want of an army of 18.
+const V9_MAIN_ATTACK_FLOOR = 8;
+const V9_FORTRESS_TOWERS = 5;
 const V7_FAR_ATTACK_SHARE = 0.7;
 // @@@v9-far-attack - V9 goes after a far base only outweighing what can reach it first: at 0.7 of it, five ravagers set out
 // for V8's natural against V8's five nearer it (5.0 to 4.8), met them under two towers raised while they walked, and all
@@ -75,6 +82,8 @@ const V9_FAR_ATTACK_SHARE = 1.5;
 // natural at 8:40, V9 came back to it in pieces and lost six of eight (marbleGrove, generated). Without the creeping V9
 // won 6591 of 8000 nudged duels against V8 against 6536, and 6536 against 6493 on forty unseen seeds.
 const V9_PUSHED_SHARE = 0.5;
+// @@@v9-fortress-creep - With its towers standing V9 creeps (and so expands) though an enemy army is about its bases: against
+// three, one nearly always is, and V9 never took a third mine while it waited for none (1000 games on ladder maps).
 const RETREAT_LINE = 0.8;
 // Out in the open the army meets attackers only with this edge; under its towers or at its hall it always fights.
 const FIELD_EDGE = 1.15;
@@ -105,7 +114,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
   const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
-  const rally = rallyPoint(intel);
+  // V9 holds at its front (see v9-front).
+  const rally = isV9Policy(options) ? v9FrontPoint(snapshot, owner, intel) : rallyPoint(intel);
   if (front.length === 0) {
     // No front left (every spirit gone): a gathering pulse is over, or its casters would hold their summons forever and
     // no front would ever come back (44 pyre callers stood at home without a spirit for twenty minutes).
@@ -161,14 +171,18 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const camps = creepCamps(snapshot, intel);
   // V7 creeps with its own procedure (see v7-creeping): a camp under way is finished first, the natural's guard next.
   const v7Camps = isV7Policy(options) ? neutralCamps(snapshot) : [];
-  const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) === 0);
+  // V9 takes on a camp with enemies about, if they are worth under half its army (see v9-contested-creep).
+  const tolerance = isV9Policy(options) ? v9ExpansionTolerance(intel) : 0;
+  const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) <= tolerance);
   const v7NearHome = v7Reachable.filter((camp) => [intel.home, ...intel.ownHalls].some((hall) => distance(hall, camp.center) <= V7_HOME_REACH));
   // V9 creeps nothing while an enemy army worth half its own pushes at its bases (see v9-home-first).
-  const pushed = isV9Policy(options) && intel.enemies.some((enemy) => enemy.state === "pushing" && enemy.power >= strength * V9_PUSHED_SHARE);
+  // Its towers standing (see v9-fortress), V9 leaves home to them and creeps on (see v9-fortress-creep).
+  const fortified = isV9Policy(options) && intel.ownTowers.length >= V9_FORTRESS_TOWERS;
+  const pushed = isV9Policy(options) && !fortified && intel.enemies.some((enemy) => enemy.state === "pushing" && enemy.power >= strength * V9_PUSHED_SHARE);
   if (isV7Policy(options) && !pushed) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
-    const mine = v7WantsBase(snapshot, owner, options) ? nextExpansionMine(snapshot, intel) : undefined;
+    const mine = !v7WantsBase(snapshot, owner, options) ? undefined : isV9Policy(options) ? v9ExpansionMine(snapshot, intel) : nextExpansionMine(snapshot, intel);
     const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, v7Reachable, options, mine) : undefined;
     if (guard) {
       startV7Creep(snapshot, front, guard, options);
@@ -188,7 +202,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;
   // A main is a long walk into two armies' reach: V6 marched four summoners at an enemy main 3165 away at 240s because both
   // armies had left it, met them on the way, and came home to lose its own. An expansion needs no such floor.
-  const ready = !isMain(intel, target?.base) || marching >= MAIN_ATTACK_FLOOR;
+  const mainFloor = isV9Policy(options) && intel.ownTowers.length >= V9_FORTRESS_TOWERS ? V9_MAIN_ATTACK_FLOOR : MAIN_ATTACK_FLOOR;
+  const ready = !isMain(intel, target?.base) || marching >= mainFloor;
   // @@@v7-far-attack - Against two opponents a march across the map meets both armies on the way: V7 sent five ravagers at
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.

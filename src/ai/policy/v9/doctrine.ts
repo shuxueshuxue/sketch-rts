@@ -21,17 +21,27 @@ const EARLY_SOLDIERS = [
   { count: 10, priority: 55 },
 ];
 
+// @@@v9-bases-first - Mining is what V9 is short of against three: given twice its own mining, the same V9 won 959 of 1000
+// games (three times: 996), yet it sat on two halls in every game, its third base ranked under towers and soldiers (saved
+// for last, never bought) and V8's later phases rank a third and fourth at 45 to 50 and 35. V9 wants its third and fourth
+// base ahead of everything else in every phase.
+const V9_BASES = [
+  { bases: 3, priority: 65 },
+  { bases: 4, priority: 61 },
+] as const;
+
 function v9Phases(strategy: V6Strategy): V6Phase[] {
   const hall = RESEARCH_HALL[strategy.race];
   return strategy.phases.map((phase, index) => {
-    if (index >= UPGRADE_PHASES) return phase;
+    const bases = [...phase.wants.filter((want) => !("bases" in want) || want.bases < 3), ...V9_BASES];
+    if (index >= UPGRADE_PHASES) return { ...phase, wants: bases };
     const level = index + 1;
     const priority = 62 - index;
     const soldiers = EARLY_SOLDIERS[index];
     return {
       ...phase,
       wants: [
-        ...phase.wants.filter((want) => !("upgrade" in want) || (want.upgrade !== "weaponTraining" && want.upgrade !== "reinforcedPlating")),
+        ...bases.filter((want) => !("upgrade" in want) || (want.upgrade !== "weaponTraining" && want.upgrade !== "reinforcedPlating")),
         { upgrade: "weaponTraining", level, priority },
         { upgrade: "reinforcedPlating", level, priority },
         { building: hall, count: 2, priority },
@@ -41,4 +51,25 @@ function v9Phases(strategy: V6Strategy): V6Phase[] {
   });
 }
 
-export const V9_STRATEGIES: V6Strategy[] = V8_STRATEGIES.map((strategy) => ({ ...strategy, risingStrike: false, phases: v9Phases(strategy) }));
+// @@@v9-fortress - Against three, V9 first holds: after its opening it masses its line's basic soldier and raises towers at
+// its natural and one in its main before any tech. On V8's lines (priests, a sanctum, stables, a second barracks and two
+// upgrades from the first phase) V9's army stood at 4.4 at 8:00 against 29.4 for the three rivals together (1000 games on
+// ladder maps, median), its soldiers a fifth of its spending.
+function fortressPhase(strategy: V6Strategy): V6Phase {
+  return {
+    wants: [
+      { bases: 2, priority: 66 },
+      { towers: "outposts", count: 6, priority: 64 },
+      { unit: strategy.standIn, count: 16, priority: 62 },
+      { towers: "main", count: 3, priority: 60 },
+      { bases: 3, priority: 65 },
+      { bases: 4, priority: 61 },
+    ],
+    advanceShare: 0.75,
+    advanceSupply: 44,
+  };
+}
+
+// @@@v9-opening-clock - V9's opening moves on at 5:00 whatever it has (V7's clock; V8's lines wait on the second base or
+// 34 supply): stuck in it without a natural, V9 kept six lancers and banked its gold to the end of the game.
+export const V9_STRATEGIES: V6Strategy[] = V8_STRATEGIES.map((strategy) => ({ ...strategy, risingStrike: false, opensOnState: false, phases: [fortressPhase(strategy), ...v9Phases(strategy)] }));
