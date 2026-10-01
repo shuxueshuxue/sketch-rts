@@ -77,6 +77,7 @@ const V7_FAR_ATTACK_SHARE = 0.7;
 // five died for three of V8's (cobaltVale, generated, 4:45); V9 trailed for the rest of the game. Of 8000 nudged duels
 // against V8 V9 won 5866 at 0.7, 6424 at 1.2, 6536 at 1.5 and 6332 at 2 (on forty unseen seeds 6307 at 1.2, 6493 at 1.5).
 const V9_FAR_ATTACK_SHARE = 1.5;
+const V9_STALE_TICKS = 3 * 90 * 20;
 // @@@v9-home-first - V9 does not go creeping while an enemy army worth half its own pushes at its bases: at 8:00 V8's army
 // of 11 walked at V9's natural, 1165 from it, while V9's army of 9 set out for camps 1000 the other way; V8 reached the
 // natural at 8:40, V9 came back to it in pieces and lost six of eight (marbleGrove, generated). Without the creeping V9
@@ -209,7 +210,12 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
   const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
   const opposing = isV8Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
-  const committed = !farOff || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
+  // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
+  // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
+  // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
+  // defense (the idle army's test below).
+  const stale = isV9Policy(options) && current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= V9_STALE_TICKS;
+  const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
   if (target && regrouped && ready && committed && (marching >= target.need || (idle && marching >= target.defended))) {
     recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
     return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base)));
