@@ -971,8 +971,8 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
           const dx = (col + 0.5 + SAMPLES[sample]![0]) * size - body.x;
           const dy = (row + 0.5 + SAMPLES[sample]![1]) * size - body.y;
           const far = dx * dx + dy * dy;
-          if (far < reach * reach) covered[at] |= 1 << sample;
-          if (sample === 0 && far < body.radius * body.radius) covered[at] |= CENTER_IN_BODY;
+          if (far < reach * reach) covered[at] = covered[at]! | (1 << sample);
+          if (sample === 0 && far < body.radius * body.radius) covered[at] = covered[at]! | CENTER_IN_BODY;
         }
         if (covered[at]! & CENTER_IN_BODY || (covered[at]! & ALL_SAMPLES) === ALL_SAMPLES) state.walk[at] = 0;
       }
