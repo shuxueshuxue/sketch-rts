@@ -115,6 +115,29 @@ describe("the AI on the water", () => {
     expect(nextExpansionMine(snapshot, readV6Intel(snapshot, "player", { version: "v8" }))).toBeUndefined();
   });
 
+  it("assaults an enemy's last base on an island: a transport first, idle soldiers aboard, the landed at its hall", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = islandGame();
+    game.resources = game.resources.filter((mine) => mine.id !== "island");
+    game.buildings.push(
+      { ...game.buildings.find((building) => building.id === "hall-a")!, id: "enemy-hall", owner: "enemy", x: at(22, 9).x, y: at(22, 9).y },
+      { ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 },
+    );
+    const footman = (id: string, col: number, row: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, kind: "footman" as const, ...at(col, row), order: { type: "idle" as const }, radius: 18 });
+    game.units.push(footman("f1", 5, 5), footman("f2", 6, 5), footman("f3", 5, 6));
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:transport");
+    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ferry", kind: "transport", ...at(11, 9), order: { type: "idle" }, radius: 30 });
+    const board = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "board");
+    expect(board).toMatchObject({ type: "board", transportId: "ferry" });
+    if (board?.type !== "board") throw new Error("no boarding");
+    expect([...board.unitIds].sort()).toEqual(["f1", "f2", "f3"]);
+    // One stands on the island already: it goes for the hall, and is the naval script's to move.
+    game.units.push(footman("landed", 21, 11));
+    const landed = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "attackMove" && command.unitIds.includes("landed"));
+    expect(landed).toMatchObject({ x: at(22, 9).x, y: at(22, 9).y });
+    expect(navalUnitIds(snapshotGame(game), "player", options).has("landed")).toBe(true);
+  });
+
   it("counts the passengers aboard a transport in its supply, as the sim does", () => {
     const game = islandGame();
     const worker = game.units.find((unit) => unit.id === "w1")!;
