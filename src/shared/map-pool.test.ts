@@ -6,26 +6,22 @@ import { MAP_POOL, type PoolMap, type PoolMapId } from "./map-pool";
 import { createRoom, roomToGameSetup } from "./rooms";
 import { createGame } from "./sim";
 
-// @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts and items. A change to the
-// generator that moves anything on a pool map fails here; if the change is meant, the map is redrawn on purpose: give it
-// a new name or take the new hash knowingly.
+// @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items and shops. A
+// change to the generator that moves anything on a pool map fails here; if the change is meant, the map is redrawn on
+// purpose: give it a new name or take the new hash knowingly.
 const HASHES: Record<PoolMapId, string> = {
-  greystonePass: "406d0ee7843017eb",
-  stillwater: "87d594feac15cfe6",
-  pineshade: "78a188b492ace36d",
-  shatteredBarrens: "5a9eb7d99d05fd86",
-  reedwater: "384f483fb3d55ccb",
-  saltmarshIsle: "bdf761cda03959d2",
-  mirrorLagoon: "8cdf6c0b6caa8ef5",
-  fourWinds: "3316e04c851a6c65",
-  elderwood: "755e07c5eabe48c9",
-  lakelands: "90b6cc63cf72be50",
-  ironcrag: "c2563a6a923cc416",
-  inlandSea: "0f81cff6200ddf32",
-  gullIsland: "df9dc46ab881ef56",
-  twoShores: "679db12345a9057c",
-  cliffbreak: "b7919adb26682fbf",
-  battlelineFields: "3e76305d69225df2",
+  templeSpring: "d85534a8220c08f4",
+  turtleLake: "0d1ffe4241e64c24",
+  elderwood: "709656e76e88a120",
+  ringwater: "21cd9f5efdc7a5b3",
+  loneMarket: "edd81d6f144f60df",
+  reedwater: "6d49111193f14075",
+  veiledHill: "269f03c23e6b14cc",
+  greystonePass: "b64b3c69527402b1",
+  pineshade: "32840611912ab19f",
+  gullIsland: "73b351045377b081",
+  stillwater: "1f25159c96f514b5",
+  twoShores: "0f8b67bcfe0003c8",
 };
 
 const host = { id: "host", name: "Host" };
@@ -50,6 +46,7 @@ function layoutHash(map: PoolMap) {
     drawn.units.filter((unit) => unit.owner === "neutral").map((unit) => `${unit.kind}@${at(unit)}`),
     drawn.mercenaryCamps.map((camp) => `${camp.hireKind}@${at(camp)}`),
     drawn.items.map((item) => `${item.kind}@${at(item)}`),
+    drawn.sites.map((site) => `${site.kind}@${at(site)}`),
   ]);
   return createHash("sha256").update(text).digest("hex").slice(0, 16);
 }

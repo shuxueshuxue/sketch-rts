@@ -448,9 +448,13 @@ describe("sketch RTS simulation", () => {
       expect(Math.max(...mines.map((mine) => mine.amount))).toBe(6_000);
       expect(Math.min(...mines.map((mine) => mine.amount))).toBe(6_000);
     }
-    const ladderMines = createGame("ladder", { aiPlayers: [] }).resources;
-    expect(ladderMines.length).toBeGreaterThan(2);
-    expect(ladderMines.every((mine) => mine.amount === 6_000)).toBe(true);
+    // A ladder map's mines are lean too, but for the one prize some of its ideas make richer (see @@@generated-ideas).
+    for (const seed of ["ladder", "lean-1", "lean-2", "lean-3"]) {
+      const ladderMines = createGame("ladder", { aiPlayers: [], layout: { seed } }).resources;
+      expect(ladderMines.length).toBeGreaterThan(2);
+      expect(ladderMines.filter((mine) => mine.amount !== 6_000).length).toBeLessThanOrEqual(1);
+      expect(Math.max(...ladderMines.map((mine) => mine.amount))).toBeLessThanOrEqual(9_000);
+    }
 
     const grandMines = createInitialResources("grandThirty", Array.from({ length: 30 }, (_, index) => `p${index + 1}`));
     expect(Math.max(...grandMines.map((mine) => mine.amount))).toBe(6_000);
