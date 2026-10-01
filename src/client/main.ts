@@ -1,6 +1,5 @@
 import "./styles.css";
-import "./atlas-theme.css";
-import { drawAtlasBuilding, drawAtlasUnit, drawAtlasMenu } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
@@ -26,7 +25,8 @@ import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
-import { terrainMinimap } from "./terrain-art";
+import { drawMapPreview, ladderPreview, type MapPreview, type PreviewSeat } from "./map-preview";
+import { drawMinimapMap } from "./minimap-art";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -46,7 +46,7 @@ import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, uni
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
+import { buildingGlyphSize, drawPaperMap, drawWorld, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
@@ -55,10 +55,11 @@ import { SHOP_GOODS, standsAtShop } from "../shared/shop";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
-import { isMapId, LADDER_MAP_ID } from "../shared/map-ids";
-import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
+import { createUnit } from "../shared/map";
+import { LADDER_MAP_ID } from "../shared/map-ids";
+import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
-import { canStartRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -114,6 +115,9 @@ const t = i18n.t;
 const tl = i18n.label;
 const worldLabels = worldLabelsFor(i18n);
 document.documentElement.lang = i18n.locale;
+// PROPOSAL ONLY - ?theme= picks one of the candidate looks for the owner's screenshots; the chosen one stays, this goes.
+const proposalTheme = new URLSearchParams(window.location.search).get("theme");
+if (proposalTheme) document.documentElement.dataset.theme = proposalTheme;
 app.innerHTML = gameShellMarkup(i18n);
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
@@ -139,12 +143,12 @@ const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
 const pointerLockGateBody = requireElement<HTMLParagraphElement>("[data-pointer-lock-gate-body]");
 const pointerLockGateAction = requireElement<HTMLButtonElement>("[data-pointer-lock-gate-action]");
+const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
 const ctx = requireCanvasContext(canvas);
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
-let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let spectatingRoom = false;
 let activeGameAdapter: GameAdapter;
@@ -175,9 +179,12 @@ let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
-// Players play the ladder map, a fresh layout (see @@@generated-map) until a room names its own.
-let selectedMapId: MapId = LADDER_MAP_ID;
-let selectedLayoutSeed: string | undefined = newLayoutSeed();
+// @@@map-chooser - The create screen is Warcraft III's custom game screen: a list of maps on the left, the chosen one's
+// picture and facts on the right (see @@@map-preview). Every map a player can choose is a ladder layout, so the list is a
+// handful of layouts drawn at once, for the seats the form asks for; "new maps" draws another handful.
+const MAP_CHOICES = 12;
+let mapChoiceSeeds = newLayoutSeeds();
+let chosenMapSeed = mapChoiceSeeds[0]!;
 let commandMode: CommandMode | undefined;
 // The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
 let openPalette: "build" | "stance" | undefined;
@@ -577,52 +584,76 @@ function renderMainMenu() {
   );
 }
 
+// The create screen's map list (see @@@map-chooser).
 function renderCreateGameMenu() {
   menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
   form.innerHTML = `
-    <div class="create-game-grid">
-      <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <label>${escapeHtml(t("roomCreate.map.label"))}
-        <select name="mapId">
-          <option value="${LADDER_MAP_ID}" selected>${escapeHtml(t("map.generated"))} - ${escapeHtml(mapCapacityLabel(LADDER_MAP_ID))}</option>
-        </select>
-      </label>
-      <div class="create-count-grid">
-        <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="${MAX_ROOM_SLOTS}" value="1" /></label>
-        <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="1" /></label>
-      </div>
-      <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
+    <div class="map-chooser">
+      <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
+        <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
+        <div class="map-entries" data-map-entries></div>
+        <button type="button" class="reroll-button" data-reroll-maps>${escapeHtml(t("map.reroll"))}</button>
+      </section>
+      ${mapDetailMarkup()}
     </div>
-    <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+    <div class="create-options">
+      <label class="create-name">${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
+      <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="${MAX_ROOM_SLOTS}" value="1" /></label>
+      <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="1" /></label>
+      <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
+      <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+    </div>
     <div class="menu-actions">
       <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
+  const counts = () => resolveRoomSlotCounts({
+    humanCount: Number((form.elements.namedItem("humanCount") as HTMLInputElement).value),
+    aiCount: Number((form.elements.namedItem("aiCount") as HTMLInputElement).value),
+  });
+  // The seats the room will have, as the form now asks; while the counts are out of range the last good ones stand.
+  let seats = roomPreviewSeats(createRoom({ id: "preview", host: localUser, humanCount: 1, aiCount: 1 }));
+  const entries = form.querySelector<HTMLDivElement>("[data-map-entries]")!;
+  const renderMaps = () => {
+    entries.replaceChildren(
+      ...mapChoiceSeeds.map((seed) => {
+        const entry = document.createElement("button");
+        entry.type = "button";
+        entry.className = `map-entry ${seed === chosenMapSeed ? "selected" : ""}`;
+        entry.dataset.mapSeed = seed;
+        entry.textContent = t("map.entry", { players: seats.length, seed });
+        entry.addEventListener("click", () => {
+          chosenMapSeed = seed;
+          renderMaps();
+        });
+        return entry;
+      }),
+    );
+    showMapDetail(form, chosenMapSeed, seats);
+  };
+  renderMaps();
+  form.querySelector("[data-reroll-maps]")?.addEventListener("click", () => {
+    mapChoiceSeeds = newLayoutSeeds();
+    chosenMapSeed = mapChoiceSeeds[0]!;
+    renderMaps();
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const mapId = String(data.get("mapId"));
-    const humanCount = Number(data.get("humanCount"));
-    const aiCount = Number(data.get("aiCount"));
     const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
-    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
+    const slotCounts = counts();
     if (!slotCounts) {
       menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.slotCountRangeError"))}</span>`;
       return;
     }
-    if (!isMapId(mapId)) {
-      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.knownMapError"))}</span>`;
-      return;
-    }
     void createConfiguredRoom({
       name,
-      mapId,
-      // Every new room draws a new ladder layout.
-      layoutSeed: newLayoutSeed(),
+      mapId: LADDER_MAP_ID,
+      layoutSeed: chosenMapSeed,
       humanCount: slotCounts.humanCount,
       aiCount: slotCounts.aiCount,
       visibility: data.get("privateRoom") === "on" ? "private" : "public",
@@ -632,16 +663,51 @@ function renderCreateGameMenu() {
     const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
     const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
     const total = humanCount + aiCount;
-    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
+    const slotCounts = counts();
     const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
     totalLabel.textContent = Number.isInteger(total) ? t("roomCreate.slotCountLabel", { count: total }) : t("roomCreate.slotCountFallback");
     totalLabel.classList.toggle("error", !slotCounts);
+    if (!slotCounts) return;
+    seats = roomPreviewSeats(createRoom({ id: "preview", host: localUser, ...slotCounts }));
+    renderMaps();
   };
   form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "home" });
   });
   mapList.replaceChildren(form);
+}
+
+function mapDetailMarkup() {
+  return `
+    <section class="map-detail">
+      <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div>
+      <div class="map-info">
+        <div class="map-info-name" data-map-name></div>
+        <dl class="map-facts" data-map-facts></dl>
+        <p class="map-info-note">${escapeHtml(t("map.generatedNote"))}</p>
+      </div>
+    </section>`;
+}
+
+function showMapDetail(root: ParentNode, seed: string, seats: PreviewSeat[]) {
+  const preview: MapPreview = ladderPreview(seed, seats);
+  drawMapPreview(root.querySelector<HTMLCanvasElement>("[data-map-preview]")!, preview);
+  const { facts } = preview;
+  root.querySelector("[data-map-name]")!.textContent = t("map.entry", { players: facts.players, seed });
+  root.querySelector("[data-map-facts]")!.innerHTML = [
+    [t("map.fact.size"), `${facts.size} × ${facts.size}`],
+    [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players, teams: facts.teams })],
+    [t("map.fact.mines"), facts.mines],
+    [t("map.fact.camps"), facts.camps],
+    [t("map.fact.posts"), facts.posts],
+    [t("map.fact.items"), facts.items],
+  ].map(([term, value]) => `<dt>${escapeHtml(String(term))}</dt><dd>${escapeHtml(String(value))}</dd>`).join("");
+}
+
+// Every seat that will play, open ones included (a player takes each before the start); closed seats stay empty.
+function roomPreviewSeats(room: RoomState): PreviewSeat[] {
+  return room.slots.filter((slot) => slot.controller !== "closed").map((slot) => ({ playerId: slot.playerId, team: slot.team }));
 }
 
 function renderProfileMenu() {
@@ -731,24 +797,12 @@ function renderRoomSetup() {
     return;
   }
   const room = currentRoom!;
-  selectedMapId = room.mapId;
-  selectedLayoutSeed = room.layoutSeed;
   menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
   const setup = document.createElement("div");
   setup.className = "room-setup";
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = `
-    <div class="room-setup-header">
-      <div>
-        <div class="room-section-title">${escapeHtml(t("roomSetup.room"))}</div>
-        <div class="room-setup-name">${escapeHtml(room.name)}</div>
-      </div>
-    </div>
     <div class="room-setup-layout">
-      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
-        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
-        <div class="room-map-grid"></div>
-      </section>
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
           <div>
@@ -764,6 +818,11 @@ function renderRoomSetup() {
         </div>
         <div class="slot-list"></div>
       </section>
+      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
+        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
+        ${mapDetailMarkup()}
+        <button type="button" class="reroll-button" data-map-id="${LADDER_MAP_ID}">${escapeHtml(t("map.rerollOne"))}</button>
+      </section>
     </div>
     <div class="menu-actions">
       <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
@@ -773,8 +832,9 @@ function renderRoomSetup() {
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
-  const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
-  mapGrid.replaceChildren(generatedMapButton());
+  // A ladder room that never drew a layout plays the one its id seeds (see roomToGameSetup).
+  showMapDetail(setup, room.layoutSeed ?? room.id, roomPreviewSeats(room));
+  setup.querySelector("[data-map-id]")?.addEventListener("click", () => void rerollLadderMap());
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...room.slots.map(slotRow));
   setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
@@ -786,11 +846,6 @@ function renderRoomSetup() {
     openMenuRoute({ screen: "rooms" });
   });
   mapList.replaceChildren(setup);
-  if (pendingRoomMapScrollTop !== undefined) {
-    // @@@preserve-map-list-scroll - Map selection swaps this DOM subtree; keep the user's scroll position stable.
-    mapGrid.scrollTop = pendingRoomMapScrollTop;
-    pendingRoomMapScrollTop = undefined;
-  }
 }
 
 function renderResultsMenu() {
@@ -839,10 +894,6 @@ function renderResultsMenu() {
   mapList.replaceChildren(panel);
 }
 
-async function createLocalRoom() {
-  await createConfiguredRoom({ name: `${localUser.name}'s Room`, mapId: selectedMapId, ...(selectedLayoutSeed ? { layoutSeed: selectedLayoutSeed } : {}), humanCount: 1, aiCount: 1, visibility: "private" });
-}
-
 async function createConfiguredRoom(input: { name: string; mapId: MapId; layoutSeed?: string; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
   currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
@@ -851,14 +902,6 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; layoutS
   });
   localPlayerId = slotForUser(currentRoom, localUser.id)?.playerId ?? "player";
   openRoomSetup(currentRoom);
-  renderMainMenu();
-}
-
-async function selectRoomMap(mapId: MapId, layoutSeed?: string) {
-  selectedMapId = mapId;
-  selectedLayoutSeed = layoutSeed;
-  pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
-  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId, layoutSeed);
   renderMainMenu();
 }
 
@@ -886,10 +929,9 @@ async function startCurrentRoom() {
   syncPointerLockGate();
 }
 
+// A rematch: a private room against one computer on the same map and layout.
 async function createReplayRoom(room: RoomState) {
-  selectedMapId = room.mapId;
-  selectedLayoutSeed = room.layoutSeed;
-  await createLocalRoom();
+  await createConfiguredRoom({ name: t("roomCreate.defaultName", { name: localUser.name }), mapId: room.mapId, ...(room.layoutSeed ? { layoutSeed: room.layoutSeed } : {}), humanCount: 1, aiCount: 1, visibility: "private" });
 }
 
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
@@ -905,30 +947,19 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   return button;
 }
 
-// The ladder map, the only map a room offers: each click draws a new layout (see @@@generated-map).
-function generatedMapButton() {
-  const button = document.createElement("button");
-  button.className = `map-button ${selectedMapId === LADDER_MAP_ID ? "selected" : ""}`;
-  button.type = "button";
-  button.dataset.mapId = LADDER_MAP_ID;
-  button.dataset.generatedMap = "true";
-  button.setAttribute("aria-label", t("map.generated"));
-  const seedTag = selectedMapId === LADDER_MAP_ID && selectedLayoutSeed ? `<span>${escapeHtml(t("map.generatedSeed", { seed: selectedLayoutSeed }))}</span>` : "";
-  button.innerHTML = `
-    <span class="map-button-name">${escapeHtml(t("map.generated"))}</span>
-    <span class="map-button-note">${escapeHtml(t("map.generatedNote"))}</span>
-    <span class="map-button-tags"><span>${escapeHtml(mapCapacityLabel(LADDER_MAP_ID))}</span>${seedTag}</span>
-  `;
-  button.addEventListener("click", () => void rerollLadderMap());
-  return button;
-}
-
-function rerollLadderMap() {
-  return selectRoomMap(LADDER_MAP_ID, newLayoutSeed());
+// The room draws a new ladder layout (see @@@generated-map).
+async function rerollLadderMap() {
+  if (!currentRoom) return;
+  currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, LADDER_MAP_ID, newLayoutSeed());
+  renderMainMenu();
 }
 
 function newLayoutSeed() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function newLayoutSeeds() {
+  return Array.from({ length: MAP_CHOICES }, newLayoutSeed);
 }
 
 function slotRow(slot: RoomState["slots"][number], index: number) {
@@ -1071,10 +1102,6 @@ function emptyRoomList() {
   empty.className = "empty-room-list";
   empty.textContent = t("roomBrowser.noVisible");
   return empty;
-}
-
-function mapCapacityLabel(mapId: MapId) {
-  return mapId === "grandThirty" ? t("map.capacity.grandThirty") : t("map.capacity.configurable");
 }
 
 function slotForUser(room: RoomState, userId: string) {
@@ -2486,7 +2513,7 @@ function draw() {
     return;
   }
   if (!snapshot) {
-    drawPaperMap(ctx, selectedMapId, camera, canvas.width, canvas.height);
+    drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.width, canvas.height);
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
     ctx.fillText(t("canvas.connecting"), 32, 48);
@@ -2510,8 +2537,39 @@ function draw() {
   drawMinimap(createMapPresentation(snapshot));
 }
 
+// @@@menu-scene - Behind the menus lies a start on a ladder map, drawn by the battlefield's own renderer: a hall on its
+// plateau, its workers at the mine and a squad mustered beside it. It is painted once for each window size; the theme
+// tints the canvas under the menus (see .menu-open .game-canvas).
+let menuScene: HTMLCanvasElement | undefined;
+const MENU_SCENE_SEED = "menu";
+const MENU_SCENE_SQUAD = [["knight", 150, 120], ["lancer", 210, 70], ["lancer", 250, 120], ["footman", 200, 170], ["footman", 260, 180], ["archer", 300, 140], ["witch", 310, 200]] as const;
+
 function drawMenuBackdrop() {
-  drawAtlasMenu(ctx, canvas.width, canvas.height);
+  if (!menuScene || menuScene.width !== canvas.width || menuScene.height !== canvas.height) menuScene = paintMenuScene(canvas.width, canvas.height);
+  ctx.drawImage(menuScene, 0, 0);
+}
+
+function paintMenuScene(width: number, height: number) {
+  const scene = document.createElement("canvas");
+  scene.width = width;
+  scene.height = height;
+  const { snapshot: start } = ladderPreview(MENU_SCENE_SEED, [{ playerId: "player", team: "north" }, { playerId: "enemy", team: "south" }]);
+  const hall = start.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+  const squad = MENU_SCENE_SQUAD.map(([kind, dx, dy], index) => createUnit(`menu-${index}`, "player", kind, hall.x + dx, hall.y + dy));
+  const zoom = Math.max(1, Math.min(1.4, height / 760));
+  const view = { width: width / zoom, height: height / zoom };
+  // The hall stands right of the menu's plaque.
+  const x = Math.max(0, Math.min(start.map.width - view.width, hall.x - view.width * 0.62));
+  const y = Math.max(0, Math.min(start.map.height - view.height, hall.y - view.height * 0.48));
+  drawWorld({
+    ctx: requireCanvasContext(scene),
+    snapshot: { ...start, units: [...start.units, ...squad] },
+    view: { x, y, width, height, zoom },
+    now: 0,
+    facing: new UnitFacingTracker(),
+    labels: worldLabels,
+  });
+  return scene;
 }
 
 function drawBuildPlacementPreview() {
@@ -2711,101 +2769,11 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
-  ctx.fillStyle = "#213e37";
-  ctx.fillRect(rect.x - 6, rect.y - 6, rect.width + 12, rect.height + 12);
-  ctx.fillStyle = "#dedcc0";
-  ctx.strokeStyle = "#bca477";
-  ctx.lineWidth = 2;
-  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-  if (snapshot.map.terrain) {
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(terrainMinimap(snapshot.map.terrain), rect.x, rect.y, rect.width, rect.height);
-    ctx.imageSmoothingEnabled = true;
-  }
-  ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-  for (const mark of marks) {
-    const point = projectWorldToRect(mark, snapshot.map, rect);
-    if (mark.category === "terrain") {
-      drawMiniTerrainMark(mark, point);
-    } else if (mark.category === "goldMine") {
-      ctx.fillStyle = "#c4921e";
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - 3);
-      ctx.lineTo(point.x + 3, point.y);
-      ctx.lineTo(point.x, point.y + 3);
-      ctx.lineTo(point.x - 3, point.y);
-      ctx.closePath();
-      ctx.fill();
-    } else if (mark.category === "mercenaryCamp") {
-      ctx.strokeStyle = "#704a33";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (mark.category === "wildlingCamp") {
-      ctx.fillStyle = "#704a33";
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (mark.category === "building") {
-      ctx.fillStyle = ownerInk(mark.owner);
-      ctx.fillRect(point.x - 3, point.y - 3, 6, 6);
-    } else {
-      ctx.fillStyle = ownerInk(mark.owner);
-      const size = mark.owner === "neutral" ? 2.2 : 3;
-      ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
-    }
-  }
-  for (const item of snapshot.items) {
-    const point = projectWorldToRect(item, snapshot.map, rect);
-    ctx.strokeStyle = item.kind === "lightningRod" || item.kind === "stormStaff" ? "#315f87" : item.kind === "flameCloak" ? "#963c36" : item.kind === "breachCharge" ? "#5f3a24" : "#8a6418";
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(point.x - 2.5, point.y + 2.5);
-    ctx.lineTo(point.x + 2.5, point.y - 2.5);
-    ctx.stroke();
-  }
+  drawMinimapMap(ctx, snapshot, rect, marks);
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
-}
-
-function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {
-  ctx.save();
-  ctx.lineWidth = 1;
-  if (mark.kind === "road") {
-    ctx.strokeStyle = "rgba(123, 101, 66, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 4, point.y);
-    ctx.lineTo(point.x + 4, point.y);
-    ctx.stroke();
-  } else if (mark.kind === "grove") {
-    ctx.strokeStyle = "rgba(64, 108, 66, 0.62)";
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, 2.3, 0, Math.PI * 2);
-    ctx.stroke();
-  } else if (mark.kind === "ridge") {
-    ctx.strokeStyle = "rgba(84, 90, 68, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 3, point.y + 2);
-    ctx.lineTo(point.x, point.y - 2);
-    ctx.lineTo(point.x + 3, point.y + 2);
-    ctx.stroke();
-  } else if (mark.kind === "ditch") {
-    ctx.strokeStyle = "rgba(54, 100, 112, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 3, point.y);
-    ctx.quadraticCurveTo(point.x, point.y + 2, point.x + 3, point.y);
-    ctx.stroke();
-  } else if (mark.kind === "mineScar") {
-    ctx.fillStyle = "rgba(184, 133, 31, 0.58)";
-    ctx.fillRect(point.x - 1.5, point.y - 1.5, 3, 3);
-  } else {
-    ctx.fillStyle = "rgba(47, 61, 42, 0.48)";
-    ctx.fillRect(point.x - 1.2, point.y - 1.2, 2.4, 2.4);
-  }
-  ctx.restore();
 }
 
 function updateCamera() {
@@ -2838,6 +2806,10 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
+  const mini = minimapRect();
+  minimapFrame.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
+  minimapFrame.style.width = `${mini.width}px`;
+  minimapFrame.style.height = `${mini.height}px`;
 }
 
 function mousePoint(event: MouseEvent): Point {
@@ -2911,9 +2883,10 @@ function nearScreen(point: Point, pad: number) {
   return point.x >= -pad && point.y >= -pad && point.x <= canvas.width + pad && point.y <= canvas.height + pad;
 }
 
+// The minimap keeps clear of the window's edge by its frame's width (see .minimap-frame).
 function minimapRect(): ScreenRect {
   const size = Math.min(220, Math.max(150, Math.floor(Math.min(canvas.width, canvas.height) * 0.24)));
-  return { x: canvas.width - size - 12, y: canvas.height - size - 12, width: size, height: size };
+  return { x: canvas.width - size - 16, y: canvas.height - size - 16, width: size, height: size };
 }
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
