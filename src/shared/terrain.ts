@@ -1162,6 +1162,9 @@ function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number,
 // some of them, and a sight line through such cells passed 38 from a tower's center, 8 off its body, with a knight 22
 // across walking it: it pressed into the tower, was put back, and turned between that line and the way round every tick
 // (pool-turtleLake-4).
+// The squares asked are the ones the segment crosses (a body near it is listed in each square its margin reaches, the one
+// the segment meets it in among them), not every square of the segment's bounding box, which for a sight line across the
+// map is every building on it.
 function sightClearOfBodies(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
   const squares = state.bodies;
   if (!squares) return true;
@@ -1170,16 +1173,32 @@ function sightClearOfBodies(state: TerrainRuntime, ax: number, ay: number, bx: n
   const dx = bx - ax;
   const dy = by - ay;
   const length = dx * dx + dy * dy;
-  for (let row = Math.floor(Math.min(ay, by) / span); row <= Math.floor(Math.max(ay, by) / span); row += 1) {
-    for (let col = Math.floor(Math.min(ax, bx) / span); col <= Math.floor(Math.max(ax, bx) / span); col += 1) {
-      for (const body of squares.get(row * squareCols + col) ?? []) {
-        const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((body.x - ax) * dx + (body.y - ay) * dy) / length));
-        if (t === 0) continue;
-        const gx = ax + dx * t - body.x;
-        const gy = ay + dy * t - body.y;
-        const reach = body.radius + BODY_MARGIN;
-        if (gx * gx + gy * gy < reach * reach) return false;
-      }
+  let col = Math.floor(ax / span);
+  let row = Math.floor(ay / span);
+  const endCol = Math.floor(bx / span);
+  const endRow = Math.floor(by / span);
+  const stepCol = Math.sign(dx);
+  const stepRow = Math.sign(dy);
+  const deltaCol = dx === 0 ? Infinity : span / Math.abs(dx);
+  const deltaRow = dy === 0 ? Infinity : span / Math.abs(dy);
+  let nextCol = dx === 0 ? Infinity : ((stepCol > 0 ? col + 1 : col) * span - ax) / dx;
+  let nextRow = dy === 0 ? Infinity : ((stepRow > 0 ? row + 1 : row) * span - ay) / dy;
+  for (let guard = 0; guard < 4 * (squareCols + Math.ceil(state.terrain.rows / SECTOR)) + 4; guard += 1) {
+    for (const body of squares.get(row * squareCols + col) ?? []) {
+      const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((body.x - ax) * dx + (body.y - ay) * dy) / length));
+      if (t === 0) continue;
+      const gx = ax + dx * t - body.x;
+      const gy = ay + dy * t - body.y;
+      const reach = body.radius + BODY_MARGIN;
+      if (gx * gx + gy * gy < reach * reach) return false;
+    }
+    if (col === endCol && row === endRow) break;
+    if (nextCol < nextRow) {
+      nextCol += deltaCol;
+      col += stepCol;
+    } else {
+      nextRow += deltaRow;
+      row += stepRow;
     }
   }
   return true;
