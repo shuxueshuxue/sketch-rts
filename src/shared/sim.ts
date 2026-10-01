@@ -742,7 +742,7 @@ function updateUnits(game: Game) {
     }
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
-      if (distanceToGoal(game.map, unit, unit.order.x, unit.order.y) < 5 || restsAgainstGoalBody(game, unit, unit.order)) unit.order = { type: "idle" };
+      if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
       continue;
     }
     if (unit.order.type === "attackMove") {
@@ -866,7 +866,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
     return;
   }
   moveToward(unit, order.x, order.y, game.map);
-  if (distanceToGoal(game.map, unit, order.x, order.y) < 8) unit.order = { type: "idle" };
+  if (walkEnded(game, unit, order, 8)) arrive(unit, order);
 }
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
@@ -2297,16 +2297,53 @@ function enemyTeamKeys(game: Game, owner: Owner, indexes: Map<string, unknown>) 
 const MAX_BUILDING_RADIUS = Math.max(...Object.values(BUILDING_DEFS).map((def) => def.radius));
 const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.radius));
 
-// A walk whose goal a building covers ends where the unit stands pressed against that building: it can come no nearer.
-function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: number }) {
+// Whether a walk (a move or an attack-move) to `goal` is over: the unit stands within `within` of where it ends (the
+// walkable point nearest the goal, or as near as its ground comes when it cannot reach it: see walkDestination), or as
+// near as a building lets it come (see restsAgainstGoalBody), or against a friend already there (see @@@group-arrival).
+// Measured to an unreachable point itself, the order never ended and the unit stood at the shore for good.
+function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
+  const map = game.map;
+  if (restsAgainstArrivedFriend(game, unit, goal)) return true;
+  if (!map.terrain) return distance(unit, goal) < within;
+  const mover = unitMover(unit.kind);
+  const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
+  const end = walkDestination(map, unit, point, mover);
+  return distance(unit, end) < within || restsAgainstGoalBody(game, unit, end, within);
+}
+
+function arrive(unit: Unit, goal: { x: number; y: number }) {
+  unit.order = { type: "idle" };
+  unit.arrivedAt = { x: goal.x, y: goal.y };
+}
+
+// A walk whose goal lies within a building's reach, or `within` of it, ends where the unit stands pressed against that
+// building: it can come no nearer. A goal just past the reach (a rally point beside a sanctum) kept four lancers pressed
+// at 15 from it for good.
+function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
   // Only a unit within a building's reach of its goal can be pressed against one that covers it.
-  if (!game.map.terrain || distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + 2) return false;
+  if (distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + within + 2) return false;
   let resting = false;
-  forEachNearbyBuilding(game, goal, MAX_BUILDING_RADIUS + unit.radius, (building) => {
+  forEachNearbyBuilding(game, goal, MAX_BUILDING_RADIUS + unit.radius + within, (building) => {
     const reach = building.radius + unit.radius;
-    if (!resting && distance(goal, building) < reach && distance(unit, building) <= reach + 2) resting = true;
+    if (!resting && distance(goal, building) < reach + within && distance(unit, building) <= reach + 2) resting = true;
   });
   return resting;
+}
+
+// @@@group-arrival - A group sent to one point gathers round it, as in StarCraft II: a unit's walk ends where it stands
+// against a friend that has already ended its walk to the same point (and is still standing there), within CROWD_REACH
+// of it. Only one unit can stand on the point; the rest pressed round the first to come for good, holding their orders
+// (seven lancers on the shore across from an island). Any other friend standing about is no reason to stop: a band
+// walking through its own camp stopped at the first idle soldier there and never reached the enemy.
+const CROWD_REACH = 100;
+
+function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y: number }) {
+  if (unit.kind === "worker" || distance(unit, goal) > CROWD_REACH) return false;
+  const friend = firstNearbyUnit(game, unit, unit.radius + MAX_UNIT_RADIUS + 2, (other) => {
+    if (other === unit || other.owner !== unit.owner || other.order.type !== "idle" || !other.arrivedAt) return false;
+    return other.arrivedAt.x === goal.x && other.arrivedAt.y === goal.y && distance(other, unit) <= other.radius + unit.radius + 2;
+  });
+  return friend !== undefined;
 }
 
 // Each unit is held against the buildings whose reach (their radius and the widest unit's) touches the square it stands
@@ -2603,16 +2640,6 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-// How far a unit stands from where a walk to (x, y) ends (see walkableGoal): the point itself on open ground.
-function distanceToGoal(map: GameMap, unit: Unit, x: number, y: number) {
-  if (!map.terrain) return Math.hypot(unit.x - x, unit.y - y);
-  const mover = unitMover(unit.kind);
-  const goal = isWalkable(map, x, y, mover) ? { x, y } : walkableGoal(map, x, y, mover);
-  // A point the unit's ground cannot reach (an island, the inside of a wall of buildings): its walk ends as near as it
-  // comes. Measured to the point itself, the order never ended and the unit stood at the shore for good.
-  return distance(unit, walkDestination(map, unit, goal, mover));
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {

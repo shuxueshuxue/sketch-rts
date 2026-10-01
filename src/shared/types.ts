@@ -136,6 +136,8 @@ export type Unit = {
   // The velocity a shove gave the unit, in units a tick (see @@@push); absent when it is not sliding.
   pushX?: number | undefined;
   pushY?: number | undefined;
+  // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
+  arrivedAt?: { x: number; y: number } | undefined;
   radius: number;
   carryingGold: number;
   kills: number;

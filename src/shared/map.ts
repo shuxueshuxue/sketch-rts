@@ -289,6 +289,7 @@ export function createUnit(
     stance: undefined,
     pushX: undefined,
     pushY: undefined,
+    arrivedAt: undefined,
     expiresTick: undefined,
   };
 }
