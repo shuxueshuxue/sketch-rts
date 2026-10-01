@@ -135,25 +135,21 @@ async page => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
     await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   };
-  const enterRoomSetup = async () => {
+  // A room on a pool map is chosen on the create screen; any other map (a test fixture) is set through the room API.
+  const enterRoomSetup = async (poolMapId) => {
     await page.click("[data-open-room-browser]");
     await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
     await page.click("[data-create-room]");
     await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+    if (poolMapId) await page.click("[data-map-entries] [data-map-id='" + poolMapId + "']");
     await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
     activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
     must(activeRoomId, "room setup did not expose room id");
   };
-  const startLocalRoom = async (mapId, viaKeyboard = false) => {
-    await enterRoomSetup();
-    if (viaKeyboard) {
-      // The ladder tile's number key draws a new layout.
-      await page.keyboard.press("1");
-    } else if (mapId === "ladder") {
-      await page.click("[data-map-id='ladder']");
-    } else {
-      // Room setup offers only the ladder map; a fixed map (a test fixture) is set through the room API.
+  const startLocalRoom = async (mapId, pool = false) => {
+    await enterRoomSetup(pool ? mapId : undefined);
+    if (!pool) {
       await page.evaluate(async ({ roomId, mapId }) => {
         const res = await fetch("/api/rooms/" + roomId + "/map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId }) });
         if (!res.ok) throw new Error(await res.text());
@@ -254,10 +250,15 @@ async page => {
   await waitForMenu();
   const menuCatalog = await catalog();
   must((await page.locator("[data-map-id]").count()) === 0, "home menu should not expose the direct map picker");
-  await enterRoomSetup();
-  const setupMenuButtons = await page.locator("[data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
-  must(setupMenuButtons.length === 1 && setupMenuButtons[0] === "ladder", "room setup should offer only the ladder map: " + JSON.stringify(setupMenuButtons));
-  must(menuCatalog.maps.some((map) => map.id === "ladder"), "catalog does not expose the ladder map");
+  await page.click("[data-open-room-browser]");
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.click("[data-create-room]");
+  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  const createMapEntries = await page.locator("[data-map-entries] [data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
+  const poolMapIds = menuCatalog.maps.filter((map) => map.tags.includes("pool")).map((map) => map.id);
+  must(poolMapIds.length >= 12 && createMapEntries.join(",") === poolMapIds.join(","), "the create screen should list exactly the pool's maps: " + JSON.stringify({ createMapEntries, poolMapIds }));
+  await page.reload();
+  await waitForMenu();
 
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
   await sleep(260);
@@ -265,18 +266,19 @@ async page => {
   must(menuBackdropA.hash !== menuBackdropB.hash, "main menu background is not visibly animated");
 
   const mapSelectionProof = [];
-  for (const via of ["click", "keyboard-number"]) {
+  for (const mapId of ["greystonePass", "twoShores"]) {
     await page.reload();
     activeRoomId = undefined;
     await waitForMenu();
-    await startLocalRoom("ladder", via === "keyboard-number");
+    await startLocalRoom(mapId, true);
     const current = await snapshot();
     const readout = await text("[data-map-readout]");
     const terrain = await visibleTerrainProof();
-    must(current.map.id === "ladder" && current.map.terrain, "room setup did not start a ladder layout; saw " + current.map.id);
-    must(readout?.includes(current.map.width + " x " + current.map.height), "map readout does not expose the ladder map's size after a " + via + " draw");
-    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "ladder map terrain is missing or too dense after a " + via + " draw: " + JSON.stringify(terrain));
-    mapSelectionProof.push({ id: current.map.id, via, size: current.map.width, terrain });
+    const named = menuCatalog.maps.find((map) => map.id === mapId)?.name;
+    must(current.map.id === mapId && current.map.terrain, "room setup did not start the chosen pool map; saw " + current.map.id);
+    must(named && readout === named, "the top bar should name the map being played: " + JSON.stringify({ readout, named }));
+    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "pool map terrain is missing or too dense on " + mapId + ": " + JSON.stringify(terrain));
+    mapSelectionProof.push({ id: current.map.id, size: current.map.width, terrain });
   }
 
   await page.reload();
