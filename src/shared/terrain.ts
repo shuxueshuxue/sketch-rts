@@ -56,14 +56,18 @@ const DIAGONAL = 7;
 // the flow and heads for that cell if it sees it (one sight line, not one a cell), else for the cell a few steps along.
 const LOOKAHEAD = 16;
 const SHORT_LOOK = 3;
-// A goal within NEAR cells gets a field of its own, grown no farther than LOCAL cells round it (a way round that leaves
-// that square takes the whole map's field); a farther goal shares the field of its BLOCK-cell square, which brings the
-// walk within NEAR of it just as well.
-const NEAR = 12;
-const LOCAL = 24;
-const BLOCK = 4;
-// Fields kept per terrain; the least recently used goes first and its arrays serve the next one.
+// Fields kept per terrain for the AIs' walking distances and routes; the least recently used goes first and its arrays
+// serve the next one.
 const FIELD_CACHE = 128;
+// The flow tiles' squares (see @@@flow-tiles), and the regions one square may hold (a square split by a cliff or a wall).
+const SECTOR = 10;
+const MAX_REGIONS = 64;
+// A cell's cost to cross in quarters of bare ground's (round(4 / pace): a shallow 5, mud 7), and the buckets of the tiles'
+// growing, more than the dearest step (a diagonal into mud, 7 × 7).
+const GROUND_WEIGHT = 4;
+const BUCKETS = 64;
+// Cells round a goal a building covers that a walk to it may end on (see goalSeeds).
+const GOAL_REACH = 3;
 
 export function terrainCellKind(char: string | undefined): TerrainCellKind {
   if (char === ",") return "shallow";
@@ -148,78 +152,403 @@ export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Poin
 }
 
 // Where a unit at `from` walking to `goal` should head this tick: the goal itself when it sees it, otherwise a cell down
-// the flow toward the goal (see @@@terrain-steering). `goal` should be walkable (see walkableGoal).
+// the flow tiles toward it (see @@@flow-tiles, @@@terrain-steering). `goal` should be walkable (see walkableGoal); a goal
+// the unit's ground does not reach is walked to as near as that ground comes (see reachableTarget).
 export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
   const terrain = map.terrain;
   if (!terrain) return goal;
   const ground = runtime(terrain, mover);
   const state = routing(map, terrain, mover);
-  const start = padAt(ground, from.x, from.y);
-  const target = padAt(ground, goal.x, goal.y);
-  const open = start >= 0 && ground.walk[start] === 1 && ground.walk[target] === 1;
-  if (open && state.bodyBlocks?.[blockOf(state, start)] === 1) {
-    const way = steerAmongBodies(state, ground, from, goal, start, target);
-    if (way) return way;
-  }
-  if (clearSegment(ground, from.x, from.y, goal.x, goal.y)) return goal;
-  if (start < 0 || ground.walk[target] !== 1) return goal;
-  if (ground.walk[start] !== 1) {
-    // Standing where it cannot (nothing puts a unit there but a seeded scenario): out by the nearest way.
-    const out = nearestWalkable(ground, start);
-    return out < 0 ? goal : centerOf(ground, out);
-  }
-  return follow(ground, fieldToward(ground, start, target), from, start, target, goal);
-}
-
-// Where a unit in cell `start` among buildings heads (see @@@building-pathing): the goal when it sees it on the copy,
-// else down its square's window field when the goal lies in the window and the way to it stays there, else down the
-// copy's field to the goal's square; undefined when no way on the copy joins them (shut in: the terrain's way).
-function steerAmongBodies(state: TerrainRuntime, ground: TerrainRuntime, from: Point, goal: Point, start: number, target: number): Point | undefined {
+  const start = padAt(state, from.x, from.y);
+  const target = padAt(state, goal.x, goal.y);
+  if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
-  // A unit pressed against a wall stands in the building's margin: it starts from the open cell nearest it.
+  // A unit pressed against a wall stands in a building's margin (see @@@building-pathing): it starts from the open cell
+  // nearest it; one standing where nothing walks (only a seeded scenario puts it there) heads out to it.
   const near = nearestWalkable(state, start);
-  if (near < 0) return undefined;
-  const block = blockOf(state, start);
-  if (!outside(windowBounds(state, block), target % state.width, Math.floor(target / state.width))) {
-    const local = windowField(state, ground, target, block);
-    if (local.dist[near]! < UNREACHED) return follow(state, local, from, near, target, goal);
-    // The way to the goal leaves the window (down a ramp beyond it): the copy's field to the goal itself.
-    const whole = goalField(state, ground, target);
-    return whole.dist[near]! < UNREACHED ? follow(state, whole, from, near, target, goal) : undefined;
-  }
-  const coarse = bodyBlockField(state, target);
-  if (coarse.dist[near]! >= UNREACHED) return undefined;
-  return follow(state, coarse, from, near, target, goal);
+  if (near < 0) return goal;
+  if (near !== start && ground.walk[start] !== 1) return centerOf(state, near);
+  const tiles = tilesOf(state);
+  const aim = reachableTarget(state, ground, tiles, near, target);
+  return walkAhead(state, ground, tiles, from, near, aim, aim === target ? goal : centerOf(state, aim));
 }
 
-// The open cells of the copy a walk to `target` may end at, each with its straight cost to it, within `bounds`: the target
+// @@@terrain-steering - Where a unit at `from`, in cell `near`, heads down the tiles to `target`, the cell of `goal`: the
+// cell LOOKAHEAD steps on when it sees it, else the one SHORT_LOOK on. The steps go down its square's field to the window
+// it leaves by, across into the next square and on down that square's, or down the goal's field near the goal.
+function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, from: Point, near: number, target: number, goal: Point): Point {
+  let at = near;
+  let short = -1;
+  let way = wayAt(state, ground, tiles, at, target);
+  for (let step = 1; step <= LOOKAHEAD && way; step += 1) {
+    let next = downhill(state, way.field, at);
+    if (next < 0) {
+      // At the bottom of a square's field: the window it leads to; the goal's field takes over there when it reaches the
+      // cell, else the walk crosses into the next square.
+      if (!way.exit) break;
+      const nearer = wayAt(state, ground, tiles, at, target);
+      if (nearer && !nearer.exit) {
+        way = nearer;
+        next = downhill(state, way.field, at);
+        if (next < 0) break;
+      } else {
+        next = at + way.exit.across;
+        if (state.walk[next] !== 1) break;
+        way = wayAt(state, ground, tiles, next, target);
+      }
+    }
+    at = next;
+    if (step === SHORT_LOOK) short = at;
+    if (way && !way.exit && way.field.dist[local(way.field.box, at, state.width)] === 0) break;
+  }
+  if (at === near) return goal;
+  const far = at === target ? goal : centerOf(state, at);
+  if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
+  return short === target ? goal : centerOf(state, short);
+}
+
+// The field a walk to `target` follows from cell `at`: the goal's when it reaches the cell, else the field of the window
+// the cell's region leaves its square by (see exitFor); undefined when the tiles join neither.
+function wayAt(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, at: number, target: number): { field: BoxField; exit?: TileNode } | undefined {
+  const goal = goalFieldOf(state, ground, tiles, target);
+  const index = local(goal.field.box, at, state.width);
+  if (index >= 0 && goal.field.dist[index]! < UNREACHED) return { field: goal.field };
+  const exit = exitFor(state, tiles, tiles.region[at]!, target, goal.field);
+  // A square with more regions than MAX_REGIONS shares the last label among them: its exit may not be this cell's.
+  if (!exit || exit.field.dist[local(exit.field.box, at, state.width)]! >= UNREACHED) return undefined;
+  return { field: exit.field, exit };
+}
+
+// ---- @@@flow-tiles - Routing as Supreme Commander 2 does it: Elijah Emerson, "Crowd Pathfinding and Steering Using Flow
+// Field Tiles" (Game AI Pro, 2013, chapter 23). The map is cut into SECTOR-cell squares. Where a square's edge can be
+// crossed, each run of open cells beside it is a window, a node for each of its two sides; each side has a field over its
+// square (the cost from every cell of the square to that side's cells), which both prices the graph's edges (from one
+// window of a square to another) and is the way a unit walks to that window. A walk asks the graph (A*, from every window
+// of its square's region, the region's answer kept until the copy changes) which window to leave its square by and
+// follows that window's field across; within a square of its goal's it follows the goal's own field. A building laid or
+// felled redoes the windows and fields of the squares whose cells changed and of the squares beside them (Emerson's dirty
+// sectors), never the map's, and every answer is a function of the cells alone: a client that rebuilds the tiles after a
+// checkpoint walks exactly as the server. Ground prices a step by its pace (see CELL_GROUND): a walk goes round a bog
+// when round is quicker, and a field is all downhill, so a unit never turns back on its way.
+type Box = { left: number; top: number; width: number; height: number };
+// `next`: each cell's next cell down the field, worked out when first asked (see downhill).
+type BoxField = { box: Box; dist: Int32Array; next: Int32Array };
+// A window's side: its cells in its square, the padded offset across to the other side's, and its field over the square.
+// Its key is its window's first cell on the left or upper side × 4, + 2 for a window on a square's lower edge, + 1 for
+// the right or lower side (key ^ 1 is the other side): the same whatever order the tiles were built in.
+type TileNode = { key: number; sector: number; cells: number[]; across: number; field: BoxField; edges: { to: number; cost: number }[] };
+type Tiles = {
+  columns: number;
+  rows: number;
+  nodes: Map<number, TileNode>;
+  // Per square edge (the left or upper square × 2, + 1 for its lower edge): its windows' left or upper side keys.
+  borders: Map<number, number[]>;
+  // Per cell: its square's region (square × MAX_REGIONS + its number in the square) and its island, the area of the whole
+  // copy it walks in; -1 on a blocked cell.
+  region: Int32Array;
+  island: Int32Array;
+  goals: Map<number, { field: BoxField; seeds: number[] }>;
+  exits: Map<number, number>;
+  nearest: Map<number, number>;
+};
+
+function tilesOf(state: TerrainRuntime): Tiles {
+  if (state.tiles) return state.tiles;
+  const { terrain } = state;
+  const columns = Math.ceil(terrain.cols / SECTOR);
+  const rows = Math.ceil(terrain.rows / SECTOR);
+  const tiles: Tiles = {
+    columns,
+    rows,
+    nodes: new Map(),
+    borders: new Map(),
+    region: new Int32Array(state.walk.length).fill(-1),
+    island: new Int32Array(state.walk.length).fill(-1),
+    goals: new Map(),
+    exits: new Map(),
+    nearest: new Map(),
+  };
+  state.tiles = tiles;
+  const all = Array.from({ length: columns * rows }, (_, sector) => sector);
+  for (const sector of all) labelRegions(state, tiles, sector);
+  for (const sector of all) for (const lower of [0, 1]) layWindows(state, tiles, sector * 2 + lower);
+  for (const sector of all) linkSector(state, tiles, sector);
+  labelIslands(state, tiles);
+  return tiles;
+}
+
+// After the copy's cells changed in `dirty` squares: their regions, the windows on their edges, and the fields and edges of
+// every square beside them, as a fresh build would make them.
+function redoTiles(state: TerrainRuntime, tiles: Tiles, dirty: Set<number>) {
+  const sectors = [...dirty].sort((a, b) => a - b);
+  const touched = new Set<number>();
+  const borders = new Set<number>();
+  for (const sector of sectors) {
+    labelRegions(state, tiles, sector);
+    const col = sector % tiles.columns;
+    const row = Math.floor(sector / tiles.columns);
+    touched.add(sector);
+    for (const lower of [0, 1]) borders.add(sector * 2 + lower);
+    if (col > 0) {
+      borders.add((sector - 1) * 2);
+      touched.add(sector - 1);
+    }
+    if (row > 0) {
+      borders.add((sector - tiles.columns) * 2 + 1);
+      touched.add(sector - tiles.columns);
+    }
+    if (col + 1 < tiles.columns) touched.add(sector + 1);
+    if (row + 1 < tiles.rows) touched.add(sector + tiles.columns);
+  }
+  for (const border of [...borders].sort((a, b) => a - b)) {
+    for (const key of tiles.borders.get(border) ?? []) {
+      tiles.nodes.delete(key);
+      tiles.nodes.delete(key ^ 1);
+    }
+    layWindows(state, tiles, border);
+  }
+  for (const sector of [...touched].sort((a, b) => a - b)) linkSector(state, tiles, sector);
+  labelIslands(state, tiles);
+  tiles.goals.clear();
+  tiles.exits.clear();
+  tiles.nearest.clear();
+}
+
+function sectorBox(state: TerrainRuntime, tiles: Tiles, sector: number): Box {
+  const col = (sector % tiles.columns) * SECTOR;
+  const row = Math.floor(sector / tiles.columns) * SECTOR;
+  return { left: col + 1, top: row + 1, width: Math.min(SECTOR, state.terrain.cols - col), height: Math.min(SECTOR, state.terrain.rows - row) };
+}
+
+function sectorOf(state: TerrainRuntime, tiles: Tiles, at: number) {
+  const col = (at % state.width) - 1;
+  const row = Math.floor(at / state.width) - 1;
+  return Math.floor(row / SECTOR) * tiles.columns + Math.floor(col / SECTOR);
+}
+
+// The index of a padded cell in a box's field, or -1 outside it.
+function local(box: Box, at: number, width: number) {
+  const col = at % width;
+  const row = (at - col) / width;
+  if (col < box.left || row < box.top || col >= box.left + box.width || row >= box.top + box.height) return -1;
+  return (row - box.top) * box.width + (col - box.left);
+}
+
+// A square's regions: the parts of it a walk joins without leaving it, numbered in cell order.
+function labelRegions(state: TerrainRuntime, tiles: Tiles, sector: number) {
+  const { walk, offsets, width } = state;
+  const box = sectorBox(state, tiles, sector);
+  for (let row = box.top; row < box.top + box.height; row += 1) for (let col = box.left; col < box.left + box.width; col += 1) tiles.region[row * width + col] = -1;
+  let count = 0;
+  for (let row = box.top; row < box.top + box.height; row += 1) {
+    for (let col = box.left; col < box.left + box.width; col += 1) {
+      const seed = row * width + col;
+      if (walk[seed] !== 1 || tiles.region[seed] !== -1) continue;
+      const label = sector * MAX_REGIONS + Math.min(count, MAX_REGIONS - 1);
+      count += 1;
+      tiles.region[seed] = label;
+      for (let index = 0, queue = [seed]; index < queue.length; index += 1) {
+        const at = queue[index]!;
+        for (let direction = 0; direction < 8; direction += 1) {
+          const next = at + offsets[direction]!;
+          if (walk[next] !== 1 || tiles.region[next] !== -1 || local(box, next, width) < 0 || !stepAllowed(state, at, direction)) continue;
+          tiles.region[next] = label;
+          queue.push(next);
+        }
+      }
+    }
+  }
+}
+
+// The copy's islands: the areas a walk joins at all, numbered in cell order.
+function labelIslands(state: TerrainRuntime, tiles: Tiles) {
+  const { walk, offsets } = state;
+  tiles.island.fill(-1);
+  const queue = new Int32Array(walk.length);
+  for (let seed = 0; seed < walk.length; seed += 1) {
+    if (walk[seed] !== 1 || tiles.island[seed] !== -1) continue;
+    tiles.island[seed] = seed;
+    let tail = 0;
+    queue[tail++] = seed;
+    for (let head = 0; head < tail; head += 1) {
+      const at = queue[head]!;
+      for (let direction = 0; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1 || tiles.island[next] !== -1 || !stepAllowed(state, at, direction)) continue;
+        tiles.island[next] = seed;
+        queue[tail++] = next;
+      }
+    }
+  }
+}
+
+// The windows on one square edge: every run of cells open on both sides of it, with its two sides' nodes (their fields
+// and edges come with their squares, see linkSector).
+function layWindows(state: TerrainRuntime, tiles: Tiles, border: number) {
+  const sector = border >> 1;
+  const lower = border & 1;
+  const col = sector % tiles.columns;
+  const row = Math.floor(sector / tiles.columns);
+  const keys: number[] = [];
+  tiles.borders.set(border, keys);
+  if (lower ? row + 1 >= tiles.rows : col + 1 >= tiles.columns) return;
+  const { walk, width } = state;
+  const box = sectorBox(state, tiles, sector);
+  const across = lower ? width : 1;
+  const span = lower ? box.width : box.height;
+  const first = lower ? (box.top + box.height - 1) * width + box.left : box.top * width + box.left + box.width - 1;
+  const along = lower ? 1 : width;
+  let run: number[] = [];
+  const close = () => {
+    if (run.length === 0) return;
+    const key = run[0]! * 4 + lower * 2;
+    keys.push(key);
+    const blank = (): BoxField => ({ box, dist: new Int32Array(0), next: new Int32Array(0) });
+    tiles.nodes.set(key, { key, sector, cells: run, across, field: blank(), edges: [] });
+    const other = lower ? sector + tiles.columns : sector + 1;
+    tiles.nodes.set(key + 1, { key: key + 1, sector: other, cells: run.map((cell) => cell + across), across: -across, field: blank(), edges: [] });
+    run = [];
+  };
+  for (let step = 0; step < span; step += 1) {
+    const at = first + step * along;
+    if (walk[at] === 1 && walk[at + across] === 1) run.push(at);
+    else close();
+  }
+  close();
+}
+
+// A square's window sides, in key order: those on its right and lower edges and those of the squares left of and above it.
+function sectorNodes(tiles: Tiles, sector: number): TileNode[] {
+  const col = sector % tiles.columns;
+  const row = Math.floor(sector / tiles.columns);
+  const keys = [...(tiles.borders.get(sector * 2) ?? []), ...(tiles.borders.get(sector * 2 + 1) ?? [])];
+  if (col > 0) keys.push(...(tiles.borders.get((sector - 1) * 2) ?? []).map((key) => key + 1));
+  if (row > 0) keys.push(...(tiles.borders.get((sector - tiles.columns) * 2 + 1) ?? []).map((key) => key + 1));
+  return keys.sort((a, b) => a - b).map((key) => tiles.nodes.get(key)!);
+}
+
+// Every window side of a square: its field over the square, and its edges to the square's other sides (the cheapest way
+// from that side's cells to its own).
+function linkSector(state: TerrainRuntime, tiles: Tiles, sector: number) {
+  const box = sectorBox(state, tiles, sector);
+  const nodes = sectorNodes(tiles, sector);
+  for (const node of nodes) node.field = growBox(state, box, node.cells);
+  for (const from of nodes) {
+    from.edges = [];
+    for (const to of nodes) {
+      if (to === from) continue;
+      let cost = UNREACHED;
+      for (const cell of from.cells) cost = Math.min(cost, to.field.dist[local(box, cell, state.width)]!);
+      if (cost < UNREACHED) from.edges.push({ to: to.key, cost });
+    }
+  }
+}
+
+// @@@terrain-flow - The cost from every cell of a box to the nearest seed, each seed starting at its cost (none: 0), by
+// Dial's algorithm over eight neighbours with no corner cut, a step priced by the ground it enters (see GROUND_WEIGHT).
+function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: number[]): BoxField {
+  const { walk, offsets, width, weight } = state;
+  const size = box.width * box.height;
+  const dist = new Int32Array(size).fill(UNREACHED);
+  const next = new Int32Array(size).fill(UNKNOWN);
+  const buckets = state.boxBuckets;
+  const order = seeds.map((_, index) => index);
+  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
+  const costOf = (index: number) => (costs ? costs[order[index]!]! : 0);
+  let seeded = 0;
+  let pending = 0;
+  for (let cost = order.length > 0 ? costOf(0) : 0; pending > 0 || seeded < order.length; cost += 1) {
+    if (pending === 0) cost = costOf(seeded);
+    for (; seeded < order.length && costOf(seeded) === cost; seeded += 1) {
+      const seed = seeds[order[seeded]!]!;
+      const index = local(box, seed, width);
+      if (index < 0 || cost >= dist[index]!) continue;
+      dist[index] = cost;
+      buckets[cost % BUCKETS]!.push(seed);
+      pending += 1;
+    }
+    const bucket = buckets[cost % BUCKETS]!;
+    while (bucket.length > 0) {
+      const at = bucket.pop()!;
+      pending -= 1;
+      if (dist[local(box, at, width)] !== cost) continue;
+      for (let direction = 0; direction < 8; direction += 1) {
+        const step = at + offsets[direction]!;
+        if (walk[step] !== 1) continue;
+        const index = local(box, step, width);
+        if (index < 0) continue;
+        const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[step]!;
+        if (reached >= dist[index]! || !stepAllowed(state, at, direction)) continue;
+        dist[index] = reached;
+        buckets[reached % BUCKETS]!.push(step);
+        pending += 1;
+      }
+    }
+  }
+  return { box, dist, next };
+}
+
+// The neighbour one step down a box field (the fixed order of directions breaks ties), or -1 at its bottom; remembered.
+function downhill(state: TerrainRuntime, field: BoxField, at: number) {
+  const { walk, offsets, width } = state;
+  const index = local(field.box, at, width);
+  if (index < 0) return -1;
+  const known = field.next[index]!;
+  if (known !== UNKNOWN) return known;
+  let best = -1;
+  let bestCost = field.dist[index]!;
+  for (let direction = 0; direction < 8; direction += 1) {
+    const step = at + offsets[direction]!;
+    if (walk[step] !== 1) continue;
+    const there = local(field.box, step, width);
+    if (there < 0 || field.dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
+    bestCost = field.dist[there]!;
+    best = step;
+  }
+  field.next[index] = best;
+  return best;
+}
+
+// The goal's own field, over its square and the squares round it, from its seeds (see goalSeeds).
+function goalFieldOf(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, target: number) {
+  const known = tiles.goals.get(target);
+  if (known) return known;
+  const sector = sectorOf(state, tiles, target);
+  const col = (sector % tiles.columns) * SECTOR;
+  const row = Math.floor(sector / tiles.columns) * SECTOR;
+  const left = Math.max(0, col - SECTOR);
+  const top = Math.max(0, row - SECTOR);
+  const box = { left: left + 1, top: top + 1, width: Math.min(state.terrain.cols, col + 2 * SECTOR) - left, height: Math.min(state.terrain.rows, row + 2 * SECTOR) - top };
+  const { seeds, costs } = goalSeeds(state, ground, target, box);
+  const goal = { field: growBox(state, box, seeds, costs), seeds };
+  if (tiles.goals.size > 2_048) tiles.goals.clear();
+  tiles.goals.set(target, goal);
+  return goal;
+}
+
+// The open cells of the copy a walk to `target` may end at, each with its straight cost to it, within `box`: the target
 // itself when it is open; where a building covers it (a site to build, a hall to bring gold to, one to strike), the open
 // cells round that building within GOAL_REACH that the land joins to the target without the buildings, so the walk ends
 // at the wall on the walker's side. Taken by distance alone, the cells on a plateau above a farm built under its cliff
 // were the farm's: a worker up there stood at its walk's end and walked straight at the cliff (V8's on the open ladder).
-function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number, bounds: Bounds) {
+function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number, box: Box) {
   if (state.walk[target] === 1) return { seeds: [target], costs: [0] };
   const { width, offsets } = state;
   const targetCol = target % width;
   const targetRow = Math.floor(target / width);
-  const square = {
-    left: Math.max(bounds.left, targetCol - GOAL_REACH),
-    right: Math.min(bounds.right, targetCol + GOAL_REACH),
-    top: Math.max(bounds.top, targetRow - GOAL_REACH),
-    bottom: Math.min(bounds.bottom, targetRow + GOAL_REACH),
-  };
+  const square = { left: targetCol - GOAL_REACH, top: targetRow - GOAL_REACH, width: 2 * GOAL_REACH + 1, height: 2 * GOAL_REACH + 1 };
   const seeds: number[] = [];
   const costs: number[] = [];
   const joined = new Set([target]);
   for (let index = 0, queue = [target]; index < queue.length; index += 1) {
     const at = queue[index]!;
-    if (state.walk[at] === 1) {
+    if (state.walk[at] === 1 && local(box, at, width) >= 0) {
       seeds.push(at);
-      costs.push(Math.round(STRAIGHT * Math.sqrt(((at % width) - targetCol) ** 2 + (Math.floor(at / width) - targetRow) ** 2)));
+      costs.push(Math.round(STRAIGHT * GROUND_WEIGHT * Math.sqrt(((at % width) - targetCol) ** 2 + (Math.floor(at / width) - targetRow) ** 2)));
     }
     for (let direction = 0; direction < 8; direction += 1) {
       const next = at + offsets[direction]!;
-      if (joined.has(next) || ground.walk[next] !== 1 || !stepAllowed(ground, at, direction) || outside(square, next % width, Math.floor(next / width))) continue;
+      if (joined.has(next) || ground.walk[next] !== 1 || !stepAllowed(ground, at, direction) || local(square, next, width) < 0) continue;
       joined.add(next);
       queue.push(next);
     }
@@ -227,86 +556,149 @@ function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number
   return { seeds, costs };
 }
 
-// The window field of `block` toward `target` on the copy: the cost to the goal (see goalSeeds) within the block's square
-// and WINDOW cells round it. It is grown again only when buildings change within the window.
-function windowField(state: TerrainRuntime, ground: TerrainRuntime, target: number, block: number): Field {
-  return cached(state, 4 * state.walk.length + target * blockCount(state) + block, () => {
-    const bounds = windowBounds(state, block);
-    const { seeds, costs } = goalSeeds(state, ground, target, bounds);
-    return grow(state, seeds, bounds, costs);
-  });
-}
-
-// The copy's field over the whole map to the goal (see goalSeeds), for a walk whose way to a goal in its window leaves the
-// window; any change of buildings drops it.
-function goalField(state: TerrainRuntime, ground: TerrainRuntime, target: number): Field {
-  const whole = { left: 1, right: state.terrain.cols, top: 1, bottom: state.terrain.rows };
-  return cached(state, 4 * state.walk.length + state.walk.length * blockCount(state) + target, () => {
-    const { seeds, costs } = goalSeeds(state, ground, target, whole);
-    return grow(state, seeds, undefined, costs);
-  });
-}
-
-// The copy's field over the whole map to the open cells of the target's BLOCK square and GOAL_REACH round it (see
-// goalSeeds), shared by every walk bound there; any change of buildings drops it. The terrain's own cost to that square
-// would lead a walk through the buildings in its way: units went along a wall to the corner behind it and stood there.
-function bodyBlockField(state: TerrainRuntime, target: number): Field {
-  const width = state.width;
-  const left = Math.floor(((target % width) - 1) / BLOCK) * BLOCK + 1;
-  const top = Math.floor((Math.floor(target / width) - 1) / BLOCK) * BLOCK + 1;
-  return cached(state, 3 * state.walk.length + blockOf(state, target), () => {
-    const square = { left: left - GOAL_REACH, right: left + BLOCK - 1 + GOAL_REACH, top: top - GOAL_REACH, bottom: top + BLOCK - 1 + GOAL_REACH };
-    const seeds: number[] = [];
-    for (let row = Math.max(1, square.top); row <= Math.min(state.terrain.rows, square.bottom); row += 1) {
-      for (let col = Math.max(1, square.left); col <= Math.min(state.terrain.cols, square.right); col += 1) if (state.walk[row * width + col] === 1) seeds.push(row * width + col);
+// The cell a walk from `near` to `target` heads for: the target when the unit's island reaches it (one of its seeds is on
+// the island), else the island's cell nearest it, so a walk to a point it cannot reach (across a cliff, inside a wall of
+// buildings) goes as near as it can and stands there instead of pressing against what is in its way.
+function reachableTarget(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, near: number, target: number) {
+  const island = tiles.island[near]!;
+  if (goalFieldOf(state, ground, tiles, target).seeds.some((seed) => tiles.island[seed] === island)) return target;
+  const key = target * state.walk.length + island;
+  const known = tiles.nearest.get(key);
+  if (known !== undefined) return known;
+  const { terrain, width } = state;
+  const col = (target % width) - 1;
+  const row = Math.floor(target / width) - 1;
+  let best = near;
+  let bestDistance = Infinity;
+  for (let ring = 1; ring <= Math.max(terrain.cols, terrain.rows) && ring * ring <= bestDistance; ring += 1) {
+    for (let r = row - ring; r <= row + ring; r += 1) {
+      for (let c = col - ring; c <= col + ring; c += 1) {
+        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring || c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
+        const at = pad(state, c, r);
+        if (tiles.island[at] !== island) continue;
+        const gap = (c - col) ** 2 + (r - row) ** 2;
+        if (gap < bestDistance || (gap === bestDistance && at < best)) {
+          bestDistance = gap;
+          best = at;
+        }
+      }
     }
-    return grow(state, seeds);
-  });
-}
-
-type Bounds = { left: number; right: number; top: number; bottom: number };
-
-// The square of `block` and WINDOW cells round it, in padded columns and rows, within the map.
-function windowBounds(state: TerrainRuntime, block: number): Bounds {
-  const columns = Math.ceil(state.terrain.cols / BLOCK);
-  const col = (block % columns) * BLOCK;
-  const row = Math.floor(block / columns) * BLOCK;
-  return {
-    left: Math.max(1, col - WINDOW + 1),
-    right: Math.min(state.terrain.cols, col + BLOCK + WINDOW),
-    top: Math.max(1, row - WINDOW + 1),
-    bottom: Math.min(state.terrain.rows, row + BLOCK + WINDOW),
-  };
-}
-
-function blockCount(state: TerrainRuntime) {
-  return Math.ceil(state.terrain.cols / BLOCK) * Math.ceil(state.terrain.rows / BLOCK);
-}
-
-// The BLOCK-cell square a padded cell lies in.
-function blockOf(state: TerrainRuntime, at: number) {
-  const col = (at % state.width) - 1;
-  const row = Math.floor(at / state.width) - 1;
-  return Math.floor(row / BLOCK) * Math.ceil(state.terrain.cols / BLOCK) + Math.floor(col / BLOCK);
-}
-
-// Where a unit at `from` (in cell `start`) heads down `field` toward `target`, the cell of `goal`: the cell LOOKAHEAD
-// steps along when it sees it, else the one SHORT_LOOK along (see @@@terrain-steering).
-function follow(state: TerrainRuntime, field: Field | undefined, from: Point, start: number, target: number, goal: Point): Point {
-  if (!field) return goal;
-  let at = start;
-  let short = -1;
-  for (let step = 1; step <= LOOKAHEAD; step += 1) {
-    const next = nextStep(state, field, at);
-    if (next < 0) break;
-    at = next;
-    if (step === SHORT_LOOK) short = at;
-    if (field.dist[at] === 0) break;
   }
-  if (at === start) return goal;
-  const far = at === target ? goal : centerOf(state, at);
-  if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
-  return short === target ? goal : centerOf(state, short);
+  if (tiles.nearest.size > 4_096) tiles.nearest.clear();
+  tiles.nearest.set(key, best);
+  return best;
+}
+
+// The window side the region's walk to `target` leaves its square by: A* over the windows from every side of the region
+// (one answer for the whole region, kept), to the goal's field wherever a side's cells lie in it.
+function exitFor(state: TerrainRuntime, tiles: Tiles, region: number, target: number, goal: BoxField): TileNode | undefined {
+  const key = target * tiles.columns * tiles.rows * MAX_REGIONS + region;
+  let exit = tiles.exits.get(key);
+  if (exit === undefined) {
+    exit = searchExit(state, tiles, region, target, goal);
+    if (tiles.exits.size > 65_536) tiles.exits.clear();
+    tiles.exits.set(key, exit);
+  }
+  return exit < 0 ? undefined : tiles.nodes.get(exit);
+}
+
+function searchExit(state: TerrainRuntime, tiles: Tiles, region: number, target: number, goal: BoxField): number {
+  const width = state.width;
+  const targetCol = target % width;
+  const targetRow = Math.floor(target / width);
+  // Octile cells to the target at bare ground's price: no walk is cheaper.
+  const estimate = (node: TileNode) => {
+    const dx = Math.abs((node.cells[0]! % width) - targetCol);
+    const dy = Math.abs(Math.floor(node.cells[0]! / width) - targetRow);
+    return (DIAGONAL * Math.min(dx, dy) + STRAIGHT * (Math.max(dx, dy) - Math.min(dx, dy))) * GROUND_WEIGHT;
+  };
+  const sector = Math.floor(region / MAX_REGIONS);
+  const cost = new Map<number, number>();
+  const parent = new Map<number, number>();
+  const closed = new Set<number>();
+  const heap = new Frontier();
+  for (const node of sectorNodes(tiles, sector)) {
+    if (tiles.region[node.cells[0]!] !== region) continue;
+    cost.set(node.key, 0);
+    parent.set(node.key, -1);
+    heap.push(estimate(node), node.key);
+  }
+  let finish = -1;
+  let finishCost = UNREACHED;
+  const relax = (from: number, to: number, through: number) => {
+    const node = tiles.nodes.get(to);
+    if (!node || closed.has(to) || through >= (cost.get(to) ?? UNREACHED)) return;
+    cost.set(to, through);
+    parent.set(to, from);
+    heap.push(through + estimate(node), to);
+  };
+  for (;;) {
+    const key = heap.pop();
+    if (key === undefined) return -1;
+    if (key === -1) break;
+    if (closed.has(key)) continue;
+    closed.add(key);
+    const node = tiles.nodes.get(key)!;
+    const here = cost.get(key)!;
+    let end = UNREACHED;
+    for (const cell of node.cells) {
+      const index = local(goal.box, cell, width);
+      if (index >= 0) end = Math.min(end, goal.dist[index]!);
+    }
+    if (end < UNREACHED && here + end < finishCost) {
+      finishCost = here + end;
+      finish = key;
+      heap.push(finishCost, -1);
+    }
+    const pair = tiles.nodes.get(key ^ 1);
+    if (pair) relax(key, key ^ 1, here + STRAIGHT * GROUND_WEIGHT);
+    for (const edge of node.edges) relax(key, edge.to, here + edge.cost);
+  }
+  // The side the way leaves the region's square by: the last of the square's before the first crossing.
+  const path: number[] = [];
+  for (let at = finish; at !== -1; at = parent.get(at)!) path.push(at);
+  path.reverse();
+  for (let index = 0; index + 1 < path.length; index += 1) if (path[index + 1] === (path[index]! ^ 1)) return path[index]!;
+  return path[path.length - 1]!;
+}
+
+// A binary heap of (priority, key), the lower key first among equal priorities, so a search goes the same way every time.
+class Frontier {
+  private items: [number, number][] = [];
+  push(priority: number, key: number) {
+    const items = this.items;
+    items.push([priority, key]);
+    for (let at = items.length - 1; at > 0; ) {
+      const up = (at - 1) >> 1;
+      if (!before(items[at]!, items[up]!)) break;
+      [items[at], items[up]] = [items[up]!, items[at]!];
+      at = up;
+    }
+  }
+  pop(): number | undefined {
+    const items = this.items;
+    if (items.length === 0) return undefined;
+    const top = items[0]![1];
+    const last = items.pop()!;
+    if (items.length > 0) {
+      items[0] = last;
+      for (let at = 0; ; ) {
+        const left = 2 * at + 1;
+        const right = left + 1;
+        let least = at;
+        if (left < items.length && before(items[left]!, items[least]!)) least = left;
+        if (right < items.length && before(items[right]!, items[least]!)) least = right;
+        if (least === at) break;
+        [items[at], items[least]] = [items[least]!, items[at]!];
+        at = least;
+      }
+    }
+    return top;
+  }
+}
+
+function before(a: [number, number], b: [number, number]) {
+  return a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
 }
 
 // The walking distance (in world units, along the flow) from a point to a goal, or undefined when no walk joins them. A
@@ -347,23 +739,15 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 
 // @@@building-pathing - Buildings stand in the land's way as forest does, but they are each game's own and they come and
 // go: the sim hands the map its buildings whenever they change (see setBuildingBodies), and they are kept on a copy of the
-// land's cells with every cell whose center lies within BODY_MARGIN of a building blocked, with its own clearance, fields
-// and nearest cells. A unit far from any building walks the terrain's fields as before buildings counted. A unit whose
-// BLOCK square has a building within WINDOW cells of it walks a field of the copy: its square's window field when the
-// goal lies in that window (see windowField), else the copy's field to the goal's square (see bodyBlockField). Either is
-// shared by every unit bound the same way and all downhill: a unit never turns back on its way. Before, a walk went the
-// terrain's way and turned to a detour round the copy when a building stood between the unit and the point LOOKAHEAD
-// cells on, and that point moved with each step: units went straight while it lay short of a gap the buildings shut and
-// round the other way once it lay past it, back and forth each tick, and were walked into the slit between a farm and a
-// cliff. The copy's fields over the whole map are thrown away by every site laid and every building felled (all of them,
-// for every walk, made a game a quarter slower a tick), so they serve only the units among buildings, one per goal
-// square; a window field is grown again only when a change falls within it. The AIs' walking distances and routes read
-// the terrain alone: what a building adds to a walk is a few steps round it.
+// land's cells with every cell whose center lies within BODY_MARGIN of a building blocked, with its own clearance, flow
+// tiles and nearest cells. A building laid or felled redoes the tiles of the squares it changed and of those beside them
+// (see @@@flow-tiles). The AIs' walking distances and routes read the terrain alone: what a building adds to a walk is a
+// few steps round it.
 //
-// The margin shuts the slits a unit's body cannot pass: farms laid 4 apart left a row of open cells between them, and
-// units routed into the slit and stood pressed in it; with half a cell more round each building no gap under about 32
-// stays open, and a unit is 30 to 36 wide. A unit pressed against a wall stands in such cells and starts from the open
-// cell nearest it.
+// The margin shuts the slits a unit's body cannot pass (Emerson's wall cushioning): farms laid 4 apart left a row of open
+// cells between them, and units routed into the slit and stood pressed in it; with half a cell more round each building
+// no gap under about 32 stays open, and a unit is 30 to 36 wide. A unit pressed against a wall stands in such cells and
+// starts from the open cell nearest it.
 //
 // The copy hangs on the game's map object (a snapshot shares it), never on the terrain, which games may share. A map
 // without terrain has no routing to take a unit round anything, and its buildings stand in nobody's way (see
@@ -372,10 +756,7 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // in deep water.
 type Body = { x: number; y: number; radius: number };
 const BODY_MARGIN = 16;
-// Cells round a unit's BLOCK square that its window field covers, and round a goal the window field may end at.
-const WINDOW = 12;
-const GOAL_REACH = 3;
-// `previous`: the cells as they were before the last change, kept to tell which fields that change reached.
+// `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
 type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array };
 const overlays = new WeakMap<object, Overlay>();
 
@@ -389,7 +770,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   const ground = runtime(terrain, "land");
   let overlay = overlays.get(map);
   if (!overlay || overlay.terrain !== terrain) {
-    const fresh = createRuntime(terrain, PASSABLE.land);
+    const fresh = createRuntime(terrain, "land");
     overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length) };
     overlays.set(map, overlay);
   }
@@ -397,9 +778,6 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);
   const size = terrain.cell;
-  const columns = Math.ceil(terrain.cols / BLOCK);
-  const blocks = (state.bodyBlocks ??= new Uint8Array(blockCount(state)));
-  blocks.fill(0);
   for (const body of bodies) {
     const reach = body.radius + BODY_MARGIN;
     const low = { col: Math.max(0, Math.floor((body.x - reach) / size)), row: Math.max(0, Math.floor((body.y - reach) / size)) };
@@ -411,36 +789,19 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
         if (dx * dx + dy * dy < reach * reach) state.walk[pad(state, col, row)] = 0;
       }
     }
-    // The squares whose window this building's cells fall in.
-    for (let row = Math.max(0, Math.floor((low.row - WINDOW) / BLOCK)); row <= Math.min(blocks.length / columns - 1, Math.floor((high.row + WINDOW) / BLOCK)); row += 1) {
-      for (let col = Math.max(0, Math.floor((low.col - WINDOW) / BLOCK)); col <= Math.min(columns - 1, Math.floor((high.col + WINDOW) / BLOCK)); col += 1) blocks[row * columns + col] = 1;
-    }
   }
-  // Only the cells that changed matter: the window fields whose square they miss stand as they were; the rest are grown
-  // again when asked for.
-  let low = { col: Infinity, row: Infinity };
-  let high = { col: -Infinity, row: -Infinity };
+  const dirty = new Set<number>();
   for (let at = 0; at < state.walk.length; at += 1) {
     if (state.walk[at] === overlay.previous[at]) continue;
     const col = (at % state.width) - 1;
     const row = Math.floor(at / state.width) - 1;
-    low = { col: Math.min(low.col, col), row: Math.min(low.row, row) };
-    high = { col: Math.max(high.col, col), row: Math.max(high.row, row) };
+    dirty.add(Math.floor(row / SECTOR) * Math.ceil(terrain.cols / SECTOR) + Math.floor(col / SECTOR));
   }
-  if (high.col < low.col) return;
+  if (dirty.size === 0) return;
   state.clearance.fill(0);
   fillClearance(state);
-  const windowKeys = 4 * state.walk.length;
-  for (const [key, field] of state.fields) {
-    if (key >= windowKeys && key < windowKeys + state.walk.length * blockCount(state)) {
-      // Padded bounds against the changed cells' unpadded ones, a cell wider for the steps taken off the window's edge.
-      const bounds = windowBounds(state, (key - windowKeys) % blockCount(state));
-      if (bounds.right < low.col || bounds.left - 2 > high.col || bounds.bottom < low.row || bounds.top - 2 > high.row) continue;
-    }
-    state.spare.push(field);
-    state.fields.delete(key);
-  }
   state.nearest.clear();
+  if (state.tiles) redoTiles(state, state.tiles, dirty);
 }
 
 // The runtime a mover's routing runs on: the land's with this game's buildings when it has any.
@@ -452,9 +813,8 @@ function routing(map: object, terrain: Terrain, mover: Mover): TerrainRuntime {
   return runtime(terrain, mover);
 }
 
-// `used`: when the field was last asked for, by the runtime's clock (the least recently used goes first). `reached`: the
-// cells a field grown within a square reached (see grow).
-type Field = { dist: Int32Array; next: Int32Array; used: number; reached?: number[] | undefined };
+// `used`: when the field was last asked for, by the runtime's clock (the least recently used goes first).
+type Field = { dist: Int32Array; next: Int32Array; used: number };
 
 type TerrainRuntime = {
   terrain: Terrain;
@@ -462,18 +822,22 @@ type TerrainRuntime = {
   width: number;
   // 1 on a cell the runtime's mover may cross (see @@@terrain-movers).
   walk: Uint8Array;
+  // What a step onto the cell costs, in quarters of bare ground's (see GROUND_WEIGHT): its ground's for a land unit, bare
+  // ground's everywhere for a ship.
+  weight: Uint8Array;
   // Chebyshev distance in cells to the nearest blocked cell (or the map's edge): 0 on a blocked cell.
   clearance: Uint16Array;
   fields: Map<number, Field>;
   spare: Field[];
   clock: number;
   nearest: Map<number, number>;
-  // Dial's buckets, kept between fields.
+  // Dial's buckets, kept between fields: the whole map's (see grow) and the boxes' (see growBox).
   buckets: Int32Array[];
   tops: Int32Array;
+  boxBuckets: number[][];
   offsets: Int32Array;
-  // On a game's building copy (see @@@building-pathing): 1 for each BLOCK square with a building's cells in its window.
-  bodyBlocks?: Uint8Array | undefined;
+  // The routing of walks (see @@@flow-tiles), built when first asked for.
+  tiles?: Tiles | undefined;
 };
 
 // @@@terrain-runtime - What the terrain's queries need, built once per terrain and mover and kept beside the terrain (never
@@ -490,21 +854,30 @@ function runtime(terrain: Terrain, mover: Mover): TerrainRuntime {
     lastRuntimes = runtimes.get(terrain) ?? {};
     runtimes.set(terrain, lastRuntimes);
   }
-  return mover === "land" ? (lastRuntimes.land ??= createRuntime(terrain, PASSABLE.land)) : (lastRuntimes.sea ??= createRuntime(terrain, PASSABLE.sea));
+  return mover === "land" ? (lastRuntimes.land ??= createRuntime(terrain, "land")) : (lastRuntimes.sea ??= createRuntime(terrain, "sea"));
 }
 
-function createRuntime(terrain: Terrain, passable: ReadonlySet<string>): TerrainRuntime {
+function createRuntime(terrain: Terrain, mover: Mover): TerrainRuntime {
   const width = terrain.cols + 2;
   const count = width * (terrain.rows + 2);
   const walk = new Uint8Array(count);
+  const weight = new Uint8Array(count);
+  const passable = PASSABLE[mover];
   for (let row = 0; row < terrain.rows; row += 1) {
-    for (let col = 0; col < terrain.cols; col += 1) if (passable.has(terrain.cells[row * terrain.cols + col]!)) walk[(row + 1) * width + col + 1] = 1;
+    for (let col = 0; col < terrain.cols; col += 1) {
+      const char = terrain.cells[row * terrain.cols + col]!;
+      if (!passable.has(char)) continue;
+      const at = (row + 1) * width + col + 1;
+      walk[at] = 1;
+      weight[at] = mover === "sea" ? GROUND_WEIGHT : Math.round(GROUND_WEIGHT / (CELL_GROUND[char]?.pace ?? 1));
+    }
   }
   const offsets = Int32Array.from([1, width, -1, -width, width + 1, width - 1, -width - 1, -width + 1]);
   const state: TerrainRuntime = {
     terrain,
     width,
     walk,
+    weight,
     clearance: new Uint16Array(count),
     fields: new Map(),
     clock: 0,
@@ -512,6 +885,7 @@ function createRuntime(terrain: Terrain, passable: ReadonlySet<string>): Terrain
     nearest: new Map(),
     buckets: Array.from({ length: 8 }, () => new Int32Array(count)),
     tops: new Int32Array(8),
+    boxBuckets: Array.from({ length: BUCKETS }, () => []),
     offsets,
   };
   fillClearance(state);
@@ -639,44 +1013,8 @@ function nextStep(state: TerrainRuntime, field: Field, at: number) {
   return best;
 }
 
-// The field a walk from `start` to `target` follows (see NEAR, LOCAL, BLOCK): undefined when no walk joins them.
-function fieldToward(state: TerrainRuntime, start: number, target: number): Field | undefined {
-  const width = state.width;
-  const gap = Math.max(Math.abs((start % width) - (target % width)), Math.abs(Math.floor(start / width) - Math.floor(target / width)));
-  if (gap > NEAR) {
-    const coarse = blockField(state, target);
-    if (coarse.dist[start]! < UNREACHED) return coarse;
-  } else {
-    const col = target % width;
-    const row = Math.floor(target / width);
-    const square = { left: col - LOCAL, right: col + LOCAL, top: row - LOCAL, bottom: row + LOCAL };
-    const local = cached(state, target + state.walk.length, () => grow(state, [target], square));
-    if (local.dist[start]! < UNREACHED) return local;
-  }
-  const exact = exactField(state, target);
-  return exact.dist[start]! < UNREACHED ? exact : undefined;
-}
-
 function exactField(state: TerrainRuntime, target: number): Field {
   return cached(state, target, () => grow(state, [target]));
-}
-
-function outside(bounds: Bounds, col: number, row: number) {
-  return col < bounds.left || col > bounds.right || row < bounds.top || row > bounds.bottom;
-}
-
-// The field down to every walkable cell of the BLOCK-cell square the target stands in.
-function blockField(state: TerrainRuntime, target: number): Field {
-  const width = state.width;
-  const col = Math.floor(((target % width) - 1) / BLOCK) * BLOCK;
-  const row = Math.floor((Math.floor(target / width) - 1) / BLOCK) * BLOCK;
-  return cached(state, 2 * state.walk.length + row * width + col, () => {
-    const sources: number[] = [];
-    for (let r = row; r < row + BLOCK && r < state.terrain.rows; r += 1) {
-      for (let c = col; c < col + BLOCK && c < state.terrain.cols; c += 1) if (state.walk[pad(state, c, r)] === 1) sources.push(pad(state, c, r));
-    }
-    return grow(state, sources);
-  });
 }
 
 function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
@@ -705,42 +1043,22 @@ function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
   return field;
 }
 
-// @@@terrain-flow - The walking cost from every cell to the nearest seed, each seed starting at its cost (none: 0), by
-// Dial's algorithm over eight neighbours with no corner cut, grown no farther than `bounds` (padded columns and rows).
-function grow(state: TerrainRuntime, seeds: number[], bounds?: Bounds, costs?: number[]): Field {
-  const { walk, offsets, buckets, tops, width } = state;
-  const field: Field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
+// The walking cost over the whole map from every cell to the nearest source, on the terrain alone (Dial's algorithm over
+// eight neighbours, no corner cut): the AIs' walking distances and routes (see walkingDistance, walkRoute).
+function grow(state: TerrainRuntime, sources: number[]): Field {
+  const { walk, offsets, buckets, tops } = state;
+  const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
   const dist = field.dist;
-  // A field grown within a square reached only the cells it lists (and steps are taken only from those, see nextStep):
-  // they alone are cleared, where clearing the whole map's cells for a square of a few hundred cost more than the growing.
-  if (field.reached) {
-    for (const at of field.reached) {
-      dist[at] = UNREACHED;
-      field.next[at] = UNKNOWN;
-    }
-  } else {
-    dist.fill(UNREACHED);
-    field.next.fill(UNKNOWN);
-  }
-  const reachedCells: number[] | undefined = bounds ? [] : undefined;
-  field.reached = reachedCells;
+  dist.fill(UNREACHED);
+  field.next.fill(UNKNOWN);
   tops.fill(0);
-  // Seeds go in when the growing comes to their cost, cheapest first (the lower index first among equals).
-  const order = seeds.map((_, index) => index);
-  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
-  const costOf = (index: number) => (costs ? costs[order[index]!]! : 0);
-  let seeded = 0;
   let pending = 0;
-  for (let cost = order.length > 0 ? costOf(0) : 0; pending > 0 || seeded < order.length; cost += 1) {
-    if (pending === 0) cost = costOf(seeded);
-    for (; seeded < order.length && costOf(seeded) === cost; seeded += 1) {
-      const seed = seeds[order[seeded]!]!;
-      if (cost >= dist[seed]!) continue;
-      if (reachedCells && dist[seed] === UNREACHED) reachedCells.push(seed);
-      dist[seed] = cost;
-      buckets[cost & 7]![tops[cost & 7]!++] = seed;
-      pending += 1;
-    }
+  for (const source of sources) {
+    dist[source] = 0;
+    buckets[0]![tops[0]!++] = source;
+    pending += 1;
+  }
+  for (let cost = 0; pending > 0; cost += 1) {
     const slot = cost & 7;
     const bucket = buckets[slot]!;
     while (tops[slot]! > 0) {
@@ -752,8 +1070,6 @@ function grow(state: TerrainRuntime, seeds: number[], bounds?: Bounds, costs?: n
         if (walk[next] !== 1) continue;
         const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL);
         if (reached >= dist[next]! || !stepAllowed(state, at, direction)) continue;
-        if (bounds && outside(bounds, next % width, Math.floor(next / width))) continue;
-        if (reachedCells && dist[next] === UNREACHED) reachedCells.push(next);
         dist[next] = reached;
         const into = reached & 7;
         buckets[into]![tops[into]!++] = next;
