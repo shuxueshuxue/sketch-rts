@@ -3,7 +3,7 @@ import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
 import { BUILDING_DEFS } from "./catalog";
 import { MAP_IDEAS } from "./map-ids";
-import { isFootprintBuildable, isShoreFootprint, isWalkable, walkableGoal, walkingDistance } from "./terrain";
+import { isFootprintBuildable, isShoreFootprint, isWalkable, setBuildingBodies, walkableGoal, walkDestination, walkingDistance } from "./terrain";
 import type { MapIdea } from "./types";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
@@ -255,5 +255,29 @@ describe("generated maps", () => {
     }
     const market = layout("ground-1", "oneMarket").map;
     expect(market.sites).toEqual([{ kind: "shop", x: market.size / 2, y: market.size / 2 }]);
+  });
+
+  it("lays rocks and gates across shortcuts only: the hill's back ways, the middle ford, the jungle's ways in, with every start, mine and camp still reached round them", () => {
+    const laid: [MapIdea, string[]][] = [
+      ["hiddenHill", ["gate", "gate"]],
+      ["bridgeStand", ["rocks"]],
+      ["deepJungle", ["gate", "gate"]],
+    ];
+    for (const [idea, kinds] of laid) {
+      for (let index = 0; index < 4; index += 1) {
+        const { map, halls, ground } = layout(`obstacles-${index}`, idea);
+        expect(map.idea).toBe(idea);
+        expect(map.obstacles.map((obstacle) => obstacle.kind)).toEqual(kinds);
+        for (const obstacle of map.obstacles) expect(isWalkable(ground, obstacle.x, obstacle.y)).toBe(true);
+        const routed = { terrain: map.terrain };
+        setBuildingBodies(routed, map.obstacles);
+        const camps = map.units.filter((unit) => unit.owner === "neutral");
+        for (const goal of [...halls, ...map.resources, ...camps]) {
+          const at = walkableGoal(ground, goal.x, goal.y);
+          expect(walkDestination(routed, halls[0]!, at)).toEqual(at);
+        }
+      }
+    }
+    for (const idea of ["openRing", "oneMarket", "floodedValley"] as const) expect(layout("obstacles-0", idea).map.obstacles).toEqual([]);
   });
 });

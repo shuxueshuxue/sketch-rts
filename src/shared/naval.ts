@@ -1,7 +1,7 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
-import type { Building, GameMap, Unit } from "./types";
+import type { Building, GameMap, Obstacle, Unit } from "./types";
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
 // soldier strikes a ship that has come in to the shallows, where it can wade out to it, and not one out on deep water; an
@@ -11,7 +11,7 @@ import type { Building, GameMap, Unit } from "./types";
 // walk's matter, not the fight's); any other it reaches from where its ground comes nearest. Two land units were taken to
 // share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
 // and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
-export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building) {
+export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle) {
   if (!map.terrain) return true;
   const mover = unitMover(attacker.kind);
   if (isWalkable(map, target.x, target.y, mover) && sameGround(map, attacker, target, mover)) return true;

@@ -303,7 +303,7 @@ function hasFriendlyUnitAtCamp(snapshot: GameSnapshot, owner: PlayerId, camp: { 
 }
 
 function findTarget(snapshot: GameSnapshot, targetId: string) {
-  return snapshot.units.some((unit) => unit.id === targetId) || snapshot.buildings.some((building) => building.id === targetId);
+  return snapshot.units.some((unit) => unit.id === targetId) || snapshot.buildings.some((building) => building.id === targetId) || Boolean(snapshot.obstacles?.some((obstacle) => obstacle.id === targetId));
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {

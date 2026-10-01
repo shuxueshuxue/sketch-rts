@@ -1,9 +1,10 @@
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
-import { cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
+import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
+import { BODY_MARGIN, cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
-import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
+import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
 
 // @@@generated-map - A seeded ladder map for a game of any size, drawn fresh for every seed on one of a dozen ideas, the
 // way every Warcraft III ladder map stands on one idea of its own (see @@@generated-ideas): a ring of mines round a
@@ -43,6 +44,8 @@ export type GeneratedMap = {
   camps: { x: number; y: number; tier: CampColor; habitat: CampHabitat; drop?: "minor" | "major" }[];
   // Neutral buildings' places: a shop, which a player buys at, no building's footprint and in nobody's way.
   sites: MapSite[];
+  // The rocks and gates across shortcuts (see @@@generated-obstacles).
+  obstacles: Obstacle[];
 };
 
 export type CampColor = "green" | "orange" | "red";
@@ -105,6 +108,8 @@ const ISLAND_RADIUS = 300;
 const ISLAND_WATER = 200;
 const BEACH_RADIUS = 190;
 const OPEN_WATER = 64;
+// A rock pile or gate shuts its way only where the walk round it is at least this many times the step across it.
+const SHORTCUT = 4;
 
 const CAMP_KINDS: Record<CampTier, UnitKind[][]> = {
   easy: [
@@ -250,6 +255,8 @@ class Field {
   readonly muds: Water[] = [];
   readonly blocks: Point[][] = [];
   readonly rings: { at: Point; inner: number; outer: number }[] = [];
+  // The rocks and gates across shortcuts (see @@@generated-obstacles), each with the way's direction where it stands.
+  readonly obstacles: { kind: ObstacleKind; at: Point; along: Point }[] = [];
   // The draws a map makes once for every copy of a feature.
   readonly easyKinds: UnitKind[];
   readonly mediumKinds: UnitKind[];
@@ -408,13 +415,26 @@ class Field {
   // `toward`, each with a way up kept open from inside it out to its foot, which is returned (a way joins the hill there).
   addHill(at: Point, radius: number, toward: Point[]): Point[] {
     this.clearings.push({ at, radius, wobble: 0.06, plateau: true });
-    return toward.map((target) => {
-      const direction = unit(sub(target, at));
-      const ramp = roundPoint(step(at, direction, radius * 0.95));
-      const foot = roundPoint(step(at, direction, radius + 280));
-      this.plateaus.push({ base: at, radius, ramp, rampRadius: 120, main: false });
-      this.paths.push({ points: [roundPoint(step(at, direction, radius * 0.45)), ramp, foot], half: 90, wobble: 0.12 });
-      return foot;
+    return toward.map((target) => this.addRamp(at, radius, target, 120, 90));
+  }
+
+  // A ramp `rampRadius` wide up the hill round `at` toward `target`, its way `half` wide kept open from inside the hill out
+  // to its foot, which is returned.
+  addRamp(at: Point, radius: number, target: Point, rampRadius: number, half: number): Point {
+    const direction = unit(sub(target, at));
+    const ramp = roundPoint(step(at, direction, radius * 0.95));
+    const foot = roundPoint(step(at, direction, radius + 280));
+    this.plateaus.push({ base: at, radius, ramp, rampRadius, main: false });
+    this.paths.push({ points: [roundPoint(step(at, direction, radius * 0.45)), ramp, foot], half, wobble: 0.12 });
+    return foot;
+  }
+
+  // Rocks or a gate at every copy of the point (one, where copies fall together), across the way running along `along`.
+  addObstacles(kind: ObstacleKind, at: Point, along: Point) {
+    const ahead = this.symmetry.copies(step(at, along, 100));
+    this.symmetry.copies(at).forEach((copy, index) => {
+      if (this.obstacles.some((other) => distance(other.at, copy) < 1)) return;
+      this.obstacles.push({ kind, at: roundPoint(copy), along: unit(sub(ahead[index]!, copy)) });
     });
   }
 
@@ -841,8 +861,9 @@ function floodedValley(field: Field, players: PlayerId[], teams: Record<PlayerId
 
 // @@@idea-hidden-hill - Concealed Hill's: an H. The starts at either end of the two long strips, joined by a crossbar
 // through the middle; in the middle of the crossbar a hill hidden in a ring of woods, a ramp up from either end of the
-// crossbar, holding a mine and a shop for whoever makes it a fortress. The far end of every strip holds a mine as near to
-// one start as to the other.
+// crossbar, holding a mine and a shop for whoever makes it a fortress, and a narrow back way up it from either start's
+// side through the woods, shut by a stone gate. The far end of every strip holds a mine as near to one start as to the
+// other.
 function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
   const ring = ringStarts(field, players, teams, teamOrder, (Math.PI * 5) / 4, [0.47, 0.5]);
   const { middle } = ring;
@@ -858,6 +879,13 @@ function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const hill = SIZE * field.between(0.06, 0.07);
   const feet = field.addHill(middle, hill, [{ x: 0, y: field.center }, { x: SIZE, y: field.center }]);
   field.rings.push({ at: middle, inner: hill + 40, outer: hill + field.between(170, 230) });
+  // Its back ways: a narrow ramp up the hill's back from either forest, the way on through the forest down to the open
+  // ground below the near main, shut by a gate inside the forest (see @@@generated-obstacles).
+  const backs = field.copies({ x: field.center, y: 0 }).map((target) => field.addRamp(middle, hill, target, 56, 40));
+  const back = field.addPath(backs[0]!, { x: strip - field.between(120, 200), y: field.center - bar - field.between(220, 360) }, 40, field.between(-0.12, 0.12));
+  if (!back) return false;
+  const gate = alongPath(back, 260);
+  field.addObstacles("gate", gate.at, gate.along);
   // The hill's mine in its middle, a red camp at the head of either ramp, a shop to either side.
   field.mines.push(middle);
   field.reserved.push({ at: middle, radius: 200 });
@@ -874,9 +902,9 @@ function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   return true;
 }
 
-// @@@idea-bridge-stand - Terenas Stand's: a small map, a river between the two starts with no ford, crossed by two bridges,
-// where the fights are. Every bank holds a mine by a bridge's far end, a shop by one bridge and a mercenary post by the
-// other.
+// @@@idea-bridge-stand - Terenas Stand's: a small map, a river between the two starts crossed by two bridges, where the
+// fights are, and by one narrow ford in the middle, shut by rocks. Every bank holds a mine by a bridge's far end, a shop by
+// one bridge and a mercenary post by the other.
 function bridgeStand(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
   const ring = ringStarts(field, players, teams, teamOrder, (Math.PI * 5) / 4, [0.39, 0.45]);
   const { middle, polar, between } = ring;
@@ -900,6 +928,9 @@ function bridgeStand(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   field.addShops(step(near, along, -260));
   const toBridge = field.addPath(naturalArea, near, width(field), bend(field));
   if (!toBridge || !field.addPath(near, far, field.between(70, 90), 0, false, true)) return false;
+  // A third way over, straight across the middle by a narrow ford, shut by rocks in the river (see @@@generated-obstacles).
+  if (!field.addPath(step(middle, across, -440), step(middle, across, 440), 26, 0)) return false;
+  field.addObstacles("rocks", middle, across);
   const toMine = field.addPath(far, mine[0]!, width(field), 0);
   if (!toMine) return false;
   homeCampsAndPost(field, [toBridge], toBridge);
@@ -907,13 +938,15 @@ function bridgeStand(field: Field, players: PlayerId[], teams: Record<PlayerId, 
 }
 
 // @@@idea-deep-jungle - Amazonia's: a small map in a dark jungle, the ways narrow between dense trees and murky ponds, and
-// in the middle a rich mine out in the open behind the hardest camp: the hardest expansion to take and to hold.
+// in the middle a rich mine out in the open behind the hardest camp: the hardest expansion to take and to hold. Gates shut
+// the straight ways in to it from the contested mines.
 function deepJungle(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
   const ring = ringStarts(field, players, teams, teamOrder, -Math.PI / 4, [0.4, 0.46]);
   const { middle } = ring;
   const naturalArea = standardMain(field, ring.base, ring.inward, ring.plateau, [0.3, 1.2]);
   if (!naturalArea) return false;
-  field.clearings.push({ at: middle, radius: field.between(380, 460), wobble: 0.16 });
+  const heart = field.between(380, 460);
+  field.clearings.push({ at: middle, radius: heart, wobble: 0.16 });
   field.rich.push(middle);
   field.addGuardedMines([middle], "hard", () => ring.polar(1, ring.between), field.majorItem);
   const contested = contestedMines(field, ring, 0.2, [0.45, 0.8]);
@@ -923,6 +956,14 @@ function deepJungle(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const toBehind = field.addPath(naturalArea, contested.behind, narrow(), bend(field));
   const toMiddle = field.addPath(naturalArea, middle, narrow(), bend(field));
   if (!toAhead || !toBehind || !toMiddle) return false;
+  // With no tree to cut, the jungle opens by its gates: a straight way from every contested mine to the middle, shut by a
+  // gate halfway between the two clearings' edges (a draw with too little jungle between them for a gate is not kept, see
+  // @@@generated-obstacles).
+  const mineEdge = 340 * 1.12;
+  const shortcut = field.addPath(contested.ahead, middle, 40, 0);
+  if (!shortcut) return false;
+  const gate = alongPath(shortcut, (mineEdge + distance(contested.ahead, middle) - heart * 1.16) / 2);
+  field.addObstacles("gate", gate.at, gate.along);
   homeCampsAndPost(field, [toAhead, toBehind], toMiddle);
   return true;
 }
@@ -1157,6 +1198,7 @@ function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
   grid.shoal();
   const required = [...field.bases, ...field.mains, ...field.mines, ...field.camps.map((camp) => camp.at), ...field.mercs.map((merc) => merc.at), ...field.sites.map((site) => site.at)];
   if (!required.every((point) => grid.walkableAt(point))) return undefined;
+  if (!grid.obstaclesFit(field.bases[0]!)) return undefined;
   if (!field.bases.every((base) => grid.roomAround(base, 450) >= 0.55)) return undefined;
   if (!field.mines.every((mine) => grid.hallFits(mine))) return undefined;
   if (grid.islandWalked(field.bases[0]!)) return undefined;
@@ -1288,6 +1330,9 @@ class Grid {
   readonly shallow: Uint8Array;
   readonly bridge: Uint8Array;
   readonly mud: Uint8Array;
+  // The cells the field's rocks and gates shut, as the sim's routing has them (see @@@generated-obstacles).
+  readonly shut: Uint8Array;
+  readonly shutCells: number[] = [];
   readonly count: number;
   private openCount = 0;
   private landCount = 0;
@@ -1310,6 +1355,15 @@ class Grid {
     this.shallow = new Uint8Array(this.count);
     this.bridge = new Uint8Array(this.count);
     this.mud = new Uint8Array(this.count);
+    this.shut = new Uint8Array(this.count);
+    for (const obstacle of field.obstacles) {
+      const reach = OBSTACLE_DEFS[obstacle.kind].radius + BODY_MARGIN;
+      this.around(obstacle.at, reach, (index, gap) => {
+        if (gap >= reach || this.shut[index]) return;
+        this.shut[index] = 1;
+        this.shutCells.push(index);
+      });
+    }
   }
 
   center(index: number): Point {
@@ -1476,11 +1530,45 @@ class Grid {
     }
   }
 
-  // Whether every open cell but an island's is reached from the start.
+  // Whether every open cell but an island's is reached from the start, with the rocks and gates standing.
   whole(from: Point) {
     const reached: number[] = [];
-    this.flood4(this.indexAt(from), (index) => this.open[index] === 1, reached);
-    return reached.length === this.openCount - this.islandCount;
+    this.flood4(this.indexAt(from), (index) => this.open[index] === 1 && !this.shut[index], reached);
+    const shutOpen = this.shutCells.filter((index) => this.open[index] && !this.island[index]).length;
+    return reached.length === this.openCount - this.islandCount - shutOpen;
+  }
+
+  // @@@generated-obstacles - Rocks and gates stand across shortcuts only: each on open ground, the land whole with all of
+  // them standing (so nothing lies behind one but a shorter way), and each shutting its way: the walk round it, from a
+  // step beyond its reach on one side to a step beyond on the other, at least SHORTCUT times the step across.
+  obstaclesFit(from: Point) {
+    if (this.field.obstacles.length === 0) return true;
+    this.countOpen();
+    if (!this.field.obstacles.every((obstacle) => this.walkableAt(obstacle.at)) || !this.whole(from)) return false;
+    const passes = (index: number) => index >= 0 && this.open[index] === 1 && !this.shut[index];
+    return this.field.obstacles.every((obstacle) => {
+      const beyond = OBSTACLE_DEFS[obstacle.kind].radius + BODY_MARGIN + TERRAIN_CELL;
+      const ends = [step(obstacle.at, obstacle.along, beyond), step(obstacle.at, obstacle.along, -beyond)].map((at) => this.indexAt(at));
+      if (!ends.every(passes)) return false;
+      return this.steps(ends[0]!, ends[1]!, passes) >= (SHORTCUT * 2 * beyond) / TERRAIN_CELL;
+    });
+  }
+
+  // The fewest eight-way steps from one cell to another over the cells that pass (Infinity where none reach).
+  steps(from: number, to: number, passes: (index: number) => boolean) {
+    const depth = new Int32Array(this.count).fill(-1);
+    const queue = [from];
+    depth[from] = 0;
+    for (let head = 0; head < queue.length; head += 1) {
+      const index = queue[head]!;
+      if (index === to) return depth[index]!;
+      for (const next of this.neighbours(index)) {
+        if (depth[next] !== -1 || !passes(next)) continue;
+        depth[next] = depth[index]! + 1;
+        queue.push(next);
+      }
+    }
+    return Infinity;
   }
 
   fill(index: number) {
@@ -1813,7 +1901,12 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
     ...field.mercs.map((merc, index) => ({ id: `gen-stone-${index + 1}`, kind: "bannerStone" as const, x: merc.at.x + 70, y: merc.at.y - 50, size: 140, rotation: 0.2 })),
   ];
   const sites = field.sites.map((site) => ({ kind: site.kind, ...clampPoint(site.at, field.size) }));
-  return { kind, idea, size: field.size, starts, buildings, units, resources, mercenaryCamps, items, landmarks: [...landmarks, ...decorate(field, terrain)], terrain, camps, sites };
+  const obstacles = field.obstacles.map((obstacle, index) => {
+    const at = clampPoint(obstacle.at, field.size);
+    const along = { x: Math.round(obstacle.along.x * 1000) / 1000, y: Math.round(obstacle.along.y * 1000) / 1000 };
+    return createObstacle(`obstacle-gen-${index + 1}`, obstacle.kind, at.x, at.y, along);
+  });
+  return { kind, idea, size: field.size, starts, buildings, units, resources, mercenaryCamps, items, landmarks: [...landmarks, ...decorate(field, terrain)], terrain, camps, sites, obstacles };
 }
 
 // @@@generated-decor - What a map is dressed in, for the eye only (no unit is stopped by it, see TerrainLandmark): about
@@ -1963,6 +2056,19 @@ function besidePath(points: Point[], share: number, offset: number): Point {
     return { x: along.x - ((to.y - from.y) / size) * offset, y: along.y + ((to.x - from.x) / size) * offset };
   }
   return points[0]!;
+}
+
+// The point `length` along a path's points (past its end, its end) and the path's direction there.
+function alongPath(points: Point[], length: number): { at: Point; along: Point } {
+  let left = length;
+  for (let index = 1; index < points.length; index += 1) {
+    const from = points[index - 1]!;
+    const to = points[index]!;
+    const piece = distance(from, to);
+    if (left <= piece || index === points.length - 1) return { at: roundPoint(lerp(from, to, piece === 0 ? 0 : Math.min(1, left / piece))), along: unit(sub(to, from)) };
+    left -= piece;
+  }
+  return { at: points[0]!, along: { x: 1, y: 0 } };
 }
 
 // Every point along a path's points at most `every` apart, its ends included (one point: itself).

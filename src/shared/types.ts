@@ -213,6 +213,13 @@ export type ResourceNode = {
   harvestCooldownRemaining?: number;
 };
 
+// @@@obstacle - Rocks or a stone gate across a way, as Warcraft III's destructible rocks and gates: it stands in the way as
+// a building does (see @@@building-pathing) until it is broken, and then the way is open. It is nobody's: nobody strikes it
+// unbidden (no unit or tower seeks it out), only a player's attack order; it strikes nobody, and breaking it pays nothing
+// and counts as no kill. `along`: the way it stands across, a unit vector (its art lies across it).
+export type ObstacleKind = "rocks" | "gate";
+export type Obstacle = { id: string; kind: ObstacleKind; owner: "neutral"; x: number; y: number; radius: number; hp: number; maxHp: number; along: { x: number; y: number } };
+
 export type MercenaryCamp = {
   id: string;
   x: number;
@@ -457,6 +464,8 @@ export type GameSnapshot = {
   variants?: Record<string, VariantRules>;
   // The map's shops (see @@@shop); a map without one has none, and no key.
   shops?: Shop[];
+  // The rocks and gates still standing (see @@@obstacle); a map without any has none, and no key.
+  obstacles?: Obstacle[];
 };
 
 export type LocalUserProfile = {

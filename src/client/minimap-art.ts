@@ -7,8 +7,8 @@ type Brush = CanvasRenderingContext2D;
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
 
-// @@@minimap-art - A map at minimap scale: the ground (see @@@terrain-art), mines, camps, posts, items, buildings and
-// units. The match's minimap and the lobby's map preview (see @@@map-preview) draw the same picture.
+// @@@minimap-art - A map at minimap scale: the ground (see @@@terrain-art), mines, camps, posts, items, rocks and gates,
+// buildings and units. The match's minimap and the lobby's map preview (see @@@map-preview) draw the same picture.
 export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot)) {
   ctx.fillStyle = "#dedcc0";
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
@@ -63,6 +63,17 @@ export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, m
     ctx.beginPath();
     ctx.moveTo(point.x - 2.5 * scale, point.y + 2.5 * scale);
     ctx.lineTo(point.x + 2.5 * scale, point.y - 2.5 * scale);
+    ctx.stroke();
+  }
+  // Rocks and gates (see @@@obstacle): a short bar across the way each shuts.
+  for (const obstacle of snapshot.obstacles ?? []) {
+    const point = projectWorldToRect(obstacle, snapshot.map, rect);
+    const half = 3.2 * scale;
+    ctx.strokeStyle = obstacle.kind === "gate" ? "#4f3f30" : "#6e6b58";
+    ctx.lineWidth = 2.2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(point.x - obstacle.along.y * half, point.y + obstacle.along.x * half);
+    ctx.lineTo(point.x + obstacle.along.y * half, point.y - obstacle.along.x * half);
     ctx.stroke();
   }
 }

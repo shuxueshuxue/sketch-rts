@@ -1,12 +1,14 @@
 import { BUILDING_DEFS } from "./catalog";
 import { isFootprintBuildable, isShoreFootprint } from "./terrain";
-import type { Building, BuildingKind, GameMap, GameSnapshot } from "./types";
+import type { Building, BuildingKind, GameMap, GameSnapshot, Obstacle } from "./types";
 
 export const BUILDING_PLACEMENT_GAP = 4;
 
-export function buildingPlacementBlocker(snapshot: Pick<GameSnapshot, "buildings">, kind: BuildingKind, point: { x: number; y: number }): Building | undefined {
+// A building keeps its gap from every building and every rock pile or gate still standing (see @@@obstacle).
+export function buildingPlacementBlocker(snapshot: Pick<GameSnapshot, "buildings" | "obstacles">, kind: BuildingKind, point: { x: number; y: number }): Building | Obstacle | undefined {
   const radius = BUILDING_DEFS[kind].radius;
-  return snapshot.buildings.find((building) => distance(point, building) < radius + building.radius + BUILDING_PLACEMENT_GAP);
+  const near = (body: Building | Obstacle) => distance(point, body) < radius + body.radius + BUILDING_PLACEMENT_GAP;
+  return snapshot.buildings.find(near) ?? snapshot.obstacles?.find(near);
 }
 
 // A building stands on walkable ground only (see @@@terrain): no part of it in a forest, on rock, in deep water or on a
@@ -17,7 +19,7 @@ export function terrainBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined
   return shore ? !isShoreFootprint(map, point.x, point.y, radius) : !isFootprintBuildable(map, point.x, point.y, radius);
 }
 
-export function isBuildPlacementClear(snapshot: Pick<GameSnapshot, "buildings"> & { map?: Pick<GameMap, "terrain"> }, kind: BuildingKind, point: { x: number; y: number }) {
+export function isBuildPlacementClear(snapshot: Pick<GameSnapshot, "buildings" | "obstacles"> & { map?: Pick<GameMap, "terrain"> }, kind: BuildingKind, point: { x: number; y: number }) {
   return !terrainBlocksPlacement(snapshot.map, kind, point) && !buildingPlacementBlocker(snapshot, kind, point);
 }
 

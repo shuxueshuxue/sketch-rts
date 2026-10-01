@@ -925,7 +925,7 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // alone: a building's round body is the sim's to keep units out of. Ships keep the sea's own routing: no building stands
 // in deep water.
 type Body = { x: number; y: number; radius: number };
-const BODY_MARGIN = 16;
+export const BODY_MARGIN = 16;
 const SAMPLES = [
   [0, 0],
   [-0.25, -0.25],

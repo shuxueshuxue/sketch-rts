@@ -25,7 +25,7 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -38,8 +38,8 @@ export type Game = GameSnapshot & {
   buildingSpatial?: SpatialIndex<Building>;
   buildingSpatialByTeam?: Map<string, SpatialIndex<Building>>;
   buildingSpatialCount?: number;
-  // The buildings the map's routing last took in (see @@@building-pathing).
-  buildingBodiesSeen?: Building[];
+  // The buildings and obstacles the map's routing last took in (see @@@building-pathing).
+  buildingBodiesSeen?: (Building | Obstacle)[];
   entityById?: Map<string, Unit | Building>;
   spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number): Unit;
   // Campaign games only (see story/); a standard match has neither (nor `variants`) and takes none of their paths.
@@ -50,7 +50,7 @@ export type Game = GameSnapshot & {
 };
 
 export type SimObserver = {
-  hit(attacker: Unit | Building, target: Unit | Building, damage: number, hpBefore: number): void;
+  hit(attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hpBefore: number): void;
 };
 
 export const GAME_SNAPSHOT_RESTORE_KEYS = [
@@ -68,6 +68,7 @@ export const GAME_SNAPSHOT_RESTORE_KEYS = [
   "projectiles",
   "effects",
   "variants",
+  "obstacles",
 ] as const satisfies readonly (keyof GameSnapshot)[];
 
 type RestoredSnapshotKey = (typeof GAME_SNAPSHOT_RESTORE_KEYS)[number];
@@ -161,6 +162,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     items: generated?.items ?? createInitialItems(mapId),
     projectiles: [],
     effects: [],
+    ...(generated?.obstacles.length ? { obstacles: generated.obstacles } : {}),
     nextId: RUNTIME_ID_START,
     activePlayers,
     teams,
@@ -366,7 +368,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (unit.attackDamage > 0) assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
-    const target = findTarget(game, command.targetId);
+    const target = findStrikeTarget(game, command.targetId);
     if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32);
     return;
   }
@@ -530,14 +532,16 @@ export function stepGame(game: Game) {
   updateVictory(game);
 }
 
-// Hands the map's routing the buildings standing now whenever a building was laid down or fell (see @@@building-pathing):
-// at the step's start, for the sites laid by the commands before it, and after the dead are gone, so what a planner reads
-// between steps is current.
+// Hands the map's routing the buildings standing now, and the rocks and gates (see @@@obstacle), whenever one was laid
+// down or fell (see @@@building-pathing): at the step's start, for the sites laid by the commands before it, and after the
+// dead are gone, so what a planner reads between steps is current.
 function syncBuildingBodies(game: Game) {
   const seen = game.buildingBodiesSeen;
-  if (seen && seen.length === game.buildings.length && seen.every((building, index) => building === game.buildings[index])) return;
-  game.buildingBodiesSeen = [...game.buildings];
-  setBuildingBodies(game.map, game.buildings);
+  const obstacles = game.obstacles ?? [];
+  const count = game.buildings.length;
+  if (seen && seen.length === count + obstacles.length && game.buildings.every((building, index) => building === seen[index]) && obstacles.every((obstacle, index) => obstacle === seen[count + index])) return;
+  game.buildingBodiesSeen = [...game.buildings, ...obstacles];
+  setBuildingBodies(game.map, game.buildingBodiesSeen);
 }
 
 export function snapshotGame(game: Game): GameSnapshot {
@@ -584,6 +588,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     effects: game.effects.map((effect) => ({ ...effect })),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
+    ...(game.obstacles ? { obstacles: game.obstacles.map((obstacle) => ({ ...obstacle, along: { ...obstacle.along } })) } : {}),
   };
 }
 
@@ -604,6 +609,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.effects = cloneSnapshotValue(snapshot.effects);
   if (snapshot.variants) game.variants = cloneSnapshotValue(snapshot.variants);
   else delete game.variants;
+  if (snapshot.obstacles) game.obstacles = cloneSnapshotValue(snapshot.obstacles);
+  else delete game.obstacles;
   game.nextId = nextId;
   invalidateGameRuntimeCaches(game);
 }
@@ -948,7 +955,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
 function updateAttackOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "attack") return;
-  const target = findTarget(game, order.targetId);
+  const target = findStrikeTarget(game, order.targetId);
   if (!target) {
     unit.order = { type: "idle" };
     return;
@@ -1875,7 +1882,7 @@ function updateProjectiles(game: Game) {
 }
 
 function applyProjectileImpact(game: Game, projectile: Projectile) {
-  const target = findTarget(game, projectile.targetId);
+  const target = findStrikeTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
   const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
   const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage));
@@ -1924,7 +1931,7 @@ function updateUnitStatusEffects(game: Game) {
   }
 }
 
-function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
+function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
   if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
     launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, damage));
     return;
@@ -1933,13 +1940,13 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
 }
 
 // Heavy armor is settled when the shot is fired, so a shot still counts as a shooter's after its shooter has died.
-function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
   if (!isUnit(target) || unitRules(game, target).armor !== "heavy") return damage;
   const multiplier = isUnit(attacker) ? HEAVY_ARMOR_DAMAGE.rangedUnit : attacker.kind === "defenseTower" ? HEAVY_ARMOR_DAMAGE.tower : 1;
   return Math.max(1, Math.round(damage * multiplier));
 }
 
-function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
   const dx = target.x - attacker.x;
   const dy = target.y - attacker.y;
   const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / PROJECTILE_SPEED));
@@ -1967,7 +1974,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   });
 }
 
-function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
+function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
   const dealt = attackDamageAgainstTarget(game, attacker, target, damage);
   const taken = applyDamage(game, attacker, target, dealt);
   if (taken === undefined) return;
@@ -1982,11 +1989,11 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
 
 // The flinch of whatever was struck, carrying who it was and what it took, so the client shakes it by the share of its
 // full health the blow took.
-function addHitEffect(game: Game, target: Unit | Building, taken: number) {
+function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number) {
   addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken });
 }
 
-function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
   if (!isUnit(attacker) || !isUnit(target)) return damage;
   const slayer = unitRules(game, attacker).casterSlayer;
   const dealt = slayer && isCasterOrSummoned(target) ? Math.round(damage * slayer) : damage;
@@ -2011,7 +2018,7 @@ function isCasterOrSummoned(unit: Unit) {
   return unit.expiresTick !== undefined || hasSpell(unit.kind);
 }
 
-function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building) {
+function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle) {
   if (!isUnit(attacker)) return;
   const rules = unitRules(game, attacker);
   // A red dragon's fire (see @@@creep-traits) falls on buildings' neighbours too.
@@ -2034,7 +2041,14 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 }
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
-function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number): number | undefined {
+function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number): number | undefined {
+  if (isObstacle(target)) {
+    // A rock pile or gate wakes nobody and pays nothing when it falls (see @@@obstacle).
+    const hpBefore = target.hp;
+    target.hp -= damage;
+    game.observer?.hit(attacker, target, damage, hpBefore);
+    return damage;
+  }
   if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return undefined;
   const taken = isUnit(target) && target.stance === "shock" ? Math.max(1, Math.round(damage * SHOCK_DAMAGE_TAKEN)) : damage;
   const hpBefore = target.hp;
@@ -2156,8 +2170,12 @@ function addEffect(
   game.nextId += 1;
 }
 
-function isUnit(entity: Unit | Building): entity is Unit {
+function isUnit(entity: Unit | Building | Obstacle): entity is Unit {
   return "order" in entity;
+}
+
+function isObstacle(entity: Unit | Building | Obstacle): entity is Obstacle {
+  return "along" in entity;
 }
 
 function awardKillXp(game: Game, attacker: Unit, target: Unit) {
@@ -2337,7 +2355,7 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
 
 // @@@building-reach - A building is reached at its edge, a unit at its center (see building-body): a footman's 48 reaches a
 // town hall's wall, 48 from a center 66 away. While units could walk into a building they struck it from inside.
-function targetGap(from: { x: number; y: number }, target: Unit | Building) {
+function targetGap(from: { x: number; y: number }, target: Unit | Building | Obstacle) {
   return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
 }
 
@@ -2381,7 +2399,7 @@ function aggressorBonus(game: Game, owner: Owner, target: Unit | Building) {
   return victim && !areEnemyOwners(game, owner, victim.owner) ? AGGRESSOR_TARGET_BONUS : 0;
 }
 
-function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building) {
+function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building | Obstacle) {
   let pendingDamage = 0;
   for (const projectile of projectilesAt(game, target.id)) if (projectile.owner === attackerOwner) pendingDamage += projectile.damage;
   return target.hp - pendingDamage;
@@ -2425,6 +2443,12 @@ function findTarget(game: Game, targetId: string): Unit | Building | undefined {
   return game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
 }
 
+// What an attack order or a shot may strike: a unit, a building, or rocks or a gate (see @@@obstacle), which nothing else
+// looks for.
+function findStrikeTarget(game: Game, targetId: string): Unit | Building | Obstacle | undefined {
+  return findTarget(game, targetId) ?? game.obstacles?.find((obstacle) => obstacle.id === targetId);
+}
+
 function removeExpiredUnits(game: Game) {
   const expiredUnits = game.units.filter((unit) => unit.expiresTick !== undefined && unit.expiresTick <= game.tick);
   if (expiredUnits.length === 0) return;
@@ -2448,6 +2472,8 @@ function removeDead(game: Game) {
   dropItemsFromDeadUnits(game, deadUnits);
   game.units = game.units.filter((unit) => unit.hp > 0);
   game.buildings = game.buildings.filter((building) => building.hp > 0);
+  // A rock pile or gate broken is gone, and its way open (see @@@obstacle).
+  if (game.obstacles?.some((obstacle) => obstacle.hp <= 0)) game.obstacles = game.obstacles.filter((obstacle) => obstacle.hp > 0);
   if (deadUnits.length > 0 || deadBuildings.length > 0) updateSupplyState(game);
 }
 
@@ -2650,7 +2676,7 @@ function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y:
 // in, the squares filled once per set of buildings (see syncBuildingBodies). Each building used to look through the
 // tick's unit index, whose squares are 320 wide: the sixty units of a whole base, for each building in it.
 const BODY_SQUARE = 64;
-const bodySquares = new WeakMap<Building[], Map<number, Building[]>>();
+const bodySquares = new WeakMap<(Building | Obstacle)[], Map<number, (Building | Obstacle)[]>>();
 
 function keepUnitsOutOfBuildings(game: Game) {
   const seen = game.buildingBodiesSeen!;
@@ -2678,7 +2704,7 @@ function keepUnitsOutOfBuildings(game: Game) {
   }
 }
 
-function keepOutOfBuilding(game: Game, unit: Unit, building: Building) {
+function keepOutOfBuilding(game: Game, unit: Unit, building: Building | Obstacle) {
   const reach = unit.radius + building.radius;
   const dx = unit.x - building.x;
   const dy = unit.y - building.y;

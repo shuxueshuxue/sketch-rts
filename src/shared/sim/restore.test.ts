@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveVariant } from "../catalog";
 import { createShop } from "../shop";
+import { createObstacle } from "../obstacle";
 import { createGame, restoreSnapshotIntoGame, snapshotGame, stepGame, GAME_SNAPSHOT_RESTORE_KEYS } from "../sim";
 
 describe("game snapshot restoration", () => {
@@ -45,14 +46,15 @@ describe("game snapshot restoration", () => {
   });
 
   it("tracks the complete GameSnapshot key set", () => {
-    // A campaign game's snapshot carries its units' variants, and a map with a shop its shops; a standard match on a map
-    // without one has neither key at all.
+    // A campaign game's snapshot carries its units' variants, a map's with a shop its shops, a map's with rocks or gates
+    // its obstacles; a standard match's on a map with none has no such key at all.
     const campaign = createGame("bareDuel", { aiPlayers: [] });
     campaign.variants = { "test/champion": resolveVariant({ base: "footman" }) };
     campaign.shops = [createShop("shop", 400, 400)];
+    campaign.obstacles = [createObstacle("obstacle-test", "rocks", 400, 400, { x: 1, y: 0 })];
     const snapshot = snapshotGame(campaign);
 
     expect([...GAME_SNAPSHOT_RESTORE_KEYS].sort()).toEqual(Object.keys(snapshot).sort());
-    expect(Object.keys(snapshotGame(createGame("bareDuel", { aiPlayers: [] }))).sort()).toEqual(GAME_SNAPSHOT_RESTORE_KEYS.filter((key) => key !== "variants" && key !== "shops").sort());
+    expect(Object.keys(snapshotGame(createGame("bareDuel", { aiPlayers: [] }))).sort()).toEqual(GAME_SNAPSHOT_RESTORE_KEYS.filter((key) => key !== "variants" && key !== "shops" && key !== "obstacles").sort());
   });
 });

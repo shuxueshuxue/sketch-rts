@@ -1,4 +1,4 @@
-import { drawAtlasBuilding, drawAtlasCamp, drawAtlasShop, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasUnit } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -13,7 +13,7 @@ import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
-import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Shop, Owner, ResourceNode, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
+import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -117,6 +117,7 @@ export function drawWorld(frame: WorldFrame) {
   drawResources(painter, snapshot.resources);
   drawMercenaryCamps(painter, snapshot.mercenaryCamps);
   if (snapshot.shops) drawShops(painter, snapshot.shops);
+  drawObstacles(painter, snapshot.obstacles ?? []);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
   drawBuildings(painter, snapshot.buildings);
@@ -230,6 +231,17 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[]) {
     ctx.fillText(painter.labels.mercenaryStock(camp.stock), point.x, point.y + 48);
     ctx.textAlign = "start";
     if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
+  }
+}
+
+// Rocks and gates across their ways (see @@@obstacle-art), their health shown once they are struck.
+function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
+  for (const obstacle of obstacles) {
+    const shake = hitFeedbackOffset(painter.snapshot, obstacle);
+    const point = worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
+    if (!nearScreen(painter, point, obstacle.radius + 80)) continue;
+    drawAtlasObstacle(painter.ctx, obstacle, point);
+    if (!painter.still && obstacle.hp < obstacle.maxHp) drawHp(painter.ctx, point.x, point.y - obstacle.radius - 14, obstacle.hp, obstacle.maxHp);
   }
 }
 
@@ -601,7 +613,7 @@ function drawTrainingProgress(painter: Painter, x: number, y: number, remaining:
 const HIT_SHAKE = 26;
 const MAX_HIT_SHAKE = 12;
 
-function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building): Point {
+function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building | Obstacle): Point {
   const hit = snapshot.effects.find((effect) => effect.type === "hit" && effect.unitId === entity.id);
   if (!hit) return { x: 0, y: 0 };
   const amount = Math.min(MAX_HIT_SHAKE, (HIT_SHAKE * (hit.damage ?? 0)) / Math.max(1, entity.maxHp));

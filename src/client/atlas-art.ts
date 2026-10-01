@@ -2,7 +2,7 @@ import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit"
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { BUILDING_CARDS } from "./content/buildings";
 import { UNIT_CARDS } from "./content/units";
-import type { BuildingKind, TerrainLandmark, UnitKind } from "../shared/types";
+import type { BuildingKind, Obstacle, TerrainLandmark, UnitKind } from "../shared/types";
 import type { Facing } from "./unit-facing";
 
 const sprites = new Map<string, HTMLCanvasElement>();
@@ -240,6 +240,59 @@ export function drawAtlasMine(c: Brush, point: Point) {
     line(b, [[-3, 17], [-10, 30]], "#847450", 2);
     line(b, [[7, 18], [5, 32]], "#847450", 2);
   });
+}
+
+// @@@obstacle-art - Rocks or a stone gate across a way (see @@@obstacle): a heap of boulders, or two stone pillars with a
+// portcullis between them, lying across the way it shuts; cracked once it is down to half its health. Drawn fresh each
+// frame (each lies its own way), as few as they are.
+export function drawAtlasObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "radius" | "along" | "hp" | "maxHp">, point: Point) {
+  c.save();
+  c.translate(point.x, point.y);
+  c.lineCap = c.lineJoin = "round";
+  const r = obstacle.radius;
+  const across = { x: -obstacle.along.y, y: obstacle.along.x };
+  // The point `t` of the way across (-1 to 1, one side of the way to the other), `lift` above the ground.
+  const at = (t: number, lift = 0): Point => ({ x: across.x * r * t, y: across.y * r * t - lift });
+  const cracked = obstacle.hp < obstacle.maxHp / 2;
+  ellipse(c, 0, r * 0.1, r * 1.1, r * 0.5, "#35493724");
+  if (obstacle.kind === "rocks") {
+    const stones = [[-0.82, 0.3], [-0.45, 0.42], [-0.05, 0.5], [0.38, 0.44], [0.8, 0.32], [-0.62, 0.26], [0.18, 0.3], [0.6, 0.24]] as const;
+    const placed = stones.map(([t, size], index) => ({ ...at(t), size: r * size, index, back: index >= 5 }));
+    for (const stone of placed.sort((a, b) => Number(b.back) - Number(a.back) || a.y - b.y)) {
+      const { x, size, index } = stone;
+      const y = stone.y - (stone.back ? size * 0.6 : 0);
+      const corners = Array.from({ length: 7 }, (_, k) => {
+        const angle = (k / 7) * Math.PI * 2 + index;
+        const reach = size * (0.8 + 0.2 * Math.sin(index * 3 + k * 2.1));
+        return [x + Math.cos(angle) * reach, y + Math.sin(angle) * reach * 0.78] as [number, number];
+      });
+      polygon(c, corners, index % 2 ? "#a9ac91" : "#b9b6a0", "#6e806d", 1.2);
+      polygon(c, [[x - size * 0.55, y - size * 0.1], [x - size * 0.2, y - size * 0.62], [x + size * 0.25, y - size * 0.5], [x - size * 0.05, y - size * 0.05]], "#d4d2b8", "transparent", 0);
+      if (cracked && index % 3 === 0) line(c, [[x - size * 0.2, y - size * 0.5], [x, y - size * 0.1], [x - size * 0.1, y + size * 0.3]], "#55604f", 1.2);
+    }
+  } else {
+    const [left, right] = [at(-1), at(1)];
+    polygon(c, [[left.x, left.y - 3], [right.x, right.y - 3], [right.x, right.y + 5], [left.x, left.y + 5]], "#b9b6a0", "#6e806d", 1);
+    const high = r * 0.72;
+    for (let bar = -3; bar <= 3; bar += 1) {
+      const foot = at(bar * 0.24);
+      const bent = cracked && bar === 1 ? r * 0.12 : 0;
+      line(c, [[foot.x, foot.y], [foot.x + bent, foot.y - high]], "#4f3f30", 2.4);
+    }
+    for (const lift of [high * 0.35, high * 0.75]) {
+      const [from, to] = [at(-0.86, lift), at(0.86, lift)];
+      line(c, [[from.x, from.y], [to.x, to.y]], "#5b4a3a", 3);
+    }
+    for (const pillar of [left, right]) {
+      const w = r * 0.18;
+      const top = pillar.y - r * 0.95;
+      polygon(c, [[pillar.x - w, pillar.y + 4], [pillar.x - w, top], [pillar.x + w, top], [pillar.x + w, pillar.y + 4]], "#c9c7ac", "#7d7a66", 1.2);
+      polygon(c, [[pillar.x - w * 1.3, top], [pillar.x - w * 1.3, top - r * 0.12], [pillar.x + w * 1.3, top - r * 0.12], [pillar.x + w * 1.3, top]], "#d8d5ba", "#7d7a66", 1.2);
+      line(c, [[pillar.x - w * 0.4, pillar.y], [pillar.x - w * 0.4, top + r * 0.1]], "#8a8d7470", 1);
+      if (cracked) line(c, [[pillar.x + w * 0.5, top + r * 0.15], [pillar.x - w * 0.1, top + r * 0.45], [pillar.x + w * 0.3, top + r * 0.7]], "#55604f", 1.2);
+    }
+  }
+  c.restore();
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {

@@ -6,9 +6,9 @@ import { MAP_POOL, type PoolMap, type PoolMapId } from "./map-pool";
 import { createRoom, roomToGameSetup } from "./rooms";
 import { createGame } from "./sim";
 
-// @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items and shops. A
-// change to the generator that moves anything on a pool map fails here; if the change is meant, the map is redrawn on
-// purpose: give it a new name or take the new hash knowingly.
+// @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items, shops and
+// obstacles. A change to the generator that moves anything on a pool map fails here; if the change is meant, the map is
+// redrawn on purpose: give it a new name or take the new hash knowingly.
 const HASHES: Record<PoolMapId, string> = {
   templeSpring: "d85534a8220c08f4",
   turtleLake: "0d1ffe4241e64c24",
@@ -16,9 +16,9 @@ const HASHES: Record<PoolMapId, string> = {
   ringwater: "21cd9f5efdc7a5b3",
   loneMarket: "edd81d6f144f60df",
   reedwater: "6d49111193f14075",
-  veiledHill: "269f03c23e6b14cc",
-  greystonePass: "b64b3c69527402b1",
-  pineshade: "32840611912ab19f",
+  veiledHill: "62928329e79e8f80",
+  greystonePass: "55987a3d44b924c0",
+  pineshade: "693e4158453223f3",
   gullIsland: "73b351045377b081",
   stillwater: "1f25159c96f514b5",
   twoShores: "0f8b67bcfe0003c8",
@@ -47,6 +47,8 @@ function layoutHash(map: PoolMap) {
     drawn.mercenaryCamps.map((camp) => `${camp.hireKind}@${at(camp)}`),
     drawn.items.map((item) => `${item.kind}@${at(item)}`),
     drawn.sites.map((site) => `${site.kind}@${at(site)}`),
+    // The rocks and gates, where a map has any (so the maps without keep their hashes).
+    ...(drawn.obstacles.length > 0 ? [drawn.obstacles.map((obstacle) => `${obstacle.kind}@${at(obstacle)}`)] : []),
   ]);
   return createHash("sha256").update(text).digest("hex").slice(0, 16);
 }

@@ -1630,7 +1630,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
   }
   if (target) {
     sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
-    statusLabel.textContent = target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
+    statusLabel.textContent = "along" in target ? t("status.breakObstacleOrdered") : target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
     return;
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
@@ -2849,7 +2849,12 @@ function hitGroundItem(world: Point) {
 }
 
 function hitAttackTarget(world: Point) {
-  return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId);
+  return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId) ?? hitObstacle(world);
+}
+
+// Rocks or a gate under the pointer (see @@@obstacle): anywhere on its body.
+function hitObstacle(world: Point) {
+  return snapshot?.obstacles?.find((obstacle) => distance(obstacle, world) < obstacle.radius + 8);
 }
 
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
