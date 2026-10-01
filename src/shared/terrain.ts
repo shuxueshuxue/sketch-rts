@@ -960,8 +960,18 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   const size = terrain.cell;
   const covered = overlay.covered;
   covered.fill(0);
+  const squares = new Map<number, Body[]>();
+  const squareSpan = SECTOR * size;
+  const squareCols = Math.ceil(terrain.cols / SECTOR);
+  const squareRows = Math.ceil(terrain.rows / SECTOR);
   for (const body of bodies) {
     const reach = body.radius + BODY_MARGIN;
+    for (let row = Math.max(0, Math.floor((body.y - reach) / squareSpan)); row <= Math.min(squareRows - 1, Math.floor((body.y + reach) / squareSpan)); row += 1) {
+      for (let col = Math.max(0, Math.floor((body.x - reach) / squareSpan)); col <= Math.min(squareCols - 1, Math.floor((body.x + reach) / squareSpan)); col += 1) {
+        const key = row * squareCols + col;
+        squares.set(key, [...(squares.get(key) ?? []), body]);
+      }
+    }
     const low = { col: Math.max(0, Math.floor((body.x - reach) / size)), row: Math.max(0, Math.floor((body.y - reach) / size)) };
     const high = { col: Math.min(terrain.cols - 1, Math.floor((body.x + reach) / size)), row: Math.min(terrain.rows - 1, Math.floor((body.y + reach) / size)) };
     for (let row = low.row; row <= high.row; row += 1) {
@@ -978,6 +988,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
       }
     }
   }
+  state.bodies = squares;
   const dirty = new Set<number>();
   for (let at = 0; at < state.walk.length; at += 1) {
     if (state.walk[at] === overlay.previous[at]) continue;
@@ -1006,6 +1017,8 @@ type Field = { dist: Int32Array; next: Int32Array; used: number };
 
 type TerrainRuntime = {
   terrain: Terrain;
+  // The building copy's buildings by square (see setBuildingBodies, sightClearOfBodies); none on the land's own runtime.
+  bodies?: Map<number, Body[]>;
   // The grid with a blocked border cell all round (cols + 2 wide), so no step ever needs a bounds check.
   width: number;
   // 1 on a cell the runtime's mover may cross (see @@@terrain-movers).
@@ -1141,6 +1154,38 @@ function fillClearance(state: TerrainRuntime) {
 // Whether the segment crosses only walkable cells. It steps from cell to cell, but across open ground it leaps: a cell
 // whose clearance is k has every cell within k - 1 of it walkable, so the walk jumps to the edge of that square.
 function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
+  return clearCells(state, ax, ay, bx, by) && sightClearOfBodies(state, ax, ay, bx, by);
+}
+
+// Whether the segment keeps every building of the copy its margin off, where it comes nearer one than its start does (a
+// unit pressed against a wall still walks straight away from it). The copy's cells are open where a margin covers only
+// some of them, and a sight line through such cells passed 38 from a tower's center, 8 off its body, with a knight 22
+// across walking it: it pressed into the tower, was put back, and turned between that line and the way round every tick
+// (pool-turtleLake-4).
+function sightClearOfBodies(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
+  const squares = state.bodies;
+  if (!squares) return true;
+  const span = SECTOR * state.terrain.cell;
+  const squareCols = Math.ceil(state.terrain.cols / SECTOR);
+  const dx = bx - ax;
+  const dy = by - ay;
+  const length = dx * dx + dy * dy;
+  for (let row = Math.floor(Math.min(ay, by) / span); row <= Math.floor(Math.max(ay, by) / span); row += 1) {
+    for (let col = Math.floor(Math.min(ax, bx) / span); col <= Math.floor(Math.max(ax, bx) / span); col += 1) {
+      for (const body of squares.get(row * squareCols + col) ?? []) {
+        const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((body.x - ax) * dx + (body.y - ay) * dy) / length));
+        if (t === 0) continue;
+        const gx = ax + dx * t - body.x;
+        const gy = ay + dy * t - body.y;
+        const reach = body.radius + BODY_MARGIN;
+        if (gx * gx + gy * gy < reach * reach) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function clearCells(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
   const { terrain, walk, clearance, width } = state;
   const size = terrain.cell;
   let at = padAt(state, ax, ay);
