@@ -100,7 +100,7 @@ describe("gameplay tooltips", () => {
   it("describes late movement, range, and leadership upgrades", () => {
     expect(upgradeTooltip("speedTraining", "m", 1)).toMatchObject({
       title: "Mobility Training II",
-      stats: expect.arrayContaining(["+38% move speed"]),
+      stats: expect.arrayContaining(["+20% move speed"]),
       requirements: expect.arrayContaining(["Research at Stables / Cinder Spire.", "Affects combat units."]),
       hotkey: "M",
     });

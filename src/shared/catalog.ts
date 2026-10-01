@@ -312,13 +312,15 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
       { cost: 260, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
     ],
   },
+  // A tenth faster a level: at a quarter a level (1.25, 1.38, 1.5) a footman at the third outran a raider untrained (4.5
+  // against 4.1), and the riders' speed was theirs no more.
   speedTraining: {
     researchBuildingKinds: ["stables", "cinderSpire"],
     affectedUnitKinds: ORDINARY_COMBAT_UNITS,
     levels: [
-      { cost: 185, researchTime: seconds(46), speedMultiplier: 1.25 },
-      { cost: 285, researchTime: seconds(60), speedMultiplier: 1.38 },
-      { cost: 420, researchTime: seconds(76), speedMultiplier: 1.5 },
+      { cost: 185, researchTime: seconds(46), speedMultiplier: 1.1 },
+      { cost: 285, researchTime: seconds(60), speedMultiplier: 1.2 },
+      { cost: 420, researchTime: seconds(76), speedMultiplier: 1.3 },
     ],
   },
   rangeTraining: {

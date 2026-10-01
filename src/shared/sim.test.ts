@@ -211,7 +211,8 @@ describe("sketch RTS simulation", () => {
 
     expect(game.players.player.upgrades.speedTraining).toBe(1);
     expect(game.players.player.upgrades.rangeTraining).toBe(1);
-    expect(archer.speed).toBeCloseTo(baseSpeed * 1.25, 5);
+    const faster = UPGRADE_DEFS.speedTraining.levels[0]!.speedMultiplier!;
+    expect(archer.speed).toBeCloseTo(baseSpeed * faster, 5);
     expect(archer.attackRange).toBe(Math.round(baseRange * 1.15));
     expect(archer.attackCooldown).toBe(baseCooldown);
     expect(tower.attackRange).toBe(towerRange);
@@ -219,7 +220,7 @@ describe("sketch RTS simulation", () => {
     issueCommand(game, { type: "train", buildingId: stables.id, unitKind: "raider" });
     stepMany(game, UNIT_DEFS.raider.trainTime + 1);
     const futureRaider = game.units.find((unit) => unit.owner === "player" && unit.kind === "raider")!;
-    expect(futureRaider.speed).toBeCloseTo(Math.round(UNIT_DEFS.raider.speed * 1.25 * 100) / 100, 5);
+    expect(futureRaider.speed).toBeCloseTo(Math.round(UNIT_DEFS.raider.speed * faster * 100) / 100, 5);
     expect(futureRaider.attackRange).toBe(Math.round(UNIT_DEFS.raider.attackRange * 1.15));
   });
 
