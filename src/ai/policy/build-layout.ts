@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { isBuildPlacementClear } from "../../shared/build-placement";
+import { isWalkable } from "../../shared/terrain";
 import { detCos, detSin } from "../../shared/det-math";
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { aiSnapshotQuery, buildings } from "./snapshot";
@@ -7,11 +8,12 @@ import { clamp, distance, nearestEntity, type Point } from "./spatial";
 import { mainBase, ownerDirection, playerState } from "./world-model";
 
 // @@@roomy-placement - Where the AIs lay a building on a map whose buildings are bodies (see @@@building-body): not
-// only where the sim allows it, but PASSAGE clear of every other building's wall, so a unit (30 to 44 wide) walks
-// between any two, and off the lane from any town hall to a mine within MINE_LANE of it, so workers are never walked
-// round a farm. Laid as close as the sim allows (4 apart), V9's main filled up with farms, barracks and towers in rows
-// that shut soldiers and workers in pockets: armies of 29 stood in their own base for twenty minutes and the game ran to
-// its end with the last rival's buildings standing (ladder-10, v5-extra-1). A map without terrain keeps its old rule.
+// only where the sim allows it, but PASSAGE clear of every other building's wall and of the terrain's rock, forest and
+// water (see clearOfTerrain), so a unit (30 to 44 wide) walks between any two, and off the lane from any town hall to a
+// mine within MINE_LANE of it, so workers are never walked round a farm. Laid as close as the sim allows (4 apart), V9's
+// main filled up with farms, barracks and towers in rows that shut soldiers and workers in pockets: armies of 29 stood
+// in their own base for twenty minutes and the game ran to its end with the last rival's buildings standing (ladder-10,
+// v5-extra-1). A map without terrain keeps its old rule.
 const PASSAGE = 48;
 const MINE_LANE = 450;
 const LANE_WIDTH = 24;
@@ -27,7 +29,25 @@ function roomyPlacement(snapshot: GameSnapshot, kind: BuildingKind, point: Point
     if (dx * dx + dy * dy < reach * reach) return false;
   }
   for (const [hall, mine] of mineLanes(snapshot)) if (segmentDistance(point, hall, mine) < radius + LANE_WIDTH) return false;
+  if (kind !== "townHall" && kind !== "defenseTower" && !clearOfTerrain(snapshot, point, radius + PASSAGE)) return false;
   return isBuildPlacementClear(snapshot, kind, point);
+}
+
+// Whether every cell whose center lies within `reach` of the point is open ground: the passage kept from a building's
+// wall to rock, forest and water as to other walls. A moon well laid against the rock at its main's rim shut two lancers in
+// a pocket of seven cells (templeSpring-5). A town hall stands where its mine is and a tower where the choke it holds is.
+function clearOfTerrain(snapshot: GameSnapshot, point: Point, reach: number) {
+  const terrain = snapshot.map.terrain!;
+  const size = terrain.cell;
+  for (let row = Math.floor((point.y - reach) / size); row <= Math.floor((point.y + reach) / size); row += 1) {
+    for (let col = Math.floor((point.x - reach) / size); col <= Math.floor((point.x + reach) / size); col += 1) {
+      const x = (col + 0.5) * size;
+      const y = (row + 0.5) * size;
+      if ((x - point.x) ** 2 + (y - point.y) ** 2 >= reach * reach) continue;
+      if (!isWalkable(snapshot.map, x, y)) return false;
+    }
+  }
+  return true;
 }
 
 // The town halls' lanes to the mines within MINE_LANE of them, once per snapshot.
