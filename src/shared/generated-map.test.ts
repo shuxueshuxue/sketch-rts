@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CAMP_TEMPLATES, HABITAT_FAMILY } from "./camps";
 import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
 import { BUILDING_DEFS } from "./catalog";
@@ -122,16 +123,18 @@ describe("generated maps", () => {
         let room = 0;
         for (let dy = -400; dy <= 400; dy += 50) for (let dx = -400; dx <= 400; dx += 50) if (isFootprintBuildable(ground, hall.x + dx, hall.y + dy, 40)) room += 1;
         expect(room).toBeGreaterThan(90);
-        // Round the main, out past its rim, the ground is open only toward its ramp: of the cells 700 out on 64 spokes,
-        // the open ones lie within a quarter turn of each other.
+        // Round the main, just past its rim, the ground is open only toward its ramp: of 64 spokes, those whose cell 48
+        // past the plateau's edge is open are under a quarter of the turn (the skirt is at least 90 deep all round).
         const open = Array.from({ length: 64 }, (_, spoke) => spoke).filter((spoke) => {
           const angle = (spoke / 64) * Math.PI * 2;
-          const x = Math.floor((hall.x + Math.cos(angle) * 700) / cell);
-          const y = Math.floor((hall.y + Math.sin(angle) * 700) / cell);
-          return x >= 0 && y >= 0 && x < cols && y < cols && levels![y * cols + x] !== "1" && ".,m".includes(cells[y * cols + x]!);
+          const cellAt = (reach: number) => Math.floor((hall.y + Math.sin(angle) * reach) / cell) * cols + Math.floor((hall.x + Math.cos(angle) * reach) / cell);
+          let reach = 0;
+          while (levels![cellAt(reach)] !== "0" && reach < 2_000) reach += 16;
+          const past = cellAt(reach + 48);
+          return ".,m".includes(cells[past]!);
         });
         expect(open.length).toBeGreaterThan(0);
-        expect(open.length).toBeLessThan(28);
+        expect(open.length).toBeLessThan(16);
       }
       // Plateau ground meets low ground only across a ramp.
       for (let index = 0; index < cells.length; index += 1) {
@@ -255,6 +258,25 @@ describe("generated maps", () => {
     }
     const market = layout("ground-1", "oneMarket").map;
     expect(market.sites).toEqual([{ kind: "shop", x: market.size / 2, y: market.size / 2 }]);
+  });
+
+  it("fills every camp with a template of its colour, mostly of its ground's family, and every copy of a camp alike", () => {
+    let own = 0;
+    let all = 0;
+    for (const idea of MAP_IDEAS) {
+      const { map } = layout("camps-1", idea);
+      const signatures = map.camps.map((camp, index) => {
+        const kinds = map.units.filter((unit) => unit.id.startsWith(`creep-gen-${index + 1}-`)).map((unit) => unit.kind).sort();
+        const template = CAMP_TEMPLATES.find((candidate) => candidate.tier === camp.tier && [...candidate.kinds].sort().join() === kinds.join());
+        expect(template, `${idea} camp ${index + 1}: ${kinds.join()}`).toBeDefined();
+        all += 1;
+        if (template!.family === HABITAT_FAMILY[camp.habitat] || template!.family === "dragon") own += 1;
+        return `${camp.tier}:${kinds.join()}`;
+      });
+      // Four starts on a ring: a camp stands once (in the middle) or four times, every copy with the same creeps.
+      if (SEATS[idea] === TEAMS) for (const signature of new Set(signatures)) expect([1, 4]).toContain(signatures.filter((other) => other === signature).length);
+    }
+    expect(own / all).toBeGreaterThan(0.7);
   });
 
   it("lays rocks and gates across shortcuts only: the hill's back ways, the middle ford, the jungle's ways in, with every start, mine and camp still reached round them", () => {

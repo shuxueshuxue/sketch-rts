@@ -10,18 +10,18 @@ import { createGame } from "./sim";
 // obstacles. A change to the generator that moves anything on a pool map fails here; if the change is meant, the map is
 // redrawn on purpose: give it a new name or take the new hash knowingly.
 const HASHES: Record<PoolMapId, string> = {
-  templeSpring: "d85534a8220c08f4",
-  turtleLake: "0d1ffe4241e64c24",
-  elderwood: "709656e76e88a120",
-  ringwater: "21cd9f5efdc7a5b3",
-  loneMarket: "edd81d6f144f60df",
-  reedwater: "6d49111193f14075",
-  veiledHill: "62928329e79e8f80",
-  greystonePass: "55987a3d44b924c0",
-  pineshade: "693e4158453223f3",
-  gullIsland: "73b351045377b081",
-  stillwater: "1f25159c96f514b5",
-  twoShores: "0f8b67bcfe0003c8",
+  templeSpring: "b21477d22b29e3d9",
+  turtleLake: "a238619492458414",
+  elderwood: "0d900305969626dc",
+  ringwater: "e09ae9f6e31827f6",
+  loneMarket: "e778910b1bf958d7",
+  reedwater: "424d25fef7423cae",
+  veiledHill: "1c6569d2777f6fba",
+  greystonePass: "209985390ac9c00f",
+  pineshade: "d21c2f7ceec5ee79",
+  gullIsland: "193134cf3c39b45b",
+  stillwater: "13f65932d0a0c499",
+  twoShores: "1af2dc45f5473a02",
 };
 
 const host = { id: "host", name: "Host" };

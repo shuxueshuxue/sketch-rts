@@ -1,10 +1,11 @@
+import { campRoster, type CampHabitat, type CampTier } from "./camps";
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
 import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
 import { BODY_MARGIN, cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
-import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
+import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
 // @@@generated-map - A seeded ladder map for a game of any size, drawn fresh for every seed on one of a dozen ideas, the
 // way every Warcraft III ladder map stands on one idea of its own (see @@@generated-ideas): a ring of mines round a
@@ -39,22 +40,18 @@ export type GeneratedMap = {
   landmarks: TerrainLandmark[];
   terrain: Terrain;
   // @@@generated-camps - Every camp's place, its colour (green to train on near home, orange guarding a mine, a shop or a
-  // post, red for the prizes everyone fights for: the middle, an island, a far mine), the ground round it, and what it drops,
-  // for whoever fills the camps with creeps.
-  camps: { x: number; y: number; tier: CampColor; habitat: CampHabitat; drop?: "minor" | "major" }[];
+  // post, red for the prizes everyone fights for: the middle, an island, a far mine), the ground round it, and what it drops;
+  // its creeps are the family of that ground, of the colour's levels (see @@@camp-templates).
+  camps: { x: number; y: number; tier: CampTier; habitat: CampHabitat; drop?: "minor" | "major" }[];
   // Neutral buildings' places: a shop, which a player buys at, no building's footprint and in nobody's way.
   sites: MapSite[];
   // The rocks and gates across shortcuts (see @@@generated-obstacles).
   obstacles: Obstacle[];
 };
 
-export type CampColor = "green" | "orange" | "red";
-export type CampHabitat = "water" | "hill" | "forest" | "open";
-
 type Point = { x: number; y: number };
-// Ladder-map camp tiers: easy near home, medium at a natural, strong at contested mines and on routes, hard in the middle.
-type CampTier = "easy" | "medium" | "strong" | "hard";
-type Camp = { at: Point; tier: CampTier; item?: ItemKind; color?: CampColor };
+// A camp's colour (see @@@generated-camps) and the copies of it one draw of creeps fills (see campRoster).
+type Camp = { at: Point; color: CampTier; group: number; item?: ItemKind };
 // Blocker codes on the grid: 1 forest, 2 rock, 3 water.
 type Blocker = 1 | 2 | 3;
 
@@ -111,28 +108,6 @@ const OPEN_WATER = 64;
 // A rock pile or gate shuts its way only where the walk round it is at least this many times the step across it.
 const SHORTCUT = 4;
 
-const CAMP_KINDS: Record<CampTier, UnitKind[][]> = {
-  easy: [
-    ["wildling", "mossGnawer"],
-    ["thornSlinger", "wildling"],
-    ["mossGnawer", "mossGnawer", "wildling"],
-  ],
-  medium: [
-    ["stonebackBrute", "thornSlinger", "barkMender"],
-    ["gladeWitch", "wildling", "thornSlinger"],
-    ["stonebackBrute", "mossGnawer", "wildling"],
-  ],
-  strong: [
-    ["stonebackBrute", "gladeWitch", "thornSlinger", "barkMender"],
-    ["stonebackBrute", "stonebackBrute", "thornSlinger", "wildling"],
-    ["gladeWitch", "gladeWitch", "thornSlinger", "barkMender"],
-  ],
-  hard: [
-    ["stonebackBrute", "stonebackBrute", "gladeWitch", "thornSlinger", "thornSlinger", "barkMender"],
-    ["stonebackBrute", "stonebackBrute", "stonebackBrute", "gladeWitch", "barkMender", "barkMender"],
-  ],
-};
-const TIER_COLOR: Record<CampTier, CampColor> = { easy: "green", medium: "orange", strong: "orange", hard: "red" };
 const MINOR_ITEMS: ItemKind[] = ["experienceBook", "guardianScroll"];
 const MAJOR_ITEMS: ItemKind[] = ["lightningRod", "flameCloak", "stormStaff", "breachCharge"];
 const MERC_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
@@ -258,10 +233,6 @@ class Field {
   // The rocks and gates across shortcuts (see @@@generated-obstacles), each with the way's direction where it stands.
   readonly obstacles: { kind: ObstacleKind; at: Point; along: Point }[] = [];
   // The draws a map makes once for every copy of a feature.
-  readonly easyKinds: UnitKind[];
-  readonly mediumKinds: UnitKind[];
-  readonly strongKinds: UnitKind[];
-  readonly hardKinds: UnitKind[];
   readonly minorItem: ItemKind;
   readonly majorItem: ItemKind;
   readonly mercKind: MercenaryUnitKind;
@@ -280,10 +251,6 @@ class Field {
     readonly spec: IdeaSpec,
   ) {
     this.center = size / 2;
-    this.easyKinds = pick(random, CAMP_KINDS.easy);
-    this.mediumKinds = pick(random, CAMP_KINDS.medium);
-    this.strongKinds = pick(random, CAMP_KINDS.strong);
-    this.hardKinds = pick(random, CAMP_KINDS.hard);
     this.minorItem = pick(random, MINOR_ITEMS);
     this.majorItem = pick(random, MAJOR_ITEMS);
     this.mercKind = pick(random, MERC_KINDS);
@@ -376,21 +343,22 @@ class Field {
     return undefined;
   }
 
-  addCamps(copies: Point[], tier: CampTier, item?: ItemKind, color?: CampColor) {
-    this.camps.push(...copies.map((at) => ({ at, tier, ...(item ? { item } : {}), ...(color ? { color } : {}) })));
+  addCamps(copies: Point[], color: CampTier, item?: ItemKind) {
+    const group = this.camps.length === 0 ? 0 : this.camps[this.camps.length - 1]!.group + 1;
+    this.camps.push(...copies.map((at) => ({ at, color, group, ...(item ? { item } : {}) })));
     for (const at of copies) this.reserved.push({ at, radius: 110 });
   }
 
   // The mines and their guards: each guard GUARD_OFFSET from its mine toward `awayFrom`, or turned from that by up to 90
   // degrees either way where that crowds another camp (every copy turned alike); a guard that fits nowhere is left out.
-  addGuardedMines(mines: Point[], tier: CampTier, awayFrom: (mine: Point, index: number) => Point, item?: ItemKind, color?: CampColor) {
+  addGuardedMines(mines: Point[], color: CampTier, awayFrom: (mine: Point, index: number) => Point, item?: ItemKind) {
     this.mines.push(...mines);
     // A hall stands within about 120 of its mine on any side the AI picks (see expansionOffset): the ground stays open.
     for (const at of mines) this.reserved.push({ at, radius: 230 });
     for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
       const guards = mines.map((mine, index) => roundPoint(step(mine, rotate(unit(sub(awayFrom(mine, index), mine)), turn), GUARD_OFFSET)));
       if (!this.campFits(guards, mines, START_SAFETY + CAMP_SPREAD + 10)) continue;
-      this.addCamps(guards, tier, item, color);
+      this.addCamps(guards, color, item);
       return;
     }
   }
@@ -408,7 +376,7 @@ class Field {
 
   // An island's mine behind a red guard, toward `toward` (or turned from it): the prize a ship reaches.
   addIslandMines(mines: Point[], toward: Point) {
-    this.addGuardedMines(mines, "strong", () => toward, undefined, "red");
+    this.addGuardedMines(mines, "red", () => toward);
   }
 
   // A hill that is no start's: a plateau of `radius` round the point, walled by its cliff but for a ramp toward each of
@@ -613,7 +581,7 @@ function standardMain(field: Field, base: Point, inward: Point, plateau: number,
   own.forEach((at, copy) => field.plateaus.push({ base: at, radius: plateau, ramp: field.copies(ramp)[copy]!, rampRadius: rampHalf + 48, main: true }));
   for (const lobe of lobes) for (const at of field.copies(lobe.at)) field.clearings.push({ at, radius: lobe.radius, wobble: 0.08, plateau: true });
   field.addClearings(field.copies(naturalArea), field.between(320, 400), 0.1);
-  field.addGuardedMines(natural, "medium", (at, copy) => mirrorAway(at, own[copy]!));
+  field.addGuardedMines(natural, "orange", (at, copy) => mirrorAway(at, own[copy]!));
   // The way down: from inside the plateau, over the rim at the ramp, to the natural's clearing.
   field.paths.push(...field.pathCopies([step(base, rampDirection, plateau * 0.55), ramp, naturalArea], rampHalf));
   return naturalArea;
@@ -629,7 +597,7 @@ function contestedMines(field: Field, ring: Ring, spread: number, share: readonl
   );
   if (!contested) return undefined;
   field.addClearings(contested, field.between(280, 340), 0.12);
-  field.addGuardedMines(contested, "strong", () => ring.middle, field.minorItem);
+  field.addGuardedMines(contested, "orange", () => ring.middle, field.minorItem);
   return { ahead: contested[0]!, behind: contested[contested.length - 1]! };
 }
 
@@ -639,7 +607,7 @@ function homeCampsAndPost(field: Field, paths: Point[][], postPath: Point[] | un
     const easy = field.place(() => field.copies(besidePath(path, field.between(0.3, 0.6), (field.random() < 0.5 ? -1 : 1) * field.between(40, 170))), (camps) => field.campFits(camps, [], 600));
     if (!easy) continue;
     field.addClearings(easy, field.between(130, 170), 0.15);
-    field.addCamps(easy, "easy");
+    field.addCamps(easy, "green");
   }
   if (!postPath) return;
   const merc = field.place(() => field.copies(besidePath(postPath, field.between(0.35, 0.8), (field.random() < 0.5 ? -1 : 1) * field.between(150, 230))), (posts) => field.mercFits(posts));
@@ -671,8 +639,8 @@ function openRing(field: Field, players: PlayerId[], teams: Record<PlayerId, str
   if (!contested) return false;
   const { middle } = ring;
   field.clearings.push({ at: middle, radius: field.between(300, 480), wobble: 0.14 });
-  if (field.random() < 0.5 && field.mineFits([middle], CONTESTED_START_SPACING)) field.addGuardedMines([middle], "hard", () => ring.polar(1, ring.between), field.majorItem);
-  else if (field.campFits([middle], [], CONTESTED_START_SPACING)) field.addCamps([middle], "hard", field.majorItem);
+  if (field.random() < 0.5 && field.mineFits([middle], CONTESTED_START_SPACING)) field.addGuardedMines([middle], "red", () => ring.polar(1, ring.between), field.majorItem);
+  else if (field.campFits([middle], [], CONTESTED_START_SPACING)) field.addCamps([middle], "red", field.majorItem);
   const toAhead = field.addPath(naturalArea, contested.ahead, width(field), bend(field));
   const toBehind = field.addPath(naturalArea, contested.behind, width(field), bend(field));
   if (!toAhead || !toBehind) return false;
@@ -682,7 +650,7 @@ function openRing(field: Field, players: PlayerId[], teams: Record<PlayerId, str
   const toMiddle = fromNatural ?? fromContested;
   if (!toMiddle) return false;
   const route = field.place(() => field.copies(besidePath(toMiddle, field.between(0.4, 0.7), field.between(-50, 50))), (camps) => field.campFits(camps, [], CONTESTED_START_SPACING));
-  if (route) field.addCamps(route, "strong");
+  if (route) field.addCamps(route, "orange");
   homeCampsAndPost(field, [toAhead, toBehind], pick(field.random, [toMiddle, toAhead]));
   neighbourWalls(field, ring, distance(contested.ahead, middle));
   return true;
@@ -705,7 +673,7 @@ function fountainRing(field: Field, players: PlayerId[], teams: Record<PlayerId,
   if (!naturalArea) return false;
   const temple = SIZE * field.between(0.055, 0.065);
   const feet = field.addHill(middle, temple, field.copies(polar(temple * 2, between)));
-  field.addCamps([middle], "hard", field.majorItem);
+  field.addCamps([middle], "red", field.majorItem);
   const contested = contestedMines(field, ring, 0.04, [0.74, 0.82]);
   if (!contested) return false;
   field.addIslandMines(field.islands.map((island) => island.at), middle);
@@ -733,11 +701,11 @@ function turtleIsle(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const naturalArea = standardMain(field, ring.base, ring.inward, ring.plateau);
   if (!naturalArea) return false;
   field.rich.push(middle);
-  field.addGuardedMines([middle], "hard", () => polar(1, between), field.majorItem);
+  field.addGuardedMines([middle], "red", () => polar(1, between), field.majorItem);
   const side = field.place(() => field.copies(polar(SIZE * field.between(0.36, 0.4), between)), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
   if (!side) return false;
   field.addClearings(side, 260, 0.08);
-  field.addGuardedMines(side, "strong", () => middle, field.minorItem);
+  field.addGuardedMines(side, "orange", () => middle, field.minorItem);
   for (const at of side) field.rings.push({ at, inner: 330, outer: field.between(420, 470) });
   const toAhead = field.addPath(naturalArea, side[0]!, width(field), bend(field));
   const toBehind = field.addPath(naturalArea, side[side.length - 1]!, width(field), bend(field));
@@ -763,7 +731,7 @@ function twistedPaths(field: Field, players: PlayerId[], teams: Record<PlayerId,
   const contested = contestedMines(field, ring, 0.18, [0.45, 0.75]);
   if (!contested) return false;
   field.clearings.push({ at: middle, radius: field.between(320, 400), wobble: 0.14 });
-  field.addCamps([middle], "hard", field.majorItem);
+  field.addCamps([middle], "red", field.majorItem);
   field.addShops(polar(SIZE * field.between(0.08, 0.1), ring.between));
   const twist = () => (field.random() < 0.5 ? -1 : 1) * field.between(0.3, 0.45);
   const narrow = () => field.between(60, 85);
@@ -791,7 +759,7 @@ function outerSea(field: Field, players: PlayerId[], teams: Record<PlayerId, str
   const contested = contestedMines(field, ring, 0.12, [0.45, 0.75]);
   if (!contested) return false;
   field.clearings.push({ at: middle, radius: field.between(300, 420), wobble: 0.14 });
-  field.addCamps([middle], "hard", field.majorItem);
+  field.addCamps([middle], "red", field.majorItem);
   field.addShops(polar(field.size * field.between(0.07, 0.09), ring.between + ring.turn / 2));
   const toAhead = field.addPath(naturalArea, contested.ahead, width(field), bend(field));
   const toBehind = field.addPath(naturalArea, contested.behind, width(field), bend(field));
@@ -821,11 +789,11 @@ function oneMarket(field: Field, players: PlayerId[], teams: Record<PlayerId, st
   const own = field.place(() => field.copies(polar(SIZE * field.between(0.18, 0.26), ring.between - ring.turn / 2 + field.between(0.35, 0.55))), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
   if (!own) return false;
   field.addClearings(own, 280, 0.12);
-  field.addGuardedMines(own, "strong", () => middle, field.minorItem);
+  field.addGuardedMines(own, "orange", () => middle, field.minorItem);
   const watch = field.place(() => field.copies(polar(SIZE * field.between(0.2, 0.25), ring.between + field.between(0.45, 0.75))), (camps) => field.campFits(camps, [], CONTESTED_START_SPACING));
   if (watch) {
     field.addClearings(watch, 160, 0.12);
-    field.addCamps(watch, "strong", field.minorItem);
+    field.addCamps(watch, "orange", field.minorItem);
   }
   const causeway = field.addPath(naturalArea, middle, field.between(80, 100), field.between(-0.15, 0.15));
   const toMine = field.addPath(naturalArea, own[0]!, width(field), bend(field));
@@ -850,7 +818,7 @@ function floodedValley(field: Field, players: PlayerId[], teams: Record<PlayerId
   const contested = contestedMines(field, ring, 0.25, [0.25, 0.6]);
   if (!contested) return false;
   field.clearings.push({ at: middle, radius: 220, wobble: 0.1 });
-  field.addCamps([middle], "hard", field.majorItem);
+  field.addCamps([middle], "red", field.majorItem);
   const toAhead = field.addPath(naturalArea, contested.ahead, field.between(60, 90), bend(field));
   const toBehind = field.addPath(naturalArea, contested.behind, field.between(60, 90), bend(field));
   const toMiddle = field.addPath(contested.ahead, middle, field.between(60, 80), bend(field));
@@ -889,12 +857,12 @@ function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   // The hill's mine in its middle, a red camp at the head of either ramp, a shop to either side.
   field.mines.push(middle);
   field.reserved.push({ at: middle, radius: 200 });
-  field.addCamps(field.copies({ x: middle.x - hill * 0.55, y: middle.y }), "strong", field.minorItem, "red");
+  field.addCamps(field.copies({ x: middle.x - hill * 0.55, y: middle.y }), "red", field.minorItem);
   field.addShops({ x: middle.x, y: middle.y - hill * 0.6 });
   const far = field.place(() => field.copies({ x: strip * field.between(0.4, 0.6), y: SIZE * field.between(0.82, 0.88) }), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
   if (!far) return false;
   field.addClearings(far, 300, 0.12);
-  field.addGuardedMines(far, "strong", () => middle, field.majorItem);
+  field.addGuardedMines(far, "orange", () => middle, field.majorItem);
   const toHill = field.addPath(naturalArea, feet[0]!, width(field), field.between(-0.1, 0.1));
   const toFar = field.addPath(feet[0]!, far[0]!, width(field), field.between(-0.1, 0.1));
   if (!toHill || !toFar) return false;
@@ -924,7 +892,7 @@ function bridgeStand(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   const mine = field.place(() => field.copies(step(step(crossing, across, field.between(560, 720)), along, field.between(-220, 220))), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
   if (!mine) return false;
   field.addClearings(mine, 280, 0.12);
-  field.addGuardedMines(mine, "strong", () => crossing, field.minorItem);
+  field.addGuardedMines(mine, "orange", () => crossing, field.minorItem);
   field.addShops(step(near, along, -260));
   const toBridge = field.addPath(naturalArea, near, width(field), bend(field));
   if (!toBridge || !field.addPath(near, far, field.between(70, 90), 0, false, true)) return false;
@@ -948,7 +916,7 @@ function deepJungle(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const heart = field.between(380, 460);
   field.clearings.push({ at: middle, radius: heart, wobble: 0.16 });
   field.rich.push(middle);
-  field.addGuardedMines([middle], "hard", () => ring.polar(1, ring.between), field.majorItem);
+  field.addGuardedMines([middle], "red", () => ring.polar(1, ring.between), field.majorItem);
   const contested = contestedMines(field, ring, 0.2, [0.45, 0.8]);
   if (!contested) return false;
   const narrow = () => field.between(55, 75);
@@ -986,11 +954,11 @@ function northIsles(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   if (!naturalArea) return false;
   field.addIslandMines(field.islands.map((island) => island.at), middle);
   field.rich.push(middle);
-  field.addGuardedMines([middle], "hard", () => polar(1, between), field.majorItem);
+  field.addGuardedMines([middle], "red", () => polar(1, between), field.majorItem);
   const third = field.place(() => field.copies(polar(ring.radius * field.between(0.5, 0.75), firstAngle + (field.random() < 0.5 ? -1 : 1) * field.between(0.45, 0.8))), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
   if (!third) return false;
   field.addClearings(third, 280, 0.12);
-  field.addGuardedMines(third, "strong", () => middle, field.minorItem);
+  field.addGuardedMines(third, "orange", () => middle, field.minorItem);
   const toThird = field.addPath(naturalArea, third[0]!, width(field), bend(field));
   const neck = field.addPath(naturalArea, middle, field.between(60, 80), field.between(-0.1, 0.1));
   if (!toThird || !neck) return false;
@@ -1062,7 +1030,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
       if (!field.mineFits([mine], CONTESTED_START_SPACING)) return;
       contested.push(mine);
       field.clearings.push({ at: mine, radius: field.between(320, 400), wobble: 0.12 });
-      field.addGuardedMines([mine], y === middleLine ? "hard" : "strong", along, y === middleLine ? field.majorItem : index === 0 ? field.minorItem : undefined);
+      field.addGuardedMines([mine], y === middleLine ? "red" : "orange", along, y === middleLine ? field.majorItem : index === 0 ? field.minorItem : undefined);
     });
   }
   if (middleKind === "strait") {
@@ -1076,7 +1044,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
         field.waters.pop();
         continue;
       }
-      field.addGuardedMines([mine], y === middleLine ? "hard" : "strong", along, y === middleLine ? field.majorItem : undefined, "red");
+      field.addGuardedMines([mine], "red", along, y === middleLine ? field.majorItem : undefined);
     }
   }
   if (middleKind === "river") {
@@ -1087,7 +1055,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
       for (const at of field.copies(place({ x: CENTER - off, y: CENTER + dy * SIZE * field.between(0.12, 0.14) }))) {
         const bank = place({ x: CENTER, y: quarter ? at.x : at.y });
         field.addHill(at, hill, [mirrorAway(at, bank)]);
-        field.addCamps([at], "hard", field.minorItem);
+        field.addCamps([at], "red", field.minorItem);
       }
     }
     field.addShops(place({ x: CENTER - SIZE * 0.24, y: CENTER }));
@@ -1099,7 +1067,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
       if (!third) return false;
       contested.push(third[0]!);
       field.addClearings(third, field.between(280, 340), 0.12);
-      field.addGuardedMines(third, "strong", (at, copy) => mirrorAway(at, field.copies(area)[copy]!), field.minorItem);
+      field.addGuardedMines(third, "orange", (at, copy) => mirrorAway(at, field.copies(area)[copy]!), field.minorItem);
     }
   }
   if (contested.length === 0) return false;
@@ -1121,7 +1089,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
     const easy = field.place(() => field.copies(besidePath(path, field.between(0.3, 0.6), (field.random() < 0.5 ? -1 : 1) * field.between(60, 170))), (camps) => field.campFits(camps, [], 600));
     if (!easy) continue;
     field.addClearings(easy, field.between(130, 170), 0.15);
-    field.addCamps(easy, "easy");
+    field.addCamps(easy, "green");
   }
   const merc = field.place(() => field.copies(place({ x: SIZE * field.between(0.3, 0.4), y: SIZE * field.between(0.2, 0.8) })), (posts) => field.mercFits(posts));
   if (merc) {
@@ -1879,16 +1847,29 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
   });
   const items: WorldItem[] = [];
   const camps: GeneratedMap["camps"] = [];
+  // Every copy of a camp holds the creeps of one draw (see campRoster), on the ground of the first: no two camps of a map
+  // share a template while the tier has one unspent.
+  const used = new Set<string>();
+  const rosters = new Map<number, { habitat: CampHabitat; kinds: CreepFamilyUnitKind[] }>();
   field.camps.forEach((camp, index) => {
     const at = clampPoint(camp.at, field.size);
-    const kinds = campKinds(field, camp.tier);
+    let roster = rosters.get(camp.group);
+    if (!roster) {
+      const habitat = habitatAt(terrain, at);
+      roster = { habitat, kinds: campRoster(field.random, camp.color, habitat, used).kinds };
+      rosters.set(camp.group, roster);
+    }
+    const { kinds } = roster;
+    const reach = kinds.length === 1 ? 0 : CAMP_SPREAD;
     const creeps = kinds.map((unitKind, member) => {
       const spread = (member / kinds.length) * Math.PI * 2 + 0.3;
-      return createUnit(`wildling-gen-${index + 1}-${member + 1}`, "neutral", unitKind, Math.round(at.x + detCos(spread) * CAMP_SPREAD), Math.round(at.y + detSin(spread) * CAMP_SPREAD));
+      return createUnit(`creep-gen-${index + 1}-${member + 1}`, "neutral", unitKind, Math.round(at.x + detCos(spread) * reach), Math.round(at.y + detSin(spread) * reach));
     });
     units.push(...creeps);
-    if (camp.item) items.push({ id: `treasure-gen-${index + 1}`, kind: camp.item, x: 0, y: 0, carrierId: creeps[0]!.id, cooldownRemaining: 0 });
-    camps.push({ x: at.x, y: at.y, tier: camp.color ?? TIER_COLOR[camp.tier], habitat: habitatAt(terrain, at), ...(camp.item ? { drop: MAJOR_ITEMS.includes(camp.item) ? ("major" as const) : ("minor" as const) } : {}) });
+    // The drop is the camp's strongest creep's to carry.
+    const carrier = creeps.reduce((best, creep) => ((UNIT_DEFS[creep.kind].creepFoodPower ?? 0) > (UNIT_DEFS[best.kind].creepFoodPower ?? 0) ? creep : best));
+    if (camp.item) items.push({ id: `treasure-gen-${index + 1}`, kind: camp.item, x: 0, y: 0, carrierId: carrier.id, cooldownRemaining: 0 });
+    camps.push({ x: at.x, y: at.y, tier: camp.color, habitat: roster.habitat, ...(camp.item ? { drop: MAJOR_ITEMS.includes(camp.item) ? ("major" as const) : ("minor" as const) } : {}) });
   });
   const mercenaryCamps: MercenaryCamp[] = field.mercs.map((merc, index) => {
     const at = clampPoint(merc.at, field.size);
@@ -1997,13 +1978,6 @@ function roads(field: Field): TerrainLandmark[] {
     }
   }
   return marks;
-}
-
-function campKinds(field: Field, tier: CampTier) {
-  if (tier === "easy") return field.easyKinds;
-  if (tier === "medium") return field.mediumKinds;
-  if (tier === "strong") return field.strongKinds;
-  return field.hardKinds;
 }
 
 // A path's points round water in the middle from `from` to `to`: along the arc between them about the center, its distance

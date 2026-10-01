@@ -46,6 +46,6 @@ describe("canonical game state", () => {
     // map is laid out with det-math (its checksum recorded on mac1).
     expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("329c28e2");
     const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
-    expect(checksumGame(ladder)).toBe("840b4868");
+    expect(checksumGame(ladder)).toBe("98866fc5");
   });
 });
