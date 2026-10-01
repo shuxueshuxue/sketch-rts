@@ -83,6 +83,7 @@ import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
 import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
+import { planV9Shopping, v9ShopperIds } from "./v9/shop";
 import { onHomeGround, sameGroundAs } from "./ground";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
@@ -174,6 +175,7 @@ export const AI_SCRIPT_LIBRARY = {
   v8Charge: { id: "v8Charge", phase: "tactics", run: planV8Charge },
   navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
   naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
+  v9Shop: { id: "v9Shop", phase: "tactics", run: planV9Shopping, claimsUnits: v9ShopperIds },
 } satisfies Record<string, AiScript>;
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
@@ -273,8 +275,9 @@ export const V8_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.v8Charge,
 ];
 
-// V9 starts as V8's stack, against V5, V7 and V8 together, with no unit kind forbidden (see v9-blind).
-export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK];
+// V9 starts as V8's stack, against V5, V7 and V8 together, with no unit kind forbidden (see v9-blind), and shops (see
+// @@@v9-shop).
+export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK, AI_SCRIPT_LIBRARY.v9Shop];
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,

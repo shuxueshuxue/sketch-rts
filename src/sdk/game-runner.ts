@@ -387,6 +387,7 @@ function plannerView(game: Game): GameSnapshot {
     buildings: game.buildings.slice(),
     resources: game.resources.slice(),
     mercenaryCamps: game.mercenaryCamps.slice(),
+    ...(game.shops ? { shops: game.shops.slice() } : {}),
     items: game.items.slice(),
     projectiles: game.projectiles.slice(),
     effects: game.effects.slice(),

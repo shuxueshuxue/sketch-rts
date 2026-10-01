@@ -16,6 +16,7 @@ import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Int
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
 import { navalWant } from "../naval";
+import { SHOP_PRIORITY, v9ShopErrandCost } from "../v9/shop";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
 // come first, as in AMAI. Then the current phase of the strategy states its wants; each want that is not met becomes a
@@ -23,7 +24,9 @@ import { navalWant } from "../naval";
 // waiting slowly gains priority so nothing starves. The executor buys top-down and stops at the first goal it cannot
 // afford, which is how it saves. No other V6 script spends gold.
 
-type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined };
+// `hold`: the goal's gold is kept for it even while it cannot be issued yet (V9's shop errand, whose unit is still on its
+// way: see @@@v9-shop).
+type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true };
 
 type Economy = {
   snapshot: GameSnapshot;
@@ -70,7 +73,10 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
       continue;
     }
     const command = goal.issue(builders);
-    if (!command) continue;
+    if (!command) {
+      if (goal.hold) gold -= goal.cost;
+      continue;
+    }
     commands.push(command);
     bought.add(goal.id);
     gold -= goal.cost;
@@ -83,7 +89,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...capacityGoals(economy)]);
+  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -360,6 +366,12 @@ const NAVAL_PRIORITY = 60;
 function navalGoals(economy: Economy): Goal[] {
   const want = navalWant(economy.snapshot, economy.owner, economy.options);
   return want ? [goal(want.id, NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
+}
+
+// V9's shop errand under way (see @@@v9-shop): its gold held at SHOP_PRIORITY until the shop script spends it.
+function shopGoals(economy: Economy): Goal[] {
+  const cost = v9ShopErrandCost(economy.snapshot, economy.owner, economy.options);
+  return cost === undefined ? [] : [{ ...goal("v9shop", SHOP_PRIORITY, cost, true, () => undefined), hold: true }];
 }
 
 function capacityGoals(economy: Economy): Goal[] {

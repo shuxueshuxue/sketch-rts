@@ -1,4 +1,4 @@
-import type { PlayerId } from "../shared/types";
+import type { ItemKind, PlayerId } from "../shared/types";
 
 export type AiJobState = {
   id: string;
@@ -45,6 +45,8 @@ export type V6PolicyMemory = {
   // given up, not tried again until the tick given.
   creep?: { center: { x: number; y: number }; reach: number; staging: { x: number; y: number }; stage: "gather" | "engage"; since: number; group: string[] };
   creepRetry?: { center: { x: number; y: number }; until: number };
+  // V9's errand to a shop (see @@@v9-shop): which unit buys what where, since when.
+  shop?: { shopId: string; kind: ItemKind; unitId: string; since: number };
   plays?: Record<string, number>;
 };
 
