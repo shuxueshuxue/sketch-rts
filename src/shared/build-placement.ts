@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from "./catalog";
-import { isFootprintWalkable } from "./terrain";
+import { isFootprintBuildable } from "./terrain";
 import type { Building, BuildingKind, GameMap, GameSnapshot } from "./types";
 
 export const BUILDING_PLACEMENT_GAP = 4;
@@ -9,9 +9,9 @@ export function buildingPlacementBlocker(snapshot: Pick<GameSnapshot, "buildings
   return snapshot.buildings.find((building) => distance(point, building) < radius + building.radius + BUILDING_PLACEMENT_GAP);
 }
 
-// A building stands on walkable ground only (see @@@terrain): no part of it in a forest, on rock or in deep water.
+// A building stands on walkable ground only (see @@@terrain): no part of it in a forest, on rock, in deep water or on a ramp.
 export function terrainBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }) {
-  return map !== undefined && !isFootprintWalkable(map, point.x, point.y, BUILDING_DEFS[kind].radius);
+  return map !== undefined && !isFootprintBuildable(map, point.x, point.y, BUILDING_DEFS[kind].radius);
 }
 
 export function isBuildPlacementClear(snapshot: Pick<GameSnapshot, "buildings"> & { map?: Pick<GameMap, "terrain"> }, kind: BuildingKind, point: { x: number; y: number }) {

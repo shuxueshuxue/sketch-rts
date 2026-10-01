@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
-import { isFootprintWalkable, isWalkable, walkingDistance } from "./terrain";
+import { isFootprintBuildable, isWalkable, walkingDistance } from "./terrain";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
 const TEAMS = { v9: "v9-side", p1: "rivals", p2: "rivals", p3: "rivals" };
@@ -57,7 +57,7 @@ describe("generated maps", () => {
         const at = Math.floor(hall.y / cell) * cols + Math.floor(hall.x / cell);
         expect(levels![at]).toBe("1");
         let room = 0;
-        for (let dy = -400; dy <= 400; dy += 50) for (let dx = -400; dx <= 400; dx += 50) if (isFootprintWalkable(ground, hall.x + dx, hall.y + dy, 40)) room += 1;
+        for (let dy = -400; dy <= 400; dy += 50) for (let dx = -400; dx <= 400; dx += 50) if (isFootprintBuildable(ground, hall.x + dx, hall.y + dy, 40)) room += 1;
         expect(room).toBeGreaterThan(90);
       }
       // Plateau ground meets low ground only across a ramp.

@@ -6,8 +6,8 @@ import type { GameMap } from "./types";
 // every map was before, and plays exactly as it did.
 // - cells: one character a cell, row by row from the top-left: "." ground, "," shallow water (walked and sailed both: a
 //   ford, a beach), "T" forest, "#" rock, "~" deep water (sailed only).
-// - levels: for the eye only, every cell's ground: "0" low ground, "1" a plateau (a main above its natural, a cliff at its
-//   rim), "2" the ramp between them.
+// - levels: every cell's ground: "0" low ground, "1" a plateau (a main above its natural, a cliff at its rim), "2" the
+//   ramp between them. Drawn for the eye; and no building stands on a ramp (see isFootprintBuildable).
 export type Terrain = {
   cell: number;
   cols: number;
@@ -80,9 +80,11 @@ export function cellCenter(terrain: Terrain, index: number): Point {
   return { x: (col + 0.5) * terrain.cell, y: (row + 0.5) * terrain.cell };
 }
 
-// Whether a building of the given radius may stand at the point: every cell its footprint touches is walkable (a map
-// without terrain has nothing to refuse).
-export function isFootprintWalkable(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
+// Whether a building of the given radius may stand at the point: every cell its footprint touches is walkable and none is
+// a ramp (a map without terrain has nothing to refuse). @@@ramp-unbuildable - A ramp is a main's one way out, as on a
+// Warcraft III map, where ramps take no building: once buildings are bodies (see @@@building-body) a tower or a farm on
+// it would shut its owner in.
+export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
   const terrain = map.terrain;
   if (!terrain) return true;
   const state = runtime(terrain, "land");
@@ -96,7 +98,7 @@ export function isFootprintWalkable(map: Pick<GameMap, "terrain">, x: number, y:
       const nearX = Math.max(col * size, Math.min(x, (col + 1) * size));
       const nearY = Math.max(row * size, Math.min(y, (row + 1) * size));
       if ((nearX - x) * (nearX - x) + (nearY - y) * (nearY - y) >= radius * radius) continue;
-      if (state.walk[pad(state, col, row)] !== 1) return false;
+      if (state.walk[pad(state, col, row)] !== 1 || terrain.levels?.[row * terrain.cols + col] === "2") return false;
     }
   }
   return true;
@@ -117,11 +119,11 @@ export function walkableGoal(map: Pick<GameMap, "terrain" | "width" | "height">,
   return nearest < 0 ? { x: cx, y: cy } : centerOf(state, nearest);
 }
 
-// Whether a unit could walk the straight segment from a to b without touching a blocked cell.
+// Whether a unit could walk the straight segment from a to b without touching a blocked cell (a building's among them).
 export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Point, mover: Mover = "land") {
   const terrain = map.terrain;
   if (!terrain) return true;
-  return clearSegment(runtime(terrain, mover), a.x, a.y, b.x, b.y);
+  return clearSegment(routing(map, terrain, mover), a.x, a.y, b.x, b.y);
 }
 
 // Where a unit at `from` walking to `goal` should head this tick: the goal itself when it sees it, otherwise a cell down
@@ -129,16 +131,20 @@ export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Poin
 export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
   const terrain = map.terrain;
   if (!terrain) return goal;
-  const state = runtime(terrain, mover);
+  const ground = runtime(terrain, mover);
+  const state = routing(map, terrain, mover);
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
-  const start = padAt(state, from.x, from.y);
-  const target = padAt(state, goal.x, goal.y);
-  if (start < 0 || state.walk[target] !== 1) return goal;
-  if (state.walk[start] !== 1) {
+  const from0 = padAt(state, from.x, from.y);
+  const goal0 = padAt(state, goal.x, goal.y);
+  if (from0 < 0 || goal0 < 0 || ground.walk[goal0] !== 1) return goal;
+  if (ground.walk[from0] !== 1) {
     // Standing where it cannot (nothing puts a unit there but a seeded scenario): out by the nearest way.
-    const out = nearestWalkable(state, start);
-    return out < 0 ? goal : centerOf(state, out);
+    const out = nearestWalkable(ground, from0);
+    return out < 0 ? goal : centerOf(ground, out);
   }
+  const start = routeCell(state, from0, from, goal);
+  const target = routeCell(state, goal0, goal, from);
+  if (start < 0 || target < 0) return goal;
   const field = fieldToward(state, start, target);
   if (!field) return goal;
   let at = start;
@@ -161,10 +167,14 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
 export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): number | undefined {
   const terrain = map.terrain;
   if (!terrain) return Math.sqrt((from.x - goal.x) ** 2 + (from.y - goal.y) ** 2);
-  const state = runtime(terrain, mover);
-  const start = padAt(state, from.x, from.y);
-  const target = padAt(state, goal.x, goal.y);
-  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  const ground = runtime(terrain, mover);
+  const state = routing(map, terrain, mover);
+  const from0 = padAt(state, from.x, from.y);
+  const goal0 = padAt(state, goal.x, goal.y);
+  if (ground.walk[from0] !== 1 || ground.walk[goal0] !== 1) return undefined;
+  const start = routeCell(state, from0, from, goal);
+  const target = routeCell(state, goal0, goal, from);
+  if (start < 0 || target < 0) return undefined;
   const cost = exactField(state, target).dist[start]!;
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
@@ -174,10 +184,14 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
 export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Point, every = 2): Point[] | undefined {
   const terrain = map.terrain;
   if (!terrain) return [goal];
-  const state = runtime(terrain, "land");
-  const start = padAt(state, from.x, from.y);
-  const target = padAt(state, goal.x, goal.y);
-  if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
+  const ground = runtime(terrain, "land");
+  const state = routing(map, terrain, "land");
+  const from0 = padAt(state, from.x, from.y);
+  const goal0 = padAt(state, goal.x, goal.y);
+  if (ground.walk[from0] !== 1 || ground.walk[goal0] !== 1) return undefined;
+  const start = routeCell(state, from0, from, goal);
+  const target = routeCell(state, goal0, goal, from);
+  if (start < 0 || target < 0) return undefined;
   const field = exactField(state, target);
   if (field.dist[start]! >= UNREACHED) return undefined;
   const route: Point[] = [];
@@ -189,6 +203,85 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
   }
   route.push(goal);
   return route;
+}
+
+// @@@building-pathing - Buildings stand in the land's way as forest does, but they are each game's own and they come and
+// go: the sim hands the map its buildings whenever they change (see setBuildingBodies), and the land's routing (steering,
+// walking distance, routes, sight lines for walking) runs on a copy of the land's cells with every cell whose center lies
+// within BODY_MARGIN of a building blocked, with its own clearance, fields and nearest cells. The margin shuts the slits a
+// unit's body cannot pass: farms laid 4 apart left a row of open cells between them, and units routed into the slit and
+// stood pressed in it; with half a cell more round each building no gap under about 32 stays open, and a unit is 30 to 36
+// wide. The copy hangs on the game's map object
+// (a snapshot shares it), never on the terrain, which games may share. A map without terrain has no routing to take a
+// unit round anything, and its buildings stand in nobody's way (see @@@building-body). Whether a point may be stood on (isWalkable,
+// walkableGoal, isFootprintBuildable) stays the terrain's alone: a building's round body is the sim's to keep units out of
+// (see @@@building-body), and a unit pressed against it often stands in a cell the building half covers. A walk from or
+// to a cell a building covers (a hall's center, a unit at its wall) routes from or to the first open cell on the line
+// toward the walk's other end: a worker bringing gold to its hall comes to the side it walks from, not round the hall to
+// whichever open cell lies nearest its center. Ships keep
+// the sea's own routing: no building stands in deep water.
+type Body = { x: number; y: number; radius: number };
+const BODY_MARGIN = 16;
+type Overlay = { terrain: Terrain; state: TerrainRuntime };
+const overlays = new WeakMap<object, Overlay>();
+
+export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
+  const terrain = map.terrain;
+  if (!terrain) return;
+  if (bodies.length === 0) {
+    overlays.delete(map);
+    return;
+  }
+  const ground = runtime(terrain, "land");
+  let overlay = overlays.get(map);
+  if (!overlay || overlay.terrain !== terrain) {
+    overlay = { terrain, state: createRuntime(terrain, PASSABLE.land) };
+    overlays.set(map, overlay);
+  }
+  const state = overlay.state;
+  state.walk.set(ground.walk);
+  const size = terrain.cell;
+  for (const body of bodies) {
+    const reach = body.radius + BODY_MARGIN;
+    const low = { col: Math.max(0, Math.floor((body.x - reach) / size)), row: Math.max(0, Math.floor((body.y - reach) / size)) };
+    const high = { col: Math.min(terrain.cols - 1, Math.floor((body.x + reach) / size)), row: Math.min(terrain.rows - 1, Math.floor((body.y + reach) / size)) };
+    for (let row = low.row; row <= high.row; row += 1) {
+      for (let col = low.col; col <= high.col; col += 1) {
+        const dx = (col + 0.5) * size - body.x;
+        const dy = (row + 0.5) * size - body.y;
+        if (dx * dx + dy * dy < reach * reach) state.walk[pad(state, col, row)] = 0;
+      }
+    }
+  }
+  state.clearance.fill(0);
+  fillClearance(state);
+  for (const field of state.fields.values()) state.spare.push(field);
+  state.fields.clear();
+  state.nearest.clear();
+}
+
+// The runtime a mover's routing runs on: the land's with this game's buildings when it has any.
+function routing(map: object, terrain: Terrain, mover: Mover): TerrainRuntime {
+  if (mover === "land") {
+    const overlay = overlays.get(map);
+    if (overlay && overlay.terrain === terrain) return overlay.state;
+  }
+  return runtime(terrain, mover);
+}
+
+// The cell a walk from or to a point routes by (`at` its cell): the cell itself when open, else the first open cell on the
+// line from the point toward `other` (the walk's other end), else the open cell nearest it.
+function routeCell(state: TerrainRuntime, at: number, point: Point, other: Point) {
+  if (state.walk[at] === 1) return at;
+  const dx = other.x - point.x;
+  const dy = other.y - point.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const step = state.terrain.cell / 2;
+  for (let travelled = step; travelled < length; travelled += step) {
+    const on = padAt(state, point.x + (dx / length) * travelled, point.y + (dy / length) * travelled);
+    if (on >= 0 && state.walk[on] === 1) return on;
+  }
+  return nearestWalkable(state, at);
 }
 
 // `used`: when the field was last asked for, by the runtime's clock (the least recently used goes first).

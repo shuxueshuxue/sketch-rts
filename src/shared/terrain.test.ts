@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, stepGame } from "./sim";
 import { isBuildPlacementClear } from "./build-placement";
-import { isFootprintWalkable, isWalkable, segmentWalkable, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
+import { isFootprintBuildable, isWalkable, segmentWalkable, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
 
 // A 20 by 20 grid of 32-unit cells: open ground with a forest wall down column 10 from the top to row 15, so the way
 // from the left half to the right half goes round its foot.
@@ -52,8 +52,8 @@ describe("terrain", () => {
 
   it("refuses a building any part of which would stand in the forest", () => {
     const terrain = walled();
-    expect(isFootprintWalkable(map(terrain), 5 * 32, 5 * 32, 48)).toBe(true);
-    expect(isFootprintWalkable(map(terrain), 10 * 32 - 20, 5 * 32, 30)).toBe(false);
+    expect(isFootprintBuildable(map(terrain), 5 * 32, 5 * 32, 48)).toBe(true);
+    expect(isFootprintBuildable(map(terrain), 10 * 32 - 20, 5 * 32, 30)).toBe(false);
     expect(isBuildPlacementClear({ buildings: [], map: map(terrain) }, "farm", { x: 10 * 32 - 20, y: 5 * 32 })).toBe(false);
     expect(isBuildPlacementClear({ buildings: [], map: map(terrain) }, "farm", { x: 5 * 32, y: 5 * 32 })).toBe(true);
   });

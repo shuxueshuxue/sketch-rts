@@ -2,7 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MER
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { isWalkable, steerPoint, walkableGoal } from "./terrain";
+import { isWalkable, setBuildingBodies, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -35,6 +35,8 @@ export type Game = GameSnapshot & {
   buildingSpatial?: SpatialIndex<Building>;
   buildingSpatialByTeam?: Map<string, SpatialIndex<Building>>;
   buildingSpatialCount?: number;
+  // The buildings the map's routing last took in (see @@@building-pathing).
+  buildingBodiesSeen?: Building[];
   entityById?: Map<string, Unit | Building>;
   spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number): Unit;
   // Campaign games only (see story/); a standard match has neither (nor `variants`) and takes none of their paths.
@@ -456,6 +458,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 export function stepGame(game: Game) {
   if (game.match.winner) return;
   game.tick += 1;
+  syncBuildingBodies(game);
   updateWorldEffects(game);
   updateProjectiles(game);
   updateUnitStatusEffects(game);
@@ -479,9 +482,21 @@ export function stepGame(game: Game) {
   updateUnits(game);
   slideUnits(game);
   separateUnits(game);
+  if (game.map.terrain) keepUnitsOutOfBuildings(game);
   removeExpiredUnits(game);
   removeDead(game);
+  syncBuildingBodies(game);
   updateVictory(game);
+}
+
+// Hands the map's routing the buildings standing now whenever a building was laid down or fell (see @@@building-pathing):
+// at the step's start, for the sites laid by the commands before it, and after the dead are gone, so what a planner reads
+// between steps is current.
+function syncBuildingBodies(game: Game) {
+  const seen = game.buildingBodiesSeen;
+  if (seen && seen.length === game.buildings.length && seen.every((building, index) => building === game.buildings[index])) return;
+  game.buildingBodiesSeen = [...game.buildings];
+  setBuildingBodies(game.map, game.buildings);
 }
 
 export function snapshotGame(game: Game): GameSnapshot {
@@ -555,6 +570,7 @@ function invalidateGameRuntimeCaches(game: Game): void {
   delete game.buildingSpatial;
   delete game.buildingSpatialByTeam;
   delete game.buildingSpatialCount;
+  delete game.buildingBodiesSeen;
   delete game.entityById;
 }
 
@@ -851,7 +867,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
 }
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
-  const gap = distance(unit, target);
+  const gap = targetGap(unit, target);
   if (gap > unit.attackRange) {
     moveToward(unit, target.x, target.y, game.map);
     return;
@@ -879,7 +895,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
     updateAttackOrder(game, unit);
     return;
   }
-  const gap = distance(unit, target);
+  const gap = targetGap(unit, target);
   if (gap > unit.attackRange) {
     if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       unit.order = { type: "move", x: order.leashX, y: order.leashY };
@@ -1792,7 +1808,7 @@ function attackerOutranksUnreachedTarget(game: Game, unit: Unit, targetId: strin
   if (targetId === attacker.id) return false;
   const current = findTarget(game, targetId);
   if (!current || current.hp <= 0) return true;
-  if (distance(unit, current) <= unit.attackRange) return false;
+  if (targetGap(unit, current) <= unit.attackRange) return false;
   return targetPriorityScore(game, unit.owner, attacker, distanceSquared(unit, attacker)) > targetPriorityScore(game, unit.owner, current, distanceSquared(unit, current));
 }
 
@@ -2028,6 +2044,12 @@ function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Build
   return nearestEnemyTargetFromPoint(game, unit.owner, unit, range);
 }
 
+// @@@building-reach - A building is reached at its edge, a unit at its center (see building-body): a footman's 48 reaches a
+// town hall's wall, 48 from a center 66 away. While units could walk into a building they struck it from inside.
+function targetGap(from: { x: number; y: number }, target: Unit | Building) {
+  return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
+}
+
 function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: number; y: number }, range: number): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
@@ -2041,10 +2063,10 @@ function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: nu
       bestScore = score;
     }
   });
-  forEachNearbyEnemyBuilding(game, owner, point, range, (building) => {
-    const candidateDistance = distanceSquared(point, building);
-    if (candidateDistance > limit) return;
-    const score = targetPriorityScore(game, owner, building, candidateDistance);
+  forEachNearbyEnemyBuilding(game, owner, point, range + MAX_BUILDING_RADIUS, (building) => {
+    const gap = targetGap(point, building);
+    if (gap > range) return;
+    const score = targetPriorityScore(game, owner, building, gap * gap);
     if (score > bestScore) {
       best = building;
       bestScore = score;
@@ -2256,6 +2278,48 @@ function enemyTeamKeys(game: Game, owner: Owner, indexes: Map<string, unknown>) 
   const ownTeam = teamKey(game, owner);
   if (ownTeam === "neutral") return [...indexes.keys()].filter((team) => team !== "neutral");
   return [...indexes.keys()].filter((team) => team !== ownTeam);
+}
+
+// @@@building-body - A building is a body no unit enters, as a forest is (see @@@terrain) but round and its own size:
+// after the units part from each other, any unit within a building's radius and its own is set back on the building's
+// rim, out along the line from its center, and the part of a slide (see @@@push) heading into it is spent, as against a
+// wall. A foundation is as solid as a finished building: a site laid where units stand moves them aside. Units used to
+// walk through buildings, and a melee fighter struck a town hall from inside it. That holds on a map with terrain, whose
+// routing takes a unit round buildings (see @@@building-pathing); a map without terrain is open everywhere and plays as
+// it did (see @@@terrain): its walks are straight lines, and a building in their way would stop them for good (a V2
+// economy on verdantCrossroads never reached its expansion with its own farms in its workers' way).
+const MAX_BUILDING_RADIUS = Math.max(...Object.values(BUILDING_DEFS).map((def) => def.radius));
+const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.radius));
+
+function keepUnitsOutOfBuildings(game: Game) {
+  for (const building of game.buildings) {
+    // The unit index is the tick's start: a unit may have walked or slid up to MAX_SLIDE_STEP since.
+    forEachNearbyUnit(game, building, building.radius + MAX_UNIT_RADIUS + MAX_SLIDE_STEP, (unit) => keepOutOfBuilding(game, unit, building));
+  }
+}
+
+function keepOutOfBuilding(game: Game, unit: Unit, building: Building) {
+  const reach = unit.radius + building.radius;
+  const dx = unit.x - building.x;
+  const dy = unit.y - building.y;
+  const gapSq = dx * dx + dy * dy;
+  if (gapSq >= reach * reach) return;
+  const length = Math.sqrt(gapSq);
+  const nx = length === 0 ? 1 : dx / length;
+  const ny = length === 0 ? 0 : dy / length;
+  const x = clamp(building.x + nx * reach, 0, game.map.width);
+  const y = clamp(building.y + ny * reach, 0, game.map.height);
+  if (!game.map.terrain || isWalkable(game.map, x, y)) {
+    unit.x = x;
+    unit.y = y;
+  }
+  if (unit.pushX !== undefined && unit.pushY !== undefined) {
+    const into = unit.pushX * nx + unit.pushY * ny;
+    if (into < 0) {
+      unit.pushX -= into * nx;
+      unit.pushY -= into * ny;
+    }
+  }
 }
 
 function slideUnits(game: Game) {
