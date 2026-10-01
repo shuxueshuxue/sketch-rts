@@ -1,4 +1,5 @@
 import type { GameMap, GameSnapshot, Unit } from "../../../shared/types";
+import { sameGroundAs } from "../ground";
 import { averagePoint, distance, type Point } from "../spatial";
 import { neutralCamps, type Camp } from "../v7/creep";
 
@@ -11,6 +12,8 @@ import { neutralCamps, type Camp } from "../v7/creep";
 // the target from there. A camp by the target is fought where it stands (no walk round it reaches the target); one the
 // march has come up to is still walked round, the march bending round it on the way (a march that stopped counting a
 // camp once 500 from it walked into the middle's brutes and witches the same way, chalkFen generated, 5:10).
+// The step out stands on the target's ground: measured as the crow flies, it stood on an island off the shore, and an
+// army sent there stood on the beach across from it to the end (pool-gullIsland-1, 19 soldiers from 17:00 to 40:00).
 const PASS_CLEARANCE = 300;
 const DETOUR_GAP = 460;
 const END_CLEARANCE = 450;
@@ -45,7 +48,7 @@ export function marchPoint(snapshot: GameSnapshot, from: Point, to: Point): Poin
   const others = camps.filter((camp) => camp !== blocking);
   for (const side of sides) {
     const waypoint = { x: blocking.center.x + left.x * gap * side, y: blocking.center.y + left.y * gap * side };
-    if (!onMap(snapshot.map, waypoint)) continue;
+    if (!onMap(snapshot.map, waypoint) || !sameGroundAs(snapshot, to, waypoint)) continue;
     if (clearOf(others, from, waypoint) && clearOf(others, waypoint, to)) return waypoint;
   }
   return to;
