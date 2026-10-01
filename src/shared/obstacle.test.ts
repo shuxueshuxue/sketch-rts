@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildingPlacementBlocker } from "./build-placement";
+import { MAP_POOL, type PoolMap } from "./map-pool";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame, type Game } from "./sim";
 import { checkCommandLegality } from "./sim/command-validation";
-import type { Obstacle } from "./types";
+import type { Obstacle, PlayerId } from "./types";
 
 const DUEL = { d1: "d1", d2: "d2" };
 
@@ -16,17 +17,27 @@ function fordGame(): { game: Game; rocks: Obstacle } {
   return { game, rocks };
 }
 
-// A point `reach` from the rocks along the ford, to one side of them (+1) or the other (-1).
-function besideRocks(rocks: Obstacle, side: number, reach = rocks.radius + 80) {
-  return { x: rocks.x + rocks.along.x * reach * side, y: rocks.y + rocks.along.y * reach * side };
+// A point `reach` from an obstacle along the way it shuts, to one side of it (+1) or the other (-1).
+function beside(obstacle: Obstacle, side: number, reach = obstacle.radius + 80) {
+  return { x: obstacle.x + obstacle.along.x * reach * side, y: obstacle.y + obstacle.along.y * reach * side };
 }
 
-function ticksToCross(game: Game, rocks: Obstacle) {
-  const from = besideRocks(rocks, 1);
-  const to = besideRocks(rocks, -1);
-  const walker = game.spawnUnit("d1", "footman", from.x, from.y);
-  issuePlayerCommand(game, "d1", { type: "move", unitIds: [walker.id], x: to.x, y: to.y });
-  for (let tick = 1; tick <= 8_000; tick += 1) {
+// A pool map's game with nobody on it but the starts' halls and workers, seated as duel2 seats it.
+function poolGame(entry: PoolMap): Game {
+  const players = Array.from({ length: entry.players }, (_, index) => `s${index + 1}`);
+  const teams = Object.fromEntries(players.map((player, index) => [player, entry.layout.kind === "sides" ? (index < players.length / 2 ? "north" : "south") : player]));
+  const game = createGame("ladder", { players, aiPlayers: [], teams, layout: entry.layout });
+  game.units = game.units.filter((unit) => unit.owner !== "neutral");
+  return game;
+}
+
+// The ticks a footman of `owner` takes from one side of the obstacle to the other, along the way it shuts.
+function ticksToCross(game: Game, obstacle: Obstacle, owner: PlayerId) {
+  const from = beside(obstacle, 1);
+  const to = beside(obstacle, -1);
+  const walker = game.spawnUnit(owner, "footman", from.x, from.y);
+  issuePlayerCommand(game, owner, { type: "move", unitIds: [walker.id], x: to.x, y: to.y });
+  for (let tick = 1; tick <= 12_000; tick += 1) {
     stepGame(game);
     if (walker.order.type === "idle") return tick;
   }
@@ -34,22 +45,29 @@ function ticksToCross(game: Game, rocks: Obstacle) {
 }
 
 describe("rocks and gates", () => {
-  it("shut their way: a footman crossing the ford walks round by a bridge while the rocks stand, straight over once they are gone", () => {
-    const shut = fordGame();
-    const open = fordGame();
-    delete open.game.obstacles;
-    const round = ticksToCross(shut.game, shut.rocks);
-    const straight = ticksToCross(open.game, open.rocks);
-    expect(straight).toBeLessThan(200);
-    expect(round).toBeLessThan(Infinity);
-    expect(round).toBeGreaterThan(straight * 3);
+  // As the sim's routing shuts cells round a body (see @@@building-pathing), not as the generator's grid reckons it.
+  it("shut their way on every pool map: a footman walks round each one while it stands, and straight past once it is gone", () => {
+    let seen = 0;
+    for (const entry of MAP_POOL) {
+      const obstacles = poolGame(entry).obstacles ?? [];
+      obstacles.forEach((obstacle, index) => {
+        const open = poolGame(entry);
+        open.obstacles = open.obstacles!.filter((_, other) => other !== index);
+        const round = ticksToCross(poolGame(entry), obstacle, "s1");
+        const straight = ticksToCross(open, obstacle, "s1");
+        expect(straight, `${entry.id} ${obstacle.kind} ${index}`).toBeLessThan(200);
+        expect(round, `${entry.id} ${obstacle.kind} ${index}`).toBeGreaterThan(straight * 3);
+        seen += 1;
+      });
+    }
+    expect(seen).toBe(5);
   });
 
   it("are broken by an attack order and gone, which pays nothing and counts as no kill", () => {
     const { game, rocks } = fordGame();
     const gold = game.players.d1!.gold;
     const footmen = [-1, 0, 1].map((step) => {
-      const at = besideRocks(rocks, 1);
+      const at = beside(rocks, 1);
       return game.spawnUnit("d1", "footman", at.x - rocks.along.y * step * 40, at.y + rocks.along.x * step * 40);
     });
     expect(checkCommandLegality(snapshotGame(game), "d1", { type: "attack", unitIds: footmen.map((unit) => unit.id), targetId: rocks.id })).toBeUndefined();
@@ -65,10 +83,10 @@ describe("rocks and gates", () => {
 
   it("are struck by nobody unbidden: a soldier idle beside them, or walking an attack-move past them, leaves them be", () => {
     const { game, rocks } = fordGame();
-    const at = besideRocks(rocks, 1);
+    const at = beside(rocks, 1);
     const guard = game.spawnUnit("d1", "footman", at.x, at.y);
     const walker = game.spawnUnit("d1", "footman", at.x, at.y);
-    const away = besideRocks(rocks, 1, 600);
+    const away = beside(rocks, 1, 600);
     issuePlayerCommand(game, "d1", { type: "attackMove", unitIds: [walker.id], x: away.x, y: away.y });
     for (let tick = 0; tick < 400; tick += 1) stepGame(game);
     expect(rocks.hp).toBe(rocks.maxHp);
