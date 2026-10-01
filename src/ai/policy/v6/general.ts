@@ -1,4 +1,5 @@
 import { canCast } from "../../../shared/ability-cooldowns";
+import { HIGH_UPKEEP_SUPPLY } from "../../../shared/catalog";
 import type { V6PolicyMemory } from "../../memory";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
@@ -214,11 +215,14 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
   // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
-  // defense (the idle army's test below).
+  // defense (the idle army's test below). Held that long at high upkeep, where its gold comes in at 40% and its army grows
+  // by a soldier a minute, it goes whatever stands at the target: two such pairs stood at 83 to 101 supply from 7:21 to the
+  // end, each army's middle 1600 from the other's natural (base-sides-2).
   const stale = isV9Policy(options) && current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= V9_STALE_TICKS;
+  const maxed = stale && (snapshot.players[owner]?.supplyUsed ?? 0) >= HIGH_UPKEEP_SUPPLY;
   const committed = !farOff || stale || marching >= opposing * (isV9Policy(options) ? V9_FAR_ATTACK_SHARE : V7_FAR_ATTACK_SHARE);
-  if (target && regrouped && ready && committed && (marching >= target.need || (idle && marching >= target.defended))) {
-    recordPlay(memory, `general:attack:${marching >= target.need ? target.why : "idleArmy"}`);
+  if (target && regrouped && ready && (maxed || (committed && (marching >= target.need || (idle && marching >= target.defended))))) {
+    recordPlay(memory, `general:attack:${marching >= target.need ? target.why : maxed && marching < target.defended ? "maxed" : "idleArmy"}`);
     return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, available, front, target.base, rally, marchStrength(available), options, {}, isMain(intel, target.base)));
   }
 

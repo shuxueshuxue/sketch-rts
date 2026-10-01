@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
@@ -88,8 +88,6 @@ const TOWN_HALL_DROP_RANGE = 74;
 const GOLD_PER_TRIP = 10;
 const GATHER_DURATION = seconds(5);
 const GOLD_MINE_ENTRY_COOLDOWN = seconds(1.6);
-const LOW_UPKEEP_SUPPLY = 51;
-const HIGH_UPKEEP_SUPPLY = 81;
 const LOW_UPKEEP_GOLD_RATE = 0.7;
 const HIGH_UPKEEP_GOLD_RATE = 0.4;
 const VETERANCY_STEP = 0.25;

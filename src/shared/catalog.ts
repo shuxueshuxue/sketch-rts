@@ -66,6 +66,10 @@ export const SPLASH_SHARE = 0.15;
 // advanced unit at 7:00-8:30; no AI reached the elite bar inside 12 minutes.
 export const TIER_SUPPLY_CAP = { 2: 42, 3: 60 } as const;
 
+// Upkeep: from LOW_UPKEEP_SUPPLY in use a player banks 70% of the gold its workers bring back, from HIGH_UPKEEP_SUPPLY 40%.
+export const LOW_UPKEEP_SUPPLY = 51;
+export const HIGH_UPKEEP_SUPPLY = 81;
+
 // Heavy armor (knights, golems, ash chieftains and cinder revenants): a shooter's or caster's attack deals half damage, a defense
 // tower's 70%. Melee blows land in full.
 export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
