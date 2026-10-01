@@ -322,7 +322,13 @@ function redoTiles(state: TerrainRuntime, tiles: Tiles, dirty: Set<number>) {
   }
   for (const sector of [...touched].sort((a, b) => a - b)) linkSector(state, tiles, sector);
   labelIslands(state, tiles);
-  tiles.goals.clear();
+  // A goal's field reads the cells of its square and those round it (and one cell beyond): only the goals within two
+  // squares of a changed one are grown again.
+  for (const target of [...tiles.goals.keys()]) {
+    const sector = sectorOf(state, tiles, target);
+    const near = sectors.some((dirty) => Math.abs((dirty % tiles.columns) - (sector % tiles.columns)) <= 2 && Math.abs(Math.floor(dirty / tiles.columns) - Math.floor(sector / tiles.columns)) <= 2);
+    if (near) tiles.goals.delete(target);
+  }
   tiles.exits.clear();
   tiles.nearest.clear();
 }
@@ -459,9 +465,16 @@ function linkSector(state: TerrainRuntime, tiles: Tiles, sector: number) {
 
 // @@@terrain-flow - The cost from every cell of a box to the nearest seed, each seed starting at its cost (none: 0), by
 // Dial's algorithm over eight neighbours with no corner cut, a step priced by the ground it enters (see GROUND_WEIGHT).
+// Each direction's step in columns and rows, in the order of a runtime's offsets.
+const STEP_COLS = [1, 0, -1, 0, 1, -1, -1, 1];
+const STEP_ROWS = [0, 1, 0, -1, 1, 1, -1, -1];
+
 function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: number[]): BoxField {
   const { walk, offsets, width, weight } = state;
-  const size = box.width * box.height;
+  const columns = box.width;
+  const rows = box.height;
+  const origin = box.top * width + box.left;
+  const size = columns * rows;
   const dist = new Int32Array(size).fill(UNREACHED);
   const next = new Int32Array(size).fill(UNKNOWN);
   const buckets = state.boxBuckets;
@@ -473,27 +486,31 @@ function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: numbe
   for (let cost = order.length > 0 ? costOf(0) : 0; pending > 0 || seeded < order.length; cost += 1) {
     if (pending === 0) cost = costOf(seeded);
     for (; seeded < order.length && costOf(seeded) === cost; seeded += 1) {
-      const seed = seeds[order[seeded]!]!;
-      const index = local(box, seed, width);
+      const index = local(box, seeds[order[seeded]!]!, width);
       if (index < 0 || cost >= dist[index]!) continue;
       dist[index] = cost;
-      buckets[cost % BUCKETS]!.push(seed);
+      buckets[cost % BUCKETS]!.push(index);
       pending += 1;
     }
     const bucket = buckets[cost % BUCKETS]!;
     while (bucket.length > 0) {
-      const at = bucket.pop()!;
+      const index = bucket.pop()!;
       pending -= 1;
-      if (dist[local(box, at, width)] !== cost) continue;
+      if (dist[index] !== cost) continue;
+      const col = index % columns;
+      const row = (index - col) / columns;
+      const at = origin + row * width + col;
       for (let direction = 0; direction < 8; direction += 1) {
+        const stepCol = col + STEP_COLS[direction]!;
+        const stepRow = row + STEP_ROWS[direction]!;
+        if (stepCol < 0 || stepRow < 0 || stepCol >= columns || stepRow >= rows) continue;
         const step = at + offsets[direction]!;
         if (walk[step] !== 1) continue;
-        const index = local(box, step, width);
-        if (index < 0) continue;
+        const there = stepRow * columns + stepCol;
         const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[step]!;
-        if (reached >= dist[index]! || !stepAllowed(state, at, direction)) continue;
-        dist[index] = reached;
-        buckets[reached % BUCKETS]!.push(step);
+        if (reached >= dist[there]! || !stepAllowed(state, at, direction)) continue;
+        dist[there] = reached;
+        buckets[reached % BUCKETS]!.push(there);
         pending += 1;
       }
     }
@@ -504,17 +521,22 @@ function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: numbe
 // The neighbour one step down a box field (the fixed order of directions breaks ties), or -1 at its bottom; remembered.
 function downhill(state: TerrainRuntime, field: BoxField, at: number) {
   const { walk, offsets, width } = state;
-  const index = local(field.box, at, width);
+  const { box } = field;
+  const index = local(box, at, width);
   if (index < 0) return -1;
   const known = field.next[index]!;
   if (known !== UNKNOWN) return known;
+  const col = index % box.width;
+  const row = (index - col) / box.width;
   let best = -1;
   let bestCost = field.dist[index]!;
   for (let direction = 0; direction < 8; direction += 1) {
+    const stepCol = col + STEP_COLS[direction]!;
+    const stepRow = row + STEP_ROWS[direction]!;
+    if (stepCol < 0 || stepRow < 0 || stepCol >= box.width || stepRow >= box.height) continue;
     const step = at + offsets[direction]!;
-    if (walk[step] !== 1) continue;
-    const there = local(field.box, step, width);
-    if (there < 0 || field.dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
+    const there = stepRow * box.width + stepCol;
+    if (walk[step] !== 1 || field.dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
     bestCost = field.dist[there]!;
     best = step;
   }
