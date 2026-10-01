@@ -22,7 +22,6 @@ export type SoundId =
   | "summon"
   | "curse"
   | "click"
-  | "hover"
   | "select"
   | "confirm"
   | "back"
@@ -37,7 +36,6 @@ type Recipe = { group: SoundGroup; files?: readonly string[]; synth?: Synth; gai
 const IMPACT = "kenney-impact-sounds/";
 const RPG = "kenney-rpg-audio/";
 const INTERFACE = "kenney-interface-sounds/";
-const UI = "kenney-ui-audio/";
 const range = (prefix: string, count: number) => Array.from({ length: count }, (_, index) => `${prefix}${String(index).padStart(3, "0")}.ogg`);
 
 const RECIPES: Record<SoundId, Recipe> = {
@@ -57,7 +55,6 @@ const RECIPES: Record<SoundId, Recipe> = {
   summon: { group: "effects", synth: swell, gain: 0.55, limit: [2, 600] },
   curse: { group: "effects", synth: hex, gain: 0.5, limit: [2, 500] },
   click: { group: "ui", files: [`${INTERFACE}click_001.ogg`], gain: 0.55, limit: [3, 120] },
-  hover: { group: "ui", files: [`${UI}rollover2.ogg`], gain: 0.25, limit: [2, 90] },
   select: { group: "ui", files: [`${INTERFACE}select_001.ogg`], gain: 0.5, limit: [3, 120] },
   confirm: { group: "ui", files: [`${INTERFACE}confirmation_001.ogg`], gain: 0.5, limit: [1, 300] },
   back: { group: "ui", files: [`${INTERFACE}back_001.ogg`], gain: 0.5, limit: [2, 150] },

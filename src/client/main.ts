@@ -294,7 +294,6 @@ document.addEventListener("focusin", showTooltipFromEvent, true);
 document.addEventListener("focusout", hideTooltipFromEvent, true);
 document.addEventListener("pointerlockchange", syncPointerLockState);
 document.addEventListener("click", onInterfaceClick, true);
-document.addEventListener("pointerover", onInterfaceHover, true);
 document.addEventListener("keydown", () => soundboard.unlock(), true);
 document.addEventListener("change", (event) => {
   if (event.target instanceof HTMLSelectElement) soundboard.play("select");
@@ -1458,8 +1457,8 @@ function playCues(cues: SoundCue[]) {
   }
 }
 
-// The interface's sounds: a click for a button, its own for a choice, a start and a way back, and a soft tick for
-// pointing at a button.
+// The interface's sounds: a click for a button, its own for a choice, a start and a way back. Pointing at a button is
+// silent.
 function interfaceSound(target: Element): SoundId | undefined {
   if (target.closest("[data-submit-create-game], [data-start-room], [data-rematch]")) return "confirm";
   if (target.closest("[data-back-home], [data-back-room-browser], [data-return-home]")) return "back";
@@ -1472,12 +1471,6 @@ function onInterfaceClick(event: MouseEvent) {
   soundboard.unlock();
   const sound = event.target instanceof Element ? interfaceSound(event.target) : undefined;
   if (sound) soundboard.play(sound);
-}
-
-function onInterfaceHover(event: PointerEvent) {
-  const target = event.target instanceof Element ? event.target.closest(".map-button, .command-button, .map-entry, .menu-actions button, .scene-switch") : null;
-  if (!target || (event.relatedTarget instanceof Node && target.contains(event.relatedTarget))) return;
-  soundboard.play("hover");
 }
 
 function onMouseDown(event: MouseEvent) {
