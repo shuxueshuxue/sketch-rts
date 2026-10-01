@@ -83,7 +83,7 @@ import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
 import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
-import { onHomeGround } from "./ground";
+import { onHomeGround, sameGroundAs } from "./ground";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -349,6 +349,8 @@ function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">)
   return version === "v3" || version === "v3-grove" || version === "v3-ember" || version === "v5" || version === "v6" || version === "v7" || version === "v8" || version === "v9" ? "v2" : version;
 }
 
+// A hall's mine takes only workers that can walk to it: a hall on an island is mined by the workers ferried there (see
+// @@@ai-home-ground, @@@ai-naval).
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
   const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !nearOwnIncompleteBuilding(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
@@ -362,7 +364,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const mine = localActiveMineForBase(snapshot, base);
     if (!mine || (assignmentCounts.get(mine.id) ?? 0) > 0) continue;
     const worker = nearestEntity(
-      assignableWorkers.filter((candidate) => candidate.order.type !== "mine" || candidate.order.resourceId !== mine.id),
+      assignableWorkers.filter((candidate) => (candidate.order.type !== "mine" || candidate.order.resourceId !== mine.id) && sameGroundAs(snapshot, candidate, mine)),
       base,
     );
     if (worker) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: [worker.id], resourceId: mine.id }, options);
@@ -374,7 +376,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const assigned = assignmentCounts.get(mine.id) ?? 0;
     if (assigned >= 5) continue;
     const candidates = nearestEntities(
-      assignableWorkers.filter((worker) => worker.order.type !== "mine" || worker.order.resourceId !== mine.id),
+      assignableWorkers.filter((worker) => (worker.order.type !== "mine" || worker.order.resourceId !== mine.id) && sameGroundAs(snapshot, worker, mine)),
       base,
     );
     const selected = candidates.slice(0, 5 - assigned);
@@ -385,8 +387,9 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   const remoteMine = depletedEconomyRemoteMine(snapshot, owner, bases, options);
   if (remoteMine) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: remoteMine.id }, options);
   const mine = localActiveMineForBase(snapshot, mainBase(snapshot, owner));
-  if (!mine) return undefined;
-  return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: mine.id }, options);
+  const walkers = mine ? idleWorkers.filter((worker) => sameGroundAs(snapshot, worker, mine)) : [];
+  if (!mine || walkers.length === 0) return undefined;
+  return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: walkers.map((worker) => worker.id), resourceId: mine.id }, options);
 }
 
 // A player whose halls have no gold left by them and who cannot pay for a new one sends its idle workers to the nearest
