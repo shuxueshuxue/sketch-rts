@@ -187,26 +187,29 @@ export const UNIT_RULES = {
   transport: { trainedAt: "shipyard", hp: 270, speed: 3.2, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, xpReward: 30, abilities: [], naval: true, carries: 8 },
   warship: { trainedAt: "shipyard", hp: 180, speed: 3, radius: 28, attackDamage: 20, attackRange: 390, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, xpReward: 40, abilities: [], naval: true },
   ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 32, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
-  // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, health and damage on the
-  // wildlings' curve, bounty and experience by level (20/35/50/68/85/100/130 gold at levels 1-8). Each has one trait or
-  // ability at most (see @@@creep-traits), and none reaches past a tower's 480, so no creep wakes from farther than
-  // today. None is wider than 28: a blow's reach is measured from center to center, and a footman (radius 18, reach 48)
-  // could not strike a wider one through their bodies.
-  murlocPeon: { hp: 60, speed: 2.8, radius: 14, attackDamage: 7, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
+  // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:
+  // health and damage were set so that a squad of two footmen to an archer sized to the tier (3, 5, 7) loses as much,
+  // for the camp's level, clearing the new templates as the old ones, within a tenth on average (green 0.96, orange
+  // 1.09, red 1.06); a power changes how a camp fights, not how hard it is. Each has one trait or ability at most (see
+  // @@@creep-traits), and none reaches past a tower's 480, so no creep wakes from farther than today. None is wider
+  // than 28: a blow's reach is measured from center to center, and a footman (radius 18, reach 48) could not strike a
+  // wider one through their bodies.
+  murlocPeon: { hp: 80, speed: 2.8, radius: 14, attackDamage: 9, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
   murlocHunter: { hp: 85, speed: 2.8, radius: 15, attackDamage: 9, attackRange: 150, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], slowOnHit: true, threat: 1.05 },
   tidePriest: { hp: 100, speed: 2.6, radius: 17, attackDamage: 7, attackRange: 200, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["heal"] },
-  deepSnapper: { hp: 420, speed: 2.2, radius: 26, attackDamage: 26, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [], armor: "heavy", threat: 1.25 },
-  rubbleGolem: { hp: 230, speed: 2, radius: 22, attackDamage: 18, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [], armor: "heavy" },
-  rockGolem: { hp: 320, speed: 2, radius: 25, attackDamage: 24, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [], armor: "heavy", threat: 1.3 },
-  graniteGolem: { hp: 560, speed: 1.9, radius: 28, attackDamage: 36, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
-  ogreWarrior: { hp: 220, speed: 2.6, radius: 22, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
-  ogreMage: { hp: 200, speed: 2.6, radius: 22, attackDamage: 14, attackRange: 200, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: ["bloodlust"], threat: 1.15 },
-  ogreLord: { hp: 520, speed: 2.6, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: [], threat: 1.35 },
-  spiderling: { hp: 50, speed: 3.6, radius: 12, attackDamage: 6, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
-  venomSpider: { hp: 90, speed: 3.2, radius: 15, attackDamage: 9, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
-  spiderQueen: { hp: 340, speed: 3, radius: 26, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
-  dragonWhelp: { hp: 260, speed: 3, radius: 22, attackDamage: 18, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
-  redDragon: { hp: 800, speed: 2.8, radius: 28, attackDamage: 40, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
+  deepSnapper: { hp: 395, speed: 2.2, radius: 26, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [], armor: "heavy", threat: 1.25 },
+  rubbleGolem: { hp: 202, speed: 2, radius: 22, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [], armor: "heavy" },
+  rockGolem: { hp: 241, speed: 2, radius: 25, attackDamage: 18, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { hp: 396, speed: 1.9, radius: 28, attackDamage: 25, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  ogreWarrior: { hp: 178, speed: 2.6, radius: 22, attackDamage: 16, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
+  ogreMage: { hp: 145, speed: 2.6, radius: 22, attackDamage: 10, attackRange: 200, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: ["bloodlust"], threat: 1.15 },
+  ogreLord: { hp: 375, speed: 2.6, radius: 28, attackDamage: 25, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: [], threat: 1.35 },
+  spiderling: { hp: 65, speed: 3.6, radius: 12, attackDamage: 8, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  venomSpider: { hp: 105, speed: 3.2, radius: 15, attackDamage: 10, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
+  spiderQueen: { hp: 400, speed: 3, radius: 26, attackDamage: 26, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
+  dragonWhelp: { hp: 170, speed: 3, radius: 22, attackDamage: 9, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
+  redDragon: { hp: 500, speed: 2.8, radius: 28, attackDamage: 19, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
 } satisfies Record<string, UnitDef>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
