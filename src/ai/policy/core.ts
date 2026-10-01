@@ -83,6 +83,7 @@ import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
 import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
+import { onHomeGround } from "./ground";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -389,14 +390,16 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
 }
 
 // A player whose halls have no gold left by them and who cannot pay for a new one sends its idle workers to the nearest
-// safe mine, however far. Only V5 used to: the other AIs stood with every worker idle by 6,000 gold until the game ran
-// out (a three-way free-for-all, two players left with three soldiers each and nothing to buy them with).
+// safe mine they can walk to (see @@@ai-home-ground), however far. Only V5 used to: the other AIs stood with every worker
+// idle by 6,000 gold until the game ran out (a three-way free-for-all, two players left with three soldiers each and
+// nothing to buy them with).
 function depletedEconomyRemoteMine(snapshot: GameSnapshot, owner: PlayerId, bases: Building[], options: PresetAiPolicyOptions) {
   if (bases.length === 0) return undefined;
   if (playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost) return undefined;
   if (bases.some((base) => localActiveMineForBase(snapshot, base))) return undefined;
   const anchor = averagePoint(bases);
   return activeResources(snapshot)
+    .filter((resource) => onHomeGround(snapshot, owner, resource))
     .filter((resource) => neutralUnitsNear(snapshot, resource, 360).length === 0)
     .filter((resource) => !enemyPressure(snapshot, owner, resource, 640, options))
     .filter((resource) => enemyBuildingsNear(snapshot, owner, resource, 720, options.teams).length === 0)
