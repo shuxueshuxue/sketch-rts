@@ -1,21 +1,22 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
-import { isWalkable, walkableGoal } from "./terrain";
+import { isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
 import type { Building, GameMap, Unit } from "./types";
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
 // soldier strikes a ship that has come in to the shallows, where it can wade out to it, and not one out on deep water; an
 // archer on the beach shoots a ship within its range of the shore; a ship shoots what stands within its range of the water.
 // Seeking a target, turning on an attacker, keeping one and charging all ask this, so nobody stands on a beach waiting for
-// a ship it will never reach. Two units on the same ground always can, as before (a walk that cannot join them is the
-// walk's matter, not the fight's).
+// a ship it will never reach. A target on the attacker's own ground it can always reach (a walk the buildings bar is the
+// walk's matter, not the fight's); any other it reaches from where its ground comes nearest. Two land units were taken to
+// share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
+// and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
 export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building) {
   if (!map.terrain) return true;
   const mover = unitMover(attacker.kind);
-  if (mover === ("order" in target ? unitMover(target.kind) : "land")) return true;
-  if (isWalkable(map, target.x, target.y, mover)) return true;
+  if (isWalkable(map, target.x, target.y, mover) && sameGround(map, attacker, target, mover)) return true;
   // A building is reached at its wall (see @@@building-reach), a unit at its center.
-  const stand = walkableGoal(map, target.x, target.y, mover);
+  const stand = walkDestination(map, attacker, walkableGoal(map, target.x, target.y, mover), mover);
   return Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius) <= attacker.attackRange;
 }
 
