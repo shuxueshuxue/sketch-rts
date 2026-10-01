@@ -81,6 +81,9 @@ export type BuildingRules = {
   attackRange: number;
   attackCooldown: number;
   supplyProvided: number;
+  // Stands on the shore, its center on land and part of it over water (see @@@shore-footprint); every other building
+  // stands on walkable ground.
+  shore?: true;
 };
 
 // What the building trains is derived from the units' trainedAt, in catalog order.
@@ -254,6 +257,8 @@ export const BUILDING_RULES = {
   ashenHall: { race: "ember", hp: 600, radius: 42, cost: 215, buildTime: seconds(13), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   // Supply is the tech (see unit-tiers), so it is dear: a farm's 6 cost 120, a hall's 8 are priced the same inside its 400.
   farm: { hp: 320, radius: 30, cost: 120, buildTime: seconds(7), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 6 },
+  // Ships are built here (see @@@naval); every race builds it, as it does a tower or a farm.
+  shipyard: { hp: 600, radius: 44, cost: 170, buildTime: seconds(12), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0, shore: true },
 } satisfies Record<string, BuildingRules>;
 
 export const BUILDABLE_BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];

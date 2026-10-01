@@ -126,7 +126,32 @@ export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y
   const terrain = map.terrain;
   if (!terrain) return true;
   const state = runtime(terrain, "land");
+  return everyFootprintCell(terrain, x, y, radius, (at, cell) => state.walk[at] === 1 && terrain.levels?.[cell] !== "2");
+}
+
+// @@@shore-footprint - Whether a shipyard of the given radius may stand at the point, on the shore: its center where a
+// worker walks, so it builds and repairs it from there and a soldier can strike it; at least one cell of its footprint
+// water a ship sails, for its ships to put out from; and no part of it in a forest, on rock, on a ramp (see
+// @@@ramp-unbuildable) or off the map. A map without terrain has no water.
+export function isShoreFootprint(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
+  const terrain = map.terrain;
+  if (!terrain) return false;
+  const land = runtime(terrain, "land");
+  const sea = runtime(terrain, "sea");
+  if (land.walk[padAt(land, x, y)] !== 1) return false;
+  let wet = false;
+  const fits = everyFootprintCell(terrain, x, y, radius, (at, cell) => {
+    if (sea.walk[at] === 1) wet = true;
+    return (sea.walk[at] === 1 || land.walk[at] === 1) && terrain.levels?.[cell] !== "2";
+  });
+  return fits && wet;
+}
+
+// Whether every cell a circle touches passes the test (by its padded index and its index in the terrain); a cell off the
+// map never does.
+function everyFootprintCell(terrain: Terrain, x: number, y: number, radius: number, passes: (at: number, cell: number) => boolean) {
   const size = terrain.cell;
+  const width = terrain.cols + 2;
   const low = { col: Math.floor((x - radius) / size), row: Math.floor((y - radius) / size) };
   const high = { col: Math.floor((x + radius) / size), row: Math.floor((y + radius) / size) };
   for (let row = low.row; row <= high.row; row += 1) {
@@ -136,7 +161,7 @@ export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y
       const nearX = Math.max(col * size, Math.min(x, (col + 1) * size));
       const nearY = Math.max(row * size, Math.min(y, (row + 1) * size));
       if ((nearX - x) * (nearX - x) + (nearY - y) * (nearY - y) >= radius * radius) continue;
-      if (state.walk[pad(state, col, row)] !== 1 || terrain.levels?.[row * terrain.cols + col] === "2") return false;
+      if (!passes((row + 1) * width + col + 1, row * terrain.cols + col)) return false;
     }
   }
   return true;

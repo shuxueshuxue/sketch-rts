@@ -2,6 +2,8 @@ import type { BuildingKind } from "../../shared/types";
 import { type Brush, GOLD, INK, ellipse, flag, house, line, polygon, tower } from "../art/kit";
 import type { BuildingCard } from "./cards";
 
+const WOOD_DECK = "#a88a5c";
+
 // Parts several buildings share.
 function yard(b: Brush, team: string, details: () => void) {
   house(b, -4, -2, 1.08, team);
@@ -190,6 +192,23 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
       }
       house(b, 12, -17, 0.6, team);
       line(b, [[-37, 20], [-37, 4], [-18, 10], [-18, 28]], "#726d4e", 2);
+    },
+  },
+  shipyard: {
+    name: { en: "Shipyard", zh: "船坞" },
+    description: { en: "Builds ships. Stands on the shore: its center on land, part of it over water.", zh: "建造船只。只能建在岸边：中心在陆地上，一部分伸进水里。" },
+    command: { icon: "⚓", hotkey: "y" },
+    glyph: { frame: "shipyard-dock", marks: ["anchor", "waves", "banner"] },
+    paint(b, team) {
+      polygon(b, [[2, 4], [40, -12], [44, 12], [8, 30]], "#5f8f9a", INK, 1);
+      for (let i = 0; i < 3; i++) line(b, [[12 + i * 9, 10 - i * 4], [20 + i * 9, 7 - i * 4]], "#b9d6d2", 1.2);
+      polygon(b, [[-2, 2], [34, -14], [38, -8], [2, 8]], WOOD_DECK);
+      for (let i = 0; i < 5; i++) line(b, [[4 + i * 7, 6 - i * 3], [1 + i * 7, 0 - i * 3]], "#6b5a3e", 0.9);
+      house(b, -16, 2, 0.82, team);
+      line(b, [[30, -10], [30, -42]], INK, 1.8);
+      line(b, [[22, -34], [38, -38]], INK, 1.2);
+      flag(b, 30, -50, team, 0.55);
+      ellipse(b, 37, 18, 4, 4, GOLD, INK);
     },
   },
 };

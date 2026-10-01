@@ -15,7 +15,8 @@ export type BuildingGlyph = {
     | "cinder-spire"
     | "ember-shrine"
     | "ashen-hall"
-    | "farm-plot";
+    | "farm-plot"
+    | "shipyard-dock";
   marks: BuildingGlyphMark[];
 };
 
@@ -35,7 +36,9 @@ export type BuildingGlyphMark =
   | "arrowSlit"
   | "watchEye"
   | "furrows"
-  | "scareMark";
+  | "scareMark"
+  | "anchor"
+  | "waves";
 
 export const BUILDING_GLYPHS: Record<BuildingKind, BuildingGlyph> = mapBuildingCards((card) => card.glyph);
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, stepGame } from "./sim";
 import { isBuildPlacementClear } from "./build-placement";
-import { isFootprintBuildable, isWalkable, segmentWalkable, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
+import { isFootprintBuildable, isShoreFootprint, isWalkable, segmentWalkable, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
 
 // A 20 by 20 grid of 32-unit cells: open ground with a forest wall down column 10 from the top to row 15, so the way
 // from the left half to the right half goes round its foot.
@@ -177,5 +177,40 @@ describe("the sea", () => {
     walkableGoal(map(terrain), at(5, 5).x, at(5, 5).y, "sea");
     expect(walkingDistance(map(terrain), at(1, 1), at(8, 18))).toBe(before);
     expect(walkableGoal(map(terrain), at(12, 2).x, at(12, 2).y)).toEqual(at(9, 2));
+  });
+
+  it("places a shipyard on the shore only: its center on land, water under part of it, no part on rock", () => {
+    const sea = map(harbor());
+    expect(isShoreFootprint(sea, 300, at(0, 5).y, 44)).toBe(true);
+    expect(isShoreFootprint(sea, 340, at(0, 5).y, 44)).toBe(false);
+    expect(isShoreFootprint(sea, 200, at(0, 5).y, 44)).toBe(false);
+    expect(isShoreFootprint(sea, 300, at(0, 12).y, 44)).toBe(false);
+    // Any water will do, a pond's or an island's shore.
+    expect(isShoreFootprint(sea, at(3, 14).x, at(3, 14).y, 44)).toBe(true);
+    expect(isShoreFootprint(sea, at(13, 8).x, at(13, 8).y, 44)).toBe(true);
+    expect(isShoreFootprint({}, 300, at(0, 5).y, 44)).toBe(false);
+  });
+
+  it("lets a worker raise a shipyard on the shore, and refuses one inland or a farm half in the sea", () => {
+    const terrain = harbor();
+    const sim = createGame("bareDuel", {
+      players: ["player", "enemy"],
+      scenario: {
+        players: { player: { gold: 1_000 } },
+        replaceDefaultUnits: true,
+        replaceDefaultBuildings: true,
+        addBuildings: [
+          { id: "hall-a", owner: "player", kind: "townHall", x: 80, y: 80 },
+          { id: "hall-b", owner: "enemy", kind: "townHall", x: 200, y: 560 },
+        ],
+        addUnits: [{ id: "worker", owner: "player", kind: "worker", x: 200, y: at(0, 5).y }],
+      },
+    });
+    sim.map = { ...sim.map, width: 640, height: 640, terrain };
+    expect(() => issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "shipyard", x: 200, y: 300 })).toThrow(/blocked ground/);
+    expect(() => issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "farm", x: 310, y: 300 })).toThrow(/blocked ground/);
+    issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "shipyard", x: 300, y: at(0, 5).y });
+    for (let tick = 0; tick < 600; tick += 1) stepGame(sim);
+    expect(sim.buildings.find((building) => building.kind === "shipyard")?.complete).toBe(true);
   });
 });
