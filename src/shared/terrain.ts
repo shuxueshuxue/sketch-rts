@@ -92,6 +92,19 @@ export function isWalkable(map: Pick<GameMap, "terrain">, x: number, y: number, 
   return state.walk[padAt(state, x, y)] === 1;
 }
 
+// The ground under a point as it slows whoever crosses it (see @@@terrain-ground): a land unit keeps `pace` of its speed
+// there and a slide brakes `drag` times as hard; a ship sails and slides at full pace everywhere, and a map without
+// terrain is bare ground.
+const BARE_GROUND = { pace: 1, drag: 1 };
+
+export function groundUnder(map: Pick<GameMap, "terrain">, x: number, y: number, mover: Mover = "land"): { pace: number; drag: number } {
+  const terrain = map.terrain;
+  if (!terrain || mover === "sea") return BARE_GROUND;
+  const index = cellIndexAt(terrain, x, y);
+  const ground = index < 0 ? undefined : CELL_GROUND[terrain.cells[index]!];
+  return ground && ground.land ? ground : BARE_GROUND;
+}
+
 export function cellIndexAt(terrain: Terrain, x: number, y: number) {
   const col = Math.floor(x / terrain.cell);
   const row = Math.floor(y / terrain.cell);

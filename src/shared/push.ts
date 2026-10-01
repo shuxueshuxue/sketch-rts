@@ -1,5 +1,5 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
-import { isWalkable } from "./terrain";
+import { groundUnder, isWalkable } from "./terrain";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 
 // @@@push - A shove (a blow that knocks back, a lunge) gives a unit a velocity of its own beside its walk: pushX/pushY, in
@@ -89,18 +89,21 @@ export function lungeStrength(striker: Unit, shoved: number) {
 // One tick of a unit's slide. Each tick it covers its speed less half the tick's slowing, the last tick what remains of
 // speed² / 2a, so the whole slide is exactly (starting speed)² / 2a. No tick covers more than MAX_SLIDE_STEP: a faster
 // slide covers that much and keeps the speed whose own slide is the rest (speed² - 2a * step = speed'²), so it runs longer
-// and just as far. Two bodies (radius 13 at the least) never pass through each other inside one tick.
+// and just as far. Two bodies (radius 13 at the least) never pass through each other inside one tick. The slowing is the
+// ground's: a shallow or a bog brakes a slide harder (see groundUnder), so a charge or a shove through one stops short.
 export const MAX_SLIDE_STEP = 24;
 
 export function slide(unit: Unit, map: GameMap) {
   const vx = unit.pushX;
   const vy = unit.pushY;
   if (vx === undefined || vy === undefined) return;
+  const mover = unitMover(unit.kind);
+  const friction = PUSH_FRICTION * groundUnder(map, unit.x, unit.y, mover).drag;
   const speed = Math.sqrt(vx * vx + vy * vy);
-  const last = speed <= PUSH_FRICTION;
-  const capped = speed > MAX_SLIDE_STEP + PUSH_FRICTION / 2;
-  const step = last ? (speed * speed) / (2 * PUSH_FRICTION) : capped ? MAX_SLIDE_STEP : speed - PUSH_FRICTION / 2;
-  const kept = last ? 0 : capped ? Math.sqrt(speed * speed - 2 * PUSH_FRICTION * MAX_SLIDE_STEP) / speed : (speed - PUSH_FRICTION) / speed;
+  const last = speed <= friction;
+  const capped = speed > MAX_SLIDE_STEP + friction / 2;
+  const step = last ? (speed * speed) / (2 * friction) : capped ? MAX_SLIDE_STEP : speed - friction / 2;
+  const kept = last ? 0 : capped ? Math.sqrt(speed * speed - 2 * friction * MAX_SLIDE_STEP) / speed : (speed - friction) / speed;
   let px = vx * kept;
   let py = vy * kept;
   let x = speed === 0 ? unit.x : unit.x + (vx / speed) * step;
@@ -113,7 +116,6 @@ export function slide(unit: Unit, map: GameMap) {
     y = Math.min(map.height, Math.max(0, y));
     py = 0;
   }
-  const mover = unitMover(unit.kind);
   if (map.terrain && !isWalkable(map, x, y, mover) && isWalkable(map, unit.x, unit.y, mover)) {
     if (isWalkable(map, x, unit.y, mover)) {
       y = unit.y;

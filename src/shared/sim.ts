@@ -2,7 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MER
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { isWalkable, setBuildingBodies, steerPoint, walkableGoal } from "./terrain";
+import { groundUnder, isWalkable, setBuildingBodies, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -2587,8 +2587,10 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
   const dy = aim.y - unit.y;
   const length = Math.sqrt(dx * dx + dy * dy);
   if (length === 0) return;
-  const nextX = clamp(length <= unit.speed ? aim.x : unit.x + (dx / length) * unit.speed, 0, map.width);
-  const nextY = clamp(length <= unit.speed ? aim.y : unit.y + (dy / length) * unit.speed, 0, map.height);
+  // A shallow or a bog slows a land unit to its ground's pace (see groundUnder).
+  const speed = unit.speed * groundUnder(map, unit.x, unit.y, mover).pace;
+  const nextX = clamp(length <= speed ? aim.x : unit.x + (dx / length) * speed, 0, map.width);
+  const nextY = clamp(length <= speed ? aim.y : unit.y + (dy / length) * speed, 0, map.height);
   if (isWalkable(map, nextX, nextY, mover) || !isWalkable(map, unit.x, unit.y, mover)) {
     unit.x = nextX;
     unit.y = nextY;
