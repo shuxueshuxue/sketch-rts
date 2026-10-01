@@ -4,7 +4,7 @@ import { UnitMotionSmoother } from "./unit-motion";
 
 const TICK_MS = 50;
 const idle: UnitOrder = { type: "idle" };
-const charging: UnitOrder = { type: "charge", targetId: "foe", ticks: 1, resume: { type: "attack", targetId: "foe" } };
+const charging: UnitOrder = { type: "charge", targetId: "foe", resume: { type: "attack", targetId: "foe" } };
 const attacking: UnitOrder = { type: "attack", targetId: "foe" };
 
 const unit = (x: number, order: UnitOrder, id = "rider") => ({ id, x, y: 100, order }) as Unit;

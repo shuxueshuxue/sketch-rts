@@ -96,7 +96,7 @@ export type UnitOrder =
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
-  | { type: "charge"; targetId: string; ticks: number; resume: SettledUnitOrder };
+  | { type: "charge"; targetId: string; resume: SettledUnitOrder };
 
 // Any order but a charge.
 export type SettledUnitOrder = Exclude<UnitOrder, { type: "charge" }>;

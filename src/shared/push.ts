@@ -90,7 +90,7 @@ export function lungeStrength(striker: Unit, shoved: number) {
 // speed² / 2a, so the whole slide is exactly (starting speed)² / 2a. No tick covers more than MAX_SLIDE_STEP: a faster
 // slide covers that much and keeps the speed whose own slide is the rest (speed² - 2a * step = speed'²), so it runs longer
 // and just as far. Two bodies (radius 13 at the least) never pass through each other inside one tick.
-const MAX_SLIDE_STEP = 24;
+export const MAX_SLIDE_STEP = 24;
 
 export function slide(unit: Unit, map: GameMap) {
   const vx = unit.pushX;

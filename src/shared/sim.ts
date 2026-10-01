@@ -4,7 +4,7 @@ import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { isWalkable, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
-import { BRACE_DAMAGE_SHARE, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
   createInitialBuildings,
@@ -708,11 +708,14 @@ function updateUnits(game: Game) {
       if (left) unit.abilityCooldowns = left;
       else unit.abilityCooldowns = undefined;
     }
-    // Off its feet (see @@@push) a unit neither walks, strikes nor casts; its order waits for it.
-    if (isStaggered(unit)) continue;
-    activateQueuedOrder(unit);
-    if (updateNeutralLeash(game, unit)) continue;
-    autocastStep(game, unit);
+    // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
+    // strikes nor casts, and its order waits for it.
+    if (unit.order.type !== "charge") {
+      if (isStaggered(unit)) continue;
+      activateQueuedOrder(unit);
+      if (updateNeutralLeash(game, unit)) continue;
+      autocastStep(game, unit);
+    }
     if (unit.order.type === "charge") {
       updateChargeOrder(game, unit);
       continue;
@@ -1260,11 +1263,15 @@ function applyCurse(game: Game, caster: Unit, ability: AbilityKind, target: Unit
 
 type ChargeDef = Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "charge" }>;
 
-// @@@charge - The cavalry's charge: at an enemy unit between minRange and range away the rider dashes (dashSpeed a tick,
-// about half a second over the window), and on reaching it strikes once for damageMultiplier times its weapon's blow, as
-// any melee blow lands (curse and armor count as ever). The dash runs its course: an order given meanwhile waits for it
-// (see assignUnitOrder), and a dash that has not arrived after maxDashTicks is given up. The rider then takes up `resume`:
-// what it was doing, now aimed at the unit it charged.
+// @@@charge - The cavalry's charge rides the push physics (see @@@push): at an enemy unit between minRange and range away
+// the rider shoves itself at where the unit stands, hard enough to slide on `drive` past the point of meeting it, so it
+// arrives at a gallop (24 a tick at the most, about six times its walk). Once the unit is within its reach it strikes once
+// for damageMultiplier times its weapon's blow, as any melee blow lands (curse, armor and its stance count as ever), and
+// what is left of its slide carries it into the unit: the two meet as any two bodies do, so a knight throws a footman
+// back and hardly moves a golem. A unit that walks out of the line may be missed: a slide that runs out with the unit
+// out of reach strikes nothing. The charge runs its course: an order given meanwhile waits for it (see
+// assignUnitOrder). The rider then takes up `resume`: what it was doing, now aimed at the unit it charged. It used to
+// dash at 30 a tick, steering after the unit, and stop dead at striking distance.
 function inChargeWindow(caster: Unit, target: Unit, def: ChargeDef) {
   const gap = distance(caster, target);
   return gap >= def.minRange && gap <= def.range;
@@ -1282,9 +1289,11 @@ function startCharge(game: Game, caster: Unit, ability: AbilityKind, target: Uni
           ? { type: "attack", targetId: target.id, leashX: caster.x, leashY: caster.y }
           : { type: "attack", targetId: target.id };
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
-  caster.order = { type: "charge", targetId: target.id, ticks: 0, resume };
+  caster.order = { type: "charge", targetId: target.id, resume };
   if (commanded) caster.orderQueue = [];
-  const expected = Math.max(1, Math.ceil((distance(caster, target) - caster.attackRange) / def.dashSpeed));
+  const meeting = Math.max(0, distance(caster, target) - caster.radius - target.radius);
+  shove(caster, target.x - caster.x, target.y - caster.y, meeting + def.drive);
+  const expected = Math.max(1, Math.ceil((distance(caster, target) - caster.attackRange) / MAX_SLIDE_STEP));
   addEffect(game, def.effectType, caster.x, caster.y, expected, { fromX: caster.x, fromY: caster.y, toX: target.x, toY: target.y, owner: caster.owner, sourceKind: caster.kind, unitId: caster.id });
 }
 
@@ -1298,37 +1307,20 @@ function updateChargeOrder(game: Game, unit: Unit) {
     endCharge(unit, order.resume);
     return;
   }
-  order.ticks += 1;
-  const gap = distance(unit, target);
-  if (gap > unit.attackRange) {
-    // Stop at striking distance, not on top of the target.
-    dashToward(unit, target, Math.min(def.dashSpeed, gap - unit.attackRange * CHARGE_STOP_SHARE), game.map);
-    if (distance(unit, target) > unit.attackRange && order.ticks < def.maxDashTicks) return;
-  }
   if (distance(unit, target) <= unit.attackRange) {
     const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit) * def.damageMultiplier));
     applyAttackDamage(game, unit, target, damage, unit.attackRange);
     addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id });
     unit.cooldown = unit.attackCooldown;
+    endCharge(unit, order.resume);
+    return;
   }
-  endCharge(unit, order.resume);
+  if (unit.pushX === undefined) endCharge(unit, order.resume);
 }
 
 function endCharge(unit: Unit, resume: SettledUnitOrder) {
   const next = unit.orderQueue?.shift();
   unit.order = next ?? resume;
-}
-
-function dashToward(unit: Unit, target: { x: number; y: number }, step: number, map: GameMap) {
-  const gap = distance(unit, target);
-  if (gap <= 0 || step <= 0) return;
-  const move = Math.min(step, gap);
-  const x = clamp(unit.x + ((target.x - unit.x) / gap) * move, 0, map.width);
-  const y = clamp(unit.y + ((target.y - unit.y) / gap) * move, 0, map.height);
-  // A dash stops at blocked ground (see @@@terrain).
-  if (map.terrain && !isWalkable(map, x, y)) return;
-  unit.x = x;
-  unit.y = y;
 }
 
 // @@@autocast-step - Each ready ability a unit has switched on (see autocast) looks for its moment, as Warcraft III units
@@ -1348,7 +1340,6 @@ const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMov
 const SUMMON_ALERT_MARGIN = 100;
 const SUMMON_COMPANY_RANGE = 320;
 const SUMMON_STEP = 60;
-const CHARGE_STOP_SHARE = 0.8;
 const CHARGE_IMPACT_TICKS = 12;
 
 function autocastStep(game: Game, unit: Unit) {

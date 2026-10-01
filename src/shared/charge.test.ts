@@ -48,6 +48,22 @@ describe("cavalry charge", () => {
     expect(game.effects.some((effect) => effect.type === "chargeImpact")).toBe(true);
   });
 
+  it("carries its momentum into the unit it meets: a knight throws a footman back and hardly moves a golem", () => {
+    const thrown = (kind: "footman" | "golem") => {
+      const game = duel();
+      const knight = game.spawnUnit("player", "knight", 500, 500);
+      const foe = game.spawnUnit("enemy", kind, INSIDE, 500);
+      issueCommand(game, { type: "setAutocast", unitIds: [knight.id], ability: "charge", enabled: false });
+      issuePlayerCommand(game, "enemy", { type: "holdPosition", unitIds: [foe.id] });
+      issueCommand(game, { type: "cast", unitId: knight.id, ability: "charge", targetId: foe.id });
+      steps(game, 40);
+      expect(foe.maxHp - foe.hp).toBeGreaterThanOrEqual(chargeBlow(knight));
+      return foe.x - INSIDE;
+    };
+    expect(thrown("footman")).toBeGreaterThan(20);
+    expect(thrown("golem")).toBeLessThan(thrown("footman") / 2);
+  });
+
   it("only charges a unit inside the window", () => {
     for (const gap of [CHARGE.minRange - 50, CHARGE.range + 50]) {
       const game = duel();

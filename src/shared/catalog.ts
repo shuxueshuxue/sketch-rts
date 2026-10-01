@@ -51,7 +51,7 @@ export type AbilityDef = { autocast: AutocastDefault } & (
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
   // A dash at an enemy unit between minRange and range away, striking it for damageMultiplier times the weapon's blow.
-  | { behavior: "charge"; minRange: number; range: number; plannerRange: number; cooldown: number; damageMultiplier: number; dashSpeed: number; maxDashTicks: number; effectType: "chargeTrail" }
+  | { behavior: "charge"; minRange: number; range: number; plannerRange: number; cooldown: number; damageMultiplier: number; drive: number; effectType: "chargeTrail" }
   | {
       behavior: "curse";
       range: number;
@@ -213,8 +213,9 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
   ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "scorch", autocast: "on" },
-  // The cavalry's charge: from 180 to 300 away, a dash of under half a second and a blow of twice the weapon's.
-  charge: { behavior: "charge", minRange: 180, range: 300, plannerRange: 288, cooldown: seconds(15), damageMultiplier: 2, dashSpeed: 30, maxDashTicks: seconds(1.5), effectType: "chargeTrail", autocast: "on" },
+  // The cavalry's charge: from 180 to 300 away, a slide that would carry the rider `drive` past the unit it meets (see
+  // @@@charge), and a blow of twice the weapon's.
+  charge: { behavior: "charge", minRange: 180, range: 300, plannerRange: 288, cooldown: seconds(15), damageMultiplier: 2, drive: 100, effectType: "chargeTrail", autocast: "on" },
 };
 
 // A spell, as against a blow of the body like the charge: what a caster is, and what the ash chieftain hunts.

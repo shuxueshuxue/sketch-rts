@@ -204,13 +204,13 @@ describe("world renderer", () => {
     const halfway = frame(current, { motion, now: 1075 });
     drawWorld(halfway);
     expect(riderX(halfway)).toBeCloseTo((before.x + after.x) / 2);
-    // The trail's speed lines leave from the rider as drawn, not from its snapshot spot ahead.
-    const lines = halfway.calls.filter((call) => call.name === "moveTo").map((call) => call.args[0] as number);
-    expect(lines.some((x) => x > before.x && x < (before.x + after.x) / 2)).toBe(true);
-
     const plain = frame(current);
     drawWorld(plain);
     expect(riderX(plain)).toBeCloseTo(after.x);
+    // The trail's speed lines leave from the rider as drawn, not from its snapshot spot ahead: half the tick's glide
+    // behind where they leave when the rider is drawn at its snapshot spot.
+    const lead = (drawn: { calls: Call[] }) => Math.max(...drawn.calls.filter((call) => call.name === "moveTo").map((call) => call.args[0] as number).filter((x) => x > before.x - 40 && x <= after.x));
+    expect(lead(plain) - lead(halfway)).toBeCloseTo((after.x - before.x) / 2, 0);
   });
 
   it("inks the two default seats and neutrals in fixed colours and any other owner from one palette", () => {

@@ -9,10 +9,11 @@ type Glide = { from: Point; to: Point; start: number; span: number; dashing: boo
 const MAX_GLIDE_TICKS = 10;
 
 /**
- * @@@unit-motion - Where to draw a charging rider between snapshots. A rider walks a few world units a tick, but a
- * charge covers dashSpeed (30) a tick: drawn at its snapshot spot it would jump every tick, three or more frames apart at
- * 60 fps. So while a unit charges, and for the step it lands on, it glides from where it was drawn when a new tick
- * arrived to where that tick put it, over the tick's time; every other unit is drawn where the snapshot puts it. The
+ * @@@unit-motion - Where to draw a charging rider, or any unit a shove sends sliding (see @@@push), between snapshots. A
+ * unit walks a few world units a tick, but a slide covers up to 24 a tick: drawn at its snapshot spot it would jump every
+ * tick, several frames apart at 60 fps. So while a unit charges or slides, and for the step it stops on, it glides from
+ * where it was drawn when a new tick arrived to where that tick put it, over the tick's time; every other unit is drawn
+ * where the snapshot puts it. The
  * clock is the frame's `now` (the page's clock, or a recording's video time), never the wall clock.
  */
 export class UnitMotionSmoother {
@@ -29,7 +30,7 @@ export class UnitMotionSmoother {
     const glides = new Map<string, Glide>();
     if (ticks > 0 && ticks <= MAX_GLIDE_TICKS) {
       for (const unit of snapshot.units) {
-        const dashing = unit.order.type === "charge";
+        const dashing = unit.order.type === "charge" || unit.pushX !== undefined;
         const previous = this.glides.get(unit.id);
         if (!dashing && !previous?.dashing) continue;
         const from = previous ? glidePoint(previous, now) : (this.lastSeen.get(unit.id) ?? unit);

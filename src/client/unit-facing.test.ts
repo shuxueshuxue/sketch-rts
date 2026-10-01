@@ -51,7 +51,7 @@ describe("unit facing", () => {
   });
 
   it("faces the unit it charges, whichever way it was facing before the dash", () => {
-    const charge: UnitOrder = { type: "charge", targetId: "enemy", ticks: 3, resume: { type: "attack", targetId: "enemy" } };
+    const charge: UnitOrder = { type: "charge", targetId: "enemy", resume: { type: "attack", targetId: "enemy" } };
     const tracker = new UnitFacingTracker();
     const rider = { id: "rider", x: 400, y: 0, order: charge } as Unit;
     tracker.update([rider], (id) => (id === "enemy" ? { x: 100, y: 0 } : undefined));
