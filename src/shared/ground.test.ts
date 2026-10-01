@@ -17,6 +17,22 @@ function field(char: string) {
   return game;
 }
 
+describe("a walk to ground it cannot reach", () => {
+  it("ends at the shore nearest the point across the water, not pressed against the water for good", () => {
+    const game = field("~");
+    const footman = game.spawnUnit("player", "footman", 160, 640);
+    // Columns 10 to 29 are deep water: the point lies beyond it.
+    issueCommand(game, { type: "move", unitIds: [footman.id], x: 1100, y: 640 });
+    let ticks = 0;
+    while (ticks < 400 && footman.order.type === "move") {
+      stepGame(game);
+      ticks += 1;
+    }
+    expect(footman.order.type).toBe("idle");
+    expect(Math.abs(footman.x - 9.5 * 32)).toBeLessThan(6);
+  });
+});
+
 describe("ground that slows", () => {
   it("walks a footman through the shallows at three quarters of its pace and over bare ground at its full one", () => {
     const game = field(",");

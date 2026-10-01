@@ -2,7 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MER
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { groundUnder, isWalkable, setBuildingBodies, steerPoint, walkableGoal } from "./terrain";
+import { groundUnder, isWalkable, setBuildingBodies, steerPoint, walkableGoal, walkDestination } from "./terrain";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -2609,8 +2609,10 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 function distanceToGoal(map: GameMap, unit: Unit, x: number, y: number) {
   if (!map.terrain) return Math.hypot(unit.x - x, unit.y - y);
   const mover = unitMover(unit.kind);
-  if (isWalkable(map, x, y, mover)) return Math.hypot(unit.x - x, unit.y - y);
-  return distance(unit, walkableGoal(map, x, y, mover));
+  const goal = isWalkable(map, x, y, mover) ? { x, y } : walkableGoal(map, x, y, mover);
+  // A point the unit's ground cannot reach (an island, the inside of a wall of buildings): its walk ends as near as it
+  // comes. Measured to the point itself, the order never ended and the unit stood at the shore for good.
+  return distance(unit, walkDestination(map, unit, goal, mover));
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {

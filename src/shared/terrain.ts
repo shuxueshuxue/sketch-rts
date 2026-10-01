@@ -186,6 +186,22 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   return walkAhead(state, ground, tiles, from, near, aim, aim === target ? goal : centerOf(state, aim));
 }
 
+// Where a walk from `from` to `goal` ends: the goal when the walker's ground (and the buildings in its way) let it reach
+// it, else the point nearest it that they do (see reachableTarget). `goal` should be walkable (see walkableGoal).
+export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
+  const terrain = map.terrain;
+  if (!terrain) return goal;
+  const ground = runtime(terrain, mover);
+  const state = routing(map, terrain, mover);
+  const start = padAt(state, from.x, from.y);
+  const target = padAt(state, goal.x, goal.y);
+  if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
+  const near = nearestWalkable(state, start);
+  if (near < 0) return goal;
+  const aim = reachableTarget(state, ground, tilesOf(state), near, target);
+  return aim === target ? goal : centerOf(state, aim);
+}
+
 // @@@terrain-steering - Where a unit at `from`, in cell `near`, heads down the tiles to `target`, the cell of `goal`: the
 // cell LOOKAHEAD steps on when it sees it, else the one SHORT_LOOK on. The steps go down its square's field to the window
 // it leaves by, across into the next square and on down that square's, or down the goal's field near the goal.
