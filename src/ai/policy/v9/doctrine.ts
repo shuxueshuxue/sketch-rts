@@ -30,10 +30,18 @@ const V9_BASES = [
   { bases: 4, priority: 61 },
 ] as const;
 
+// @@@v9-hold-upgrades - Its ground held (every phase after the fortress), V9 makes its buildings stouter (building
+// durability, the hall's: 1.2 of every building's health, towers too) and its army quicker (mobility training, where it
+// has a building that teaches it).
+const HOLD_UPGRADES = [
+  { upgrade: "buildingDurability", level: 1, priority: 58 },
+  { upgrade: "speedTraining", level: 1, priority: 54 },
+] as const;
+
 function v9Phases(strategy: V6Strategy): V6Phase[] {
   const hall = RESEARCH_HALL[strategy.race];
   return strategy.phases.map((phase, index) => {
-    const bases = [...phase.wants.filter((want) => !("bases" in want) || want.bases < 3), ...V9_BASES];
+    const bases = [...phase.wants.filter((want) => (!("bases" in want) || want.bases < 3) && !("upgrade" in want && HOLD_UPGRADES.some((hold) => hold.upgrade === want.upgrade))), ...V9_BASES, ...HOLD_UPGRADES];
     if (index >= UPGRADE_PHASES) return { ...phase, wants: bases };
     const level = index + 1;
     const priority = 62 - index;
