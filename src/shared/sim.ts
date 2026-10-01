@@ -2509,7 +2509,8 @@ function keepOutOfBuilding(game: Game, unit: Unit, building: Building) {
   const ny = length === 0 ? 0 : dy / length;
   const x = clamp(building.x + nx * reach, 0, game.map.width);
   const y = clamp(building.y + ny * reach, 0, game.map.height);
-  if (!game.map.terrain || isWalkable(game.map, x, y)) {
+  // Set back only onto ground the unit stands on: a ship by its shipyard onto the water, never ashore (see @@@naval).
+  if (!game.map.terrain || isWalkable(game.map, x, y, unitMover(unit.kind))) {
     unit.x = x;
     unit.y = y;
   }
