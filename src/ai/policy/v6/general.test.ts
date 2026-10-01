@@ -143,6 +143,26 @@ describe("v6 general", () => {
     expect(memory.v6?.plays?.["general:creep"]).toBe(1);
   });
 
+  it("creeps no camp on an island its soldiers cannot walk to (see @@@ai-home-ground), V6 and V9 alike", () => {
+    for (const requestedVersion of ["v6", "v9"] as const) {
+      const { game } = board(`general-island-camp-${requestedVersion}`, { v6Footmen: 6, enemyFootmen: 8, enemyAt: "home", camp: true });
+      // Deep water from 150 to 300 round the camp: an island of its own in the open ground.
+      const cols = Math.ceil(game.map.width / 32);
+      const rows = Math.ceil(game.map.height / 32);
+      let cells = "";
+      for (let row = 0; row < rows; row += 1) {
+        for (let col = 0; col < cols; col += 1) {
+          const gap = Math.hypot(col * 32 + 16 - 1_625, row * 32 + 16 - 1_520);
+          cells += gap >= 150 && gap <= 300 ? "~" : ".";
+        }
+      }
+      game.map = { ...game.map, terrain: { cell: 32, cols, rows, cells } };
+      const memory = steady();
+      planV6General(snapshotGame(game), "v6", { version: "v2", requestedVersion, teams: game.teams, memory });
+      expect(memory.v6?.general?.mode, requestedVersion).not.toBe("creep");
+    }
+  });
+
   it("does not cross the map on a peak of spirits that will have expired when it arrives", () => {
     const { game } = board("v6-general-spirit-peak", { v6Footmen: 0, enemyFootmen: 5, enemyAt: "home" });
     for (let index = 0; index < 3; index += 1) game.spawnUnit("v6", "summoner", 820 + index * 30, 760);

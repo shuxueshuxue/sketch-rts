@@ -5,9 +5,9 @@ import type { GameSnapshot, PlayerId, Unit } from "../../shared/types";
 type Point = { x: number; y: number };
 
 // @@@ai-home-ground - An AI's army walks. What stands on land it cannot walk to (an island, see @@@ground-wholes) is no
-// mine to expand to and no target to march on, and a ship is no army to chase: the soldiers would stand on the beach
-// (see @@@reach). Ships and islands are the naval script's (see @@@ai-naval). Where the land is one whole and no ship is
-// afloat, nothing is set aside and nothing new is made.
+// mine to expand to, no target to march on and no camp to creep, and a ship is no army to chase: the soldiers would
+// stand on the beach (see @@@reach). Ships and islands are the naval script's (see @@@ai-naval). Where the land is one
+// whole and no ship is afloat, nothing is set aside and nothing new is made.
 export function onHomeGround(snapshot: GameSnapshot, owner: PlayerId, point: Point) {
   if (groundWholes(snapshot.map) <= 1) return true;
   const home = homeOf(snapshot, owner);

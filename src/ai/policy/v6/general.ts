@@ -2,6 +2,7 @@ import { canCast } from "../../../shared/ability-cooldowns";
 import type { V6PolicyMemory } from "../../memory";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
+import { sameGroundAs } from "../ground";
 import { enemyUnits } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
@@ -171,7 +172,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
 
   const camps = creepCamps(snapshot, intel);
   // V7 creeps with its own procedure (see v7-creeping): a camp under way is finished first, the natural's guard next.
-  const v7Camps = isV7Policy(options) ? neutralCamps(snapshot) : [];
+  const v7Camps = isV7Policy(options) ? neutralCamps(snapshot).filter((camp) => camp.creeps.some((creep) => sameGroundAs(snapshot, intel.home, { x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }))) : [];
   // V9 takes on a camp with enemies about, if they are worth under half its army (see v9-contested-creep).
   const tolerance = isV9Policy(options) ? v9ExpansionTolerance(intel) : 0;
   const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) <= tolerance);
@@ -439,7 +440,7 @@ function creepCamps(snapshot: GameSnapshot, intel: V6Intel): Camp[] {
     if (camp) camp.strength += strengthOf([creep]);
     else camps.push({ center: home, strength: strengthOf([creep]) });
   }
-  return camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) === 0);
+  return camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) === 0 && sameGroundAs(snapshot, intel.home, camp.center));
 }
 
 function expansionCamp(snapshot: GameSnapshot, intel: V6Intel, camps: Camp[], strength: number): Point | undefined {
