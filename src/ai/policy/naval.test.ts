@@ -161,6 +161,13 @@ describe("the AI on the water", () => {
     expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attack", unitIds: ["ship"], targetId: "we" });
   });
 
+  it("raises no shipyard on water an enemy's warship sails, where the ship would sink the site", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = lakeGame();
+    game.units.push({ ...game.units.find((unit) => unit.id === "we")!, id: "gun", kind: "warship", ...at(18, 16), order: { type: "idle" }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390 });
+    expect(navalWant(snapshotGame(game), "player", options)?.issue(new Set())).toBeUndefined();
+  });
+
   it("leaves a door its towers cover, and a pond, alone", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     expect(navalWant(snapshotGame(lakeGame(false, true)), "player", options)).toBeUndefined();

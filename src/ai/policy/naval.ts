@@ -380,9 +380,16 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
   // hall kept every shore of its lake its own, and no assault ever set out, see @@@ai-closeout).
   const theirs = snapshot.buildings.filter((building) => building.kind === "townHall" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(map, building, home));
   const gapOf = (spot: Point, from: Building[]) => Math.min(Infinity, ...from.map((hall) => distance(hall, spot)));
+  // None on water an enemy's armed ship sails, nor where one's guns reach across the land: a site starts at a few health
+  // and the ship comes and sinks it before its builder gets there (two warships guarding an island's last hall sank five
+  // shipyards in ten minutes, each a little farther along the shore, 170 gold each and a third of the army's income while
+  // its front line waited on the gold: pool-templeSpring-5).
+  const guns = snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options));
+  if (guns.some((ship) => sameGround(map, ship, water, "sea"))) return undefined;
   const spots = shoreSpots(map, BUILDING_DEFS.shipyard.radius)
     .map((spot) => ({ spot, gap: gapOf(spot, ours) }))
     .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs))
+    .filter((entry) => guns.every((ship) => distance(ship, entry.spot) > ship.attackRange + BUILDING_DEFS.shipyard.radius))
     .sort((a, b) => a.gap - b.gap);
   for (const { spot } of spots) {
     if (!sameGround(map, spot, home) || !isBuildPlacementClear(snapshot, "shipyard", spot)) continue;
