@@ -33,6 +33,8 @@ export type UnitDef = {
   tier?: 2 | 3;
   // A ship (see @@@naval): it sails deep and shallow water and nothing else.
   naval?: true;
+  // A transport (see @@@transport): the supply of passengers it carries.
+  carries?: number;
 };
 
 // @@@unit-tiers - Advanced and elite units are locked until the player's supply cap (halls and farms built, not supply in
@@ -150,6 +152,14 @@ export const UNIT_RULES = {
   barkMender: { hp: 68, speed: 2.6, radius: 18, attackDamage: 5, attackRange: 110, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 24, creepFoodPower: 2, goldBounty: 35, abilities: ["heal"] },
   stonebackBrute: { hp: 210, speed: 2.0, radius: 24, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
   gladeWitch: { hp: 110, speed: 2.7, radius: 22, attackDamage: 9, attackRange: 150, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["curse"] },
+  // @@@ships - Both races' ships, from the shipyard. The warship is Warcraft II's destroyer to our archer: about two
+  // archers' price, two and a half times the health and the same reach (a little under the grove archer's, over the spark
+  // archer's, well under a tower's), and a little less fight for its gold than an archer (damage a second times health,
+  // each over its price: 86% of the archer's), so the default army stays the best buy and a tower holds the shore. The
+  // transport is Warcraft II's too: half again the warship's health, three quarters of its price, no weapon; it carries
+  // eight supply of passengers, who drown with it.
+  transport: { trainedAt: "shipyard", hp: 270, speed: 3.2, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, xpReward: 30, abilities: [], naval: true, carries: 8 },
+  warship: { trainedAt: "shipyard", hp: 180, speed: 3, radius: 28, attackDamage: 20, attackRange: 390, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, xpReward: 40, abilities: [], naval: true },
   ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 32, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
 } satisfies Record<string, UnitDef>;
 

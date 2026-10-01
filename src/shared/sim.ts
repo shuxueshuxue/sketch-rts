@@ -3,6 +3,7 @@ import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { groundUnder, isWalkable, setBuildingBodies, steerPoint, walkableGoal, walkDestination } from "./terrain";
+import { alongside, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -326,7 +327,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "attackMove") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      assignUnitOrder(unit, { type: "attackMove", x: command.x, y: command.y }, command.queued);
+      assignUnitOrder(unit, { type: unit.attackDamage > 0 ? "attackMove" : "move", x: command.x, y: command.y }, command.queued);
     }
     addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28);
     return;
@@ -349,8 +350,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "attack") {
+    // A unit without a weapon (a transport) has nothing to attack with.
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
+      if (unit.attackDamage > 0) assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
     const target = findTarget(game, command.targetId);
     if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32);
@@ -431,6 +433,24 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  // Told to board, soldiers walk to the transport, and an idle transport sails in to meet them (see @@@transport).
+  if (command.type === "board") {
+    const transport = game.units.find((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
+    if (!transport) throw new Error(`Unknown ${owner} transport ${command.transportId}`);
+    const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => unitMover(unit.kind) === "land");
+    for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id }, command.queued);
+    if (transport.order.type === "idle" && boarders[0]) assignUnitOrder(transport, { type: "move", x: boarders[0].x, y: boarders[0].y });
+    return;
+  }
+
+  if (command.type === "unload") {
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y }, command.queued);
+    }
+    addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
+    return;
+  }
+
   if (command.type === "research") {
     const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
@@ -483,6 +503,7 @@ export function stepGame(game: Game) {
   updateRegeneration(game);
   updateTowerAttacks(game);
   updateUnits(game);
+  ferryUnits(game);
   slideUnits(game);
   separateUnits(game);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
@@ -616,7 +637,9 @@ function updateTraining(game: Game) {
     if (job.remaining > 0) continue;
     building.queue.shift();
     const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
-    const unit = game.spawnUnit(building.owner, job.unitKind, building.x + detCos(angle) * 80, building.y + detSin(angle) * 80);
+    // A ship is launched from the shipyard's own water, the nearest to it (see @@@shore-footprint).
+    const from = unitMover(job.unitKind) === "sea" ? building : { x: building.x + detCos(angle) * 80, y: building.y + detSin(angle) * 80 };
+    const unit = game.spawnUnit(building.owner, job.unitKind, from.x, from.y);
     unit.order = rallyOrderForUnit(game, building, unit);
   }
 }
@@ -773,13 +796,21 @@ function updateUnits(game: Game) {
       updatePickupItemOrder(game, unit);
       continue;
     }
+    if (unit.order.type === "board") {
+      updateBoardOrder(game, unit);
+      continue;
+    }
+    if (unit.order.type === "unload") {
+      moveToward(unit, unit.order.x, unit.order.y, game.map);
+      continue;
+    }
     if (unit.kind === "worker" && updateAutoRepair(game, unit)) continue;
     if (unit.kind !== "worker") {
       const target = nearestEnemyTarget(game, unit, AUTO_ACQUIRE_RANGE);
       if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
     }
     if (unit.owner === "neutral") {
-      const target = nearestEnemyInRange(game, unit, 150);
+      const target = firstNearbyUnit(game, unit, 150, (candidate) => areEnemyOwners(game, unit.owner, candidate.owner) && distanceSquared(unit, candidate) <= 150 * 150 && canReach(game.map, unit, candidate));
       if (target) unit.order = { type: "attack", targetId: target.id };
     }
   }
@@ -852,7 +883,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.targetId) {
     const target = findTarget(game, order.targetId);
-    if (target && target.hp > 0 && areEnemyOwners(game, unit.owner, target.owner)) {
+    if (target && target.hp > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target)) {
       attackMoveTowardTarget(game, unit, target);
       return;
     }
@@ -888,7 +919,8 @@ function updateAttackOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
-  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0) {
+  // A target that is as good as dead, or out of reach from the attacker's ground (see @@@reach), gives way to the next.
+  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || !canReach(game.map, unit, target)) {
     const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange));
     if (!replacement) {
       unit.order = { type: "idle" };
@@ -957,6 +989,73 @@ function updateMineOrder(game: Game, unit: Unit) {
   }
   unit.carryingGold = 0;
   unit.order = { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 };
+}
+
+// A soldier told to board walks to its transport (see @@@transport); it goes aboard in ferryUnits.
+function updateBoardOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "board") return;
+  const transport = findTarget(game, unit.order.transportId);
+  if (!transport || !isUnit(transport) || transport.owner !== unit.owner) {
+    unit.order = { type: "idle" };
+    return;
+  }
+  if (!alongside(unit, transport)) moveToward(unit, transport.x, transport.y, game.map);
+}
+
+// After every unit has moved: soldiers alongside the transport they were told to board go aboard while their supply fits
+// (the rest stop), and a transport that has reached the water nearest its unloading point sets its passengers ashore (any
+// that find no land near enough stay aboard) and stops (see @@@transport).
+function ferryUnits(game: Game) {
+  let boarding: Unit[] | undefined;
+  let unloading: Unit[] | undefined;
+  for (const unit of game.units) {
+    if (unit.order.type === "board") (boarding ??= []).push(unit);
+    else if (unit.order.type === "unload") (unloading ??= []).push(unit);
+  }
+  if (boarding) {
+    const aboard = new Set<Unit>();
+    for (const unit of boarding) {
+      if (unit.order.type !== "board") continue;
+      const transport = findTarget(game, unit.order.transportId);
+      if (!transport || !isUnit(transport) || !alongside(unit, transport)) continue;
+      unit.order = { type: "idle" };
+      unit.orderQueue = [];
+      if (cargoSupply(game, transport) + unitRules(game, unit).supplyUsed > carries(transport)) continue;
+      transport.cargo = [...(transport.cargo ?? []), unit];
+      aboard.add(unit);
+    }
+    if (aboard.size > 0) game.units = game.units.filter((unit) => !aboard.has(unit));
+  }
+  for (const transport of unloading ?? []) {
+    if (transport.order.type !== "unload" || distanceToGoal(game.map, transport, transport.order.x, transport.order.y) >= 8) continue;
+    const passengers = transport.cargo ?? [];
+    const staying: Unit[] = [];
+    passengers.forEach((passenger, index) => {
+      if (passenger.expiresTick !== undefined && passenger.expiresTick <= game.tick) {
+        // A summon whose time ran out aboard is gone; what it carried is left where the transport is.
+        passenger.x = transport.x;
+        passenger.y = transport.y;
+        dropItemsFromDeadUnits(game, [passenger]);
+        return;
+      }
+      const spot = landingSpot(game.map, transport, index, passengers.length);
+      if (!spot) {
+        staying.push(passenger);
+        return;
+      }
+      passenger.x = spot.x;
+      passenger.y = spot.y;
+      passenger.order = { type: "idle" };
+      game.units.push(passenger);
+    });
+    transport.cargo = staying.length > 0 ? staying : undefined;
+    transport.order = { type: "idle" };
+    updateSupplyState(game);
+  }
+}
+
+function cargoSupply(game: Game, transport: Unit) {
+  return (transport.cargo ?? []).reduce((total, passenger) => total + unitRules(game, passenger).supplyUsed, 0);
 }
 
 function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
@@ -1178,6 +1277,7 @@ function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string,
   const item = game.items.find((candidate) => candidate.id === itemId);
   if (!item) throw new Error(`Unknown item ${itemId}`);
   if (item.carrierId) throw new Error(`${item.id} is already carried`);
+  if (unitMover(unit.kind) === "sea") throw new Error("A ship carries no items");
   if (distance(unit, item) > ITEM_PICKUP_RANGE) {
     assignUnitOrder(unit, { type: "pickupItem", itemId }, queued);
     return;
@@ -1246,6 +1346,7 @@ function castAbility(
     const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Charge requires an enemy unit target");
     if (!inChargeWindow(caster, target, def)) throw new Error(`Charge target must be ${def.minRange} to ${def.range} away`);
+    if (!canReach(game.map, caster, target)) throw new Error("Charge target is out of reach");
     startCharge(game, caster, ability, target, def, true);
     return;
   }
@@ -1445,14 +1546,14 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
   const own = order.type === "attack" || order.type === "attackMove" ? order.targetId : undefined;
   if (own) {
     const target = findTarget(game, own);
-    return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) ? target : undefined;
+    return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) && canReach(game.map, rider, target) ? target : undefined;
   }
   if (order.type !== "idle" && order.type !== "attackMove") return undefined;
   const charged = new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
   let free: Unit | undefined;
   let any: Unit | undefined;
   forEachNearbyUnit(game, rider, def.range, (candidate) => {
-    if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def)) return;
+    if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def) || !canReach(game.map, rider, candidate)) return;
     if (!any || distance(rider, candidate) < distance(rider, any)) any = candidate;
     if (!charged.has(candidate.id) && (!free || distance(rider, candidate) < distance(rider, free))) free = candidate;
   });
@@ -1775,7 +1876,7 @@ function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit |
   for (const unit of game.units) {
     if (unit.owner !== "neutral" || unit.hp <= 0) continue;
     if (distance(unit, damagedNeutral) > NEUTRAL_ASSIST_RANGE) continue;
-    if (neutralHasValidAttackTarget(game, unit)) continue;
+    if (neutralHasValidAttackTarget(game, unit) || (isUnit(attacker) && !canReach(game.map, unit, attacker))) continue;
     unit.order = { type: "attack", targetId: attacker.id, leashX: origin.x, leashY: origin.y };
   }
 }
@@ -1794,7 +1895,7 @@ function triggerPlayerAggro(game: Game, victim: Unit | Building, attacker: Unit 
 }
 
 function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building) {
-  if (unit.hp <= 0 || unit.kind === "worker" || unit.attackDamage <= 0) return;
+  if (unit.hp <= 0 || unit.kind === "worker" || unit.attackDamage <= 0 || !canReach(game.map, unit, attacker)) return;
   const order = unit.order;
   if (order.type === "idle") {
     if (!unit.orderQueue?.length) unit.order = { type: "attack", targetId: attacker.id, leashX: unit.x, leashY: unit.y };
@@ -1838,6 +1939,8 @@ function neutralHomeOrCurrentPoint(unit: Unit) {
 }
 
 function recordKill(game: Game, attacker: Unit | Building, target: Unit | Building) {
+  // Those aboard a sunk transport drown with it, at the hand that sank it (see @@@transport).
+  if (isUnit(target)) for (const passenger of target.cargo ?? []) recordKill(game, attacker, passenger);
   const attackerOwner = attacker.owner;
   if (isPlayerId(attackerOwner) || attackerOwner === "neutral") {
     incrementStat(game.match.stats.unitsKilled, attackerOwner, isUnit(target) ? 1 : 0);
@@ -1956,7 +2059,7 @@ function updateSupplyState(game: Game) {
 function projectedSupplyUsed(game: Game, owner: PlayerId) {
   const unitSupply = game.units
     .filter((unit) => unit.owner === owner)
-    .reduce((total, unit) => total + unitRules(game, unit).supplyUsed, 0);
+    .reduce((total, unit) => total + unitRules(game, unit).supplyUsed + (unit.cargo ? cargoSupply(game, unit) : 0), 0);
   const queuedSupply = game.buildings
     .filter((building) => building.owner === owner)
     .flatMap((building) => building.queue)
@@ -2045,9 +2148,11 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
   return best;
 }
 
+// The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
+// (see @@@reach).
 function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
-  if (!isPlayerId(unit.owner)) return undefined;
-  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range);
+  if (!isPlayerId(unit.owner) || unit.attackDamage <= 0) return undefined;
+  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit);
 }
 
 // @@@building-reach - A building is reached at its edge, a unit at its center (see building-body): a footman's 48 reaches a
@@ -2056,13 +2161,14 @@ function targetGap(from: { x: number; y: number }, target: Unit | Building) {
   return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
 }
 
-function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: number; y: number }, range: number): Unit | Building | undefined {
+function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: number; y: number }, range: number, attacker?: Unit): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyEnemyUnit(game, owner, point, range, (candidate) => {
     const candidateDistance = distanceSquared(point, candidate);
     if (candidateDistance > limit) return;
+    if (attacker && !canReach(game.map, attacker, candidate)) return;
     const score = targetPriorityScore(game, owner, candidate, candidateDistance);
     if (score > bestScore) {
       best = candidate;
@@ -2072,6 +2178,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: nu
   forEachNearbyEnemyBuilding(game, owner, point, range + MAX_BUILDING_RADIUS, (building) => {
     const gap = targetGap(point, building);
     if (gap > range) return;
+    if (attacker && !canReach(game.map, attacker, building)) return;
     const score = targetPriorityScore(game, owner, building, gap * gap);
     if (score > bestScore) {
       best = building;
@@ -2149,6 +2256,13 @@ function removeExpiredUnits(game: Game) {
 
 function removeDead(game: Game) {
   const deadUnits = game.units.filter((unit) => unit.hp <= 0);
+  for (const unit of [...deadUnits]) {
+    for (const passenger of unit.cargo ?? []) {
+      passenger.x = unit.x;
+      passenger.y = unit.y;
+      deadUnits.push(passenger);
+    }
+  }
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
   dropItemsFromDeadUnits(game, deadUnits);

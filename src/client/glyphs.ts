@@ -17,7 +17,9 @@ export type UnitGlyph = {
     | "golem-block"
     | "spirit-wisp"
     | "mercenary-badge"
-    | "wildling-thorns";
+    | "wildling-thorns"
+    | "transport-hull"
+    | "warship-hull";
   marks: GlyphMark[];
 };
 
@@ -46,7 +48,10 @@ export type GlyphMark =
   | "spark"
   | "coinSlash"
   | "scar"
-  | "thornFork";
+  | "thornFork"
+  | "mast"
+  | "cargo"
+  | "cannon";
 
 export const UNIT_GLYPHS: Record<UnitKind, UnitGlyph> = mapUnitCards((card) => card.glyph);
 

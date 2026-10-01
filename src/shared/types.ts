@@ -95,6 +95,9 @@ export type UnitOrder =
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
+  // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
+  | { type: "board"; transportId: string }
+  | { type: "unload"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder };
 
@@ -138,6 +141,8 @@ export type Unit = {
   pushY?: number | undefined;
   // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
   arrivedAt?: { x: number; y: number } | undefined;
+  // A transport's passengers, out of the game while aboard (see @@@transport).
+  cargo?: Unit[] | undefined;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -360,6 +365,8 @@ export type GameCommand =
   | { type: "hire"; campId: string }
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
+  | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
+  | { type: "unload"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }

@@ -9,7 +9,7 @@ import { mapUnitCards } from "./content/units";
 export type UnitArtTier = "civilian" | "basic" | "advanced" | "elite";
 
 /** Only units trained at the stables ride; everyone else is drawn on foot. */
-export type UnitArtBearing = "foot" | "mounted" | "construct" | "beast" | "spirit";
+export type UnitArtBearing = "foot" | "mounted" | "construct" | "beast" | "spirit" | "vessel";
 
 export type UnitArtFaction = "grove" | "ember" | "hired" | "wild" | "summoned";
 
