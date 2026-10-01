@@ -3,7 +3,7 @@ import { createGame, snapshotGame } from "../../shared/sim";
 import { isShoreFootprint, type Terrain } from "../../shared/terrain";
 import { createAiPolicyMemory } from "../memory";
 import { desiredExpansionMine } from "./expansion-model";
-import { navalUnitIds, navalWant } from "./naval";
+import { navalUnitIds, navalWant, planNavalTactics } from "./naval";
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
 
@@ -53,6 +53,45 @@ function islandGame(terrain = coast()) {
   return game;
 }
 
+// A 30 by 20 grid of land with water in columns 10-19, rows 2-17 (a lake, or with `pond` a pond of four cells there): the
+// land is one whole round it. The player holds two halls west of it, the enemy a hall east of it with a worker by it.
+function lakeGame(pond = false, tower = false) {
+  let cells = "";
+  for (let row = 0; row < 20; row += 1) {
+    for (let col = 0; col < 30; col += 1) cells += (pond ? col >= 18 && col <= 19 && row >= 8 && row <= 9 : col >= 10 && col <= 19 && row >= 2 && row <= 17) ? "~" : ".";
+  }
+  const terrain: Terrain = { cell: 32, cols: 30, rows: 20, cells };
+  const game = createGame("bareDuel", {
+    players: ["player", "enemy"],
+    scenario: {
+      players: { player: { gold: 1_000 } },
+      replaceDefaultUnits: true,
+      replaceDefaultBuildings: true,
+      replaceDefaultResources: true,
+      replaceDefaultMercenaryCamps: true,
+      replaceDefaultLandmarks: true,
+      addBuildings: [
+        { id: "hall-a", owner: "player", kind: "townHall", ...at(3, 3) },
+        { id: "hall-b", owner: "player", kind: "townHall", ...at(3, 15) },
+        { id: "hall-e", owner: "enemy", kind: "townHall", ...at(24, 9) },
+        ...(tower ? [{ id: "tower-e", owner: "enemy", kind: "defenseTower" as const, ...at(21, 6) }] : []),
+      ],
+      addResources: [
+        { id: "main", kind: "goldMine", ...at(1, 3), amount: 6_000 },
+        { id: "natural", kind: "goldMine", ...at(1, 15), amount: 6_000 },
+        { id: "enemy-main", kind: "goldMine", ...at(27, 9), amount: 6_000 },
+      ],
+      addUnits: [
+        { id: "w1", owner: "player", kind: "worker", ...at(2, 4), order: { type: "mine", resourceId: "main", phase: "toMine", timer: 0 } },
+        { id: "w2", owner: "player", kind: "worker", ...at(2, 14), order: { type: "mine", resourceId: "natural", phase: "toMine", timer: 0 } },
+        { id: "we", owner: "enemy", kind: "worker", ...at(21, 10) },
+      ],
+    },
+  });
+  game.map = { ...game.map, width: terrain.cols * terrain.cell, height: terrain.rows * terrain.cell, terrain };
+  return game;
+}
+
 describe("the AI on the water", () => {
   it("wants a shipyard on its own shore for an island's mine once it holds two bases", () => {
     const game = islandGame();
@@ -84,12 +123,33 @@ describe("the AI on the water", () => {
     expect(projectedSupplyUsed(snapshotGame(game), "player")).toBe(1 + 1 + 1);
   });
 
+  it("raids the enemy's door across a lake: a shipyard on its own shore, then its warships shoot the enemy's worker", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = lakeGame();
+    const want = navalWant(snapshotGame(game), "player", options)!;
+    expect(want.id).toBe("naval:shipyard");
+    const command = want.issue(new Set());
+    if (command?.type !== "build") throw new Error("no build");
+    expect(isShoreFootprint(game.map, command.x, command.y, 44)).toBe(true);
+    expect(command.x).toBeLessThan(at(10, 0).x);
+    game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: command.x, y: command.y, radius: 44 });
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
+    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ship", kind: "warship", ...at(12, 9), order: { type: "idle" }, hp: 180, maxHp: 180, attackRange: 390 });
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attack", unitIds: ["ship"], targetId: "we" });
+  });
+
+  it("leaves a door its towers cover, and a pond, alone", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    expect(navalWant(snapshotGame(lakeGame(false, true)), "player", options)).toBeUndefined();
+    expect(navalWant(snapshotGame(lakeGame(true)), "player", options)).toBeUndefined();
+  });
+
   it("does nothing on a map whose land is one whole and that has no ship", () => {
     let cells = "";
     for (let index = 0; index < 600; index += 1) cells += ".";
     const game = islandGame({ cell: 32, cols: 30, rows: 20, cells });
     const snapshot = snapshotGame(game);
     expect(navalWant(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
-    expect(navalUnitIds(snapshot, "player").size).toBe(0);
+    expect(navalUnitIds(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() }).size).toBe(0);
   });
 });

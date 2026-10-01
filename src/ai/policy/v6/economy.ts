@@ -353,8 +353,8 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
 // factory count follows income the same way).
 // @@@v6-naval - The water's next want (see @@@ai-naval) is one of V6's goals, saved for like any base: the island is taken
 // at a second base's weight (at a third's, 48, the army's wants outbid it: one warship by 9:00, the second rarely, no
-// transport in 20 minutes), and the shipyard and ships that take it come first at the same weight. On a map without water
-// to take there is none.
+// transport in 20 minutes), and the shipyard and ships that take it, or raid the enemy's door, or meet its ships, come first
+// at the same weight. Where the water offers none of these there is none.
 const NAVAL_PRIORITY = 60;
 
 function navalGoals(economy: Economy): Goal[] {

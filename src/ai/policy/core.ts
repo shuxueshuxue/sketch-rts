@@ -205,7 +205,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
-  // @@@ai-naval: a shipyard, ships and an island hall before the rest of the spending, on a map with water to take.
+  // @@@ai-naval: a shipyard, ships and an island hall before the rest of the spending, whenever the water offers one.
   AI_SCRIPT_LIBRARY.navalEconomy,
   AI_SCRIPT_LIBRARY.supply,
   AI_SCRIPT_LIBRARY.defense,
