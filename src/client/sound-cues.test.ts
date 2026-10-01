@@ -49,6 +49,13 @@ describe("sound cues", () => {
       next.units = next.units.filter((unit) => unit.id !== first!.id);
     });
     expect(ids(start, fallen)).toEqual(["death"]);
+    const afloat = later((next) => {
+      next.units.push({ ...structuredClone(first!), id: "ship", kind: "warship" });
+    });
+    const sunk = structuredClone(afloat);
+    sunk.tick += 1;
+    sunk.units = sunk.units.filter((unit) => unit.id !== "ship");
+    expect(ids(afloat, sunk)).toEqual(["buildingDown"]);
     const aboard = later((next) => {
       next.units = next.units.filter((unit) => unit.id !== first!.id);
       next.units.find((unit) => unit.id === second!.id)!.cargo = [structuredClone(first!)];
@@ -79,10 +86,7 @@ describe("sound cues", () => {
 
 describe("sound files", () => {
   it("plays only files that are in public/audio, and keeps none there unplayed", () => {
-    const root = join(process.cwd(), "public", "audio");
-    const kept = readdirSync(root, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .flatMap((folder) => readdirSync(join(root, folder.name)).filter((file) => file.endsWith(".ogg")).map((file) => `${folder.name}/${file}`));
+    const kept = readdirSync(join(process.cwd(), "public", "audio")).filter((file) => file.endsWith(".ogg"));
     expect([...SOUND_FILES].sort()).toEqual(kept.sort());
   });
 });

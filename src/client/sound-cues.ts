@@ -1,3 +1,4 @@
+import { UNIT_DEFS } from "../shared/catalog";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 import type { SoundId } from "./sound";
 
@@ -35,7 +36,8 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
   // ashore no recruit.
   const aboard = (snapshot: GameSnapshot) => snapshot.units.flatMap((unit) => unit.cargo ?? []).map((unit) => unit.id);
   const unitsAfter = new Set([...after.units.map((unit) => unit.id), ...aboard(after)]);
-  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: "death", x: unit.x, y: unit.y });
+  // A ship goes down with its timbers breaking, as a building falls, not with a cry.
+  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: UNIT_DEFS[unit.kind].naval ? "buildingDown" : "death", x: unit.x, y: unit.y });
   const unitsBefore = new Set([...before.units.map((unit) => unit.id), ...aboard(before)]);
   for (const unit of after.units) {
     // A soldier of the listener's own, new on the field and not a summoned spirit: one just trained or hired.
