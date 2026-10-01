@@ -69,7 +69,9 @@ describe("AI version benchmark CLI", () => {
     expect(output.probes.every((probe: { setupEqual: boolean; coreResultEqual: boolean; directResultEqual: boolean }) => probe.setupEqual && probe.coreResultEqual && probe.directResultEqual)).toBe(true);
     expect(output.probes[0].serialManifest.commandPlanner).toBe("present");
     expect(output.probes[0].parallelManifest.commandPlanner).toBe("absent");
-    expect(output.probes[0].serial).toMatchObject({ map: output.selectedRichScoreMapIds[0], result: { tick: 1, timeout: true } });
+    // Every gauntlet game is on the ladder map; its slot is in its name (see 4da9c16).
+    expect(output.probes[0].matchName).toBe(`${output.selectedRichScoreMapIds[0]} 1v2`);
+    expect(output.probes[0].serial).toMatchObject({ map: "ladder", result: { tick: 1, timeout: true } });
     expect(output.probes[0].parallel).toEqual(output.probes[0].serial);
     expect(output.serialReport).toBeUndefined();
     expect(output.parallelReport).toBeUndefined();
