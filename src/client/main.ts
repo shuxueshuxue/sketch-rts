@@ -27,6 +27,7 @@ import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
+import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -55,7 +56,6 @@ import { SHOP_GOODS, standsAtShop } from "../shared/shop";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
-import { createUnit } from "../shared/map";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
@@ -140,8 +140,12 @@ const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
 const pointerLockGateBody = requireElement<HTMLParagraphElement>("[data-pointer-lock-gate-body]");
 const pointerLockGateAction = requireElement<HTMLButtonElement>("[data-pointer-lock-gate-action]");
+const sceneSwitch = requireElement<HTMLButtonElement>("[data-scene-switch]");
 const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
 const ctx = requireCanvasContext(canvas);
+// The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
+const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
+const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
@@ -300,6 +304,16 @@ document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { 
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
+sceneSwitch.addEventListener("click", () => {
+  const scene = menuBackdrop.next();
+  try {
+    localStorage.setItem(MENU_SCENE_STORAGE_KEY, scene.id);
+  } catch {
+    // Without storage the pick lasts this visit.
+  }
+  labelSceneSwitch();
+});
+labelSceneSwitch();
 forfeitButton.addEventListener("click", () => void forfeitCurrentMatch());
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
@@ -2392,11 +2406,12 @@ function trainIcon(kind: TrainableUnitKind) {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (menuOpen) {
-    drawMenuBackdrop();
+    // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
+    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now());
     return;
   }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!snapshot) {
     drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.width, canvas.height);
     ctx.fillStyle = "#243126";
@@ -2420,42 +2435,6 @@ function draw() {
   drawSpellPreview();
   drawSelectionBox();
   drawMinimap(createMapPresentation(snapshot));
-}
-
-// @@@menu-scene - Behind the menus lies a start on a ladder map, drawn by the battlefield's own renderer: a hall on its
-// plateau, its workers at the mine and a squad mustered beside it. It is painted once for each window size; the theme
-// tints the canvas under the menus (see .menu-open .game-canvas).
-let menuScene: HTMLCanvasElement | undefined;
-const MENU_SCENE_MAP: PoolMapId = "pineshade";
-const MENU_SCENE_SQUAD = [["knight", 150, 120], ["lancer", 210, 70], ["lancer", 250, 120], ["footman", 200, 170], ["footman", 260, 180], ["archer", 300, 140], ["witch", 310, 200]] as const;
-
-function drawMenuBackdrop() {
-  if (!menuScene || menuScene.width !== canvas.width || menuScene.height !== canvas.height) menuScene = paintMenuScene(canvas.width, canvas.height);
-  ctx.drawImage(menuScene, 0, 0);
-}
-
-function paintMenuScene(width: number, height: number) {
-  const scene = document.createElement("canvas");
-  scene.width = width;
-  scene.height = height;
-  const { snapshot: start } = mapPreview(MENU_SCENE_MAP, [{ playerId: "player", team: "north" }, { playerId: "enemy", team: "south" }]);
-  const hall = start.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
-  const squad = MENU_SCENE_SQUAD.map(([kind, dx, dy], index) => createUnit(`menu-${index}`, "player", kind, hall.x + dx, hall.y + dy));
-  const zoom = Math.max(1, Math.min(1.4, height / 760));
-  const view = { width: width / zoom, height: height / zoom };
-  // The hall stands right of the menu's plaque.
-  const x = Math.max(0, Math.min(start.map.width - view.width, hall.x - view.width * 0.62));
-  const y = Math.max(0, Math.min(start.map.height - view.height, hall.y - view.height * 0.48));
-  drawWorld({
-    ctx: requireCanvasContext(scene),
-    snapshot: { ...start, units: [...start.units, ...squad] },
-    view: { x, y, width, height, zoom },
-    now: 0,
-    facing: new UnitFacingTracker(),
-    labels: worldLabels,
-    still: true,
-  });
-  return scene;
 }
 
 function drawBuildPlacementPreview() {
@@ -2846,6 +2825,23 @@ function romanLevel(level: number) {
 
 function distance(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function initialMenuScene() {
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(MENU_SCENE_STORAGE_KEY);
+  } catch {
+    // Storage blocked: a scene at random.
+  }
+  const index = MENU_SCENES.findIndex((scene) => scene.id === stored);
+  return index >= 0 ? index : Math.floor(Math.random() * MENU_SCENES.length);
+}
+
+function labelSceneSwitch() {
+  const name = menuBackdrop.scene.name[i18n.locale];
+  sceneSwitch.innerHTML = `<span class="scene-switch-mark" aria-hidden="true">⟳</span>${escapeHtml(name)}`;
+  sceneSwitch.setAttribute("aria-label", t("home.switchScene", { name }));
 }
 
 function loadLocalUserProfile(): LocalUserProfile {

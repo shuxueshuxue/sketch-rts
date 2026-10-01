@@ -13,6 +13,7 @@ export function gameShellMarkup(i18n: I18n) {
         <div class="menu-status" data-menu-status>${escapeHtml(t("shell.connectingServer"))}</div>
         <div class="map-list" data-map-list></div>
       </div>
+      <button type="button" class="scene-switch" data-scene-switch></button>
     </div>
     <div class="top-strip">
       <div class="resource-readout" title="${escapeHtml(t("shell.gold"))}"><span class="readout-icon" aria-hidden="true"></span>${escapeHtml(t("shell.gold"))} <span data-gold>?</span></div>

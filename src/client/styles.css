@@ -54,7 +54,7 @@
   --tip-title: #4d1d10;
   --hud-panel: var(--parchment);
   --hud-ink: #2e1d0e;
-  --scene-filter: sepia(0.38) saturate(0.82) brightness(0.9);
+  --scene-filter: sepia(0.25) saturate(0.9) brightness(0.96);
   --shade: radial-gradient(ellipse at 62% 48%, rgba(40, 22, 8, 0) 25%, rgba(30, 16, 6, 0.6) 100%);
   --danger: #8e2a1f;
 }
@@ -270,28 +270,32 @@ input[type="checkbox"] {
   text-transform: uppercase;
 }
 
-/* The home screen: the game's name and three ways in, nothing else, over the scene (see @@@menu-scene) dimmed and
-   softened so the name stands out. */
+/* The home screen: the game's name and three ways in down the left, nothing else; the scene (see @@@menu-scenes) plays
+   on the right, darkened and softened under the buttons. */
 .main-menu[data-menu-view="home"] {
+  place-items: center start;
+  padding-left: 9vw;
   background:
-    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(12, 6, 2, 0.5) 0%, rgba(12, 6, 2, 0.62) 60%, rgba(8, 4, 1, 0.9) 100%),
-    linear-gradient(rgba(8, 4, 1, 0.35), rgba(8, 4, 1, 0) 30%, rgba(8, 4, 1, 0) 70%, rgba(8, 4, 1, 0.45));
+    linear-gradient(90deg, rgba(10, 5, 2, 0.9) 0%, rgba(10, 5, 2, 0.6) 30%, rgba(10, 5, 2, 0) 62%),
+    radial-gradient(ellipse 90% 80% at 65% 50%, rgba(8, 4, 1, 0) 50%, rgba(8, 4, 1, 0.7) 100%);
 }
 
 .main-menu[data-menu-view="home"]::before {
   position: absolute;
   inset: 0;
   content: "";
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
 }
 
 .main-menu[data-menu-view="home"] .menu-window {
   z-index: 1;
   width: auto;
   max-height: none;
-  justify-items: center;
-  gap: 52px;
+  justify-items: start;
+  gap: 44px;
   padding: 0;
   overflow: visible;
   border: 0;
@@ -307,7 +311,7 @@ input[type="checkbox"] {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  font-size: clamp(60px, 8.5vw, 124px);
+  font-size: clamp(56px, 7vw, 104px);
   letter-spacing: 0.08em;
   line-height: 1;
   text-shadow: none;
@@ -350,30 +354,38 @@ input[type="checkbox"] {
   color: #f6dc94;
 }
 
-/* PROPOSAL ONLY - the home's second layout for the owner to compare: name and ways in down the left, the scene clear
-   on the right. */
-:root[data-home="left"] .main-menu[data-menu-view="home"] {
-  place-items: center start;
-  padding-left: 9vw;
-  background:
-    linear-gradient(90deg, rgba(10, 5, 2, 0.9) 0%, rgba(10, 5, 2, 0.6) 30%, rgba(10, 5, 2, 0) 62%),
-    radial-gradient(ellipse 90% 80% at 65% 50%, rgba(8, 4, 1, 0) 50%, rgba(8, 4, 1, 0.7) 100%);
+/* The scene's switch, bottom right of the home screen: the scene's name, a click for the next. */
+.scene-switch {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(214, 178, 101, 0.45);
+  border-radius: 2px;
+  background: rgba(20, 11, 4, 0.55);
+  color: #e9d29a;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  pointer-events: auto;
 }
 
-:root[data-home="left"] .main-menu[data-menu-view="home"]::before {
-  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
-  mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+.scene-switch:hover,
+.scene-switch:focus-visible {
+  background: rgba(40, 24, 10, 0.75);
+  color: #fff1c6;
 }
 
-:root[data-home="left"] .main-menu[data-menu-view="home"] .menu-window {
-  justify-items: start;
-  gap: 44px;
+.scene-switch-mark {
+  font-size: 15px;
 }
 
-:root[data-home="left"] .main-menu[data-menu-view="home"] .menu-title {
-  font-size: clamp(56px, 7vw, 104px);
+.main-menu[data-menu-view="home"] .scene-switch {
+  display: inline-flex;
 }
 
 /* A menu entry: a board with its name and, where it helps, a line under it. */
