@@ -28,6 +28,8 @@ import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMi
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
+import { Soundboard, type SoundId } from "./sound";
+import { soundCues, type SoundCue } from "./sound-cues";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -146,6 +148,8 @@ const ctx = requireCanvasContext(canvas);
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
 const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
+// The game's sounds (see @@@sound), from public/audio under the deployment's base path.
+const soundboard = new Soundboard((file) => `${import.meta.env.BASE_URL}audio/${file}`);
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
@@ -289,6 +293,12 @@ document.addEventListener("pointerout", hideTooltipFromEvent, true);
 document.addEventListener("focusin", showTooltipFromEvent, true);
 document.addEventListener("focusout", hideTooltipFromEvent, true);
 document.addEventListener("pointerlockchange", syncPointerLockState);
+document.addEventListener("click", onInterfaceClick, true);
+document.addEventListener("pointerover", onInterfaceHover, true);
+document.addEventListener("keydown", () => soundboard.unlock(), true);
+document.addEventListener("change", (event) => {
+  if (event.target instanceof HTMLSelectElement) soundboard.play("select");
+}, true);
 document.addEventListener("pointerlockerror", () => {
   if (pointerLockArmed && !pointerLockFieldClickOnError) return;
   const fieldClickOnError = pointerLockFieldClickOnError;
@@ -705,12 +715,29 @@ function renderProfileMenu() {
   form.innerHTML = `
     <label>${escapeHtml(t("profile.displayName"))}<input name="name" value="${escapeHtml(localUser.name)}" /></label>
     <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
+    <fieldset class="sound-settings" data-sound-settings>
+      <legend>${escapeHtml(t("settings.sound"))}</legend>
+      <label>${escapeHtml(t("settings.effects"))}<input type="range" min="0" max="100" data-volume="effects" value="${Math.round(soundboard.settings.effects * 100)}" /></label>
+      <label>${escapeHtml(t("settings.interface"))}<input type="range" min="0" max="100" data-volume="ui" value="${Math.round(soundboard.settings.ui * 100)}" /></label>
+      <label class="checkbox-row"><input type="checkbox" data-mute ${soundboard.settings.muted ? "checked" : ""} /> ${escapeHtml(t("settings.mute"))}</label>
+    </fieldset>
     <div class="menu-actions">
       <button type="submit">${escapeHtml(t("common.save"))}</button>
       <button type="button" data-regenerate-user>${escapeHtml(t("profile.regenerate"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
+  // A volume takes effect as it moves, with a sound of its group to hear it by.
+  form.querySelectorAll<HTMLInputElement>("[data-volume]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const group = input.dataset.volume === "ui" ? "ui" : "effects";
+      soundboard.update({ [group]: Number(input.value) / 100 });
+      soundboard.play(group === "ui" ? "click" : "melee");
+    });
+  });
+  form.querySelector<HTMLInputElement>("[data-mute]")?.addEventListener("change", (event) => {
+    soundboard.update({ muted: (event.currentTarget as HTMLInputElement).checked });
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -1094,6 +1121,7 @@ function syncActiveGameAdapterSnapshot() {
   if (menuOpen) return false;
   const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
   if (!view.snapshot) return false;
+  if (snapshot && view.snapshot !== snapshot) playCues(soundCues(snapshot, view.snapshot, localPlayerId));
   snapshot = view.snapshot;
   selectedIds = view.selectedIds;
   focusedSelectionId = view.focusedSelectionId;
@@ -1415,6 +1443,41 @@ function resetChatOverlay() {
 
 function showInvalidCommand(message: string) {
   statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+  soundboard.play("error");
+}
+
+// A battlefield sound is heard where it happens: panned across the view, full inside it and fading out within a screen's
+// half-width beyond its edges.
+function playCues(cues: SoundCue[]) {
+  for (const cue of cues) {
+    const at = worldToScreen(cue);
+    const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
+    const gain = 1 - outside / (canvas.width / 2);
+    if (gain <= 0) continue;
+    soundboard.play(cue.id, { pan: ((at.x / canvas.width) * 2 - 1) * 0.7, gain });
+  }
+}
+
+// The interface's sounds: a click for a button, its own for a choice, a start and a way back, and a soft tick for
+// pointing at a button.
+function interfaceSound(target: Element): SoundId | undefined {
+  if (target.closest("[data-submit-create-game], [data-start-room], [data-rematch]")) return "confirm";
+  if (target.closest("[data-back-home], [data-back-room-browser], [data-return-home]")) return "back";
+  if (target.closest(".map-entry, .selection-model")) return "select";
+  if (target.closest("button")) return "click";
+  return undefined;
+}
+
+function onInterfaceClick(event: MouseEvent) {
+  soundboard.unlock();
+  const sound = event.target instanceof Element ? interfaceSound(event.target) : undefined;
+  if (sound) soundboard.play(sound);
+}
+
+function onInterfaceHover(event: PointerEvent) {
+  const target = event.target instanceof Element ? event.target.closest(".map-button, .command-button, .map-entry, .menu-actions button, .scene-switch") : null;
+  if (!target || (event.relatedTarget instanceof Node && target.contains(event.relatedTarget))) return;
+  soundboard.play("hover");
 }
 
 function onMouseDown(event: MouseEvent) {

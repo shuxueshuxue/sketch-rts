@@ -98,8 +98,50 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="range"] {
   accent-color: #8a6420;
+}
+
+/* Scrollbars in the look's materials: a thin walnut track and a brass thumb. Chrome and Edge draw them from the
+   ::-webkit-scrollbar rules (which a scrollbar-color would switch off there), Firefox from scrollbar-color alone. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, #2a170b, #4a2c15 50%, #2a170b);
+  box-shadow: inset 0 0 0 1px #1a0e05;
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(180deg, #2a170b, #4a2c15 50%, #2a170b);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #2a170b;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(180deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #a77b2c, #f2d792 50%, #a77b2c);
+}
+
+::-webkit-scrollbar-corner {
+  background: #2a170b;
+}
+
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9a14f #3b2414;
+  }
 }
 
 .hidden {
@@ -471,7 +513,7 @@ input[type="checkbox"] {
   color: #f4ab92;
 }
 
-.profile-form input,
+.profile-form input:not([type="range"]):not([type="checkbox"]),
 .create-game-form input:not([type="checkbox"]),
 .slot-row select,
 .slot-controller-badge {
@@ -510,6 +552,30 @@ input[type="checkbox"] {
 
 .main-menu[data-menu-view="profile"] .menu-window {
   width: min(520px, calc(100vw - 56px));
+}
+
+.sound-settings {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  border: 1px solid var(--inset-edge);
+  border-radius: 2px;
+  background: var(--inset);
+  padding: 10px 14px 12px;
+}
+
+.sound-settings legend {
+  padding: 0 6px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.sound-settings label:not(.checkbox-row) {
+  grid-template-columns: 64px 1fr;
+  align-items: center;
 }
 
 /* Insets: the lists and notes sunk into a panel. */
