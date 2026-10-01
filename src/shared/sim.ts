@@ -502,8 +502,8 @@ export function stepGame(game: Game) {
   updateMoonWellHealing(game);
   updateRegeneration(game);
   updateTowerAttacks(game);
-  updateUnits(game);
-  ferryUnits(game);
+  const ferry = updateUnits(game);
+  if (ferry) ferryUnits(game, ferry);
   slideUnits(game);
   separateUnits(game);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
@@ -743,7 +743,12 @@ function updateResources(game: Game) {
   }
 }
 
-function updateUnits(game: Game) {
+// The units under way to board a transport, and the transports under way to unload, as updateUnits found them: what
+// ferryUnits has to look at (see @@@transport), so that no other pass looks over every unit for them.
+type Ferry = { boarding: Unit[]; unloading: Unit[] };
+
+function updateUnits(game: Game): Ferry | undefined {
+  let ferry: Ferry | undefined;
   for (const unit of game.units) {
     unit.cooldown = Math.max(0, unit.cooldown - 1);
     if (unit.abilityCooldowns) {
@@ -798,10 +803,12 @@ function updateUnits(game: Game) {
     }
     if (unit.order.type === "board") {
       updateBoardOrder(game, unit);
+      (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
       continue;
     }
     if (unit.order.type === "unload") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
+      (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
       continue;
     }
     if (unit.kind === "worker" && updateAutoRepair(game, unit)) continue;
@@ -814,6 +821,7 @@ function updateUnits(game: Game) {
       if (target) unit.order = { type: "attack", targetId: target.id };
     }
   }
+  return ferry;
 }
 
 function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
@@ -1005,14 +1013,8 @@ function updateBoardOrder(game: Game, unit: Unit) {
 // After every unit has moved: soldiers alongside the transport they were told to board go aboard while their supply fits
 // (the rest stop), and a transport that has reached the water nearest its unloading point sets its passengers ashore (any
 // that find no land near enough stay aboard) and stops (see @@@transport).
-function ferryUnits(game: Game) {
-  let boarding: Unit[] | undefined;
-  let unloading: Unit[] | undefined;
-  for (const unit of game.units) {
-    if (unit.order.type === "board") (boarding ??= []).push(unit);
-    else if (unit.order.type === "unload") (unloading ??= []).push(unit);
-  }
-  if (boarding) {
+function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
+  if (boarding.length > 0) {
     const aboard = new Set<Unit>();
     for (const unit of boarding) {
       if (unit.order.type !== "board") continue;
@@ -1026,7 +1028,7 @@ function ferryUnits(game: Game) {
     }
     if (aboard.size > 0) game.units = game.units.filter((unit) => !aboard.has(unit));
   }
-  for (const transport of unloading ?? []) {
+  for (const transport of unloading) {
     if (transport.order.type !== "unload" || distanceToGoal(game.map, transport, transport.order.x, transport.order.y) >= 8) continue;
     const passengers = transport.cargo ?? [];
     const staying: Unit[] = [];
