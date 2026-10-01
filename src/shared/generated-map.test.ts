@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
-import { isFootprintBuildable, isWalkable, walkingDistance } from "./terrain";
+import { BUILDING_DEFS } from "./catalog";
+import { isFootprintBuildable, isShoreFootprint, isWalkable, walkableGoal, walkingDistance } from "./terrain";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
 const TEAMS = { v9: "v9-side", p1: "rivals", p2: "rivals", p3: "rivals" };
@@ -150,5 +151,36 @@ describe("generated maps", () => {
     expect(seeded.map.id).toBe("ladder");
     expect(seeded.resources).toEqual(gameMap.resources);
     expect(seeded.map.terrain).toEqual(gameMap.terrain);
+  });
+
+  it("fills a sea map's middle with one sea: an island mine only a ship reaches, and a beach for every start's shipyard", () => {
+    for (const players of [PLAYERS.slice(0, 2), PLAYERS]) {
+      for (let index = 0; index < 4; index += 1) {
+        const map = generateMap({ seed: `sea-${index}`, sea: true }, players, Object.fromEntries(players.map((player) => [player, player])));
+        const ground = { terrain: map.terrain, width: map.size, height: map.size };
+        const middle = { x: map.size / 2, y: map.size / 2 };
+        const island = map.resources.find((mine) => gap(mine, middle) < 2)!;
+        const halls = players.map((player) => ({ x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
+        const landing = walkableGoal(ground, island.x, island.y, "sea");
+        // Every start's beach, on the way from it to the middle, takes a shipyard whose ships sail to the island.
+        const harbors = halls.map((hall) => {
+          for (let share = 0; share <= 1; share += 0.01) {
+            for (const side of [0, 32, -32, 64, -64]) {
+              const along = { x: hall.x + (middle.x - hall.x) * share, y: hall.y + (middle.y - hall.y) * share };
+              const at = { x: along.x + ((middle.y - hall.y) / gap(hall, middle)) * side, y: along.y - ((middle.x - hall.x) / gap(hall, middle)) * side };
+              if (!isShoreFootprint(ground, at.x, at.y, BUILDING_DEFS.shipyard.radius)) continue;
+              const water = walkableGoal(ground, at.x, at.y, "sea");
+              if (walkingDistance(ground, water, landing, "sea") !== undefined) return water;
+            }
+          }
+          return undefined;
+        });
+        expect(harbors.every((harbor) => harbor !== undefined)).toBe(true);
+        for (const hall of halls) {
+          for (const other of halls) expect(walkingDistance(ground, hall, other)).toBeDefined();
+          expect(walkingDistance(ground, hall, island)).toBeUndefined();
+        }
+      }
+    }
   });
 });

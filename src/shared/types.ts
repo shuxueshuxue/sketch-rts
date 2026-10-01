@@ -250,6 +250,8 @@ export type GeneratedLayoutOptions = {
   seed: string;
   // Drawn from the seed when absent; "sides" needs exactly two teams.
   kind?: GeneratedLayoutKind;
+  // A sea in the middle of a ring, with a shore for every player (see @@@generated-sea); absent, the map has none.
+  sea?: boolean;
 };
 
 export type GameSetupOptions = {
