@@ -4,7 +4,7 @@ import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-coun
 import { ROOM_AI_VERSIONS, type CreateRoomInput, type SlotPatch } from "./rooms";
 import type { BuildingKind, GameSetupOptions, GeneratedLayoutOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
-const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
+const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge", "speedBoots", "regenRing", "healingScroll", "ivoryTower"] satisfies ItemKind[];
 
 export type CreateRoomRequest = Omit<CreateRoomInput, "id"> & { id?: string };
 export type MapUpdateRequest = { mapId: MapId; layoutSeed?: string };

@@ -166,6 +166,21 @@ export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
   });
 }
 
+// A shop (see @@@shop): a merchant's stall under a striped awning, its goods on the counter, a coin hung at its post.
+export function drawAtlasShop(c: Brush, point: Point, size = 1) {
+  sprite(c, "shop", point, size, (b) => {
+    ellipse(b, 2, 24, 42, 12, "#3b4b3822");
+    polygon(b, [[-30, 22], [-30, -4], [30, -4], [30, 22]], "#c9a874", "#62573f");
+    polygon(b, [[-22, 22], [-22, 6], [22, 6], [22, 22]], "#7a5a3a", "#62573f");
+    polygon(b, [[-36, -4], [-28, -26], [28, -26], [36, -4]], "#b5523f", "#62573f");
+    for (const x of [-18, 0, 18]) polygon(b, [[x - 5, -4], [x - 3, -26], [x + 3, -26], [x + 5, -4]], "#f0e3c0", "#b5523f", 0.8);
+    ellipse(b, -10, 2, 5, 3, "#d9b25a", "#8a6418");
+    ellipse(b, 8, 2, 6, 3, "#9ed8ff", "#315f87");
+    line(b, [[38, 22], [38, -16]], "#62573f", 2);
+    ellipse(b, 38, -19, 6, 6, "#f2d05c", "#8a6418");
+  });
+}
+
 /** The paper's own colour, under the washes and specks of the ground tile. */
 export const PAPER_BASE = "#e8e3ca";
 

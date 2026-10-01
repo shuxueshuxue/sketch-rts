@@ -15,7 +15,9 @@ export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extend
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
 export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge";
-export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
+export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
+// What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
+export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
@@ -209,6 +211,15 @@ export type MercenaryCamp = {
   cooldownRemaining: number;
 };
 
+// @@@shop - A neutral post where any player's units buy goods with their owner's gold, as at a Warcraft III goblin
+// merchant: it is struck by nobody and stands in nobody's way, and each of its goods has a stock that comes back one at a
+// time, `restock` ticks after it last ran short (see shared/shop.ts).
+export type ShopGood = { kind: ItemKind; cost: number; stock: number; maxStock: number; restock: number; restockRemaining: number };
+export type Shop = { id: string; x: number; y: number; radius: number; goods: ShopGood[] };
+
+// A spot a generated map sets aside for a post of the game's (see @@@shop): the generator says where, the game makes it.
+export type MapSite = { kind: "shop"; x: number; y: number };
+
 export type WorldItem = {
   id: string;
   kind: ItemKind;
@@ -308,6 +319,7 @@ export type ScenarioOverride = {
   replaceDefaultLandmarks?: boolean;
   addResources?: ResourceNode[];
   addMercenaryCamps?: MercenaryCamp[];
+  addShops?: Shop[];
   addItems?: WorldItem[];
   addUnits?: ScenarioUnitSeed[];
   addBuildings?: ScenarioBuildingSeed[];
@@ -363,6 +375,7 @@ export type GameCommand =
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
+  | { type: "buy"; shopId: string; item: ItemKind }
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
@@ -387,6 +400,8 @@ export type GameSnapshot = {
   effects: WorldEffect[];
   // A campaign game's own units' rules, by variant id (see unit-variants). A standard match has none.
   variants?: Record<string, VariantRules>;
+  // The map's shops (see @@@shop); a map without one has none, and no key.
+  shops?: Shop[];
 };
 
 export type LocalUserProfile = {

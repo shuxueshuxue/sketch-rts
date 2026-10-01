@@ -3,7 +3,7 @@ import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
 import { cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
-import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
+import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapSite, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
 
 // @@@generated-map - A seeded ladder map for a game of any size, drawn fresh for every seed, built the way a Warcraft III
 // ladder map is: the ground a unit can walk is carved out of forest, rock and water (see @@@terrain), and everything else
@@ -36,6 +36,8 @@ export type GeneratedMap = {
   items: WorldItem[];
   landmarks: TerrainLandmark[];
   terrain: Terrain;
+  // Spots set aside for the game's posts: a shop's (see @@@shop), made by createGame.
+  sites?: MapSite[];
 };
 
 type Point = { x: number; y: number };

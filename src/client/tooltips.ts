@@ -385,6 +385,30 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
       stats: ["260 building damage", "Range 280", "Consumed on use"],
       requirements: ["Needs an enemy building in range.", "Carrier must not be neutral."],
     },
+    speedBoots: {
+      title: "Boots of Speed",
+      body: "Its carrier moves a fifth faster. A second pair adds nothing.",
+      stats: ["+20% move speed", "Sold at shops"],
+      requirements: ["Passive item. No manual use."],
+    },
+    regenRing: {
+      title: "Ring of Regeneration",
+      body: "Its carrier heals over time. A second ring adds nothing.",
+      stats: ["+2 HP per second", "Sold at shops"],
+      requirements: ["Passive item. No manual use."],
+    },
+    healingScroll: {
+      title: "Scroll of Healing",
+      body: "Consumed to heal every allied unit near the reader at once.",
+      stats: ["Heals 75", "Radius 300", "Consumed on use"],
+      requirements: ["Carrier must not be neutral."],
+    },
+    ivoryTower: {
+      title: "Ivory Tower",
+      body: "Consumed to raise a finished defense tower at half health near its carrier.",
+      stats: ["Range 200", "Consumed on use"],
+      requirements: ["Target open ground near the carrier."],
+    },
   },
   zh: {
     lightningRod: {
@@ -422,6 +446,30 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
       body: "消耗后近距离爆破一个敌方建筑。",
       stats: ["建筑伤害 260", "射程 280", "使用后消耗"],
       requirements: ["需要射程内敌方建筑。", "携带者不能是中立单位。"],
+    },
+    speedBoots: {
+      title: "速度之靴",
+      body: "携带者移速提高五分之一。带两双不叠加。",
+      stats: ["移速 +20%", "商店出售"],
+      requirements: ["被动物品，无法手动使用。"],
+    },
+    regenRing: {
+      title: "回复戒指",
+      body: "携带者持续回血。带两枚不叠加。",
+      stats: ["每秒回 2 血", "商店出售"],
+      requirements: ["被动物品，无法手动使用。"],
+    },
+    healingScroll: {
+      title: "治疗卷轴",
+      body: "消耗后，使用者身边所有友军立即回血。",
+      stats: ["回复 75", "半径 300", "使用后消耗"],
+      requirements: ["携带者不能是中立单位。"],
+    },
+    ivoryTower: {
+      title: "象牙塔",
+      body: "消耗后，在携带者身边立起一座半血的防御塔，立即可用。",
+      stats: ["距离 200 以内", "使用后消耗"],
+      requirements: ["目标必须是携带者附近的空地。"],
     },
   },
 };

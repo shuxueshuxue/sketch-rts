@@ -4,7 +4,7 @@ import { drawAtlasBuilding, drawAtlasUnit, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
-import { abilityCommandState, autocastToggle, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
 import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
   controlGroupCenter,
@@ -51,6 +51,7 @@ import { virtualClickableTargetFromElement, virtualContextTargetFromElement, vir
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { SHOP_GOODS, standsAtShop } from "../shared/shop";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
@@ -96,6 +97,8 @@ const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UN
 
 const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
+// A shop's goods, in SHOP_GOODS order: a shop selected shows no other button.
+const SHOP_HOTKEYS = ["q", "w", "e", "r", "t"];
 // Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
 // hides every other button, so X does not meet a hexer's curse.
 const STANCE_MENU_COMMAND = { icon: "⇄", hotkey: "z" } as const;
@@ -250,6 +253,17 @@ const commandButtons: CommandButton[] = [
       requirements: [t("command.stance.requirements")],
       hotkey: command.hotkey.toUpperCase(),
     }))),
+  ),
+  ...SHOP_GOODS.map((good, index) =>
+    createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), SHOP_HOTKEYS[index]!, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
+      const tooltip = itemTooltip(good.kind, SHOP_HOTKEYS[index], i18n);
+      return {
+        ...tooltip,
+        title: t("command.buy.title", { item: tooltip.title }),
+        stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
+        requirements: [t("command.buy.requirements")],
+      };
+    }),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -1922,7 +1936,7 @@ function beginItemTargeting(entry: { item: WorldItem; carrier: Unit }) {
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
   statusLabel.textContent =
-    entry.item.kind === "stormStaff"
+    entry.item.kind === "stormStaff" || entry.item.kind === "ivoryTower"
       ? t("status.itemModePoint", { item: labelKind(entry.item.kind) })
       : t("status.itemModeTarget", { item: labelKind(entry.item.kind) });
   updateHud();
@@ -1936,6 +1950,14 @@ function issueItemAt(point: Point) {
   if (kind === "stormStaff") {
     const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
     sendCommand(target ? { type: "useItem", unitId, itemId, x: target.x, y: target.y } : { type: "useItem", unitId, itemId, x: world.x, y: world.y });
+    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+  if (kind === "ivoryTower") {
+    sendCommand({ type: "useItem", unitId, itemId, x: world.x, y: world.y });
     statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
     clearCommandModeClasses();
     commandMode = undefined;
@@ -2023,6 +2045,32 @@ function research(upgradeKind: UpgradeKind) {
   statusLabel.textContent = t("status.researchStarted", { upgrade: labelKind(command.upgradeKind) });
 }
 
+function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
+  const shop = selectedShop();
+  if (!shop || commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  const good = shop.goods.find((candidate) => candidate.kind === kind);
+  const player = currentPlayerState();
+  if (!good) return HIDDEN_COMMAND_STATE;
+  if (!player) return { visible: true, enabled: false, reason: "missing" };
+  if (good.stock <= 0) return { visible: true, enabled: false, cooldownTicks: good.restockRemaining, reason: "cooldown" };
+  if (player.gold < good.cost) return { visible: true, enabled: false, reason: "gold" };
+  if (!snapshot?.units.some((unit) => unit.owner === localPlayerId && standsAtShop(unit, shop))) return { visible: true, enabled: false, reason: "position" };
+  return ENABLED_COMMAND_STATE;
+}
+
+function buyGood(kind: WorldItem["kind"]) {
+  if (!syncBeforeCommandProjection()) return;
+  const shop = selectedShop();
+  if (!shop) return;
+  const state = shopGoodButtonState(kind);
+  if (!state.enabled) {
+    showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
+    return;
+  }
+  sendCommand({ type: "buy", shopId: shop.id, item: kind });
+  statusLabel.textContent = t("status.itemBought", { item: labelKind(kind) });
+}
+
 function hireMercenary() {
   if (!syncBeforeCommandProjection()) return;
   const camp = selectedMercenaryCamp();
@@ -2071,7 +2119,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
     return;
   }
   if (additive) return;
-  const camp = hitMercenaryCamp(world);
+  const camp = hitMercenaryCamp(world) ?? hitShop(world);
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = camp?.id;
@@ -2102,6 +2150,10 @@ function focusedPlayerBuildings() {
 
 function selectedMercenaryCamp() {
   return snapshot?.mercenaryCamps.find((camp) => camp.id === selectedCampId);
+}
+
+function selectedShop() {
+  return snapshot?.shops?.find((shop) => shop.id === selectedCampId);
 }
 
 function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
@@ -2211,6 +2263,8 @@ function updateHud() {
     renderSelectionGroups(groups);
   } else if (camp) {
     selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
+  } else if (selectedShop()) {
+    selectionLabel.textContent = t("hud.shop");
   } else {
     selectionLabel.textContent = t("hud.nothingSelected");
   }
@@ -2387,7 +2441,7 @@ function useCarriedItem(itemId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
   if (!entry) return;
-  if (entry.item.kind === "flameCloak") {
+  if (entry.item.kind === "flameCloak" || entry.item.kind === "speedBoots" || entry.item.kind === "regenRing") {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
     return;
   }
@@ -2395,7 +2449,7 @@ function useCarriedItem(itemId: string) {
     showInvalidCommand(t("status.itemRecharging", { item: labelKind(entry.item.kind) }));
     return;
   }
-  if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge") {
+  if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge" || entry.item.kind === "ivoryTower") {
     beginItemTargeting(entry);
     return;
   }
@@ -2418,7 +2472,7 @@ function dropCarriedItem(itemId: string, carrierId: string) {
 }
 
 function itemIcon(kind: WorldItem["kind"]) {
-  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : "✦";
+  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : kind === "speedBoots" ? "»" : kind === "regenRing" ? "◯" : kind === "healingScroll" ? "✚" : kind === "ivoryTower" ? "♜" : "✦";
 }
 
 function trainIcon(kind: TrainableUnitKind) {
@@ -2889,6 +2943,10 @@ function centerCameraOnWorld(world: Point) {
 
 function hitResource(world: Point) {
   return snapshot?.resources.find((resource) => distance(resource, world) < 84);
+}
+
+function hitShop(world: Point) {
+  return snapshot?.shops?.find((shop) => distance(shop, world) < shop.radius + 16);
 }
 
 function hitMercenaryCamp(world: Point) {

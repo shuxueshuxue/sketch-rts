@@ -4,6 +4,7 @@ import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach } from "../naval";
+import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, UnitKind } from "../types";
 import { ownUnitLookup } from "../unit-lookup";
@@ -89,6 +90,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!canSupply(snapshot, owner, camp.hireKind)) return commandError(`Need more supply to hire ${camp.hireKind}`, true);
     return canSpendGold(snapshot, owner, camp.cost) ? undefined : commandError(`Need ${camp.cost} gold`, true);
   }
+  if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item);
   if (command.type === "cast") return castError(snapshot, owner, command);
   if (command.type === "setAutocast") {
     if (!canAutocast(command.ability)) return commandError(`${command.ability} cannot be autocast`);
@@ -107,7 +109,8 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
     if (!item) return commandError(`Unknown item ${command.itemId}`, true);
-    return item.carrierId ? commandError(`${item.id} is already carried`, true) : undefined;
+    if (item.carrierId) return commandError(`${item.id} is already carried`, true);
+    return carriedItemCount(snapshot, command.unitId) < MAX_CARRIED_ITEMS ? undefined : commandError(`${command.unitId} carries ${MAX_CARRIED_ITEMS} items already`, true);
   }
   if (command.type === "dropItem" || command.type === "useItem") {
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
@@ -187,7 +190,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (!hasCurrentUnit(game, owner, command.unitId)) return undefined;
     return game.items.some((item) => item.id === command.itemId) ? command : undefined;
   }
-  if (command.type === "hire") {
+  if (command.type === "hire" || command.type === "buy") {
     return command;
   }
   return command satisfies never;

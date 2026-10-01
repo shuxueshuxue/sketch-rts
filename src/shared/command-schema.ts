@@ -17,6 +17,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "train") return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   if (command.type === "research") return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
   if (command.type === "hire") return typeof command.campId === "string";
+  if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string";
   if (command.type === "cast") {
     return (
       typeof command.unitId === "string" &&

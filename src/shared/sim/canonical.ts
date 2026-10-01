@@ -14,6 +14,7 @@ export function canonicalGameState(game: Game) {
     buildings: game.buildings,
     resources: game.resources,
     mercenaryCamps: game.mercenaryCamps,
+    shops: game.shops,
     items: game.items,
     projectiles: game.projectiles,
     effects: game.effects,

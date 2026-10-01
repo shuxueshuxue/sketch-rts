@@ -21,6 +21,7 @@ import {
   withUnitShape,
 } from "./map";
 import { generateMap } from "./generated-map";
+import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
 import { seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
@@ -61,6 +62,7 @@ export const GAME_SNAPSHOT_RESTORE_KEYS = [
   "buildings",
   "resources",
   "mercenaryCamps",
+  "shops",
   "items",
   "projectiles",
   "effects",
@@ -142,6 +144,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   // The ladder map has none of its own: a game on it without a layout is drawn from the seed "ladder".
   const layout = options.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
   const generated = layout ? generateMap(layout, activePlayers, teams) : undefined;
+  const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {
     tick: 0,
     match: createMatchState(activePlayers),
@@ -151,6 +154,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     buildings: generated?.buildings ?? createInitialBuildings(activePlayers, mapId, teams),
     resources: generated?.resources ?? createInitialResources(mapId, activePlayers, teams),
     mercenaryCamps: generated?.mercenaryCamps ?? createInitialMercenaryCamps(mapId),
+    ...(shops.length > 0 ? { shops } : {}),
     items: generated?.items ?? createInitialItems(mapId),
     projectiles: [],
     effects: [],
@@ -238,6 +242,7 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
     ...game.buildings.map((building) => building.id),
     ...game.resources.map((resource) => resource.id),
     ...game.mercenaryCamps.map((camp) => camp.id),
+    ...(game.shops ?? []).map((shop) => shop.id),
     ...game.items.map((item) => item.id),
     ...game.map.landmarks.map((landmark) => landmark.id),
   ]);
@@ -266,6 +271,10 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
   for (const camp of scenario.addMercenaryCamps ?? []) {
     claimId(camp.id);
     game.mercenaryCamps.push({ ...camp });
+  }
+  for (const shop of scenario.addShops ?? []) {
+    claimId(shop.id);
+    (game.shops ??= []).push({ ...shop, goods: shop.goods.map((good) => ({ ...good })) });
   }
   for (const item of scenario.addItems ?? []) {
     claimId(item.id);
@@ -433,6 +442,11 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "buy") {
+    buyGood(game, owner, command.shopId, command.item);
+    return;
+  }
+
   // Told to board, soldiers walk to the transport, and an idle transport sails in to meet them (see @@@transport).
   if (command.type === "board") {
     const transport = game.units.find((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
@@ -490,6 +504,7 @@ export function stepGame(game: Game) {
   updateResearch(game);
   updateResources(game);
   updateMercenaryCamps(game);
+  if (game.shops) restockShops(game.shops);
   game.unitSpatial = createSpatialIndex(game.units, 320);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
@@ -561,6 +576,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     }),
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
+    ...(game.shops ? { shops: game.shops.map((shop) => ({ ...shop, goods: shop.goods.map((good) => ({ ...good })) })) } : {}),
     items: game.items.map((item) => ({ ...item })),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
@@ -579,6 +595,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.buildings = cloneSnapshotValue(snapshot.buildings);
   game.resources = cloneSnapshotValue(snapshot.resources);
   game.mercenaryCamps = cloneSnapshotValue(snapshot.mercenaryCamps);
+  if (snapshot.shops) game.shops = cloneSnapshotValue(snapshot.shops);
+  else delete game.shops;
   game.items = cloneSnapshotValue(snapshot.items);
   game.projectiles = cloneSnapshotValue(snapshot.projectiles);
   game.effects = cloneSnapshotValue(snapshot.effects);
@@ -726,6 +744,8 @@ function updateMercenaryCamps(game: Game) {
 }
 
 function updateItems(game: Game) {
+  // The carriers a ring has healed this tick: a second ring heals no more (see @@@shop-goods).
+  let ringed: Set<string> | undefined;
   for (const item of game.items) {
     item.cooldownRemaining = Math.max(0, item.cooldownRemaining - 1);
     const carrier = carrierFor(game, item);
@@ -733,6 +753,10 @@ function updateItems(game: Game) {
     item.x = carrier.x;
     item.y = carrier.y;
     if (item.kind === "flameCloak") applyFlameCloak(game, carrier, item);
+    if (item.kind === "regenRing" && carrier.hp < carrier.maxHp && !ringed?.has(carrier.id)) {
+      carrier.hp = Math.min(carrier.maxHp, carrier.hp + RING_REGEN_PER_SECOND / 20);
+      (ringed ??= new Set()).add(carrier.id);
+    }
     if (carrier.owner === "neutral") activateNeutralItem(game, carrier, item);
   }
 }
@@ -1253,6 +1277,25 @@ function hireMercenary(game: Game, owner: PlayerId, campId: string) {
   return mercenary;
 }
 
+// The good comes from the shop's stock to the owner's unit standing by it nearest it with room (see @@@carried-items), or
+// to the ground at the shop's door when none has room.
+function buyGood(game: Game, owner: PlayerId, shopId: string, kind: WorldItem["kind"]) {
+  const refusal = buyRefusal(game, owner, shopId, kind);
+  if (refusal) throw new Error(refusal.message);
+  const shop = game.shops!.find((candidate) => candidate.id === shopId)!;
+  const good = shop.goods.find((candidate) => candidate.kind === kind)!;
+  spendGold(game, owner, good.cost);
+  good.stock -= 1;
+  if (good.restockRemaining <= 0) good.restockRemaining = good.restock;
+  const item: WorldItem = { id: `item-${owner}-${kind}-${game.nextId}`, kind, x: shop.x, y: shop.y + shop.radius + 16, cooldownRemaining: 0 };
+  game.nextId += 1;
+  game.items.push(item);
+  const buyer = shopBuyer(game, owner, shop);
+  if (buyer) attachItemToUnit(game, item, buyer);
+  addEffect(game, "summon", shop.x, shop.y, 24);
+  return item;
+}
+
 function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
   return game.units.some((unit) => unit.owner === owner && distance(unit, camp) <= camp.radius + unit.radius + MERCENARY_HIRE_RANGE);
 }
@@ -1269,7 +1312,7 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
     moveToward(unit, item.x, item.y, game.map);
     return;
   }
-  attachItemToUnit(item, unit);
+  if (carriedItemCount(game, unit.id) < MAX_CARRIED_ITEMS) attachItemToUnit(game, item, unit);
   unit.order = { type: "idle" };
 }
 
@@ -1280,17 +1323,20 @@ function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string,
   if (!item) throw new Error(`Unknown item ${itemId}`);
   if (item.carrierId) throw new Error(`${item.id} is already carried`);
   if (unitMover(unit.kind) === "sea") throw new Error("A ship carries no items");
+  if (carriedItemCount(game, unit.id) >= MAX_CARRIED_ITEMS) throw new Error(`${unit.id} carries ${MAX_CARRIED_ITEMS} items already`);
   if (distance(unit, item) > ITEM_PICKUP_RANGE) {
     assignUnitOrder(unit, { type: "pickupItem", itemId }, queued);
     return;
   }
-  attachItemToUnit(item, unit);
+  attachItemToUnit(game, item, unit);
 }
 
-function attachItemToUnit(item: WorldItem, unit: Unit) {
+function attachItemToUnit(game: Game, item: WorldItem, unit: Unit) {
   item.carrierId = unit.id;
   item.x = unit.x;
   item.y = unit.y;
+  // Boots change their carrier's pace (see @@@shop-goods).
+  if (item.kind === "speedBoots" && isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
 }
 
 function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x: number, y: number) {
@@ -1300,6 +1346,7 @@ function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x
   delete item.carrierId;
   item.x = clamp(x, 0, game.map.width);
   item.y = clamp(y, 0, game.map.height);
+  if (item.kind === "speedBoots" && isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
 }
 
 function useItem(
@@ -1579,8 +1626,9 @@ function carrierFor(game: Game, item: WorldItem) {
 }
 
 function activateNeutralItem(game: Game, carrier: Unit, item: WorldItem) {
-  // @@@neutral-treasure-rule - Camps can weaponize carried treasure, except scrolls that are explicitly inert on monsters.
-  if (item.kind === "guardianScroll" || item.kind === "experienceBook" || item.kind === "breachCharge" || item.cooldownRemaining > 0) return;
+  // @@@neutral-treasure-rule - Camps can weaponize carried treasure, except scrolls that are explicitly inert on monsters
+  // and what a shop sells (which no camp carries).
+  if (item.kind === "guardianScroll" || item.kind === "experienceBook" || item.kind === "breachCharge" || isShopOnlyItem(item.kind) || item.cooldownRemaining > 0) return;
   const target = nearestEnemyInRange(game, carrier, item.kind === "stormStaff" ? 280 : 240);
   if (!target) return;
   activateItem(game, carrier, item, target.id, target.x, target.y);
@@ -1632,7 +1680,33 @@ function activateItem(
     applyXpLevel(game, carrier);
     addEffect(game, "experienceBurst", carrier.x, carrier.y, 48);
     consumeItem(game, item);
+    return;
   }
+  if (item.kind === "healingScroll") {
+    if (carrier.owner === "neutral") return;
+    forEachNearbyUnit(game, carrier, HEALING_SCROLL_RADIUS, (unit) => {
+      if (distance(unit, carrier) > HEALING_SCROLL_RADIUS || areEnemyOwners(game, carrier.owner, unit.owner)) return;
+      unit.hp = Math.min(unit.maxHp, unit.hp + HEALING_SCROLL_HEAL);
+    });
+    addEffect(game, "heal", carrier.x, carrier.y, 30, { radius: HEALING_SCROLL_RADIUS });
+    consumeItem(game, item);
+    return;
+  }
+  if (item.kind === "ivoryTower") {
+    if (!isPlayerId(carrier.owner) || !isNumber(x) || !isNumber(y)) return;
+    if (Math.hypot(x - carrier.x, y - carrier.y) > IVORY_TOWER_REACH) return;
+    if (terrainBlocksPlacement(game.map, "defenseTower", { x, y }) || buildingPlacementBlocker(game, "defenseTower", { x, y })) return;
+    const tower = createBuilding(`building-${carrier.owner}-defenseTower-${game.nextId}`, carrier.owner, "defenseTower", x, y, true);
+    game.nextId += 1;
+    tower.hp = Math.round(tower.maxHp / 2);
+    game.buildings.push(tower);
+    addEffect(game, "summon", x, y, 34);
+    consumeItem(game, item);
+  }
+}
+
+function isShopOnlyItem(kind: WorldItem["kind"]) {
+  return kind === "speedBoots" || kind === "regenRing" || kind === "healingScroll" || kind === "ivoryTower";
 }
 
 function consumeItem(game: Game, item: WorldItem) {
@@ -2041,6 +2115,7 @@ function nonStarUnitStats(game: Game, unit: Unit) {
       if (levelDef.attackRangeMultiplier) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
     }
   }
+  if (game.items.some((item) => item.carrierId === unit.id && item.kind === "speedBoots")) speed = roundUnitScalar(speed * BOOTS_SPEED);
   return { attackDamage, maxHp, speed, attackRange };
 }
 

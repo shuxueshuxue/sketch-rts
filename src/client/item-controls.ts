@@ -26,8 +26,8 @@ export function pickupItemCommand(selectedUnits: Unit[], item: WorldItem): Extra
 
 export function useItemCommand(snapshot: GameSnapshot, owner: PlayerId, item: WorldItem, carrier: Unit): GameCommand | undefined {
   if (item.cooldownRemaining > 0) return undefined;
-  if (item.kind === "flameCloak") return undefined;
-  if (item.kind === "experienceBook" || item.kind === "guardianScroll") return { type: "useItem", unitId: carrier.id, itemId: item.id };
+  if (item.kind === "flameCloak" || item.kind === "speedBoots" || item.kind === "regenRing") return undefined;
+  if (item.kind === "experienceBook" || item.kind === "guardianScroll" || item.kind === "healingScroll") return { type: "useItem", unitId: carrier.id, itemId: item.id };
   const target = nearestEnemy(snapshot, owner, carrier, item.kind === "stormStaff" ? 320 : 280);
   if (!target) return undefined;
   if (item.kind === "stormStaff") return { type: "useItem", unitId: carrier.id, itemId: item.id, x: target.x, y: target.y };

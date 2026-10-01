@@ -1,4 +1,4 @@
-import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasUnit } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasCamp, drawAtlasShop, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasUnit } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -13,7 +13,7 @@ import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
-import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Owner, ResourceNode, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
+import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Shop, Owner, ResourceNode, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -112,6 +112,7 @@ export function drawWorld(frame: WorldFrame) {
   if (frame.story && frame.props) drawStoryProps(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);
   drawMercenaryCamps(painter, snapshot.mercenaryCamps);
+  if (snapshot.shops) drawShops(painter, snapshot.shops);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
   drawBuildings(painter, snapshot.buildings);
@@ -224,6 +225,16 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[]) {
     ctx.fillText(painter.labels.mercenaryStock(camp.stock), point.x, point.y + 48);
     ctx.textAlign = "start";
     if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
+  }
+}
+
+function drawShops(painter: Painter, shops: Shop[]) {
+  const { ctx } = painter;
+  for (const shop of shops) {
+    const point = worldToScreen(painter, shop);
+    if (!nearScreen(painter, point, 110)) continue;
+    if (painter.selectedCampId === shop.id) drawSelectionHalo(ctx, point.x, point.y + shop.radius * 0.56, shop.radius * 1.1, shop.radius * 0.34, "#96774a");
+    drawAtlasShop(ctx, point);
   }
 }
 
@@ -467,6 +478,68 @@ function drawItemGlyph(ctx: Brush, item: WorldItem, point: Point, now: number, c
     ctx.beginPath();
     ctx.moveTo(x - 2, y - 7);
     ctx.quadraticCurveTo(x + 2, y - 13, x + 7, y - 9);
+    ctx.stroke();
+  } else if (item.kind === "speedBoots") {
+    ctx.strokeStyle = "#5f3a24";
+    ctx.fillStyle = "#b07a4a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 4, y - 10);
+    ctx.lineTo(x + 2, y - 10);
+    ctx.lineTo(x + 2, y + 3);
+    ctx.lineTo(x + 10, y + 5);
+    ctx.lineTo(x + 10, y + 9);
+    ctx.lineTo(x - 4, y + 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y - 4);
+    ctx.lineTo(x - 7, y - 4);
+    ctx.moveTo(x - 13, y + 1);
+    ctx.lineTo(x - 7, y + 1);
+    ctx.stroke();
+  } else if (item.kind === "regenRing") {
+    ctx.strokeStyle = "#3f6b3a";
+    ctx.fillStyle = "#9fd38b";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y - 7, 3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (item.kind === "healingScroll") {
+    ctx.strokeStyle = "#704a33";
+    ctx.fillStyle = "#fff6d0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(x - 8, y - 6, 16, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = "#b5523f";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 4);
+    ctx.lineTo(x, y + 4);
+    ctx.moveTo(x - 4, y);
+    ctx.lineTo(x + 4, y);
+    ctx.stroke();
+  } else if (item.kind === "ivoryTower") {
+    ctx.strokeStyle = "#62573f";
+    ctx.fillStyle = "#f4efe0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 5, y + 9);
+    ctx.lineTo(x - 4, y - 6);
+    ctx.lineTo(x - 7, y - 6);
+    ctx.lineTo(x - 7, y - 11);
+    ctx.lineTo(x + 7, y - 11);
+    ctx.lineTo(x + 7, y - 6);
+    ctx.lineTo(x + 4, y - 6);
+    ctx.lineTo(x + 5, y + 9);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
   } else {
     ctx.strokeStyle = "#8a6418";
