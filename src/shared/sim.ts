@@ -453,7 +453,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (!transport) throw new Error(`Unknown ${owner} transport ${command.transportId}`);
     const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => unitMover(unit.kind) === "land");
     for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id }, command.queued);
-    if (transport.order.type === "idle" && boarders[0]) assignUnitOrder(transport, { type: "move", x: boarders[0].x, y: boarders[0].y });
     return;
   }
 
@@ -1023,7 +1022,8 @@ function updateMineOrder(game: Game, unit: Unit) {
   unit.order = { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 };
 }
 
-// A soldier told to board walks to its transport (see @@@transport); it goes aboard in ferryUnits.
+// A soldier told to board walks to its transport (see @@@transport); it goes aboard in ferryUnits. An idle transport
+// sails in to the water nearest it, so the two meet at the shore wherever each stopped.
 function updateBoardOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "board") return;
   const transport = findTarget(game, unit.order.transportId);
@@ -1031,7 +1031,9 @@ function updateBoardOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
-  if (!alongside(unit, transport)) moveToward(unit, transport.x, transport.y, game.map);
+  if (alongside(unit, transport)) return;
+  moveToward(unit, transport.x, transport.y, game.map);
+  if (transport.order.type === "idle") moveToward(transport, unit.x, unit.y, game.map);
 }
 
 // After every unit has moved: soldiers alongside the transport they were told to board go aboard while their supply fits
@@ -1053,7 +1055,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
     if (aboard.size > 0) game.units = game.units.filter((unit) => !aboard.has(unit));
   }
   for (const transport of unloading) {
-    if (transport.order.type !== "unload" || distanceToGoal(game.map, transport, transport.order.x, transport.order.y) >= 8) continue;
+    if (transport.order.type !== "unload" || !walkEnded(game, transport, transport.order, 8)) continue;
     const passengers = transport.cargo ?? [];
     const staying: Unit[] = [];
     passengers.forEach((passenger, index) => {

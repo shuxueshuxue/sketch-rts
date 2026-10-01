@@ -126,7 +126,8 @@ describe("transports", () => {
     run(sim, 400);
     const transport = unit(sim, "transport")!;
     expect(transport.cargo!.map((passenger) => passenger.id).sort()).toEqual(["f1", "f2", "w1", "w2", "w3", "w4"]);
-    expect(unit(sim, "f3")!.order.type).toBe("idle");
+    // The one that did not fit is told so: its order ends (and, idle by the enemy hall, it may turn on it).
+    expect(unit(sim, "f3")!.order.type).not.toBe("board");
     expect(unit(sim, "w1")).toBeUndefined();
     expect(sim.players.player!.supplyUsed).toBe(supply);
     issuePlayerCommand(sim, "player", { type: "unload", unitIds: ["transport"], ...at(22, 9) });
