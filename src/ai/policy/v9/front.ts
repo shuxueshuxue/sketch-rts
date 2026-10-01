@@ -1,5 +1,8 @@
 import { walkRoute, walkingDistance } from "../../../shared/terrain";
 import type { GameSnapshot, PlayerId } from "../../../shared/types";
+import { BUILDING_DEFS } from "../../../shared/catalog";
+import type { Building } from "../../../shared/types";
+import { legalBuildPointNear } from "../build-layout";
 import { buildings } from "../snapshot";
 import { distance, type Point } from "../spatial";
 import { v9ExpansionMine, type V6Intel } from "../v6/intel";
@@ -50,6 +53,29 @@ export function v9FrontPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6I
     }
   }
   return anchor;
+}
+
+// @@@v9-choke-towers - V9's towers stand where the way out of a base toward the enemy narrows: on the walk from the hall
+// to the nearest enemy hall, CHOKE_STEP along it (a main's ramp, a natural's mouth), no farther from the hall than
+// CHOKE_REACH (its towers are counted by the hall they guard), and out of a standing camp's reach (a tower there would
+// wake it). The old spot, a step from the hall straight toward the enemy, stood wherever the hall did.
+const CHOKE_STEP = 260;
+const CHOKE_REACH = 460;
+const CAMP_CLEARANCE = BUILDING_DEFS.defenseTower.attackRange + 60;
+
+export function v9ChokeTowerPoint(snapshot: GameSnapshot, intel: V6Intel, hall: Building): Point | undefined {
+  const enemyHalls = intel.enemies.flatMap((enemy) => enemy.buildings.filter((building) => building.kind === "townHall"));
+  if (enemyHalls.length === 0) return undefined;
+  const target = enemyHalls.reduce((best, candidate) => (distance(candidate, hall) < distance(best, hall) ? candidate : best));
+  const route = walkRoute(snapshot.map, hall, target, 1);
+  if (!route || route.length === 0) return undefined;
+  let index = 0;
+  for (let walked = distance(hall, route[0]!); index < route.length - 1 && walked < CHOKE_STEP; index += 1) walked += distance(route[index]!, route[index + 1]!);
+  while (index > 0 && distance(route[index]!, hall) > CHOKE_REACH) index -= 1;
+  const point = legalBuildPointNear(snapshot, "defenseTower", route[index]!);
+  const creeps = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.attackDamage > 0);
+  if (distance(point, hall) > CHOKE_REACH + 60 || creeps.some((creep) => distance(creep, point) <= CAMP_CLEARANCE)) return undefined;
+  return point;
 }
 
 // Whether V9's army (or a tower of its own) stands by the mine, so a hall may rise there.

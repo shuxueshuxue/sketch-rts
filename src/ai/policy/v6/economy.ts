@@ -9,7 +9,7 @@ import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { v8WantsWell, v8WellPoint } from "../v8/well";
-import { v9ExpansionCovered } from "../v9/front";
+import { v9ChokeTowerPoint, v9ExpansionCovered } from "../v9/front";
 import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
@@ -312,7 +312,8 @@ function towerRising(economy: Economy) {
 
 function towerGoal(economy: Economy, hall: Building, priority: number, play: string): Goal[] {
   const facing = economy.intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall))[0];
-  const point = towerPoint(economy.snapshot, economy.owner, hall, facing);
+  // V9 holds the way in (see v9-choke-towers).
+  const point = (isV9Policy(economy.options) ? v9ChokeTowerPoint(economy.snapshot, economy.intel, hall) : undefined) ?? towerPoint(economy.snapshot, economy.owner, hall, facing);
   if (!point) return [];
   return [goal(play, priority, BUILDING_DEFS.defenseTower.cost, true, (used) => build(economy, "defenseTower", point, used, play))];
 }
