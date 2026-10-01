@@ -906,7 +906,7 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 
 // @@@building-pathing - Buildings stand in the land's way as forest does, but they are each game's own and they come and
 // go: the sim hands the map its buildings whenever they change (see setBuildingBodies), and they are kept on a copy of the
-// land's cells with every cell whose center lies within BODY_MARGIN of a building blocked, with its own clearance, flow
+// land's cells with every cell a building shuts blocked (see BODY_MARGIN), with its own clearance, flow
 // tiles and nearest cells. A building laid or felled redoes the tiles of the squares it changed and of those beside them
 // (see @@@flow-tiles). The AIs' walking distances and routes read the terrain alone: what a building adds to a walk is a
 // few steps round it.
@@ -914,7 +914,10 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // The margin shuts the slits a unit's body cannot pass (Emerson's wall cushioning): farms laid 4 apart left a row of open
 // cells between them, and units routed into the slit and stood pressed in it; with half a cell more round each building
 // no gap under about 32 stays open, and a unit is 30 to 36 wide. A unit pressed against a wall stands in such cells and
-// starts from the open cell nearest it.
+// starts from the open cell nearest it. A cell is shut when a building covers its center, or the margins cover all five
+// of its samples (its center and its quarters' centers): taken at the center alone, a gap of 32 to 77 between two walls
+// stayed open or shut by how it lay on the grid, and a farm and stables 54 apart with two farms 56 apart shut a knight in
+// a one-cell pocket where every walk ended as it began, its army standing at home to the end (pool-twoShores-4).
 //
 // The copy hangs on the game's map object (a snapshot shares it), never on the terrain, which games may share. A map
 // without terrain has no routing to take a unit round anything, and its buildings stand in nobody's way (see
@@ -923,8 +926,18 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // in deep water.
 type Body = { x: number; y: number; radius: number };
 const BODY_MARGIN = 16;
-// `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
-type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array };
+const SAMPLES = [
+  [0, 0],
+  [-0.25, -0.25],
+  [0.25, -0.25],
+  [-0.25, 0.25],
+  [0.25, 0.25],
+] as const;
+const ALL_SAMPLES = (1 << SAMPLES.length) - 1;
+const CENTER_IN_BODY = 1 << SAMPLES.length;
+// `previous`: the cells as they were before the last change, kept to tell which squares that change reached. `covered`:
+// per cell, the samples a margin covers and whether a body covers its center.
+type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; covered: Uint8Array };
 const overlays = new WeakMap<object, Overlay>();
 
 export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
@@ -938,22 +951,30 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   let overlay = overlays.get(map);
   if (!overlay || overlay.terrain !== terrain) {
     const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length) };
+    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), covered: new Uint8Array(fresh.walk.length) };
     overlays.set(map, overlay);
   }
   const state = overlay.state;
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);
   const size = terrain.cell;
+  const covered = overlay.covered;
+  covered.fill(0);
   for (const body of bodies) {
     const reach = body.radius + BODY_MARGIN;
     const low = { col: Math.max(0, Math.floor((body.x - reach) / size)), row: Math.max(0, Math.floor((body.y - reach) / size)) };
     const high = { col: Math.min(terrain.cols - 1, Math.floor((body.x + reach) / size)), row: Math.min(terrain.rows - 1, Math.floor((body.y + reach) / size)) };
     for (let row = low.row; row <= high.row; row += 1) {
       for (let col = low.col; col <= high.col; col += 1) {
-        const dx = (col + 0.5) * size - body.x;
-        const dy = (row + 0.5) * size - body.y;
-        if (dx * dx + dy * dy < reach * reach) state.walk[pad(state, col, row)] = 0;
+        const at = pad(state, col, row);
+        for (let sample = 0; sample < SAMPLES.length; sample += 1) {
+          const dx = (col + 0.5 + SAMPLES[sample]![0]) * size - body.x;
+          const dy = (row + 0.5 + SAMPLES[sample]![1]) * size - body.y;
+          const far = dx * dx + dy * dy;
+          if (far < reach * reach) covered[at] |= 1 << sample;
+          if (sample === 0 && far < body.radius * body.radius) covered[at] |= CENTER_IN_BODY;
+        }
+        if (covered[at]! & CENTER_IN_BODY || (covered[at]! & ALL_SAMPLES) === ALL_SAMPLES) state.walk[at] = 0;
       }
     }
   }
