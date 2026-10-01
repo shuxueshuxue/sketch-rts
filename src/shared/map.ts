@@ -286,6 +286,9 @@ export function createUnit(
     variant: undefined,
     abilityCooldowns: undefined,
     autocast: undefined,
+    stance: undefined,
+    pushX: undefined,
+    pushY: undefined,
     expiresTick: undefined,
   };
 }

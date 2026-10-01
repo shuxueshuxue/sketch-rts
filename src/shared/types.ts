@@ -106,6 +106,9 @@ export type RallyTarget =
   | { type: "resource"; resourceId: string }
   | { type: "unit"; unitId: string };
 
+// How a melee fighter lands its blow (see @@@melee-stances).
+export type MeleeStance = "pursue" | "brace" | "shock";
+
 export type Unit = {
   id: string;
   owner: Owner;
@@ -128,6 +131,11 @@ export type Unit = {
   abilityCooldowns?: Partial<Record<AbilityKind, number>> | undefined;
   // Autocast switched away from its ability's default (see autocast): true on, false off; an absent ability keeps the default.
   autocast?: Partial<Record<AbilityKind, boolean>> | undefined;
+  // A melee fighter's stance (see @@@melee-stances); absent is pursue.
+  stance?: Exclude<MeleeStance, "pursue"> | undefined;
+  // The velocity a shove gave the unit, in units a tick (see @@@push); absent when it is not sliding.
+  pushX?: number | undefined;
+  pushY?: number | undefined;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -347,6 +355,7 @@ export type GameCommand =
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
+  | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }

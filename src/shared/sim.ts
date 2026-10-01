@@ -4,6 +4,7 @@ import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { isWalkable, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
+import { BRACE_DAMAGE_SHARE, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
   createInitialBuildings,
@@ -412,6 +413,13 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "setStance") {
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (canTakeStance(unit.kind)) unit.stance = command.stance === "pursue" ? undefined : command.stance;
+    }
+    return;
+  }
+
   if (command.type === "hire") {
     hireMercenary(game, owner, command.campId);
     return;
@@ -468,6 +476,7 @@ export function stepGame(game: Game) {
   updateRegeneration(game);
   updateTowerAttacks(game);
   updateUnits(game);
+  slideUnits(game);
   separateUnits(game);
   removeExpiredUnits(game);
   removeDead(game);
@@ -699,6 +708,8 @@ function updateUnits(game: Game) {
       if (left) unit.abilityCooldowns = left;
       else unit.abilityCooldowns = undefined;
     }
+    // Off its feet (see @@@push) a unit neither walks, strikes nor casts; its order waits for it.
+    if (isStaggered(unit)) continue;
     activateQueuedOrder(unit);
     if (updateNeutralLeash(game, unit)) continue;
     autocastStep(game, unit);
@@ -1438,7 +1449,8 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
 }
 
 function outgoingDamageMultiplier(unit: Unit) {
-  return unit.effects.reduce((multiplier, effect) => Math.min(multiplier, effect.damageMultiplier ?? (effect.type === "curse" ? 0.4 : 1)), 1);
+  const cursed = unit.effects.reduce((multiplier, effect) => Math.min(multiplier, effect.damageMultiplier ?? (effect.type === "curse" ? 0.4 : 1)), 1);
+  return unit.stance === "brace" ? cursed * BRACE_DAMAGE_SHARE : cursed;
 }
 
 function carriedItem(game: Game, unit: Unit, itemId: string) {
@@ -1677,8 +1689,10 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
 }
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
-  if (!applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, damage))) return;
+  const dealt = attackDamageAgainstTarget(game, attacker, target, damage);
+  if (!applyDamage(game, attacker, target, dealt)) return;
   applyAttackStatusEffects(game, attacker, target);
+  if (attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
@@ -1696,6 +1710,16 @@ function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target
   return dealt;
 }
 
+// A melee blow in brace or shock shoves its target, and in shock the striker after it (see @@@melee-stances).
+function stanceBlow(attacker: Unit, target: Unit, dealt: number) {
+  if (!attacker.stance || target.hp <= 0) return;
+  const strength = blowStrength(dealt, target);
+  const dx = target.x - attacker.x;
+  const dy = target.y - attacker.y;
+  shove(target, dx, dy, strength);
+  if (attacker.stance === "shock") shove(attacker, dx, dy, strength);
+}
+
 // What the ash chieftain hunts: anything summoned, and any unit with a spell.
 function isCasterOrSummoned(unit: Unit) {
   return unit.expiresTick !== undefined || hasSpell(unit.kind);
@@ -1710,9 +1734,10 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 
 function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
   if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return false;
+  const taken = isUnit(target) && target.stance === "shock" ? Math.max(1, Math.round(damage * SHOCK_DAMAGE_TAKEN)) : damage;
   const hpBefore = target.hp;
-  target.hp -= damage;
-  game.observer?.hit(attacker, target, damage, hpBefore);
+  target.hp -= taken;
+  game.observer?.hit(attacker, target, taken, hpBefore);
   if (hpBefore > 0 && isUnit(target) && target.owner === "neutral") triggerNeutralAssist(game, target, attacker);
   if (hpBefore > 0 && isPlayerId(target.owner)) triggerPlayerAggro(game, target, attacker);
   if (hpBefore > 0 && target.hp <= 0) {
@@ -2232,6 +2257,10 @@ function enemyTeamKeys(game: Game, owner: Owner, indexes: Map<string, unknown>) 
   return [...indexes.keys()].filter((team) => team !== ownTeam);
 }
 
+function slideUnits(game: Game) {
+  for (const unit of game.units) if (unit.pushX !== undefined) slide(unit, game.map);
+}
+
 function separateUnits(game: Game) {
   const cellSize = 80;
   const buckets = new Map<number, { x: number; y: number; units: Unit[] }>();
@@ -2279,6 +2308,7 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const length = Math.hypot(dx, dy);
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;
+  if (a.pushX !== undefined || b.pushX !== undefined) pushContact(a, b, nx, ny);
   const push = (minDistance - length) / 2;
   const ax = clamp(a.x - nx * push, 0, game.map.width);
   const ay = clamp(a.y - ny * push, 0, game.map.height);

@@ -1,6 +1,7 @@
 import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
+import { isMeleeStance } from "./push";
 
 export function isGameCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
@@ -26,6 +27,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
     );
   }
   if (command.type === "setAutocast") return isStringArray(command.unitIds) && isAbilityKind(command.ability) && typeof command.enabled === "boolean";
+  if (command.type === "setStance") return isStringArray(command.unitIds) && isMeleeStance(command.stance);
   if (command.type === "pickupItem") return typeof command.unitId === "string" && typeof command.itemId === "string";
   if (command.type === "dropItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
   if (command.type === "useItem") {

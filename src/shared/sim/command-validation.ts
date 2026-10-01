@@ -1,5 +1,6 @@
 import { abilityCooldown } from "../ability-cooldowns";
 import { canAutocast } from "../autocast";
+import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import type { Game } from "../sim";
@@ -91,6 +92,11 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
       ? undefined
       : commandError(`None of those units has ${command.ability}`);
   }
+  if (command.type === "setStance") {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit.kind)) ? undefined : commandError("None of those units fights in melee");
+  }
   if (command.type === "pickupItem") {
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
@@ -158,7 +164,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if ((behavior === "heal" || behavior === "curse" || behavior === "charge") && command.targetId && !game.units.some((unit) => unit.id === command.targetId)) return undefined;
     return command;
   }
-  if (command.type === "setAutocast") {
+  if (command.type === "setAutocast" || command.type === "setStance") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 ? { ...command, unitIds } : undefined;
   }
