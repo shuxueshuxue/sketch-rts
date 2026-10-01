@@ -49,6 +49,8 @@ describe("shared room setup schema", () => {
     // A generated layout goes through as asked, a sea map's included (see @@@generated-sea).
     expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } });
     expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", kind: "square" } } })).toBeUndefined();
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } });
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", size: "big" } } })).toBeUndefined();
   });
 
   it("validates scenario seeds in the same place as reset options", () => {

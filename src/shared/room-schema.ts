@@ -141,12 +141,13 @@ export function parseGameSetupOptions(value: unknown): GameSetupOptions | undefi
   return options;
 }
 
-// A generated layout (see @@@generated-map): its seed, and its kind and sea when given.
+// A generated layout (see @@@generated-map): its seed, and its kind, sea and size when given.
 function parseLayout(value: unknown): GeneratedLayoutOptions | undefined {
   if (!isRecord(value) || typeof value.seed !== "string") return undefined;
   if (value.kind !== undefined && value.kind !== "ring" && value.kind !== "sides") return undefined;
   if (value.sea !== undefined && typeof value.sea !== "boolean") return undefined;
-  return { seed: value.seed, ...(value.kind ? { kind: value.kind } : {}), ...(value.sea !== undefined ? { sea: value.sea } : {}) };
+  if (value.size !== undefined && (typeof value.size !== "number" || !Number.isInteger(value.size) || value.size <= 0)) return undefined;
+  return { seed: value.seed, ...(value.kind ? { kind: value.kind } : {}), ...(value.sea !== undefined ? { sea: value.sea } : {}), ...(value.size !== undefined ? { size: value.size } : {}) };
 }
 
 export function parseSlotPatch(value: unknown): SlotPatch | undefined {
