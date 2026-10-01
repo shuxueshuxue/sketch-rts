@@ -151,7 +151,7 @@ describe("melee stances", () => {
     expect(lancer.pushX).toBeUndefined();
   });
 
-  it("brace shoves the target straight back for a fifth less damage, the striker standing", () => {
+  it("brace shoves the target straight back for a tenth less damage, the striker standing", () => {
     const { game, lancer, footman } = duel("brace");
     expect(lancer.stance).toBe("brace");
     const dealt = firstBlow(game, footman);
@@ -165,7 +165,7 @@ describe("melee stances", () => {
     expect(lancer.pushX).toBeUndefined();
   });
 
-  it("shock drives the striker in after the target, and takes a fifth more damage", () => {
+  it("shock drives the striker in after the target, and takes a tenth more damage", () => {
     const { game, lancer, footman } = duel("shock");
     const dealt = firstBlow(game, footman);
     expect(dealt).toBe(lancer.attackDamage);
@@ -182,7 +182,7 @@ describe("melee stances", () => {
     expect(lancer.hp).toBeLessThan(before);
   });
 
-  it("lunges no further than the shove and no faster on average than twice its own walk", () => {
+  it("lunges no further than the shove and no faster on average than LUNGE_PACE times its own walk", () => {
     for (const [kind, foe] of [["golem", "spirit"], ["lancer", "footman"], ["footman", "golem"], ["knight", "worker"]] as const) {
       const game = field();
       const striker = game.spawnUnit("player", kind, 1000, 1000);
@@ -192,12 +192,12 @@ describe("melee stances", () => {
       const time = Math.sqrt((2 * lunge) / PUSH_FRICTION);
       expect(lunge / time).toBeLessThanOrEqual(LUNGE_PACE * striker.speed + 1e-9);
     }
-    // A golem's blow throws a spirit 171; the golem, at 2.1 a tick, lunges 11 after it.
+    // A golem's blow throws a spirit 171; the golem, at 2.1 a tick, lunges 18 after it.
     const game = field();
     const golem = game.spawnUnit("player", "golem", 1000, 1000);
     const spirit = game.spawnUnit("enemy", "spirit", 1050, 1000);
     expect(blowStrength(golem.attackDamage, spirit)).toBeCloseTo(171, 0);
-    expect(lungeStrength(golem, blowStrength(golem.attackDamage, spirit))).toBeCloseTo(11.3, 1);
+    expect(lungeStrength(golem, blowStrength(golem.attackDamage, spirit))).toBeCloseTo(17.6, 1);
   });
 
   it("shoves by the damage over the target's full health, however hurt the target is", () => {
