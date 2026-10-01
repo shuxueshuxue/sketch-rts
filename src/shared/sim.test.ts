@@ -1714,21 +1714,24 @@ describe("sketch RTS simulation", () => {
     expect(worker.orderQueue).toEqual([]);
   });
 
-  it("repairs and spends gold on a fixed worker cadence instead of every tick", () => {
+  it("repairs about a footman's damage a second, at the price per health it always had", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 100;
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     game.units = game.units.filter((unit) => unit === worker || unit.owner !== "player");
     const barracks = createBuilding("building-player-cadence-barracks", "player", "barracks", worker.x + 40, worker.y, true);
     game.buildings.push(barracks);
-    barracks.hp = barracks.maxHp - 120;
+    barracks.hp = barracks.maxHp - 300;
 
     issueCommand(game, { type: "repair", unitIds: [worker.id], buildingId: barracks.id });
-    stepMany(game, 20);
+    stepMany(game, 100);
 
-    expect(game.players.player.gold).toBe(99);
-    expect(barracks.hp).toBeGreaterThan(barracks.maxHp - 120);
-    expect(barracks.hp).toBeLessThan(barracks.maxHp - 30);
+    const gained = barracks.hp - (barracks.maxHp - 300);
+    const footmanPerSecond = UNIT_DEFS.footman.attackDamage / (UNIT_DEFS.footman.attackCooldown / 20);
+    expect(gained).toBeGreaterThan(5 * footmanPerSecond * 0.85);
+    expect(gained).toBeLessThan(5 * footmanPerSecond * 1.2);
+    const hpPerGold = barracks.maxHp / Math.round(BUILDING_DEFS.barracks.cost * 0.35);
+    expect(gained).toBeCloseTo((100 - game.players.player.gold) * hpPerGold, 5);
   });
 
   it("uses build-length hammer effects for repair instead of per-tick repair flashes", () => {

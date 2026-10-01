@@ -105,8 +105,11 @@ const FLAME_CLOAK_COOLDOWN = seconds(2);
 const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const REPAIR_RANGE = BUILD_RANGE + 20;
+// @@@repair - A worker repairs a building as fast as a footman strikes one (the owner's word, 10-02: a tower held by its
+// workers holds), at the price it always had: 1 gold for each REPAIR_FULL_COST_FRACTION-th of the building's price worth
+// of its health, paid as often as that rate asks (a tower every 6 ticks, a hall every 9).
 const REPAIR_FULL_COST_FRACTION = 0.35;
-const REPAIR_TICK_INTERVAL = seconds(1.5);
+const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.attackCooldown;
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 const AUTO_ACQUIRE_RANGE = 230;
 const RANGED_ATTACK_RANGE_THRESHOLD = 90;
@@ -1125,7 +1128,7 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   const hpPerGold = Math.max(1, building.maxHp / fullRepairCost);
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
-  unit.cooldown = REPAIR_TICK_INTERVAL;
+  unit.cooldown = Math.max(1, Math.round(hpPerGold / REPAIR_HP_PER_TICK));
   addRepairHammerEffect(game, building);
   return true;
 }
