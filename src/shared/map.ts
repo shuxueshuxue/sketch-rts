@@ -1,6 +1,7 @@
 import { BUILDING_DEFS, UNIT_DEFS, constructionStartHp } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { seconds } from "./time";
+import { MAP_POOL } from "./map-pool";
 import type { Building, BuildingKind, GameMap, MapId, MercenaryCamp, MercenaryUnitKind, Owner, PlayerId, ResourceNode, TrainableUnitKind, Unit, UnitKind, WorldItem } from "./types";
 
 export { LADDER_MAP_ID, LADDER_SLOT_IDS } from "./map-ids";
@@ -20,6 +21,7 @@ const MAP_SCALE = STANDARD_MAP_SIZE / AUTHOR_MAP_SIZE;
 
 export const MAP_SCENARIOS: MapScenario[] = [
   { id: "ladder", name: "Ladder Map", note: "Every game draws a new War3-style ladder map: each main on a plateau with one ramp, a natural of its own, guarded contested mines, mercenary posts and a hard middle, walled by forest, rock and water.", tags: ["generated", "terrain", "expansions", "wild camps", "mercs"] },
+  ...MAP_POOL.map((map) => ({ id: map.id, name: map.name.en, note: `A ${map.players}-player War3-style ladder map, ${map.layout.kind === "sides" ? "two teams facing each other across it" : "every start on one ring"}.`, tags: ["pool", String(map.layout.size), `${map.players} players`, map.layout.kind] })),
   { id: "verdantCrossroads", name: "Verdant Crossroads", note: "Compact ladder-style map with expansions, wild camps, and a mercenary crossroad.", tags: ["4096", "expansions", "wild camps", "mercs"] },
   { id: "bareDuel", name: "Bare Duel", note: "A cleaner duel layout for AI pressure tests without neutral distractions.", tags: ["4096", "few camps", "fast contact"] },
   { id: "openClaims", name: "Open Claims", note: "Expansion-focused economy map with no neutral camps blocking the mines.", tags: ["4096", "expansions", "no wild camps"] },

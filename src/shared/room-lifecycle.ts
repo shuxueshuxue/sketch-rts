@@ -102,8 +102,8 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
       return replaceRoom(updateRoomSlot(requireRoom(roomId), slotId, patch));
     },
 
-    updateMap(roomId: string, mapId: MapId, layoutSeed?: string): RoomState {
-      return replaceRoom(updateRoomMap(requireRoom(roomId), mapId, layoutSeed));
+    updateMap(roomId: string, mapId: MapId): RoomState {
+      return replaceRoom(updateRoomMap(requireRoom(roomId), mapId));
     },
 
     resizeSlots(roomId: string, humanCount: number, aiCount: number): RoomState {

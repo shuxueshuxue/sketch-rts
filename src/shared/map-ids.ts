@@ -1,11 +1,13 @@
-// Fixed maps kept as test, research and campaign fixtures; players play the ladder map.
+import { MAP_POOL } from "./map-pool";
+
+// Fixed maps kept as test, research and campaign fixtures; players play the pool's maps (see @@@map-pool).
 export const BASE_MAP_IDS = ["verdantCrossroads", "bareDuel", "openClaims", "campRush", "combatArena", "goldGrid", "mercPocket"] as const;
 
 // The ladder map: every game on it is played on a War3-style ladder map generated from its layout seed (see
-// @@@generated-map).
+// @@@generated-map). The AIs' gauntlets play it, each game on a fresh layout.
 export const LADDER_MAP_ID = "ladder" as const;
 
-export const MAP_IDS = [...BASE_MAP_IDS, LADDER_MAP_ID, "grandThirty"] as const;
+export const MAP_IDS = [...BASE_MAP_IDS, LADDER_MAP_ID, "grandThirty", ...MAP_POOL.map((map) => map.id)] as const;
 
 // The gauntlets' map pool: each slot names one generated ladder map and seeds its layout. Slots are plain names, not map
 // ids; every gauntlet game is played on the ladder map.

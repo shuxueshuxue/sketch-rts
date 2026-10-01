@@ -282,6 +282,8 @@ export type GeneratedLayoutOptions = {
   kind?: GeneratedLayoutKind;
   // A sea in the middle of a ring, with a shore for every player (see @@@generated-sea); absent, the map has none.
   sea?: boolean;
+  // The map's side, one of the sizes the generator draws for the kind and player count; drawn from the seed when absent.
+  size?: number;
 };
 
 export type GameSetupOptions = {
@@ -457,8 +459,6 @@ export type RoomState = {
   hostUserId: string;
   visibility: RoomVisibility;
   mapId: MapId;
-  // When set, the match is played on the layout generated from this seed (see @@@generated-map); the map id names it.
-  layoutSeed?: string;
   status: RoomStatus;
   autoTick: boolean;
   slots: RoomSlot[];

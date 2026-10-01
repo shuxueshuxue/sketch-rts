@@ -1,25 +1,22 @@
-/* @@@antique-ui - The look of an old campaign table, after Age of Empires: panels of parchment, wood or leather in carved
-   frames of walnut, bronze or iron, dark brown ink and dark gold, serif letters. Every colour, surface and frame is a token
-   below, so the menus and the match's HUD read as one set. A frame is a 9-slice SVG (border-image, slice 16): its corners
-   keep their nails or rivets, its edges stretch. */
+/* @@@antique-ui - The look of an old campaign table, after Age of Empires: parchment panels in carved walnut frames,
+   dark brown ink and dark gold, serif letters. Every colour, surface and frame is a token below, so the menus and the
+   match's HUD read as one set. A frame is a 9-slice SVG (border-image, slice 16): its corners keep their nails, its edges
+   stretch. */
 :root {
   --font-display: "Cinzel", "Trajan Pro", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
   --font-body: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
 
-  /* Surfaces: speckle and stains for paper and hide, streaks for wood. */
+  /* Surfaces: speckle and stains for paper, streaks for wood. */
   --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .16 0 0 0 0 .06 0 0 0 .6 -.18'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   --tex-cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='c' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .12 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='600' height='600' filter='url(%23c)'/%3E%3C/svg%3E");
   --tex-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='w' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005 .11' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .02 0 0 0 0 0 0 0 0 1.5 -.6'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23w)'/%3E%3C/svg%3E");
   --parchment: var(--tex-grain), var(--tex-cloud), radial-gradient(ellipse at 50% 40%, #f4e8c8 0%, #e8d6a9 55%, #d2b67d 100%);
   --walnut: var(--tex-wood), linear-gradient(180deg, #3f2716 0%, #2a180b 100%);
-  --leather: var(--tex-grain), radial-gradient(ellipse at 50% 30%, #43301f 0%, #261a10 100%);
 
-  /* Frames: walnut with a gold inlay and brass nails; bronze, bevelled, with studs; blackened iron with rivets. */
+  /* The frame: walnut with a gold inlay and brass nails. */
   --frame-walnut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cdefs%3E%3CradialGradient id='n' cx='.38' cy='.34' r='.66'%3E%3Cstop offset='0' stop-color='%23fff0b8'/%3E%3Cstop offset='.5' stop-color='%23b8903f'/%3E%3Cstop offset='1' stop-color='%23402a0c'/%3E%3C/radialGradient%3E%3Cfilter id='g' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.04 .45' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .01 0 0 0 1 -.35'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='48' height='48' fill='%231a0e05'/%3E%3Cpath d='M1 1H47L32 16H16Z' fill='%237d5434'/%3E%3Cpath d='M1 1L16 16V32L1 47Z' fill='%236a4428'/%3E%3Cpath d='M47 1V47L32 32V16Z' fill='%234a2c15'/%3E%3Cpath d='M1 47L16 32H32L47 47Z' fill='%233d230f'/%3E%3Crect x='1' y='1' width='46' height='46' filter='url(%23g)'/%3E%3Crect x='11.5' y='11.5' width='25' height='25' fill='none' stroke='%23d1ad5f'/%3E%3Crect x='15' y='15' width='18' height='18' fill='none' stroke='%231a0e05' stroke-width='2'/%3E%3Ccircle cx='6.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='6.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3C/svg%3E");
-  --frame-bronze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cdefs%3E%3CradialGradient id='s' cx='.38' cy='.34' r='.7'%3E%3Cstop offset='0' stop-color='%23fff3c4'/%3E%3Cstop offset='.45' stop-color='%23d9b366'/%3E%3Cstop offset='1' stop-color='%235a3c12'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='48' height='48' fill='%23120a04'/%3E%3Cpath d='M1 1H47L32 16H16Z' fill='%23d6b265'/%3E%3Cpath d='M1 1L16 16V32L1 47Z' fill='%23b48f45'/%3E%3Cpath d='M47 1V47L32 32V16Z' fill='%237a5626'/%3E%3Cpath d='M1 47L16 32H32L47 47Z' fill='%235e3f17'/%3E%3Crect x='3.5' y='3.5' width='41' height='41' fill='none' stroke='%23fff0bd' stroke-opacity='.45'/%3E%3Crect x='10.5' y='10.5' width='27' height='27' fill='none' stroke='%233a2509'/%3E%3Crect x='11.5' y='11.5' width='25' height='25' fill='none' stroke='%23f0d690' stroke-opacity='.35'/%3E%3Crect x='15' y='15' width='18' height='18' fill='none' stroke='%23120a04' stroke-width='2'/%3E%3Cg fill='url(%23s)' stroke='%233a2509' stroke-width='.6'%3E%3Cpath d='M7 3.6 10.4 7 7 10.4 3.6 7Z'/%3E%3Cpath d='M41 3.6 44.4 7 41 10.4 37.6 7Z'/%3E%3Cpath d='M7 37.6 10.4 41 7 44.4 3.6 41Z'/%3E%3Cpath d='M41 37.6 44.4 41 41 44.4 37.6 41Z'/%3E%3C/g%3E%3C/svg%3E");
-  --frame-iron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cdefs%3E%3CradialGradient id='r' cx='.36' cy='.32' r='.7'%3E%3Cstop offset='0' stop-color='%23ece6d8'/%3E%3Cstop offset='.4' stop-color='%23858076'/%3E%3Cstop offset='1' stop-color='%23161412'/%3E%3C/radialGradient%3E%3Cfilter id='h' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.35' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .88 0 0 0 0 .82 0 0 0 .7 -.32'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='48' height='48' fill='%230c0b0a'/%3E%3Cpath d='M1 1H47L32 16H16Z' fill='%236f6a62'/%3E%3Cpath d='M1 1L16 16V32L1 47Z' fill='%235b5750'/%3E%3Cpath d='M47 1V47L32 32V16Z' fill='%3338352f'/%3E%3Cpath d='M1 47L16 32H32L47 47Z' fill='%232b2926'/%3E%3Crect x='1' y='1' width='46' height='46' filter='url(%23h)'/%3E%3Crect x='12.5' y='12.5' width='23' height='23' fill='none' stroke='%239c7a34'/%3E%3Crect x='15' y='15' width='18' height='18' fill='none' stroke='%230c0b0a' stroke-width='2'/%3E%3Ccircle cx='6.5' cy='6.5' r='3.3' fill='url(%23r)'/%3E%3Ccircle cx='41.5' cy='6.5' r='3.3' fill='url(%23r)'/%3E%3Ccircle cx='6.5' cy='41.5' r='3.3' fill='url(%23r)'/%3E%3Ccircle cx='41.5' cy='41.5' r='3.3' fill='url(%23r)'/%3E%3C/svg%3E");
 
-  /* PROPOSAL A (default): parchment panels in walnut frames. */
+  /* Parchment panels in walnut frames, dark brown ink, dark gold. */
   --panel: var(--parchment);
   --ink: #2e1d0e;
   --ink-soft: #6a5133;
@@ -60,94 +57,6 @@
   --scene-filter: sepia(0.38) saturate(0.82) brightness(0.9);
   --shade: radial-gradient(ellipse at 62% 48%, rgba(40, 22, 8, 0) 25%, rgba(30, 16, 6, 0.6) 100%);
   --danger: #8e2a1f;
-}
-
-/* PROPOSAL B: walnut panels in bronze frames, parchment-coloured letters, dark gold titles. */
-:root[data-theme="walnut"] {
-  --panel: var(--walnut);
-  --ink: #ecdcb4;
-  --ink-soft: #b49c72;
-  --title: #e2bd68;
-  --title-shadow: 0 2px 0 #0d0703, 0 0 22px rgba(226, 189, 104, 0.22);
-  --accent: #d6b265;
-  --rule: rgba(214, 178, 101, 0.32);
-  --frame: var(--frame-bronze);
-  --inset: rgba(8, 4, 1, 0.42);
-  --inset-edge: rgba(160, 122, 58, 0.45);
-  --inset-ink: #ecdcb4;
-  --inset-ink-soft: #b49c72;
-  --selected: linear-gradient(90deg, rgba(214, 178, 101, 0.3), rgba(214, 178, 101, 0.04));
-  --selected-mark: #e2bd68;
-  --field: #1c110a;
-  --field-edge: #7a5a2a;
-  --field-ink: #ecdcb4;
-  --btn: linear-gradient(#4d311a, #2b1a0c);
-  --btn-hover: linear-gradient(#5e3d21, #36210f);
-  --btn-edge: #a07a3a;
-  --btn-ink: #ecd6a0;
-  --primary: linear-gradient(#e6c87e, #9c7430);
-  --primary-hover: linear-gradient(#f2d792, #ad8238);
-  --primary-edge: #3a2509;
-  --primary-ink: #24160a;
-  --bar: var(--walnut);
-  --bar-ink: #e6d2a2;
-  --bar-value: #f3d07a;
-  --slot: radial-gradient(circle at 50% 35%, #3e2815, #1c1108);
-  --slot-edge: #a07a3a;
-  --slot-ink: #ecd193;
-  --tip: var(--walnut);
-  --tip-ink: #ecdcb4;
-  --tip-soft: #b49c72;
-  --tip-title: #e2bd68;
-  --hud-panel: var(--walnut);
-  --hud-ink: #ecdcb4;
-  --scene-filter: sepia(0.45) saturate(0.75) brightness(0.62);
-  --shade: radial-gradient(ellipse at 62% 48%, rgba(10, 5, 2, 0) 20%, rgba(10, 5, 2, 0.7) 100%);
-  --danger: #e0937a;
-}
-
-/* PROPOSAL C: dark leather in riveted iron, the lists and notes on parchment. */
-:root[data-theme="iron"] {
-  --panel: var(--leather);
-  --ink: #eadfc6;
-  --ink-soft: #b5a585;
-  --title: #d8b25e;
-  --title-shadow: 0 2px 0 #050403, 0 0 16px rgba(0, 0, 0, 0.6);
-  --accent: #c9a14f;
-  --rule: rgba(201, 161, 79, 0.3);
-  --frame: var(--frame-iron);
-  --inset: var(--parchment);
-  --inset-edge: #0c0b0a;
-  --inset-ink: #2e1d0e;
-  --inset-ink-soft: #6a5133;
-  --selected: linear-gradient(90deg, rgba(120, 40, 20, 0.3), rgba(120, 40, 20, 0.04));
-  --selected-mark: #8a1f14;
-  --field: #f3e8cc;
-  --field-edge: #57524a;
-  --field-ink: #2e1d0e;
-  --btn: linear-gradient(#57534c, #312e2a);
-  --btn-hover: linear-gradient(#67625a, #3b3833);
-  --btn-edge: #0c0b0a;
-  --btn-ink: #ece2c8;
-  --primary: linear-gradient(#4a2f17, #2a190b);
-  --primary-hover: linear-gradient(#5a391c, #33200e);
-  --primary-edge: #c9a14f;
-  --primary-ink: #ecc96e;
-  --bar: var(--tex-grain), linear-gradient(#4a4640, #2a2825);
-  --bar-ink: #e3d8be;
-  --bar-value: #e8c46a;
-  --slot: linear-gradient(#4b4740, #2a2724);
-  --slot-edge: #0c0b0a;
-  --slot-ink: #ece2c8;
-  --tip: var(--parchment);
-  --tip-ink: #2e1d0e;
-  --tip-soft: #6a5133;
-  --tip-title: #4d1d10;
-  --hud-panel: var(--leather);
-  --hud-ink: #eadfc6;
-  --scene-filter: sepia(0.3) saturate(0.6) brightness(0.55);
-  --shade: radial-gradient(ellipse at 62% 48%, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.72) 100%);
-  --danger: #e0937a;
 }
 
 html,
@@ -322,34 +231,10 @@ input[type="checkbox"] {
   pointer-events: auto;
 }
 
-.menu-header {
-  display: grid;
-  gap: 4px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.menu-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 2.4px;
-}
-
-.menu-eyebrow svg {
-  width: 20px;
-  height: 25px;
-  flex: 0 0 auto;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-}
-
 .menu-title {
   margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
   color: var(--title);
   font-family: var(--font-display);
   font-size: clamp(26px, 3vw, 34px);
@@ -359,15 +244,6 @@ input[type="checkbox"] {
   text-shadow: var(--title-shadow);
 }
 
-.menu-intro {
-  display: none;
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.8;
-  white-space: pre-line;
-}
-
 .menu-status {
   color: var(--ink-soft);
   font-size: 13px;
@@ -375,10 +251,6 @@ input[type="checkbox"] {
 }
 
 .menu-status:empty {
-  display: none;
-}
-
-.menu-footer {
   display: none;
 }
 
@@ -398,57 +270,113 @@ input[type="checkbox"] {
   text-transform: uppercase;
 }
 
-/* The home screen: one tall plaque left of the scene, its title large, its two ways in as carved boards. */
+/* The home screen: the game's name and three ways in, nothing else, over the scene (see @@@menu-scene) dimmed and
+   softened so the name stands out. */
 .main-menu[data-menu-view="home"] {
-  place-items: center start;
-  padding-left: max(28px, 8vw);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(12, 6, 2, 0.5) 0%, rgba(12, 6, 2, 0.62) 60%, rgba(8, 4, 1, 0.9) 100%),
+    linear-gradient(rgba(8, 4, 1, 0.35), rgba(8, 4, 1, 0) 30%, rgba(8, 4, 1, 0) 70%, rgba(8, 4, 1, 0.45));
+}
+
+.main-menu[data-menu-view="home"]::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 .main-menu[data-menu-view="home"] .menu-window {
-  width: min(430px, calc(100vw - 56px));
-  gap: 18px;
-  padding: 34px 34px 28px;
-  text-align: center;
-}
-
-.main-menu[data-menu-view="home"] .menu-header {
+  z-index: 1;
+  width: auto;
+  max-height: none;
   justify-items: center;
-  gap: 10px;
-  padding-bottom: 16px;
-}
-
-.main-menu[data-menu-view="home"] .menu-eyebrow {
-  flex-direction: column;
-  gap: 8px;
-}
-
-.main-menu[data-menu-view="home"] .menu-eyebrow svg {
-  width: 42px;
-  height: 52px;
-  stroke-width: 1.3;
+  gap: 52px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-image: none;
+  background: none;
+  box-shadow: none;
 }
 
 .main-menu[data-menu-view="home"] .menu-title {
-  font-size: clamp(46px, 5vw, 62px);
-  letter-spacing: 2px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(180deg, #fff4d2 0%, #ecd08c 46%, #a97f36 54%, #e0bf74 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(60px, 8.5vw, 124px);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow: none;
+  text-transform: uppercase;
+  filter: drop-shadow(0 3px 0 #1a0e05) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.75));
 }
 
-.main-menu[data-menu-view="home"] .menu-intro {
-  display: block;
+.main-menu[data-menu-view="home"] .map-list {
+  width: min(340px, calc(100vw - 56px));
+  gap: 16px;
 }
 
-.main-menu[data-menu-view="home"] .menu-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule);
-  color: var(--ink-soft);
-  font-size: 11px;
-  letter-spacing: 1px;
+.main-menu[data-menu-view="home"] .map-button {
+  justify-items: center;
+  min-height: 60px;
+  padding: 0 24px;
+  border: 7px solid transparent;
+  border-image: var(--frame) 16 / 7px stretch;
+  background: var(--walnut);
+  color: #e9d29a;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  text-align: center;
 }
 
-/* A menu entry: a board with its name and a line under it. */
+.main-menu[data-menu-view="home"] .map-button:hover,
+.main-menu[data-menu-view="home"] .map-button:focus-visible {
+  outline: none;
+  background: var(--tex-wood), linear-gradient(180deg, #5a3a20, #3a2311);
+  color: #fff1c6;
+  text-shadow: 0 0 12px rgba(255, 214, 120, 0.6);
+}
+
+.main-menu[data-menu-view="home"] .map-button-name {
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+
+.main-menu[data-menu-view="home"] .map-button:first-child {
+  color: #f6dc94;
+}
+
+/* PROPOSAL ONLY - the home's second layout for the owner to compare: name and ways in down the left, the scene clear
+   on the right. */
+:root[data-home="left"] .main-menu[data-menu-view="home"] {
+  place-items: center start;
+  padding-left: 9vw;
+  background:
+    linear-gradient(90deg, rgba(10, 5, 2, 0.9) 0%, rgba(10, 5, 2, 0.6) 30%, rgba(10, 5, 2, 0) 62%),
+    radial-gradient(ellipse 90% 80% at 65% 50%, rgba(8, 4, 1, 0) 50%, rgba(8, 4, 1, 0.7) 100%);
+}
+
+:root[data-home="left"] .main-menu[data-menu-view="home"]::before {
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+:root[data-home="left"] .main-menu[data-menu-view="home"] .menu-window {
+  justify-items: start;
+  gap: 44px;
+}
+
+:root[data-home="left"] .main-menu[data-menu-view="home"] .menu-title {
+  font-size: clamp(56px, 7vw, 104px);
+}
+
+/* A menu entry: a board with its name and, where it helps, a line under it. */
 .map-button {
   display: grid;
   gap: 3px;
@@ -479,27 +407,6 @@ input[type="checkbox"] {
   opacity: 0.82;
 }
 
-.main-menu[data-menu-view="home"] .map-button {
-  justify-items: center;
-  padding: 14px 18px;
-  text-align: center;
-}
-
-.main-menu[data-menu-view="home"] .map-button:first-child {
-  border-color: var(--primary-edge);
-  background: var(--primary);
-  color: var(--primary-ink);
-}
-
-.main-menu[data-menu-view="home"] .map-button:first-child:hover {
-  background: var(--primary-hover);
-}
-
-.main-menu[data-menu-view="home"] .map-button-name {
-  font-size: 20px;
-  letter-spacing: 3px;
-}
-
 .menu-actions {
   display: flex;
   flex-wrap: wrap;
@@ -510,8 +417,7 @@ input[type="checkbox"] {
 .menu-actions button,
 .pointer-lock-panel button,
 .match-action,
-.slot-actions button,
-.reroll-button {
+.slot-actions button {
   min-height: 34px;
   border: 1px solid var(--btn-edge);
   border-radius: 2px;
@@ -527,7 +433,6 @@ input[type="checkbox"] {
 
 .menu-actions button:hover,
 .slot-actions button:hover,
-.reroll-button:hover,
 .match-action:hover {
   background: var(--btn-hover);
 }
@@ -671,10 +576,6 @@ input[type="checkbox"] {
   transform: translateY(-50%);
 }
 
-.reroll-button {
-  justify-self: start;
-}
-
 .map-detail {
   display: grid;
   grid-template-columns: auto minmax(220px, 1fr);
@@ -729,31 +630,14 @@ input[type="checkbox"] {
   font-weight: 700;
 }
 
-.map-info-note {
-  margin: 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--inset-edge);
-  color: var(--inset-ink-soft);
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.55;
-}
-
 .create-options {
   display: grid;
-  grid-template-columns: minmax(200px, 2fr) repeat(2, minmax(110px, 1fr)) auto auto;
+  grid-template-columns: minmax(200px, 420px) auto;
   align-items: end;
-  gap: 14px;
+  gap: 18px;
 }
 
-.create-slot-total,
-.room-slot-summary {
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.create-slot-total {
+.create-options .checkbox-row {
   padding-bottom: 8px;
 }
 
@@ -824,10 +708,6 @@ input[type="checkbox"] {
   padding: 0;
 }
 
-.room-map-pane .map-info-note {
-  display: none;
-}
-
 .slot-pane-head {
   display: flex;
   align-items: start;
@@ -835,10 +715,6 @@ input[type="checkbox"] {
   gap: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--inset-edge);
-}
-
-.slot-pane-head .room-slot-summary {
-  color: var(--inset-ink-soft);
 }
 
 .slot-actions {
@@ -910,10 +786,6 @@ input[type="checkbox"] {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-}
-
-.room-map-pane .reroll-button {
-  justify-self: stretch;
 }
 
 /* The results. */

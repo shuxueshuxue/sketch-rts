@@ -239,7 +239,7 @@ router.post("/api/rooms/:roomId/map", (request, response) => {
     return;
   }
   try {
-    response.json(roomHost.updateMap(request.params.roomId, body.mapId, body.layoutSeed));
+    response.json(roomHost.updateMap(request.params.roomId, body.mapId));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }

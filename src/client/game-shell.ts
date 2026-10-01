@@ -9,14 +9,9 @@ export function gameShellMarkup(i18n: I18n) {
     <canvas class="game-canvas"></canvas>
     <div class="main-menu" data-main-menu>
       <div class="menu-window">
-        <header class="menu-header">
-          <div class="menu-eyebrow"><svg viewBox="0 0 32 40" aria-hidden="true"><path d="M3 4h26v14c0 10-6 16-13 20C9 34 3 28 3 18Z"/><path d="M9 11l14 16M23 11 9 27M8 26l3 3M24 26l-3 3"/></svg><span>${escapeHtml(t("art.edition"))}</span></div>
-          <h1 class="menu-title" data-menu-title>Sketch RTS</h1>
-          <p class="menu-intro">${escapeHtml(t("art.intro"))}</p>
-        </header>
+        <h1 class="menu-title" data-menu-title>Sketch RTS</h1>
         <div class="menu-status" data-menu-status>${escapeHtml(t("shell.connectingServer"))}</div>
         <div class="map-list" data-map-list></div>
-        <div class="menu-footer"><span>SKETCH RTS</span><span>${escapeHtml(t("art.footer"))}</span></div>
       </div>
     </div>
     <div class="top-strip">

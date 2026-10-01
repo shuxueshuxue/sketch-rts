@@ -1,5 +1,6 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
 import { LADDER_MAP_ID } from "./map-ids";
+import { poolMap, poolSeatsFit } from "./map-pool";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
 export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v5";
@@ -10,8 +11,6 @@ export type CreateRoomInput = {
   host: LocalUserProfile;
   name?: string;
   mapId?: MapId;
-  // The generated layout the room plays (see @@@generated-map); a ladder room without one plays the one its id seeds.
-  layoutSeed?: string;
   slotCount?: number;
   humanCount?: number;
   aiCount?: number;
@@ -50,7 +49,6 @@ export function createRoom(input: CreateRoomInput): RoomState {
     hostUserId: input.host.id,
     visibility: input.visibility ?? "public",
     mapId: input.mapId ?? "verdantCrossroads",
-    ...(input.layoutSeed ? { layoutSeed: input.layoutSeed } : {}),
     status: "open",
     autoTick: true,
     slots,
@@ -65,10 +63,9 @@ export function updateRoomSlot(room: RoomState, slotId: string, patch: SlotPatch
   };
 }
 
-export function updateRoomMap(room: RoomState, mapId: MapId, layoutSeed?: string): RoomState {
+export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
   if (room.status !== "open") throw new Error("Cannot edit map after match start");
-  const { layoutSeed: _previous, ...rest } = room;
-  return layoutSeed ? { ...rest, mapId, layoutSeed } : { ...rest, mapId };
+  return { ...room, mapId };
 }
 
 export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: number): RoomState {
@@ -133,8 +130,11 @@ export function leaveUserSlot(room: RoomState, userId: string): RoomState {
 export function canStartRoom(room: RoomState) {
   const active = activeRoomSlots(room);
   const teams = new Set(active.map((slot) => slot.team));
+  // A pool map plays only with all its seats taken (see @@@map-pool).
+  const pool = poolMap(room.mapId);
   return (
     room.status === "open" &&
+    (!pool || poolSeatsFit(pool, active.map((slot) => slot.team))) &&
     room.slots.every((slot) => slot.controller !== "open") &&
     active.length >= 2 &&
     teams.size >= 2 &&
@@ -145,8 +145,8 @@ export function canStartRoom(room: RoomState) {
 export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameSetupOptions; playerSlots: RoomSlot[] } {
   if (!canStartRoom(room)) throw new Error("Room is not ready to start");
   const playerSlots = activeRoomSlots(room);
-  // A room on the ladder map that never drew a layout plays the one its own id seeds.
-  const layoutSeed = room.layoutSeed ?? (room.mapId === LADDER_MAP_ID ? room.id : undefined);
+  // A room on the ladder map plays the layout its own id seeds.
+  const layoutSeed = room.mapId === LADDER_MAP_ID ? room.id : undefined;
   return {
     mapId: room.mapId,
     playerSlots,

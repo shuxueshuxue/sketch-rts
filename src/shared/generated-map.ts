@@ -130,7 +130,7 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
   for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
     // The last draws leave the open ground whole: no copse, outcrop or pond can cost a map its connection.
     const plain = attempt >= ATTEMPTS - 5;
-    const field = new Field(random, pick(random, sizesFor(kind, players.length, options.sea === true)), kind, players.length, options.sea === true);
+    const field = new Field(random, options.size ?? pick(random, sizesFor(kind, players.length, options.sea === true)), kind, players.length, options.sea === true);
     const drawn = kind === "sides" ? sidesLayout(field, players, teams, teamOrder) : ringLayout(field, players, teams, teamOrder);
     if (!drawn) continue;
     const terrain = carveTerrain(field, plain);

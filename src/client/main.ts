@@ -25,7 +25,7 @@ import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
-import { drawMapPreview, ladderPreview, type MapPreview, type PreviewSeat } from "./map-preview";
+import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import {
   isMicrosoftEdgeUserAgent,
@@ -57,8 +57,8 @@ import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
 import { createUnit } from "../shared/map";
 import { LADDER_MAP_ID } from "../shared/map-ids";
+import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
-import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
@@ -115,9 +115,6 @@ const t = i18n.t;
 const tl = i18n.label;
 const worldLabels = worldLabelsFor(i18n);
 document.documentElement.lang = i18n.locale;
-// PROPOSAL ONLY - ?theme= picks one of the candidate looks for the owner's screenshots; the chosen one stays, this goes.
-const proposalTheme = new URLSearchParams(window.location.search).get("theme");
-if (proposalTheme) document.documentElement.dataset.theme = proposalTheme;
 app.innerHTML = gameShellMarkup(i18n);
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
@@ -179,12 +176,9 @@ let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
-// @@@map-chooser - The create screen is Warcraft III's custom game screen: a list of maps on the left, the chosen one's
-// picture and facts on the right (see @@@map-preview). Every map a player can choose is a ladder layout, so the list is a
-// handful of layouts drawn at once, for the seats the form asks for; "new maps" draws another handful.
-const MAP_CHOICES = 12;
-let mapChoiceSeeds = newLayoutSeeds();
-let chosenMapSeed = mapChoiceSeeds[0]!;
+// @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
+// @@@map-pool), the chosen one's picture and facts on the right (see @@@map-preview).
+let chosenMapId: PoolMapId = MAP_POOL[0].id;
 let commandMode: CommandMode | undefined;
 // The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
 let openPalette: "build" | "stance" | undefined;
@@ -573,18 +567,21 @@ function renderMainMenu() {
     renderRoomSetup();
     return;
   }
-  menuStatus.textContent = t("home.signedIn", { name: localUser.name });
+  menuStatus.textContent = "";
   mapList.replaceChildren(
-    menuButton(t("home.rooms.label"), t("home.rooms.note"), "data-open-room-browser", () => {
+    menuButton(t("home.play"), "", "data-open-create", () => {
+      openMenuRoute({ screen: "create" });
+    }),
+    menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
     }),
-    menuButton(t("profile.open.label"), t("profile.open.note", { id: localUser.id.slice(0, 8) }), "data-open-profile", () => {
+    menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
   );
 }
 
-// The create screen's map list (see @@@map-chooser).
+// The create screen (see @@@map-chooser).
 function renderCreateGameMenu() {
   menuStatus.textContent = "";
   const form = document.createElement("form");
@@ -595,15 +592,11 @@ function renderCreateGameMenu() {
       <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
         <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
         <div class="map-entries" data-map-entries></div>
-        <button type="button" class="reroll-button" data-reroll-maps>${escapeHtml(t("map.reroll"))}</button>
       </section>
       ${mapDetailMarkup()}
     </div>
     <div class="create-options">
       <label class="create-name">${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="${MAX_ROOM_SLOTS}" value="1" /></label>
-      <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="1" /></label>
-      <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
       <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
     </div>
     <div class="menu-actions">
@@ -611,71 +604,40 @@ function renderCreateGameMenu() {
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
-  const counts = () => resolveRoomSlotCounts({
-    humanCount: Number((form.elements.namedItem("humanCount") as HTMLInputElement).value),
-    aiCount: Number((form.elements.namedItem("aiCount") as HTMLInputElement).value),
-  });
-  // The seats the room will have, as the form now asks; while the counts are out of range the last good ones stand.
-  let seats = roomPreviewSeats(createRoom({ id: "preview", host: localUser, humanCount: 1, aiCount: 1 }));
   const entries = form.querySelector<HTMLDivElement>("[data-map-entries]")!;
   const renderMaps = () => {
     entries.replaceChildren(
-      ...mapChoiceSeeds.map((seed) => {
+      ...MAP_POOL.map((map) => {
         const entry = document.createElement("button");
         entry.type = "button";
-        entry.className = `map-entry ${seed === chosenMapSeed ? "selected" : ""}`;
-        entry.dataset.mapSeed = seed;
-        entry.textContent = t("map.entry", { players: seats.length, seed });
+        entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
+        entry.dataset.mapId = map.id;
+        entry.textContent = mapEntryLabel(map.id);
         entry.addEventListener("click", () => {
-          chosenMapSeed = seed;
+          chosenMapId = map.id;
           renderMaps();
         });
         return entry;
       }),
     );
-    showMapDetail(form, chosenMapSeed, seats);
+    showMapDetail(form, chosenMapId, roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: chosenMapId, ...poolSeatCounts(chosenMapId) })));
   };
   renderMaps();
-  form.querySelector("[data-reroll-maps]")?.addEventListener("click", () => {
-    mapChoiceSeeds = newLayoutSeeds();
-    chosenMapSeed = mapChoiceSeeds[0]!;
-    renderMaps();
-  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
-    const slotCounts = counts();
-    if (!slotCounts) {
-      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.slotCountRangeError"))}</span>`;
-      return;
-    }
-    void createConfiguredRoom({
-      name,
-      mapId: LADDER_MAP_ID,
-      layoutSeed: chosenMapSeed,
-      humanCount: slotCounts.humanCount,
-      aiCount: slotCounts.aiCount,
-      visibility: data.get("privateRoom") === "on" ? "private" : "public",
-    });
+    void createConfiguredRoom({ name, mapId: chosenMapId, ...poolSeatCounts(chosenMapId), visibility: data.get("privateRoom") === "on" ? "private" : "public" });
   });
-  const refreshSlotTotal = () => {
-    const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
-    const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
-    const total = humanCount + aiCount;
-    const slotCounts = counts();
-    const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
-    totalLabel.textContent = Number.isInteger(total) ? t("roomCreate.slotCountLabel", { count: total }) : t("roomCreate.slotCountFallback");
-    totalLabel.classList.toggle("error", !slotCounts);
-    if (!slotCounts) return;
-    seats = roomPreviewSeats(createRoom({ id: "preview", host: localUser, ...slotCounts }));
-    renderMaps();
-  };
-  form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "home" });
   });
   mapList.replaceChildren(form);
+}
+
+// A new room on a map: its host and a computer in every other seat; the host opens seats to players in the lobby.
+function poolSeatCounts(mapId: MapId) {
+  return { humanCount: 1, aiCount: (poolMap(mapId)?.players ?? 2) - 1 };
 }
 
 function mapDetailMarkup() {
@@ -685,24 +647,35 @@ function mapDetailMarkup() {
       <div class="map-info">
         <div class="map-info-name" data-map-name></div>
         <dl class="map-facts" data-map-facts></dl>
-        <p class="map-info-note">${escapeHtml(t("map.generatedNote"))}</p>
       </div>
     </section>`;
 }
 
-function showMapDetail(root: ParentNode, seed: string, seats: PreviewSeat[]) {
-  const preview: MapPreview = ladderPreview(seed, seats);
+function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[]) {
+  const preview = mapPreview(mapId, seats);
   drawMapPreview(root.querySelector<HTMLCanvasElement>("[data-map-preview]")!, preview);
   const { facts } = preview;
-  root.querySelector("[data-map-name]")!.textContent = t("map.entry", { players: facts.players, seed });
+  const kind = poolMap(mapId)?.layout.kind;
+  root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
   root.querySelector("[data-map-facts]")!.innerHTML = [
+    [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
+    ...(kind ? [[t("map.fact.layout"), t(kind === "sides" ? "map.kind.sides" : "map.kind.ring")]] : []),
     [t("map.fact.size"), `${facts.size} × ${facts.size}`],
-    [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players, teams: facts.teams })],
     [t("map.fact.mines"), facts.mines],
     [t("map.fact.camps"), facts.camps],
     [t("map.fact.posts"), facts.posts],
     [t("map.fact.items"), facts.items],
   ].map(([term, value]) => `<dt>${escapeHtml(String(term))}</dt><dd>${escapeHtml(String(value))}</dd>`).join("");
+}
+
+// A pool map by its name in the reader's language; any other map by its id.
+function mapName(mapId: MapId) {
+  const map = poolMap(mapId);
+  return map ? map.name[i18n.locale] : mapId;
+}
+
+function mapEntryLabel(mapId: MapId) {
+  return t("map.entry", { players: poolMap(mapId)?.players ?? 2, name: mapName(mapId) });
 }
 
 // Every seat that will play, open ones included (a player takes each before the start); closed seats stay empty.
@@ -711,7 +684,7 @@ function roomPreviewSeats(room: RoomState): PreviewSeat[] {
 }
 
 function renderProfileMenu() {
-  menuStatus.textContent = t("profile.status");
+  menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "profile-form";
   form.dataset.profileForm = "true";
@@ -748,7 +721,7 @@ function renderProfileMenu() {
 }
 
 async function renderRoomBrowser() {
-  menuStatus.textContent = t("roomBrowser.status");
+  menuStatus.textContent = "";
   const rooms = await deploymentRuntime.listRooms(localUser.id);
   const browser = document.createElement("div");
   browser.className = "room-browser";
@@ -759,10 +732,10 @@ async function renderRoomBrowser() {
   `;
   const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
   actions.replaceChildren(
-    menuButton(t("roomBrowser.create.title"), t("roomBrowser.create.note"), "data-create-room", () => {
+    menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
       openMenuRoute({ screen: "create" });
     }),
-    menuButton(t("common.back"), t("roomBrowser.back.note"), "data-back-home", () => {
+    menuButton(t("common.back"), "", "data-back-home", () => {
       openMenuRoute({ screen: "home" });
     }),
   );
@@ -782,7 +755,7 @@ function renderRoomSetup() {
   const setupAction = roomSetupViewAction(currentRoom);
   if (setupAction === "empty") {
     menuStatus.textContent = t("roomSetup.empty");
-    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), t("roomSetup.createMissing.note"), "data-create-room", () => {
+    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
       openMenuRoute({ screen: "create" });
     }));
     return;
@@ -807,12 +780,8 @@ function renderRoomSetup() {
         <div class="slot-pane-head">
           <div>
             <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
-            <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(room))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" data-add-player-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addPlayer"))}</button>
-            <button type="button" data-add-ai-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addAi"))}</button>
-            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(room) ? "" : "disabled"}>${escapeHtml(t("roomSetup.removeSlot"))}</button>
             <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
           </div>
         </div>
@@ -821,7 +790,6 @@ function renderRoomSetup() {
       <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
         <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
         ${mapDetailMarkup()}
-        <button type="button" class="reroll-button" data-map-id="${LADDER_MAP_ID}">${escapeHtml(t("map.rerollOne"))}</button>
       </section>
     </div>
     <div class="menu-actions">
@@ -832,14 +800,12 @@ function renderRoomSetup() {
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
-  // A ladder room that never drew a layout plays the one its id seeds (see roomToGameSetup).
-  showMapDetail(setup, room.layoutSeed ?? room.id, roomPreviewSeats(room));
-  setup.querySelector("[data-map-id]")?.addEventListener("click", () => void rerollLadderMap());
+  // Teams that split a sides map unevenly cannot start on it; meanwhile it shows with the seats a new room gets.
+  const seats = roomPreviewSeats(room);
+  const pool = poolMap(room.mapId);
+  showMapDetail(setup, room.mapId, !pool || poolSeatsFit(pool, seats.map((seat) => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) })));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   slotList.replaceChildren(...room.slots.map(slotRow));
-  setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
-  setup.querySelector("[data-add-ai-slot]")?.addEventListener("click", () => void addAiRoomSlot());
-  setup.querySelector("[data-remove-slot]")?.addEventListener("click", () => void removeLastRoomSlot());
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
@@ -852,7 +818,7 @@ function renderResultsMenu() {
   const result = currentRoom?.result;
   if (!currentRoom || !result) {
     menuStatus.textContent = t("results.noCompleted");
-    mapList.replaceChildren(menuButton(t("results.backHome"), t("roomBrowser.back.note"), "data-return-home", returnHome));
+    mapList.replaceChildren(menuButton(t("results.backHome"), "", "data-return-home", returnHome));
     return;
   }
 
@@ -894,7 +860,7 @@ function renderResultsMenu() {
   mapList.replaceChildren(panel);
 }
 
-async function createConfiguredRoom(input: { name: string; mapId: MapId; layoutSeed?: string; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
+async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
   currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
     host: localUser,
@@ -929,9 +895,9 @@ async function startCurrentRoom() {
   syncPointerLockGate();
 }
 
-// A rematch: a private room against one computer on the same map and layout.
+// A rematch: a private room on the same map, computers in the other seats.
 async function createReplayRoom(room: RoomState) {
-  await createConfiguredRoom({ name: t("roomCreate.defaultName", { name: localUser.name }), mapId: room.mapId, ...(room.layoutSeed ? { layoutSeed: room.layoutSeed } : {}), humanCount: 1, aiCount: 1, visibility: "private" });
+  await createConfiguredRoom({ name: t("roomCreate.defaultName", { name: localUser.name }), mapId: room.mapId, ...poolSeatCounts(room.mapId), visibility: "private" });
 }
 
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
@@ -939,34 +905,17 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   button.className = "map-button";
   button.type = "button";
   button.setAttribute(dataName, dataValue);
-  button.innerHTML = `
-    <span class="map-button-name">${escapeHtml(label)}</span>
-    <span class="map-button-note">${escapeHtml(note)}</span>
-  `;
+  button.innerHTML = `<span class="map-button-name">${escapeHtml(label)}</span>${note ? `<span class="map-button-note">${escapeHtml(note)}</span>` : ""}`;
   button.addEventListener("click", onClick);
   return button;
-}
-
-// The room draws a new ladder layout (see @@@generated-map).
-async function rerollLadderMap() {
-  if (!currentRoom) return;
-  currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, LADDER_MAP_ID, newLayoutSeed());
-  renderMainMenu();
-}
-
-function newLayoutSeed() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function newLayoutSeeds() {
-  return Array.from({ length: MAP_CHOICES }, newLayoutSeed);
 }
 
 function slotRow(slot: RoomState["slots"][number], index: number) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
-  const controllerOptions = ["ai", "open", "closed"]
+  // A seat is a computer's or open to a player; a pool map plays with every seat taken (see @@@map-pool).
+  const controllerOptions = ["ai", "open"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
   const aiOptions = ROOM_AI_VERSIONS.map((version) => `<option value="${version}" ${(slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION) === version ? "selected" : ""}>${version.toUpperCase()}</option>`).join("");
@@ -1011,47 +960,6 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
   renderMainMenu();
 }
 
-async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
-  if (!currentRoom) return;
-  const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
-  if (!slotCounts) return;
-  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, slotCounts.humanCount, slotCounts.aiCount);
-  renderMainMenu();
-}
-
-async function addPlayerRoomSlot() {
-  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) + 1, aiSeatCount(currentRoom));
-}
-
-async function addAiRoomSlot() {
-  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) + 1);
-}
-
-async function removeLastRoomSlot() {
-  if (!currentRoom || !canRemoveLastRoomSlot(currentRoom)) return;
-  const last = currentRoom.slots.at(-1);
-  if (!last) return;
-  if (last.controller === "ai") {
-    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) - 1);
-    return;
-  }
-  if (last.controller === "closed") {
-    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom));
-    return;
-  }
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) - 1, aiSeatCount(currentRoom));
-}
-
-function canRemoveLastRoomSlot(room: RoomState) {
-  const last = room.slots.at(-1);
-  if (!last || room.slots.length <= 2 || last.controller === "human") return false;
-  if (last.controller === "ai") return aiSeatCount(room) > 0;
-  if (last.controller === "closed") return humanSeatCount(room) + aiSeatCount(room) >= 2;
-  return humanSeatCount(room) > 1;
-}
-
 async function closeCurrentRoom() {
   if (!currentRoom) return;
   await deploymentRuntime.closeRoom(currentRoom.id, localUser.id);
@@ -1073,28 +981,10 @@ function activeSlotCount(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
 }
 
-function humanSeatCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length;
-}
-
-function aiSeatCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "ai").length;
-}
-
-function slotSummaryText(room: RoomState) {
-  const tally = room.slots.reduce(
-    (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
-    { human: 0, ai: 0, open: 0, closed: 0 },
-  );
-  const openText = tally.open > 0 ? t("roomSetup.summaryOpen", { count: tally.open }) : "";
-  const closedText = tally.closed > 0 ? t("roomSetup.summaryClosed", { count: tally.closed }) : "";
-  return t("roomSetup.summary", { total: room.slots.length, max: MAX_ROOM_SLOTS, human: tally.human, ai: tally.ai, open: openText, closed: closedText });
-}
-
 function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
   const ownedSlot = slotForUser(room, localUser.id);
   const access = ownedSlot ? t("roomCard.access.youAre", { playerId: ownedSlot.playerId }) : action === "watch" ? t("roomCard.access.watch") : room.status === "open" ? t("roomCard.access.open") : t("roomCard.access.alreadyStarted");
-  return `${room.mapId} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
+  return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
 }
 
 function emptyRoomList() {
@@ -1414,11 +1304,6 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (menuOpen) {
-    // The map tile's number key: the ladder map is tile 1, and pressing it draws a new layout.
-    if (key === "1" && menuView === "setup") {
-      event.preventDefault();
-      void rerollLadderMap();
-    }
     return;
   }
   if (event.repeat) return;
@@ -2541,7 +2426,7 @@ function draw() {
 // plateau, its workers at the mine and a squad mustered beside it. It is painted once for each window size; the theme
 // tints the canvas under the menus (see .menu-open .game-canvas).
 let menuScene: HTMLCanvasElement | undefined;
-const MENU_SCENE_SEED = "menu";
+const MENU_SCENE_MAP: PoolMapId = "pineshade";
 const MENU_SCENE_SQUAD = [["knight", 150, 120], ["lancer", 210, 70], ["lancer", 250, 120], ["footman", 200, 170], ["footman", 260, 180], ["archer", 300, 140], ["witch", 310, 200]] as const;
 
 function drawMenuBackdrop() {
@@ -2553,7 +2438,7 @@ function paintMenuScene(width: number, height: number) {
   const scene = document.createElement("canvas");
   scene.width = width;
   scene.height = height;
-  const { snapshot: start } = ladderPreview(MENU_SCENE_SEED, [{ playerId: "player", team: "north" }, { playerId: "enemy", team: "south" }]);
+  const { snapshot: start } = mapPreview(MENU_SCENE_MAP, [{ playerId: "player", team: "north" }, { playerId: "enemy", team: "south" }]);
   const hall = start.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
   const squad = MENU_SCENE_SQUAD.map(([kind, dx, dy], index) => createUnit(`menu-${index}`, "player", kind, hall.x + dx, hall.y + dy));
   const zoom = Math.max(1, Math.min(1.4, height / 760));
@@ -2568,6 +2453,7 @@ function paintMenuScene(width: number, height: number) {
     now: 0,
     facing: new UnitFacingTracker(),
     labels: worldLabels,
+    still: true,
   });
   return scene;
 }

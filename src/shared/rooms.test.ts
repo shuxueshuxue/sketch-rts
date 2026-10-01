@@ -155,23 +155,23 @@ describe("room model", () => {
     expect(() => updateRoomMap({ ...updated, status: "inMatch" }, "bareDuel")).toThrow("Cannot edit map after match start");
   });
 
-  it("plays a generated layout when the room names a seed, and the map's own when it drops it", () => {
-    const room = updateRoomMap(createRoom({ id: "room-generated", host }), "verdantCrossroads", "seed-1");
-    expect(room.layoutSeed).toBe("seed-1");
-    expect(roomToGameSetup(room).options.layout).toEqual({ seed: "seed-1" });
-    const plain = updateRoomMap(room, "verdantCrossroads");
-    expect(plain.layoutSeed).toBeUndefined();
-    expect(roomToGameSetup(plain).options.layout).toBeUndefined();
+  it("plays a ladder room on the layout its id seeds, and any other map on its own", () => {
+    const ladder = createRoom({ id: "room-ladder", host, mapId: "ladder" });
+    expect(roomToGameSetup(ladder)).toMatchObject({ mapId: "ladder", options: { layout: { seed: "room-ladder" } } });
+    expect(roomToGameSetup(updateRoomMap(ladder, "verdantCrossroads")).options.layout).toBeUndefined();
+    expect(roomToGameSetup(updateRoomMap(ladder, "pineshade")).options.layout).toBeUndefined();
   });
 
-  it("plays a ladder room on its own layout seed, or on the one its id seeds when it has none", () => {
-    const created = createRoom({ id: "room-ladder", host, mapId: "ladder", layoutSeed: "seed-2" });
-    expect(created.layoutSeed).toBe("seed-2");
-    expect(roomToGameSetup(created)).toMatchObject({ mapId: "ladder", options: { layout: { seed: "seed-2" } } });
-    const unseeded = updateRoomMap(created, "ladder");
-    expect(unseeded.layoutSeed).toBeUndefined();
-    expect(roomToGameSetup(unseeded).options.layout).toEqual({ seed: "room-ladder" });
-    expect(roomToGameSetup(updateRoomMap(unseeded, "ladder", "seed-3")).options.layout).toEqual({ seed: "seed-3" });
+  it("starts a room on a pool map only with all its seats taken, and a sides map with two even teams", () => {
+    const duel = createRoom({ id: "room-duel", host, mapId: "pineshade", humanCount: 1, aiCount: 1 });
+    expect(canStartRoom(duel)).toBe(true);
+    expect(canStartRoom(createRoom({ id: "room-crowd", host, mapId: "pineshade", humanCount: 1, aiCount: 2 }))).toBe(false);
+    const sides = createRoom({ id: "room-sides", host, mapId: "twoShores", humanCount: 1, aiCount: 3 });
+    expect(canStartRoom(sides)).toBe(true);
+    expect(canStartRoom(updateRoomSlot(sides, "slot-2", { team: "north" }))).toBe(false);
+    const ring = createRoom({ id: "room-ring", host, mapId: "elderwood", humanCount: 1, aiCount: 3 });
+    expect(canStartRoom(updateRoomSlot(ring, "slot-2", { team: "east" }))).toBe(true);
+    expect(canStartRoom(updateRoomSlot(ring, "slot-4", { controller: "closed" }))).toBe(false);
   });
 
   it("records immutable match results from the simulation snapshot", () => {

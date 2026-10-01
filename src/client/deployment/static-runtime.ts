@@ -51,10 +51,10 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return { room, spectating: room.status === "inMatch" && !slot, playerId: slot?.playerId ?? "player" };
   }
 
-  async updateRoomMap(roomId: string, mapId: MapId, layoutSeed?: string): Promise<RoomState> {
-    const input = parseMapUpdateRequest({ mapId, ...(layoutSeed ? { layoutSeed } : {}) });
+  async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
+    const input = parseMapUpdateRequest({ mapId });
     if (!input) throw new Error("Malformed room map input");
-    return this.lifecycle.updateMap(roomId, input.mapId, input.layoutSeed);
+    return this.lifecycle.updateMap(roomId, input.mapId);
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {

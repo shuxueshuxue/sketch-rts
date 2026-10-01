@@ -22,6 +22,7 @@ import {
 } from "./map";
 import { generateMap } from "./generated-map";
 import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
+import { poolMap } from "./map-pool";
 import { seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
@@ -142,8 +143,9 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const activePlayers = uniquePlayers(options.players ?? [...DEFAULT_PLAYERS, ...aiPlayers]);
   const teams = Object.fromEntries(activePlayers.map((owner, index) => [owner, options.teams?.[owner] ?? DEFAULT_TEAMS[owner] ?? `team-${index + 1}`]));
   // A generated layout replaces the map id's own starts, mines, camps and scenery (see @@@generated-map); the id names it.
-  // The ladder map has none of its own: a game on it without a layout is drawn from the seed "ladder".
-  const layout = options.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
+  // A pool map is its own layout (see @@@map-pool); the ladder map has none of its own: a game on it without a layout is
+  // drawn from the seed "ladder".
+  const layout = options.layout ?? poolMap(mapId)?.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
   const generated = layout ? generateMap(layout, activePlayers, teams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {

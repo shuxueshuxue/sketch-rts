@@ -62,6 +62,8 @@ export type WorldFrame = {
   /** The story's stage (see story/stage): bubbles, titles, objectives and the rest, drawn over the world. */
   story?: StageView;
   locale?: "zh" | "en";
+  /** A picture of the world rather than a match (see @@@menu-scene): no health bars, no gold counts. */
+  still?: boolean;
 };
 
 type Painter = {
@@ -77,6 +79,7 @@ type Painter = {
   selectedIds: ReadonlySet<string>;
   selectedCampId: string | undefined;
   models: WorldFrame["models"];
+  still: boolean;
 };
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
@@ -96,6 +99,7 @@ export function drawWorld(frame: WorldFrame) {
     selectedIds: frame.selectedIds ?? NO_SELECTION,
     selectedCampId: frame.selectedCampId,
     models: frame.models,
+    still: frame.still ?? false,
   };
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
@@ -204,6 +208,7 @@ function drawResources(painter: Painter, resources: ResourceNode[]) {
     const point = worldToScreen(painter, resource);
     if (!nearScreen(painter, point, 80)) continue;
     drawAtlasMine(ctx, point);
+    if (painter.still) continue;
     ctx.font = "600 11px ui-monospace, monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#776443";
@@ -261,7 +266,7 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     drawAtlasBuilding(ctx, building.kind, point, size, String(ctx.strokeStyle));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
-    drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
+    if (!painter.still) drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
     if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
       drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
@@ -319,7 +324,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
+    if (!painter.still) drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
   }
 }
 

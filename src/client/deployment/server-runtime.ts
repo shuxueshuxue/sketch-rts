@@ -74,8 +74,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return { room, spectating, playerId: joinedSlot?.playerId ?? (spectating ? `spectator-${user.id}` : "player") };
   }
 
-  async updateRoomMap(roomId: string, mapId: MapId, layoutSeed?: string): Promise<RoomState> {
-    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/map`), { mapId, ...(layoutSeed ? { layoutSeed } : {}) });
+  async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/map`), { mapId });
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
