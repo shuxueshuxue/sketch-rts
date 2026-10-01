@@ -4,7 +4,7 @@ import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { isWalkable, steerPoint, walkableGoal } from "./terrain";
 import { detCos, detSin } from "./det-math";
-import { BRACE_DAMAGE_SHARE, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, pushContact, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
   createInitialBuildings,
@@ -1611,10 +1611,10 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const target = findTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
   const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
-  if (applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage))) {
-    applyAttackStatusEffects(game, attacker, target);
-    addEffect(game, "hit", target.x, target.y, 14);
-  }
+  const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage));
+  if (taken === undefined) return;
+  applyAttackStatusEffects(game, attacker, target);
+  addHitEffect(game, target, taken);
 }
 
 function projectileAttacker(projectile: Projectile): Building {
@@ -1690,14 +1690,21 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number, attackRange: number) {
   const dealt = attackDamageAgainstTarget(game, attacker, target, damage);
-  if (!applyDamage(game, attacker, target, dealt)) return;
+  const taken = applyDamage(game, attacker, target, dealt);
+  if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target);
   if (attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
-  addEffect(game, "hit", to.x, to.y, 14);
+  addHitEffect(game, target, taken);
+}
+
+// The flinch of whatever was struck, carrying who it was and what it took, so the client shakes it by the share of its
+// full health the blow took.
+function addHitEffect(game: Game, target: Unit | Building, taken: number) {
+  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken });
 }
 
 function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
@@ -1717,7 +1724,7 @@ function stanceBlow(attacker: Unit, target: Unit, dealt: number) {
   const dx = target.x - attacker.x;
   const dy = target.y - attacker.y;
   shove(target, dx, dy, strength);
-  if (attacker.stance === "shock") shove(attacker, dx, dy, strength);
+  if (attacker.stance === "shock") shove(attacker, dx, dy, lungeStrength(attacker, strength));
 }
 
 // What the ash chieftain hunts: anything summoned, and any unit with a spell.
@@ -1732,8 +1739,9 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
   addEffect(game, "scorch", target.x, target.y, 28);
 }
 
-function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
-  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return false;
+// The damage the target took, or undefined when a guardian field turned the blow aside.
+function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number): number | undefined {
+  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return undefined;
   const taken = isUnit(target) && target.stance === "shock" ? Math.max(1, Math.round(damage * SHOCK_DAMAGE_TAKEN)) : damage;
   const hpBefore = target.hp;
   target.hp -= taken;
@@ -1743,7 +1751,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   if (hpBefore > 0 && target.hp <= 0) {
     recordKill(game, attacker, target);
   }
-  return true;
+  return taken;
 }
 
 function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit | Building) {
@@ -2210,7 +2218,8 @@ export function strikeUnit(game: Game, source: Unit | Building | { id: string; o
   const attacker = "hp" in source ? source : (findTarget(game, source.id) ?? scriptSource(source));
   const dealt = Math.max(1, Math.round(damage));
   if (style === "spell") {
-    if (applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, dealt))) addEffect(game, "hit", target.x, target.y, 14);
+    const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, dealt));
+    if (taken !== undefined) addHitEffect(game, target, taken);
     return;
   }
   applyAttackDamage(game, attacker, target, style === "ranged" ? heavyArmoredDamage(game, attacker, target, dealt) : dealt, style === "ranged" ? RANGED_ATTACK_RANGE_THRESHOLD + 1 : 0);

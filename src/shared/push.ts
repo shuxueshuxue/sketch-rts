@@ -5,10 +5,9 @@ import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 // @@@push - A shove (a blow that knocks back, a lunge) gives a unit a velocity of its own beside its walk: pushX/pushY, in
 // units a tick. The unit slides off in a straight line and the ground slows it by PUSH_FRICTION a tick every tick (uniform
 // deceleration), so a shove of strength F, with nothing in the way, carries it exactly F before it stops: it sets off at
-// sqrt(2 * PUSH_FRICTION * F). Shoves add as vectors, so blows from opposite sides cancel out. While its pushed speed is over
-// STAND_SPEED the unit has lost its footing (staggered): it neither walks, strikes nor casts; below it the unit stands and
-// fights while the rest of the slide runs out. A unit beaten on from every side is shoved every way at once and keeps its
-// feet. A slide that runs into another unit shares its momentum with it along the line between them, as two bodies that
+// sqrt(2 * PUSH_FRICTION * F). Shoves add as vectors, so blows landing together from opposite sides cancel out. While its
+// pushed speed is over STAND_SPEED the unit has lost its footing (staggered): it neither walks, strikes nor casts; below it
+// the unit stands and fights while the rest of the slide runs out. A slide that runs into another unit shares its momentum with it along the line between them, as two bodies that
 // stick together (mass by the square of the body's radius): the one in front is carried along, the one behind stops
 // sooner, and through a crowd the shove passes from body to body. Ground a unit cannot stand on (see @@@terrain) and the
 // map's edge stop the part of a slide that heads into them.
@@ -18,15 +17,15 @@ export const PUSH_FRICTION = 3.125;
 export const STAND_SPEED = 6;
 
 // @@@melee-stances - How a melee fighter (not a worker) lands its blow. pursue, the default, is the plain blow of before.
-// brace: the blow shoves the target back by KNOCKBACK times the damage over the target's full health (a lancer's 18 on a
-// footman's 145 is 159, a golem's 34 on an 85-health spirit 512), for a fifth less damage. shock: the blow shoves the
-// target as brace's does and the striker after it by the same strength, so the two drive on together; a fighter in shock
-// takes a fifth more damage from everything. Eight lancers holding their ground in brace against eight footmen won 37 of
-// 40 jittered fights at this strength, 14 at 640 and 3 at 320 (12 holding in pursue): a shove pays for the fifth only
-// when the shoved must walk back into a longer reach than its own.
-export const KNOCKBACK = 1280;
+// brace: the blow shoves the target back by KNOCKBACK times the damage over the target's full health, never its health
+// left (a lancer's 18 on a footman's 145 is 53, a golem's 34 on an 85-health spirit 171), for a fifth less damage.
+// shock: the blow shoves the target as brace's does and the striker lunges after it (see lungeStrength); a fighter in
+// shock takes a fifth more damage from everything. At 1280 a lancer's blow threw a footman 159 and everything flew.
+export const KNOCKBACK = 427;
 export const BRACE_DAMAGE_SHARE = 0.8;
 export const SHOCK_DAMAGE_TAKEN = 1.2;
+// The lunge's average speed is at most this many times the striker's own walking speed.
+export const LUNGE_PACE = 2;
 const MELEE_RANGE = 90;
 
 export function canTakeStance(kind: UnitKind) {
@@ -71,6 +70,16 @@ export function shove(unit: Unit, dx: number, dy: number, strength: number) {
 // The shove of a blow that dealt this damage (see @@@melee-stances).
 export function blowStrength(damage: number, target: Unit) {
   return (KNOCKBACK * damage) / Math.max(1, target.maxHp);
+}
+
+// @@@shock-lunge - How far a striker in shock lunges after a blow that shoves its target this far: never further than the
+// target goes, so it stays behind what it struck (it may fall back from it), and never faster than LUNGE_PACE times its
+// own walking speed on average over the lunge's own time, reckoned on open ground: a slide of L lasts sqrt(2L / a), so
+// L <= LUNGE_PACE * speed * sqrt(2L / a), that is L <= 2 (LUNGE_PACE * speed)² / a. A golem (2.1 a tick) whose blow threw
+// a spirit 512 lunged after it at 56 a tick, twenty-seven times its walk; now it lunges 11, a lancer at most 30.
+export function lungeStrength(striker: Unit, shoved: number) {
+  const pace = LUNGE_PACE * striker.speed;
+  return Math.min(shoved, (2 * pace * pace) / PUSH_FRICTION);
 }
 
 // One tick of a unit's slide. Each tick it covers its speed less half the tick's slowing, the last tick what remains of

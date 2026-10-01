@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isGameCommand } from "./command-schema";
-import { BRACE_DAMAGE_SHARE, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, STAND_SPEED, blowStrength, isStaggered, pushSpeed, pushedSpeed, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, LUNGE_PACE, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, STAND_SPEED, blowStrength, isStaggered, lungeStrength, pushSpeed, pushedSpeed, shove, slide } from "./push";
 import { createGame, issueCommand, issuePlayerCommand, snapshotGame, stepGame } from "./sim";
 import { checkCommandLegality } from "./sim/command-validation";
 import type { Terrain } from "./terrain";
@@ -170,12 +170,51 @@ describe("melee stances", () => {
     const dealt = firstBlow(game, footman);
     expect(dealt).toBe(lancer.attackDamage);
     expect(footman.pushX).toBeGreaterThan(0);
-    expect(lancer.pushX).toBeCloseTo(footman.pushX!, 6);
+    // The lunge is its own, shorter than the shove, one tick of it spent.
+    const lunge = { ...lancer, pushX: pushSpeed(lungeStrength(lancer, blowStrength(dealt, footman))), pushY: 0 };
+    slide(lunge, game.map);
+    expect(lancer.pushX).toBeCloseTo(lunge.pushX!, 6);
+    expect(lancer.pushX!).toBeLessThan(footman.pushX!);
     const before = lancer.hp;
     issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [footman.id], targetId: lancer.id });
     slideOut(game, footman);
     expect(firstBlow(game, lancer)).toBe(Math.round(footman.attackDamage * SHOCK_DAMAGE_TAKEN));
     expect(lancer.hp).toBeLessThan(before);
+  });
+
+  it("lunges no further than the shove and no faster on average than twice its own walk", () => {
+    for (const [kind, foe] of [["golem", "spirit"], ["lancer", "footman"], ["footman", "golem"], ["knight", "worker"]] as const) {
+      const game = field();
+      const striker = game.spawnUnit("player", kind, 1000, 1000);
+      const shoved = blowStrength(striker.attackDamage, game.spawnUnit("enemy", foe, 1100, 1000));
+      const lunge = lungeStrength(striker, shoved);
+      expect(lunge).toBeLessThanOrEqual(shoved);
+      const time = Math.sqrt((2 * lunge) / PUSH_FRICTION);
+      expect(lunge / time).toBeLessThanOrEqual(LUNGE_PACE * striker.speed + 1e-9);
+    }
+    // A golem's blow throws a spirit 171; the golem, at 2.1 a tick, lunges 11 after it.
+    const game = field();
+    const golem = game.spawnUnit("player", "golem", 1000, 1000);
+    const spirit = game.spawnUnit("enemy", "spirit", 1050, 1000);
+    expect(blowStrength(golem.attackDamage, spirit)).toBeCloseTo(171, 0);
+    expect(lungeStrength(golem, blowStrength(golem.attackDamage, spirit))).toBeCloseTo(11.3, 1);
+  });
+
+  it("shoves by the damage over the target's full health, however hurt the target is", () => {
+    const shoved = (hp: number) => {
+      const { game, footman } = duel("brace");
+      footman.hp = hp;
+      firstBlow(game, footman);
+      return footman.pushX;
+    };
+    expect(shoved(40)).toBeCloseTo(shoved(145)!, 9);
+  });
+
+  it("marks each hit with what was struck and what it took, for the client's shake", () => {
+    const { game, lancer, footman } = duel("pursue");
+    const dealt = firstBlow(game, footman);
+    expect(game.effects.find((effect) => effect.type === "hit" && effect.unitId === footman.id)).toMatchObject({ damage: dealt });
+    expect(dealt).toBe(lancer.attackDamage);
   });
 
   it("is taken only by melee fighters", () => {

@@ -230,7 +230,7 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[]) {
 function drawBuildings(painter: Painter, buildings: Building[]) {
   const { ctx } = painter;
   for (const building of buildings) {
-    const shake = hitFeedbackOffset(painter.snapshot, building, building.radius);
+    const shake = hitFeedbackOffset(painter.snapshot, building);
     const point = worldToScreen(painter, { x: building.x + shake.x, y: building.y + shake.y });
     const selected = painter.selectedIds.has(building.id);
     const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
@@ -286,7 +286,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
   const { ctx, now } = painter;
   trackUnitFacing(painter.facing, painter.snapshot);
   for (const unit of units) {
-    const shake = hitFeedbackOffset(painter.snapshot, unit, unit.radius);
+    const shake = hitFeedbackOffset(painter.snapshot, unit);
     const at = drawnPosition(painter, unit);
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y });
     const scale = unitGlyphScale(unit.radius);
@@ -517,10 +517,17 @@ function drawTrainingProgress(painter: Painter, x: number, y: number, remaining:
   ctx.fillText(`${painter.labels.unitKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
 }
 
-function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building, scale: number): Point {
-  const hit = snapshot.effects.find((effect) => effect.type === "hit" && distance(effect, entity) <= scale + 8);
+// @@@hit-shake - A struck unit or building shakes by the share of its full health the blow took: HIT_SHAKE a whole
+// health's worth, so a lancer's 18 on a footman (145) shakes it about 3, a golem's 34 on a spirit (85) 10, and a tower's
+// arrow on a town hall hardly at all. It used to shake whatever stood near any hit by its size alone.
+const HIT_SHAKE = 26;
+const MAX_HIT_SHAKE = 12;
+
+function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building): Point {
+  const hit = snapshot.effects.find((effect) => effect.type === "hit" && effect.unitId === entity.id);
   if (!hit) return { x: 0, y: 0 };
-  const pulse = Math.sin(hit.remaining * 1.7) * Math.max(2, scale * 0.18);
+  const amount = Math.min(MAX_HIT_SHAKE, (HIT_SHAKE * (hit.damage ?? 0)) / Math.max(1, entity.maxHp));
+  const pulse = Math.sin(hit.remaining * 1.7) * amount;
   return { x: pulse, y: -pulse * 0.35 };
 }
 
@@ -530,8 +537,4 @@ function worldToScreen(painter: Painter, point: Point): Point {
 
 function nearScreen(painter: Painter, point: Point, pad: number) {
   return point.x >= -pad && point.y >= -pad && point.x <= painter.width + pad && point.y <= painter.height + pad;
-}
-
-function distance(a: Point, b: Point) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
 }

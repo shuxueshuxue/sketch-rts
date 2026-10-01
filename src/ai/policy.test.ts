@@ -13237,7 +13237,8 @@ describe("SDK preset AI policy", () => {
       .unit("v2", "priest", 1580, 1580)
       .townHall("v1", 3300, 3300)
       .worker("v1", 3350, 3300)
-      .unit("v1", "raider", 1800, 1520)
+      // Just outside the raider's reach of the archer (72 + both bodies), where kiting would take over from the pullback.
+      .unit("v1", "raider", 1812, 1520)
       .unit("v1", "archer", 1840, 1560)
       .build();
     const game = scene.createGame();

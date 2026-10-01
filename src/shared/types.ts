@@ -66,7 +66,7 @@ export type WorldEffect = {
   tickEvery?: number;
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt. Presentation only. */
   sourceKind?: UnitKind | BuildingKind;
-  /** The unit an effect follows (a charging rider's trail). Presentation only. */
+  /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
   unitId?: string;
 };
 
