@@ -1,6 +1,6 @@
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { isBuildPlacementClear } from "../../shared/build-placement";
-import { isWalkable, openPassage } from "../../shared/terrain";
+import { isWalkable } from "../../shared/terrain";
 import { detCos, detSin } from "../../shared/det-math";
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { aiSnapshotQuery, buildings } from "./snapshot";
@@ -8,28 +8,28 @@ import { clamp, distance, nearestEntity, type Point } from "./spatial";
 import { mainBase, ownerDirection, playerState } from "./world-model";
 
 // @@@roomy-placement - Where the AIs lay a building on a map whose buildings are bodies (see @@@building-body): not
-// only where the sim allows it, but a passage clear of every other building's wall and of the terrain's rock, forest and
-// water (see clearOfTerrain), the gap the routing keeps open (see openPassage), so a unit walks between any two, and off the lane from any town hall to a
+// only where the sim allows it, but PASSAGE clear of every other building's wall and of the terrain's rock, forest and
+// water (see clearOfTerrain), so a unit (30 to 44 wide) walks between any two, and off the lane from any town hall to a
 // mine within MINE_LANE of it, so workers are never walked round a farm. Laid as close as the sim allows (4 apart), V9's
 // main filled up with farms, barracks and towers in rows that shut soldiers and workers in pockets: armies of 29 stood
 // in their own base for twenty minutes and the game ran to its end with the last rival's buildings standing (ladder-10,
 // v5-extra-1). A map without terrain keeps its old rule.
+const PASSAGE = 48;
 const MINE_LANE = 450;
 const LANE_WIDTH = 24;
 
 function roomyPlacement(snapshot: GameSnapshot, kind: BuildingKind, point: Point) {
   if (!snapshot.map.terrain) return isBuildPlacementClear(snapshot, kind, point);
   const radius = BUILDING_DEFS[kind].radius;
-  const passage = openPassage(snapshot.map.terrain);
   // The passage rule covers the sim's own gap (4), so the building test is one pass; the terrain's comes last.
   for (const building of snapshot.buildings) {
-    const reach = radius + building.radius + passage;
+    const reach = radius + building.radius + PASSAGE;
     const dx = point.x - building.x;
     const dy = point.y - building.y;
     if (dx * dx + dy * dy < reach * reach) return false;
   }
   for (const [hall, mine] of mineLanes(snapshot)) if (segmentDistance(point, hall, mine) < radius + LANE_WIDTH) return false;
-  if (kind !== "townHall" && kind !== "defenseTower" && !clearOfTerrain(snapshot, point, radius + passage)) return false;
+  if (kind !== "townHall" && kind !== "defenseTower" && !clearOfTerrain(snapshot, point, radius + PASSAGE)) return false;
   return isBuildPlacementClear(snapshot, kind, point);
 }
 

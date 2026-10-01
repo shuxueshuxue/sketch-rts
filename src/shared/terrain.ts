@@ -923,14 +923,6 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // in deep water.
 type Body = { x: number; y: number; radius: number };
 const BODY_MARGIN = 16;
-
-// The gap between two buildings' walls that the copy keeps open at any angle: each wall's margin and a cell's diagonal
-// between, the narrowest band of open cell centers a walk crosses whichever way the gap runs. Narrower gaps a unit could
-// pass may be shut, as a farm and stables 54 apart and two farms 56 apart shut a knight in a one-cell pocket for the rest
-// of the game (pool-twoShores-4).
-export function openPassage(terrain: Terrain) {
-  return 2 * BODY_MARGIN + Math.ceil(terrain.cell * Math.SQRT2);
-}
 // `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
 type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array };
 const overlays = new WeakMap<object, Overlay>();
