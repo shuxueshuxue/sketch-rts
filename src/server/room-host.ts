@@ -267,6 +267,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         ...(options.aiVersions ?? setup.options.aiVersions ? { aiVersions: options.aiVersions ?? setup.options.aiVersions } : {}),
         ...(options.teams ?? setup.options.teams ? { teams: options.teams ?? setup.options.teams } : {}),
         ...(options.races ?? setup.options.races ? { races: options.races ?? setup.options.races } : {}),
+        ...(options.layout ?? setup.options.layout ? { layout: options.layout ?? setup.options.layout } : {}),
       };
       const game = createGame(mapId, mergedOptions);
       const aiRuntime = createHostedAiRuntime(mergedOptions.aiPlayers ?? [], mergedOptions.aiVersions);

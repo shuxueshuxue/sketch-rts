@@ -46,6 +46,9 @@ describe("shared room setup schema", () => {
       options: { aiPlayers: ["enemy"], races: { player: "grove", enemy: "ember" } },
     });
     expect(parseResetRoomRequest({ mapId: "missing", options: {} })).toBeUndefined();
+    // A generated layout goes through as asked, a sea map's included (see @@@generated-sea).
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } });
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", kind: "square" } } })).toBeUndefined();
   });
 
   it("validates scenario seeds in the same place as reset options", () => {
