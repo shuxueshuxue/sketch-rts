@@ -4,8 +4,8 @@ import type { GameMap } from "./types";
 // water, on a grid of square cells laid over the map. A unit is a point to the terrain: it stands on a walkable cell, walks
 // round what blocks it, and is never pushed into it (see sim moveToward). A map without terrain is open everywhere, as
 // every map was before, and plays exactly as it did.
-// - cells: one character a cell, row by row from the top-left: "." ground, "," shallow water (walkable, a ford), "T"
-//   forest, "#" rock, "~" deep water.
+// - cells: one character a cell, row by row from the top-left: "." ground, "," shallow water (walked and sailed both: a
+//   ford, a beach), "T" forest, "#" rock, "~" deep water (sailed only).
 // - levels: for the eye only, every cell's ground: "0" low ground, "1" a plateau (a main above its natural, a cliff at its
 //   rim), "2" the ramp between them.
 export type Terrain = {
@@ -18,9 +18,16 @@ export type Terrain = {
 
 export type TerrainCellKind = "ground" | "shallow" | "forest" | "rock" | "water";
 
+// @@@terrain-movers - Who crosses a cell: a land unit walks ground and shallow water, a ship sails deep and shallow water
+// (see @@@naval). The shallows are both's, as on a Warcraft III coast: a ship that comes in to the beach is in the reach of
+// soldiers who wade out to it, and out on deep water it is not. Every query below takes the mover (land when not said) and
+// works on that mover's own runtime: the sea's is built the first time a ship asks, so a game without ships never builds
+// it.
+export type Mover = "land" | "sea";
+
 type Point = { x: number; y: number };
 
-const WALKABLE = new Set([".", ","]);
+const PASSABLE: Record<Mover, ReadonlySet<string>> = { land: new Set([".", ","]), sea: new Set(["~", ","]) };
 const UNREACHED = 0x3fffffff;
 const UNKNOWN = -2;
 // Orthogonal and diagonal steps of the flow fields, in fifths of a cell (7/5 for the square root of two).
@@ -48,15 +55,15 @@ export function terrainCellKind(char: string | undefined): TerrainCellKind {
 }
 
 export function isWalkableChar(char: string | undefined) {
-  return char !== undefined && WALKABLE.has(char);
+  return char !== undefined && PASSABLE.land.has(char);
 }
 
-// Whether a unit may stand at the point: always on a map without terrain; on one with terrain, on a walkable cell inside
-// the map.
-export function isWalkable(map: Pick<GameMap, "terrain">, x: number, y: number) {
+// Whether a unit may stand at the point: always on a map without terrain; on one with terrain, on a cell of its mover's
+// inside the map.
+export function isWalkable(map: Pick<GameMap, "terrain">, x: number, y: number, mover: Mover = "land") {
   const terrain = map.terrain;
   if (!terrain) return true;
-  const state = runtime(terrain);
+  const state = runtime(terrain, mover);
   return state.walk[padAt(state, x, y)] === 1;
 }
 
@@ -78,7 +85,7 @@ export function cellCenter(terrain: Terrain, index: number): Point {
 export function isFootprintWalkable(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
   const terrain = map.terrain;
   if (!terrain) return true;
-  const state = runtime(terrain);
+  const state = runtime(terrain, "land");
   const size = terrain.cell;
   const low = { col: Math.floor((x - radius) / size), row: Math.floor((y - radius) / size) };
   const high = { col: Math.floor((x + radius) / size), row: Math.floor((y + radius) / size) };
@@ -96,11 +103,12 @@ export function isFootprintWalkable(map: Pick<GameMap, "terrain">, x: number, y:
 }
 
 // The point a unit heading for (x, y) should stop at: the point itself when it is walkable, otherwise the center of the
-// walkable cell nearest the point's cell (a move into a forest ends at its edge, as on any Warcraft III map).
-export function walkableGoal(map: Pick<GameMap, "terrain" | "width" | "height">, x: number, y: number): Point {
+// walkable cell nearest the point's cell (a move into a forest ends at its edge, as on any Warcraft III map; a ship sent
+// inland stops at the shore).
+export function walkableGoal(map: Pick<GameMap, "terrain" | "width" | "height">, x: number, y: number, mover: Mover = "land"): Point {
   const terrain = map.terrain;
   if (!terrain) return { x, y };
-  const state = runtime(terrain);
+  const state = runtime(terrain, mover);
   const cx = Math.min(Math.max(x, 0), map.width);
   const cy = Math.min(Math.max(y, 0), map.height);
   const at = padAt(state, Math.min(cx, terrain.cols * terrain.cell - 0.001), Math.min(cy, terrain.rows * terrain.cell - 0.001));
@@ -110,18 +118,18 @@ export function walkableGoal(map: Pick<GameMap, "terrain" | "width" | "height">,
 }
 
 // Whether a unit could walk the straight segment from a to b without touching a blocked cell.
-export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Point) {
+export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Point, mover: Mover = "land") {
   const terrain = map.terrain;
   if (!terrain) return true;
-  return clearSegment(runtime(terrain), a.x, a.y, b.x, b.y);
+  return clearSegment(runtime(terrain, mover), a.x, a.y, b.x, b.y);
 }
 
 // Where a unit at `from` walking to `goal` should head this tick: the goal itself when it sees it, otherwise a cell down
 // the flow toward the goal (see @@@terrain-steering). `goal` should be walkable (see walkableGoal).
-export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point): Point {
+export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
   const terrain = map.terrain;
   if (!terrain) return goal;
-  const state = runtime(terrain);
+  const state = runtime(terrain, mover);
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
   const start = padAt(state, from.x, from.y);
   const target = padAt(state, goal.x, goal.y);
@@ -150,10 +158,10 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
 
 // The walking distance (in world units, along the flow) from a point to a goal, or undefined when no walk joins them. A
 // map without terrain measures the straight line.
-export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal: Point): number | undefined {
+export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): number | undefined {
   const terrain = map.terrain;
   if (!terrain) return Math.sqrt((from.x - goal.x) ** 2 + (from.y - goal.y) ** 2);
-  const state = runtime(terrain);
+  const state = runtime(terrain, mover);
   const start = padAt(state, from.x, from.y);
   const target = padAt(state, goal.x, goal.y);
   if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
@@ -166,7 +174,7 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
 export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Point, every = 2): Point[] | undefined {
   const terrain = map.terrain;
   if (!terrain) return [goal];
-  const state = runtime(terrain);
+  const state = runtime(terrain, "land");
   const start = padAt(state, from.x, from.y);
   const target = padAt(state, goal.x, goal.y);
   if (state.walk[start] !== 1 || state.walk[target] !== 1) return undefined;
@@ -190,6 +198,7 @@ type TerrainRuntime = {
   terrain: Terrain;
   // The grid with a blocked border cell all round (cols + 2 wide), so no step ever needs a bounds check.
   width: number;
+  // 1 on a cell the runtime's mover may cross (see @@@terrain-movers).
   walk: Uint8Array;
   // Chebyshev distance in cells to the nearest blocked cell (or the map's edge): 0 on a blocked cell.
   clearance: Uint16Array;
@@ -203,31 +212,29 @@ type TerrainRuntime = {
   offsets: Int32Array;
 };
 
-// @@@terrain-runtime - What the terrain's queries need, built once per terrain and kept beside it (never in the game's
-// state): the walkable cells, their clearance, and the flow fields and nearest cells asked for so far. Every one is a pure
-// function of the terrain, so whether it was cached changes nothing a unit does.
-const runtimes = new WeakMap<Terrain, TerrainRuntime>();
+// @@@terrain-runtime - What the terrain's queries need, built once per terrain and mover and kept beside the terrain (never
+// in the game's state): the cells the mover may cross, their clearance, and the flow fields and nearest cells asked for so
+// far. Every one is a pure function of the terrain, so whether it was cached changes nothing a unit does.
+type Runtimes = { land?: TerrainRuntime; sea?: TerrainRuntime };
+const runtimes = new WeakMap<Terrain, Runtimes>();
 let lastTerrain: Terrain | undefined;
-let lastRuntime: TerrainRuntime | undefined;
+let lastRuntimes: Runtimes = {};
 
-function runtime(terrain: Terrain): TerrainRuntime {
-  if (terrain === lastTerrain) return lastRuntime!;
-  let state = runtimes.get(terrain);
-  if (!state) {
-    state = createRuntime(terrain);
-    runtimes.set(terrain, state);
+function runtime(terrain: Terrain, mover: Mover): TerrainRuntime {
+  if (terrain !== lastTerrain) {
+    lastTerrain = terrain;
+    lastRuntimes = runtimes.get(terrain) ?? {};
+    runtimes.set(terrain, lastRuntimes);
   }
-  lastTerrain = terrain;
-  lastRuntime = state;
-  return state;
+  return mover === "land" ? (lastRuntimes.land ??= createRuntime(terrain, PASSABLE.land)) : (lastRuntimes.sea ??= createRuntime(terrain, PASSABLE.sea));
 }
 
-function createRuntime(terrain: Terrain): TerrainRuntime {
+function createRuntime(terrain: Terrain, passable: ReadonlySet<string>): TerrainRuntime {
   const width = terrain.cols + 2;
   const count = width * (terrain.rows + 2);
   const walk = new Uint8Array(count);
   for (let row = 0; row < terrain.rows; row += 1) {
-    for (let col = 0; col < terrain.cols; col += 1) if (WALKABLE.has(terrain.cells[row * terrain.cols + col]!)) walk[(row + 1) * width + col + 1] = 1;
+    for (let col = 0; col < terrain.cols; col += 1) if (passable.has(terrain.cells[row * terrain.cols + col]!)) walk[(row + 1) * width + col + 1] = 1;
   }
   const offsets = Int32Array.from([1, width, -1, -width, width + 1, width - 1, -width - 1, -width + 1]);
   const state: TerrainRuntime = {

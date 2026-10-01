@@ -1,4 +1,4 @@
-import { UNIT_DEFS } from "./catalog";
+import { UNIT_DEFS, unitMover } from "./catalog";
 import { isWalkable } from "./terrain";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 
@@ -113,11 +113,12 @@ export function slide(unit: Unit, map: GameMap) {
     y = Math.min(map.height, Math.max(0, y));
     py = 0;
   }
-  if (map.terrain && !isWalkable(map, x, y) && isWalkable(map, unit.x, unit.y)) {
-    if (isWalkable(map, x, unit.y)) {
+  const mover = unitMover(unit.kind);
+  if (map.terrain && !isWalkable(map, x, y, mover) && isWalkable(map, unit.x, unit.y, mover)) {
+    if (isWalkable(map, x, unit.y, mover)) {
       y = unit.y;
       py = 0;
-    } else if (isWalkable(map, unit.x, y)) {
+    } else if (isWalkable(map, unit.x, y, mover)) {
       x = unit.x;
       px = 0;
     } else {

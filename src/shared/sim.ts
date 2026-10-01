@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
@@ -153,8 +153,9 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     activePlayers,
     teams,
     spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number) {
-      // A unit comes out on walkable ground (see @@@terrain): beside a hall backed onto a forest, at its nearest edge.
-      const at = walkableGoal(this.map, x, y);
+      // A unit comes out on walkable ground (see @@@terrain): beside a hall backed onto a forest, at its nearest edge; a ship
+      // on the nearest water.
+      const at = walkableGoal(this.map, x, y, unitMover(kind));
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
       this.nextId += 1;
       applyUnitUpgrades(this, unit);
@@ -2314,12 +2315,13 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const ay = clamp(a.y - ny * push, 0, game.map.height);
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
-  // Neither is pushed onto blocked ground (see @@@terrain): the one by a wall stays and the other gives way.
-  if (!game.map.terrain || isWalkable(game.map, ax, ay)) {
+  // Neither is pushed onto ground it cannot stand on (see @@@terrain): the one by a wall stays and the other gives way; a
+  // ship by the shore stays on the water and the soldier beside it on land (see @@@naval).
+  if (!game.map.terrain || isWalkable(game.map, ax, ay, unitMover(a.kind))) {
     a.x = ax;
     a.y = ay;
   }
-  if (!game.map.terrain || isWalkable(game.map, bx, by)) {
+  if (!game.map.terrain || isWalkable(game.map, bx, by, unitMover(b.kind))) {
     b.x = bx;
     b.y = by;
   }
@@ -2458,22 +2460,23 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
 // for the farthest cell it sees on the way (see terrain steerPoint), and a goal in a forest or on rock is its nearest
 // walkable cell. A step that would end on blocked ground slides along it on one axis, or waits; a unit that stands on
-// blocked ground (only a seeded scenario puts one there) walks out.
+// blocked ground (only a seeded scenario puts one there) walks out. A ship sails the same way over the water (see @@@naval).
 function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
-  const goal = x >= 0 && y >= 0 && x <= map.width && y <= map.height && isWalkable(map, x, y) ? { x, y } : walkableGoal(map, x, y);
-  const aim = steerPoint(map, unit, goal);
+  const mover = unitMover(unit.kind);
+  const goal = x >= 0 && y >= 0 && x <= map.width && y <= map.height && isWalkable(map, x, y, mover) ? { x, y } : walkableGoal(map, x, y, mover);
+  const aim = steerPoint(map, unit, goal, mover);
   const dx = aim.x - unit.x;
   const dy = aim.y - unit.y;
   const length = Math.sqrt(dx * dx + dy * dy);
   if (length === 0) return;
   const nextX = clamp(length <= unit.speed ? aim.x : unit.x + (dx / length) * unit.speed, 0, map.width);
   const nextY = clamp(length <= unit.speed ? aim.y : unit.y + (dy / length) * unit.speed, 0, map.height);
-  if (isWalkable(map, nextX, nextY) || !isWalkable(map, unit.x, unit.y)) {
+  if (isWalkable(map, nextX, nextY, mover) || !isWalkable(map, unit.x, unit.y, mover)) {
     unit.x = nextX;
     unit.y = nextY;
-  } else if (isWalkable(map, nextX, unit.y)) {
+  } else if (isWalkable(map, nextX, unit.y, mover)) {
     unit.x = nextX;
-  } else if (isWalkable(map, unit.x, nextY)) {
+  } else if (isWalkable(map, unit.x, nextY, mover)) {
     unit.y = nextY;
   }
 }
@@ -2484,8 +2487,10 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 
 // How far a unit stands from where a walk to (x, y) ends (see walkableGoal): the point itself on open ground.
 function distanceToGoal(map: GameMap, unit: Unit, x: number, y: number) {
-  if (!map.terrain || isWalkable(map, x, y)) return Math.hypot(unit.x - x, unit.y - y);
-  return distance(unit, walkableGoal(map, x, y));
+  if (!map.terrain) return Math.hypot(unit.x - x, unit.y - y);
+  const mover = unitMover(unit.kind);
+  if (isWalkable(map, x, y, mover)) return Math.hypot(unit.x - x, unit.y - y);
+  return distance(unit, walkableGoal(map, x, y, mover));
 }
 
 function distanceSquared(a: { x: number; y: number }, b: { x: number; y: number }) {

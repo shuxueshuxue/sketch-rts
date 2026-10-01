@@ -1,3 +1,4 @@
+import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";
 import { seconds } from "./time";
 
@@ -30,6 +31,8 @@ export type UnitDef = {
   regenPerSecond?: number;
   // Advanced (2) and elite (3) units; see TIER_SUPPLY_CAP. No tier: trainable from the start.
   tier?: 2 | 3;
+  // A ship (see @@@naval): it sails deep and shallow water and nothing else.
+  naval?: true;
 };
 
 // @@@unit-tiers - Advanced and elite units are locked until the player's supply cap (halls and farms built, not supply in
@@ -192,6 +195,14 @@ export function requiredSupplyCap(kind: UnitKind): number {
   return tier ? TIER_SUPPLY_CAP[tier] : 0;
 }
 const UNIT_KINDS = Object.keys(UNIT_DEFS) as UnitKind[];
+
+// @@@naval - Ships sail the water every other unit is kept out of, and a unit's kind says which it is: every terrain query
+// a unit makes is its mover's (see @@@terrain-movers). The ships' kinds are a set, as the sim asks of every walking unit
+// every tick.
+const NAVAL_KINDS: ReadonlySet<UnitKind> = new Set(UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].naval));
+export function unitMover(kind: UnitKind): Mover {
+  return NAVAL_KINDS.has(kind) ? "sea" : "land";
+}
 
 export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].trainedAt !== undefined) as TrainableUnitKind[];
 

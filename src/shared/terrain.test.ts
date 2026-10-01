@@ -116,3 +116,66 @@ describe("walking on terrain", () => {
     expect(() => issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "farm", x: 10 * 32, y: 5 * 32 })).toThrow(/blocked ground/);
   });
 });
+
+// A 20 by 20 grid: land on the left (shallows across row 3, a pond at rows 15-16, rock on the coast at rows 12-13), the sea
+// from column 10 on, and an island in the sea at columns 13-15, rows 8-11.
+function harbor(): Terrain {
+  let cells = "";
+  for (let row = 0; row < 20; row += 1) {
+    for (let col = 0; col < 20; col += 1) {
+      if (col >= 10) cells += row >= 8 && row <= 11 && col >= 13 && col <= 15 ? "." : "~";
+      else if (row >= 15 && row <= 16 && col >= 2 && col <= 3) cells += "~";
+      else if (row >= 12 && row <= 13 && col === 9) cells += "#";
+      else cells += row === 3 && col >= 2 && col <= 4 ? "," : ".";
+    }
+  }
+  return { cell: 32, cols: 20, rows: 20, cells };
+}
+
+const at = (col: number, row: number) => ({ x: col * 32 + 16, y: row * 32 + 16 });
+
+describe("the sea", () => {
+  it("is the ships', the land the soldiers', and the shallows both's", () => {
+    const sea = map(harbor());
+    for (const [col, row, ship, soldier] of [[12, 2, true, false], [5, 5, false, true], [3, 3, true, true], [2, 15, true, false], [14, 9, false, true], [9, 12, false, false]] as const) {
+      expect(isWalkable(sea, at(col, row).x, at(col, row).y, "sea"), `ship at ${col},${row}`).toBe(ship);
+      expect(isWalkable(sea, at(col, row).x, at(col, row).y), `soldier at ${col},${row}`).toBe(soldier);
+    }
+  });
+
+  it("sails a ship round the island to the far side, never over land", () => {
+    const sea = map(harbor());
+    const goal = at(18, 9);
+    let ship = at(11, 9);
+    expect(segmentWalkable(sea, ship, goal, "sea")).toBe(false);
+    // Each tick as the sim's walk takes it (see @@@terrain-walk): toward the steer point, or along one axis when the step
+    // would end on land.
+    for (let tick = 0; tick < 400 && Math.hypot(goal.x - ship.x, goal.y - ship.y) > 0; tick += 1) {
+      const aim = steerPoint(sea, ship, goal, "sea");
+      const gap = Math.hypot(aim.x - ship.x, aim.y - ship.y);
+      const next = gap <= 3.2 ? aim : { x: ship.x + ((aim.x - ship.x) / gap) * 3.2, y: ship.y + ((aim.y - ship.y) / gap) * 3.2 };
+      if (isWalkable(sea, next.x, next.y, "sea")) ship = next;
+      else if (isWalkable(sea, next.x, ship.y, "sea")) ship = { x: next.x, y: ship.y };
+      else if (isWalkable(sea, ship.x, next.y, "sea")) ship = { x: ship.x, y: next.y };
+      expect(isWalkable(sea, ship.x, ship.y, "sea")).toBe(true);
+    }
+    expect(ship).toEqual(goal);
+    expect(walkingDistance(sea, at(11, 9), goal, "sea")!).toBeGreaterThan(8 * 32);
+  });
+
+  it("stops a ship sent inland at the shore, and joins no two waters", () => {
+    const sea = map(harbor());
+    expect(walkableGoal(sea, at(7, 8).x, at(7, 8).y, "sea")).toEqual(at(10, 8));
+    expect(walkingDistance(sea, at(12, 2), at(2, 15), "sea")).toBeUndefined();
+    expect(walkingDistance(sea, at(5, 5), at(14, 9))).toBeUndefined();
+  });
+
+  it("leaves the soldiers' ways as they were when ships ask too", () => {
+    const terrain = harbor();
+    const before = walkingDistance(map(terrain), at(1, 1), at(8, 18));
+    steerPoint(map(terrain), at(11, 9), at(18, 9), "sea");
+    walkableGoal(map(terrain), at(5, 5).x, at(5, 5).y, "sea");
+    expect(walkingDistance(map(terrain), at(1, 1), at(8, 18))).toBe(before);
+    expect(walkableGoal(map(terrain), at(12, 2).x, at(12, 2).y)).toEqual(at(9, 2));
+  });
+});
