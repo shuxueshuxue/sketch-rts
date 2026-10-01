@@ -131,20 +131,47 @@ export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y
 
 // @@@shore-footprint - Whether a shipyard of the given radius may stand at the point, on the shore: its center where a
 // worker walks, so it builds and repairs it from there and a soldier can strike it; at least one cell of its footprint
-// water a ship sails, for its ships to put out from; and no part of it in a forest, on rock, on a ramp (see
-// @@@ramp-unbuildable) or off the map. A map without terrain has no water.
+// open water (see @@@open-water), for its ships to put out from; and no part of it in a forest, on rock, on a ramp (see
+// @@@ramp-unbuildable) or off the map. Wherever the water is (a sea, a lake, a river), this is the whole rule: no map is
+// told it has water. A map without terrain has none.
 export function isShoreFootprint(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
   const terrain = map.terrain;
   if (!terrain) return false;
   const land = runtime(terrain, "land");
   const sea = runtime(terrain, "sea");
   if (land.walk[padAt(land, x, y)] !== 1) return false;
+  const { labels, deep } = wholesOf(sea);
   let wet = false;
   const fits = everyFootprintCell(terrain, x, y, radius, (at, cell) => {
-    if (sea.walk[at] === 1) wet = true;
+    if (sea.walk[at] === 1 && deep[labels[at]!]! >= OPEN_WATER) wet = true;
     return (sea.walk[at] === 1 || land.walk[at] === 1) && terrain.levels?.[cell] !== "2";
   });
   return fits && wet;
+}
+
+// @@@open-water - The water a ship has room on: a whole of the sea's (see @@@ground-wholes) with at least OPEN_WATER cells
+// of deep water in it, a lake's, a sea's, or a river's three cells wide and thirty long, and not a pond or a ford's
+// shallows. Only on it does a shipyard stand.
+export const OPEN_WATER = 64;
+
+// Every point a shipyard of the given radius may stand at by the terrain alone (see @@@shore-footprint), one a cell at the
+// cell's center, row by row: worked out once per terrain and radius. Whether a building stands there already is the
+// asker's to see.
+export function shoreSpots(map: Pick<GameMap, "terrain">, radius: number): readonly Point[] {
+  const terrain = map.terrain;
+  if (!terrain) return [];
+  const sea = runtime(terrain, "sea");
+  const known = (sea.shores ??= new Map()).get(radius);
+  if (known) return known;
+  const spots: Point[] = [];
+  if (wholesOf(sea).deep.some((cells) => cells >= OPEN_WATER)) {
+    for (let index = 0; index < terrain.cols * terrain.rows; index += 1) {
+      const spot = cellCenter(terrain, index);
+      if (isShoreFootprint(map, spot.x, spot.y, radius)) spots.push(spot);
+    }
+  }
+  sea.shores.set(radius, spots);
+  return spots;
 }
 
 // Whether every cell a circle touches passes the test (by its padded index and its index in the terrain); a cell off the
@@ -822,7 +849,7 @@ export function groundWholes(map: Pick<GameMap, "terrain">, mover: Mover = "land
 
 function wholesOf(state: TerrainRuntime) {
   if (state.wholes) return state.wholes;
-  const { walk, offsets } = state;
+  const { walk, offsets, terrain, width } = state;
   const labels = new Int32Array(walk.length);
   const queue = new Int32Array(walk.length);
   let count = 0;
@@ -842,7 +869,15 @@ function wholesOf(state: TerrainRuntime) {
       }
     }
   }
-  state.wholes = { labels, count };
+  // Each whole's deep water (see @@@open-water), by its label.
+  const deep = new Int32Array(count + 1);
+  for (let index = 0; index < terrain.cols * terrain.rows; index += 1) {
+    if (terrain.cells[index] !== "~") continue;
+    const col = index % terrain.cols;
+    deep[labels[((index - col) / terrain.cols + 1) * width + col + 1]!]! += 1;
+  }
+  deep[0] = 0;
+  state.wholes = { labels, count, deep };
   return state.wholes;
 }
 
@@ -971,7 +1006,9 @@ type TerrainRuntime = {
   // The routing of walks (see @@@flow-tiles), built when first asked for.
   tiles?: Tiles | undefined;
   // Which whole of the mover's ground every cell belongs to (see @@@ground-wholes), worked out the first time it is asked.
-  wholes?: { labels: Int32Array; count: number };
+  wholes?: { labels: Int32Array; count: number; deep: Int32Array };
+  // The sea's shore spots by a shipyard's radius (see shoreSpots), worked out the first time each is asked.
+  shores?: Map<number, Point[]>;
 };
 
 // @@@terrain-runtime - What the terrain's queries need, built once per terrain and mover and kept beside the terrain (never

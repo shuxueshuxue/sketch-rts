@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, stepGame } from "./sim";
 import { isBuildPlacementClear } from "./build-placement";
-import { isFootprintBuildable, isShoreFootprint, isWalkable, segmentWalkable, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
+import { isFootprintBuildable, isShoreFootprint, isWalkable, segmentWalkable, shoreSpots, steerPoint, walkableGoal, walkingDistance, type Terrain } from "./terrain";
 
 // A 20 by 20 grid of 32-unit cells: open ground with a forest wall down column 10 from the top to row 15, so the way
 // from the left half to the right half goes round its foot.
@@ -185,10 +185,27 @@ describe("the sea", () => {
     expect(isShoreFootprint(sea, 340, at(0, 5).y, 44)).toBe(false);
     expect(isShoreFootprint(sea, 200, at(0, 5).y, 44)).toBe(false);
     expect(isShoreFootprint(sea, 300, at(0, 12).y, 44)).toBe(false);
-    // Any water will do, a pond's or an island's shore.
-    expect(isShoreFootprint(sea, at(3, 14).x, at(3, 14).y, 44)).toBe(true);
+    // An island's shore on the sea will do; a pond's (four cells) and a ford's shallows will not.
     expect(isShoreFootprint(sea, at(13, 8).x, at(13, 8).y, 44)).toBe(true);
+    expect(isShoreFootprint(sea, at(3, 14).x, at(3, 14).y, 44)).toBe(false);
+    expect(isShoreFootprint(sea, at(3, 2).x, at(3, 2).y, 44)).toBe(false);
     expect(isShoreFootprint({}, 300, at(0, 5).y, 44)).toBe(false);
+  });
+
+  it("finds a shipyard room on a river three cells wide and thirty long, and none on a shorter one", () => {
+    // A river down columns 10-12 of a 23-wide grid, `length` cells long from the top, its land on both banks.
+    const river = (length: number): Terrain => {
+      let cells = "";
+      for (let row = 0; row < 32; row += 1) for (let col = 0; col < 23; col += 1) cells += col >= 10 && col <= 12 && row < length ? "~" : ".";
+      return { cell: 32, cols: 23, rows: 32, cells };
+    };
+    expect(isShoreFootprint(map(river(30)), at(9, 15).x, at(9, 15).y, 44)).toBe(true);
+    expect(isShoreFootprint(map(river(30)), at(13, 15).x, at(13, 15).y, 44)).toBe(true);
+    expect(isShoreFootprint(map(river(21)), at(9, 15).x, at(9, 15).y, 44)).toBe(false);
+    const spots = shoreSpots(map(river(30)), 44);
+    expect(spots.length).toBeGreaterThan(0);
+    for (const spot of spots) expect(isShoreFootprint(map(river(30)), spot.x, spot.y, 44)).toBe(true);
+    expect(shoreSpots(map(river(21)), 44)).toEqual([]);
   });
 
   it("lets a worker raise a shipyard on the shore, and refuses one inland or a farm half in the sea", () => {
