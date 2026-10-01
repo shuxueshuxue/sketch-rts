@@ -11,14 +11,18 @@ import { createGame } from "./sim";
 // a new name or take the new hash knowingly.
 const HASHES: Record<PoolMapId, string> = {
   greystonePass: "406d0ee7843017eb",
-  mirrormere: "87d594feac15cfe6",
+  stillwater: "87d594feac15cfe6",
   pineshade: "78a188b492ace36d",
   shatteredBarrens: "5a9eb7d99d05fd86",
   reedwater: "384f483fb3d55ccb",
+  saltmarshIsle: "bdf761cda03959d2",
+  mirrorLagoon: "8cdf6c0b6caa8ef5",
   fourWinds: "3316e04c851a6c65",
   elderwood: "755e07c5eabe48c9",
   lakelands: "90b6cc63cf72be50",
   ironcrag: "c2563a6a923cc416",
+  inlandSea: "0f81cff6200ddf32",
+  gullIsland: "df9dc46ab881ef56",
   twoShores: "679db12345a9057c",
   cliffbreak: "b7919adb26682fbf",
   battlelineFields: "3e76305d69225df2",
@@ -65,11 +69,11 @@ describe("map pool", () => {
     expect(Object.fromEntries(MAP_POOL.map((map) => [map.id, layoutHash(map)]))).toEqual(HASHES);
   });
 
-  it("starts a room's game on its map's own layout, at the map's size", () => {
-    for (const map of MAP_POOL) {
+  it("starts a room's game on its map's own layout, at the size it names", () => {
+    for (const map of MAP_POOL as readonly PoolMap[]) {
       const { options } = roomToGameSetup(createRoom({ id: `game-${map.id}`, host, mapId: map.id as PoolMapId, humanCount: 1, aiCount: map.players - 1 }));
       const game = createGame(map.id as PoolMapId, options);
-      expect(game.map.width).toBe(map.layout.size);
+      if (map.layout.size) expect(game.map.width).toBe(map.layout.size);
       expect(game.buildings.filter((building) => building.kind === "townHall")).toHaveLength(map.players);
     }
   });

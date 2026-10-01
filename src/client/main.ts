@@ -655,11 +655,11 @@ function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[]) {
   const preview = mapPreview(mapId, seats);
   drawMapPreview(root.querySelector<HTMLCanvasElement>("[data-map-preview]")!, preview);
   const { facts } = preview;
-  const kind = poolMap(mapId)?.layout.kind;
+  const layout = poolMap(mapId)?.layout;
   root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
   root.querySelector("[data-map-facts]")!.innerHTML = [
     [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
-    ...(kind ? [[t("map.fact.layout"), t(kind === "sides" ? "map.kind.sides" : "map.kind.ring")]] : []),
+    ...(layout ? [[t("map.fact.layout"), t(layout.sea ? "map.kind.sea" : layout.kind === "sides" ? "map.kind.sides" : "map.kind.ring")]] : []),
     [t("map.fact.size"), `${facts.size} × ${facts.size}`],
     [t("map.fact.mines"), facts.mines],
     [t("map.fact.camps"), facts.camps],
