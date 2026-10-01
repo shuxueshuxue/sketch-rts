@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createGame, issuePlayerCommand, stepGame, type Game } from "./sim";
+import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
+import { commandValidationError } from "./sim/command-validation";
 import { isWalkable, type Terrain } from "./terrain";
 import type { ScenarioBuildingSeed, ScenarioUnitSeed } from "./types";
 
@@ -67,6 +68,14 @@ describe("ships", () => {
     issuePlayerCommand(sim, "enemy", { type: "move", unitIds: ["warship"], ...at(9, 5) });
     run(sim, 100);
     expect(unit(sim, "warship")!.hp).toBeLessThan(180);
+  });
+
+  it("are no rider's to charge out on deep water: the command is turned away, not thrown", () => {
+    const sim = game([
+      { id: "raider", owner: "player", kind: "raider", ...at(6, 5) },
+      { id: "warship", owner: "enemy", kind: "warship", ...at(14, 5) },
+    ]);
+    expect(commandValidationError(snapshotGame(sim), "player", { type: "cast", unitId: "raider", ability: "charge", targetId: "warship" })).toMatch(/out of reach/);
   });
 
   it("are shot from the beach by an archer within its range, and shoot what stands on the shore", () => {

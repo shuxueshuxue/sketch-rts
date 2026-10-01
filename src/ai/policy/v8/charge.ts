@@ -1,6 +1,7 @@
 import { abilityCooldown } from "../../../shared/ability-cooldowns";
 import { autocastEnabled } from "../../../shared/autocast";
 import { ABILITY_DEFS, hasSpell, UNIT_DEFS } from "../../../shared/catalog";
+import { canReach } from "../../../shared/naval";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { enemyBuildings, enemyUnits, units } from "../snapshot";
 import { distance } from "../spatial";
@@ -14,7 +15,8 @@ import { isV8Policy } from "../versions";
 // autocast off, each think every ready rider not walking under a move order charges the most valuable unit in its
 // window: a shooter or a caster first (V5's archers step back from a rider that walks; a charge closes on them at once),
 // then a worker, then any other fighter or a creep that is fighting; never a summoned spirit; and not a unit under an
-// enemy tower whose reach the rider is not already in. Two riders share a target only when there is no other.
+// enemy tower whose reach the rider is not already in, nor one it cannot reach (a ship off the beach, see @@@reach). Two
+// riders share a target only when there is no other.
 
 const CHARGE_MARGIN = 20;
 
@@ -46,7 +48,7 @@ export function planV8Charge(snapshot: GameSnapshot, owner: PlayerId, options: A
     const exposed = (target: Unit) => towers.some((tower) => distance(tower, target) <= tower.attackRange && distance(tower, rider) > tower.attackRange);
     const window = foes.filter((foe) => {
       const gap = distance(rider, foe);
-      return gap >= def.minRange + CHARGE_MARGIN && gap <= def.plannerRange && !exposed(foe);
+      return gap >= def.minRange + CHARGE_MARGIN && gap <= def.plannerRange && !exposed(foe) && canReach(snapshot.map, rider, foe);
     });
     const target = window.sort((a, b) => Number(taken.has(a.id)) - Number(taken.has(b.id)) || worth(b) - worth(a) || a.hp - b.hp || distance(rider, a) - distance(rider, b))[0];
     if (!target) continue;

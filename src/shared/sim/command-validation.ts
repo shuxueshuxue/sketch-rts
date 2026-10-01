@@ -3,6 +3,7 @@ import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
+import { canReach } from "../naval";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
 import { ownUnitLookup } from "../unit-lookup";
@@ -266,7 +267,9 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     const target = command.targetId ? snapshot.units.find((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner)) : undefined;
     if (!target || def.behavior !== "charge") return commandError("Charge requires an enemy unit target");
     const gap = Math.hypot(target.x - caster.x, target.y - caster.y);
-    return gap >= def.minRange && gap <= def.range ? undefined : commandError(`Charge target must be ${def.minRange} to ${def.range} away`, true);
+    if (gap < def.minRange || gap > def.range) return commandError(`Charge target must be ${def.minRange} to ${def.range} away`, true);
+    // A rider charges nothing it cannot come within reach of (see @@@reach): a ship out on deep water.
+    return canReach(snapshot.map, caster, target) ? undefined : commandError("Charge target is out of reach", true);
   }
   return Number.isFinite(command.x) && Number.isFinite(command.y) ? undefined : commandError("Summon requires a target point");
 }
