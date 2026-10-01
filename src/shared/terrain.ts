@@ -229,8 +229,8 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
   // A unit pressed against a wall stands in a building's margin (see @@@building-pathing): it starts from the open cell
-  // nearest it; one standing where nothing walks (only a seeded scenario puts it there) heads out to it.
-  const near = nearestWalkable(state, start);
+  // nearest it (see nearestOpenTo); one standing where nothing walks (only a seeded scenario puts it there) heads out to it.
+  const near = nearestOpenTo(state, from);
   if (near < 0) return goal;
   if (near !== start && ground.walk[start] !== 1) return centerOf(state, near);
   const tiles = tilesOf(state);
@@ -249,7 +249,7 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
   const start = padAt(state, from.x, from.y);
   const target = padAt(state, goal.x, goal.y);
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
-  const near = nearestWalkable(state, start);
+  const near = nearestOpenTo(state, from);
   if (near < 0) return goal;
   const tiles = tilesOf(state);
   const aim = reachableTarget(state, ground, tiles, near, target);
@@ -1273,6 +1273,43 @@ function grow(state: TerrainRuntime, sources: number[]): Field {
 }
 
 // The walkable cell whose center is nearest the given cell's center (the lowest index among equals), or -1 when none is.
+// The open cell whose center is nearest the point itself, the point's own when it is open. Taken from the point's cell
+// instead, it changed as a unit pressed against a wall stepped across a cell's border, a step at a time: the open cell
+// nearest one cell lay on the wall's north side, the next one's on its south, and the unit turned between the two ways
+// round every tick (pool-elderwood-4, a lancer at its tower's corner, 1 to 3 a step for minutes; 9 of the pool batch's 15
+// stuck units). A center on the ring `ring` cells out is at least half a cell less than that from the point.
+function nearestOpenTo(state: TerrainRuntime, point: Point): number {
+  const { terrain } = state;
+  const size = terrain.cell;
+  const col = Math.floor(point.x / size);
+  const row = Math.floor(point.y / size);
+  if (col >= 0 && row >= 0 && col < terrain.cols && row < terrain.rows && state.walk[pad(state, col, row)] === 1) return pad(state, col, row);
+  let best = -1;
+  let bestDistance = Infinity;
+  const limit = Math.max(terrain.cols, terrain.rows);
+  for (let ring = 1; ring <= limit; ring += 1) {
+    const least = (ring - 0.5) * size;
+    if (least * least > bestDistance) break;
+    for (let r = row - ring; r <= row + ring; r += 1) {
+      for (let c = col - ring; c <= col + ring; c += 1) {
+        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring) continue;
+        if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
+        const index = pad(state, c, r);
+        if (state.walk[index] !== 1) continue;
+        const dx = (c + 0.5) * size - point.x;
+        const dy = (r + 0.5) * size - point.y;
+        const gap = dx * dx + dy * dy;
+        if (gap < bestDistance || (gap === bestDistance && index < best)) {
+          bestDistance = gap;
+          best = index;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+// The open cell nearest a cell, for a goal point (see walkableGoal), kept per cell.
 function nearestWalkable(state: TerrainRuntime, at: number): number {
   if (at >= 0 && state.walk[at] === 1) return at;
   const known = state.nearest.get(at);
