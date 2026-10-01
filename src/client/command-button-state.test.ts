@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { abilityCommandState, autocastSwitch, autocastToggle, mercenaryHireCommandState, trainCommandState } from "./command-button-state";
+import { abilityCommandState, autocastSwitch, autocastToggle, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState } from "./command-button-state";
 import { TIER_SUPPLY_CAP } from "../shared/catalog";
 import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
 
@@ -55,6 +55,35 @@ describe("command button state", () => {
     expect(autocastToggle([footman], "charge")).toBeUndefined();
     // A switch only speaks for the ability it names: a priest's heal switched off leaves a witch's curse on.
     expect(autocastSwitch([{ ...unit("priest", undefined), autocast: { heal: false } }, unit("witch", undefined)], "curse")).toBe("on");
+  });
+
+  it("shows the stances for melee fighters, pressed for the stance all or some of the selected ones are in", () => {
+    const lancer = unit("lancer", undefined);
+    const braced = { ...unit("footman", undefined), id: "footman-2", stance: "brace" as const };
+    const archer = unit("archer", undefined);
+    const worker = unit("worker", undefined);
+    expect(stanceCommandState([archer, worker], "pursue")).toEqual({ visible: false, enabled: false });
+    expect(stanceFighters([lancer, braced, archer, worker]).map((fighter) => fighter.id)).toEqual(["lancer-1", "footman-2"]);
+    expect(stanceCommandState([lancer], "pursue")).toEqual({ visible: true, enabled: true, pressed: "all" });
+    expect(stanceCommandState([lancer, braced, archer], "pursue")).toEqual({ visible: true, enabled: true, pressed: "some" });
+    expect(stanceCommandState([lancer, braced], "brace")).toEqual({ visible: true, enabled: true, pressed: "some" });
+    expect(stanceCommandState([lancer, braced], "shock")).toEqual({ visible: true, enabled: true });
+    // The card follows the focused units; the press, every selected fighter.
+    expect(stanceCommandState([archer], "brace", [archer, braced])).toEqual({ visible: false, enabled: false });
+    expect(stanceCommandState([braced], "brace", [braced, lancer])).toEqual({ visible: true, enabled: true, pressed: "some" });
+  });
+
+  it("folds the stances into one button, ringed while the selected fighters are out of pursue", () => {
+    const lancer = unit("lancer", undefined);
+    const braced = { ...unit("footman", undefined), id: "footman-2", stance: "brace" as const };
+    const shocked = { ...unit("knight", undefined), id: "knight-3", stance: "shock" as const };
+    expect(stanceMenuCommandState([unit("archer", undefined)])).toEqual({ visible: false, enabled: false });
+    expect(stanceMenuCommandState([lancer])).toEqual({ visible: true, enabled: true });
+    expect(stanceMenuCommandState([lancer, braced])).toEqual({ visible: true, enabled: true, pressed: "some" });
+    expect(stanceMenuCommandState([braced, shocked])).toEqual({ visible: true, enabled: true, pressed: "all" });
+    expect(sharedStance([lancer, unit("archer", undefined)])).toBe("pursue");
+    expect(sharedStance([braced, { ...braced, id: "footman-4" }])).toBe("brace");
+    expect(sharedStance([braced, shocked])).toBeUndefined();
   });
 
   it("keeps selected mercenary camps visible while explaining unavailable hire states", () => {

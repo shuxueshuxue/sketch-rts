@@ -1,7 +1,8 @@
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { autocastEnabled, canAutocast } from "../shared/autocast";
 import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
-import type { AbilityKind, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
+import { canTakeStance } from "../shared/push";
+import type { AbilityKind, MeleeStance, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
 
 export type CommandButtonDisabledReason = "cooldown" | "stock" | "gold" | "supply" | "position" | "missing" | "tier";
 
@@ -17,6 +18,8 @@ export type CommandButtonState = {
   supplyCap?: number;
   // A spell the player can switch to autocast (right-click on its button), and how it stands.
   autocast?: AutocastSwitch;
+  // A mode button (a melee stance) that all the selected units it applies to are in, or only some.
+  pressed?: "all" | "some";
 };
 
 export const HIDDEN_COMMAND_STATE: CommandButtonState = { visible: false, enabled: false };
@@ -56,6 +59,36 @@ export function autocastToggle(units: readonly Unit[], ability: AbilityKind): { 
 
 function autocastCasters(units: readonly Unit[], ability: AbilityKind) {
   return canAutocast(ability) ? units.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability)) : [];
+}
+
+// @@@stance-buttons - The melee stances fold into one button on the card, shown whenever a focused unit can take a stance;
+// it wears the autocast ring while the selected fighters are out of the default pursue (all of them, or some). Pressing it
+// opens the three stances in place of the card, as the build button opens the buildings; the stance the selected fighters
+// are in wears the ring, and choosing one sets it for every selected fighter and folds the card back.
+export function stanceMenuCommandState(units: readonly Unit[], selected: readonly Unit[] = units): CommandButtonState {
+  if (stanceFighters(units).length === 0) return HIDDEN_COMMAND_STATE;
+  const fighters = stanceFighters(selected);
+  const special = fighters.filter((unit) => unit.stance !== undefined).length;
+  if (special === 0) return ENABLED_COMMAND_STATE;
+  return { ...ENABLED_COMMAND_STATE, pressed: special === fighters.length ? "all" : "some" };
+}
+
+// The stance the selected fighters share, or undefined when they differ (or there are none).
+export function sharedStance(selected: readonly Unit[]): MeleeStance | undefined {
+  const stances = new Set(stanceFighters(selected).map((unit) => unit.stance ?? "pursue"));
+  return stances.size === 1 ? [...stances][0] : undefined;
+}
+
+export function stanceCommandState(units: readonly Unit[], stance: MeleeStance, selected: readonly Unit[] = units): CommandButtonState {
+  if (stanceFighters(units).length === 0) return HIDDEN_COMMAND_STATE;
+  const fighters = stanceFighters(selected);
+  const inStance = fighters.filter((unit) => (unit.stance ?? "pursue") === stance).length;
+  if (inStance === 0) return ENABLED_COMMAND_STATE;
+  return { ...ENABLED_COMMAND_STATE, pressed: inStance === fighters.length ? "all" : "some" };
+}
+
+export function stanceFighters(units: readonly Unit[]) {
+  return units.filter((unit) => canTakeStance(unit.kind));
 }
 
 // A unit the player could train but whose tier is still locked stays on the card, greyed, with the supply cap it waits for.

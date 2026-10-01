@@ -24,8 +24,8 @@ export const STAND_SPEED = 6;
 // lungeStrength); a fighter in shock takes a tenth more damage from everything. At 1280 a lancer's blow threw a footman
 // 159 and everything flew; at a fifth less damage brace lost every way it was used.
 export const KNOCKBACK = 427;
-// About two bodies: a golem's 34 on an 85-health spirit came to 171, and the spirit seemed to fly off on its own.
-export const MAX_SHOVE = 80;
+// Under three bodies: a golem's 34 on an 85-health spirit came to 171, and the spirit seemed to fly off on its own.
+export const MAX_SHOVE = 100;
 export const BRACE_DAMAGE_SHARE = 0.9;
 export const SHOCK_DAMAGE_TAKEN = 1.1;
 // The lunge's average speed is at most this many times the striker's own walking speed.

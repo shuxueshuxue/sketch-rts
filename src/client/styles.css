@@ -1011,17 +1011,24 @@ button {
   animation: autocast-turn 1.6s linear infinite;
 }
 
+/* @@@stance-buttons - A stance the selected fighters are in wears the autocast ring: all of them turning, some of them
+   still. */
 .command-button[data-autocast="on"],
-.command-button[data-autocast="mixed"] {
+.command-button[data-autocast="mixed"],
+.command-button[data-pressed="all"],
+.command-button[data-pressed="some"] {
   border-color: #c9a45a;
 }
 
 .command-button[data-autocast="on"] .autocast-ring,
-.command-button[data-autocast="mixed"] .autocast-ring {
+.command-button[data-autocast="mixed"] .autocast-ring,
+.command-button[data-pressed="all"] .autocast-ring,
+.command-button[data-pressed="some"] .autocast-ring {
   display: block;
 }
 
-.command-button[data-autocast="mixed"] .autocast-ring::before {
+.command-button[data-autocast="mixed"] .autocast-ring::before,
+.command-button[data-pressed="some"] .autocast-ring::before {
   background: repeating-conic-gradient(from 22.5deg, #e8c060 0deg 22deg, rgba(185, 134, 27, 0) 22deg 45deg);
   animation: none;
 }
@@ -1034,7 +1041,8 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   /* A still, whole ring of gold says "on" without anything moving. */
-  .command-button[data-autocast="on"] .autocast-ring::before {
+  .command-button[data-autocast="on"] .autocast-ring::before,
+  .command-button[data-pressed="all"] .autocast-ring::before {
     background: linear-gradient(135deg, #fffbe0, #ffd76a 45%, #b9861b);
     animation: none;
   }

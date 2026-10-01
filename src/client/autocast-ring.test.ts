@@ -22,22 +22,28 @@ function reducedMotionBlock() {
   return CSS.slice(start);
 }
 
+// The same ring marks the stance the selected fighters are in (see stance-buttons): pressed "all" as autocast "on",
+// "some" as "mixed".
 describe("autocast ring", () => {
-  it("is hidden until a spell's autocast is on (or on for some of the selection)", () => {
+  it("is hidden until a spell's autocast is on (or on for some of the selection), or a stance is held", () => {
     expect(rule(".autocast-ring")).toMatch(/display: none;/);
-    expect(CSS).toContain('.command-button[data-autocast="on"] .autocast-ring,\n.command-button[data-autocast="mixed"] .autocast-ring {\n  display: block;');
+    expect(CSS).toContain(
+      '.command-button[data-autocast="on"] .autocast-ring,\n.command-button[data-autocast="mixed"] .autocast-ring,\n.command-button[data-pressed="all"] .autocast-ring,\n.command-button[data-pressed="some"] .autocast-ring {\n  display: block;',
+    );
     expect(CSS).not.toMatch(/data-autocast="off"/);
   });
 
   it("runs its sparks round the border, and stands still when only some of the selection has it on", () => {
     expect(rule(".autocast-ring::before")).toMatch(/animation: autocast-turn [\d.]+s linear infinite;/);
     expect(CSS).toMatch(/@keyframes autocast-turn \{\s*to \{\s*--autocast-turn: 360deg;/);
-    expect(rule('.command-button[data-autocast="mixed"] .autocast-ring::before')).toMatch(/animation: none;/);
+    expect(CSS).toContain('.command-button[data-autocast="mixed"] .autocast-ring::before,\n.command-button[data-pressed="some"] .autocast-ring::before {');
+    expect(rule('.command-button[data-pressed="some"] .autocast-ring::before')).toMatch(/animation: none;/);
   });
 
   it("stops moving for players who ask for reduced motion, and still shows the ring", () => {
     const block = reducedMotionBlock();
-    const still = rule('  .command-button[data-autocast="on"] .autocast-ring::before', block);
+    expect(block).toContain('  .command-button[data-autocast="on"] .autocast-ring::before,\n  .command-button[data-pressed="all"] .autocast-ring::before {');
+    const still = rule('  .command-button[data-pressed="all"] .autocast-ring::before', block);
     expect(still).toMatch(/animation: none;/);
     expect(still).toMatch(/background: /);
   });

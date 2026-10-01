@@ -4,7 +4,8 @@ import { drawAtlasBuilding, drawAtlasUnit, drawAtlasMenu } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
-import { abilityCommandState, autocastToggle, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { abilityCommandState, autocastToggle, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -57,7 +58,7 @@ import { isMapId, LADDER_MAP_ID } from "../shared/map-ids";
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
 import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
 import { canStartRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -95,6 +96,14 @@ const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UN
 
 const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
+// Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
+// hides every other button, so X does not meet a hexer's curse.
+const STANCE_MENU_COMMAND = { icon: "⇄", hotkey: "z" } as const;
+const STANCE_COMMANDS = [
+  { stance: "pursue", icon: "»", hotkey: "z", title: "command.stance.pursue.title", body: "command.stance.pursue.body", stats: "command.stance.pursue.stats" },
+  { stance: "brace", icon: "▥", hotkey: "j", title: "command.stance.brace.title", body: "command.stance.brace.body", stats: "command.stance.brace.stats" },
+  { stance: "shock", icon: "⇥", hotkey: "x", title: "command.stance.shock.title", body: "command.stance.shock.body", stats: "command.stance.shock.stats" },
+] as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
 const i18n = createBrowserI18n();
@@ -167,7 +176,8 @@ let menuView: MenuView = "home";
 let selectedMapId: MapId = LADDER_MAP_ID;
 let selectedLayoutSeed: string | undefined = newLayoutSeed();
 let commandMode: CommandMode | undefined;
-let buildPaletteOpen = false;
+// The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
+let openPalette: "build" | "stance" | undefined;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
@@ -217,6 +227,22 @@ const commandButtons: CommandButton[] = [
       undefined,
       () => toggleAutocast(command.ability),
     ), command.ability),
+  ),
+  withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, STANCE_MENU_COMMAND.hotkey, stanceMenuButtonState, openStancePalette, () => ({
+    title: t("command.stance.menu.title"),
+    body: t("command.stance.menu.body", { stance: currentStanceLabel() }),
+    stats: [],
+    requirements: [t("command.stance.requirements")],
+    hotkey: STANCE_MENU_COMMAND.hotkey.toUpperCase(),
+  }))),
+  ...STANCE_COMMANDS.map((command) =>
+    withRing(createCommandButton(t(command.title), command.icon, command.hotkey, () => stanceButtonState(command.stance), () => setStance(command.stance), () => ({
+      title: t(command.title),
+      body: t(command.body),
+      stats: [t(command.stats, { share: BRACE_DAMAGE_SHARE, knockback: KNOCKBACK, most: MAX_SHOVE, taken: SHOCK_DAMAGE_TAKEN, pace: LUNGE_PACE })],
+      requirements: [t("command.stance.requirements")],
+      hotkey: command.hotkey.toUpperCase(),
+    }))),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -293,7 +319,11 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
 // @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
 // player cannot switch gets none.
 function withAutocastRing(button: CommandButton, ability: AbilityKind) {
-  if (!canAutocast(ability)) return button;
+  return canAutocast(ability) ? withRing(button) : button;
+}
+
+// The ring itself, lit by the button's state: a spell's autocast, or a stance the selected fighters are in.
+function withRing(button: CommandButton) {
   const ring = document.createElement("span");
   ring.className = "autocast-ring";
   ring.setAttribute("aria-hidden", "true");
@@ -333,6 +363,8 @@ function renderCommandButtonState(element: HTMLButtonElement, state: CommandButt
   else delete element.dataset.disabledReason;
   if (state.autocast) element.dataset.autocast = state.autocast;
   else delete element.dataset.autocast;
+  if (state.pressed) element.dataset.pressed = state.pressed;
+  else delete element.dataset.pressed;
 }
 
 function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonState): GameplayTooltip {
@@ -1040,7 +1072,7 @@ function returnHome() {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   menuView = "home";
   replaceRoomRouteHash({ screen: "home" });
   renderMainMenu();
@@ -1139,7 +1171,7 @@ function openResults(room: RoomState) {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   menuOpen = true;
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");
@@ -1347,9 +1379,9 @@ function onKeyDown(event: KeyboardEvent) {
     cancelCommandMode();
     return;
   }
-  if (key === "escape" && buildPaletteOpen) {
+  if (key === "escape" && openPalette) {
     event.preventDefault();
-    closeBuildPalette(t("status.buildMenuClosed"));
+    closePalette(t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
     return;
   }
   if (key === "tab") {
@@ -1615,25 +1647,25 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
 }
 
 function canAttackMove() {
-  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().length > 0;
+  return !commandMode && !openPalette && selectedPlayerUnits().length > 0;
 }
 
 function canOpenBuildPalette() {
-  return !commandMode && !buildPaletteOpen && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && !openPalette && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canBuild(kind: BuildingKind) {
   const player = currentPlayerState();
-  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && openPalette === "build" && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canTrain(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return !commandMode && !buildPaletteOpen && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  return !commandMode && !openPalette && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
-  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
+  return !commandMode && !openPalette && researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
 }
 
 function canCast(ability: AbilityKind) {
@@ -1645,8 +1677,40 @@ function canHireMercenary() {
 }
 
 function abilityButtonState(ability: AbilityKind): CommandButtonState {
-  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
   return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits());
+}
+
+function stanceMenuButtonState(): CommandButtonState {
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  return stanceMenuCommandState(focusedPlayerUnits(), selectedPlayerUnits());
+}
+
+function stanceButtonState(stance: MeleeStance): CommandButtonState {
+  if (commandMode || openPalette !== "stance") return HIDDEN_COMMAND_STATE;
+  return stanceCommandState(focusedPlayerUnits(), stance, selectedPlayerUnits());
+}
+
+function currentStanceLabel() {
+  const stance = sharedStance(selectedPlayerUnits());
+  const command = STANCE_COMMANDS.find((candidate) => candidate.stance === stance);
+  return command ? t(command.title) : t("command.stance.mixed");
+}
+
+function openStancePalette() {
+  if (!stanceMenuButtonState().visible) return;
+  openPalette = "stance";
+  statusLabel.textContent = t("status.stanceMenuOpened");
+  updateHud();
+}
+
+function setStance(stance: MeleeStance) {
+  if (!syncBeforeCommandProjection()) return;
+  const unitIds = stanceFighters(selectedPlayerUnits()).map((unit) => unit.id);
+  if (unitIds.length === 0) return;
+  sendCommand({ type: "setStance", unitIds, stance });
+  const command = STANCE_COMMANDS.find((candidate) => candidate.stance === stance)!;
+  closePalette(t("status.stanceSet", { stance: t(command.title) }));
 }
 
 function toggleAutocast(ability: AbilityKind) {
@@ -1660,7 +1724,7 @@ function toggleAutocast(ability: AbilityKind) {
 
 function hireMercenaryButtonState(): CommandButtonState {
   const camp = selectedMercenaryCamp();
-  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
   return mercenaryHireCommandState({
     camp,
     player: currentPlayerState(),
@@ -1673,7 +1737,7 @@ function openBuildPalette() {
     showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
-  buildPaletteOpen = true;
+  openPalette = "build";
   statusLabel.textContent = t("status.buildMenuOpened");
   updateHud();
 }
@@ -1697,7 +1761,7 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
     showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
-  buildPaletteOpen = false;
+  openPalette = undefined;
   commandMode = { type: "build", placement: { workerId: worker.id, buildingKind } };
   shell.classList.add("placement-active");
   shell.classList.remove("targeting-active");
@@ -1872,8 +1936,8 @@ function clearCommandModeClasses() {
   shell.classList.remove("placement-active", "targeting-active");
 }
 
-function closeBuildPalette(message?: string) {
-  buildPaletteOpen = false;
+function closePalette(message?: string) {
+  openPalette = undefined;
   if (message) statusLabel.textContent = message;
   updateHud();
 }
@@ -1927,7 +1991,7 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
   selectedIds = result.selectedIds;
   focusedSelectionId = result.focusedSelectionId;
   if (selectedIds.size > 0 || !additive) selectedCampId = undefined;
-  if (selectedIds.size > 0 || !additive) buildPaletteOpen = false;
+  if (selectedIds.size > 0 || !additive) openPalette = undefined;
 }
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
@@ -1940,7 +2004,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
-    buildPaletteOpen = false;
+    openPalette = undefined;
     return;
   }
   const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
@@ -1949,7 +2013,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
-    buildPaletteOpen = false;
+    openPalette = undefined;
     return;
   }
   if (additive) return;
@@ -1957,7 +2021,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = camp?.id;
-  buildPaletteOpen = false;
+  openPalette = undefined;
 }
 
 function selectedPlayerUnits() {
@@ -2017,7 +2081,8 @@ function pruneSelection() {
       clearCommandModeClasses();
     }
   }
-  if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
+  if (openPalette === "build" && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) openPalette = undefined;
+  if (openPalette === "stance" && stanceFighters(focusedPlayerUnits()).length === 0) openPalette = undefined;
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
@@ -2064,7 +2129,7 @@ function selectControlGroup(slot: number) {
   selectedIds = new Set(ids);
   focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   selectedCampId = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   statusLabel.textContent = t("status.groupSelected", { slot });
   if (recallTap.shouldCenterCamera) centerCameraOnControlGroup(ids);
   updateHud();
@@ -2075,7 +2140,7 @@ function cycleFocusedSelection(direction: 1 | -1) {
   const nextFocus = cycleFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId, direction);
   if (!nextFocus || nextFocus === focusedSelectionId) return;
   focusedSelectionId = nextFocus;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   updateHud();
 }
 
@@ -2138,7 +2203,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       button.append(canvas, count);
       button.addEventListener("click", () => {
         focusedSelectionId = group.ids[0];
-        buildPaletteOpen = false;
+        openPalette = undefined;
         updateHud();
       });
       drawSelectionModel(canvas, group);
