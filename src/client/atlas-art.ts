@@ -242,9 +242,9 @@ export function drawAtlasMine(c: Brush, point: Point) {
   });
 }
 
-// @@@obstacle-art - Rocks or a stone gate across a way (see @@@obstacle): a heap of boulders, or two stone pillars with a
-// portcullis between them, lying across the way it shuts; cracked once it is down to half its health. Drawn fresh each
-// frame (each lies its own way), as few as they are.
+// @@@obstacle-art - Rocks or a stone gate across a way (see @@@obstacle): a heap of boulders the width of the way, or two
+// stone pillars with a timber gate between them, lying across the way it shuts; cracked once it is down to half its
+// health. Drawn fresh each frame (each lies its own way), as few as they are.
 export function drawAtlasObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "radius" | "along" | "hp" | "maxHp">, point: Point) {
   c.save();
   c.translate(point.x, point.y);
@@ -254,13 +254,16 @@ export function drawAtlasObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "r
   // The point `t` of the way across (-1 to 1, one side of the way to the other), `lift` above the ground.
   const at = (t: number, lift = 0): Point => ({ x: across.x * r * t, y: across.y * r * t - lift });
   const cracked = obstacle.hp < obstacle.maxHp / 2;
-  ellipse(c, 0, r * 0.1, r * 1.1, r * 0.5, "#35493724");
+  c.save();
+  c.rotate(Math.atan2(across.y, across.x));
+  ellipse(c, 0, r * 0.08, r * 1.2, r * 0.5, "#35493726");
+  c.restore();
   if (obstacle.kind === "rocks") {
-    const stones = [[-0.82, 0.3], [-0.45, 0.42], [-0.05, 0.5], [0.38, 0.44], [0.8, 0.32], [-0.62, 0.26], [0.18, 0.3], [0.6, 0.24]] as const;
+    const stones = [[-0.98, 0.44], [-0.55, 0.58], [-0.08, 0.64], [0.4, 0.58], [0.94, 0.46], [-0.76, 0.38], [0.16, 0.42], [0.68, 0.36]] as const;
     const placed = stones.map(([t, size], index) => ({ ...at(t), size: r * size, index, back: index >= 5 }));
     for (const stone of placed.sort((a, b) => Number(b.back) - Number(a.back) || a.y - b.y)) {
       const { x, size, index } = stone;
-      const y = stone.y - (stone.back ? size * 0.6 : 0);
+      const y = stone.y - (stone.back ? size * 0.55 : 0);
       const corners = Array.from({ length: 7 }, (_, k) => {
         const angle = (k / 7) * Math.PI * 2 + index;
         const reach = size * (0.8 + 0.2 * Math.sin(index * 3 + k * 2.1));
@@ -271,21 +274,26 @@ export function drawAtlasObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "r
       if (cracked && index % 3 === 0) line(c, [[x - size * 0.2, y - size * 0.5], [x, y - size * 0.1], [x - size * 0.1, y + size * 0.3]], "#55604f", 1.2);
     }
   } else {
-    const [left, right] = [at(-1), at(1)];
-    polygon(c, [[left.x, left.y - 3], [right.x, right.y - 3], [right.x, right.y + 5], [left.x, left.y + 5]], "#b9b6a0", "#6e806d", 1);
-    const high = r * 0.72;
-    for (let bar = -3; bar <= 3; bar += 1) {
-      const foot = at(bar * 0.24);
-      const bent = cracked && bar === 1 ? r * 0.12 : 0;
-      line(c, [[foot.x, foot.y], [foot.x + bent, foot.y - high]], "#4f3f30", 2.4);
+    const high = r * 0.8;
+    const ends = [at(-0.86), at(0.86)];
+    // The gate's face: a timber wall between the pillars, its planks upright and two cross beams.
+    polygon(c, [[ends[0]!.x, ends[0]!.y], [ends[1]!.x, ends[1]!.y], [ends[1]!.x, ends[1]!.y - high], [ends[0]!.x, ends[0]!.y - high]], "#7a5c3c", "#3f3024", 1.4);
+    for (let plank = -2; plank <= 2; plank += 1) {
+      if (cracked && plank === 1) continue;
+      const foot = at(plank * 0.29);
+      line(c, [[foot.x, foot.y], [foot.x, foot.y - high]], "#4f3a28", 1.4);
     }
-    for (const lift of [high * 0.35, high * 0.75]) {
+    for (const lift of [high * 0.28, high * 0.72]) {
       const [from, to] = [at(-0.86, lift), at(0.86, lift)];
-      line(c, [[from.x, from.y], [to.x, to.y]], "#5b4a3a", 3);
+      line(c, [[from.x, from.y], [to.x, to.y]], "#3f3024", 2.6);
     }
-    for (const pillar of [left, right]) {
-      const w = r * 0.18;
-      const top = pillar.y - r * 0.95;
+    if (cracked) {
+      const [from, to] = [at(0.05, high * 0.95), at(0.5, high * 0.1)];
+      line(c, [[from.x, from.y], [(from.x + to.x) / 2 + r * 0.08, (from.y + to.y) / 2], [to.x, to.y]], "#24190f", 1.6);
+    }
+    for (const pillar of [at(-1), at(1)].sort((a, b) => a.y - b.y)) {
+      const w = r * 0.2;
+      const top = pillar.y - r * 1.05;
       polygon(c, [[pillar.x - w, pillar.y + 4], [pillar.x - w, top], [pillar.x + w, top], [pillar.x + w, pillar.y + 4]], "#c9c7ac", "#7d7a66", 1.2);
       polygon(c, [[pillar.x - w * 1.3, top], [pillar.x - w * 1.3, top - r * 0.12], [pillar.x + w * 1.3, top - r * 0.12], [pillar.x + w * 1.3, top]], "#d8d5ba", "#7d7a66", 1.2);
       line(c, [[pillar.x - w * 0.4, pillar.y], [pillar.x - w * 0.4, top + r * 0.1]], "#8a8d7470", 1);
@@ -293,6 +301,11 @@ export function drawAtlasObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "r
     }
   }
   c.restore();
+}
+
+// How far above its point an obstacle's drawing reaches (see @@@obstacle-art), for what is drawn over it.
+export function obstacleArtTop(obstacle: Pick<Obstacle, "kind" | "radius" | "along">) {
+  return obstacle.radius * (Math.abs(obstacle.along.x) + (obstacle.kind === "gate" ? 1.2 : 0.75));
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {

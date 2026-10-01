@@ -1,4 +1,4 @@
-import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -241,7 +241,7 @@ function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
     const point = worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
     if (!nearScreen(painter, point, obstacle.radius + 80)) continue;
     drawAtlasObstacle(painter.ctx, obstacle, point);
-    if (!painter.still && obstacle.hp < obstacle.maxHp) drawHp(painter.ctx, point.x, point.y - obstacle.radius - 14, obstacle.hp, obstacle.maxHp);
+    if (!painter.still && obstacle.hp < obstacle.maxHp) drawHp(painter.ctx, point.x, point.y - obstacleArtTop(obstacle) - 10, obstacle.hp, obstacle.maxHp);
   }
 }
 
