@@ -5,7 +5,7 @@ import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-place
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach } from "../naval";
 import type { Game } from "../sim";
-import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, UnitKind } from "../types";
+import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, UnitKind } from "../types";
 import { ownUnitLookup } from "../unit-lookup";
 
 export type CommandLegalityError = {
@@ -284,8 +284,10 @@ function canSpendGold(snapshot: GameSnapshot, owner: PlayerId, amount: number) {
   return snapshot.players[owner]!.gold >= amount;
 }
 
+// As the sim counts it: passengers aboard a transport too (see @@@transport).
 function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) {
-  const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + unitRules(snapshot, unit).supplyUsed, 0);
+  const supply = (unit: Unit): number => unitRules(snapshot, unit).supplyUsed + (unit.cargo ?? []).reduce((total, passenger) => total + supply(passenger), 0);
+  const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + supply(unit), 0);
   const queuedSupply = snapshot.buildings
     .filter((building) => building.owner === owner)
     .flatMap((building) => building.queue)

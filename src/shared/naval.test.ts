@@ -78,6 +78,18 @@ describe("ships", () => {
     expect(commandValidationError(snapshotGame(sim), "player", { type: "cast", unitId: "raider", ability: "charge", targetId: "warship" })).toMatch(/out of reach/);
   });
 
+  it("count their passengers in their owner's supply, in the command checks as in the sim", () => {
+    const sim = game([{ id: "ferry", owner: "player", kind: "transport", ...at(12, 4) }]);
+    const cap = sim.players.player!.supplyCap;
+    // Workers up to the cap, all but the transport's own supply, eight of them aboard.
+    for (let index = 0; index < cap - 1; index += 1) sim.units.push({ ...unit(sim, "ferry")!, id: `w${index}`, kind: "worker", ...at(3, 5), order: { type: "idle" }, cargo: undefined });
+    const ferry = unit(sim, "ferry")!;
+    ferry.cargo = sim.units.filter((candidate) => candidate.kind === "worker").slice(0, 8);
+    sim.units = sim.units.filter((candidate) => !ferry.cargo!.includes(candidate));
+    expect(commandValidationError(snapshotGame(sim), "player", { type: "train", buildingId: "hall-a", unitKind: "worker" })).toMatch(/more supply/);
+    expect(() => issuePlayerCommand(sim, "player", { type: "train", buildingId: "hall-a", unitKind: "worker" })).toThrow(/more supply/);
+  });
+
   it("are shot from the beach by an archer within its range, and shoot what stands on the shore", () => {
     const sim = game([
       { id: "archer", owner: "player", kind: "archer", ...at(7, 12) },
