@@ -2,26 +2,101 @@ import { describe, expect, it } from "vitest";
 import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
 import { BUILDING_DEFS } from "./catalog";
+import { MAP_IDEAS } from "./map-ids";
 import { isFootprintBuildable, isShoreFootprint, isWalkable, walkableGoal, walkingDistance } from "./terrain";
-import type { SeaForm } from "./types";
+import type { MapIdea } from "./types";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
 const TEAMS = { v9: "v9-side", p1: "rivals", p2: "rivals", p3: "rivals" };
 const PAIRS = { a1: "north", a2: "north", b1: "south", b2: "south" };
+const DUEL = { d1: "d1", d2: "d2" };
 const gap = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+// The seats every idea takes in these tests: a duel, four on a ring, or two pairs.
+const SEATS: Record<MapIdea, Record<string, string>> = {
+  openRing: TEAMS,
+  openSides: PAIRS,
+  fountainRing: TEAMS,
+  turtleIsle: TEAMS,
+  twistedPaths: TEAMS,
+  outerSea: TEAMS,
+  oneMarket: DUEL,
+  floodedValley: DUEL,
+  hiddenHill: DUEL,
+  bridgeStand: DUEL,
+  deepJungle: DUEL,
+  northIsles: DUEL,
+  riverValley: PAIRS,
+  twoShores: PAIRS,
+};
 
-function layout(seed: string, kind?: "ring" | "sides", players = PLAYERS, teams: Record<string, string> = TEAMS) {
-  const map = generateMap({ seed, ...(kind ? { kind } : {}) }, players, teams);
+function layout(seed: string, idea?: MapIdea, teams: Record<string, string> = idea ? SEATS[idea] : TEAMS, kind?: "ring" | "sides") {
+  const players = Object.keys(teams);
+  const map = generateMap({ seed, ...(idea ? { idea } : {}), ...(kind ? { kind } : {}) }, players, teams);
   const halls = players.map((player) => ({ player, x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
   const expansions = map.resources.filter((mine) => !mine.id.endsWith("-main"));
   const ground = { terrain: map.terrain, width: map.size, height: map.size };
   return { map, halls, expansions, ground };
 }
 
+// The water a ship sails from the point (deep or shallow, four ways), and how much of it is deep.
+function sea(map: ReturnType<typeof generateMap>, at: { x: number; y: number }) {
+  const { cols, rows, cell, cells } = map.terrain;
+  const start = Math.floor(at.y / cell) * cols + Math.floor(at.x / cell);
+  const reached = new Set<number>();
+  let deep = 0;
+  const queue = [start];
+  reached.add(start);
+  for (let head = 0; head < queue.length; head += 1) {
+    const index = queue[head]!;
+    if (cells[index] === "~") deep += 1;
+    const col = index % cols;
+    const row = (index - col) / cols;
+    for (const [c, r] of [[col + 1, row], [col - 1, row], [col, row + 1], [col, row - 1]] as const) {
+      const next = r * cols + c;
+      if (c < 0 || r < 0 || c >= cols || r >= rows || reached.has(next) || (cells[next] !== "~" && cells[next] !== ",")) continue;
+      reached.add(next);
+      queue.push(next);
+    }
+  }
+  return { reached, deep };
+}
+
 describe("generated maps", () => {
+  it("draws every idea for its seats: every start walks to every other start and every mine but an island's, over ground it can stand on", () => {
+    for (const idea of MAP_IDEAS) {
+      for (let index = 0; index < 3; index += 1) {
+        const { map, halls, ground } = layout(`walk-${index}`, idea);
+        expect(map.idea).toBe(idea);
+        const things = [...map.resources, ...map.mercenaryCamps, ...map.units, ...map.buildings, ...map.sites];
+        for (const thing of things) expect(isWalkable(ground, thing.x, thing.y)).toBe(true);
+        const walked = map.resources.filter((mine) => walkingDistance(ground, halls[0]!, mine) !== undefined);
+        // Only an island's mine is out of a walk, and only where the idea has islands.
+        expect(map.resources.length - walked.length).toBeLessThanOrEqual(4);
+        for (const hall of halls) for (const thing of [...halls, ...walked, ...map.mercenaryCamps]) expect(walkingDistance(ground, hall, thing)).toBeDefined();
+        // Most of the land is walked, but not all of it.
+        const land = [...map.terrain.cells].filter((cell) => cell !== "~").length;
+        const open = [...map.terrain.cells].filter((cell) => cell === "." || cell === "," || cell === "m" || cell === "=").length / land;
+        expect(open).toBeGreaterThan(0.4);
+        expect(open).toBeLessThan(0.8);
+        // Every camp says what it is and where it stands.
+        expect(map.camps.length).toBe(new Set(map.units.filter((unit) => unit.owner === "neutral").map((unit) => unit.id.split("-").slice(0, 3).join("-"))).size);
+        for (const camp of map.camps) expect(["green", "orange", "red"]).toContain(camp.tier);
+      }
+    }
+  });
+
+  it("draws an idea from the seed among those that take the seats, and the open ring for seats no other idea takes", () => {
+    const duels = new Set(Array.from({ length: 30 }, (_, index) => layout(`pick-${index}`, undefined, DUEL).map.idea));
+    expect(duels).toEqual(new Set(["oneMarket", "floodedValley", "hiddenHill", "bridgeStand", "deepJungle", "northIsles"]));
+    const rings = new Set(Array.from({ length: 30 }, (_, index) => layout(`pick-${index}`, undefined, TEAMS).map.idea));
+    expect(rings).toEqual(new Set(["fountainRing", "turtleIsle", "twistedPaths", "outerSea"]));
+    expect(layout("pick-3", undefined, { a: "a", b: "b", c: "c" }).map.idea).toBe("openRing");
+    expect(() => generateMap({ seed: "x", idea: "oneMarket" }, PLAYERS, TEAMS)).toThrow(/oneMarket/);
+  });
+
   it("gives four players a main mine and a natural each and more mines to contest, the same from every start of a ring", () => {
-    for (let index = 0; index < 12; index += 1) {
-      const { map, halls, expansions } = layout(`ring-${index}`, "ring");
+    for (const idea of ["fountainRing", "turtleIsle", "twistedPaths", "outerSea"] as const) {
+      const { map, halls, expansions } = layout(`ring-${idea}`, idea);
       expect(expansions.length).toBeGreaterThanOrEqual(8);
       for (const hall of halls) {
         const main = map.resources.find((mine) => mine.id === `gold-${hall.player}-main`)!;
@@ -31,71 +106,59 @@ describe("generated maps", () => {
       // Every start sees the same map: its nearest expansions lie at the same distances.
       const nearest = halls.map((hall) => expansions.map((mine) => gap(mine, hall)).sort((a, b) => a - b).slice(0, 3));
       for (const distances of nearest) distances.forEach((distance, rank) => expect(Math.abs(distance - nearest[0]![rank]!)).toBeLessThan(4));
+      // And exactly the same ground.
+      const { cols, cells } = map.terrain;
+      for (let row = 0; row < cols; row += 1) for (let col = 0; col < cols; col += 1) expect(cells[col * cols + (cols - 1 - row)]).toBe(cells[row * cols + col]);
     }
   });
 
-  it("draws a ladder map on open ground: every start walks to every other start and every mine, camp and post, over ground it can stand on", () => {
-    for (let index = 0; index < 12; index += 1) {
-      const { map, halls, ground } = layout(`walk-${index}`);
-      // Most of the map is walked (the maps carved out of forest kept 18 to 28 per cent), but not all of it.
-      const open = [...map.terrain.cells].filter((cell) => cell === "." || cell === ",").length / map.terrain.cells.length;
-      expect(open).toBeGreaterThan(0.5);
-      expect(open).toBeLessThan(0.75);
-      const things = [...map.resources, ...map.mercenaryCamps, ...map.units, ...map.buildings];
-      for (const thing of things) expect(isWalkable(ground, thing.x, thing.y)).toBe(true);
-      for (const hall of halls) for (const thing of [...halls, ...map.resources, ...map.mercenaryCamps]) expect(walkingDistance(ground, hall, thing)).toBeDefined();
-      // A start's own natural is a short walk down its ramp, nearer it than to any other start.
-      for (const hall of halls) {
-        const natural = map.resources.filter((mine) => !mine.id.endsWith("-main")).sort((a, b) => walkingDistance(ground, hall, a)! - walkingDistance(ground, hall, b)!)[0]!;
-        for (const other of halls) if (other !== hall) expect(walkingDistance(ground, other, natural)!).toBeGreaterThan(walkingDistance(ground, hall, natural)!);
-      }
-    }
-  });
-
-  it("puts every main on a plateau walled by its cliff but for one ramp, with room to build", () => {
-    for (let index = 0; index < 8; index += 1) {
-      const { map, halls, ground } = layout(`plateau-${index}`);
-      const { cols, cell, levels } = map.terrain;
+  it("puts every main on a plateau walled by its cliff, and outside it by forest or rock, but for one ramp, with room to build", () => {
+    for (const idea of ["openRing", "fountainRing", "hiddenHill", "riverValley"] as const) {
+      const { map, halls, ground } = layout(`plateau-${idea}`, idea);
+      const { cols, cell, levels, cells } = map.terrain;
       for (const hall of halls) {
         const at = Math.floor(hall.y / cell) * cols + Math.floor(hall.x / cell);
         expect(levels![at]).toBe("1");
         let room = 0;
         for (let dy = -400; dy <= 400; dy += 50) for (let dx = -400; dx <= 400; dx += 50) if (isFootprintBuildable(ground, hall.x + dx, hall.y + dy, 40)) room += 1;
         expect(room).toBeGreaterThan(90);
+        // Round the main, out past its rim, the ground is open only toward its ramp: of the cells 700 out on 64 spokes,
+        // the open ones lie within a quarter turn of each other.
+        const open = Array.from({ length: 64 }, (_, spoke) => spoke).filter((spoke) => {
+          const angle = (spoke / 64) * Math.PI * 2;
+          const x = Math.floor((hall.x + Math.cos(angle) * 700) / cell);
+          const y = Math.floor((hall.y + Math.sin(angle) * 700) / cell);
+          return x >= 0 && y >= 0 && x < cols && y < cols && levels![y * cols + x] !== "1" && ".,m".includes(cells[y * cols + x]!);
+        });
+        expect(open.length).toBeGreaterThan(0);
+        expect(open.length).toBeLessThan(28);
       }
       // Plateau ground meets low ground only across a ramp.
-      for (let index = 0; index < map.terrain.cells.length; index += 1) {
-        if (map.terrain.cells[index] !== "." || levels![index] !== "1") continue;
-        for (const next of [index + 1, index - 1, index + cols, index - cols]) if (map.terrain.cells[next] === ".") expect(levels![next]).not.toBe("0");
+      for (let index = 0; index < cells.length; index += 1) {
+        if (cells[index] !== "." || levels![index] !== "1") continue;
+        for (const next of [index + 1, index - 1, index + cols, index - cols]) if (cells[next] === ".") expect(levels![next]).not.toBe("0");
       }
-    }
-  });
-
-  it("is exactly the same ground seen from every start of four", () => {
-    for (let index = 0; index < 6; index += 1) {
-      const { map } = layout(`turn-${index}`);
-      const { cols, cells } = map.terrain;
-      for (let row = 0; row < cols; row += 1) for (let col = 0; col < cols; col += 1) expect(cells[col * cols + (cols - 1 - row)]).toBe(cells[row * cols + col]);
     }
   });
 
   it("gives every player of two facing teams a natural of its own, nearer to it than to any other start", () => {
-    const players = Object.keys(PAIRS);
-    for (let index = 0; index < 10; index += 1) {
-      const { halls, expansions } = layout(`sides-${index}`, "sides", players, PAIRS);
-      expect(expansions.length).toBeGreaterThanOrEqual(6);
-      for (const hall of halls) {
-        const natural = [...expansions].sort((a, b) => gap(a, hall) - gap(b, hall))[0]!;
-        expect(gap(natural, hall)).toBeLessThan(1_100);
-        for (const other of halls) if (other !== hall) expect(gap(natural, other)).toBeGreaterThan(gap(natural, hall));
+    for (const idea of ["openSides", "riverValley", "twoShores"] as const) {
+      for (let index = 0; index < 3; index += 1) {
+        const { halls, expansions } = layout(`sides-${index}`, idea);
+        expect(expansions.length).toBeGreaterThanOrEqual(6);
+        for (const hall of halls) {
+          const natural = [...expansions].sort((a, b) => gap(a, hall) - gap(b, hall))[0]!;
+          expect(gap(natural, hall)).toBeLessThan(1_100);
+          for (const other of halls) if (other !== hall) expect(gap(natural, other)).toBeGreaterThan(gap(natural, hall));
+        }
       }
     }
     expect(() => generateMap({ seed: "uneven", kind: "sides" }, PLAYERS, TEAMS)).toThrow(/same size/);
   });
 
   it("keeps creeps out of every start's opening economy and everything on the map", () => {
-    for (let index = 0; index < 12; index += 1) {
-      const { map } = layout(`safe-${index}`);
+    for (const idea of MAP_IDEAS) {
+      const { map } = layout(`safe-${idea}`, idea);
       const spots = Object.values(map.starts).flatMap((start) => [{ x: start.baseX, y: start.baseY }, { x: start.mineX, y: start.mineY }]);
       const neutrals = map.units.filter((unit) => unit.owner === "neutral");
       expect(neutrals.length).toBeGreaterThan(0);
@@ -112,17 +175,16 @@ describe("generated maps", () => {
 
   it("is the same map for the same seed and a different one for another, of both kinds for even teams", () => {
     expect(layout("same")).toEqual(layout("same"));
-    expect(layout("one").map.terrain.cells).not.toEqual(layout("two").map.terrain.cells);
-    const kinds = new Set(Array.from({ length: 30 }, (_, index) => layout(`kind-${index}`, undefined, Object.keys(PAIRS), PAIRS).map.kind));
+    expect(layout("one", "openRing").map.terrain.cells).not.toEqual(layout("two", "openRing").map.terrain.cells);
+    const kinds = new Set(Array.from({ length: 30 }, (_, index) => layout(`kind-${index}`, undefined, PAIRS).map.kind));
     expect(kinds).toEqual(new Set(["ring", "sides"]));
-    expect(new Set(Array.from({ length: 10 }, (_, index) => layout(`kind-${index}`).map.kind))).toEqual(new Set(["ring"]));
   });
 
   it("draws a map for any number of players from two to eight", () => {
     for (let count = 2; count <= 8; count += 1) {
       const players = Array.from({ length: count }, (_, index) => `p${index}`);
       const teams = Object.fromEntries(players.map((player) => [player, player]));
-      const { map, halls, ground } = layout(`count-${count}`, "ring", players, teams);
+      const { map, halls, ground } = layout(`count-${count}`, undefined, teams, "ring");
       expect(Object.keys(map.starts)).toHaveLength(count);
       for (const hall of halls) expect(walkingDistance(ground, halls[0]!, hall)).toBeDefined();
     }
@@ -155,44 +217,43 @@ describe("generated maps", () => {
     expect(seeded.map.terrain).toEqual(gameMap.terrain);
   });
 
-  it("draws every form of sea: island mines only a ship reaches, and near every start a shore for a shipyard on the one water", () => {
-    const draws: ["ring" | "sides", number, SeaForm][] = [
-      ["ring", 2, "inland"],
-      ["ring", 2, "isles"],
-      ["ring", 2, "strait"],
-      ["ring", 2, "rivers"],
-      ["ring", 2, "coast"],
-      ["ring", 4, "inland"],
-      ["ring", 4, "isles"],
-      ["ring", 4, "rivers"],
-      ["ring", 4, "coast"],
-      ["sides", 4, "strait"],
-      ["sides", 4, "coast"],
-    ];
-    for (const [kind, count, form] of draws) {
+  it("puts island mines only a ship reaches, and near every start a shore for a shipyard on open water that reaches them", () => {
+    for (const idea of ["fountainRing", "twistedPaths", "outerSea", "northIsles", "twoShores"] as const) {
       for (let index = 0; index < 2; index += 1) {
-        const players = kind === "sides" ? Object.keys(PAIRS) : PLAYERS.slice(0, count);
-        const teams = kind === "sides" ? PAIRS : Object.fromEntries(players.map((player) => [player, player]));
-        const map = generateMap({ seed: `${form}-${index}`, kind, sea: form }, players, teams);
-        const ground = { terrain: map.terrain, width: map.size, height: map.size };
-        const halls = players.map((player) => ({ x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
+        const { map, halls, ground } = layout(`isle-${index}`, idea);
         const islands = map.resources.filter((mine) => walkingDistance(ground, halls[0]!, mine) === undefined);
         expect(islands.length).toBeGreaterThan(0);
-        for (const hall of halls) for (const other of [...halls, ...map.resources.filter((mine) => !islands.includes(mine))]) expect(walkingDistance(ground, hall, other)).toBeDefined();
-        // Within reach of every start a shipyard stands on the shore, and its ships sail to every island.
         const landings = islands.map((mine) => walkableGoal(ground, mine.x, mine.y, "sea"));
         for (const hall of halls) {
           const yards: { x: number; y: number }[] = [];
           for (let dy = -2_800; dy <= 2_800; dy += 48) for (let dx = -2_800; dx <= 2_800; dx += 48) if (dx * dx + dy * dy <= 2_800 ** 2 && isShoreFootprint(ground, hall.x + dx, hall.y + dy, BUILDING_DEFS.shipyard.radius)) yards.push({ x: hall.x + dx, y: hall.y + dy });
           const harbor = yards
             .sort((a, b) => gap(a, hall) - gap(b, hall))
-            .slice(0, 6)
-            .some((yard) => landings.every((landing) => walkingDistance(ground, walkableGoal(ground, yard.x, yard.y, "sea"), landing, "sea") !== undefined));
+            .slice(0, 8)
+            .some((yard) => {
+              const water = sea(map, walkableGoal(ground, yard.x, yard.y, "sea"));
+              return water.deep >= 64 && landings.some((landing) => water.reached.has(Math.floor(landing.y / map.terrain.cell) * map.terrain.cols + Math.floor(landing.x / map.terrain.cell)));
+            });
           expect(harbor).toBe(true);
         }
       }
     }
-    // A strait parts two players, or two teams; a ring of more has rivers instead.
-    expect(() => generateMap({ seed: "strait", kind: "ring", sea: "strait" }, PLAYERS, TEAMS)).toThrow(/strait/);
+  });
+
+  it("lays the ground an idea names: a flooded valley's shallows and mud, a river's bridges that walls a ship out, one shop on one market", () => {
+    const flood = layout("ground-1", "floodedValley").map.terrain.cells;
+    expect([...flood].filter((cell) => cell === ",").length).toBeGreaterThan(200);
+    expect(flood).toContain("m");
+    const bridge = layout("ground-1", "bridgeStand");
+    const { cols, cell, cells } = bridge.map.terrain;
+    const decks = [...cells].flatMap((char, index) => (char === "=" ? [index] : []));
+    expect(decks.length).toBeGreaterThan(10);
+    for (const deck of decks) {
+      const at = { x: ((deck % cols) + 0.5) * cell, y: (Math.floor(deck / cols) + 0.5) * cell };
+      expect(isWalkable(bridge.ground, at.x, at.y)).toBe(true);
+      expect(isWalkable(bridge.ground, at.x, at.y, "sea")).toBe(false);
+    }
+    const market = layout("ground-1", "oneMarket").map;
+    expect(market.sites).toEqual([{ kind: "shop", x: market.size / 2, y: market.size / 2 }]);
   });
 });

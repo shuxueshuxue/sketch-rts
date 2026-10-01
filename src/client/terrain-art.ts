@@ -3,10 +3,11 @@ import { createScratchCanvas } from "./art/scratch-canvas";
 import { drawAtlasTree } from "./atlas-art";
 import type { Terrain } from "../shared/terrain";
 
-// @@@terrain-art - The ground a unit cannot cross (see @@@terrain), painted in the atlas's ink over its paper: forest as
-// tree crowns packed on a dark floor, rock as inked stones with a shaded face where a plateau drops away, deep water as
-// a wash inside a sandy shore, a plateau a shade lighter than the ground below with steps on its ramp. The map is painted
-// in square chunks once (a few hundred trees each) and kept, so a frame only lays down the chunks in view.
+// @@@terrain-art - The ground a unit cannot cross or crosses slowly (see @@@terrain), painted in the atlas's ink over its
+// paper: forest as tree crowns packed on a dark floor, rock as inked stones with a shaded face where a plateau drops away,
+// deep water as a wash inside a sandy shore, mud as a brown wash flecked darker, a bridge as planked deck over the water
+// laid across its way, a plateau a shade lighter than the ground below with steps on its ramp. The map is painted in
+// square chunks once (a few hundred trees each) and kept, so a frame only lays down the chunks in view.
 
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
@@ -21,6 +22,10 @@ const WATER = "#8db4ad";
 const WATER_DEEP = "#7aa39f";
 const PLATEAU = "#f4efd9";
 const RAMP = "#e6dcc0";
+const MUD = "#c2ab84";
+const MUD_DARK = "#a48d66";
+const DECK = "#b88e5c";
+const DECK_INK = "#7c5a36";
 
 type Cache = { chunks: Map<string, HTMLCanvasElement>; minimap?: HTMLCanvasElement };
 const caches = new WeakMap<Terrain, Cache>();
@@ -72,7 +77,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
       const level = terrain.levels?.[row * terrain.cols + start];
       const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
       if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#4d6b50" : kind === "#" ? "#8b8a74" : kind === "~" ? "#6f9c9a" : kind === "," ? "#a9c6bd" : level === "1" ? "#ece6c9" : undefined;
+      const color = kind === "T" ? "#4d6b50" : kind === "#" ? "#8b8a74" : kind === "~" ? "#6f9c9a" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#ece6c9" : undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);
@@ -98,7 +103,11 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const levelAt = (col: number, row: number) => (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? "0" : terrain.levels?.[row * terrain.cols + col] ?? "0");
   const walkable = (col: number, row: number) => {
     const kind = kindAt(col, row);
-    return kind === "." || kind === ",";
+    return kind === "." || kind === "," || kind === "m" || kind === "=";
+  };
+  const wet = (col: number, row: number) => {
+    const kind = kindAt(col, row);
+    return kind === "~" || kind === ",";
   };
   const cells = (visit: (col: number, row: number, x: number, y: number) => void) => {
     for (let row = low.row; row <= high.row; row += 1) for (let col = low.col; col <= high.col; col += 1) visit(col, row, (col + 0.5) * size, (row + 0.5) * size);
@@ -141,6 +150,48 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== ",") return;
     ellipse(b, x, y, size * 0.7, size * 0.7, "#b9d0c299");
+  });
+
+  // Mud: a brown wash, flecked darker, its edge soft.
+  cells((col, row, x, y) => {
+    if (kindAt(col, row) !== "m") return;
+    ellipse(b, x, y, size * 0.85, size * 0.85, MUD);
+  });
+  cells((col, row, x, y) => {
+    if (kindAt(col, row) !== "m") return;
+    for (let fleck = 0; fleck < 3; fleck += 1) {
+      if (jitter(col, row, 30 + fleck) < 0.4) continue;
+      ellipse(b, x + (jitter(col, row, 40 + fleck) - 0.5) * size * 0.8, y + (jitter(col, row, 50 + fleck) - 0.5) * size * 0.8, size * 0.14, size * 0.08, MUD_DARK);
+    }
+  });
+
+  // A bridge: water under it, then its deck, the planks laid across the way it carries (the way runs where its neighbours
+  // are dry, not over the water either side).
+  cells((col, row, x, y) => {
+    if (kindAt(col, row) !== "=") return;
+    ellipse(b, x, y, size * 0.8, size * 0.8, WATER);
+  });
+  cells((col, row, x, y) => {
+    if (kindAt(col, row) !== "=") return;
+    let wayX = 0;
+    let wayY = 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] as const) {
+      if (wet(col + dx, row + dy)) continue;
+      // Folded onto one half, so the neighbours either end of the way add up instead of cancelling.
+      const flip = dx < 0 || (dx === 0 && dy < 0) ? -1 : 1;
+      wayX += dx * flip;
+      wayY += dy * flip;
+    }
+    const length = Math.hypot(wayX, wayY) || 1;
+    const ux = wayX / length;
+    const uy = wayY / length;
+    const half = size * 0.56;
+    polygon(b, [[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], DECK, "transparent", 0);
+    for (const offset of [-0.33, 0, 0.33]) {
+      const cx = x + ux * offset * size;
+      const cy = y + uy * offset * size;
+      line(b, [[cx - uy * half, cy + ux * half], [cx + uy * half, cy - ux * half]], DECK_INK, 1);
+    }
   });
 
   // Rock: stones, with a shaded face on the side a plateau drops away (and on the south side of any outcrop).

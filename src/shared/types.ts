@@ -276,15 +276,28 @@ export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-
 
 // A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
 export type GeneratedLayoutKind = "ring" | "sides";
-// The forms a map's sea takes (see @@@generated-sea).
-export type SeaForm = "inland" | "isles" | "strait" | "rivers" | "coast";
+// The ideas a generated map is drawn on (see @@@generated-ideas; MAP_IDEAS lists them).
+export type MapIdea =
+  | "openRing"
+  | "openSides"
+  | "fountainRing"
+  | "turtleIsle"
+  | "twistedPaths"
+  | "outerSea"
+  | "oneMarket"
+  | "floodedValley"
+  | "hiddenHill"
+  | "bridgeStand"
+  | "deepJungle"
+  | "northIsles"
+  | "riverValley"
+  | "twoShores";
 export type GeneratedLayoutOptions = {
   seed: string;
-  // Drawn from the seed when absent; "sides" needs exactly two teams.
+  // Drawn from the seed (or the idea) when absent; "sides" needs exactly two teams.
   kind?: GeneratedLayoutKind;
-  // A sea ships sail, in the form named, with a shore for every player (see @@@generated-sea); true, the seed picks a form
-  // the layout takes; absent, the map has none.
-  sea?: boolean | SeaForm;
+  // Drawn from the seed when absent, among the ideas that take the kind and the seats.
+  idea?: MapIdea;
   // The map's side, one of the sizes the generator draws for the kind and player count; drawn from the seed when absent.
   size?: number;
 };
@@ -372,9 +385,32 @@ export type GameMap = {
   terrain?: Terrain;
 };
 
+// Scenery for the eye only: no unit is stopped or slowed by any of it. A generated map dresses its ground in the small kinds
+// (see @@@generated-decor).
 export type TerrainLandmark = {
   id: string;
-  kind: "grove" | "ridge" | "ruin" | "ditch" | "road" | "campMark" | "mineScar" | "bannerStone";
+  kind:
+    | "grove"
+    | "ridge"
+    | "ruin"
+    | "ditch"
+    | "road"
+    | "campMark"
+    | "mineScar"
+    | "bannerStone"
+    | "flowers"
+    | "bush"
+    | "stump"
+    | "log"
+    | "mushrooms"
+    | "pebbles"
+    | "bones"
+    | "reeds"
+    | "lilies"
+    | "wreck"
+    | "campfire"
+    | "signpost"
+    | "pillar";
   x: number;
   y: number;
   size: number;

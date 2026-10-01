@@ -129,12 +129,102 @@ export function drawAtlasLandmark(c: Brush, landmark: TerrainLandmark, point: Po
     c.lineWidth = 1; c.strokeStyle = river ? "#e0e4c9a6" : "#a7967433"; c.stroke();
   } else if (landmark.kind === "mineScar") {
     for (let i = 0; i < 6; i++) { const x = (i - 2.5) * 14; polygon(c, [[x, 8], [x + 5, -8 - (i % 3) * 5], [x + 12, 5]], "#c3b78c", "#a79f7d", 0.7); }
+  } else if (isDecor(landmark.kind)) {
+    drawDecor(c, landmark.kind, size, landmark.rotation);
   } else {
     // Camp markers remain subtle so they cannot be mistaken for live entities.
     ellipse(c, 0, 0, size * 0.26, size * 0.12, "#a18b5c12", "#9d987d55");
     line(c, [[-9, 4], [0, -9], [9, 4]], "#8b8b6c66", 1);
   }
   c.restore();
+}
+
+// @@@decor-art - The small scenery a generated map is dressed in (see @@@generated-decor), each sized to its landmark's
+// size and turned by its rotation where it has a way to face; drawn faint enough that nothing reads as a unit.
+type DecorKind = "flowers" | "bush" | "stump" | "log" | "mushrooms" | "pebbles" | "bones" | "reeds" | "lilies" | "wreck" | "campfire" | "signpost" | "pillar";
+const DECOR_KINDS: readonly string[] = ["flowers", "bush", "stump", "log", "mushrooms", "pebbles", "bones", "reeds", "lilies", "wreck", "campfire", "signpost", "pillar"];
+
+function isDecor(kind: TerrainLandmark["kind"]): kind is DecorKind {
+  return DECOR_KINDS.includes(kind);
+}
+
+function drawDecor(c: Brush, kind: DecorKind, size: number, rotation: number) {
+  const s = size;
+  // A fixed spread of a few points round the middle, the same every frame.
+  const spot = (i: number, reach: number) => [Math.cos(i * 2.4 + rotation) * s * reach * Math.sqrt((i + 1) / 7), Math.sin(i * 2.4 + rotation) * s * reach * 0.6 * Math.sqrt((i + 1) / 7)] as const;
+  if (kind === "flowers") {
+    for (let i = 0; i < 7; i++) {
+      const [x, y] = spot(i, 0.42);
+      line(c, [[x, y + s * 0.06], [x, y]], "#6f8a5a", 1);
+      ellipse(c, x, y, s * 0.05, s * 0.04, ["#e8a6b4", "#f2d27a", "#f4f0e2", "#c9a6e0"][i % 4]!, "#9a8a6a80");
+    }
+  } else if (kind === "bush") {
+    for (let i = 0; i < 3; i++) ellipse(c, (i - 1) * s * 0.16, -Math.abs(i - 1) * s * 0.04 - s * 0.06, s * 0.17, s * 0.13, i === 1 ? "#6f8f62" : "#5f7f55", "#4c6a45");
+  } else if (kind === "stump") {
+    polygon(c, [[-s * 0.13, 0], [-s * 0.12, -s * 0.12], [s * 0.12, -s * 0.12], [s * 0.13, 0]], "#8a6a46", "#5e4630", 1);
+    ellipse(c, 0, -s * 0.12, s * 0.12, s * 0.055, "#c9a878", "#5e4630");
+    ellipse(c, 0, -s * 0.12, s * 0.05, s * 0.022, "transparent", "#8a6a4680");
+  } else if (kind === "log") {
+    c.rotate(rotation);
+    polygon(c, [[-s * 0.32, -s * 0.06], [s * 0.3, -s * 0.07], [s * 0.3, s * 0.06], [-s * 0.32, s * 0.07]], "#8a6a46", "#5e4630", 1);
+    ellipse(c, s * 0.3, 0, s * 0.045, s * 0.065, "#c9a878", "#5e4630");
+    line(c, [[-s * 0.2, -s * 0.02], [s * 0.15, -s * 0.03]], "#5e463080", 1);
+  } else if (kind === "mushrooms") {
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = spot(i, 0.25);
+      line(c, [[x, y], [x, y - s * 0.07]], "#efe6cf", 2);
+      polygon(c, [[x - s * 0.06, y - s * 0.06], [x, y - s * 0.12], [x + s * 0.06, y - s * 0.06]], i % 2 ? "#b8573f" : "#9b7a4c", "#5e3a2a", 0.8);
+    }
+  } else if (kind === "pebbles") {
+    for (let i = 0; i < 6; i++) {
+      const [x, y] = spot(i, 0.36);
+      ellipse(c, x, y, s * (0.035 + (i % 3) * 0.015), s * (0.025 + (i % 2) * 0.01), i % 2 ? "#b9b6a0" : "#a3a08b", "#7d7a6680");
+    }
+  } else if (kind === "bones") {
+    c.rotate(rotation);
+    for (const turn of [0.5, -0.5]) {
+      const dx = Math.cos(turn) * s * 0.18;
+      const dy = Math.sin(turn) * s * 0.18;
+      line(c, [[-dx, -dy], [dx, dy]], "#ece5cf", 3);
+      for (const end of [-1, 1]) ellipse(c, end * dx, end * dy, s * 0.03, s * 0.03, "#ece5cf", "#a49c84");
+    }
+  } else if (kind === "reeds") {
+    for (let i = 0; i < 8; i++) {
+      const x = (i - 3.5) * s * 0.06 + Math.sin(i * 3.1) * s * 0.02;
+      const h = s * (0.18 + (i % 3) * 0.06);
+      line(c, [[x, 0], [x + Math.sin(i + rotation) * s * 0.03, -h]], "#6f8a5a", 1.2);
+      if (i % 3 === 0) ellipse(c, x + Math.sin(i + rotation) * s * 0.03, -h, s * 0.015, s * 0.04, "#7a5a3a");
+    }
+  } else if (kind === "lilies") {
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = spot(i, 0.35);
+      polygon(c, [[x, y], [x + s * 0.07, y - s * 0.02], [x + s * 0.05, y + s * 0.04], [x - s * 0.05, y + s * 0.04], [x - s * 0.07, y - s * 0.02]], "#7fa36a", "#5f7f55", 0.6);
+    }
+    ellipse(c, 0, -s * 0.01, s * 0.03, s * 0.025, "#f0b8c8", "#c08a9a");
+  } else if (kind === "wreck") {
+    c.rotate(rotation);
+    polygon(c, [[-s * 0.32, -s * 0.02], [-s * 0.18, s * 0.09], [s * 0.24, s * 0.08], [s * 0.34, -s * 0.05], [s * 0.1, -s * 0.02], [-s * 0.05, -s * 0.09]], "#7d5c3c", "#4f3a26", 1);
+    for (const x of [-0.15, 0, 0.15]) line(c, [[x * s, -s * 0.06], [x * s + s * 0.02, s * 0.07]], "#4f3a2690", 1);
+    line(c, [[s * 0.02, -s * 0.04], [-s * 0.08, -s * 0.3]], "#5e4630", 2);
+  } else if (kind === "campfire") {
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2;
+      ellipse(c, Math.cos(a) * s * 0.1, Math.sin(a) * s * 0.06, s * 0.03, s * 0.022, "#a3a08b", "#6f6c5a");
+    }
+    polygon(c, [[-s * 0.05, 0], [-s * 0.02, -s * 0.12], [0, -s * 0.06], [s * 0.025, -s * 0.15], [s * 0.05, 0]], "#e8873a", "#b4562a", 0.8);
+    polygon(c, [[-s * 0.02, 0], [0, -s * 0.07], [s * 0.02, 0]], "#f6d36a", "transparent", 0);
+  } else if (kind === "signpost") {
+    line(c, [[0, 0], [0, -s * 0.32]], "#6e5236", 2.4);
+    polygon(c, [[0, -s * 0.3], [s * 0.2, -s * 0.3], [s * 0.25, -s * 0.26], [s * 0.2, -s * 0.22], [0, -s * 0.22]], "#b88e5c", "#6e5236", 1);
+    polygon(c, [[0, -s * 0.18], [-s * 0.18, -s * 0.18], [-s * 0.23, -s * 0.14], [-s * 0.18, -s * 0.1], [0, -s * 0.1]], "#a87e4e", "#6e5236", 1);
+  } else {
+    const broken = Math.sin(rotation * 7) > 0;
+    const top = broken ? -s * 0.24 : -s * 0.38;
+    ellipse(c, 0, 0, s * 0.11, s * 0.04, "#7a8b6830");
+    polygon(c, [[-s * 0.07, 0], [-s * 0.07, top], [s * 0.07, broken ? top + s * 0.04 : top], [s * 0.07, 0]], "#c9c7ac", "#8a8d74", 1);
+    if (!broken) polygon(c, [[-s * 0.1, top], [-s * 0.1, top - s * 0.04], [s * 0.1, top - s * 0.04], [s * 0.1, top]], "#d8d5ba", "#8a8d74", 1);
+    line(c, [[-s * 0.02, -s * 0.03], [-s * 0.02, top + s * 0.03]], "#8a8d7470", 1);
+  }
 }
 
 export function drawAtlasMine(c: Brush, point: Point) {

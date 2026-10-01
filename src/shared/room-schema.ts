@@ -1,5 +1,5 @@
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
-import { isMapId } from "./map-ids";
+import { isMapId, isMapIdea } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
 import { ROOM_AI_VERSIONS, type CreateRoomInput, type SlotPatch } from "./rooms";
 import type { BuildingKind, GameSetupOptions, GeneratedLayoutOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
@@ -141,13 +141,13 @@ export function parseGameSetupOptions(value: unknown): GameSetupOptions | undefi
   return options;
 }
 
-// A generated layout (see @@@generated-map): its seed, and its kind, sea and size when given.
+// A generated layout (see @@@generated-map): its seed, and its kind, idea and size when given.
 function parseLayout(value: unknown): GeneratedLayoutOptions | undefined {
   if (!isRecord(value) || typeof value.seed !== "string") return undefined;
   if (value.kind !== undefined && value.kind !== "ring" && value.kind !== "sides") return undefined;
-  if (value.sea !== undefined && typeof value.sea !== "boolean") return undefined;
+  if (value.idea !== undefined && !isMapIdea(value.idea)) return undefined;
   if (value.size !== undefined && (typeof value.size !== "number" || !Number.isInteger(value.size) || value.size <= 0)) return undefined;
-  return { seed: value.seed, ...(value.kind ? { kind: value.kind } : {}), ...(value.sea !== undefined ? { sea: value.sea } : {}), ...(value.size !== undefined ? { size: value.size } : {}) };
+  return { seed: value.seed, ...(value.kind ? { kind: value.kind } : {}), ...(value.idea !== undefined ? { idea: value.idea } : {}), ...(value.size !== undefined ? { size: value.size } : {}) };
 }
 
 export function parseSlotPatch(value: unknown): SlotPatch | undefined {

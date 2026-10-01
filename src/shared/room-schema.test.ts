@@ -46,8 +46,9 @@ describe("shared room setup schema", () => {
       options: { aiPlayers: ["enemy"], races: { player: "grove", enemy: "ember" } },
     });
     expect(parseResetRoomRequest({ mapId: "missing", options: {} })).toBeUndefined();
-    // A generated layout goes through as asked, a sea map's included (see @@@generated-sea).
-    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "isle2-f", sea: true } } });
+    // A generated layout goes through as asked, its idea included (see @@@generated-ideas); an idea there is none of is not.
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "northIsles" } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "northIsles" } } });
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "archipelago" } } })).toBeUndefined();
     expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", kind: "square" } } })).toBeUndefined();
     expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } });
     expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", size: "big" } } })).toBeUndefined();

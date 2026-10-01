@@ -684,7 +684,7 @@ function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[]) {
   root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
   root.querySelector("[data-map-facts]")!.innerHTML = [
     [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
-    ...(layout ? [[t("map.fact.layout"), t(layout.sea ? "map.kind.sea" : layout.kind === "sides" ? "map.kind.sides" : "map.kind.ring")]] : []),
+    ...(layout?.idea ? [[t("map.fact.layout"), t(`map.idea.${layout.idea}`)]] : []),
     [t("map.fact.size"), `${facts.size} × ${facts.size}`],
     [t("map.fact.mines"), facts.mines],
     [t("map.fact.camps"), facts.camps],
