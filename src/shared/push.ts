@@ -19,11 +19,13 @@ export const STAND_SPEED = 6;
 // @@@melee-stances - How a melee fighter (not a worker) lands its blow. pursue, the default, is the plain blow of before,
 // and it stays the all-round and best-value choice: a player who never switches loses nothing, and the two stances pay off
 // only where they fit. brace: the blow shoves the target back by KNOCKBACK times the damage over the target's full
-// health, never its health left (a lancer's 18 on a footman's 145 is 53, a golem's 34 on an 85-health spirit 171), for a
+// health, never its health left (a lancer's 18 on a footman's 145 is 53, a knight's 24 on it 71), at most MAX_SHOVE, for a
 // tenth less damage. shock: the blow shoves the target as brace's does and the striker lunges after it (see
 // lungeStrength); a fighter in shock takes a tenth more damage from everything. At 1280 a lancer's blow threw a footman
 // 159 and everything flew; at a fifth less damage brace lost every way it was used.
 export const KNOCKBACK = 427;
+// About two bodies: a golem's 34 on an 85-health spirit came to 171, and the spirit seemed to fly off on its own.
+export const MAX_SHOVE = 80;
 export const BRACE_DAMAGE_SHARE = 0.9;
 export const SHOCK_DAMAGE_TAKEN = 1.1;
 // The lunge's average speed is at most this many times the striker's own walking speed.
@@ -71,7 +73,7 @@ export function shove(unit: Unit, dx: number, dy: number, strength: number) {
 
 // The shove of a blow that dealt this damage (see @@@melee-stances).
 export function blowStrength(damage: number, target: Unit) {
-  return (KNOCKBACK * damage) / Math.max(1, target.maxHp);
+  return Math.min(MAX_SHOVE, (KNOCKBACK * damage) / Math.max(1, target.maxHp));
 }
 
 // @@@shock-lunge - How far a striker in shock lunges after a blow that shoves its target this far: never further than the

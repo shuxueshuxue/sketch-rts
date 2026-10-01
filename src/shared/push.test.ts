@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isGameCommand } from "./command-schema";
-import { BRACE_DAMAGE_SHARE, LUNGE_PACE, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, STAND_SPEED, blowStrength, isStaggered, lungeStrength, pushSpeed, pushedSpeed, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, LUNGE_PACE, MAX_SHOVE, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, STAND_SPEED, blowStrength, isStaggered, lungeStrength, pushSpeed, pushedSpeed, shove, slide } from "./push";
 import { createGame, issueCommand, issuePlayerCommand, snapshotGame, stepGame } from "./sim";
 import { checkCommandLegality } from "./sim/command-validation";
 import type { Terrain } from "./terrain";
@@ -192,11 +192,13 @@ describe("melee stances", () => {
       const time = Math.sqrt((2 * lunge) / PUSH_FRICTION);
       expect(lunge / time).toBeLessThanOrEqual(LUNGE_PACE * striker.speed + 1e-9);
     }
-    // A golem's blow throws a spirit 171; the golem, at 2.1 a tick, lunges 18 after it.
+    // A golem's blow throws a spirit no further than MAX_SHOVE (171 by the share alone); the golem, at 2.1 a tick, lunges
+    // 18 after it.
     const game = field();
     const golem = game.spawnUnit("player", "golem", 1000, 1000);
     const spirit = game.spawnUnit("enemy", "spirit", 1050, 1000);
-    expect(blowStrength(golem.attackDamage, spirit)).toBeCloseTo(171, 0);
+    expect(blowStrength(golem.attackDamage, spirit)).toBe(MAX_SHOVE);
+    expect(blowStrength(18, game.spawnUnit("enemy", "footman", 1050, 1100))).toBeCloseTo(53, 0);
     expect(lungeStrength(golem, blowStrength(golem.attackDamage, spirit))).toBeCloseTo(17.6, 1);
   });
 
