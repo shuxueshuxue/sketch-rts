@@ -10,20 +10,31 @@ export type RaceId = "grove" | "ember";
 // building that trains it.
 export type UnitKind = keyof typeof UNIT_RULES;
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
+// The creep families of the camp templates (see shared/camps.ts).
+export type CreepFamilyUnitKind =
+  | "murlocPeon" | "murlocHunter" | "tidePriest" | "deepSnapper"
+  | "rubbleGolem" | "rockGolem" | "graniteGolem"
+  | "ogreWarrior" | "ogreMage" | "ogreLord"
+  | "spiderling" | "venomSpider" | "spiderQueen"
+  | "dragonWhelp" | "redDragon";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge";
+export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
 export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
-  type: "curse" | "guardian" | "scorch";
+  // @@@creep-status - slow (a murloc's net), stun (a golem's stomp), root (a spider queen's web), poison (a venom spider's
+  // bite), bloodlust (an ogre mage's): see sim updateUnitStatusEffects and statusPace.
+  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust";
   remaining: number;
   damageMultiplier?: number;
+  // Who poisoned the unit, credited with what the poison does.
+  sourceId?: string;
 };
 
 export type WorldEffect = {
@@ -53,7 +64,10 @@ export type WorldEffect = {
     | "scorch"
     | "storm"
     | "chargeTrail"
-    | "chargeImpact";
+    | "chargeImpact"
+    | "stomp"
+    | "web"
+    | "bloodlust";
   x: number;
   y: number;
   remaining: number;

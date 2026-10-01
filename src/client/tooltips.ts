@@ -83,6 +83,7 @@ function abilityStats(ability: AbilityKind, locale: Locale) {
   if (def.behavior === "heal") return [tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
   if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
   if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
+  if (def.behavior === "stomp" || def.behavior === "bloodlust" || def.behavior === "web") return [tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.effectDuration)), cooldown];
   return [
     tooltipLine(locale, "enemyDamage", def.damageMultiplier),
     ...(def.summonedDamage ? [tooltipLine(locale, "summonedDamage", def.summonedDamage)] : []),
@@ -335,6 +336,9 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     cinderSoul: ["Pyre caller must be ready.", "Target a nearby point."],
     ashCurse: ["Ash hexer must be ready.", "Target an enemy unit."],
     charge: ["Raider or knight must be ready.", "Target an enemy unit {min} to {max} away."],
+    stomp: ["Cast by a granite golem on its own."],
+    bloodlust: ["Cast by an ogre mage on its own."],
+    web: ["Cast by a spider queen on its own."],
   },
   zh: {
     heal: ["牧师或战地医师必须准备就绪。"],
@@ -344,6 +348,9 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     cinderSoul: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
     ashCurse: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
     charge: ["掠袭者或骑士必须准备就绪。", "目标必须是 {min} 到 {max} 距离内的敌方单位。"],
+    stomp: ["花岗岩魔像自己施放。"],
+    bloodlust: ["食人魔法师自己施放。"],
+    web: ["蛛后自己施放。"],
   },
 };
 

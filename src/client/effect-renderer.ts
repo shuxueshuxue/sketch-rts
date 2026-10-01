@@ -213,6 +213,46 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
+    // The creeps' powers (see @@@creep-abilities): a stomp's dust ring, a web's strands, bloodlust's red flare.
+    if (effect.type === "stomp") {
+      ctx.save();
+      ctx.strokeStyle = `rgba(122, 96, 60, ${0.7 * life})`;
+      ctx.lineWidth = 4;
+      const reach = (effect.radius ?? 160) * (1.1 - life * 0.6);
+      ctx.beginPath();
+      ctx.ellipse(point.x, point.y + 6, reach, reach * 0.45, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+    if (effect.type === "web") {
+      ctx.save();
+      ctx.strokeStyle = `rgba(235, 232, 220, ${0.85 * Math.min(1, life * 3)})`;
+      ctx.lineWidth = 1.4;
+      for (let spoke = 0; spoke < 6; spoke += 1) {
+        const angle = (spoke / 6) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y + 4);
+        ctx.lineTo(point.x + Math.cos(angle) * 18, point.y + 4 + Math.sin(angle) * 9);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.ellipse(point.x, point.y + 4, 11, 5.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+    if (effect.type === "bloodlust") {
+      ctx.save();
+      ctx.strokeStyle = `rgba(181, 52, 40, ${life})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y - 10, radius * 0.8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
+
     if (effect.type === "flameBurn" || effect.type === "scorch") {
       drawFlameBurnEffect(ctx, point, life, effect.remaining);
       continue;

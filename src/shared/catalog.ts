@@ -35,7 +35,29 @@ export type UnitDef = {
   naval?: true;
   // A transport (see @@@transport): the supply of passengers it carries.
   carries?: number;
+  // @@@creep-traits - What a creep's blow does besides its damage: slows its target (a murloc hunter's net), poisons it (a
+  // venom spider's bite), or strikes every enemy round it for a share of the blow (a red dragon's fire).
+  slowOnHit?: true;
+  poisonOnHit?: true;
+  splash?: true;
+  // How much harder a camp with this creep is than its health and damage say: the AIs weigh camps by it (see ai
+  // combatRating). @@@creep-threat - Measured, not guessed: two of the kind at a camp against squads of two footmen to an
+  // archer walked in, six starts a squad; the smallest squad that wins half of them, by what it spends, over the creep's
+  // rating; and that over what the old wildlings of the same reach spend (melee 0.47, shooters 0.85), with a squad of
+  // footmen alone the second measure. A big body few blows reach counts (an ogre lord, a rock golem), a poison bite most
+  // (1.7); armor against a third of archers next to nothing.
+  threat?: number;
 };
+
+// @@@creep-trait-numbers - The traits' one number each: a net slows its target to SLOW_PACE for SLOW_TICKS; a bite
+// poisons for POISON_TICKS at POISON_DAMAGE a second (a second bite starts it over); fire strikes enemies within
+// SPLASH_RADIUS of the target for SPLASH_SHARE of the blow.
+export const SLOW_PACE = 0.7;
+export const SLOW_TICKS = seconds(3);
+export const POISON_TICKS = seconds(4);
+export const POISON_DAMAGE = 3;
+export const SPLASH_RADIUS = 50;
+export const SPLASH_SHARE = 0.15;
 
 // @@@unit-tiers - Advanced and elite units are locked until the player's supply cap (halls and farms built, not supply in
 // use) reaches a bar: the tech a player buys is supply, the way a Warcraft III player buys a keep and a castle. Early
@@ -57,6 +79,10 @@ export type AbilityDef = { autocast: AutocastDefault } & (
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
   // A dash at an enemy unit between minRange and range away, striking it for damageMultiplier times the weapon's blow.
   | { behavior: "charge"; minRange: number; range: number; plannerRange: number; cooldown: number; damageMultiplier: number; drive: number; effectType: "chargeTrail" }
+  // A creep's own: stun every enemy unit within range; quicken an ally's blows; root one enemy (see @@@creep-abilities).
+  | { behavior: "stomp"; range: number; plannerRange: number; cooldown: number; effectDuration: number; effectType: "stomp" }
+  | { behavior: "bloodlust"; range: number; plannerRange: number; cooldown: number; effectDuration: number; attackSpeed: number; effectType: "bloodlust" }
+  | { behavior: "web"; range: number; plannerRange: number; cooldown: number; effectDuration: number; effectType: "web" }
   | {
       behavior: "curse";
       range: number;
@@ -161,6 +187,26 @@ export const UNIT_RULES = {
   transport: { trainedAt: "shipyard", hp: 270, speed: 3.2, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, xpReward: 30, abilities: [], naval: true, carries: 8 },
   warship: { trainedAt: "shipyard", hp: 180, speed: 3, radius: 28, attackDamage: 20, attackRange: 390, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, xpReward: 40, abilities: [], naval: true },
   ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 32, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
+  // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, health and damage on the
+  // wildlings' curve, bounty and experience by level (20/35/50/68/85/100/130 gold at levels 1-8). Each has one trait or
+  // ability at most (see @@@creep-traits), and none reaches past a tower's 480, so no creep wakes from farther than
+  // today. None is wider than 28: a blow's reach is measured from center to center, and a footman (radius 18, reach 48)
+  // could not strike a wider one through their bodies.
+  murlocPeon: { hp: 60, speed: 2.8, radius: 14, attackDamage: 7, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  murlocHunter: { hp: 85, speed: 2.8, radius: 15, attackDamage: 9, attackRange: 150, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], slowOnHit: true, threat: 1.05 },
+  tidePriest: { hp: 100, speed: 2.6, radius: 17, attackDamage: 7, attackRange: 200, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["heal"] },
+  deepSnapper: { hp: 420, speed: 2.2, radius: 26, attackDamage: 26, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [], armor: "heavy", threat: 1.25 },
+  rubbleGolem: { hp: 230, speed: 2, radius: 22, attackDamage: 18, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [], armor: "heavy" },
+  rockGolem: { hp: 320, speed: 2, radius: 25, attackDamage: 24, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { hp: 560, speed: 1.9, radius: 28, attackDamage: 36, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  ogreWarrior: { hp: 220, speed: 2.6, radius: 22, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
+  ogreMage: { hp: 200, speed: 2.6, radius: 22, attackDamage: 14, attackRange: 200, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: ["bloodlust"], threat: 1.15 },
+  ogreLord: { hp: 520, speed: 2.6, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: [], threat: 1.35 },
+  spiderling: { hp: 50, speed: 3.6, radius: 12, attackDamage: 6, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  venomSpider: { hp: 90, speed: 3.2, radius: 15, attackDamage: 9, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
+  spiderQueen: { hp: 340, speed: 3, radius: 26, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
+  dragonWhelp: { hp: 260, speed: 3, radius: 22, attackDamage: 18, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
+  redDragon: { hp: 800, speed: 2.8, radius: 28, attackDamage: 40, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
 } satisfies Record<string, UnitDef>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
@@ -221,7 +267,7 @@ export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
-export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge"];
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web"];
 
 // What a curse deals at once to a summoned unit (a spirit has 85 hp): both races' curses are the answer to a summoner's
 // free army, so they share the one number.
@@ -240,6 +286,12 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
   // The cavalry's charge: from 180 to 300 away, a slide that would carry the rider `drive` past the unit it meets (see
   // @@@charge), and a blow of twice the weapon's.
   charge: { behavior: "charge", minRange: 180, range: 300, plannerRange: 288, cooldown: seconds(15), damageMultiplier: 2, drive: 100, effectType: "chargeTrail", autocast: "on" },
+  // @@@creep-abilities - The creeps' own, cast by themselves only: a granite golem's stomp stuns every enemy unit within
+  // 160 for 1.5s, every 12s; an ogre mage's bloodlust quickens a fighting ally's blows by 30% for 15s, every 20s; a spider
+  // queen's web roots one enemy within 220 in place for 2s, every 10s.
+  stomp: { behavior: "stomp", range: 160, plannerRange: 150, cooldown: seconds(12), effectDuration: seconds(1.5), effectType: "stomp", autocast: "on" },
+  bloodlust: { behavior: "bloodlust", range: 300, plannerRange: 280, cooldown: seconds(20), effectDuration: seconds(15), attackSpeed: 1.3, effectType: "bloodlust", autocast: "on" },
+  web: { behavior: "web", range: 220, plannerRange: 200, cooldown: seconds(10), effectDuration: seconds(2), effectType: "web", autocast: "on" },
 };
 
 // A spell, as against a blow of the body like the charge: what a caster is, and what the ash chieftain hunts.

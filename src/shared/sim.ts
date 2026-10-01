@@ -1,4 +1,4 @@
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
@@ -24,7 +24,7 @@ import { generateMap } from "./generated-map";
 import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
 import { seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -783,7 +783,7 @@ function updateUnits(game: Game): Ferry | undefined {
     // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
     // strikes nor casts, and its order waits for it.
     if (unit.order.type !== "charge") {
-      if (isStaggered(unit)) continue;
+      if (isStaggered(unit) || isStunned(unit)) continue;
       activateQueuedOrder(unit);
       if (updateNeutralLeash(game, unit)) continue;
       autocastStep(game, unit);
@@ -907,7 +907,7 @@ function updateHoldOrder(game: Game, unit: Unit) {
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
-  unit.cooldown = unit.attackCooldown;
+  unit.cooldown = attackCooldownOf(unit);
 }
 
 function updateAttackMoveOrder(game: Game, unit: Unit) {
@@ -940,7 +940,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
   }
   if (unit.cooldown > 0) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
-  unit.cooldown = unit.attackCooldown;
+  unit.cooldown = attackCooldownOf(unit);
 }
 
 function updateAttackOrder(game: Game, unit: Unit) {
@@ -973,7 +973,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
   }
   if (unit.cooldown > 0) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
-  unit.cooldown = unit.attackCooldown;
+  unit.cooldown = attackCooldownOf(unit);
 }
 
 function updateMineOrder(game: Game, unit: Unit) {
@@ -1399,6 +1399,7 @@ function castAbility(
     startCharge(game, caster, ability, target, def, true);
     return;
   }
+  if (def.behavior !== "summon") throw new Error(`${ability} is cast by its creep alone`);
   if (!isNumber(x) || !isNumber(y)) throw new Error("Summon requires a target point");
   applySummon(game, caster, ability, x, y, def);
 }
@@ -1526,11 +1527,84 @@ function autocastStep(game: Game, unit: Unit) {
     } else if (def.behavior === "summon") {
       const point = autocastSummonPoint(game, unit, def);
       if (point) return applySummon(game, unit, ability, point.x, point.y, def);
+    } else if (def.behavior === "stomp") {
+      if (applyStomp(game, unit, ability, def)) return;
+    } else if (def.behavior === "bloodlust") {
+      if (applyBloodlust(game, unit, ability, def)) return;
+    } else if (def.behavior === "web") {
+      if (applyWeb(game, unit, ability, def)) return;
     } else if (unit.order.type !== "hold") {
       const target = autocastChargeTarget(game, unit, def);
       if (target) return startCharge(game, unit, ability, target, def, false);
     }
   }
+}
+
+// @@@creep-abilities in play: each only when a foe is about (see isAutocastFoe), so an idle camp keeps its powers.
+function applyStomp(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "stomp" }>) {
+  const struck: Unit[] = [];
+  forEachNearbyUnit(game, caster, def.range, (candidate) => {
+    if (distance(caster, candidate) <= def.range && isAutocastFoe(game, caster, candidate)) struck.push(candidate);
+  });
+  if (struck.length === 0) return false;
+  for (const unit of struck) setStatus(unit, { type: "stun", remaining: def.effectDuration });
+  caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
+  addEffect(game, "stomp", caster.x, caster.y, 24, { radius: def.range });
+  return true;
+}
+
+function applyBloodlust(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "bloodlust" }>) {
+  let best: Unit | undefined;
+  forEachNearbyUnit(game, caster, def.range, (candidate) => {
+    if (distance(caster, candidate) > def.range || candidate.hp <= 0 || candidate.owner !== caster.owner || !isEngaged(candidate)) return;
+    if (candidate.effects.some((effect) => effect.type === "bloodlust")) return;
+    if (!best || candidate.attackDamage > best.attackDamage) best = candidate;
+  });
+  if (!best) return false;
+  setStatus(best, { type: "bloodlust", remaining: def.effectDuration });
+  caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
+  addEffect(game, "bloodlust", best.x, best.y, 30);
+  return true;
+}
+
+function applyWeb(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "web" }>) {
+  let best: Unit | undefined;
+  forEachNearbyUnit(game, caster, def.range, (candidate) => {
+    if (distance(caster, candidate) > def.range || !isAutocastFoe(game, caster, candidate) || candidate.effects.some((effect) => effect.type === "root")) return;
+    if (!best || distance(caster, candidate) < distance(caster, best)) best = candidate;
+  });
+  if (!best) return false;
+  setStatus(best, { type: "root", remaining: def.effectDuration });
+  caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
+  addEffect(game, "web", best.x, best.y, def.effectDuration);
+  return true;
+}
+
+// A status put on anew: one of its kind at a time, the later replacing the earlier.
+function setStatus(unit: Unit, status: UnitStatusEffect) {
+  unit.effects = unit.effects.filter((effect) => effect.type !== status.type);
+  unit.effects.push(status);
+}
+
+function isStunned(unit: Unit) {
+  return unit.effects.length > 0 && unit.effects.some((effect) => effect.type === "stun");
+}
+
+// The share of its pace a unit keeps under its statuses: none rooted or stunned, a net's share slowed.
+function statusPace(unit: Unit) {
+  if (unit.effects.length === 0) return 1;
+  let pace = 1;
+  for (const effect of unit.effects) {
+    if (effect.type === "root" || effect.type === "stun") return 0;
+    if (effect.type === "slow") pace = SLOW_PACE;
+  }
+  return pace;
+}
+
+// The ticks between a unit's blows: bloodlust's quicker.
+function attackCooldownOf(unit: Unit) {
+  if (unit.effects.length === 0 || !unit.effects.some((effect) => effect.type === "bloodlust")) return unit.attackCooldown;
+  return Math.max(1, Math.round(unit.attackCooldown / (ABILITY_DEFS.bloodlust as Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "bloodlust" }>).attackSpeed));
 }
 
 // Fighting: attacking, charging, or attack-moving onto a target.
@@ -1831,7 +1905,16 @@ function projectileAttacker(projectile: Projectile): Building {
 
 function updateUnitStatusEffects(game: Game) {
   for (const unit of game.units) {
-    for (const effect of unit.effects) effect.remaining -= 1;
+    if (unit.effects.length === 0) continue;
+    for (const effect of unit.effects) {
+      effect.remaining -= 1;
+      // Poison bites once a second (see @@@creep-trait-numbers), for its biter while it lives.
+      if (effect.type === "poison" && effect.remaining % 20 === 0 && unit.hp > 0) {
+        const source = effect.sourceId ? findTarget(game, effect.sourceId) : undefined;
+        if (source && source.hp > 0) applyDamage(game, source, unit, POISON_DAMAGE);
+        else unit.hp -= POISON_DAMAGE;
+      }
+    }
     unit.effects = unit.effects.filter((effect) => effect.remaining > 0);
   }
 }
@@ -1924,7 +2007,22 @@ function isCasterOrSummoned(unit: Unit) {
 }
 
 function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building) {
-  if (!isUnit(attacker) || !isUnit(target) || attacker.kind !== "sparkArcher") return;
+  if (!isUnit(attacker)) return;
+  const rules = unitRules(game, attacker);
+  // A red dragon's fire (see @@@creep-traits) falls on buildings' neighbours too.
+  if (rules.splash) {
+    const share = Math.max(1, Math.round(attacker.attackDamage * SPLASH_SHARE));
+    const burned: Unit[] = [];
+    forEachNearbyUnit(game, target, SPLASH_RADIUS, (unit) => {
+      if (unit !== target && unit.hp > 0 && distance(unit, target) <= SPLASH_RADIUS && areEnemyOwners(game, attacker.owner, unit.owner)) burned.push(unit);
+    });
+    for (const unit of burned) applyDamage(game, attacker, unit, share);
+    addEffect(game, "flameBurn", target.x, target.y, 20);
+  }
+  if (!isUnit(target)) return;
+  if (rules.slowOnHit) setStatus(target, { type: "slow", remaining: SLOW_TICKS });
+  if (rules.poisonOnHit) setStatus(target, { type: "poison", remaining: POISON_TICKS, sourceId: attacker.id });
+  if (attacker.kind !== "sparkArcher") return;
   target.effects = target.effects.filter((effect) => effect.type !== "scorch");
   target.effects.push({ type: "scorch", remaining: SCORCH_DURATION });
   addEffect(game, "scorch", target.x, target.y, 28);
@@ -2794,27 +2892,31 @@ function forEachNearbyEntity<T extends SpatialEntity>(
 }
 
 function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
+  // A rooted or stunned unit stands, a netted one walks slower (see @@@creep-status).
+  const pace = statusPace(unit);
+  if (pace === 0) return;
   if (map.terrain) {
-    walkToward(unit, x, y, map);
+    walkToward(unit, x, y, map, pace);
     return;
   }
+  const speed = unit.speed * pace;
   const dx = x - unit.x;
   const dy = y - unit.y;
   const length = Math.hypot(dx, dy);
-  if (length <= unit.speed || length === 0) {
+  if (length <= speed || length === 0) {
     unit.x = clamp(x, 0, map.width);
     unit.y = clamp(y, 0, map.height);
     return;
   }
-  unit.x = clamp(unit.x + (dx / length) * unit.speed, 0, map.width);
-  unit.y = clamp(unit.y + (dy / length) * unit.speed, 0, map.height);
+  unit.x = clamp(unit.x + (dx / length) * speed, 0, map.width);
+  unit.y = clamp(unit.y + (dy / length) * speed, 0, map.height);
 }
 
 // @@@terrain-walk - On a map with terrain a unit walks round what blocks it: it heads for the goal when it sees it, else
 // for the farthest cell it sees on the way (see terrain steerPoint), and a goal in a forest or on rock is its nearest
 // walkable cell. A step that would end on blocked ground slides along it on one axis, or waits; a unit that stands on
 // blocked ground (only a seeded scenario puts one there) walks out. A ship sails the same way over the water (see @@@naval).
-function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
+function walkToward(unit: Unit, x: number, y: number, map: GameMap, pace = 1) {
   const mover = unitMover(unit.kind);
   const goal = x >= 0 && y >= 0 && x <= map.width && y <= map.height && isWalkable(map, x, y, mover) ? { x, y } : walkableGoal(map, x, y, mover);
   const aim = steerPoint(map, unit, goal, mover);
@@ -2823,7 +2925,7 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap) {
   const length = Math.sqrt(dx * dx + dy * dy);
   if (length === 0) return;
   // A shallow or a bog slows a land unit to its ground's pace (see groundUnder).
-  const speed = unit.speed * groundUnder(map, unit.x, unit.y, mover).pace;
+  const speed = unit.speed * pace * groundUnder(map, unit.x, unit.y, mover).pace;
   const nextX = clamp(length <= speed ? aim.x : unit.x + (dx / length) * speed, 0, map.width);
   const nextY = clamp(length <= speed ? aim.y : unit.y + (dy / length) * speed, 0, map.height);
   if (isWalkable(map, nextX, nextY, mover) || !isWalkable(map, unit.x, unit.y, mover)) {

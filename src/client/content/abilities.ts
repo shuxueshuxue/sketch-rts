@@ -48,6 +48,22 @@ export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
     },
     command: { icon: "↠", hotkey: "r" },
   },
+  // The creeps' own (see @@@creep-abilities): no player's unit casts them, so their buttons never show.
+  stomp: {
+    name: { en: "Stomp", zh: "践踏" },
+    description: { en: "Shakes the ground: every enemy unit close by is stunned.", zh: "震动地面，身边的敌方单位全部眩晕。" },
+    command: { icon: "✷", hotkey: "j" },
+  },
+  bloodlust: {
+    name: { en: "Bloodlust", zh: "嗜血" },
+    description: { en: "Drives a fighting ally into a frenzy: its blows come faster.", zh: "让一个正在战斗的同伴狂暴，攻击变快。" },
+    command: { icon: "♨", hotkey: "l" },
+  },
+  web: {
+    name: { en: "Web", zh: "结网" },
+    description: { en: "Binds an enemy unit in place with a web; it still strikes.", zh: "用蛛网把一个敌方单位定在原地，它仍能攻击。" },
+    command: { icon: "#", hotkey: "k" },
+  },
 };
 
 export function mapAbilityCards<T>(pick: (card: AbilityCard) => T): Record<AbilityKind, T> {

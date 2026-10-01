@@ -15,10 +15,11 @@ const FOOTMAN_RATING = Math.sqrt(UNIT_DEFS.footman.hp * (UNIT_DEFS.footman.attac
 
 // A fighter's worth by its own hit points and damage (a footman is 1), whatever it cost; casters as in unitStrength. What a
 // camp's creeps answer to: by price an ember ravager is 1.2 footmen, by hit points and damage 0.95 (see v7-creep-force).
+// A creep with a power counts its threat over that (see @@@creep-traits).
 export function combatRating(unit: Unit) {
   if (unit.kind === "worker") return 0;
   const base = CASTER_STRENGTH[unit.kind] ?? Math.sqrt(unit.maxHp * (unit.attackDamage / Math.max(1, unit.attackCooldown / 20))) / FOOTMAN_RATING;
-  return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level);
+  return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level) * (UNIT_DEFS[unit.kind].threat ?? 1);
 }
 
 // A tower by the same hit points times damage rating as a fighter (about one footman for a defense tower).
@@ -31,7 +32,7 @@ export function unitStrength(unit: Unit) {
   if (unit.kind === "worker") return 0;
   const cost = UNIT_DEFS[unit.kind].cost;
   const base = CASTER_STRENGTH[unit.kind] ?? (cost > 0 ? cost / 100 : undefined) ?? Math.sqrt(unit.maxHp * (unit.attackDamage / Math.max(1, unit.attackCooldown / 20))) / FOOTMAN_RATING;
-  return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level);
+  return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (1 + 0.15 * unit.level) * (UNIT_DEFS[unit.kind].threat ?? 1);
 }
 
 // A fresh spirit, at full health: what a summoner puts back on the field every forty seconds.
