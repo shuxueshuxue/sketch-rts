@@ -1,5 +1,6 @@
 import { CAST } from "../campaigns/ashen-march/cast";
 import { SCENERY } from "../campaigns/ashen-march/scenery";
+import { UNIT_DEFS, resolveVariant } from "../shared/catalog";
 import { createGame, issuePlayerCommand, snapshotGame, spawnVariantUnit, stepGame, type Game } from "../shared/sim";
 import type { Terrain } from "../shared/terrain";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
@@ -12,8 +13,8 @@ import { UnitMotionSmoother } from "./unit-motion";
 import { drawWorld, trackUnitFacing, type WorldLabels } from "./world-renderer";
 
 // @@@menu-scenes - The home screen's backdrop: small worlds set up by hand and played live by the real simulation, drawn
-// by the battlefield's own renderer with the campaign's cast and scenery and a few pieces of their own (a statue, a
-// ship, runestones), under drifting mist, shafts of light and motes (embers, fireflies, glints on the water). A capital
+// by the battlefield's own renderer with the campaign's cast and scenery and a few pieces of their own (a statue,
+// runestones), under drifting mist, shafts of light and motes (embers, fireflies, glints on the water). A capital
 // goes about its day, two hosts meet in a forest glade, a fleet sails past a lighthouse. One is drawn at random for each
 // visit until the player picks one with the switch; the world is stepped at the game's tick rate and painted at most
 // thirty times a second, and only while the menus are up.
@@ -41,8 +42,6 @@ type Run = {
   script: (game: Game, second: number) => void;
   // Seconds after which the scene fades out and begins again; absent, it runs on.
   length?: number;
-  // Props that move by themselves (ships), each frame.
-  drift?: (props: PropView[], second: number) => void;
   // Where embers rise or runes glow, in world points.
   embers: Point[];
   glows: Point[];
@@ -191,22 +190,7 @@ function runestone(b: Brush) {
   for (const [x1, y1, x2, y2] of [[-4, -24, 3, -18], [3, -18, -2, -10], [-3, -4, 4, 2], [0, 6, 0, 12]] as const) line(b, [[x1, y1], [x2, y2]], "#7fd6c8", 1.6);
 }
 
-// A cog under sail, bow to the right: hull, stern castle, one square sail with the crown's mark, a pennant.
-function ship(b: Brush) {
-  ellipse(b, 0, 16, 64, 9, "#1f3a4433");
-  polygon(b, [[-50, -2], [54, -6], [42, 14], [-40, 14]], "#7a5634", INK, 1.4);
-  line(b, [[-44, 5], [48, 2]], "#5a3d22", 1.2);
-  polygon(b, [[-50, -2], [-50, -18], [-30, -18], [-28, -3]], "#8a6440", INK, 1.2);
-  polygon(b, [[34, -5], [34, -14], [50, -16], [52, -6]], "#8a6440", INK, 1.1);
-  line(b, [[52, -6], [74, -16]], WOOD, 1.8);
-  line(b, [[4, -3], [4, -84]], WOOD, 2.8);
-  polygon(b, [[-22, -74], [28, -74], [33, -28], [-27, -28]], "#ece2c3", INK, 1.2);
-  line(b, [[-24, -74], [30, -74]], WOOD, 2.2);
-  polygon(b, [[4, -62], [11, -51], [4, -40], [-3, -51]], "#a3362a", "transparent", 0);
-  polygon(b, [[4, -84], [24, -80], [4, -75]], "#a3362a", INK, 0.8);
-}
-
-const PROPS: Record<string, PropPainter> = { statue, runestone, ship };
+const PROPS: Record<string, PropPainter> = { statue, runestone };
 
 // ---------------------------------------------------------------- the capital
 
@@ -417,27 +401,30 @@ function fleet(): Run {
   p.prop("hut", 2000, coast(2000) + 110, 1.3);
   p.prop("crate", 2280, coast(2280) + 50, 1);
   p.prop("reeds", 2520, coast(2520) + 25, 1.3);
-  // The fleet: a flagship and its line, sailing east past the lighthouse.
-  const line = [[0, 0, 1.9], [-230, -120, 1.55], [-220, 140, 1.55], [-460, -230, 1.35], [-450, 260, 1.35]] as const;
-  const ships = line.map(([dx, dy, scale]) => p.prop("ship", 1900 + dx, 1170 + dy, scale));
   const game = stage(width, height, terrain, [[CROWN, "grove"]], p);
+  // The fleet: warships and transports in line, sailing east past the lighthouse at a third of a ship's speed, a slow
+  // pass rather than a race (its own variants of the two ships, drawn as they are).
+  for (const kind of ["warship", "transport"] as const) game.variants![`menu/${kind}`] = resolveVariant({ base: kind, speed: UNIT_DEFS[kind].speed / 3 });
+  const lanes = [1110, 1170, 1230, 1050, 1290];
+  const ships = lanes.map((y, index) => spawnVariantUnit(game, CROWN, index % 2 ? "menu/transport" : "menu/warship", 2050 - Math.abs(index - 2) * 130 - (index % 2) * 40, y).id);
   return {
     game,
     props: p.props,
-    focus: { x: 2000, y: 1100 },
-    zoom: 1.05,
+    focus: { x: 2000, y: 1110 },
+    zoom: 1.25,
     embers: [{ x: isle.x + 20, y: isle.y - 150 }],
     glows: [{ x: isle.x + 110, y: isle.y + 20 }],
     air: { dusk: 0.26, mist: "222, 230, 236", mistAlpha: 0.26, rays: "236, 240, 228", rayAngle: -0.2, motes: "glints" },
-    script() {},
-    drift(_, second) {
-      // East at an easy sail; past the right edge the line comes round again from the left.
-      const from = 1500;
-      const span = 2200;
-      line.forEach(([dx, dy], index) => {
-        const ship = ships[index]!;
-        ship.x = from + ((400 + second * 16) % span) + dx;
-        ship.y = 1170 + dy + Math.sin(second * 0.8 + index) * 3;
+    script(g) {
+      // East at an easy sail; a ship past the frame's right edge comes round again from the left, under the menu.
+      ships.forEach((id, index) => {
+        const ship = g.units.find((unit) => unit.id === id);
+        if (!ship) return;
+        if (ship.x > 3050) {
+          ship.x = 1150;
+          ship.y = lanes[index]!;
+        }
+        if (ship.order.type === "idle") order(g, CROWN, { type: "move", unitIds: [id], x: 3200, y: lanes[index]! });
       });
     },
   };
@@ -499,7 +486,6 @@ export class MenuBackdrop {
       trackUnitFacing(this.facing, this.snapshot);
     }
     const age = (now - this.started) / 1000;
-    run.drift?.(run.props, age);
     const zoom = run.zoom * Math.max(0.85, Math.min(1.4, height / 900));
     const view = { width: width / zoom, height: height / zoom };
     const map = run.game.map;
