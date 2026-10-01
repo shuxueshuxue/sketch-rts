@@ -1,13 +1,14 @@
 import type { GameMap } from "./types";
 
-// @@@terrain - Ground that a unit cannot cross, as on a Warcraft III map: forest, rock (cliffs and outcrops) and deep
-// water, on a grid of square cells laid over the map. A unit is a point to the terrain: it stands on a walkable cell, walks
-// round what blocks it, and is never pushed into it (see sim moveToward). A map without terrain is open everywhere, as
-// every map was before, and plays exactly as it did.
-// - cells: one character a cell, row by row from the top-left: "." ground, "," shallow water (walked and sailed both: a
-//   ford, a beach), "T" forest, "#" rock, "~" deep water (sailed only).
-// - levels: every cell's ground: "0" low ground, "1" a plateau (a main above its natural, a cliff at its rim), "2" the
-//   ramp between them. Drawn for the eye; and no building stands on a ramp (see isFootprintBuildable).
+// @@@terrain - Ground that a unit cannot cross, or crosses slowly, as on a Warcraft III map: forest, rock (cliffs and
+// outcrops) and deep water, shallows and mud, on a grid of square cells laid over the map. A unit is a point to the
+// terrain: it stands on a walkable cell, walks round what blocks it, and is never pushed into it (see sim moveToward). A
+// map without terrain is open everywhere, as every map was before, and plays exactly as it did.
+// - cells: one character a cell, row by row from the top-left (what each is to whoever crosses it: see CELL_GROUND):
+//   "." ground; "," shallow water (a ford, a beach, a flooded valley floor); "m" mud (a bog, a marsh, a snowdrift: how it
+//   looks is the map's theme's); "=" a bridge, ground laid over water; "T" forest; "#" rock; "~" deep water.
+// - levels: every cell's ground: "0" low ground, "1" a plateau (a main above its natural, a temple's or a hill's top, a
+//   cliff at its rim), "2" a ramp up to it. Drawn for the eye; and no building stands on a ramp (see isFootprintBuildable).
 export type Terrain = {
   cell: number;
   cols: number;
@@ -16,7 +17,22 @@ export type Terrain = {
   levels?: string;
 };
 
-export type TerrainCellKind = "ground" | "shallow" | "forest" | "rock" | "water";
+export type TerrainCellKind = "ground" | "shallow" | "mud" | "bridge" | "forest" | "rock" | "water";
+
+// @@@terrain-ground - What a cell is to whoever crosses it: whether a land unit walks it and a ship sails it (see
+// @@@terrain-movers), the share of its full pace a land unit keeps on it (a ship sails at its full pace wherever it
+// sails), and how many times bare ground's PUSH_FRICTION brakes a slide on it (a shove, a charge, a lunge: see @@@push).
+// Water drags and mud drags harder, so a charge through a ford or a bog stops short; a bridge is ground a ship cannot pass
+// under. A character not listed is ground.
+export const CELL_GROUND: Readonly<Record<string, { land: boolean; sea: boolean; pace: number; drag: number }>> = {
+  ".": { land: true, sea: false, pace: 1, drag: 1 },
+  ",": { land: true, sea: true, pace: 0.75, drag: 1.6 },
+  m: { land: true, sea: false, pace: 0.6, drag: 2 },
+  "=": { land: true, sea: false, pace: 1, drag: 1 },
+  T: { land: false, sea: false, pace: 0, drag: 1 },
+  "#": { land: false, sea: false, pace: 0, drag: 1 },
+  "~": { land: false, sea: true, pace: 0, drag: 1 },
+};
 
 // @@@terrain-movers - Who crosses a cell: a land unit walks ground and shallow water, a ship sails deep and shallow water
 // (see @@@naval). The shallows are both's, as on a Warcraft III coast: a ship that comes in to the beach is in the reach of
@@ -27,7 +43,10 @@ export type Mover = "land" | "sea";
 
 type Point = { x: number; y: number };
 
-const PASSABLE: Record<Mover, ReadonlySet<string>> = { land: new Set([".", ","]), sea: new Set(["~", ","]) };
+const PASSABLE: Record<Mover, ReadonlySet<string>> = {
+  land: new Set(Object.keys(CELL_GROUND).filter((char) => CELL_GROUND[char]!.land)),
+  sea: new Set(Object.keys(CELL_GROUND).filter((char) => CELL_GROUND[char]!.sea)),
+};
 const UNREACHED = 0x3fffffff;
 const UNKNOWN = -2;
 // Orthogonal and diagonal steps of the flow fields, in fifths of a cell (7/5 for the square root of two).
@@ -48,6 +67,8 @@ const FIELD_CACHE = 128;
 
 export function terrainCellKind(char: string | undefined): TerrainCellKind {
   if (char === ",") return "shallow";
+  if (char === "m") return "mud";
+  if (char === "=") return "bridge";
   if (char === "T") return "forest";
   if (char === "#") return "rock";
   if (char === "~") return "water";
