@@ -100,9 +100,15 @@ export function planSquad(snapshot: GameSnapshot, owner: PlayerId, unitIds: read
   const { foes } = assessment;
   const odds = assessment.odds;
 
-  // The fight state, with a gap between the odds that start a fight and the odds that end one.
+  // The fight state, with a gap between the odds that start a fight and the odds that end one. A squad that broke falls
+  // back FALLBACK_TICKS at least, foes in sight or not: walking out of their sight used to turn it round at once, into
+  // their sight and back out again every half second, a broken band shuffling in place for good (the Ashen March's
+  // outpost, held until the last raider left, never was).
   const cornered = intent.kind === "hold" && options.retreatTo === undefined;
-  if (foes.length === 0) setState(memory, "advance", snapshot.tick);
+  const regrouping = memory.state === "fallback" && snapshot.tick - memory.since < FALLBACK_TICKS;
+  if (foes.length === 0) {
+    if (!regrouping) setState(memory, "advance", snapshot.tick);
+  }
   else if (memory.state === "fight") {
     if (odds < nerve * RETREAT_SHARE && !cornered) setState(memory, "fallback", snapshot.tick);
   } else if (memory.state === "fallback") {

@@ -230,7 +230,10 @@ export const outpost: Chapter<Vars> = {
         yield* squad.defeated();
       }, "wave");
     }
-    yield* until(() => world.tick >= started + length && world.units({ owner: EMBER }).filter((unit) => unit.x < 4600).length === 0);
+    // Held: the time runs out and none of the attackers stands within reach of the line. A band that broke and hangs back
+    // out there, too few to come again, is beaten, and goes (below). Counted over the whole west of the map, such a band
+    // kept the chapter waiting for good, for the pilot and for a player alike, who were told to hold here, not to chase.
+    yield* until(() => world.tick >= started + length && world.units({ owner: EMBER, within: { at: OUTPOST_SPOTS.front, radius: 700 } }).length === 0);
     hold.done();
     reward(story, 90);
     for (const raider of world.units({ owner: EMBER })) world.move([raider], { x: raider.x + 1500, y: raider.y });
