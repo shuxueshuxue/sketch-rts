@@ -50,7 +50,7 @@ describe("buildings as bodies", () => {
     expect(Math.hypot(footman.x - 880, footman.y - 600)).toBeLessThan(10);
   });
 
-  it("measures walks from a hall's center, longer once buildings stand in the straight way", () => {
+  it("measures the AIs' walking distances on the terrain alone, from a hall's center too", () => {
     const game = field();
     stepGame(game);
     const hall = game.buildings.find((building) => building.owner === "player")!;
@@ -58,9 +58,7 @@ describe("buildings as bodies", () => {
     expect(open).toBeDefined();
     wall(game, "player", 560, [24, 88, 152, 216, 280, 344, 408, 472]);
     stepGame(game);
-    const walled = walkingDistance(game.map, hall, { x: 1000, y: 120 });
-    expect(walled).toBeDefined();
-    expect(walled!).toBeGreaterThan(open! + 300);
+    expect(walkingDistance(game.map, hall, { x: 1000, y: 120 })).toBe(open);
   });
 
   it("sets a unit standing where a building is laid out on the building's rim", () => {
@@ -101,6 +99,34 @@ describe("buildings as bodies", () => {
     const gold = game.players.player!.gold;
     steps(game, 600);
     expect(game.players.player!.gold).toBeGreaterThan(gold + 50);
+  });
+
+  it("ends a builder's walk at the site's wall on its own side, and the site goes up", () => {
+    const game = field();
+    game.players.player!.gold = 1000;
+    // The builder's spot lies inside the site, on the side away from the worker.
+    const worker = game.spawnUnit("player", "worker", 900, 600);
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: 700, y: 600 });
+    const site = game.buildings.find((building) => building.kind === "barracks")!;
+    let touched = false;
+    for (let tick = 0; tick < 500 && !site.complete; tick += 1) {
+      stepGame(game);
+      if (inside(worker, site)) touched = true;
+    }
+    expect(site.complete).toBe(true);
+    expect(touched).toBe(false);
+    expect(worker.x).toBeGreaterThan(site.x);
+  });
+
+  it("lets a worker on a mining run pass through other units", () => {
+    const game = field();
+    const hall = game.buildings.find((building) => building.owner === "player")!;
+    game.resources = [{ id: "mine", kind: "goldMine", x: hall.x + 400, y: hall.y + 200, amount: 5000 }];
+    const worker = game.spawnUnit("player", "worker", 600, 600);
+    const footman = game.spawnUnit("player", "footman", 605, 600);
+    issuePlayerCommand(game, "player", { type: "mine", unitIds: [worker.id], resourceId: "mine" });
+    stepGame(game);
+    expect({ x: footman.x, y: footman.y }).toEqual({ x: 605, y: 600 });
   });
 
   it("leaves a map without terrain open: its walks go straight through buildings, as they always did", () => {

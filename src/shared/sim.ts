@@ -390,6 +390,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     building.hp = constructionStartHp(building.maxHp);
     game.nextId += 1;
     game.buildings.push(building);
+    // Where a building is a body (see @@@building-body) this spot lies inside it: the walk ends at the wall (restsAgainstGoalBody).
     worker.order = { type: "move", x: command.x - BUILD_RANGE + 10, y: command.y };
     addEffect(game, "build", command.x, command.y, 60);
     return;
@@ -739,7 +740,7 @@ function updateUnits(game: Game) {
     }
     if (unit.order.type === "move") {
       moveToward(unit, unit.order.x, unit.order.y, game.map);
-      if (distanceToGoal(game.map, unit, unit.order.x, unit.order.y) < 5) unit.order = { type: "idle" };
+      if (distanceToGoal(game.map, unit, unit.order.x, unit.order.y) < 5 || restsAgainstGoalBody(game, unit, unit.order)) unit.order = { type: "idle" };
       continue;
     }
     if (unit.order.type === "attackMove") {
@@ -2291,10 +2292,47 @@ function enemyTeamKeys(game: Game, owner: Owner, indexes: Map<string, unknown>) 
 const MAX_BUILDING_RADIUS = Math.max(...Object.values(BUILDING_DEFS).map((def) => def.radius));
 const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.radius));
 
+// A walk whose goal a building covers ends where the unit stands pressed against that building: it can come no nearer.
+function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: number }) {
+  // Only a unit within a building's reach of its goal can be pressed against one that covers it.
+  if (!game.map.terrain || distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + 2) return false;
+  let resting = false;
+  forEachNearbyBuilding(game, goal, MAX_BUILDING_RADIUS + unit.radius, (building) => {
+    const reach = building.radius + unit.radius;
+    if (!resting && distance(goal, building) < reach && distance(unit, building) <= reach + 2) resting = true;
+  });
+  return resting;
+}
+
+// Each unit is held against the buildings whose reach (their radius and the widest unit's) touches the square it stands
+// in, the squares filled once per set of buildings (see syncBuildingBodies). Each building used to look through the
+// tick's unit index, whose squares are 320 wide: the sixty units of a whole base, for each building in it.
+const BODY_SQUARE = 64;
+const bodySquares = new WeakMap<Building[], Map<number, Building[]>>();
+
 function keepUnitsOutOfBuildings(game: Game) {
-  for (const building of game.buildings) {
-    // The unit index is the tick's start: a unit may have walked or slid up to MAX_SLIDE_STEP since.
-    forEachNearbyUnit(game, building, building.radius + MAX_UNIT_RADIUS + MAX_SLIDE_STEP, (unit) => keepOutOfBuilding(game, unit, building));
+  const seen = game.buildingBodiesSeen!;
+  let squares = bodySquares.get(seen);
+  if (!squares) {
+    squares = new Map();
+    for (const building of seen) {
+      const reach = building.radius + MAX_UNIT_RADIUS;
+      const right = Math.floor((building.x + reach) / BODY_SQUARE);
+      const bottom = Math.floor((building.y + reach) / BODY_SQUARE);
+      for (let x = Math.floor((building.x - reach) / BODY_SQUARE); x <= right; x += 1) {
+        for (let y = Math.floor((building.y - reach) / BODY_SQUARE); y <= bottom; y += 1) {
+          const key = numericBucketKey(x, y);
+          const square = squares.get(key);
+          if (square) square.push(building);
+          else squares.set(key, [building]);
+        }
+      }
+    }
+    bodySquares.set(seen, squares);
+  }
+  for (const unit of game.units) {
+    const square = squares.get(numericBucketKey(Math.floor(unit.x / BODY_SQUARE), Math.floor(unit.y / BODY_SQUARE)));
+    if (square) for (const building of square) keepOutOfBuilding(game, unit, building);
   }
 }
 
@@ -2364,7 +2402,15 @@ function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[]) {
   }
 }
 
+// @@@miner-ghost - A worker on a mining run passes through other units, as in Warcraft III and StarCraft, on a map whose
+// buildings are bodies (see @@@building-body): with a tower or a farm by the lane, ten workers going to and fro jammed in
+// the gap and stood there for minutes. It still walks round buildings.
+function minerGhost(game: Game, unit: Unit) {
+  return unit.kind === "worker" && unit.order.type === "mine" && game.map.terrain !== undefined;
+}
+
 function separateUnitPair(game: Game, a: Unit, b: Unit) {
+  if (minerGhost(game, a) || minerGhost(game, b)) return;
   const minDistance = a.radius + b.radius;
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -2492,12 +2538,15 @@ function forEachNearbyEntity<T extends SpatialEntity>(
     for (const entity of unindexedEntities) visit(entity);
     return;
   }
-  const radius = Math.ceil(range / index.cellSize);
-  const bx = Math.floor(point.x / index.cellSize);
-  const by = Math.floor(point.y / index.cellSize);
-  for (let ox = -radius; ox <= radius; ox += 1) {
-    for (let oy = -radius; oy <= radius; oy += 1) {
-      const bucket = index.buckets.get(numericBucketKey(bx + ox, by + oy));
+  // Only the squares the range reaches (the visitors drop whoever stands beyond it): a search a little wider than a square
+  // (a building's, by its radius) looked at 25 squares round the point's, where 9 hold all it can find.
+  const size = index.cellSize;
+  const right = Math.floor((point.x + range) / size);
+  const bottom = Math.floor((point.y + range) / size);
+  const top = Math.floor((point.y - range) / size);
+  for (let x = Math.floor((point.x - range) / size); x <= right; x += 1) {
+    for (let y = top; y <= bottom; y += 1) {
+      const bucket = index.buckets.get(numericBucketKey(x, y));
       if (!bucket) continue;
       for (const entity of bucket) visit(entity);
     }

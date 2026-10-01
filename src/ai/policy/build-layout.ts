@@ -6,6 +6,53 @@ import { aiSnapshotQuery, buildings } from "./snapshot";
 import { clamp, distance, nearestEntity, type Point } from "./spatial";
 import { mainBase, ownerDirection, playerState } from "./world-model";
 
+// @@@roomy-placement - Where the AIs lay a building on a map whose buildings are bodies (see @@@building-body): not
+// only where the sim allows it, but PASSAGE clear of every other building's wall, so a unit (30 to 44 wide) walks
+// between any two, and off the lane from any town hall to a mine within MINE_LANE of it, so workers are never walked
+// round a farm. Laid as close as the sim allows (4 apart), V9's main filled up with farms, barracks and towers in rows
+// that shut soldiers and workers in pockets: armies of 29 stood in their own base for twenty minutes and the game ran to
+// its end with the last rival's buildings standing (ladder-10, v5-extra-1). A map without terrain keeps its old rule.
+const PASSAGE = 48;
+const MINE_LANE = 450;
+const LANE_WIDTH = 24;
+
+function roomyPlacement(snapshot: GameSnapshot, kind: BuildingKind, point: Point) {
+  if (!snapshot.map.terrain) return isBuildPlacementClear(snapshot, kind, point);
+  const radius = BUILDING_DEFS[kind].radius;
+  // The passage rule covers the sim's own gap (4), so the building test is one pass; the terrain's comes last.
+  for (const building of snapshot.buildings) {
+    const reach = radius + building.radius + PASSAGE;
+    const dx = point.x - building.x;
+    const dy = point.y - building.y;
+    if (dx * dx + dy * dy < reach * reach) return false;
+  }
+  for (const [hall, mine] of mineLanes(snapshot)) if (segmentDistance(point, hall, mine) < radius + LANE_WIDTH) return false;
+  return isBuildPlacementClear(snapshot, kind, point);
+}
+
+// The town halls' lanes to the mines within MINE_LANE of them, once per snapshot.
+const lanesBySnapshot = new WeakMap<GameSnapshot, [Point, Point][]>();
+
+function mineLanes(snapshot: GameSnapshot) {
+  const known = lanesBySnapshot.get(snapshot);
+  if (known) return known;
+  const lanes: [Point, Point][] = [];
+  for (const hall of snapshot.buildings) {
+    if (hall.kind !== "townHall") continue;
+    for (const mine of snapshot.resources) if (mine.amount > 0 && distance(hall, mine) <= MINE_LANE) lanes.push([hall, mine]);
+  }
+  lanesBySnapshot.set(snapshot, lanes);
+  return lanes;
+}
+
+function segmentDistance(point: Point, a: Point, b: Point) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length2 = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / length2));
+  return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
+}
+
 export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Building, threat: Point | undefined): Point {
   let preferred: Point;
   if (threat) {
@@ -30,7 +77,7 @@ export function towerPointFor(snapshot: GameSnapshot, owner: PlayerId, base: Bui
 }
 
 function safeTowerPointNear(snapshot: GameSnapshot, owner: PlayerId, base: Point, preferred: Point): Point {
-  if (isBuildPlacementClear(snapshot, "defenseTower", preferred) && neutralClearanceScore(snapshot, owner, preferred) >= 360) return preferred;
+  if (roomyPlacement(snapshot, "defenseTower", preferred) && neutralClearanceScore(snapshot, owner, preferred) >= 360) return preferred;
   const candidates = [
     preferred,
     ...[150, 210, 280, 360, 420].flatMap((radius) =>
@@ -43,7 +90,7 @@ function safeTowerPointNear(snapshot: GameSnapshot, owner: PlayerId, base: Point
   return (
     candidates
       .filter((point) => distance(point, base) <= 430)
-      .filter((point) => isBuildPlacementClear(snapshot, "defenseTower", point))
+      .filter((point) => roomyPlacement(snapshot, "defenseTower", point))
       .sort((a, b) => towerPointScore(snapshot, owner, b, base, preferred) - towerPointScore(snapshot, owner, a, base, preferred))[0] ?? legalBuildPointNear(snapshot, "defenseTower", preferred)
   );
 }
@@ -69,7 +116,7 @@ export function safeMainBuildPoint(snapshot: GameSnapshot, owner: PlayerId, slot
   const ownBuildings = buildings(snapshot, owner);
   return (
     candidates
-      .filter((point) => isBuildPlacementClear(snapshot, buildingKind, point))
+      .filter((point) => roomyPlacement(snapshot, buildingKind, point))
       .map((point) => ({ point, score: mainBuildPointScore(neutrals, ownBuildings, point, base) }))
       .sort((a, b) => b.score - a.score)[0]?.point ?? legalBuildPointNear(snapshot, buildingKind, base)
   );
@@ -114,7 +161,7 @@ export function healingWellPointFor(snapshot: GameSnapshot, owner: PlayerId, bas
     { x: base.x - direction * 34, y: base.y + 36 },
   ].map((point) => ({ x: clamp(point.x, 0, snapshot.map.width), y: clamp(point.y, 0, snapshot.map.height) }));
   return candidates
-    .filter((point) => isBuildPlacementClear(snapshot, healingKind, point))
+    .filter((point) => roomyPlacement(snapshot, healingKind, point))
     .sort((a, b) => healingWellPointScore(snapshot, owner, b, base, healingRange) - healingWellPointScore(snapshot, owner, a, base, healingRange))[0] ?? legalBuildPointNear(snapshot, healingKind, base);
 }
 
@@ -161,7 +208,7 @@ export function defensiveRallyPoint(snapshot: GameSnapshot, owner: PlayerId): Po
 }
 
 export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, preferred: Point): Point {
-  if (isBuildPlacementClear(snapshot, kind, preferred)) return preferred;
+  if (roomyPlacement(snapshot, kind, preferred)) return preferred;
   // @@@placement-candidates - AI layout should avoid illegal foundations before the sim has to reject the command.
   const offsets = [72, 104, 140, 180, 230, 290, 360, 440, 520, 640, 800, 1_000].flatMap((radius) =>
     Array.from({ length: 16 }, (_, index) => {
@@ -172,6 +219,6 @@ export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, 
   return (
     offsets
       .map((offset) => ({ x: clamp(preferred.x + offset.x, 0, snapshot.map.width), y: clamp(preferred.y + offset.y, 0, snapshot.map.height) }))
-      .find((point) => isBuildPlacementClear(snapshot, kind, point)) ?? preferred
+      .find((point) => roomyPlacement(snapshot, kind, point)) ?? preferred
   );
 }
