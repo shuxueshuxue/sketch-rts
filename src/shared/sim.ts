@@ -2338,10 +2338,15 @@ function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: numb
 const CROWD_REACH = 100;
 
 function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y: number }) {
-  if (unit.kind === "worker" || distance(unit, goal) > CROWD_REACH) return false;
+  const gap = distance(unit, goal);
+  if (unit.kind === "worker" || gap > CROWD_REACH) return false;
   const friend = firstNearbyUnit(game, unit, unit.radius + MAX_UNIT_RADIUS + 2, (other) => {
-    if (other === unit || other.owner !== unit.owner || other.order.type !== "idle" || !other.arrivedAt) return false;
-    return other.arrivedAt.x === goal.x && other.arrivedAt.y === goal.y && distance(other, unit) <= other.radius + unit.radius + 2;
+    if (other === unit || other.owner !== unit.owner || distance(other, unit) > other.radius + unit.radius + 2) return false;
+    const there = other.order.type === "idle" && other.arrivedAt?.x === goal.x && other.arrivedAt.y === goal.y;
+    // Round the point itself (within two bodies of it) a friend still walking there counts too: three archers pressing
+    // round a point, none of them within reach of it, circled it for good with nobody there yet to stop against.
+    const huddled = gap <= 2 * (unit.radius + other.radius) && (other.order.type === "move" || other.order.type === "attackMove") && other.order.x === goal.x && other.order.y === goal.y;
+    return there || huddled;
   });
   return friend !== undefined;
 }
