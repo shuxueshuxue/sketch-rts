@@ -57,6 +57,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
+      ...cargoLines(kind, units, i18n.locale),
     ],
     requirements: [],
   };
@@ -161,6 +162,14 @@ export function tooltipText(tooltip: GameplayTooltip) {
   return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements, ...(tooltip.notes ?? [])].filter(Boolean).join("\n");
 }
 
+// Transports: the supply of passengers aboard against what they carry (see @@@transport).
+function cargoLines(kind: UnitKind, units: Unit[], locale: Locale) {
+  const carries = UNIT_DEFS[kind].carries;
+  if (!carries) return [];
+  const aboard = units.flatMap((unit) => unit.cargo ?? []).reduce((total, passenger) => total + UNIT_DEFS[passenger.kind].supplyUsed, 0);
+  return [tooltipLine(locale, "cargo", `${aboard}/${carries * units.length}`)];
+}
+
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {
   return TEXT[locale].stats[key].replace("{value}", String(value));
 }
@@ -233,6 +242,7 @@ const TEXT = {
       range: "Range {value}",
       research: "Research {value}",
       currentRegen: "Regen {value} HP/s",
+      cargo: "Aboard {value} supply",
       speedBonus: "+{value}% move speed",
       speed: "Speed {value}",
       supply: "Supply {value}",
@@ -279,6 +289,7 @@ const TEXT = {
       range: "射程 {value}",
       research: "研究 {value}",
       currentRegen: "回复 {value} 生命/秒",
+      cargo: "载 {value} 人口",
       speedBonus: "+{value}% 移动速度",
       speed: "移速 {value}",
       supply: "人口 {value}",
