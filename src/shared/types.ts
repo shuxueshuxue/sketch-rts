@@ -276,12 +276,15 @@ export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-
 
 // A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
 export type GeneratedLayoutKind = "ring" | "sides";
+// The forms a map's sea takes (see @@@generated-sea).
+export type SeaForm = "inland" | "isles" | "strait" | "rivers" | "coast";
 export type GeneratedLayoutOptions = {
   seed: string;
   // Drawn from the seed when absent; "sides" needs exactly two teams.
   kind?: GeneratedLayoutKind;
-  // A sea in the middle of a ring, with a shore for every player (see @@@generated-sea); absent, the map has none.
-  sea?: boolean;
+  // A sea ships sail, in the form named, with a shore for every player (see @@@generated-sea); true, the seed picks a form
+  // the layout takes; absent, the map has none.
+  sea?: boolean | SeaForm;
   // The map's side, one of the sizes the generator draws for the kind and player count; drawn from the seed when absent.
   size?: number;
 };

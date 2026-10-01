@@ -3,18 +3,19 @@ import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
 import { cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
-import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapSite, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
+import type { Building, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapSite, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, SeaForm, TerrainLandmark, Unit, UnitKind, WorldItem } from "./types";
 
 // @@@generated-map - A seeded ladder map for a game of any size, drawn fresh for every seed, built the way a Warcraft III
-// ladder map is: the ground a unit can walk is carved out of forest, rock and water (see @@@terrain), and everything else
-// is shaped around it.
-// - Every player's main sits on a plateau with a single ramp down, its main mine inside; its natural lies at the foot of
-//   the ramp behind a medium guard; paths wind from the natural to the mines contested with each neighbour (strong guards,
-//   a minor item) and on to the middle (a hard camp with the best item, over a mine on some maps); easy camps stand in
-//   clearings beside the paths near home, a mercenary post in a clearing out on the contested ground.
-// - Open ground is broken up by copses, outcrops and ponds wherever it is wide enough to keep a way round them.
-// - What is not walked is filled with forest, rock or deep water, by patches, so no two maps look alike and no map is a
-//   square of open ground.
+// ladder map is: open ground to fight over, shaped by what stands on it (see @@@terrain).
+// - Every player's main sits on a plateau walled by its cliff but for a single ramp, its main mine inside; its natural lies
+//   at the foot of the ramp behind a medium guard; ways wind from the natural to the mines contested with each neighbour
+//   (strong guards, a minor item) and on to the middle (a hard camp with the best item, over a mine on some maps); easy
+//   camps stand in clearings beside the ways near home, a mercenary post in a clearing out on the contested ground.
+// - The ground is open but for what a ladder map puts on it (see @@@generated-open): forest along the map's edge and round
+//   the back of every main, a tree line between every two neighbours, and groves, outcrops and lakes in the ground between
+//   the ways until the open share of the land comes down to the share drawn for the map. The ways and clearings themselves
+//   stay open, so what stands beside them narrows them into chokes and never closes them.
+// - A sea map's water takes one of several forms, with island mines only a ship reaches (see @@@generated-sea).
 // - ring: the players stand on a ring around the center, an equal turn apart (on the edges, in the corners or anywhere
 //   between), and the map is the same seen from every start; sides: two teams of equal size face each other across the
 //   map, mirrored.
@@ -44,7 +45,8 @@ type Point = { x: number; y: number };
 // Ladder-map camp tiers: easy near home, medium at a natural, strong at contested mines and on routes, hard in the middle.
 type CampTier = "easy" | "medium" | "strong" | "hard";
 type Camp = { at: Point; tier: CampTier; item?: ItemKind };
-type Blocker = "forest" | "rock" | "water";
+// Blocker codes on the grid: 1 forest, 2 rock, 3 water.
+type Blocker = 1 | 2 | 3;
 
 // Terrain cells are this many units square.
 export const TERRAIN_CELL = 32;
@@ -72,18 +74,33 @@ const TRIES = 60;
 const ATTEMPTS = 30;
 // Every path keeps this far outside every main's plateau (a main's own way down is carved apart, see ringLayout).
 const PLATEAU_MARGIN = 96;
-// A copse, outcrop or pond stands only where the ground around it stays this many cells wide.
-const OBSTACLE_PASSAGE = 3;
-// @@@generated-sea - A sea map (the layout option sea, on a ring) has a sea in its middle, drawn first: deep water within
-// SEA_SHARE of the map's size of the center (less between two players, whose ring of land round it is shorter and must
-// still hold every path), its edge wobbling by SEA_WOBBLE of that, which every mine, camp, post and
-// path keeps off (see Field.dry). An island in its middle holds the mine, the hard camp and the best item a land map keeps
-// there, so only a ship reaches them. Every start has a beach on the sea toward it, with a path down from its natural, and
-// the rim of the sea and of the island is a strip of shallows, where soldiers wade out to strike a ship (see
-// @@@terrain-movers). A draw is kept only if every beach takes a shipyard on the one sea.
+// @@@generated-open - What blocks a map's land, on open ground: forest (or rock, by patches) BORDER_CELLS deep along the
+// map's edge; a skirt round the back of every main SKIRT beyond its plateau (the side toward its ramp stays open); a tree
+// line between every two neighbours; then masses of MASS_RADIUS (a grove, an outcrop or a lake, in the shares of the map's
+// theme) in the ground between the ways until the open share of the land is down to the map's share of WALK_SHARE (the
+// old maps, carved out of forest, kept 18 to 28 per cent open); last, copses here and there for the eye.
+const WALK_SHARE = [0.56, 0.68] as const;
+const BORDER_CELLS = [2, 7] as const;
+const SKIRT = [90, 240] as const;
+const MASS_RADIUS = [110, 280] as const;
+// @@@generated-sea - A sea map's water, drawn first, which every mine, camp, post and plateau keeps off (see Field.dry):
+// - inland: a sea in the middle, SEA_SHARE of the map's size round its center, an island in it;
+// - isles: a smaller sea in the middle with an island, and a lobe toward every gap between neighbours, an island in each;
+// - strait (two players): a strait across the map between them, an island in a lagoon at its middle;
+// - rivers: a river from the map's edge between every two neighbours, winding in to a lagoon with an island in the middle;
+// - coast (two or four players, or two teams: no other ring stands alike on a square's edges): a sea all along the map's
+//   edge, COAST_SHARE of its size deep, an island in a bay between every two neighbours.
+// Every island holds a mine behind a guard (the middle's with the hard camp and the best item) that only a ship reaches:
+// ISLAND_WATER of water round it keeps its shallows off the land's. A way may cross a river or a strait, where its ground
+// becomes a ford of shallows (walked and sailed both), never a sea, a lagoon or a bay. Every start has a beach on the water
+// nearest its natural, with a way down to it, and the rim of all water is a strip of shallows, where soldiers wade out to
+// strike a ship (see @@@terrain-movers). A draw is kept only if every beach takes a shipyard on one water, the water every
+// island's mine is reached from.
 const SEA_SHARE = { duel: [0.12, 0.14], more: [0.15, 0.18] } as const;
 const SEA_WOBBLE = 0.12;
+const COAST_SHARE = [0.07, 0.09] as const;
 const ISLAND_RADIUS = 300;
+const ISLAND_WATER = 200;
 const BEACH_RADIUS = 190;
 
 const CAMP_KINDS: Record<CampTier, UnitKind[][]> = {
@@ -110,27 +127,30 @@ const CAMP_KINDS: Record<CampTier, UnitKind[][]> = {
 const MINOR_ITEMS: ItemKind[] = ["experienceBook", "guardianScroll"];
 const MAJOR_ITEMS: ItemKind[] = ["lightningRod", "flameCloak", "stormStaff", "breachCharge"];
 const MERC_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
-// What fills the ground no one walks: mostly forest; rock and water by patches, in shares that make each map's look.
-const THEMES: { rock: number; water: number }[] = [
-  { rock: 0.68, water: 0.76 },
-  { rock: 0.62, water: 0.72 },
-  { rock: 0.54, water: 0.8 },
-  { rock: 0.72, water: 0.64 },
+// A map's look: the shares of its masses that are groves, outcrops and lakes (a sea map's lakes are groves: its water is
+// the sea's), and where its edges and tree lines turn to rock (where a patch noise runs over `rockFill`).
+const THEMES: { forest: number; rock: number; water: number; rockFill: number }[] = [
+  { forest: 0.65, rock: 0.2, water: 0.15, rockFill: 0.72 },
+  { forest: 0.25, rock: 0.6, water: 0.15, rockFill: 0.56 },
+  { forest: 0.4, rock: 0.15, water: 0.45, rockFill: 0.74 },
+  { forest: 0.45, rock: 0.35, water: 0.2, rockFill: 0.64 },
 ];
-const KIND_CHAR: Record<Blocker | "ground" | "shallow", string> = { ground: ".", shallow: ",", forest: "T", rock: "#", water: "~" };
+const KIND_CHAR = { ground: ".", shallow: ",", forest: "T", rock: "#", water: "~" } as const;
 
 export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[], teams: Record<PlayerId, string>): GeneratedMap {
   const random = seededRandom(options.seed);
   const teamOrder = [...new Set(players.map((player) => teams[player] ?? player))];
   const teamSizes = teamOrder.map((team) => players.filter((player) => (teams[player] ?? player) === team).length);
   const evenTeams = teamOrder.length === 2 && teamSizes[0] === teamSizes[1] && teamSizes[0]! >= 2;
-  if (options.sea && options.kind === "sides") throw new Error("A sea is drawn in the middle of a ring layout, not on sides");
-  const kind = options.sea ? "ring" : (options.kind ?? (evenTeams && random() < 1 / 3 ? "sides" : "ring"));
+  const kind = options.kind ?? (evenTeams && random() < 1 / 3 ? "sides" : "ring");
   if (kind === "sides" && !evenTeams) throw new Error(`A sides layout needs two teams of the same size (two or more), not ${teamSizes.join(" and ")}`);
+  const forms = seaForms(kind, players.length);
+  if (typeof options.sea === "string" && !forms.includes(options.sea)) throw new Error(`No ${options.sea} sea is drawn on a ${kind} layout for ${players.length} players`);
+  const form = options.sea === true ? pick(random, forms) : options.sea || undefined;
   for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
-    // The last draws leave the open ground whole: no copse, outcrop or pond can cost a map its connection.
+    // The last draws leave the land between the ways open: no mass or copse can cost a map its connection.
     const plain = attempt >= ATTEMPTS - 5;
-    const field = new Field(random, options.size ?? pick(random, sizesFor(kind, players.length, options.sea === true)), kind, players.length, options.sea === true);
+    const field = new Field(random, options.size ?? pick(random, sizesFor(kind, players.length, form !== undefined)), kind, players.length, form);
     const drawn = kind === "sides" ? sidesLayout(field, players, teams, teamOrder) : ringLayout(field, players, teams, teamOrder);
     if (!drawn) continue;
     const terrain = carveTerrain(field, plain);
@@ -140,7 +160,13 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
   throw new Error(`No ladder map fits the seed ${options.seed} for ${players.length} players`);
 }
 
-// A sea map is a size up from a land map for as many players: the sea takes its middle.
+// The forms a layout's sea takes (see @@@generated-sea), in the order a seed picks from.
+function seaForms(kind: GeneratedLayoutKind, count: number): SeaForm[] {
+  if (kind === "sides") return ["strait", "coast"];
+  return ["inland", "isles", ...(count === 2 ? ["strait" as const] : []), "rivers", ...(count === 2 || count === 4 ? ["coast" as const] : [])];
+}
+
+// A sea map is a size up from a land map for as many players: the sea takes its share.
 function sizesFor(kind: GeneratedLayoutKind, count: number, sea = false): number[] {
   if (sea) return sizesFor(kind, count).map((size) => size + 512);
   if (kind === "sides") return count <= 4 ? [STANDARD_MAP_SIZE + 512, STANDARD_MAP_SIZE + 1_024] : [STANDARD_MAP_SIZE + 1_536, STANDARD_MAP_SIZE + 2_048];
@@ -151,11 +177,15 @@ function sizesFor(kind: GeneratedLayoutKind, count: number, sea = false): number
   return [grown, grown + 512];
 }
 
-// A disk of ground carved out (a clearing, a plateau), its edge wobbling by `wobble` of its radius.
+// A disk of ground kept open (a clearing, a plateau), its edge wobbling by `wobble` of its radius.
 type Clearing = { at: Point; radius: number; wobble: number; plateau?: boolean };
-// A path carved along its points, `half` wide either side.
+// A path along its points, `half` wide either side: a way kept open, or a tree line between neighbours.
 type Path = { points: Point[]; half: number; wobble: number };
-type Obstacle = { at: Point; radius: number; kind: Blocker };
+// Water along its points, `half` wide either side (one point: a disk); a way fords it where it may (see @@@generated-sea).
+type Water = { points: Point[]; half: number; wobble: number; ford: boolean };
+type Island = { at: Point; radius: number };
+// Where a beach meets the water, and the way out onto it.
+type Shore = { at: Point; out: Point };
 
 // Everything placed so far, and whether a feature with all its copies keeps its distances from it.
 class Field {
@@ -167,10 +197,17 @@ class Field {
   readonly mercs: { at: Point; kind: MercenaryUnitKind }[] = [];
   readonly clearings: Clearing[] = [];
   readonly paths: Path[] = [];
+  readonly walls: Path[] = [];
   // Every main's plateau and the foot of its way down, by start.
   readonly plateaus: { base: Point; radius: number; ramp: Point; rampRadius: number }[] = [];
   // Ground that stays open whatever is drawn on it (a start, a mine and its hall, a camp, a post).
   readonly reserved: { at: Point; radius: number }[] = [];
+  // A sea map's water (see @@@generated-sea): rivers, straits and seas, the depth of the sea along the map's edge, the
+  // islands in it, and every start's shore.
+  readonly waters: Water[] = [];
+  coast = 0;
+  readonly islands: Island[] = [];
+  readonly shores: Shore[] = [];
   // The draws a map makes once for every copy of a feature.
   readonly easyKinds: UnitKind[];
   readonly mediumKinds: UnitKind[];
@@ -179,13 +216,10 @@ class Field {
   readonly minorItem: ItemKind;
   readonly majorItem: ItemKind;
   readonly mercKind: MercenaryUnitKind;
-  readonly theme: { rock: number; water: number };
+  readonly theme: (typeof THEMES)[number];
+  readonly walkShare: number;
   readonly noiseSeed: number;
   readonly center: number;
-  // A sea map's sea (see @@@generated-sea): its radius round the center, the islands in it, and every player's shore.
-  seaRadius = 0;
-  readonly islands: { at: Point; radius: number }[] = [];
-  readonly shores: Point[] = [];
   // All the copies of a point under the map's symmetry, and the one copy a point stands for (see Symmetry).
   symmetry: Symmetry = { copies: (point) => [point], canonical: (point) => point };
 
@@ -194,7 +228,7 @@ class Field {
     readonly size: number,
     readonly kind: GeneratedLayoutKind,
     readonly count: number,
-    readonly sea: boolean,
+    readonly form: SeaForm | undefined,
   ) {
     this.center = size / 2;
     this.easyKinds = pick(random, CAMP_KINDS.easy);
@@ -205,6 +239,7 @@ class Field {
     this.majorItem = pick(random, MAJOR_ITEMS);
     this.mercKind = pick(random, MERC_KINDS);
     this.theme = pick(random, THEMES);
+    this.walkShare = this.between(WALK_SHARE[0], WALK_SHARE[1]);
     this.noiseSeed = Math.floor(random() * 2_147_483_647);
   }
 
@@ -242,11 +277,25 @@ class Field {
     );
   }
 
-  // Whether ground `reach` round the point stays off the sea, or on an island in it (always, on a map without a sea).
+  // Whether ground `reach` round the point stays land: on an island, or off every water at its widest.
   dry(point: Point, reach: number) {
-    if (this.seaRadius === 0) return true;
-    if (distance(point, { x: this.center, y: this.center }) >= this.seaRadius * (1 + SEA_WOBBLE) + reach) return true;
-    return this.islands.some((island) => distance(point, island.at) + reach <= island.radius);
+    if (this.islands.some((island) => distance(point, island.at) + reach <= island.radius)) return true;
+    return this.waterGap(point, true) >= reach;
+  }
+
+  // How far the point stands from the nearest water (negative inside it), the water's edge at its farthest wobble out when
+  // `widest`; Infinity on a map without water.
+  waterGap(point: Point, widest = false) {
+    let gap = Infinity;
+    for (const water of this.waters) gap = Math.min(gap, toPolyline(point, water.points) - water.half * (widest ? 1 + water.wobble : 1));
+    if (this.coast > 0) gap = Math.min(gap, edgeGap(point, this.size) - this.coast * (widest ? 1 + SEA_WOBBLE : 1));
+    return gap;
+  }
+
+  // Whether a way may pass the point `reach` wide: off every water but a river or a strait, which it fords.
+  fordable(point: Point, reach: number) {
+    if (this.coast > 0 && edgeGap(point, this.size) < this.coast * (1 + SEA_WOBBLE) + reach) return false;
+    return this.waters.every((water) => water.ford || toPolyline(point, water.points) >= water.half * (1 + water.wobble) + reach);
   }
 
   // Whether ground `reach` around the point stays clear of every plateau.
@@ -254,10 +303,11 @@ class Field {
     return this.plateaus.every((plateau) => distance(point, plateau.base) >= plateau.radius + reach + PLATEAU_MARGIN);
   }
 
-  // Whether a path keeps off every plateau, and off the sea unless it is the way down to a beach.
+  // Whether a path keeps off every plateau, and off all water but what it fords unless it is the way down to a beach.
   pathFits(path: Path, toShore: boolean) {
     return (
-      path.points.every((point) => this.plateaus.every((plateau) => distance(point, plateau.base) >= plateau.radius + path.half * 1.2 + PLATEAU_MARGIN) && (toShore || this.dry(point, path.half * 1.2))) &&
+      path.points.every((point) => this.plateaus.every((plateau) => distance(point, plateau.base) >= plateau.radius + path.half * 1.2 + PLATEAU_MARGIN)) &&
+      (toShore || samplesAlong(path.points, TERRAIN_CELL * 1.5).every((point) => this.fordable(point, path.half * 1.2))) &&
       this.inside(path.points, path.half + 96)
     );
   }
@@ -290,12 +340,24 @@ class Field {
     }
   }
 
+  // An island with all its copies (one, on the mirror's line), in a bay of its own unless the water round it is drawn
+  // already.
+  addIslands(at: Point, bay: boolean) {
+    const copies = this.symmetry.copies(at).map(roundPoint);
+    for (const copy of copies.filter((copy, index) => copies.findIndex((other) => distance(other, copy) < 1) === index)) {
+      if (bay) this.waters.push({ points: [copy], half: ISLAND_RADIUS + ISLAND_WATER, wobble: 0.08, ford: false });
+      this.islands.push({ at: copy, radius: ISLAND_RADIUS });
+    }
+  }
+
   // A path from `from` to `to`, bowed sideways by `bend` of its length (or the other way, or straight, where that bow
-  // crowds a plateau), with all its copies; on a sea map, where no bow keeps off the sea, round it (see roundSea). Returns
-  // the first copy's points, or nothing where no way fits.
+  // crowds a plateau or the water; on a sea map wider bows too, round the water's lobes and bays), with all its copies;
+  // round a sea in the middle where no bow keeps off it (see roundSea). Returns the first copy's points, or nothing where
+  // no way fits.
   addPath(from: Point, to: Point, half: number, bend: number, toShore = false): Point[] | undefined {
-    const ways = [bend, -bend, bend / 2, 0].map((bow) => curve(from, to, bow));
-    if (this.seaRadius > 0) ways.push(roundSea({ x: this.center, y: this.center }, from, to));
+    const ways = [bend, -bend, bend / 2, 0, ...(this.form ? [0.4, -0.4, 0.6, -0.6] : [])].map((bow) => curve(from, to, bow));
+    const middle = { x: this.center, y: this.center };
+    if (this.waters.some((water) => !water.ford && distance(water.points[0]!, middle) < 1)) ways.push(roundSea(middle, from, to));
     for (const points of ways) {
       const copies = this.pathCopies(points, half);
       if (!copies.every((path) => this.pathFits(path, toShore))) continue;
@@ -305,13 +367,29 @@ class Field {
     return undefined;
   }
 
-  pathCopies(points: Point[], half: number): Path[] {
+  pathCopies(points: Point[], half: number, wobble = 0.16): Path[] {
     const images = points.map((point) => this.symmetry.copies(point));
-    return images[0]!.map((_, copy) => ({ points: images.map((image) => image[copy]!), half, wobble: 0.16 }));
+    return images[0]!.map((_, copy) => ({ points: images.map((image) => roundPoint(image[copy]!)), half, wobble }));
   }
 
   addClearings(copies: Point[], radius: number, wobble: number) {
     for (const at of copies) this.clearings.push({ at, radius, wobble });
+  }
+
+  // A beach for every start on the water nearest `from` (its natural), with a way down to it: the nearest shore the way
+  // reaches.
+  addBeaches(from: Point, half: number, bend: number): boolean {
+    for (const shore of shoresFrom(this, from)) {
+      const beach = roundPoint(step(shore.at, shore.out, -BEACH_RADIUS * 0.6));
+      if (!this.addPath(from, beach, half, bend, true)) continue;
+      const ends = this.symmetry.copies(shore.at);
+      const outs = this.symmetry.copies(step(shore.at, shore.out, 100));
+      this.shores.push(...ends.map((at, copy) => ({ at: roundPoint(at), out: unit(sub(outs[copy]!, at)) })));
+      this.addClearings(ends.map(roundPoint), BEACH_RADIUS, 0.1);
+      for (const at of this.symmetry.copies(beach)) this.reserved.push({ at: roundPoint(at), radius: BEACH_RADIUS * 0.6 });
+      return true;
+    }
+    return false;
   }
 }
 
@@ -339,12 +417,12 @@ function ringSymmetry(size: number, count: number, firstAngle: number): Symmetry
   const high = heading(firstAngle + turn / 2);
   const inFirstWedge = (x: number, y: number) => (count === 2 ? low.x * y - low.y * x >= 0 : low.x * y - low.y * x >= 0 && x * high.y - y * high.x > 0);
   const backs = Array.from({ length: count }, (_, slot) => heading(-slot * turn));
-  const exact = quarter || half;
   return {
     copies: (point) => Array.from({ length: count }, (_, slot) => turnAround(point, slot * turn)),
-    // Where the grid is made exactly symmetric (see orbit) any copy stands for itself.
     canonical: (point) => {
-      if (exact) return point;
+      // A quarter or half turn maps the map onto itself exactly: the copy farthest up-left stands for all.
+      if (quarter) return firstOf([point, { x: size - point.y, y: point.x }, { x: size - point.x, y: size - point.y }, { x: point.y, y: size - point.x }]);
+      if (half) return firstOf([point, { x: size - point.x, y: size - point.y }]);
       const ox = point.x - center;
       const oy = point.y - center;
       for (const back of backs) {
@@ -369,12 +447,16 @@ function ringSymmetry(size: number, count: number, firstAngle: number): Symmetry
   };
 }
 
+// The point farthest left (then up) of an exact symmetry's copies of one point.
+function firstOf(copies: Point[]): Point {
+  return copies.reduce((best, point) => (point.x < best.x || (point.x === best.x && point.y < best.y) ? point : best));
+}
+
 function mirrorSymmetry(size: number, quarter: boolean): Symmetry {
   const mirror = (point: Point): Point => (quarter ? { x: point.x, y: size - point.y } : { x: size - point.x, y: point.y });
   return {
     copies: (point) => [point, mirror(point)],
-    // The grid is made exactly symmetric (see orbit): any copy stands for itself.
-    canonical: (point) => point,
+    canonical: (point) => firstOf([point, mirror(point)]),
     orbit: (col, row, cells) => [[col, row], quarter ? [col, cells - 1 - row] : [cells - 1 - col, row]],
   };
 }
@@ -391,12 +473,18 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const copies = (point: Point) => field.symmetry.copies(point);
   const polar = (radius: number, angle: number): Point => ({ x: CENTER + detCos(angle) * radius, y: CENTER + detSin(angle) * radius });
   const ordered = [...players].sort((a, b) => teamOrder.indexOf(teams[a] ?? a) - teamOrder.indexOf(teams[b] ?? b));
+  // The heading between the first start and the next, where what they contest lies.
+  const between = firstAngle + turn / 2;
+  const middle = { x: CENTER, y: CENTER };
 
-  // The main: a plateau round the start with the main mine inside, a tenth of the map or more from every border.
+  // The main: a plateau round the start with the main mine inside, a tenth of the map or more from every border (and
+  // from the sea along it, on a coast).
   const plateau = field.between(500, 570);
-  const reachCap = (CENTER - plateau - 110) / Math.max(Math.abs(detCos(firstAngle)), Math.abs(detSin(firstAngle)));
-  // On a sea map the starts stand a little farther out, round the sea (see @@@generated-sea).
-  const radius = Math.min(SIZE * field.between(field.sea ? 0.35 : 0.31, field.sea ? 0.4 : 0.37), reachCap);
+  const coast = field.form === "coast" ? SIZE * field.between(COAST_SHARE[0], COAST_SHARE[1]) : 0;
+  const reachCap = (CENTER - plateau - (coast > 0 ? coast * (1 + SEA_WOBBLE) + 160 : 110)) / Math.max(Math.abs(detCos(firstAngle)), Math.abs(detSin(firstAngle)));
+  // Round a sea in the middle the starts stand a little farther out (see @@@generated-sea).
+  const outward = field.form === "inland" || field.form === "isles";
+  const radius = Math.min(SIZE * field.between(outward ? 0.35 : 0.31, outward ? 0.4 : 0.37), reachCap);
   const base = roundPoint(polar(radius, firstAngle));
   const inward = heading(firstAngle + Math.PI);
   const mineSide = field.random() < 0.5 ? -1 : 1;
@@ -409,12 +497,7 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   field.mains.push(...copies(mine).map(roundPoint));
   for (const at of field.bases) field.reserved.push({ at, radius: 300 });
   for (const at of field.mains) field.reserved.push({ at, radius: 150 });
-  // A sea map's sea is drawn first (see @@@generated-sea), and every main stands well clear of it.
-  if (field.sea) {
-    const [low, high] = count <= 2 ? SEA_SHARE.duel : SEA_SHARE.more;
-    field.seaRadius = SIZE * field.between(low, high);
-    if (radius - plateau < field.seaRadius * (1 + SEA_WOBBLE) + 150) return false;
-  }
+  if (field.form && !ringSea(field, base, plateau, between, coast)) return false;
 
   // The natural at the foot of the ramp, and the ramp itself on the plateau's rim toward it: tucked by its own main, well
   // away from every other start and natural (naturals halfway to the middle stood 900 apart, so a neighbour's army was
@@ -436,44 +519,46 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const rampHalf = field.between(85, 115);
   copies(base).forEach((at, slot) => field.plateaus.push({ base: roundPoint(at), radius: plateau, ramp: roundPoint(copies(ramp)[slot]!), rampRadius: rampHalf + 48 }));
   for (const lobe of lobes) for (const at of copies(lobe.at)) field.clearings.push({ at: roundPoint(at), radius: lobe.radius, wobble: 0.08, plateau: true });
-  field.addClearings(copies(naturalArea), field.between(320, 400), 0.1);
+  field.addClearings(copies(naturalArea).map(roundPoint), field.between(320, 400), 0.1);
   field.addGuardedMines(natural, "medium", (at, slot) => mirrorAway(at, field.bases[slot]!));
   // The way down: from inside the plateau, over the rim at the ramp, to the natural's clearing.
   field.paths.push(...field.pathCopies([step(base, rampDirection, plateau * 0.55), ramp, naturalArea], rampHalf));
 
-  // The mine contested with the next start, behind a strong guard with a minor item.
+  // The mine contested with the next start, behind a strong guard with a minor item; where water parts neighbours (a
+  // strait, a river, a sea's lobe) it stands on either bank, nearer one of them.
+  const spread = field.form === "strait" || field.form === "rivers" || field.form === "isles" ? 0.3 : 0.12;
   const contested = field.place(
-    () => copies(polar(radius * field.between(0.5, 0.95), firstAngle + turn / 2 + field.between(-0.12, 0.12) * turn)),
+    () => copies(polar(radius * field.between(0.5, 0.95), between + field.between(-spread, spread) * turn)),
     (mines) => field.mineFits(mines, CONTESTED_START_SPACING) && mines.every((at) => field.offPlateaus(at, 330)),
   );
   if (!contested) return false;
   field.addClearings(contested, field.between(280, 340), 0.12);
-  field.addGuardedMines(contested, "strong", () => ({ x: CENTER, y: CENTER }), field.minorItem);
+  field.addGuardedMines(contested, "strong", () => middle, field.minorItem);
   const ahead = contested[0]!;
   const behind = roundPoint(copies(ahead)[count - 1]!);
 
-  // The middle: a hard camp with the best item, over a mine on some maps; on a sea map, an island with all three, which
-  // only a ship reaches.
-  const middle = { x: CENTER, y: CENTER };
-  if (field.sea) {
-    field.islands.push({ at: middle, radius: ISLAND_RADIUS });
-    field.addGuardedMines([middle], "hard", () => polar(1, firstAngle + turn / 2), field.majorItem);
-  } else {
+  // The middle: a hard camp with the best item, over a mine on some maps; on an island in the middle, all three, which only
+  // a ship reaches. Every other island holds a mine behind a medium guard.
+  const middleIsland = field.islands.some((island) => distance(island.at, middle) < 1);
+  if (middleIsland) field.addGuardedMines([middle], "hard", () => polar(1, between), field.majorItem);
+  else if (field.dry(middle, 300)) {
     field.clearings.push({ at: middle, radius: field.between(300, 480), wobble: 0.14 });
     const middleMine = field.random() < 0.5 && field.mineFits([middle], CONTESTED_START_SPACING);
-    if (middleMine) field.addGuardedMines([middle], "hard", () => polar(1, firstAngle + turn / 2), field.majorItem);
+    if (middleMine) field.addGuardedMines([middle], "hard", () => polar(1, between), field.majorItem);
     else if (field.campFits([middle], [], CONTESTED_START_SPACING)) field.addCamps([middle], "hard", field.majorItem);
   }
+  const outer = field.islands.filter((island) => distance(island.at, middle) >= 1).map((island) => island.at);
+  if (outer.length > 0) field.addGuardedMines(outer, "medium", () => middle);
 
-  // Paths from the natural to both contested mines, and on to the middle from the natural or the contested mine (or both).
+  // Paths from the natural to both contested mines, and on to the middle from the natural or the contested mine (or both)
+  // where the middle is land.
   const width = () => field.between(70, 120);
   const bend = () => field.between(-0.22, 0.22);
   const toAhead = field.addPath(naturalArea, ahead, width(), bend());
   const toBehind = field.addPath(naturalArea, behind, width(), bend());
   if (!toAhead || !toBehind) return false;
-  // On a sea map no path leads to the middle: the sea is there, and every natural has its way down to the shore.
   let toMiddle: Point[] | undefined;
-  if (!field.sea) {
+  if (!middleIsland && field.dry(middle, 0)) {
     const roll = field.random();
     const fromNatural = roll < 0.75 ? field.addPath(naturalArea, middle, width(), bend()) : undefined;
     const fromContested = roll >= 0.45 || !fromNatural ? field.addPath(ahead, middle, width(), bend()) : undefined;
@@ -500,33 +585,77 @@ function ringLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, s
     field.mercs.push(...merc.map((at) => ({ at, kind: field.mercKind })));
     for (const at of merc) field.reserved.push({ at, radius: 100 });
   }
-  // A sea map's beaches: one on the sea's edge toward every start, a clearing kept clear of copses and ponds, with a path
-  // down to it from the natural.
-  if (field.sea) {
-    const toward = unit(sub(base, middle));
-    const shore = step(middle, toward, field.seaRadius);
-    const beach = step(middle, toward, field.seaRadius + BEACH_RADIUS * 0.6);
-    field.shores.push(...copies(shore).map(roundPoint));
-    field.addClearings(copies(shore).map(roundPoint), BEACH_RADIUS, 0.1);
-    for (const at of copies(beach)) field.reserved.push({ at: roundPoint(at), radius: BEACH_RADIUS * 0.6 });
-    if (!field.addPath(naturalArea, beach, width(), bend(), true)) return false;
+  if (field.form && !field.addBeaches(naturalArea, width(), bend())) return false;
+
+  // A tree line between every two neighbours, from beyond the map's edge in to the mine they contest, where no river or
+  // strait parts them already.
+  if (field.form !== "strait" && field.form !== "rivers") {
+    const reach = distance(ahead, middle);
+    const edge = CENTER / Math.max(Math.abs(detCos(between)), Math.abs(detSin(between)));
+    if (edge > reach) field.walls.push(...field.pathCopies(curve(polar(edge + 160, between), polar(reach, between), field.between(-0.12, 0.12)), field.between(48, 84), 0.35));
   }
   return true;
+}
+
+// A ring's sea (see @@@generated-sea), drawn once the first main stands; false where it would crowd that main's plateau.
+function ringSea(field: Field, base: Point, plateau: number, between: number, coast: number): boolean {
+  const middle = { x: field.center, y: field.center };
+  const polar = (radius: number, angle: number): Point => roundPoint({ x: field.center + detCos(angle) * radius, y: field.center + detSin(angle) * radius });
+  const lagoon = () => {
+    field.waters.push({ points: [middle], half: ISLAND_RADIUS + ISLAND_WATER, wobble: 0.08, ford: false });
+    field.islands.push({ at: middle, radius: ISLAND_RADIUS });
+  };
+  if (field.form === "inland") {
+    const [low, high] = field.count <= 2 ? SEA_SHARE.duel : SEA_SHARE.more;
+    field.waters.push({ points: [middle], half: field.size * field.between(low, high), wobble: SEA_WOBBLE, ford: false });
+    field.islands.push({ at: middle, radius: ISLAND_RADIUS });
+  } else if (field.form === "isles") {
+    field.waters.push({ points: [middle], half: field.size * field.between(0.11, 0.13), wobble: SEA_WOBBLE, ford: false });
+    field.islands.push({ at: middle, radius: ISLAND_RADIUS });
+    field.addIslands(polar(field.between(800, 900), between), true);
+  } else if (field.form === "strait") {
+    // Across the map between the two starts, bowed into an S through the middle (the same turned half round).
+    const side = heading(between + Math.PI / 2);
+    const bow = field.size * field.between(-0.08, 0.08);
+    const a = polar(field.size, between);
+    const b = polar(field.size, between + Math.PI);
+    const points = [a, step(lerp(a, middle, 0.5), side, bow), middle, step(lerp(b, middle, 0.5), side, -bow), b].map(roundPoint);
+    field.waters.push({ points, half: field.size * field.between(0.045, 0.06), wobble: 0.15, ford: true });
+    lagoon();
+  } else if (field.form === "rivers") {
+    const half = field.between(64, 100);
+    const bend = (field.random() < 0.5 ? -1 : 1) * field.between(0.08, 0.2);
+    for (const mouth of field.symmetry.copies(polar(field.size * 0.75, between))) field.waters.push({ points: curve(roundPoint(mouth), middle, bend), half, wobble: 0.25, ford: true });
+    lagoon();
+  } else if (field.form === "coast") {
+    field.coast = coast;
+    const edge = field.center / Math.max(Math.abs(detCos(between)), Math.abs(detSin(between)));
+    field.addIslands(polar(edge - ISLAND_RADIUS - 110, between), true);
+  }
+  return field.dry(base, plateau + 150);
 }
 
 // @@@generated-sides - Two teams of equal size face each other across the map, each along its edge, the halves mirrored.
 // Every player has its plateau, its ramp and its natural; the contested mines stand down the middle line, the hard camp
 // with the best item at the middle one. Half the maps turn the whole field a quarter, so the teams face top and bottom.
+// A strait down the middle line puts the contested mines on islands in it, every player a third mine on its own bank and a
+// ford straight across from its natural; a coast runs a sea round the map, with an island at either end of the middle line.
 function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, string>, teamOrder: string[]): boolean {
   const SIZE = field.size;
   const CENTER = field.center;
   const quarter = field.random() < 0.5;
   field.symmetry = mirrorSymmetry(SIZE, quarter);
+  // A point of the left side before the turn, turned (and back: the turn is its own inverse).
   const place = (point: Point): Point => roundPoint(quarter ? { x: point.y, y: point.x } : point);
   const members = teamOrder.map((team) => players.filter((player) => (teams[player] ?? player) === team));
   const perSide = members[0]!.length;
   const plateau = field.between(480, 540);
-  const margin = plateau + 130;
+  const coast = field.form === "coast" ? SIZE * field.between(COAST_SHARE[0], COAST_SHARE[1]) : 0;
+  const margin = plateau + 130 + (coast > 0 ? coast * (1 + SEA_WOBBLE) + 50 : 0);
+  field.coast = coast;
+  const strait = field.form === "strait";
+  if (strait) field.waters.push({ points: [place({ x: CENTER, y: -200 }), place({ x: CENTER, y: SIZE + 200 })], half: SIZE * field.between(0.04, 0.055), wobble: 0.15, ford: true });
+  if (coast > 0) for (const y of [ISLAND_RADIUS + 110, SIZE - ISLAND_RADIUS - 110]) field.addIslands(place({ x: CENTER, y }), true);
   // One side is drawn (the left, before any turn); the mirror gives the other.
   const own: { base: Point; natural: Point; area: Point }[] = [];
   for (let index = 0; index < perSide; index += 1) {
@@ -542,6 +671,7 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
       field.starts.set(player, { base: roundPoint(start), mine: roundPoint(main) });
     }
   }
+  if (!own.every(({ base }) => field.dry(base, plateau + 150))) return false;
   for (const { base } of own) {
     for (const at of field.symmetry.copies(base)) {
       field.bases.push(roundPoint(at));
@@ -567,33 +697,63 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
       field.addGuardedMines(naturals, "medium", (at, copy) => mirrorAway(at, field.symmetry.copies(base)[copy]!));
     }
   });
-  // The contested mines down the middle line, one more than a side has players, the middle one behind the hard camp.
-  const middleIndex = Math.floor((perSide + 1) / 2);
+  // The contested mines down the middle line, one more than a side has players, the middle one behind the hard camp. A
+  // strait is forded straight across from every natural, and its mines stand on islands between the fords and at its ends,
+  // the one nearest the middle behind the hard camp.
+  const middle = { x: CENTER, y: CENTER };
+  const fords = own.map(({ area }) => place(area).y);
+  const lines = strait
+    ? [ISLAND_RADIUS + 110, ...fords.slice(1).map((y, index) => (fords[index]! + y) / 2), SIZE - ISLAND_RADIUS - 110].filter((y) => fords.every((ford) => Math.abs(ford - y) >= 720))
+    : Array.from({ length: perSide + 1 }, (_, index) => SIZE * (0.12 + ((index + 0.5) / (perSide + 1)) * 0.76));
+  const middleLine = lines.reduce((best, y) => (Math.abs(y - CENTER) < Math.abs(best - CENTER) ? y : best), lines[0]!);
   const contested: Point[] = [];
-  for (let index = 0; index <= perSide; index += 1) {
-    const y = SIZE * (0.12 + ((index + 0.5) / (perSide + 1)) * 0.76);
+  lines.forEach((y, index) => {
     const mine = place({ x: CENTER, y });
-    if (!field.mineFits([mine], CONTESTED_START_SPACING)) continue;
-    contested.push(mine);
-    field.clearings.push({ at: mine, radius: field.between(320, 400), wobble: 0.12 });
+    if (strait) field.addIslands(mine, true);
+    if (!field.mineFits([mine], CONTESTED_START_SPACING)) {
+      if (strait) {
+        field.islands.pop();
+        field.waters.pop();
+      }
+      return;
+    }
+    if (!strait) {
+      contested.push(mine);
+      field.clearings.push({ at: mine, radius: field.between(320, 400), wobble: 0.12 });
+    }
     const along = (at: Point) => place({ x: CENTER, y: (quarter ? at.x : at.y) + 1 });
-    field.addGuardedMines([mine], index === middleIndex ? "hard" : "strong", along, index === middleIndex ? field.majorItem : index === 0 ? field.minorItem : undefined);
+    field.addGuardedMines([mine], y === middleLine ? "hard" : "strong", along, y === middleLine ? field.majorItem : index === 0 ? field.minorItem : undefined);
+  });
+  const ends = field.islands.filter((island) => coast > 0 && distance(island.at, middle) > CENTER * 0.6).map((island) => island.at);
+  if (ends.length > 0) field.addGuardedMines(ends, "medium", () => middle);
+  // On a strait, every player's third mine on its own bank, toward the strait.
+  if (strait) {
+    for (const { natural } of own) {
+      const from = place(natural);
+      const third = field.place(() => field.symmetry.copies(place({ x: from.x + field.between(420, 640), y: from.y + field.between(-420, 420) })), (mines) => field.mineFits(mines, CONTESTED_START_SPACING));
+      if (!third) return false;
+      contested.push(third[0]!);
+      field.addClearings(third, field.between(280, 340), 0.12);
+      field.addGuardedMines(third, "strong", (at, copy) => mirrorAway(at, field.symmetry.copies(natural)[copy]!), field.minorItem);
+    }
   }
   if (contested.length === 0) return false;
   const width = () => field.between(70, 120);
-  // Every natural reaches the two contested mines nearest it; neighbours on a side reach each other.
-  const outward: Point[][] = [];
+  // Every natural reaches the two mines nearest it (on a strait, its third and a ford straight across to the other bank);
+  // neighbours on a side reach each other.
+  // Every natural's first way out, where its easy camp stands.
+  const leads: Point[][] = [];
   for (const { area } of own) {
-    const targets = [...contested].sort((a, b) => distance(a, area) - distance(b, area)).slice(0, 2);
-    for (const target of targets) {
-      const path = field.addPath(area, target, width(), field.between(-0.2, 0.2));
+    const ford = place({ x: CENTER, y: place(area).y });
+    const targets = strait ? [[...contested].sort((a, b) => distance(a, area) - distance(b, area))[0]!, ford] : [...contested].sort((a, b) => distance(a, area) - distance(b, area)).slice(0, 2);
+    for (const [index, target] of targets.entries()) {
+      const path = field.addPath(area, target, width(), strait ? 0 : field.between(-0.2, 0.2));
       if (!path) return false;
-      outward.push(path);
+      if (index === 0) leads.push(path);
     }
   }
   for (let index = 1; index < own.length; index += 1) field.addPath(own[index - 1]!.area, own[index]!.area, width(), field.between(-0.2, 0.2));
-  for (let index = 0; index < own.length; index += 1) {
-    const path = outward[index * 2]!;
+  for (const path of leads) {
     const easy = field.place(() => field.symmetry.copies(besidePath(path, field.between(0.3, 0.6), (field.random() < 0.5 ? -1 : 1) * field.between(60, 170))), (camps) => field.campFits(camps, [], 600));
     if (!easy) continue;
     field.addClearings(easy, field.between(130, 170), 0.15);
@@ -602,73 +762,112 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   const merc = field.place(() => field.symmetry.copies(place({ x: SIZE * field.between(0.3, 0.42), y: SIZE * field.between(0.2, 0.8) })), (posts) => field.mercFits(posts));
   if (merc) {
     field.addClearings(merc, 170, 0.12);
+    const landMines = contested.flatMap((mine) => field.symmetry.copies(mine).map(roundPoint));
     for (const at of merc) {
-      const target = [...contested].sort((a, b) => distance(a, at) - distance(b, at))[0]!;
+      const target = [...landMines].sort((a, b) => distance(a, at) - distance(b, at))[0]!;
       field.paths.push({ points: curve(at, target, 0), half: 90, wobble: 0.16 });
     }
     field.mercs.push(...merc.map((at) => ({ at, kind: field.mercKind })));
     for (const at of merc) field.reserved.push({ at, radius: 100 });
   }
+  if (field.form && !own.every(({ area }) => field.addBeaches(area, width(), field.between(-0.2, 0.2)))) return false;
+  // A tree line between every two teammates, from beyond the map's edge in to their plateaus' fronts.
+  for (let index = 1; index < own.length; index += 1) {
+    const y = (place(own[index - 1]!.base).y + place(own[index]!.base).y) / 2;
+    field.walls.push(...field.pathCopies(curve(place({ x: -160, y }), place({ x: margin + plateau * 0.9, y }), field.between(-0.1, 0.1)), field.between(48, 84), 0.35));
+  }
   return true;
 }
 
-// @@@generated-terrain - The grid is drawn from the layout: every clearing and path is carved out of the blocked ground,
-// copses, outcrops and ponds are set where the open ground is wide enough, the grid is made symmetric, each main's rim
-// becomes a cliff but for its ramp, stray pockets and specks are filled or cleared, and the map is kept only if every
-// start reaches everything.
+// The shores nearest a point (one by each of 32 headings, out to 1800): where the water's edge is first met, nearest first,
+// with a beach behind it off every plateau.
+function shoresFrom(field: Field, from: Point): Shore[] {
+  const found: (Shore & { reach: number })[] = [];
+  for (let spoke = 0; spoke < 32; spoke += 1) {
+    const out = heading((spoke / 32) * Math.PI * 2);
+    for (let reach = 64; reach <= 1_800; reach += 32) {
+      const at = step(from, out, reach);
+      if (field.waterGap(at) > 0) continue;
+      const beach = step(at, out, -BEACH_RADIUS * 0.6);
+      if (field.offPlateaus(beach, BEACH_RADIUS * 0.6) && field.inside([beach], 200)) found.push({ at: roundPoint(at), out, reach });
+      break;
+    }
+  }
+  return found.sort((a, b) => a.reach - b.reach).map(({ at, out }) => ({ at, out }));
+}
+
+// @@@generated-terrain - The grid is drawn from the layout on open ground: every clearing and path is kept open, the water
+// sunk (fords where a way crosses a river or a strait) and its islands raised, then what blocks the land (see
+// @@@generated-open) is set round the kept ground; the grid is made symmetric, each main's rim becomes a cliff but for its
+// ramp, stray pockets and specks are filled or cleared, the water's rim becomes shallows, and the map is kept only if every
+// start reaches everything, no island is walked to, and every shore takes a shipyard on one water.
 function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
   const cells = Math.round(field.size / TERRAIN_CELL);
   const grid = new Grid(cells, field);
-  for (const clearing of field.clearings) grid.carveDisk(clearing.at, clearing.radius, clearing.wobble, clearing.plateau === true);
-  for (const path of field.paths) grid.carvePath(path);
+  for (const clearing of field.clearings) grid.keep(clearing.at, clearing.radius, clearing.wobble, clearing.plateau === true);
+  for (const path of field.paths) grid.keepPath(path);
   for (const plateau of field.plateaus) grid.markRamp(plateau.ramp, plateau.rampRadius);
-  for (const reserved of field.reserved) grid.carveDisk(reserved.at, reserved.radius, 0, false, true);
-  if (field.seaRadius > 0) grid.sink({ x: field.center, y: field.center }, field.seaRadius, SEA_WOBBLE);
+  for (const reserved of field.reserved) grid.keep(reserved.at, reserved.radius, 0, false);
+  for (const water of field.waters) grid.sink(water);
+  if (field.coast > 0) grid.sinkCoast(field.coast);
+  grid.ford();
   for (const island of field.islands) grid.raise(island.at, island.radius);
-  if (!plain) placeObstacles(field, grid);
-  grid.fillBlocked();
+  grid.border();
+  grid.skirts();
+  for (const wall of field.walls) grid.wall(wall);
+  if (!grid.keepReachable(field.bases[0]!)) return undefined;
+  if (!plain) {
+    placeMasses(field, grid);
+    placeCopses(field, grid);
+  }
   grid.symmetrize();
   grid.raiseCliffs();
   grid.frame();
   if (!grid.keepReachable(field.bases[0]!)) return undefined;
   grid.clearSpecks();
-  if (field.seaRadius > 0) grid.shoal();
+  grid.shoal();
   const required = [...field.bases, ...field.mains, ...field.mines, ...field.camps.map((camp) => camp.at), ...field.mercs.map((merc) => merc.at)];
   if (!required.every((point) => grid.walkableAt(point))) return undefined;
   if (!field.bases.every((base) => grid.roomAround(base, 450) >= 0.55)) return undefined;
   if (!field.mines.every((mine) => grid.hallFits(mine))) return undefined;
+  if (grid.islandWalked(field.bases[0]!)) return undefined;
   const terrain = grid.terrain();
-  if (field.seaRadius > 0) {
-    const center = { x: field.center, y: field.center };
-    const sea = seaCells(terrain, step(center, unit(sub(field.bases[0]!, center)), (ISLAND_RADIUS + field.seaRadius) / 2));
-    if (!field.shores.every((shore) => shipyardFits(field, terrain, sea, shore))) return undefined;
-  }
+  if (field.form && !oneSea(field, terrain)) return undefined;
   return terrain;
 }
 
-// Whether a shipyard can stand on the beach at this shore (see @@@shore-footprint), on the water of the sea itself: a spot
-// out from the shore, or along it either way, within a beach's width.
-function shipyardFits(field: Field, terrain: Terrain, sea: Uint8Array, shore: Point) {
-  const center = { x: field.center, y: field.center };
+// Whether every shore takes a shipyard (see @@@shore-footprint) on one water, the water every island's mine is reached from.
+function oneSea(field: Field, terrain: Terrain) {
   const map = { terrain, width: field.size, height: field.size };
-  const out = unit(sub(shore, center));
-  const along = { x: -out.y, y: out.x };
-  for (let reach = 0; reach <= BEACH_RADIUS; reach += TERRAIN_CELL / 2) {
-    for (const side of [0, 1, -1, 2, -2, 3, -3]) {
-      const at = step(step(shore, out, reach), along, side * TERRAIN_CELL);
-      if (!isShoreFootprint(map, at.x, at.y, BUILDING_DEFS.shipyard.radius)) continue;
-      const water = walkableGoal(map, at.x, at.y, "sea");
-      if (sea[cellIndexAt(terrain, water.x, water.y)] === 1) return true;
-    }
-  }
-  return false;
+  const yards = field.shores.map((shore) => shipyardWater(map, shore));
+  if (yards.some((yard) => yard < 0)) return false;
+  const sea = seaCells(terrain, yards[0]!);
+  const landings = field.islands.map((island) => {
+    const at = walkableGoal(map, island.at.x, island.at.y, "sea");
+    return cellIndexAt(terrain, at.x, at.y);
+  });
+  return [...yards, ...landings].every((index) => index >= 0 && sea[index] === 1);
 }
 
-// The water a ship sails from the cell under the point (four ways, deep or shallow): 1 for each cell.
-function seaCells(terrain: Terrain, at: Point) {
+// The cell of water a shipyard on the beach at this shore puts its ships out on: a spot out from the shore, or along it
+// either way, within a beach's width; -1 where none fits.
+function shipyardWater(map: { terrain: Terrain; width: number; height: number }, shore: Shore) {
+  const along = { x: -shore.out.y, y: shore.out.x };
+  for (let reach = -BEACH_RADIUS / 2; reach <= BEACH_RADIUS; reach += TERRAIN_CELL / 2) {
+    for (const side of [0, 1, -1, 2, -2, 3, -3]) {
+      const at = step(step(shore.at, shore.out, reach), along, side * TERRAIN_CELL);
+      if (!isShoreFootprint(map, at.x, at.y, BUILDING_DEFS.shipyard.radius)) continue;
+      const water = walkableGoal(map, at.x, at.y, "sea");
+      return cellIndexAt(map.terrain, water.x, water.y);
+    }
+  }
+  return -1;
+}
+
+// The water a ship sails from the cell (four ways, deep or shallow): 1 for each cell.
+function seaCells(terrain: Terrain, start: number) {
   const reached = new Uint8Array(terrain.cols * terrain.rows);
   const wet = (index: number) => terrain.cells[index] === "~" || terrain.cells[index] === ",";
-  const start = cellIndexAt(terrain, at.x, at.y);
   if (start < 0 || !wet(start)) return reached;
   const queue = [start];
   reached[start] = 1;
@@ -687,17 +886,52 @@ function seaCells(terrain: Terrain, at: Point) {
   return reached;
 }
 
-function placeObstacles(field: Field, grid: Grid) {
-  const wanted = Math.round(field.between(4, 10));
-  const kinds: Blocker[] = ["forest", "forest", "forest", "rock", "rock", "water"];
+// The blocker a mass of the map's theme is made of (see @@@generated-open): a sea map's lakes are groves.
+function massKind(field: Field): Blocker {
+  const { forest, rock, water } = field.theme;
+  const roll = field.random() * (forest + rock + water);
+  if (roll < forest) return 1;
+  if (roll < forest + rock) return 2;
+  return field.form ? 1 : 3;
+}
+
+// @@@generated-masses - Groves, ridges, outcrops and lakes: each a chain of one to four disks, every one beside the last,
+// turned from its heading and smaller, set with all its copies on open land off the ways, until the open share of the land
+// is down to the map's share (or the draws run out). A mass that would cut any open ground off from the starts is taken
+// back: the land between the ways stays one whole, so the share drawn is the share played on.
+function placeMasses(field: Field, grid: Grid) {
+  grid.countOpen();
+  for (let attempt = 0; attempt < 240 && grid.openShare() > field.walkShare; attempt += 1) {
+    const kind = massKind(field);
+    const disks: { at: Point; radius: number }[] = [];
+    let at = { x: field.between(0, field.size), y: field.between(0, field.size) };
+    let radius = field.between(MASS_RADIUS[0], MASS_RADIUS[1]);
+    let toward = field.between(0, Math.PI * 2);
+    for (let link = Math.floor(field.between(1, 5)); link > 0; link -= 1) {
+      disks.push({ at, radius });
+      toward += field.between(-1, 1);
+      at = step(at, heading(toward), radius * field.between(0.6, 1));
+      radius *= field.between(0.6, 0.95);
+    }
+    const images = disks.map((disk) => field.symmetry.copies(disk.at).map(roundPoint));
+    if (!images[0]!.every((point) => grid.massFits(point, disks[0]!.radius))) continue;
+    const closed: number[] = [];
+    images[0]!.forEach((_, copy) => disks.forEach((disk, index) => grid.block(images[index]![copy]!, disk.radius, 0.4, kind, closed)));
+    if (!grid.whole(field.bases[0]!)) grid.reopen(closed);
+  }
+}
+
+// Copses here and there on open land, a little apart from the ways, for the eye.
+function placeCopses(field: Field, grid: Grid) {
+  const copies = field.symmetry.copies({ x: 0, y: 0 }).length;
+  const wanted = Math.round((field.size * field.size) / 1_400_000 / copies);
   let placed = 0;
-  for (let attempt = 0; attempt < 60 && placed < wanted; attempt += 1) {
-    const radius = field.between(50, 130);
-    const at = { x: field.between(0, field.size), y: field.between(0, field.size) };
-    const copies = field.symmetry.copies(at).map(roundPoint);
-    const kind = pick(field.random, kinds);
-    if (!copies.every((point) => grid.obstacleFits(point, radius, field.reserved))) continue;
-    for (const point of copies) grid.block({ at: point, radius, kind });
+  for (let attempt = 0; attempt < wanted * 8 && placed < wanted; attempt += 1) {
+    const radius = field.between(36, 84);
+    const at = field.symmetry.copies({ x: field.between(0, field.size), y: field.between(0, field.size) }).map(roundPoint);
+    if (!at.every((point) => grid.copseFits(point, radius))) continue;
+    const kind = field.random() < field.theme.rock ? 2 : 1;
+    for (const point of at) grid.block(point, radius, 0.3, kind);
     placed += 1;
   }
 }
@@ -705,26 +939,36 @@ function placeObstacles(field: Field, grid: Grid) {
 // The terrain being drawn: which cells are open, which of them lie on a plateau or a ramp, what blocks the rest.
 class Grid {
   readonly open: Uint8Array;
+  // Ground no blocker covers (the ways, clearings and reserved spots), and the ways' own cells, which ford water.
+  readonly kept: Uint8Array;
+  readonly way: Uint8Array;
   readonly plateau: Uint8Array;
   readonly ramp: Uint8Array;
-  readonly kept: Uint8Array;
+  // 0 none (open), 1 forest, 2 rock, 3 water.
   readonly blocker: Uint8Array;
-  // A sea map's island and shallows (see @@@generated-sea).
+  // A sea map's water (see @@@generated-sea), the part of it no way fords, its islands and every water's shallows.
+  readonly sea: Uint8Array;
+  readonly still: Uint8Array;
   readonly island: Uint8Array;
   readonly shallow: Uint8Array;
   readonly count: number;
+  private openCount = 0;
+  private landCount = 0;
+  private islandCount = 0;
 
   constructor(
     readonly cells: number,
     readonly field: Field,
   ) {
     this.count = cells * cells;
-    this.open = new Uint8Array(this.count);
+    this.open = new Uint8Array(this.count).fill(1);
+    this.kept = new Uint8Array(this.count);
+    this.way = new Uint8Array(this.count);
     this.plateau = new Uint8Array(this.count);
     this.ramp = new Uint8Array(this.count);
-    this.kept = new Uint8Array(this.count);
-    // 0 none (open or not yet filled), 1 forest, 2 rock, 3 water.
     this.blocker = new Uint8Array(this.count);
+    this.sea = new Uint8Array(this.count);
+    this.still = new Uint8Array(this.count);
     this.island = new Uint8Array(this.count);
     this.shallow = new Uint8Array(this.count);
   }
@@ -765,53 +1009,27 @@ class Grid {
     return edgeNoise(this.field.noiseSeed, this.field.symmetry.canonical(point));
   }
 
-  carveDisk(at: Point, radius: number, wobble: number, plateau: boolean, keep = false) {
+  // Cells within a wobbling disk, the wobble the same for every copy.
+  disk(at: Point, radius: number, wobble: number, visit: (index: number) => void) {
     this.around(at, radius * (1 + wobble), (index, gap) => {
-      if (gap > radius * (1 + wobble * this.wobble(this.center(index)))) return;
-      this.open[index] = 1;
+      if (gap <= radius * (1 + wobble * this.wobble(this.center(index)))) visit(index);
+    });
+  }
+
+  keep(at: Point, radius: number, wobble: number, plateau: boolean) {
+    this.disk(at, radius, wobble, (index) => {
+      this.kept[index] = 1;
       if (plateau) this.plateau[index] = 1;
-      if (keep) this.kept[index] = 1;
     });
   }
 
-  carvePath(path: Path) {
-    for (let index = 1; index < path.points.length; index += 1) {
-      const from = path.points[index - 1]!;
-      const to = path.points[index]!;
-      const pieces = Math.max(1, Math.ceil(distance(from, to) / 24));
-      for (let piece = 0; piece <= pieces; piece += 1) this.carveDisk(lerp(from, to, piece / pieces), path.half, path.wobble, false);
-    }
-  }
-
-  // The sea (see @@@generated-sea): deep water over everything within its wobbling edge.
-  sink(at: Point, radius: number, wobble: number) {
-    this.around(at, radius * (1 + wobble), (index, gap) => {
-      if (gap > radius * (1 + wobble * this.wobble(this.center(index)))) return;
-      this.open[index] = 0;
-      this.blocker[index] = 3;
-    });
-  }
-
-  // An island in the sea: open ground that no walk from a start need reach.
-  raise(at: Point, radius: number) {
-    this.carveDisk(at, radius, 0.08, false, true);
-    this.around(at, radius * 1.08, (index) => {
-      if (this.open[index]) this.island[index] = 1;
-    });
-  }
-
-  // Water beside open ground becomes shallows, walked and sailed both.
-  shoal() {
-    const rim: number[] = [];
-    for (let index = 0; index < this.count; index += 1) {
-      if (this.open[index] || this.blocker[index] !== 3) continue;
-      if (this.neighbours(index).some((next) => this.open[next] === 1)) rim.push(index);
-    }
-    for (const index of rim) {
-      this.open[index] = 1;
-      this.shallow[index] = 1;
-      this.blocker[index] = 0;
-    }
+  keepPath(path: Path) {
+    alongEvery(path.points, 24, (at) =>
+      this.disk(at, path.half, path.wobble, (index) => {
+        this.kept[index] = 1;
+        this.way[index] = 1;
+      }),
+    );
   }
 
   markRamp(at: Point, radius: number) {
@@ -820,45 +1038,160 @@ class Grid {
     });
   }
 
-  // Whether a copse, outcrop or pond of this radius may stand here: off every reserved spot, and with the ground round it
-  // at least OBSTACLE_PASSAGE cells wide on every side.
-  obstacleFits(at: Point, radius: number, reserved: { at: Point; radius: number }[]) {
-    if (!this.walkableAt(at)) return false;
-    if (reserved.some((spot) => distance(spot.at, at) < spot.radius + radius + 60)) return false;
-    if (this.field.plateaus.some((plateau) => distance(plateau.base, at) < plateau.radius + radius + 40)) return false;
-    let clear = true;
-    this.around(at, radius + OBSTACLE_PASSAGE * TERRAIN_CELL * 1.5, (index) => {
-      if (!this.open[index] || this.ramp[index]) clear = false;
+  private drown(index: number, still: boolean) {
+    this.open[index] = 0;
+    this.blocker[index] = 3;
+    this.sea[index] = 1;
+    if (still) this.still[index] = 1;
+  }
+
+  // Deep water over everything along the water's points within its wobbling edge.
+  sink(water: Water) {
+    alongEvery(water.points, 24, (at) => this.disk(at, water.half, water.wobble, (index) => this.drown(index, !water.ford)));
+  }
+
+  // The sea along the map's edge, `depth` deep, its shore wobbling.
+  sinkCoast(depth: number) {
+    for (let index = 0; index < this.count; index += 1) {
+      const at = this.center(index);
+      if (edgeGap(at, this.field.size) <= depth * (1 + SEA_WOBBLE * this.wobble(at))) this.drown(index, true);
+    }
+  }
+
+  // A way across a river or a strait is a ford: shallows, walked and sailed both.
+  ford() {
+    for (let index = 0; index < this.count; index += 1) {
+      if (!this.way[index] || !this.sea[index] || this.still[index]) continue;
+      this.open[index] = 1;
+      this.blocker[index] = 0;
+      this.shallow[index] = 1;
+    }
+  }
+
+  // An island in the water: open ground that no walk from a start reaches.
+  raise(at: Point, radius: number) {
+    this.disk(at, radius, 0.08, (index) => {
+      this.open[index] = 1;
+      this.blocker[index] = 0;
+      this.sea[index] = 0;
+      this.still[index] = 0;
+      this.kept[index] = 1;
+      this.island[index] = 1;
+    });
+  }
+
+  // What blocks the cell where the land is filled (the edge, a skirt, a tree line, a pocket): forest, or rock where the
+  // theme's patches run high.
+  fillKind(index: number): Blocker {
+    return patchNoise(this.field.noiseSeed + 17, this.field.symmetry.canonical(this.center(index)), 520) > this.field.theme.rockFill ? 2 : 1;
+  }
+
+  // Whether a blocker may stand on the cell: open land off the kept ground, the plateaus and their ramps.
+  blockable(index: number) {
+    return this.open[index] === 1 && !this.kept[index] && !this.plateau[index] && !this.ramp[index] && !this.shallow[index];
+  }
+
+  close(index: number, code: Blocker) {
+    if (this.open[index]) this.openCount -= 1;
+    this.open[index] = 0;
+    this.blocker[index] = code;
+  }
+
+  // Blocks the open land in a wobbling disk; the cells it closes are listed into `closed` when given.
+  block(at: Point, radius: number, wobble: number, code: Blocker, closed?: number[]) {
+    this.disk(at, radius, wobble, (index) => {
+      if (!this.blockable(index)) return;
+      this.close(index, code);
+      closed?.push(index);
+    });
+  }
+
+  reopen(cells: number[]) {
+    for (const index of cells) {
+      this.open[index] = 1;
+      this.blocker[index] = 0;
+      this.openCount += 1;
+    }
+  }
+
+  // Whether every open cell but an island's is reached from the start.
+  whole(from: Point) {
+    const reached: number[] = [];
+    this.flood(this.indexAt(from), (index) => this.open[index] === 1, reached);
+    return reached.length === this.openCount - this.islandCount;
+  }
+
+  fill(index: number) {
+    if (this.blockable(index)) this.close(index, this.fillKind(index));
+  }
+
+  // The map's edge, BORDER_CELLS deep by patches (see @@@generated-open).
+  border() {
+    const [low, high] = BORDER_CELLS;
+    for (let index = 0; index < this.count; index += 1) {
+      const col = index % this.cells;
+      const row = (index - col) / this.cells;
+      const depth = Math.min(col, row, this.cells - 1 - col, this.cells - 1 - row);
+      if (depth >= high) continue;
+      if (depth < low + (high - low) * patchNoise(this.field.noiseSeed + 43, this.field.symmetry.canonical(this.center(index)), 640)) this.fill(index);
+    }
+  }
+
+  // The land round the back of every main, SKIRT beyond its plateau's radius by patches: all but the side toward its ramp.
+  skirts() {
+    for (const plateau of this.field.plateaus) {
+      const toRamp = unit(sub(plateau.ramp, plateau.base));
+      this.around(plateau.base, plateau.radius + SKIRT[1], (index, gap) => {
+        const at = this.center(index);
+        if ((at.x - plateau.base.x) * toRamp.x + (at.y - plateau.base.y) * toRamp.y > gap * 0.15) return;
+        if (gap <= plateau.radius + SKIRT[0] + (SKIRT[1] - SKIRT[0]) * patchNoise(this.field.noiseSeed + 59, this.field.symmetry.canonical(at), 300)) this.fill(index);
+      });
+    }
+  }
+
+  // A tree line along its points.
+  wall(wall: Path) {
+    alongEvery(wall.points, 24, (at) => this.disk(at, wall.half, wall.wobble, (index) => this.fill(index)));
+  }
+
+  countOpen() {
+    this.openCount = 0;
+    this.landCount = 0;
+    this.islandCount = 0;
+    for (let index = 0; index < this.count; index += 1) {
+      this.openCount += this.open[index]!;
+      if (!this.sea[index]) this.landCount += 1;
+      if (this.open[index] && this.island[index]) this.islandCount += 1;
+    }
+  }
+
+  // The open share of the land (the map but its sea).
+  openShare() {
+    return this.landCount === 0 ? 0 : this.openCount / this.landCount;
+  }
+
+  // Whether a mass may stand here: on open land off the ways, clear of every reserved spot and plateau by half its size.
+  massFits(at: Point, radius: number) {
+    const index = this.indexAt(at);
+    if (index < 0 || !this.blockable(index)) return false;
+    if (this.field.reserved.some((spot) => distance(spot.at, at) < spot.radius + radius * 0.5)) return false;
+    return this.field.plateaus.every((plateau) => distance(plateau.base, at) >= plateau.radius + radius * 0.5 + 64);
+  }
+
+  // Whether a copse may stand here: its ground and two cells round it open land off the ways.
+  copseFits(at: Point, radius: number) {
+    let clear = this.indexAt(at) >= 0;
+    this.around(at, radius + TERRAIN_CELL * 2, (index) => {
+      if (!this.blockable(index)) clear = false;
     });
     return clear;
-  }
-
-  block(obstacle: Obstacle) {
-    const code = obstacle.kind === "forest" ? 1 : obstacle.kind === "rock" ? 2 : 3;
-    this.around(obstacle.at, obstacle.radius * 1.3, (index, gap) => {
-      if (this.kept[index] || gap > obstacle.radius * (1 + 0.3 * this.wobble(this.center(index)))) return;
-      this.open[index] = 0;
-      this.blocker[index] = code;
-    });
-  }
-
-  // What blocks the ground no one walks, by patches: rock where one noise runs high, water where another does, forest
-  // elsewhere.
-  fillBlocked() {
-    const { theme, noiseSeed, symmetry } = this.field;
-    for (let index = 0; index < this.count; index += 1) {
-      if (this.open[index] || this.blocker[index]) continue;
-      const at = symmetry.canonical(this.center(index));
-      const rock = patchNoise(noiseSeed + 17, at, 520);
-      const water = patchNoise(noiseSeed + 31, at, 700);
-      this.blocker[index] = water > theme.water ? 3 : rock > theme.rock ? 2 : 1;
-    }
   }
 
   // Every cell takes the value of the first cell of its orbit, so the grid is the same from every start.
   symmetrize() {
     const orbit = this.field.symmetry.orbit;
     if (!orbit) return;
+    const layers = [this.open, this.kept, this.way, this.plateau, this.ramp, this.blocker, this.sea, this.still, this.island, this.shallow];
     const done = new Uint8Array(this.count);
     for (let row = 0; row < this.cells; row += 1) {
       for (let col = 0; col < this.cells; col += 1) {
@@ -868,12 +1201,7 @@ class Grid {
           const image = r * this.cells + c;
           done[image] = 1;
           if (image === index) continue;
-          this.open[image] = this.open[index]!;
-          this.plateau[image] = this.plateau[index]!;
-          this.ramp[image] = this.ramp[index]!;
-          this.kept[image] = this.kept[index]!;
-          this.blocker[image] = this.blocker[index]!;
-          this.island[image] = this.island[index]!;
+          for (const layer of layers) layer[image] = layer[index]!;
         }
       }
     }
@@ -901,11 +1229,11 @@ class Grid {
       if (col > 1 && row > 1 && col < this.cells - 2 && row < this.cells - 2) continue;
       if (!this.open[index]) continue;
       this.open[index] = 0;
-      this.blocker[index] = this.blocker[index] || 1;
+      this.blocker[index] = this.fillKind(index);
     }
   }
 
-  // Open ground that the first start cannot reach is filled; false when the start itself is not open.
+  // Open ground that the first start cannot reach is filled (but an island's); false when the start itself is not open.
   keepReachable(from: Point) {
     const start = this.indexAt(from);
     if (start < 0 || !this.open[start]) return false;
@@ -913,7 +1241,8 @@ class Grid {
     for (let index = 0; index < this.count; index += 1) {
       if (!this.open[index] || reached[index] || this.island[index]) continue;
       this.open[index] = 0;
-      this.blocker[index] = this.plateau[index] ? 2 : 1;
+      this.shallow[index] = 0;
+      this.blocker[index] = this.plateau[index] ? 2 : this.sea[index] ? 3 : this.fillKind(index);
     }
     return true;
   }
@@ -938,6 +1267,27 @@ class Grid {
         this.blocker[cell] = 0;
       }
     }
+  }
+
+  // Water beside open ground becomes shallows, walked and sailed both.
+  shoal() {
+    const rim: number[] = [];
+    for (let index = 0; index < this.count; index += 1) {
+      if (this.open[index] || this.blocker[index] !== 3) continue;
+      if (this.neighbours(index).some((next) => this.open[next] === 1)) rim.push(index);
+    }
+    for (const index of rim) {
+      this.open[index] = 1;
+      this.shallow[index] = 1;
+      this.blocker[index] = 0;
+    }
+  }
+
+  // Whether a walk from the start reaches any island (its shallows touching the land's).
+  islandWalked(from: Point) {
+    const reached = this.flood(this.indexAt(from), (index) => this.open[index] === 1);
+    for (let index = 0; index < this.count; index += 1) if (reached[index] && this.island[index]) return true;
+    return false;
   }
 
   // Four-way flood from a cell over the cells that pass; the cells reached (listed into `into` when given).
@@ -989,14 +1339,15 @@ class Grid {
     return all === 0 ? 0 : open / all;
   }
 
-  // Whether a hall fits somewhere beside the mine (within 170 of it, its whole footprint open).
+  // Whether a hall fits somewhere beside the mine (within 170 of it, its whole footprint open and off every ramp, see
+  // @@@ramp-unbuildable).
   hallFits(mine: Point) {
     for (const reach of [110, 140, 170]) {
       for (let spoke = 0; spoke < 16; spoke += 1) {
         const at = step(mine, heading((spoke / 16) * Math.PI * 2), reach);
         let clear = true;
         this.around(at, 56, (index) => {
-          if (!this.open[index]) clear = false;
+          if (!this.open[index] || this.ramp[index]) clear = false;
         });
         if (clear) return true;
       }
@@ -1145,6 +1496,44 @@ function besidePath(points: Point[], share: number, offset: number): Point {
     return { x: along.x - ((to.y - from.y) / size) * offset, y: along.y + ((to.x - from.x) / size) * offset };
   }
   return points[0]!;
+}
+
+// Every point along a path's points at most `every` apart, its ends included (one point: itself).
+function alongEvery(points: Point[], every: number, visit: (at: Point) => void) {
+  if (points.length === 1) visit(points[0]!);
+  for (let index = 1; index < points.length; index += 1) {
+    const from = points[index - 1]!;
+    const to = points[index]!;
+    const pieces = Math.max(1, Math.ceil(distance(from, to) / every));
+    for (let piece = index === 1 ? 0 : 1; piece <= pieces; piece += 1) visit(lerp(from, to, piece / pieces));
+  }
+}
+
+function samplesAlong(points: Point[], every: number): Point[] {
+  const found: Point[] = [];
+  alongEvery(points, every, (at) => found.push(at));
+  return found;
+}
+
+// The distance from a point to a path's points (one point: to it).
+function toPolyline(point: Point, points: Point[]) {
+  if (points.length === 1) return distance(point, points[0]!);
+  let best = Infinity;
+  for (let index = 1; index < points.length; index += 1) {
+    const a = points[index - 1]!;
+    const b = points[index]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length = dx * dx + dy * dy;
+    const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / length));
+    best = Math.min(best, distance(point, { x: a.x + dx * t, y: a.y + dy * t }));
+  }
+  return best;
+}
+
+// How far the point stands in from the map's nearest edge.
+function edgeGap(point: Point, size: number) {
+  return Math.min(point.x, point.y, size - point.x, size - point.y);
 }
 
 // @@@generated-noise - Value noise on a hashed lattice, smoothed: integer hashing and + - * / only, the same everywhere.

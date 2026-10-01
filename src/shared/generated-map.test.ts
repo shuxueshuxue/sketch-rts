@@ -3,6 +3,7 @@ import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
 import { BUILDING_DEFS } from "./catalog";
 import { isFootprintBuildable, isShoreFootprint, isWalkable, walkableGoal, walkingDistance } from "./terrain";
+import type { SeaForm } from "./types";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
 const TEAMS = { v9: "v9-side", p1: "rivals", p2: "rivals", p3: "rivals" };
@@ -33,12 +34,13 @@ describe("generated maps", () => {
     }
   });
 
-  it("carves a ladder map: every start walks to every other start and every mine, camp and post, over ground it can stand on", () => {
+  it("draws a ladder map on open ground: every start walks to every other start and every mine, camp and post, over ground it can stand on", () => {
     for (let index = 0; index < 12; index += 1) {
       const { map, halls, ground } = layout(`walk-${index}`);
-      const open = [...map.terrain.cells].filter((cell) => cell === ".").length / map.terrain.cells.length;
-      expect(open).toBeGreaterThan(0.15);
-      expect(open).toBeLessThan(0.6);
+      // Most of the map is walked (the maps carved out of forest kept 18 to 28 per cent), but not all of it.
+      const open = [...map.terrain.cells].filter((cell) => cell === "." || cell === ",").length / map.terrain.cells.length;
+      expect(open).toBeGreaterThan(0.5);
+      expect(open).toBeLessThan(0.75);
       const things = [...map.resources, ...map.mercenaryCamps, ...map.units, ...map.buildings];
       for (const thing of things) expect(isWalkable(ground, thing.x, thing.y)).toBe(true);
       for (const hall of halls) for (const thing of [...halls, ...map.resources, ...map.mercenaryCamps]) expect(walkingDistance(ground, hall, thing)).toBeDefined();
@@ -153,34 +155,44 @@ describe("generated maps", () => {
     expect(seeded.map.terrain).toEqual(gameMap.terrain);
   });
 
-  it("fills a sea map's middle with one sea: an island mine only a ship reaches, and a beach for every start's shipyard", () => {
-    for (const players of [PLAYERS.slice(0, 2), PLAYERS]) {
-      for (let index = 0; index < 4; index += 1) {
-        const map = generateMap({ seed: `sea-${index}`, sea: true }, players, Object.fromEntries(players.map((player) => [player, player])));
+  it("draws every form of sea: island mines only a ship reaches, and near every start a shore for a shipyard on the one water", () => {
+    const draws: ["ring" | "sides", number, SeaForm][] = [
+      ["ring", 2, "inland"],
+      ["ring", 2, "isles"],
+      ["ring", 2, "strait"],
+      ["ring", 2, "rivers"],
+      ["ring", 2, "coast"],
+      ["ring", 4, "inland"],
+      ["ring", 4, "isles"],
+      ["ring", 4, "rivers"],
+      ["ring", 4, "coast"],
+      ["sides", 4, "strait"],
+      ["sides", 4, "coast"],
+    ];
+    for (const [kind, count, form] of draws) {
+      for (let index = 0; index < 2; index += 1) {
+        const players = kind === "sides" ? Object.keys(PAIRS) : PLAYERS.slice(0, count);
+        const teams = kind === "sides" ? PAIRS : Object.fromEntries(players.map((player) => [player, player]));
+        const map = generateMap({ seed: `${form}-${index}`, kind, sea: form }, players, teams);
         const ground = { terrain: map.terrain, width: map.size, height: map.size };
-        const middle = { x: map.size / 2, y: map.size / 2 };
-        const island = map.resources.find((mine) => gap(mine, middle) < 2)!;
         const halls = players.map((player) => ({ x: map.starts[player]!.baseX, y: map.starts[player]!.baseY }));
-        const landing = walkableGoal(ground, island.x, island.y, "sea");
-        // Every start's beach, on the way from it to the middle, takes a shipyard whose ships sail to the island.
-        const harbors = halls.map((hall) => {
-          for (let share = 0; share <= 1; share += 0.01) {
-            for (const side of [0, 32, -32, 64, -64]) {
-              const along = { x: hall.x + (middle.x - hall.x) * share, y: hall.y + (middle.y - hall.y) * share };
-              const at = { x: along.x + ((middle.y - hall.y) / gap(hall, middle)) * side, y: along.y - ((middle.x - hall.x) / gap(hall, middle)) * side };
-              if (!isShoreFootprint(ground, at.x, at.y, BUILDING_DEFS.shipyard.radius)) continue;
-              const water = walkableGoal(ground, at.x, at.y, "sea");
-              if (walkingDistance(ground, water, landing, "sea") !== undefined) return water;
-            }
-          }
-          return undefined;
-        });
-        expect(harbors.every((harbor) => harbor !== undefined)).toBe(true);
+        const islands = map.resources.filter((mine) => walkingDistance(ground, halls[0]!, mine) === undefined);
+        expect(islands.length).toBeGreaterThan(0);
+        for (const hall of halls) for (const other of [...halls, ...map.resources.filter((mine) => !islands.includes(mine))]) expect(walkingDistance(ground, hall, other)).toBeDefined();
+        // Within reach of every start a shipyard stands on the shore, and its ships sail to every island.
+        const landings = islands.map((mine) => walkableGoal(ground, mine.x, mine.y, "sea"));
         for (const hall of halls) {
-          for (const other of halls) expect(walkingDistance(ground, hall, other)).toBeDefined();
-          expect(walkingDistance(ground, hall, island)).toBeUndefined();
+          const yards: { x: number; y: number }[] = [];
+          for (let dy = -2_800; dy <= 2_800; dy += 48) for (let dx = -2_800; dx <= 2_800; dx += 48) if (dx * dx + dy * dy <= 2_800 ** 2 && isShoreFootprint(ground, hall.x + dx, hall.y + dy, BUILDING_DEFS.shipyard.radius)) yards.push({ x: hall.x + dx, y: hall.y + dy });
+          const harbor = yards
+            .sort((a, b) => gap(a, hall) - gap(b, hall))
+            .slice(0, 6)
+            .some((yard) => landings.every((landing) => walkingDistance(ground, walkableGoal(ground, yard.x, yard.y, "sea"), landing, "sea") !== undefined));
+          expect(harbor).toBe(true);
         }
       }
     }
+    // A strait parts two players, or two teams; a ring of more has rivers instead.
+    expect(() => generateMap({ seed: "strait", kind: "ring", sea: "strait" }, PLAYERS, TEAMS)).toThrow(/strait/);
   });
 });

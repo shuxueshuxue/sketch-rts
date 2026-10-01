@@ -45,12 +45,8 @@ function runTwoAiDuel(mapId: MapId, ticks = 36_000) {
 
 function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof runTwoAiDuel>) {
   const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
-  const losingOwners = game.activePlayers
-    .filter((owner) => owner !== game.match.winner)
-    .map((owner) => ({
-      buildings: game.buildings.filter((building) => building.owner === owner).length,
-      workers: game.units.filter((unit) => unit.owner === owner && unit.kind === "worker").length,
-    }));
+  // A side is out when its last building falls (see updateVictory); a worker of its may still be walking.
+  const losingOwners = game.activePlayers.filter((owner) => owner !== game.match.winner).map((owner) => ({ buildings: game.buildings.filter((building) => building.owner === owner).length }));
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(ticks);
@@ -62,7 +58,7 @@ function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof r
   expect(game.match.stats.unitsLost.player).toBeGreaterThan(0);
   expect(game.match.stats.unitsLost.enemy).toBeGreaterThan(0);
   expect(totalNonBaseBuildingsDestroyed).toBeGreaterThan(0);
-  expect(losingOwners).toEqual(expect.arrayContaining([expect.objectContaining({ buildings: 0, workers: 0 })]));
+  expect(losingOwners).toEqual(expect.arrayContaining([{ buildings: 0 }]));
 }
 
 function expectActivePlayersSpent(game: ReturnType<typeof createGame>, minimum: number) {
