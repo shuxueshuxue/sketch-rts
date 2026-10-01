@@ -50,6 +50,24 @@ describe("buildings as bodies", () => {
     expect(Math.hypot(footman.x - 880, footman.y - 600)).toBeLessThan(10);
   });
 
+  it("walks a worker down the far ramp to a farm under its cliff, not straight at the cliff", () => {
+    const game = field();
+    // A cliff of rock along row 20 with its ramp at the east end (columns 35 to 39); a farm below it, under the worker.
+    const cells = Array.from({ length: 40 * 40 }, (_, at) => (Math.floor(at / 40) === 20 && at % 40 < 35 ? "#" : ".")).join("");
+    game.map = { ...game.map, terrain: { cell: 32, cols: 40, rows: 40, cells } };
+    wall(game, "player", 336, [720]);
+    const worker = game.spawnUnit("player", "worker", 336, 560);
+    // Below the cliff, by the farm's wall.
+    issueCommand(game, { type: "move", unitIds: [worker.id], x: 336, y: 680 });
+    let ticks = 0;
+    while (ticks < 2000 && worker.order.type === "move") {
+      stepGame(game);
+      ticks += 1;
+    }
+    expect(worker.order.type).toBe("idle");
+    expect(worker.y).toBeGreaterThan(672);
+  });
+
   it("measures the AIs' walking distances on the terrain alone, from a hall's center too", () => {
     const game = field();
     stepGame(game);

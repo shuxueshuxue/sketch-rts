@@ -137,7 +137,7 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   const target = padAt(ground, goal.x, goal.y);
   const open = start >= 0 && ground.walk[start] === 1 && ground.walk[target] === 1;
   if (open && state.bodyBlocks?.[blockOf(state, start)] === 1) {
-    const way = steerAmongBodies(state, from, goal, start, target);
+    const way = steerAmongBodies(state, ground, from, goal, start, target);
     if (way) return way;
   }
   if (clearSegment(ground, from.x, from.y, goal.x, goal.y)) return goal;
@@ -153,36 +153,54 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
 // Where a unit in cell `start` among buildings heads (see @@@building-pathing): the goal when it sees it on the copy,
 // else down its square's window field when the goal lies in the window and the way to it stays there, else down the
 // copy's field to the goal's square; undefined when no way on the copy joins them (shut in: the terrain's way).
-function steerAmongBodies(state: TerrainRuntime, from: Point, goal: Point, start: number, target: number): Point | undefined {
+function steerAmongBodies(state: TerrainRuntime, ground: TerrainRuntime, from: Point, goal: Point, start: number, target: number): Point | undefined {
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
   // A unit pressed against a wall stands in the building's margin: it starts from the open cell nearest it.
   const near = nearestWalkable(state, start);
   if (near < 0) return undefined;
   const block = blockOf(state, start);
   if (!outside(windowBounds(state, block), target % state.width, Math.floor(target / state.width))) {
-    const local = windowField(state, target, block);
+    const local = windowField(state, ground, target, block);
     if (local.dist[near]! < UNREACHED) return follow(state, local, from, near, target, goal);
+    // The way to the goal leaves the window (down a ramp beyond it): the copy's field to the goal itself.
+    const whole = goalField(state, ground, target);
+    return whole.dist[near]! < UNREACHED ? follow(state, whole, from, near, target, goal) : undefined;
   }
   const coarse = bodyBlockField(state, target);
   if (coarse.dist[near]! >= UNREACHED) return undefined;
   return follow(state, coarse, from, near, target, goal);
 }
 
-// The open cells of the copy a walk to `target` may end at, each with its straight cost to it, among `at` (the cells
-// within GOAL_REACH of it): the target itself when it is open; where a building covers it (a site to build, a hall to
-// bring gold to, one to strike), the cells round that building, and the walk ends at the wall on the walker's side.
-function goalSeeds(state: TerrainRuntime, target: number, bounds: Bounds) {
-  const width = state.width;
+// The open cells of the copy a walk to `target` may end at, each with its straight cost to it, within `bounds`: the target
+// itself when it is open; where a building covers it (a site to build, a hall to bring gold to, one to strike), the open
+// cells round that building within GOAL_REACH that the land joins to the target without the buildings, so the walk ends
+// at the wall on the walker's side. Taken by distance alone, the cells on a plateau above a farm built under its cliff
+// were the farm's: a worker up there stood at its walk's end and walked straight at the cliff (V8's on the open ladder).
+function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number, bounds: Bounds) {
+  if (state.walk[target] === 1) return { seeds: [target], costs: [0] };
+  const { width, offsets } = state;
   const targetCol = target % width;
   const targetRow = Math.floor(target / width);
+  const square = {
+    left: Math.max(bounds.left, targetCol - GOAL_REACH),
+    right: Math.min(bounds.right, targetCol + GOAL_REACH),
+    top: Math.max(bounds.top, targetRow - GOAL_REACH),
+    bottom: Math.min(bounds.bottom, targetRow + GOAL_REACH),
+  };
   const seeds: number[] = [];
   const costs: number[] = [];
-  for (let row = Math.max(bounds.top, targetRow - GOAL_REACH); row <= Math.min(bounds.bottom, targetRow + GOAL_REACH); row += 1) {
-    for (let col = Math.max(bounds.left, targetCol - GOAL_REACH); col <= Math.min(bounds.right, targetCol + GOAL_REACH); col += 1) {
-      const at = row * width + col;
-      if (state.walk[at] !== 1) continue;
+  const joined = new Set([target]);
+  for (let index = 0, queue = [target]; index < queue.length; index += 1) {
+    const at = queue[index]!;
+    if (state.walk[at] === 1) {
       seeds.push(at);
-      costs.push(Math.round(STRAIGHT * Math.sqrt((col - targetCol) ** 2 + (row - targetRow) ** 2)));
+      costs.push(Math.round(STRAIGHT * Math.sqrt(((at % width) - targetCol) ** 2 + (Math.floor(at / width) - targetRow) ** 2)));
+    }
+    for (let direction = 0; direction < 8; direction += 1) {
+      const next = at + offsets[direction]!;
+      if (joined.has(next) || ground.walk[next] !== 1 || !stepAllowed(ground, at, direction) || outside(square, next % width, Math.floor(next / width))) continue;
+      joined.add(next);
+      queue.push(next);
     }
   }
   return { seeds, costs };
@@ -190,11 +208,21 @@ function goalSeeds(state: TerrainRuntime, target: number, bounds: Bounds) {
 
 // The window field of `block` toward `target` on the copy: the cost to the goal (see goalSeeds) within the block's square
 // and WINDOW cells round it. It is grown again only when buildings change within the window.
-function windowField(state: TerrainRuntime, target: number, block: number): Field {
+function windowField(state: TerrainRuntime, ground: TerrainRuntime, target: number, block: number): Field {
   return cached(state, 4 * state.walk.length + target * blockCount(state) + block, () => {
     const bounds = windowBounds(state, block);
-    const { seeds, costs } = goalSeeds(state, target, bounds);
+    const { seeds, costs } = goalSeeds(state, ground, target, bounds);
     return grow(state, seeds, bounds, costs);
+  });
+}
+
+// The copy's field over the whole map to the goal (see goalSeeds), for a walk whose way to a goal in its window leaves the
+// window; any change of buildings drops it.
+function goalField(state: TerrainRuntime, ground: TerrainRuntime, target: number): Field {
+  const whole = { left: 1, right: state.terrain.cols, top: 1, bottom: state.terrain.rows };
+  return cached(state, 4 * state.walk.length + state.walk.length * blockCount(state) + target, () => {
+    const { seeds, costs } = goalSeeds(state, ground, target, whole);
+    return grow(state, seeds, undefined, costs);
   });
 }
 
@@ -383,7 +411,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   fillClearance(state);
   const windowKeys = 4 * state.walk.length;
   for (const [key, field] of state.fields) {
-    if (key >= windowKeys) {
+    if (key >= windowKeys && key < windowKeys + state.walk.length * blockCount(state)) {
       // Padded bounds against the changed cells' unpadded ones, a cell wider for the steps taken off the window's edge.
       const bounds = windowBounds(state, (key - windowKeys) % blockCount(state));
       if (bounds.right < low.col || bounds.left - 2 > high.col || bounds.bottom < low.row || bounds.top - 2 > high.row) continue;
