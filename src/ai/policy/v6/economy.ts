@@ -15,6 +15,7 @@ import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
+import { navalWant } from "../naval";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
 // come first, as in AMAI. Then the current phase of the strategy states its wants; each want that is not met becomes a
@@ -82,7 +83,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...capacityGoals(economy)]);
+  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...capacityGoals(economy)]);
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -350,6 +351,17 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
 
 // Gold piling up while every producer is busy buys another producer of whatever the phase still waits on most (AMAI's
 // factory count follows income the same way).
+// @@@v6-naval - The water's next want (see @@@ai-naval) is one of V6's goals, saved for like any base: the island is taken
+// at a second base's weight (at a third's, 48, the army's wants outbid it: one warship by 9:00, the second rarely, no
+// transport in 20 minutes), and the shipyard and ships that take it come first at the same weight. On a map without water
+// to take there is none.
+const NAVAL_PRIORITY = 60;
+
+function navalGoals(economy: Economy): Goal[] {
+  const want = navalWant(economy.snapshot, economy.owner, economy.options);
+  return want ? [goal(want.id, NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
+}
+
 function capacityGoals(economy: Economy): Goal[] {
   if (playerState(economy.snapshot, economy.owner).gold < soldiersWorth(FLOAT_SOLDIERS)) return [];
   const producers = economy.own.filter((building) => isCoreProductionBuilding(building));

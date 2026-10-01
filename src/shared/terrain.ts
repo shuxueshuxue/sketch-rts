@@ -802,6 +802,50 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
 
+// @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
+// land is a whole of its own, and so is a lake's water. Whether two points stand in one whole is sameGround; how many
+// wholes there are, groundWholes (a ladder map's land is one: the generator keeps no open ground a start cannot reach).
+// Terrain only: a building in the way cuts no whole (see @@@building-pathing). A map without terrain is one whole.
+export function sameGround(map: Pick<GameMap, "terrain">, a: Point, b: Point, mover: Mover = "land") {
+  const terrain = map.terrain;
+  if (!terrain) return true;
+  const state = runtime(terrain, mover);
+  const { labels } = wholesOf(state);
+  const from = padAt(state, a.x, a.y);
+  const to = padAt(state, b.x, b.y);
+  return from >= 0 && to >= 0 && labels[from] !== 0 && labels[from] === labels[to];
+}
+
+export function groundWholes(map: Pick<GameMap, "terrain">, mover: Mover = "land") {
+  return map.terrain ? wholesOf(runtime(map.terrain, mover)).count : 1;
+}
+
+function wholesOf(state: TerrainRuntime) {
+  if (state.wholes) return state.wholes;
+  const { walk, offsets } = state;
+  const labels = new Int32Array(walk.length);
+  const queue = new Int32Array(walk.length);
+  let count = 0;
+  for (let seed = 0; seed < walk.length; seed += 1) {
+    if (walk[seed] !== 1 || labels[seed] !== 0) continue;
+    count += 1;
+    labels[seed] = count;
+    let tail = 0;
+    queue[tail++] = seed;
+    for (let head = 0; head < tail; head += 1) {
+      const at = queue[head]!;
+      for (let direction = 0; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1 || labels[next] !== 0 || !stepAllowed(state, at, direction)) continue;
+        labels[next] = count;
+        queue[tail++] = next;
+      }
+    }
+  }
+  state.wholes = { labels, count };
+  return state.wholes;
+}
+
 // The cells a walk from `from` to `goal` passes, down the whole map's field toward the goal (every `every`-th cell's
 // center, the goal last), or undefined when no walk joins them. A map without terrain walks the straight line. It reads
 // the terrain alone (see @@@building-pathing).
@@ -926,6 +970,8 @@ type TerrainRuntime = {
   offsets: Int32Array;
   // The routing of walks (see @@@flow-tiles), built when first asked for.
   tiles?: Tiles | undefined;
+  // Which whole of the mover's ground every cell belongs to (see @@@ground-wholes), worked out the first time it is asked.
+  wholes?: { labels: Int32Array; count: number };
 };
 
 // @@@terrain-runtime - What the terrain's queries need, built once per terrain and mover and kept beside the terrain (never

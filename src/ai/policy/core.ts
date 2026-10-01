@@ -82,6 +82,7 @@ import { planV6General } from "./v6/general";
 import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
+import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 import {
@@ -170,6 +171,8 @@ export const AI_SCRIPT_LIBRARY = {
   v6General: { id: "v6General", phase: "tactics", run: planV6General, claimsUnits: v7CreepGroupIds },
   v6Economy: { id: "v6Economy", phase: "economy", run: planV6Economy },
   v8Charge: { id: "v8Charge", phase: "tactics", run: planV8Charge },
+  navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
+  naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
 } satisfies Record<string, AiScript>;
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
@@ -201,6 +204,8 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
+  // @@@ai-naval: a shipyard, ships and an island hall before the rest of the spending, on a map with water to take.
+  AI_SCRIPT_LIBRARY.navalEconomy,
   AI_SCRIPT_LIBRARY.supply,
   AI_SCRIPT_LIBRARY.defense,
   AI_SCRIPT_LIBRARY.healingWell,
@@ -223,6 +228,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.expansionDenial,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
+  AI_SCRIPT_LIBRARY.naval,
 ];
 
 // V6 is its own AI (src/ai/policy/v6): one economy module spends all its gold, and its army modules decide where the army
@@ -242,6 +248,7 @@ export const V6_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.focusFire,
   AI_SCRIPT_LIBRARY.towerBreaker,
   AI_SCRIPT_LIBRARY.workerDefense,
+  AI_SCRIPT_LIBRARY.naval,
 ];
 
 // V7 starts as V6's stack; it plays both races and must hold against any pair of V3, V5 and V6.

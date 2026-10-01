@@ -24,6 +24,9 @@ describe("SDK preset AI policy", () => {
     v5Expected.splice(v5Expected.indexOf("objectiveControl"), 1);
     v5Expected.splice(v5Expected.indexOf("workerPressure"), 0, "objectiveControl");
     v5Expected.splice(v5Expected.indexOf("focusFire") + 1, 0, "towerBreaker");
+    // The water's (see @@@ai-naval): its spending right after emergency defense, its ships and crew last.
+    v5Expected.splice(v5Expected.indexOf("emergencyDefense") + 1, 0, "navalEconomy");
+    v5Expected.push("naval");
     expect(v5ScriptIds).toEqual(v5Expected);
 
     const game = createGame("bareDuel", { aiPlayers: [] });

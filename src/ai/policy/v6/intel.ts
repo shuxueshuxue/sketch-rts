@@ -1,6 +1,7 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { opponentPlayerIds } from "../ownership";
 import { walkingDistance } from "../../../shared/terrain";
+import { onOwnGround, sameGroundAs, withoutShips } from "../ground";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { PresetAiPolicyOptions } from "../types";
@@ -70,10 +71,10 @@ export function readV6Intel(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   if (cached) return cached;
   const ownHalls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
   const ownBuildings = buildings(snapshot, owner);
-  const army = units(snapshot, owner).filter((unit) => unit.kind !== "worker");
+  const army = withoutShips(snapshot, units(snapshot, owner).filter((unit) => unit.kind !== "worker"));
   const home = ownHalls[0] ?? ownBuildings[0] ?? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 };
   const neutrals = snapshot.units.filter((unit) => unit.owner === "neutral");
-  const enemies = opponentPlayerIds(snapshot, owner, options).map((enemy) => readEnemy(snapshot, enemy, ownBuildings, neutrals));
+  const enemies = opponentPlayerIds(snapshot, owner, options).map((enemy) => readEnemy(snapshot, owner, enemy, ownBuildings, neutrals));
   const intrusion = readIntrusion(ownBuildings, enemies);
   const intel: V6Intel = {
     tick: snapshot.tick,
@@ -90,11 +91,13 @@ export function readV6Intel(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   return intel;
 }
 
-function readEnemy(snapshot: GameSnapshot, enemy: PlayerId, ownBuildings: Building[], neutrals: Unit[]): V6EnemyIntel {
-  const all = units(snapshot, enemy);
+// An enemy as the owner's walking army sees it: its ships and what stands on ground the owner cannot walk to are the naval
+// script's (see @@@ai-home-ground).
+function readEnemy(snapshot: GameSnapshot, owner: PlayerId, enemy: PlayerId, ownBuildings: Building[], neutrals: Unit[]): V6EnemyIntel {
+  const all = withoutShips(snapshot, units(snapshot, enemy));
   const army = all.filter((unit) => unit.kind !== "worker");
   const workers = all.filter((unit) => unit.kind === "worker");
-  const enemyBuildings = buildings(snapshot, enemy);
+  const enemyBuildings = onOwnGround(snapshot, owner, buildings(snapshot, enemy));
   const halls = enemyBuildings.filter((building) => building.kind === "townHall");
   const center = army.length > 0 ? averagePoint(army) : undefined;
   const bases = halls.map((hall): V6BaseIntel => {
@@ -136,7 +139,7 @@ export function nextExpansionMine(snapshot: GameSnapshot, intel: V6Intel) {
   const halls = snapshot.buildings.filter((building) => building.kind === "townHall");
   const enemyHalls = intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall));
   return snapshot.resources
-    .filter((mine) => mine.amount > 0)
+    .filter((mine) => mine.amount > 0 && sameGroundAs(snapshot, intel.home, mine))
     .filter((mine) => halls.every((hall) => distance(hall, mine) > 340))
     .filter((mine) => enemyHalls.every((hall) => distance(hall, mine) > 1_200))
     .filter((mine) => enemyPowerNear(intel, mine, distance(mine, intel.home) <= NATURAL_RANGE ? NATURAL_CLEARANCE : FAR_MINE_CLEARANCE) === 0)

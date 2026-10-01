@@ -9,6 +9,7 @@ import { enemyPressure } from "./threats";
 import { hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy } from "./versions";
+import { onHomeGround } from "./ground";
 
 export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
   const townHalls = completeBuildings(snapshot, owner, "townHall");
@@ -18,8 +19,9 @@ export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
     .sort((a, b) => distance(a, base) - distance(b, base))[0];
 }
 
+// A mine the owner's workers can walk to (see @@@ai-home-ground) with no hall by it.
 function unoccupiedExpansionMine(snapshot: GameSnapshot, owner: PlayerId, resource: ResourceNode, ownTownHalls = completeBuildings(snapshot, owner, "townHall")) {
-  return ownTownHalls.every((townHall) => distance(resource, townHall) > 520) && allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340);
+  return onHomeGround(snapshot, owner, resource) && ownTownHalls.every((townHall) => distance(resource, townHall) > 520) && allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340);
 }
 
 export function desiredCatchUpExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
