@@ -208,8 +208,11 @@ export const pass: Chapter<Vars> = {
       yield* squad.defeated();
     }, "duSurrounded");
 
-    // Holding: the time runs out and the last of the vanguard falls. Escorting: the refugees are through.
-    yield* until(() => world.tick >= startTick + seconds(HOLD_SECONDS) && (standing ? world.units({ owner: EMBER }).length <= 2 : true) && walkers.every((walker) => through.has(walker.id) || lost.has(walker.id) || !world.alive(walker)));
+    // Holding: the time runs out and no more than two of the vanguard still stand at the pass; a band that fell back to its
+    // gate, too few to come again, is broken. Counted over the whole map, such a band kept the chapter waiting for good,
+    // for the pilot and for a player alike, who were told to hold the pass, not to chase. Escorting: the refugees are through.
+    const held = { at: { x: mouth.x, y: mouth.y + 170 }, radius: 600 };
+    yield* until(() => world.tick >= startTick + seconds(HOLD_SECONDS) && (standing ? world.units({ owner: EMBER, within: held }).length <= 2 : true) && walkers.every((walker) => through.has(walker.id) || lost.has(walker.id) || !world.alive(walker)));
     if (!standing) story.vars.duFell = true;
     hold.done();
     exodus.done();

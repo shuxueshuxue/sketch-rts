@@ -13,6 +13,7 @@ import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 // The whole duel's CPU, AI and sim together. With spells on their own cooldowns a duel on a map with camps ran 32k ticks
 // (18k before) at the same 0.15-0.19 ms a tick on a loaded runner; the budget keeps the old headroom over that length.
 const AI_DUEL_CPU_BUDGET_MS = 8_000;
+const FREE_FOR_ALL_TICKS = 42_000;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
   const elapsed = process.cpuUsage(started);
@@ -407,7 +408,8 @@ describe("sketch RTS simulation", () => {
       .build()
       .createGame();
 
-    stepMany(game, 24);
+    // The tower's shot across its full reach (468) is 26 ticks in the air.
+    stepMany(game, 30);
 
     const damaged = game.units.find((unit) => unit.id === "damaged-creep");
     const called = game.units.find((unit) => unit.id === "called-creep");
@@ -1078,11 +1080,15 @@ describe("sketch RTS simulation", () => {
 
     const projectile = game.effects.find((effect) => effect.type === "projectile");
     expect(projectile).toMatchObject({ fromX: archer.x, fromY: archer.y, toX: target.x, toY: target.y, sourceKind: "archer" });
+    // A shot flies at one speed: the 120 between them in 7 ticks.
+    expect(projectile?.duration).toBe(7);
 
-    stepMany(game, 24);
+    stepMany(game, 7);
 
-    const hit = game.effects.find((effect) => effect.type === "hit" && distance(effect, target) < 1);
-    expect(hit).toMatchObject({ x: target.x, y: target.y });
+    // The struck raider turns on the archer; the hit shows where it stood when the arrow landed, on it.
+    const hit = game.effects.find((effect) => effect.type === "hit" && effect.unitId === target.id);
+    expect(hit).toBeDefined();
+    expect(distance(hit!, target)).toBeLessThan(target.speed + 1);
   });
 
   it("emits melee lunge and hit feedback effects for close attacks", () => {
@@ -2193,7 +2199,8 @@ describe("sketch RTS simulation", () => {
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
     const started = process.cpuUsage();
 
-    stepMany(game, 36_000, runtime);
+    // Three ways take longer than two: since a shot flies at one speed this one is settled in 31 minutes.
+    stepMany(game, FREE_FOR_ALL_TICKS, runtime);
 
     const elapsedMs = elapsedCpuMs(started);
     const totalNeutralKills = sumPlayerStats(game.match.stats.neutralUnitsKilled);
@@ -2216,7 +2223,7 @@ describe("sketch RTS simulation", () => {
     expect(survivingTownHallOwners.every((owner) => owner === game.match.winner)).toBe(true);
     expect(survivingContenders).toEqual([game.match.winner]);
     expect(Math.max(...loserArmies)).toBeLessThanOrEqual(maxAcceptableLoserCombat);
-    expect(game.match.endedAtTick).toBeLessThanOrEqual(36_000);
+    expect(game.match.endedAtTick).toBeLessThanOrEqual(FREE_FOR_ALL_TICKS);
     expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
     expectWinnerSpentAndLosersDiedCleanly(game, 1_500, 600, maxAcceptableLoserCombat);
     expect(game.match.stats.unitsKilled.player + game.match.stats.unitsKilled.enemy + game.match.stats.unitsKilled.enemy2).toBeGreaterThan(20);

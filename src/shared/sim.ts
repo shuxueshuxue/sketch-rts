@@ -109,7 +109,9 @@ const REPAIR_TICK_INTERVAL = seconds(1.5);
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 const AUTO_ACQUIRE_RANGE = 230;
 const RANGED_ATTACK_RANGE_THRESHOLD = 90;
-const PROJECTILE_FLIGHT_DURATION = 22;
+// A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take
+// and one at point blank lands at once; with a fixed flight time a shot from close in crept to its target.
+const PROJECTILE_SPEED = 18;
 const NEUTRAL_LEASH_RANGE = 520;
 // @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
 const NEUTRAL_DAMAGE_RESPONSE_RANGE = Math.max(BUILDING_DEFS.defenseTower.attackRange, ...Object.values(UNIT_DEFS).map((unit) => unit.attackRange));
@@ -1673,6 +1675,9 @@ function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit 
 }
 
 function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building, damage: number) {
+  const dx = target.x - attacker.x;
+  const dy = target.y - attacker.y;
+  const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / PROJECTILE_SPEED));
   const projectile = {
     id: `projectile-${game.nextId}`,
     owner: attacker.owner,
@@ -1683,12 +1688,12 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
     toX: target.x,
     toY: target.y,
     damage,
-    remaining: PROJECTILE_FLIGHT_DURATION,
-    duration: PROJECTILE_FLIGHT_DURATION,
+    remaining: flight,
+    duration: flight,
   } satisfies Projectile;
   game.nextId += 1;
   game.projectiles.push(projectile);
-  addEffect(game, "projectile", target.x, target.y, PROJECTILE_FLIGHT_DURATION, {
+  addEffect(game, "projectile", target.x, target.y, flight, {
     fromX: projectile.fromX,
     fromY: projectile.fromY,
     toX: projectile.toX,

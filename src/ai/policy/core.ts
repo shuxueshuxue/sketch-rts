@@ -381,8 +381,10 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: mine.id }, options);
 }
 
+// A player whose halls have no gold left by them and who cannot pay for a new one sends its idle workers to the nearest
+// safe mine, however far. Only V5 used to: the other AIs stood with every worker idle by 6,000 gold until the game ran
+// out (a three-way free-for-all, two players left with three soldiers each and nothing to buy them with).
 function depletedEconomyRemoteMine(snapshot: GameSnapshot, owner: PlayerId, bases: Building[], options: PresetAiPolicyOptions) {
-  if (!isV5HybridPolicy(options)) return undefined;
   if (bases.length === 0) return undefined;
   if (playerState(snapshot, owner).gold >= BUILDING_DEFS.townHall.cost) return undefined;
   if (bases.some((base) => localActiveMineForBase(snapshot, base))) return undefined;

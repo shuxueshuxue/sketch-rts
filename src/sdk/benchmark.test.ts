@@ -162,8 +162,9 @@ describe("SDK benchmark", () => {
     });
 
     const match = report.evaluations[0]!.matches[0]!;
-    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(1.15);
-    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(1.15);
+    // The arrow flies the 110 between archer and hall in 7 ticks and lands on the 8th.
+    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(0.4);
+    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(0.4);
   });
 
   it("watches an expansion hall built during the game for expansion attacks", () => {
