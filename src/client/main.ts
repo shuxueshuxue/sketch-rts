@@ -66,7 +66,7 @@ type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
-type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
+type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
 type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
@@ -199,6 +199,13 @@ const commandButtons: CommandButton[] = [
     stats: [t("command.attackMove.stats")],
     requirements: [t("command.attackMove.requirements")],
     hotkey: "A",
+  })),
+  createCommandButton(t("command.unload.title"), "⤓", "d", unloadButtonState, beginUnloadMode, () => ({
+    title: t("command.unload.title"),
+    body: t("command.unload.body"),
+    stats: [t("command.unload.stats")],
+    requirements: [t("command.unload.requirements")],
+    hotkey: "D",
   })),
   createCommandButton(t("command.build.title"), "⌘", "b", () => booleanCommandState(canOpenBuildPalette()), openBuildPalette, () => ({
     title: t("command.build.title"),
@@ -1543,6 +1550,7 @@ function onMouseUp(event: MouseEvent) {
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
+    else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 2) cancelCommandMode();
@@ -1619,6 +1627,14 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     statusLabel.textContent = t("status.repairOrdered", { building: labelBuilding(repairTarget) });
     return;
   }
+  // Soldiers right-clicked onto an own transport board it (see @@@transport).
+  const transport = hitUnit(world, (unit) => unit.owner === localPlayerId && Boolean(UNIT_DEFS[unit.kind].carries));
+  const boarders = selectedUnits.filter((unit) => !UNIT_DEFS[unit.kind].naval);
+  if (transport && boarders.length > 0) {
+    sendCommand({ type: "board", unitIds: boarders.map((unit) => unit.id), transportId: transport.id, queued });
+    statusLabel.textContent = t("status.boardOrdered");
+    return;
+  }
   if (target) {
     sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
     statusLabel.textContent = target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
@@ -1644,6 +1660,42 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   }
   sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: world.x, y: world.y, target: { type: "point" } });
   statusLabel.textContent = t("status.rallySet", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
+}
+
+function loadedTransports() {
+  return selectedPlayerUnits().filter((unit) => UNIT_DEFS[unit.kind].carries && (unit.cargo?.length ?? 0) > 0);
+}
+
+function unloadButtonState(): CommandButtonState {
+  if (commandMode || openPalette || !selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].carries)) return HIDDEN_COMMAND_STATE;
+  return booleanCommandState(loadedTransports().length > 0);
+}
+
+function beginUnloadMode() {
+  if (loadedTransports().length === 0) {
+    showInvalidCommand(t("status.unloadNeedsTransport"));
+    return;
+  }
+  commandMode = { type: "unload" };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent = t("status.unloadMode");
+  updateHud();
+}
+
+function issueUnloadAt(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection()) return;
+  if (!commandMode || commandMode.type !== "unload") return;
+  const unitIds = loadedTransports().map((unit) => unit.id);
+  clearCommandModeClasses();
+  commandMode = undefined;
+  if (unitIds.length === 0) showInvalidCommand(t("status.unloadNeedsTransport"));
+  else {
+    const world = screenToWorld(point);
+    sendCommand({ type: "unload", unitIds, x: world.x, y: world.y, queued });
+    statusLabel.textContent = t("status.unloadOrdered");
+  }
+  updateHud();
 }
 
 function canAttackMove() {
@@ -1924,11 +1976,13 @@ function cancelCommandMode() {
   statusLabel.textContent =
     canceled === "attackMove"
       ? t("status.attackMoveCanceled")
-      : canceled === "spell"
-        ? t("status.spellCanceled")
-        : canceled === "item"
-          ? t("status.itemCanceled")
-          : t("status.buildCanceled");
+      : canceled === "unload"
+        ? t("status.unloadCanceled")
+        : canceled === "spell"
+          ? t("status.spellCanceled")
+          : canceled === "item"
+            ? t("status.itemCanceled")
+            : t("status.buildCanceled");
   updateHud();
 }
 
