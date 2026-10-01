@@ -148,8 +148,8 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   // Only the goal is a place to stop at a wall: a point further down the flow inside a building is a building in the way.
   if (state === ground || (!seen && clearPastBodies(state, from, way, way === goal))) return way;
   // A building stands between the unit and where the terrain's way leads next (see @@@building-pathing).
-  const near = routeCell(state, padAt(state, from.x, from.y), from, way);
-  const aim = routeCell(state, padAt(state, way.x, way.y), way, from);
+  const near = routeCell(state, from, way, false);
+  const aim = routeCell(state, way, from, way === goal);
   if (near < 0 || aim < 0) return way;
   const local = cached(state, aim + state.walk.length, () => grow(state, [aim], aim, LOCAL));
   const field = local.dist[near]! < UNREACHED ? local : exactField(state, aim);
@@ -157,17 +157,24 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   return follow(state, field, from, near, aim, way);
 }
 
-// Whether a unit at `from` walks straight to `to` on the copy (see @@@building-pathing): the line is open but for where
-// it starts and ends in a building's blocked cells. A unit pressed against a wall stands in the BODY_MARGIN band round
-// it, and so may a walk's end, and the line leaves the band within a cell; a walk may end inside a building (a site to
-// build, a hall to bring gold to, one to strike), and ends at its wall, the line leaving its cells within GOAL_BODY. A
-// line that runs on into another building is not open: the unit is walked round that one.
+// Whether a unit at `from` walks straight to `to` on the copy (see @@@building-pathing): the line is open between its
+// ends (see walkEnd).
+function clearPastBodies(state: TerrainRuntime, from: Point, to: Point, isGoal: boolean) {
+  const start = walkEnd(state, from, to, false);
+  const end = start && walkEnd(state, to, from, isGoal);
+  return end !== undefined && clearSegment(state, start!.x, start!.y, end.x, end.y);
+}
+
+// Where on the copy a walk between `point` and `other` starts or ends at the point's side: the point when its cell is
+// open, else the first point on the line toward `other` whose cell is, or undefined when the line runs on into a building.
+// A unit pressed against a wall stands in the BODY_MARGIN band round it, and so may a walk's end, and the line leaves the
+// band within a cell; a goal inside a building (a site to build, a hall to bring gold to, one to strike) is come to at
+// its wall on the walker's side, and the line leaves its cells within GOAL_BODY.
 const GOAL_BODY = 3;
 
-function clearPastBodies(state: TerrainRuntime, from: Point, to: Point, isGoal: boolean) {
-  const start = openEnd(state, from, to, 1);
-  const end = start && openEnd(state, to, from, isGoal && state.walk[padAt(state, to.x, to.y)] === INSIDE ? GOAL_BODY : 1);
-  return end !== undefined && clearSegment(state, start!.x, start!.y, end.x, end.y);
+function walkEnd(state: TerrainRuntime, point: Point, other: Point, isGoal: boolean): Point | undefined {
+  const inside = isGoal && state.walk[padAt(state, point.x, point.y)] === INSIDE;
+  return openEnd(state, point, other, inside ? GOAL_BODY : 1);
 }
 
 // The first point on the line from `point` toward `toward`, within `cells` cells, whose cell is open on the copy.
@@ -253,10 +260,8 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // The margin shuts the slits a unit's body cannot pass: farms laid 4 apart left a row of open cells between them, and
 // units routed into the slit and stood pressed in it; with half a cell more round each building no gap under about 32
 // stays open, and a unit is 30 to 36 wide. So a unit at a wall stands in blocked cells, and so does a walk's end at a
-// building: a line counts as open when it leaves those cells soon enough (see clearPastBodies), else every worker going
-// to its hall and every unit at a wall took the detour every tick. A walk from or to a blocked cell that does need a
-// detour routes from or to the first open cell on the line toward the walk's other end: a worker bringing gold to its
-// hall comes to the side it walks from, not round the hall to whichever open cell lies nearest its center.
+// building: a line counts as open when it leaves those cells soon enough (see walkEnd), else every worker going to its
+// hall and every unit at a wall took the detour every tick, and a detour starts or ends there too (see routeCell).
 //
 // The copy hangs on the game's map object (a snapshot shares it), never on the terrain, which games may share. A map
 // without terrain has no routing to take a unit round anything, and its buildings stand in nobody's way (see
@@ -340,19 +345,12 @@ function routing(map: object, terrain: Terrain, mover: Mover): TerrainRuntime {
   return runtime(terrain, mover);
 }
 
-// The cell a walk from or to a point routes by (`at` its cell): the cell itself when open, else the first open cell on the
-// line from the point toward `other` (the walk's other end), else the open cell nearest it.
-function routeCell(state: TerrainRuntime, at: number, point: Point, other: Point) {
-  if (state.walk[at] === 1) return at;
-  const dx = other.x - point.x;
-  const dy = other.y - point.y;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const step = state.terrain.cell / 2;
-  for (let travelled = step; travelled < length; travelled += step) {
-    const on = padAt(state, point.x + (dx / length) * travelled, point.y + (dy / length) * travelled);
-    if (on >= 0 && state.walk[on] === 1) return on;
-  }
-  return nearestWalkable(state, at);
+// The cell a detour from or to a point routes by: the cell of its walk's end (see walkEnd), else the open cell nearest it.
+// Stepping on along the line used to go through the building a unit stood pressed against: it was routed from the far
+// side, walked into the wall, and stood there for minutes with its order (V8's workers at their own hall).
+function routeCell(state: TerrainRuntime, point: Point, other: Point, isGoal: boolean) {
+  const end = walkEnd(state, point, other, isGoal);
+  return end ? padAt(state, end.x, end.y) : nearestWalkable(state, padAt(state, point.x, point.y));
 }
 
 // `used`: when the field was last asked for, by the runtime's clock (the least recently used goes first). `reached`: the
