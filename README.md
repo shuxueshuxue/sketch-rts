@@ -213,6 +213,24 @@ A unit or building lives in two places:
 
 If a card is missing, TypeScript reports it. `src/client/content/cards.test.ts` checks that every name and description exists in both languages, that each unit is trained at a building its race can build, and that no building or build menu repeats a hotkey. To see every unit and building drawn by the game's own code, run `npx vite` and open `/unit-sheet.html`.
 
+### Sound packs
+
+The game is silent until a sound pack is chosen in **Settings → Sound pack** (the choice is kept in the browser). A pack is a folder `audio-packs/<id>/` holding a `pack.json` and the files it names:
+
+```json
+{
+  "name": "My pack",
+  "sounds": {
+    "melee": { "file": "melee.ogg", "volume": 1, "pitch": 0.08, "max": 4 },
+    "click": { "file": "click.ogg" }
+  }
+}
+```
+
+The events are `melee`, `arrowShot`, `arrowHit`, `death`, `built`, `buildingDown` and `click`; an event a pack leaves out is silent. Each event plays one recording: `volume` 1 is as recorded, `pitch` is how far each play may stray up or down (0.08 is 8%, default 0), and `max` is how many plays of it may sound at once (default 4). Packs are found when the game is built or served, so dropping a folder in and restarting `npm run dev` is enough; a pack whose `pack.json` does not read is left out with the reason in the browser console. Start the server with `VITE_SOUND_PACK=<id>` to play a pack until the player picks one.
+
+Only `audio-packs/cc0` is in the repository; git ignores every other folder under `audio-packs/`. A pack you keep locally is part of the builds you make on that machine, so publish only builds made from the repository.
+
 ### Recording clips
 
 `npm run record` films a scene in Node, with no browser: it runs the match on the same command-frame runtime as a local game and draws every frame with the client's own world renderer ([`src/client/world-renderer.ts`](src/client/world-renderer.ts)), so units, buildings, terrain, missiles, effects and unit facing look exactly as they do in the game. Frames are drawn with `@napi-rs/canvas`; GIFs are encoded in JavaScript and MP4s by the `ffmpeg` on your `PATH`.
@@ -240,3 +258,17 @@ A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](src/recorde
 Sketch RTS is developed and discussed with the community on [linux.do](https://linux.do/).
 
 The game takes inspiration from **Warcraft III**: workers and bases, neutral camps, distinct races, and the pacing of a small army growing into a larger battle.
+
+The `cc0` sound pack is made of recordings from [Freesound](https://freesound.org), all released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), cut and levelled for the game:
+
+| File | Recording | Author |
+| --- | --- | --- |
+| `melee.ogg` | [Sword_Clash (7).wav](https://freesound.org/people/JohnBuhr/sounds/326868/) | JohnBuhr |
+| `arrowShot.ogg` | [Arrow Loose and Flyby](https://freesound.org/people/saturdaysoundguy/sounds/394180/) | saturdaysoundguy |
+| `arrowHit.ogg` | [Arrow Impact 2](https://freesound.org/people/Ali_6868/sounds/384913/) | Ali_6868 |
+| `death.ogg` | [Grunt1 - Death Pain.wav](https://freesound.org/people/tonsil5/sounds/416839/) | tonsil5 |
+| `built.ogg` | [Hammer on Wood](https://freesound.org/people/L.i.Z.e.L.l.E_+/sounds/707864/) | L.i.Z.e.L.l.E_+ |
+| `buildingDown.ogg` | [Big falling debris (crash)](https://freesound.org/people/xkeril/sounds/703247/) | xkeril |
+| `click.ogg` | [Basic Click Wooden](https://freesound.org/people/GameAudio/sounds/220200/) | GameAudio |
+
+For local testing we also play a sound pack taken from **Warcraft III** (© Blizzard Entertainment) game files we own. It is not part of this repository and is not distributed with the game.

@@ -1,71 +1,58 @@
 // @@@sound - The game's sounds, heard on the client only: the simulation never hears them, so a game plays the same with
-// or without them. Every sound is recorded (Freesound, CC0 and CC BY, see public/audio/SOURCES.md) in a few takes, cut
-// and levelled against each other beforehand; a sound plays a take other than its last, a little higher or lower each
-// time, so the tenth blow is not the first again. Each sound belongs to a group with its own volume (effects, interface,
-// music) under one mute, kept in the browser. The battlefield goes through a compressor; a sound heard again in a short
-// while is quieter each time, and dropped once heard too often in it; no more than a few dozen play at once: a melee of
-// forty is a din, not a roar.
+// or without them. What a game sounds like is a sound pack's (see @@@sound-packs): for each event below, the one
+// recording it plays, how loud, how far its pitch may stray, and how many of it may sound at once. With no pack chosen,
+// or a pack without an event, it is silent. Each play strays a little in pitch and level, so the tenth blow is not the
+// first again. Events belong to a group with its own volume (effects, interface) under one mute; the choices are kept in
+// the browser. The battlefield goes through a compressor, a sound already playing is quieter for each copy of it, and
+// no more than a dozen play at once.
 
-export type SoundGroup = "effects" | "ui" | "music";
-export type SoundId =
-  | "melee"
-  | "buildingBlow"
-  | "arrowShot"
-  | "cannonShot"
-  | "spellBolt"
-  | "arrowHit"
-  | "death"
-  | "buildingDown"
-  | "built"
-  | "trained"
-  | "charge"
-  | "chargeImpact"
-  | "heal"
-  | "summon"
-  | "curse"
-  | "click"
-  | "select"
-  | "confirm"
-  | "back"
-  | "error";
-export type SoundSettings = { effects: number; ui: number; music: number; muted: boolean };
+export type SoundGroup = "effects" | "ui";
+export type SoundEvent = "melee" | "arrowShot" | "arrowHit" | "death" | "built" | "buildingDown" | "click";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["melee", "arrowShot", "arrowHit", "death", "built", "buildingDown", "click"];
+const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
+  melee: "effects",
+  arrowShot: "effects",
+  arrowHit: "effects",
+  death: "effects",
+  built: "effects",
+  buildingDown: "effects",
+  click: "ui",
+};
+
+// An event's sound in a pack: its file in the pack's folder, its volume (1 as recorded), how far a play may stray in
+// pitch (0.05 is 5% up or down), and how many plays of it may sound at once.
+export type PackSound = { file: string; volume: number; pitch: number; max: number };
+export type SoundPack = { id: string; name: string; sounds: Partial<Record<SoundEvent, PackSound & { url: string }>> };
+export type SoundSettings = { effects: number; ui: number; muted: boolean; pack?: string };
 // Where a battlefield sound falls: -1 left to 1 right, and how loud for its distance from the middle of the view.
 export type SoundPlace = { pan: number; gain: number };
 
-// A sound's takes are public/audio/<id>-1.ogg to <id>-<takes>.ogg; pitch is how far a play may stray up or down (0.05 is
-// 5%); limit is how many plays a window of milliseconds lets through.
-type Recipe = { group: SoundGroup; takes: number; pitch: number; limit: readonly [count: number, windowMs: number] };
-
-const RECIPES: Record<SoundId, Recipe> = {
-  melee: { group: "effects", takes: 6, pitch: 0.08, limit: [5, 220] },
-  buildingBlow: { group: "effects", takes: 4, pitch: 0.07, limit: [3, 220] },
-  arrowShot: { group: "effects", takes: 3, pitch: 0.06, limit: [4, 220] },
-  cannonShot: { group: "effects", takes: 4, pitch: 0.05, limit: [2, 300] },
-  spellBolt: { group: "effects", takes: 3, pitch: 0.05, limit: [3, 220] },
-  arrowHit: { group: "effects", takes: 5, pitch: 0.08, limit: [4, 220] },
-  death: { group: "effects", takes: 6, pitch: 0.05, limit: [3, 300] },
-  buildingDown: { group: "effects", takes: 3, pitch: 0.05, limit: [2, 600] },
-  built: { group: "effects", takes: 2, pitch: 0.03, limit: [1, 800] },
-  trained: { group: "effects", takes: 2, pitch: 0.04, limit: [2, 400] },
-  charge: { group: "effects", takes: 3, pitch: 0.03, limit: [2, 500] },
-  chargeImpact: { group: "effects", takes: 3, pitch: 0.06, limit: [2, 300] },
-  heal: { group: "effects", takes: 2, pitch: 0.03, limit: [2, 400] },
-  summon: { group: "effects", takes: 2, pitch: 0.04, limit: [2, 600] },
-  curse: { group: "effects", takes: 2, pitch: 0.04, limit: [2, 500] },
-  click: { group: "ui", takes: 2, pitch: 0.03, limit: [3, 120] },
-  select: { group: "ui", takes: 2, pitch: 0.04, limit: [3, 120] },
-  confirm: { group: "ui", takes: 2, pitch: 0.02, limit: [1, 300] },
-  back: { group: "ui", takes: 1, pitch: 0.03, limit: [2, 150] },
-  error: { group: "ui", takes: 2, pitch: 0.02, limit: [1, 400] },
-};
-
-export const SOUND_IDS = Object.keys(RECIPES) as SoundId[];
-const takeFiles = (id: SoundId) => Array.from({ length: RECIPES[id].takes }, (_, index) => `${id}-${index + 1}.ogg`);
-export const SOUND_FILES = SOUND_IDS.flatMap(takeFiles);
-
+export const NO_SOUND_PACK = "none";
 const SETTINGS_KEY = "sketch-rts-sound";
-const DEFAULT_SETTINGS: SoundSettings = { effects: 0.7, ui: 0.5, music: 0.5, muted: false };
-const MAX_VOICES = 24;
+const DEFAULT_SETTINGS: SoundSettings = { effects: 0.7, ui: 0.5, muted: false };
+const MAX_VOICES = 12;
+
+// A pack from its pack.json and the addresses of the files in its folder; a manifest that does not hold throws, naming
+// what is wrong.
+export function readSoundPack(id: string, manifest: unknown, urls: Readonly<Record<string, string>>): SoundPack {
+  const fail = (problem: string) => new Error(`Sound pack ${id}: ${problem}`);
+  if (!isRecord(manifest) || typeof manifest.name !== "string" || !isRecord(manifest.sounds)) throw fail("pack.json needs a name and sounds");
+  const sounds: SoundPack["sounds"] = {};
+  for (const [event, entry] of Object.entries(manifest.sounds)) {
+    if (!SOUND_EVENTS.includes(event as SoundEvent)) throw fail(`no event ${event} (events: ${SOUND_EVENTS.join(", ")})`);
+    if (!isRecord(entry) || typeof entry.file !== "string") throw fail(`${event} needs a file`);
+    const url = urls[entry.file];
+    if (!url) throw fail(`${event} plays ${entry.file}, which is not in the pack`);
+    const volume = entry.volume ?? 1;
+    const pitch = entry.pitch ?? 0;
+    const max = entry.max ?? 4;
+    if (typeof volume !== "number" || !(volume > 0 && volume <= 4)) throw fail(`${event} volume must be above 0 and at most 4`);
+    if (typeof pitch !== "number" || !(pitch >= 0 && pitch <= 0.5)) throw fail(`${event} pitch must be from 0 to 0.5`);
+    if (typeof max !== "number" || !Number.isInteger(max) || max < 1) throw fail(`${event} max must be a whole number of at least 1`);
+    sounds[event as SoundEvent] = { file: entry.file, volume, pitch, max, url };
+  }
+  return { id, name: manifest.name, sounds };
+}
 
 export class Soundboard {
   settings: SoundSettings = loadSettings();
@@ -73,12 +60,20 @@ export class Soundboard {
   private master: GainNode | undefined;
   private groups = new Map<SoundGroup, GainNode>();
   private buffers = new Map<string, AudioBuffer>();
-  private recent = new Map<SoundId, number[]>();
-  private lastTake = new Map<SoundId, number>();
+  private playing = new Map<SoundEvent, number>();
   private voices = 0;
 
-  /** `url` turns a file's name under public/audio into the address it is fetched from. */
-  constructor(private readonly url: (file: string) => string) {}
+  /** `packs` are the packs to choose from; `fallback` is the one played until the player chooses (none: silence). */
+  constructor(
+    readonly packs: readonly SoundPack[],
+    private readonly fallback?: string,
+  ) {}
+
+  // The chosen pack, or none: the player's choice, else the fallback, else silence.
+  get pack(): SoundPack | undefined {
+    const id = this.settings.pack ?? this.fallback;
+    return this.packs.find((pack) => pack.id === id);
+  }
 
   // A browser lets a page make sound only after a person's gesture: the first click or key opens it.
   unlock() {
@@ -95,7 +90,7 @@ export class Soundboard {
     limiter.connect(ctx.destination);
     this.master = ctx.createGain();
     this.master.connect(limiter);
-    for (const group of ["effects", "ui", "music"] as const) {
+    for (const group of ["effects", "ui"] as const) {
       const node = ctx.createGain();
       // A battle's many sounds are pressed together, so a crowd of them swells less than it adds up.
       if (group === "effects") node.connect(compressor(ctx, { threshold: -24, knee: 12, ratio: 4, attack: 0.004, release: 0.3 })).connect(this.master);
@@ -103,7 +98,7 @@ export class Soundboard {
       this.groups.set(group, node);
     }
     this.applySettings();
-    for (const file of SOUND_FILES) void this.load(ctx, file);
+    this.loadPack();
   }
 
   update(change: Partial<SoundSettings>) {
@@ -114,54 +109,38 @@ export class Soundboard {
       // Without storage the choice lasts this visit.
     }
     this.applySettings();
+    this.loadPack();
   }
 
-  play(id: SoundId, place: SoundPlace = { pan: 0, gain: 1 }) {
+  play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }) {
     const ctx = this.ctx;
-    const recipe = RECIPES[id];
-    const group = this.groups.get(recipe.group);
-    if (!ctx || !group || ctx.state !== "running" || this.settings.muted || this.settings[recipe.group] <= 0 || place.gain <= 0.02) return;
-    if (this.voices >= MAX_VOICES) return;
-    const earlier = this.admit(id, recipe, ctx.currentTime * 1000);
-    if (earlier === undefined) return;
-    const buffer = this.buffers.get(takeFiles(id)[this.nextTake(id, recipe)]!);
+    const sound = this.pack?.sounds[event];
+    const groupName = EVENT_GROUPS[event];
+    const group = this.groups.get(groupName);
+    if (!ctx || !sound || !group || ctx.state !== "running" || this.settings.muted || this.settings[groupName] <= 0 || place.gain <= 0.02) return;
+    const playing = this.playing.get(event) ?? 0;
+    if (this.voices >= MAX_VOICES || playing >= sound.max) return;
+    const buffer = this.buffers.get(sound.url);
     if (!buffer) return;
     const out = ctx.createGain();
-    // Each play after others of the sound in its window is quieter, and every play a little louder or softer (±0.6 dB).
-    out.gain.value = (place.gain / Math.sqrt(1 + earlier)) * 10 ** ((Math.random() - 0.5) * 0.06);
+    // Each copy of a sound already playing is quieter, and every play a little louder or softer (±0.6 dB).
+    out.gain.value = ((sound.volume * place.gain) / Math.sqrt(1 + playing)) * 10 ** ((Math.random() - 0.5) * 0.06);
     const panner = ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, place.pan));
     out.connect(panner).connect(group);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = 1 + (Math.random() * 2 - 1) * recipe.pitch;
+    source.playbackRate.value = 1 + (Math.random() * 2 - 1) * sound.pitch;
     source.connect(out);
     source.start();
     this.voices += 1;
+    this.playing.set(event, playing + 1);
     source.onended = () => {
       this.voices -= 1;
+      this.playing.set(event, (this.playing.get(event) ?? 1) - 1);
       out.disconnect();
       panner.disconnect();
     };
-  }
-
-  // How many plays of the sound the window already holds, or undefined when it is full and this one is dropped.
-  private admit(id: SoundId, recipe: Recipe, now: number) {
-    const [count, windowMs] = recipe.limit;
-    const times = (this.recent.get(id) ?? []).filter((time) => now - time < windowMs);
-    this.recent.set(id, times);
-    if (times.length >= count) return undefined;
-    times.push(now);
-    return times.length - 1;
-  }
-
-  // Any take but the last one played.
-  private nextTake(id: SoundId, recipe: Recipe) {
-    const last = this.lastTake.get(id);
-    let take = Math.floor(Math.random() * recipe.takes);
-    if (recipe.takes > 1 && take === last) take = (take + 1 + Math.floor(Math.random() * (recipe.takes - 1))) % recipe.takes;
-    this.lastTake.set(id, take);
-    return take;
   }
 
   private applySettings() {
@@ -170,12 +149,19 @@ export class Soundboard {
     for (const [group, node] of this.groups) node.gain.value = this.settings[group];
   }
 
-  private async load(ctx: AudioContext, file: string) {
-    try {
-      const response = await fetch(this.url(file));
-      this.buffers.set(file, await ctx.decodeAudioData(await response.arrayBuffer()));
-    } catch {
-      // A sound that did not load is not heard; the game goes on.
+  // The chosen pack's recordings, each fetched and decoded once.
+  private loadPack() {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    for (const sound of Object.values(this.pack?.sounds ?? {})) {
+      if (this.buffers.has(sound.url)) continue;
+      void fetch(sound.url)
+        .then((response) => response.arrayBuffer())
+        .then((data) => ctx.decodeAudioData(data))
+        .then((buffer) => this.buffers.set(sound.url, buffer))
+        .catch(() => {
+          // A sound that did not load is not heard; the game goes on.
+        });
     }
   }
 }
@@ -188,6 +174,10 @@ function compressor(ctx: AudioContext, settings: { threshold: number; knee: numb
   node.attack.value = settings.attack;
   node.release.value = settings.release;
   return node;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function loadSettings(): SoundSettings {

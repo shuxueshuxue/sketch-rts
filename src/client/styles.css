@@ -514,6 +514,7 @@ input[type="range"] {
 }
 
 .profile-form input:not([type="range"]):not([type="checkbox"]),
+.profile-form select,
 .create-game-form input:not([type="checkbox"]),
 .slot-row select,
 .slot-controller-badge {

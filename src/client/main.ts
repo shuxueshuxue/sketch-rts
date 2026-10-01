@@ -28,8 +28,9 @@ import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMi
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
-import { Soundboard, type SoundId } from "./sound";
+import { NO_SOUND_PACK, Soundboard } from "./sound";
 import { soundCues, type SoundCue } from "./sound-cues";
+import { SOUND_PACKS } from "./sound-packs";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -148,8 +149,9 @@ const ctx = requireCanvasContext(canvas);
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
 const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
-// The game's sounds (see @@@sound), from public/audio under the deployment's base path.
-const soundboard = new Soundboard((file) => `${import.meta.env.BASE_URL}audio/${file}`);
+// The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs); until the player chooses one, the
+// one a server names in VITE_SOUND_PACK, else none.
+const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
@@ -296,7 +298,7 @@ document.addEventListener("pointerlockchange", syncPointerLockState);
 document.addEventListener("click", onInterfaceClick, true);
 document.addEventListener("keydown", () => soundboard.unlock(), true);
 document.addEventListener("change", (event) => {
-  if (event.target instanceof HTMLSelectElement) soundboard.play("select");
+  if (event.target instanceof HTMLSelectElement) soundboard.play("click");
 }, true);
 document.addEventListener("pointerlockerror", () => {
   if (pointerLockArmed && !pointerLockFieldClickOnError) return;
@@ -716,6 +718,9 @@ function renderProfileMenu() {
     <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
     <fieldset class="sound-settings" data-sound-settings>
       <legend>${escapeHtml(t("settings.sound"))}</legend>
+      <label>${escapeHtml(t("settings.soundPack"))}<select data-sound-pack>${[{ id: NO_SOUND_PACK, name: t("settings.soundPackNone") }, ...soundboard.packs]
+        .map((pack) => `<option value="${escapeHtml(pack.id)}" ${pack.id === (soundboard.pack?.id ?? NO_SOUND_PACK) ? "selected" : ""}>${escapeHtml(pack.name)}</option>`)
+        .join("")}</select></label>
       <label>${escapeHtml(t("settings.effects"))}<input type="range" min="0" max="100" data-volume="effects" value="${Math.round(soundboard.settings.effects * 100)}" /></label>
       <label>${escapeHtml(t("settings.interface"))}<input type="range" min="0" max="100" data-volume="ui" value="${Math.round(soundboard.settings.ui * 100)}" /></label>
       <label class="checkbox-row"><input type="checkbox" data-mute ${soundboard.settings.muted ? "checked" : ""} /> ${escapeHtml(t("settings.mute"))}</label>
@@ -733,6 +738,9 @@ function renderProfileMenu() {
       soundboard.update({ [group]: Number(input.value) / 100 });
       soundboard.play(group === "ui" ? "click" : "melee");
     });
+  });
+  form.querySelector<HTMLSelectElement>("[data-sound-pack]")?.addEventListener("change", (event) => {
+    soundboard.update({ pack: (event.currentTarget as HTMLSelectElement).value });
   });
   form.querySelector<HTMLInputElement>("[data-mute]")?.addEventListener("change", (event) => {
     soundboard.update({ muted: (event.currentTarget as HTMLInputElement).checked });
@@ -1442,7 +1450,6 @@ function resetChatOverlay() {
 
 function showInvalidCommand(message: string) {
   statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
-  soundboard.play("error");
 }
 
 // A battlefield sound is heard where it happens: panned across the view, full inside it and fading out within a screen's
@@ -1457,20 +1464,10 @@ function playCues(cues: SoundCue[]) {
   }
 }
 
-// The interface's sounds: a click for a button, its own for a choice, a start and a way back. Pointing at a button is
-// silent.
-function interfaceSound(target: Element): SoundId | undefined {
-  if (target.closest("[data-submit-create-game], [data-start-room], [data-rematch]")) return "confirm";
-  if (target.closest("[data-back-home], [data-back-room-browser], [data-return-home]")) return "back";
-  if (target.closest(".map-entry, .selection-model")) return "select";
-  if (target.closest("button")) return "click";
-  return undefined;
-}
-
+// The interface has one sound: a click for a button, a map or a portrait chosen. Pointing at one is silent.
 function onInterfaceClick(event: MouseEvent) {
   soundboard.unlock();
-  const sound = event.target instanceof Element ? interfaceSound(event.target) : undefined;
-  if (sound) soundboard.play(sound);
+  if (event.target instanceof Element && event.target.closest("button, .map-entry, .selection-model")) soundboard.play("click");
 }
 
 function onMouseDown(event: MouseEvent) {

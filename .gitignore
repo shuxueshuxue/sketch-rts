@@ -10,3 +10,7 @@ coverage/
 .playtest/
 .benchmark-dashboard/
 recordings/
+
+# Sound packs (see @@@sound-packs): only the cc0 pack is ours to publish; any other pack stays on its machine.
+audio-packs/*
+!audio-packs/cc0/
