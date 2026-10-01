@@ -18,7 +18,7 @@ export function gameShellMarkup(i18n: I18n) {
       <div class="resource-readout" title="${escapeHtml(t("shell.gold"))}"><span class="readout-icon" aria-hidden="true"></span>${escapeHtml(t("shell.gold"))} <span data-gold>?</span></div>
       <div class="supply-readout" title="${escapeHtml(t("shell.supply"))}"><span class="readout-icon" aria-hidden="true"></span>${escapeHtml(t("shell.supply"))} <span data-supply>?</span></div>
       <div class="brand">Sketch RTS</div>
-      <div class="map-readout" data-map-readout>${escapeHtml(t("hud.mapReadout", { width: 4096, height: 4096 }))}</div>
+      <div class="map-readout" data-map-readout></div>
       <button type="button" class="match-action hidden" data-forfeit-match>${escapeHtml(t("shell.concede"))}</button>
     </div>
     <div class="status-line" data-status>${escapeHtml(t("shell.connectingMatch"))}</div>

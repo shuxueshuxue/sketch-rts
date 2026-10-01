@@ -641,21 +641,47 @@ input[type="checkbox"] {
   padding-bottom: 8px;
 }
 
-/* The room browser. */
-.room-browser {
-  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
-  height: min(60vh, 560px);
+/* The room browser: the rooms, then the way out and the way to a new room, as the other screens end. */
+.main-menu[data-menu-view="rooms"] .menu-window {
+  width: min(900px, calc(100vw - 56px));
 }
 
-.room-browser-actions,
 .room-browser-list {
   display: grid;
   align-content: start;
   grid-auto-rows: max-content;
   gap: 8px;
-  min-height: 0;
+  min-height: 160px;
+  max-height: 52vh;
   overflow: auto;
   padding: 12px;
+}
+
+.room-browser-actions {
+  order: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.room-browser-actions .map-button {
+  min-width: 140px;
+  justify-items: center;
+  padding: 7px 16px;
+}
+
+.room-browser-actions .map-button:first-child {
+  border-color: var(--primary-edge);
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.room-browser-actions .map-button-name {
+  font-size: 13px;
 }
 
 .room-browser-list .map-button {
@@ -1391,8 +1417,7 @@ input[type="checkbox"] {
 @media (max-width: 960px) {
   .map-chooser,
   .map-detail,
-  .room-setup-layout,
-  .room-browser {
+  .room-setup-layout {
     grid-template-columns: 1fr;
   }
 

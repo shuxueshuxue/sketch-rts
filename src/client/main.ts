@@ -2167,7 +2167,7 @@ function updateHud() {
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
-  mapReadout.textContent = t("hud.mapReadout", { width: snapshot.map.width, height: snapshot.map.height });
+  mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
