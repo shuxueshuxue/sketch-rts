@@ -2303,12 +2303,11 @@ const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.ra
 // Measured to an unreachable point itself, the order never ended and the unit stood at the shore for good.
 function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
   const map = game.map;
-  if (restsAgainstArrivedFriend(game, unit, goal)) return true;
-  if (!map.terrain) return distance(unit, goal) < within;
+  if (!map.terrain) return distance(unit, goal) < within || restsAgainstArrivedFriend(game, unit, goal, goal);
   const mover = unitMover(unit.kind);
   const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
   const end = walkDestination(map, unit, point, mover);
-  return distance(unit, end) < within || restsAgainstGoalBody(game, unit, end, within);
+  return distance(unit, end) < within || restsAgainstGoalBody(game, unit, point, within) || restsAgainstArrivedFriend(game, unit, goal, end);
 }
 
 function arrive(unit: Unit, goal: { x: number; y: number }) {
@@ -2337,8 +2336,10 @@ function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: numb
 // walking through its own camp stopped at the first idle soldier there and never reached the enemy.
 const CROWD_REACH = 100;
 
-function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y: number }) {
-  const gap = distance(unit, goal);
+// `goal` is the order's point (whose walk a friend shares), `end` where that walk ends for this unit (see walkEnded): a
+// group sent to an island stands round the shore across from it, never within two bodies of the island's point.
+function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y: number }, end: { x: number; y: number }) {
+  const gap = distance(unit, end);
   if (unit.kind === "worker" || gap > CROWD_REACH) return false;
   const friend = firstNearbyUnit(game, unit, unit.radius + MAX_UNIT_RADIUS + 2, (other) => {
     if (other === unit || other.owner !== unit.owner || distance(other, unit) > other.radius + unit.radius + 2) return false;

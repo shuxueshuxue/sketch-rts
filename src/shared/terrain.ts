@@ -187,7 +187,8 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
 }
 
 // Where a walk from `from` to `goal` ends: the goal when the walker's ground (and the buildings in its way) let it reach
-// it, else the point nearest it that they do (see reachableTarget). `goal` should be walkable (see walkableGoal).
+// it, else the point nearest it that they do (see reachableTarget); for a goal in a building's cells, the bottom of the
+// goal's field the walker comes down to, by the building (see goalSeeds). `goal` should be walkable (see walkableGoal).
 export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
   const terrain = map.terrain;
   if (!terrain) return goal;
@@ -198,8 +199,15 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
   const near = nearestWalkable(state, start);
   if (near < 0) return goal;
-  const aim = reachableTarget(state, ground, tilesOf(state), near, target);
-  return aim === target ? goal : centerOf(state, aim);
+  const tiles = tilesOf(state);
+  const aim = reachableTarget(state, ground, tiles, near, target);
+  if (state.walk[aim] === 1) return aim === target ? goal : centerOf(state, aim);
+  const field = goalFieldOf(state, ground, tiles, aim).field;
+  const index = local(field.box, near, state.width);
+  if (index < 0 || field.dist[index]! >= UNREACHED) return goal;
+  let at = near;
+  for (let next = downhill(state, field, at); next >= 0; next = downhill(state, field, at)) at = next;
+  return centerOf(state, at);
 }
 
 // @@@terrain-steering - Where a unit at `from`, in cell `near`, heads down the tiles to `target`, the cell of `goal`: the
@@ -230,7 +238,11 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
     if (step === SHORT_LOOK) short = at;
     if (way && !way.exit && way.field.dist[local(way.field.box, at, state.width)] === 0) break;
   }
-  if (at === near) return goal;
+  // Nowhere further down: at the goal, or at the bottom of a field that ends by a building. From there a walk goes on
+  // straight at its goal when only buildings stand between (it ends at the wall: a worker comes to its hall to drop its
+  // gold), and stands where it is when the ground does (a goal snapped by a wood, the wood between): heading straight at
+  // it, three casters stood pressed against the trees for minutes.
+  if (at === near) return near === target || clearSegment(ground, from.x, from.y, goal.x, goal.y) ? goal : centerOf(state, near);
   const far = at === target ? goal : centerOf(state, at);
   if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
   return short === target ? goal : centerOf(state, short);
