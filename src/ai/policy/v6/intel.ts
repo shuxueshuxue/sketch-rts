@@ -5,6 +5,7 @@ import { onOwnGround, sameGroundAs, withoutShips } from "../ground";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { PresetAiPolicyOptions } from "../types";
+import { isV9Policy } from "../versions";
 import { strengthOf, TOWER_STRENGTH } from "./strength";
 
 // @@@v6-intel - One read of the board that every V6 module plans from: where each opponent's army is and what it is doing,
@@ -75,7 +76,7 @@ export function readV6Intel(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   const home = ownHalls[0] ?? ownBuildings[0] ?? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 };
   const neutrals = snapshot.units.filter((unit) => unit.owner === "neutral");
   const enemies = opponentPlayerIds(snapshot, owner, options).map((enemy) => readEnemy(snapshot, owner, enemy, ownBuildings, neutrals));
-  const intrusion = readIntrusion(ownBuildings, enemies);
+  const intrusion = readIntrusion(ownBuildings, enemies, isV9Policy(options));
   const intel: V6Intel = {
     tick: snapshot.tick,
     home: { x: home.x, y: home.y },
@@ -110,8 +111,14 @@ function readEnemy(snapshot: GameSnapshot, owner: PlayerId, enemy: PlayerId, own
 
 // Range questions of the whole enemy army through withinRangeOf (@@@range-grid): per own building here, per creep in
 // enemyState; the same units in the same order as the filters over every enemy unit they replace.
-function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[]): V6Intrusion | undefined {
-  const army = enemies.flatMap((enemy) => enemy.army);
+// @@@v9-home-is-no-intrusion - For V9 an enemy soldier nearer one of its own halls than any building of V9's is at home,
+// not intruding: V8's raiders idling 350 from their hall stood 733 to 757 from V9's outpost tower, in and out of
+// INTRUSION_RANGE, and V9's army of 33 turned between defending against them and its attack every 20 to 60 seconds for
+// twenty minutes (pool-elderwood-3).
+function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[], homeAware: boolean): V6Intrusion | undefined {
+  const nearest = (unit: Unit, points: readonly Point[]) => points.reduce((best, point) => Math.min(best, distance(unit, point)), Infinity);
+  const atHome = (unit: Unit, enemy: V6EnemyIntel) => nearest(unit, enemy.bases.map((base) => base.hall)) < nearest(unit, ownBuildings);
+  const army = enemies.flatMap((enemy) => (homeAware ? enemy.army.filter((unit) => !atHome(unit, enemy)) : enemy.army));
   const armyNear = withinRangeOf(army, INTRUSION_RANGE);
   const attacked = ownBuildings
     .map((building) => ({ building, threat: strengthOf(armyNear(building)) }))
