@@ -2,7 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LO
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { groundUnder, isWalkable, setBuildingBodies, steerPoint, walkableGoal, walkDestination } from "./terrain";
+import { groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
 import { alongside, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
@@ -84,7 +84,8 @@ type SpatialIndex<T extends SpatialEntity> = {
   buckets: Map<number, T[]>;
 };
 
-const BUILD_RANGE = 46;
+// How far from a site's center its builders work (see updateConstruction).
+const BUILD_RANGE = 70;
 const MINE_RANGE = 44;
 const TOWN_HALL_DROP_RANGE = 74;
 const GOLD_PER_TRIP = 10;
@@ -106,7 +107,7 @@ const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
 const FLAME_CLOAK_COOLDOWN = seconds(2);
 const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
-const REPAIR_RANGE = BUILD_RANGE + 20;
+const REPAIR_RANGE = 66;
 // @@@repair - A worker repairs a building as fast as a footman strikes one (the owner's word, 10-02: a tower held by its
 // workers holds), at the price it always had: 1 gold for each REPAIR_FULL_COST_FRACTION-th of the building's price worth
 // of its health, paid as often as that rate asks (a tower every 6 ticks, a hall every 9).
@@ -180,6 +181,10 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   } satisfies Game;
 
   if (options.scenario) applyScenarioOverride(game, options.scenario);
+  // Every building stands on whole cells (see @@@building-footprint), a hall the map lays or a scenario seeds as one a
+  // worker lays: laid 10 off its cells' middle, a start hall had the cells beside one of its sides 77 from it, past where
+  // its workers drop their gold.
+  for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
   updateSupplyState(game);
   return game;
 }
@@ -404,14 +409,17 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
     if (terrainBlocksPlacement(game.map, command.buildingKind, command)) throw new Error(`${command.buildingKind} placement is on blocked ground`);
     spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
-    const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, command.x, command.y, false);
+    // Laid on whole cells (see @@@building-footprint), where its placement was checked.
+    const at = snapToFootprint(game.map, BUILDING_DEFS[command.buildingKind].radius, command);
+    const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, at.x, at.y, false);
     applyDerivedBuildingStats(game, building);
     building.hp = constructionStartHp(building.maxHp);
     game.nextId += 1;
     game.buildings.push(building);
-    // Where a building is a body (see @@@building-body) this spot lies inside it: the walk ends at the wall (restsAgainstGoalBody).
-    worker.order = { type: "move", x: command.x - BUILD_RANGE + 10, y: command.y };
-    addEffect(game, "build", command.x, command.y, 60);
+    // Where a building is a body (see @@@building-body) the walk ends at its wall on the builder's side, by the middle of
+    // that side (see goalSeeds), within reach of the work.
+    worker.order = { type: "move", x: at.x, y: at.y };
+    addEffect(game, "build", at.x, at.y, 60);
     return;
   }
 
@@ -637,9 +645,10 @@ function definedTeams(teams: Partial<Record<PlayerId, string>>): Record<PlayerId
 function updateConstruction(game: Game) {
   for (const building of game.buildings) {
     if (building.complete) continue;
-    const builders = game.units.filter(
-      (unit) => unit.owner === building.owner && unit.kind === "worker" && distance(unit, building) <= BUILD_RANGE + 20,
-    );
+    // A builder's walk to a site of three cells across ends in the cell beside the middle of its side, 64 from its center,
+    // within 5 of that cell's (see walkEnded); at 66 it stood 2 short. Measured from the wall instead, a hall's reach took
+    // in the miners passing it and set them idle when it was done.
+    const builders = game.units.filter((unit) => unit.owner === building.owner && unit.kind === "worker" && distance(unit, building) <= BUILD_RANGE);
     if (builders.length === 0) continue;
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
     // same share of the health it started without.
@@ -1830,11 +1839,12 @@ function activateItem(
     if (!isPlayerId(carrier.owner) || !isNumber(x) || !isNumber(y)) return;
     if (Math.hypot(x - carrier.x, y - carrier.y) > IVORY_TOWER_REACH) return;
     if (terrainBlocksPlacement(game.map, "defenseTower", { x, y }) || buildingPlacementBlocker(game, "defenseTower", { x, y })) return;
-    const tower = createBuilding(`building-${carrier.owner}-defenseTower-${game.nextId}`, carrier.owner, "defenseTower", x, y, true);
+    const at = snapToFootprint(game.map, BUILDING_DEFS.defenseTower.radius, { x, y });
+    const tower = createBuilding(`building-${carrier.owner}-defenseTower-${game.nextId}`, carrier.owner, "defenseTower", at.x, at.y, true);
     game.nextId += 1;
     tower.hp = Math.round(tower.maxHp / 2);
     game.buildings.push(tower);
-    addEffect(game, "summon", x, y, 34);
+    addEffect(game, "summon", at.x, at.y, 34);
     consumeItem(game, item);
   }
 }
@@ -2656,11 +2666,11 @@ function enemyTeamKeys(game: Game, owner: Owner, indexes: Map<string, unknown>) 
   return [...indexes.keys()].filter((team) => team !== ownTeam);
 }
 
-// @@@building-body - A building is a body no unit enters, as a forest is (see @@@terrain) but round and its own size:
-// after the units part from each other, any unit within a building's radius and its own is set back on the building's
-// rim, out along the line from its center, and the part of a slide (see @@@push) heading into it is spent, as against a
-// wall. A foundation is as solid as a finished building: a site laid where units stand moves them aside. Units used to
-// walk through buildings, and a melee fighter struck a town hall from inside it. That holds on a map with terrain, whose
+// @@@building-body - A building is a body no unit enters, as a forest is (see @@@terrain): its footprint's cells (see
+// @@@building-footprint) are ground no land unit's center stands on, so a step or a slide (see @@@push) into them stops
+// as at a wall, and units parting from each other are never pushed onto them. A foundation is as solid as a finished
+// building: a site laid where units stand moves them aside (see keepUnitsOutOfBuildings). Units used to walk through
+// buildings, and a melee fighter struck a town hall from inside it. That holds on a map with terrain, whose
 // routing takes a unit round buildings (see @@@building-pathing); a map without terrain is open everywhere and plays as
 // it did (see @@@terrain): its walks are straight lines, and a building in their way would stop them for good (a V2
 // economy on verdantCrossroads never reached its expansion with its own farms in its workers' way).
@@ -2722,60 +2732,17 @@ function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y:
   return friend !== undefined;
 }
 
-// Each unit is held against the buildings whose reach (their radius and the widest unit's) touches the square it stands
-// in, the squares filled once per set of buildings (see syncBuildingBodies). Each building used to look through the
-// tick's unit index, whose squares are 320 wide: the sixty units of a whole base, for each building in it.
-const BODY_SQUARE = 64;
-const bodySquares = new WeakMap<(Building | Obstacle)[], Map<number, (Building | Obstacle)[]>>();
-
+// A land unit a footprint has come down on (a site laid where it stood, a unit set down by a building) steps out to the
+// center of the open cell nearest it (see isOpenGround); one on ground nothing walks (only a seeded scenario puts it
+// there) walks out (see @@@terrain-walk).
 function keepUnitsOutOfBuildings(game: Game) {
-  const seen = game.buildingBodiesSeen!;
-  let squares = bodySquares.get(seen);
-  if (!squares) {
-    squares = new Map();
-    for (const building of seen) {
-      const reach = building.radius + MAX_UNIT_RADIUS;
-      const right = Math.floor((building.x + reach) / BODY_SQUARE);
-      const bottom = Math.floor((building.y + reach) / BODY_SQUARE);
-      for (let x = Math.floor((building.x - reach) / BODY_SQUARE); x <= right; x += 1) {
-        for (let y = Math.floor((building.y - reach) / BODY_SQUARE); y <= bottom; y += 1) {
-          const key = numericBucketKey(x, y);
-          const square = squares.get(key);
-          if (square) square.push(building);
-          else squares.set(key, [building]);
-        }
-      }
-    }
-    bodySquares.set(seen, squares);
-  }
+  const map = game.map;
   for (const unit of game.units) {
-    const square = squares.get(numericBucketKey(Math.floor(unit.x / BODY_SQUARE), Math.floor(unit.y / BODY_SQUARE)));
-    if (square) for (const building of square) keepOutOfBuilding(game, unit, building);
-  }
-}
-
-function keepOutOfBuilding(game: Game, unit: Unit, building: Building | Obstacle) {
-  const reach = unit.radius + building.radius;
-  const dx = unit.x - building.x;
-  const dy = unit.y - building.y;
-  const gapSq = dx * dx + dy * dy;
-  if (gapSq >= reach * reach) return;
-  const length = Math.sqrt(gapSq);
-  const nx = length === 0 ? 1 : dx / length;
-  const ny = length === 0 ? 0 : dy / length;
-  const x = clamp(building.x + nx * reach, 0, game.map.width);
-  const y = clamp(building.y + ny * reach, 0, game.map.height);
-  // Set back only onto ground the unit stands on: a ship by its shipyard onto the water, never ashore (see @@@naval).
-  if (!game.map.terrain || isWalkable(game.map, x, y, unitMover(unit.kind))) {
-    unit.x = x;
-    unit.y = y;
-  }
-  if (unit.pushX !== undefined && unit.pushY !== undefined) {
-    const into = unit.pushX * nx + unit.pushY * ny;
-    if (into < 0) {
-      unit.pushX -= into * nx;
-      unit.pushY -= into * ny;
-    }
+    if (unitMover(unit.kind) !== "land" || isOpenGround(map, unit.x, unit.y) || !isWalkable(map, unit.x, unit.y)) continue;
+    const out = openGroundNear(map, unit);
+    if (!out) continue;
+    unit.x = out.x;
+    unit.y = out.y;
   }
 }
 
@@ -2849,15 +2816,13 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const ay = clamp(a.y - ny * push, 0, game.map.height);
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
-  // Neither is pushed onto ground it cannot stand on (see @@@terrain): the one by a wall stays and the other gives way.
-  if (!game.map.terrain || isWalkable(game.map, ax, ay, unitMover(a.kind))) {
-    a.x = ax;
-    a.y = ay;
-  }
-  if (!game.map.terrain || isWalkable(game.map, bx, by, unitMover(b.kind))) {
-    b.x = bx;
-    b.y = by;
-  }
+  // Neither is pushed onto ground it cannot stand on (see @@@terrain): one by a wall slides along it (see openStep).
+  const aAt = openStep(game.map, a, { x: ax, y: ay }, unitMover(a.kind));
+  const bAt = openStep(game.map, b, { x: bx, y: by }, unitMover(b.kind));
+  a.x = aAt.x;
+  a.y = aAt.y;
+  b.x = bAt.x;
+  b.y = bAt.y;
 }
 
 function numericBucketKey(x: number, y: number) {
@@ -3013,14 +2978,9 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap, pace = 1) {
   const speed = unit.speed * pace * groundUnder(map, unit.x, unit.y, mover).pace;
   const nextX = clamp(length <= speed ? aim.x : unit.x + (dx / length) * speed, 0, map.width);
   const nextY = clamp(length <= speed ? aim.y : unit.y + (dy / length) * speed, 0, map.height);
-  if (isWalkable(map, nextX, nextY, mover) || !isWalkable(map, unit.x, unit.y, mover)) {
-    unit.x = nextX;
-    unit.y = nextY;
-  } else if (isWalkable(map, nextX, unit.y, mover)) {
-    unit.x = nextX;
-  } else if (isWalkable(map, unit.x, nextY, mover)) {
-    unit.y = nextY;
-  }
+  const step = openStep(map, unit, { x: nextX, y: nextY }, mover);
+  unit.x = step.x;
+  unit.y = step.y;
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {

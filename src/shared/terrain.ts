@@ -92,6 +92,37 @@ export function isWalkable(map: Pick<GameMap, "terrain">, x: number, y: number, 
   return state.walk[padAt(state, x, y)] === 1;
 }
 
+// Whether a unit's center may be at the point: on its mover's ground and, for a land unit, on no building's footprint
+// (see @@@building-footprint). The sim keeps every unit on open ground as it keeps it out of a wood.
+export function isOpenGround(map: Pick<GameMap, "terrain">, x: number, y: number, mover: Mover = "land") {
+  const terrain = map.terrain;
+  if (!terrain) return true;
+  const state = routing(map, terrain, mover);
+  return state.walk[padAt(state, x, y)] === 1;
+}
+
+// Where a unit's step from `from` toward `to` ends: there when it is open ground (see isOpenGround), else as far along one
+// axis as is, sliding along the wall, else where it stands; a unit standing where nothing is open steps anywhere (it is
+// walking out). Walking, parting and slides all step so: parted all at once or not at all, a unit by a wall never gave
+// way to a friend walking down a passage one cell wide, and the friend stood behind it for good.
+export function openStep(map: Pick<GameMap, "terrain">, from: Point, to: Point, mover: Mover = "land"): Point {
+  if (isOpenGround(map, to.x, to.y, mover) || !isOpenGround(map, from.x, from.y, mover)) return to;
+  if (isOpenGround(map, to.x, from.y, mover)) return { x: to.x, y: from.y };
+  if (isOpenGround(map, from.x, to.y, mover)) return { x: from.x, y: to.y };
+  return { x: from.x, y: from.y };
+}
+
+// The center of the open cell nearest the point's, for a unit a footprint has come down on; undefined on a map without
+// terrain or with no open cell.
+export function openGroundNear(map: Pick<GameMap, "terrain">, point: Point, mover: Mover = "land"): Point | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return undefined;
+  const state = routing(map, terrain, mover);
+  const at = padAt(state, point.x, point.y);
+  const near = at < 0 ? -1 : nearestWalkable(state, at);
+  return near < 0 ? undefined : centerOf(state, near);
+}
+
 // The ground under a point as it slows whoever crosses it (see @@@terrain-ground): a land unit keeps `pace` of its speed
 // there and a slide brakes `drag` times as hard; a ship sails and slides at full pace everywhere, and a map without
 // terrain is bare ground.
@@ -118,7 +149,7 @@ export function cellCenter(terrain: Terrain, index: number): Point {
   return { x: (col + 0.5) * terrain.cell, y: (row + 0.5) * terrain.cell };
 }
 
-// Whether a building of the given radius may stand at the point: every cell its footprint touches is walkable and none is
+// Whether a building of the given radius may stand at the point: every cell of its footprint is walkable and none is
 // a ramp (a map without terrain has nothing to refuse). @@@ramp-unbuildable - A ramp is a main's one way out, as on a
 // Warcraft III map, where ramps take no building: once buildings are bodies (see @@@building-body) a tower or a farm on
 // it would shut its owner in.
@@ -174,20 +205,42 @@ export function shoreSpots(map: Pick<GameMap, "terrain">, radius: number): reado
   return spots;
 }
 
-// Whether every cell a circle touches passes the test (by its padded index and its index in the terrain); a cell off the
-// map never does.
+// @@@building-footprint - A building, a rock pile or a gate takes the cells of its footprint, as in Warcraft III: a square
+// of whole cells, the fewest across that hold its round body (two for a farm or a tower, three for a hall or a barracks,
+// four for a gate), the cells whose centers fall within it. Routing and walking read the same cells (see
+// @@@building-pathing, isOpenGround): a unit walks round a footprint and stands outside it as it does a wood, and a gap
+// between two footprints is open exactly when a cell lies between them. A building is laid on whole cells (see
+// snapToFootprint); a body laid elsewhere (a generated rock pile) still takes a square of that many cells.
+export function footprintHalf(radius: number, cell: number) {
+  return (Math.ceil((2 * radius) / cell) * cell) / 2;
+}
+
+// Where a body of this radius stands on the grid: its center on a cell's corner when its footprint is an even number of
+// cells across, on a cell's center when an odd one. A map without terrain takes the point as it is.
+export function snapToFootprint(map: Pick<GameMap, "terrain">, radius: number, point: Point): Point {
+  const terrain = map.terrain;
+  if (!terrain) return { x: point.x, y: point.y };
+  const cell = terrain.cell;
+  const offset = Math.ceil((2 * radius) / cell) % 2 === 1 ? cell / 2 : 0;
+  return { x: Math.round((point.x - offset) / cell) * cell + offset, y: Math.round((point.y - offset) / cell) * cell + offset };
+}
+
+// The columns and rows of the cells a footprint of this radius round the point takes: those whose centers fall within it.
+export function footprintCells(cell: number, x: number, y: number, radius: number) {
+  const half = footprintHalf(radius, cell);
+  const first = (from: number) => Math.ceil(from / cell - 0.5);
+  return { left: first(x - half), right: first(x + half) - 1, top: first(y - half), bottom: first(y + half) - 1 };
+}
+
+// Whether every cell of a footprint passes the test (by its padded index and its index in the terrain); a cell off the map
+// never does.
 function everyFootprintCell(terrain: Terrain, x: number, y: number, radius: number, passes: (at: number, cell: number) => boolean) {
   const size = terrain.cell;
   const width = terrain.cols + 2;
-  const low = { col: Math.floor((x - radius) / size), row: Math.floor((y - radius) / size) };
-  const high = { col: Math.floor((x + radius) / size), row: Math.floor((y + radius) / size) };
-  for (let row = low.row; row <= high.row; row += 1) {
-    for (let col = low.col; col <= high.col; col += 1) {
+  const { left, right, top, bottom } = footprintCells(size, x, y, radius);
+  for (let row = top; row <= bottom; row += 1) {
+    for (let col = left; col <= right; col += 1) {
       if (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows) return false;
-      // Only the cells the circle reaches: the corner cells of its bounding square may lie outside it.
-      const nearX = Math.max(col * size, Math.min(x, (col + 1) * size));
-      const nearY = Math.max(row * size, Math.min(y, (row + 1) * size));
-      if ((nearX - x) * (nearX - x) + (nearY - y) * (nearY - y) >= radius * radius) continue;
       if (!passes((row + 1) * width + col + 1, row * terrain.cols + col)) return false;
     }
   }
@@ -228,9 +281,9 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
   const target = padAt(state, goal.x, goal.y);
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
   if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return goal;
-  // A unit pressed against a wall stands in a building's margin (see @@@building-pathing): it starts from the open cell
-  // nearest it (see nearestOpenTo); one standing where nothing walks (only a seeded scenario puts it there) heads out to it.
-  const near = nearestOpenTo(state, from);
+  // A unit stands on open ground (see isOpenGround); one standing where nothing walks (only a seeded scenario puts it there)
+  // heads out to the walkable cell nearest it.
+  const near = nearestWalkable(state, start);
   if (near < 0) return goal;
   if (near !== start && ground.walk[start] !== 1) return centerOf(state, near);
   const tiles = tilesOf(state);
@@ -249,7 +302,7 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
   const start = padAt(state, from.x, from.y);
   const target = padAt(state, goal.x, goal.y);
   if (start < 0 || target < 0 || ground.walk[target] !== 1) return goal;
-  const near = nearestOpenTo(state, from);
+  const near = nearestWalkable(state, start);
   if (near < 0) return goal;
   const tiles = tilesOf(state);
   const aim = reachableTarget(state, ground, tiles, near, target);
@@ -290,11 +343,11 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
     if (step === SHORT_LOOK) short = at;
     if (way && !way.exit && way.field.dist[local(way.field.box, at, state.width)] === 0) break;
   }
-  // Nowhere further down: at the goal, or at the bottom of a field that ends by a building. From there a walk goes on
-  // straight at its goal when only buildings stand between (it ends at the wall: a worker comes to its hall to drop its
-  // gold), and stands where it is when the ground does (a goal snapped by a wood, the wood between): heading straight at
-  // it, three casters stood pressed against the trees for minutes.
-  if (at === near) return near === target || clearSegment(ground, from.x, from.y, goal.x, goal.y) ? goal : centerOf(state, near);
+  // Nowhere further down: at the goal, or at the bottom of a field that ends by a building or a wood, a cell beside it,
+  // where the walk ends (a worker by its hall drops its gold there). Heading on straight at a goal behind it, three casters
+  // stood pressed against the trees for minutes, and a builder whose site's middle lay on a cell's edge stepped across it
+  // and back every tick.
+  if (at === near) return near === target ? goal : centerOf(state, near);
   const far = at === target ? goal : centerOf(state, at);
   if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
   return short === target ? goal : centerOf(state, short);
@@ -911,38 +964,22 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 
 // @@@building-pathing - Buildings stand in the land's way as forest does, but they are each game's own and they come and
 // go: the sim hands the map its buildings whenever they change (see setBuildingBodies), and they are kept on a copy of the
-// land's cells with every cell a building shuts blocked (see BODY_MARGIN), with its own clearance, flow
-// tiles and nearest cells. A building laid or felled redoes the tiles of the squares it changed and of those beside them
-// (see @@@flow-tiles). The AIs' walking distances and routes read the terrain alone: what a building adds to a walk is a
-// few steps round it.
+// land's cells with every cell of their footprints blocked (see @@@building-footprint), with its own clearance, flow tiles
+// and nearest cells. A building laid or felled redoes the tiles of the squares it changed and of those beside them (see
+// @@@flow-tiles). The AIs' walking distances and routes read the terrain alone: what a building adds to a walk is a few
+// steps round it.
 //
-// The margin shuts the slits a unit's body cannot pass (Emerson's wall cushioning): farms laid 4 apart left a row of open
-// cells between them, and units routed into the slit and stood pressed in it; with half a cell more round each building
-// no gap under about 32 stays open, and a unit is 30 to 36 wide. A unit pressed against a wall stands in such cells and
-// starts from the open cell nearest it. A cell is shut when a building covers its center, or the margins cover all five
-// of its samples (its center and its quarters' centers): taken at the center alone, a gap of 32 to 77 between two walls
-// stayed open or shut by how it lay on the grid, and a farm and stables 54 apart with two farms 56 apart shut a knight in
-// a one-cell pocket where every walk ended as it began, its army standing at home to the end (pool-twoShores-4).
+// Routing and walking read the copy alike (see isOpenGround): a unit's center never stands on a footprint, so a walk
+// starts from the cell under it and every gap routing takes is one a unit walks. Whether a building may be laid
+// (isFootprintBuildable) and where a goal may lie (walkableGoal) stay the terrain's alone: a goal on a footprint is walked
+// to the edge of it.
 //
 // The copy hangs on the game's map object (a snapshot shares it), never on the terrain, which games may share. A map
-// without terrain has no routing to take a unit round anything, and its buildings stand in nobody's way (see
-// @@@building-body). Whether a point may be stood on (isWalkable, walkableGoal, isFootprintBuildable) stays the terrain's
-// alone: a building's round body is the sim's to keep units out of. Ships keep the sea's own routing: no building stands
-// in deep water.
+// without terrain has no routing to take a unit round anything, and its buildings stand in nobody's way but by their
+// round bodies (see @@@building-body). Ships keep the sea's own routing: no building stands in deep water.
 type Body = { x: number; y: number; radius: number };
-export const BODY_MARGIN = 16;
-const SAMPLES = [
-  [0, 0],
-  [-0.25, -0.25],
-  [0.25, -0.25],
-  [-0.25, 0.25],
-  [0.25, 0.25],
-] as const;
-const ALL_SAMPLES = (1 << SAMPLES.length) - 1;
-const CENTER_IN_BODY = 1 << SAMPLES.length;
-// `previous`: the cells as they were before the last change, kept to tell which squares that change reached. `covered`:
-// per cell, the samples a margin covers and whether a body covers its center.
-type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; covered: Uint8Array };
+// `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
+type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array };
 const overlays = new WeakMap<object, Overlay>();
 
 export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
@@ -956,44 +993,19 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   let overlay = overlays.get(map);
   if (!overlay || overlay.terrain !== terrain) {
     const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), covered: new Uint8Array(fresh.walk.length) };
+    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length) };
     overlays.set(map, overlay);
   }
   const state = overlay.state;
   overlay.previous.set(state.walk);
   state.walk.set(ground.walk);
   const size = terrain.cell;
-  const covered = overlay.covered;
-  covered.fill(0);
-  const squares = new Map<number, Body[]>();
-  const squareSpan = SECTOR * size;
-  const squareCols = Math.ceil(terrain.cols / SECTOR);
-  const squareRows = Math.ceil(terrain.rows / SECTOR);
   for (const body of bodies) {
-    const reach = body.radius + BODY_MARGIN;
-    for (let row = Math.max(0, Math.floor((body.y - reach) / squareSpan)); row <= Math.min(squareRows - 1, Math.floor((body.y + reach) / squareSpan)); row += 1) {
-      for (let col = Math.max(0, Math.floor((body.x - reach) / squareSpan)); col <= Math.min(squareCols - 1, Math.floor((body.x + reach) / squareSpan)); col += 1) {
-        const key = row * squareCols + col;
-        squares.set(key, [...(squares.get(key) ?? []), body]);
-      }
-    }
-    const low = { col: Math.max(0, Math.floor((body.x - reach) / size)), row: Math.max(0, Math.floor((body.y - reach) / size)) };
-    const high = { col: Math.min(terrain.cols - 1, Math.floor((body.x + reach) / size)), row: Math.min(terrain.rows - 1, Math.floor((body.y + reach) / size)) };
-    for (let row = low.row; row <= high.row; row += 1) {
-      for (let col = low.col; col <= high.col; col += 1) {
-        const at = pad(state, col, row);
-        for (let sample = 0; sample < SAMPLES.length; sample += 1) {
-          const dx = (col + 0.5 + SAMPLES[sample]![0]) * size - body.x;
-          const dy = (row + 0.5 + SAMPLES[sample]![1]) * size - body.y;
-          const far = dx * dx + dy * dy;
-          if (far < reach * reach) covered[at] = covered[at]! | (1 << sample);
-          if (sample === 0 && far < body.radius * body.radius) covered[at] = covered[at]! | CENTER_IN_BODY;
-        }
-        if (covered[at]! & CENTER_IN_BODY || (covered[at]! & ALL_SAMPLES) === ALL_SAMPLES) state.walk[at] = 0;
-      }
+    const { left, right, top, bottom } = footprintCells(size, body.x, body.y, body.radius);
+    for (let row = Math.max(0, top); row <= Math.min(terrain.rows - 1, bottom); row += 1) {
+      for (let col = Math.max(0, left); col <= Math.min(terrain.cols - 1, right); col += 1) state.walk[pad(state, col, row)] = 0;
     }
   }
-  state.bodies = squares;
   const dirty = new Set<number>();
   for (let at = 0; at < state.walk.length; at += 1) {
     if (state.walk[at] === overlay.previous[at]) continue;
@@ -1022,8 +1034,6 @@ type Field = { dist: Int32Array; next: Int32Array; used: number };
 
 type TerrainRuntime = {
   terrain: Terrain;
-  // The building copy's buildings by square (see setBuildingBodies, sightClearOfBodies); none on the land's own runtime.
-  bodies?: Map<number, Body[]>;
   // The grid with a blocked border cell all round (cols + 2 wide), so no step ever needs a bounds check.
   width: number;
   // 1 on a cell the runtime's mover may cross (see @@@terrain-movers).
@@ -1158,58 +1168,8 @@ function fillClearance(state: TerrainRuntime) {
 
 // Whether the segment crosses only walkable cells. It steps from cell to cell, but across open ground it leaps: a cell
 // whose clearance is k has every cell within k - 1 of it walkable, so the walk jumps to the edge of that square.
+
 function clearSegment(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
-  return clearCells(state, ax, ay, bx, by) && sightClearOfBodies(state, ax, ay, bx, by);
-}
-
-// Whether the segment keeps every building of the copy its margin off, where it comes nearer one than its start does (a
-// unit pressed against a wall still walks straight away from it). The copy's cells are open where a margin covers only
-// some of them, and a sight line through such cells passed 38 from a tower's center, 8 off its body, with a knight 22
-// across walking it: it pressed into the tower, was put back, and turned between that line and the way round every tick
-// (pool-turtleLake-4).
-// The squares asked are the ones the segment crosses (a body near it is listed in each square its margin reaches, the one
-// the segment meets it in among them), not every square of the segment's bounding box, which for a sight line across the
-// map is every building on it.
-function sightClearOfBodies(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
-  const squares = state.bodies;
-  if (!squares) return true;
-  const span = SECTOR * state.terrain.cell;
-  const squareCols = Math.ceil(state.terrain.cols / SECTOR);
-  const dx = bx - ax;
-  const dy = by - ay;
-  const length = dx * dx + dy * dy;
-  let col = Math.floor(ax / span);
-  let row = Math.floor(ay / span);
-  const endCol = Math.floor(bx / span);
-  const endRow = Math.floor(by / span);
-  const stepCol = Math.sign(dx);
-  const stepRow = Math.sign(dy);
-  const deltaCol = dx === 0 ? Infinity : span / Math.abs(dx);
-  const deltaRow = dy === 0 ? Infinity : span / Math.abs(dy);
-  let nextCol = dx === 0 ? Infinity : ((stepCol > 0 ? col + 1 : col) * span - ax) / dx;
-  let nextRow = dy === 0 ? Infinity : ((stepRow > 0 ? row + 1 : row) * span - ay) / dy;
-  for (let guard = 0; guard < 4 * (squareCols + Math.ceil(state.terrain.rows / SECTOR)) + 4; guard += 1) {
-    for (const body of squares.get(row * squareCols + col) ?? []) {
-      const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((body.x - ax) * dx + (body.y - ay) * dy) / length));
-      if (t === 0) continue;
-      const gx = ax + dx * t - body.x;
-      const gy = ay + dy * t - body.y;
-      const reach = body.radius + BODY_MARGIN;
-      if (gx * gx + gy * gy < reach * reach) return false;
-    }
-    if (col === endCol && row === endRow) break;
-    if (nextCol < nextRow) {
-      nextCol += deltaCol;
-      col += stepCol;
-    } else {
-      nextRow += deltaRow;
-      row += stepRow;
-    }
-  }
-  return true;
-}
-
-function clearCells(state: TerrainRuntime, ax: number, ay: number, bx: number, by: number) {
   const { terrain, walk, clearance, width } = state;
   const size = terrain.cell;
   let at = padAt(state, ax, ay);
@@ -1342,43 +1302,6 @@ function grow(state: TerrainRuntime, sources: number[]): Field {
 }
 
 // The walkable cell whose center is nearest the given cell's center (the lowest index among equals), or -1 when none is.
-// The open cell whose center is nearest the point itself, the point's own when it is open. Taken from the point's cell
-// instead, it changed as a unit pressed against a wall stepped across a cell's border, a step at a time: the open cell
-// nearest one cell lay on the wall's north side, the next one's on its south, and the unit turned between the two ways
-// round every tick (pool-elderwood-4, a lancer at its tower's corner, 1 to 3 a step for minutes; 9 of the pool batch's 15
-// stuck units). A center on the ring `ring` cells out is at least half a cell less than that from the point.
-function nearestOpenTo(state: TerrainRuntime, point: Point): number {
-  const { terrain } = state;
-  const size = terrain.cell;
-  const col = Math.floor(point.x / size);
-  const row = Math.floor(point.y / size);
-  if (col >= 0 && row >= 0 && col < terrain.cols && row < terrain.rows && state.walk[pad(state, col, row)] === 1) return pad(state, col, row);
-  let best = -1;
-  let bestDistance = Infinity;
-  const limit = Math.max(terrain.cols, terrain.rows);
-  for (let ring = 1; ring <= limit; ring += 1) {
-    const least = (ring - 0.5) * size;
-    if (least * least > bestDistance) break;
-    for (let r = row - ring; r <= row + ring; r += 1) {
-      for (let c = col - ring; c <= col + ring; c += 1) {
-        if (Math.max(Math.abs(c - col), Math.abs(r - row)) !== ring) continue;
-        if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows) continue;
-        const index = pad(state, c, r);
-        if (state.walk[index] !== 1) continue;
-        const dx = (c + 0.5) * size - point.x;
-        const dy = (r + 0.5) * size - point.y;
-        const gap = dx * dx + dy * dy;
-        if (gap < bestDistance || (gap === bestDistance && index < best)) {
-          bestDistance = gap;
-          best = index;
-        }
-      }
-    }
-  }
-  return best;
-}
-
-// The open cell nearest a cell, for a goal point (see walkableGoal), kept per cell.
 function nearestWalkable(state: TerrainRuntime, at: number): number {
   if (at >= 0 && state.walk[at] === 1) return at;
   const known = state.nearest.get(at);

@@ -3,7 +3,7 @@ import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
 import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
-import { BODY_MARGIN, cellIndexAt, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
+import { cellIndexAt, footprintCells, footprintHalf, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
 import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
@@ -1324,13 +1324,17 @@ class Grid {
     this.bridge = new Uint8Array(this.count);
     this.mud = new Uint8Array(this.count);
     this.shut = new Uint8Array(this.count);
+    // The cells each one's footprint takes (see @@@building-footprint).
     for (const obstacle of field.obstacles) {
-      const reach = OBSTACLE_DEFS[obstacle.kind].radius + BODY_MARGIN;
-      this.around(obstacle.at, reach, (index, gap) => {
-        if (gap >= reach || this.shut[index]) return;
-        this.shut[index] = 1;
-        this.shutCells.push(index);
-      });
+      const { left, right, top, bottom } = footprintCells(TERRAIN_CELL, obstacle.at.x, obstacle.at.y, OBSTACLE_DEFS[obstacle.kind].radius);
+      for (let row = Math.max(0, top); row <= Math.min(this.cells - 1, bottom); row += 1) {
+        for (let col = Math.max(0, left); col <= Math.min(this.cells - 1, right); col += 1) {
+          const index = row * this.cells + col;
+          if (this.shut[index]) continue;
+          this.shut[index] = 1;
+          this.shutCells.push(index);
+        }
+      }
     }
   }
 
@@ -1515,7 +1519,8 @@ class Grid {
     if (!this.field.obstacles.every((obstacle) => this.walkableAt(obstacle.at)) || !this.whole(from)) return false;
     const passes = (index: number) => index >= 0 && this.open[index] === 1 && !this.shut[index];
     return this.field.obstacles.every((obstacle) => {
-      const beyond = OBSTACLE_DEFS[obstacle.kind].radius + BODY_MARGIN + TERRAIN_CELL;
+      // Past its footprint's corner and a step on, whichever way it lies.
+      const beyond = footprintHalf(OBSTACLE_DEFS[obstacle.kind].radius, TERRAIN_CELL) * Math.SQRT2 + TERRAIN_CELL;
       const ends = [step(obstacle.at, obstacle.along, beyond), step(obstacle.at, obstacle.along, -beyond)].map((at) => this.indexAt(at));
       if (!ends.every(passes)) return false;
       return this.steps(ends[0]!, ends[1]!, passes) >= (SHORTCUT * 2 * beyond) / TERRAIN_CELL;

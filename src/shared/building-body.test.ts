@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { shove } from "./push";
 import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
-import { walkingDistance, type Terrain } from "./terrain";
+import { footprintCells, walkingDistance, type Terrain } from "./terrain";
 import type { Building, Unit } from "./types";
 
 // An open 40 by 40 grid of 32-unit cells: terrain everywhere walkable, so only buildings stand in the way.
@@ -32,7 +32,13 @@ function wall(game: Field, owner: "player" | "enemy", x: number, ys: number[]) {
   }
 }
 
-const inside = (unit: Unit, building: Building) => Math.hypot(unit.x - building.x, unit.y - building.y) < unit.radius + building.radius - 0.5;
+// Whether the unit's center stands on one of the building's cells (see @@@building-footprint).
+const inside = (unit: Unit, building: Building) => {
+  const { left, right, top, bottom } = footprintCells(32, building.x, building.y, building.radius);
+  const col = Math.floor(unit.x / 32);
+  const row = Math.floor(unit.y / 32);
+  return col >= left && col <= right && row >= top && row <= bottom;
+};
 
 describe("buildings as bodies", () => {
   it("walks a unit round a wall of buildings to the goal behind it, never into one", () => {
@@ -79,13 +85,14 @@ describe("buildings as bodies", () => {
     expect(walkingDistance(game.map, hall, { x: 1000, y: 120 })).toBe(open);
   });
 
-  it("sets a unit standing where a building is laid out on the building's rim", () => {
+  it("steps a unit standing where a building is laid out to the open cell nearest it", () => {
     const game = field();
     const worker = game.spawnUnit("player", "worker", 600, 600);
     const building = { ...game.buildings[0]!, id: "site", kind: "farm", x: 610, y: 600, radius: 30, hp: 32, maxHp: 320, complete: false, queue: [], researchQueue: [] } as Building;
     game.buildings.push(building);
     stepGame(game);
-    expect(Math.hypot(worker.x - building.x, worker.y - building.y)).toBeCloseTo(worker.radius + building.radius, 6);
+    expect(inside(worker, building)).toBe(false);
+    expect(worker).toMatchObject({ x: 18 * 32 + 16, y: 17 * 32 + 16 });
   });
 
   it("lets a footman strike a town hall from its wall", () => {
@@ -122,7 +129,6 @@ describe("buildings as bodies", () => {
   it("ends a builder's walk at the site's wall on its own side, and the site goes up", () => {
     const game = field();
     game.players.player!.gold = 1000;
-    // The builder's spot lies inside the site, on the side away from the worker.
     const worker = game.spawnUnit("player", "worker", 900, 600);
     issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: 700, y: 600 });
     const site = game.buildings.find((building) => building.kind === "barracks")!;

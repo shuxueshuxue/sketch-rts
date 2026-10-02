@@ -4,7 +4,7 @@ import { generateMap } from "./generated-map";
 import { createGame } from "./sim";
 import { BUILDING_DEFS } from "./catalog";
 import { MAP_IDEAS } from "./map-ids";
-import { isFootprintBuildable, isShoreFootprint, isWalkable, setBuildingBodies, walkableGoal, walkDestination, walkingDistance } from "./terrain";
+import { isFootprintBuildable, isShoreFootprint, isWalkable, setBuildingBodies, snapToFootprint, walkableGoal, walkDestination, walkingDistance } from "./terrain";
 import type { MapIdea } from "./types";
 
 const PLAYERS = ["v9", "p1", "p2", "p3"];
@@ -199,7 +199,9 @@ describe("generated maps", () => {
     const generated = createGame("verdantCrossroads", { ...setup, layout: { seed: "game" } });
     const map = generateMap({ seed: "game" }, PLAYERS, TEAMS);
     expect(generated.resources).toEqual(map.resources);
-    expect(generated.buildings.map((building) => [building.id, building.x, building.y])).toEqual(map.buildings.map((building) => [building.id, building.x, building.y]));
+    // Laid on whole cells (see @@@building-footprint).
+    const laid = map.buildings.map((building) => ({ id: building.id, ...snapToFootprint({ terrain: map.terrain }, building.radius, building) }));
+    expect(generated.buildings.map((building) => [building.id, building.x, building.y])).toEqual(laid.map((building) => [building.id, building.x, building.y]));
     expect(generated.map.landmarks).toEqual(map.landmarks);
     expect(generated.map.terrain).toEqual(map.terrain);
     expect(plain.resources).not.toEqual(map.resources);

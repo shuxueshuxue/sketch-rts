@@ -53,8 +53,10 @@ describe("terrain", () => {
   it("refuses a building any part of which would stand in the forest", () => {
     const terrain = walled();
     expect(isFootprintBuildable(map(terrain), 5 * 32, 5 * 32, 48)).toBe(true);
-    expect(isFootprintBuildable(map(terrain), 10 * 32 - 20, 5 * 32, 30)).toBe(false);
-    expect(isBuildPlacementClear({ buildings: [], map: map(terrain) }, "farm", { x: 10 * 32 - 20, y: 5 * 32 })).toBe(false);
+    // A farm's two cells across: the forest's column and the one beside it.
+    expect(isFootprintBuildable(map(terrain), 10 * 32 - 10, 5 * 32, 30)).toBe(false);
+    expect(isFootprintBuildable(map(terrain), 10 * 32 - 20, 5 * 32, 30)).toBe(true);
+    expect(isBuildPlacementClear({ buildings: [], map: map(terrain) }, "farm", { x: 10 * 32 - 10, y: 5 * 32 })).toBe(false);
     expect(isBuildPlacementClear({ buildings: [], map: map(terrain) }, "farm", { x: 5 * 32, y: 5 * 32 })).toBe(true);
   });
 });

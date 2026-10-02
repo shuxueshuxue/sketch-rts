@@ -1,5 +1,5 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
-import { groundUnder, isWalkable } from "./terrain";
+import { groundUnder, openStep } from "./terrain";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 
 // @@@push - A shove (a blow that knocks back, a lunge) gives a unit a velocity of its own beside its walk: pushX/pushY, in
@@ -116,22 +116,12 @@ export function slide(unit: Unit, map: GameMap) {
     y = Math.min(map.height, Math.max(0, y));
     py = 0;
   }
-  if (map.terrain && !isWalkable(map, x, y, mover) && isWalkable(map, unit.x, unit.y, mover)) {
-    if (isWalkable(map, x, unit.y, mover)) {
-      y = unit.y;
-      py = 0;
-    } else if (isWalkable(map, unit.x, y, mover)) {
-      x = unit.x;
-      px = 0;
-    } else {
-      x = unit.x;
-      y = unit.y;
-      px = 0;
-      py = 0;
-    }
-  }
-  unit.x = x;
-  unit.y = y;
+  // A wall spends the part of the slide heading into it (see openStep).
+  const at = openStep(map, unit, { x, y }, mover);
+  if (at.x !== x) px = 0;
+  if (at.y !== y) py = 0;
+  unit.x = at.x;
+  unit.y = at.y;
   if (px === 0 && py === 0) {
     unit.pushX = undefined;
     unit.pushY = undefined;
