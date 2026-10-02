@@ -91,9 +91,11 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
   const yard = shipyardOf(snapshot, owner, water);
   if (!yard && !shoreSpot(snapshot, owner, water, options)) {
     // Every shore of the water under an enemy ship's guns: a tower that outshoots the nearest of them first (see
-    // @@@coast-tower).
+    // @@@coast-tower), one at a time, from the hall nearest the shore by walking: asked again while the first still
+    // rose, one AI laid three on a shore 1500 off but 4500 to walk, and none went up (pool-elderwood-4 at 2a189fd).
+    if (buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && !building.complete)) return undefined;
     const site = shoreSpot(snapshot, owner, water, options, true);
-    const hall = site && nearestOf(halls.filter((building) => sameGround(snapshot.map, building, site)), site);
+    const hall = site && nearestByWalk(snapshot, halls, site);
     const gun = site && nearestOf(snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options)), site);
     const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle"));
     return hall && gun ? coastTower(snapshot, hall, gun, workers, site) : undefined;
@@ -299,7 +301,7 @@ function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers:
     id: "naval:coastTower",
     cost: BUILDING_DEFS.defenseTower.cost,
     issue: (builders) => {
-      const builder = nearestOf(workers.filter((worker) => !builders.has(worker.id) && sameGround(snapshot.map, worker, site)), site);
+      const builder = nearestByWalk(snapshot, workers.filter((worker) => !builders.has(worker.id)), site);
       if (!builder) return undefined;
       builders.add(builder.id);
       return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: site.x, y: site.y };
@@ -570,6 +572,21 @@ function enemyShipsNear(snapshot: GameSnapshot, owner: PlayerId, options: AiPoli
 
 function nearestWorker(snapshot: GameSnapshot, owner: PlayerId, point: Point, builders: Set<string>) {
   return nearestOf(units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.order.type === "mine" && !builders.has(unit.id) && sameGround(snapshot.map, unit, point)), point);
+}
+
+// The thing with the shortest walk to the point, none that no walk reaches (see walkingDistance: one field toward the
+// point serves them all).
+function nearestByWalk<T extends Point>(snapshot: GameSnapshot, things: T[], to: Point): T | undefined {
+  let best: T | undefined;
+  let bestWalk = Infinity;
+  for (const thing of things) {
+    const walk = walkingDistance(snapshot.map, thing, to);
+    if (walk !== undefined && walk < bestWalk) {
+      best = thing;
+      bestWalk = walk;
+    }
+  }
+  return best;
 }
 
 function nearestOf<T extends Point>(things: T[], from: Point): T | undefined {
