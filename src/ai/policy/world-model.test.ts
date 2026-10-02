@@ -25,7 +25,7 @@ describe("AI world model helpers", () => {
       .player("v2", { team: "north" })
       .townHall("v2", 500, 500)
       .building("v2", "barracks", 640, 520, { id: "unfinished-barracks", complete: false })
-      .worker("v2", 610, 520, { id: "reserved-worker", order: { type: "move", x: 630, y: 520 } })
+      .worker("v2", 610, 520, { id: "reserved-worker", order: { type: "repair", buildingId: "unfinished-barracks" } })
       .worker("v2", 700, 520, { id: "free-worker" })
       .build()
       .createGame();

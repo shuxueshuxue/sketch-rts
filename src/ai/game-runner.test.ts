@@ -296,7 +296,7 @@ describe("SDK game runner", () => {
       .player("v1", { team: "south", race: "grove" })
       .townHall("v2", 500, 500, { id: "v2-main" })
       .townHall("v2", 900, 700, { id: "v2-natural", complete: false })
-      .worker("v2", 910, 710, { id: "v2-builder" })
+      .worker("v2", 910, 710, { id: "v2-builder", order: { type: "repair", buildingId: "v2-natural" } })
       .worker("v2", 540, 520, { id: "v2-miner" })
       .goldMine("v2-main-mine", 580, 520, 4000)
       .goldMine("v2-natural-mine", 960, 720, 4000)

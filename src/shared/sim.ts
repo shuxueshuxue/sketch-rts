@@ -2,7 +2,7 @@ import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LO
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
+import { footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
 import { alongside, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
@@ -20,7 +20,7 @@ import {
   trainTimeFor,
   withUnitShape,
 } from "./map";
-import { generateMap } from "./generated-map";
+import { generateMap, TERRAIN_CELL } from "./generated-map";
 import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
 import { poolMap } from "./map-pool";
 import { seconds } from "./time";
@@ -84,8 +84,6 @@ type SpatialIndex<T extends SpatialEntity> = {
   buckets: Map<number, T[]>;
 };
 
-// How far from a site's center its builders work (see updateConstruction).
-const BUILD_RANGE = 70;
 const MINE_RANGE = 44;
 const TOWN_HALL_DROP_RANGE = 74;
 const GOLD_PER_TRIP = 10;
@@ -107,7 +105,6 @@ const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
 const FLAME_CLOAK_COOLDOWN = seconds(2);
 const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
-const REPAIR_RANGE = 66;
 // @@@repair - A worker repairs a building as fast as a footman strikes one (the owner's word, 10-02: a tower held by its
 // workers holds), at the price it always had: 1 gold for each REPAIR_FULL_COST_FRACTION-th of the building's price worth
 // of its health, paid as often as that rate asks (a tower every 6 ticks, a hall every 9).
@@ -416,9 +413,8 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     building.hp = constructionStartHp(building.maxHp);
     game.nextId += 1;
     game.buildings.push(building);
-    // Where a building is a body (see @@@building-body) the walk ends at its wall on the builder's side, by the middle of
-    // that side (see goalSeeds), within reach of the work.
-    worker.order = { type: "move", x: at.x, y: at.y };
+    // The builder walks to the site and builds it from beside its walls (see updateConstruction).
+    worker.order = { type: "repair", buildingId: building.id };
     addEffect(game, "build", at.x, at.y, 60);
     return;
   }
@@ -645,10 +641,11 @@ function definedTeams(teams: Partial<Record<PlayerId, string>>): Record<PlayerId
 function updateConstruction(game: Game) {
   for (const building of game.buildings) {
     if (building.complete) continue;
-    // A builder's walk to a site of three cells across ends in the cell beside the middle of its side, 64 from its center,
-    // within 5 of that cell's (see walkEnded); at 66 it stood 2 short. Measured from the wall instead, a hall's reach took
-    // in the miners passing it and set them idle when it was done.
-    const builders = game.units.filter((unit) => unit.owner === building.owner && unit.kind === "worker" && distance(unit, building) <= BUILD_RANGE);
+    // A site goes up with the work of the workers sent to it, at it (see @@@building-work): the builder's order is to repair
+    // it, and a worker sent to help repairs it too, as a peasant does in Warcraft III. Counted by who stood near it, one
+    // worker among three sites raised all three at once, and a miner passing a site was set idle when it was done (the
+    // owner, 10-02).
+    const builders = game.units.filter((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id && workGap(unit, building) <= WORK_REACH);
     if (builders.length === 0) continue;
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
     // same share of the health it started without.
@@ -1120,15 +1117,16 @@ function updateRepairOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "repair" || !isPlayerId(unit.owner)) return;
   const order = unit.order;
   const building = game.buildings.find((candidate) => candidate.id === order.buildingId && candidate.owner === unit.owner);
-  if (!building || building.hp <= 0 || building.hp >= building.maxHp) {
+  if (!building || building.hp <= 0 || (building.complete && building.hp >= building.maxHp)) {
     unit.order = { type: "idle" };
     return;
   }
-  if (distance(unit, building) > REPAIR_RANGE) {
+  if (workGap(unit, building) > WORK_REACH) {
     moveToward(unit, building.x, building.y, game.map);
     return;
   }
-  if (unit.cooldown > 0) return;
+  // A site goes up with its builders' work (see updateConstruction); a standing building is mended.
+  if (!building.complete || unit.cooldown > 0) return;
   if (!repairBuildingTick(game, unit, building)) unit.order = { type: "idle" };
 }
 
@@ -1136,7 +1134,7 @@ function updateAutoRepair(game: Game, unit: Unit) {
   if (unit.order.type !== "idle" || !isPlayerId(unit.owner)) return false;
   if (unit.cooldown > 0) return false;
   const building = game.buildings.find(
-    (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && distance(unit, candidate) <= REPAIR_RANGE,
+    (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && workGap(unit, candidate) <= WORK_REACH,
   );
   if (!building) return false;
   return repairBuildingTick(game, unit, building);
@@ -2411,6 +2409,15 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
   if (!isPlayerId(unit.owner) || unit.attackDamage <= 0) return undefined;
   return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit);
+}
+
+// @@@building-work - A worker builds or repairs a building from beside its walls: within WORK_REACH of its footprint's
+// square (see @@@building-footprint), from the cell next to it, whatever the building's size.
+const WORK_REACH = TERRAIN_CELL;
+
+function workGap(unit: Unit, building: Building) {
+  const half = footprintHalf(building.radius, TERRAIN_CELL);
+  return Math.hypot(Math.max(0, Math.abs(unit.x - building.x) - half), Math.max(0, Math.abs(unit.y - building.y) - half));
 }
 
 // @@@building-reach - A building is reached at its edge, a unit at its center (see building-body): a footman's 48 reaches a

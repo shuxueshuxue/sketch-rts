@@ -134,11 +134,12 @@ function* economy(controls: PlayerControls): Operation<void> {
       return true;
     };
     const unfinished = game.buildings.filter((building) => building.owner === PLAYER && !building.complete);
-    // A site nobody is working on gets its builder back.
+    // A site nobody is working on gets its builder back: a site goes up with the work of the workers whose order is to
+    // repair it.
     for (const site of unfinished) {
-      if (workers.some((worker) => distance(worker, site) < 90 || (worker.order.type === "move" && distance(worker.order, site) < 90))) continue;
+      if (workers.some((worker) => worker.order.type === "repair" && worker.order.buildingId === site.id)) continue;
       const nearest = [...workers].sort((a, b) => distance(a, site) - distance(b, site))[0];
-      if (nearest) controls.command({ type: "move", unitIds: [nearest.id], x: site.x - 36, y: site.y });
+      if (nearest) controls.command({ type: "repair", unitIds: [nearest.id], buildingId: site.id });
     }
     const underway = unfinished.length > 0;
     if (!underway) {

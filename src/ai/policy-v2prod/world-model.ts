@@ -5,8 +5,6 @@ import { activeUnitClaim } from "./claims";
 import { buildings, completeBuildings, units } from "./snapshot";
 import { distance, nearestEntity, type Point } from "./spatial";
 
-const BUILD_RANGE = 46;
-
 type AvailableBuilderOptions = {
   memory?: AiPolicyMemory;
 };
@@ -19,21 +17,15 @@ export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point:
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
 }
 
+// A worker building one of its owner's sites: a site goes up with the work of the workers whose order is to repair it
+// (see the sim's updateConstruction).
 export function isReservedBuilder(snapshot: GameSnapshot, owner: PlayerId, worker: Unit) {
-  if (worker.order.type !== "move") return false;
-  return buildings(snapshot, owner).some((building) => !building.complete && distance(worker.order as Point, building) <= BUILD_RANGE + 40);
+  const order = worker.order;
+  return order.type === "repair" && buildings(snapshot, owner).some((building) => building.id === order.buildingId && !building.complete);
 }
 
 export function hasAssignedBuilder(snapshot: GameSnapshot, owner: PlayerId, building: Building) {
-  return units(snapshot, owner).some(
-    (unit) =>
-      unit.kind === "worker" &&
-      (distance(unit, building) <= BUILD_RANGE + 20 || (unit.order.type === "move" && distance(unit.order, building) <= BUILD_RANGE + 40)),
-  );
-}
-
-export function nearOwnIncompleteBuilding(snapshot: GameSnapshot, owner: PlayerId, worker: Unit) {
-  return buildings(snapshot, owner).some((building) => !building.complete && distance(worker, building) <= BUILD_RANGE + 35);
+  return units(snapshot, owner).some((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id);
 }
 
 export function mainBase(snapshot: GameSnapshot, owner: PlayerId) {

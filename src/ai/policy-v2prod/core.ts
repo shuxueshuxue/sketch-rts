@@ -83,7 +83,7 @@ import {
   mainBase,
   mainBaseX,
   mineAssignmentCounts,
-  nearOwnIncompleteBuilding,
+  isReservedBuilder,
   nearestResource,
   ownerDirection,
   playerState,
@@ -192,7 +192,7 @@ function groupAttackMoveMinimum(scriptId: string, command: Extract<GameCommand, 
 }
 
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
-  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !nearOwnIncompleteBuilding(snapshot, owner, unit));
+  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
@@ -234,7 +234,7 @@ function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId, optio
   if (!stalled) return undefined;
   const builder = availableBuilder(snapshot, owner, stalled, options);
   if (!builder) return undefined;
-  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y }, options);
+  return resolveAiCommandIntent(snapshot, owner, { type: "repair", unitIds: [builder.id], buildingId: stalled.id }, options);
 }
 
 function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {

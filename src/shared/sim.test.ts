@@ -2100,7 +2100,7 @@ describe("sketch RTS simulation", () => {
     const game = createGame();
     const runtime = createAiRuntime(["enemy"]);
     const playerTownHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
-    let baseCloseout: { playerUnits: number; enemyCombatNearBase: number } | undefined;
+    let baseCloseout: { playerArmyAndMiners: number; enemyCombatNearBase: number } | undefined;
 
     // Supply is dear (farms and halls are the tech), so the enemy's first real army takes a while to come.
     for (let i = 0; i < 12_000 && !baseCloseout; i += 1) {
@@ -2110,7 +2110,8 @@ describe("sketch RTS simulation", () => {
       const afterHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
       if (afterHp < beforeHp) {
         baseCloseout = {
-          playerUnits: game.units.filter((unit) => unit.owner === "player").length,
+          // The army is its soldiers, the economy its miners: a worker standing idle is neither.
+          playerArmyAndMiners: game.units.filter((unit) => unit.owner === "player" && (unit.kind !== "worker" || unit.order.type === "mine")).length,
           enemyCombatNearBase: game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker" && Math.hypot(unit.x - playerTownHall.x, unit.y - playerTownHall.y) <= 700).length,
         };
       }
@@ -2118,7 +2119,7 @@ describe("sketch RTS simulation", () => {
 
     expect(baseCloseout).toBeDefined();
     expect(baseCloseout?.enemyCombatNearBase).toBeGreaterThanOrEqual(1);
-    expect(baseCloseout?.playerUnits).toBe(0);
+    expect(baseCloseout?.playerArmyAndMiners).toBe(0);
   });
 
   it("does not spam unfinished supply buildings while one farm is already pending", () => {

@@ -11,7 +11,7 @@ import type { AiPolicyContext } from "../types";
 import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { v8WantsWell, v8WellPoint } from "../v8/well";
 import { v9ChokeTowerPoint, v9ExpansionCovered } from "../v9/front";
-import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, nearOwnIncompleteBuilding, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
+import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder, playerState, projectedSupplyUsed, soldiersWorth, tierUnlocked } from "../world-model";
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
@@ -417,7 +417,7 @@ function goal(id: string, priority: number, cost: number, save: boolean, issue: 
 
 function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
   const builder = economy.workers
-    .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker) && !nearOwnIncompleteBuilding(economy.snapshot, economy.owner, worker))
+    .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
   if (!builder) return undefined;
   used.add(builder.id);

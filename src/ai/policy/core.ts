@@ -100,7 +100,7 @@ import {
   mainBase,
   mainBaseX,
   mineAssignmentCounts,
-  nearOwnIncompleteBuilding,
+  isReservedBuilder,
   nearestResource,
   ownerDirection,
   playerState,
@@ -357,7 +357,7 @@ function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">)
 // A hall's mine takes only workers that can walk to it: a hall on an island is mined by the workers ferried there (see
 // @@@ai-home-ground, @@@ai-naval).
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
-  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !nearOwnIncompleteBuilding(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
+  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
@@ -445,7 +445,7 @@ function planConstructionRecovery(snapshot: GameSnapshot, owner: PlayerId, optio
   if (!stalled) return undefined;
   const builder = availableBuilder(snapshot, owner, stalled, options);
   if (!builder) return undefined;
-  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [builder.id], x: stalled.x - ownerDirection(snapshot, owner) * 30, y: stalled.y }, options);
+  return resolveAiCommandIntent(snapshot, owner, { type: "repair", unitIds: [builder.id], buildingId: stalled.id }, options);
 }
 
 function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
