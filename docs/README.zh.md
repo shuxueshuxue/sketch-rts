@@ -265,4 +265,6 @@ Sketch RTS 在 [linux.do](https://linux.do/) 社区开发和讨论。
 | `buildingDown.ogg` | [Big falling debris (crash)](https://freesound.org/people/xkeril/sounds/703247/) | xkeril |
 | `click.ogg` | [Basic Click Wooden](https://freesound.org/people/GameAudio/sounds/220200/) | GameAudio |
 
+标题和按钮里的拉丁字母使用 Natanael Gama 设计的 [Cinzel](https://github.com/NDISCOVER/Cinzel) 字体（© 2020 The Cinzel Project Authors），按 [SIL Open Font License 1.1](../src/client/fonts/cinzel/OFL.txt) 授权；字体文件由游戏自带，放在 `src/client/fonts/cinzel/`。
+
 本仓库不包含、也不分发任何魔兽争霸 3 的文件。lexicalmathical.com 上的线上版本播放一个取自魔兽争霸 3 游戏文件的音效包，由该站点独立于仓库另行提供；这些声音的版权归 Blizzard Entertainment 所有。

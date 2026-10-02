@@ -265,4 +265,6 @@ The `cc0` sound pack is made of recordings from [Freesound](https://freesound.or
 | `buildingDown.ogg` | [Big falling debris (crash)](https://freesound.org/people/xkeril/sounds/703247/) | xkeril |
 | `click.ogg` | [Basic Click Wooden](https://freesound.org/people/GameAudio/sounds/220200/) | GameAudio |
 
+The titles and buttons are set in [Cinzel](https://github.com/NDISCOVER/Cinzel) by Natanael Gama (© 2020 The Cinzel Project Authors), under the [SIL Open Font License 1.1](src/client/fonts/cinzel/OFL.txt); the game serves its Latin letters itself, from `src/client/fonts/cinzel/`.
+
 This repository contains no Warcraft III files and does not distribute any. The hosted game at lexicalmathical.com plays a sound pack taken from Warcraft III game files, provided by that site separately from the repository; those sounds are © Blizzard Entertainment.
