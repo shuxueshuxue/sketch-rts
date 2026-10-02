@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import {
@@ -3264,14 +3265,14 @@ function hasMainDefenseLine(snapshot: GameSnapshot, owner: PlayerId, main: Point
   );
 }
 
+// Away from the enemy, on ground the workers stand on: taken as the crow flies and kept on the map, the point lay out on the
+// deep water past a main by the map's edge, and four workers sent there each think stood for minutes at the shore short
+// of it (pool-elderwood-4, V8, from 17:15).
 function workerEvacuationPoint(snapshot: GameSnapshot, main: Point, enemyCenter: Point, retreatDistance = 220): Point {
   const dx = main.x - enemyCenter.x;
   const dy = main.y - enemyCenter.y;
   const length = Math.hypot(dx, dy) || 1;
-  return {
-    x: clamp(main.x + (dx / length) * retreatDistance, 0, snapshot.map.width),
-    y: clamp(main.y + (dy / length) * retreatDistance, 0, snapshot.map.height),
-  };
+  return walkableGoal(snapshot.map, clamp(main.x + (dx / length) * retreatDistance, 0, snapshot.map.width), clamp(main.y + (dy / length) * retreatDistance, 0, snapshot.map.height));
 }
 
 function planAttackWave(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
