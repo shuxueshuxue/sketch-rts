@@ -13,6 +13,16 @@ export function relationTo(sides: Pick<GameSnapshot, "teams">, viewer: PlayerId,
   return areEnemyOwners(sides, owner, viewer) ? "enemy" : "ally";
 }
 
+// @@@relation-ink - Friend and foe in colour, as in Warcraft III and StarCraft: own green, an ally's yellow, an enemy's
+// red, the creeps' orange. Selection and hover rings take them, and the minimap does when told to (see
+// @@@minimap-relations); units, buildings and health bars keep their own colours.
+export const RELATION_INK: Readonly<Record<Relation, string>> = { own: "#3d9a3f", ally: "#d6a417", enemy: "#c8372b", creep: "#df7a1f" };
+
+// Whether the viewer has an ally in the match: the minimap starts in friend-or-foe colours if so.
+export function hasAlly(snapshot: Pick<GameSnapshot, "teams" | "players">, viewer: PlayerId) {
+  return Object.keys(snapshot.players).some((player) => relationTo(snapshot, viewer, player) === "ally");
+}
+
 const near = (a: Point, b: Point, reach: number) => Math.hypot(a.x - b.x, a.y - b.y) < reach;
 
 // What the pointer is on: a unit within 34 of its middle, a building within its body (a town hall's is wider), rocks or

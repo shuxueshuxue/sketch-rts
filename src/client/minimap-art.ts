@@ -1,5 +1,6 @@
 import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameSnapshot, Owner, PlayerId } from "../shared/types";
+import { RELATION_INK, relationTo } from "./relations";
 import { terrainMinimap } from "./terrain-art";
 import { ownerInk } from "./world-renderer";
 
@@ -9,7 +10,10 @@ type Point = { x: number; y: number };
 
 // @@@minimap-art - A map at minimap scale: the ground (see @@@terrain-art), mines, camps, posts, items, rocks and gates,
 // buildings and units. The match's minimap and the lobby's map preview (see @@@map-preview) draw the same picture.
-export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot)) {
+// @@@minimap-relations - Given the player looking on, the players' buildings and units are in friend-or-foe colours (see
+// @@@relation-ink): own green, allies yellow, enemies red; the creeps keep theirs.
+export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot), viewer?: PlayerId) {
+  const ink = (owner: Owner | undefined) => (viewer && owner && owner !== "neutral" ? RELATION_INK[relationTo(snapshot, viewer, owner)] : ownerInk(owner));
   ctx.fillStyle = "#dedcc0";
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
   if (snapshot.map.terrain) {
@@ -48,10 +52,10 @@ export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, m
       ctx.arc(point.x, point.y, 2.6 * scale, 0, Math.PI * 2);
       ctx.fill();
     } else if (mark.category === "building") {
-      ctx.fillStyle = ownerInk(mark.owner);
+      ctx.fillStyle = ink(mark.owner);
       ctx.fillRect(point.x - 3 * scale, point.y - 3 * scale, 6 * scale, 6 * scale);
     } else if (mark.owner !== "neutral" || scale === 1) {
-      ctx.fillStyle = ownerInk(mark.owner);
+      ctx.fillStyle = ink(mark.owner);
       const size = mark.owner === "neutral" ? 2.2 : 3;
       ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
     }

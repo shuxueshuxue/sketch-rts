@@ -42,7 +42,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { buildingAt, rightClickOrder, unitAt } from "./relations";
+import { buildingAt, hasAlly, relationTo, rightClickOrder, unitAt } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -151,6 +151,7 @@ const sceneSwitch = requireElement<HTMLButtonElement>("[data-scene-switch]");
 const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
 const minimapTab = requireElement<HTMLDivElement>("[data-minimap-tab]");
 const matchMenuButton = requireElement<HTMLButtonElement>("[data-match-menu-button]");
+const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-relations]");
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
@@ -167,6 +168,9 @@ let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
 let localPlayerId: PlayerId = "player";
 let spectatingRoom = false;
+// The minimap in friend-or-foe colours (see @@@minimap-relations): as the player sets it this match, or, until they do,
+// on when they have an ally.
+let minimapRelations: boolean | undefined;
 let activeGameAdapter: GameAdapter;
 let activeChat: MatchChat | undefined;
 let activeChatUnsubscribe: (() => void) | undefined;
@@ -336,6 +340,7 @@ sceneSwitch.addEventListener("click", () => {
 labelSceneSwitch();
 // The match's menu (≡ in the top right): the map being played, concede, and back to the game.
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
+minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
 forfeitButton.addEventListener("click", () => {
   matchMenu.classList.add("hidden");
@@ -1143,6 +1148,7 @@ async function enterRoom(roomId: string) {
 
 function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
   disconnectActiveMatch();
+  minimapRelations = undefined;
   activeGameAdapter = adapter;
   activeChat = chat;
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
@@ -1411,6 +1417,13 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (event.repeat) return;
+  // Alt+A, as in Warcraft III: the minimap in friend-or-foe colours or the players' own. By its key, as Alt changes the
+  // letter a Mac types.
+  if (event.altKey && event.code === "KeyA") {
+    event.preventDefault();
+    toggleMinimapRelations();
+    return;
+  }
   if (key === "escape" && commandMode) {
     event.preventDefault();
     cancelCommandMode();
@@ -2544,6 +2557,11 @@ function draw() {
     ctx.fillText(t("canvas.connecting"), 32, 48);
     return;
   }
+  const viewer = matchViewer();
+  const hovered = hoveredTarget();
+  // Over an enemy's or the creeps', the cursor is the red one of an attack; over a friend's, it stays as it is.
+  const hostile = viewer && hovered ? relationTo(snapshot, viewer, hovered.owner) : undefined;
+  shell.classList.toggle("pointer-over-enemy", hostile === "enemy" || hostile === "creep");
   drawWorld({
     ctx,
     snapshot,
@@ -2554,6 +2572,8 @@ function draw() {
     labels: worldLabels,
     selectedIds,
     ...(selectedCampId ? { selectedCampId } : {}),
+    ...(viewer ? { viewer } : {}),
+    ...(hovered ? { hoveredId: hovered.id } : {}),
   });
   drawBuildPlacementPreview();
   drawAttackMovePreview();
@@ -2765,11 +2785,37 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
-  drawMinimapMap(ctx, snapshot, rect, marks);
+  const relations = minimapRelationsOn();
+  if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
+  const viewer = matchViewer();
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined);
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+}
+
+// The player the match is seen as: none for a spectator.
+function matchViewer() {
+  return !spectatingRoom && snapshot?.players[localPlayerId] ? localPlayerId : undefined;
+}
+
+// The unit or building under the pointer on the battlefield, not over the interface or the minimap.
+function hoveredTarget() {
+  if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
+  const world = screenToWorld(lastMouse);
+  return hitUnit(world, () => true) ?? hitBuilding(world, () => true);
+}
+
+function minimapRelationsOn() {
+  const viewer = matchViewer();
+  return Boolean(snapshot && viewer && (minimapRelations ?? hasAlly(snapshot, viewer)));
+}
+
+function toggleMinimapRelations() {
+  if (!matchViewer()) return;
+  minimapRelations = !minimapRelationsOn();
+  statusLabel.textContent = t(minimapRelations ? "status.minimapRelationsOn" : "status.minimapRelationsOff");
 }
 
 function updateCamera() {
@@ -2812,6 +2858,8 @@ function resizeCanvas() {
   // The treasury rides on the minimap's frame, just above it (see .minimap-tab).
   minimapTab.style.transform = `translate(${mini.x}px, ${mini.y}px) translateY(-100%)`;
   minimapTab.style.width = `${mini.width}px`;
+  // The friend-or-foe button stands at the frame's top left, outside it (see .minimap-relations).
+  minimapRelationsButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
 }
 
 function mousePoint(event: MouseEvent): Point {

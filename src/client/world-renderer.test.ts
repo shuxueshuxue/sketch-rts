@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setScratchCanvasFactory } from "./art/scratch-canvas";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
+import { RELATION_INK } from "./relations";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
 import { sketchScene } from "../sdk/scene";
 import { ABILITY_DEFS } from "../shared/catalog";
 import { snapshotGame, stepGame } from "../shared/sim";
 import type { GameSnapshot } from "../shared/types";
 
-type Call = { name: string; args: unknown[]; at?: Transform };
+type Call = { name: string; args: unknown[]; at?: Transform; ink?: unknown };
 type Transform = { a: number; b: number; c: number; d: number; e: number; f: number };
 
 // A 2D context that records every call; it keeps only the transform, which the atlas reads for sprite resolution and
@@ -35,7 +36,7 @@ function recordingContext() {
       if (key in target) return target[key];
       const method = methods[key];
       return (...args: unknown[]) => {
-        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : { name: key, args });
+        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : key === "stroke" ? { name: key, args, ink: target.strokeStyle } : { name: key, args });
         return method?.(...(args as never[]));
       };
     },
@@ -211,6 +212,33 @@ describe("world renderer", () => {
     // behind where they leave when the rider is drawn at its snapshot spot.
     const lead = (drawn: { calls: Call[] }) => Math.max(...drawn.calls.filter((call) => call.name === "moveTo").map((call) => call.args[0] as number).filter((x) => x > before.x - 40 && x <= after.x));
     expect(lead(plain) - lead(halfway)).toBeCloseTo((after.x - before.x) / 2, 0);
+  });
+
+  it("rings selected and hovered units in friend-or-foe colours to the player looking on, and in the owners' with no one", () => {
+    const snapshot = snapshotGame(
+      sketchScene("relations")
+        .map("bareDuel")
+        .replaceDefaults()
+        .player("north", { team: "a", race: "grove" })
+        .player("ally", { team: "a", race: "grove" })
+        .player("south", { team: "b", race: "ember" })
+        .unit("north", "footman", 200, 300, { id: "own" })
+        .unit("ally", "footman", 320, 300, { id: "friend" })
+        .unit("south", "footman", 440, 300, { id: "foe" })
+        .build()
+        .createGame(),
+    );
+    // A ring is an ellipse stroked at once; the ink it is stroked in.
+    const rings = (overrides: Partial<WorldFrame>) => {
+      const drawn = frame(snapshot, overrides);
+      drawWorld(drawn);
+      return drawn.calls.flatMap((call, index) => (call.name === "ellipse" && drawn.calls[index + 1]?.name === "stroke" ? [drawn.calls[index + 1]!.ink] : []));
+    };
+    const looking = rings({ viewer: "north", selectedIds: new Set(["own", "friend"]), hoveredId: "foe" });
+    expect(looking).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.ally, RELATION_INK.enemy]));
+    const nobody = rings({ selectedIds: new Set(["own", "friend"]), hoveredId: "foe" });
+    expect(nobody).toEqual(expect.arrayContaining([ownerInk("north"), ownerInk("ally"), ownerInk("south")]));
+    expect(nobody).not.toContain(RELATION_INK.ally);
   });
 
   it("inks the two default seats and neutrals in fixed colours and any other owner from one palette", () => {

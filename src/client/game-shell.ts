@@ -33,6 +33,7 @@ export function gameShellMarkup(i18n: I18n) {
       </form>
     </div>
     <div class="minimap-frame" data-minimap-frame aria-hidden="true"></div>
+    <button type="button" class="minimap-relations" data-minimap-relations aria-pressed="false" aria-label="${escapeHtml(t("hud.minimapRelations"))}" title="${escapeHtml(t("hud.minimapRelations"))}"><span aria-hidden="true"></span></button>
     <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
     <div class="command-dock hidden" data-command-dock></div>
     <div class="item-dock hidden" data-item-dock></div>

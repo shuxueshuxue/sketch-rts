@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
-import { relationTo, rightClickOrder } from "./relations";
+import { hasAlly, relationTo, rightClickOrder } from "./relations";
 
 // The player and "enemy" on one team, "enemy2" on the other.
 function alliedGame() {
@@ -38,5 +38,12 @@ describe("right-click orders", () => {
     expect(["player", "enemy", "enemy2", "neutral"].map((owner) => relationTo(snapshot, "player", owner as never))).toEqual(["own", "ally", "enemy", "creep"]);
     // Without teams (a duel, an old save), every other player is an enemy.
     expect(relationTo({}, "player", "enemy")).toBe("enemy");
+  });
+
+  it("knows a player with an ally, for whom the minimap starts in friend-or-foe colours", () => {
+    const snapshot = snapshotGame(alliedGame().game);
+    expect(hasAlly(snapshot, "player")).toBe(true);
+    expect(hasAlly(snapshot, "enemy2")).toBe(false);
+    expect(hasAlly(snapshotGame(createGame("bareDuel", { aiPlayers: [] })), "player")).toBe(false);
   });
 });

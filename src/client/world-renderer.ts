@@ -5,6 +5,7 @@ import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
 import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
+import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
@@ -14,7 +15,7 @@ import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
-import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
+import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -56,6 +57,10 @@ export type WorldFrame = {
   labels: WorldLabels;
   selectedIds?: ReadonlySet<string>;
   selectedCampId?: string;
+  /** The player looking on: rings are in friend-or-foe colours to them (see @@@relation-ink); without one, the owners'. */
+  viewer?: PlayerId;
+  /** The unit or building under the pointer: ringed thinly, as a selected one is. */
+  hoveredId?: string;
   /** A campaign's own units' models, by variant (see story/cast); without it a variant is drawn as its base kind. */
   models?: (variant: string) => UnitModel | undefined;
   /** A campaign's scenery painters, by prop kind (see story/stage props). */
@@ -79,6 +84,8 @@ type Painter = {
   labels: WorldLabels;
   selectedIds: ReadonlySet<string>;
   selectedCampId: string | undefined;
+  viewer: PlayerId | undefined;
+  hoveredId: string | undefined;
   models: WorldFrame["models"];
   still: boolean;
 };
@@ -99,6 +106,8 @@ export function drawWorld(frame: WorldFrame) {
     labels: frame.labels,
     selectedIds: frame.selectedIds ?? NO_SELECTION,
     selectedCampId: frame.selectedCampId,
+    viewer: frame.viewer,
+    hoveredId: frame.hoveredId,
     models: frame.models,
     still: frame.still ?? false,
   };
@@ -273,10 +282,12 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
     ctx.lineWidth = selected ? 4 : 2;
     const size = buildingGlyphSize(building.kind);
-    // Selected, a building shows the cells it takes (see @@@building-footprint); on a map without a grid, a halo.
+    // Selected, a building shows the cells it takes (see @@@building-footprint); on a map without a grid, or under the
+    // pointer, a halo.
+    const ring = ringInk(painter, building.owner);
     const square = selected ? footprintSquare(painter.snapshot, building, building.radius) : undefined;
-    if (square) drawFootprint(ctx, square, painter.camera, () => ownerInk(building.owner));
-    else if (selected) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
+    if (square) drawFootprint(ctx, square, painter.camera, () => ring);
+    else if (selected || painter.hoveredId === building.id) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ring);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
     drawAtlasBuilding(ctx, building.kind, point, size, String(ctx.strokeStyle));
@@ -328,10 +339,14 @@ function drawUnits(painter: Painter, units: Unit[]) {
     ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
-    if (selected) {
+    if (selected || painter.hoveredId === unit.id) {
+      ctx.save();
+      ctx.strokeStyle = ringInk(painter, unit.owner);
+      ctx.lineWidth = selected ? 3 : 2;
       ctx.beginPath();
       ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
     }
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
@@ -395,6 +410,11 @@ function drawCarriedItems(painter: Painter, items: WorldItem[]) {
     if (!nearScreen(painter, point, 60)) continue;
     drawItemGlyph(painter.ctx, item, { x: point.x + 12, y: point.y - 34 }, painter.now, true);
   }
+}
+
+// A ring's colour: friend or foe to the player looking on (see @@@relation-ink), or with no one looking, the owner's.
+function ringInk(painter: Painter, owner: Owner) {
+  return painter.viewer ? RELATION_INK[relationTo(painter.snapshot, painter.viewer, owner)] : ownerInk(owner);
 }
 
 function drawSelectionHalo(ctx: Brush, x: number, y: number, rx: number, ry: number, color: string) {

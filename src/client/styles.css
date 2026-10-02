@@ -180,6 +180,21 @@ input[type="range"] {
   cursor: crosshair;
 }
 
+/* Over an enemy's or the creeps' (see @@@relation-ink), the attack cursor: a red ring and cross, dark-edged to read on
+   any ground; under pointer lock, the drawn cursor turns red. Placing a building keeps its own. */
+.pointer-over-enemy:not(.placement-active) .game-canvas {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cg stroke='%232e1d0e' stroke-width='4.5'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3Cg stroke='%23d8382b' stroke-width='2.2'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
+}
+
+.pointer-over-enemy:not(.placement-active) .virtual-pointer::before {
+  border-color: #6e1610;
+  background: rgba(216, 56, 43, 0.6);
+}
+
+.pointer-over-enemy:not(.placement-active) .virtual-pointer::after {
+  background: #6e1610;
+}
+
 .pointer-locked .game-canvas {
   cursor: none;
 }
@@ -1028,6 +1043,7 @@ input[type="range"] {
 /* ---------------------------------------------------------------- the match's HUD */
 
 .menu-open .minimap-tab,
+.menu-open .minimap-relations,
 .menu-open .match-menu-button,
 .menu-open .match-menu,
 .menu-open .selection-chip,
@@ -1133,6 +1149,42 @@ input[type="range"] {
 
 .match-menu-button:hover {
   background: linear-gradient(#4a2f1b, #2b1a0d);
+}
+
+/* The minimap's friend-or-foe button (see @@@minimap-relations), Alt+A: a plaque as the menu's, at the frame's top left
+   outside it (resizeCanvas puts it at the minimap's corner), three marks in the minimap's colours: green, yellow, red
+   when on, the players' own when off. */
+.minimap-relations {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -12px 0 0 -46px;
+  padding: 0;
+  border: 1px solid #0d0703;
+  border-radius: 3px;
+  background: linear-gradient(#3b2516, #22150b);
+  box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.minimap-relations:hover {
+  background: linear-gradient(#4a2f1b, #2b1a0d);
+}
+
+.minimap-relations span {
+  width: 4px;
+  height: 4px;
+  background: #387d72;
+  box-shadow: -6px 0 0 #387d72, 6px 0 0 #a85644;
+}
+
+.minimap-relations[aria-pressed="true"] span {
+  background: #d6a417;
+  box-shadow: -6px 0 0 #3d9a3f, 6px 0 0 #c8372b;
 }
 
 .match-menu {
