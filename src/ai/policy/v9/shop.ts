@@ -1,5 +1,6 @@
 import { unitMover } from "../../../shared/catalog";
-import { MAX_CARRIED_ITEMS, carriedItemCount, shopBuyer, standsAtShop } from "../../../shared/shop";
+import { MAX_CARRIED_ITEMS, SHOP_REACH as BUY_REACH, carriedItemCount, shopBuyer, standsAtShop } from "../../../shared/shop";
+import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
 import type { GameCommand, GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
 import { sameGroundAs } from "../ground";
@@ -13,7 +14,9 @@ import { playerState } from "../world-model";
 
 // @@@v9-shop - V9 shops (see @@@shop), the owner's guess for how one army beats three: in a lull (no enemy army near its
 // own, none in its bases) it sends one unit at a time from its army to a shop on its own ground within SHOP_REACH of the
-// army that no enemy army or tower is near, and buys there what that unit is sent for, when it is the unit standing
+// army that no enemy army or tower is near, nor any creep that takes on its buyer standing there (one within the sim's
+// AUTO_ACQUIRE_RANGE of it: creeps killed 157 of V9's shoppers in 500 games against three, 116 of them within 100 of the
+// shop, by the camp beside it), and buys there what that unit is sent for, when it is the unit standing
 // nearest the shop with room (so the good is its). It buys scrolls, read in the fight (see item-tactics): a guardian
 // scroll while nobody in an army of six carries one, a healing scroll while its army is worn (under WORN of its health).
 // Rings and boots it leaves: over 48 of the 1v3 gauntlet's games with a shop by every start, V9 bought 4 rings and 3
@@ -83,9 +86,11 @@ function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   // Only in a lull: no enemy army near its own, none in its bases.
   if (intel.intrusion || enemyPowerNear(intel, center, SHOP_CLEARANCE) > 0) return undefined;
   const towers = snapshot.buildings.filter((building) => building.kind === "defenseTower" && building.owner !== owner && intel.enemies.some((enemy) => enemy.owner === building.owner));
+  const creeps = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.attackDamage > 0);
   const shop = snapshot.shops!
     .filter((candidate) => sameGroundAs(snapshot, intel.home, candidate) && distance(candidate, center) <= SHOP_REACH)
     .filter((candidate) => enemyPowerNear(intel, candidate, SHOP_CLEARANCE) === 0 && !towers.some((tower) => distance(tower, candidate) <= tower.attackRange + 120))
+    .filter((candidate) => creeps.every((creep) => distance(creep, candidate) > candidate.radius + BUY_REACH + AUTO_ACQUIRE_RANGE))
     .sort((a, b) => distance(a, center) - distance(b, center))[0];
   if (!shop) return undefined;
   const stocked = (kind: ItemKind) => {
