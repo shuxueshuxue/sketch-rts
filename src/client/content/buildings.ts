@@ -196,7 +196,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   shipyard: {
     name: { en: "Shipyard", zh: "船坞" },
-    description: { en: "Builds ships. Stands on the shore: its center on land, part of it over water.", zh: "建造船只。只能建在岸边：中心在陆地上，一部分伸进水里。" },
+    description: { en: "Builds ships. Stands on the shore: part of it on land or shallows, part over open water.", zh: "建造船只。只能建在岸边：一部分在陆地或浅水上，一部分伸进开阔水面。" },
     command: { icon: "⚓", hotkey: "y" },
     glyph: { frame: "shipyard-dock", marks: ["anchor", "waves", "banner"] },
     paint(b, team) {

@@ -160,24 +160,26 @@ export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y
   return everyFootprintCell(terrain, x, y, radius, (at, cell) => state.walk[at] === 1 && terrain.levels?.[cell] !== "2");
 }
 
-// @@@shore-footprint - Whether a shipyard of the given radius may stand at the point, on the shore: its center where a
-// worker walks, so it builds and repairs it from there and a soldier can strike it; at least one cell of its footprint
-// open water (see @@@open-water), for its ships to put out from; and no part of it in a forest, on rock, on a ramp (see
-// @@@ramp-unbuildable) or off the map. Wherever the water is (a sea, a lake, a river), this is the whole rule: no map is
-// told it has water. A map without terrain has none.
+// @@@shore-footprint - Whether a shipyard of the given radius may stand at the point, on the shore: at least one cell of
+// its footprint where a worker walks (ground or shallows), so it builds and repairs it from there and a soldier can strike
+// it; at least one cell open water (see @@@open-water), for its ships to put out from; and no part of it in a forest, on
+// rock, on a ramp (see @@@ramp-unbuildable) or off the map. Its center may stand anywhere in it, as in Warcraft III: in
+// the shallows' middle or over deep water by them. Wherever the water is (a sea, a lake, a river), this is the whole
+// rule: no map is told it has water. A map without terrain has none.
 export function isShoreFootprint(map: Pick<GameMap, "terrain">, x: number, y: number, radius: number) {
   const terrain = map.terrain;
   if (!terrain) return false;
   const land = runtime(terrain, "land");
   const sea = runtime(terrain, "sea");
-  if (land.walk[padAt(land, x, y)] !== 1) return false;
   const { labels, deep } = wholesOf(sea);
+  let dry = false;
   let wet = false;
   const fits = everyFootprintCell(terrain, x, y, radius, (at, cell) => {
+    if (land.walk[at] === 1) dry = true;
     if (sea.walk[at] === 1 && deep[labels[at]!]! >= OPEN_WATER) wet = true;
     return (sea.walk[at] === 1 || land.walk[at] === 1) && terrain.levels?.[cell] !== "2";
   });
-  return fits && wet;
+  return fits && dry && wet;
 }
 
 // @@@open-water - The water a ship has room on: a whole of the sea's (see @@@ground-wholes) with at least OPEN_WATER cells

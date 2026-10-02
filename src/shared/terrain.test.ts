@@ -181,10 +181,12 @@ describe("the sea", () => {
     expect(walkableGoal(map(terrain), at(12, 2).x, at(12, 2).y)).toEqual(at(9, 2));
   });
 
-  it("places a shipyard on the shore only: its center on land, water under part of it, no part on rock", () => {
+  it("places a shipyard on the shore only: a cell of it where a worker walks, water under part of it, no part on rock", () => {
     const sea = map(harbor());
     expect(isShoreFootprint(sea, 300, at(0, 5).y, 44)).toBe(true);
-    expect(isShoreFootprint(sea, 340, at(0, 5).y, 44)).toBe(false);
+    // Its center over the water, its landward cells on land; all of it out on the water, nowhere a worker walks.
+    expect(isShoreFootprint(sea, 340, at(0, 5).y, 44)).toBe(true);
+    expect(isShoreFootprint(sea, at(12, 2).x, at(12, 2).y, 44)).toBe(false);
     expect(isShoreFootprint(sea, 200, at(0, 5).y, 44)).toBe(false);
     expect(isShoreFootprint(sea, 300, at(0, 12).y, 44)).toBe(false);
     // An island's shore on the sea will do; a pond's (four cells) and a ford's shallows will not.
@@ -210,7 +212,7 @@ describe("the sea", () => {
     expect(shoreSpots(map(river(21)), 44)).toEqual([]);
   });
 
-  it("lets a worker raise a shipyard on the shore, and refuses one inland or a farm half in the sea", () => {
+  it("lets a worker raise a shipyard on the shore, its center over the water, and refuses one inland or a farm half in the sea", () => {
     const terrain = harbor();
     const sim = createGame("bareDuel", {
       players: ["player", "enemy"],
@@ -228,7 +230,7 @@ describe("the sea", () => {
     sim.map = { ...sim.map, width: 640, height: 640, terrain };
     expect(() => issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "shipyard", x: 200, y: 300 })).toThrow(/blocked ground/);
     expect(() => issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "farm", x: 310, y: 300 })).toThrow(/blocked ground/);
-    issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "shipyard", x: 300, y: at(0, 5).y });
+    issuePlayerCommand(sim, "player", { type: "build", unitId: "worker", buildingKind: "shipyard", x: 340, y: at(0, 5).y });
     for (let tick = 0; tick < 600; tick += 1) stepGame(sim);
     expect(sim.buildings.find((building) => building.kind === "shipyard")?.complete).toBe(true);
   });

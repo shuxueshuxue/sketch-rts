@@ -113,8 +113,8 @@ export type BuildingRules = {
   attackRange: number;
   attackCooldown: number;
   supplyProvided: number;
-  // Stands on the shore, its center on land and part of it over water (see @@@shore-footprint); every other building
-  // stands on walkable ground.
+  // Stands on the shore, part of it where a worker walks and part over open water (see @@@shore-footprint); every other
+  // building stands on walkable ground.
   shore?: true;
 };
 
