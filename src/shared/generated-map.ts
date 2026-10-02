@@ -96,13 +96,16 @@ const MASS_RADIUS = [110, 280] as const;
 // drawn first, which every mine, camp, post and plateau keeps off (see Field.dry). A way may cross water marked crossable,
 // where its ground becomes a ford of shallows (walked and sailed both) or a bridge (walked, and no ship passes under it);
 // never other water. An island holds a mine that only a ship reaches: ISLAND_WATER of water round it keeps its shallows off
-// the land's. Every start has a beach on the open water nearest its natural, with a way down to it, wherever the idea has
+// the land's and leaves four cells of deep water or more between the two at their nearest, six of water in all. At 200 the
+// wobble of the bay's rim and the shallows of both shores left two deep cells in 476 of the 1036 crossings between an island
+// and other land on the 1v3 bed's 250 maps, and one in 12: an island a cell of water off the shore (the owner's word).
+// Every start has a beach on the open water nearest its natural, with a way down to it, wherever the idea has
 // such water; the rim of all water is a strip of shallows, where soldiers wade out to strike a ship (see
 // @@@terrain-movers). A draw is kept only if every beach takes a shipyard on water of OPEN_WATER deep cells or more, and
 // every island's mine is reached from such a shipyard's water.
 const SEA_WOBBLE = 0.12;
 const ISLAND_RADIUS = 300;
-const ISLAND_WATER = 200;
+const ISLAND_WATER = 320;
 const BEACH_RADIUS = 190;
 const OPEN_WATER = 64;
 // A rock pile or gate shuts its way only where the walk round it is at least this many times the step across it.

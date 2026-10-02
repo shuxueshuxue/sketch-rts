@@ -8,12 +8,13 @@ import { createGame } from "./sim";
 
 // @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items, shops and
 // obstacles. A change to the generator that moves anything on a pool map fails here; if the change is meant, the map is
-// redrawn on purpose: give it a new name or take the new hash knowingly.
+// redrawn on purpose: give it a new name or take the new hash knowingly. Elderwood, ringwater and twoShores were redrawn so
+// on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
   templeSpring: "89d478ee42c291c3",
   turtleLake: "185a1f243b2bb342",
-  elderwood: "abffa21764184ecd",
-  ringwater: "7a361e86e14ae6b9",
+  elderwood: "ea14bcd697fe7b7c",
+  ringwater: "b136207233416a3c",
   loneMarket: "e778910b1bf958d7",
   reedwater: "424d25fef7423cae",
   veiledHill: "1c6569d2777f6fba",
@@ -21,7 +22,7 @@ const HASHES: Record<PoolMapId, string> = {
   pineshade: "d21c2f7ceec5ee79",
   gullIsland: "193134cf3c39b45b",
   stillwater: "13f65932d0a0c499",
-  twoShores: "1af2dc45f5473a02",
+  twoShores: "767122ed94c74e7e",
 };
 
 const host = { id: "host", name: "Host" };
