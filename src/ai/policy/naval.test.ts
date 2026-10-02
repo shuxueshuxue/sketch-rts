@@ -103,6 +103,8 @@ describe("the AI on the water", () => {
     if (command?.type !== "build") throw new Error("no build");
     expect(isShoreFootprint(snapshot.map, command.x, command.y, 44)).toBe(true);
     expect(command.x).toBeLessThan(at(10, 0).x);
+    // V9 leaves the island's mine alone (see @@@v9-water).
+    expect(navalWant(snapshot, "player", { version: "v2", requestedVersion: "v9", memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
   it("never sends its workers to expand to a mine they cannot walk to", () => {

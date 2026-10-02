@@ -10,6 +10,7 @@ import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import type { AiPolicyContext } from "./types";
+import { isV9Policy } from "./versions";
 import { canSupply, playerState } from "./world-model";
 
 type Point = { x: number; y: number };
@@ -30,7 +31,8 @@ type Point = { x: number; y: number };
 //   carries and lands them by the nearest of those buildings, and comes back for more while they stand; landed soldiers
 //   go for the buildings on their ground. Before, its army stood at home for good while an island hall held out.
 // The ships, the crew and soldiers on their way and whoever stands off the home's ground are this script's alone. Where
-// the water offers none of these (or there is none) it does nothing at all.
+// the water offers none of these (or there is none) it does nothing at all. V9 takes to the water for the closeout alone
+// (see @@@v9-water).
 const WARSHIPS = 2;
 const CREW = 4;
 // Enemy ships this near an own hall or the shipyard are met.
@@ -58,6 +60,13 @@ export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
   const assault = assaultPlan(snapshot, owner, options);
   const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
   if (!threat.length && !assault && halls.length < 2) return undefined;
+  // @@@v9-water - V9 takes to the water only for the assault on an opponent walled off by it. Against three, every
+  // shipyard it raised was for an island's mine, and the mines paid back 26480 of the 48670 gold its shipyards, warships
+  // and island halls cost (50 games): its two escorts were sunk and rebuilt (4.5 warships a game) on lakes the rivals'
+  // navies held, and in 22 of the 34 games it raised a shipyard its transport never came. Off the water V9 won 235 of
+  // 500 against 185 (the 1v3 bench at 1.5 of its mining), its losses at a median 4385 gold against 5455; shipping the
+  // workers first and escorting them only on contested water won 183.
+  if (isV9Policy(options) && !assault) return undefined;
   const plan = assault ? undefined : islandPlan(snapshot, owner, options);
   const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
   if (!water) return undefined;
