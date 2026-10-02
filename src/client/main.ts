@@ -123,6 +123,7 @@ app.innerHTML = gameShellMarkup(i18n);
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
 const mainMenu = requireElement<HTMLDivElement>("[data-main-menu]");
+const menuWindow = requireElement<HTMLDivElement>(".menu-window");
 const menuTitle = requireElement<HTMLHeadingElement>("[data-menu-title]");
 const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
 const mapList = requireElement<HTMLDivElement>("[data-map-list]");
@@ -584,6 +585,8 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
+  // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
+  if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
     menuView === "home"

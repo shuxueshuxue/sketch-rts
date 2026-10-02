@@ -1621,12 +1621,54 @@ input[type="range"] {
 }
 
 /* A narrow window stacks the create screen and the lobby only when it is also tall; a short one (a phone on its side)
-   keeps them side by side (see the short window below). */
+   keeps them side by side (see the short window below). Stacked, a screen is taller than the window, so the window
+   scrolls as a whole instead of keeping one screen (see @@@one-screen-menus): held to the window's height, it squeezed
+   the map list and the seats to nothing and laid the form over the map's facts. The list keeps its own few rows, and
+   the picture fits the width (on a phone upright it ran off the window's right edge). */
 @media (max-width: 960px) and (min-height: 601px) {
   .map-chooser,
   .map-detail,
   .room-setup-layout {
     grid-template-columns: 1fr;
+  }
+
+  .main-menu[data-menu-view="create"] {
+    --preview: min(calc(100vw - 124px), 400px);
+  }
+
+  .main-menu[data-menu-view="setup"] {
+    --preview: min(calc(100vw - 148px), 400px);
+  }
+
+  /* Every row as tall as what it holds: a flexible row under the window's max-height is shared out again and squeezed. */
+  .main-menu[data-menu-view="create"] .menu-window,
+  .main-menu[data-menu-view="setup"] .menu-window {
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    grid-template-rows: auto;
+  }
+
+  .create-game-form,
+  .room-setup,
+  .map-browser,
+  .room-slot-pane {
+    height: auto;
+    grid-template-rows: auto;
+  }
+
+  .map-entries {
+    max-height: 32dvh;
+  }
+
+  /* A seat's controls go to a second line rather than the seat scrolling sideways. */
+  .slot-list .slot-row {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .room-map-pane .map-facts {
+    grid-template-columns: auto 1fr;
   }
 }
 
