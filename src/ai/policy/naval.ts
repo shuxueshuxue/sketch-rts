@@ -473,8 +473,9 @@ function enemyTowers(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   return snapshot.buildings.filter((building) => building.kind === "defenseTower" && building.complete && isOpponentOwner(snapshot, owner, building.owner, options));
 }
 
-function covered(thing: Point, towers: Building[]) {
-  return towers.some((tower) => distance(tower, thing) <= TOWER_COVER);
+// Whether a tower reaches the thing: a building of the given radius at its wall (see @@@building-reach).
+function covered(thing: Point, towers: Building[], radius = 0) {
+  return towers.some((tower) => distance(tower, thing) <= TOWER_COVER + radius);
 }
 
 // The owner's shipyard on the given water, if it has one.
@@ -507,9 +508,13 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
   const guns = snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options));
   const towers = buildings(snapshot, owner).filter((building) => building.kind === "defenseTower" && building.complete);
   const held = guns.some((ship) => sameGround(map, ship, water, "sea"));
+  // None an enemy's tower reaches, for the plans too: a site starts at a few health, and the tower struck down one placed
+  // there every four seconds while its builder walked over, ten of them (the 1v3 bench's v5-extra-11 ladder-32 at c29edfa);
+  // and a tower reaches a site at its wall, so one 486 from a site's center still struck down 30 (v5-extra-15 ladder-13).
+  const enemy = enemyTowers(snapshot, owner, options);
   const spots = shoreSpots(map, BUILDING_DEFS.shipyard.radius)
     .map((spot) => ({ spot, gap: gapOf(spot, ours) }))
-    .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs))
+    .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs) && !covered(entry.spot, enemy, BUILDING_DEFS.shipyard.radius))
     .filter((entry) => despiteGuns || covered(entry.spot, towers) || (!held && guns.every((ship) => distance(ship, entry.spot) > ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN)))
     .sort((a, b) => a.gap - b.gap);
   for (const { spot } of spots) {

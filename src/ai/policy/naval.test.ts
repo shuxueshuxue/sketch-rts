@@ -107,6 +107,15 @@ describe("the AI on the water", () => {
     expect(navalWant(snapshot, "player", { version: "v2", requestedVersion: "v9", memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
+  it("raises its shipyard on a shore no enemy tower covers", () => {
+    const game = islandGame();
+    const tower = { ...game.buildings.find((building) => building.id === "hall-a")!, id: "tower-e", owner: "enemy" as const, kind: "defenseTower" as const, ...at(7, 0), radius: 22, complete: true };
+    game.buildings.push(tower);
+    const command = navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.issue(new Set());
+    if (command?.type !== "build") throw new Error("no shipyard");
+    expect(Math.hypot(command.x - tower.x, command.y - tower.y)).toBeGreaterThan(480 + 44);
+  });
+
   it("keeps its idle warships off the shallows its workers cross to the island", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = islandGame();
