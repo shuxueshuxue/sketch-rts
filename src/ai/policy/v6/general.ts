@@ -9,7 +9,8 @@ import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { isBacklineKind } from "./backline";
-import { enemyPowerNear, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, type V6BaseIntel, type V6Intel } from "./intel";
+import { enemyPowerNear, mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, type V6BaseIntel, type V6Intel } from "./intel";
+import { activeMiningBaseCount } from "../expansion-model";
 import { recordPlay, v6Memory } from "./memory";
 import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
 import { v6Doctrine } from "./select";
@@ -117,8 +118,8 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
   const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
-  // V9 holds at its front (see v9-front).
-  const rally = isV9Policy(options) ? v9FrontPoint(snapshot, owner, intel) : rallyPoint(intel);
+  // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort).
+  const rally = isV9Policy(options) ? (v9EscortPoint(snapshot, owner, intel, options) ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
   if (front.length === 0) {
     // No front left (every spirit gone): a gathering pulse is over, or its casters would hold their summons forever and
     // no front would ever come back (44 pyre callers stood at home without a spirit for twenty minutes).
@@ -252,6 +253,24 @@ function v7WantsBase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   const phase = phases[Math.min(v6Memory(options).phase ?? 0, phases.length - 1)];
   const wanted = Math.max(0, ...(phase?.wants ?? []).map((want) => ("bases" in want ? want.bases : 0)));
   return wanted > snapshot.buildings.filter((building) => building.owner === owner && building.kind === "townHall").length;
+}
+
+// @@@v9-escort - While V9 wants another base (its phase wants more than it has halls mining) and the mine it takes next
+// stands clear of creeps, its front is by that mine, V9_ESCORT_STEP from it toward the front it would hold: a hall rises
+// only with the army or a tower by its mine (see v9-front), and the army held at its front left the third mine bare. On
+// the open ladder maps 192 of 314 looks at a missing third base found its mine cleared and unguarded by V9's own army (96
+// of 231 on the old maps), and V9 had its third by 9:00 in 7 of 16 games (11 of 16).
+const V9_ESCORT_STEP = 260;
+
+function v9EscortPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext): Point | undefined {
+  const phases = v6Doctrine(snapshot, owner, options).strategy.phases;
+  const phase = phases[Math.min(v6Memory(options).phase ?? 0, phases.length - 1)];
+  const wanted = Math.max(0, ...(phase?.wants ?? []).map((want) => ("bases" in want ? want.bases : 0)));
+  const rising = snapshot.buildings.some((building) => building.owner === owner && building.kind === "townHall" && !building.complete);
+  if (rising || wanted <= activeMiningBaseCount(snapshot, owner)) return undefined;
+  const mine = v9ExpansionMine(snapshot, intel);
+  if (!mine || mineGuards(snapshot, mine).length > 0) return undefined;
+  return toward(mine, v9FrontPoint(snapshot, owner, intel), V9_ESCORT_STEP);
 }
 
 function creepOrders(memory: V6PolicyMemory, under: { commands: GameCommand[]; point: Point }): GameCommand[] {
