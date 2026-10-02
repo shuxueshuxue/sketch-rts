@@ -799,12 +799,12 @@ function renderProfileMenu() {
   mapList.replaceChildren(form);
 }
 
+// The browser is laid out at once, its list saying the rooms are loading, and they fill it when they come (see
+// @@@steady-rooms).
 async function renderRoomBrowser() {
   menuStatus.textContent = "";
-  const rooms = await deploymentRuntime.listRooms(localUser.id);
   const browser = document.createElement("div");
   browser.className = "room-browser";
-  browser.dataset.roomBrowser = "true";
   browser.innerHTML = `
     <div class="room-browser-actions"></div>
     <div class="room-browser-list" data-room-browser-list></div>
@@ -819,15 +819,21 @@ async function renderRoomBrowser() {
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
+  list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
+  mapList.replaceChildren(browser);
+  const rooms = await deploymentRuntime.listRooms(localUser.id);
+  // Left, or laid out again, while they loaded.
+  if (!browser.isConnected) return;
   const visibleRooms = roomBrowserEntries(rooms, localUser.id);
   list.replaceChildren(
     ...(visibleRooms.length > 0
       ? visibleRooms.map((entry) =>
           menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
         )
-      : [emptyRoomList()]),
+      : [roomListNote(t("roomBrowser.noVisible"), "empty")]),
   );
-  mapList.replaceChildren(browser);
+  // Marked once its rooms are in: what a script waits on.
+  browser.dataset.roomBrowser = "true";
 }
 
 function renderRoomSetup() {
@@ -1065,11 +1071,12 @@ function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = 
   return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
 }
 
-function emptyRoomList() {
-  const empty = document.createElement("div");
-  empty.className = "empty-room-list";
-  empty.textContent = t("roomBrowser.noVisible");
-  return empty;
+function roomListNote(text: string, state: "loading" | "empty") {
+  const note = document.createElement("div");
+  note.className = "room-list-note";
+  note.dataset.roomList = state;
+  note.textContent = text;
+  return note;
 }
 
 function slotForUser(room: RoomState, userId: string) {

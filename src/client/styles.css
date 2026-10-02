@@ -592,7 +592,7 @@ input[type="range"] {
 .room-slot-pane,
 .room-map-pane,
 .results-panel .result-list,
-.empty-room-list {
+.room-list-note {
   border: 1px solid var(--inset-edge);
   border-radius: 2px;
   background: var(--inset);
@@ -634,12 +634,14 @@ input[type="range"] {
 }
 
 .main-menu[data-menu-view="create"] .menu-status,
-.main-menu[data-menu-view="setup"] .menu-status {
+.main-menu[data-menu-view="setup"] .menu-status,
+.main-menu[data-menu-view="rooms"] .menu-status {
   grid-row: 2;
 }
 
 .main-menu[data-menu-view="create"] .map-list,
-.main-menu[data-menu-view="setup"] .map-list {
+.main-menu[data-menu-view="setup"] .map-list,
+.main-menu[data-menu-view="rooms"] .map-list {
   grid-row: 3;
 }
 
@@ -783,9 +785,21 @@ input[type="range"] {
   padding-bottom: 8px;
 }
 
-/* The room browser: the rooms, then the way out and the way to a new room, as the other screens end. */
+/* The room browser: the rooms, then the way out and the way to a new room, as the other screens end.
+   @@@steady-rooms - Its window is one size however many rooms there are and while they load: a share of the screen's
+   height within bounds, the list taking what the title and the buttons leave and scrolling inside it, with room kept
+   for its scrollbar whether or not there is one. The window took the size of what it held: the home screen's buttons
+   until the rooms came, then as many rooms as there were. */
 .main-menu[data-menu-view="rooms"] .menu-window {
   width: min(900px, calc(100vw - 56px));
+  height: min(max(320px, 76dvh), 720px, calc(100dvh - 56px));
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.room-browser {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .room-browser-list {
@@ -793,9 +807,9 @@ input[type="range"] {
   align-content: start;
   grid-auto-rows: max-content;
   gap: 8px;
-  min-height: 160px;
-  max-height: 52vh;
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 12px;
 }
 
@@ -837,7 +851,7 @@ input[type="range"] {
   background: var(--selected);
 }
 
-.empty-room-list {
+.room-list-note {
   padding: 16px;
   color: var(--inset-ink-soft);
   font-style: italic;
