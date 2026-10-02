@@ -336,6 +336,11 @@ canvas.addEventListener("pointerdown", suppressCanvasPointerGestureDefault);
 canvas.addEventListener("pointerup", suppressCanvasPointerGestureDefault);
 canvas.addEventListener("mousedown", onMouseDown);
 canvas.addEventListener("mousemove", onMouseMove);
+// Off pointer lock the canvas hears no move over the interface, so the cursor is followed across the whole page too,
+// after the canvas's own handler (which reads the point before), for edge scrolling over the top bar and the docks.
+document.addEventListener("mousemove", (event) => {
+  if (document.pointerLockElement !== canvas) lastMouse = mousePoint(event);
+});
 canvas.addEventListener("mouseup", onMouseUp);
 
 renderMainMenu();
@@ -2701,16 +2706,19 @@ function updateCamera() {
   if (keys.has("arrowright") || keys.has("d")) camera.x += speed;
   if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;
   if (keys.has("arrowdown") || keys.has("s")) camera.y += speed;
-  const edge = edgeScrollDelta(edgeScrollPoint(), { width: canvas.width, height: canvas.height });
+  const aim = edgeScrollAim();
+  const edge = edgeScrollDelta(aim?.point, { width: canvas.width, height: canvas.height }, aim?.overInterface);
   camera.x += edge.x;
   camera.y += edge.y;
   clampCamera();
 }
 
-function edgeScrollPoint() {
+// @@@edge-scroll-ui - The window's edge scrolls the camera whatever covers it (the top bar runs along the whole top);
+// over the interface only the last few pixels do (see edgeScrollDelta), so a panel near an edge can be read and used
+// without the camera drifting.
+function edgeScrollAim() {
   if (!lastMouse || draggingMinimapViewport || isInsideRect(lastMouse, minimapRect())) return undefined;
-  // @@@edge-scroll-ui - UI overlays near the viewport edge should not make the camera drift.
-  return document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+  return { point: lastMouse, overInterface: document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas };
 }
 
 function clampCamera() {
