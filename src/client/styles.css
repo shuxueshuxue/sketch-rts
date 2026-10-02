@@ -365,7 +365,7 @@ input[type="range"] {
 }
 
 .main-menu[data-menu-view="home"] .map-button {
-  justify-items: center;
+  align-items: center;
   min-height: 60px;
   padding: 0 24px;
   border: 7px solid transparent;
@@ -410,6 +410,7 @@ input[type="range"] {
   padding: 6px 12px;
   font-family: var(--font-display);
   font-size: 13px;
+  line-height: 1.2;
   letter-spacing: 0.15em;
   pointer-events: auto;
 }
@@ -429,8 +430,13 @@ input[type="range"] {
 }
 
 /* A menu entry: a board with its name and, where it helps, a line under it. */
+/* A button holds its label in its middle whatever the font: its lines in a column centred down the button, each 1.2
+   high. As a grid its one row filled the button and the label sat at the top of that row, under the top edge; and a
+   Latin font's own line (Palatino, Cinzel's fallback, is 1.37 high with a deep descent) lifted the capitals further. */
 .map-button {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: 3px;
   border: 1px solid var(--btn-edge);
   border-radius: 2px;
@@ -449,6 +455,7 @@ input[type="range"] {
 .map-button-name {
   font-family: var(--font-display);
   font-size: 16px;
+  line-height: 1.2;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -805,7 +812,7 @@ input[type="range"] {
 
 .room-browser-actions .map-button {
   min-width: 140px;
-  justify-items: center;
+  align-items: center;
   padding: 7px 16px;
 }
 
