@@ -512,10 +512,14 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
   // there every four seconds while its builder walked over, ten of them (the 1v3 bench's v5-extra-11 ladder-32 at c29edfa);
   // and a tower reaches a site at its wall, so one 486 from a site's center still struck down 30 (v5-extra-15 ladder-13).
   const enemy = enemyTowers(snapshot, owner, options);
+  // Whether a gun reaches a site there: its range, the shipyard's radius and GUN_MARGIN. Its own towers' cover holds a site
+  // only while they reach every gun that reaches it: a warship 121 off a shore the owner's tower covered, out of that
+  // tower's reach, sank the 21 sites placed there one after another (the 1v3 bench's v5-extra-13 ladder-57 at fbd8f95).
+  const reaches = (ship: Unit, spot: Point) => distance(ship, spot) <= ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN;
   const spots = shoreSpots(map, BUILDING_DEFS.shipyard.radius)
     .map((spot) => ({ spot, gap: gapOf(spot, ours) }))
     .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs) && !covered(entry.spot, enemy, BUILDING_DEFS.shipyard.radius))
-    .filter((entry) => despiteGuns || covered(entry.spot, towers) || (!held && guns.every((ship) => distance(ship, entry.spot) > ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN)))
+    .filter((entry) => despiteGuns || (covered(entry.spot, towers) && !guns.some((ship) => reaches(ship, entry.spot) && !covered(ship, towers))) || (!held && !guns.some((ship) => reaches(ship, entry.spot))))
     .sort((a, b) => a.gap - b.gap);
   for (const { spot } of spots) {
     if (!sameGround(map, spot, home) || !isBuildPlacementClear(snapshot, "shipyard", spot)) continue;

@@ -116,6 +116,16 @@ describe("the AI on the water", () => {
     expect(Math.hypot(command.x - tower.x, command.y - tower.y)).toBeGreaterThan(480 + 44);
   });
 
+  it("raises no shipyard under its own tower within reach of an enemy warship the tower does not reach", () => {
+    const game = islandGame();
+    game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "tower", kind: "defenseTower", ...at(5, 3), radius: 22, complete: true });
+    const ship = { ...game.units.find((unit) => unit.id === "w1")!, id: "e-ship", owner: "enemy" as const, kind: "warship" as const, ...at(22, 3), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 };
+    game.units.push(ship);
+    const command = navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.issue(new Set());
+    if (command?.type !== "build" || command.buildingKind !== "shipyard") throw new Error("no shipyard");
+    expect(Math.hypot(command.x - ship.x, command.y - ship.y)).toBeGreaterThan(390 + 44 + 100);
+  });
+
   it("keeps its idle warships off the shallows its workers cross to the island", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = islandGame();
