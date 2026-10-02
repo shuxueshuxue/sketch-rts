@@ -1570,7 +1570,7 @@ function onMouseUp(event: MouseEvent) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
-    else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
+    else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 2) cancelCommandMode();
     selectionStart = undefined;
@@ -1860,7 +1860,7 @@ function beginSpellTargeting(ability: AbilityKind) {
     behavior === "summon"
       ? t("status.summonMode")
       : reach
-        ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange, max: reach.range })
+        ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange })
         : t("status.spellMode", { ability: labelKind(ability) });
   updateHud();
 }
@@ -1900,14 +1900,14 @@ function issueAttackMoveAt(point: Point, queued = false) {
   updateHud();
 }
 
-function issueSpellAt(point: Point) {
+function issueSpellAt(point: Point, queued = false) {
   if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "spell") return;
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
   const behavior = ABILITY_DEFS[ability].behavior;
   if (behavior === "summon") {
-    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y });
+    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y, queued });
     statusLabel.textContent = t("status.summonOrdered");
     clearCommandModeClasses();
     commandMode = undefined;
@@ -1926,10 +1926,10 @@ function issueSpellAt(point: Point) {
   const reach = chargeWindow(ability);
   const caster = reach ? chargeRiderFor(readyChargers(selectedPlayerUnits(), ability), target, reach, casterId) : { id: casterId };
   if (!caster) {
-    showInvalidCommand(t("status.chargeOutOfWindow", { ability: labelKind(ability), min: reach!.minRange, max: reach!.range }));
+    showInvalidCommand(t("status.chargeTooClose", { ability: labelKind(ability), min: reach!.minRange }));
     return;
   }
-  sendCommand({ type: "cast", unitId: caster.id, ability, targetId: target.id });
+  sendCommand({ type: "cast", unitId: caster.id, ability, targetId: target.id, queued });
   statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2613,7 +2613,7 @@ function drawSpellPreview() {
 
 // @@@charge-preview - While a charge is being aimed, every ready rider shows its window: the ring band between the
 // shortest and longest charge. The rider that would take the hovered enemy (see chargeRiderFor) is drawn strong with a
-// lane to it; a hovered enemy no rider can reach is marked out of reach.
+// lane to it; a hovered enemy too near every rider is marked out of reach.
 const CHARGE_PREVIEW_INK = { band: "rgba(212, 180, 119, 0.12)", ring: "#b9861b", reach: "#387d72", miss: "#a85644" } as const;
 
 function drawChargePreview(point: Point, ability: AbilityKind, reach: ChargeWindow, preferredId: string) {

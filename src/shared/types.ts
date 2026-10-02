@@ -116,7 +116,9 @@ export type UnitOrder =
   | { type: "board"; transportId: string }
   | { type: "unload"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
-  | { type: "charge"; targetId: string; resume: SettledUnitOrder };
+  | { type: "charge"; targetId: string; resume: SettledUnitOrder }
+  // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
+  | { type: "cast"; ability: AbilityKind; targetId?: string; x?: number; y?: number };
 
 // Any order but a charge.
 export type SettledUnitOrder = Exclude<UnitOrder, { type: "charge" }>;
@@ -443,7 +445,7 @@ export type GameCommand =
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
   | { type: "unload"; unitIds: string[]; x: number; y: number; queued?: boolean }
-  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
+  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };

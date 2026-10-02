@@ -45,13 +45,13 @@ describe("gameplay tooltips", () => {
       title: "Charge",
       body: expect.stringContaining("twice"),
       stats: [`Strikes for x${CHARGE.damageMultiplier} its attack`, `Range ${CHARGE.minRange}-${CHARGE.range}`, `Cooldown ${CHARGE_COOLDOWN_SECONDS}s`],
-      requirements: ["Raider or knight must be ready.", `Target an enemy unit ${CHARGE.minRange} to ${CHARGE.range} away.`],
+      requirements: ["Raider or knight must be ready.", `Target an enemy unit at least ${CHARGE.minRange} away; a farther one is ridden up to first.`],
       hotkey: "R",
     });
     expect(abilityTooltip("charge", "r", createI18n("zh"))).toMatchObject({
       title: "冲锋",
       stats: [`伤害为普攻 x${CHARGE.damageMultiplier}`, `射程 ${CHARGE.minRange}-${CHARGE.range}`, `冷却 ${CHARGE_COOLDOWN_SECONDS}s`],
-      requirements: ["掠袭者或骑士必须准备就绪。", `目标必须是 ${CHARGE.minRange} 到 ${CHARGE.range} 距离内的敌方单位。`],
+      requirements: ["掠袭者或骑士必须准备就绪。", `目标是至少 ${CHARGE.minRange} 外的敌方单位，更远的会先骑过去再冲。`],
     });
   });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ABILITY_DEFS } from "../shared/catalog";
 import type { Unit } from "../shared/types";
-import { chargeRiderFor, chargeWindow, inChargeWindow, readyChargers } from "./charge-targeting";
+import { chargeRiderFor, chargeWindow, readyChargers } from "./charge-targeting";
 
 const CHARGE = ABILITY_DEFS.charge;
 if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
@@ -15,14 +15,6 @@ describe("charge targeting", () => {
     expect(chargeWindow("curse")).toBeUndefined();
   });
 
-  it("holds a target from the shortest to the longest charge, both ends included", () => {
-    const rider = { x: 0, y: 0 };
-    expect(inChargeWindow(rider, { x: WINDOW.minRange - 1, y: 0 }, WINDOW)).toBe(false);
-    expect(inChargeWindow(rider, { x: WINDOW.minRange, y: 0 }, WINDOW)).toBe(true);
-    expect(inChargeWindow(rider, { x: 0, y: WINDOW.range }, WINDOW)).toBe(true);
-    expect(inChargeWindow(rider, { x: 0, y: WINDOW.range + 1 }, WINDOW)).toBe(false);
-  });
-
   it("offers only riders whose charge has cooled down", () => {
     const ready = rider("ready", 0);
     const cooling = { ...rider("cooling", 0), abilityCooldowns: { charge: 40 } };
@@ -30,17 +22,20 @@ describe("charge targeting", () => {
     expect(readyChargers([ready, cooling, footman], "charge").map((unit) => unit.id)).toEqual(["ready"]);
   });
 
-  it("lets the armed rider charge when it can reach, else the nearest rider that can, else nobody", () => {
+  it("lets the armed rider charge unless the target is too near it, else the nearest rider it is not too near, else nobody", () => {
     const target = { x: 0, y: 0 };
     const near = rider("near", WINDOW.minRange + 10);
     const far = rider("far", WINDOW.range - 10);
     const tooClose = rider("tooClose", WINDOW.minRange - 50);
-    const tooFar = rider("tooFar", WINDOW.range + 50);
+    const beyond = rider("beyond", WINDOW.range + 50);
 
     expect(chargeRiderFor([far, near], target, WINDOW, "far")?.id).toBe("far");
     expect(chargeRiderFor([far, near], target, WINDOW, "tooClose")?.id).toBe("near");
     expect(chargeRiderFor([tooClose, far, near], target, WINDOW)?.id).toBe("near");
-    expect(chargeRiderFor([tooClose, tooFar], target, WINDOW, "tooClose")).toBeUndefined();
+    // Beyond the window is no bar: that rider rides up first.
+    expect(chargeRiderFor([tooClose, beyond], target, WINDOW, "tooClose")?.id).toBe("beyond");
+    expect(chargeRiderFor([near, beyond], target, WINDOW, "beyond")?.id).toBe("beyond");
+    expect(chargeRiderFor([tooClose], target, WINDOW, "tooClose")).toBeUndefined();
     expect(chargeRiderFor([rider("middle", MIDDLE)], target, WINDOW)?.id).toBe("middle");
   });
 });

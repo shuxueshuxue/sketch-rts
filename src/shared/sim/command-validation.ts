@@ -269,8 +269,9 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     const def = ABILITY_DEFS[command.ability];
     const target = command.targetId ? snapshot.units.find((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner)) : undefined;
     if (!target || def.behavior !== "charge") return commandError("Charge requires an enemy unit target");
+    // Farther than the window, the rider rides up to it first (see @@@cast-order); nearer, there is no room to charge.
     const gap = Math.hypot(target.x - caster.x, target.y - caster.y);
-    if (gap < def.minRange || gap > def.range) return commandError(`Charge target must be ${def.minRange} to ${def.range} away`, true);
+    if (gap < def.minRange) return commandError(`Charge target must be at least ${def.minRange} away`, true);
     // A rider charges nothing it cannot come within reach of (see @@@reach): a ship out on deep water.
     return canReach(snapshot.map, caster, target) ? undefined : commandError("Charge target is out of reach", true);
   }

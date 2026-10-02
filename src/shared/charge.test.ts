@@ -8,7 +8,7 @@ import type { Unit } from "./types";
 const CHARGE = ABILITY_DEFS.charge as Extract<AbilityDef, { behavior: "charge" }>;
 // Riders stand at x 500; a foe at INSIDE is in the middle of the charge window.
 const INSIDE = 500 + (CHARGE.minRange + CHARGE.range) / 2;
-const WINDOW_TEXT = `${CHARGE.minRange} to ${CHARGE.range}`;
+const TOO_NEAR_TEXT = `at least ${CHARGE.minRange} away`;
 
 function duel() {
   const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [] });
@@ -64,15 +64,19 @@ describe("cavalry charge", () => {
     expect(thrown("golem")).toBeLessThan(thrown("footman") / 2);
   });
 
-  it("only charges a unit inside the window", () => {
-    for (const gap of [CHARGE.minRange - 50, CHARGE.range + 50]) {
-      const game = duel();
-      const raider = game.spawnUnit("player", "raider", 500, 500);
-      const footman = game.spawnUnit("enemy", "footman", 500 + gap, 500);
-      const command = { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id } as const;
-      expect(checkCommandLegality(snapshotGame(game), "player", command)).toMatchObject({ message: expect.stringContaining(WINDOW_TEXT) });
-      expect(() => issueCommand(game, command)).toThrow(WINDOW_TEXT);
-    }
+  it("refuses a unit nearer than the shortest charge, and rides up to one beyond the window first (see cast-order)", () => {
+    const game = duel();
+    const raider = game.spawnUnit("player", "raider", 500, 500);
+    const near = game.spawnUnit("enemy", "footman", 500 + CHARGE.minRange - 50, 500);
+    const command = { type: "cast", unitId: raider.id, ability: "charge", targetId: near.id } as const;
+    expect(checkCommandLegality(snapshotGame(game), "player", command)).toMatchObject({ message: expect.stringContaining(TOO_NEAR_TEXT) });
+    expect(() => issueCommand(game, command)).toThrow(TOO_NEAR_TEXT);
+
+    const far = game.spawnUnit("enemy", "footman", 500, 500 + CHARGE.range + 50);
+    const ride = { type: "cast", unitId: raider.id, ability: "charge", targetId: far.id } as const;
+    expect(checkCommandLegality(snapshotGame(game), "player", ride)).toBeUndefined();
+    issueCommand(game, ride);
+    expect(raider.order).toMatchObject({ type: "cast", ability: "charge", targetId: far.id });
   });
 
   it("charges on its own an enemy that comes inside the window, and not once switched off", () => {

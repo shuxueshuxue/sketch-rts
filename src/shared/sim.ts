@@ -421,7 +421,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "cast") {
-    castAbility(game, owner, command.unitId, command.ability, command.targetId, command.x, command.y);
+    castAbility(game, owner, command.unitId, command.ability, command.targetId, command.x, command.y, command.queued);
     return;
   }
 
@@ -817,6 +817,10 @@ function updateUnits(game: Game): Ferry | undefined {
     }
     if (unit.order.type === "follow") {
       updateFollowOrder(game, unit);
+      continue;
+    }
+    if (unit.order.type === "cast") {
+      updateCastOrder(game, unit);
       continue;
     }
     if (unit.order.type === "attack") {
@@ -1385,36 +1389,79 @@ function castAbility(
   targetId: string | undefined,
   x: number | undefined,
   y: number | undefined,
+  queued = false,
 ) {
   const caster = game.units.find((unit) => unit.id === unitId && unit.owner === owner);
   if (!caster) throw new Error(`Unknown ${owner} caster ${unitId}`);
   if (!UNIT_DEFS[caster.kind].abilities.includes(ability)) throw new Error(`${caster.kind} cannot cast ${ability}`);
   if (abilityCooldown(caster, ability) > 0) throw new Error(`${caster.kind} is on cooldown`);
   const def = ABILITY_DEFS[ability];
+  // Out of reach, or after the orders before it (shift), the caster walks to cast (see @@@cast-order).
+  const later = (order: Extract<UnitOrder, { type: "cast" }>, at: { x: number; y: number }) => {
+    assignUnitOrder(caster, order, queued);
+    addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24);
+  };
 
   if (def.behavior === "heal") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && !areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Heal requires an allied unit target");
-    applyHeal(game, caster, ability, target, def);
+    if (queued || distance(caster, target) > def.range) later({ type: "cast", ability, targetId: target.id }, target);
+    else applyHeal(game, caster, ability, target, def);
     return;
   }
   if (def.behavior === "curse") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Curse requires an enemy unit target");
-    applyCurse(game, caster, ability, target, def);
+    if (queued || distance(caster, target) > def.range) later({ type: "cast", ability, targetId: target.id }, target);
+    else applyCurse(game, caster, ability, target, def);
     return;
   }
   if (def.behavior === "charge") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Charge requires an enemy unit target");
-    if (!inChargeWindow(caster, target, def)) throw new Error(`Charge target must be ${def.minRange} to ${def.range} away`);
+    if (distance(caster, target) < def.minRange) throw new Error(`Charge target must be at least ${def.minRange} away`);
     if (!canReach(game.map, caster, target)) throw new Error("Charge target is out of reach");
-    startCharge(game, caster, ability, target, def, true);
+    if (queued || distance(caster, target) > def.range) later({ type: "cast", ability, targetId: target.id }, target);
+    else startCharge(game, caster, ability, target, def, true);
     return;
   }
   if (def.behavior !== "summon") throw new Error(`${ability} is cast by its creep alone`);
   if (!isNumber(x) || !isNumber(y)) throw new Error("Summon requires a target point");
-  applySummon(game, caster, ability, x, y, def);
+  if (queued || distance(caster, { x, y }) > def.range) later({ type: "cast", ability, x, y }, { x, y });
+  else applySummon(game, caster, ability, x, y, def);
+}
+
+// @@@cast-order - A spell cast out of reach is walked to, as Warcraft III's are: the caster heads for the spell's point or
+// follows its unit, and casts once within the spell's range (a charge: within its window, from which it charges) with
+// the spell ready. A target gone, dead or turned, one it can come no nearer to, a charge's target come too close or out
+// of reach, or the spell not ready on arrival, and the order ends: the caster takes up its next queued order, else idles.
+function updateCastOrder(game: Game, unit: Unit) {
+  const order = unit.order;
+  if (order.type !== "cast") return;
+  const def = ABILITY_DEFS[order.ability];
+  const target = order.targetId === undefined ? undefined : game.units.find((candidate) => candidate.id === order.targetId);
+  const end = () => {
+    unit.order = { type: "idle" };
+  };
+  if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end();
+  const at = target ?? (isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined);
+  if (!at) return end();
+  if (distance(unit, at) > def.range) {
+    moveToward(unit, at.x, at.y, game.map);
+    // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
+    if (walkEnded(game, unit, at, 5)) end();
+    return;
+  }
+  if (abilityCooldown(unit, order.ability) > 0) return end();
+  if (def.behavior === "heal" && target) applyHeal(game, unit, order.ability, target, def);
+  else if (def.behavior === "curse" && target) applyCurse(game, unit, order.ability, target, def);
+  else if (def.behavior === "summon") applySummon(game, unit, order.ability, at.x, at.y, def);
+  else if (def.behavior === "charge" && target && distance(unit, target) >= def.minRange && canReach(game.map, unit, target)) {
+    // The charge's own rule sees to what follows it (see endCharge): the next queued order, else attacking its unit.
+    startCharge(game, unit, order.ability, target, def, false);
+    return;
+  }
+  end();
 }
 
 function applyHeal(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "heal" }>) {
