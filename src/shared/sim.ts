@@ -2727,7 +2727,7 @@ const CROWD_REACH = 100;
 // group sent to an island stands round the shore across from it, never within two bodies of the island's point.
 function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y: number }, end: { x: number; y: number }) {
   const gap = distance(unit, end);
-  if (unit.kind === "worker" || gap > CROWD_REACH) return false;
+  if (gap > CROWD_REACH) return false;
   const friend = firstNearbyUnit(game, unit, unit.radius + MAX_UNIT_RADIUS + 2, (other) => {
     if (other === unit || other.owner !== unit.owner || distance(other, unit) > other.radius + unit.radius + 2) return false;
     const there = other.order.type === "idle" && other.arrivedAt?.x === goal.x && other.arrivedAt.y === goal.y;

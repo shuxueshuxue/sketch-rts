@@ -698,9 +698,12 @@ function goalFieldOf(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles
 
 // The open cells of the copy a walk to `target` may end at, each with its straight cost to it, within `box`: the target
 // itself when it is open; where a building covers it (a site to build, a hall to bring gold to, one to strike), the open
-// cells round that building within GOAL_REACH that the land joins to the target without the buildings, so the walk ends
-// at the wall on the walker's side. Taken by distance alone, the cells on a plateau above a farm built under its cliff
-// were the farm's: a worker up there stood at its walk's end and walked straight at the cliff (V8's on the open ladder).
+// cells beside that building (or the buildings it stands against) within GOAL_REACH that the land joins to the target
+// without the buildings, so the walk ends at the wall on the walker's side. Taken by distance alone, the cells on a
+// plateau above a farm built under its cliff were the farm's: a worker up there stood at its walk's end and walked
+// straight at the cliff (V8's on the open ladder). Every open cell within GOAL_REACH was one: a worker sent to a farm two
+// cells beyond the corner of its hall stood at the hall's foot for good, a cell there its walk's end and nowhere near the
+// farm (pool-pineshade-10).
 function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number, box: Box) {
   if (state.walk[target] === 1) return { seeds: [target], costs: [0] };
   const { width, offsets } = state;
@@ -712,9 +715,12 @@ function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number
   const joined = new Set([target]);
   for (let index = 0, queue = [target]; index < queue.length; index += 1) {
     const at = queue[index]!;
-    if (state.walk[at] === 1 && local(box, at, width) >= 0) {
-      seeds.push(at);
-      costs.push(Math.round(STRAIGHT * GROUND_WEIGHT * Math.sqrt(((at % width) - targetCol) ** 2 + (Math.floor(at / width) - targetRow) ** 2)));
+    if (state.walk[at] === 1) {
+      if (local(box, at, width) >= 0) {
+        seeds.push(at);
+        costs.push(Math.round(STRAIGHT * GROUND_WEIGHT * Math.sqrt(((at % width) - targetCol) ** 2 + (Math.floor(at / width) - targetRow) ** 2)));
+      }
+      continue;
     }
     for (let direction = 0; direction < 8; direction += 1) {
       const next = at + offsets[direction]!;
