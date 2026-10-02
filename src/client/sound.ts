@@ -88,9 +88,17 @@ export class Soundboard {
 
   /** `packs` are the packs to choose from; `fallback` is the one played until the player chooses (none: silence). */
   constructor(
-    readonly packs: readonly SoundPack[],
-    private readonly fallback?: string,
+    public packs: readonly SoundPack[],
+    private fallback?: string,
   ) {}
+
+  // More packs to choose from (those the server offers, see @@@served-sound-packs), and the one to play until the player
+  // chooses when none was named before; a pack already here keeps its place.
+  addPacks(packs: readonly SoundPack[], fallback?: string) {
+    this.packs = [...this.packs, ...packs.filter((pack) => !this.packs.some((known) => known.id === pack.id))];
+    this.fallback ??= fallback;
+    this.loadPack();
+  }
 
   // The chosen pack, or none: the player's choice, else the fallback, else silence.
   get pack(): SoundPack | undefined {
@@ -202,7 +210,7 @@ function compressor(ctx: AudioContext, settings: { threshold: number; knee: numb
   return node;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 

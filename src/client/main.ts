@@ -31,7 +31,7 @@ import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
 import { NO_SOUND_PACK, Soundboard } from "./sound";
 import { soundCues, type SoundCue } from "./sound-cues";
-import { SOUND_PACKS } from "./sound-packs";
+import { servedSoundPacks, SOUND_PACKS } from "./sound-packs";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -156,9 +156,10 @@ const ctx = requireCanvasContext(canvas);
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
 const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
-// The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs); until the player chooses one, the
-// one a server names in VITE_SOUND_PACK, else none.
+// The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs) and those the server offers (see
+// @@@served-sound-packs); until the player chooses one, the one a build names in VITE_SOUND_PACK, else the server's, else none.
 const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
+void servedSoundPacks(import.meta.env.BASE_URL).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
