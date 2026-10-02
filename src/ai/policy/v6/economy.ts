@@ -367,10 +367,13 @@ function upgradeGoal(economy: Economy, kind: UpgradeKind, level: number, priorit
 // transport in 20 minutes), and the shipyard and ships that take it, or raid the enemy's door, or meet its ships, come first
 // at the same weight. Where the water offers none of these there is none.
 const NAVAL_PRIORITY = 60;
+// The closeout (see @@@ai-closeout) when it is all there is left to fight comes before more bases: V9's third and fourth
+// (65 and 61, aged to 85 and 81) kept its shipyard for the island's last base from ever being bought (pool-templeSpring-1).
+const CLOSEOUT_PRIORITY = 80;
 
 function navalGoals(economy: Economy): Goal[] {
   const want = navalWant(economy.snapshot, economy.owner, economy.options);
-  return want ? [goal(want.id, NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
+  return want ? [goal(want.id, want.closeout ? CLOSEOUT_PRIORITY : NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
 }
 
 // V9's shop errand under way (see @@@v9-shop): its gold held at SHOP_PRIORITY until the shop script spends it.

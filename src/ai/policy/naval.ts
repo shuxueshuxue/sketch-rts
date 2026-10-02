@@ -4,6 +4,7 @@ import { canReach, carries } from "../../shared/naval";
 import { groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
 import type { Building, GameCommand, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
+import { legalBuildPointNear } from "./build-layout";
 import { resolveAiCommandIntent } from "./commands";
 import { shipsAfloat } from "./ground";
 import { isEnemyOwner, isOpponentOwner } from "./ownership";
@@ -57,7 +58,9 @@ type AssaultPlan = { target: Building; landing: Point };
 // transport, and once workers stand on the island its hall. The gold is the economy's to find: V6 takes it as one of its
 // goals and saves for it (see v6/economy navalGoals); the shared library's economy (V5) buys it when it can (planNavalEconomy).
 // `issue` takes the workers already given a building this think, and adds the one it gives this one.
-export type NavalWant = { id: string; cost: number; issue: (builders: Set<string>) => GameCommand | undefined };
+// `closeout`: the assault is all there is left to fight (no opponent's hall stands on the army's ground), so it comes
+// before more bases (see v6/economy navalGoals).
+export type NavalWant = { id: string; cost: number; issue: (builders: Set<string>) => GameCommand | undefined; closeout?: true };
 
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
   const threat = enemyShipsNear(snapshot, owner, options);
@@ -74,7 +77,23 @@ export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
   const plan = assault ? undefined : islandPlan(snapshot, owner, options);
   const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
   if (!water) return undefined;
+  const want = navalStep(snapshot, owner, options, assault, plan, water, halls);
+  const home = halls[0];
+  return want && assault && home && lastFight(snapshot, owner, options, home) ? { ...want, closeout: true } : want;
+}
+
+// The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
   const yard = shipyardOf(snapshot, owner, water);
+  if (!yard && !shoreSpot(snapshot, owner, water, options)) {
+    // Every shore of the water under an enemy ship's guns: a tower that outshoots the nearest of them first (see
+    // @@@coast-tower).
+    const site = shoreSpot(snapshot, owner, water, options, true);
+    const hall = site && nearestOf(halls.filter((building) => sameGround(snapshot.map, building, site)), site);
+    const gun = site && nearestOf(snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options)), site);
+    const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle"));
+    return hall && gun ? coastTower(snapshot, hall, gun, workers) : undefined;
+  }
   if (!yard) {
     return {
       id: "naval:shipyard",
@@ -240,6 +259,36 @@ function offshore(snapshot: GameSnapshot, landing: Point, from: Point): Point {
   return landing;
 }
 
+// @@@coast-tower - Where every shore of a water is under an enemy ship's guns, a tower goes up where it outshoots the
+// nearest of them (a tower reaches 480, a warship 390): within a tower's reach of the ship and beyond the ship's own, on
+// the owner's ground, the build layout's clear spot nearest the point on the way from the ship to `ground` (the owner's
+// hall). The ship sunk or gone, a shore is free for the shipyard (see shoreSpot). An island's warships, parked off its
+// besieger's beach, sank every shipyard placed there within two seconds, and its last base stood to the end
+// (pool-templeSpring-3, -5 at 88ba501; a tower inland of the shore, which the ships did not reach, ended one of them).
+function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers: Unit[]): NavalWant | undefined {
+  const site = towerSite(snapshot, ground, ship);
+  if (!site) return undefined;
+  return {
+    id: "naval:coastTower",
+    cost: BUILDING_DEFS.defenseTower.cost,
+    issue: (builders) => {
+      const builder = nearestOf(workers.filter((worker) => !builders.has(worker.id) && sameGround(snapshot.map, worker, site)), site);
+      if (!builder) return undefined;
+      builders.add(builder.id);
+      return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: site.x, y: site.y };
+    },
+  };
+}
+
+function towerSite(snapshot: GameSnapshot, ground: Point, ship: Point): Point | undefined {
+  const length = distance(ground, ship) || 1;
+  const beyond = UNIT_DEFS.warship.attackRange + BUILDING_DEFS.defenseTower.radius;
+  const midway = (beyond + TOWER_COVER) / 2;
+  const at = legalBuildPointNear(snapshot, "defenseTower", { x: ship.x + ((ground.x - ship.x) / length) * midway, y: ship.y + ((ground.y - ship.y) / length) * midway });
+  const reach = distance(at, ship);
+  return sameGround(snapshot.map, at, ground) && isBuildPlacementClear(snapshot, "defenseTower", at) && reach > beyond && reach <= TOWER_COVER ? at : undefined;
+}
+
 function islandHallOf(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan): Building | undefined {
   return buildings(snapshot, owner).find((building) => building.kind === "townHall" && distance(building, plan.mine) <= 320);
 }
@@ -281,7 +330,7 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const plan = snapshot.resources
       .filter((mine) => mine.amount > 0 && !sameGround(map, home, mine) && !held(mine))
       .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
-      .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options)))
+      .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options, true)))
       .sort((a, b) => distance(a.mine, home) - distance(b.mine, home))[0];
     known = { tick: snapshot.tick, ...(plan ? { plan: { mineId: plan.mine.id, landing: { x: plan.landing.x, y: plan.landing.y } } } : {}) };
     memory.island = known;
@@ -313,7 +362,7 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
       for (const target of islanders.sort((a, b) => distance(a, home) - distance(b, home))) {
         const landing = walkableGoal(map, target.x, target.y, "sea");
         if (!isWalkable(map, landing.x, landing.y, "sea")) continue;
-        if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options)) {
+        if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true)) {
           assault = { target, landing };
           break;
         }
@@ -324,6 +373,11 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   }
   const live = known.plan && snapshot.buildings.find((building) => building.id === known!.plan!.targetId);
   return known.plan && live ? { target: live, landing: known.plan.landing } : undefined;
+}
+
+// Whether the fight is the last: no opponent's hall stands on the army's ground.
+function lastFight(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Building) {
+  return !snapshot.buildings.some((building) => building.kind === "townHall" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, home));
 }
 
 // The water at the enemy's door: by an enemy hall that no tower covers and a warship reaches from water the owner has a
@@ -403,7 +457,7 @@ function shipyardOf(snapshot: GameSnapshot, owner: PlayerId, water: Point): Buil
 
 // The shore spot (see shoreSpots) on the owner's own ground and on the given water, free to build on, nearest its halls
 // there: as far off as the shore lies, but on its own side, nearer one of its halls than any enemy's on its ground.
-function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext): Point | undefined {
+function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false): Point | undefined {
   const map = snapshot.map;
   const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall");
   const home = halls[0];
@@ -413,16 +467,19 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
   // hall kept every shore of its lake its own, and no assault ever set out, see @@@ai-closeout).
   const theirs = snapshot.buildings.filter((building) => building.kind === "townHall" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(map, building, home));
   const gapOf = (spot: Point, from: Building[]) => Math.min(Infinity, ...from.map((hall) => distance(hall, spot)));
-  // None within an enemy's armed ship's reach (its range, the shipyard's radius and GUN_MARGIN): a site starts at a few
-  // health and a ship that reaches it sinks it before its builder gets there (two warships guarding an island's last hall
-  // sank five shipyards placed by them, 170 gold each and a third of the army's income: pool-templeSpring-5). Not the
-  // whole water the ship sails: with no shipyard of its own there, the island's last base that one warship guarded was
-  // never assaulted (five of the pool's games at 26e9560; this way two of them end).
+  // None on water an enemy's armed ship sails, nor within the reach of one on other water (its range, the shipyard's
+  // radius and GUN_MARGIN), unless its own towers cover the shore: a site starts at a few health and the ships come and
+  // sink it before its builder gets there (two warships guarding an island's last hall sank five shipyards, 170 gold each
+  // and a third of the army's income: pool-templeSpring-5), and a raider keeps off what towers cover (see @@@coast-tower:
+  // with no shore at all, the island's last base that one warship guarded was never assaulted, five of the pool's games at
+  // 26e9560). `despiteGuns`: whether the water has a shore of the owner's at all, for the plans that go there.
   const guns = snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options));
+  const towers = buildings(snapshot, owner).filter((building) => building.kind === "defenseTower" && building.complete);
+  const held = guns.some((ship) => sameGround(map, ship, water, "sea"));
   const spots = shoreSpots(map, BUILDING_DEFS.shipyard.radius)
     .map((spot) => ({ spot, gap: gapOf(spot, ours) }))
     .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs))
-    .filter((entry) => guns.every((ship) => distance(ship, entry.spot) > ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN))
+    .filter((entry) => despiteGuns || covered(entry.spot, towers) || (!held && guns.every((ship) => distance(ship, entry.spot) > ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN)))
     .sort((a, b) => a.gap - b.gap);
   for (const { spot } of spots) {
     if (!sameGround(map, spot, home) || !isBuildPlacementClear(snapshot, "shipyard", spot)) continue;
