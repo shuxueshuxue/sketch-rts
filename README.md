@@ -221,13 +221,14 @@ The game is silent until a sound pack is chosen in **Settings → Sound pack** (
 {
   "name": "My pack",
   "sounds": {
-    "melee": { "file": "melee.ogg", "volume": 1, "pitch": 0.08, "max": 4 },
+    "melee": { "pitch": 0.08, "max": 4, "kinds": { "footman": { "file": "sword.ogg" }, "golem": { "file": "rock.ogg", "volume": 1.2 } } },
+    "arrowShot": { "file": "bow.ogg" },
     "click": { "file": "click.ogg" }
   }
 }
 ```
 
-The events are `melee`, `arrowShot`, `arrowHit`, `death`, `built`, `buildingDown` and `click`; an event a pack leaves out is silent. Each event plays one recording: `volume` 1 is as recorded, `pitch` is how far each play may stray up or down (0.08 is 8%, default 0), and `max` is how many plays of it may sound at once (default 4). Packs are found when the game is built or served, so dropping a folder in and restarting `npm run dev` is enough; a pack whose `pack.json` does not read is left out with the reason in the browser console. Start the server with `VITE_SOUND_PACK=<id>` to play a pack until the player picks one.
+The events are `melee` (a melee weapon's blow), `arrowShot` and `arrowHit` (a bowman's or tower's arrow loosed and landing), `death`, `construction` (a building placed), `built` (one of yours finished), `buildingDown` and `click`; an event a pack leaves out is silent. An event plays one recording, or one per unit kind of who caused it under `kinds` (its own `file`, if any, for kinds not named): `volume` 1 is as recorded, `pitch` is how far each play may stray up or down (0.08 is 8%, default 0), both given per kind or for the event, and `max` is how many plays of the event may sound at once (default 4). Packs are found when the game is built or served, so dropping a folder in and restarting `npm run dev` is enough; a pack whose `pack.json` does not read is left out with the reason in the browser console. Start the server with `VITE_SOUND_PACK=<id>` to play a pack until the player picks one.
 
 Only `audio-packs/cc0` is in the repository; git ignores every other folder under `audio-packs/`. A pack you keep locally is part of the builds you make on that machine, so publish only builds made from the repository.
 

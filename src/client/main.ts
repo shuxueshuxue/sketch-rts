@@ -1460,7 +1460,7 @@ function playCues(cues: SoundCue[]) {
     const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
     const gain = 1 - outside / (canvas.width / 2);
     if (gain <= 0) continue;
-    soundboard.play(cue.id, { pan: ((at.x / canvas.width) * 2 - 1) * 0.7, gain });
+    soundboard.play(cue.id, { pan: ((at.x / canvas.width) * 2 - 1) * 0.7, gain }, cue.kind);
   }
 }
 

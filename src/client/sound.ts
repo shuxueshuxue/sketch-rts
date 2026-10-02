@@ -1,28 +1,35 @@
+import { UNIT_DEFS } from "../shared/catalog";
+import type { UnitKind } from "../shared/types";
+
 // @@@sound - The game's sounds, heard on the client only: the simulation never hears them, so a game plays the same with
-// or without them. What a game sounds like is a sound pack's (see @@@sound-packs): for each event below, the one
-// recording it plays, how loud, how far its pitch may stray, and how many of it may sound at once. With no pack chosen,
-// or a pack without an event, it is silent. Each play strays a little in pitch and level, so the tenth blow is not the
-// first again. Events belong to a group with its own volume (effects, interface) under one mute; the choices are kept in
-// the browser. The battlefield goes through a compressor, a sound already playing is quieter for each copy of it, and
-// no more than a dozen play at once.
+// or without them. What a game sounds like is a sound pack's (see @@@sound-packs): for each event below, the recording
+// it plays (one, or one per unit kind of who caused it, so a blow sounds as its striker's weapon), how loud, how far its
+// pitch may stray, and how many of it may sound at once. With no pack chosen, or a pack without an event, it is silent.
+// Each play strays a little in pitch and level, so the tenth blow is not the first again. Events belong to a group with
+// its own volume (effects, interface) under one mute; the choices are kept in the browser. The battlefield goes through
+// a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "melee" | "arrowShot" | "arrowHit" | "death" | "built" | "buildingDown" | "click";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["melee", "arrowShot", "arrowHit", "death", "built", "buildingDown", "click"];
+export type SoundEvent = "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   melee: "effects",
   arrowShot: "effects",
   arrowHit: "effects",
   death: "effects",
+  construction: "effects",
   built: "effects",
   buildingDown: "effects",
   click: "ui",
 };
 
-// An event's sound in a pack: its file in the pack's folder, its volume (1 as recorded), how far a play may stray in
-// pitch (0.05 is 5% up or down), and how many plays of it may sound at once.
-export type PackSound = { file: string; volume: number; pitch: number; max: number };
-export type SoundPack = { id: string; name: string; sounds: Partial<Record<SoundEvent, PackSound & { url: string }>> };
+// One recording as a pack plays it: its file in the pack's folder and the address it is fetched from, its volume (1 as
+// recorded), and how far a play may stray in pitch (0.05 is 5% up or down).
+export type PackClip = { file: string; url: string; volume: number; pitch: number };
+// An event's sound in a pack: the clip it plays, one per unit kind named in kinds (the event's own clip, if any, for
+// the kinds not named), and how many plays of it may sound at once.
+export type PackSound = { clip?: PackClip; kinds: Partial<Record<UnitKind, PackClip>>; max: number };
+export type SoundPack = { id: string; name: string; sounds: Partial<Record<SoundEvent, PackSound>> };
 export type SoundSettings = { effects: number; ui: number; muted: boolean; pack?: string };
 // Where a battlefield sound falls: -1 left to 1 right, and how loud for its distance from the middle of the view.
 export type SoundPlace = { pan: number; gain: number };
@@ -37,19 +44,35 @@ const MAX_VOICES = 12;
 export function readSoundPack(id: string, manifest: unknown, urls: Readonly<Record<string, string>>): SoundPack {
   const fail = (problem: string) => new Error(`Sound pack ${id}: ${problem}`);
   if (!isRecord(manifest) || typeof manifest.name !== "string" || !isRecord(manifest.sounds)) throw fail("pack.json needs a name and sounds");
+  // A clip's file, volume and pitch play, the volume and pitch falling back to its event's.
+  const readClip = (label: string, entry: Record<string, unknown>, base: { volume: unknown; pitch: unknown }): PackClip => {
+    if (typeof entry.file !== "string") throw fail(`${label} needs a file`);
+    const url = urls[entry.file];
+    if (!url) throw fail(`${label} plays ${entry.file}, which is not in the pack`);
+    const volume = entry.volume ?? base.volume;
+    const pitch = entry.pitch ?? base.pitch;
+    if (typeof volume !== "number" || !(volume > 0 && volume <= 4)) throw fail(`${label} volume must be above 0 and at most 4`);
+    if (typeof pitch !== "number" || !(pitch >= 0 && pitch <= 0.5)) throw fail(`${label} pitch must be from 0 to 0.5`);
+    return { file: entry.file, url, volume, pitch };
+  };
   const sounds: SoundPack["sounds"] = {};
   for (const [event, entry] of Object.entries(manifest.sounds)) {
     if (!SOUND_EVENTS.includes(event as SoundEvent)) throw fail(`no event ${event} (events: ${SOUND_EVENTS.join(", ")})`);
-    if (!isRecord(entry) || typeof entry.file !== "string") throw fail(`${event} needs a file`);
-    const url = urls[entry.file];
-    if (!url) throw fail(`${event} plays ${entry.file}, which is not in the pack`);
-    const volume = entry.volume ?? 1;
-    const pitch = entry.pitch ?? 0;
+    if (!isRecord(entry)) throw fail(`${event} needs a file or kinds`);
+    const base = { volume: entry.volume ?? 1, pitch: entry.pitch ?? 0 };
     const max = entry.max ?? 4;
-    if (typeof volume !== "number" || !(volume > 0 && volume <= 4)) throw fail(`${event} volume must be above 0 and at most 4`);
-    if (typeof pitch !== "number" || !(pitch >= 0 && pitch <= 0.5)) throw fail(`${event} pitch must be from 0 to 0.5`);
     if (typeof max !== "number" || !Number.isInteger(max) || max < 1) throw fail(`${event} max must be a whole number of at least 1`);
-    sounds[event as SoundEvent] = { file: entry.file, volume, pitch, max, url };
+    const kinds: PackSound["kinds"] = {};
+    if (entry.kinds !== undefined) {
+      if (!isRecord(entry.kinds)) throw fail(`${event} kinds must map unit kinds to files`);
+      for (const [kind, kindEntry] of Object.entries(entry.kinds)) {
+        if (!(kind in UNIT_DEFS)) throw fail(`${event} names no unit kind ${kind}`);
+        if (!isRecord(kindEntry)) throw fail(`${event}.${kind} needs a file`);
+        kinds[kind as UnitKind] = readClip(`${event}.${kind}`, kindEntry, base);
+      }
+    }
+    if (entry.file === undefined && Object.keys(kinds).length === 0) throw fail(`${event} needs a file or kinds`);
+    sounds[event as SoundEvent] = { ...(entry.file === undefined ? {} : { clip: readClip(event, entry, base) }), kinds, max };
   }
   return { id, name: manifest.name, sounds };
 }
@@ -112,25 +135,27 @@ export class Soundboard {
     this.loadPack();
   }
 
-  play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }) {
+  /** `kind` is the unit kind of who caused the event, for a pack that sounds it per kind. */
+  play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }, kind?: UnitKind) {
     const ctx = this.ctx;
     const sound = this.pack?.sounds[event];
+    const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
     const groupName = EVENT_GROUPS[event];
     const group = this.groups.get(groupName);
-    if (!ctx || !sound || !group || ctx.state !== "running" || this.settings.muted || this.settings[groupName] <= 0 || place.gain <= 0.02) return;
+    if (!ctx || !sound || !clip || !group || ctx.state !== "running" || this.settings.muted || this.settings[groupName] <= 0 || place.gain <= 0.02) return;
     const playing = this.playing.get(event) ?? 0;
     if (this.voices >= MAX_VOICES || playing >= sound.max) return;
-    const buffer = this.buffers.get(sound.url);
+    const buffer = this.buffers.get(clip.url);
     if (!buffer) return;
     const out = ctx.createGain();
     // Each copy of a sound already playing is quieter, and every play a little louder or softer (±0.6 dB).
-    out.gain.value = ((sound.volume * place.gain) / Math.sqrt(1 + playing)) * 10 ** ((Math.random() - 0.5) * 0.06);
+    out.gain.value = ((clip.volume * place.gain) / Math.sqrt(1 + playing)) * 10 ** ((Math.random() - 0.5) * 0.06);
     const panner = ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, place.pan));
     out.connect(panner).connect(group);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = 1 + (Math.random() * 2 - 1) * sound.pitch;
+    source.playbackRate.value = 1 + (Math.random() * 2 - 1) * clip.pitch;
     source.connect(out);
     source.start();
     this.voices += 1;
@@ -153,12 +178,13 @@ export class Soundboard {
   private loadPack() {
     const ctx = this.ctx;
     if (!ctx) return;
-    for (const sound of Object.values(this.pack?.sounds ?? {})) {
-      if (this.buffers.has(sound.url)) continue;
-      void fetch(sound.url)
+    const clips = Object.values(this.pack?.sounds ?? {}).flatMap((sound) => [...(sound.clip ? [sound.clip] : []), ...Object.values(sound.kinds)]);
+    for (const { url } of clips) {
+      if (this.buffers.has(url)) continue;
+      void fetch(url)
         .then((response) => response.arrayBuffer())
         .then((data) => ctx.decodeAudioData(data))
-        .then((buffer) => this.buffers.set(sound.url, buffer))
+        .then((buffer) => this.buffers.set(url, buffer))
         .catch(() => {
           // A sound that did not load is not heard; the game goes on.
         });

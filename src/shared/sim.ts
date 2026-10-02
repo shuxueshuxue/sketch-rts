@@ -114,7 +114,8 @@ const REPAIR_FULL_COST_FRACTION = 0.35;
 const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.attackCooldown;
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 const AUTO_ACQUIRE_RANGE = 230;
-const RANGED_ATTACK_RANGE_THRESHOLD = 90;
+// A weapon reaching farther than this throws a missile; within it, it strikes in melee.
+export const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 // A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take
 // and one at point blank lands at once; with a fixed flight time a shot from close in crept to its target.
 const PROJECTILE_SPEED = 18;
@@ -1884,11 +1885,12 @@ function updateProjectiles(game: Game) {
 function applyProjectileImpact(game: Game, projectile: Projectile) {
   const target = findStrikeTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
-  const attacker = findTarget(game, projectile.attackerId) ?? projectileAttacker(projectile);
+  const shooter = findTarget(game, projectile.attackerId);
+  const attacker = shooter ?? projectileAttacker(projectile);
   const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage));
   if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target);
-  addHitEffect(game, target, taken);
+  addHitEffect(game, target, taken, shooter);
 }
 
 function projectileAttacker(projectile: Projectile): Building {
@@ -1984,13 +1986,14 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
-  addHitEffect(game, target, taken);
+  addHitEffect(game, target, taken, attacker);
 }
 
 // The flinch of whatever was struck, carrying who it was and what it took, so the client shakes it by the share of its
-// full health the blow took.
-function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number) {
-  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken });
+// full health the blow took, and the kind of who struck it (a weapon's blow; a spell's or a gone shooter's has none) so
+// the client can sound the blow.
+function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building) {
+  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(striker ? { sourceKind: striker.kind } : {}) });
 }
 
 function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
