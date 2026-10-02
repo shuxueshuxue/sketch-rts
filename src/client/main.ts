@@ -947,7 +947,7 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
 async function startCurrentRoom() {
   if (!currentRoom) return;
   clearRoomWatch();
-  if (hasSeenPointerLockGuide()) {
+  if (hasSeenPointerLockGuide() && hasMouse()) {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
   }
@@ -1251,8 +1251,13 @@ function markPointerLockGuideSeen() {
   localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY, "seen");
 }
 
+// Pointer lock is a mouse's: on a touch screen with no mouse there is none to lock, so no gate and no request.
+function hasMouse() {
+  return window.matchMedia("(any-pointer: fine)").matches;
+}
+
 function syncPointerLockGate() {
-  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable })) {
+  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable || !hasMouse() })) {
     hidePointerLockGate();
     return;
   }
