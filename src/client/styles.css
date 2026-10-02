@@ -958,6 +958,7 @@ input[type="range"] {
 
 .slot-ready {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
   white-space: nowrap;
@@ -1563,13 +1564,112 @@ input[type="range"] {
   min-height: 40px;
 }
 
-@media (max-width: 960px) {
+/* A narrow window stacks the create screen and the lobby only when it is also tall; a short one (a phone on its side)
+   keeps them side by side (see the short window below). */
+@media (max-width: 960px) and (min-height: 601px) {
   .map-chooser,
   .map-detail,
   .room-setup-layout {
     grid-template-columns: 1fr;
   }
+}
 
+/* A short window (a phone on its side): the create screen and the lobby keep one screen by spending less on their
+   frame and title, putting the room's name beside the buttons, leaving out the lobby's map facts (chosen on the create
+   screen), and giving the map's picture what the height leaves (see @@@one-screen-menus). */
+@media (max-height: 600px) {
+  .main-menu[data-menu-view="create"],
+  .main-menu[data-menu-view="setup"] {
+    padding: 8px;
+  }
+
+  .main-menu[data-menu-view="create"] {
+    --preview: clamp(96px, calc(100dvh - 175px), 560px);
+  }
+
+  .main-menu[data-menu-view="setup"] {
+    --preview: clamp(96px, calc(100dvh - 220px), 400px);
+  }
+
+  .main-menu[data-menu-view="create"] .menu-window,
+  .main-menu[data-menu-view="setup"] .menu-window {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    gap: 6px;
+    padding: 8px 14px 10px;
+  }
+
+  .main-menu[data-menu-view="create"] .menu-title,
+  .main-menu[data-menu-view="setup"] .menu-title {
+    padding-bottom: 2px;
+    font-size: 20px;
+  }
+
+  .create-game-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 8px 14px;
+  }
+
+  .create-game-form .map-chooser {
+    grid-column: 1 / -1;
+  }
+
+  .create-game-form .create-options {
+    grid-template-columns: minmax(140px, 300px) auto;
+    gap: 12px;
+  }
+
+  .create-game-form .menu-actions {
+    align-self: end;
+  }
+
+  .map-chooser {
+    grid-template-columns: minmax(170px, 240px) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .map-browser {
+    padding: 8px;
+  }
+
+  .map-detail {
+    gap: 12px;
+  }
+
+  .map-info {
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .room-setup {
+    gap: 8px;
+  }
+
+  .room-setup-layout {
+    gap: 12px;
+  }
+
+  .room-map-pane .map-facts {
+    display: none;
+  }
+
+  .slot-row select,
+  .slot-controller-badge {
+    flex-basis: 80px;
+  }
+
+  .slot-row [data-slot-ai] {
+    flex-basis: 56px;
+  }
+
+  /* The narrower controls fit a seat in the pane, so it need not scroll sideways (the narrow window's 520). */
+  .slot-list .slot-row {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 960px) {
   .create-options {
     grid-template-columns: 1fr 1fr;
   }
