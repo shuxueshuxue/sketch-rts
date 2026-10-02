@@ -114,9 +114,10 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
   const warships = fleet.filter((unit) => unit.kind === "warship").length;
   // A transport on other water serves nothing here (one from an island's ferry sat on its own lake through an assault).
   const transported = fleet.some((unit) => unit.kind === "transport" && sameGround(snapshot.map, unit, water, "sea"));
+  const held = outgunned(snapshot, owner, options, water);
   const ship: TrainableUnitKind | undefined = assault
-    ? !transported ? "transport" : warships < WARSHIPS ? "warship" : undefined
-    : warships < WARSHIPS ? "warship" : plan && !transported && !islandHallOf(snapshot, owner, plan) ? "transport" : undefined;
+    ? !transported ? "transport" : warships < WARSHIPS && !held ? "warship" : undefined
+    : held ? undefined : warships < WARSHIPS ? "warship" : plan && !transported && !islandHallOf(snapshot, owner, plan) ? "transport" : undefined;
   if (ship && yard.complete && yard.queue.length === 0 && canSupply(snapshot, owner, ship)) {
     return { id: `naval:${ship}`, cost: UNIT_DEFS[ship].cost, issue: () => ({ type: "train", buildingId: yard.id, unitKind: ship }) };
   }
@@ -134,6 +135,21 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
       return { type: "build", unitId: builder.id, buildingKind: "townHall", x: site.x, y: site.y };
     },
   };
+}
+
+// @@@outgunned - Whether the enemy's armed ships on the water outweigh, by the general's attack margin (see attackMargin,
+// strengthOf), what the owner would have on it: its warships there and fresh ones up to its escort (WARSHIPS). For such
+// water no ship is bought but an assault's transport: an AI that lost its escorts bought them again one at a time and
+// fed them to the ships that sank the first (the water pool maps' 30 island games at c29edfa: V8 bought 153 warships and
+// lost 120; with V9 on the water too, V9 bought 197 and lost 130, 62 of them to warships).
+function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, water: Point) {
+  const afloat = (unit: Unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && sameGround(snapshot.map, unit, water, "sea");
+  const theirs = snapshot.units.filter((unit) => afloat(unit) && isEnemyOwner(snapshot, owner, unit.owner, options));
+  if (theirs.length === 0) return false;
+  const ours = units(snapshot, owner).filter((unit) => unit.kind === "warship" && afloat(unit));
+  // A fresh warship's strength (see unitStrength): its price in hundreds.
+  const fresh = Math.max(0, WARSHIPS - ours.length) * (UNIT_DEFS.warship.cost / 100);
+  return strengthOf(theirs) * attackMargin(options) > strengthOf(ours) + fresh;
 }
 
 // The shared library's economy script: the water's next want, when the gold is there.

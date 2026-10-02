@@ -126,6 +126,17 @@ describe("the AI on the water", () => {
     expect(Math.hypot(command.x - ship.x, command.y - ship.y)).toBeGreaterThan(390 + 44 + 100);
   });
 
+  it("buys no ship for water the enemy's warships hold, but meets one warship with its escort", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = islandGame();
+    game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
+    const enemyShip = (id: string, col: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, owner: "enemy" as const, kind: "warship" as const, ...at(col, 17), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 });
+    game.units.push(enemyShip("e1", 14));
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
+    game.units.push(enemyShip("e2", 16));
+    expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
+  });
+
   it("keeps its idle warships off the shallows its workers cross to the island", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = islandGame();
