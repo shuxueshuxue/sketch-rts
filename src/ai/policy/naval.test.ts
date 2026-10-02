@@ -163,11 +163,19 @@ describe("the AI on the water", () => {
     expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attack", unitIds: ["ship"], targetId: "we" });
   });
 
-  it("raises no shipyard on water an enemy's warship sails, where the ship would sink the site", () => {
+  it("raises no shipyard within an enemy's warship's reach, where the ship would sink the site, but beyond it on that water", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = lakeGame();
-    game.units.push({ ...game.units.find((unit) => unit.id === "we")!, id: "gun", kind: "warship", ...at(18, 16), order: { type: "idle" }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390 });
+    const gun = (col: number, row: number) => ({ ...game.units.find((unit) => unit.id === "we")!, id: "gun", kind: "warship" as const, ...at(col, row), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390 });
+    // A warship off the middle of its west shore reaches every shore of it.
+    game.units.push(gun(11, 9));
     expect(navalWant(snapshotGame(game), "player", options)?.issue(new Set())).toBeUndefined();
+    // One at the lake's far corner leaves its north-west shore.
+    game.units = game.units.filter((unit) => unit.id !== "gun");
+    game.units.push(gun(19, 17));
+    const command = navalWant(snapshotGame(game), "player", options)?.issue(new Set());
+    if (command?.type !== "build") throw new Error("no shipyard");
+    expect(Math.hypot(command.x - at(19, 17).x, command.y - at(19, 17).y)).toBeGreaterThan(390 + 44 + 100);
   });
 
   it("leaves a door its towers cover, and a pond, alone", () => {
