@@ -1,29 +1,24 @@
 # Sketch RTS
 
-**手绘风格的浏览器即时战略游戏，也是一套可以编程控制的 AI 对战环境。**
+**一款致敬魔兽争霸 3 的浏览器即时战略游戏：手绘风格的世界，可以编程的对手。**
 
-[English](../README.md) · [快速开始](#快速开始) · [游戏画面](#游戏画面) · [SDK 与 AI](#sdk-与-ai) · [美术设计](woodland-atlas.md)
+[English](../README.md) · [在线游玩](https://lexicalmathical.com/sketch-rts/) · [快速开始](#快速开始) · [怎么玩](#怎么玩) · [AI](#ai) · [开发](#开发)
 
-![Sketch RTS「林野战记」主菜单](art/woodland-home.png)
+![Sketch RTS 主页：菜单背后是一段实时运行的场景](art/menu.webp)
 
-建造基地，派农民采金，带领军队探索地图。从近战、远程到施法单位，配合物品与升级，争夺野怪营地和雇佣兵资源。
+建造基地，派农民采金，把一支小部队养成大军。两个种族，各有自己的建筑和科技；有法师、骑兵冲锋和重甲精英；野怪营地守着最好的金矿，有雇佣兵可雇，有商店；被水隔开的地图上还有战船和运输船。对局用的十二张地图，由带种子的地图生成器仿照经典天梯图画出来。
 
-你可以直接在浏览器里玩，也可以写一个 AI 来玩。SDK、回放与 AI 基准测试使用同一套按命令帧推进的游戏模拟。
+你可以在浏览器里和电脑打，开房间和朋友联机，也可以自己写一个对手：SDK、回放工具、AI 基准测试和游戏本身跑的是同一套按命令帧推进的模拟。
 
-> **项目持续开发中。** 当前在完善浏览器游玩、联机和 AI 工具。新版美术「林野战记 / Woodland Atlas」采用暖纸色地图、墨绿界面与黄铜点缀，单位和建筑使用有明暗与投影的插画造型。
+> **持续开发中。** 规则、AI 和地图都在频繁变化；线上版本跟随仓库的 `main`，会有一些滞后。
 
-## 可以做什么
+## 游戏
 
-| 游玩 | 开发与实验 |
-| --- | --- |
-| 采金、建造基地、训练军队与研究升级 | 通过 TypeScript SDK 控制比赛 |
-| 探索地图，争夺野怪、物品与雇佣兵营地 | 组合 AI 策略，用普通玩家命令控制单位 |
-| 创建房间、与电脑对战、观看服务器上的比赛 | 读取状态、推进模拟、保存和回放比赛 |
-| 在浏览器本地游玩，或使用服务器联机 | 并行对比 AI 版本，在面板中查看结果 |
+![发展起来的基地：城镇大厅、生产建筑、农场、防御塔和月井；农民在采金；选中的部队、指令卡和小地图](art/match.webp)
 
-## 种族与兵种
+### 两个种族
 
-两个种族都能造城镇大厅、农场和防御塔，训练农民，也都能在中立营地雇佣雇佣兵、契约弓手和战地医师。其余都不一样。
+两个种族都能造城镇大厅（训练农民）、农场、防御塔和船坞，其余都不一样。
 
 | | 林野族 Grove Kin | 余烬盟约 Ember Pact |
 | --- | --- | --- |
@@ -31,16 +26,112 @@
 | 进阶（人口上限 42） | 掠袭者（马厩）；牧师、召唤师、女巫（圣所） | 余烬侍僧、灰烬巫师、薪火召唤者（烬火尖塔） |
 | 精英（人口上限 60） | 骑士（马厩）；魔像（工坊） | 灰烬酋长、余烬复生者（灰烬战殿） |
 | 治疗建筑 | 月井 | 余烬神龛 |
+| 船（船坞） | 运输船、战船 | 运输船、战船 |
 
-- **人口就是科技**：进阶兵种要人口上限达到 42，精英要 60。上限按已建成的主基地和农场算，不看已用人口。农场 120 金提供 6 人口，主基地 400 金提供 8 人口。未解锁的兵种在指令卡上显示为灰色，并标出所需上限。
-- **维护费**：已用人口达到 51 起采金收入按 70% 计，达到 81 起按 40%。
-- **重甲**：四种精英受到射手和法师攻击只承受 50% 伤害，防御塔 70%，近战照常。
-- **法术单独冷却**：和魔兽争霸 3 一样，法术一好就能放，不受普攻影响，施法也不占用普攻。治疗每 12 秒回复 55 点生命。
-- **女巫的诅咒**让目标伤害降低 60%，持续 18 秒；对召唤生物额外造成 100 点伤害，足以直接杀死一个灵体。
+- **人口就是科技**：进阶兵种要人口上限达到 42，精英要 60。上限按已建成的城镇大厅和农场算，不看已用人口：农场 120 金提供 6 人口，城镇大厅提供 8。未解锁的兵种留在指令卡上显示为灰色，并标出所需上限。
+- **维护费**：已用人口达到 51 起，采金收入按 70% 计；达到 81 起按 40%。
+- **重甲**：四种精英受到射手和法师的攻击只承受一半伤害，受防御塔 70%，近战照常。
+- **法术单独冷却**，和魔兽争霸 3 一样：法术一好就能放，不受普攻影响。治疗每 12 秒回复 55 点生命；女巫的诅咒让目标伤害降低 60%，持续 18 秒，对召唤生物造成 100 点伤害。每个法术都能设成自动施放（右键法术按钮）。目标在射程外时，施法者会先走过去，到了再放。
+- **骑兵冲锋**：掠袭者和骑士可以冲锋 180 到 300 外的敌人，造成双倍一击；更远的目标会先骑过去再冲。
+- **近战姿态**：近战单位有三种姿态（`Z`）：*追击*（贴住目标一直打，最通用）、*坚阵*（每一刀把敌人顶退）、*陷阵*（每一刀把敌人顶退，自己跟着冲上去）。
 - **余烬精英各有分工**：灰烬酋长对法师和召唤生物多造成 50% 伤害；余烬复生者生命值较低，但每秒恢复 7 点生命。
-- **单位会还手**：没有命令的单位挨打时会转身反击，300 范围内闲着的士兵也会过来帮忙，射手没法站在远处白打一支闲置的部队。单位自己发起的追击离原位超过 600 就放弃并走回来。移动命令和你亲手下的命令不会被打断。
+- **单位会还手**：没有命令的单位挨打时会转身反击，附近闲着的士兵也会过来帮忙；单位自己发起的追击，追远了会放弃并走回来。你亲手下的命令不会被打断。
+- **建筑占整格**，和魔兽争霸 3 一样。建造预览会吸附到格子上，画出建筑要占的格子：能放的格子是绿色，不能放的是红色。
 
-## 快速开始
+### 野怪、雇佣兵和物品
+
+![一支部队正在进攻中立野怪营地](art/camp.webp)
+
+中立野怪营地守着主基地以外的金矿：林间野人、鱼人、魔像、食人魔、蜘蛛和龙，营地由弱到强。最强的几种有自己的技能：魔像的践踏、食人魔法师的嗜血、蛛后的结网。清掉营地能拿到金币和经验；单位靠经验升级。
+
+雇佣兵营地可以雇佣雇佣兵、契约弓手和战地医师。商店卖速度之靴、回复戒指、治疗卷轴和象牙塔。较强的营地守着一件宝物：烈焰斗篷、闪电权杖、风暴法杖、守护卷轴、经验书或破城炸药。宝物由营地里的一只野怪带着，它也会用，直到它倒下。一个单位最多带六件物品，用数字键使用。
+
+### 地图
+
+![创建游戏页，选中鸥岛：两座主岛、岛上金矿和地图信息](art/maps.webp)
+
+地图池里有十二张地图，每张都由生成器按一个构思画出来，构思取自魔兽争霸 3 的一张天梯图：
+
+| 地图 | 人数 | 构思 |
+| --- | --- | --- |
+| 神泉殿 | 4 | 中央神殿周围一圈金矿（Lost Temple） |
+| 龟湖 | 4 | 湖心一座岛，最富的矿在岛上（Turtle Rock） |
+| 古木林 | 4 | 道路在密林之间弯来绕去（Twisted Meadows） |
+| 环海 | 4 | 地图边上一圈海，每个海湾里一座有矿的小岛 |
+| 孤市 | 2 | 两座大岛，全图唯一的商店在两岛之间（Echo Isles） |
+| 芦苇泽 | 2 | 谷底泡在浅水里，干燥的山脊横贯其间（Secret Valley） |
+| 雾丘 | 2 | 两条长带由一道横梁连成 H 形（Concealed Hill） |
+| 灰岩隘口 | 2 | 两家之间一条河，两座桥（Terenas Stand） |
+| 松影林 | 2 | 幽暗丛林里的窄路（Amazonia） |
+| 鸥岛 | 2 | 各自的主岛、中间一座兵家必争的小岛，还有只有船能到的矿（Northern Isles） |
+| 静水原 | 4 | 两队隔河对阵，有浅滩和桥，两岸各一个商店（Gnoll Wood） |
+| 双岸 | 4 | 两队分据海峡两岸，矿在浅滩之间的小岛上 |
+
+每张图都有的东西：主基地在只有一条坡道的高地上，分矿在坡下，由一个营地守着；森林、石堆和石门把道路收窄成隘口；只要有开阔水面，每家都有一片能造船坞的海滩。生成器还能按任意种子、任意人数画出新地图（`ladder` 地图）。
+
+### 海军和上岛
+
+![战船和运输船离开船坞，迎击一支敌方舰队](art/naval.webp)
+
+船坞造在海滩上。战船在水上远程作战；运输船能装八个士兵：右键把士兵点到自己的运输船上就能登船，到了对岸再卸下（`D`）。岛上的矿、海峡对岸和海图上敌人基地的背后，都要靠船去。
+
+### 单位和建筑
+
+<details>
+<summary><strong>全部单位和建筑，由游戏自己的代码绘制</strong></summary>
+
+![单位和建筑图鉴](art/catalog.webp)
+
+</details>
+
+美术用 Canvas 绘制，战场、头像和指令按钮共用同一套画法。运行 `npm run dev` 后打开 `/unit-sheet.html` 可以看到实时的图鉴。画法见[美术设计说明](woodland-atlas.md)。
+
+## 怎么玩
+
+**在线**：[lexicalmathical.com/sketch-rts](https://lexicalmathical.com/sketch-rts/)。**本地**：见[快速开始](#快速开始)。
+
+1. 「**开始游戏 → 选地图 → 创建房间**」。房间里有你的座位和一个电脑座位；为每个座位选种族，为电脑选版本（V5、V7 或 V8），然后「**开始比赛**」。
+2. 在电脑上，点一下战场把鼠标锁进去（`Esc` 释放）。
+3. 选中农民，右键金矿开始采金，按 `B` 打开建造菜单，造一座兵营，训练第一批士兵。
+
+| 操作 | 作用 |
+| --- | --- |
+| 左键单击 / 拖动 | 选择单位或建筑 / 框选多个单位 |
+| 右键 | 按目标移动、采集、攻击或登船 |
+| `Shift` + 命令 | 排在当前命令之后 |
+| `A` 后点击 | 攻击移动 |
+| `B`（选中农民） | 建造菜单 |
+| 按钮上的快捷键 | 建造、训练、研究、施法（按钮上标着） |
+| `Z` / `D` | 近战姿态菜单 / 运输船卸载 |
+| `Shift` + `1`–`9`，再按 `1`–`9` | 编队，再选中编队（连按两下镜头跳过去） |
+| `Tab` | 在混编选中里切换当前兵种 |
+| 方向键 / `WASD`、窗口边缘、小地图 | 移动镜头（命令快捷键优先于 `WASD`） |
+| `Esc` | 取消目标选择；释放鼠标 |
+| 右上角 ≡ | 对局菜单：地图名，以及部署方式支持时的认输 |
+
+界面跟随浏览器语言，显示英文或简体中文。手机上菜单和战场都能正常显示，但还没有用触屏指挥单位的操作。
+
+## AI
+
+电脑玩家是脚本 AI：读取局面，下和玩家一样的命令。房间里可以选其中三个：
+
+- **V5**：后续版本的基础打法：经济和扩张、清野、造塔，以射手为核心的部队操控。
+- **V7**：不被告知对手是谁，两个种族都能打，从局面上看出对手。
+- **V8**：和 V7 一样，但不用射手和召唤师，靠近战阵线、治疗和骑兵冲锋打正面。
+
+**V9** 是现在的主攻方向：**1 打 3**，同时对付 V5、V7 和 V8，在生成地图上进行，用 500 局的考场衡量，目前大约赢一半。更早的版本（V1–V4、V6）留作基准测试。
+
+```bash
+npm run benchmark:ai-v9-gauntlet -- --seed v5-hybrid-50-2026-06-12 --map-count 50
+npm run play:ai -- new --file .playtest/match.json --map bareDuel --you v2 --enemy v1
+npm run play:ai -- step-until --file .playtest/match.json --condition tick --tick 1200
+```
+
+联机服务器在 `benchmark.html` 提供基准测试面板。详见[开发指南](development.md#benchmark-system)和 [AI 规格](ai-spec.md)。
+
+## 开发
+
+### 快速开始
 
 需要 **Node.js 20.19+ 或 22.12+**，以及 npm。
 
@@ -51,101 +142,32 @@ npm ci
 npm run dev
 ```
 
-打开 **[localhost:5173](http://127.0.0.1:5173/)**。这会启动包含房间 API 和 SDK 接口的开发服务器。
+打开 **[127.0.0.1:5173](http://127.0.0.1:5173/)**。这是联机开发服务器，带房间、SDK 接口和基准测试面板。
 
-1. 进入「**房间 → 创建房间**」。
-2. 选择地图。初次体验可保留一个人类槽位和一个电脑槽位。
-3. 点击「开始比赛」，按提示锁定鼠标进入战场。
-4. 选中农民，右键金矿开始采金，再建造兵营、训练士兵。
-
-界面根据浏览器语言显示英文或简体中文。
-
-| 操作 | 作用 |
+| 命令 | 用途 |
 | --- | --- |
-| 左键单击 / 拖动 | 选择单位或建筑 / 框选多个单位 |
-| 右键 | 根据目标执行移动、采金或攻击 |
-| 选中农民后按 `B` | 打开建造菜单 |
-| 按钮上的快捷键 | 建造、训练、研究或施法 |
-| 方向键 / `WASD` | 移动镜头；当前可用的命令快捷键优先 |
-| `Esc` | 释放鼠标；取消当前目标选择模式 |
+| `npm run dev` | 联机开发服务器（房间、SDK、面板） |
+| `npm run dev:static` | 只在浏览器里跑游戏，和 AI 对战，不要后端 |
+| `npm run build` | 类型检查并构建前端 |
+| `npm run build:production` | 前端加服务器包（`dist-server/index.mjs`） |
+| `npm run build:static` | 构建静态站点到 `dist/` |
+| `npm test -- --run` | 跑一遍测试 |
+| `npm run test:sdk-smoke` | 启动测试服务器并跑 SDK 冒烟检查 |
+| `npm run benchmark:ai-v9-gauntlet` | V9 的 1 打 3 考场（见 [AI](#ai)） |
+| `npm run record -- --scene infantry-clash` | 不开浏览器，把一段场景录成 MP4/GIF |
 
-## 游戏画面
+### 运行方式
 
-实际对局：农民正在采金，兵营正在建造，主城队列中正在训练农民。
-
-![Sketch RTS 实际对局：基地、农民、金矿和指令栏](art/woodland-match.png)
-
-守在金矿旁的中立营地：石背蛮兽、荆刺射手、树皮医者和林间女巫。
-
-![战场上的中立野怪营地](art/woodland-camp.png)
-
-<details>
-<summary><strong>展开查看 30 种单位（按阵营与等级分组）与 13 种建筑图鉴</strong></summary>
-
-![「林野战记」单位和建筑图鉴](art/woodland-catalog.png)
-
-</details>
-
-这套插画由 Canvas 代码绘制，在战场、选中头像和指令按钮中共用。单位装备随价格分级：初级兵（≤120 金）穿布甲皮甲，进阶的法师与雇佣兵（130–160 金）有镶边长袍和法器，精英（≥190 金、3+ 人口）才有板甲、披风和羽饰。只有马厩训练的掠袭者和骑士骑马。[美术设计说明](woodland-atlas.md)还包含建筑放置预览与改造前的画面。
-
-## 选择运行方式
-
-| 模式 | 适合场景 | 比赛如何运行 |
+| 方式 | 适合 | 对局在哪里跑 |
 | --- | --- | --- |
-| 静态浏览器模式 | 本地与 AI 对战、静态网站托管 | 游戏直接运行在浏览器里，不需要游戏后端 |
-| 服务器模式 | 共享房间、联机、观战、SDK 和基准测试 | 服务器管理房间并协调命令帧 |
+| 静态浏览器 | 本地和 AI 对战；静态托管 | 浏览器里，没有游戏后端 |
+| 联机服务器 | 房间、联机、观战、SDK、基准测试 | 服务器管理房间并协调命令帧 |
 
-### 静态浏览器模式
+部署生产版本：先 `npm run build:production`，再 `NODE_ENV=production HOST=0.0.0.0 PORT=34573 node dist-server/index.mjs`。挂在子路径下时，构建和服务器都要设置 `SKETCH_RTS_BASE_PATH` 和 `VITE_SKETCH_RTS_BASE_PATH`（例如 `/sketch-rts/`）。Windows PowerShell 里用 `$env:NAME = 'value'` 先设变量。房间链接使用 `#room=room-id` 这样的哈希路由。详见[部署说明](development.md#deployment-modes)。
 
-安装依赖后，可以直接启动不依赖房间后端的本地游戏：
+### SDK
 
-```bash
-npm run dev:static
-```
-
-运行 `npm run build:static` 可生成静态站点，再用静态服务器托管 `dist/` 目录。
-
-<details>
-<summary>Windows PowerShell 命令</summary>
-
-静态模式的 npm 脚本使用 Bash 风格的环境变量写法。在 PowerShell 中请显式设置：
-
-```powershell
-$env:VITE_SKETCH_RTS_DEPLOYMENT = 'static'
-npx vite --host 127.0.0.1 --port 5173
-```
-
-需要构建静态生产版本时，保留该变量并执行 `npm run build`。切回服务器模式前，执行 `Remove-Item Env:VITE_SKETCH_RTS_DEPLOYMENT` 清除该变量。
-
-</details>
-
-### 服务器模式
-
-本地开发使用 `npm run dev`。如果要在网络中提供生产构建：
-
-```bash
-npm run build
-NODE_ENV=production HOST=0.0.0.0 PORT=34573 npm run server
-```
-
-<details>
-<summary>Windows PowerShell 命令</summary>
-
-```powershell
-npm run build
-$env:NODE_ENV = 'production'
-$env:HOST = '0.0.0.0'
-$env:PORT = '34573'
-npm run server
-```
-
-</details>
-
-房间链接使用 `#room=room-id` 这样的哈希路由，也支持部署到子路径。[开发指南](development.md#deployment-modes)列出了服务器接口与各运行模式的职责。
-
-## SDK 与 AI
-
-TypeScript SDK 支持创建房间、重置场景、读取状态、发出命令、推进时间，以及保存和回放比赛。先启动服务器，再从仓库中导入 SDK：
+TypeScript SDK 可以创建房间、重置场景、读取快照、下命令、推进 tick、保存或回放比赛。先启动联机服务器。
 
 ```ts
 import { SketchRtsSdk } from './src/sdk/client';
@@ -169,60 +191,78 @@ const worker = snapshot.units.find(u => u.owner === 'player' && u.kind === 'work
 const mine = snapshot.resources.find(r => r.id === 'gold-player-main');
 if (!worker || !mine) throw new Error('Missing starting worker or mine');
 
-await sdk.roomCommand(room.id, 'player', {
-  type: 'mine',
-  unitIds: [worker.id],
-  resourceId: mine.id,
-});
+await sdk.roomCommand(room.id, 'player', { type: 'mine', unitIds: [worker.id], resourceId: mine.id });
 ```
 
-AI 策略读取状态快照，输出普通 `GameCommand` 命令。浏览器操作、内置电脑、外部 SDK 智能体、回放和基准测试，都通过共用的命令帧运行时推进游戏。
+浏览器操作、内置 AI、SDK 智能体、回放和基准测试都走同一套命令帧运行时。更多见[开发指南](development.md)。
 
-也可以在终端创建一场可复现的 AI 对局：
+### 添加单位或建筑
+
+一个单位或建筑分两处：
+
+1. **规则**：[`src/shared/catalog.ts`](../src/shared/catalog.ts) 里 `UNIT_RULES` 或 `BUILDING_RULES` 的一行：数值、在哪里训练（`trainedAt`）、种族，以及写成数据的特殊规则（`armor`、`casterSlayer`、`regenPerSecond`）。兵种、训练列表和种族名单都从这些行推导。
+2. **卡片**：[`src/client/content/`](../src/client/content/) 里的一项：中英文名称和说明、指令图标和快捷键、画它的函数。标签、提示、指令卡和图鉴都读卡片。
+
+缺卡片时 TypeScript 会报错；`src/client/content/cards.test.ts` 检查中英文都齐、每个单位都在它的种族能造的建筑里训练、菜单里没有重复的快捷键。
+
+### 音效包
+
+在「**设置 → 音效包**」里选一个音效包之前，游戏是静音的。音效包是一个文件夹 `audio-packs/<id>/`，里面有一个 `pack.json` 和它用到的文件：
+
+```json
+{
+  "name": "My pack",
+  "sounds": {
+    "melee": { "pitch": 0.08, "max": 4, "kinds": { "footman": { "file": "sword.ogg" }, "golem": { "file": "rock.ogg", "volume": 1.2 } } },
+    "arrowShot": { "file": "bow.ogg" },
+    "click": { "file": "click.ogg" }
+  }
+}
+```
+
+事件有 `melee`、`arrowShot`、`arrowHit`、`death`、`construction`（放下建筑）、`built`、`buildingDown` 和 `click`，包里没写的事件就不出声。一个事件放一段录音，或者按引发它的单位种类各放一段（`kinds`）。`volume` 为 1 是原音量，`pitch` 是每次播放音高最多偏多少（0.08 即 8%），`max` 是同一事件最多同时响几个。
+
+游戏有两种找包的方式：
+
+- **构建进去**：`audio-packs/` 下的包在构建或启动开发服务器时找到。仓库里只有 `audio-packs/cc0`，其余文件夹 git 都忽略。`VITE_SOUND_PACK=<id>` 指定玩家自己选之前默认播放的包。
+- **由服务器提供**：客户端还会读页面旁边的 `audio-packs/served.json`，格式是 `{"packs": ["<id>"], "default": "<id>"}`，并从旁边的同名文件夹加载列出的包。仓库里的这个文件不列任何包；服务器在这个路径放上自己的文件夹，就能不重新构建而提供音效包，把某个包从列表里删掉就撤下了。
+
+### 录制片段
+
+`npm run record` 在 Node 里录一段场景，不开浏览器：用游戏的命令帧运行时跑对局，每一帧都用客户端自己的世界渲染器画。
 
 ```bash
-npm run play:ai -- new --file .playtest/match.json --map bareDuel --you v2 --enemy v1
-npm run play:ai -- step-until --file .playtest/match.json --condition tick --tick 1200
-npm run play:ai -- plan --file .playtest/match.json --owner v2
-npm run play:ai -- commands
+npm run record -- --list
+npm run record -- --scene infantry-clash --seconds 14 --size 1280x720 --out clip.mp4 --out clip.gif --gif-size 640x360
+npm run record -- --scene cavalry-flank --follow 'owner=north,kind=raider|knight' --zoom 1.2
 ```
 
-最后一条命令会输出机器可读的命令清单。完整 SDK 示例、AI 策略组合、回放与基准测试命令见[开发指南](development.md)。
+场景模块导出一个 `RecordingScene`（[`src/recorder/scene.ts`](../src/recorder/scene.ts)）；[`src/recorder/scenes/`](../src/recorder/scenes/) 里的内置场景就是示例。`npm run record -- --help` 列出全部选项。
 
-## 开发命令
+## 路线图
 
-| 命令 | 用途 |
-| --- | --- |
-| `npm run dev` | 启动服务器模式的开发环境 |
-| `npm run build` | TypeScript 检查与前端构建 |
-| `npm run build:production` | 构建前端和服务器包 |
-| `npm test -- --run` | 运行一次完整测试 |
-| `npx vitest --run src/client` | 运行前端测试 |
-| `npm run test:sdk-smoke` | 启动测试服务器并验证 SDK |
-| `npm run benchmark:ai` | 运行 AI 基准测试 |
-
-服务器还提供 `benchmark.html` 基准测试面板。实验设计与测试流程可参考[开发指南](development.md#benchmark-system)和 [AI 规范](ai-spec.md)。
-
-### 新增单位或建筑
-
-一个单位或建筑只写在两处：
-
-1. **规则**：[`src/shared/catalog.ts`](../src/shared/catalog.ts) 里 `UNIT_RULES` 或 `BUILDING_RULES` 的一行。这一行写属性、训练它的建筑（`trainedAt`）、所属种族，以及写成数据的特殊规则（`armor`、`casterSlayer`、`regenPerSecond`）。单位与建筑的种类、每座建筑的训练列表、每个种族的兵种表，都从这些行推导出来。
-2. **卡片**：[`src/client/content/`](../src/client/content/) 里的一项。卡片写中英文名称和说明、指令图标和快捷键、图形标识、美术档次，以及绘制它的函数。名称、提示框、指令面板和图鉴页都从卡片读取。
-
-漏写卡片时 TypeScript 会报错。`src/client/content/cards.test.ts` 会检查名称和说明是否中英文齐全、每个单位的训练建筑是否属于它的种族、同一建筑或同一建造菜单里有没有重复的快捷键。想看游戏自己的绘制代码画出的全部单位和建筑，运行 `npx vite` 后打开 `/unit-sheet.html`。
-
-## 后续方向
-
-- 更多种族，以及有差异的科技树与单位能力。
-- 更强的 AI，包括用大语言模型进行侦察分析与策略选择的实验。
-- 更好的断线重连、观战体验与联机性能。
-- 单位动画、更丰富的战斗反馈和更清楚的新手引导。
-- 地图、战役与 Mod 制作工具。
-- 更方便外部智能体使用的 SDK 和 CLI 分发方式。
+- 手机和平板的触屏操作。
+- 让 V9 以扎实的打法、在所有兵种和地图上，同时赢下三个对手。
+- 更多种族和技能；基于 `src/story/` 剧情工具的战役。
+- 更好的断线重连和观战工具。
+- 地图和模组编辑。
 
 ## 致谢
 
-Sketch RTS 会在 [linux.do](https://linux.do/) 与社区交流并收集反馈。
+Sketch RTS 在 [linux.do](https://linux.do/) 社区开发和讨论。
 
-游戏深受 **Warcraft III** 启发：农民与基地、野怪营地、种族差异，以及从小规模军队逐步发展为大战场的节奏。
+游戏的灵感来自**魔兽争霸 3**：农民和基地、中立营地、各有科技的种族，以及上面提到的那些地图构思。
+
+`cc0` 音效包由 [Freesound](https://freesound.org) 上的录音组成，全部以 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) 发布，为游戏剪辑并统一了音量：
+
+| 文件 | 录音 | 作者 |
+| --- | --- | --- |
+| `melee.ogg` | [Sword_Clash (7).wav](https://freesound.org/people/JohnBuhr/sounds/326868/) | JohnBuhr |
+| `arrowShot.ogg` | [Arrow Loose and Flyby](https://freesound.org/people/saturdaysoundguy/sounds/394180/) | saturdaysoundguy |
+| `arrowHit.ogg` | [Arrow Impact 2](https://freesound.org/people/Ali_6868/sounds/384913/) | Ali_6868 |
+| `death.ogg` | [Grunt1 - Death Pain.wav](https://freesound.org/people/tonsil5/sounds/416839/) | tonsil5 |
+| `built.ogg` | [Hammer on Wood](https://freesound.org/people/L.i.Z.e.L.l.E_+/sounds/707864/) | L.i.Z.e.L.l.E_+ |
+| `buildingDown.ogg` | [Big falling debris (crash)](https://freesound.org/people/xkeril/sounds/703247/) | xkeril |
+| `click.ogg` | [Basic Click Wooden](https://freesound.org/people/GameAudio/sounds/220200/) | GameAudio |
+
+本仓库不包含、也不分发任何魔兽争霸 3 的文件。lexicalmathical.com 上的线上版本播放一个取自魔兽争霸 3 游戏文件的音效包，由该站点独立于仓库另行提供；这些声音的版权归 Blizzard Entertainment 所有。
