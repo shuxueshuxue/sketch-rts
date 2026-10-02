@@ -70,6 +70,16 @@ describe("ships", () => {
     expect(unit(sim, "warship")!.hp).toBeLessThan(180);
   });
 
+  it("and the workers wading their shallows pass each other by, on layers of their own (see @@@ship-layer)", () => {
+    const sim = game([
+      { id: "worker", owner: "player", kind: "worker", ...at(9, 5) },
+      { id: "warship", owner: "player", kind: "warship", x: at(9, 5).x + 10, y: at(9, 5).y },
+    ]);
+    run(sim, 20);
+    expect(unit(sim, "worker")!).toMatchObject(at(9, 5));
+    expect(unit(sim, "warship")!).toMatchObject({ x: at(9, 5).x + 10, y: at(9, 5).y });
+  });
+
   it("are no rider's to charge out on deep water: the command is turned away, not thrown", () => {
     const sim = game([
       { id: "raider", owner: "player", kind: "raider", ...at(6, 5) },

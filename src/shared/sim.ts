@@ -2828,8 +2828,13 @@ function minerGhost(game: Game, unit: Unit) {
   return unit.kind === "worker" && unit.order.type === "mine" && game.map.terrain !== undefined;
 }
 
+// @@@ship-layer - A ship and a land unit do not shove each other: they move on different layers, as Warcraft III's boats
+// and ground units do, and a soldier or worker wading the shallows passes under a ship's hull there. A ship by a beach
+// and the workers wading its shallows jammed each other for minutes, every walk ending where it began (six of the pool's
+// games at ddec752 and 7fbb5d1, on the way to an island's hall site and out of a landing).
 function separateUnitPair(game: Game, a: Unit, b: Unit) {
   if (minerGhost(game, a) || minerGhost(game, b)) return;
+  if (unitMover(a.kind) !== unitMover(b.kind)) return;
   const minDistance = a.radius + b.radius;
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -2844,8 +2849,7 @@ function separateUnitPair(game: Game, a: Unit, b: Unit) {
   const ay = clamp(a.y - ny * push, 0, game.map.height);
   const bx = clamp(b.x + nx * push, 0, game.map.width);
   const by = clamp(b.y + ny * push, 0, game.map.height);
-  // Neither is pushed onto ground it cannot stand on (see @@@terrain): the one by a wall stays and the other gives way; a
-  // ship by the shore stays on the water and the soldier beside it on land (see @@@naval).
+  // Neither is pushed onto ground it cannot stand on (see @@@terrain): the one by a wall stays and the other gives way.
   if (!game.map.terrain || isWalkable(game.map, ax, ay, unitMover(a.kind))) {
     a.x = ax;
     a.y = ay;
