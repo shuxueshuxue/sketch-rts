@@ -5,6 +5,7 @@ import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, Train
 import { legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "../build-layout";
 import { resolveAiCommandIntent } from "../commands";
 import { activeMiningBaseCount } from "../expansion-model";
+import { sameGroundAs } from "../ground";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
@@ -415,9 +416,12 @@ function goal(id: string, priority: number, cost: number, save: boolean, issue: 
   return { id, priority, cost, save, issue };
 }
 
+// @@@build-on-walked-ground - A site is laid only where a worker of its owner walks: V8's home on an island, its well's step
+// toward the enemies and its farm's search both landed across a cliff from every worker, and neither site ever began
+// (pool-elderwood-4, from 1791 s).
 function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
   const builder = economy.workers
-    .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker))
+    .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker) && sameGroundAs(economy.snapshot, worker, point))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
   if (!builder) return undefined;
   used.add(builder.id);
