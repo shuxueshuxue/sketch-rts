@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from "../shared/catalog";
-import { footprintCells, isFootprintBuildable } from "../shared/terrain";
+import { footprintCells, isFootprintBuildable, isWalkable } from "../shared/terrain";
 import type { BuildingKind, GameSnapshot } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -33,19 +33,26 @@ export function drawFootprint(ctx: CanvasRenderingContext2D, square: FootprintSq
 }
 
 // @@@footprint-preview - Which cells of a building's footprint (see footprintSquare) stop it, as Warcraft III marks them
-// red: a cell off the map, under another building, rock pile or gate's footprint, or (for a building on dry ground) not
-// buildable ground. A shipyard's cells are judged as a whole (its footprint must touch water), so only the first two.
+// red: a cell off the map, under another building, rock pile or gate's footprint, or ground the building cannot take. A
+// building on dry ground takes only buildable ground; a shipyard (see @@@shore-footprint) takes ground a worker walks or
+// water, but no forest, rock or ramp. Whether a shipyard's footprint as a whole holds a dry cell and open water is no one
+// cell's fault, so it marks none.
 export function blockedFootprintCells(snapshot: Pick<GameSnapshot, "map" | "buildings" | "obstacles">, kind: BuildingKind, square: FootprintSquare) {
   const { cell } = square;
-  const terrain = snapshot.map.terrain;
+  const map = snapshot.map;
+  const terrain = map.terrain;
   const others = [...snapshot.buildings, ...(snapshot.obstacles ?? [])].map((body) => footprintCells(cell, body.x, body.y, body.radius));
   const blocked = new Set<string>();
   for (let row = square.top; row <= square.bottom; row += 1) {
     for (let col = square.left; col <= square.right; col += 1) {
       const off = !terrain || col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows;
       const taken = others.some((other) => col >= other.left && col <= other.right && row >= other.top && row <= other.bottom);
+      const x = (col + 0.5) * cell;
+      const y = (row + 0.5) * cell;
       // One cell's ground: a footprint of a single cell round that cell's center.
-      const ground = BUILDING_DEFS[kind].shore || isFootprintBuildable(snapshot.map, (col + 0.5) * cell, (row + 0.5) * cell, cell / 2);
+      const ground = BUILDING_DEFS[kind].shore
+        ? (isWalkable(map, x, y, "land") || isWalkable(map, x, y, "sea")) && terrain?.levels?.[row * terrain.cols + col] !== "2"
+        : isFootprintBuildable(map, x, y, cell / 2);
       if (off || taken || !ground) blocked.add(`${col},${row}`);
     }
   }

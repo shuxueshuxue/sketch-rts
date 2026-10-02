@@ -33,4 +33,28 @@ describe("footprint view", () => {
     const corner = blockedFootprintCells(game, "farm", footprintSquare(game, { x: 0, y: 0 }, radius)!);
     for (const off of ["-1,-1", "-1,0", "0,-1"]) expect(corner.has(off)).toBe(true);
   });
+
+  it("marks red a shipyard's cells on forest or rock, and not its water or ground", () => {
+    const terrain = game.map.terrain!;
+    const at = (col: number, row: number) => terrain.cells[row * terrain.cols + col];
+    // A deep-water cell with forest or rock among its eight neighbours, away from the map's edge and every building.
+    let centre: { col: number; row: number } | undefined;
+    for (let i = 0; i < terrain.cells.length && !centre; i += 1) {
+      const col = i % terrain.cols, row = Math.floor(i / terrain.cols);
+      if (terrain.cells[i] !== "~" || col < 2 || row < 2 || col > terrain.cols - 3 || row > terrain.rows - 3) continue;
+      const near = [-1, 0, 1].flatMap((dy) => [-1, 0, 1].map((dx) => at(col + dx, row + dy)));
+      if (near.some((char) => char === "T" || char === "#")) centre = { col, row };
+    }
+    expect(centre).toBeDefined();
+    const point = { x: (centre!.col + 0.5) * cell, y: (centre!.row + 0.5) * cell };
+    const square = footprintSquare(game, point, BUILDING_DEFS.shipyard.radius)!;
+    expect(cellsOf(square)).toEqual({ cols: 3, rows: 3 });
+    const blocked = blockedFootprintCells(game, "shipyard", square);
+    for (let row = square.top; row <= square.bottom; row += 1) {
+      for (let col = square.left; col <= square.right; col += 1) {
+        const char = at(col, row);
+        expect(blocked.has(`${col},${row}`), `${col},${row} is ${char}`).toBe(char === "T" || char === "#");
+      }
+    }
+  });
 });
