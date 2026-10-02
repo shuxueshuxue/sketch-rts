@@ -957,7 +957,6 @@ async function startCurrentRoom() {
   localPlayerId = started.playerId;
   activateStartedMatch(started.adapter, started.snapshot, started.chat);
   syncDebugView();
-  camera = { x: 0, y: 0 };
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -1128,6 +1127,10 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
   resetChatOverlay();
   snapshot = nextSnapshot;
+  // The match opens on the player's own base, wherever its seat put it; a spectator, with none, on the map's middle.
+  const entities = [...nextSnapshot.buildings, ...nextSnapshot.units];
+  const own = entities.filter((entity) => entity.owner === localPlayerId).map((entity) => entity.id);
+  centerCameraOnWorld(controlGroupCenter(own, entities) ?? { x: nextSnapshot.map.width / 2, y: nextSnapshot.map.height / 2 });
   pruneSelection();
   updateHud();
   syncMatchActions();
