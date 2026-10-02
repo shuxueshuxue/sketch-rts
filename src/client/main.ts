@@ -896,7 +896,8 @@ function renderRoomSetup() {
   const pool = poolMap(room.mapId);
   showMapDetail(setup, room.mapId, !pool || poolSeatsFit(pool, seats.map((seat) => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) })));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
-  slotList.replaceChildren(...room.slots.map(slotRow));
+  const local = deploymentRuntime.isLocalRoom(room.id);
+  slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(slot, index, local)));
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
@@ -1000,11 +1001,12 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   return button;
 }
 
-function slotRow(slot: RoomState["slots"][number], index: number) {
+function slotRow(slot: RoomState["slots"][number], index: number, local: boolean) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
-  // A seat is a computer's or open to a player; a pool map plays with every seat taken (see @@@map-pool).
+  // A seat is a computer's or open to a player; a pool map plays with every seat taken (see @@@map-pool). A room played
+  // in this browser (see @@@private-rooms-local) has nobody else to come in, so its computers' seats stay theirs.
   const controllerOptions = ["ai", "open"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
@@ -1018,8 +1020,8 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     ${
-      slot.controller === "human"
-        ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind("human"))}</span>`
+      slot.controller === "human" || local
+        ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind(slot.controller))}</span>`
         : `<select data-slot-controller aria-label="${escapeHtml(t("roomSetup.slotController"))}">${controllerOptions}</select>`
     }
     <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}">
@@ -1235,7 +1237,7 @@ async function forfeitCurrentMatch() {
 }
 
 function syncMatchActions() {
-  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch());
+  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch(currentRoomId));
   if (menuOpen) matchMenu.classList.add("hidden");
 }
 

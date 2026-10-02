@@ -114,8 +114,12 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return { room, playerId, adapter, chat: createLocalChat(room.id, playerId, this.options.now), snapshot: adapter.currentSnapshot() };
   }
 
-  canForfeitMatch(): boolean {
+  canForfeitMatch(_roomId: string): boolean {
     return true;
+  }
+
+  isLocalRoom(roomId: string): boolean {
+    return this.lifecycle.hasRoom(roomId);
   }
 
   async forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState> {
