@@ -1,5 +1,6 @@
+import { UNIT_DEFS } from "../shared/catalog";
 import { areEnemyOwners } from "../shared/sim/command-validation";
-import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, Unit } from "../shared/types";
+import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
 
@@ -25,33 +26,67 @@ export function hasAlly(snapshot: Pick<GameSnapshot, "teams" | "players">, viewe
 
 const near = (a: Point, b: Point, reach: number) => Math.hypot(a.x - b.x, a.y - b.y) < reach;
 
-// What the pointer is on: a unit within 34 of its middle, a building within its body (a town hall's is wider), rocks or
-// a gate anywhere on theirs (see @@@obstacle).
+// How far from its middle the pointer is on a unit or a building: a unit 34, a building its body (a town hall's is wider).
+const UNIT_REACH = 34;
+const buildingReach = (building: Building) => (building.kind === "townHall" ? 58 : 46);
+
 export function unitAt(units: readonly Unit[], world: Point, predicate: (unit: Unit) => boolean) {
-  return units.find((unit) => predicate(unit) && near(unit, world, 34));
+  return units.find((unit) => predicate(unit) && near(unit, world, UNIT_REACH));
 }
 
 export function buildingAt(buildings: readonly Building[], world: Point, predicate: (building: Building) => boolean) {
-  return buildings.find((building) => predicate(building) && near(building, world, building.kind === "townHall" ? 58 : 46));
+  return buildings.find((building) => predicate(building) && near(building, world, buildingReach(building)));
 }
 
-export function obstacleAt(obstacles: readonly Obstacle[] | undefined, world: Point) {
-  return obstacles?.find((obstacle) => near(obstacle, world, obstacle.radius + 8));
+export type PointerTarget =
+  | { kind: "item"; item: WorldItem }
+  | { kind: "resource"; resource: ResourceNode }
+  | { kind: "unit"; unit: Unit }
+  | { kind: "building"; building: Building }
+  | { kind: "obstacle"; obstacle: Obstacle };
+
+// @@@pointer-target - What the pointer is on, as in Warcraft III: of everything whose reach takes the pointer in (an item
+// or a unit 34 from its middle, a building its body, a mine 84, rocks or a gate their body and 8), the one whose middle is
+// nearest. A unit at a mine's foot is the unit while the pointer is on it, the mine while the pointer is on the mine.
+// Right-clicks and rally points (see @@@context-target), the hover ring and the attack cursor all go by it. A mine's
+// reach took a worker's right-click on any unit beside it as an order to mine.
+export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources" | "units" | "buildings" | "obstacles">, world: Point): PointerTarget | undefined {
+  let nearest: { target: PointerTarget; gap: number } | undefined;
+  const consider = (at: Point, reach: number, target: PointerTarget) => {
+    const gap = Math.hypot(at.x - world.x, at.y - world.y);
+    if (gap < reach && (!nearest || gap < nearest.gap)) nearest = { target, gap };
+  };
+  for (const item of snapshot.items) if (!item.carrierId) consider(item, 34, { kind: "item", item });
+  for (const resource of snapshot.resources) consider(resource, 84, { kind: "resource", resource });
+  for (const unit of snapshot.units) consider(unit, UNIT_REACH, { kind: "unit", unit });
+  for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });
+  for (const obstacle of snapshot.obstacles ?? []) consider(obstacle, obstacle.radius + 8, { kind: "obstacle", obstacle });
+  return nearest?.target;
 }
 
-// @@@context-target - What a right-click on someone else's unit or building orders, as in Warcraft III: an enemy's or the
-// creeps', or rocks or a gate, are attacked; an ally's unit is followed (see @@@follow); an ally's building is neither,
-// so the right-click is a move there. Anything not an own unit's or building's was attacked, an ally's too.
-export function rightClickOrder(
-  snapshot: Pick<GameSnapshot, "teams" | "units" | "buildings" | "obstacles">,
-  viewer: PlayerId,
-  unitIds: string[],
-  world: Point,
+// @@@context-target - What a right-click on what the pointer is on (see @@@pointer-target) orders the selected units, as
+// in Warcraft III: workers mine a mine and repair an own damaged building; soldiers board an own transport (see
+// @@@transport); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
+// (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
+export function targetCommand(
+  snapshot: Pick<GameSnapshot, "teams">,
+  owner: PlayerId,
+  selected: readonly Unit[],
+  target: Exclude<PointerTarget, { kind: "item" }>,
   queued = false,
-): { command: Extract<GameCommand, { type: "attack" | "follow" }>; target: Unit | Building | Obstacle } | undefined {
-  const hostile = (owner: Owner) => owner !== viewer && areEnemyOwners(snapshot, owner, viewer);
-  const enemy = unitAt(snapshot.units, world, (unit) => hostile(unit.owner)) ?? buildingAt(snapshot.buildings, world, (building) => hostile(building.owner)) ?? obstacleAt(snapshot.obstacles, world);
-  if (enemy) return { command: { type: "attack", unitIds, targetId: enemy.id, queued }, target: enemy };
-  const ally = unitAt(snapshot.units, world, (unit) => relationTo(snapshot, viewer, unit.owner) === "ally");
-  return ally ? { command: { type: "follow", unitIds, targetId: ally.id, queued }, target: ally } : undefined;
+): GameCommand | undefined {
+  const ids = (units: readonly Unit[]) => units.map((unit) => unit.id);
+  const workers = selected.filter((unit) => unit.kind === "worker");
+  if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(workers), resourceId: target.resource.id, queued } : undefined;
+  if (target.kind === "obstacle") return { type: "attack", unitIds: ids(selected), targetId: target.obstacle.id, queued };
+  const thing = target.kind === "unit" ? target.unit : target.building;
+  const relation = relationTo(snapshot, owner, thing.owner);
+  if (relation === "enemy" || relation === "creep") return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
+  if (target.kind === "building") {
+    const damaged = relation === "own" && target.building.hp < target.building.maxHp;
+    return damaged && workers.length > 0 ? { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued } : undefined;
+  }
+  if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
+  const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval);
+  return UNIT_DEFS[target.unit.kind].carries && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;
 }

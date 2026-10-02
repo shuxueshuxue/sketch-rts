@@ -42,7 +42,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { buildingAt, hasAlly, relationTo, rightClickOrder, unitAt } from "./relations";
+import { buildingAt, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, type PointerTarget } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -1664,63 +1664,49 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     return;
   }
 
-  const resource = hitResource(world);
-  const item = hitGroundItem(world);
-  const target = rightClickOrder(snapshot, localPlayerId, unitIds, world, queued);
-  const repairTarget = hitBuilding(world, (building) => building.owner === localPlayerId && building.hp < building.maxHp);
-  if (item) {
-    const command = pickupItemCommand(focusedPlayerUnits(), item);
+  // What the pointer is on decides (see @@@pointer-target): an item is picked up, anything else is ordered as
+  // @@@context-target says, and nothing (or nothing the selection can act on) is a move there.
+  const target = pointerTarget(snapshot, world);
+  if (target?.kind === "item") {
+    const command = pickupItemCommand(focusedPlayerUnits(), target.item);
     if (!command) {
       showInvalidCommand(t("status.pickupNeedsFocus"));
       return;
     }
     sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued });
-    statusLabel.textContent = t("status.itemPickup", { item: labelKind(item.kind) });
+    statusLabel.textContent = t("status.itemPickup", { item: labelKind(target.item.kind) });
     return;
   }
-  if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id, queued });
-    statusLabel.textContent = t("status.mineOrdered");
-    return;
-  }
-  if (repairTarget && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id, queued });
-    statusLabel.textContent = t("status.repairOrdered", { building: labelBuilding(repairTarget) });
-    return;
-  }
-  // Soldiers right-clicked onto an own transport board it (see @@@transport).
-  const transport = hitUnit(world, (unit) => unit.owner === localPlayerId && Boolean(UNIT_DEFS[unit.kind].carries));
-  const boarders = selectedUnits.filter((unit) => !UNIT_DEFS[unit.kind].naval);
-  if (transport && boarders.length > 0) {
-    sendCommand({ type: "board", unitIds: boarders.map((unit) => unit.id), transportId: transport.id, queued });
-    statusLabel.textContent = t("status.boardOrdered");
-    return;
-  }
-  if (target) {
-    sendCommand(target.command);
-    statusLabel.textContent =
-      target.command.type === "follow"
-        ? t("status.followOrdered", { target: labelAnyKind(target.target.kind) })
-        : "along" in target.target
-          ? t("status.breakObstacleOrdered")
-          : target.target.owner === "neutral"
-            ? t("status.attackWildlingsOrdered")
-            : t("status.attackOrdered");
+  const command = target ? targetCommand(snapshot, localPlayerId, selectedUnits, target, queued) : undefined;
+  if (target && command) {
+    sendCommand(command);
+    statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
   statusLabel.textContent = t("status.moveOrdered");
 }
 
+function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
+  if (command.type === "mine") return t("status.mineOrdered");
+  if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
+  if (command.type === "board") return t("status.boardOrdered");
+  if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
+  if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
+  const owner = target.kind === "unit" ? target.unit.owner : target.kind === "building" ? target.building.owner : undefined;
+  return owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
+}
+
 function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   if (!snapshot) return;
-  const friendlyUnit = hitUnit(world, (unit) => unit.owner === localPlayerId);
+  const target = pointerTarget(snapshot, world);
+  const friendlyUnit = target?.kind === "unit" && target.unit.owner === localPlayerId ? target.unit : undefined;
   if (friendlyUnit) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: friendlyUnit.x, y: friendlyUnit.y, target: { type: "unit", unitId: friendlyUnit.id } });
     statusLabel.textContent = t("status.rallyFollow", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint"), target: labelAnyKind(friendlyUnit.kind) });
     return;
   }
-  const resource = hitResource(world);
+  const resource = target?.kind === "resource" ? target.resource : undefined;
   if (resource) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: resource.x, y: resource.y, target: { type: "resource", resourceId: resource.id } });
     statusLabel.textContent = t("status.rallyGold", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
@@ -2803,8 +2789,8 @@ function matchViewer() {
 // The unit or building under the pointer on the battlefield, not over the interface or the minimap.
 function hoveredTarget() {
   if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
-  const world = screenToWorld(lastMouse);
-  return hitUnit(world, () => true) ?? hitBuilding(world, () => true);
+  const target = snapshot ? pointerTarget(snapshot, screenToWorld(lastMouse)) : undefined;
+  return target?.kind === "unit" ? target.unit : target?.kind === "building" ? target.building : undefined;
 }
 
 function minimapRelationsOn() {
@@ -2964,20 +2950,12 @@ function centerCameraOnWorld(world: Point) {
   clampCamera();
 }
 
-function hitResource(world: Point) {
-  return snapshot?.resources.find((resource) => distance(resource, world) < 84);
-}
-
 function hitShop(world: Point) {
   return snapshot?.shops?.find((shop) => distance(shop, world) < shop.radius + 16);
 }
 
 function hitMercenaryCamp(world: Point) {
   return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
-}
-
-function hitGroundItem(world: Point) {
-  return snapshot?.items.find((item) => !item.carrierId && distance(item, world) < 34);
 }
 
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
-import { hasAlly, relationTo, rightClickOrder } from "./relations";
+import { hasAlly, pointerTarget, relationTo, targetCommand } from "./relations";
+import type { GameSnapshot, Unit } from "../shared/types";
 
 // The player and "enemy" on one team, "enemy2" on the other.
 function alliedGame() {
@@ -11,26 +12,47 @@ function alliedGame() {
   return { game, own, ally, foe };
 }
 
+// What a right-click there orders the player's selection (see @@@pointer-target and @@@context-target); none is a move.
+function rightClick(snapshot: GameSnapshot, selected: Unit[], at: { x: number; y: number }, queued = false) {
+  const target = pointerTarget(snapshot, at);
+  return target && target.kind !== "item" ? targetCommand(snapshot, "player", selected, target, queued) : undefined;
+}
+
 describe("right-click orders", () => {
-  it("follows an ally's unit and attacks an enemy's, as in Warcraft III", () => {
+  it("follows an ally's unit and attacks an enemy's, as in Warcraft III; an own unit is a move", () => {
     const { game, own, ally, foe } = alliedGame();
     const snapshot = snapshotGame(game);
-    expect(rightClickOrder(snapshot, "player", [own.id], ally, true)?.command).toEqual({ type: "follow", unitIds: [own.id], targetId: ally.id, queued: true });
-    expect(rightClickOrder(snapshot, "player", [own.id], foe)?.command).toEqual({ type: "attack", unitIds: [own.id], targetId: foe.id, queued: false });
-    // An own unit is neither: the right-click is a move (or a board, a mine or a repair) there.
-    expect(rightClickOrder(snapshot, "player", [own.id], own)).toBeUndefined();
+    expect(rightClick(snapshot, [own], ally, true)).toEqual({ type: "follow", unitIds: [own.id], targetId: ally.id, queued: true });
+    expect(rightClick(snapshot, [own], foe)).toEqual({ type: "attack", unitIds: [own.id], targetId: foe.id, queued: false });
+    expect(rightClick(snapshot, [own], own)).toBeUndefined();
+  });
+
+  it("takes what the pointer is on, the nearest: an ally or an enemy at a mine's foot, the mine on the mine", () => {
+    const { game } = alliedGame();
+    const mine = game.resources[0]!;
+    const worker = game.spawnUnit("player", "worker", mine.x + 150, mine.y);
+    const soldier = game.spawnUnit("player", "footman", mine.x + 150, mine.y + 60);
+    // Both within the mine's reach (84 from its middle), the ally on one side and the enemy on the other.
+    const ally = game.spawnUnit("enemy", "footman", mine.x + 60, mine.y);
+    const foe = game.spawnUnit("enemy2", "footman", mine.x - 60, mine.y);
+    const snapshot = snapshotGame(game);
+    expect(rightClick(snapshot, [worker], ally)).toEqual({ type: "follow", unitIds: [worker.id], targetId: ally.id, queued: false });
+    expect(rightClick(snapshot, [worker], foe)).toEqual({ type: "attack", unitIds: [worker.id], targetId: foe.id, queued: false });
+    expect(rightClick(snapshot, [worker, soldier], mine)).toEqual({ type: "mine", unitIds: [worker.id], resourceId: mine.id, queued: false });
+    // A soldier has nothing to do at a mine: a move there.
+    expect(rightClick(snapshot, [soldier], mine)).toBeUndefined();
   });
 
   it("walks to an ally's building, and attacks an enemy's, the creeps and rocks", () => {
     const { game, own } = alliedGame();
     const snapshot = snapshotGame(game);
     const hall = (owner: string) => snapshot.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
-    expect(rightClickOrder(snapshot, "player", [own.id], hall("enemy"))).toBeUndefined();
-    expect(rightClickOrder(snapshot, "player", [own.id], hall("enemy2"))?.command).toMatchObject({ type: "attack", targetId: hall("enemy2").id });
+    expect(rightClick(snapshot, [own], hall("enemy"))).toBeUndefined();
+    expect(rightClick(snapshot, [own], hall("enemy2"))).toMatchObject({ type: "attack", targetId: hall("enemy2").id });
     const creep = snapshot.units.find((unit) => unit.owner === "neutral")!;
-    expect(rightClickOrder(snapshot, "player", [own.id], creep)?.command).toMatchObject({ type: "attack", targetId: creep.id });
+    expect(rightClick(snapshot, [own], creep)).toMatchObject({ type: "attack", targetId: creep.id });
     const rocks = { id: "rocks-1", kind: "rocks" as const, owner: "neutral" as const, x: 300, y: 300, radius: 40, hp: 500, maxHp: 500, along: { x: 1, y: 0 } };
-    expect(rightClickOrder({ ...snapshot, obstacles: [rocks] }, "player", [own.id], { x: 330, y: 300 })?.command).toMatchObject({ type: "attack", targetId: rocks.id });
+    expect(rightClick({ ...snapshot, obstacles: [rocks] }, [own], { x: 330, y: 300 })).toMatchObject({ type: "attack", targetId: rocks.id });
   });
 
   it("tells own, allied, enemy and creep owners apart", () => {
