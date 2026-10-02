@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
 import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { createRoomLifecycleHost } from "./room-lifecycle";
 import { parseSlotPatch } from "./room-schema";
 import type { LocalUserProfile } from "./types";
 
@@ -12,12 +13,13 @@ describe("room model", () => {
     let room = createRoom({ id: "room-1", host, slotCount: 4 });
     room = updateRoomSlot(room, "slot-2", { controller: "open", name: "Open", ready: false });
     room = updateRoomSlot(room, "slot-3", { controller: "closed" });
-    room = updateRoomSlot(room, "slot-4", { controller: "ai", team: "south" });
+    room = updateRoomSlot(room, "slot-4", { controller: "ai", team: "team-2" });
 
     expect(canStartRoom(room)).toBe(false);
 
     room = joinFirstOpenSlot(room, guest);
-    room = updateRoomSlot(room, "slot-2", { ready: true, team: "north", race: "ember" });
+    room = updateRoomSlot(room, "slot-1", { team: "team-1" });
+    room = updateRoomSlot(room, "slot-2", { ready: true, team: "team-1", race: "ember" });
 
     expect(canStartRoom(room)).toBe(true);
     const setup = roomToGameSetup(room);
@@ -26,15 +28,15 @@ describe("room model", () => {
     expect(setup.options.aiPlayers).toEqual(["player-4"]);
     // A computer seat starts on random: a computer player drawn for it (see the random seats below).
     expect(ROOM_AI_VERSIONS).toContain(setup.options.aiVersions?.["player-4"]);
-    expect(setup.options.teams).toMatchObject({ player: "north", enemy: "north", "player-4": "south" });
+    expect(setup.options.teams).toEqual({ player: "team-1", enemy: "team-1", "player-4": "team-2" });
   });
 
   it("starts each AI slot with the computer player chosen for it, V5 when none is", () => {
     let room = createRoom({ id: "room-ai-versions", host, slotCount: 4 });
-    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "south", race: "grove", aiVersion: "v8" });
-    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "south", race: "ember", aiVersion: "v7" });
+    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "team-2", race: "grove", aiVersion: "v8" });
+    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "team-2", race: "ember", aiVersion: "v7" });
     // A room from before random seats: a computer seat with no computer player set.
-    room = { ...room, slots: room.slots.map((slot) => (slot.id === "slot-4" ? { id: slot.id, playerId: slot.playerId, controller: "ai" as const, name: "AI", team: "south", race: "grove" as const, ready: true } : slot)) };
+    room = { ...room, slots: room.slots.map((slot) => (slot.id === "slot-4" ? { id: slot.id, playerId: slot.playerId, controller: "ai" as const, name: "AI", team: "team-2", race: "grove" as const, ready: true } : slot)) };
     expect(roomToGameSetup(room).options.aiVersions).toEqual({ enemy: "v8", enemy2: "v7", "player-4": "v5" });
   });
 
@@ -124,14 +126,39 @@ describe("room model", () => {
     expect(room.slots.map((slot) => slot.playerId)).toEqual(["player", "enemy", "enemy2", "player-4", "player-5", "player-6", "player-7"]);
   });
 
-  it("defaults all-human rooms to startable teams after every human slot is claimed", () => {
+  it("defaults all-human rooms to free for all, startable after every human slot is claimed", () => {
     let room = createRoom({ id: "room-all-human", host, humanCount: 2, aiCount: 0 });
 
     room = joinFirstOpenSlot(room, guest);
     room = updateRoomSlot(room, "slot-2", { ready: true });
 
-    expect(room.slots.map((slot) => slot.team)).toEqual(["north", "south"]);
+    expect(room.slots.map((slot) => slot.team)).toEqual(["ffa", "ffa"]);
     expect(canStartRoom(room)).toBe(true);
+  });
+
+  it("seats free for all by default, each seat its own team, and a map of two sides on teams 1 and 2 by turns", () => {
+    let room = createRoom({ id: "room-ffa", host, humanCount: 1, aiCount: 3 });
+    expect(room.slots.map((slot) => slot.team)).toEqual(["ffa", "ffa", "ffa", "ffa"]);
+    expect(roomToGameSetup(room).options.teams).toEqual({ player: "player", enemy: "enemy", enemy2: "enemy2", "player-4": "player-4" });
+    // Two on a team, two free for all: three sides.
+    room = updateRoomSlot(updateRoomSlot(room, "slot-1", { team: "team-1" }), "slot-2", { team: "team-1" });
+    expect(roomToGameSetup(room).options.teams).toEqual({ player: "team-1", enemy: "team-1", enemy2: "enemy2", "player-4": "player-4" });
+    // All on one team: nobody to play.
+    for (const slot of ["slot-3", "slot-4"]) room = updateRoomSlot(room, slot, { team: "team-1" });
+    expect(canStartRoom(room)).toBe(false);
+
+    const sides = createRoom({ id: "room-two-sides", host, mapId: "stillwater", humanCount: 1, aiCount: 3 });
+    expect(sides.slots.map((slot) => slot.team)).toEqual(["team-1", "team-2", "team-1", "team-2"]);
+    expect(canStartRoom(sides)).toBe(true);
+    expect(canStartRoom(sides.slots.reduce((edited, slot) => updateRoomSlot(edited, slot.id, { team: "ffa" }), sides))).toBe(false);
+  });
+
+  it("reads the north, south, east and west of rooms and saves from before as teams 1 to 4", () => {
+    const room = updateRoomSlot(createRoom({ id: "room-compass", host, humanCount: 1, aiCount: 3 }), "slot-2", { team: "south" });
+    expect(room.slots[1]!.team).toBe("team-2");
+    const saved = { ...room, status: "inMatch" as const, slots: room.slots.map((slot, index) => ({ ...slot, team: ["north", "south", "east", "west"][index]! })) };
+    const adopted = createRoomLifecycleHost().adoptRoom(saved);
+    expect(adopted.slots.map((slot) => slot.team)).toEqual(["team-1", "team-2", "team-3", "team-4"]);
   });
 
   it("keeps private rooms out of the public lobby while preserving owner visibility", () => {
@@ -216,9 +243,9 @@ describe("room model", () => {
     expect(canStartRoom(createRoom({ id: "room-crowd", host, mapId: "pineshade", humanCount: 1, aiCount: 2 }))).toBe(false);
     const sides = createRoom({ id: "room-sides", host, mapId: "twoShores", humanCount: 1, aiCount: 3 });
     expect(canStartRoom(sides)).toBe(true);
-    expect(canStartRoom(updateRoomSlot(sides, "slot-2", { team: "north" }))).toBe(false);
+    expect(canStartRoom(updateRoomSlot(sides, "slot-2", { team: "team-1" }))).toBe(false);
     const ring = createRoom({ id: "room-ring", host, mapId: "elderwood", humanCount: 1, aiCount: 3 });
-    expect(canStartRoom(updateRoomSlot(ring, "slot-2", { team: "east" }))).toBe(true);
+    expect(canStartRoom(updateRoomSlot(ring, "slot-2", { team: "team-3" }))).toBe(true);
     expect(canStartRoom(updateRoomSlot(ring, "slot-4", { controller: "closed" }))).toBe(false);
   });
 

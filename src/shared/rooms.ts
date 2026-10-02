@@ -16,6 +16,25 @@ export function roomAiVersionsFor(race: RaceId): RoomAiVersion[] {
   return ROOM_AI_VERSIONS.filter((version) => ROOM_AI_RACES[version].includes(race));
 }
 
+// @@@room-teams - A seat plays free for all, on a team of its own (the default), or on one of four teams with the seats
+// that pick it; the game knows only which players share a team. A map dealt out in two sides (see @@@map-pool) starts its
+// seats on teams 1 and 2 by turns, as it plays only as two equal teams. Rooms and saves from before held north, south,
+// east and west: those are teams 1 to 4.
+export const FREE_FOR_ALL = "ffa";
+export const ROOM_TEAMS = [FREE_FOR_ALL, "team-1", "team-2", "team-3", "team-4"] as const;
+const COMPASS_TEAMS: Partial<Record<string, string>> = { north: "team-1", south: "team-2", east: "team-3", west: "team-4" };
+
+export function roomTeam(team: string) {
+  return COMPASS_TEAMS[team] ?? team;
+}
+
+// The team a seat plays on: free for all is a team of the seat's own.
+export function seatTeam(slot: Pick<RoomSlot, "playerId" | "team">) {
+  return slot.team === FREE_FOR_ALL ? slot.playerId : slot.team;
+}
+
+const DEFAULT_ROOM_MAP_ID: MapId = "verdantCrossroads";
+
 export type CreateRoomInput = {
   id: string;
   host: LocalUserProfile;
@@ -48,7 +67,7 @@ export function createRoom(input: CreateRoomInput): RoomState {
       controller: isHost ? "human" : isHumanSeat ? "open" : "ai",
       ...(isHost ? { userId: input.host.id } : {}),
       name: isHost ? input.host.name : isHumanSeat ? "Open" : `AI ${index - humanCount + 1}`,
-      team: defaultTeam(index),
+      team: defaultTeam(index, input.mapId ?? DEFAULT_ROOM_MAP_ID),
       // A computer seat starts on a race and a computer player drawn when the match starts (see @@@random-seats).
       race: isHumanSeat ? (index % 2 === 0 ? "grove" : "ember") : "random",
       ...(isHumanSeat ? {} : { aiVersion: "random" as const }),
@@ -60,7 +79,7 @@ export function createRoom(input: CreateRoomInput): RoomState {
     name: input.name ?? `${input.host.name}'s Room`,
     hostUserId: input.host.id,
     visibility: input.visibility ?? "public",
-    mapId: input.mapId ?? "verdantCrossroads",
+    mapId: input.mapId ?? DEFAULT_ROOM_MAP_ID,
     status: "open",
     autoTick: true,
     slots,
@@ -92,7 +111,7 @@ export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: nu
     const base = {
       id: `slot-${index + 1}`,
       playerId: defaultPlayerId(index),
-      team: existing?.team ?? defaultTeam(index),
+      team: existing?.team ?? defaultTeam(index, room.mapId),
       race: existing?.race ?? (isHumanSeat ? (index % 2 === 0 ? "grove" : "ember") : "random"),
     } satisfies Pick<RoomSlot, "id" | "playerId" | "team" | "race">;
 
@@ -144,15 +163,15 @@ export function leaveUserSlot(room: RoomState, userId: string): RoomState {
 
 export function canStartRoom(room: RoomState) {
   const active = activeRoomSlots(room);
-  const teams = new Set(active.map((slot) => slot.team));
+  const teams = active.map(seatTeam);
   // A pool map plays only with all its seats taken (see @@@map-pool).
   const pool = poolMap(room.mapId);
   return (
     room.status === "open" &&
-    (!pool || poolSeatsFit(pool, active.map((slot) => slot.team))) &&
+    (!pool || poolSeatsFit(pool, teams)) &&
     room.slots.every((slot) => slot.controller !== "open") &&
     active.length >= 2 &&
-    teams.size >= 2 &&
+    new Set(teams).size >= 2 &&
     active.every((slot) => slot.controller === "ai" || (slot.controller === "human" && Boolean(slot.userId) && slot.ready))
   );
 }
@@ -169,7 +188,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
       players: playerSlots.map((slot) => slot.playerId),
       aiPlayers: playerSlots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId),
       aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion])),
-      teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
+      teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, seatTeam(slot)])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race])),
       ...(layoutSeed ? { layout: { seed: layoutSeed } } : {}),
     },
@@ -223,7 +242,7 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
       controller: "human",
       userId: index === 0 ? host.id : `agent-human-${index + 1}`,
       name: index === 0 ? host.name : `SDK Agent ${index + 1}`,
-      team: "north",
+      team: "team-1",
       race: index % 2 === 0 ? "grove" : "ember",
       ready: true,
     }),
@@ -234,7 +253,7 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
       playerId: `ai-${index + 1}`,
       controller: "ai",
       name: `Internal AI ${index + 1}`,
-      team: "south",
+      team: "team-2",
       race: index % 2 === 0 ? "ember" : "grove",
       ready: true,
     }),
@@ -251,7 +270,8 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
   };
 }
 
-function normalizeSlot(slot: EditableRoomSlot): RoomSlot {
+function normalizeSlot(edited: EditableRoomSlot): RoomSlot {
+  const slot = { ...edited, team: roomTeam(edited.team) };
   if (slot.controller === "ai") {
     // A race drawn at the start leaves the computer player to be drawn among those that play it.
     const aiVersion = slot.race === "random" ? "random" : slot.aiVersion;
@@ -275,6 +295,7 @@ function defaultPlayerId(index: number): PlayerId {
   return `player-${index + 1}`;
 }
 
-function defaultTeam(index: number): RoomSlot["team"] {
-  return index % 2 === 0 ? "north" : "south";
+function defaultTeam(index: number, mapId: MapId): RoomSlot["team"] {
+  if (poolMap(mapId)?.layout.kind !== "sides") return FREE_FOR_ALL;
+  return index % 2 === 0 ? "team-1" : "team-2";
 }

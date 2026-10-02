@@ -6,6 +6,7 @@ import {
   leaveUserSlot,
   lobbyVisibleRooms,
   resizeRoomSlots,
+  roomTeam,
   roomToGameSetup,
   updateRoomMap,
   updateRoomSlot,
@@ -86,8 +87,9 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
       return addRoom(createGrandThirtyRoomState(id, host, roomOptions));
     },
 
+    // A room from a save, its seats' teams as rooms hold them now (see @@@room-teams).
     adoptRoom(room: RoomState): RoomState {
-      return addRoom(room);
+      return addRoom({ ...room, slots: room.slots.map((slot) => ({ ...slot, team: roomTeam(slot.team) })) });
     },
 
     joinRoom(roomId: string, user: LocalUserProfile): RoomState {

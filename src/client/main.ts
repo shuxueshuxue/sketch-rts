@@ -64,7 +64,7 @@ import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
-import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, roomAiVersionsFor, type SlotPatch } from "../shared/rooms";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomTeam, seatTeam, type SlotPatch } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
@@ -737,7 +737,7 @@ function mapEntryLabel(mapId: MapId) {
 
 // Every seat that will play, open ones included (a player takes each before the start); closed seats stay empty.
 function roomPreviewSeats(room: RoomState): PreviewSeat[] {
-  return room.slots.filter((slot) => slot.controller !== "closed").map((slot) => ({ playerId: slot.playerId, team: slot.team }));
+  return room.slots.filter((slot) => slot.controller !== "closed").map((slot) => ({ playerId: slot.playerId, team: seatTeam(slot) }));
 }
 
 function renderProfileMenu() {
@@ -918,7 +918,7 @@ function renderResultsMenu() {
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
         <span>${escapeHtml(labelKind(slot.controller))}</span>
-        <span>${escapeHtml(labelKind(slot.team))}</span>
+        <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
         <span>${spent}</span>
@@ -1018,7 +1018,7 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
         : `<select data-slot-controller aria-label="${escapeHtml(t("roomSetup.slotController"))}">${controllerOptions}</select>`
     }
     <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}">
-      ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
+      ${ROOM_TEAMS.map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
     <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
     ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" ? "disabled" : ""}>${aiOptions}</select>` : ""}
