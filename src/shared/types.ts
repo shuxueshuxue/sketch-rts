@@ -480,17 +480,20 @@ export type SlotController = "human" | "ai" | "open" | "closed";
 
 // The computer players a room offers, per AI slot.
 export type RoomAiVersion = "v5" | "v7" | "v8";
+// A seat's race or computer player, or one drawn when the match starts (see resolvedRoomSlots).
+export type RaceChoice = RaceId | "random";
+export type RoomAiChoice = RoomAiVersion | "random";
 
 export type RoomSlot = {
   id: string;
   playerId: PlayerId;
   controller: SlotController;
   // An AI slot's computer player (unset: the room default).
-  aiVersion?: RoomAiVersion;
+  aiVersion?: RoomAiChoice;
   userId?: string;
   name: string;
   team: string;
-  race: RaceId;
+  race: RaceChoice;
   ready: boolean;
 };
 

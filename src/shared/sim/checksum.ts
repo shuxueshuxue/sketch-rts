@@ -11,7 +11,7 @@ export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
 }
 
-function fnv1a(input: string) {
+export function fnv1a(input: string) {
   // @@@canonical-checksum - The hash is intentionally simple; determinism comes from canonical state, not cryptographic strength.
   let hash = 0x811c9dc5;
   for (let index = 0; index < input.length; index += 1) {

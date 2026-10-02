@@ -162,12 +162,12 @@ export function parseSlotPatch(value: unknown): SlotPatch | undefined {
     patch.team = value.team;
   }
   if (value.race !== undefined) {
-    if (!isRaceId(value.race)) return undefined;
+    if (value.race !== "random" && !isRaceId(value.race)) return undefined;
     patch.race = value.race;
   }
   if (value.aiVersion !== undefined) {
-    if (!(ROOM_AI_VERSIONS as readonly unknown[]).includes(value.aiVersion)) return undefined;
-    patch.aiVersion = value.aiVersion as RoomAiVersion;
+    if (value.aiVersion !== "random" && !(ROOM_AI_VERSIONS as readonly unknown[]).includes(value.aiVersion)) return undefined;
+    patch.aiVersion = value.aiVersion as RoomAiVersion | "random";
   }
   if (value.ready !== undefined) {
     if (typeof value.ready !== "boolean") return undefined;

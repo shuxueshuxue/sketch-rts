@@ -66,7 +66,7 @@ describe("server room host", () => {
     host.updateSlot(room.id, "slot-2", { controller: "open" });
     host.updateSlot(room.id, "slot-3", { controller: "ai", team: "south" });
     host.joinRoom(room.id, guestUser);
-    host.updateSlot(room.id, "slot-2", { ready: true, team: "north" });
+    host.updateSlot(room.id, "slot-2", { ready: true, team: "north", race: "ember" });
 
     const started = host.startRoom(room.id);
     const snapshot = host.snapshot(room.id);

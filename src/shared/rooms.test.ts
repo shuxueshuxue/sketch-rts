@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { parseSlotPatch } from "./room-schema";
 import type { LocalUserProfile } from "./types";
 
 const host: LocalUserProfile = { id: "user-host", name: "Host" };
@@ -23,16 +24,63 @@ describe("room model", () => {
     expect(setup.playerSlots.map((slot) => slot.controller)).toEqual(["human", "human", "ai"]);
     expect(setup.options.players).toEqual(["player", "enemy", "player-4"]);
     expect(setup.options.aiPlayers).toEqual(["player-4"]);
-    expect(setup.options.aiVersions).toEqual({ "player-4": "v5" });
+    // A computer seat starts on random: a computer player drawn for it (see the random seats below).
+    expect(ROOM_AI_VERSIONS).toContain(setup.options.aiVersions?.["player-4"]);
     expect(setup.options.teams).toMatchObject({ player: "north", enemy: "north", "player-4": "south" });
   });
 
   it("starts each AI slot with the computer player chosen for it, V5 when none is", () => {
     let room = createRoom({ id: "room-ai-versions", host, slotCount: 4 });
-    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "south", aiVersion: "v8" });
-    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "south", aiVersion: "v7" });
-    room = updateRoomSlot(room, "slot-4", { controller: "ai", team: "south" });
+    room = updateRoomSlot(room, "slot-2", { controller: "ai", team: "south", race: "grove", aiVersion: "v8" });
+    room = updateRoomSlot(room, "slot-3", { controller: "ai", team: "south", race: "ember", aiVersion: "v7" });
+    // A room from before random seats: a computer seat with no computer player set.
+    room = { ...room, slots: room.slots.map((slot) => (slot.id === "slot-4" ? { id: slot.id, playerId: slot.playerId, controller: "ai" as const, name: "AI", team: "south", race: "grove" as const, ready: true } : slot)) };
     expect(roomToGameSetup(room).options.aiVersions).toEqual({ enemy: "v8", enemy2: "v7", "player-4": "v5" });
+  });
+
+  it("draws a random seat's race, then a computer player that plays it, the same at every start and in the result", () => {
+    let room = createRoom({ id: "room-random-seats", host, slotCount: 4 });
+    expect(room.slots.slice(1).map((slot) => [slot.race, slot.aiVersion])).toEqual([
+      ["random", "random"],
+      ["random", "random"],
+      ["random", "random"],
+    ]);
+    room = updateRoomSlot(room, "slot-1", { race: "random" });
+    const setup = roomToGameSetup(room);
+    for (const slot of setup.playerSlots) {
+      expect(["grove", "ember"]).toContain(setup.options.races?.[slot.playerId]);
+      if (slot.controller === "ai") expect(roomAiVersionsFor(slot.race)).toContain(setup.options.aiVersions?.[slot.playerId]);
+    }
+    expect(roomToGameSetup(room)).toEqual(setup);
+    // Different rooms draw differently: over a dozen rooms both races come up.
+    const races = new Set(Array.from({ length: 12 }, (_, i) => roomToGameSetup(createRoom({ id: `room-draw-${i}`, host, slotCount: 2 })).options.races?.enemy));
+    expect(races).toEqual(new Set(["grove", "ember"]));
+
+    const result = finishRoom({ ...room, status: "inMatch" }, snapshotGame(createGame("bareDuel", { aiPlayers: [] }))).result!;
+    expect(result.slots.map((slot) => [slot.race, slot.aiVersion])).toEqual(setup.playerSlots.map((slot) => [slot.race, slot.aiVersion]));
+  });
+
+  it("locks a computer seat on a random race to a random computer player, and refuses one that does not play its race", () => {
+    let room = createRoom({ id: "room-ai-race", host, slotCount: 2 });
+    room = updateRoomSlot(room, "slot-2", { race: "random", aiVersion: "v8" });
+    expect(room.slots[1]!.aiVersion).toBe("random");
+    room = updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v8" });
+    expect(room.slots[1]!.aiVersion).toBe("v8");
+
+    const declared = ROOM_AI_RACES.v5;
+    (ROOM_AI_RACES as Record<string, readonly string[]>).v5 = ["grove"];
+    try {
+      expect(roomAiVersionsFor("ember")).not.toContain("v5");
+      expect(() => updateRoomSlot(room, "slot-2", { race: "ember", aiVersion: "v5" })).toThrow("v5 does not play ember");
+    } finally {
+      (ROOM_AI_RACES as Record<string, readonly string[]>).v5 = declared;
+    }
+  });
+
+  it("takes random for a seat's race and computer player from a client, and nothing else unknown", () => {
+    expect(parseSlotPatch({ race: "random", aiVersion: "random" })).toEqual({ race: "random", aiVersion: "random" });
+    expect(parseSlotPatch({ race: "orc" })).toBeUndefined();
+    expect(parseSlotPatch({ aiVersion: "v9" })).toBeUndefined();
   });
 
   it("lets the same local user rejoin their claimed slot without requiring an open slot", () => {

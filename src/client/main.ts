@@ -63,10 +63,10 @@ import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
-import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, roomAiVersionsFor, type SlotPatch } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
-import type { MapId } from "../shared/types";
+import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
 type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind };
@@ -1002,8 +1002,12 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
   const controllerOptions = ["ai", "open"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
-  const aiOptions = ROOM_AI_VERSIONS.map((version) => `<option value="${version}" ${(slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION) === version ? "selected" : ""}>${version.toUpperCase()}</option>`).join("");
-  const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
+  // @@@seat-race-first - A seat's race first, then its computer player among those that play that race (see
+  // @@@room-ai-races), random by default; a seat on a random race has its computer player drawn too, so that one is locked.
+  const aiChoice = slot.race === "random" ? "random" : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
+  const aiChoices: RoomAiChoice[] = slot.race === "random" ? ["random"] : ["random", ...roomAiVersionsFor(slot.race)];
+  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase()}</option>`).join("");
+  const raceOptions = [...RACE_IDS, "random" as const].map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
@@ -1016,7 +1020,7 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
       ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
     <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
-    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}">${aiOptions}</select>` : ""}
+    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" ? "disabled" : ""}>${aiOptions}</select>` : ""}
     <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
@@ -1027,7 +1031,10 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
     void updateCurrentRoomSlot(slot.id, { team: (event.currentTarget as HTMLSelectElement).value });
   });
   row.querySelector<HTMLSelectElement>("[data-slot-race]")?.addEventListener("change", (event) => {
-    void updateCurrentRoomSlot(slot.id, { race: (event.currentTarget as HTMLSelectElement).value });
+    const race = (event.currentTarget as HTMLSelectElement).value as RaceChoice;
+    // A computer player that does not play the new race gives way to a random one.
+    const keeps = race !== "random" && slot.aiVersion !== undefined && slot.aiVersion !== "random" && ROOM_AI_RACES[slot.aiVersion].includes(race);
+    void updateCurrentRoomSlot(slot.id, slot.controller === "ai" && !keeps ? { race, aiVersion: "random" } : { race });
   });
   row.querySelector<HTMLSelectElement>("[data-slot-ai]")?.addEventListener("change", (event) => {
     void updateCurrentRoomSlot(slot.id, { aiVersion: (event.currentTarget as HTMLSelectElement).value });

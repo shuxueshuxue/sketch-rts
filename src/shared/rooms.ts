@@ -1,10 +1,20 @@
 import type { GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomResult, RoomSlot, RoomState, RoomVisibility } from "./types";
+import { RACE_IDS } from "./catalog";
 import { LADDER_MAP_ID } from "./map-ids";
+import { fnv1a } from "./sim/checksum";
 import { poolMap, poolSeatsFit } from "./map-pool";
 import { assertRoomSlotCounts, isGrandStressSlotCounts } from "./room-slot-counts";
 
 export const DEFAULT_INTERNAL_AI_VERSION: RoomAiVersion = "v5";
 export const ROOM_AI_VERSIONS: RoomAiVersion[] = ["v5", "v7", "v8"];
+// @@@room-ai-races - The races each computer player plays, declared here alone: a seat lists only the computer players
+// of its race, and a room refuses one set to a race it does not play. All three play both (V5 has a playbook for each,
+// and V7 and V8 are built to play either: see src/ai/policy/versions.ts).
+export const ROOM_AI_RACES: Readonly<Record<RoomAiVersion, readonly RaceId[]>> = { v5: RACE_IDS, v7: RACE_IDS, v8: RACE_IDS };
+
+export function roomAiVersionsFor(race: RaceId): RoomAiVersion[] {
+  return ROOM_AI_VERSIONS.filter((version) => ROOM_AI_RACES[version].includes(race));
+}
 
 export type CreateRoomInput = {
   id: string;
@@ -39,7 +49,9 @@ export function createRoom(input: CreateRoomInput): RoomState {
       ...(isHost ? { userId: input.host.id } : {}),
       name: isHost ? input.host.name : isHumanSeat ? "Open" : `AI ${index - humanCount + 1}`,
       team: defaultTeam(index),
-      race: index % 2 === 0 ? "grove" : "ember",
+      // A computer seat starts on a race and a computer player drawn when the match starts (see @@@random-seats).
+      race: isHumanSeat ? (index % 2 === 0 ? "grove" : "ember") : "random",
+      ...(isHumanSeat ? {} : { aiVersion: "random" as const }),
       ready: isHost,
     });
   });
@@ -57,10 +69,12 @@ export function createRoom(input: CreateRoomInput): RoomState {
 
 export function updateRoomSlot(room: RoomState, slotId: string, patch: SlotPatch): RoomState {
   if (room.status !== "open") throw new Error("Cannot edit slots after match start");
-  return {
-    ...room,
-    slots: room.slots.map((slot) => (slot.id === slotId ? normalizeSlot({ ...slot, ...patch }) : slot)),
-  };
+  const slots = room.slots.map((slot) => (slot.id === slotId ? normalizeSlot({ ...slot, ...patch }) : slot));
+  const edited = slots.find((slot) => slot.id === slotId);
+  if (edited?.controller === "ai" && edited.race !== "random" && edited.aiVersion && edited.aiVersion !== "random" && !ROOM_AI_RACES[edited.aiVersion].includes(edited.race)) {
+    throw new Error(`${edited.aiVersion} does not play ${edited.race}`);
+  }
+  return { ...room, slots };
 }
 
 export function updateRoomMap(room: RoomState, mapId: MapId): RoomState {
@@ -79,7 +93,7 @@ export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: nu
       id: `slot-${index + 1}`,
       playerId: defaultPlayerId(index),
       team: existing?.team ?? defaultTeam(index),
-      race: existing?.race ?? (index % 2 === 0 ? "grove" : "ember"),
+      race: existing?.race ?? (isHumanSeat ? (index % 2 === 0 ? "grove" : "ember") : "random"),
     } satisfies Pick<RoomSlot, "id" | "playerId" | "team" | "race">;
 
     if (isHost) {
@@ -101,6 +115,7 @@ export function resizeRoomSlots(room: RoomState, humanCount: number, aiCount: nu
     return normalizeSlot({
       ...base,
       controller: "ai",
+      aiVersion: existing?.controller === "ai" ? (existing.aiVersion ?? "random") : "random",
       name: existing?.controller === "ai" && existing.name !== "AI" ? existing.name : `AI ${index - humanCount + 1}`,
       ready: true,
     });
@@ -142,9 +157,9 @@ export function canStartRoom(room: RoomState) {
   );
 }
 
-export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameSetupOptions; playerSlots: RoomSlot[] } {
+export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameSetupOptions; playerSlots: ResolvedRoomSlot[] } {
   if (!canStartRoom(room)) throw new Error("Room is not ready to start");
-  const playerSlots = activeRoomSlots(room);
+  const playerSlots = resolvedRoomSlots(room);
   // A room on the ladder map plays the layout its own id seeds.
   const layoutSeed = room.mapId === LADDER_MAP_ID ? room.id : undefined;
   return {
@@ -153,9 +168,9 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
     options: {
       players: playerSlots.map((slot) => slot.playerId),
       aiPlayers: playerSlots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId),
-      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION])),
+      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion])),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.team])),
-      races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race as RaceId])),
+      races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race])),
       ...(layoutSeed ? { layout: { seed: layoutSeed } } : {}),
     },
   };
@@ -165,7 +180,7 @@ export function finishRoom(room: RoomState, snapshot: GameSnapshot): RoomState {
   const result: RoomResult = {
     winner: snapshot.match.winner,
     endedAtTick: snapshot.match.endedAtTick,
-    slots: activeRoomSlots(room),
+    slots: resolvedRoomSlots(room),
     stats: snapshot.match.stats,
   };
   return { ...room, status: "ended", result };
@@ -173,6 +188,21 @@ export function finishRoom(room: RoomState, snapshot: GameSnapshot): RoomState {
 
 export function activeRoomSlots(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai");
+}
+
+export type ResolvedRoomSlot = RoomSlot & { race: RaceId; aiVersion: RoomAiVersion };
+
+// @@@random-seats - The seats as they play: a race drawn for a seat on random, then for a computer seat on random one
+// of the computer players of that race; a computer seat with none set plays the room default. Every draw is the room's
+// and the seat's (an FNV hash of their ids), so the start, a reset and the result all see the same seats, and the game,
+// its replay and its result hold what was drawn, never "random".
+export function resolvedRoomSlots(room: RoomState): ResolvedRoomSlot[] {
+  const draw = <T>(key: string, choices: readonly T[]) => choices[Number.parseInt(fnv1a(`${room.id}:${key}`), 16) % choices.length]!;
+  return activeRoomSlots(room).map((slot) => {
+    const race = slot.race === "random" ? draw(`${slot.id}:race`, RACE_IDS) : slot.race;
+    const aiVersion = slot.aiVersion === "random" ? draw(`${slot.id}:ai`, roomAiVersionsFor(race)) : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
+    return { ...slot, race, aiVersion };
+  });
 }
 
 export function lobbyVisibleRooms(rooms: RoomState[], viewerUserId?: string): RoomState[] {
@@ -222,7 +252,11 @@ export function createGrandThirtyRoom(id: string, host: LocalUserProfile, option
 }
 
 function normalizeSlot(slot: EditableRoomSlot): RoomSlot {
-  if (slot.controller === "ai") return withoutUserId({ ...slot, ready: true, name: slot.name && slot.name !== "Open" && slot.name !== "Closed" ? slot.name : "AI" });
+  if (slot.controller === "ai") {
+    // A race drawn at the start leaves the computer player to be drawn among those that play it.
+    const aiVersion = slot.race === "random" ? "random" : slot.aiVersion;
+    return withoutUserId({ ...slot, ...(aiVersion ? { aiVersion } : {}), ready: true, name: slot.name && slot.name !== "Open" && slot.name !== "Closed" ? slot.name : "AI" });
+  }
   if (slot.controller === "closed") return withoutUserId({ ...slot, name: "Closed", ready: false });
   if (slot.controller === "open") return withoutUserId({ ...slot, name: "Open", ready: false });
   const base = withoutUserId({ ...slot, ready: Boolean(slot.ready), name: slot.name || "Player" });
