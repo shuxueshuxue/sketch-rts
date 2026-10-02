@@ -9,7 +9,7 @@ import { averagePoint, distance, type Point } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "../versions";
 import { isBacklineKind } from "./backline";
-import { enemyPowerNear, mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, type V6BaseIntel, type V6Intel } from "./intel";
+import { enemyPowerNear, mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, v9Fleeing, type V6BaseIntel, type V6Intel } from "./intel";
 import { activeMiningBaseCount } from "../expansion-model";
 import { recordPlay, v6Memory } from "./memory";
 import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
@@ -158,6 +158,11 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     if (current?.mode !== "guard") recordPlay(memory, "general:guard");
     return [...order(snapshot, owner, memory, "guard", line, defense.guard, options), ...stepBack(snapshot, owner, wounded, intel.home, options)];
   }
+  // @@@v9-pursue - Intruders V9 has beaten are chased while they run, with the field edge it defends with, until they are
+  // back by their own halls: V7's five summoners, their footmen dead, walked home from V9's natural and sent their spirits
+  // at it from there while V9 held, 19 of 24 times to the end (the V9 exam's S2, the whole army).
+  const fleeing = isV9Policy(options) && current?.mode === "defend" ? v9Fleeing(intel, averagePoint(front)) : [];
+  if (fleeing.length > 0 && strength >= strengthOf(fleeing) * FIELD_EDGE) return order(snapshot, owner, memory, "defend", front, averagePoint(fleeing), options);
 
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);

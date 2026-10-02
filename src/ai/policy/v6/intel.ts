@@ -129,6 +129,18 @@ function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[], homeAw
   return { building: attacked.building, attackers, threat: strengthOf(attackers) };
 }
 
+// The enemy soldiers V9's front is driving off, while they are still out in the field (see v9-pursue): within
+// INTRUDER_GROUP_RANGE of the front and not yet within INTRUSION_RANGE of one of their own halls; none while another
+// enemy's soldiers stand within INTRUDER_GROUP_RANGE of them (a chase there met a third army: 196 of V9's units lost
+// chasing in 500 games against three, to 18 without the chase).
+export function v9Fleeing(intel: V6Intel, front: Point): Unit[] {
+  const fleeing = intel.enemies.flatMap((enemy) => enemy.army.filter((unit) => distance(unit, front) <= INTRUDER_GROUP_RANGE && enemy.bases.every((base) => distance(unit, base.hall) > INTRUSION_RANGE)));
+  if (fleeing.length === 0) return fleeing;
+  const middle = averagePoint(fleeing);
+  const chased = new Set(fleeing.map((unit) => unit.owner));
+  return intel.enemies.some((enemy) => !chased.has(enemy.owner) && enemy.army.some((unit) => distance(unit, middle) <= INTRUDER_GROUP_RANGE)) ? [] : fleeing;
+}
+
 function enemyState(army: Unit[], center: Point | undefined, halls: Building[], ownBuildings: Building[], neutrals: Unit[]): V6EnemyState {
   if (!center || army.length === 0) return "none";
   if (ownBuildings.some((building) => distance(building, center) <= PUSH_RANGE)) return "pushing";
