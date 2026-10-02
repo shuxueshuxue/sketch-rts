@@ -28,6 +28,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     return snapshot.units.some((unit) => unit.id === command.transportId && unit.owner === owner && UNIT_DEFS[unit.kind].carries) ? undefined : commandError(`Unknown ${owner} transport ${command.transportId}`, true);
   }
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
+  if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, true));
   if (command.type === "mine") return missingUnitError(snapshot, owner, command.unitIds) ?? (snapshot.resources.some((resource) => resource.id === command.resourceId) ? undefined : commandError(`Unknown resource ${command.resourceId}`, true));
   if (command.type === "repair") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
@@ -138,6 +139,11 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if (command.type === "attack") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     if (unitIds.length === 0 || !findTarget(game, command.targetId)) return undefined;
+    return { ...command, unitIds };
+  }
+  if (command.type === "follow") {
+    const unitIds = currentUnitIds(game, owner, command.unitIds);
+    if (unitIds.length === 0 || !isFriendlyUnit(game, owner, command.targetId)) return undefined;
     return { ...command, unitIds };
   }
   if (command.type === "mine") {
@@ -278,10 +284,17 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   return Number.isFinite(command.x) && Number.isFinite(command.y) ? undefined : commandError("Summon requires a target point");
 }
 
-function areEnemyOwners(snapshot: GameSnapshot, a: Owner, b: Owner) {
+// Two owners at war: players on different teams, and a player and the creeps. The client asks it too, for what a
+// right-click does and the colour a unit is ringed in.
+export function areEnemyOwners(sides: Pick<GameSnapshot, "teams">, a: Owner, b: Owner) {
   if (a === b) return false;
   if (a === "neutral" || b === "neutral") return a !== "neutral" || b !== "neutral";
-  return (snapshot.teams?.[a] ?? a) !== (snapshot.teams?.[b] ?? b);
+  return (sides.teams?.[a] ?? a) !== (sides.teams?.[b] ?? b);
+}
+
+// An own unit or an ally's: one a unit may follow.
+function isFriendlyUnit(sides: Pick<GameSnapshot, "teams" | "units">, owner: PlayerId, unitId: string) {
+  return sides.units.some((unit) => unit.id === unitId && !areEnemyOwners(sides, unit.owner, owner));
 }
 
 function canSpendGold(snapshot: GameSnapshot, owner: PlayerId, amount: number) {

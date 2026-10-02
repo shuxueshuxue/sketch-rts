@@ -431,6 +431,7 @@ export type GameCommand =
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "follow"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "stop"; unitIds: string[] }
   | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }

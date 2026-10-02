@@ -26,6 +26,20 @@ describe("command admission validation", () => {
     expect(commandValidationError(snapshotGame(game), "player", { type: "cast", unitId: priest.id, ability: "heal", targetId: alliedWorker!.id })).toBeUndefined();
   });
 
+  it("admits following an own or an ally's unit, and refuses following an enemy's", () => {
+    const allied = createGame("bareDuel", { aiPlayers: [], teams: { player: "north", enemy: "north" } });
+    const footman = allied.spawnUnit("player", "footman", 900, 900);
+    const alliedWorker = allied.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker")!;
+    const ownWorker = allied.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    expect(commandValidationError(snapshotGame(allied), "player", { type: "follow", unitIds: [footman.id], targetId: alliedWorker.id })).toBeUndefined();
+    expect(commandValidationError(snapshotGame(allied), "player", { type: "follow", unitIds: [footman.id], targetId: ownWorker.id })).toBeUndefined();
+
+    const duel = createGame("bareDuel", { aiPlayers: [] });
+    const rival = duel.spawnUnit("player", "footman", 900, 900);
+    const enemyWorker = duel.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker")!;
+    expect(commandValidationError(snapshotGame(duel), "player", { type: "follow", unitIds: [rival.id], targetId: enemyWorker.id })).toBe(`Unknown friendly unit ${enemyWorker.id}`);
+  });
+
   it("rejects rally commands for buildings that do not train units", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const farm = createBuilding("player-rallyless-farm", "player", "farm", 900, 900, true);

@@ -376,6 +376,18 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  // @@@follow - Units told to follow an own unit or an ally's walk after it and keep near it until it dies or they are
+  // told otherwise, as in Warcraft III; a right-click on an ally's unit gives it (a rally point onto an own unit too).
+  if (command.type === "follow") {
+    const target = game.units.find((unit) => unit.id === command.targetId && !areEnemyOwners(game, unit.owner, owner));
+    if (!target) throw new Error(`Unknown friendly unit ${command.targetId}`);
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (unit !== target) assignUnitOrder(unit, { type: "follow", targetId: target.id }, command.queued);
+    }
+    addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24);
+    return;
+  }
+
   if (command.type === "mine") {
     const resource = game.resources.find((candidate) => candidate.id === command.resourceId);
     if (!resource) throw new Error(`Unknown resource ${command.resourceId}`);
@@ -893,7 +905,7 @@ function activateQueuedOrder(unit: Unit) {
 function updateFollowOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "follow") return;
   const order = unit.order;
-  const target = game.units.find((candidate) => candidate.id === order.targetId && candidate.owner === unit.owner);
+  const target = game.units.find((candidate) => candidate.id === order.targetId && !areEnemyOwners(game, candidate.owner, unit.owner));
   if (!target) {
     unit.order = { type: "idle" };
     return;

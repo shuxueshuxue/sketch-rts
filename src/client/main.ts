@@ -42,6 +42,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
+import { buildingAt, rightClickOrder, unitAt } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -1652,7 +1653,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
 
   const resource = hitResource(world);
   const item = hitGroundItem(world);
-  const target = hitAttackTarget(world);
+  const target = rightClickOrder(snapshot, localPlayerId, unitIds, world, queued);
   const repairTarget = hitBuilding(world, (building) => building.owner === localPlayerId && building.hp < building.maxHp);
   if (item) {
     const command = pickupItemCommand(focusedPlayerUnits(), item);
@@ -1683,8 +1684,15 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     return;
   }
   if (target) {
-    sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
-    statusLabel.textContent = "along" in target ? t("status.breakObstacleOrdered") : target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
+    sendCommand(target.command);
+    statusLabel.textContent =
+      target.command.type === "follow"
+        ? t("status.followOrdered", { target: labelAnyKind(target.target.kind) })
+        : "along" in target.target
+          ? t("status.breakObstacleOrdered")
+          : target.target.owner === "neutral"
+            ? t("status.attackWildlingsOrdered")
+            : t("status.attackOrdered");
     return;
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
@@ -2924,21 +2932,12 @@ function hitGroundItem(world: Point) {
   return snapshot?.items.find((item) => !item.carrierId && distance(item, world) < 34);
 }
 
-function hitAttackTarget(world: Point) {
-  return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId) ?? hitObstacle(world);
-}
-
-// Rocks or a gate under the pointer (see @@@obstacle): anywhere on its body.
-function hitObstacle(world: Point) {
-  return snapshot?.obstacles?.find((obstacle) => distance(obstacle, world) < obstacle.radius + 8);
-}
-
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
-  return snapshot?.units.find((unit) => predicate(unit) && distance(unit, world) < 34);
+  return unitAt(snapshot?.units ?? [], world, predicate);
 }
 
 function hitBuilding(world: Point, predicate: (building: Building) => boolean) {
-  return snapshot?.buildings.find((building) => predicate(building) && distance(building, world) < (building.kind === "townHall" ? 58 : 46));
+  return buildingAt(snapshot?.buildings ?? [], world, predicate);
 }
 
 function labelBuilding(building: Building) {

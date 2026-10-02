@@ -813,6 +813,23 @@ describe("sketch RTS simulation", () => {
     expect(distance(follower, target)).toBeLessThan(before + 160);
   });
 
+  it("walks after an ally's unit told to follow it, and refuses to follow an enemy's", () => {
+    const game = createGame("bareDuel", { aiPlayers: [], teams: { player: "north", enemy: "north" } });
+    const follower = game.spawnUnit("player", "footman", 900, 900);
+    const ally = game.spawnUnit("enemy", "footman", 1000, 900);
+    issuePlayerCommand(game, "player", { type: "follow", unitIds: [follower.id], targetId: ally.id });
+    ally.x += 200;
+    const before = distance(follower, ally);
+    stepMany(game, 12);
+    expect(follower.order).toEqual({ type: "follow", targetId: ally.id });
+    expect(distance(follower, ally)).toBeLessThan(before);
+
+    const duel = createGame("bareDuel", { aiPlayers: [] });
+    const own = duel.spawnUnit("player", "footman", 900, 900);
+    const rival = duel.spawnUnit("enemy", "footman", 1000, 900);
+    expect(() => issuePlayerCommand(duel, "player", { type: "follow", unitIds: [own.id], targetId: rival.id })).toThrow(`Unknown friendly unit ${rival.id}`);
+  });
+
   it("counts queued training jobs against the supply cap", () => {
     const game = createGame();
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
