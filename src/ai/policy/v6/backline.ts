@@ -4,7 +4,8 @@ import { enemyBuildings, hostileCombatUnits, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { V6PolicyMemory } from "../../memory";
 import type { AiPolicyContext, PresetAiPolicyOptions } from "../types";
-import { isV6Policy, isV8Policy } from "../versions";
+import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
+import { isV6Policy, isV8Policy, isV9Policy } from "../versions";
 import { mainBase } from "../world-model";
 import { v6Memory } from "./memory";
 
@@ -53,6 +54,16 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
+    // @@@v9-caster-stand - With no front left and only soldiers that fight at arm's length within the reach every idle
+    // unit engages at (no shooter, see inReach, and nothing summoned), a V9 caster stops and fights where it stands rather
+    // than walking home: riders (4.1) ran priests and witches (3.0) down from behind, four of them walked for 20 s without a
+    // shot at a knight 38 away (the V9 exam's S3, gullIsland). From shooters, which outreach it, and from spirits, gone in
+    // 60 s, it still walks: standing against them too, V9 won 336 of 500 games against three where it had won 348.
+    const on = threatsNear(caster).filter((enemy) => distance(enemy, caster) <= AUTO_ACQUIRE_RANGE);
+    if (isV9Policy(options) && frontNear(caster).length < MIN_SCREEN && on.length > 0 && on.every((enemy) => enemy.attackRange <= 100 && enemy.expiresTick === undefined)) {
+      if (caster.order.type === "move") commands.push({ type: "stop", unitIds: [caster.id] });
+      continue;
+    }
     const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, isV8Policy(options));
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
