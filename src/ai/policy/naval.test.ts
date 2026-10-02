@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../../shared/sim";
-import { isShoreFootprint, type Terrain } from "../../shared/terrain";
+import { isShoreFootprint, isWalkable, type Terrain } from "../../shared/terrain";
 import { createAiPolicyMemory } from "../memory";
 import { desiredExpansionMine } from "./expansion-model";
 import { navalUnitIds, navalWant, planNavalTactics } from "./naval";
@@ -105,6 +105,17 @@ describe("the AI on the water", () => {
     expect(command.x).toBeLessThan(at(10, 0).x);
     // V9 leaves the island's mine alone (see @@@v9-water).
     expect(navalWant(snapshot, "player", { version: "v2", requestedVersion: "v9", memory: createAiPolicyMemory() })).toBeUndefined();
+  });
+
+  it("keeps its idle warships off the shallows its workers cross to the island", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = islandGame();
+    game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
+    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ship", kind: "warship", ...at(12, 3), order: { type: "idle" }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 });
+    const station = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "move" && command.unitIds.includes("ship"));
+    if (station?.type !== "move") throw new Error("no station");
+    expect(isWalkable(game.map, station.x, station.y, "sea")).toBe(true);
+    expect(isWalkable(game.map, station.x, station.y)).toBe(false);
   });
 
   it("never sends its workers to expand to a mine they cannot walk to", () => {

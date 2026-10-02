@@ -39,6 +39,8 @@ const CREW = 4;
 const HOME_WATERS = 900;
 // A shipyard stands no nearer a hall than this, off its workers' way to the mine.
 const HALL_BERTH = 160;
+// How many cells out from a landing a ship looks for open water to wait on.
+const OFFSHORE_STEPS = 8;
 // A shipyard stands this much farther off an enemy warship than its guns reach.
 const GUN_MARGIN = 100;
 // A target this near an enemy tower is the tower's to cover: towers are the coast's strongest defense, and a warship that
@@ -140,7 +142,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     if (foe && !busy) commands.push({ type: "attack", unitIds: [ship.id], targetId: foe.id });
     else if (hurt && !foe && home && ship.order.type !== "move" && distance(ship, home) > 300) commands.push({ type: "move", unitIds: [ship.id], x: home.x, y: home.y });
     else if (!foe && !hurt && ship.order.type === "idle") {
-      const station = assault?.landing ?? plan?.landing ?? (prey.length > 0 ? raid?.water : undefined);
+      const station = assault ? offshore(snapshot, assault.landing, assault.target) : plan ? offshore(snapshot, plan.landing, plan.mine) : prey.length > 0 ? raid?.water : undefined;
       if (station && distance(ship, station) > 300) commands.push({ type: "move", unitIds: [ship.id], x: station.x, y: station.y });
     }
   }
@@ -153,6 +155,11 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
   if (hall?.complete) {
     const idle = islanders.filter((worker) => worker.order.type === "idle").map((worker) => worker.id);
     if (idle.length > 0) commands.push({ type: "mine", unitIds: idle, resourceId: plan.mine.id });
+  }
+  // A transport that has set its crew down waits off the beach they cross (see offshore).
+  if (transport && transport.order.type === "idle" && !transport.cargo?.length && (islanders.length > 0 || hall) && isWalkable(snapshot.map, transport.x, transport.y)) {
+    const off = offshore(snapshot, plan.landing, plan.mine);
+    if (distance(transport, off) > 40) commands.push({ type: "move", unitIds: [transport.id], x: off.x, y: off.y });
   }
   if (!transport || hall) return commands;
   const aboard = transport.cargo?.length ?? 0;
@@ -216,6 +223,21 @@ function assaultCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
   if (crew.length > 0) commands.push({ type: "board", unitIds: crew.map((unit) => unit.id), transportId: transport.id });
   else if (aboard.length > 0 && boarding.length === 0) commands.push({ type: "unload", unitIds: [transport.id], x: assault.target.x, y: assault.target.y });
   return commands;
+}
+
+// Open water off a landing: the first point straight out from what the landing is by (an island's mine, the assault's
+// target) that a ship sails and no land unit walks, so ships waiting there keep off the shallows of the beach. Waiting on
+// a landing's shallows, V8's warships and its emptied transport walled in its own workers on their way to the island's
+// hall site (three of the pool's games at ddec752).
+function offshore(snapshot: GameSnapshot, landing: Point, from: Point): Point {
+  const map = snapshot.map;
+  const step = map.terrain?.cell ?? 32;
+  const length = distance(landing, from) || 1;
+  for (let k = 1; k <= OFFSHORE_STEPS; k += 1) {
+    const point = { x: landing.x + ((landing.x - from.x) / length) * step * k, y: landing.y + ((landing.y - from.y) / length) * step * k };
+    if (isWalkable(map, point.x, point.y, "sea") && !isWalkable(map, point.x, point.y)) return point;
+  }
+  return landing;
 }
 
 function islandHallOf(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan): Building | undefined {
