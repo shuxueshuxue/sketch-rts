@@ -42,8 +42,6 @@
   --primary-hover: linear-gradient(#efd38f, #b68b38);
   --primary-edge: #4a300c;
   --primary-ink: #2a1806;
-  --bar: var(--walnut);
-  --bar-ink: #e6d2a2;
   --bar-value: #f3d07a;
   --slot: linear-gradient(#f4e9cb, #dfcb9a);
   --slot-edge: #3d230f;
@@ -217,12 +215,12 @@ input[type="range"] {
   background: #2e1d0e;
 }
 
-/* Framed panels: the menus' window, the HUD's panels, the tooltip, the minimap's border. */
+/* Framed panels: the menus' window, the HUD's panels, the match's menu, the tooltip, the minimap's border. */
 .menu-window,
-.status-line,
 .selection-chip,
 .command-dock,
 .item-dock,
+.match-menu,
 .tooltip-layer,
 .pointer-lock-panel,
 .minimap-frame,
@@ -231,10 +229,10 @@ input[type="range"] {
   border-image: var(--frame) 16 / 12px stretch;
 }
 
-.status-line,
 .selection-chip,
 .command-dock,
 .item-dock,
+.match-menu,
 .tooltip-layer {
   border-width: 9px;
   border-image-width: 9px;
@@ -1008,7 +1006,9 @@ input[type="range"] {
 
 /* ---------------------------------------------------------------- the match's HUD */
 
-.menu-open .top-strip,
+.menu-open .minimap-tab,
+.menu-open .match-menu-button,
+.menu-open .match-menu,
 .menu-open .selection-chip,
 .menu-open .command-dock,
 .menu-open .item-dock,
@@ -1018,7 +1018,9 @@ input[type="range"] {
   display: none;
 }
 
-.top-strip,
+.minimap-tab,
+.match-menu-button,
+.match-menu,
 .status-line,
 .selection-chip,
 .command-dock,
@@ -1027,58 +1029,49 @@ input[type="range"] {
   position: absolute;
 }
 
-/* The top bar: a board across the top, the treasury left, the name in the middle, the map and concede right. */
-.top-strip {
-  top: 0;
+/* The treasury: a plaque on top of the minimap's frame, as wide as the frame (resizeCanvas puts it there), gold and
+   supply side by side. The battlefield's top is left to the battlefield. */
+.minimap-tab {
   left: 0;
-  right: 0;
+  top: 0;
   z-index: 2;
   display: flex;
+  justify-content: space-around;
   align-items: center;
-  gap: 24px;
-  height: 34px;
-  padding: 0 16px;
-  background: var(--bar);
-  color: var(--bar-ink);
-  font-size: 13px;
-  box-shadow: inset 0 1px 0 rgba(255, 230, 180, 0.18), 0 1px 0 #0d0703, 0 2px 0 #9c7a34, 0 3px 0 #0d0703, 0 6px 14px rgba(0, 0, 0, 0.45);
-}
-
-.brand {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  box-sizing: content-box;
+  height: 27px;
+  margin: -11px 0 0 -12px;
+  padding: 0 11px;
+  border: 1px solid #0d0703;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(#3b2516, #22150b);
   color: var(--bar-value);
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-shadow: 0 1px 0 #000;
-  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 -3px 10px rgba(0, 0, 0, 0.35);
 }
 
 .resource-readout,
-.supply-readout,
-.map-readout {
+.supply-readout {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   white-space: nowrap;
 }
 
 .resource-readout span[data-gold],
 .supply-readout span[data-supply] {
-  color: var(--bar-value);
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
   text-shadow: 0 1px 0 #000;
 }
 
 .readout-icon {
   display: inline-block;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 
 .resource-readout .readout-icon {
@@ -1088,31 +1081,94 @@ input[type="range"] {
 }
 
 .supply-readout .readout-icon {
+  height: 13px;
   background: linear-gradient(#e6d3a6, #a98d5a);
   clip-path: polygon(50% 0, 100% 45%, 100% 100%, 0 100%, 0 45%);
 }
 
-.map-readout {
-  margin-left: auto;
-  opacity: 0.8;
+/* The match's menu: a small square in the top right corner, and the panel it opens below it (the map being played,
+   concede, back to the game). */
+.match-menu-button {
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #0d0703;
+  border-radius: 3px;
+  background: linear-gradient(#3b2516, #22150b);
+  box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.match-menu-button span {
+  width: 12px;
+  height: 2px;
+  background: var(--bar-value);
+  box-shadow: 0 -4px 0 var(--bar-value), 0 4px 0 var(--bar-value);
+}
+
+.match-menu-button:hover {
+  background: linear-gradient(#4a2f1b, #2b1a0d);
+}
+
+.match-menu {
+  top: 42px;
+  right: 8px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  min-width: 200px;
+  padding: 10px 12px;
+  background: var(--hud-panel);
+  color: var(--hud-ink);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.match-menu-map {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--inset-edge);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .match-action {
-  min-height: 24px;
-  padding: 2px 12px;
-  font-size: 12px;
+  min-height: 30px;
 }
 
+/* @@@status-flash - A message rises near the top of the screen when something happens and fades a few seconds later
+   (main.ts takes away .shown); no box, a soft dark wash behind the letters so they read over any ground. */
 .status-line {
-  right: 14px;
-  top: 46px;
-  width: 300px;
-  padding: 6px 10px;
-  background: var(--hud-panel);
-  color: var(--hud-ink);
-  font-size: 13px;
+  top: 14px;
+  left: 50%;
+  z-index: 2;
+  max-width: min(640px, calc(100vw - 120px));
+  padding: 4px 22px;
+  color: #f6e9c8;
+  background: radial-gradient(ellipse at center, rgba(22, 13, 6, 0.62), rgba(22, 13, 6, 0) 72%);
+  font-family: var(--font-display);
+  font-size: 15px;
   line-height: 1.4;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  text-shadow: 0 1px 2px #000, 0 0 8px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -4px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.status-line.shown {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.status-line .error {
+  color: #ffb39c;
 }
 
 .selection-chip {
@@ -1681,10 +1737,6 @@ input[type="range"] {
   .slot-row {
     min-width: 520px;
   }
-
-  .map-readout {
-    display: none;
-  }
 }
 
 @media (max-width: 600px) {
@@ -1701,13 +1753,5 @@ input[type="range"] {
     width: calc(100vw - 24px);
     max-height: calc(100dvh - 24px);
     padding: 14px 16px;
-  }
-
-  .brand {
-    display: none;
-  }
-
-  .status-line {
-    width: 200px;
   }
 }

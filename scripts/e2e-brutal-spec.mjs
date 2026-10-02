@@ -276,7 +276,7 @@ async page => {
     const terrain = await visibleTerrainProof();
     const named = menuCatalog.maps.find((map) => map.id === mapId)?.name;
     must(current.map.id === mapId && current.map.terrain, "room setup did not start the chosen pool map; saw " + current.map.id);
-    must(named && readout === named, "the top bar should name the map being played: " + JSON.stringify({ readout, named }));
+    must(named && readout === named, "the match menu should name the map being played: " + JSON.stringify({ readout, named }));
     must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "pool map terrain is missing or too dense on " + mapId + ": " + JSON.stringify(terrain));
     mapSelectionProof.push({ id: current.map.id, size: current.map.width, terrain });
   }
@@ -350,22 +350,22 @@ async page => {
   );
   const virtualPointerOverlayProof = await page.evaluate(() => {
     const pointer = document.querySelector("[data-virtual-pointer]");
-    const topStrip = document.querySelector(".top-strip");
+    const hudPanel = document.querySelector(".match-menu");
     const pointerStyle = pointer ? getComputedStyle(pointer) : null;
-    const topStripStyle = topStrip ? getComputedStyle(topStrip) : null;
+    const hudPanelStyle = hudPanel ? getComputedStyle(hudPanel) : null;
     return {
       exists: !!pointer,
       position: pointerStyle?.position,
       pointerEvents: pointerStyle?.pointerEvents,
       zIndex: pointerStyle?.zIndex,
-      topStripZIndex: topStripStyle?.zIndex,
+      hudPanelZIndex: hudPanelStyle?.zIndex,
     };
   });
   must(virtualPointerOverlayProof.exists, "virtual pointer overlay is missing");
   must(virtualPointerOverlayProof.position === "absolute", "virtual pointer is not an overlay: " + JSON.stringify(virtualPointerOverlayProof));
   must(virtualPointerOverlayProof.pointerEvents === "none", "virtual pointer can intercept player input: " + JSON.stringify(virtualPointerOverlayProof));
   must(
-    Number(virtualPointerOverlayProof.zIndex) > (virtualPointerOverlayProof.topStripZIndex === "auto" ? 0 : Number(virtualPointerOverlayProof.topStripZIndex || 0)),
+    Number(virtualPointerOverlayProof.zIndex) > (virtualPointerOverlayProof.hudPanelZIndex === "auto" ? 0 : Number(virtualPointerOverlayProof.hudPanelZIndex || 0)),
     "virtual pointer is not above HUD UI: " + JSON.stringify(virtualPointerOverlayProof),
   );
   const beforePointerLockClickState = await page.evaluate(() => ({

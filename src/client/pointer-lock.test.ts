@@ -12,7 +12,7 @@ import {
 } from "./pointer-lock";
 
 describe("pointer lock virtual mouse", () => {
-  it("keeps pointer lock behind the blocking gate instead of a top-strip button", () => {
+  it("keeps pointer lock behind the blocking gate instead of a HUD button", () => {
     const markup = gameShellMarkup(createI18n("en"));
 
     expect(markup).not.toContain("data-pointer-lock ");

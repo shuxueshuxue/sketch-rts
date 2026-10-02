@@ -145,6 +145,10 @@ const pointerLockGateBody = requireElement<HTMLParagraphElement>("[data-pointer-
 const pointerLockGateAction = requireElement<HTMLButtonElement>("[data-pointer-lock-gate-action]");
 const sceneSwitch = requireElement<HTMLButtonElement>("[data-scene-switch]");
 const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
+const minimapTab = requireElement<HTMLDivElement>("[data-minimap-tab]");
+const matchMenuButton = requireElement<HTMLButtonElement>("[data-match-menu-button]");
+const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
+const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
@@ -325,7 +329,23 @@ sceneSwitch.addEventListener("click", () => {
   labelSceneSwitch();
 });
 labelSceneSwitch();
-forfeitButton.addEventListener("click", () => void forfeitCurrentMatch());
+// The match's menu (≡ in the top right): the map being played, concede, and back to the game.
+matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
+matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
+forfeitButton.addEventListener("click", () => {
+  matchMenu.classList.add("hidden");
+  void forfeitCurrentMatch();
+});
+// @@@status-flash - The status line speaks when something happens, near the top of the screen, and fades a few
+// seconds later (see .status-line), so no box stands over the battlefield between messages.
+const STATUS_SHOWN_MS = 3500;
+let statusFade: number | undefined;
+new MutationObserver(() => {
+  window.clearTimeout(statusFade);
+  const shown = (statusLabel.textContent ?? "").trim() !== "";
+  statusLabel.classList.toggle("shown", shown);
+  if (shown) statusFade = window.setTimeout(() => statusLabel.classList.remove("shown"), STATUS_SHOWN_MS);
+}).observe(statusLabel, { childList: true, characterData: true, subtree: true });
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
@@ -1186,6 +1206,7 @@ async function forfeitCurrentMatch() {
 
 function syncMatchActions() {
   forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch());
+  if (menuOpen) matchMenu.classList.add("hidden");
 }
 
 function releasePointerLockForMenu() {
@@ -2736,6 +2757,9 @@ function resizeCanvas() {
   minimapFrame.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
   minimapFrame.style.width = `${mini.width}px`;
   minimapFrame.style.height = `${mini.height}px`;
+  // The treasury rides on the minimap's frame, just above it (see .minimap-tab).
+  minimapTab.style.transform = `translate(${mini.x}px, ${mini.y}px) translateY(-100%)`;
+  minimapTab.style.width = `${mini.width}px`;
 }
 
 function mousePoint(event: MouseEvent): Point {
