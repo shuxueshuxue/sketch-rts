@@ -60,6 +60,9 @@ describe("room model", () => {
 
     const result = finishRoom({ ...room, status: "inMatch" }, snapshotGame(createGame("bareDuel", { aiPlayers: [] }))).result!;
     expect(result.slots.map((slot) => [slot.race, slot.aiVersion])).toEqual(setup.playerSlots.map((slot) => [slot.race, slot.aiVersion]));
+    // A player's seat plays no computer player.
+    expect(result.slots[0]).not.toHaveProperty("aiVersion");
+    expect(Object.keys(setup.options.aiVersions ?? {})).toEqual(["enemy", "enemy2", "player-4"]);
   });
 
   it("locks a computer seat on a random race to a random computer player, and refuses one that does not play its race", () => {

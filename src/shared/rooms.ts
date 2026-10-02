@@ -187,7 +187,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
     options: {
       players: playerSlots.map((slot) => slot.playerId),
       aiPlayers: playerSlots.filter((slot) => slot.controller === "ai").map((slot) => slot.playerId),
-      aiVersions: Object.fromEntries(playerSlots.filter((slot) => slot.controller === "ai").map((slot) => [slot.playerId, slot.aiVersion])),
+      aiVersions: Object.fromEntries(playerSlots.flatMap((slot) => (slot.aiVersion ? [[slot.playerId, slot.aiVersion]] : []))),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, seatTeam(slot)])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race])),
       ...(layoutSeed ? { layout: { seed: layoutSeed } } : {}),
@@ -209,18 +209,19 @@ export function activeRoomSlots(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai");
 }
 
-export type ResolvedRoomSlot = RoomSlot & { race: RaceId; aiVersion: RoomAiVersion };
+export type ResolvedRoomSlot = Omit<RoomSlot, "race" | "aiVersion"> & { race: RaceId; aiVersion?: RoomAiVersion };
 
 // @@@random-seats - The seats as they play: a race drawn for a seat on random, then for a computer seat on random one
-// of the computer players of that race; a computer seat with none set plays the room default. Every draw is the room's
-// and the seat's (an FNV hash of their ids), so the start, a reset and the result all see the same seats, and the game,
-// its replay and its result hold what was drawn, never "random".
+// of the computer players of that race; a computer seat with none set plays the room default, a player's seat has none.
+// Every draw is the room's and the seat's (an FNV hash of their ids), so the start, a reset and the result all see the
+// same seats, and the game, its replay and its result hold what was drawn, never "random". A rematch is a new room, so
+// it draws anew.
 export function resolvedRoomSlots(room: RoomState): ResolvedRoomSlot[] {
   const draw = <T>(key: string, choices: readonly T[]) => choices[Number.parseInt(fnv1a(`${room.id}:${key}`), 16) % choices.length]!;
-  return activeRoomSlots(room).map((slot) => {
+  return activeRoomSlots(room).map(({ aiVersion, ...slot }) => {
     const race = slot.race === "random" ? draw(`${slot.id}:race`, RACE_IDS) : slot.race;
-    const aiVersion = slot.aiVersion === "random" ? draw(`${slot.id}:ai`, roomAiVersionsFor(race)) : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
-    return { ...slot, race, aiVersion };
+    if (slot.controller !== "ai") return { ...slot, race };
+    return { ...slot, race, aiVersion: aiVersion === "random" ? draw(`${slot.id}:ai`, roomAiVersionsFor(race)) : (aiVersion ?? DEFAULT_INTERNAL_AI_VERSION) };
   });
 }
 

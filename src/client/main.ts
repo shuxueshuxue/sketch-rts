@@ -922,7 +922,7 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(labelKind(slot.controller))}</span>
+        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase()}` : labelKind(slot.controller))}</span>
         <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
