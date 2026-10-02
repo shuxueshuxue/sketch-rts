@@ -1,3 +1,4 @@
+import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
 import { walkRoute, walkingDistance } from "../../../shared/terrain";
 import type { GameSnapshot, PlayerId } from "../../../shared/types";
 import { BUILDING_DEFS } from "../../../shared/catalog";
@@ -7,6 +8,7 @@ import { buildings } from "../snapshot";
 import { distance, type Point } from "../spatial";
 import { v9ExpansionMine, type V6Intel } from "../v6/intel";
 import { strengthOf } from "../v6/strength";
+import { ARRIVED } from "./march";
 
 // @@@v9-front - V9 holds its army at its front: a little way out from the hall nearest the enemy on the walk toward it, or,
 // with the main alone, out from the natural it is about to take. On a ladder map the main's one ramp comes down into the
@@ -14,7 +16,9 @@ import { strengthOf } from "../v6/strength";
 // the main straight toward the enemies' halls, left the army on the plateau while V8's ravagers razed V9's rising natural
 // 880 away and its army never came (russetBrook, v5-extra-2, 4:54).
 const FRONT_STEP = 320;
-const CREEP_CLEARANCE = 330;
+// The army holding the front stands anywhere within ARRIVED of it (see v9-march-round-camps), and each idle soldier takes
+// on any creep within the sim's AUTO_ACQUIRE_RANGE of itself: no creep may stand within the two of the front.
+const CREEP_CLEARANCE = ARRIVED + AUTO_ACQUIRE_RANGE;
 const NATURAL_REACH = 1_300;
 // An expansion rises only with the army by it (or a tower): it starts at a tenth of its health.
 const ESCORT_RANGE = 650;
@@ -34,8 +38,9 @@ export function v9FrontPoint(snapshot: GameSnapshot, owner: PlayerId, intel: V6I
     if (natural && distance(natural, intel.home) <= NATURAL_REACH) anchor = natural;
   }
   // The front stands on the walk from the main toward the enemy, FRONT_STEP past the point of it nearest the anchor, or
-  // the nearest point to that of the walk that no creep stands near: idle soldiers pick a fight with creeps within 230,
-  // and a front beside the natural's guard cost V9 a soldier a game to it by 3:00 (1000 games, against 0.06).
+  // the nearest point to that of the walk that no creep stands near (CREEP_CLEARANCE): a front beside the natural's guard
+  // cost V9 a soldier a game to it by 3:00 (1000 games, against 0.06), and with the front only 330 from every creep its
+  // army's edge still pulled the camp beside it, 170 of V9's 1151 units lost to creeps in 500 games against three.
   const route = walkRoute(snapshot.map, intel.home, target, 1);
   if (!route || route.length === 0) return anchor;
   let nearest = 0;

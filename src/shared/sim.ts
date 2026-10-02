@@ -111,7 +111,7 @@ const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const REPAIR_FULL_COST_FRACTION = 0.35;
 const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.attackCooldown;
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
-const AUTO_ACQUIRE_RANGE = 230;
+export const AUTO_ACQUIRE_RANGE = 230;
 // A weapon reaching farther than this throws a missile; within it, it strikes in melee.
 export const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 // A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take

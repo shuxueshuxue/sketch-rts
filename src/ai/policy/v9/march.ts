@@ -21,7 +21,7 @@ const EDGE_MARGIN = 120;
 
 // Units still on the way (farther than ARRIVED from the point) head for the march point from their middle; units at the
 // point already hold it.
-const ARRIVED = 350;
+export const ARRIVED = 350;
 
 export function marchArrived(unit: Point, point: Point) {
   return distance(unit, point) <= ARRIVED;
