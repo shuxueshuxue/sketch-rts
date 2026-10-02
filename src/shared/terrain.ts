@@ -721,16 +721,23 @@ function searchExit(state: TerrainRuntime, tiles: Tiles, region: number, target:
   const width = state.width;
   const targetCol = target % width;
   const targetRow = Math.floor(target / width);
-  // Octile cells to the target at bare ground's price: no walk is cheaper.
+  // Octile cells to the target at bare ground's price from the window's cell nearest it: no walk is cheaper. Taken from
+  // the window's first cell, it priced a long window up to nine cells too dear, the search came out the wrong way, and the
+  // two sides of a strip on a squares' border each sent the walk across to the other: units stood on it for good, the
+  // walk crossing and crossing back within one look ahead (pool-stillwater-2, a strip at x 3840, eight soldiers in a row).
+  // A window reached again more cheaply is searched on from there again.
   const estimate = (node: TileNode) => {
-    const dx = Math.abs((node.cells[0]! % width) - targetCol);
-    const dy = Math.abs(Math.floor(node.cells[0]! / width) - targetRow);
-    return (DIAGONAL * Math.min(dx, dy) + STRAIGHT * (Math.max(dx, dy) - Math.min(dx, dy))) * GROUND_WEIGHT;
+    let least = UNREACHED;
+    for (const cell of node.cells) {
+      const dx = Math.abs((cell % width) - targetCol);
+      const dy = Math.abs(Math.floor(cell / width) - targetRow);
+      least = Math.min(least, (DIAGONAL * Math.min(dx, dy) + STRAIGHT * (Math.max(dx, dy) - Math.min(dx, dy))) * GROUND_WEIGHT);
+    }
+    return least;
   };
   const sector = Math.floor(region / MAX_REGIONS);
   const cost = new Map<number, number>();
   const parent = new Map<number, number>();
-  const closed = new Set<number>();
   const heap = new Frontier();
   for (const node of sectorNodes(tiles, sector)) {
     if (tiles.region[node.cells[0]!] !== region) continue;
@@ -742,7 +749,7 @@ function searchExit(state: TerrainRuntime, tiles: Tiles, region: number, target:
   let finishCost = UNREACHED;
   const relax = (from: number, to: number, through: number) => {
     const node = tiles.nodes.get(to);
-    if (!node || closed.has(to) || through >= (cost.get(to) ?? UNREACHED)) return;
+    if (!node || through >= (cost.get(to) ?? UNREACHED)) return;
     cost.set(to, through);
     parent.set(to, from);
     heap.push(through + estimate(node), to);
@@ -751,8 +758,6 @@ function searchExit(state: TerrainRuntime, tiles: Tiles, region: number, target:
     const key = heap.pop();
     if (key === undefined) return -1;
     if (key === -1) break;
-    if (closed.has(key)) continue;
-    closed.add(key);
     const node = tiles.nodes.get(key)!;
     const here = cost.get(key)!;
     let end = UNREACHED;
