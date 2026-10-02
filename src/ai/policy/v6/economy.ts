@@ -1,3 +1,4 @@
+import { isBuildPlacementClear } from "../../../shared/build-placement";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
 import { detCos, detSin } from "../../../shared/det-math";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../../shared/types";
@@ -312,8 +313,11 @@ function towerRising(economy: Economy) {
 
 function towerGoal(economy: Economy, hall: Building, priority: number, play: string): Goal[] {
   const facing = economy.intel.enemies.flatMap((enemy) => enemy.bases.map((base) => base.hall))[0];
-  // V9 holds the way in (see v9-choke-towers).
-  const point = (isV9Policy(economy.options) ? v9ChokeTowerPoint(economy.snapshot, economy.intel, hall) : undefined) ?? towerPoint(economy.snapshot, economy.owner, hall, facing);
+  // V9 holds the way in (see v9-choke-towers). A point the sim would refuse is none: legalBuildPointNear hands back the
+  // point it was given when nothing within its reach is clear, and a rival's last hall in a pocket of forest had its
+  // tower sent into the trees, which ended the game (1v3 bench, seed v5-extra-11, match 6, at 487e4e6).
+  const choke = isV9Policy(economy.options) ? v9ChokeTowerPoint(economy.snapshot, economy.intel, hall) : undefined;
+  const point = (choke && isBuildPlacementClear(economy.snapshot, "defenseTower", choke) ? choke : undefined) ?? towerPoint(economy.snapshot, economy.owner, hall, facing);
   if (!point) return [];
   return [goal(play, priority, BUILDING_DEFS.defenseTower.cost, true, (used) => build(economy, "defenseTower", point, used, play))];
 }
@@ -324,7 +328,7 @@ function towerPoint(snapshot: GameSnapshot, owner: PlayerId, hall: Building, fac
   const ring = Array.from({ length: 8 }, (_, index) => ({ x: hall.x + detCos((index / 8) * Math.PI * 2) * 180, y: hall.y + detSin((index / 8) * Math.PI * 2) * 180 }));
   return [towerPointFor(snapshot, owner, hall, facing), ...ring]
     .map((candidate) => legalBuildPointNear(snapshot, "defenseTower", candidate))
-    .find((candidate) => distance(candidate, hall) <= TOWER_REACH_FROM_HALL && creeps.every((creep) => distance(creep, candidate) > CREEP_CLEARANCE));
+    .find((candidate) => isBuildPlacementClear(snapshot, "defenseTower", candidate) && distance(candidate, hall) <= TOWER_REACH_FROM_HALL && creeps.every((creep) => distance(creep, candidate) > CREEP_CLEARANCE));
 }
 
 const V9_THREAT_CLEARANCE = 1_500;
