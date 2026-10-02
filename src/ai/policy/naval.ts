@@ -255,22 +255,26 @@ function hallSite(snapshot: GameSnapshot, mine: Point): Point | undefined {
   return undefined;
 }
 
-// The plans below are found once per map and owner, and looked for again every PLAN_RETRY: an island's while none is
-// found (its shore may have been built over, or its halls may since stand by another water), the enemy's door always (its
-// buildings and towers come and go).
+// The plans below are found once per owner, and looked for again every PLAN_RETRY: an island's while none is found (its
+// shore may have been built over, or its halls may since stand by another water), the enemy's door always (its buildings
+// and towers come and go). They are kept in the owner's memory (a game saved with its AIs' memory plays on as it would
+// have: kept by the terrain beside it, a replay from a save took other naval commands than the game had, and a second
+// game on the same terrain object took the first one's plans).
 const PLAN_RETRY = seconds(20);
+
+function navalMemory(options: AiPolicyContext) {
+  return (options.memory.naval ??= {});
+}
 
 // The nearest mine with gold left that the owner's workers cannot walk to but a ship from its own shore can reach, with
 // the water a ship lands at.
-const plans = new WeakMap<object, Map<PlayerId, { plan: IslandPlan | undefined; tick: number }>>();
 function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): IslandPlan | undefined {
   const map = snapshot.map;
   if (!map.terrain || groundWholes(map) <= 1) return undefined;
   const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
   if (!home) return undefined;
-  let perOwner = plans.get(map.terrain);
-  if (!perOwner) plans.set(map.terrain, (perOwner = new Map()));
-  let known = perOwner.get(owner);
+  const memory = navalMemory(options);
+  let known = memory.island;
   if (!known || (!known.plan && snapshot.tick - known.tick >= PLAN_RETRY)) {
     // A mine an opponent's hall holds is no island to take but a base to assault (see @@@ai-closeout).
     const held = (mine: ResourceNode) => snapshot.buildings.some((building) => building.kind === "townHall" && distance(building, mine) <= 400 && isOpponentOwner(snapshot, owner, building.owner, options));
@@ -279,28 +283,26 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
       .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
       .filter((entry) => isWalkable(map, entry.landing.x, entry.landing.y, "sea") && Boolean(shoreSpot(snapshot, owner, entry.landing, options)))
       .sort((a, b) => distance(a.mine, home) - distance(b.mine, home))[0];
-    known = { plan, tick: snapshot.tick };
-    perOwner.set(owner, known);
+    known = { tick: snapshot.tick, ...(plan ? { plan: { mineId: plan.mine.id, landing: { x: plan.landing.x, y: plan.landing.y } } } : {}) };
+    memory.island = known;
   }
   const plan = known.plan;
-  const live = plan && snapshot.resources.find((mine) => mine.id === plan.mine.id && mine.amount > 0);
+  const live = plan && snapshot.resources.find((mine) => mine.id === plan.mineId && mine.amount > 0);
   return plan && live ? { mine: live, landing: plan.landing } : undefined;
 }
 
 // The assault (see @@@ai-closeout): of the opponents whose every building stands off the owner's home's ground, the
 // building nearest its home that water by it joins to a shore of the owner's (or its shipyard), with that water. Looked for again
 // every PLAN_RETRY, and at once when its target falls.
-const assaults = new WeakMap<object, Map<PlayerId, { assault: AssaultPlan | undefined; tick: number }>>();
 function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): AssaultPlan | undefined {
   const map = snapshot.map;
   if (!map.terrain || groundWholes(map) <= 1) return undefined;
   const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
   if (!home) return undefined;
-  let perOwner = assaults.get(map.terrain);
-  if (!perOwner) assaults.set(map.terrain, (perOwner = new Map()));
-  let known = perOwner.get(owner);
-  const standing = known?.assault && snapshot.buildings.some((building) => building.id === known!.assault!.target.id);
-  if (!known || snapshot.tick - known.tick >= PLAN_RETRY || (known.assault && !standing)) {
+  const memory = navalMemory(options);
+  let known = memory.assault;
+  const standing = known?.plan && snapshot.buildings.some((building) => building.id === known!.plan!.targetId);
+  if (!known || snapshot.tick - known.tick >= PLAN_RETRY || (known.plan && !standing)) {
     // The opponents walled off by water: every building of theirs off the home's ground (another opponent may still stand
     // on it, for the army: four players' games ended with the island's last hall untouched while two fought on).
     const foes = snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options));
@@ -317,24 +319,22 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
         }
       }
     }
-    known = { assault, tick: snapshot.tick };
-    perOwner.set(owner, known);
+    known = { tick: snapshot.tick, ...(assault ? { plan: { targetId: assault.target.id, landing: { x: assault.landing.x, y: assault.landing.y } } } : {}) };
+    memory.assault = known;
   }
-  const live = known.assault && snapshot.buildings.find((building) => building.id === known!.assault!.target.id);
-  return known.assault && live ? { target: live, landing: known.assault.landing } : undefined;
+  const live = known.plan && snapshot.buildings.find((building) => building.id === known!.plan!.targetId);
+  return known.plan && live ? { target: live, landing: known.plan.landing } : undefined;
 }
 
 // The water at the enemy's door: by an enemy hall that no tower covers and a warship reaches from water the owner has a
 // shore on; on the water its shipyard is on first (one shipyard serves the raid), then by the hall nearest its home.
-const raids = new WeakMap<object, Map<PlayerId, { raid: RaidPlan | undefined; tick: number }>>();
 function raidPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): RaidPlan | undefined {
   const map = snapshot.map;
   if (!map.terrain || shoreSpots(map, BUILDING_DEFS.shipyard.radius).length === 0) return undefined;
   const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
   if (!home) return undefined;
-  let perOwner = raids.get(map.terrain);
-  if (!perOwner) raids.set(map.terrain, (perOwner = new Map()));
-  let known = perOwner.get(owner);
+  const memory = navalMemory(options);
+  let known = memory.raid;
   if (!known || snapshot.tick - known.tick >= PLAN_RETRY) {
     const towers = enemyTowers(snapshot, owner, options);
     const yards = buildings(snapshot, owner).filter((building) => building.kind === "shipyard");
@@ -356,10 +356,10 @@ function raidPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCont
       raid = { water };
       break;
     }
-    known = { raid, tick: snapshot.tick };
-    perOwner.set(owner, known);
+    known = { tick: snapshot.tick, ...(raid ? { water: { x: raid.water.x, y: raid.water.y } } : {}) };
+    memory.raid = known;
   }
-  return known.raid;
+  return known.water ? { water: known.water } : undefined;
 }
 
 // The water a warship shoots the thing from, if any is within its range of it.

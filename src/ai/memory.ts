@@ -50,12 +50,21 @@ export type V6PolicyMemory = {
   plays?: Record<string, number>;
 };
 
+// The naval script's plans (see @@@ai-naval), each with the tick it was looked for: the island's mine and the water a ship
+// lands at, the assault's target and its water, the raid's water.
+export type NavalPlanMemory = {
+  island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
+  assault?: { tick: number; plan?: { targetId: string; landing: { x: number; y: number } } };
+  raid?: { tick: number; water?: { x: number; y: number } };
+};
+
 export type AiPolicyMemory = {
   jobs: AiJobState[];
   unitClaims: Record<string, AiPolicyUnitClaim>;
   strategicPlan?: AiStrategicPlan;
   perception?: Record<string, unknown>;
   v6?: V6PolicyMemory;
+  naval?: NavalPlanMemory;
 };
 
 export function createAiPolicyMemory(): AiPolicyMemory {
