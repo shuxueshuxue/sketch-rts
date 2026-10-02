@@ -1,7 +1,7 @@
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../../shared/catalog";
 import { canReach, carries } from "../../shared/naval";
-import { groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal } from "../../shared/terrain";
+import { groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
 import type { Building, GameCommand, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import { legalBuildPointNear } from "./build-layout";
@@ -483,7 +483,8 @@ function shipyardOf(snapshot: GameSnapshot, owner: PlayerId, water: Point): Buil
 }
 
 // The shore spot (see shoreSpots) on the owner's own ground and on the given water, free to build on, nearest its halls
-// there: as far off as the shore lies, but on its own side, nearer one of its halls than any enemy's on its ground.
+// there by walking: as far off as the shore lies, but on its own side, a shorter walk from one of its halls than from any
+// enemy's on its ground.
 function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, options: AiPolicyContext, despiteGuns = false): Point | undefined {
   const map = snapshot.map;
   const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall");
@@ -493,7 +494,10 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
   // Only the enemy halls on its own ground: one on an island sends nobody walking at the shipyard (a corner island's last
   // hall kept every shore of its lake its own, and no assault ever set out, see @@@ai-closeout).
   const theirs = snapshot.buildings.filter((building) => building.kind === "townHall" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(map, building, home));
-  const gapOf = (spot: Point, from: Building[]) => Math.min(Infinity, ...from.map((hall) => distance(hall, spot)));
+  // How far its workers walk there from the nearest of the halls (a spot no walk reaches is none): by the straight line a
+  // shore across the map's middle came first, 1780 off but 3782 to walk, and its builders died on the way one after
+  // another (pool-templeSpring-5 at f18cf97).
+  const gapOf = (spot: Point, from: Building[]) => Math.min(Infinity, ...from.map((hall) => walkingDistance(map, spot, hall) ?? Infinity));
   // None on water an enemy's armed ship sails, nor within the reach of one on other water (its range, the shipyard's
   // radius and GUN_MARGIN), unless its own towers cover the shore: a site starts at a few health and the ships come and
   // sink it before its builder gets there (two warships guarding an island's last hall sank five shipyards, 170 gold each
