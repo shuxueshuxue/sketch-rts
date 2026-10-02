@@ -1,6 +1,6 @@
 import "./styles.css";
 import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
-import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
+import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
@@ -1879,13 +1879,23 @@ function beginSpellTargeting(ability: AbilityKind) {
   updateHud();
 }
 
+function placementRefusalText(refusal: PlacementRefusal, kind: BuildingKind) {
+  const building = labelKind(kind);
+  if (refusal.reason === "worker") return t("status.buildNeedsWorker");
+  if (refusal.reason === "tooClose") return t("status.placementTooClose", { building, blocker: labelKind(refusal.blocker) });
+  if (refusal.reason === "ground") return t("status.placementGround", { building });
+  if (refusal.reason === "shore") return t("status.placementShore", { building });
+  if (refusal.reason === "gold") return t("status.placementGold", { building, cost: refusal.cost });
+  return refusal.message;
+}
+
 function confirmBuildPlacement(point: Point) {
   if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "build" || !snapshot) return;
   const world = screenToWorld(point);
-  const result = buildPlacementCommand(snapshot, commandMode.placement, world);
-  if ("error" in result) {
-    showInvalidCommand(result.error);
+  const result = buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
+  if ("refusal" in result) {
+    showInvalidCommand(placementRefusalText(result.refusal, commandMode.placement.buildingKind));
     return;
   }
   sendCommand(result.command);
@@ -2543,7 +2553,7 @@ function drawBuildPlacementPreview() {
   const world = screenToWorld(lastMouse);
   const at = snapToFootprint(snapshot.map, def.radius, world);
   const point = worldToScreen(at);
-  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world);
+  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
   const ink = validPlacement ? PLACEMENT_INK.clear : PLACEMENT_INK.blocked;
   const square = footprintSquare(snapshot, at, def.radius);
   if (square) {
