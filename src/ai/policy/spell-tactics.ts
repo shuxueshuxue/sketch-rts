@@ -10,7 +10,7 @@ import { anyWithinRangeOf, averagePoint, distance, type Point } from "./spatial"
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
 import { unitStrength } from "./v6/strength";
-import { isV5HybridPolicy, isV6Policy, isV7Policy, isV8Policy } from "./versions";
+import { isV5HybridPolicy, isV6Policy, isV7Policy, isV8Policy, isV9Policy } from "./versions";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
@@ -183,7 +183,12 @@ function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: U
   return fighters.filter((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options));
 }
 
+// @@@v9-melee-focus - A V9 melee fighter joins a focus only standing at the target already: sent at it from its whole join
+// range, twelve footmen closed on one man at a time, the ones that found no room round him walked round the crowd, and all
+// twelve fell having killed 829 gold's worth, where twelve left to their own blows lost 563 and killed every enemy (the V9
+// exam's S1, against V8's ember).
 function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
+  if (isV9Policy(options) && fighter.attackRange <= 100 && distance(fighter, target) > fighter.attackRange + fighter.radius + target.radius) return false;
   if (distance(fighter, target) <= focusFireJoinRange(fighter)) return true;
   return v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options);
 }

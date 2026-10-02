@@ -86,6 +86,12 @@ const V9_STALE_TICKS = 3 * 90 * 20;
 // natural at 8:40, V9 came back to it in pieces and lost six of eight (marbleGrove, generated). Without the creeping V9
 // won 6591 of 8000 nudged duels against V8 against 6536, and 6536 against 6493 on forty unseen seeds.
 const V9_PUSHED_SHARE = 0.5;
+// @@@v9-fall-back - Outweighed by the armies pushing at it (worth more than V9_FALL_BACK_SHARE times its own), V9 holds at
+// home, under its main's towers, not at its front: met at the front, 650 out, 800 gold of V9's against 1600 struck at its
+// main lost 0.34 of what they traded and its two towers never fired, where V8, holding at home, lost 0.12 and beat twelve
+// ravagers outright (the V9 exam's S8, 24 cells of 24). Even (S1, the whole army), the front holds better than home: V9
+// gained 0.07 on V8 there. Against three, 267 of 500 games won against 271 without it.
+const V9_FALL_BACK_SHARE = 1.2;
 // @@@v9-fortress-creep - With its towers standing V9 creeps (and so expands) though an enemy army is about its bases: against
 // three, one nearly always is, and V9 never took a third mine while it waited for none (1000 games on ladder maps).
 const RETREAT_LINE = 0.8;
@@ -118,16 +124,18 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
   const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
-  // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort).
-  const rally = isV9Policy(options) ? (v9EscortPoint(snapshot, owner, intel, options) ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
+  const available = intel.army.filter((unit) => !busy.has(unit.id));
+  const strength = strengthOf(available);
+  // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
+  // and at home under its towers while the armies closing on it outweigh it (see v9-fall-back).
+  const outweighed = isV9Policy(options) && intel.enemies.filter((enemy) => enemy.state === "pushing").reduce((total, enemy) => total + enemy.power, 0) > strength * V9_FALL_BACK_SHARE;
+  const rally = isV9Policy(options) && !outweighed ? (v9EscortPoint(snapshot, owner, intel, options) ?? v9FrontPoint(snapshot, owner, intel)) : rallyPoint(intel);
   if (front.length === 0) {
     // No front left (every spirit gone): a gathering pulse is over, or its casters would hold their summons forever and
     // no front would ever come back (44 pyre callers stood at home without a spirit for twenty minutes).
     if (memory.general?.stage === "gather") memory.general = { mode: "hold", target: rally };
     return [];
   }
-  const available = intel.army.filter((unit) => !busy.has(unit.id));
-  const strength = strengthOf(available);
   const current = memory.general;
 
   const defense = isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel);
