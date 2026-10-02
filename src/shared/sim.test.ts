@@ -180,7 +180,7 @@ describe("sketch RTS simulation", () => {
       { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
       { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ]);
-    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 260, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 }]);
+    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 }]);
   });
 
   it("researches late mobility and range tech as derived unit stats without touching attack speed or towers", () => {

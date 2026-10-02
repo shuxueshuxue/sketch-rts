@@ -368,7 +368,7 @@ export const UPGRADE_DEFS: Record<UpgradeKind, UpgradeDef> = {
     researchBuildingKinds: ["townHall"],
     affectedUnitKinds: [],
     levels: [
-      { cost: 260, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
+      { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
     ],
   },
   // A tenth faster a level: at a quarter a level (1.25, 1.38, 1.5) a footman at the third outran a raider untrained (4.5

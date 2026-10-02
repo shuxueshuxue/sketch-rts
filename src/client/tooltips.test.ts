@@ -92,7 +92,7 @@ describe("gameplay tooltips", () => {
     const tooltip = upgradeTooltip("buildingDurability", "d", 0);
 
     expect(tooltip.title).toBe("Building Durability I");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 260 gold", "Research 54.0s", "+20% building HP"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 200 gold", "Research 54.0s", "+20% building HP"]));
     expect(tooltip.requirements).toEqual(expect.arrayContaining(["Research at Town Hall.", "Affects buildings."]));
     expect(tooltip.hotkey).toBe("D");
   });
