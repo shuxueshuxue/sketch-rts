@@ -137,6 +137,18 @@ describe("the AI on the water", () => {
     expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
+  it("breaks a blockade in the closeout: another warship, and no transport, until its fleet outweighs the enemy's", () => {
+    const game = islandGame();
+    const hall = game.buildings.find((building) => building.id === "hall-a")!;
+    game.buildings.push({ ...hall, id: "hall-e", owner: "enemy", ...at(22, 10) }, { ...hall, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
+    const warship = (id: string, owner: "player" | "enemy", col: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, owner, kind: "warship" as const, ...at(col, 16), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 });
+    game.units.push(warship("p1", "player", 11), warship("p2", "player", 12), warship("e1", "enemy", 26), warship("e2", "enemy", 27));
+    expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.id).toBe("naval:warship");
+    // Its fleet outweighing theirs, the transport comes.
+    game.units.push(warship("p3", "player", 13), warship("p4", "player", 14));
+    expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.id).toBe("naval:transport");
+  });
+
   it("keeps its idle warships off the shallows its workers cross to the island", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = islandGame();

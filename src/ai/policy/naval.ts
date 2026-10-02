@@ -80,13 +80,14 @@ export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
   const plan = assault ? undefined : islandPlan(snapshot, owner, options);
   const water = assault?.landing ?? plan?.landing ?? raidPlan(snapshot, owner, options)?.water ?? threat[0];
   if (!water) return undefined;
-  const want = navalStep(snapshot, owner, options, assault, plan, water, halls);
   const home = halls[0];
-  return want && assault && home && lastFight(snapshot, owner, options, home) ? { ...want, closeout: true } : want;
+  const closeout = Boolean(assault && home && lastFight(snapshot, owner, options, home));
+  const want = navalStep(snapshot, owner, options, assault, plan, water, halls, closeout);
+  return want && closeout ? { ...want, closeout: true } : want;
 }
 
 // The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[], closeout: boolean): NavalWant | undefined {
   const yard = shipyardOf(snapshot, owner, water);
   if (!yard && !shoreSpot(snapshot, owner, water, options)) {
     // Every shore of the water under an enemy ship's guns: a tower that outshoots the nearest of them first (see
@@ -95,7 +96,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const hall = site && nearestOf(halls.filter((building) => sameGround(snapshot.map, building, site)), site);
     const gun = site && nearestOf(snapshot.units.filter((unit) => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options)), site);
     const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && (unit.order.type === "mine" || unit.order.type === "idle"));
-    return hall && gun ? coastTower(snapshot, hall, gun, workers) : undefined;
+    return hall && gun ? coastTower(snapshot, hall, gun, workers, site) : undefined;
   }
   if (!yard) {
     return {
@@ -115,8 +116,13 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
   // A transport on other water serves nothing here (one from an island's ferry sat on its own lake through an assault).
   const transported = fleet.some((unit) => unit.kind === "transport" && sameGround(snapshot.map, unit, water, "sea"));
   const held = outgunned(snapshot, owner, options, water);
+  // @@@blockade - Water the enemy's ships hold is crossed by no transport: in the closeout the fleet grows past its escort
+  // until it outweighs them (see outgunned) and strikes together (see planNavalTactics), and in any other assault nothing
+  // is bought for it. Crossing all the same, one transport after another went down with the soldiers aboard, and the
+  // last base an island's ships guarded stood to the end (the 1v3 bench's 500 games at eb943a6: V9's transports sunk
+  // 220, soldiers drowned 414, games unfinished 115 against 87).
   const ship: TrainableUnitKind | undefined = assault
-    ? !transported ? "transport" : warships < WARSHIPS && !held ? "warship" : undefined
+    ? held ? (closeout ? "warship" : undefined) : !transported ? "transport" : warships < WARSHIPS ? "warship" : undefined
     : held ? undefined : warships < WARSHIPS ? "warship" : plan && !transported && !islandHallOf(snapshot, owner, plan) ? "transport" : undefined;
   if (ship && yard.complete && yard.queue.length === 0 && canSupply(snapshot, owner, ship)) {
     return { id: `naval:${ship}`, cost: UNIT_DEFS[ship].cost, issue: () => ({ type: "train", buildingId: yard.id, unitKind: ship }) };
@@ -170,21 +176,23 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
   const guards = plan ? snapshot.units.filter((unit) => unit.owner === "neutral" && distance(unit, plan.mine) <= 350) : [];
   const prey = raid ? raidTargets(snapshot, owner, options, raid) : [];
   const harbor = buildings(snapshot, owner).find((building) => building.kind === "shipyard");
+  // While the assault's water is held, the warships gather at the harbor and the soldiers stay ashore (see @@@blockade).
+  const blockaded = Boolean(assault && outgunned(snapshot, owner, options, assault.landing));
   for (const ship of warships) {
     const busy = ship.order.type === "attack" || ship.order.type === "attackMove";
     const hurt = ship.hp < ship.maxHp * HURT;
     const reachable = <T extends Unit | Building>(things: T[]) => things.filter((thing) => canReach(snapshot.map, ship, thing));
-    const besieged = assault ? reachable(snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options))) : [];
+    const besieged = assault && !blockaded ? reachable(snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options))) : [];
     const foe = nearestOf(reachable(threat), ship) ?? nearestOf(reachable(guards), ship) ?? (hurt ? undefined : (nearestPrey(prey, ship) ?? nearestOf(besieged, ship)));
     const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
     if (foe && !busy) commands.push({ type: "attack", unitIds: [ship.id], targetId: foe.id });
     else if (hurt && !foe && home && ship.order.type !== "move" && distance(ship, home) > 300) commands.push({ type: "move", unitIds: [ship.id], x: home.x, y: home.y });
     else if (!foe && !hurt && ship.order.type === "idle") {
-      const station = assault ? offshore(snapshot, assault.landing, assault.target) : plan ? offshore(snapshot, plan.landing, plan.mine) : prey.length > 0 ? raid?.water : undefined;
+      const station = blockaded ? home : assault ? offshore(snapshot, assault.landing, assault.target) : plan ? offshore(snapshot, plan.landing, plan.mine) : prey.length > 0 ? raid?.water : undefined;
       if (station && distance(ship, station) > 300) commands.push({ type: "move", unitIds: [ship.id], x: station.x, y: station.y });
     }
   }
-  if (assault) return [...commands, ...assaultCommands(snapshot, owner, options, assault, own)];
+  if (assault) return [...commands, ...assaultCommands(snapshot, owner, options, assault, own, blockaded)];
   if (!plan) return commands;
   const transport = own.find((unit) => unit.kind === "transport" && sameGround(snapshot.map, unit, plan.landing, "sea"));
   const islanders = own.filter((unit) => unit.kind === "worker" && sameGround(snapshot.map, unit, plan.mine));
@@ -229,7 +237,7 @@ export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: A
 
 // The assault's moves (see @@@ai-closeout): landed soldiers go for the enemy's buildings on their ground; the transport
 // takes soldiers from home aboard while it has room and some stand idle, and lands them by the target.
-function assaultCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan, own: Unit[]): GameCommand[] {
+function assaultCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan, own: Unit[], blockaded: boolean): GameCommand[] {
   const map = snapshot.map;
   const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
   if (!home) return [];
@@ -247,7 +255,7 @@ function assaultCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "attackMove", unitIds, x: target.x, y: target.y }, options));
   }
   const transport = own.find((unit) => unit.kind === "transport" && sameGround(map, unit, assault.landing, "sea"));
-  if (!transport || transport.order.type === "unload") return commands;
+  if (!transport || transport.order.type === "unload" || blockaded) return commands;
   const supply = (list: Unit[]) => list.reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0);
   const aboard = transport.cargo ?? [];
   const boarding = own.filter((unit) => unit.order.type === "board");
@@ -284,8 +292,8 @@ function offshore(snapshot: GameSnapshot, landing: Point, from: Point): Point {
 // hall). The ship sunk or gone, a shore is free for the shipyard (see shoreSpot). An island's warships, parked off its
 // besieger's beach, sank every shipyard placed there within two seconds, and its last base stood to the end
 // (pool-templeSpring-3, -5 at 88ba501; a tower inland of the shore, which the ships did not reach, ended one of them).
-function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers: Unit[]): NavalWant | undefined {
-  const site = towerSite(snapshot, ground, ship);
+function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers: Unit[], shore: Point): NavalWant | undefined {
+  const site = towerSite(snapshot, ground, ship) ?? shoreTower(snapshot, ground, shore);
   if (!site) return undefined;
   return {
     id: "naval:coastTower",
@@ -297,6 +305,14 @@ function coastTower(snapshot: GameSnapshot, ground: Point, ship: Point, workers:
       return { type: "build", unitId: builder.id, buildingKind: "defenseTower", x: site.x, y: site.y };
     },
   };
+}
+
+// Where no tower outshoots the ship (it lies out on the water, beyond a tower's reach of any ground), one by the shore the
+// shipyard would take, which it then rises under: the island's two warships blockading its besieger's water from out
+// there left it no shore, no shipyard and no closeout (pool-elderwood-6 at eb943a6).
+function shoreTower(snapshot: GameSnapshot, ground: Point, shore: Point): Point | undefined {
+  const at = legalBuildPointNear(snapshot, "defenseTower", shore);
+  return sameGround(snapshot.map, at, ground) && isBuildPlacementClear(snapshot, "defenseTower", at) && distance(at, shore) <= TOWER_COVER ? at : undefined;
 }
 
 function towerSite(snapshot: GameSnapshot, ground: Point, ship: Point): Point | undefined {
