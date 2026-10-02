@@ -1,6 +1,7 @@
 import "./styles.css";
 import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
+import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
 import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
@@ -63,6 +64,7 @@ import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
 import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_VERSIONS, type SlotPatch } from "../shared/rooms";
+import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId } from "../shared/types";
 
@@ -2527,28 +2529,34 @@ function draw() {
   drawMinimap(createMapPresentation(snapshot));
 }
 
+// The build mode's preview stands where the sim will lay the building (see snapToFootprint), on the cells it would take:
+// green where it can go, its blocking cells red where it cannot (see @@@footprint-preview), every cell red when nothing
+// on the ground is in the way (gold short, a shipyard off the shore).
+const PLACEMENT_INK = { clear: "#4f9a52", blocked: "#b2483c" } as const;
+
 function drawBuildPlacementPreview() {
-  if (!commandMode || commandMode.type !== "build" || !lastMouse) return;
-  const def = BUILDING_DEFS[commandMode.placement.buildingKind];
-  const point = lastMouse;
-  const size = buildingGlyphSize(commandMode.placement.buildingKind);
-  const world = screenToWorld(point);
-  const placement = snapshot ? buildPlacementCommand(snapshot, commandMode.placement, world) : undefined;
-  const validPlacement = !placement || "command" in placement;
+  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
+  const kind = commandMode.placement.buildingKind;
+  const def = BUILDING_DEFS[kind];
+  const size = buildingGlyphSize(kind);
+  const world = screenToWorld(lastMouse);
+  const at = snapToFootprint(snapshot.map, def.radius, world);
+  const point = worldToScreen(at);
+  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world);
+  const ink = validPlacement ? PLACEMENT_INK.clear : PLACEMENT_INK.blocked;
+  const square = footprintSquare(snapshot, at, def.radius);
+  if (square) {
+    const blocked = validPlacement ? new Set<string>() : blockedFootprintCells(snapshot, kind, square);
+    const everyCell = !validPlacement && blocked.size === 0;
+    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));
+  }
   ctx.save();
-  ctx.strokeStyle = validPlacement ? "#387d72" : "#a85644";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 5]);
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + size / 2 - 3, def.radius, def.radius * 0.36, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
   ctx.globalAlpha = 0.62;
-  drawAtlasBuilding(ctx, commandMode.placement.buildingKind, point, size, String(ctx.strokeStyle));
+  drawAtlasBuilding(ctx, kind, point, size, ink);
   ctx.globalAlpha = 1;
-  ctx.fillStyle = validPlacement ? "#387d72" : "#a85644";
+  ctx.fillStyle = ink;
   ctx.font = "11px ui-monospace, monospace";
-  ctx.fillText(t("canvas.buildPreview", { building: labelKind(commandMode.placement.buildingKind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
+  ctx.fillText(t("canvas.buildPreview", { building: labelKind(kind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
   ctx.restore();
 }
 

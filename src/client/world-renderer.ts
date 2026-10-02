@@ -1,5 +1,6 @@
 import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
+import { drawFootprint, footprintSquare } from "./footprint-view";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
 import { drawLevelStar } from "./level-star";
@@ -272,7 +273,10 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
     ctx.lineWidth = selected ? 4 : 2;
     const size = buildingGlyphSize(building.kind);
-    if (selected) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
+    // Selected, a building shows the cells it takes (see @@@building-footprint); on a map without a grid, a halo.
+    const square = selected ? footprintSquare(painter.snapshot, building, building.radius) : undefined;
+    if (square) drawFootprint(ctx, square, painter.camera, () => ownerInk(building.owner));
+    else if (selected) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
     drawAtlasBuilding(ctx, building.kind, point, size, String(ctx.strokeStyle));
