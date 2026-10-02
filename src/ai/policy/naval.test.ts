@@ -24,9 +24,9 @@ function coast(): Terrain {
 const at = (col: number, row: number) => ({ x: col * 32 + 16, y: row * 32 + 16 });
 
 // The player holds two halls on the land with workers mining; the only other mine is the island's.
-function islandGame(terrain = coast()) {
+function islandGame(terrain = coast(), players = ["player", "enemy"]) {
   const game = createGame("bareDuel", {
-    players: ["player", "enemy"],
+    players,
     scenario: {
       players: { player: { gold: 1_000 } },
       replaceDefaultUnits: true,
@@ -126,6 +126,22 @@ describe("the AI on the water", () => {
     const snapshot = snapshotGame(game);
     expect(desiredExpansionMine(snapshot, "player")).toBeUndefined();
     expect(nextExpansionMine(snapshot, readV6Intel(snapshot, "player", { version: "v8" }))).toBeUndefined();
+  });
+
+  it("crosses to an opponent's island hall while it still stands ashore: against it alone at once, against more with its general's edge (see @@@transport-attack)", () => {
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const game = islandGame(coast(), ["player", "enemy", "rival"]);
+    // One hall of its own: nothing on the water but the crossing (no island to take, no raid without a second base).
+    game.resources = game.resources.filter((mine) => mine.id !== "island");
+    game.buildings = game.buildings.filter((building) => building.id !== "hall-b");
+    const hall = game.buildings.find((building) => building.id === "hall-a")!;
+    game.buildings.push({ ...hall, id: "enemy-island", owner: "enemy", ...at(22, 9) }, { ...hall, id: "enemy-shore", owner: "enemy", ...at(6, 9) });
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:shipyard");
+    // A second opponent ashore, and soldiers on the island the player has none to outweigh: no crossing.
+    const footman = game.units.find((unit) => unit.id === "w1")!;
+    game.buildings.push({ ...hall, id: "rival-shore", owner: "rival", ...at(6, 17) });
+    game.units.push(...[8, 10].map((row) => ({ ...footman, id: `guard-${row}`, owner: "enemy", kind: "footman" as const, ...at(21, row), order: { type: "idle" as const }, radius: 18 })));
+    expect(navalWant(snapshotGame(game), "player", { version: "v8" as const, memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
   it("assaults an enemy's last base on an island: a transport first, idle soldiers aboard, the landed at its hall", () => {

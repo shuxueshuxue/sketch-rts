@@ -61,6 +61,12 @@ const ATTACK_MARGIN = 1.3;
 // went down attacking enemy bases between minutes 6 and 14, and the push that followed took its home. With the wider edge
 // V8 won 1168 of 2000 games against 1120 (and 972 against 940 before it fielded knights).
 const V8_ATTACK_MARGIN = 1.6;
+
+// The edge the general sets out with against a base: what its army must outweigh the base's defence by. A transport's
+// crossing to a base on other ground asks the same edge (see @@@transport-attack).
+export function attackMargin(options: AiPolicyContext) {
+  return isV8Policy(options) ? V8_ATTACK_MARGIN : ATTACK_MARGIN;
+}
 const IDLE_TICKS = 90 * 20;
 const JOIN_RANGE = 700;
 const WORN_SHARE = 0.5;
@@ -208,7 +214,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     return order(snapshot, owner, memory, "creep", front, natural, options);
   }
 
-  const target = attackTarget(intel, isV8Policy(options) ? V8_ATTACK_MARGIN : ATTACK_MARGIN);
+  const target = attackTarget(intel, attackMargin(options));
   const idle = current?.mode === "hold" && snapshot.tick - (current.holdingSince ?? snapshot.tick) >= IDLE_TICKS;
   const marching = marchStrength(available) * (1 + profile.aggression);
   const regrouped = snapshot.tick - (memory.retreatedAt ?? -REGROUP_TICKS) >= REGROUP_TICKS;

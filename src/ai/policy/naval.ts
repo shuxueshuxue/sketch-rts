@@ -11,6 +11,9 @@ import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import type { AiPolicyContext } from "./types";
+import { attackMargin } from "./v6/general";
+import { readV6Intel } from "./v6/intel";
+import { TOWER_STRENGTH, strengthOf } from "./v6/strength";
 import { isV9Policy } from "./versions";
 import { canSupply, playerState } from "./world-model";
 
@@ -352,14 +355,15 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   let known = memory.assault;
   const standing = known?.plan && snapshot.buildings.some((building) => building.id === known!.plan!.targetId);
   if (!known || snapshot.tick - known.tick >= PLAN_RETRY || (known.plan && !standing)) {
-    // The opponents walled off by water: every building of theirs off the home's ground (another opponent may still stand
-    // on it, for the army: four players' games ended with the island's last hall untouched while two fought on).
+    // The opponents walled off by water, every building of theirs off the home's ground (another opponent may still stand
+    // on it, for the army: four players' games ended with the island's last hall untouched while two fought on), and the
+    // halls the others hold off it (see @@@transport-attack).
     const foes = snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options));
     const ashore = new Set(foes.filter((building) => sameGround(map, home, building)).map((building) => building.owner));
-    const islanders = foes.filter((building) => !ashore.has(building.owner));
+    const targets = foes.filter((building) => !ashore.has(building.owner) || (building.kind === "townHall" && !sameGround(map, home, building)));
     let assault: AssaultPlan | undefined;
-    if (islanders.length > 0) {
-      for (const target of islanders.sort((a, b) => distance(a, home) - distance(b, home))) {
+    if (targets.length > 0) {
+      for (const target of targets.sort((a, b) => distance(a, home) - distance(b, home))) {
         const landing = walkableGoal(map, target.x, target.y, "sea");
         if (!isWalkable(map, landing.x, landing.y, "sea")) continue;
         if (shipyardOf(snapshot, owner, landing) || shoreSpot(snapshot, owner, landing, options, true)) {
@@ -372,12 +376,35 @@ function assaultPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     memory.assault = known;
   }
   const live = known.plan && snapshot.buildings.find((building) => building.id === known!.plan!.targetId);
-  return known.plan && live ? { target: live, landing: known.plan.landing } : undefined;
+  if (!known.plan || !live) return undefined;
+  const free = lastFight(snapshot, owner, options, home) || soleOpponent(snapshot, owner, options);
+  return free || readyToCross(snapshot, owner, options, home, live) ? { target: live, landing: known.plan.landing } : undefined;
+}
+
+// Whether one opponent is all there is left (see @@@transport-attack).
+function soleOpponent(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return new Set(snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options)).map((building) => building.owner)).size <= 1;
 }
 
 // Whether the fight is the last: no opponent's hall stands on the army's ground.
 function lastFight(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Building) {
   return !snapshot.buildings.some((building) => building.kind === "townHall" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, home));
+}
+
+// @@@transport-attack - Any opponent's base the army cannot walk to is a transport's target: the last of one walled off by
+// water (see @@@ai-closeout) and a hall another holds on an island while it still stands ashore. While more than one
+// opponent is left and one still holds a hall on the army's ground, the soldiers cross only as the AI's general would set
+// out against a base: no enemy army in its bases (the intel's intrusion), and its soldiers at home outweighing the
+// target's ground's soldiers and towers by the general's own attack margin (see attackMargin). Crossing whenever a shore
+// was there, V9 shipped soldiers to an island while two rivals fought it on its own ground (I1 on the 1v3 bench: 238 of
+// 500 against 267; with the edge, 263 against 271).
+function readyToCross(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Building, target: Building) {
+  if (readV6Intel(snapshot, owner, options).intrusion) return false;
+  const map = snapshot.map;
+  const soldiers = units(snapshot, owner).filter((unit) => unitMover(unit.kind) === "land" && unit.kind !== "worker" && sameGround(map, unit, home));
+  const defenders = snapshot.units.filter((unit) => unitMover(unit.kind) === "land" && unit.kind !== "worker" && isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(map, unit, target));
+  const towers = snapshot.buildings.filter((building) => building.kind === "defenseTower" && building.complete && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(map, building, target)).length;
+  return strengthOf(soldiers) >= (strengthOf(defenders) + towers * TOWER_STRENGTH) * attackMargin(options);
 }
 
 // The water at the enemy's door: by an enemy hall that no tower covers and a warship reaches from water the owner has a
