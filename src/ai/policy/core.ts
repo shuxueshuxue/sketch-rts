@@ -80,6 +80,7 @@ import { planV6CasterScreen, v6ScreenedCasterIds } from "./v6/backline";
 import { planV6Closeout, v6CloseoutUnitIds } from "./v6/closeout";
 import { planV6Economy } from "./v6/economy";
 import { planV6General } from "./v6/general";
+import { readV6Intel } from "./v6/intel";
 import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
@@ -87,7 +88,7 @@ import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
 import { planV9Shopping, v9ShopperIds } from "./v9/shop";
 import { onHomeGround, sameGroundAs } from "./ground";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
-import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
+import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy, isV9Policy } from "./versions";
 import {
   availableBuilder,
   canSupply,
@@ -363,8 +364,13 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   const oversaturatedWorkers = workers.filter((unit) => unit.order.type === "mine" && (assignmentCounts.get(unit.order.resourceId) ?? 0) > 5);
   const bases = completeBuildings(snapshot, owner, "townHall");
   const assignableWorkers = [...idleWorkers, ...oversaturatedWorkers];
+  // @@@v9-no-feed - V9 sends no workers to the hall nearest its intrusion: with eight workers on the main mine and four on
+  // the natural, the natural's mine kept drawing the main's spare workers while the enemy's wave stood at it, 60 of them in
+  // 32 games of the V9 exam's S12.
+  const raided = isV9Policy(options) ? readV6Intel(snapshot, owner, options).intrusion : undefined;
+  const fed = raided ? bases.filter((base) => base !== nearestEntity([...bases], raided.building)) : bases;
 
-  for (const base of bases) {
+  for (const base of fed) {
     const mine = localActiveMineForBase(snapshot, base);
     if (!mine || (assignmentCounts.get(mine.id) ?? 0) > 0) continue;
     const worker = nearestEntity(
@@ -374,7 +380,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     if (worker) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: [worker.id], resourceId: mine.id }, options);
   }
 
-  for (const base of bases) {
+  for (const base of fed) {
     const mine = localActiveMineForBase(snapshot, base);
     if (!mine) continue;
     const assigned = assignmentCounts.get(mine.id) ?? 0;
