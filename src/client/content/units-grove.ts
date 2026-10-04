@@ -15,11 +15,11 @@ export const GROVE_UNITS = {
       torso(b, team);
       quilting(b, team);
       belt(b);
-      blade(b, [13, -1], [18, -20], 3.4);
+      blade(b, [13, -1], [20, -27], 4.2, STEEL, "#f5f4db");
       arm(b, [6, -6], [12, 1], team);
       head(b);
       kettleHelm(b);
-      roundShield(b, -12, 1, 8, "#9c8058", team);
+      roundShield(b, -12, 0, 10.5, team, "#ddd5b2");
     },
   },
   archer: {
@@ -30,6 +30,8 @@ export const GROVE_UNITS = {
     art: { tier: "basic", bearing: "foot", faction: "grove" },
     paint(b, team) {
       quiver(b);
+      // The broad hooded shoulder and longbow read before the small face does.
+      polygon(b, [[-6, -13], [4, -11], [-4, 12], [-17, 9], [-13, -4]], darker(team, 0.25));
       legs(b);
       torso(b, team);
       polygon(b, [[-7, -8], [6, -8], [8, 5], [-8, 5]], LEATHER, INK, 0.9);
@@ -37,7 +39,8 @@ export const GROVE_UNITS = {
       arm(b, [6, -6], [12, -2], team);
       head(b);
       hood(b, darker(team, 0.18));
-      bow(b, 15, -3, 17);
+      line(b, [[-8, -19], [-3, -24], [3, -23]], lighter(team, 0.35), 1.4);
+      bow(b, 16, -3, 20);
     },
   },
   raider: {
@@ -98,8 +101,8 @@ export const GROVE_UNITS = {
       head(b);
       kettleHelm(b);
       leafMark(b, -1, -29, 4.5);
-      kiteShield(b, -12, 0, 12, 22, team, LINEN);
-      leafMark(b, -12, -1, 4.2, "#b7cf94");
+      kiteShield(b, -12, 0, 17, 28, team, LINEN);
+      leafMark(b, -12, -1, 5.4, "#d0dfac");
     },
   },
   knight: {
@@ -134,6 +137,7 @@ export const GROVE_UNITS = {
     glyph: { silhouette: "priest-medallion", marks: ["halo", "cross", "satchel"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },
     paint(b, team) {
+      polygon(b, [[-7, -10], [6, -10], [13, 16], [-15, 16]], darker(team, 0.2));
       torso(b, LINEN, 15, 2);
       polygon(b, [[-4, -9], [-1, -9], [-2, 15], [-5, 15]], team, "transparent", 0);
       polygon(b, [[2, -9], [5, -9], [6, 15], [3, 15]], team, "transparent", 0);
@@ -144,6 +148,8 @@ export const GROVE_UNITS = {
       leafMark(b, 16, -32, 4.5, "#d9c882");
       arm(b, [6, -6], [15, 0], LINEN);
       head(b);
+      polygon(b, [[-7, -19], [-6, -25], [-1, -30], [4, -25], [5, -19]], LINEN, INK, 1.2);
+      line(b, [[-1, -27], [-1, -21]], GOLD, 1.8);
       halo(b, -26);
     },
   },
@@ -165,6 +171,8 @@ export const GROVE_UNITS = {
       arm(b, [6, -6], [15, 0], team);
       head(b);
       hood(b, darker(team, 0.25));
+      polygon(b, [[-8, -8], [-14, -11], [-17, -4], [-9, -1]], team, GOLD, 1);
+      polygon(b, [[6, -9], [11, -11], [14, -5], [8, -2]], team, GOLD, 1);
       line(b, [[-9, -19], [-3, -25]], GOLD, 1.2);
     },
   },
@@ -175,15 +183,16 @@ export const GROVE_UNITS = {
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "spark"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },
     paint(b, team) {
-      torso(b, darker(team, 0.2), 15, 2);
+      polygon(b, [[-7, -10], [5, -9], [10, 15], [-16, 17]], "#50495e");
+      torso(b, "#655672", 15, 2);
       hemTrim(b, 15, 2);
       belt(b, "#3f3441", GOLD);
       staff(b, 16, -24, 16, "#5b4a3a");
       b.beginPath(); b.arc(16, -29, 6, Math.PI * 0.35, Math.PI * 1.65); b.arc(18, -29, 4.6, Math.PI * 1.6, Math.PI * 0.4, true); b.closePath();
       b.fillStyle = "#ece0a6"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1; b.stroke();
-      arm(b, [6, -6], [15, 0], darker(team, 0.2));
+      arm(b, [6, -6], [15, 0], "#655672");
       head(b);
-      pointedHat(b, darker(team, 0.08));
+      pointedHat(b, "#51445f", team);
       line(b, [[-5, -4], [0, 1], [-3, 5]], "#9b5a8c", 1.3);
     },
   },

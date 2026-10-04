@@ -13,12 +13,14 @@ export const EMBER_UNITS = {
     paint(b, team) {
       legs(b, "brace");
       torso(b, team, 8);
+      polygon(b, [[-9, -10], [-4, -8], [-7, -2], [-14, -4], [-13, -9]], ASH, INK, 1.2);
+      line(b, [[-12, -9], [-7, -7]], EMBER, 1.5);
       line(b, [[-7, -8], [8, 6]], LEATHER_DARK, 2.6);
       line(b, [[6, -8], [-8, 6]], LEATHER_DARK, 2.6);
       belt(b, LEATHER_DARK);
       arm(b, [-6, -7], [-13, 2], SKIN, SKIN, 4.4);
       line(b, [[-12, -1], [-13, 1]], EMBER, 2.4);
-      b.beginPath(); b.moveTo(13, 0); b.lineTo(15, -12); b.quadraticCurveTo(26, -20, 26, -8); b.lineTo(17, -4); b.closePath();
+      b.beginPath(); b.moveTo(13, 0); b.lineTo(15, -17); b.quadraticCurveTo(32, -28, 29, -9); b.lineTo(17, -4); b.closePath();
       b.fillStyle = "#cfd6c8"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1.1; b.stroke();
       line(b, [[16, -12], [25.5, -9]], EMBER, 1.6);
       line(b, [[12, 3], [15, -12]], WOOD, 2.4);
@@ -67,7 +69,8 @@ export const EMBER_UNITS = {
       head(b);
       hood(b, ASH);
       line(b, [[-2, -20], [4.5, -18.5]], EMBER, 1.4);
-      bow(b, 14, -3, 13, "#6b4b36", EMBER_GLOW);
+      bow(b, 14, -3, 17, "#6b4b36", EMBER_GLOW);
+      polygon(b, [[20, -17], [23, -23], [25, -14]], EMBER, INK, 0.8);
       ellipse(b, 29, -4, 3.5, 3.5, "#f4c86e55");
     },
   },
@@ -146,6 +149,9 @@ export const EMBER_UNITS = {
       legs(b, "brace", ASH);
       polygon(b, [[-12, -12], [10, -12], [13, -4], [-15, -4]], "#7b6a58", INK, 1.1);
       torso(b, team, 10, 2);
+      polygon(b, [[-10, -12], [-18, -10], [-20, -2], [-10, -1]], ASH, INK, 1.4);
+      polygon(b, [[8, -12], [17, -10], [19, -2], [10, -1]], ASH, INK, 1.4);
+      for (const x of [-16, -11, 12, 17]) polygon(b, [[x - 2, -8], [x - 2, -18], [x + 3, -9]], LINEN, INK, 0.9);
       line(b, [[-8, -6], [8, 6]], LEATHER_DARK, 2.8);
       belt(b, LEATHER_DARK, EMBER_GLOW);
       for (const x of [-5, -1, 3]) ellipse(b, x, -7, 1.4, 1.8, "#e4dcc0", INK);
