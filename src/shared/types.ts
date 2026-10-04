@@ -102,6 +102,7 @@ export type Projectile = {
 };
 
 export type UnitOrder =
+  | { type: "build"; buildingKind: BuildingKind; x: number; y: number }
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
   | { type: "follow"; targetId: string }
@@ -197,6 +198,7 @@ export type Building = {
 };
 
 export type TrainingJob = {
+  id?: string;
   unitKind: TrainableUnitKind;
   remaining: number;
 };
@@ -428,6 +430,7 @@ export type TerrainLandmark = {
 };
 
 export type GameCommand =
+  | { type: "cancelTraining"; buildingId: string; jobId: string }
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
@@ -451,6 +454,19 @@ export type GameCommand =
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
+/** Persistent battlefield remains. Separate from live entities and transient effects. */
+export type Corpse = {
+  id: string;
+  unitId: string;
+  kind: UnitKind;
+  owner: Owner;
+  x: number;
+  y: number;
+  radius: number;
+  diedAtTick: number;
+  variant?: string;
+};
+
 export type GameSnapshot = {
   tick: number;
   match: MatchState;
@@ -464,6 +480,7 @@ export type GameSnapshot = {
   items: WorldItem[];
   projectiles: Projectile[];
   effects: WorldEffect[];
+  corpses?: Corpse[];
   // A campaign game's own units' rules, by variant id (see unit-variants). A standard match has none.
   variants?: Record<string, VariantRules>;
   // The map's shops (see @@@shop); a map without one has none, and no key.

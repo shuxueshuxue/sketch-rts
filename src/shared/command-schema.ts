@@ -14,6 +14,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "repair") return isStringArray(command.unitIds) && typeof command.buildingId === "string";
   if (command.type === "build") return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "setRally") return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
+  if (command.type === "cancelTraining") return typeof command.buildingId === "string" && typeof command.jobId === "string";
   if (command.type === "train") return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   if (command.type === "research") return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
   if (command.type === "hire") return typeof command.campId === "string";

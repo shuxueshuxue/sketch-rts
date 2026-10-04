@@ -78,3 +78,16 @@ describe("map pool", () => {
     }
   });
 });
+
+it('keeps named shores and requested diplomacy when alliances are uneven or free-for-all', () => {
+  for(const map of MAP_POOL.filter(map=>map.layout.kind==='sides')) {
+    const {players,teams}=seatsOf(map);
+    const baseline=createGame(map.id,{players,teams,aiPlayers:[]});
+    for(const custom of [Object.fromEntries(players.map((p,i)=>[p,i===0?'a':'b'])),Object.fromEntries(players.map(p=>[p,p]))]) {
+      const game=createGame(map.id,{players,teams:custom,aiPlayers:[]});
+      expect(game.map.terrain?.cells).toBe(baseline.map.terrain?.cells);
+      expect(game.teams).toEqual(custom);
+      expect(game.buildings.filter(b=>b.kind==='townHall')).toHaveLength(4);
+    }
+  }
+});

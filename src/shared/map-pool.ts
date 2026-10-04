@@ -36,10 +36,7 @@ export function poolMap(id: string): PoolMap | undefined {
   return MAP_POOL.find((map) => map.id === id);
 }
 
-/** Whether these teams, one per player, can play the map: all its seats taken, and on a sides map two teams of one size. */
+/** Alliances are independent of a named map's physical starting seats. */
 export function poolSeatsFit(map: PoolMap, teams: readonly string[]) {
-  if (teams.length !== map.players) return false;
-  if (map.layout.kind !== "sides") return true;
-  const sizes = [...new Set(teams)].map((team) => teams.filter((other) => other === team).length);
-  return sizes.length === 2 && sizes[0] === sizes[1];
+  return teams.length === map.players;
 }

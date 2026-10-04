@@ -67,6 +67,7 @@ export const GAME_SNAPSHOT_RESTORE_KEYS = [
   "items",
   "projectiles",
   "effects",
+  "corpses",
   "variants",
   "obstacles",
 ] as const satisfies readonly (keyof GameSnapshot)[];
@@ -146,7 +147,12 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   // A pool map is its own layout (see @@@map-pool); the ladder map has none of its own: a game on it without a layout is
   // drawn from the seed "ladder".
   const layout = options.layout ?? poolMap(mapId)?.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
-  const generated = layout ? generateMap(layout, activePlayers, teams) : undefined;
+  // Named two-shore maps retain their geometry when players change alliances.
+  // Only the layout uses these physical sides; game diplomacy uses `teams`.
+  const teamSizes = [...new Set(Object.values(teams))].map(team => activePlayers.filter(id => teams[id] === team).length);
+  const layoutTeams = !options.layout && poolMap(mapId)?.layout.kind === "sides" && (teamSizes.length !== 2 || teamSizes[0] !== teamSizes[1])
+    ? Object.fromEntries(activePlayers.map((id, index) => [id, `shore-${index % 2}`])) : teams;
+  const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {
     tick: 0,
@@ -417,17 +423,24 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const blocker = buildingPlacementBlocker(game, command.buildingKind, command);
     if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
     if (terrainBlocksPlacement(game.map, command.buildingKind, command)) throw new Error(`${command.buildingKind} placement is on blocked ground`);
-    spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
-    // Laid on whole cells (see @@@building-footprint), where its placement was checked.
+    if (playerState(game, owner).gold < BUILDING_DEFS[command.buildingKind].cost) throw new Error("Not enough gold");
     const at = snapToFootprint(game.map, BUILDING_DEFS[command.buildingKind].radius, command);
-    const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, at.x, at.y, false);
-    applyDerivedBuildingStats(game, building);
-    building.hp = constructionStartHp(building.maxHp);
-    game.nextId += 1;
-    game.buildings.push(building);
-    // The builder walks to the site and builds it from beside its walls (see updateConstruction).
-    worker.order = { type: "repair", buildingId: building.id };
-    addEffect(game, "build", at.x, at.y, 60);
+    // A plan is an order, not an entity: no remote HP, vision, collision or attack target.
+    assignUnitOrder(worker, { type: "build", buildingKind: command.buildingKind, ...at });
+
+    return;
+  }
+
+  if (command.type === "cancelTraining") {
+    const building = game.buildings.find(b => b.id === command.buildingId && b.owner === owner);
+    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+    const index = building.queue.findIndex(job => job.id === command.jobId);
+    // A delayed/duplicate click must never cancel the following soldier.
+    if (index < 0) return;
+    const [job] = building.queue.splice(index, 1);
+    playerState(game, owner).gold += UNIT_DEFS[job!.unitKind].cost;
+    game.match.stats.goldSpent[owner] = Math.max(0, (game.match.stats.goldSpent[owner] ?? 0) - UNIT_DEFS[job!.unitKind].cost);
+    updateSupplyState(game);
     return;
   }
 
@@ -603,6 +616,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     items: game.items.map((item) => ({ ...item })),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
+    ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse })) } : {}),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
     ...(game.obstacles ? { obstacles: game.obstacles.map((obstacle) => ({ ...obstacle, along: { ...obstacle.along } })) } : {}),
@@ -624,6 +638,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.items = cloneSnapshotValue(snapshot.items);
   game.projectiles = cloneSnapshotValue(snapshot.projectiles);
   game.effects = cloneSnapshotValue(snapshot.effects);
+  if (snapshot.corpses) game.corpses = cloneSnapshotValue(snapshot.corpses);
+  else delete game.corpses;
   if (snapshot.variants) game.variants = cloneSnapshotValue(snapshot.variants);
   else delete game.variants;
   if (snapshot.obstacles) game.obstacles = cloneSnapshotValue(snapshot.obstacles);
@@ -847,6 +863,10 @@ function updateUnits(game: Game): Ferry | undefined {
     }
     if (unit.order.type === "mine") {
       updateMineOrder(game, unit);
+      continue;
+    }
+    if (unit.order.type === "build") {
+      updateBuildOrder(game, unit);
       continue;
     }
     if (unit.order.type === "repair") {
@@ -1125,6 +1145,28 @@ function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
   return carriedGold;
 }
 
+function updateBuildOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "build" || !isPlayerId(unit.owner)) return;
+  const order = unit.order;
+  const def = BUILDING_DEFS[order.buildingKind];
+  const half = footprintHalf(def.radius, TERRAIN_CELL);
+  const gap = Math.hypot(Math.max(0, Math.abs(unit.x-order.x)-half), Math.max(0, Math.abs(unit.y-order.y)-half));
+  if (gap > WORK_REACH) { moveToward(unit, order.x, order.y, game.map); return; }
+  // Revalidate at arrival: two builders cannot claim the same site, and money is paid only on breaking ground.
+  if (buildingPlacementBlocker(game, order.buildingKind, order) || terrainBlocksPlacement(game.map, order.buildingKind, order)) {
+    unit.order = { type: "idle" }; return;
+  }
+  if (playerState(game, unit.owner).gold < def.cost) return; // Wait for funds, retaining the visible plan.
+  spendGold(game, unit.owner, def.cost);
+  const building = createBuilding(`building-${unit.owner}-${order.buildingKind}-${game.nextId++}`, unit.owner, order.buildingKind, order.x, order.y, false);
+  applyDerivedBuildingStats(game, building);
+  building.hp = constructionStartHp(building.maxHp);
+  game.buildings.push(building);
+  syncBuildingBodies(game);
+  unit.order = { type: "repair", buildingId: building.id };
+  addEffect(game, "build", building.x, building.y, 60);
+}
+
 function updateRepairOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "repair" || !isPlayerId(unit.owner)) return;
   const order = unit.order;
@@ -1182,7 +1224,7 @@ function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKi
     throw new Error(`Need more supply to train ${unitKind}`);
   }
   spendGold(game, building.owner, UNIT_DEFS[unitKind].cost);
-  building.queue.push({ unitKind, remaining: trainTimeFor(unitKind) });
+  building.queue.push({ id: `training-${game.nextId++}`, unitKind, remaining: trainTimeFor(unitKind) });
   updateSupplyState(game);
 }
 
@@ -1751,11 +1793,13 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
     return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) && canReach(game.map, rider, target) ? target : undefined;
   }
   if (order.type !== "idle" && order.type !== "attackMove") return undefined;
-  const charged = new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
+  let charged: Set<string> | undefined;
   let free: Unit | undefined;
   let any: Unit | undefined;
   forEachNearbyUnit(game, rider, def.range, (candidate) => {
     if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def) || !canReach(game.map, rider, candidate)) return;
+    // Most riders are out of charge range: only scan existing charges when a candidate exists.
+    charged ??= new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
     if (!any || distance(rider, candidate) < distance(rider, any)) any = candidate;
     if (!charged.has(candidate.id) && (!free || distance(rider, candidate) < distance(rider, free))) free = candidate;
   });
@@ -2549,6 +2593,14 @@ function removeDead(game: Game) {
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
   dropItemsFromDeadUnits(game, deadUnits);
+  // Only actual field deaths create remains. Boarding, scripted exits and
+  // summon expiry do not; passengers stay aboard the wreck. IDs do not consume
+  // the live-entity counter, and remains never join targeting or pathing indexes.
+  for (const unit of game.units) if (unit.hp <= 0) {
+    (game.corpses ??= []).push({ id: `corpse-${unit.id}-${game.tick}`, unitId: unit.id,
+      kind: unit.kind, owner: unit.owner, x: unit.x, y: unit.y, radius: unit.radius,
+      diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}) });
+  }
   game.units = game.units.filter((unit) => unit.hp > 0);
   game.buildings = game.buildings.filter((building) => building.hp > 0);
   // A rock pile or gate broken is gone, and its way open (see @@@obstacle).

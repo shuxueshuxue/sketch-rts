@@ -213,7 +213,7 @@ export const UNIT_RULES = {
   venomSpider: { hp: 105, speed: 3.2, radius: 15, attackDamage: 10, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
   spiderQueen: { hp: 400, speed: 3, radius: 26, attackDamage: 26, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
   dragonWhelp: { hp: 170, speed: 3, radius: 22, attackDamage: 9, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
-  redDragon: { hp: 500, speed: 2.8, radius: 28, attackDamage: 19, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
+  redDragon: { hp: 1200, speed: 2.8, radius: 28, attackDamage: 54, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
 } satisfies Record<string, UnitDef>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
