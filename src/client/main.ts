@@ -1,5 +1,5 @@
 import "./styles.css";
-import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -386,7 +386,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.dataset.hotkey = hotkey.toUpperCase();
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
   element.addEventListener("click", run);
   // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
@@ -415,13 +415,13 @@ function withRing(button: CommandButton) {
 
 function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const icon = document.createElement("canvas");
-  icon.width = icon.height = 68;
+  icon.width = icon.height = 96;
   icon.className = "command-portrait";
   icon.setAttribute("aria-hidden", "true");
   const brush = requireCanvasContext(icon);
-  const center = { x: 34, y: 39 };
-  if (portrait.type === "unit") drawAtlasUnit(brush, portrait.kind, center, 1.13, "#467d6c");
-  else drawAtlasBuilding(brush, portrait.kind, center, 56, "#467d6c");
+  const center = { x: 48, y: 48 };
+  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, "#397d73");
+  else drawAtlasBuilding(brush, portrait.kind, center, 78, "#397d73");
   element.querySelector(".command-icon")?.replaceChildren(icon);
 }
 
@@ -2354,13 +2354,16 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       button.setAttribute("aria-label", selectionGroupTitle(group));
       applyTooltip(button, selectionGroupTooltip(group));
       const canvas = document.createElement("canvas");
-      canvas.width = 34;
-      canvas.height = 34;
+      canvas.width = 96;
+      canvas.height = 96;
       canvas.className = "selection-model-canvas";
       const count = document.createElement("span");
       count.className = "selection-model-count";
       count.textContent = `x${group.count}`;
-      button.append(canvas, count);
+      const name = document.createElement("span");
+      name.className = "selection-model-name";
+      name.textContent = labelAnyKind(group.kind);
+      button.append(canvas, name, count);
       button.addEventListener("click", () => {
         focusedSelectionId = group.ids[0];
         openPalette = undefined;
@@ -2388,10 +2391,10 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
-  const point = { x: canvas.width / 2, y: canvas.height / 2 + 4 };
-  const color = group.focused ? "#42796e" : "#7c9078";
-  if (group.entityType === "unit") drawAtlasUnit(mini, group.kind, point, 0.61, color);
-  else drawAtlasBuilding(mini, group.kind, point, 30, color);
+  const point = { x: canvas.width / 2, y: canvas.height / 2 };
+  const color = "#397d73";
+  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
+  else drawAtlasBuilding(mini, group.kind, point, 78, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {

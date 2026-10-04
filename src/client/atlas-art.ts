@@ -62,6 +62,26 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
   }, facing === -1);
 }
 
+/** A close portrait shares the actual model, but gives faces and equipment the
+ * space that a full-body thumbnail cannot. Mounted units and beasts keep their
+ * silhouette. Coordinates and clipping stay local to the requested rectangle. */
+export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
+  const { bearing, faction } = UNIT_CARDS[kind].art;
+  const foot = bearing === "foot";
+  const extent = foot ? 48 : bearing === "mounted" ? 88 : 78;
+  const scale = size / extent;
+  c.save();
+  c.beginPath(); c.rect(x, y, size, size); c.clip();
+  const wash = c.createLinearGradient(x, y, x + size, y + size);
+  wash.addColorStop(0, faction === "ember" ? "#ded0b4" : "#d7e0cd");
+  wash.addColorStop(1, faction === "ember" ? "#9c7867" : "#78948b");
+  c.fillStyle = wash; c.fillRect(x, y, size, size);
+  c.strokeStyle = "#f8efd34d"; c.lineWidth = 1;
+  c.beginPath(); c.arc(x + size * 0.48, y + size * 0.5, size * 0.37, 0, Math.PI * 2); c.stroke();
+  drawAtlasUnit(c, kind, { x: x + size * (foot ? 0.43 : 0.48), y: y + size * 0.5 + (foot ? 16 : 10) * scale }, scale, color);
+  c.restore();
+}
+
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
 export function drawAtlasModel(c: Brush, key: string, model: { paint: (b: Brush, team: string) => void; shadow?: "foot" | "mounted" | "beast" | "huge" | "none" }, point: Point, scale: number, color: string, facing: Facing = 1) {
   sprite(c, `m:${key}:${color}`, point, scale, (b) => {

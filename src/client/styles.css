@@ -30,7 +30,7 @@
   --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .16 0 0 0 0 .06 0 0 0 .6 -.18'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   --tex-cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='c' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .12 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='600' height='600' filter='url(%23c)'/%3E%3C/svg%3E");
   --tex-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='w' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005 .11' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .02 0 0 0 0 0 0 0 0 1.5 -.6'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23w)'/%3E%3C/svg%3E");
-  --parchment: var(--tex-grain), var(--tex-cloud), radial-gradient(ellipse at 50% 40%, #f4e8c8 0%, #e8d6a9 55%, #d2b67d 100%);
+  --parchment: radial-gradient(ellipse at 35% 20%, #f5edda 0%, #e8dcc0 65%, #d9c7a0 100%);
   --walnut: var(--tex-wood), linear-gradient(180deg, #3f2716 0%, #2a180b 100%);
 
   /* The frame: walnut with a gold inlay and brass nails. */
@@ -70,9 +70,11 @@
   --tip-ink: #2e1d0e;
   --tip-soft: #6a5133;
   --tip-title: #4d1d10;
-  --hud-panel: var(--parchment);
-  --hud-ink: #2e1d0e;
-  --scene-filter: sepia(0.25) saturate(0.9) brightness(0.96);
+  /* Quiet lacquer and brass distinguish live controls from the paper map. */
+  --hud-panel: linear-gradient(145deg, #263e38, #172b28);
+  --hud-ink: #f0e7ce;
+  --font-ui: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --scene-filter: saturate(0.96) brightness(0.98);
   --shade: radial-gradient(ellipse at 62% 48%, rgba(40, 22, 8, 0) 25%, rgba(30, 16, 6, 0.6) 100%);
   --danger: #8e2a1f;
 }
@@ -269,8 +271,21 @@ input[type="range"] {
 .item-dock,
 .match-menu,
 .tooltip-layer {
+  font-family: var(--font-ui);
   border-width: 9px;
   border-image-width: 9px;
+}
+
+/* Match controls use thin, readable edges; the menu retains its carved frame. */
+.selection-chip,
+.command-dock,
+.item-dock,
+.match-menu {
+  border: 1px solid #9f936c;
+  border-image: none;
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  box-shadow: inset 0 1px 0 #e6d49e26, 0 5px 16px #14272340;
 }
 
 /* ---------------------------------------------------------------- menus */
@@ -1062,6 +1077,7 @@ input[type="range"] {
 
 /* ---------------------------------------------------------------- the match's HUD */
 
+.menu-open .control-deck,
 .menu-open .minimap-tab,
 .menu-open .minimap-relations,
 .menu-open .match-menu-button,
@@ -1096,13 +1112,13 @@ input[type="range"] {
   justify-content: space-around;
   align-items: center;
   box-sizing: content-box;
-  height: 27px;
+  height: 33px;
   margin: -11px 0 0 -12px;
   padding: 0 11px;
   border: 1px solid #0d0703;
   border-bottom: 0;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(#3b2516, #22150b);
+  background: linear-gradient(#2d453d, #172b28);
   color: var(--bar-value);
   font-family: var(--font-display);
   box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 -3px 10px rgba(0, 0, 0, 0.35);
@@ -1156,7 +1172,7 @@ input[type="range"] {
   padding: 0;
   border: 1px solid #0d0703;
   border-radius: 3px;
-  background: linear-gradient(#3b2516, #22150b);
+  background: linear-gradient(#2d453d, #172b28);
   box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
@@ -1168,7 +1184,7 @@ input[type="range"] {
 }
 
 .match-menu-button:hover {
-  background: linear-gradient(#4a2f1b, #2b1a0d);
+  background: linear-gradient(#456153, #253e35);
 }
 
 /* The minimap's friend-or-foe button (see @@@minimap-relations), Alt+A: a plaque as the menu's, at the frame's top left
@@ -1187,12 +1203,12 @@ input[type="range"] {
   padding: 0;
   border: 1px solid #0d0703;
   border-radius: 3px;
-  background: linear-gradient(#3b2516, #22150b);
+  background: linear-gradient(#2d453d, #172b28);
   box-shadow: inset 0 0 0 1px rgba(214, 176, 98, 0.55), inset 0 1px 0 rgba(255, 230, 180, 0.16), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .minimap-relations:hover {
-  background: linear-gradient(#4a2f1b, #2b1a0d);
+  background: linear-gradient(#456153, #253e35);
 }
 
 .minimap-relations span {
@@ -1264,16 +1280,39 @@ input[type="range"] {
   color: #ffb39c;
 }
 
-.selection-chip {
+.control-deck {
+  position: absolute;
   left: 14px;
   bottom: 14px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: calc(100vw - 300px);
+  max-height: calc(100dvh - 80px);
+}
+
+.control-deck > div {
+  position: relative;
+  inset: auto;
+  box-sizing: border-box;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+.control-deck .command-dock {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+.selection-chip {
   max-width: min(560px, calc(100vw - 300px));
   min-height: 40px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   overflow-x: auto;
-  padding: 4px;
+  padding: 7px;
   background: var(--hud-panel);
   color: var(--hud-ink);
   font-size: 13px;
@@ -1283,24 +1322,26 @@ input[type="range"] {
 .selection-model {
   position: relative;
   display: grid;
-  width: 48px;
-  height: 40px;
+  width: 72px;
+  height: 72px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--slot-edge);
   border-radius: 1px;
-  background: #e6d7b0;
-  padding: 0;
+  background: #304a41;
+  color: #eee7d3;
+  padding: 3px;
   box-shadow: inset 0 0 0 1px rgba(255, 245, 215, 0.5), inset 0 -3px 6px rgba(80, 50, 20, 0.25);
 }
 
 .selection-model.focused {
-  border-color: #c9a14f;
-  box-shadow: 0 0 0 1px #c9a14f, inset 0 0 0 1px rgba(255, 245, 215, 0.6);
+  border-color: #e2c77e;
+  background: #496358;
+  box-shadow: 0 0 0 1px #e2c77e, inset 0 -2px 0 #e2c77e;
 }
 
 .selection-model.dimmed {
-  opacity: 0.7;
+  opacity: 0.86;
 }
 
 .selection-model:hover,
@@ -1309,8 +1350,19 @@ input[type="range"] {
 }
 
 .selection-model-canvas {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+}
+
+.selection-model-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 16px;
 }
 
 .selection-model-count,
@@ -1330,9 +1382,16 @@ input[type="range"] {
   text-align: center;
 }
 
+.selection-model-count {
+  top: 3px;
+  bottom: auto;
+  font-size: 11px;
+  line-height: 16px;
+}
+
 .command-dock {
-  left: 14px;
-  bottom: 84px;
+  max-height: calc(100dvh - 230px);
+  overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
@@ -1343,9 +1402,8 @@ input[type="range"] {
 }
 
 .item-dock {
-  left: 14px;
-  bottom: 160px;
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   padding: 4px;
   background: var(--hud-panel);
@@ -1355,12 +1413,13 @@ input[type="range"] {
 .item-button,
 .command-button {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 66px;
+  flex: 0 0 auto;
   border: 1px solid var(--slot-edge);
   border-radius: 1px;
-  background: var(--slot);
-  color: var(--slot-ink);
+  background: linear-gradient(#e9e4cf, #c3cbb5);
+  color: #233d35;
   padding: 0;
   text-align: center;
   box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.28), inset 0 -3px 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -1382,12 +1441,44 @@ input[type="range"] {
 
 .command-portrait {
   display: block;
-  width: 36px;
-  height: 36px;
-  margin: 3px auto;
+  width: 46px;
+  height: 46px;
+  margin: 3px auto 0;
   border-radius: 1px;
   background: #e6d7b0;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.command-label {
+  position: absolute;
+  bottom: 2px;
+  left: 3px;
+  right: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.command-button .hotkey {
+  top: 2px;
+  bottom: auto;
+  right: 2px;
+  min-width: 13px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  line-height: 15px;
+  border: 1px solid #beaa74;
+  background: #203630;
+  color: #fff0bb;
+}
+
+.command-button:focus-visible,
+.selection-model:focus-visible {
+  outline: 2px solid #ffe7a3;
+  outline-offset: 2px;
 }
 
 .command-button:disabled {
@@ -1559,6 +1650,7 @@ input[type="range"] {
 }
 
 .tooltip-layer {
+  font-family: var(--font-ui);
   position: fixed;
   left: 0;
   top: 0;
@@ -1889,4 +1981,14 @@ input[type="range"] {
     max-height: calc(100dvh - 24px);
     padding: 14px 16px;
   }
+}
+
+/* Keep the command deck usable beside the minimap on narrow viewports. */
+@media (max-width: 700px) {
+  .control-deck { left: 8px; max-width: calc(100vw - 225px); }
+  .command-dock { gap: 3px; }
+  .command-button, .item-button { width: 50px; height: 60px; }
+  .command-portrait { width: 40px; height: 40px; }
+  .selection-model { width: 62px; }
+  .selection-chip { gap: 4px; }
 }
