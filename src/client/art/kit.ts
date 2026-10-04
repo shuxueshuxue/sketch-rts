@@ -2,7 +2,7 @@
 // (-1,-15)), headgear, mounts and building parts. Unit and building cards paint with these.
 export type Point = { x: number; y: number };
 export type Brush = CanvasRenderingContext2D;
-export const INK = "#35483c";
+export const INK = "#293c35";
 export const GOLD = "#cfab62";
 
 export function polygon(c: Brush, points: number[][], fill: string, stroke = INK, width = 1.4) {
@@ -64,8 +64,8 @@ export function tower(c: Brush, x: number, y: number, size: number, color: strin
 }
 
 export const SKIN = "#ddc29a";
-export const STEEL = "#c3cdc2";
-export const STEEL_DARK = "#7f8e86";
+export const STEEL = "#d5dfd8";
+export const STEEL_DARK = "#708a86";
 export const LEATHER = "#8d6c47";
 export const LEATHER_DARK = "#5f4b35";
 export const WOOD = "#7a6547";
@@ -101,7 +101,8 @@ export function legs(b: Brush, stance: "stand" | "brace" | "stride" = "stand", c
 
 export function torso(b: Brush, fill: string, hem = 9, flare = 0, lean = 0) {
   polygon(b, [[-8 + lean, -9], [7 + lean, -9], [11 + flare, hem], [-11 - flare, hem]], fill);
-  polygon(b, [[-8 + lean, -8], [-1 + lean, -7], [-3, hem - 1], [-11 - flare, hem - 1]], "#243f3d2e", "transparent", 0);
+  polygon(b, [[2 + lean, -8], [7 + lean, -8], [10 + flare, hem - 1], [3, hem - 1]], "#142f354a", "transparent", 0);
+  line(b, [[-7 + lean, -7], [-3 + lean, -7], [-6, hem - 2]], lighter(fill, 0.22), 1.5);
 }
 
 export function hemTrim(b: Brush, hem: number, flare = 0, color = GOLD) {
@@ -118,12 +119,15 @@ export function belt(b: Brush, color = LEATHER_DARK, buckle?: string) {
 }
 
 export function arm(b: Brush, from: XY, to: XY, sleeve: string, hand = SKIN, width = 3.6) {
+  line(b, [from, to], INK, width + 1.8);
   line(b, [from, to], sleeve, width);
   ellipse(b, to[0], to[1], 2.1, 2.1, hand, INK);
 }
 
 export function head(b: Brush, skin = SKIN, dx = 0) {
   ellipse(b, -1 + dx, -15, 6, 7, skin, INK);
+  polygon(b, [[1 + dx, -20], [4 + dx, -17], [5 + dx, -13], [1 + dx, -9], [-1 + dx, -10]], "#7f56352b", "transparent", 0);
+  line(b, [[-4 + dx, -17], [-3 + dx, -19]], "#fff0cf90", 1.2);
   ellipse(b, 2.4 + dx, -15.5, 0.9, 1.1, INK);
 }
 
@@ -150,6 +154,7 @@ export function pennant(b: Brush, x: number, y: number, color: string, size = 1)
 }
 
 export function bow(b: Brush, x: number, y: number, height: number, color = "#846c45", arrowTip = "#bcc5b0") {
+  b.beginPath(); b.ellipse(x, y, 8, height, -0.1, -Math.PI / 2, Math.PI / 2); b.strokeStyle = INK; b.lineWidth = 4; b.stroke();
   b.beginPath(); b.ellipse(x, y, 7, height, -0.1, -Math.PI / 2, Math.PI / 2); b.strokeStyle = color; b.lineWidth = 2.6; b.stroke();
   line(b, [[x - 2, y - height], [x + 1, y + height]], "#d6c494", 0.8);
   line(b, [[x - 10, y + 1], [x + 12, y - 1]], "#5e6049", 1.5);
@@ -163,13 +168,19 @@ export function quiver(b: Brush, fill = LEATHER) {
 
 export function roundShield(b: Brush, x: number, y: number, r: number, fill: string, band?: string) {
   ellipse(b, x, y, r * 0.85, r, fill, INK);
+  b.save();
+  b.beginPath(); b.ellipse(x, y, r * 0.85, r, 0, 0, Math.PI * 2); b.clip();
+  polygon(b, [[x, y - r], [x + r, y - r], [x + r, y + r], [x - r * 0.25, y + r]], "#152e353b", "transparent", 0);
+  b.restore();
   if (band) line(b, [[x - r * 0.6, y - r * 0.5], [x + r * 0.6, y + r * 0.5]], band, 2.6);
+  b.beginPath(); b.ellipse(x, y, r * 0.7, r * 0.83, 0, Math.PI * 0.85, Math.PI * 1.65); b.strokeStyle = "#e6dfc0"; b.lineWidth = 1.3; b.stroke();
   ellipse(b, x, y, r * 0.28, r * 0.3, STEEL_DARK, INK);
 }
 
 export function kiteShield(b: Brush, x: number, y: number, w: number, h: number, fill: string, rim: string) {
   const pts = [[x - w / 2, y - h * 0.45], [x + w / 2, y - h * 0.55], [x + w / 2, y + h * 0.1], [x, y + h * 0.5], [x - w / 2, y + h * 0.15]];
   polygon(b, pts, fill, INK, 1.3);
+  polygon(b, [[x, y - h * 0.5], [x + w / 2, y - h * 0.55], [x + w / 2, y + h * 0.1], [x, y + h * 0.5]], "#142e354a", "transparent", 0);
   polygon(b, pts.map(([px, py]) => [x + (px! - x) * 0.72, y + (py! - y) * 0.72]), "transparent", rim, 1.1);
 }
 
@@ -195,6 +206,8 @@ export function capeBehind(b: Brush, color: string, trim = GOLD) {
 export function kettleHelm(b: Brush) {
   polygon(b, [[-7, -17.5], [-6, -23], [-1, -25.5], [5, -23], [6, -17.5]], STEEL, INK, 1.2);
   ellipse(b, -0.5, -17.8, 10, 2.3, STEEL_DARK, INK);
+  polygon(b, [[-6, -22], [-1, -24.5], [0, -19], [-6, -19]], "#f0f3dd", "transparent", 0);
+  line(b, [[-9, -18.5], [-1, -19], [8, -18.5]], "#e3ead6", 1);
 }
 
 export function skullCap(b: Brush) {
