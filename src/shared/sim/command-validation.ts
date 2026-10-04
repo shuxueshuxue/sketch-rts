@@ -56,6 +56,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (rallyless) return commandError(`${rallyless.kind} has no training rally point`);
     return rallyTargetError(snapshot, owner, command.target);
   }
+  if (command.type === "cancelTraining") return missingBuildingError(snapshot, owner, [command.buildingId]);
   if (command.type === "train") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, true);
@@ -166,6 +167,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (buildingIds.length === 0 || isStaleRallyTarget(game, owner, command.target)) return undefined;
     return { ...command, buildingIds };
   }
+  if (command.type === "cancelTraining") return currentBuilding(game, owner, command.buildingId)?.queue.some(job => job.id === command.jobId) ? command : undefined;
   if (command.type === "train") {
     const building = currentBuilding(game, owner, command.buildingId);
     if (!building) return undefined;
