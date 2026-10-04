@@ -114,22 +114,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
-    if (effect.type === "melee" && hasEffectVector(effect)) {
-      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
-      const to = worldToScreen({ x: effect.toX, y: effect.toY });
-      const thrust = 0.45 + Math.sin((1 - effect.remaining / effect.duration) * Math.PI) * 0.35;
-      const tip = {
-        x: from.x + (to.x - from.x) * thrust,
-        y: from.y + (to.y - from.y) * thrust,
-      };
-      ctx.strokeStyle = "#243126";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(tip.x, tip.y);
-      ctx.stroke();
-      continue;
-    }
+    // Weapon poses carry the swing; a source-to-target line duplicates it.
+    if (effect.type === "melee") continue;
 
     if (effect.type === "chainLightning" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
@@ -146,28 +132,27 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     const radius = 9 + (1 - life) * 22;
 
     if (effect.type === "hit") {
-      ctx.strokeStyle = "#9b2f2f";
-      ctx.lineWidth = 2;
+      // Brief, local contact glint, no expanding cross across adjacent troops.
+      if (life < .55) continue;
+      ctx.save();
+      ctx.globalAlpha *= (life-.55)/.45*.7;
+      ctx.strokeStyle = "#e4d2aa"; ctx.lineWidth = 1.3;
+      const at = effect.unitId ? unitPosition?.(effect.unitId) : undefined;
+      const contact = at ? worldToScreen(at) : point;
       ctx.beginPath();
-      ctx.moveTo(point.x - radius, point.y);
-      ctx.lineTo(point.x + radius, point.y);
-      ctx.moveTo(point.x, point.y - radius);
-      ctx.lineTo(point.x, point.y + radius);
-      ctx.stroke();
+      ctx.moveTo(contact.x-2,contact.y-10);ctx.lineTo(contact.x+2,contact.y-14);
+      ctx.moveTo(contact.x+1,contact.y-10);ctx.lineTo(contact.x+3,contact.y-9);
+      ctx.stroke();ctx.restore();
       continue;
     }
 
     if (effect.type === "attackTarget" || effect.type === "queuedAttackTarget") {
-      const pulse = 0.55 + Math.sin(effect.remaining * 0.9) * 0.22;
+      const pulse = life * .5;
       ctx.setLineDash(effect.type === "queuedAttackTarget" ? [5, 5] : []);
       ctx.strokeStyle = effect.type === "queuedAttackTarget" ? `rgba(155, 47, 47, ${pulse * 0.58})` : `rgba(155, 47, 47, ${pulse})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.ellipse(point.x, point.y + 10, radius * 1.15, radius * 0.5, 0, 0, Math.PI * 2);
-      ctx.moveTo(point.x - radius * 1.25, point.y + 10);
-      ctx.lineTo(point.x - radius * 0.45, point.y + 10);
-      ctx.moveTo(point.x + radius * 0.45, point.y + 10);
-      ctx.lineTo(point.x + radius * 1.25, point.y + 10);
+      ctx.ellipse(point.x, point.y + 10, 14, 6, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
       continue;
@@ -264,7 +249,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     ctx.strokeStyle = effect.type === "mine" || effect.type === "queuedMine" ? "#b9861b" : effect.type === "attack" || effect.type === "queuedAttack" ? "#9b2f2f" : "#243126";
     if (isQueuedEffect(effect.type)) ctx.globalAlpha *= 0.58;
     ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.globalAlpha *= life * .6;
+    ctx.arc(point.x, point.y, 8 + (1-life)*3, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -933,9 +919,9 @@ function drawChargeTrail(ctx: CanvasRenderingContext2D, frame: ChargeTrailFrame)
     ctx.stroke();
   }
   ctx.lineCap = "round";
-  for (const streak of frame.streaks) {
+  for (const streak of frame.streaks.slice(0, 1)) {
     const gradient = ctx.createLinearGradient(streak.from.x, streak.from.y, streak.to.x, streak.to.y);
-    gradient.addColorStop(0, rgba(INK, streak.alpha));
+    gradient.addColorStop(0, rgba(INK, streak.alpha * .2));
     gradient.addColorStop(1, rgba(INK, 0));
     ctx.strokeStyle = gradient;
     ctx.lineWidth = streak.width;
@@ -1029,7 +1015,7 @@ function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFram
     ctx.fill();
     ctx.stroke();
   }
-  for (const ray of frame.rays) {
+  for (const ray of frame.rays.slice(0, 2)) {
     ctx.strokeStyle = rgba(SPARK, ray.alpha * 0.85);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1040,7 +1026,7 @@ function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFram
     ctx.lineWidth = 0.8;
     ctx.stroke();
   }
-  for (const spark of frame.sparks) {
+  for (const spark of frame.sparks.slice(0, 2)) {
     ctx.strokeStyle = rgba(SPARK, spark.alpha);
     ctx.lineWidth = 1.5;
     ctx.beginPath();

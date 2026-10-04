@@ -1,23 +1,19 @@
-import { CAST } from "../campaigns/ashen-march/cast";
-import { SCENERY } from "../campaigns/ashen-march/scenery";
-import { UNIT_DEFS, resolveVariant } from "../shared/catalog";
-import { createGame, issuePlayerCommand, snapshotGame, spawnVariantUnit, stepGame, type Game } from "../shared/sim";
+import { CORE_SCENERY } from "./art/scenery";
+import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "../shared/sim";
 import type { Terrain } from "../shared/terrain";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import type { GameCommand, GameSnapshot, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
-import { enlist, modelBook, type PropPainter } from "../story/cast";
+import type { GameSnapshot, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
+import { type PropPainter } from "../story/cast";
 import type { PropView, StageView } from "../story/stage";
 import { INK, WOOD, ellipse, line, polygon, type Brush } from "./art/kit";
+import { paintBuildingModel } from "./art/building-models";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
+import { UnitAnimationTracker } from "./unit-animation";
 import { drawWorld, trackUnitFacing, type WorldLabels } from "./world-renderer";
 
-// @@@menu-scenes - The home screen's backdrop: small worlds set up by hand and played live by the real simulation, drawn
-// by the battlefield's own renderer with the campaign's cast and scenery and a few pieces of their own (a statue,
-// runestones), under drifting mist, shafts of light and motes (embers, fireflies, glints on the water). A capital
-// goes about its day, two hosts meet in a forest glade, a fleet sails past a lighthouse. One is drawn at random for each
-// visit until the player picks one with the switch; the world is stepped at the game's tick rate and painted at most
-// thirty times a second, and only while the menus are up.
+// @@@menu-scenes - Composed small worlds running the same collision, pathfinding
+// and combat as a match. Scripts issue orders; only simulation moves actors.
 
 type Point = { x: number; y: number };
 type Text = { zh: string; en: string };
@@ -62,28 +58,6 @@ function terrainOf(width: number, height: number, kindAt: (x: number, y: number)
   let cells = "";
   for (let row = 0; row < rows; row += 1) for (let col = 0; col < cols; col += 1) cells += kindAt(col * CELL + CELL / 2, row * CELL + CELL / 2);
   return { cell: CELL, cols, rows, cells };
-}
-
-// Smooth value noise in [0, 1): the wobble of a forest's edge or a shore.
-function noise(x: number, y: number, scale: number, seed: number) {
-  const gx = x / scale;
-  const gy = y / scale;
-  const x0 = Math.floor(gx);
-  const y0 = Math.floor(gy);
-  const fx = gx - x0;
-  const fy = gy - y0;
-  const sx = fx * fx * (3 - 2 * fx);
-  const sy = fy * fy * (3 - 2 * fy);
-  const a = hash(x0, y0, seed);
-  const b = hash(x0 + 1, y0, seed);
-  const c = hash(x0, y0 + 1, seed);
-  const d = hash(x0 + 1, y0 + 1, seed);
-  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-}
-
-function hash(x: number, y: number, seed: number) {
-  const s = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
-  return s - Math.floor(s);
 }
 
 function seeded(seed: number) {
@@ -151,20 +125,7 @@ function stage(width: number, height: number, terrain: Terrain, seats: [PlayerId
   game.map = { ...game.map, width, height, landmarks: [], terrain };
   game.items = [];
   game.scriptedVictory = true;
-  enlist(game, CAST);
   return game;
-}
-
-function order(game: Game, owner: PlayerId, command: GameCommand) {
-  issuePlayerCommand(game, owner, command);
-}
-
-function alive(game: Game, ids: string[]) {
-  return ids.filter((id) => game.units.some((unit) => unit.id === id && unit.hp > 0));
-}
-
-function idle(game: Game, ids: string[]) {
-  return ids.filter((id) => game.units.find((unit) => unit.id === id)?.order.type === "idle");
 }
 
 // ---------------------------------------------------------------- the scenes' own pieces
@@ -190,7 +151,11 @@ function runestone(b: Brush) {
   for (const [x1, y1, x2, y2] of [[-4, -24, 3, -18], [3, -18, -2, -10], [-3, -4, 4, 2], [0, 6, 0, 12]] as const) line(b, [[x1, y1], [x2, y2]], "#7fd6c8", 1.6);
 }
 
-const PROPS: Record<string, PropPainter> = { statue, runestone };
+const PROPS: Record<string, PropPainter> = {
+  statue: b => paintBuildingModel(b, "statue", "#867658"),
+  well: b => paintBuildingModel(b, "well", "#867658"),
+  beacon: b => paintBuildingModel(b, "beacon", "#867658"), runestone,
+};
 
 // ---------------------------------------------------------------- the capital
 
@@ -199,236 +164,111 @@ const CROWN = "lion";
 const GROVE = "court";
 const EMBERS = "cinder";
 
-function capital(): Run {
-  const width = 3600;
-  const height = 2400;
-  const c = { x: 1900, y: 1200 };
-  const wall = { x: 470, y: 330, thick: 40 };
-  const terrain = terrainOf(width, height, (x, y) => {
-    const dx = x - c.x;
-    const dy = y - c.y;
-    const onWall = (Math.abs(dx) > wall.x - wall.thick && Math.abs(dx) <= wall.x && Math.abs(dy) <= wall.y) || (Math.abs(dy) > wall.y - wall.thick && Math.abs(dy) <= wall.y && Math.abs(dx) <= wall.x);
-    const gate = (dy > 0 && Math.abs(dx) < 80) || (dx > 0 && Math.abs(dy) < 70);
-    if (onWall && !gate) return "#";
-    const reach = (dx / 1150) ** 2 + (dy / 760) ** 2 + (noise(x, y, 220, 3) - 0.5) * 0.5;
-    if (reach > 1) return "T";
-    const pond = Math.hypot(x - (c.x + 640), y - (c.y + 400)) + (noise(x, y, 90, 5) - 0.5) * 70;
-    if (pond < 120) return "~";
-    if (pond < 150) return ",";
-    return ".";
-  });
-  const at = (dx: number, dy: number): [number, number] => [c.x + dx, c.y + dy];
+/** A bounded demonstration match. Authored destinations are orders, never
+ * coordinate animation. Forest encounters fade and restart before drifting away. */
+function directedScene(kind: "capital" | "woods" | "fleet"): Run {
+  const width = 3600, height = 2400, cx = 2100, cy = 1200;
   const p = cast();
-  p.resources.push({ id: "menu-mine", kind: "goldMine", x: c.x + 760, y: c.y - 60, amount: 1_000_000 });
-  p.building(CROWN, "townHall", ...at(0, -50));
-  p.building(CROWN, "barracks", ...at(-280, -175));
-  p.building(CROWN, "stables", ...at(275, -190));
-  p.building(CROWN, "sanctum", ...at(-300, 150));
-  p.building(CROWN, "workshop", ...at(-360, -20));
-  for (let i = 0; i < 3; i += 1) p.building(CROWN, "farm", ...at(-130 + i * 62, -250));
-  p.building(CROWN, "moonWell", ...at(190, 110));
-  p.building(CROWN, "defenseTower", ...at(-130, 262));
-  p.building(CROWN, "defenseTower", ...at(130, 262));
-  const workers = [0, 1, 2, 3, 4].map((i) => p.unit(CROWN, "worker", ...at(80 + i * 22, 20)));
-  const gate = [0, 1, 2].map((i) => p.unit(CROWN, "lancer", ...at(-40 + i * 40, 250)));
-  const patrol = [p.unit(CROWN, "footman", ...at(-400, 250)), p.unit(CROWN, "footman", ...at(-370, 250))];
-  const riders = [p.unit(CROWN, "knight", ...at(-30, 520)), p.unit(CROWN, "knight", ...at(30, 550)), p.unit(CROWN, "priest", ...at(0, 600))];
-  for (const [dx, dy] of [[-wall.x, -wall.y], [wall.x, -wall.y], [-wall.x, wall.y], [wall.x, wall.y]] as const) p.prop("watchtower", ...at(dx, dy - 16), 1.4);
-  for (const side of [-1, 1]) {
-    p.prop("banner", ...at(side * 100, wall.y + 26), 1.5, undefined, side < 0);
-    p.prop("banner", ...at(side * 66, 22), 1.3, undefined, side < 0);
-    p.prop("campfire", ...at(side * 66, 262), 1.1, "lit");
+  const terrain = terrainOf(width, height, (x, y) => {
+    const dx = x - cx, dy = y - cy;
+    if (kind === "fleet") {
+      const shore = dy - 370 + Math.sin(dx / 230) * 60;
+      return shore > 90 ? "T" : shore > 10 ? "." : shore > -45 ? "," : "~";
+    }
+    if (kind === "capital") {
+      if (Math.abs(dx) > 790 || Math.abs(dy) > 590) return "T";
+      if (dy < -290 && dy > -335 && Math.abs(dx) > 95) return "#";
+      return ".";
+    }
+    const edge = 310 + Math.sin(dx / 260) * 75;
+    return Math.abs(dy) > edge || Math.abs(dx) > 1100 ? "T" : ".";
+  });
+  type Track = { id: string; x: number; y: number; dx: number; dy: number; period: number; phase: number; duel?: boolean };
+  const tracks: Track[] = [];
+  const actor = (owner: string, unitKind: UnitKind, x: number, y: number, dx = 0, dy = 0, period = 24, phase = 0, duel = false) => {
+    const id = p.unit(owner, unitKind, cx + x, cy + y);
+    tracks.push({ id, x: cx + x, y: cy + y, dx, dy, period, phase, duel });
+  };
+  if (kind === "capital") {
+    p.building(CROWN, "townHall", cx + 30, cy - 200);
+    p.building(CROWN, "sanctum", cx - 260, cy - 190);
+    p.building(CROWN, "barracks", cx + 285, cy - 150);
+    p.building(CROWN, "stables", cx + 330, cy + 140);
+    for (const side of [-1, 1]) {
+      p.building(CROWN, "defenseTower", cx + side * 120, cy + 240);
+      p.prop("banner", cx + side * 70, cy + 225, 1.3);
+      p.prop("campfire", cx + side * 145, cy + 260, .85, "lit");
+      p.building(CROWN, "farm", cx - 410, cy + side * 95);
+      actor(CROWN, "lancer", side * 73, 205);
+    }
+    p.prop("statue", cx + 5, cy + 15, 1.45);
+    p.prop("well", cx - 220, cy + 65, 1.1);
+    p.prop("cart", cx + 235, cy + 180, 1);
+    for (let i = 0; i < 4; i++) actor(CROWN, "footman", -150 + i * 25, 115, 260, 0, 36, i * .004);
+    for (let i = 0; i < 3; i++) actor(CROWN, "worker", -310, -70 + i * 37, 175, 0, 30, i * .22);
+    actor(CROWN, "knight", -25, 440, 0, -300, 45);
+    actor(CROWN, "knight", 25, 485, 0, -300, 45);
+  } else if (kind === "woods") {
+    for (let i = 0; i < 5; i++) {
+      const y = (i - 2) * 52;
+      actor(GROVE, i % 2 ? "footman" : "lancer", -150, y, 0, 0, 4.5, i * .13, true);
+      actor(EMBERS, "emberRavager", 150, y + 8, 0, 0, 4.5, i * .13 + .5, true);
+    }
+    for (let i = 0; i < 4; i++) {
+      actor(GROVE, "archer", -280 - i % 2 * 40, -90 + i * 58, 0, 0, 5, i * .22, true);
+      actor(EMBERS, "sparkArcher", 280 + i % 2 * 40, -82 + i * 58, 0, 0, 5, i * .22 + .4, true);
+    }
+    actor(GROVE, "knight", -280, -180, 410, 0, 28);
+    actor(GROVE, "knight", -310, -218, 410, 0, 28);
+    p.prop("deadTree", cx + 295, cy + 225, 1.6);
+    p.prop("stone", cx - 310, cy + 195, 1.6);
+    p.prop("banner", cx - 330, cy - 30, 1.4);
+    p.prop("banner", cx + 350, cy + 65, 1.4, "ember", true);
+    p.prop("campfire", cx + 330, cy + 170, 1, "lit");
+  } else {
+    p.building(CROWN, "shipyard", cx + 320, cy + 280);
+    for (let i = 0; i < 5; i++) actor(CROWN, i % 2 ? "transport" : "warship", -430 + i * 160, -180 + i % 2 * 165, 280, 0, 80, i * .07);
+    p.prop("beacon", cx + 510, cy + 300, 1.6, "lit");
   }
-  p.prop("statue", ...at(0, 140), 1.5);
-  for (let i = 0; i < 3; i += 1) p.prop("tent", ...at(150 + i * 64, 210 + (i % 2) * 12), 1.05, undefined, i % 2 === 1);
-  p.prop("well", ...at(60, 205), 1.15);
-  p.prop("cart", ...at(360, 250), 1.05);
-  p.prop("crate", ...at(395, 215), 0.95);
-  p.prop("crate", ...at(120, 280), 0.95);
-  for (const [dx, dy] of [[-120, 150], [120, 175], [-420, 190], [400, -60]] as const) p.prop("tree", ...at(dx, dy), 1.15);
-  p.prop("beacon", ...at(wall.x - 20, -110), 1.35, "lit");
-  p.prop("reeds", ...at(640 - 100, 400 + 90), 1.2);
-  p.prop("cairn", ...at(620, 160), 1.05);
-  const game = stage(width, height, terrain, [[CROWN, "grove"]], p);
-  const du = spawnVariantUnit(game, CROWN, CAST.du.id, ...at(-80, 70)).id;
-  const tess = spawnVariantUnit(game, CROWN, CAST.tess.id, ...at(230, 160)).id;
-  const folk = [
-    ...[[-20, 190], [250, 190], [100, 300], [-200, 40], [330, 90], [-60, -190]].map(([dx, dy], i) => spawnVariantUnit(game, CROWN, i % 2 ? CAST.villagerWoman.id : CAST.villager.id, ...at(dx!, dy!)).id),
-    du,
-    tess,
-  ];
-  const stops: [number, number][] = [[60, 195], [175, 190], [280, 200], [-100, 110], [-80, -180], [230, 140], [-40, 230], [330, 260], [-220, 60], [100, -170]];
-  const corners: [number, number][] = [[-400, 260], [-400, -260], [400, -260], [400, 260]];
-  const random = seeded(7);
+  const game = stage(width, height, terrain, [[CROWN, "grove"], [GROVE, "grove"], [EMBERS, "ember"]], p);
+  if (kind === "capital") {
+    game.map.landmarks.push({id:"avenue",kind:"road",x:cx,y:cy+85,size:860,rotation:Math.PI/2}, {id:"cross-street",kind:"road",x:cx-50,y:cy+110,size:860,rotation:0});
+  } else if (kind === "woods") {
+    for(let i=0;i<13;i++) game.map.landmarks.push({id:`debris-${i}`,kind:i%3===0?"log":"pebbles",x:cx-390+(i*131)%790,y:cy+(i%2?210:-225),size:26+i%3*10,rotation:i*.7});
+  }
+  const fires = p.props.filter(prop => prop.state === "lit").map(prop => ({ x: prop.x, y: prop.y - 15 }));
   return {
-    game,
-    props: p.props,
-    focus: { x: c.x - 110, y: c.y + 30 },
-    zoom: 1.25,
-    embers: [at(-66, 262), at(66, 262), at(wall.x - 20, -130)].map(([x, y]) => ({ x, y })),
-    glows: [],
-    air: { dusk: 0.18, mist: "255, 230, 190", mistAlpha: 0.2, rays: "255, 210, 130", rayAngle: -0.42, motes: "embers" },
+    game, props: p.props, focus: { x: cx, y: cy }, zoom: kind === "fleet" ? 1.05 : 1.32,
+    ...(kind === "woods" ? {length: 45} : {}),
+    embers: fires, glows: fires,
+    air: { dusk: kind === "woods" ? .22 : .1, mist: "211, 204, 185", mistAlpha: .12, rays: "248, 222, 171", rayAngle: -.45, motes: kind === "fleet" ? "glints" : "embers" },
     script(g, second) {
-      const tick = g.tick;
-      if (tick === 1) {
-        order(g, CROWN, { type: "mine", unitIds: workers, resourceId: "menu-mine" });
-        order(g, CROWN, { type: "setStance", unitIds: gate, stance: "brace" });
-        order(g, CROWN, { type: "holdPosition", unitIds: gate });
-      }
-      // Townsfolk stroll between the stalls, the well, the hall and the farms.
-      if (tick % (SIM_TICKS_PER_SECOND * 3) === 0) {
-        for (const id of idle(g, folk)) {
-          if (random() < 0.4) continue;
-          const [dx, dy] = stops[Math.floor(random() * stops.length)]!;
-          order(g, CROWN, { type: "move", unitIds: [id], x: c.x + dx + (random() - 0.5) * 50, y: c.y + dy + (random() - 0.5) * 30 });
+      for (const track of tracks) {
+        const unit = g.units.find(unit => unit.id === track.id);
+        if (!unit) continue;
+        if (kind === "woods") {
+          // Genuine targeting, damage, death and collision. Riders join later.
+          if (g.tick === (unit.kind === "knight" ? 8 * SIM_TICKS_PER_SECOND : 1))
+            issuePlayerCommand(g, unit.owner, {type:"attackMove", unitIds:[unit.id], x:cx+(unit.owner===GROVE?260:-260), y:cy});
+          continue;
+        }
+        if (track.dx === 0 && track.dy === 0) {
+          if (g.tick === 1) issuePlayerCommand(g,unit.owner,{type:"holdPosition",unitIds:[unit.id]});
+          continue;
+        }
+        // Reverse destinations at low frequency; the real pathfinder routes
+        // around buildings and troops. Never repair a route by teleportation.
+        if (g.tick === 1 || g.tick % (SIM_TICKS_PER_SECOND * 3) === 0 && unit.order.type === "idle") {
+          const atEnd = Math.hypot(unit.x-track.x-track.dx,unit.y-track.y-track.dy) < 40;
+          issuePlayerCommand(g,unit.owner,{type:"move",unitIds:[unit.id],x:track.x+(atEnd?0:track.dx),y:track.y+(atEnd?0:track.dy)});
         }
       }
-      // The watch walks the inside of the wall.
-      if (tick % (SIM_TICKS_PER_SECOND * 8) === 2) {
-        const [dx, dy] = corners[Math.floor(tick / (SIM_TICKS_PER_SECOND * 8)) % corners.length]!;
-        order(g, CROWN, { type: "move", unitIds: alive(g, patrol), x: c.x + dx, y: c.y + dy });
-      }
-      // Riders come in at the gate, wait by the statue, and ride out again.
-      const cycle = second % 36;
-      if (tick % SIM_TICKS_PER_SECOND === 0 && Math.floor(cycle) === 1) order(g, CROWN, { type: "move", unitIds: alive(g, riders), x: c.x, y: c.y + 200 });
-      if (tick % SIM_TICKS_PER_SECOND === 0 && Math.floor(cycle) === 20) order(g, CROWN, { type: "move", unitIds: alive(g, riders), x: c.x + 20, y: c.y + 640 });
     },
   };
 }
-
-// ---------------------------------------------------------------- the forest battle
-
-function woods(): Run {
-  const width = 3600;
-  const height = 2400;
-  const mid = (x: number) => 1220 + Math.sin(x / 520) * 110;
-  const ring = { x: 2470, y: 800, r: 170 };
-  const terrain = terrainOf(width, height, (x, y) => {
-    const half = 270 + (noise(x, y, 200, 11) - 0.5) * 180;
-    const inGlade = Math.abs(y - mid(x)) < half && x > 900 + noise(x, y, 120, 2) * 120 && x < 3000 - noise(x, y, 120, 4) * 120;
-    const inRing = Math.hypot(x - ring.x, (y - ring.y) * 1.3) < ring.r + (noise(x, y, 80, 8) - 0.5) * 50;
-    if (!inGlade && !inRing) return "T";
-    const brook = Math.abs(x - (2120 - (y - 1220) * 0.3)) + (noise(x, y, 70, 9) - 0.5) * 50;
-    if (brook < 42) return ",";
-    return ".";
-  });
-  const p = cast();
-  const grove: string[] = [];
-  const embers: string[] = [];
-  const ranks = (owner: string, kind: UnitKind, x: number, y: number, count: number, perRank: number, spacing = 40, into = grove) => {
-    for (let i = 0; i < count; i += 1) into.push(p.unit(owner, kind, x - Math.floor(i / perRank) * spacing * (owner === GROVE ? 1 : -1), y + ((i % perRank) - (perRank - 1) / 2) * spacing));
-  };
-  const y = mid(1820);
-  ranks(GROVE, "lancer", 1820, y, 8, 4);
-  const lancers = [...grove];
-  ranks(GROVE, "archer", 1680, y, 6, 3);
-  const archers = grove.slice(lancers.length);
-  ranks(GROVE, "priest", 1590, y - 60, 2, 2, 60);
-  ranks(GROVE, "summoner", 1590, y + 80, 1, 1);
-  const knights: string[] = [];
-  ranks(GROVE, "knight", 1740, y - 220, 3, 3, 46, knights);
-  const ey = mid(2480);
-  ranks(EMBERS, "emberRavager", 2480, ey, 6, 3, 42, embers);
-  const ravagers = [...embers];
-  ranks(EMBERS, "cinderRunner", 2560, ey - 160, 5, 5, 40, embers);
-  ranks(EMBERS, "ashHexer", 2660, ey + 40, 3, 3, 50, embers);
-  // An ancient stag keeps a ring of standing stones above the glade.
-  p.unit("neutral", "ancientStag", ring.x, ring.y);
-  for (let i = 0; i < 7; i += 1) {
-    const angle = (i / 7) * Math.PI * 2 + 0.3;
-    p.prop(i % 3 === 0 ? "runestone" : "stone", ring.x + Math.cos(angle) * 125, ring.y + Math.sin(angle) * 82, 1.25);
-  }
-  for (const [x, dy, kind, scale] of [[1560, -230, "deadTree", 1.4], [1620, -190, "grave", 1.1], [1640, 230, "cairn", 1.2], [2300, 220, "ashPile", 1.2], [1980, -240, "tree", 1.3], [2200, 250, "tree", 1.2], [2060, 190, "deadTree", 1.2], [1500, 200, "statue", 1.3]] as const) {
-    p.prop(kind, x, mid(x) + dy, scale);
-  }
-  p.prop("pyre", 2760, mid(2760) - 120, 1.4, "lit");
-  p.prop("banner", 1560, y + 150, 1.5);
-  p.prop("banner", 2720, ey + 180, 1.5, "ember", true);
-  const game = stage(width, height, terrain, [[GROVE, "grove"], [EMBERS, "ember"]], p);
-  grove.push(spawnVariantUnit(game, GROVE, CAST.treant.id, 1790, y + 220).id, spawnVariantUnit(game, GROVE, CAST.lynn.id, 1660, y - 110).id);
-  embers.push(
-    spawnVariantUnit(game, EMBERS, CAST.kharn.id, 2620, ey - 30).id,
-    spawnVariantUnit(game, EMBERS, CAST.pyremancer.id, 2740, ey + 110).id,
-    ...[0, 1, 2].map((i) => spawnVariantUnit(game, EMBERS, CAST.cinderHound.id, 2400, ey + 140 + i * 36).id),
-  );
-  return {
-    game,
-    props: p.props,
-    focus: { x: 2150, y: mid(2150) - 60 },
-    zoom: 1.15,
-    length: 50,
-    embers: [{ x: 2760, y: mid(2760) - 150 }],
-    glows: p.props.filter((prop) => prop.kind === "runestone").map((prop) => ({ x: prop.x, y: prop.y - 10 })),
-    air: { dusk: 0.34, mist: "205, 222, 208", mistAlpha: 0.24, rays: "246, 232, 178", rayAngle: 0.38, motes: "fireflies" },
-    script(g) {
-      const tick = g.tick;
-      if (tick === 1) {
-        order(g, GROVE, { type: "setStance", unitIds: lancers, stance: "brace" });
-        order(g, GROVE, { type: "holdPosition", unitIds: [...lancers, ...archers] });
-        order(g, EMBERS, { type: "setStance", unitIds: ravagers, stance: "shock" });
-      }
-      if (tick === SIM_TICKS_PER_SECOND * 2) order(g, EMBERS, { type: "attackMove", unitIds: alive(g, embers), x: 1500, y: mid(1500) });
-      if (tick === SIM_TICKS_PER_SECOND * 7) order(g, GROVE, { type: "attackMove", unitIds: alive(g, knights), x: 2600, y: mid(2600) });
-      if (tick === SIM_TICKS_PER_SECOND * 14) order(g, GROVE, { type: "attackMove", unitIds: alive(g, [...grove, ...knights]), x: 2700, y: mid(2700) });
-    },
-  };
-}
-
-// ---------------------------------------------------------------- the fleet
-
-function fleet(): Run {
-  const width = 3600;
-  const height = 2400;
-  const isle = { x: 2380, y: 780, r: 250 };
-  const coast = (x: number) => 1880 - x * 0.2 + (noise(x, 0, 160, 6) - 0.5) * 120;
-  const terrain = terrainOf(width, height, (x, y) => {
-    const fromIsle = Math.hypot(x - isle.x, (y - isle.y) * 1.2) + (noise(x, y, 90, 12) - 0.5) * 110;
-    const shore = y - coast(x);
-    if (fromIsle < isle.r * 0.55 || shore > 110) return noise(x, y, 110, 13) > 0.55 ? "T" : ".";
-    if (fromIsle < isle.r * 0.72 || shore > 55) return noise(x, y, 60, 14) > 0.62 ? "#" : ".";
-    if (fromIsle < isle.r * 0.95 || shore > 0) return ",";
-    // Drowned stones out on the water, far from the islands and the shore.
-    if (noise(x, y, 70, 15) > 0.87 && fromIsle > isle.r * 1.5 && shore < -240) return "#";
-    return "~";
-  });
-  const p = cast();
-  p.prop("beacon", isle.x + 20, isle.y - 60, 1.9, "lit");
-  p.prop("watchtower", isle.x - 90, isle.y - 10, 1.3);
-  p.prop("runestone", isle.x + 110, isle.y + 30, 1.2);
-  p.prop("dock", 2150, coast(2150) + 10, 1.5);
-  p.prop("boat", 2070, coast(2070) - 4, 1.2);
-  p.prop("boat", 2240, coast(2240) + 4, 1.1, undefined, true);
-  p.prop("hut", 2000, coast(2000) + 110, 1.3);
-  p.prop("crate", 2280, coast(2280) + 50, 1);
-  p.prop("reeds", 2520, coast(2520) + 25, 1.3);
-  const game = stage(width, height, terrain, [[CROWN, "grove"]], p);
-  // The fleet: warships and transports in line, sailing east past the lighthouse at a third of a ship's speed, a slow
-  // pass rather than a race (its own variants of the two ships, drawn as they are).
-  for (const kind of ["warship", "transport"] as const) game.variants![`menu/${kind}`] = resolveVariant({ base: kind, speed: UNIT_DEFS[kind].speed / 3 });
-  const lanes = [1110, 1170, 1230, 1050, 1290];
-  const ships = lanes.map((y, index) => spawnVariantUnit(game, CROWN, index % 2 ? "menu/transport" : "menu/warship", 2050 - Math.abs(index - 2) * 130 - (index % 2) * 40, y).id);
-  return {
-    game,
-    props: p.props,
-    focus: { x: 2000, y: 1110 },
-    zoom: 1.25,
-    embers: [{ x: isle.x + 20, y: isle.y - 150 }],
-    glows: [{ x: isle.x + 110, y: isle.y + 20 }],
-    air: { dusk: 0.26, mist: "222, 230, 236", mistAlpha: 0.26, rays: "236, 240, 228", rayAngle: -0.2, motes: "glints" },
-    script(g) {
-      // East at an easy sail; a ship past the frame's right edge comes round again from the left, under the menu.
-      ships.forEach((id, index) => {
-        const ship = g.units.find((unit) => unit.id === id);
-        if (!ship) return;
-        if (ship.x > 3050) {
-          ship.x = 1150;
-          ship.y = lanes[index]!;
-        }
-        if (ship.order.type === "idle") order(g, CROWN, { type: "move", unitIds: [id], x: 3200, y: lanes[index]! });
-      });
-    },
-  };
-}
+const capital = () => directedScene("capital");
+const woods = () => directedScene("woods");
+const fleet = () => directedScene("fleet");
 
 export const MENU_SCENES: MenuScene[] = [
   { id: "capital", name: { zh: "王城", en: "The Capital" }, create: capital },
@@ -445,7 +285,7 @@ export class MenuBackdrop {
   private snapshot: GameSnapshot | undefined;
   private facing = new UnitFacingTracker();
   private motion = new UnitMotionSmoother();
-  private models = modelBook(CAST);
+  private animation = new UnitAnimationTracker();
   private started = 0;
   private clock: number | undefined;
   private carry = 0;
@@ -466,14 +306,14 @@ export class MenuBackdrop {
   }
 
   /** Steps the scene to `now` and paints it, at most thirty times a second; the canvas keeps the last picture between. */
-  draw(ctx: CanvasRenderingContext2D, width: number, height: number, now: number) {
+  draw(ctx: CanvasRenderingContext2D, width: number, height: number, now: number, reducedMotion = false) {
     if (now - this.lastPaint < FRAME_MS) return;
     this.lastPaint = now;
     if (!this.run) this.begin(now);
     const run = this.run!;
     const elapsed = Math.min(250, now - (this.clock ?? now));
     this.clock = now;
-    this.carry += elapsed;
+    if (!reducedMotion) this.carry += elapsed;
     let stepped = false;
     while (this.carry >= TICK_MS) {
       this.carry -= TICK_MS;
@@ -501,10 +341,12 @@ export class MenuBackdrop {
       now,
       facing: this.facing,
       motion: this.motion,
+      animation: this.animation,
+      reducedMotion,
       labels: this.labels,
       still: true,
-      models: this.models,
-      props: (kind) => PROPS[kind] ?? SCENERY[kind],
+
+      props: (kind) => PROPS[kind] ?? CORE_SCENERY[kind],
       story: stageView(run),
     });
     const toScreen = (point: Point) => ({ x: (point.x - camera.x) * zoom, y: (point.y - camera.y) * zoom });
@@ -533,6 +375,7 @@ export class MenuBackdrop {
     this.snapshot = undefined;
     this.facing = new UnitFacingTracker();
     this.motion = new UnitMotionSmoother();
+    this.animation = new UnitAnimationTracker();
     this.started = now;
     this.clock = now;
     this.carry = 0;
@@ -542,9 +385,10 @@ export class MenuBackdrop {
   private drawMotes(ctx: CanvasRenderingContext2D, run: Run, width: number, height: number, dt: number, age: number, toScreen: (point: Point) => Point, waterAt: (point: Point) => boolean, zoom: number) {
     const random = this.random;
     const kind = run.air.motes;
-    const target = kind === "embers" ? 70 : kind === "fireflies" ? 46 : 26;
+    const target = kind === "embers" ? 18 : kind === "fireflies" ? 18 : 16;
     const sources = run.embers.map(toScreen);
-    while (this.motes.length < target) {
+    let attempts = 0;
+    while (this.motes.length < target && attempts++ < target * 3) {
       if (kind === "embers" || (kind === "glints" && sources.length > 0 && random() < 0.25)) {
         const from = sources[Math.floor(random() * sources.length)];
         if (!from) break;
@@ -631,7 +475,7 @@ function drawAir(ctx: CanvasRenderingContext2D, width: number, height: number, a
   for (let i = 0; i < 5; i += 1) {
     const x = width * (0.42 + i * 0.13);
     const beam = 70 + ((i * 47) % 110);
-    const strength = 0.16 * (0.55 + 0.45 * Math.sin(age * 0.35 + i * 1.7));
+    const strength = 0.055 * (0.55 + 0.45 * Math.sin(age * 0.35 + i * 1.7));
     ctx.save();
     ctx.translate(x, -40);
     ctx.rotate(air.rayAngle);
@@ -651,7 +495,7 @@ function drawGlows(ctx: CanvasRenderingContext2D, points: Point[], age: number, 
   ctx.globalCompositeOperation = "lighter";
   points.forEach((point, index) => {
     const pulse = 0.5 + 0.5 * Math.sin(age * 1.3 + index * 1.9);
-    glow(ctx, point.x, point.y, (26 + 12 * pulse) * zoom, `rgba(120, 230, 210, ${0.18 + 0.2 * pulse})`);
+    glow(ctx, point.x, point.y, (26 + 12 * pulse) * zoom, `rgba(240, 177, 98, ${0.08 + 0.08 * pulse})`);
   });
   ctx.restore();
 }
@@ -678,9 +522,9 @@ function drawGulls(ctx: CanvasRenderingContext2D, width: number, height: number,
 function glow(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
   const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
   gradient.addColorStop(0, color);
-  gradient.addColorStop(1, color.replace(/[\d.]+\)$/, "0)"));
+  gradient.addColorStop(1, color.replace(/,[^,]+\)$/, ", 0)"));
   ctx.fillStyle = gradient;
-  ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+  ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
 }
 
 function clamp(value: number, low: number, high: number) {

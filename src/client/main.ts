@@ -1,5 +1,9 @@
+import type { SiteModelKind } from "./art/building-models";
+import { tideModel } from "../campaigns/tidebound/art";
+import { TideboundAdapter, TIDE_SAVE } from "./tidebound-adapter";
+import { TITLE, HERO, RELICS, SHIPS, SIEGE, DEFENSES, type CampaignSave } from "../campaigns/tidebound/campaign";
 import "./styles.css";
-import { drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
+import { drawAtlasModel, drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -48,11 +52,12 @@ import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
+import { UnitAnimationTracker } from "./unit-animation";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { buildingGlyphSize, drawPaperMap, drawWorld, worldLabelsFor } from "./world-renderer";
+import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
@@ -180,11 +185,14 @@ let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 const unitFacing = new UnitFacingTracker();
 const unitMotion = new UnitMotionSmoother();
+const unitAnimation = new UnitAnimationTracker();
+const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 const controlGroups: ControlGroups = {};
 let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
+let worldZoom = 1;
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
@@ -197,6 +205,10 @@ let lastMouse: Point | undefined;
 let draggingMinimapViewport = false;
 let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
+let tideAdapter: TideboundAdapter | undefined;
+let tideTarget: {type:"cast";index:number}|{type:"fortify";id:string}|undefined;
+let tidePanel: HTMLElement | undefined;
+let tidePanelTick=-1;
 let menuOpen = true;
 let menuView: MenuView = "home";
 // @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
@@ -388,14 +400,15 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   applyTooltip(element, tooltip());
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
-  element.addEventListener("click", run);
+  const guardedRun = () => { const current = state(); if (!current.visible) return; if (!current.enabled) { showCommandUnavailable(current, label); return; } run(); };
+  element.addEventListener("click", guardedRun);
   // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
   element.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     contextAction?.();
   });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run, ...(contextAction ? { contextAction } : {}) };
+  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}) };
 }
 
 // @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
@@ -594,6 +607,7 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
+  mainMenu.classList.remove("tide-briefing");
   // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
   if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
@@ -631,6 +645,7 @@ function renderMainMenu() {
   }
   menuStatus.textContent = "";
   mapList.replaceChildren(
+    menuButton("战役 · 潮汐王座", "5000 人战场 · 群岛远征", "data-open-campaign", () => openTideBriefing()),
     menuButton(t("home.play"), "", "data-open-create", () => {
       openMenuRoute({ screen: "create" });
     }),
@@ -1251,6 +1266,7 @@ function releasePointerLockForMenu() {
 
 function frame() {
   syncActiveGameAdapterSnapshot();
+  updateTidePanel();
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
@@ -1436,6 +1452,8 @@ function onKeyDown(event: KeyboardEvent) {
     closePalette(t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
     return;
   }
+  if(tideAdapter&&key==='h'){event.preventDefault();sendCommand({type:'holdPosition',unitIds:[...selectedIds]});return;}
+  if(tideAdapter&&key==='escape'&&tideTarget){tideTarget=undefined;return;}
   if (key === "tab") {
     event.preventDefault();
     cycleFocusedSelection(event.shiftKey ? -1 : 1);
@@ -1462,8 +1480,10 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
+    return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
@@ -1524,8 +1544,13 @@ function showInvalidCommand(message: string) {
 
 // A battlefield sound is heard where it happens: panned across the view, full inside it and fading out within a screen's
 // half-width beyond its edges.
+let lastSoundCamera: Point | undefined;
 function playCues(cues: SoundCue[]) {
-  for (const cue of cues) {
+  if (lastSoundCamera && Math.hypot(camera.x - lastSoundCamera.x, camera.y - lastSoundCamera.y) > Math.min(canvas.width, canvas.height) * .45) soundboard.stopEffects();
+  lastSoundCamera = { x: camera.x, y: camera.y };
+  // A frame's visible battle gets the voice budget before peripheral events.
+  const distance = (cue: SoundCue) => { const at = worldToScreen(cue); return Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height); };
+  for (const cue of cues.sort((a, b) => distance(a) - distance(b))) {
     const at = worldToScreen(cue);
     const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
     const gain = 1 - outside / (canvas.width / 2);
@@ -1610,6 +1635,7 @@ function onMouseUp(event: MouseEvent) {
     virtualUiMouseDownTarget = undefined;
   }
   if (!snapshot) return;
+  if(tideTarget && tideAdapter){if(event.button===0)tideAdapter.action({...tideTarget,...screenToWorld(point)});tideTarget=undefined;selectionStart=undefined;selectionEnd=undefined;return;}
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
@@ -2082,7 +2108,9 @@ function train(unitKind: TrainableUnitKind) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  sendCommand({ type: "train", buildingId: building.id, unitKind });
+  const state = trainCommandState(unitKind, player, true);
+  if (!state.enabled) { showCommandUnavailable(state, labelKind(unitKind)); return; }
+  if (!sendCommand({ type: "train", buildingId: building.id, unitKind })) return;
   statusLabel.textContent = t("status.trainQueued", { unit: labelKind(unitKind) });
 }
 
@@ -2150,9 +2178,11 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
-  const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
+  if (selectedIds.size && !selectedPlayerUnits().length && !selectedPlayerBuildings().length) additive = false;
+  const unit = hitUnit(world, () => true);
   if (unit) {
-    const result = sameKind
+    if (unit.owner !== localPlayerId) additive = false;
+    const result = sameKind && unit.owner === localPlayerId
       ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
       : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
     selectedIds = result.selectedIds;
@@ -2161,8 +2191,9 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
     openPalette = undefined;
     return;
   }
-  const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
+  const building = hitBuilding(world, () => true);
   if (building) {
+    if (building.owner !== localPlayerId) additive = false;
     const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
@@ -2261,11 +2292,11 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
     return Boolean(command);
   }
   if (intent.type === "controlGroupReplace") {
-    if (selectedIds.size === 0) {
+    if (selectedPlayerUnits().length + selectedPlayerBuildings().length === 0) {
       showInvalidCommand(t("status.groupNeedsSelection", { slot: intent.slot }));
       return true;
     }
-    replaceControlGroup(controlGroups, intent.slot, selectedIds);
+    replaceControlGroup(controlGroups, intent.slot, new Set([...selectedPlayerUnits(), ...selectedPlayerBuildings()].map(entity => entity.id)));
     lastControlGroupRecall = undefined;
     statusLabel.textContent = t("status.groupSet", { slot: intent.slot });
     return true;
@@ -2324,18 +2355,24 @@ function updateHud() {
   for (const button of commandButtons) {
     const state = button.state();
     button.element.hidden = !state.visible;
-    button.element.disabled = !state.enabled;
+    button.element.disabled = false;
+    button.element.setAttribute("aria-disabled", String(!state.enabled));
     button.element.classList.toggle("command-button-disabled", state.visible && !state.enabled);
     button.element.classList.toggle("command-button-cooldown", state.cooldownTicks !== undefined);
     renderCommandButtonState(button.element, state);
     applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
     if (state.visible) visibleCount += 1;
   }
-  commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
+  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
+  const previousTraining = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-training-progress]"), button => [button.dataset.jobId, button]));
   for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {
-    commandDock.append(renderTrainingProgressButton(progress));
+    const previous = previousTraining.get(progress.jobId);
+    const button = renderTrainingProgressButton(progress, previous);
+    if (!previous) commandDock.append(button);
+    previousTraining.delete(progress.jobId);
     visibleCount += 1;
   }
+  for (const button of previousTraining.values()) button.remove();
   for (const progress of researchProgressButtonsForSelection(focusedBuildings, player)) {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
@@ -2362,8 +2399,16 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       count.textContent = `x${group.count}`;
       const name = document.createElement("span");
       name.className = "selection-model-name";
-      name.textContent = labelAnyKind(group.kind);
+      const first=snapshot?.units.find(u=>u.id===group.ids[0]);
+      const variant=first?.variant?.replace('tide/','');
+      name.textContent=first?.id===HERO?'远征统帅':variant?([...SHIPS,...SIEGE].find(d=>d.id===variant)?.name??(variant==='dragon'?'王廷古龙':variant==='archmage'?'议会大法师':labelAnyKind(group.kind))):labelAnyKind(group.kind);
       button.append(canvas, name, count);
+      const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0]);
+      if (entity && group.focused) {
+        const detail = document.createElement("span"); detail.className = "selection-details";
+        detail.textContent = `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "");
+        button.append(detail);
+      }
       button.addEventListener("click", () => {
         focusedSelectionId = group.ids[0];
         openPalette = undefined;
@@ -2392,8 +2437,12 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
   const point = { x: canvas.width / 2, y: canvas.height / 2 };
-  const color = "#397d73";
-  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
+  const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+  const color = ownerInk(owner ?? localPlayerId);
+  const modelUnit=snapshot?.units.find(u=>u.id===group.ids[0]);
+  const model=modelUnit?.variant?tideModel(modelUnit.variant):undefined;
+  if(model&&modelUnit?.variant)drawAtlasModel(mini,modelUnit.variant,model,{x:canvas.width/2,y:canvas.height*.68},canvas.width/100,color);
+  else if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
   else drawAtlasBuilding(mini, group.kind, point, 78, color);
 }
 
@@ -2423,30 +2472,36 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   return button;
 }
 
-function renderTrainingProgressButton(progress: TrainingProgressButton) {
+function renderTrainingProgressButton(progress: TrainingProgressButton, previous?: HTMLButtonElement) {
   const percent = Math.floor(progress.progress * 100);
   const label = t(progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: labelKind(progress.unitKind) });
-  const button = document.createElement("button");
+  const button = previous ?? document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
   button.className = "command-button research-progress-button";
-  button.setAttribute("aria-disabled", "true");
+  button.classList.add("training-cancel-button");
+  button.disabled = !progress.jobId;
+  if (!previous) button.addEventListener("click", () => {
+    if (progress.jobId) sendCommand({ type: "cancelTraining", buildingId: progress.buildingId, jobId: progress.jobId });
+  });
+  if (progress.jobId) button.dataset.jobId = progress.jobId;
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
   const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
   applyTooltip(button, {
     ...tooltip,
-    title: label,
+    title: `${label} · ${t("hud.cancelTraining")}`,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
-  button.innerHTML = `
+  if (!previous) button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
     <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
   `;
-  drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  if (!previous) drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? String(percent) : "Q";
   return button;
 }
 
@@ -2537,7 +2592,7 @@ function trainIcon(kind: TrainableUnitKind) {
 function draw() {
   if (menuOpen) {
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
-    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now());
+    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now(), reducedUnitMotion.matches);
     return;
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2556,16 +2611,21 @@ function draw() {
   drawWorld({
     ctx,
     snapshot,
-    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height },
+    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height, zoom:worldZoom },
     now: performance.now(),
     facing: unitFacing,
     motion: unitMotion,
+    animation: unitAnimation,
+    reducedMotion: reducedUnitMotion.matches,
     labels: worldLabels,
     selectedIds,
+    controlGroups,
+    ...(tideAdapter ? {models:tideModel,buildingModels:{citadel:'citadel' as SiteModelKind,...Object.fromEntries(Object.entries(tideAdapter.state?.defense??{}).filter(([,id])=>id!=='watch').map(([key,id])=>[key,`fort-${id}` as SiteModelKind]))}} : {}),
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
   });
+  drawTideObjectives();
   drawBuildPlacementPreview();
   drawAttackMovePreview();
   drawSpellPreview();
@@ -2582,7 +2642,7 @@ function drawBuildPlacementPreview() {
   if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
   const kind = commandMode.placement.buildingKind;
   const def = BUILDING_DEFS[kind];
-  const size = buildingGlyphSize(kind);
+  const size = buildingGlyphSize(kind)*worldZoom;
   const world = screenToWorld(lastMouse);
   const at = snapToFootprint(snapshot.map, def.radius, world);
   const point = worldToScreen(at);
@@ -2592,7 +2652,8 @@ function drawBuildPlacementPreview() {
   if (square) {
     const blocked = validPlacement ? new Set<string>() : blockedFootprintCells(snapshot, kind, square);
     const everyCell = !validPlacement && blocked.size === 0;
-    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));
+    ctx.save();ctx.scale(worldZoom,worldZoom);
+    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));ctx.restore();
   }
   ctx.save();
   ctx.globalAlpha = 0.62;
@@ -2833,8 +2894,8 @@ function edgeScrollAim() {
 
 function clampCamera() {
   if (!snapshot) return;
-  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width, camera.x));
-  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height, camera.y));
+  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width/worldZoom, camera.x));
+  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height/worldZoom, camera.y));
 }
 
 function resizeCanvas() {
@@ -2913,11 +2974,11 @@ function openVirtualContextMenu(target: HTMLElement) {
 }
 
 function screenToWorld(point: Point): Point {
-  return { x: point.x + camera.x, y: point.y + camera.y };
+  return { x: point.x / worldZoom + camera.x, y: point.y / worldZoom + camera.y };
 }
 
 function worldToScreen(point: Point): Point {
-  return { x: point.x - camera.x, y: point.y - camera.y };
+  return { x: (point.x - camera.x)*worldZoom, y: (point.y - camera.y)*worldZoom };
 }
 
 function nearScreen(point: Point, pad: number) {
@@ -2932,7 +2993,7 @@ function minimapRect(): ScreenRect {
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
   if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
-  return minimapViewportRectFor(rect, camera, { width: canvas.width, height: canvas.height }, snapshot.map);
+  return minimapViewportRectFor(rect, camera, { width: canvas.width/worldZoom, height: canvas.height/worldZoom }, snapshot.map);
 }
 
 function centerCameraFromMinimap(point: Point) {
@@ -2950,8 +3011,8 @@ function centerCameraOnControlGroup(ids: string[]) {
 
 function centerCameraOnWorld(world: Point) {
   if (!snapshot) return;
-  camera.x = world.x - canvas.width / 2;
-  camera.y = world.y - canvas.height / 2;
+  camera.x = world.x - canvas.width / (2*worldZoom);
+  camera.y = world.y - canvas.height / (2*worldZoom);
   clampCamera();
 }
 
@@ -3037,4 +3098,81 @@ function requireCanvasContext(target: HTMLCanvasElement) {
   const context = target.getContext("2d");
   if (!context) throw new Error("Canvas 2D context is unavailable");
   return context;
+}
+
+
+function openTideBriefing(){
+ menuTitle.textContent=TITLE;mainMenu.classList.add('tide-briefing');
+ menuStatus.textContent="王廷封锁海峡，联军主力在三条战线作战。你统领一支远征队和一座基地，决定这场战争的突破口。";
+ mapList.replaceChildren();
+ const brief=document.createElement('div');brief.className='tide-brief';brief.innerHTML=`<p>第一幕 · 打通航路</p><span>占领至少三座港口。港口持续提供补给，驻军必须将敌人逐出旗帜周围。</span><p>第二幕 · 王座之战</p><span>突破东岸防线，摧毁王廷堡垒。古龙会焚烧密集军队，用工程和遗物打开缺口。</span><p>第三幕 · 最后一潮</p><span>王座陷落后，守住三座港口 60 秒。统帅和远征司令部必须存活。</span><hr><small>左键选择 / 拖框编队，右键移动或攻击；A 攻击移动；Ctrl + 数字编队；工人可修理、采矿、建造。运输舰用右键登船、D 卸载。点击左侧遗物，再选择战场目标。点击港口按钮跳转战线。支持暂停、手动保存和自动存档。</small>`;
+ mapList.append(brief,menuButton('开始远征','标准战役 · 保留全部 5000 余名真实单位','data-start-campaign',()=>startTideCampaign()));
+ if(localStorage.getItem(TIDE_SAVE))mapList.append(menuButton('继续远征','读取最近的战役存档','data-load-campaign',()=>{try{startTideCampaign(JSON.parse(localStorage.getItem(TIDE_SAVE)!));}catch{menuStatus.textContent='存档读取失败，请开始新的远征。';}}));
+ mapList.append(menuButton('返回','','data-campaign-back',()=>renderMainMenu()));
+}
+function startTideCampaign(save?:CampaignSave){
+ menuStatus.textContent='正在集结远征军、构建海陆导航……';
+ const adapter=new TideboundAdapter({...(save?{save}:{}),notice:(text)=>statusLabel.textContent=text,ready:(initial)=>{
+  worldZoom=.7;localPlayerId='player';currentRoomId=undefined;spectatingRoom=false;
+  activateStartedMatch(adapter,initial,{send:()=>{},onMessage:()=>()=>{}});tideAdapter=adapter;
+  selectedIds=new Set([HERO]);focusedSelectionId=HERO;
+  const hero=initial.units.find(u=>u.id===HERO);if(hero)centerCameraOnWorld(hero);
+  menuOpen=false;shell.classList.remove('menu-open');mainMenu.classList.add('hidden');
+  pointerLockUnavailable=true;localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY,'seen');
+  createTidePanel();syncMatchActions();statusLabel.textContent='远征开始：先视察三条战线。统帅携带六件主动遗物。';
+ }});
+}
+function createTidePanel(){
+ tidePanel?.remove();tidePanel=document.createElement('aside');tidePanel.className='tide-panel';
+ tidePanel.innerHTML=`<header><small>THE TIDAL THRONE</small><strong>${TITLE}</strong><span data-tide-clock></span></header><div data-tide-hero-health></div><div data-tide-objective></div><div class="tide-ports"></div><div class="tide-tools"><button data-tide-hero>统帅</button><button data-tide-army>远征军</button><button data-tide-hold>固守 H</button><button data-tide-base>司令部</button><button data-tide-citadel>王廷堡垒</button><button data-tide-zoom>缩放 70%</button><button data-tide-pause>暂停</button><button data-tide-speed>速度 1×</button><button data-tide-save>保存</button><button data-tide-exit>退出</button></div><details open><summary>六件遗物 · 点击后选择目标</summary><div class="tide-relics"></div></details><details><summary>舰队、攻城与工程</summary><div class="tide-recruits"></div><div class="tide-jobs"></div></details><p class="tide-log"></p>`;
+ shell.append(tidePanel);
+ tidePanel.querySelector('[data-tide-hero]')!.addEventListener('click',()=>{const hero=snapshot?.units.find(u=>u.id===HERO);if(hero){selectedIds=new Set([HERO]);focusedSelectionId=HERO;centerCameraOnWorld(hero);}});
+ tidePanel.querySelector('[data-tide-army]')!.addEventListener('click',()=>{selectedIds=new Set(snapshot?.units.filter(u=>u.owner==='player'&&u.kind!=='worker'&&u.kind!=='warship'&&u.kind!=='transport').map(u=>u.id));focusedSelectionId=HERO;});
+ tidePanel.querySelector('[data-tide-citadel]')!.addEventListener('click',()=>{const target=snapshot?.buildings.find(b=>b.id==='citadel');if(target)centerCameraOnWorld(target);});
+ tidePanel.querySelector('[data-tide-base]')!.addEventListener('click',()=>{const base=snapshot?.buildings.find(b=>b.id==='expedition');if(base)centerCameraOnWorld(base);});
+ tidePanel.querySelector('[data-tide-hold]')!.addEventListener('click',()=>sendCommand({type:'holdPosition',unitIds:[...selectedIds]}));
+ tidePanel.querySelector('[data-tide-zoom]')!.addEventListener('click',()=>{const center=screenToWorld({x:canvas.width/2,y:canvas.height/2});worldZoom=worldZoom===.7?.45:worldZoom===.45?1:.7;centerCameraOnWorld(center);tidePanel!.querySelector('[data-tide-zoom]')!.textContent='缩放 '+Math.round(worldZoom*100)+'%';});
+ tidePanel.querySelector('[data-tide-pause]')!.addEventListener('click',()=>{if(!tideAdapter)return;tideAdapter.paused=!tideAdapter.paused;tideAdapter.action({type:'pause',paused:tideAdapter.paused});tidePanel!.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';});
+ let tideSpeed=1;tidePanel.querySelector('[data-tide-speed]')!.addEventListener('click',()=>{tideSpeed=tideSpeed===1?2:tideSpeed===2?4:1;tideAdapter?.action({type:'speed',speed:tideSpeed});tidePanel!.querySelector('[data-tide-speed]')!.textContent='速度 '+tideSpeed+'×';});
+ tidePanel.querySelector('[data-tide-save]')!.addEventListener('click',()=>tideAdapter?.action({type:'save'}));
+ tidePanel.querySelector('[data-tide-exit]')!.addEventListener('click',()=>{tideAdapter?.action({type:'save'});tideAdapter?.action({type:'pause',paused:true});setTimeout(()=>location.reload(),400);});
+ RELICS.forEach((r,index)=>{const b=document.createElement('button');b.title=r.description+' · 射程 '+r.range;b.dataset.relic=String(index);b.textContent=r.name;b.onclick=()=>{tideTarget={type:'cast',index};statusLabel.textContent=r.description+'：请选择目标';};tidePanel!.querySelector('.tide-relics')!.append(b);});
+ [...SHIPS,...SIEGE].forEach(d=>{const b=document.createElement('button');b.textContent=d.name+' · '+d.cost;b.title=d.role;b.onclick=()=>tideAdapter?.action({type:'recruit',id:d.id});tidePanel!.querySelector('.tide-recruits')!.append(b);});
+ DEFENSES.forEach(d=>{const b=document.createElement('button');b.textContent=d.name+' · '+d.cost;b.title=d.role;b.onclick=()=>{tideTarget={type:'fortify',id:d.id};statusLabel.textContent='请选择工程兵附近的陆地';};tidePanel!.querySelector('.tide-recruits')!.append(b);});
+ tidePanelTick=-1;
+}
+function updateTidePanel(){
+ if(!tidePanel||!tideAdapter?.state||!snapshot)return;
+ if(!tideAdapter.paused&&snapshot.tick-tidePanelTick<10&&tidePanelTick>=0)return;tidePanelTick=snapshot.tick;const s=tideAdapter.state;
+ tidePanel.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';
+ tidePanel.querySelector('[data-tide-clock]')!.textContent=`${Math.floor(snapshot.tick/1200)}:${String(Math.floor(snapshot.tick/20)%60).padStart(2,'0')} · ${snapshot.units.length.toLocaleString()} 名作战单位`;
+ tidePanel.querySelector('[data-tide-objective]')!.textContent=s.outcome==='victory'?'远征胜利 · 自由诸港重获航路':s.outcome==='defeat'?'远征失败 · 统帅或司令部陷落':s.phase===2?`最后一潮 · 守住三港 ${s.hold}/60 秒`:s.phase===1?'王座之战 · 摧毁东岸王廷堡垒':'打通航路 · 占领三座港口';
+ const hero=snapshot.units.find(u=>u.id===HERO);const health=tidePanel.querySelector('[data-tide-hero-health]')!;health.textContent=hero?`统帅生命 ${Math.ceil(hero.hp)} / ${hero.maxHp}`:'统帅已阵亡';const base=snapshot.buildings.find(b=>b.id==='expedition');health.textContent+=base?` · 基地 ${Math.ceil(base.hp/base.maxHp*100)}%`:' · 基地已陷落';health.classList.toggle('critical',!hero||hero.hp<hero.maxHp*.35);
+ const ports=tidePanel.querySelector('.tide-ports')!;if(!ports.children.length)for(const p of s.ports){const b=document.createElement('button');b.onclick=()=>centerCameraOnWorld(p);ports.append(b);}
+ s.ports.forEach((p,i)=>{const b=ports.children[i] as HTMLElement;b.textContent=`${p.contested?'交战':p.owner==='fleet'?'联军':p.owner==='crown'?'王廷':'中立'} · ${p.name}`;b.dataset.side=p.owner??'neutral';});
+ RELICS.forEach((r,i)=>{const b=tidePanel!.querySelector(`[data-relic="${i}"]`)!;const seconds=Math.max(0,Math.ceil((s.cooldowns[i]!-snapshot!.tick)/20));b.textContent=r.name+(seconds?` ${seconds}s`:'');});
+ const jobs=tidePanel.querySelector('.tide-jobs')!;const signature=s.jobs.map(j=>j.id).join(',');if(jobs.getAttribute('data-jobs')!==signature){jobs.setAttribute('data-jobs',signature);jobs.replaceChildren(...s.jobs.map(j=>{const b=document.createElement('button');b.title='取消生产并退还黄金';b.textContent=([...SHIPS,...SIEGE].find(d=>d.id===j.kind)?.name??j.kind)+' ×';b.onclick=()=>tideAdapter?.action({type:'cancelRecruit',id:j.id});return b;}));}
+ tidePanel.querySelector('.tide-log')!.textContent=s.log.at(-1)?.text??'';
+ if(s.outcome!=='playing'&&!document.querySelector('.tide-result')){
+  const result=document.createElement('section');result.className='tide-result';result.setAttribute('role','dialog');result.setAttribute('aria-label',s.outcome==='victory'?'远征胜利':'远征失败');
+  result.innerHTML=`<small>THE TIDAL THRONE</small><h2>${s.outcome==='victory'?'海峡重归自由':'潮水终将再起'}</h2><p>${s.outcome==='victory'?'远征胜利 · 王廷堡垒已陷落，诸港航线重新接通。':'远征失败 · 统帅与司令部必须存活。读取最近的自动存档，重新部署军队。'}</p><div>${Math.floor(snapshot.tick/1200)} 分 ${Math.floor(snapshot.tick/20)%60} 秒 · 开局 ${s.peak} 名作战单位<br>港口易手 ${s.ports.reduce((n,p)=>n+p.captures,0)} 次 · 施放遗物 ${s.casts} 次</div><button>返回主菜单</button>`;
+  result.querySelector('button')!.onclick=()=>location.reload();shell.append(result);
+ }
+
+}
+
+function drawTideObjectives(){
+ if(!tideAdapter?.state)return;
+ if(tideTarget?.type==='cast'&&snapshot&&lastMouse){
+  const relic=RELICS[tideTarget.index as number];const hero=snapshot.units.find(u=>u.id===HERO);
+  if(relic&&hero){const at=worldToScreen(hero);const valid=distance(hero,screenToWorld(lastMouse))<=relic.range;
+   ctx.save();ctx.strokeStyle=valid?'#e3c58b':'#c77b68';ctx.fillStyle=valid?'#e3c58b18':'#c77b6820';ctx.lineWidth=1;ctx.setLineDash([5,7]);ctx.beginPath();ctx.arc(at.x,at.y,relic.range*worldZoom,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(lastMouse.x,lastMouse.y,relic.radius*worldZoom,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+  }
+ }
+ for(const p of tideAdapter.state.ports){const at=worldToScreen(p);if(!nearScreen(at,80))continue;
+  ctx.save();ctx.strokeStyle='#d6c19a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(at.x,at.y+5);ctx.lineTo(at.x,at.y-42);ctx.stroke();
+  ctx.fillStyle=p.owner==='fleet'?'#7ea5b2':p.owner==='crown'?'#bc725b':'#d1c39c';ctx.beginPath();ctx.moveTo(at.x+1,at.y-41);ctx.lineTo(at.x+28,at.y-33);ctx.lineTo(at.x+1,at.y-23);ctx.fill();
+  ctx.font='11px sans-serif';ctx.textAlign='center';const label=p.name+(p.contested?' · 争夺中':'');const w=ctx.measureText(label).width+16;
+  ctx.fillStyle='#19232bda';ctx.fillRect(at.x-w/2,at.y+10,w,24);ctx.fillStyle='#e7d9bb';ctx.fillText(label,at.x,at.y+25);ctx.restore();
+ }
 }

@@ -1,4 +1,6 @@
-import { drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
+import type { SiteModelKind } from "./art/building-models";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
+import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
 import { drawFootprint, footprintSquare } from "./footprint-view";
 import { unitGlyphScale } from "./glyphs";
@@ -11,6 +13,7 @@ import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
+import type { UnitAnimationTracker } from "./unit-animation";
 import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "./story-renderer";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
@@ -46,6 +49,9 @@ export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels
 }
 
 export type WorldFrame = {
+  /** Optional per-match pose history. Omit for static diagrams and portraits. */
+  animation?: UnitAnimationTracker;
+  reducedMotion?: boolean;
   ctx: Brush;
   snapshot: GameSnapshot;
   view: WorldView;
@@ -56,12 +62,14 @@ export type WorldFrame = {
   motion?: UnitMotionSmoother;
   labels: WorldLabels;
   selectedIds?: ReadonlySet<string>;
+  controlGroups?: Readonly<Record<string, readonly string[]>>;
   selectedCampId?: string;
   /** The player looking on: rings are in friend-or-foe colours to them (see @@@relation-ink); without one, the owners'. */
   viewer?: PlayerId;
   /** The unit or building under the pointer: ringed thinly, as a selected one is. */
   hoveredId?: string;
   /** A campaign's own units' models, by variant (see story/cast); without it a variant is drawn as its base kind. */
+  buildingModels?: Readonly<Record<string,SiteModelKind>>;
   models?: (variant: string) => UnitModel | undefined;
   /** A campaign's scenery painters, by prop kind (see story/stage props). */
   props?: (kind: string) => PropPainter | undefined;
@@ -73,6 +81,8 @@ export type WorldFrame = {
 };
 
 type Painter = {
+  animation: UnitAnimationTracker | undefined;
+  reducedMotion: boolean;
   ctx: Brush;
   snapshot: GameSnapshot;
   camera: Point;
@@ -83,10 +93,12 @@ type Painter = {
   motion: UnitMotionSmoother | undefined;
   labels: WorldLabels;
   selectedIds: ReadonlySet<string>;
+  controlGroups: WorldFrame["controlGroups"];
   selectedCampId: string | undefined;
   viewer: PlayerId | undefined;
   hoveredId: string | undefined;
   models: WorldFrame["models"];
+  buildingModels: WorldFrame["buildingModels"];
   still: boolean;
 };
 
@@ -95,6 +107,8 @@ const NO_SELECTION: ReadonlySet<string> = new Set();
 export function drawWorld(frame: WorldFrame) {
   const zoom = frame.view.zoom ?? 1;
   const painter: Painter = {
+    animation: frame.animation,
+    reducedMotion: frame.reducedMotion ?? false,
     ctx: frame.ctx,
     snapshot: frame.snapshot,
     camera: { x: frame.view.x, y: frame.view.y },
@@ -105,14 +119,17 @@ export function drawWorld(frame: WorldFrame) {
     motion: frame.motion,
     labels: frame.labels,
     selectedIds: frame.selectedIds ?? NO_SELECTION,
+    controlGroups: frame.controlGroups,
     selectedCampId: frame.selectedCampId,
     viewer: frame.viewer,
     hoveredId: frame.hoveredId,
     models: frame.models,
+    buildingModels: frame.buildingModels,
     still: frame.still ?? false,
   };
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
+  painter.animation?.update(snapshot, painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
   if (snapshot.map.terrain) {
@@ -130,8 +147,32 @@ export function drawWorld(frame: WorldFrame) {
   drawObstacles(painter, snapshot.obstacles ?? []);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
-  drawBuildings(painter, snapshot.buildings);
-  drawUnits(painter, snapshot.units);
+  // Persistent ground layer: weather to a faint sketch, never disappear.
+  for(const corpse of snapshot.corpses ?? []){
+    const point=worldToScreen(painter,corpse);
+    if(!nearScreen(painter,point,90))continue;
+    const age=Math.max(0,snapshot.tick-corpse.diedAtTick)/SIM_TICKS_PER_SECOND;
+    ctx.save();ctx.globalAlpha*=.58-Math.min(1,age/8)*.18;
+    let hash=0;for(const ch of corpse.id)hash=(Math.imul(hash,31)+ch.charCodeAt(0))>>>0;
+    drawAtlasCorpse(ctx,corpse.kind,point,unitGlyphScale(corpse.radius),hash%6);ctx.restore();
+  }
+  // Plans are a private overlay: they never enter target, visibility or pathing indexes.
+  if (!painter.still && frame.viewer) for (const worker of snapshot.units) {
+    if (worker.owner !== frame.viewer || worker.order.type !== "build") continue;
+    const order = worker.order, point = worldToScreen(painter, order);
+    if (!nearScreen(painter, point, 120)) continue;
+    ctx.save(); ctx.globalAlpha = .24;
+    drawAtlasBuilding(ctx, order.buildingKind, point, buildingGlyphSize(order.buildingKind), "#bca577");
+    ctx.restore();
+    if ((snapshot.players[frame.viewer]?.gold ?? 0) < BUILDING_DEFS[order.buildingKind].cost) {
+      ctx.save(); ctx.fillStyle="#e1c28c"; ctx.font="12px sans-serif"; ctx.textAlign="center";
+      ctx.fillText(frame.locale === "zh" ? "等待金币" : "Waiting for gold", point.x, point.y+40); ctx.restore();
+    }
+  }
+  trackUnitFacing(painter.facing,painter.snapshot);
+  // Sort feet, so a soldier behind a tall building is actually occluded by it.
+  const actors=[...snapshot.buildings,...snapshot.units].sort((a,b)=>a.y-b.y);
+  for(const actor of actors)if('order' in actor)drawUnits(painter,[actor]);else drawBuildings(painter,[actor]);
   drawCarriedItems(painter, snapshot.items);
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
   renderWorldEffects({
@@ -182,7 +223,9 @@ export function drawPaperMap(ctx: Brush, mapId: MapId, camera: Point, width: num
 }
 
 export function ownerInk(owner: Owner | undefined) {
-  if (owner === "player") return "#387d72";
+  if (owner === "player") return "#477b91";
+  if (owner === "fleet") return "#799199";
+  if (owner === "crown") return "#a45c4b";
   if (owner === "enemy") return "#a85644";
   if (owner === "enemy2") return "#7f3a70";
   if (!owner || owner === "neutral") return "#704a33";
@@ -193,7 +236,7 @@ export function ownerInk(owner: Owner | undefined) {
 }
 
 export function buildingGlyphSize(kind: BuildingKind) {
-  return kind === "townHall" ? 76 : 58;
+  return Math.round(BUILDING_DEFS[kind].radius * 2.12);
 }
 
 function drawTextureStroke(ctx: Brush, stroke: TextureStroke) {
@@ -290,7 +333,7 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     else if (selected || painter.hoveredId === building.id) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ring);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
-    drawAtlasBuilding(ctx, building.kind, point, size, String(ctx.strokeStyle));
+    drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
     if (!painter.still) drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
@@ -302,32 +345,22 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
 }
 
 function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Point) {
-  const ink = building.rallyTarget?.type === "resource" ? "#b9861b" : building.rallyTarget?.type === "unit" ? "#5d8b4c" : "#315f87";
   ctx.save();
-  ctx.strokeStyle = ink;
-  ctx.fillStyle = ink;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 5]);
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.arc(to.x, to.y, 7, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(to.x, to.y - 16);
-  ctx.lineTo(to.x, to.y + 8);
-  ctx.lineTo(to.x + 15, to.y - 8);
-  ctx.lineTo(to.x, to.y - 8);
-  ctx.fill();
+  const x = to.x, y = to.y;
+  ctx.fillStyle = "#29272440";
+  ctx.beginPath(); ctx.ellipse(x + 3, y + 3, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#49413a"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 27); ctx.stroke();
+  ctx.strokeStyle = "#d4c1a0"; ctx.lineWidth = .65;
+  ctx.beginPath(); ctx.moveTo(x - .6, y); ctx.lineTo(x - .6, y - 27); ctx.stroke();
+  ctx.fillStyle = ownerInk(building.owner);
+  ctx.beginPath(); ctx.moveTo(x + 1, y - 26); ctx.lineTo(x + 17, y - 23);
+  ctx.lineTo(x + 12, y - 18); ctx.lineTo(x + 17, y - 14); ctx.lineTo(x + 1, y - 17); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
 
 function drawUnits(painter: Painter, units: Unit[]) {
   const { ctx, now } = painter;
-  trackUnitFacing(painter.facing, painter.snapshot);
   for (const unit of units) {
     const shake = hitFeedbackOffset(painter.snapshot, unit);
     const at = drawnPosition(painter, unit);
@@ -350,12 +383,21 @@ function drawUnits(painter: Painter, units: Unit[]) {
     }
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
-    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id));
+    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion ? undefined : painter.animation?.frame(unit, now));
     const scorch = unit.effects.find((effect) => effect.type === "scorch");
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    if (!painter.still) drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
+    if (!painter.still && (selected || painter.hoveredId===unit.id || unit.hp<unit.maxHp*.85)) drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
+    if (selected && painter.controlGroups) {
+      const digits = Object.entries(painter.controlGroups).filter(([, ids]) => ids.includes(unit.id)).map(([digit]) => digit).join("·");
+      if (digits) {
+        ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center";
+        const w = ctx.measureText(digits).width + 7;
+        ctx.fillStyle = "#242321e8"; ctx.fillRect(point.x - w / 2, point.y + unit.radius + 5, w, 15);
+        ctx.fillStyle = "#f0dfb9"; ctx.fillText(digits, point.x, point.y + unit.radius + 16); ctx.restore();
+      }
+    }
   }
 }
 
@@ -424,10 +466,7 @@ function drawSelectionHalo(ctx: Brush, x: number, y: number, rx: number, ry: num
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 250, 226, 0.8)";
-  ctx.beginPath();
-  ctx.ellipse(x - 2, y - 3, rx * 0.82, ry * 0.7, 0, 0, Math.PI * 2);
-  ctx.stroke();
+
   ctx.restore();
 }
 
@@ -631,17 +670,17 @@ function drawTrainingProgress(painter: Painter, x: number, y: number, remaining:
   ctx.fillText(`${painter.labels.unitKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
 }
 
-// @@@hit-shake - A struck unit or building shakes by the share of its full health the blow took: HIT_SHAKE a whole
-// health's worth, so a lancer's 18 on a footman (145) shakes it about 3, a golem's 34 on a spirit (85) 10, and a tower's
-// arrow on a town hall hardly at all. It used to shake whatever stood near any hit by its size alone.
-const HIT_SHAKE = 26;
-const MAX_HIT_SHAKE = 12;
+// @@@hit-shake - A subtle, decaying contact response; strong hits cannot move
+// a silhouette far enough to resemble pathing or a second attack animation.
+const HIT_SHAKE = 7;
+const MAX_HIT_SHAKE = 2;
 
 function hitFeedbackOffset(snapshot: GameSnapshot, entity: Unit | Building | Obstacle): Point {
   const hit = snapshot.effects.find((effect) => effect.type === "hit" && effect.unitId === entity.id);
   if (!hit) return { x: 0, y: 0 };
   const amount = Math.min(MAX_HIT_SHAKE, (HIT_SHAKE * (hit.damage ?? 0)) / Math.max(1, entity.maxHp));
-  const pulse = Math.sin(hit.remaining * 1.7) * amount;
+  const life = Math.max(0, Math.min(1, hit.remaining / hit.duration));
+  const pulse = Math.sin((1-life) * Math.PI * 2) * amount * life * life;
   return { x: pulse, y: -pulse * 0.35 };
 }
 

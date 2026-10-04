@@ -25,7 +25,7 @@ export function gameShellMarkup(i18n: I18n) {
       <button type="button" class="match-action" data-forfeit-match>${escapeHtml(t("shell.concede"))}</button>
       <button type="button" class="match-action" data-match-menu-close>${escapeHtml(t("shell.resume"))}</button>
     </div>
-    <div class="status-line" data-status>${escapeHtml(t("shell.connectingMatch"))}</div>
+    <div class="status-line" data-status role="status" aria-live="polite">${escapeHtml(t("shell.connectingMatch"))}</div>
     <div class="chat-overlay" data-chat-overlay>
       <div class="chat-messages" data-chat-messages></div>
       <form class="chat-input-row hidden" data-chat-form>

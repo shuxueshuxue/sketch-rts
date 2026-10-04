@@ -23,8 +23,8 @@ export function buildSelectionGroups(
 ): SelectionGroup[] {
   const groups = new Map<string, SelectionGroup>();
   for (const unit of snapshot.units) {
-    if (unit.owner !== owner || !selectedIds.has(unit.id)) continue;
-    const id = `unit:${unit.kind}`;
+    if (!selectedIds.has(unit.id) || (selectedIds.size > 1 && unit.owner !== owner)) continue;
+    const id = `unit:${unit.kind}${unit.variant ? `:${unit.variant}` : ""}`;
     const group = groups.get(id) ?? { id, entityType: "unit", kind: unit.kind, count: 0, ids: [], focused: false };
     group.count += 1;
     group.ids.push(unit.id);
@@ -32,7 +32,7 @@ export function buildSelectionGroups(
     groups.set(id, group);
   }
   for (const building of snapshot.buildings) {
-    if (building.owner !== owner || !selectedIds.has(building.id)) continue;
+    if (!selectedIds.has(building.id) || (selectedIds.size > 1 && building.owner !== owner)) continue;
     const id = `building:${building.kind}`;
     const group = groups.get(id) ?? { id, entityType: "building", kind: building.kind, count: 0, ids: [], focused: false };
     group.count += 1;
@@ -65,7 +65,7 @@ export function cycleFocusedSelectionId(
 
 function selectableSelectionEntities(snapshot: GameSnapshot, selectedIds: Set<string>, owner: PlayerId): (Unit | Building)[] {
   return [
-    ...snapshot.units.filter((unit) => unit.owner === owner && selectedIds.has(unit.id)),
-    ...snapshot.buildings.filter((building) => building.owner === owner && selectedIds.has(building.id)),
+    ...snapshot.units.filter((unit) => selectedIds.has(unit.id) && (selectedIds.size === 1 || unit.owner === owner)),
+    ...snapshot.buildings.filter((building) => selectedIds.has(building.id) && (selectedIds.size === 1 || building.owner === owner)),
   ];
 }
