@@ -1,3 +1,4 @@
+import { warfarePainter } from "../art/warfare-units";
 import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
 import { type Brush, GOLD, INK, LINEN, WOOD, arm, belt, ellipse, head, legs, line, polygon, torso } from "../art/kit";
@@ -35,12 +36,7 @@ export const COMMON_UNITS = {
     command: { icon: "⛴", hotkey: "t" },
     glyph: { silhouette: "transport-hull", marks: ["mast", "cargo", "flag"] },
     art: { tier: "advanced", bearing: "vessel", faction: "grove" },
-    paint(b, team) {
-      hull(b, 30, 12);
-      for (const x of [-14, -3, 8]) polygon(b, [[x, -2], [x + 9, -2], [x + 9, 6], [x, 6]], "#b9925e", INK, 0.8);
-      line(b, [[-1, 6], [-1, -34]], WOOD, 2.2);
-      polygon(b, [[-1, -32], [17, -24], [-1, -14]], team);
-    },
+    paint: warfarePainter("transport"),
   },
   warship: {
     name: { en: "Warship", zh: "战船" },
@@ -48,15 +44,7 @@ export const COMMON_UNITS = {
     command: { icon: "⚔", hotkey: "w" },
     glyph: { silhouette: "warship-hull", marks: ["mast", "cannon", "flag"] },
     art: { tier: "elite", bearing: "vessel", faction: "grove" },
-    paint(b, team) {
-      hull(b, 28, 10);
-      line(b, [[14, 0], [27, -4]], "#4c4f4a", 3.4);
-      ellipse(b, 27, -4, 2, 2, "#2e302c");
-      line(b, [[-4, 4], [-4, -38]], WOOD, 2.4);
-      polygon(b, [[-4, -36], [-22, -24], [-4, -12]], team);
-      polygon(b, [[-4, -36], [10, -28], [-4, -20]], LINEN);
-      ellipse(b, -4, -40, 2, 2, GOLD, INK);
-    },
+    paint: warfarePainter("frigate"),
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;
 
