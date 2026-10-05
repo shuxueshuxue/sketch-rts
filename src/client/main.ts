@@ -2410,54 +2410,73 @@ function updateHud() {
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
-  const previousGrid = selectionLabel.querySelector<HTMLDivElement>(".selection-grid");
-  const previousScroll = previousGrid?.scrollTop ?? 0;
-  const previousFocus = previousGrid?.querySelector<HTMLElement>(".focused")?.dataset.selectionGroup;
+  let grid = selectionLabel.querySelector<HTMLDivElement>(".selection-grid");
+  let header = selectionLabel.querySelector<HTMLDivElement>(".selection-header");
+  if (!grid || !header) {
+    header = document.createElement("div");
+    header.className = "selection-header";
+    const title = document.createElement("span");
+    title.className = "selection-header-title";
+    const details = document.createElement("span");
+    details.className = "selection-details";
+    header.append(title, details);
+    grid = document.createElement("div");
+    grid.className = "selection-grid";
+    grid.tabIndex = 0;
+    grid.setAttribute("aria-label", t("hud.selectionTypes"));
+    selectionLabel.replaceChildren(header, grid);
+  }
+  const previousFocus = grid.dataset.focusGroup;
   const focusedGroup = groups.find(group => group.focused) ?? groups[0]!;
   const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focusedGroup.ids[0]);
-  const header = document.createElement("div");
-  header.className = "selection-header";
-  const title = document.createElement("span");
-  title.className = "selection-header-title";
-  title.textContent = labelAnyKind(focusedGroup.kind);
-  const details = document.createElement("span");
-  details.className = "selection-details";
-  if (entity) details.textContent = `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "");
-  header.append(title, details);
-  const grid = document.createElement("div");
-  grid.className = "selection-grid";
+  header.children[0]!.textContent = labelAnyKind(focusedGroup.kind);
+  header.children[1]!.textContent = entity ? `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "") : "";
   grid.style.setProperty("--selection-columns", String(Math.min(3, groups.length)));
-  grid.replaceChildren(...groups.map((group) => {
-      const button = document.createElement("button");
+  // Keep live cards and the scroll container: replacing them each frame interrupted wheel, thumb and keyboard input.
+  const existing = new Map(Array.from(grid.querySelectorAll<HTMLButtonElement>(".selection-model"), button => [button.dataset.selectionGroup, button]));
+  groups.forEach((group, index) => {
+    let button = existing.get(group.id);
+    if (!button) {
+      button = document.createElement("button");
       button.type = "button";
-      button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
       button.dataset.selectionGroup = group.id;
-      button.setAttribute("aria-label", selectionGroupTitle(group));
-      button.setAttribute("aria-pressed", String(group.focused));
-      applyTooltip(button, selectionGroupTooltip(group));
       const canvas = document.createElement("canvas");
       canvas.width = 96;
       canvas.height = 96;
       canvas.className = "selection-model-canvas";
       const count = document.createElement("span");
       count.className = "selection-model-count";
-      count.textContent = `x${group.count}`;
-      count.hidden = group.count === 1;
       const name = document.createElement("span");
       name.className = "selection-model-name";
-      name.textContent = labelAnyKind(group.kind);
       button.append(canvas, name, count);
+      const card = button;
       button.addEventListener("click", () => {
-        focusedSelectionId = group.ids[0];
+        focusedSelectionId = card.dataset.focusId;
         openPalette = undefined;
         updateHud();
       });
-      drawSelectionModel(canvas, group);
-      return button;
-    }));
-  selectionLabel.replaceChildren(header, grid);
-  // HUD refreshes retain the player's place. Only a changed focus brings its card into view.
-  grid.scrollTop = previousScroll;
+    }
+    button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
+    button.dataset.focusId = group.ids[0];
+    button.setAttribute("aria-label", selectionGroupTitle(group));
+    button.setAttribute("aria-pressed", String(group.focused));
+    applyTooltip(button, selectionGroupTooltip(group));
+    button.children[1]!.textContent = labelAnyKind(group.kind);
+    const count = button.children[2] as HTMLElement;
+    count.textContent = `x${group.count}`;
+    count.hidden = group.count === 1;
+    const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+    const artKey = `${group.kind}:${owner}`;
+    if (button.dataset.artKey !== artKey) {
+      drawSelectionModel(button.children[0] as HTMLCanvasElement, group);
+      button.dataset.artKey = artKey;
+    }
+    if (grid!.children[index] !== button) grid!.insertBefore(button, grid!.children[index] ?? null);
+    existing.delete(group.id);
+  });
+  for (const removed of existing.values()) removed.remove();
+  grid.dataset.focusGroup = focusedGroup.id;
+  // Only a changed focus brings its card into view; normal stat updates leave scrolling alone.
   if (previousFocus && previousFocus !== focusedGroup.id) {
     const focused = grid.querySelector<HTMLElement>(".focused");
     if (focused) {
