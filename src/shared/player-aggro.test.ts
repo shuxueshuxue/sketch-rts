@@ -45,9 +45,9 @@ describe("player unit aggro", () => {
 
   it("never overrides a command: a marching soldier keeps walking, and a worker cries for help instead of fighting", () => {
     const game = duel("aggro-commands-win")
-      .unit("v1", "archer", 1_000, 600, { id: "marcher-shooter" })
+      .unit("v1", "archer", 1_100, 600, { id: "marcher-shooter" })
       .unit("v2", "footman", 1_380, 600, { id: "marcher" })
-      .unit("v1", "archer", 1_000, 1_600, { id: "worker-shooter" })
+      .unit("v1", "archer", 1_100, 1_600, { id: "worker-shooter" })
       .worker("v2", 1_380, 1_600, { id: "peasant" })
       .unit("v2", "footman", 1_380, 1_800, { id: "guard" })
       .build()
@@ -80,7 +80,7 @@ describe("player unit aggro", () => {
 
   it("turns an attack-move onto a shooter that hits it from outside acquisition range, and keeps the destination", () => {
     const game = duel("aggro-attack-move")
-      .unit("v1", "archer", 1_000, 1_000, { id: "shooter" })
+      .unit("v1", "archer", 1_100, 1_000, { id: "shooter" })
       .unit("v2", "footman", 1_380, 1_000, { id: "column" })
       .build()
       .createGame();

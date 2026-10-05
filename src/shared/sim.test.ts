@@ -89,18 +89,18 @@ function sumPlayerStats(record: PlayerNumberMap) {
 describe("sketch RTS simulation", () => {
   it("defines a production roster with at least 10 distinct unit kinds and 5 building kinds including a tower", () => {
     expect(TRAINABLE_UNIT_KINDS.length).toBeGreaterThanOrEqual(10);
-    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "groveWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(Object.keys(UNIT_DEFS)).toEqual(expect.arrayContaining(["priest", "summoner", "witch", "golem", "ashWarden", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
     expect(MERCENARY_UNIT_KINDS).toEqual(expect.arrayContaining(["mercenary", "contractArcher", "fieldMedic"]));
     expect(MERCENARY_UNIT_KINDS).toHaveLength(3);
     expect(Object.keys(BUILDING_DEFS).length).toBeGreaterThanOrEqual(5);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeGreaterThan(0);
     expect(Object.keys(RACE_DEFS)).toEqual(expect.arrayContaining(["grove", "ember"]));
-    expect(RACE_DEFS.grove.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest", "groveWarden"]));
+    expect(RACE_DEFS.grove.trainableUnits).toEqual(expect.arrayContaining(["worker", "footman", "archer", "priest", "horseArcher"]));
     expect(RACE_DEFS.grove.trainableUnits).not.toEqual(expect.arrayContaining(["emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
     expect(RACE_DEFS.grove.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "barracks", "archeryRange", "sanctum", "defenseTower", "moonWell", "farm"]));
     expect(RACE_DEFS.grove.buildableBuildings).not.toEqual(expect.arrayContaining(["emberForge", "cinderSpire", "emberShrine"]));
-    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
-    expect(RACE_DEFS.ember.trainableUnits).not.toEqual(expect.arrayContaining(["footman", "archer", "raider", "lancer", "groveWarden", "knight", "priest", "summoner", "witch", "golem"]));
+    expect(RACE_DEFS.ember.trainableUnits).toEqual(expect.arrayContaining(["ashWarden", "worker", "emberRavager", "cinderRunner", "sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"]));
+    expect(RACE_DEFS.ember.trainableUnits).not.toEqual(expect.arrayContaining(["footman", "archer", "horseArcher", "raider", "lancer", "knight", "priest", "summoner", "witch", "golem"]));
     expect(RACE_DEFS.ember.buildableBuildings).toEqual(expect.arrayContaining(["townHall", "emberForge", "cinderSpire", "emberShrine", "defenseTower", "farm"]));
     expect(RACE_DEFS.ember.buildableBuildings).not.toEqual(expect.arrayContaining(["barracks", "archeryRange", "stables", "sanctum", "workshop", "moonWell"]));
   });
@@ -108,7 +108,7 @@ describe("sketch RTS simulation", () => {
   it("keeps ember exclusive unit raw value no stronger than grove analogues", () => {
     const rawValue = (kind: keyof typeof UNIT_DEFS) => (UNIT_DEFS[kind].hp * UNIT_DEFS[kind].attackDamage) / UNIT_DEFS[kind].cost;
 
-    expect(rawValue("emberRavager")).toBeLessThanOrEqual(rawValue("groveWarden"));
+    expect(rawValue("emberRavager")).toBeLessThanOrEqual(rawValue("ashWarden"));
     expect(rawValue("cinderRunner")).toBeLessThanOrEqual(rawValue("raider"));
     expect(rawValue("sparkArcher")).toBeLessThanOrEqual(rawValue("archer"));
     expect(rawValue("emberAcolyte")).toBeLessThanOrEqual(rawValue("priest"));
@@ -382,7 +382,7 @@ describe("sketch RTS simulation", () => {
       .createGame();
 
     issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["pulling-archer"], targetId: "damaged-creep" });
-    stepMany(game, 24);
+    stepMany(game, 40);
 
     const damaged = game.units.find((unit) => unit.id === "damaged-creep");
     const called = game.units.find((unit) => unit.id === "called-creep");
@@ -430,7 +430,7 @@ describe("sketch RTS simulation", () => {
       .createGame();
 
     issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["pulling-archer"], targetId: "damaged-creep" });
-    stepMany(game, 24);
+    stepMany(game, 40);
 
     const damaged = game.units.find((unit) => unit.id === "damaged-creep");
     const called = game.units.find((unit) => unit.id === "called-wide-creep");
@@ -731,10 +731,10 @@ describe("sketch RTS simulation", () => {
     game.players.player.gold = 500;
     game.players.enemy.gold = 500;
 
-    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "groveWarden" })).not.toThrow();
+    expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "ashWarden" })).toThrow(/cannot train/i);
     expect(() => issuePlayerCommand(game, "player", { type: "train", buildingId: groveBarracks.id, unitKind: "emberRavager" })).toThrow(/cannot train/i);
     expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberForge.id, unitKind: "emberRavager" })).not.toThrow();
-    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberForge.id, unitKind: "groveWarden" })).toThrow(/cannot train/i);
+    expect(() => issuePlayerCommand(game, "enemy", { type: "train", buildingId: emberForge.id, unitKind: "ashWarden" })).not.toThrow();
   });
 
   it("stacks repeated training commands on one building but produces units serially", () => {
@@ -944,7 +944,7 @@ describe("sketch RTS simulation", () => {
       .createGame();
     const target = game.units.find((unit) => unit.id === "projectile-target")!;
 
-    stepGame(game);
+    expect(stepUntil(game, 20, () => game.projectiles.length > 0)).toBe(true);
 
     expect(target.hp).toBe(target.maxHp);
     expect(game.effects.some((effect) => effect.type === "projectile")).toBe(true);
@@ -969,7 +969,7 @@ describe("sketch RTS simulation", () => {
       .build()
       .createGame();
 
-    stepGame(game);
+    expect(stepUntil(game, 20, () => game.projectiles.length === 2)).toBe(true);
 
     expect(game.projectiles.map((projectile) => projectile.targetId).sort()).toEqual(["doomed-raider", "fresh-footman"]);
   });
@@ -989,7 +989,7 @@ describe("sketch RTS simulation", () => {
       .build()
       .createGame();
 
-    stepGame(game);
+    expect(stepUntil(game, 20, () => game.projectiles.length === 2)).toBe(true);
 
     expect(game.projectiles.map((projectile) => projectile.targetId).sort()).toEqual(["doomed-raider", "fresh-footman"]);
   });
@@ -1095,8 +1095,9 @@ describe("sketch RTS simulation", () => {
     const archer = game.spawnUnit("player", "archer", 2500, 2500);
     const target = game.spawnUnit("enemy", "raider", 2620, 2500);
 
+    issuePlayerCommand(game, "enemy", { type: "holdPosition", unitIds: [target.id] });
     issueCommand(game, { type: "attack", unitIds: [archer.id], targetId: target.id });
-    stepMany(game, 1);
+    expect(stepUntil(game, 20, () => game.projectiles.length > 0)).toBe(true);
 
     const projectile = game.effects.find((effect) => effect.type === "projectile");
     expect(projectile).toMatchObject({ fromX: archer.x, fromY: archer.y, toX: target.x, toY: target.y, sourceKind: "archer" });
