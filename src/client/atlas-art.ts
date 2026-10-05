@@ -2,6 +2,7 @@ import { unitMover } from "../shared/catalog";
 import { paintCorpse } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
 import { hasPaintedUnit, paintFigure } from "./art/painted-units";
+import { creatureShadow } from "./art/painted-creatures";
 import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { UNIT_CARDS } from "./content/units";
@@ -73,9 +74,10 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
     sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
       const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
+      const feet = creatureShadow(kind);
       if (unitMover(kind) !== "sea") {
-        ellipse(b, 3, 18, broad ? 29 : 14, broad ? 6 : 4.5, "#29282418");
-        ellipse(b, 1, 17, broad ? 24 : 10, broad ? 4.5 : 2.8, "#29282438");
+        ellipse(b, 3, feet?.y ?? 18, feet ? feet.rx * 1.12 : broad ? 29 : 14, feet ? feet.ry * 1.2 : broad ? 6 : 4.5, "#29282418");
+        ellipse(b, 1, feet?.y ?? 17, feet?.rx ?? (broad ? 24 : 10), feet?.ry ?? (broad ? 4.5 : 2.8), "#29282438");
       }
       paintFigure(b, kind, color, pose, facing);
     }, facing === -1);

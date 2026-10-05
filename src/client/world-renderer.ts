@@ -1,3 +1,4 @@
+import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
@@ -173,7 +174,7 @@ export function drawWorld(frame: WorldFrame) {
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
   const actors=[...snapshot.buildings,...snapshot.units].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
   for(const actor of actors)if('order' in actor)drawUnits(painter,[actor]);else drawBuildings(painter,[actor]);
-  drawCarriedItems(painter, snapshot.items);
+  // Carried objects belong in the inventory, not stacked over a unit's head.
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
   renderWorldEffects({
     ctx,
@@ -447,17 +448,6 @@ function drawItems(painter: Painter, items: WorldItem[]) {
   }
 }
 
-function drawCarriedItems(painter: Painter, items: WorldItem[]) {
-  for (const item of items) {
-    if (!item.carrierId) continue;
-    // A carried item rides with its carrier as drawn (on its glide while it charges).
-    const carrier = painter.motion ? painter.snapshot.units.find((unit) => unit.id === item.carrierId) : undefined;
-    const point = worldToScreen(painter, carrier ? drawnPosition(painter, carrier) : item);
-    if (!nearScreen(painter, point, 60)) continue;
-    drawItemGlyph(painter.ctx, item, { x: point.x + 12, y: point.y - 34 }, painter.now, true);
-  }
-}
-
 // A ring's colour: friend or foe to the player looking on (see @@@relation-ink), or with no one looking, the owner's.
 function ringInk(painter: Painter, owner: Owner) {
   return painter.viewer ? RELATION_INK[relationTo(painter.snapshot, painter.viewer, owner)] : ownerInk(owner);
@@ -490,162 +480,8 @@ function drawCarriedGold(ctx: Brush, x: number, y: number) {
   ctx.restore();
 }
 
-function drawItemGlyph(ctx: Brush, item: WorldItem, point: Point, now: number, carried: boolean) {
-  const bob = carried ? Math.sin(now / 180 + point.x * 0.03) * 2.5 : 0;
-  const x = point.x;
-  const y = point.y + bob;
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (item.kind === "lightningRod") {
-    ctx.strokeStyle = "#315f87";
-    ctx.fillStyle = "#9ed8ff";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(x - 3, y + 9);
-    ctx.lineTo(x + 6, y - 11);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x + 3, y - 13);
-    ctx.lineTo(x + 11, y - 6);
-    ctx.lineTo(x + 6, y - 6);
-    ctx.lineTo(x + 12, y + 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "stormStaff") {
-    ctx.strokeStyle = "#596073";
-    ctx.fillStyle = "#d6d4f2";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 9);
-    ctx.lineTo(x + 5, y - 10);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 5, 0.15, Math.PI * 1.8);
-    ctx.stroke();
-  } else if (item.kind === "flameCloak") {
-    ctx.strokeStyle = "#963c36";
-    ctx.fillStyle = "rgba(242, 137, 75, 0.72)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 8);
-    ctx.quadraticCurveTo(x - 13, y - 4, x - 4, y - 12);
-    ctx.quadraticCurveTo(x + 12, y - 4, x + 7, y + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "guardianScroll") {
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "#fff6d0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.rect(x - 8, y - 6, 16, 12);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y - 2);
-    ctx.lineTo(x + 5, y - 2);
-    ctx.moveTo(x - 4, y + 3);
-    ctx.lineTo(x + 4, y + 3);
-    ctx.stroke();
-  } else if (item.kind === "breachCharge") {
-    ctx.strokeStyle = "#5f3a24";
-    ctx.fillStyle = "#d28445";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 2, y - 7);
-    ctx.quadraticCurveTo(x + 2, y - 13, x + 7, y - 9);
-    ctx.stroke();
-  } else if (item.kind === "speedBoots") {
-    ctx.strokeStyle = "#5f3a24";
-    ctx.fillStyle = "#b07a4a";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 4, y - 10);
-    ctx.lineTo(x + 2, y - 10);
-    ctx.lineTo(x + 2, y + 3);
-    ctx.lineTo(x + 10, y + 5);
-    ctx.lineTo(x + 10, y + 9);
-    ctx.lineTo(x - 4, y + 9);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 12, y - 4);
-    ctx.lineTo(x - 7, y - 4);
-    ctx.moveTo(x - 13, y + 1);
-    ctx.lineTo(x - 7, y + 1);
-    ctx.stroke();
-  } else if (item.kind === "regenRing") {
-    ctx.strokeStyle = "#3f6b3a";
-    ctx.fillStyle = "#9fd38b";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y - 7, 3, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (item.kind === "healingScroll") {
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "#fff6d0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.rect(x - 8, y - 6, 16, 12);
-    ctx.fill();
-    ctx.stroke();
-    ctx.strokeStyle = "#b5523f";
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 4);
-    ctx.lineTo(x, y + 4);
-    ctx.moveTo(x - 4, y);
-    ctx.lineTo(x + 4, y);
-    ctx.stroke();
-  } else if (item.kind === "ivoryTower") {
-    ctx.strokeStyle = "#62573f";
-    ctx.fillStyle = "#f4efe0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y + 9);
-    ctx.lineTo(x - 4, y - 6);
-    ctx.lineTo(x - 7, y - 6);
-    ctx.lineTo(x - 7, y - 11);
-    ctx.lineTo(x + 7, y - 11);
-    ctx.lineTo(x + 7, y - 6);
-    ctx.lineTo(x + 4, y - 6);
-    ctx.lineTo(x + 5, y + 9);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  } else {
-    ctx.strokeStyle = "#8a6418";
-    ctx.fillStyle = "#f2d05c";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 10);
-    ctx.lineTo(x + 8, y);
-    ctx.lineTo(x, y + 10);
-    ctx.lineTo(x - 8, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-  if (carried) {
-    ctx.strokeStyle = "rgba(49, 95, 135, 0.36)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(x, y + 13, 10, 3.2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
+function drawItemGlyph(ctx: Brush, item: WorldItem, point: Point, _now: number, _carried: boolean) {
+  drawPaintedItem(ctx, item.kind, point, 30, true);
 }
 
 function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number) {

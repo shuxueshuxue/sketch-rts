@@ -58,7 +58,8 @@ import { virtualClickableTargetFromElement, virtualContextTargetFromElement, vir
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
-import { SHOP_GOODS, standsAtShop } from "../shared/shop";
+import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
+import { drawPaintedItem } from "./art/items";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
@@ -71,7 +72,7 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, Lo
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
-type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"] };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
@@ -185,6 +186,8 @@ const unitAnimation = new UnitAnimationTracker();
 const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
+let inspectedShopItem: WorldItem["kind"] | undefined;
+let shopInventoryCarrierId: string | undefined;
 const controlGroups: ControlGroups = {};
 let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
@@ -291,7 +294,7 @@ const commandButtons: CommandButton[] = [
         stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
         requirements: [t("command.buy.requirements")],
       };
-    }),
+    }, { type: "item", kind: good.kind }),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -390,8 +393,16 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.dataset.hotkey = hotkey.toUpperCase();
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
+  else {
+    const paths: Record<string, string> = {
+      "⌁": "M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4",
+      "⌘": "M12 33l13-19M17 7l7-3 12 8-5 8-8-5-7 1-4-5zM9 31l5 3-3 5-5-3z",
+      "⤓": "M6 27h30l-5 8H12zM21 4v19m-6-6l6 6 6-6M7 38l6 2 8-2 8 2 7-2",
+    };
+    if (paths[icon]) element.querySelector(".command-icon")!.innerHTML = `<svg class="command-symbol" viewBox="0 0 42 42" aria-hidden="true"><path d="${paths[icon]}"/></svg>`;
+  }
   const guardedRun = () => { const current = state(); if (!current.visible) return; if (!current.enabled) { showCommandUnavailable(current, label); return; } run(); };
   element.addEventListener("click", guardedRun);
   // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
@@ -425,9 +436,10 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   icon.setAttribute("aria-hidden", "true");
   const brush = requireCanvasContext(icon);
   const center = { x: 48, y: 48 };
-  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, "#397d73");
-  else drawAtlasBuilding(brush, portrait.kind, center, 78, "#397d73");
-  element.querySelector(".command-icon")?.replaceChildren(icon);
+  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, ownerInk(localPlayerId));
+  else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
+  else drawAtlasBuilding(brush, portrait.kind, center, 78, ownerInk(localPlayerId));
+  element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -461,7 +473,7 @@ function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonStat
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) return t("hud.commandCooldownShort", { ticks: state.cooldownTicks });
+  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / 20)}s`;
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
@@ -1709,6 +1721,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
 function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
   if (command.type === "mine") return t("status.mineOrdered");
   if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
+  if (command.type === "repairShip" && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
   if (command.type === "board") return t("status.boardOrdered");
   if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
   if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
@@ -2140,8 +2153,14 @@ function buyGood(kind: WorldItem["kind"]) {
     showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
     return;
   }
+  shopInventoryCarrierId = snapshot && shopBuyer(snapshot, localPlayerId, shop)?.id;
   sendCommand({ type: "buy", shopId: shop.id, item: kind });
+  inspectedShopItem = kind;
+  selectedIds = new Set();
+  focusedSelectionId = undefined;
+  selectedCampId = shop.id;
   statusLabel.textContent = t("status.itemBought", { item: labelKind(kind) });
+  updateHud();
 }
 
 function hireMercenary() {
@@ -2199,6 +2218,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = camp?.id;
+  inspectedShopItem = undefined;
   openPalette = undefined;
 }
 
@@ -2230,6 +2250,13 @@ function selectedMercenaryCamp() {
 
 function selectedShop() {
   return snapshot?.shops?.find((shop) => shop.id === selectedCampId);
+}
+
+function inventoryCarriers() {
+  const shop = selectedShop();
+  const previous = snapshot?.units.find(unit => unit.id === shopInventoryCarrierId && unit.owner === localPlayerId);
+  const buyer = snapshot && shop && ((previous && standsAtShop(previous, shop) ? previous : undefined) ?? shopBuyer(snapshot, localPlayerId, shop) ?? snapshot.units.find(unit => unit.owner === localPlayerId && standsAtShop(unit, shop)));
+  return buyer ? [buyer] : focusedPlayerUnits();
 }
 
 function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
@@ -2269,7 +2296,7 @@ function pruneSelection() {
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if (!snapshot) return false;
-  const inventoryEntries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const inventoryEntries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
   const intent = gameplayKeyIntent(event, {
     controlGroups: reservedGroupDigits,
@@ -2335,12 +2362,20 @@ function updateHud() {
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
-  if (groups.length > 0) {
+  if (selectedShop()) {
+    const shop = selectedShop()!;
+    selectionLabel.replaceChildren();
+    if (inspectedShopItem) {
+      const art = document.createElement("canvas"); art.width = art.height = 96; art.className = "shop-item-portrait";
+      drawPaintedItem(requireCanvasContext(art), inspectedShopItem, { x:48, y:48 }, 76);
+      const text = document.createElement("span"); text.className = "shop-item-summary";
+      text.textContent = `${labelKind(inspectedShopItem)} · ${t("hud.shop")}`;
+      selectionLabel.append(art, text);
+    } else selectionLabel.textContent = t("hud.shop");
+  } else if (groups.length > 0) {
     renderSelectionGroups(groups);
   } else if (camp) {
     selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
-  } else if (selectedShop()) {
-    selectionLabel.textContent = t("hud.shop");
   } else {
     selectionLabel.textContent = t("hud.nothingSelected");
   }
@@ -2390,6 +2425,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       const count = document.createElement("span");
       count.className = "selection-model-count";
       count.textContent = `x${group.count}`;
+      count.hidden = group.count === 1;
       const name = document.createElement("span");
       name.className = "selection-model-name";
       name.textContent = labelAnyKind(group.kind);
@@ -2499,7 +2535,7 @@ function renderItemDock() {
     itemDock.replaceChildren();
     return;
   }
-  const entries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.classList.toggle("hidden", entries.length === 0);
   itemDock.replaceChildren(
@@ -2514,7 +2550,8 @@ function renderItemDock() {
       button.setAttribute("aria-label", `${itemName} (${hotkey})${cooldownText}`);
       applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
       button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
-      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
+      button.innerHTML = `<span class="item-icon"></span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${Math.ceil(item.cooldownRemaining / 20)}s</span>` : ""}`;
+      drawCommandPortrait(button, { type: "item", kind: item.kind });
       button.addEventListener("click", () => useCarriedItem(item.id));
       button.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -2528,7 +2565,7 @@ function renderItemDock() {
 function useInventoryItem(index: number) {
   if (!syncBeforeCommandProjection()) return false;
   if (!snapshot) return false;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits())[index];
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers())[index];
   if (!entry) return false;
   useCarriedItem(entry.item.id);
   return true;
@@ -2537,7 +2574,7 @@ function useInventoryItem(index: number) {
 function useCarriedItem(itemId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
   if (entry.item.kind === "flameCloak" || entry.item.kind === "speedBoots" || entry.item.kind === "regenRing") {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
@@ -2563,7 +2600,7 @@ function useCarriedItem(itemId: string) {
 function dropCarriedItem(itemId: string, carrierId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
   sendCommand(dropItemCommand(entry.item, entry.carrier));
   statusLabel.textContent = t("status.itemDropped", { item: labelKind(entry.item.kind) });
@@ -2973,7 +3010,7 @@ function nearScreen(point: Point, pad: number) {
 
 // The minimap keeps clear of the window's edge by its frame's width (see .minimap-frame).
 function minimapRect(): ScreenRect {
-  const size = Math.min(220, Math.max(150, Math.floor(Math.min(canvas.width, canvas.height) * 0.24)));
+  const size = Math.min(184, Math.max(132, Math.floor(Math.min(canvas.width, canvas.height) * 0.2)));
   return { x: canvas.width - size - 16, y: canvas.height - size - 16, width: size, height: size };
 }
 

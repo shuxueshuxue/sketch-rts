@@ -2054,7 +2054,7 @@ input[type="range"] {
   .selection-details { max-width: 100px; font-size: 9px; }
 }
 
-.selection-model:has(.selection-details) { width: 112px; }
+
 
 /* Quiet slate surfaces let the painted subject, not an ornamental disc, carry the portrait. */
 .selection-model, .selection-model.focused { background: #293034; border-color: #696354; box-shadow: inset 0 -2px #ae9365; }
@@ -2063,7 +2063,7 @@ input[type="range"] {
 .training-cancel-button:hover { border-color: #c39779; }
 .training-cancel-button:hover::after { content: '×'; position: absolute; right: 3px; top: 0; font: 18px sans-serif; color: #f6d4bd; background: #392b28; padding: 0 3px; }
 
-.selection-model.focused .selection-model-canvas { width: 96px; height: 96px; display: block; margin: 0 auto; border-radius: 0; }
+
 
 /* Live HUD material uses slate, ivory and aged metal, independent of faction. */
 .game-shell { --hud-panel:linear-gradient(140deg,#293137,#1a2025); --hud-ink:#e1dfd4; }
@@ -2076,3 +2076,34 @@ input[type="range"] {
 
 /* The map browser keeps its original three rows after removing campaign tabs. */
 .play-browser .create-game-form { grid-template-rows:minmax(0,1fr) auto auto; }
+
+/* Compact command desk: portraits have explicit space instead of spilling above buttons. */
+.control-deck { display:grid; grid-template-columns:minmax(0,max-content) minmax(0,max-content); align-items:end; gap:5px 7px; left:10px; bottom:10px; max-width:calc(100vw - 220px); }
+.control-deck .selection-chip { grid-column:1; grid-row:1 / 3; max-width:212px; padding:4px; gap:4px; }
+.control-deck .command-dock { grid-column:2; grid-row:1; max-width:344px; padding:4px; gap:4px; }
+.control-deck .item-dock { grid-column:2; grid-row:2; max-width:344px; padding:4px; gap:4px; }
+.selection-model { width:60px; height:72px; overflow:hidden; padding:3px; grid-template-rows:48px 14px; border-radius:2px; }
+.selection-model.focused { width:92px; height:96px; grid-template-rows:60px 13px auto; border-color:#ac9975; box-shadow:inset 0 -2px #ac9975; }
+.selection-model .selection-model-canvas { width:48px; height:48px; }
+.selection-model.focused .selection-model-canvas { width:60px; height:60px; }
+.selection-details { padding:0 2px; font:9px/1.15 sans-serif; }
+.selection-model-name { line-height:13px; font-size:10px; }
+.command-button,.item-button { width:52px; height:60px; }
+.command-portrait { width:42px; height:42px; }
+.command-symbol { width:34px; height:34px; fill:none; stroke:#d1c7ad; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
+.command-label { font-size:9px; line-height:12px; }
+.shop-item-portrait { width:60px; height:60px; flex:0 0 auto; }
+.shop-item-summary { max-width:116px; font:11px/1.5 sans-serif; color:#ded6bf; }
+.status-line { padding:7px 12px; font-size:12px; max-width:min(540px,75vw); }
+.tooltip-layer { max-width:min(280px,calc(100vw - 24px)); padding:10px 12px; background:#242e32f5; color:#dad7ca; border:1px solid #8a8269; border-image:none; box-shadow:0 4px 14px #0c161a80; font-size:11px; line-height:1.45; }
+.tooltip-title { color:#e3d7b9; font-size:14px; text-shadow:none; }
+.tooltip-title span { background:#333e42; color:#ded2b4; border-color:#8a8269; }
+.tooltip-body,.tooltip-stats,.tooltip-notes { color:#c7ccca; }
+.tooltip-requirements { color:#d6ad83; }
+@media (max-width:760px) {
+ .control-deck { max-width:calc(100vw - 170px); gap:3px; left:6px; bottom:6px; }
+ .control-deck .selection-chip { max-width:96px; }
+ .control-deck .command-dock,.control-deck .item-dock { max-width:236px; }
+ .command-button,.item-button { width:44px; height:54px; }
+ .command-portrait { width:36px; height:36px; }
+}

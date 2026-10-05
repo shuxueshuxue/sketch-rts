@@ -38,7 +38,7 @@ export class UnitAnimationTracker {
       const phase = (previous?.phase ?? phaseFor(unit.id)) + (moving ? distance / 28 : 0);
       let action = previous?.action;
       if (previous) {
-        if (unit.cooldown > previous.cooldown && unit.order.type !== "repair") action = { mode: "attack", tick: snapshot.tick };
+        if (unit.cooldown > previous.cooldown && unit.order.type !== "repair" && unit.order.type !== "repairShip") action = { mode: "attack", tick: snapshot.tick };
         const cast = Object.entries(unit.abilityCooldowns ?? {}).some(([ability, ticks]) =>
           ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
         if (cast) action = { mode: "cast", tick: snapshot.tick };

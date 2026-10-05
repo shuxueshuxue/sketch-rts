@@ -105,7 +105,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
         const sourceKind = effect.sourceKind!;
         const launch = launchPoint(from, to, sourceKind);
         if (look === "arrow") drawArrow(ctx, arrowFrame(launch, to, progress, isUnitKind(sourceKind) ? 1 : TOWER_ARROW_SCALE));
-        else drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        else if (look === "orb") drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        else drawPhysicalMissile(ctx, launch, to, progress, look);
         continue;
       }
       const head = {
@@ -166,12 +167,15 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "repair") {
-      drawHammerEffect(ctx, "repair", point, life, effect.remaining);
+      if (effect.unitId) {
+        const at = unitPosition?.(effect.unitId) ?? effect;
+        drawWorkerHammer(ctx, worldToScreen(at), effect.remaining, (effect.fromX ?? effect.x) < at.x);
+      }
       continue;
     }
 
     if (effect.type === "build") {
-      drawHammerEffect(ctx, "build", point, life, effect.remaining);
+      // The actual builders animate at their hands; a site needs no floating icon.
       continue;
     }
 
@@ -643,15 +647,52 @@ function strokePolyline(ctx: CanvasRenderingContext2D, points: Point[]) {
   ctx.stroke();
 }
 
-export type ProjectileLook = "arrow" | "orb" | "streak";
+export type ProjectileLook = "arrow" | "orb" | "streak" | "fire" | "spear" | "stone" | "shell";
 
 // @@@projectile-look - The shooter's rules pick the missile: a unit with a spell throws a small spell orb (its weapon is
 // weak), any other ranged unit and a tower shoot an arrow (a rider's charge is no spell). Item blasts carry no shooter
 // and keep the old streak.
 export function projectileLook(sourceKind: WorldEffect["sourceKind"]): ProjectileLook {
   if (!sourceKind) return "streak";
+  if (sourceKind === "redDragon" || sourceKind === "dragonWhelp" || sourceKind === "fireShip") return "fire";
+  if (sourceKind === "murlocHunter") return "spear";
+  if (sourceKind === "thornSlinger") return "stone";
+  if (sourceKind === "warship" || sourceKind === "bombardShip" || sourceKind === "catapult" || sourceKind === "organGun") return "shell";
+  if (sourceKind === "archer" || sourceKind === "sparkArcher" || sourceKind === "contractArcher" || sourceKind === "defenseTower" || sourceKind === "cutter" || sourceKind === "ballista") return "arrow";
   if (isUnitKind(sourceKind) && hasSpell(sourceKind)) return "orb";
-  return "arrow";
+  return "stone";
+}
+
+function drawPhysicalMissile(ctx: CanvasRenderingContext2D, from: Point, to: Point, progress: number, look: "fire" | "spear" | "stone" | "shell") {
+  const frame = arrowFrame(from, to, progress, look === "spear" ? 1.15 : 0.55);
+  ctx.save(); ctx.translate(frame.tip.x, frame.tip.y); ctx.rotate(frame.angle);
+  if (look === "fire") {
+    const glow = ctx.createRadialGradient(-3, 0, 1, -3, 0, 15);
+    glow.addColorStop(0, '#e8b466a8'); glow.addColorStop(1, '#b8522b00');
+    ctx.fillStyle = glow; ctx.fillRect(-20,-16,36,32);
+    ctx.fillStyle = '#b96539'; ctx.beginPath(); ctx.moveTo(6,0); ctx.quadraticCurveTo(-3,-8,-18,-3); ctx.lineTo(-13,0); ctx.lineTo(-21,4); ctx.quadraticCurveTo(-2,8,6,0); ctx.fill();
+    ctx.fillStyle = '#f0d092'; ctx.beginPath(); ctx.ellipse(0,0,5,2.5,0,0,Math.PI*2); ctx.fill();
+  } else if (look === "spear") {
+    ctx.strokeStyle='#9a8767'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.moveTo(-24,0); ctx.lineTo(-3,0); ctx.stroke();
+    ctx.fillStyle='#c0c5b7'; ctx.strokeStyle='#373e3d'; ctx.lineWidth=.7; ctx.beginPath(); ctx.moveTo(3,0); ctx.lineTo(-5,-2.5); ctx.lineTo(-4,2.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.fillStyle = look === "stone" ? '#8b8874' : '#555b59'; ctx.strokeStyle='#292f30'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(0,0,look === "stone" ? 4.5 : 3.5,3.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='#d8cdb09a'; ctx.beginPath(); ctx.moveTo(-2,-2); ctx.lineTo(1,-3); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawWorkerHammer(ctx: CanvasRenderingContext2D, point: Point, remaining: number, left: boolean) {
+  const strike = Math.sin(remaining / 2.6);
+  ctx.save(); ctx.translate(point.x + (left ? -13 : 13), point.y - 12); ctx.scale(left ? -1 : 1,1); ctx.rotate(-.5 + strike*.65);
+  ctx.lineCap='round'; ctx.strokeStyle='#343a36'; ctx.lineWidth=3.3;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-12); ctx.stroke();
+  ctx.strokeStyle='#a88b62'; ctx.lineWidth=1.8; ctx.stroke();
+  ctx.fillStyle='#77817f'; ctx.strokeStyle='#30393a'; ctx.lineWidth=.8;
+  ctx.fillRect(-5,-15,10,4); ctx.strokeRect(-5,-15,10,4);
+  ctx.strokeStyle='#d5d0b3'; ctx.beginPath(); ctx.moveTo(-4,-15); ctx.lineTo(4,-15); ctx.stroke();
+  ctx.restore();
 }
 
 function isUnitKind(kind: NonNullable<WorldEffect["sourceKind"]>): kind is UnitKind {

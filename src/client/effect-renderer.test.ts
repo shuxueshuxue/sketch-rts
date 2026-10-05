@@ -25,14 +25,20 @@ describe("hammer effect frames", () => {
 describe("projectile looks", () => {
   const shooters = (Object.keys(UNIT_DEFS) as UnitKind[]).filter((kind) => projectileLook(kind) !== "streak");
 
-  it("gives casters a spell orb and every other shooter an arrow, from the catalog's spells", () => {
-    for (const kind of shooters) expect(projectileLook(kind), kind).toBe(hasSpell(kind) ? "orb" : "arrow");
-    // A rider's charge is no spell.
-    expect(projectileLook("knight")).toBe("arrow");
+  it("uses the actual ranged weapon, including dragon fire, thrown spears and stones", () => {
+    expect(projectileLook("redDragon")).toBe("fire");
+    expect(projectileLook("dragonWhelp")).toBe("fire");
+    expect(projectileLook("murlocHunter")).toBe("spear");
+    expect(projectileLook("thornSlinger")).toBe("stone");
+    expect(projectileLook("warship")).toBe("shell");
     expect(projectileLook("archer")).toBe("arrow");
     expect(projectileLook("summoner")).toBe("orb");
     expect(projectileLook("defenseTower")).toBe("arrow");
     expect(projectileLook(undefined)).toBe("streak");
+    const arrows = new Set(["archer", "sparkArcher", "contractArcher", "cutter", "ballista"]);
+    for (const [kind, def] of Object.entries(UNIT_DEFS)) {
+      if (def.attackRange > 100 && projectileLook(kind as UnitKind) === "arrow") expect(arrows.has(kind), kind).toBe(true);
+    }
   });
 
   it("lets each race field both archers and orb casters, with its own orb color", () => {
