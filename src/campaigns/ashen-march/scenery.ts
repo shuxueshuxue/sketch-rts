@@ -1,5 +1,5 @@
 import { CORE_SCENERY } from "../../client/art/scenery";
-import { EMBER, EMBER_GLOW, GOLD, INK, LEAF, MOSS, WOOD, darker, ellipse, leafMark, line, polygon, type Brush } from "../../client/art/kit";
+import { INK, MOSS, ellipse, line, polygon, type Brush } from "../../client/art/kit";
 import type { PropPainter } from "../../story/cast";
 
 // Campaign-specific scenery extends the common asset set. Menus never import this pack.

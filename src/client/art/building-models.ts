@@ -323,7 +323,7 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
   }
   b.restore();
 }
-function depth(f:Face){return f.p.reduce((sum,[x,y,z])=>sum+x*.6+y*.8,0)/f.p.length;}
+function depth(f:Face){return f.p.reduce((sum,[x,y])=>sum+x*.6+y*.8,0)/f.p.length;}
 function height(f:Face){return f.p.reduce((sum,p)=>sum+p[2],0)/f.p.length;}
 function noise(x:number){const v=Math.sin(x*12.9898+78.233)*43758.5453;return v-Math.floor(v);}
 

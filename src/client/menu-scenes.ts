@@ -5,7 +5,7 @@ import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
 import { type PropPainter } from "../story/cast";
 import type { PropView, StageView } from "../story/stage";
-import { INK, WOOD, ellipse, line, polygon, type Brush } from "./art/kit";
+import { INK, ellipse, line, polygon, type Brush } from "./art/kit";
 import { paintBuildingModel } from "./art/building-models";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
@@ -130,20 +130,6 @@ function stage(width: number, height: number, terrain: Terrain, seats: [PlayerId
 
 // ---------------------------------------------------------------- the scenes' own pieces
 
-// A knight in stone on a plinth, sword raised.
-function statue(b: Brush) {
-  ellipse(b, 2, 24, 30, 8, "#30483630");
-  polygon(b, [[-20, 24], [-18, 6], [18, 6], [20, 24]], "#b3ad96", INK, 1.2);
-  polygon(b, [[-23, 6], [-17, -1], [17, -1], [23, 6]], "#cbc5ac", INK, 1.1);
-  line(b, [[-14, 14], [14, 14]], "#8f8a75", 0.9);
-  polygon(b, [[-9, -1], [-7, -32], [7, -32], [9, -1]], "#aaa58f", INK, 1.1);
-  polygon(b, [[-13, -28], [-18, -10], [-9, -8]], "#9d9882", INK, 1);
-  ellipse(b, 0, -38, 6.5, 6.5, "#b6b19b", INK);
-  line(b, [[6, -28], [15, -48]], "#aaa58f", 3.4);
-  line(b, [[15, -48], [19, -76]], "#dad6c2", 2.6);
-  line(b, [[11, -50], [19, -46]], INK, 1.5);
-}
-
 // A standing stone cut with runes; its glow is the air's (see drawGlows).
 function runestone(b: Brush) {
   ellipse(b, 2, 18, 18, 5, "#30483630");
@@ -242,7 +228,7 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
     ...(kind === "woods" ? {length: 45} : {}),
     embers: fires, glows: fires,
     air: { dusk: kind === "woods" ? .22 : .1, mist: "211, 204, 185", mistAlpha: .12, rays: "248, 222, 171", rayAngle: -.45, motes: kind === "fleet" ? "glints" : "embers" },
-    script(g, second) {
+    script(g) {
       for (const track of tracks) {
         const unit = g.units.find(unit => unit.id === track.id);
         if (!unit) continue;

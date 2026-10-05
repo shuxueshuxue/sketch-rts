@@ -3,7 +3,7 @@ import { paintCorpse } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
 import { hasPaintedUnit, paintFigure } from "./art/painted-units";
 import { creatureShadow } from "./art/painted-creatures";
-import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit";
+import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { UNIT_CARDS } from "./content/units";
 import type { BuildingKind, Obstacle, TerrainLandmark, UnitKind } from "../shared/types";

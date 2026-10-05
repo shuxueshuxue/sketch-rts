@@ -1,7 +1,7 @@
 import { warfarePainter } from "../art/warfare-units";
 import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
-import { type Brush, GOLD, INK, LINEN, WOOD, arm, belt, ellipse, head, legs, line, polygon, torso } from "../art/kit";
+import { type Brush, INK, LINEN, arm, belt, ellipse, head, legs, line, polygon, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
 
 // Units every race trains.
@@ -47,10 +47,3 @@ export const COMMON_UNITS = {
     paint: warfarePainter("frigate"),
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;
-
-// A ship's hull on the water, `half` long either way and `depth` deep, its keel at y=16.
-function hull(b: Brush, half: number, depth: number) {
-  ellipse(b, 0, 14, half + 6, 5, "#7fb3b866");
-  polygon(b, [[-half, 16 - depth], [half + 6, 16 - depth - 4], [half - 4, 16], [-half + 6, 16]], "#8a6a43", INK, 1.2);
-  line(b, [[-half + 2, 16 - depth + 3], [half + 2, 16 - depth - 1]], "#c9a66e", 1.4);
-}

@@ -1,11 +1,10 @@
 import { isBuildPlacementClear } from "../../shared/build-placement";
-import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
 import { canReach, carries } from "../../shared/naval";
 import { groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
 import type { Building, GameCommand, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import { legalBuildPointNear } from "./build-layout";
-import { resolveAiCommandIntent } from "./commands";
 import { shipsAfloat } from "./ground";
 import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
@@ -82,7 +81,7 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
 }
 export const navalReservePurchase = (id: string) => id === "naval:islandHall" || id === "naval:transport" || id === "naval:shipyard";
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
-    const foothold = footholdWant(snapshot, owner, options);
+    const foothold = footholdWant(snapshot, owner);
     if (foothold)
         return { ...foothold, closeout: true };
     const threat = enemyShipsNear(snapshot, owner, options);
@@ -97,11 +96,11 @@ export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
         return undefined;
     const home = halls[0];
     const closeout = Boolean(assault && home && lastFight(snapshot, owner, options, home));
-    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls, closeout);
+    const want = navalStep(snapshot, owner, options, plan ? undefined : assault, plan, plan?.landing ?? water, halls);
     return want && closeout ? { ...want, closeout: true } : want;
 }
 /** A beachhead produces and defends locally instead of waiting indefinitely for the original mainland army. */
-function footholdWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
+function footholdWant(snapshot: GameSnapshot, owner: PlayerId): NavalWant | undefined {
     const halls = buildings(snapshot, owner).filter(building => building.kind === "townHall" && building.complete);
     const home = halls[0];
     if (!home)
@@ -140,7 +139,7 @@ function footholdWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
     return undefined;
 }
 // The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
-function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[], closeout: boolean): NavalWant | undefined {
+function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
     if (plan && !islandHallOf(snapshot, owner, plan) && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300)) {
         const builder = units(snapshot, owner).find(unit => unit.kind === "worker" && sameGround(snapshot.map, unit, plan.mine));
         const site = builder && hallSite(snapshot, plan.mine);

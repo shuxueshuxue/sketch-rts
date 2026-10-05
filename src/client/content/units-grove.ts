@@ -1,6 +1,6 @@
 import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
-import { EMBER_GLOW, GOLD, INK, LEATHER, LINEN, MOSS, STEEL, STEEL_DARK, arm, belt, blade, bow, capeBehind, darker, ellipse, flag, halo, head, hemTrim, hood, horse, kettleHelm, kiteShield, leafMark, legs, lighter, line, pennant, plumedHelm, pointedHat, polygon, quilting, quiver, riderLeg, roundShield, skullCap, spear, staff, torso } from "../art/kit";
+import { EMBER_GLOW, GOLD, INK, LEATHER, LINEN, MOSS, STEEL, STEEL_DARK, arm, belt, blade, bow, capeBehind, darker, ellipse, halo, head, hemTrim, hood, horse, kettleHelm, kiteShield, leafMark, legs, lighter, line, pennant, plumedHelm, pointedHat, polygon, quilting, quiver, riderLeg, roundShield, skullCap, spear, staff, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
 
 // Grove Kin: durable line holders, conventional ranged units, heavy tech.

@@ -1,6 +1,6 @@
 import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
-import { ASH, EMBER, EMBER_GLOW, GOLD, INK, LEATHER_DARK, LINEN, SKIN, WOOD, arm, belt, blade, bow, darker, ellipse, halo, head, hemTrim, hood, hornedCap, legs, lighter, line, polygon, quiver, staff, torso } from "../art/kit";
+import { ASH, EMBER, EMBER_GLOW, GOLD, INK, LEATHER_DARK, LINEN, SKIN, WOOD, arm, belt, blade, bow, darker, ellipse, head, hemTrim, hood, hornedCap, legs, lighter, line, polygon, quiver, staff, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
 
 // Ember Pact: faster fragile fighters, early support casters, and the ashen hall's heavies.

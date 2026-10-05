@@ -352,51 +352,6 @@ function drawHealEffect(renderer: EffectRenderContext, effect: WorldEffect, poin
   ctx.restore();
 }
 
-function drawHammerEffect(ctx: CanvasRenderingContext2D, kind: HammerEffectKind, point: Point, life: number, remaining: number) {
-  const frame = hammerEffectFrame(kind, life, remaining);
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  ctx.shadowColor = kind === "build" ? "rgba(49, 95, 135, 0.28)" : "rgba(185, 134, 27, 0.3)";
-  ctx.shadowBlur = 8;
-  ctx.strokeStyle = frame.siteStroke;
-  ctx.fillStyle = frame.siteFill;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 16, frame.site.rx, frame.site.ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.shadowBlur = 0;
-  const impact = { x: point.x + frame.impact.x, y: point.y + frame.impact.y };
-  ctx.strokeStyle = frame.sparkStroke;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(impact.x - 8, impact.y + 5);
-  ctx.lineTo(impact.x - 1, impact.y + 1);
-  ctx.moveTo(impact.x + 1, impact.y + 6);
-  ctx.lineTo(impact.x + 8, impact.y + 2);
-  ctx.moveTo(impact.x - 2, impact.y + 9);
-  ctx.lineTo(impact.x + 4, impact.y + 9);
-  ctx.stroke();
-
-  ctx.strokeStyle = frame.handleStroke;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(point.x + frame.handle.from.x, point.y + frame.handle.from.y);
-  ctx.lineTo(point.x + frame.handle.to.x, point.y + frame.handle.to.y);
-  ctx.stroke();
-
-  ctx.strokeStyle = frame.headStroke;
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.moveTo(point.x + frame.head.from.x, point.y + frame.head.from.y);
-  ctx.lineTo(point.x + frame.head.to.x, point.y + frame.head.to.y);
-  ctx.stroke();
-  ctx.restore();
-}
-
 function drawSummonEffect(ctx: CanvasRenderingContext2D, point: Point, life: number) {
   const open = 1 - life;
   ctx.save();

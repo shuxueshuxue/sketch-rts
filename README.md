@@ -85,7 +85,7 @@ Workshops train a ram, ballista, catapult and organ gun. They have distinct atta
 
 ### Units and buildings
 
-The art is drawn with Canvas and reused on the battlefield, in portraits and on command buttons. Building volume uses projected faces and grounded shadows; fallen units leave persistent sketch corpses. Item art lives in `src/client/art/items.ts`. Run `npm run dev` and open `/unit-sheet.html` to see the catalog live. See the [art notes](docs/woodland-atlas.md) for how it is built.
+The art is drawn with Canvas and reused on the battlefield, in portraits and on command buttons. Building volume uses projected faces and grounded shadows; fallen units leave persistent sketch corpses. Item art lives in `src/client/art/items.ts`. Run `npm run dev` and open `/unit-sheet.html` to see the catalog live. See the [current art and skirmish notes](docs/reviews/skirmish-naval-repair.zh.md) for implementation and verification.
 
 ## How to play
 
