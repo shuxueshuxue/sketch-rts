@@ -119,6 +119,8 @@ export type UnitOrder =
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
+  // Stay in place and prepare a reticle at a point, engaging enemies that enter weapon range.
+  | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; berth?: { x: number; y: number } }
   | { type: "unload"; x: number; y: number }
@@ -138,6 +140,16 @@ export type RallyTarget =
 // How a melee fighter lands its blow (see @@@melee-stances).
 export type MeleeStance = "pursue" | "brace" | "shock";
 
+/** A private reticle in world coordinates. Its anchor is the last shot's standing position. */
+export type UnitAim = {
+  x: number;
+  y: number;
+  anchorX: number;
+  anchorY: number;
+  tracking: boolean;
+  updatedTick: number;
+};
+
 export type Unit = {
   id: string;
   owner: Owner;
@@ -156,6 +168,9 @@ export type Unit = {
   attackCooldown: number;
   // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;
+  aim?: UnitAim | undefined;
+  /** Simulation-facing angle in radians while aiming or firing. */
+  facing?: number | undefined;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
   abilityCooldowns?: Partial<Record<AbilityKind, number>> | undefined;
   // Autocast switched away from its ability's default (see autocast): true on, false off; an absent ability keeps the default.
@@ -449,6 +464,7 @@ export type GameCommand =
   | { type: "follow"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "stop"; unitIds: string[] }
   | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
+  | { type: "aim"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
   | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }

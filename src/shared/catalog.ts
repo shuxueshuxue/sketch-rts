@@ -49,6 +49,9 @@ export type UnitDef = {
   // A transport (see @@@transport): the supply of passengers it carries.
   carries?: number;
   weapon?: WeaponDef;
+  /** Reticle movement per tick and displacement allowed from the last shot. */
+  aimSpeed?: number;
+  aimMoveTolerance?: number;
   // @@@creep-traits - What a creep's blow does besides its damage: slows its target (a murloc hunter's net), poisons it (a
   // venom spider's bite), or strikes every enemy round it for a share of the blow (a red dragon's fire).
   slowOnHit?: true;
@@ -166,9 +169,10 @@ export const UNIT_RULES = {
   footman: { trainedAt: "barracks", race: "grove", hp: 145, speed: 3.1, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   archer: { trainedAt: "archeryRange", race: "grove", hp: 72, speed: 3, radius: 16, attackDamage: 13, attackRange: 319.2, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, xpReward: 30, abilities: [] },
   // The cavalry strikes from the saddle with a reach a little under the lancer's 74 (it had a footman's, 48 and 52).
+  horseArcher: { trainedAt: "stables", race: "grove", hp: 95, speed: 4.5, radius: 19, attackDamage: 10, attackRange: 264, attackCooldown: seconds(1.5), cost: 150, trainTime: seconds(10), supplyUsed: 2, xpReward: 34, abilities: [], tier: 2, aimMoveTolerance: 72 },
   raider: { trainedAt: "stables", race: "grove", hp: 115, speed: 4.1, radius: 18, attackDamage: 14, attackRange: 72, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, xpReward: 32, abilities: ["charge"], tier: 2 },
   lancer: { trainedAt: "barracks", race: "grove", hp: 130, speed: 3.4, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, xpReward: 34, abilities: [] },
-  groveWarden: { trainedAt: "barracks", race: "grove", hp: 165, speed: 3.0, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
+  ashWarden: { trainedAt: "emberForge", race: "ember", hp: 165, speed: 3.0, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   emberRavager: { trainedAt: "emberForge", race: "ember", hp: 118, speed: 3.8, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 36, abilities: [] },
   cinderRunner: { trainedAt: "emberForge", race: "ember", hp: 96, speed: 4.35, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, xpReward: 32, abilities: [] },
   sparkArcher: { trainedAt: "cinderSpire", race: "ember", hp: 65, speed: 3.15, radius: 16, attackDamage: 12, attackRange: 288, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, xpReward: 30, abilities: [] },
@@ -207,10 +211,10 @@ export const UNIT_RULES = {
   bombardShip: { trainedAt: "shipyard", hp: 260, speed: 2.2, radius: 32, attackDamage: 36, attackRange: 576, attackCooldown: seconds(3.6), cost: 350, trainTime: seconds(19), supplyUsed: 4, xpReward: 55, abilities: ["siegeBarrage"], naval: true, tier: 2, weapon: { delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
   fireShip: { trainedAt: "shipyard", hp: 340, speed: 3.5, radius: 28, attackDamage: 18, attackRange: 144, attackCooldown: seconds(1.2), cost: 230, trainTime: seconds(15), supplyUsed: 3, xpReward: 45, abilities: ["incendiaryFlume"], naval: true, weapon: { delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
   carrier: { trainedAt: "shipyard", hp: 480, speed: 2.7, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, xpReward: 42, abilities: [], naval: true, carries: 24, armor: "heavy", tier: 2 },
-  siegeRam: { trainedAt: "workshop", hp: 420, speed: 2.5, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, xpReward: 50, abilities: ["ramBreach"], armor: "heavy", tier: 2, weapon: { delivery: "ram", buildingMultiplier: 3.3 } },
-  ballista: { trainedAt: "workshop", hp: 150, speed: 2.3, radius: 24, attackDamage: 27, attackRange: 472, attackCooldown: seconds(2.4), cost: 240, trainTime: seconds(15), supplyUsed: 3, xpReward: 45, abilities: ["pinningBolt"], tier: 2, weapon: { delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
-  catapult: { trainedAt: "workshop", hp: 180, speed: 1.9, radius: 27, attackDamage: 38, attackRange: 608, attackCooldown: seconds(3.8), cost: 300, trainTime: seconds(19), supplyUsed: 4, xpReward: 55, abilities: ["siegeBarrage"], tier: 2, weapon: { delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
-  organGun: { trainedAt: "workshop", hp: 190, speed: 2.3, radius: 25, attackDamage: 12, attackRange: 304, attackCooldown: seconds(2.5), cost: 270, trainTime: seconds(17), supplyUsed: 3, xpReward: 50, abilities: ["grapeshot"], tier: 2, weapon: { delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
+  siegeRam: { trainedAt: "workshop", race: "ember", hp: 420, speed: 2.5, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, xpReward: 50, abilities: ["ramBreach"], armor: "heavy", tier: 2, weapon: { delivery: "ram", buildingMultiplier: 3.3 } },
+  ballista: { trainedAt: "workshop", race: "grove", hp: 150, speed: 2.3, radius: 24, attackDamage: 27, attackRange: 472, attackCooldown: seconds(2.4), cost: 240, trainTime: seconds(15), supplyUsed: 3, xpReward: 45, abilities: ["pinningBolt"], tier: 2, weapon: { delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
+  catapult: { trainedAt: "workshop", race: "ember", hp: 180, speed: 1.9, radius: 27, attackDamage: 38, attackRange: 608, attackCooldown: seconds(3.8), cost: 300, trainTime: seconds(19), supplyUsed: 4, xpReward: 55, abilities: ["siegeBarrage"], tier: 2, weapon: { delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
+  organGun: { trainedAt: "workshop", race: "ember", hp: 190, speed: 2.3, radius: 25, attackDamage: 12, attackRange: 304, attackCooldown: seconds(2.5), cost: 270, trainTime: seconds(17), supplyUsed: 3, xpReward: 50, abilities: ["grapeshot"], tier: 2, weapon: { delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
   ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
   // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
   // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:

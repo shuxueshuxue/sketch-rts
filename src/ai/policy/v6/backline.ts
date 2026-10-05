@@ -1,4 +1,6 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
+import { aimingProfile } from "../../../shared/aiming";
+import { UNIT_DEFS } from "../../../shared/catalog";
 import { resolveAiCommandIntent } from "../commands";
 import { enemyBuildings, hostileCombatUnits, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
@@ -54,6 +56,22 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
   const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
   for (const caster of casters) {
+    // A healthy caster behind a real screen can finish a shot instead of endlessly adjusting its depth.
+    const screen = frontNear(caster);
+    const local = threatsNear(caster);
+    const quarry = local.filter(enemy => distance(caster, enemy) <= caster.attackRange).sort((a, b) => distance(caster, a) - distance(caster, b))[0];
+    if (quarry && caster.hp >= caster.maxHp * .6 && screen.length >= MIN_SCREEN && caster.order.type !== "cast" && caster.order.type !== "board"
+      && screen.filter(guard => guard.attackRange <= 80 && distance(guard, quarry) + guard.radius + caster.radius < distance(caster, quarry)).length >= 2
+      && !towers.some(tower => distance(caster, tower) <= tower.attackRange)) {
+      const profile = aimingProfile(UNIT_DEFS[caster.kind])!;
+      const reticle = caster.aim ?? caster;
+      const shotTicks = caster.cooldown + Math.hypot(quarry.x - reticle.x, quarry.y - reticle.y) / profile.speed;
+      const contactTicks = Math.min(...local.filter(enemy => enemy.attackRange <= 80).map(enemy => Math.max(0, distance(caster, enemy) - enemy.attackRange - enemy.radius - caster.radius) / Math.max(.1, enemy.speed)));
+      if (contactTicks > shotTicks + 3) {
+        if (caster.order.type !== "attack" || caster.order.targetId !== quarry.id) commands.push({ type: "attack", unitIds: [caster.id], targetId: quarry.id });
+        continue;
+      }
+    }
     // @@@v9-caster-stand - With no front left and only soldiers that fight at arm's length within the reach every idle
     // unit engages at (no shooter, see inReach, and nothing summoned), a V9 caster stops and fights where it stands rather
     // than walking home: riders (4.1) ran priests and witches (3.0) down from behind, four of them walked for 20 s without a

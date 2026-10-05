@@ -35,7 +35,7 @@ describe("projectile looks", () => {
     expect(projectileLook("summoner")).toBe("orb");
     expect(projectileLook("defenseTower")).toBe("arrow");
     expect(projectileLook(undefined)).toBe("streak");
-    const arrows = new Set(["archer", "sparkArcher", "contractArcher", "cutter", "ballista"]);
+    const arrows = new Set(["archer", "horseArcher", "sparkArcher", "contractArcher", "cutter", "ballista"]);
     for (const [kind, def] of Object.entries(UNIT_DEFS)) {
       if (def.attackRange > 100 && projectileLook(kind as UnitKind) === "arrow") expect(arrows.has(kind), kind).toBe(true);
     }

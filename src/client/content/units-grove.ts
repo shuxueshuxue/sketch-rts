@@ -50,6 +50,19 @@ export const GROVE_UNITS = {
       });
     },
   },
+  horseArcher: {
+    name: { en: "Horse Archer", zh: "骑射手" },
+    description: { en: "Fast mounted skirmisher. Can keep aim while moving farther between shots, trading damage per gold for mobility.", zh: "高速骑射单位，可在更大的位移范围内保留瞄准；用较低的攻价比换取风筝和机动优势。" },
+    command: { icon: "⋉", hotkey: "h" },
+    glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "reins"] },
+    art: { tier: "advanced", bearing: "mounted", faction: "grove" },
+    paint(b, team) {
+      horse(b, "#9a7651", .95);
+      b.translate(-2, -10);
+      riderLeg(b); quiver(b); torso(b, team); belt(b); head(b); hood(b, darker(team, .18));
+      articulated(b, "bow", () => { arm(b, [6, -6], [12, -2], team); bow(b, 16, -3, 20); });
+    },
+  },
   raider: {
     name: { en: "Raider", zh: "掠袭者" },
     description: { en: "Fast melee harasser for chasing workers and punishing isolated targets.", zh: "高速近战骚扰单位，用于追击农民并惩罚落单目标。" },
@@ -92,30 +105,6 @@ export const GROVE_UNITS = {
       });
       head(b);
       skullCap(b);
-    },
-  },
-  groveWarden: {
-    name: { en: "Grove Warden", zh: "林地守卫" },
-    description: { en: "Durable grove infantry that holds the line better than basic soldiers.", zh: "耐久的林地步兵，比基础士兵更适合顶线。" },
-    command: { icon: "◭", hotkey: "v" },
-    glyph: { silhouette: "shield-triangle", marks: ["shieldBar", "halo", "longSpear"] },
-    art: { tier: "basic", bearing: "foot", faction: "grove" },
-    paint(b, team) {
-      legs(b);
-      torso(b, team);
-      polygon(b, [[-7, -8], [6, -8], [8, 3], [-8, 3]], LEATHER, INK, 0.9);
-      belt(b);
-      articulated(b, "weapon", () => {
-        spear(b, [16, 16], [18, -33], 7);
-        arm(b, [6, -6], [16, 0], team);
-      });
-      head(b);
-      kettleHelm(b);
-      leafMark(b, -1, -29, 4.5);
-      articulated(b, "shield", () => {
-        kiteShield(b, -12, 0, 17, 28, team, LINEN);
-        leafMark(b, -12, -1, 5.4, "#d0dfac");
-      });
     },
   },
   knight: {

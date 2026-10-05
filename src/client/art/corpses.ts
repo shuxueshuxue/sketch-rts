@@ -4,9 +4,9 @@ import type {UnitKind} from '../../shared/types';
 import {UNIT_CARDS} from '../content/units';
 import {type Brush, polygon, line, ellipse} from './kit';
 const INK='#555247', WASH='#929082', LIGHT='#aaa594', DARK='#6b6c60';
-const bow=new Set(['archer','sparkArcher','contractArcher','murlocHunter','thornSlinger']);
+const bow=new Set(['archer','horseArcher','sparkArcher','contractArcher','murlocHunter','thornSlinger']);
 const staff=new Set(['priest','summoner','witch','emberAcolyte','ashHexer','pyreCaller','fieldMedic','barkMender','gladeWitch','tidePriest','ogreMage']);
-const pike=new Set(['lancer','groveWarden','knight']);
+const pike=new Set(['lancer','ashWarden','knight']);
 function sketch(b:Brush,p:number[][],fill=WASH){
  polygon(b,p,fill,INK,.65);b.save();b.clip();
  const xs=p.map(q=>q[0]!),ys=p.map(q=>q[1]!),lo=Math.min(...xs),hi=Math.max(...xs),y=Math.min(...ys),bottom=Math.max(...ys);

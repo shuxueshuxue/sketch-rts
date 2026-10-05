@@ -23,7 +23,7 @@ export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options
         return undefined;
     const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(snapshot.map, unit, home));
     const towers = snapshot.buildings.filter(building => building.kind === "defenseTower" && isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, home));
-    const kind: TrainableUnitKind = towers.length >= 2 ? "catapult" : foes.filter(unit => unit.attackRange > 200).length >= 4 ? "ballista" : foes.length >= 12 ? "organGun" : "siegeRam";
+    const kind: TrainableUnitKind = player.race === "grove" ? "ballista" : towers.length >= 2 ? "catapult" : foes.filter(unit => unit.attackRange > 200).length >= 4 || foes.length >= 12 ? "organGun" : "siegeRam";
     const workshop = snapshot.buildings.find(building => building.owner === owner && building.kind === "workshop");
     if (!workshop)
         return { id: "engineering:workshop", cost: BUILDING_DEFS.workshop.cost, issue: used => {

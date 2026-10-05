@@ -12,8 +12,8 @@ type Figure = { role: Role; armor?: boolean; elite?: boolean; mounted?: boolean;
 const figures: Partial<Record<UnitKind, Figure>> = {
   thornSlinger:{role:'bow'}, barkMender:{role:'priest'}, gladeWitch:{role:'witch'},
   worker: { role:'worker' }, footman:{role:'sword',armor:true}, lancer:{role:'pike',armor:true},
-  groveWarden:{role:'pike',armor:true,elite:true}, archer:{role:'bow'},
-  raider:{role:'sword',mounted:true}, knight:{role:'pike',armor:true,elite:true,mounted:true},
+  ashWarden:{role:'pike',armor:true,elite:true,ember:true}, archer:{role:'bow'},
+  horseArcher:{role:'bow',mounted:true}, raider:{role:'sword',mounted:true}, knight:{role:'pike',armor:true,elite:true,mounted:true},
   priest:{role:'priest'}, summoner:{role:'mage'}, witch:{role:'witch'},
   emberRavager:{role:'axe',armor:true,ember:true}, cinderRunner:{role:'sword',ember:true},
   sparkArcher:{role:'bow',ember:true}, emberAcolyte:{role:'priest',ember:true},

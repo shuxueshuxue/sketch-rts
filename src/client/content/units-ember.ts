@@ -1,10 +1,35 @@
 import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
-import { ASH, EMBER, EMBER_GLOW, GOLD, INK, LEATHER_DARK, LINEN, SKIN, WOOD, arm, belt, blade, bow, darker, ellipse, head, hemTrim, hood, hornedCap, legs, lighter, line, polygon, quiver, staff, torso } from "../art/kit";
+import { ASH, EMBER, EMBER_GLOW, GOLD, INK, LEATHER, LEATHER_DARK, LINEN, SKIN, WOOD, arm, belt, blade, bow, darker, ellipse, head, hemTrim, hood, hornedCap, kettleHelm, kiteShield, legs, lighter, line, polygon, quiver, spear, staff, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
 
 // Ember Pact: faster fragile fighters, early support casters, and the ashen hall's heavies.
 export const EMBER_UNITS = {
+  ashWarden: {
+    name: { en: "Ash Warden", zh: "灰烬守卫" },
+    description: { en: "Durable ember infantry that holds the line better than basic soldiers.", zh: "耐久的灰烬步兵，比基础士兵更适合顶线。" },
+    command: { icon: "◭", hotkey: "g" },
+    glyph: { silhouette: "shield-triangle", marks: ["shieldBar", "halo", "longSpear"] },
+    art: { tier: "basic", bearing: "foot", faction: "ember" },
+    paint(b, team) {
+      legs(b);
+      torso(b, ASH);
+      polygon(b, [[-7, -8], [6, -8], [8, 3], [-8, 3]], LEATHER, INK, 0.9);
+      belt(b);
+      articulated(b, "weapon", () => {
+        spear(b, [16, 16], [18, -33], 7);
+        arm(b, [6, -6], [16, 0], team);
+      });
+      head(b);
+      kettleHelm(b);
+      line(b, [[-3, -29], [0, -34], [3, -29]], EMBER, 1.5);
+      articulated(b, "shield", () => {
+        kiteShield(b, -12, 0, 17, 28, team, LINEN);
+        line(b, [[-15, 2], [-12, -6], [-9, 2]], EMBER, 2);
+      });
+    },
+  },
+
   emberRavager: {
     name: { en: "Ember Ravager", zh: "余烬劫掠者" },
     description: { en: "Aggressive ember infantry with strong close-range damage.", zh: "进攻性的余烬步兵，近距离伤害很强。" },
