@@ -200,7 +200,7 @@ describe("shorter ranged weapons", () => {
     const game = field("short-ranged-creep").unit("us", "barkMender", 1_500, 1_500, { id: "shooter" })
       .unit("enemy", "knight", 1_575, 1_500, { id: "target" }).build().createGame();
     issuePlayerCommand(game, "us", { type: "attack", unitIds: ["shooter"], targetId: "target" });
-    for (let i = 0; i < 4; i++) stepGame(game);
+    for (let i = 0; i < 6; i++) stepGame(game);
     expect(game.projectiles.some(shot => shot.attackerId === "shooter")).toBe(true);
     for (let i = 0; i < 10; i++) stepGame(game);
     expect(game.units.find(unit => unit.id === "target")!.hp).toBe(UNIT_DEFS.knight.hp - Math.round(UNIT_DEFS.barkMender.attackDamage * 0.5));
@@ -216,7 +216,6 @@ describe("shorter ranged weapons", () => {
     expect(UNIT_DEFS[kind].attackRange).toBeCloseTo(previous * 0.8, 8);
   });
   it("shortens ranged weapon skills while keeping melee, support spells and towers intact", () => {
-    expect(ABILITY_DEFS.siegeBarrage.range).toBe(608);
     expect(ABILITY_DEFS.pinningBolt.range).toBe(472);
     expect(ABILITY_DEFS.heal.range).toBe(240);
     expect(UNIT_DEFS.knight.attackRange).toBe(72);

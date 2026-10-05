@@ -27,7 +27,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     for (const ability of abilities) {
       const def=ABILITY_DEFS[ability];
       if(def.behavior!=="weapon" || abilityCooldown(caster,ability)>0)continue;
-      const targets=[...snapshot.units,...snapshot.buildings].filter(target=>isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0) && (ability!=="ramBreach" || !("order" in target)));
+      const targets=[...snapshot.units,...snapshot.buildings].filter(target=>isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0));
       const target=targets.sort((a,b)=> {
         const score=(target:typeof a)=>targets.filter(other=>distance(other,target)<(def.weapon.radius??80)).length + (!("order" in target)?(def.weapon.buildingMultiplier??1)*2:target.attackDamage/15);
         return score(b)-score(a)||distance(caster,a)-distance(caster,b);

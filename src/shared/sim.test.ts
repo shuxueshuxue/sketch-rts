@@ -6,7 +6,7 @@ import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
 import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame } from "./sim";
-import { seconds } from "./time";
+import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
@@ -1109,7 +1109,7 @@ describe("sketch RTS simulation", () => {
     // The struck raider turns on the archer; the hit shows where it stood when the arrow landed, on it.
     const hit = game.effects.find((effect) => effect.type === "hit" && effect.unitId === target.id);
     expect(hit).toBeDefined();
-    expect(distance(hit!, target)).toBeLessThan(target.speed + 1);
+    expect(distance(hit!, target)).toBeLessThan(perTick(target.speed) + 1);
   });
 
   it("emits melee lunge and hit feedback effects for close attacks", () => {

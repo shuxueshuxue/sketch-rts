@@ -17,6 +17,13 @@ const hasPower = (kind: keyof typeof UNIT_DEFS) => {
 };
 
 describe("camp templates", () => {
+  it("gives beasts a faster chase than ordinary infantry while keeping stone constructs heavy", () => {
+    const infantryPace = Math.max(UNIT_DEFS.footman.speed, UNIT_DEFS.lancer.speed, UNIT_DEFS.sparkArcher.speed);
+    for (const kind of ["wildling", "mossGnawer", "stonebackBrute", "ancientStag", "deepSnapper", "spiderling", "venomSpider", "spiderQueen", "dragonWhelp", "redDragon"] as const) {
+      expect(UNIT_DEFS[kind].speed, kind).toBeGreaterThan(infantryPace);
+    }
+    for (const kind of ["rubbleGolem", "rockGolem", "graniteGolem"] as const) expect(UNIT_DEFS[kind].speed).toBeLessThan(UNIT_DEFS.footman.speed);
+  });
   it("sum to their tier's levels, and every orange or red camp has a creep with a power", () => {
     for (const template of CAMP_TEMPLATES) {
       const level = campLevel(template.kinds);

@@ -34,7 +34,10 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
       tooltipLine(i18n.locale, "range", stats.weapon?.minRange ? `${stats.weapon.minRange}-${stats.attackRange}` : stats.attackRange),
-      ...(aimingProfile(stats) ? [i18n.locale === "zh" ? `瞄准位移容错：${aimingProfile(stats)!.moveTolerance}` : `Aim movement tolerance: ${aimingProfile(stats)!.moveTolerance}`] : []),
+      ...(aimingProfile(stats) ? [
+        i18n.locale === "zh" ? `准心速度：${Math.round(aimingProfile(stats)!.speed)} / 秒` : `Reticle speed: ${Math.round(aimingProfile(stats)!.speed)} / second`,
+        i18n.locale === "zh" ? `瞄准位移容错：${aimingProfile(stats)!.moveTolerance}` : `Aim movement tolerance: ${aimingProfile(stats)!.moveTolerance}`,
+      ] : []),
       ...(stats.carries ? [i18n.locale === "zh" ? `运载人口：${stats.carries}` : `Cargo supply: ${stats.carries}`] : []),
       ...(stats.weapon?.buildingMultiplier ? [i18n.locale === "zh" ? `对建筑伤害 ×${stats.weapon.buildingMultiplier}` : `Structure damage ×${stats.weapon.buildingMultiplier}`] : []),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
@@ -250,7 +253,7 @@ const TEXT = {
       currentRegen: "Regen {value} HP/s",
       cargo: "Aboard {value} supply",
       speedBonus: "+{value}% move speed",
-      speed: "Speed {value}",
+      speed: "Speed {value}/s",
       supply: "Supply {value}",
       supplyBonus: "Supply +{value}",
       train: "Train {value}",
@@ -297,7 +300,7 @@ const TEXT = {
       currentRegen: "回复 {value} 生命/秒",
       cargo: "载 {value} 人口",
       speedBonus: "+{value}% 移动速度",
-      speed: "移速 {value}",
+      speed: "移速 {value}/秒",
       supply: "人口 {value}",
       supplyBonus: "人口 +{value}",
       train: "训练 {value}",
@@ -334,7 +337,7 @@ const TEXT = {
 // What a spell's button needs besides a ready caster ({min} and {max}: a charge's window, filled from the catalog).
 const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
   en: {
-    ramBreach: ["Target an enemy structure."], pinningBolt:["Target an enemy unit or structure."], siegeBarrage:["Target a point outside the dead zone."], grapeshot:["Target a direction."], incendiaryFlume:["Target a point."],
+    pinningBolt:["Target an enemy unit or structure."], incendiaryFlume:["Target a point."],
     heal: ["Priest or field medic must be ready."],
     summon: ["Summoner must be ready.", "Target a point; a far one is walked to first."],
     curse: ["Witch must be ready.", "Target an enemy unit."],
@@ -347,7 +350,7 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     web: ["Cast by a spider queen on its own."],
   },
   zh: {
-    ramBreach: ["目标必须是敌方建筑或路障。"], pinningBolt:["目标必须是敌方单位或建筑。"], siegeBarrage:["选择近程死角之外的落点。"], grapeshot:["选择射击方向。"], incendiaryFlume:["选择燃油弹落点。"],
+    pinningBolt:["目标必须是敌方单位或建筑。"], incendiaryFlume:["选择燃油弹落点。"],
     heal: ["牧师或战地医师必须准备就绪。"],
     summon: ["召唤师必须准备就绪。", "目标是一个点位，远了会先走过去。"],
     curse: ["女巫必须准备就绪。", "目标必须是敌方单位。"],

@@ -1,3 +1,4 @@
+import { perTick } from "./time";
 import { describe, expect, it } from "vitest";
 import { shove } from "./push";
 import { createGame, issueCommand, stepGame } from "./sim";
@@ -41,8 +42,8 @@ describe("ground that slows", () => {
     issueCommand(game, { type: "move", unitIds: [wading.id], x: 900, y: 640 });
     issueCommand(game, { type: "move", unitIds: [walking.id], x: 300, y: 800 });
     stepGame(game);
-    expect(wading.x - 500).toBeCloseTo(wading.speed * CELL_GROUND[","]!.pace, 6);
-    expect(walking.x - 100).toBeCloseTo(walking.speed, 6);
+    expect(wading.x - 500).toBeCloseTo(perTick(wading.speed) * CELL_GROUND[","]!.pace, 6);
+    expect(walking.x - 100).toBeCloseTo(perTick(walking.speed), 6);
   });
 
   it("brakes a slide on mud twice as hard as on bare ground, so it stops at half the distance", () => {

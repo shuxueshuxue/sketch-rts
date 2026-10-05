@@ -150,7 +150,7 @@ describe("room net hub", () => {
 
     const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
     const serverError = messages.find((message) => message.type === "error");
-    expect(serverError).toMatchObject({ type: "error", roomId: room.id, message: expect.stringMatching(/farm placement is too close to townHall/) });
+    expect(serverError).toMatchObject({ type: "error", roomId: room.id, clientSeq: 1, message: expect.stringMatching(/farm placement is too close to townHall/) });
     expect(roomHost.getRoom(room.id).status).toBe("inMatch");
   });
 

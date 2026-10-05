@@ -19,6 +19,7 @@ export class LockstepClient {
   private localInputSeq = 0;
   private lastChecksumTick = -1;
   private epoch = 0;
+  private readonly castsAwaitingFrame = new Map<number, Extract<GameCommand, { type: "cast" }>>();
 
   constructor(private readonly options: LockstepClientOptions) {
     this.options.transport.onMessage((message) => this.handleServerMessage(message));
@@ -50,20 +51,31 @@ export class LockstepClient {
   }
 
   close(): void {
+    this.castsAwaitingFrame.clear();
     this.options.transport.close();
   }
 
   sendCommand(command: GameCommand): void {
     const clientSeq = this.localInputSeq;
     this.localInputSeq += 1;
-    this.options.transport.send({
-      type: "command",
-      roomId: this.options.roomId,
-      playerId: this.options.playerId,
-      clientSeq,
-      command,
-      epoch: this.epoch,
-    });
+    if (command.type === "cast") this.castsAwaitingFrame.set(clientSeq, command);
+    try {
+      this.options.transport.send({
+        type: "command",
+        roomId: this.options.roomId,
+        playerId: this.options.playerId,
+        clientSeq,
+        command,
+        epoch: this.epoch,
+      });
+    } catch (error) {
+      this.castsAwaitingFrame.delete(clientSeq);
+      throw error;
+    }
+  }
+
+  pendingCasts() {
+    return [...this.castsAwaitingFrame.values()];
   }
 
   receiveFrame(frame: CommandFrame): void {
@@ -78,6 +90,7 @@ export class LockstepClient {
       if (!frame) return changed;
       try {
         this.options.engine.advanceFrame(frame);
+        for (const entry of frame.commands) if (entry.playerId === this.options.playerId && entry.clientSeq !== undefined) this.castsAwaitingFrame.delete(entry.clientSeq);
       } catch (error) {
         // @@@lockstep-resync - A bad or stale frame is a visible sync failure; report it, then recover from server truth instead of crashing the render loop.
         const message = errorMessage(error);
@@ -110,7 +123,10 @@ export class LockstepClient {
       this.emitSyncEvent({ kind: "server-desync", localTick: this.options.engine.game.tick, serverTick: message.tick, message: error, checksums: message.checksums });
       this.requestCheckpoint("server-desync");
     }
-    if (message.type === "error" && message.roomId === this.options.roomId) this.options.onError?.(message.message);
+    if (message.type === "error" && message.roomId === this.options.roomId) {
+      if (message.clientSeq !== undefined) this.castsAwaitingFrame.delete(message.clientSeq);
+      this.options.onError?.(message.message);
+    }
   }
 
   private handleServerMessage(message: ServerNetMessage): void {
@@ -129,6 +145,7 @@ export class LockstepClient {
     if (checkpoint.roomId !== this.options.roomId) throw new Error(`Received checkpoint for ${checkpoint.roomId} while joined to ${this.options.roomId}`);
     restoreSnapshotIntoGame(this.options.engine.game, checkpoint.snapshot, checkpoint.nextId);
     this.frameBuffer.clear();
+    this.castsAwaitingFrame.clear();
     this.emitSyncEvent({
       kind: "checkpoint-restore",
       localTick: this.options.engine.game.tick,

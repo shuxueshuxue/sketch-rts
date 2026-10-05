@@ -38,6 +38,8 @@ describe("net message codec", () => {
     const serverError = { type: "error", roomId: "room-1", message: "farm placement is too close to townHall" } as const;
 
     expect(decodeServerNetMessage(encodeNetMessage(serverError))).toEqual(serverError);
+    expect(decodeServerNetMessage(encodeNetMessage({ ...serverError, clientSeq: 7 }))).toEqual({ ...serverError, clientSeq: 7 });
+    expect(() => decodeServerNetMessage(encodeNetMessage({ ...serverError, clientSeq: -1 }))).toThrow(/sequence/);
   });
 
   it("round-trips public chat messages outside command frames", () => {

@@ -16,7 +16,7 @@ export function planBattlefieldCommands(snapshot: GameSnapshot, owner: PlayerId,
   const commands: GameCommand[] = [];
   for (const fighter of own.filter((unit) => unit.attackRange <= 100 && unit.attackDamage > 0 && unit.hp >= unit.maxHp * 0.4)) {
     if (["board", "cast", "charge", "move"].includes(fighter.order.type)) continue;
-    const mobile = fighter.speed >= 3.5;
+    const mobile = fighter.speed >= 70;
     const general = options.memory.v6?.general;
     const local = enemies.filter((enemy) => sameGround(snapshot.map, fighter, enemy) && distance(fighter, enemy) <= (mobile || proxyBuilders.has(enemy.id) ? 500 : fighter.attackRange + fighter.radius + enemy.radius + 25) && canReach(snapshot.map, fighter, enemy));
     const candidates = local.filter((enemy) => {

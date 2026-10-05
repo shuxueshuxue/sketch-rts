@@ -1,3 +1,4 @@
+import { SIM_TICKS_PER_SECOND } from "./time";
 import { describe, expect, it } from "vitest";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot } from "./aiming";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "./catalog";
@@ -9,6 +10,7 @@ import { checksumGame } from "./sim/checksum";
 import type { UnitKind } from "./types";
 
 const at = { x: 1_288, y: 1_000 };
+const aimTicks = (kind: UnitKind, gap = 288) => Math.ceil(gap / aimingProfile(UNIT_DEFS[kind])!.speed * SIM_TICKS_PER_SECOND);
 const run = (game: ReturnType<typeof createGame>, ticks: number) => { for (let i = 0; i < ticks; i++) stepGame(game); };
 function battle(kind: UnitKind = "archer") {
   const game = createGame("bareDuel", { players: ["p1", "p2"], scenario: { replaceDefaultUnits: true, replaceDefaultResources: true, replaceDefaultMercenaryCamps: true, addUnits: [
@@ -22,9 +24,23 @@ function battle(kind: UnitKind = "archer") {
 function shooter(kind: UnitKind = "archer") { return createUnit("shooter", "p1", kind, 1_000, 1_000); }
 
 describe("reticle aiming", () => {
+  it("slows every weapon's own aim speed by one third while retaining weapon and proficiency differences", () => {
+    expect(aimingProfile(UNIT_DEFS.archer)?.speed).toBe(480 * 2 / 3);
+    expect(aimingProfile(UNIT_DEFS.catapult)?.speed).toBe(360 * 2 / 3);
+    expect(aimingProfile(UNIT_DEFS.contractArcher)!.speed).toBeGreaterThan(aimingProfile(UNIT_DEFS.archer)!.speed);
+    expect(aimingProfile(UNIT_DEFS.horseArcher)!.speed).toBeGreaterThan(aimingProfile(UNIT_DEFS.ballista)!.speed);
+  });
+
+  it("restores fifteen percent shooter health without raising caster health", () => {
+    for (const [kind, oldHp] of [["archer", 72], ["sparkArcher", 65], ["horseArcher", 95], ["contractArcher", 81], ["thornSlinger", 72], ["murlocHunter", 85]] as const) {
+      expect(UNIT_DEFS[kind].hp).toBe(Math.round(oldHp * 1.15));
+    }
+    expect(UNIT_DEFS.priest.hp).toBe(90);
+    expect(UNIT_DEFS.emberAcolyte.hp).toBe(78);
+  });
   it("spends distance / reticle speed before the first shot, then keeps stationary firing cadence", () => {
     const game = battle(), unit = game.units[0]!;
-    run(game, 11);
+    run(game, aimTicks(unit.kind) - 1);
     expect(game.projectiles).toHaveLength(0);
     expect(unit.cooldown).toBe(0);
     run(game, 1);
@@ -43,13 +59,13 @@ describe("reticle aiming", () => {
     run(game, 4);
     expect(unit.aim).toBeUndefined();
     run(game, 1);
-    expect(unit.aim?.x).toBe(1_024);
+    expect(unit.aim?.x).toBe(1_016);
   });
 
   it("continues toward a moving target instead of completing a fixed timer", () => {
     const unit = shooter();
     aimAt(unit, UNIT_DEFS.archer, at, 1);
-    expect(unit.aim?.x).toBe(1_024);
+    expect(unit.aim?.x).toBe(1_016);
     expect(aimAt(unit, UNIT_DEFS.archer, { x: 1_048, y: 1_048 }, 2)).toBe(false);
     expect(unit.aim?.y).toBeGreaterThan(1_000);
     expect(unit.aim?.y).toBeLessThan(1_048);
@@ -57,12 +73,12 @@ describe("reticle aiming", () => {
 
   it("reuses a nearby reticle across target changes and starts at the shooter when that is nearer", () => {
     const unit = shooter();
-    for (let tick = 1; tick <= 12; tick++) aimAt(unit, UNIT_DEFS.archer, at, tick);
+    for (let tick = 1; tick <= aimTicks(unit.kind); tick++) aimAt(unit, UNIT_DEFS.archer, at, tick);
     markAimShot(unit);
-    expect(aimAt(unit, UNIT_DEFS.archer, { x: 1_300, y: 1_000 }, 13)).toBe(true);
+    expect(aimAt(unit, UNIT_DEFS.archer, { x: 1_300, y: 1_000 }, aimTicks(unit.kind) + 1)).toBe(true);
     markAimShot(unit);
-    expect(aimAt(unit, UNIT_DEFS.archer, { x: 800, y: 1_000 }, 14)).toBe(false);
-    expect(unit.aim?.x).toBe(976);
+    expect(aimAt(unit, UNIT_DEFS.archer, { x: 800, y: 1_000 }, aimTicks(unit.kind) + 2)).toBe(false);
+    expect(unit.aim?.x).toBe(984);
     expect(unit.facing).toBe(Math.PI);
   });
 
@@ -70,7 +86,7 @@ describe("reticle aiming", () => {
     const unit = shooter();
     aimAt(unit, UNIT_DEFS.archer, at, 1);
     aimAt(unit, UNIT_DEFS.archer, at, 1);
-    expect(unit.aim?.x).toBe(1_024);
+    expect(unit.aim?.x).toBe(1_016);
   });
 
   it("keeps tiny moves, renews the anchor after each shot, and invalidates accumulated displacement", () => {
@@ -108,7 +124,7 @@ describe("reticle aiming", () => {
     run(game, 2);
     issuePlayerCommand(game, "p1", { type: "attack", unitIds: [unit.id], targetId: "foe" });
     run(game, 1);
-    expect(unit.aim?.x).toBe(1_072);
+    expect(unit.aim?.x).toBe(1_048);
     issuePlayerCommand(game, "p1", { type: "move", unitIds: [unit.id], x: 1_000, y: 1_060 });
     run(game, 3);
     expect(unit.aim).toBeUndefined();
@@ -122,7 +138,7 @@ describe("reticle aiming", () => {
     for (const kind of ["archer", "horseArcher"] as const) {
       const game = battle(kind), unit = game.units[0]!;
       game.units[1]!.x = 1_180;
-      run(game, 8);
+      run(game, aimTicks(kind, 180));
       expect(unit.cooldown).toBe(unit.attackCooldown);
       issuePlayerCommand(game, "p1", { type: "move", unitIds: [unit.id], x: 946, y: 1_000 });
       run(game, 20);
@@ -156,12 +172,47 @@ describe("reticle aiming", () => {
   it("requires aiming for ranged weapon skills as well as basic attacks", () => {
     const game = battle("ballista"), unit = game.units[0]!;
     issuePlayerCommand(game, "p1", { type: "cast", unitId: unit.id, ability: "pinningBolt", targetId: "foe" });
-    run(game, 11);
+    run(game, aimTicks(unit.kind) - 1);
     expect(game.projectiles).toHaveLength(0);
     expect(unit.abilityCooldowns).toBeUndefined();
     run(game, 1);
     expect(game.projectiles).toHaveLength(1);
     expect(unit.abilityCooldowns?.pinningBolt).toBeGreaterThan(0);
+  });
+
+  it("moves each selected ranged unit into its own range before preparing the same point", () => {
+    const game = battle();
+    game.units = [createUnit("archer", "p1", "archer", 1_000, 1_000), createUnit("ballista", "p1", "ballista", 1_000, 1_200), createUnit("melee", "p1", "footman", 1_000, 1_400)];
+    const point = { x: 1_700, y: 1_000 };
+    issuePlayerCommand(game, "p1", { type: "aim", unitIds: game.units.map(unit => unit.id), ...point });
+    const meleePosition = { x: game.units[2]!.x, y: game.units[2]!.y };
+    game.units[2]!.order = { type: "hold", ...meleePosition };
+    run(game, 1);
+    expect(game.units[0]!.x).toBeGreaterThan(1_000);
+    expect(game.units[0]!.aim).toBeUndefined();
+    expect(game.units[1]!.aim).toBeUndefined();
+    run(game, 220);
+    for (const unit of game.units.slice(0, 2)) {
+      expect(Math.hypot(unit.x - point.x, unit.y - point.y)).toBeLessThanOrEqual(unit.attackRange);
+      expect(unit.aim).toMatchObject({ ...point, tracking: false });
+      expect(unit.order.type).toBe("aim");
+    }
+    expect(game.units[0]!.x).toBeGreaterThan(game.units[1]!.x);
+    expect(game.units[2]).toMatchObject(meleePosition);
+  });
+
+  it("waits for earlier queued movement and backs artillery out of its minimum range before aiming", () => {
+    const game = battle("catapult"), unit = game.units[0]!;
+    game.units.splice(1);
+    issuePlayerCommand(game, "p1", { type: "move", unitIds: [unit.id], x: 1_100, y: 1_000 });
+    issuePlayerCommand(game, "p1", { type: "aim", unitIds: [unit.id], x: 1_200, y: 1_000, queued: true });
+    run(game, 1);
+    expect(unit.order.type).toBe("move");
+    expect(unit.aim).toBeUndefined();
+    run(game, 160);
+    expect(unit.order.type).toBe("aim");
+    expect(Math.hypot(unit.x - 1_200, unit.y - 1_000)).toBeGreaterThanOrEqual(UNIT_DEFS.catapult.weapon!.minRange!);
+    expect(unit.aim).toMatchObject({ x: 1_200, y: 1_000, tracking: false });
   });
 
   it("keeps reticle state isolated in snapshots and resumes it deterministically after loading", () => {

@@ -27,7 +27,7 @@ import {
 import { generateMap, TERRAIN_CELL } from "./generated-map";
 import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
 import { poolMap } from "./map-pool";
-import { seconds } from "./time";
+import { perTick, seconds } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
@@ -58,6 +58,7 @@ export type SimObserver = {
 };
 
 export const GAME_SNAPSHOT_RESTORE_KEYS = [
+  "rateUnits",
   "tick",
   "match",
   "map",
@@ -117,9 +118,8 @@ const REPAIR_FULL_COST_FRACTION = 0.35;
 const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.attackCooldown;
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 export const AUTO_ACQUIRE_RANGE = 230;
-// A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take
-// and one at point blank lands at once; with a fixed flight time a shot from close in crept to its target.
-const PROJECTILE_SPEED = 18;
+// Projectile rates are distance per second; only flight duration is quantized to simulation ticks.
+const PROJECTILE_SPEED = 360; // Distance per second.
 const NEUTRAL_LEASH_RANGE = 520;
 // @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
 // A new long-range siege weapon must not expand every creep's pursuit radius.
@@ -158,6 +158,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {
+    rateUnits: "perSecond",
     tick: 0,
     match: createMatchState(activePlayers),
     map: generated ? { ...createMap(mapId), width: generated.size, height: generated.size, landmarks: generated.landmarks, ...(generated.terrain ? { terrain: generated.terrain } : {}) } : createMap(mapId),
@@ -599,6 +600,7 @@ function syncBuildingBodies(game: Game) {
 
 export function snapshotGame(game: Game): GameSnapshot {
   return {
+    rateUnits: "perSecond",
     tick: game.tick,
     match: {
       winner: game.match.winner,
@@ -648,6 +650,7 @@ export function snapshotGame(game: Game): GameSnapshot {
 }
 
 export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, nextId: number): void {
+  game.rateUnits = "perSecond";
   game.tick = snapshot.tick;
   game.match = cloneSnapshotValue(snapshot.match);
   game.map = cloneSnapshotValue(snapshot.map);
@@ -669,8 +672,24 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   else delete game.variants;
   if (snapshot.obstacles) game.obstacles = cloneSnapshotValue(snapshot.obstacles);
   else delete game.obstacles;
+  if (!snapshot.rateUnits) migrateSnapshotRates(game);
   game.nextId = nextId;
   invalidateGameRuntimeCaches(game);
+}
+
+/** Old saves used 20 Hz rates, including passengers and campaign rule overrides. */
+function migrateSnapshotRates(game: Game): void {
+  const migrate = (unit: Unit) => {
+    unit.speed *= 20;
+    if (unit.pushX !== undefined) unit.pushX *= 20;
+    if (unit.pushY !== undefined) unit.pushY *= 20;
+    unit.cargo?.forEach(migrate);
+  };
+  game.units.forEach(migrate);
+  for (const rules of Object.values(game.variants ?? {})) {
+    rules.speed *= 20;
+    if (rules.aimSpeed !== undefined) rules.aimSpeed *= 20;
+  }
 }
 
 function invalidateGameRuntimeCaches(game: Game): void {
@@ -887,9 +906,7 @@ function updateUnits(game: Game): Ferry | undefined {
       continue;
     }
     if (unit.order.type === "aim") {
-      const target = nearestEnemyTarget(game, unit, unit.attackRange);
-      if (target) updateHoldOrder(game, unit);
-      else aimAt(unit, unitRules(game, unit), unit.order, game.tick);
+      updateAimOrder(game, unit);
       continue;
     }
     if (unit.order.type === "follow") {
@@ -1012,6 +1029,20 @@ function updateHoldOrder(game: Game, unit: Unit) {
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
+}
+
+function updateAimOrder(game: Game, unit: Unit) {
+  if (unit.order.type !== "aim") return;
+  const point = unit.order;
+  if (distance(unit, point) > unit.attackRange) {
+    unit.aim = undefined;
+    moveToward(unit, point.x, point.y, game.map);
+    if (distance(unit, point) > unit.attackRange && walkEnded(game, unit, point, 5)) unit.order = { type: "idle" };
+    return;
+  }
+  if (backOutOfDeadZone(game, unit, point)) { unit.aim = undefined; return; }
+  if (nearestEnemyTarget(game, unit, unit.attackRange)) updateHoldOrder(game, unit);
+  else aimAt(unit, unitRules(game, unit), point, game.tick);
 }
 
 function updateAttackMoveOrder(game: Game, unit: Unit) {
@@ -1570,7 +1601,6 @@ function castAbility(
   if (def.behavior === "weapon") {
     const target = targetId ? findStrikeTarget(game, targetId) : undefined;
     if (def.target === "enemy" && (!target || !areEnemyOwners(game, owner, target.owner))) throw new Error("Weapon skill requires an enemy target");
-    if (ability === "ramBreach" && (!target || isUnit(target))) throw new Error("Breach requires a building or obstacle");
     const point = target ?? (isNumber(x) && isNumber(y) ? { x, y } : undefined);
     if (!point) throw new Error("Weapon skill requires a target point");
     if (def.weapon.minRange && distance(caster, point) < def.weapon.minRange) throw new Error("Target inside weapon minimum range");
@@ -1619,6 +1649,8 @@ function updateCastOrder(game: Game, unit: Unit) {
   const end = () => {
     unit.order = { type: "idle" };
   };
+  // Saves can contain a cast for an ability removed from the catalog.
+  if (!def) return end();
   if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end();
   const at = target ?? (isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined);
   if (!at) return end();
@@ -2180,7 +2212,7 @@ function applyWeaponAbility(game:Game,caster:Unit,ability:AbilityKind,at:{x:numb
   caster.abilityCooldowns=withAbilityCooldown(caster,ability,def.cooldown);
   fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId);
 }
-function backOutOfDeadZone(game:Game,unit:Unit,target:Unit|Building|Obstacle){
+function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number}){
   const minimum=unitRules(game,unit).weapon?.minRange;if(!minimum||distance(unit,target)>=minimum)return false;
   const dx=unit.x-target.x,dy=unit.y-target.y,length=Math.hypot(dx,dy)||1;
   moveToward(unit,unit.x+(dx||1)/length*(minimum+32),unit.y+dy/length*(minimum+32),game.map);return true;
@@ -2195,7 +2227,7 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
     for(const target of [...game.units,...game.buildings])if(target.hp>0&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(attacker,at,target,range,weapon.coneAngle??.6))hitWeapon(game,attacker,target,damage*(weapon.burst??1),weapon);
     addEffect(game,"grapeshot",at.x,at.y,14,{fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind,radius:range});return;
   }
-  const flight=Math.max(4,Math.ceil(distance(attacker,at)/(weapon.delivery==="shell"?12:28)));
+  const flight=Math.max(seconds(0.2),Math.ceil(distance(attacker,at)/perTick(weapon.delivery==="shell"?240:560)));
   const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,damage,remaining:flight,duration:flight,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
   game.projectiles.push(projectile);
   addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",at.x,at.y,flight,{fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind,radius:weapon.radius??0});
@@ -2253,7 +2285,7 @@ function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit 
 function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
   const dx = target.x - attacker.x;
   const dy = target.y - attacker.y;
-  const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / PROJECTILE_SPEED));
+  const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / perTick(PROJECTILE_SPEED)));
   const projectile = {
     id: `projectile-${game.nextId}`,
     owner: attacker.owner,
@@ -3212,7 +3244,7 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap) {
     walkToward(unit, x, y, map, pace);
     return;
   }
-  const speed = unit.speed * pace;
+  const speed = perTick(unit.speed) * pace;
   const dx = x - unit.x;
   const dy = y - unit.y;
   const length = Math.hypot(dx, dy);
@@ -3238,7 +3270,7 @@ function walkToward(unit: Unit, x: number, y: number, map: GameMap, pace = 1) {
   const length = Math.sqrt(dx * dx + dy * dy);
   if (length === 0) return;
   // A shallow or a bog slows a land unit to its ground's pace (see groundUnder).
-  const speed = unit.speed * pace * groundUnder(map, unit.x, unit.y, mover).pace;
+  const speed = perTick(unit.speed) * pace * groundUnder(map, unit.x, unit.y, mover).pace;
   const nextX = clamp(length <= speed ? aim.x : unit.x + (dx / length) * speed, 0, map.width);
   const nextY = clamp(length <= speed ? aim.y : unit.y + (dy / length) * speed, 0, map.height);
   const step = openStep(map, unit, { x: nextX, y: nextY }, mover);

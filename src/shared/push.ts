@@ -1,9 +1,10 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { groundUnder, openStep } from "./terrain";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
+import { perTick } from "./time";
 
 // @@@push - A shove (a blow that knocks back, a lunge) gives a unit a velocity of its own beside its walk: pushX/pushY, in
-// units a tick. The unit slides off in a straight line and the ground slows it by PUSH_FRICTION a tick every tick (uniform
+// distance per second. The unit slides off in a straight line and the ground slows it by PUSH_FRICTION per second (uniform
 // deceleration), so a shove of strength F, with nothing in the way, carries it exactly F before it stops: it sets off at
 // sqrt(2 * PUSH_FRICTION * F). Shoves add as vectors, so blows landing together from opposite sides cancel out. While its
 // pushed speed is over STAND_SPEED the unit has lost its footing (staggered): it neither walks, strikes nor casts; below it
@@ -12,9 +13,9 @@ import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 // sooner, and through a crowd the shove passes from body to body. Ground a unit cannot stand on (see @@@terrain) and the
 // map's edge stop the part of a slide that heads into them.
 // 100 slides in 0.4 s, 500 in 0.9 s.
-export const PUSH_FRICTION = 3.125;
-// Walking is 2 to 4.35 a tick: a unit carried faster than about twice that is off its feet.
-export const STAND_SPEED = 6;
+export const PUSH_FRICTION = 1250; // Distance per second squared.
+// A unit carried faster than about twice an ordinary soldier's walk is off its feet.
+export const STAND_SPEED = 120; // Distance per second.
 
 // @@@melee-stances - How a melee fighter (not a worker) lands its blow. pursue, the default, is the plain blow of before,
 // and it stays the all-round and best-value choice: a player who never switches loses nothing, and the two stances pay off
@@ -79,8 +80,8 @@ export function blowStrength(damage: number, target: Unit) {
 // @@@shock-lunge - How far a striker in shock lunges after a blow that shoves its target this far: never further than the
 // target goes, so it stays behind what it struck (it may fall back from it), and never faster than LUNGE_PACE times its
 // own walking speed on average over the lunge's own time, reckoned on open ground: a slide of L lasts sqrt(2L / a), so
-// L <= LUNGE_PACE * speed * sqrt(2L / a), that is L <= 2 (LUNGE_PACE * speed)² / a. A golem (2.1 a tick) whose blow threw
-// a spirit 512 lunged after it at 56 a tick, twenty-seven times its walk; now it lunges 18, a lancer at most 46.
+// L <= LUNGE_PACE * speed * sqrt(2L / a), that is L <= 2 (LUNGE_PACE * speed)² / a. This keeps even a heavy golem's
+// lunge within the same multiple of its walk as a lancer's.
 export function lungeStrength(striker: Unit, shoved: number) {
   const pace = LUNGE_PACE * striker.speed;
   return Math.min(shoved, (2 * pace * pace) / PUSH_FRICTION);
@@ -99,11 +100,12 @@ export function slide(unit: Unit, map: GameMap) {
   if (vx === undefined || vy === undefined) return;
   const mover = unitMover(unit.kind);
   const friction = PUSH_FRICTION * groundUnder(map, unit.x, unit.y, mover).drag;
+  const slowing = perTick(friction);
   const speed = Math.sqrt(vx * vx + vy * vy);
-  const last = speed <= friction;
-  const capped = speed > MAX_SLIDE_STEP + friction / 2;
-  const step = last ? (speed * speed) / (2 * friction) : capped ? MAX_SLIDE_STEP : speed - friction / 2;
-  const kept = last ? 0 : capped ? Math.sqrt(speed * speed - 2 * friction * MAX_SLIDE_STEP) / speed : (speed - friction) / speed;
+  const last = speed <= slowing;
+  const capped = perTick(speed - slowing / 2) > MAX_SLIDE_STEP;
+  const step = last ? (speed * speed) / (2 * friction) : capped ? MAX_SLIDE_STEP : perTick(speed - slowing / 2);
+  const kept = last ? 0 : capped ? Math.sqrt(speed * speed - 2 * friction * MAX_SLIDE_STEP) / speed : (speed - slowing) / speed;
   let px = vx * kept;
   let py = vy * kept;
   let x = speed === 0 ? unit.x : unit.x + (vx / speed) * step;
