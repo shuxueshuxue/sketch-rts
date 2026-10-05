@@ -6,6 +6,8 @@
 
 ![Native skirmish: painted units, physical buildings and the compact command deck](docs/reviews/skirmish-live.jpg)
 
+Selection stress scene: 23 unit types seeded through the SDK to exercise the portrait grid, rather than a normal starting army.
+
 Build a base, send workers to the gold mines, and grow a small army into a large one. Two races with their own buildings and tech; casters, cavalry charges and heavy elites; neutral camps that guard the best mines, mercenaries for hire, and shops; six ship types and four siege engines for fights across land and water. The map pool has thirteen maps, plus seeded generated layouts.
 
 Play in the browser against the computer, host a room for friends, or write an opponent yourself: the SDK, the replay tools, the AI benchmarks and the game all run the same command-frame simulation.
@@ -40,7 +42,7 @@ Both races build town halls (which train workers), farms, defense towers, worksh
 
 Neutral camps guard the gold mines away from your main: wildlings, murlocs, golems, ogres, spiders and dragons, in camps of rising strength. The strongest have abilities of their own — a golem's stomp, an ogre mage's bloodlust, a spider queen's web. Camps pay gold and experience when cleared, and some drop items. Units gain levels from experience.
 
-Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys. Ground drops, inventory slots and shop cards share the painted item models. A purchase goes to the nearest eligible friendly unit at the shop; inspecting the purchase keeps the item selected and that recipient’s inventory visible. Right-click an inventory slot to drop its item.
+Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls, guardian scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys. Ground drops, inventory slots and shop cards share the painted item models. A purchase goes to the nearest eligible friendly unit at the shop; inspecting the purchase keeps the item selected and that recipient’s inventory visible. Right-click an inventory slot to drop its item.
 
 ### Maps
 
@@ -254,7 +256,7 @@ A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](src/recorde
 
 - Touch controls for phones and tablets.
 - A V9 that beats three opponents at once with solid play across every unit type and map.
-- More races and abilities; a campaign built on the story tools in `src/story/`.
+- More races and abilities, with further skirmish balance and naval strategy work.
 - Better reconnection and spectator tools.
 - Map and mod authoring.
 
