@@ -118,7 +118,11 @@ export class RoomNetHub {
       return;
     }
     if (message.type === "command") {
-      this.acceptCommand(message);
+      try {
+        this.acceptCommand(message);
+      } catch (error) {
+        this.send(socketRoomId, socket, { type: "error", roomId: socketRoomId, message: errorMessage(error), ...(message.clientSeq !== undefined ? { clientSeq: message.clientSeq } : {}) });
+      }
       return;
     }
     if (message.type === "chat") {
