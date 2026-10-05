@@ -295,3 +295,28 @@ describe("the AI on the water", () => {
   });
 
 });
+
+
+describe("naval strategic choices", () => {
+  it("develops an unclaimed reachable mainland mine before buying an overseas expedition", () => {
+    const sim=islandGame();
+    sim.buildings=sim.buildings.filter(b=>b.id!=="hall-b");
+    sim.players.player!.supplyUsed=25;
+    const want = navalWant(snapshotGame(sim),"player",{version:"v7",memory:createAiPolicyMemory()});
+    expect(want?.issue(new Set())).toMatchObject({type:"build",buildingKind:"townHall"});
+  });
+
+  it("keeps a weak loaded landing force offshore until the mine guards are cleared", () => {
+    const sim=islandGame();
+    const mine=sim.resources.find(m=>m.id==="island")!;
+    const boat=createUnit("ferry","player","transport",at(9,9).x,at(9,9).y);
+    boat.cargo=[createUnit("builder","player","worker",0,0),createUnit("soldier","player","footman",0,0)];
+    sim.units=[boat,createUnit("guard","neutral","redDragon",mine.x,mine.y)];
+    const memory=createAiPolicyMemory();
+    memory.naval={ferries:{ferry:{purpose:"settle",targetId:mine.id,from:at(9,9),to:at(19,9),phase:"loading",crewIds:[],sinceTick:0}}};
+    const options={version:"v7" as const,memory};
+    expect(planNavalTactics(snapshotGame(sim),"player",options).some(c=>c.type==="unload")).toBe(false);
+    sim.units=sim.units.filter(u=>u.id!=="guard");
+    expect(planNavalTactics(snapshotGame(sim),"player",options).some(c=>c.type==="unload")).toBe(true);
+  });
+});

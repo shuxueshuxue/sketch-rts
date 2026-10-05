@@ -6,6 +6,17 @@ import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
 
 describe("AI script runner", () => {
+  it("lets a boarding healer reach its ferry instead of restarting land spells every think", () => {
+    const game = sketchScene("boarding-caster-reservation").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .townHall("v2", 500,500).townHall("v1",3400,3400)
+      .unit("v2", "priest",620,520,{id:"healer"})
+      .unit("v2", "footman",700,520,{id:"patient"})
+      .unit("v2", "transport",1000,520,{id:"ferry"}).build().createGame();
+    issuePlayerCommand(game,"v2",{type:"board",unitIds:["healer"],transportId:"ferry"});
+    const scripts:AiScript[]=[{id:"abilities",phase:"tactics",run:()=>({type:"cast",unitId:"healer",ability:"heal",targetId:"patient"})}];
+    expect(runAiCommandEntriesFromScripts(snapshotGame(game),"v2",scripts)).toEqual([]);
+  });
   it("keeps later tactical scripts from reusing units reserved by earlier scripts", () => {
     const scene = sketchScene("script-runner-unit-reservations")
       .map("bareDuel")

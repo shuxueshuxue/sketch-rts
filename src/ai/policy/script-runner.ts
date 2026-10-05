@@ -18,7 +18,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const claims = unitClaims(snapshot, owner, scripts, policyOptions);
   const commands: AiCommandEntry[] = [];
-  const movedUnitIds = new Set<string>();
+  const movedUnitIds = new Set(snapshot.units.filter(unit => unit.owner === owner && unit.order.type === "board").map(unit => unit.id));
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
@@ -61,7 +61,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
   if (claims.size === 0) return commands;
   const free = (unitId: string) => (claims.get(unitId) ?? scriptId) === scriptId;
   return commands.flatMap((command): GameCommand[] => {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "repair" || command.type === "mine") {
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip") || command.type === "mine") {
       const unitIds = command.unitIds.filter(free);
       return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
     }
@@ -87,9 +87,11 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
     } else if (command.type === "move") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
-    } else if (command.type === "repair") {
+    } else if ((command.type === "repair" || command.type === "repairShip")) {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+    } else if (command.type === "cast") {
+      if (!movedUnitIds.has(command.unitId)) filtered.push(command);
     } else {
       filtered.push(command);
     }
@@ -99,6 +101,6 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
 
 function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>) {
   for (const command of commands) {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "repair" || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
   }
 }
