@@ -1,5 +1,6 @@
 // The drawing kit every painter shares: canvas primitives, the palette, the humanoid rig (feet at y=16, head at
 // (-1,-15)), headgear, mounts and building parts. Unit and building cards paint with these.
+import { strideOf } from "./pose";
 export type Point = { x: number; y: number };
 export type Brush = CanvasRenderingContext2D;
 export const INK = "#293c35";
@@ -90,6 +91,18 @@ export const lighter = (hex: string, amount = 0.35) => mix(hex, 255, amount);
 
 // ---- Humanoid rig: feet at y=16, hips y=8, shoulders y=-9, head at (-1,-15).
 export function legs(b: Brush, stance: "stand" | "brace" | "stride" = "stand", color = BOOT) {
+  const stride = strideOf(b);
+  if (stride) {
+    for (const side of [-1, 1]) {
+      const swing = stride * side;
+      const hip = side * 4;
+      const toe = hip + swing * 6;
+      const lift = Math.max(0, -swing) * 3;
+      line(b, [[hip, 7], [hip + swing * 2, 12 - lift], [toe, 16 - lift]], color, 4);
+      ellipse(b, toe + 1.2, 16.6 - lift, 3, 1.6, "#3f3a2c");
+    }
+    return;
+  }
   const pairs = stance === "brace" ? [[-4, 8, -9, 16], [4, 8, 9, 16]]
     : stance === "stride" ? [[-3, 7, -12, 13], [4, 7, 11, 16]]
     : [[-5, 8, -6, 16], [5, 8, 6, 16]];
@@ -245,8 +258,11 @@ export function horse(b: Brush, coat: string, size: number, dress?: { cloth: str
   b.save(); b.scale(size, size);
   line(b, [[-17, 4], [-24, 11]], darker(coat, 0.45), 3.2);
   for (const x of [-13, -6, 10, 16]) {
-    line(b, [[x, 9], [x - 2, 19]], darker(coat, 0.3), 2.8);
-    ellipse(b, x - 1.5, 19.5, 2, 1.1, "#3f3a2c");
+    const swing = strideOf(b) * (x === -13 || x === 16 ? 1 : -1);
+    const hoof = x - 2 + swing * 5;
+    const lift = Math.max(0, swing) * 3;
+    line(b, [[x, 9], [x + swing * 2, 14 - lift], [hoof, 19 - lift]], darker(coat, 0.3), 2.8);
+    ellipse(b, hoof + 0.5, 19.5 - lift, 2, 1.1, "#3f3a2c");
   }
   polygon(b, [[-18, 2], [7, -3], [19, 2], [15, 12], [-13, 12]], coat);
   polygon(b, [[8, 0], [8, -13], [14, -19], [24, -11], [22, -6], [16, -7], [19, 5]], lighter(coat, 0.12));
