@@ -7,4 +7,13 @@ coverage/
 .superpowers/
 .worktrees/
 .playwright-cli/
+.playtest/
 .benchmark-dashboard/
+recordings/
+
+# Sound packs (see @@@sound-packs): only the cc0 pack is ours to publish; any other pack stays on its machine.
+audio-packs/*
+!audio-packs/cc0/
+
+# Python admin toolkit caches
+__pycache__/

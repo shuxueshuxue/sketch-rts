@@ -221,6 +221,131 @@ Interpretation:
 - Negative V5 two-base catch-up third experiments on 2026-06-12: exact `wispQuarry v5 north` at `500s` showed V5 Grove with two mining bases, `400g`, five combat units, and a safe unoccupied third mine, but `planExpansion` returned empty because `missingCombatProductionKind = stables` while `productionBuildingNeedKind` was still below its duplicate-stables threshold. A narrow V5 Grove rule allowed a five-fighter catch-up third to precede duplicate `stables`, but the fresh seed `v5-late-upgrades-50-2026-06-12a` dropped from `84/100` to `82/100` in run `2026-06-12T12-37-13-912Z-e6iffm`, losing retained wins on `celadonPass v5 south` and `hazelCircuit v5 south` with no gains. A second variant also released the two-base third bank into training when `mainBaseNeedsObjectivePause` blocked the expansion; it flipped `wispQuarry v5 north` but dropped the same seed further to `81/100` in run `2026-06-12T12-33-33-185Z-e6iffm` with net `+1/-4` flips. Both were reverted. Do not break the two-base third/stables/army bank by simple five-body or main-pressure gates; the aggregate evidence says the current bank is preserving more winning timings than it strands.
 - V5 baseline reset after prerequisite repair on 2026-06-12: the V5 mercenary-claim ownership rule was narrowed so ordinary V2/V3/V4-TR `hire` clears camp claims while V5 keeps the same-frame guarded-camp preservation through an explicit runner option. This fixed a real V3 Grove regression, so the hybrid opponent is stronger again. Fresh pgl seed `v5-late-upgrades-50-2026-06-12a` now scores `80/100` in run `2026-06-12T13-03-49-694Z-e6iffm`, with V5 Grove `40/51`, V5 Ember `40/49`, against V3 Grove `40/50`, against V3 Ember `40/50`, and opponent-order split `42/50` for `v3,v4-tr` versus `38/50` for `v4-tr,v3`. Treat this as the current honest V5 baseline; do not weaken V3 to recover the earlier `84/100`.
 
+### 2026-09-24 Recovery After V4-TR Route-Clearing Towers
+
+`f459512` (V4-TR route-clearing towers plus tower building targeting) dropped retained seed `v5-hybrid-50-2026-06-12` from `82/100` to `58/100`. Bisecting showed the sim targeting change alone kept `82/100`; the loss came from V4-TR no longer banking gold behind its route-safety rule, so both opponents now reach V5 together around `220s`.
+
+Evaluation used five seeds (`v5-hybrid-50-2026-06-12`, `v5-hybrid-50-holdout-a` through `-d`, 500 games, 10 local workers):
+
+- `main` at `d5a5b2d`: `315/500` (`58, 68, 66, 66, 57`).
+- Guarded-expansion incoming-army gate: `338/500`. V5 in 1v2 does not send its army to clear a guarded mine while enemy combat power within `2200` of its main exceeds `0.8x` its own; this was the recurring `~190s` creep, `~220s` double-hit collapse.
+- Plus attack-wave commitment holds: `345/500` (`74, 67, 64, 72, 68`). `locallyBeatableOpponentBaseTarget` and `closeoutAttackWaveTarget` sat on thresholds, so the army flipped between a base strike and the generic wave point every think and never arrived. A detector over 16 games counted ~200 such flips before and 14 after.
+
+Rejected on the same five seeds (each flat or worse, reverted): wider main emergency-tower trigger, releasing the cleared-expansion bank under incoming pressure, gating objectiveControl and expansionDenial on the same incoming check, removing expansionDenial, adding `desperateWorkerFight` to the V5 stack, one-base worker labor `+1` instead of `+3`, and a V5 late-standoff counter push that counts towers.
+
+Remaining losses: about six early double-rush collapses per 100 games, midgame trades against the combined army, and timeouts where V4-TR banks thousands of gold behind forward towers.
+
+### 2026-09-25 Tower Breaker
+
+Loss analysis of the `345/500` build showed V4-TR winning by creeping 200 HP towers into V5's base: in lost games V4-TR raised 5.1 towers within 700 of V5 buildings (2.3 before 600s) versus 1.2 in won games, and 4.4 of V5's 11.8 lost buildings died inside enemy tower range. Unit auto-targeting prefers units over towers, so V5 fought around the towers while they kept firing.
+
+The new V5-only `towerBreaker` tactic (after `focusFire` in the V5 stack):
+
+- kills the worker standing at an unfinished enemy tower site within 900 of any V5 building (construction advances for any owner worker at the site);
+- otherwise sends every healthy nearby fighter (within 1600, at least three) at the nearest threatening enemy tower (unfinished first), when their power beats local defenders plus covering towers. A tower threatens when it is within 900 of a V5 building, of the mine V5 wants next, or within 700 of the V5 army.
+
+Ten seeds (`v5-hybrid-50-2026-06-12`, `v5-hybrid-50-holdout-a` through `-i`, 1000 games):
+
+- previous build `244d538`: `679/1000` (`74 67 64 72 68 61 70 66 67 70`);
+- tower breaker near V5 buildings only: `739/1000`, every seed up;
+- plus the wanted-mine and army-reach scope: `777/1000`;
+- plus the builder snipe: `791/1000` (`80 84 82 85 74 75 76 74 78 83`); the retained seed is `80/100`.
+
+Noise calibration: unrelated changes move a 1000-game total by about 15-20, so five-seed screens were not trusted. Rejected on ten seeds (flat or worse): removing the routine `defense` towers, earlier weapon or plating upgrades, a home-ground hold for wounded units, HP-aware skirmish retreat odds (`707`), camp-worker sniping, taking a guarded mercenary camp before the natural (`756`-`775`), holding a camp worker, and an opening creep hold (`688`).
+
+Remaining losses on the retained seed: ten early collapses around 280-340s where V4-TR's mercenary army (and V3) reach V5 at about 220s while V5 has three or four units, eight midgame losses, and two timeouts. Separately, V4-TR loses workers to neutral camps in the first 90 seconds in 69 of 100 games; V5 wins 78% of those and 47% against a V4-TR that opens cleanly, so a later V4-TR opening fix will lower this score.
+
+### 2026-09-25 Army First When Outnumbered
+
+Found by replaying the early-collapse games by hand (reedBasin, graniteBloom, heatherCircuit on the retained seed) and by reading the opponents' attack rules: V3 treats V5 as its only opponent (1v1 rules) and V4-TR attacks as soon as it has five hired fighters. In every early collapse both opponents opened army-heavy (about six fighters between them at 150s against V5's three) while V5 kept building workers, a well, tech and creeping its natural into the first wave.
+
+Before 300s, when both opponents' fighters together are at least twice V5's army (five or more of them), V5 now stops adding workers, skips the healing well, upgrades, early tech, economic catch-up and routine towers, and does not start creep fights. In all three replayed games V5 then held the first wave at home and was alive and expanding at 420-480s.
+
+- ten seeds: `791/1000` -> `821/1000` (`90 82 81 85 75 83 81 82 80 82`); the retained seed is `90/100`;
+- untouched final seeds (`v5-final-1` through `-5`): `398/500` -> `410/500`.
+
+Keeping the mode on after 300s was worse (`805/1000` capped at 600s, `803/1000` uncapped): it is an opening answer, not a posture.
+
+### 2026-09-25 What Decides The Remaining Losses (No Retained Change)
+
+Analysis of the 179 ten-seed losses of `282cd0b` (timelines, decisive-fight windows, replays and save/load play):
+
+- V4-TR's opening decides most of the score. When V4-TR has no workers left at 300s (it walks them into neutral camps; 387 of 1000 games) V5 wins 98%. Against a V4-TR still on six workers (552 games) V5 wins 71%, and those games hold 158 of the 179 losses. Within them, V5's own state at 300s is identical in wins and losses (army power 12.7, six fighters, nine workers); the enemies are slightly stronger in the losses and the game turns in the 300-420s fights.
+- One town hall at 300s: 222 games at 65% (two halls: 87%). What holds the natural back is the guarded-expansion incoming-army gate (enemies within 2200 of the main outweighing 0.8 of V5's army), often V4-TR's mercenaries idling at their own camp.
+- 121 of the 179 decisive losses happen within 900 of V5's main. There the home defenders match the attackers (median power 14 vs 14), but the enemy is 2.4 times V5 across the map and V5 trades 0.39 of what it loses.
+- Worker feeding: 36 losses lose at least 15 workers before the final minute by rebuilding miners at a base under enemy towers or a parked army (auricDelta south: 93 workers built and killed between 600s and 1260s).
+- Script churn: in a lost fight one army receives five contradictory macro orders in 13s (focus fire, raid recall, a creep camp, home, then a tower break into V3's army).
+
+Tried against these and rejected on the ten tune seeds (baseline `821`):
+
+- clearing the guarded contract-archer camp beside the main during the outnumbered opening: `798` (hollowFord `6/12` -> `12/12`, ironMoss `10/16` -> `16/16`, but russetBrook `14/14` -> `6/14`, saffronFen `20/20` -> `12/20`); the baseline hires the same three archers anyway, about 100s later, after the natural;
+- keeping wounded units swinging within 750 of a town hall: stopped at `149/200` vs `172`;
+- natural clearing without the outnumbered gate: `805`;
+- camp clear plus the arrival gate: `804`;
+- not mining or rebuilding workers at a contested base (enemy tower or stronger local army): stopped at `318/400` vs `338`; narrowed to bases that lost three workers in the last minute: `815`;
+- two fast units hunting V4-TR's lone camp-hiring worker anywhere on the map: `818`;
+- a four-second lease that stops macro scripts re-tasking each other's units: `793`;
+- tower breaker counting every enemy fighter within 1000 of the tower: `792`.
+
+Noise calibration: each of these flips 90-250 of the 1000 games in both directions. The simulation is deterministic, so every game a change touches becomes a new trajectory; a change has to be worth well over 20 games to be seen on ten seeds. mac1 (node 26) reproduces the A100 (node 22) baseline exactly (`821`, same per-seed counts). Ten fresh seeds (`v5-extra-1` through `-10`) give `792/1000` at `282cd0b`.
+
+### 2026-09-25 Natural Clear Against Arriving Armies
+
+The guarded-natural clear no longer waits on every enemy within 2200 of the main. The clear is a short job: walk out, kill the guards, walk home. V5 now counts only enemies whose own speed brings them to the natural inside that time (slowest squad member for the walks, squad damage against guard HP for the kill), and still refuses when those outweigh 0.8 of its army. A mercenary ball idling at V4-TR's camp across the map no longer freezes V5 on one base.
+
+Small but positive on all three independent seed sets:
+
+- ten tune seeds: `821/1000` -> `825/1000` (`91 84 81 82 76 87 81 84 79 80`);
+- ten fresh seeds (`v5-extra-1` through `-10`): `792/1000` -> `799/1000`;
+- untouched final seeds: `410/500` -> `420/500` (`85 85 86 80 84`).
+
+Together `+21` over 2500 games, inside the per-set noise but never negative.
+
+Still open after it: of 39 games that sat on one hall at 300s, 34 still do. Between 150s and 300s their expansion is held by real danger rather than by far-away armies: an enemy army within 1550 of the main (92 checks), fewer than four idle fighters (64), the outnumbered opening (62) and the unfinished production chain (52). These games are decided by the first home defense against a healthy V4-TR plus V3.
+
+Rejected the same night: judging armies by damage per second instead of damage per hit for V5 only (a mercenary lands 31 per second, twice a footman, and was scored as 1.35 footmen): fresh seeds `799` -> `773`, tune seeds flat. Seeing the enemy as stronger made V5 more careful, and the caution cost more than the fights it avoided.
+
+Replayed by hand (thornedDelta south, `v5-hybrid-50-holdout-e`): V5 clears its natural at 190-210s with three or four units, loses one and leaves three badly wounded with no healing building, then trains nothing from 220s to 260s while it banks the town hall, and meets V4-TR's eight-unit mercenary wave at 310s with five wounded units and 50 gold. Spending that bank on a shrine and fighters instead gave nine units at 300s and turned the first V4-TR approach away, but the game was still lost by 417s: the nine Ember units split across the base and V4-TR's mercenaries (about 166 damage per second against their 114) took them apart. As a rule ("no town-hall bank during the outnumbered opening") it was flat: fresh seeds `799` -> `794`, first seven tune seeds `582` -> `577`.
+
+### 2026-09-25 V5 Fight Arena
+
+The 1v2 benchmark could not rate a fighting change: any behaviour change sends 90-250 of the 1000 games down a new path, so a real gain in fights disappears in the reshuffle. `scripts/ai-v5-arena.ts` captures the moment ten seconds before V5's worst 30 seconds of each tune game (every fighter with its health, experience and carried items, every complete building, both sides' upgrades, no workers, no gold) and replays it on the same map with the real V5, V3 and V4-TR policies for 90 seconds (`src/ai/benchmark/v5-arena.ts`; scenario gold, upgrades and `hpRatio` seeds in the simulation). The score is enemy unit value killed minus V5 unit value lost; the V5 building value lost is reported next to it.
+
+Ten tune seeds give 654 unique fights (identical games repeat across seeds). Each is run in six one- or two-pixel variants, 3924 replays in about 45 seconds on the A100. At `3cb7fed`:
+
+- all fights: V5 trades `1.54` (enemy value killed per value lost), net `+264` per fight;
+- fights from lost games (118): `1.13`, and V5 loses 569 building value per fight;
+- home defense (101 fights, V5 army at its hall with enemies inside 1200): net `+282`, `416` building value lost per fight; open field (324): `+291`; V5 attacking an enemy hall (229): `+218`, trade `1.44`.
+
+A paired per-fight comparison has a standard error of about 5 per fight on home defense and 13-15 on the field and attack sets, so a change must be worth roughly 25 value per fight to be seen.
+
+First module results on it: focusing the enemy with the most damage per second per remaining health was neutral to slightly worse; holding march leaders until the group caught up was `+4` per fight (standard error 8), neutral. The heaviest home losses are fights V5 was never going to win (six fighters against fifteen, eight against twenty-three), so the home-defense gap is army size when the wave lands more than fighting.
+
+Rejected before the arena, on the full benchmark: a V5 commander that owns the army while a wave is on or closing on a town hall. Engaging the wave itself lost `147` wins over eight tune seeds (it chased enemies 1300 away and fed new units in one at a time); holding the point and fighting only attackers kept 3 of 12 sample wins; only recalling far squads and pausing errands scored `770` tune and `740` fresh (pausing alone `780`, recalling alone `792`). The existing base-defense logic plus V3's own stopline (V3 turns back from a strong army at home) beat every version of it.
+
+### 2026-09-25 Ranged Core
+
+The arena answered a question the 1v2 benchmark never could: what V5's army should be made of. Replaying the same 654 fights with V5's own units swapped:
+
+- its archers swapped for melee: trade `1.54` -> `1.11`, about `-245` value per fight on every kind of fight;
+- its melee swapped for archers (Grove) or spark archers (Ember), at the same or slightly higher cost: trade `2.61`, net value per fight nearly doubled, fights won `2754` -> `3151` of `3924`, `+422` per fight in home defense;
+- keeping two melee bodies in front of the archers: worse than none (`2.15`), because the melee runs ahead and pulls the shooters in.
+
+V3 and V4-TR field footmen, ravagers and mercenaries that run at a kiting line and die on the way in. V5 now builds its shooter building first (archery range for Grove, cinder spire for Ember), trains from barracks or forges only until that building stands, adds more ranges or spires (up to three) where it used to duplicate core production, and keeps its spire on spark archers with one acolyte once six fighters stand.
+
+Two more arena-priced modules ride on it:
+
+- stutter step: a shooter whose weapon is reloading steps away from a melee attacker by exactly the distance it can walk before the next shot (`2.61` -> `2.75` trade on shooter armies; `+64` per fight on home defense, `+46` attacking);
+- upgrades priced on shooter armies, per extra level: range `+93` per fight, speed `+90`, weapons `+55`, plating `+42`. Range and speed training now come first once four shooters stand (three more per level).
+
+Results (1000-game sets, fresh and final seeds untouched while building):
+
+- ten tune seeds: `825` -> `918` (ranged core) -> `935` (with stutter step and shooter upgrades), per seed `93 95 95 94 91 91 93 96 91 96`;
+- ten fresh seeds (`v5-extra-1` through `-10`): `799` -> `915` -> `930` (with stutter step) -> `941`;
+- untouched final seeds: `420/500` -> `477/500` (`92 99 95 95 96`).
+
+Together `2353/2500` (94.1%), from `2044/2500` (81.8%).
+
 ## Non-Goals
 
 - Do not close or regress the V3 and V4-TR gates while building V5.

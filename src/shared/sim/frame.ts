@@ -38,7 +38,9 @@ function issueFrameCommand(game: Game, owner: PlayerId, command: GameCommand): v
   // @@@frame-issuer-subset - Network frames carry accepted intent; units/buildings that died before this tick are no longer issuers, not sim-corrupt ids.
   const currentCommand = narrowFrameCommandToLiveOperands(game, owner, command);
   if (!currentCommand) return;
-  const legality = checkCommandLegality(snapshotGame(game), owner, currentCommand);
+  // @@@legality-reads-live-game - The legality check only reads (players, units, buildings, resources, camps, items, teams,
+  // variants) and nothing runs between here and the check, so it reads the game itself rather than a copy of the world.
+  const legality = checkCommandLegality(game, owner, currentCommand);
   if (legality?.transient) return;
   if (legality) throw new Error(legality.message);
   issuePlayerCommand(game, owner, currentCommand);

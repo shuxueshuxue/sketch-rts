@@ -162,8 +162,56 @@ describe("SDK benchmark", () => {
     });
 
     const match = report.evaluations[0]!.matches[0]!;
-    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(1.15);
-    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(1.15);
+    // The arrow flies the 110 between archer and hall in 7 ticks and lands on the 8th.
+    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(0.4);
+    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(0.4);
+  });
+
+  it("watches an expansion hall built during the game for expansion attacks", () => {
+    const scene = sketchScene("sdk-benchmark-built-expansion-attack")
+      .map("bareDuel")
+      .replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1", { team: "south", race: "ember" })
+      .playerState("v2", { gold: 1000 })
+      .townHall("v2", 500, 500, { id: "v2-main" })
+      .worker("v2", 1350, 700, { id: "v2-builder" })
+      .townHall("v1", 3400, 3400, { id: "v1-main" })
+      .unit("v1", "raider", 1800, 700, { id: "v1-raider" })
+      .build();
+    // v2 lays an expansion hall down on the first tick; v1's raider attacks it as soon as it stands.
+    const commandPlanner = ({ game, owner, source }: SdkGameCommandPlannerContext) => {
+      if (owner === "v2" && game.tick === 0) return [{ playerId: owner, source, scriptId: "expand", command: { type: "build" as const, unitId: "v2-builder", buildingKind: "townHall" as const, x: 1400, y: 700 } }];
+      const hall = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main");
+      if (owner === "v1" && hall) return [{ playerId: owner, source, scriptId: "raid", command: { type: "attack" as const, unitIds: ["v1-raider"], targetId: hall.id } }];
+      return [];
+    };
+
+    const report = runBenchmark({
+      name: "sdk-benchmark-built-expansion-attack",
+      evaluations: [
+        {
+          name: "built expansion",
+          matches: [
+            {
+              name: "raided expansion",
+              game: scene.createGame(),
+              agents: {
+                v2: { controller: "external-agent", team: "north", race: "grove", versionLabel: "v2" },
+                v1: { controller: "external-agent", team: "south", race: "ember", versionLabel: "v1" },
+              },
+              commandPlanner,
+              maxTicks: 240,
+              thinkInterval: 1,
+            },
+          ],
+        },
+      ],
+    });
+
+    const players = report.evaluations[0]!.matches[0]!.result.players;
+    expect(players.v1!.firstEnemyExpansionAttackSecond).not.toBeNull();
+    expect(players.v2!.firstOwnExpansionAttackedSecond).not.toBeNull();
   });
 
   it("splits gold income into mine income and creep bounty income", () => {

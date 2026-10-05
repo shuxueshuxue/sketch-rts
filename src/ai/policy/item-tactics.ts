@@ -1,4 +1,5 @@
 import { MAX_UPGRADE_LEVEL, XP_STAR_THRESHOLDS } from "../../shared/catalog";
+import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS } from "../../shared/shop";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
 import { resolveAiCommandIntent } from "./commands";
 import { carriedItemsFor, combatUnits, enemyBuildingsNear, groundItems, hostileUnitsNear, items, units } from "./snapshot";
@@ -34,6 +35,14 @@ export function planItemCommands(snapshot: GameSnapshot, owner: PlayerId, option
 
 function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, item: WorldItem, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (item.kind === "experienceBook") return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options);
+  // A healing scroll is read when the hurt friends round its carrier lack at least what it heals four of them for.
+  if (item.kind === "healingScroll") {
+    const missing = units(snapshot, owner)
+      .filter((unit) => distance(unit, carrier) <= HEALING_SCROLL_RADIUS)
+      .reduce((total, unit) => total + Math.min(HEALING_SCROLL_HEAL, unit.maxHp - unit.hp), 0);
+    return missing >= HEALING_SCROLL_HEAL * 4 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
+  }
+  if (item.kind === "speedBoots" || item.kind === "regenRing" || item.kind === "ivoryTower") return undefined;
   if (item.kind === "breachCharge") {
     const target = breachChargeTarget(snapshot, owner, carrier, options);
     return target ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options) : undefined;

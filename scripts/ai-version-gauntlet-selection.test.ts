@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { RICH_SCORE_MAP_IDS } from "../src/shared/map";
-import { allocateGauntletBenchmarkMaps, selectGauntletRichScoreMaps } from "./ai-version-gauntlet-selection";
+import { LADDER_SLOT_IDS } from "../src/shared/map";
+import { allocateGauntletBenchmarkMaps, selectGauntletMaps } from "./ai-version-gauntlet-selection";
 
 const MAPS = Array.from({ length: 24 }, (_, index) => `map${index + 1}`);
 
 describe("AI version gauntlet map selection", () => {
-  it("samples eighteen rich maps by default for the benchmark bundle", () => {
-    const selection = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_SEED: "daily-sample" });
+  it("samples eighteen maps by default for the benchmark bundle", () => {
+    const selection = selectGauntletMaps(MAPS, { AI_GAUNTLET_SEED: "daily-sample" });
 
     expect(selection.mode).toBe("sample");
     expect(selection.mapIds).toHaveLength(18);
@@ -15,25 +15,25 @@ describe("AI version gauntlet map selection", () => {
   });
 
   it("keeps the default random sample reproducible when a seed is supplied", () => {
-    const first = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_SEED: "same-seed" });
-    const second = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_SEED: "same-seed" });
+    const first = selectGauntletMaps(MAPS, { AI_GAUNTLET_SEED: "same-seed" });
+    const second = selectGauntletMaps(MAPS, { AI_GAUNTLET_SEED: "same-seed" });
 
     expect(second.mapIds).toEqual(first.mapIds);
   });
 
-  it("uses the full rich-map family only when explicitly requested", () => {
-    const selection = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_FULL: "1", AI_GAUNTLET_SEED: "ignored" });
+  it("uses the whole pool only when explicitly requested", () => {
+    const selection = selectGauntletMaps(MAPS, { AI_GAUNTLET_FULL: "1", AI_GAUNTLET_SEED: "ignored" });
 
     expect(selection).toMatchObject({ mode: "full", mapIds: MAPS });
   });
 
-  it("keeps the stable rich score pool at sixty-four maps", () => {
-    expect(RICH_SCORE_MAP_IDS).toHaveLength(64);
-    expect(new Set(RICH_SCORE_MAP_IDS).size).toBe(64);
+  it("keeps the ladder slot pool at sixty-four named maps", () => {
+    expect(LADDER_SLOT_IDS).toHaveLength(64);
+    expect(new Set(LADDER_SLOT_IDS).size).toBe(64);
   });
 
   it("allocates the random sample into score and probe maps", () => {
-    const selection = selectGauntletRichScoreMaps(MAPS, { AI_GAUNTLET_SEED: "same-score-sample" });
+    const selection = selectGauntletMaps(MAPS, { AI_GAUNTLET_SEED: "same-score-sample" });
     const allocated = allocateGauntletBenchmarkMaps(selection.mapIds);
     const allMatchMapIds = [...allocated.score, ...allocated.oneVThreeProbe, ...allocated.twoVThreeProbe];
 

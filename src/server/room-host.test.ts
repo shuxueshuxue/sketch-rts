@@ -59,6 +59,18 @@ function playerSiegeAttackCommand() {
 }
 
 describe("server room host", () => {
+  it("closes and frees a room nobody has attended for the idle time, and keeps an attended one", () => {
+    const host = createRoomHost();
+    host.createRoom({ id: "room-left", host: hostUser, visibility: "private" });
+    host.createRoom({ id: "room-played", host: guestUser, visibility: "private" });
+    const attended = (roomId: string) => roomId === "room-played";
+    expect(host.closeIdleRooms(attended, 0, 300_000)).toEqual([]);
+    expect(host.closeIdleRooms(attended, 299_999, 300_000)).toEqual([]);
+    expect(host.closeIdleRooms(attended, 300_000, 300_000)).toEqual(["room-left"]);
+    expect(host.hasRoom("room-left")).toBe(false);
+    expect(host.hasRoom("room-played")).toBe(true);
+  });
+
   it("creates joins configures and starts rooms without a solo-only path", () => {
     const host = createRoomHost();
     const room = host.createRoom({ id: "room-1", host: hostUser, slotCount: 3 });
@@ -66,7 +78,7 @@ describe("server room host", () => {
     host.updateSlot(room.id, "slot-2", { controller: "open" });
     host.updateSlot(room.id, "slot-3", { controller: "ai", team: "south" });
     host.joinRoom(room.id, guestUser);
-    host.updateSlot(room.id, "slot-2", { ready: true, team: "north" });
+    host.updateSlot(room.id, "slot-2", { ready: true, team: "north", race: "ember" });
 
     const started = host.startRoom(room.id);
     const snapshot = host.snapshot(room.id);

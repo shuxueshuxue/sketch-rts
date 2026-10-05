@@ -48,14 +48,15 @@ describe("room lifecycle host", () => {
     const created = lifecycle.createRoom({ id: "room-reset", host: hostUser, humanCount: 1, aiCount: 1 });
     lifecycle.startRoom(created.id);
 
-    const reset = lifecycle.resetRoom(created.id, "wildMarches");
+    const reset = lifecycle.resetRoom(created.id, "ladder");
     const adoptedRoom: RoomState = { ...reset.room, id: "room-adopted", status: "inMatch", autoTick: true };
     const adopted = lifecycle.adoptRoom(adoptedRoom);
 
     expect(reset.room.status).toBe("inMatch");
-    expect(reset.room.mapId).toBe("wildMarches");
+    expect(reset.room.mapId).toBe("ladder");
     expect(reset.room.autoTick).toBe(false);
-    expect(reset.setup.mapId).toBe("wildMarches");
+    expect(reset.setup.mapId).toBe("ladder");
+    expect(reset.setup.options.layout).toEqual({ seed: "room-reset" });
     expect(adopted.autoTick).toBe(false);
     expect(lifecycle.getRoom("room-adopted")).toEqual(adopted);
   });

@@ -104,17 +104,17 @@ async page => {
       { x, y, width, height },
     );
   await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
+  must((await page.locator("[data-open-create]").count()) === 1, "home missing play entry");
   must((await page.locator("[data-open-room-browser]").count()) === 1, "home missing rooms entry");
-  must((await page.locator("[data-open-profile]").count()) === 1, "home missing profile entry");
-  must((await page.locator("[data-create-game]").count()) === 0, "home should not expose create game outside the room browser");
+  must((await page.locator("[data-open-profile]").count()) === 1, "home missing settings entry");
   must((await page.locator("[data-resume-room]").count()) === 0, "home should not expose resume-room shortcut");
   must((await page.locator("[data-create-local-room]").count()) === 0, "home still exposes old single/local creation entry");
   must((await page.locator("[data-map-id]").count()) === 0, "home exposes direct map picker instead of hierarchy");
-  const homeButtonProof = await page.locator("[data-open-room-browser], [data-open-profile]").evaluateAll((buttons) =>
-    buttons.map((button) => ({ label: button.textContent ?? "", width: button.getBoundingClientRect().width })),
+  const homeButtonProof = await page.locator("[data-open-create], [data-open-room-browser], [data-open-profile]").evaluateAll((buttons) =>
+    buttons.map((button) => ({ label: button.textContent ?? "", width: button.getBoundingClientRect().width, notes: button.querySelectorAll(".map-button-note").length })),
   );
   must(
-    homeButtonProof.length === 2 && homeButtonProof.every((button) => button.width <= 430),
+    homeButtonProof.length === 3 && homeButtonProof.every((button) => button.width <= 430 && button.notes === 0),
     "home menu buttons should stay compact: " + JSON.stringify(homeButtonProof),
   );
 
@@ -130,11 +130,6 @@ async page => {
   must(persistedProfile.id === initialProfile.id, "profile id did not persist across reload");
   must(persistedProfile.name === "Room Flow Tester", "profile name did not persist across reload");
 
-  const backdropA = await canvasPatch(640, 400, 180, 120);
-  await sleep(260);
-  const backdropB = await canvasPatch(640, 400, 180, 120);
-  must(backdropA.hash !== backdropB.hash, "main menu background did not animate");
-
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   const roomBrowserLayoutProof = await page.evaluate(() => {
@@ -143,87 +138,47 @@ async page => {
     return {
       hasCreate: Boolean(document.querySelector("[data-create-room]")),
       hasList: Boolean(document.querySelector("[data-room-browser-list]")),
-      sideBySide: Boolean(actions && list && list.left > actions.right + 8),
+      actionsBelow: Boolean(actions && list && actions.top > list.bottom),
     };
   });
-  must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.sideBySide, "rooms browser should show create action on the left and room list on the right: " + JSON.stringify(roomBrowserLayoutProof));
+  must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.actionsBelow, "rooms browser should show the room list with its actions below: " + JSON.stringify(roomBrowserLayoutProof));
   await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   must((await page.locator("[data-create-game-form] input[name='privateRoom']").isChecked()) === true, "new rooms should default to private/local shape");
-  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("wildMarches");
+  await page.locator("[data-map-entries] [data-map-id='pineshade']").click();
+  must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "map chooser did not show the chosen pool map");
   await page.locator("[data-submit-create-game]").click();
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
   const roomSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
   must(roomSetupId, "room setup did not expose room id");
-  must((await page.locator("[data-map-id='wildMarches']").count()) === 1, "room setup missing map selection");
   const roomSetupLayoutProof = await page.evaluate(() => {
-    const setup = document.querySelector("[data-room-setup]");
-    const layout = document.querySelector(".room-setup-layout");
-    const mapPane = document.querySelector(".room-map-pane");
-    const slotPane = document.querySelector(".room-slot-pane");
-    const selectedMap = document.querySelector("[data-map-id='wildMarches']");
-    const layoutRect = layout?.getBoundingClientRect();
-    const mapRect = mapPane?.getBoundingClientRect();
-    const slotRect = slotPane?.getBoundingClientRect();
+    const mapPane = document.querySelector(".room-map-pane")?.getBoundingClientRect();
+    const slotPane = document.querySelector(".room-slot-pane")?.getBoundingClientRect();
     const rowRects = [...document.querySelectorAll(".slot-row")].map((row) => row.getBoundingClientRect());
     return {
-      setupWidth: setup?.getBoundingClientRect().width ?? 0,
-      mapLeft: mapRect?.left ?? 0,
-      slotLeft: slotRect?.left ?? 0,
-      sideBySide: Boolean(layoutRect && mapRect && slotRect && slotRect.left > mapRect.right + 8),
-      selectedMapText: selectedMap?.textContent ?? "",
-      slotSummary: document.querySelector("[data-slot-summary]")?.textContent ?? "",
+      seatsThenMap: Boolean(mapPane && slotPane && mapPane.left > slotPane.right + 8),
+      mapName: document.querySelector("[data-map-name]")?.textContent ?? "",
+      rows: rowRects.length,
       maxSlotRowHeight: Math.max(...rowRects.map((rect) => rect.height)),
-      slotPaneBorder: getComputedStyle(slotPane).borderTopWidth,
-      hasCountInputs: Boolean(document.querySelector("[data-room-human-count], [data-room-ai-count]")),
       slotActions: [...document.querySelectorAll(".slot-actions button")].map((button) => button.textContent?.trim()),
-      humanControllerOptions: [...document.querySelectorAll("[data-slot-controller] option[value='human']")].length,
+      controllerOptions: [...document.querySelectorAll("[data-slot-id='slot-2'] [data-slot-controller] option")].map((option) => option.value),
       hostControllerStatus: document.querySelector("[data-slot-id='slot-1'] [data-slot-controller-status]")?.textContent ?? "",
     };
   });
-  must(roomSetupLayoutProof.sideBySide, "room setup should place maps in a left pane and slots in a right pane: " + JSON.stringify(roomSetupLayoutProof));
-  must(roomSetupLayoutProof.maxSlotRowHeight <= 52, "two-slot setup should not stretch slot rows into oversized panels: " + JSON.stringify(roomSetupLayoutProof));
-  must(roomSetupLayoutProof.slotPaneBorder === "0px", "slot pane should not keep an outer box shell around sparse rows: " + JSON.stringify(roomSetupLayoutProof));
-  must(!roomSetupLayoutProof.hasCountInputs, "room setup should use slot actions instead of humans/AI number inputs: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.seatsThenMap, "room setup should place seats on the left and the map on the right: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.mapName === "Pineshade" && roomSetupLayoutProof.rows === 2, "room setup should show the map's name and one row per seat: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.maxSlotRowHeight <= 52, "seat rows should stay one line high: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.slotActions.length === 1 && roomSetupLayoutProof.slotActions[0] === "Close Room", "seats come with the map: only closing the room should be offered: " + JSON.stringify(roomSetupLayoutProof));
   must(
-    roomSetupLayoutProof.slotActions.includes("+ Player") &&
-      roomSetupLayoutProof.slotActions.includes("+ Computer") &&
-      roomSetupLayoutProof.slotActions.includes("Remove Slot") &&
-      roomSetupLayoutProof.slotActions.includes("Close Room"),
-    "room setup did not expose direct slot management actions: " + JSON.stringify(roomSetupLayoutProof),
+    roomSetupLayoutProof.controllerOptions.join(",") === "ai,open" && roomSetupLayoutProof.hostControllerStatus.toLowerCase() === "human",
+    "a seat should be a computer's or open, and a claimed seat shown as identity: " + JSON.stringify(roomSetupLayoutProof),
   );
-  must(
-    roomSetupLayoutProof.humanControllerOptions === 0 && roomSetupLayoutProof.hostControllerStatus === "human",
-    "room setup should show claimed human seats as identity, not as a selectable controller: " + JSON.stringify(roomSetupLayoutProof),
-  );
-  must(roomSetupLayoutProof.selectedMapText.includes("2-30 configurable"), "selected map did not explain configurable slot capacity: " + JSON.stringify(roomSetupLayoutProof));
-  must(roomSetupLayoutProof.slotSummary.includes("2/30") && roomSetupLayoutProof.slotSummary.includes("1 AI"), "slot summary did not expose current room composition: " + JSON.stringify(roomSetupLayoutProof));
   const privateRoomProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
   }, roomSetupId);
   must(privateRoomProof.visibility === "private", "private checkbox did not create a private room: " + JSON.stringify(privateRoomProof));
-  must(privateRoomProof.mapId === "wildMarches", "create form did not use selected map: " + JSON.stringify(privateRoomProof));
-  const mapScrollBeforeClick = await page.evaluate(() => {
-    const grid = document.querySelector(".room-map-grid");
-    if (!grid) throw new Error("map grid missing");
-    grid.scrollTop = Math.floor(grid.scrollHeight * 0.55);
-    const rect = grid.getBoundingClientRect();
-    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + Math.min(rect.height - 20, 120))?.closest("[data-map-id]");
-    if (!target) throw new Error("no visible map button after scrolling");
-    return { before: grid.scrollTop, mapId: target.getAttribute("data-map-id") };
-  });
-  must(mapScrollBeforeClick.before > 0 && mapScrollBeforeClick.mapId, "map list did not scroll before click: " + JSON.stringify(mapScrollBeforeClick));
-  await page.locator("[data-map-id='" + mapScrollBeforeClick.mapId + "']").click();
-  await page.waitForFunction(async ({ roomId, mapId }) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return room.mapId === mapId;
-  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
-  const mapScrollAfterClick = await page.evaluate(() => document.querySelector(".room-map-grid")?.scrollTop ?? -1);
-  must(
-    Math.abs(mapScrollAfterClick - mapScrollBeforeClick.before) <= 2,
-    "clicking a map should not move the map list scrollbar: " + JSON.stringify({ mapScrollBeforeClick, mapScrollAfterClick }),
-  );
+  must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "create form did not create a room on the chosen pool map with its seats: " + JSON.stringify(privateRoomProof));
   const privateLobbyProof = await page.evaluate(async (roomId) => {
     const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
     const publicLobby = await (await fetch("/api/rooms")).json();
@@ -265,11 +220,6 @@ async page => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return room.slots.find((slot) => slot.id === "slot-2")?.controller === "open";
   }, roomSetupId, { timeout: 5000 });
-  await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("closed");
-  await page.waitForFunction(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return room.slots.find((slot) => slot.id === "slot-2")?.controller === "closed";
-  }, roomSetupId, { timeout: 5000 });
   await page.locator("[data-slot-id='slot-2'] [data-slot-controller]").selectOption("ai");
   await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("west");
   await page.locator("[data-slot-id='slot-2'] [data-slot-race]").selectOption("grove");
@@ -302,20 +252,16 @@ async page => {
   await page.waitForFunction(async ({ roomId, mapId }) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return room.status === "inMatch" && room.mapId === mapId;
-  }, { roomId: roomSetupId, mapId: mapScrollBeforeClick.mapId }, { timeout: 5000 });
+  }, { roomId: roomSetupId, mapId: "pineshade" }, { timeout: 5000 });
+  // A reload during the match comes straight back into it (the room's route).
   await page.reload();
-  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-  await page.locator("[data-open-room-browser]").click();
-  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  must((await page.locator("[data-room-id='" + roomSetupId + "']").count()) === 1, "in-match owned room was not visible from Rooms after reload");
-  await page.locator("[data-room-id='" + roomSetupId + "']").click();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
   const snapshot = await page.evaluate(async (roomId) => {
     const res = await fetch("/api/rooms/" + roomId + "/snapshot");
     return res.json();
   }, roomSetupId);
-  must(snapshot.map.id === mapScrollBeforeClick.mapId, "room start did not use selected map");
-  must(snapshot.players.player.supplyCap >= 10, "room snapshot did not expose player state");
+  must(snapshot.map.id === "pineshade" && snapshot.map.terrain, "room start did not use the pool map's layout");
+  must(snapshot.players.player.supplyCap > 0, "room snapshot did not expose player state");
   const researchProof = await page.evaluate(async (roomId) => {
     const reset = await fetch("/api/rooms/" + roomId + "/reset", {
       method: "POST",
@@ -338,11 +284,8 @@ async page => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
     return snapshot.buildings.some((building) => building.id === "ui-research-barracks");
   }, roomSetupId, { timeout: 5000 });
+  // A reload during the match comes straight back into it (the room's route).
   await page.reload();
-  await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
-  await page.locator("[data-open-room-browser]").click();
-  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  await page.locator("[data-room-id='" + roomSetupId + "']").click();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
   await page.waitForFunction(async (roomId) => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
@@ -468,92 +411,22 @@ async page => {
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("bareDuel");
-  await page.locator("[data-create-game-form] input[name='humanCount']").fill("2");
-  await page.locator("[data-create-game-form] input[name='aiCount']").fill("3");
-  await page.locator("[data-submit-create-game]").click();
-  await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-  const sameMapSmallRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
-  const sameMapSmallProof = await page.evaluate(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return {
-      mapId: room.mapId,
-      slotCount: room.slots.length,
-      humanSeats: room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length,
-      aiSeats: room.slots.filter((slot) => slot.controller === "ai").length,
-    };
-  }, sameMapSmallRoomId);
-  must(
-    sameMapSmallProof.mapId === "bareDuel" &&
-      sameMapSmallProof.slotCount === 5 &&
-      sameMapSmallProof.humanSeats === 2 &&
-      sameMapSmallProof.aiSeats === 3,
-    "small same-map room did not keep requested human/computer counts: " + JSON.stringify(sameMapSmallProof),
-  );
-  await page.locator("[data-add-player-slot]").click();
-  await page.waitForFunction(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return room.slots.length === 6 && room.slots.filter((slot) => slot.controller === "ai").length === 3;
-  }, sameMapSmallRoomId, { timeout: 5000 });
-  const setupResizeProof = await page.evaluate(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return {
-      mapId: room.mapId,
-      slotCount: room.slots.length,
-      summary: document.querySelector("[data-slot-summary]")?.textContent ?? "",
-    };
-  }, sameMapSmallRoomId);
-  must(
-    setupResizeProof.mapId === "bareDuel" && setupResizeProof.slotCount === 6 && setupResizeProof.summary.includes("6/30"),
-    "room setup slot actions did not resize the current room independently from map choice: " + JSON.stringify(setupResizeProof),
-  );
-  await page.locator("[data-back-room-browser]").click();
-  await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
-  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  await page.locator("[data-create-room]").click();
-  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
   await page.locator("[data-create-game-form] input[name='privateRoom']").uncheck();
-  await page.locator("[data-create-game-form] input[name='humanCount']").fill("15");
-  await page.locator("[data-create-game-form] input[name='aiCount']").fill("15");
-  await page.locator("[data-create-game-form] select[name='mapId']").selectOption("bareDuel");
+  await page.locator("[data-map-entries] [data-map-id='twoShores']").click();
   await page.locator("[data-submit-create-game]").click();
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
-  const grandSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
-  const layoutProof = await page.evaluate(async (roomId) => {
-    const setup = document.querySelector("[data-room-setup]");
-    const layout = document.querySelector(".room-setup-layout");
-    const mapPane = document.querySelector(".room-map-pane");
-    const slotPane = document.querySelector(".room-slot-pane");
-    const slotList = document.querySelector(".slot-list");
-    const rows = [...document.querySelectorAll(".slot-row")];
+  const sidesSetupId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  const seatsReady = () => page.evaluate(() => !document.querySelector("[data-start-room]")?.disabled);
+  const sidesBefore = await seatsReady();
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("north");
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === true, null, { timeout: 5000 });
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("south");
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
+  const seatsProof = await page.evaluate(async (roomId) => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
-    const setupRect = setup.getBoundingClientRect();
-    const layoutRect = layout.getBoundingClientRect();
-    const mapRect = mapPane.getBoundingClientRect();
-    const slotPaneRect = slotPane.getBoundingClientRect();
-    const slotRect = slotList.getBoundingClientRect();
-    const rowRects = rows.map((row) => row.getBoundingClientRect());
-    return {
-      roomVisibility: room.visibility,
-      slotCount: room.slots.length,
-      rowCount: rows.length,
-      sideBySide: slotPaneRect.left > mapRect.right + 8,
-      layoutWidth: layoutRect.width,
-      setupHeight: setupRect.height,
-      slotListHeight: slotRect.height,
-      slotListScrollable: slotList.scrollHeight > slotList.clientHeight,
-      viewportHeight: window.innerHeight,
-      overflowsViewport: setupRect.bottom > window.innerHeight,
-      grandMapText: document.querySelector("[data-map-id='grandThirty']")?.textContent ?? "",
-    };
-  }, grandSetupId);
-  must(layoutProof.roomVisibility === "public", "public checkbox did not create public room: " + JSON.stringify(layoutProof));
-  must(layoutProof.slotCount === 30 && layoutProof.rowCount === 30, "30-slot setup did not render every slot: " + JSON.stringify(layoutProof));
-  must(layoutProof.sideBySide, "30-slot setup should keep map and slot panes side by side: " + JSON.stringify(layoutProof));
-  must(layoutProof.slotListScrollable, "30-slot setup should scroll inside the slot pane: " + JSON.stringify(layoutProof));
-  must(layoutProof.grandMapText.includes("up to 30"), "grand map capacity is not visible in the map list: " + JSON.stringify(layoutProof));
-  must(!layoutProof.overflowsViewport, "30-slot setup overflows the viewport instead of scrolling internally: " + JSON.stringify(layoutProof));
-  await page.screenshot({ path: ".playwright-cli/room-flow-30-slot-setup.png", fullPage: false });
+    return { visibility: room.visibility, mapId: room.mapId, seats: room.slots.length, rows: document.querySelectorAll(".slot-row").length };
+  }, sidesSetupId);
+  must(sidesBefore && seatsProof.visibility === "public" && seatsProof.mapId === "twoShores" && seatsProof.seats === 4 && seatsProof.rows === 4, "a two-sides map should open with its four seats ready and start only on even teams: " + JSON.stringify(seatsProof));
   await page.locator("[data-close-room]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   const closeRoomProof = await page.evaluate(async (roomId) => {
@@ -564,7 +437,7 @@ async page => {
       listed: rooms.rooms.some((room) => room.id === roomId),
       visibleInUi: Boolean(document.querySelector("[data-room-id='" + roomId + "']")),
     };
-  }, grandSetupId);
+  }, sidesSetupId);
   must(
     !closeRoomProof.listed && !closeRoomProof.visibleInUi,
     "closing a room should remove it from the backend room list and room browser: " + JSON.stringify(closeRoomProof),
@@ -577,7 +450,6 @@ async page => {
     profileId: persistedProfile.id,
     roomSetupId,
     map: snapshot.map.id,
-    mapScrollProof: { before: mapScrollBeforeClick.before, after: mapScrollAfterClick, mapId: mapScrollBeforeClick.mapId },
     tick: snapshot.tick,
     endedStatus: ended.status,
     winner: ended.result?.winner,
@@ -585,9 +457,7 @@ async page => {
     privateLobbyProof,
     roomBrowserLayoutProof,
     slotEditProof,
-    sameMapSmallProof,
-    setupResizeProof,
-    layoutProof,
+    seatsProof,
     closeRoomProof,
   });
 }

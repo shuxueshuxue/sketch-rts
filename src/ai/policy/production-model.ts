@@ -5,8 +5,10 @@ import { activePlayerIds, activeResources, buildings, combatUnits, completeBuild
 import { opponentPlayerIds } from "./ownership";
 import { aiPlaybook, type ProductionBuildingKind } from "./playbook";
 import type { PresetAiPolicyOptions } from "./types";
-import { isTowerMercPolicy, isV5HybridPolicy } from "./versions";
-import { hasCoreProduction, isCoreProductionBuilding, playerState } from "./world-model";
+import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
+import { hasCoreProduction, isCoreProductionBuilding, playerState, soldiersWorth } from "./world-model";
+
+const V5_SHOOTER_BUILDING_TARGET = 3;
 
 export function nextProductionBuildingKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
   const missing = productionBuildingNeedKind(snapshot, owner, options);
@@ -58,8 +60,11 @@ function canAddSevereEconomyFirstCoreDuringExpansion(
 function desiredProductionPlan(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind[] {
   const player = playerState(snapshot, owner);
   const plan = aiPlaybook(player.race).productionPlan;
-  if (!isV5HybridPolicy(options) || player.race !== "grove" || opponentPlayerIds(snapshot, owner, options).length < 2 || activeMiningBaseCount(snapshot, owner) < 2) return plan;
-  return [...plan, "workshop"];
+  if (!isV5ShooterCorePolicy(options)) return plan;
+  // Shooters first: the first production building sets what the opening army is made of.
+  if (player.race === "ember") return ["cinderSpire", "emberForge", "cinderSpire", "emberForge"];
+  const shooterFirst: ProductionBuildingKind[] = ["archeryRange", "barracks", "stables", "sanctum"];
+  return activeMiningBaseCount(snapshot, owner) < 2 ? shooterFirst : [...shooterFirst, "workshop"];
 }
 
 export function missingCombatProductionKind(snapshot: GameSnapshot, owner: PlayerId): ProductionBuildingKind | undefined {
@@ -73,7 +78,7 @@ export function needsDuplicateCoreProduction(snapshot: GameSnapshot, owner: Play
 
 export function duplicateCoreProductionKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): ProductionBuildingKind | undefined {
   const candidate = duplicateCoreProductionReserveKind(snapshot, owner, options);
-  if (!candidate || (!isOneBaseNoExpansionPressure(snapshot, owner) && playerState(snapshot, owner).gold < 260)) return undefined;
+  if (!candidate || (!isOneBaseNoExpansionPressure(snapshot, owner) && playerState(snapshot, owner).gold < soldiersWorth(2.6))) return undefined;
   return candidate;
 }
 
@@ -82,7 +87,8 @@ export function duplicateCoreProductionReserveKind(snapshot: GameSnapshot, owner
   const opponents = opponentPlayerIds(snapshot, owner, options);
   const player = playerState(snapshot, owner);
   const emberOneOnOneScale = player.race === "ember" && opponents.length === 1 && completeBuildings(snapshot, owner, "townHall").length >= 2;
-  if (!emberOneOnOneScale && opponents.length < 2) return undefined;
+  // V5 keeps adding shooter buildings with one opponent too, so it is still the shooter army when it plays in a pair.
+  if (!emberOneOnOneScale && !isV5ShooterCorePolicy(options) && opponents.length < 2) return undefined;
   if (desiredMissingProductionKind(snapshot, owner, options)) return undefined;
   const noExpansionMap = isOneBaseNoExpansionPressure(snapshot, owner);
   if (!noExpansionMap && completeBuildings(snapshot, owner, "townHall").length < 2) return undefined;
@@ -90,6 +96,12 @@ export function duplicateCoreProductionReserveKind(snapshot: GameSnapshot, owner
   const minimumCombat = emberOneOnOneScale ? 15 : noExpansionMap ? 2 : 6;
   if (units(snapshot, owner).filter((unit) => unit.kind === "worker").length < minimumWorkers || combatUnits(snapshot, owner).length < minimumCombat) return undefined;
   if (buildings(snapshot, owner).some((building) => !building.complete && isCoreProductionBuilding(building))) return undefined;
+  // @@@v5-ranged-core-production - A shooter army is paced by its shooter buildings; V5 adds ranges and spires, not barracks.
+  if (isV5ShooterCorePolicy(options)) {
+    const shooterBuilding = player.race === "ember" ? "cinderSpire" : "archeryRange";
+    const shooterBuildings = buildings(snapshot, owner).filter((building) => building.kind === shooterBuilding).length;
+    return shooterBuildings < V5_SHOOTER_BUILDING_TARGET ? shooterBuilding : undefined;
+  }
   const candidates = aiPlaybook(player.race).productionPlan.slice(0, emberOneOnOneScale ? 4 : 3);
   const counts = new Map(candidates.map((kind) => [kind, buildings(snapshot, owner).filter((building) => building.kind === kind).length]));
   const total = [...counts.values()].reduce((sum, count) => sum + count, 0);

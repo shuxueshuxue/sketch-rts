@@ -31,6 +31,8 @@ const server = createServer(app);
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
+// Lobby pages watching each room through its event stream (see @@@idle-room-reaper).
+const lobbyWatchers = new Map<string, number>();
 const roomNetHub = new RoomNetHub({ roomHost });
 
 router.use(express.json({ limit: "64kb" }));
@@ -176,8 +178,15 @@ router.get("/api/rooms/:roomId/events", (request, response) => {
     Connection: "keep-alive",
   });
   writeRoomEvent(response, room);
-  const unobserve = roomHost.observeRoomLifecycle(request.params.roomId, (event) => writeRoomEvent(response, event.room));
-  request.on("close", unobserve);
+  const roomId = request.params.roomId;
+  const unobserve = roomHost.observeRoomLifecycle(roomId, (event) => writeRoomEvent(response, event.room));
+  lobbyWatchers.set(roomId, (lobbyWatchers.get(roomId) ?? 0) + 1);
+  request.on("close", () => {
+    unobserve();
+    const left = (lobbyWatchers.get(roomId) ?? 1) - 1;
+    if (left > 0) lobbyWatchers.set(roomId, left);
+    else lobbyWatchers.delete(roomId);
+  });
 });
 
 router.post("/api/rooms/:roomId/join", (request, response) => {
@@ -477,6 +486,13 @@ setInterval(() => {
   roomNetHub.tickConnectedRooms();
   roomHost.tickActiveRooms(1, { excludeRoomIds: roomNetHub.transportOwnedRoomIds() });
 }, 50);
+
+// @@@idle-room-reaper: a room is attended while a browser plays in it or a lobby page watches it (its event stream).
+const ROOM_IDLE_MS = 5 * 60_000;
+setInterval(() => {
+  const closed = roomHost.closeIdleRooms((roomId) => roomNetHub.isAttended(roomId) || lobbyWatchers.has(roomId), Date.now(), ROOM_IDLE_MS);
+  if (closed.length > 0) console.log(`closed ${closed.length} idle rooms`);
+}, 30_000);
 
 if (process.env.NODE_ENV === "production") {
   router.use(express.static(path.join(root, "dist")));

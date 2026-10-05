@@ -1,10 +1,9 @@
-import { RICH_SCORE_MAP_IDS } from "../../shared/map";
-import { seconds } from "../../shared/time";
+import { LADDER_SLOT_IDS } from "../../shared/map";
 import type { CreateGameOptions } from "../../shared/sim";
-import type { AiScriptVersion, MapId, PlayerId, RaceId, ScenarioOverride } from "../../shared/types";
+import type { AiScriptVersion, MapId, PlayerId, RaceId } from "../../shared/types";
 import type { SdkAgentController } from "../../sdk/game-runner";
 import type { AiGameAgent } from "../game-runner";
-import { allocateGauntletBenchmarkMaps, selectGauntletRichScoreMaps, type GauntletMapSelection } from "./presets";
+import { allocateGauntletBenchmarkMaps, gauntletLadderGame, selectGauntletLadderMaps, selectGauntletMaps, type GauntletMapSelection } from "./presets";
 
 export type AiGauntletLane = "score" | "1v3" | "2v3" | "robustness";
 
@@ -39,8 +38,9 @@ export type AiGauntletCatalogOptions = {
 };
 
 export type AiGauntletCatalog = {
-  selection: GauntletMapSelection<MapId>;
-  selectedRichScoreMapIds: MapId[];
+  selection: GauntletMapSelection;
+  // The ladder slots played (named as the dry-run manifest has always named them).
+  selectedRichScoreMapIds: string[];
   scoreCaseCount: number;
   oneVThreeCaseCount: number;
   twoVThreeCaseCount: number;
@@ -73,28 +73,19 @@ export const AI_GAUNTLET_CONTROLLER_CASES: AiGauntletControllerCase[] = [
 ];
 
 export function createAiGauntletCatalog(options: AiGauntletCatalogOptions = {}): AiGauntletCatalog {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
-  return createAiGauntletCatalogFromSelection(selection);
+  return createAiGauntletCatalogFromSelection(selectGauntletLadderMaps(options));
 }
 
 export function createAiGauntletCatalogFromEnv(env: NodeJS.ProcessEnv): AiGauntletCatalog {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], env);
-  return createAiGauntletCatalogFromSelection(selection);
+  return createAiGauntletCatalogFromSelection(selectGauntletMaps(LADDER_SLOT_IDS, env));
 }
 
-function createAiGauntletCatalogFromSelection(selection: GauntletMapSelection<MapId>): AiGauntletCatalog {
+function createAiGauntletCatalogFromSelection(selection: GauntletMapSelection): AiGauntletCatalog {
   const allocatedMaps = allocateGauntletBenchmarkMaps(selection.mapIds);
-  const curatedScenarioCases = selection.mode === "full" ? fullCuratedScenarioCases() : [];
-  const scoreCases: AiGauntletCase[] = [
-    ...allocatedMaps.score.map((mapId) => ({ name: `${mapId} official triangle`, mapId })),
-    ...curatedScenarioCases,
-  ];
-  const oneVThreeCases: AiGauntletCase[] = allocatedMaps.oneVThreeProbe.map((mapId) => ({ name: `${mapId} 1v3 probe`, mapId }));
-  const twoVThreeCases: AiGauntletCase[] = allocatedMaps.twoVThreeProbe.map((mapId) => ({ name: `${mapId} 2v3 probe`, mapId }));
+  const ladderCase = (name: string, slot: string, index: number): AiGauntletCase => ({ name, ...gauntletLadderGame(selection.seed, slot, index) });
+  const scoreCases = allocatedMaps.score.map((slot, index) => ladderCase(`${slot} official triangle`, slot, index));
+  const oneVThreeCases = allocatedMaps.oneVThreeProbe.map((slot, index) => ladderCase(`${slot} 1v3 probe`, slot, index));
+  const twoVThreeCases = allocatedMaps.twoVThreeProbe.map((slot, index) => ladderCase(`${slot} 2v3 probe`, slot, index));
   const robustnessCases = aiGauntletRobustnessCases();
 
   return {
@@ -148,54 +139,4 @@ function aiGauntletRobustnessCases(): AiGauntletCase[] {
     { name: "open claims no-creep smoke", mapId: "openClaims" },
     { name: "camp rush no-expansion objectives", mapId: "campRush" },
   ];
-}
-
-function fullCuratedScenarioCases(): AiGauntletCase[] {
-  return [
-    { name: "wild marches extra camp", mapId: "wildMarches", options: { scenario: scenarioWildlings("gauntlet-extra", 2100, 2100) } },
-    { name: "stag hollow extra merc", mapId: "stagHollow", options: { scenario: scenarioMerc("gauntlet-center-merc", 2100, 2100, 3) } },
-    { name: "wild marches pocket gold", mapId: "wildMarches", options: { scenario: scenarioResource("gauntlet-pocket-gold", 2450, 1350, 3200) } },
-    { name: "thorned delta west storm road", mapId: "thornedDelta", options: { scenario: scenarioWildlings("gauntlet-west-storm", 900, 2840) } },
-    { name: "wild marches north red camp", mapId: "wildMarches", options: { scenario: scenarioWildlings("gauntlet-north-red", 2700, 860) } },
-    { name: "silver ridge south boss", mapId: "silverRidge", options: { scenario: scenarioWildlings("gauntlet-south-boss", 3260, 3140) } },
-    { name: "wild marches south bounty", mapId: "wildMarches", options: { scenario: scenarioWildlings("gauntlet-south-bounty", 1450, 3340) } },
-    { name: "ember fen east pocket gold", mapId: "emberFen", options: { scenario: scenarioResource("gauntlet-east-pocket-gold", 3160, 1120, 3200) } },
-    { name: "wild marches ridge merc", mapId: "wildMarches", options: { scenario: scenarioMerc("gauntlet-ridge-merc", 3120, 1180, 2) } },
-    { name: "ash vale contested book", mapId: "ashVale", options: { scenario: scenarioWildlings("gauntlet-ash-book", 1840, 2120) } },
-    { name: "reed basin side gold", mapId: "reedBasin", options: { scenario: scenarioResource("gauntlet-reed-side-gold", 1060, 2920, 3200) } },
-    { name: "frost meadow ridge merc", mapId: "frostMeadow", options: { scenario: scenarioMerc("gauntlet-frost-ridge-merc", 2860, 1710, 2) } },
-    { name: "sunken orchard red bend", mapId: "sunkenOrchard", options: { scenario: scenarioWildlings("gauntlet-orchard-red", 2860, 3080) } },
-    { name: "cedar pass pocket gold", mapId: "cedarPass", options: { scenario: scenarioResource("gauntlet-cedar-pocket-gold", 2280, 1160, 3200) } },
-  ];
-}
-
-function scenarioResource(id: string, x: number, y: number, amount: number): ScenarioOverride {
-  return {
-    addResources: [{ id, kind: "goldMine", x, y, amount }],
-    addUnits: [
-      { id: `${id}-guard-brute`, owner: "neutral", kind: "stonebackBrute", x: x - 70, y: y - 25 },
-      { id: `${id}-guard-witch`, owner: "neutral", kind: "gladeWitch", x: x + 45, y: y + 50 },
-      { id: `${id}-guard-slinger`, owner: "neutral", kind: "thornSlinger", x: x + 80, y: y - 55 },
-    ],
-  };
-}
-
-function scenarioMerc(id: string, x: number, y: number, stock: number): ScenarioOverride {
-  return {
-    addMercenaryCamps: [{ id, x, y, radius: 54, hireKind: "mercenary", cost: 185, stock, cooldown: seconds(8), cooldownRemaining: 0 }],
-    addUnits: [
-      { id: `${id}-guard-brute`, owner: "neutral", kind: "stonebackBrute", x: x - 65, y: y - 30 },
-      { id: `${id}-guard-slinger`, owner: "neutral", kind: "thornSlinger", x: x + 60, y: y + 35 },
-    ],
-  };
-}
-
-function scenarioWildlings(prefix: string, x: number, y: number): ScenarioOverride {
-  return {
-    addUnits: [
-      { id: `${prefix}-brute`, owner: "neutral", kind: "stonebackBrute", x: x - 40, y },
-      { id: `${prefix}-witch`, owner: "neutral", kind: "gladeWitch", x: x + 35, y: y + 30 },
-      { id: `${prefix}-slinger`, owner: "neutral", kind: "thornSlinger", x: x + 15, y: y - 45 },
-    ],
-  };
 }

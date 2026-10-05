@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BUILDING_DEFS } from "../../shared/catalog";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { AI_SCRIPT_LIBRARY, planAiCommandEntriesFromScripts, planPresetAiCommandEntries } from "./core";
@@ -848,7 +849,7 @@ describe("V4-TR tower mercenary policy", () => {
       .townHall("v3", 1_650, 500)
       .build()
       .createGame();
-    game.players.v4!.gold = 360;
+    game.players.v4!.gold = BUILDING_DEFS.townHall.cost + 40;
 
     const entries = planPresetAiCommandEntries(snapshotGame(game), "v4", { version: "v4-tr", teams: game.teams });
 

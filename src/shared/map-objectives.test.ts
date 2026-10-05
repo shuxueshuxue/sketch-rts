@@ -1,13 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { UNIT_DEFS } from "./catalog";
 import { analyzeMapObjectives } from "../sdk/map-analysis";
-import { RICH_SCORE_MAP_IDS } from "./map";
 import { createGame } from "./sim";
 import type { MapId, PlayerId } from "./types";
 
-const EVALUATION_MAPS: MapId[] = ["verdantCrossroads", "campRush", "wildMarches", "grandThirty"];
-const RICH_SCORE_MAPS: MapId[] = [...RICH_SCORE_MAP_IDS];
-const RICH_SCORE_MAP_COUNT = 64;
+// Fixed maps whose camps are laid out for objective-control AI tests (the ladder map's camps are its generator's; see
+// generated-map.test).
+const EVALUATION_MAPS: MapId[] = ["verdantCrossroads", "campRush", "grandThirty"];
+// The maps a game with creeps is played on: the ladder map (on the layout the seed "ladder" draws, and on others) and the
+// fixed maps with camps.
+const CREEP_MAPS: { mapId: MapId; layout?: { seed: string } }[] = [
+  { mapId: "verdantCrossroads" },
+  { mapId: "campRush" },
+  { mapId: "ladder" },
+  { mapId: "ladder", layout: { seed: "objectives-a" } },
+  { mapId: "ladder", layout: { seed: "objectives-b" } },
+];
+const LADDER_LAYOUTS = CREEP_MAPS.filter((map) => map.mapId === "ladder");
 const GRAND_PLAYERS = Array.from({ length: 30 }, (_, index) => `p${index + 1}`);
 
 describe("map neutral objective layout", () => {
@@ -27,13 +36,13 @@ describe("map neutral objective layout", () => {
   it("keeps multiplayer main mines outside accidental neutral aggro range", () => {
     const players = ["player", "enemy", "enemy2"];
     const teams = { player: "north", enemy: "south", enemy2: "south" };
-    for (const mapId of ["verdantCrossroads", "campRush", ...RICH_SCORE_MAPS] as const) {
-      const game = createGame(mapId, { players, aiPlayers: [], teams });
+    for (const { mapId, layout } of CREEP_MAPS) {
+      const game = createGame(mapId, { players, aiPlayers: [], teams, ...(layout ? { layout } : {}) });
       const neutrals = game.units.filter((unit) => unit.owner === "neutral" && (UNIT_DEFS[unit.kind].creepFoodPower ?? 0) > 0);
       for (const owner of players) {
         const mine = game.resources.find((resource) => resource.id === `gold-${owner}-main`)!;
         const nearest = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - mine.x, unit.y - mine.y)));
-        expect(nearest, `${mapId}:${owner} main mine`).toBeGreaterThanOrEqual(430);
+        expect(nearest, `${mapId}${layout ? `/${layout.seed}` : ""}:${owner} main mine`).toBeGreaterThanOrEqual(430);
       }
     }
   });
@@ -41,8 +50,8 @@ describe("map neutral objective layout", () => {
   it("keeps sampled 1v1 sanity starts outside accidental neutral aggro range", () => {
     const players = ["v2", "v1a"];
     const teams = { v2: "north", v1a: "south" };
-    for (const mapId of RICH_SCORE_MAPS) {
-      const game = createGame(mapId, { players, aiPlayers: [], teams });
+    for (const { mapId, layout } of CREEP_MAPS) {
+      const game = createGame(mapId, { players, aiPlayers: [], teams, ...(layout ? { layout } : {}) });
       const neutrals = game.units.filter((unit) => unit.owner === "neutral" && (UNIT_DEFS[unit.kind].creepFoodPower ?? 0) > 0);
       for (const owner of players) {
         const base = game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
@@ -50,66 +59,33 @@ describe("map neutral objective layout", () => {
         const nearestBase = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - base.x, unit.y - base.y)));
         const nearestMine = Math.min(...neutrals.map((unit) => Math.hypot(unit.x - mine.x, unit.y - mine.y)));
 
-        expect(nearestBase, `${mapId}:${owner} main base`).toBeGreaterThanOrEqual(430);
-        expect(nearestMine, `${mapId}:${owner} main mine`).toBeGreaterThanOrEqual(430);
+        expect(nearestBase, `${mapId}${layout ? `/${layout.seed}` : ""}:${owner} main base`).toBeGreaterThanOrEqual(430);
+        expect(nearestMine, `${mapId}${layout ? `/${layout.seed}` : ""}:${owner} main mine`).toBeGreaterThanOrEqual(430);
       }
     }
   });
 
-  it("keeps rich score side-lane expansion access balanced for 1v1 controls", () => {
+  it("keeps the first expansion and the first contested economy objective as near to one 1v1 start as to the other on ladder maps", () => {
     const players = ["v2", "v1a"];
     const teams = { v2: "north", v1a: "south" };
-    for (const mapId of RICH_SCORE_MAPS) {
-      const game = createGame(mapId, { players, aiPlayers: [], teams });
+    for (const { layout } of LADDER_LAYOUTS) {
+      const game = createGame("ladder", { players, aiPlayers: [], teams, ...(layout ? { layout } : {}) });
       const distances = players.map((owner) => {
         const base = game.buildings.find((building) => building.owner === owner && building.kind === "townHall")!;
         return Math.min(...game.resources.filter((resource) => resource.kind === "goldMine" && !resource.id.endsWith("-main")).map((resource) => Math.hypot(resource.x - base.x, resource.y - base.y)));
       });
-      const northDistance = distances[0]!;
-      const southDistance = distances[1]!;
 
-      expect(Math.min(...distances), `${mapId} should not have a nearly free side-lane expansion`).toBeGreaterThanOrEqual(480);
-      expect(Math.abs(northDistance - southDistance), `${mapId} should keep side-lane natural distances comparable`).toBeLessThanOrEqual(450);
+      expect(Math.min(...distances), `${layout?.seed ?? "ladder"} should not have a nearly free expansion`).toBeGreaterThanOrEqual(480);
+      expect(Math.abs(distances[0]! - distances[1]!), `${layout?.seed ?? "ladder"} should keep the first expansion's distance the same from both starts`).toBeLessThanOrEqual(160);
     }
   });
 
-  it("guards both side-lane march mines in rich score maps", () => {
-    for (const mapId of RICH_SCORE_MAPS) {
-      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
-      const report = analyzeMapObjectives(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
-      const guardedIds = new Set(report.camps.flatMap((camp) => camp.guardedObjectiveIds));
-      const westCamp = report.camps.find((camp) => camp.guardedObjectiveIds.includes("gold-west-march"))!;
-      const eastCamp = report.camps.find((camp) => camp.guardedObjectiveIds.includes("gold-east-march"))!;
-      const westMine = game.resources.find((resource) => resource.id === "gold-west-march")!;
-      const eastMine = game.resources.find((resource) => resource.id === "gold-east-march")!;
-      const northBase = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall")!;
-      const southBase = game.buildings.find((building) => building.owner === "v1a" && building.kind === "townHall")!;
-
-      expect(guardedIds.has("gold-west-march"), `${mapId} west march mine should be guarded`).toBe(true);
-      expect(guardedIds.has("gold-east-march"), `${mapId} east march mine should be guarded`).toBe(true);
-      expect(Math.abs(Math.hypot(westMine.x - northBase.x, westMine.y - northBase.y) - Math.hypot(eastMine.x - southBase.x, eastMine.y - southBase.y)), `${mapId} side march mines should mirror start access`).toBeLessThanOrEqual(20);
-      expect(Math.abs(westCamp.power - eastCamp.power), `${mapId} side march guards should have comparable power`).toBeLessThanOrEqual(1);
-    }
-  });
-
-  it("keeps the first contested economy objective centered between 1v1 score starts", () => {
-    for (const mapId of RICH_SCORE_MAPS) {
-      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
-      const leftBase = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall")!;
-      const rightBase = game.buildings.find((building) => building.owner === "v1a" && building.kind === "townHall")!;
-      const contestedEconomy = game.resources.filter((resource) => !resource.id.endsWith("-main") && resource.id !== "gold-west-march" && resource.id !== "gold-east-march");
-      const leftDistance = Math.min(...contestedEconomy.map((resource) => Math.hypot(resource.x - leftBase.x, resource.y - leftBase.y)));
-      const rightDistance = Math.min(...contestedEconomy.map((resource) => Math.hypot(resource.x - rightBase.x, resource.y - rightBase.y)));
-
-      expect(Math.abs(leftDistance - rightDistance), `${mapId} should not let one score start reach the first contested economy objective much earlier`).toBeLessThanOrEqual(160);
-    }
-  });
-
-  it("keeps guarded rich mercenary camps inside the AI guard radius", () => {
-    for (const mapId of RICH_SCORE_MAPS) {
-      const game = createGame(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
-      const report = analyzeMapObjectives(mapId, { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" } });
-      const guardedMercenaryIds = new Set(report.camps.flatMap((camp) => camp.guardedObjectiveIds.filter((id) => id.startsWith("merc-camp-"))));
+  it("keeps guarded mercenary camps inside the AI guard radius", () => {
+    for (const { mapId, layout } of CREEP_MAPS) {
+      const options = { players: ["v2", "v1a"], aiPlayers: [], teams: { v2: "north", v1a: "south" }, ...(layout ? { layout } : {}) };
+      const game = createGame(mapId, options);
+      const report = analyzeMapObjectives(mapId, options);
+      const guardedMercenaryIds = new Set(report.camps.flatMap((camp) => camp.guardedObjectiveIds.filter((id) => game.mercenaryCamps.some((candidate) => candidate.id === id))));
 
       for (const camp of game.mercenaryCamps.filter((candidate) => guardedMercenaryIds.has(candidate.id))) {
         expect(neutralCreepsNear(game.units, camp, 260), `${mapId}:${camp.id} should not be reported as guarded while AI sees it as free`).not.toEqual([]);
@@ -138,35 +114,14 @@ describe("map neutral objective layout", () => {
     }
   });
 
-  it("keeps a broad rich official map family for v2 scoring without turning 1v1 into a neutral-camp sea", () => {
-    expect(RICH_SCORE_MAPS.length).toBe(RICH_SCORE_MAP_COUNT);
-    expect(RICH_SCORE_MAPS).not.toContain("stagHollow");
-    for (const mapId of RICH_SCORE_MAPS) {
-      const report = analyzeMapObjectives(mapId);
-      const game = createGame(mapId, { aiPlayers: [] });
-      const mercKinds = new Set(game.mercenaryCamps.map((camp) => camp.hireKind));
+  it("attaches every ladder map's treasure to a camp that is on the map", () => {
+    for (const { layout } of LADDER_LAYOUTS) {
+      const game = createGame("ladder", { aiPlayers: [], ...(layout ? { layout } : {}) });
       const unitIds = new Set(game.units.map((unit) => unit.id));
 
-      expect(report.players, `${mapId} should be a normal 1v1 scoring map by default`).toBe(2);
-      expect(report.camps.length, `${mapId} should have bounded 1v1 camp density`).toBeGreaterThanOrEqual(9);
-      expect(report.camps.length, `${mapId} should have bounded 1v1 camp density`).toBeLessThanOrEqual(14);
-      expect(report.guardedCamps, `${mapId} should have guarded economy/mercenary objectives`).toBeGreaterThanOrEqual(5);
-      expect(report.freeCamps, `${mapId} should leave room for army-vs-army play`).toBeLessThanOrEqual(6);
-      expect(report.carriedItems, `${mapId} should have item-routing AI without flooding the map`).toBeGreaterThanOrEqual(6);
-      expect(report.bands, `${mapId} should include green camps`).toMatchObject({ green: expect.any(Number) });
-      expect(report.bands.green, `${mapId} should include green camps`).toBeGreaterThan(0);
-      expect(report.bands.orange, `${mapId} should include yellow/orange camps`).toBeGreaterThan(0);
-      expect(report.bands.red, `${mapId} should include red camps`).toBeGreaterThan(0);
-      expect(mercKinds, `${mapId} should offer all three mercenary roles`).toEqual(new Set(["mercenary", "contractArcher", "fieldMedic"]));
-      expect(game.items.filter((item) => item.carrierId && !unitIds.has(item.carrierId)), `${mapId} should not have treasure attached to removed camps`).toEqual([]);
+      expect(game.items.length, `${layout?.seed ?? "ladder"} should carry treasure`).toBeGreaterThan(0);
+      expect(game.items.filter((item) => item.carrierId && !unitIds.has(item.carrierId)), `${layout?.seed ?? "ladder"} should not have treasure attached to missing camps`).toEqual([]);
     }
-  });
-
-  it("keeps side-biased rich maps out of the score pool", () => {
-    expect(RICH_SCORE_MAPS).not.toContain("stagHollow");
-    expect(RICH_SCORE_MAPS).not.toContain("willowCircuit");
-    expect(RICH_SCORE_MAPS).not.toContain("quarrySong");
-    expect(RICH_SCORE_MAPS).not.toContain("mistHarbor");
   });
 });
 

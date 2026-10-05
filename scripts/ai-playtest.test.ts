@@ -3,8 +3,14 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { createAiCrossRaceBenchmarkInput, createAiMeleeControlBenchmarkInput, createAiV5VsHybridBenchmarkInput } from "../src/ai/benchmark/control";
+import { createAiVersionBenchmarkInput } from "../src/ai/benchmark/presets";
 
 const tempDirs: string[] = [];
+// The ladder slots the replayed benchmarks draw for their seeds.
+const WILLOW_SLOTS = createAiVersionBenchmarkInput({ seed: "willow-27", mapCount: 2 }).selection.mapIds;
+const CONTROL_SLOT = createAiMeleeControlBenchmarkInput({ seed: "control-cli-seed", mapCount: 2 }).selection.mapIds[1]!;
+const CROSS_RACE_SLOT = createAiCrossRaceBenchmarkInput({ seed: "cross-race-cli-seed", mapCount: 2 }).selection.mapIds[0]!;
 
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
@@ -265,10 +271,12 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "benchmark.json");
 
-    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--from-benchmark", "sableRun 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2"));
+    const created = JSON.parse(runPlaytestCli("new", "--file", file, "--from-benchmark", `${WILLOW_SLOTS[0]} 1v2`, "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2"));
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
-    expect(created.id).toBe("interactive-sableRun-1v2");
+    expect(created.id).toBe(`interactive-${WILLOW_SLOTS[0]}-1v2`);
+    expect(persisted.session.save.snapshot.map.id).toBe("ladder");
+    expect(persisted.session.save.snapshot.map.terrain).toBeDefined();
     expect(created.players.v2).toMatchObject({ bases: 1, workers: 3 });
     expect(created.players.v1a).toMatchObject({ bases: 1, workers: 3 });
     expect(created.players.v1b).toMatchObject({ bases: 1, workers: 3 });
@@ -286,7 +294,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "benchmark-control.json");
 
-    runPlaytestCli("new", "--file", file, "--from-benchmark", "sableRun 1v1 control south", "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2", "--assist-you");
+    runPlaytestCli("new", "--file", file, "--from-benchmark", `${WILLOW_SLOTS[0]} 1v1 control south`, "--benchmark-seed", "willow-27", "--benchmark-map-count", "1", "--you", "v2", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.scriptedPlayers).toEqual(["v1a"]);
@@ -303,7 +311,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "control-benchmark-south.json");
 
-    runPlaytestCli("new", "--file", file, "--from-control-benchmark", "brackenFord 1v1 control south", "--control-seed", "control-cli-seed", "--control-map-count", "2", "--you", "v2", "--assist-you");
+    runPlaytestCli("new", "--file", file, "--from-control-benchmark", `${CONTROL_SLOT} 1v1 control south`, "--control-seed", "control-cli-seed", "--control-map-count", "2", "--you", "v2", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
@@ -320,7 +328,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "cross-race-benchmark.json");
 
-    runPlaytestCli("new", "--file", file, "--from-cross-race-benchmark", "glassmereFord ember south", "--cross-race-seed", "cross-race-cli-seed", "--cross-race-map-count", "2", "--you", "ember", "--enemy", "grove", "--assist-you");
+    runPlaytestCli("new", "--file", file, "--from-cross-race-benchmark", `${CROSS_RACE_SLOT} ember south`, "--cross-race-seed", "cross-race-cli-seed", "--cross-race-map-count", "2", "--you", "ember", "--enemy", "grove", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
@@ -337,7 +345,8 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "gauntlet-1v3.json");
 
-    runPlaytestCli("new", "--file", file, "--from-gauntlet", "internal-only 1v3 lichenCrown 1v3 probe", "--gauntlet-full", "--you", "v2", "--assist-you");
+    // The full gauntlet plays the slots in order: twelve score maps, then the 1v3 probes from ladder-13.
+    runPlaytestCli("new", "--file", file, "--from-gauntlet", "internal-only 1v3 ladder-13 1v3 probe", "--gauntlet-full", "--gauntlet-seed", "gauntlet-cli-full", "--you", "v2", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
@@ -357,12 +366,15 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "v5-hybrid.json");
 
+    const game = createAiV5VsHybridBenchmarkInput({ seed: "v5-hybrid-cli-seed", mapCount: 4 }).input.evaluations[0]!.matches.find((match) => match.name.endsWith(" v5 north"))!;
+    const order = Object.keys(game.agents);
+    const v3Race = game.agents.v3!.race!;
     runPlaytestCli(
       "new",
       "--file",
       file,
       "--from-v5-vs-hybrid-benchmark",
-      "thornedDelta v5 north",
+      game.name,
       "--v5-hybrid-seed",
       "v5-hybrid-cli-seed",
       "--v5-hybrid-map-count",
@@ -373,14 +385,13 @@ describe("AI playtest CLI", () => {
     );
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
+    expect(order[0]).toBe("v5");
     expect(persisted.session.scriptedPlayers.sort()).toEqual(["v3", "v4-tr"]);
-    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
-      { playerId: "v5", team: "north", race: "ember", controller: "human" },
-      { playerId: "v4-tr", team: "south", race: "grove", controller: "ai" },
-      { playerId: "v3", team: "south", race: "grove", controller: "ai" },
-    ]);
-    expect(persisted.runtime.controlledPlayers).toEqual(["v5", "v4-tr", "v3"]);
-    expect(persisted.runtime.versions).toMatchObject({ v5: "v5", "v4-tr": "v4-tr", v3: "v3-grove" });
+    expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual(
+      order.map((playerId) => ({ playerId, team: playerId === "v5" ? "north" : "south", race: game.agents[playerId]!.race, controller: playerId === "v5" ? "human" : "ai" })),
+    );
+    expect(persisted.runtime.controlledPlayers).toEqual(order);
+    expect(persisted.runtime.versions).toMatchObject({ v5: "v5", "v4-tr": "v4-tr", v3: `v3-${v3Race}` });
   });
 
   it("creates manual side-swapped map sessions with explicit teams", () => {
@@ -388,7 +399,7 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "manual-control-south.json");
 
-    runPlaytestCli("new", "--file", file, "--map", "amberReach", "--you", "v2", "--enemy", "v1a", "--you-team", "south", "--enemy-team", "north", "--you-race", "grove", "--enemy-race", "grove", "--assist-you");
+    runPlaytestCli("new", "--file", file, "--map", "ladder", "--you", "v2", "--enemy", "v1a", "--you-team", "south", "--enemy-team", "north", "--you-race", "grove", "--enemy-race", "grove", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.save.room.slots.map((slot: { playerId: string; team: string; race: string; controller: string }) => ({ playerId: slot.playerId, team: slot.team, race: slot.race, controller: slot.controller }))).toEqual([
@@ -403,7 +414,8 @@ describe("AI playtest CLI", () => {
     tempDirs.push(dir);
     const file = join(dir, "benchmark-disabled.json");
 
-    runPlaytestCli("new", "--file", file, "--from-benchmark", "silverRidge 1v2", "--benchmark-seed", "willow-27", "--benchmark-map-count", "2", "--you", "v2", "--assist-you");
+    // The second score map: the one whose V2 plays without worker harassment.
+    runPlaytestCli("new", "--file", file, "--from-benchmark", `${WILLOW_SLOTS[1]} 1v2`, "--benchmark-seed", "willow-27", "--benchmark-map-count", "2", "--you", "v2", "--assist-you");
     const persisted = JSON.parse(readFileSync(file, "utf8"));
 
     expect(persisted.session.scriptedPlayers).toEqual(["v1a", "v1b"]);
@@ -420,7 +432,7 @@ describe("AI playtest CLI", () => {
       "--file",
       file,
       "--from-control-benchmark",
-      "brackenFord 1v1 control south",
+      `${CONTROL_SLOT} 1v1 control south`,
       "--control-seed",
       "control-cli-seed",
       "--control-map-count",
@@ -497,7 +509,7 @@ describe("AI playtest CLI", () => {
 });
 
 function runPlaytestCli(...args: string[]) {
-  return execFileSync(join(process.cwd(), "node_modules", ".bin", "tsx"), ["scripts/ai-playtest.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-playtest.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
   });

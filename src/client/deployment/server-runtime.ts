@@ -132,7 +132,11 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };
   }
 
-  canForfeitMatch(): boolean {
+  canForfeitMatch(_roomId: string): boolean {
+    return false;
+  }
+
+  isLocalRoom(_roomId: string): boolean {
     return false;
   }
 

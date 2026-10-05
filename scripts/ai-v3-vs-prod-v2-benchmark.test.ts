@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
+import { createAiV3VsProdV2BenchmarkInput } from "../src/ai/benchmark/control";
 
 describe("AI V3 versus frozen production V2 benchmark CLI", () => {
   it("prints a dry-run manifest with random V3 races and Grove-only V2-prod", () => {
@@ -26,18 +27,21 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
   });
 
   it("prints focused match diagnostics for one V3 versus frozen V2-prod match", () => {
-    const output = JSON.parse(runV3BenchmarkCli(["--seed", "v3-frozen-smoke-2026-06-08", "--map-count", "2", "--match", "wildMarches v3 north", "--max-ticks", "1", "--workers", "1", "--details"]));
+    const { input, selection } = createAiV3VsProdV2BenchmarkInput({ seed: "v3-frozen-smoke-2026-06-08", mapCount: 2 });
+    const game = input.evaluations[0]!.matches[0]!;
+    const output = JSON.parse(runV3BenchmarkCli(["--seed", "v3-frozen-smoke-2026-06-08", "--map-count", "2", "--match", game.name, "--max-ticks", "1", "--workers", "1", "--details"]));
 
+    expect(game.name).toBe(`${selection.mapIds[0]} v3 north`);
     expect(output).toMatchObject({
       seed: "v3-frozen-smoke-2026-06-08",
-      selectedMapIds: ["wildMarches", "emberFen"],
+      selectedMapIds: selection.mapIds,
       matchCount: 1,
       matches: [
         {
-          name: "wildMarches v3 north",
-          mapId: "wildMarches",
+          name: game.name,
+          mapId: "ladder",
           players: {
-            v3: { team: "north", race: "ember" },
+            v3: { team: "north", race: game.agents.v3!.race },
             "v2-prod": { team: "south", race: "grove" },
           },
         },
@@ -80,7 +84,7 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
 });
 
 function runV3BenchmarkCli(args: string[], env: NodeJS.ProcessEnv = {}) {
-  return execFileSync("npx", ["tsx", "scripts/ai-v3-vs-prod-v2-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-v3-vs-prod-v2-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, ...env, FORCE_COLOR: "0" },

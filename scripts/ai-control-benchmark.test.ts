@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
+import { createAiMeleeControlBenchmarkInput } from "../src/ai/benchmark/control";
 
 describe("AI control benchmark CLI", () => {
   it("prints selected side-balanced matches without running simulations in dry-run mode", () => {
@@ -21,16 +22,25 @@ describe("AI control benchmark CLI", () => {
     expect(output.manifest.evaluations[0].matches[3].agents.v2.disabledBehaviors).toEqual(["workerHarassment"]);
     expect(output.selectedMapIds).toHaveLength(2);
     expect(output.matches).toEqual(output.selectedMapIds.flatMap((mapId: string) => [`${mapId} 1v1 control north`, `${mapId} 1v1 control south`]));
+    expect(output.manifest.evaluations[0].matches[0]).toMatchObject({ mapId: "ladder" });
+  });
+
+  it("runs only the games of the ladder slots named with --maps", () => {
+    const slot = createAiMeleeControlBenchmarkInput({ seed: "control-cli-seed", mapCount: 2 }).selection.mapIds[0]!;
+    const output = JSON.parse(runControlBenchmarkCli("--seed", "control-cli-seed", "--map-count", "2", "--maps", slot, "--max-ticks", "1", "--workers", "1", "--details"));
+
+    expect(output.matches.map((match: { name: string }) => match.name)).toEqual([`${slot} 1v1 control north`, `${slot} 1v1 control south`]);
   });
 
   it("prints focused match diagnostics with player benchmark metrics", () => {
-    const output = JSON.parse(runControlBenchmarkCli("--seed", "control-cli-seed", "--map-count", "2", "--match", "brackenFord 1v1 control south", "--max-ticks", "1", "--workers", "1", "--details"));
+    const slot = createAiMeleeControlBenchmarkInput({ seed: "control-cli-seed", mapCount: 2 }).selection.mapIds[1]!;
+    const output = JSON.parse(runControlBenchmarkCli("--seed", "control-cli-seed", "--map-count", "2", "--match", `${slot} 1v1 control south`, "--max-ticks", "1", "--workers", "1", "--details"));
 
     expect(output.matchCount).toBe(1);
     expect(output.matches).toHaveLength(1);
     expect(output.matches[0]).toMatchObject({
-      name: "brackenFord 1v1 control south",
-      mapId: "brackenFord",
+      name: `${slot} 1v1 control south`,
+      mapId: "ladder",
       players: {
         v2: {
           team: "south",
@@ -48,7 +58,7 @@ describe("AI control benchmark CLI", () => {
 });
 
 function runControlBenchmarkCli(...args: string[]) {
-  return execFileSync("npx", ["tsx", "scripts/ai-control-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-control-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

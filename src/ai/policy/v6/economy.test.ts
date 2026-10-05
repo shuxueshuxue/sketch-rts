@@ -1,0 +1,190 @@
+import { describe, expect, it } from "vitest";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from "../../../shared/catalog";
+import { snapshotGame } from "../../../shared/sim";
+import { sketchScene } from "../../../sdk/scene";
+import type { GameCommand, UnitKind } from "../../../shared/types";
+import { createAiPolicyMemory } from "../../memory";
+import { planV6Economy, rankV6Goals } from "./economy";
+
+const V6 = { version: "v2", requestedVersion: "v6" } as const;
+const V7 = { version: "v2", requestedVersion: "v7" } as const;
+
+type Base = { gold: number; buildings?: ("barracks" | "stables" | "sanctum")[]; army?: UnitKind[]; creep?: boolean; farms?: number; enemyAtBase?: number; enemyArchers?: number; enemyFootmen?: number; natural?: boolean; mainGold?: number; naturalHall?: boolean; thirdMine?: boolean; enemyPushing?: number; v7?: boolean };
+
+function base(name: string, options: Base & { phase?: number }) {
+  let scene = sketchScene(name)
+    .map("openClaims")
+    .replaceDefaults()
+    .player("v6", { team: "north", race: "grove" })
+    .player("v3", { team: "south", race: "grove" })
+    .player("v5", { team: "south", race: "grove" })
+    .playerState("v6", { gold: options.gold })
+    .townHall("v6", 600, 600, { id: "v6-hall" })
+    .goldMine("v6-mine", 600, 800, options.mainGold ?? 6_000)
+    .townHall("v3", 3_400, 3_300)
+    .townHall("v5", 3_400, 2_150);
+  (options.buildings ?? []).forEach((kind, index) => (scene = scene.building("v6", kind, 820, 460 + index * 110, { id: `v6-${kind}` })));
+  for (let index = 0; index < (options.farms ?? 3); index += 1) scene = scene.building("v6", "farm", 420 + index * 70, 420);
+  for (let index = 0; index < 6; index += 1) scene = scene.worker("v6", 560 + index * 20, 700, { id: `worker-${index}` });
+  (options.army ?? []).forEach((kind, index) => (scene = scene.unit("v6", kind, 900 + index * 30, 900)));
+  for (let index = 0; index < (options.enemyAtBase ?? 0); index += 1) scene = scene.unit("v3", "footman", 950 + index * 30, 1_150);
+  for (let index = 0; index < (options.enemyArchers ?? 0); index += 1) scene = scene.unit("v5", "archer", 3_200 + index * 30, 2_300);
+  for (let index = 0; index < (options.enemyFootmen ?? 0); index += 1) scene = scene.unit("v3", "footman", 3_200 + index * 30, 3_150);
+  // On the way in: within 1300 of the hall, farther than 750 from every building.
+  for (let index = 0; index < (options.enemyPushing ?? 0); index += 1) scene = scene.unit("v3", "footman", 600 + index * 30, 1_800);
+  if (options.natural) scene = scene.goldMine("v6-natural", 700, 1_350, 6_000);
+  if (options.naturalHall) scene = scene.townHall("v6", 700, 1_550, { id: "v6-natural-hall" });
+  if (options.thirdMine) scene = scene.goldMine("v6-third", 1_500, 900, 6_000);
+  if (options.creep) scene = scene.unit("neutral", "wildling", 900, 1_050, { id: "near-creep" });
+  const game = scene.build().createGame();
+  const memory = createAiPolicyMemory();
+  memory.v6 = { doctrine: { profileId: "steady", strategyId: "grove-spirit-host", decidedTick: 0 }, ...(options.phase !== undefined ? { phase: options.phase } : {}) };
+  const version = options.v7 ? V7 : V6;
+  return {
+    game,
+    memory,
+    plan: () => planV6Economy(snapshotGame(game), "v6", { ...version, teams: game.teams, memory }),
+    goals: () => rankV6Goals(snapshotGame(game), "v6", { ...version, teams: game.teams, memory }).map((candidate) => candidate.id),
+  };
+}
+
+// Farms beside the one hall that leave the cap one farm short of the summoners' bar.
+const ONE_FARM_SHORT = Math.ceil((requiredSupplyCap("summoner") - BUILDING_DEFS.townHall.supplyProvided) / BUILDING_DEFS.farm.supplyProvided) - 1;
+
+function of<T extends GameCommand["type"]>(commands: GameCommand[], type: T) {
+  return commands.filter((command): command is Extract<GameCommand, { type: T }> => command.type === type);
+}
+
+describe("v6 economy", () => {
+  it("opens one building at a time, preserving the remaining miners until the barracks stands", () => {
+    const { plan } = base("v6-econ-opening", { gold: 450, farms: ONE_FARM_SHORT - 1 });
+    expect(of(plan(), "build").map((command) => command.buildingKind)).toEqual(["barracks"]);
+    const next = base("v6-econ-opening-farm", { gold: 450, farms: ONE_FARM_SHORT - 1, buildings: ["barracks"] });
+    expect(of(next.plan(), "build").map((command) => command.buildingKind)).toEqual(["farm"]);
+  });
+
+  it("puts the sanctum up once one more farm reaches the casters' bar, and trains footmen in the summoners' place until then", () => {
+    const { plan } = base("v6-econ-sanctum-timing", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT });
+    const commands = plan();
+    expect(of(commands, "build").map((command) => command.buildingKind)).toEqual(["farm"]);
+    const ready = base("v6-econ-sanctum-ready", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT + 1 });
+    expect(of(ready.plan(), "build").map((command) => command.buildingKind)).toEqual(["sanctum"]);
+    expect(of(commands, "train").map((command) => command.unitKind)).toContain("footman");
+    const early = base("v6-econ-sanctum-early", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT - 1 }).plan();
+    expect(of(early, "build").map((command) => command.buildingKind)).not.toContain("sanctum");
+  });
+
+  it("moves to the second phase once most of its summoners stand, and asks for a second sanctum", () => {
+    const { plan, memory } = base("v6-econ-phase-two", { gold: 600, buildings: ["barracks", "sanctum"], farms: 6, army: ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner"] });
+    expect(of(plan(), "build").map((command) => command.buildingKind)).toContain("sanctum");
+    expect(memory.v6?.phase).toBe(1);
+    expect(memory.v6?.plays?.["phase:2"]).toBe(1);
+  });
+
+  it("still takes the natural in the second phase, ahead of more summoners", () => {
+    // Gold covers one hall and the worker trained ahead of it: before the natural was restated in phase two, a summoner
+    // (56) took the gold ahead of the third-base want (40) every time.
+    const army: UnitKind[] = ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner", "summoner"];
+    const { plan } = base("v6-econ-natural", { gold: BUILDING_DEFS.townHall.cost + UNIT_DEFS.worker.cost, buildings: ["sanctum"], army, farms: 6, natural: true, phase: 1 });
+    expect(of(plan(), "build").map((command) => command.buildingKind)).toContain("townHall");
+  });
+
+  it("takes another base when its main's mine runs dry, though the dry hall still stands", () => {
+    // Two halls meet the opening's two bases only while both still have gold: counting the dry main left eleven workers
+    // idle when V6's main ran out.
+    const twoHalls = { gold: 1_000, buildings: ["sanctum" as const], army: ["summoner", "summoner", "summoner"] as UnitKind[], farms: 5, natural: true, naturalHall: true, thirdMine: true };
+    const { plan: dry } = base("v6-econ-dry-main", { ...twoHalls, mainGold: 0 });
+    expect(of(dry(), "build").map((command) => command.buildingKind)).toContain("townHall");
+    const { plan: rich } = base("v6-econ-rich-main", twoHalls);
+    expect(of(rich(), "build").map((command) => command.buildingKind)).not.toContain("townHall");
+  });
+
+  it("puts a tower up at a base under attack ahead of everything but farms, and never where it reaches a standing camp", () => {
+    const { plan, memory } = base("v6-econ-under-fire", { gold: 600, buildings: ["barracks"], enemyAtBase: 3, creep: true });
+    const [tower] = of(plan(), "build").filter((command) => command.buildingKind === "defenseTower");
+    expect(tower).toBeDefined();
+    expect(Math.hypot(tower!.x - 900, tower!.y - 1_050)).toBeGreaterThan(480);
+    expect(memory.v6?.plays?.["tower:underFire"]).toBe(1);
+  });
+
+  it("trains the next base's workers ahead of its hall, but no faster than the army grows", () => {
+    const { plan } = base("v6-econ-workers", { gold: 500, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner"], farms: ONE_FARM_SHORT + 1 });
+    expect(of(plan(), "train").map((command) => command.unitKind)).toContain("worker");
+    const { plan: bare } = base("v6-econ-workers-bare", { gold: 500, buildings: ["sanctum"], farms: ONE_FARM_SHORT + 1 });
+    expect(of(bare(), "train").map((command) => command.unitKind)).not.toContain("worker");
+  });
+
+  it("keeps training workers without an army while the phase's units still wait on their tier", () => {
+    const { plan } = base("v6-econ-workers-tier", { gold: 500, buildings: ["sanctum"], farms: ONE_FARM_SHORT - 1 });
+    expect(of(plan(), "train").map((command) => command.unitKind)).toContain("worker");
+  });
+
+  it("V7 opens on footmen and the natural, buying no farm ahead of need; V6 goes for the casters' bar", () => {
+    const v7 = base("v7-econ-opening", { gold: 1_000, natural: true, v7: true });
+    expect(v7.goals()).toEqual(expect.arrayContaining(["build:barracks", "bases:2"]));
+    expect(v7.goals()).not.toContain("farm:tier");
+    expect(base("v6-econ-opening-tier", { gold: 1_000, natural: true }).goals()).toContain("farm:tier");
+  });
+
+  it("V7 leaves its opening only once the natural stands as well as the footmen", () => {
+    const footmen: UnitKind[] = ["footman", "footman", "footman", "footman", "footman"];
+    const oneBase = base("v7-econ-one-base", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    oneBase.plan();
+    expect(oneBase.memory.v6?.phase ?? 0).toBe(0);
+    const twoBases = base("v7-econ-two-bases", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, naturalHall: true, v7: true });
+    twoBases.plan();
+    expect(twoBases.memory.v6?.phase).toBe(1);
+  });
+
+  it("V7 puts a tower up ahead of an army that outweighs its own and is still on the way; V6 waits for it to arrive", () => {
+    const v7 = base("v7-econ-tower-ahead", { gold: 600, buildings: ["barracks"], enemyPushing: 3, v7: true });
+    expect(of(v7.plan(), "build").map((command) => command.buildingKind)).toContain("defenseTower");
+    expect(v7.memory.v6?.plays?.["tower:ahead"]).toBe(1);
+    const v6 = base("v6-econ-tower-waits", { gold: 600, buildings: ["barracks"], enemyPushing: 3 });
+    expect(of(v6.plan(), "build").map((command) => command.buildingKind)).not.toContain("defenseTower");
+  });
+
+  it("V7 leaves its opening at 5:00 even when the natural has not fallen", () => {
+    const footmen: UnitKind[] = ["footman", "footman", "footman", "footman", "footman"];
+    const early = base("v7-econ-opening-early", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    early.game.tick = 290 * 20;
+    early.plan();
+    expect(early.memory.v6?.phase ?? 0).toBe(0);
+    const due = base("v7-econ-opening-due", { gold: 0, buildings: ["barracks"], army: footmen, natural: true, v7: true });
+    due.game.tick = 300 * 20;
+    due.plan();
+    expect(due.memory.v6?.phase).toBe(1);
+  });
+
+  it("V7 trains no workers for a base it has not started, where V6 trains that base's five ahead", () => {
+    const v7 = base("v7-econ-no-early-workers", { gold: 500, buildings: ["barracks"], natural: true, v7: true });
+    expect(of(v7.plan(), "train").map((command) => command.unitKind)).not.toContain("worker");
+    const v6 = base("v6-econ-early-workers", { gold: 500, buildings: ["barracks"], natural: true });
+    expect(of(v6.plan(), "train").map((command) => command.unitKind)).toContain("worker");
+  });
+
+  it("builds a farm first when supply runs short", () => {
+    const { plan } = base("v6-econ-farm", { gold: 400, buildings: ["barracks"], army: ["footman", "footman", "footman", "footman", "footman", "footman", "footman"], farms: 0 });
+    expect(of(plan(), "build")[0]).toMatchObject({ buildingKind: "farm" });
+  });
+
+  it("raises a goal's priority the longer it waits, and keeps the wait through a moment's absence", () => {
+    const { game, memory } = base("v6-econ-ageing", { gold: 0 });
+    const options = () => ({ ...V6, teams: game.teams, memory });
+    const priority = (id: string) => rankV6Goals(snapshotGame(game), "v6", options()).find((candidate) => candidate.id === id)?.priority;
+    const waitSeconds = (seconds: number) => {
+      for (let second = 0; second < seconds; second += 1) {
+        game.tick += 20;
+        priority("farm:tier");
+      }
+    };
+    const start = priority("farm:tier")!;
+    waitSeconds(60);
+    expect(priority("farm:tier")).toBe(start + 10);
+    // Unseen for three seconds it keeps its wait; unseen for twelve it starts over.
+    game.tick += 3 * 20;
+    expect(priority("farm:tier")).toBe(start + 10);
+    game.tick += 12 * 20;
+    expect(priority("farm:tier")).toBe(start);
+  });
+});

@@ -1,0 +1,2174 @@
+[
+  {
+    "map": "brokenSea",
+    "players": {
+      "p1": {
+        "gold": 79,
+        "workers": [],
+        "townHalls": []
+      },
+      "p2": {
+        "gold": 0,
+        "workers": [
+          {
+            "id": "unit-p2-worker-1043",
+            "x": 903.9856657989723,
+            "y": 3561.5057174636822,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p2-worker-5313",
+            "x": 865.4657790761374,
+            "y": 3572.779053108395,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p2-worker-8312",
+            "x": 932.1443691306214,
+            "y": 3570.703578759035,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p2-worker-9304",
+            "x": 946.838037716946,
+            "y": 3544.301904320217,
+            "order": {
+              "type": "attack",
+              "targetId": "unit-p4-siegeRam-23870"
+            }
+          }
+        ],
+        "townHalls": []
+      },
+      "p3": {
+        "gold": 48,
+        "workers": [],
+        "townHalls": []
+      },
+      "p4": {
+        "gold": 2439,
+        "workers": [
+          {
+            "id": "unit-p4-worker-1074",
+            "x": 2547.847515607228,
+            "y": 3213.6407264158224,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 6
+            }
+          },
+          {
+            "id": "unit-p4-worker-1323",
+            "x": 3253.335371260984,
+            "y": 3634.7144801104396,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 33
+            }
+          },
+          {
+            "id": "unit-p4-worker-7930",
+            "x": 3419.085105324775,
+            "y": 2575.1501510260136,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 75
+            }
+          },
+          {
+            "id": "unit-p4-worker-8645",
+            "x": 3612.7339928844153,
+            "y": 3375.8138503198456,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-7",
+              "phase": "gather",
+              "timer": 5
+            }
+          },
+          {
+            "id": "unit-p4-worker-8077",
+            "x": 3612.7471226022562,
+            "y": 3375.813977180215,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-7",
+              "phase": "gather",
+              "timer": 69
+            }
+          },
+          {
+            "id": "unit-p4-worker-16639",
+            "x": 3681.6354741545374,
+            "y": 2931.10926112944,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "gather",
+              "timer": 65
+            }
+          },
+          {
+            "id": "unit-p4-worker-1045",
+            "x": 3681.7074337488034,
+            "y": 2931.1044354320934,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "gather",
+              "timer": 33
+            }
+          },
+          {
+            "id": "unit-p4-worker-2829",
+            "x": 3680.9789645070487,
+            "y": 2931.1532874597174,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "gather",
+              "timer": 97
+            }
+          },
+          {
+            "id": "unit-p4-worker-6450",
+            "x": 3612.7241738600833,
+            "y": 3375.813755447658,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-7",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-1024",
+            "x": 3612.7423829548825,
+            "y": 3375.813931385368,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-7",
+              "phase": "gather",
+              "timer": 37
+            }
+          },
+          {
+            "id": "unit-p4-worker-17843",
+            "x": 3680.196644801181,
+            "y": 2931.205750764537,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "gather",
+              "timer": 1
+            }
+          },
+          {
+            "id": "unit-p4-worker-18514",
+            "x": 2976.028141588074,
+            "y": 2508.205496933529,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 9
+            }
+          },
+          {
+            "id": "unit-p4-worker-7443",
+            "x": 3418.456564599374,
+            "y": 2575.1246111082237,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-17751",
+            "x": 3419.2226848956016,
+            "y": 2575.1557413891937,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 11
+            }
+          },
+          {
+            "id": "unit-p4-worker-18718",
+            "x": 3650.976348083201,
+            "y": 2974.571582999305,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-19055",
+            "x": 3597.269942053224,
+            "y": 3341.8230248326754,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-7",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-19110",
+            "x": 3252.736246948119,
+            "y": 3634.775471435197,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 97
+            }
+          },
+          {
+            "id": "unit-p4-worker-18513",
+            "x": 3252.242874345475,
+            "y": 3634.8256971529454,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 1
+            }
+          },
+          {
+            "id": "unit-p4-worker-19273",
+            "x": 3251.2737435252384,
+            "y": 3634.9243554302348,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 65
+            }
+          },
+          {
+            "id": "unit-p4-worker-19030",
+            "x": 3418.4620941377616,
+            "y": 2575.124835793674,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 43
+            }
+          },
+          {
+            "id": "unit-p4-worker-19272",
+            "x": 2811.114476125364,
+            "y": 3568.864529621963,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "return",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-21022",
+            "x": 3410.602193941996,
+            "y": 2596.607811540246,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-21060",
+            "x": 2987.6031068019306,
+            "y": 2509.1210595665443,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-20000",
+            "x": 2975.070410382509,
+            "y": 2508.1297418113245,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 43
+            }
+          },
+          {
+            "id": "unit-p4-worker-20812",
+            "x": 2975.852190851325,
+            "y": 2508.191579490423,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 75
+            }
+          },
+          {
+            "id": "unit-p4-worker-19780",
+            "x": 2616.4132523739254,
+            "y": 2768.209941193232,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 57
+            }
+          },
+          {
+            "id": "unit-p4-worker-20971",
+            "x": 3232.301176312672,
+            "y": 3675.500699192116,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "toMine",
+              "timer": 0
+            }
+          }
+        ],
+        "townHalls": [
+          {
+            "id": "building-p4-townhall",
+            "x": 5136,
+            "y": 2576,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-4588",
+            "x": 3792,
+            "y": 2928,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-15917",
+            "x": 3696,
+            "y": 3376,
+            "complete": true,
+            "hp": 837
+          },
+          {
+            "id": "building-p4-townHall-18322",
+            "x": 3504,
+            "y": 2576,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-18978",
+            "x": 3344,
+            "y": 3632,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-19652",
+            "x": 3088,
+            "y": 2512,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-20404",
+            "x": 2704,
+            "y": 2768,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-21289",
+            "x": 2640,
+            "y": 3216,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-21869",
+            "x": 2896,
+            "y": 3568,
+            "complete": true,
+            "hp": 900
+          }
+        ]
+      },
+      "player": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy2": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      }
+    },
+    "versions": [
+      "v5",
+      "v7",
+      "v8",
+      "v7"
+    ],
+    "tick": 49752,
+    "winner": "p4",
+    "errors": {},
+    "born": {
+      "worker": 78,
+      "ogreWarrior": 8,
+      "transport": 16,
+      "warship": 20,
+      "emberRavager": 26,
+      "lancer": 10,
+      "fireShip": 5,
+      "bombardShip": 2,
+      "cutter": 7,
+      "footman": 9,
+      "pyreCaller": 24,
+      "spirit": 390,
+      "archer": 4,
+      "priest": 1,
+      "siegeRam": 9,
+      "carrier": 1
+    },
+    "commands": {
+      "mine": 146,
+      "train:worker": 66,
+      "build": 71,
+      "train:transport": 16,
+      "move": 17405,
+      "board": 67,
+      "stop": 55,
+      "unload": 59,
+      "train:warship": 20,
+      "attack": 647,
+      "train:emberRavager": 26,
+      "train:lancer": 10,
+      "attackMove": 853,
+      "train:fireShip": 5,
+      "train:bombardShip": 2,
+      "cast:incendiaryFlume": 36,
+      "cast:siegeBarrage": 14,
+      "train:cutter": 7,
+      "train:footman": 10,
+      "train:pyreCaller": 24,
+      "cast:cinderSoul": 390,
+      "repair": 2,
+      "train:archer": 4,
+      "train:priest": 1,
+      "cast:heal": 3,
+      "train:siegeRam": 9,
+      "train:carrier": 1,
+      "cast:ramBreach": 18
+    },
+    "landed": 284,
+    "resources": [
+      {
+        "id": "gold-p1-main",
+        "x": 3738.302194011249,
+        "y": 5131.548351624576,
+        "amount": 0
+      },
+      {
+        "id": "gold-p2-main",
+        "x": 1177.4516483754242,
+        "y": 3573.3021940112494,
+        "amount": 0
+      },
+      {
+        "id": "gold-p3-main",
+        "x": 2735.6978059887506,
+        "y": 1012.4516483754242,
+        "amount": 0
+      },
+      {
+        "id": "gold-p4-main",
+        "x": 5296.548351624576,
+        "y": 2570.69780598875,
+        "amount": 0
+      },
+      {
+        "id": "gold-mainland-0",
+        "x": 3210.039734582808,
+        "y": 3639.1220098676367,
+        "amount": 4990
+      },
+      {
+        "id": "gold-mainland-1",
+        "x": 2768.5930134591445,
+        "y": 3570.624651334245,
+        "amount": 8240
+      },
+      {
+        "id": "gold-mainland-2",
+        "x": 2504.8779901323633,
+        "y": 3210.039734582808,
+        "amount": 8250
+      },
+      {
+        "id": "gold-mainland-3",
+        "x": 2573.375348665755,
+        "y": 2768.5930134591445,
+        "amount": 8210
+      },
+      {
+        "id": "gold-mainland-4",
+        "x": 2933.960265417192,
+        "y": 2504.8779901323633,
+        "amount": 6180
+      },
+      {
+        "id": "gold-mainland-5",
+        "x": 3375.4069865408555,
+        "y": 2573.375348665755,
+        "amount": 4640
+      },
+      {
+        "id": "gold-mainland-6",
+        "x": 3639.1220098676367,
+        "y": 2933.960265417192,
+        "amount": 450
+      },
+      {
+        "id": "gold-mainland-7",
+        "x": 3570.624651334245,
+        "y": 3375.4069865408555,
+        "amount": 3710
+      }
+    ]
+  },
+  {
+    "map": "ladder",
+    "players": {
+      "p1": {
+        "gold": 47,
+        "workers": [
+          {
+            "id": "unit-p1-worker-3",
+            "x": 2361.896588871097,
+            "y": 2131.03540581713,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-2392",
+            "x": 2843.0953323210974,
+            "y": 2989.1593265810225,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 5
+            }
+          },
+          {
+            "id": "unit-p1-worker-2934",
+            "x": 2196.420868674633,
+            "y": 2799.893352514012,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-3494",
+            "x": 2179.7056499998357,
+            "y": 2799.8287153784763,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 13
+            }
+          },
+          {
+            "id": "unit-p1-worker-3543",
+            "x": 2178.377717606934,
+            "y": 2799.823580312778,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 77
+            }
+          },
+          {
+            "id": "unit-p1-worker-5057",
+            "x": 3026.9356096317592,
+            "y": 2320.1348169407484,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 42
+            }
+          },
+          {
+            "id": "unit-p1-worker-5094",
+            "x": 2178.375685663929,
+            "y": 2799.823572455329,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "gather",
+              "timer": 45
+            }
+          },
+          {
+            "id": "unit-p1-worker-5131",
+            "x": 2159.454454748622,
+            "y": 2764.667796415952,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-0",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-5312",
+            "x": 2842.900792963359,
+            "y": 2989.1328912034805,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-2709",
+            "x": 2842.8306676747234,
+            "y": 2989.1233620855605,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 37
+            }
+          },
+          {
+            "id": "unit-p1-worker-1013",
+            "x": 2841.7649111078936,
+            "y": 2988.9785395800322,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 69
+            }
+          },
+          {
+            "id": "unit-p1-worker-1038",
+            "x": 2361.1074300532764,
+            "y": 2131.1437790113073,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "gather",
+              "timer": 45
+            }
+          },
+          {
+            "id": "unit-p1-worker-2231",
+            "x": 3026.133904609833,
+            "y": 2320.1385356982064,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-3477",
+            "x": 2363.418044444768,
+            "y": 2130.826468152627,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "gather",
+              "timer": 77
+            }
+          },
+          {
+            "id": "unit-p1-worker-1050",
+            "x": 2363.4890835074243,
+            "y": 2130.8167125369546,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "gather",
+              "timer": 13
+            }
+          },
+          {
+            "id": "unit-p1-worker-2003",
+            "x": 2363.058353145331,
+            "y": 2131.701444073908,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-1",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-2",
+            "x": 2840.872507075727,
+            "y": 2988.9324050477735,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-1235",
+            "x": 3025.995492141348,
+            "y": 2320.1391777328517,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 74
+            }
+          },
+          {
+            "id": "unit-p1-worker-3536",
+            "x": 3026.5158197583137,
+            "y": 2320.136764161584,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 10
+            }
+          },
+          {
+            "id": "unit-p1-worker-5009",
+            "x": 3026.4734340938166,
+            "y": 2321.142514616505,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-6044",
+            "x": 1007.9460425668802,
+            "y": 3682.528703705282,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-1021",
+            "x": 1930.2055518308591,
+            "y": 2891.980929073148,
+            "order": {
+              "type": "idle"
+            }
+          }
+        ],
+        "townHalls": [
+          {
+            "id": "building-p1-townhall",
+            "x": 1008,
+            "y": 3440,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-2038",
+            "x": 2288,
+            "y": 2800,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-3399",
+            "x": 2928,
+            "y": 2992,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-3870",
+            "x": 2448,
+            "y": 2128,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-4732",
+            "x": 3120,
+            "y": 2320,
+            "complete": true,
+            "hp": 900
+          }
+        ]
+      },
+      "p2": {
+        "gold": 20,
+        "workers": [],
+        "townHalls": []
+      },
+      "player": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy2": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      }
+    },
+    "versions": [
+      "v8",
+      "v5"
+    ],
+    "layout": {
+      "seed": "unseen-ferry-a",
+      "idea": "islandStarts",
+      "size": 5120
+    },
+    "tick": 31515,
+    "winner": "p1",
+    "errors": {},
+    "born": {
+      "worker": 40,
+      "ogreWarrior": 4,
+      "transport": 8,
+      "warship": 2,
+      "lancer": 9,
+      "cutter": 3,
+      "sparkArcher": 15,
+      "emberAcolyte": 1,
+      "footman": 5,
+      "priest": 4,
+      "knight": 6,
+      "siegeRam": 3,
+      "bombardShip": 1,
+      "carrier": 1
+    },
+    "commands": {
+      "mine": 83,
+      "train:worker": 34,
+      "build": 48,
+      "train:transport": 8,
+      "board": 18,
+      "stop": 13,
+      "unload": 14,
+      "train:warship": 2,
+      "move": 2998,
+      "train:lancer": 9,
+      "attackMove": 307,
+      "attack": 128,
+      "train:cutter": 3,
+      "train:sparkArcher": 15,
+      "train:emberAcolyte": 1,
+      "cast:emberMend": 5,
+      "train:footman": 5,
+      "train:priest": 4,
+      "train:knight": 6,
+      "setAutocast": 6,
+      "train:siegeRam": 3,
+      "repair": 1,
+      "train:bombardShip": 1,
+      "train:carrier": 1,
+      "research": 1,
+      "cast:siegeBarrage": 6,
+      "train:witch": 1
+    },
+    "landed": 40,
+    "resources": [
+      {
+        "id": "gold-p1-main",
+        "x": 1187.90741575175,
+        "y": 3430.3535761109024,
+        "amount": 0
+      },
+      {
+        "id": "gold-p2-main",
+        "x": 4262.09258424825,
+        "y": 1689.6464238890976,
+        "amount": 0
+      },
+      {
+        "id": "gold-mainland-0",
+        "x": 2136.742621728743,
+        "y": 2799.6625789290892,
+        "amount": 4160
+      },
+      {
+        "id": "gold-mainland-1",
+        "x": 2320.3374210709108,
+        "y": 2136.742621728743,
+        "amount": 7210
+      },
+      {
+        "id": "gold-mainland-2",
+        "x": 2983.257378271257,
+        "y": 2320.3374210709108,
+        "amount": 7750
+      },
+      {
+        "id": "gold-mainland-3",
+        "x": 2799.6625789290892,
+        "y": 2983.257378271257,
+        "amount": 6870
+      }
+    ]
+  },
+  {
+    "map": "ladder",
+    "players": {
+      "p1": {
+        "gold": 0,
+        "workers": [],
+        "townHalls": []
+      },
+      "p2": {
+        "gold": 0,
+        "workers": [
+          {
+            "id": "unit-p2-worker-2",
+            "x": 6080.725989488833,
+            "y": 4333.14876076557,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p2-worker-1045",
+            "x": 6147.786993532354,
+            "y": 4345.770869157751,
+            "order": {
+              "type": "idle"
+            }
+          }
+        ],
+        "townHalls": []
+      },
+      "p3": {
+        "gold": 11,
+        "workers": [],
+        "townHalls": []
+      },
+      "p4": {
+        "gold": 109,
+        "workers": [
+          {
+            "id": "unit-p4-worker-6175",
+            "x": 3021.7618462367295,
+            "y": 3891.993205295982,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 19
+            }
+          },
+          {
+            "id": "unit-p4-worker-11690",
+            "x": 3970.2781723012063,
+            "y": 4178.015509392386,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-11741",
+            "x": 2977.688062893256,
+            "y": 3376.8574686183815,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-11792",
+            "x": 3020.0539599755703,
+            "y": 3892.1923965406427,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 83
+            }
+          },
+          {
+            "id": "unit-p4-worker-12232",
+            "x": 4275.314184678133,
+            "y": 3791.335890031425,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12255",
+            "x": 3020.7789736863165,
+            "y": 3892.10783799203,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "gather",
+              "timer": 51
+            }
+          },
+          {
+            "id": "unit-p4-worker-12274",
+            "x": 3038.216138599441,
+            "y": 3890.0741368016393,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12434",
+            "x": 3426.044959109502,
+            "y": 4238.420152128751,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12450",
+            "x": 3418.9064232127084,
+            "y": 4237.611999660487,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 89
+            }
+          },
+          {
+            "id": "unit-p4-worker-12465",
+            "x": 3418.9045278951517,
+            "y": 4237.6117850919,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 57
+            }
+          },
+          {
+            "id": "unit-p4-worker-1133",
+            "x": 4275.389974171709,
+            "y": 3791.337644646298,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 70
+            }
+          },
+          {
+            "id": "unit-p4-worker-1046",
+            "x": 3939.429861946618,
+            "y": 4182.546615643224,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 48
+            }
+          },
+          {
+            "id": "unit-p4-worker-3225",
+            "x": 3940.320804015204,
+            "y": 4182.415750998461,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 80
+            }
+          },
+          {
+            "id": "unit-p4-worker-6019",
+            "x": 3937.8616270176376,
+            "y": 4182.776963399967,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "gather",
+              "timer": 16
+            }
+          },
+          {
+            "id": "unit-p4-worker-1",
+            "x": 3418.795421192466,
+            "y": 4237.598273684838,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "gather",
+              "timer": 25
+            }
+          },
+          {
+            "id": "unit-p4-worker-2",
+            "x": 3939.9985159967873,
+            "y": 4180.930843174707,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-3",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-1076",
+            "x": 4275.287007728006,
+            "y": 3791.3352608534396,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 38
+            }
+          },
+          {
+            "id": "unit-p4-worker-1024",
+            "x": 4274.658160149259,
+            "y": 3791.320702301031,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "gather",
+              "timer": 6
+            }
+          },
+          {
+            "id": "unit-p4-worker-12822",
+            "x": 4191.394451260608,
+            "y": 3796.628019738725,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12208",
+            "x": 3149.7350105588616,
+            "y": 3480.6126950103776,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-11831",
+            "x": 3117.388803341686,
+            "y": 3465.155897856612,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-11624",
+            "x": 3414.522496447941,
+            "y": 4213.6954385825775,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-4",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12418",
+            "x": 3016.4669161621755,
+            "y": 3873.787166354257,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-5",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-6836",
+            "x": 3091.026109610408,
+            "y": 3452.4194982711465,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-12739",
+            "x": 3114.50814612061,
+            "y": 3463.7908600741957,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-mainland-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p4-worker-3",
+            "x": 5626.428603406407,
+            "y": 4850.458175327259,
+            "order": {
+              "type": "idle"
+            }
+          }
+        ],
+        "townHalls": [
+          {
+            "id": "building-p4-townhall",
+            "x": 1232,
+            "y": 2832,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-4040",
+            "x": 3120,
+            "y": 3888,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-10503",
+            "x": 3504,
+            "y": 4240,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-11368",
+            "x": 4048,
+            "y": 4176,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-12031",
+            "x": 4368,
+            "y": 3792,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p4-townHall-13811",
+            "x": 3088,
+            "y": 3376,
+            "complete": true,
+            "hp": 900
+          }
+        ]
+      },
+      "player": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy2": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      }
+    },
+    "versions": [
+      "v8",
+      "v7",
+      "v5",
+      "v8"
+    ],
+    "layout": {
+      "seed": "unseen-ferry-b",
+      "idea": "islandStarts",
+      "size": 7168
+    },
+    "tick": 52560,
+    "winner": "p4",
+    "errors": {},
+    "born": {
+      "worker": 58,
+      "ogreWarrior": 8,
+      "transport": 9,
+      "warship": 15,
+      "lancer": 9,
+      "emberRavager": 39,
+      "fireShip": 4,
+      "cutter": 4,
+      "priest": 2,
+      "pyreCaller": 2,
+      "spirit": 12,
+      "raider": 1,
+      "cinderRunner": 5,
+      "emberAcolyte": 4,
+      "ashChieftain": 8,
+      "bombardShip": 1,
+      "carrier": 1,
+      "siegeRam": 1
+    },
+    "commands": {
+      "mine": 125,
+      "train:worker": 46,
+      "build": 72,
+      "train:transport": 9,
+      "move": 7292,
+      "board": 47,
+      "stop": 37,
+      "train:warship": 15,
+      "unload": 40,
+      "attack": 525,
+      "train:lancer": 9,
+      "train:emberRavager": 39,
+      "attackMove": 322,
+      "train:fireShip": 4,
+      "cast:incendiaryFlume": 21,
+      "train:cutter": 4,
+      "train:priest": 2,
+      "cast:heal": 6,
+      "train:pyreCaller": 2,
+      "cast:cinderSoul": 11,
+      "train:raider": 1,
+      "setAutocast": 1,
+      "cast:charge": 1,
+      "train:cinderRunner": 5,
+      "repair": 3,
+      "train:emberAcolyte": 4,
+      "cast:emberMend": 2,
+      "train:ashChieftain": 8,
+      "train:bombardShip": 1,
+      "train:carrier": 1,
+      "cast:siegeBarrage": 18,
+      "research": 4,
+      "train:siegeRam": 2
+    },
+    "landed": 101,
+    "resources": [
+      {
+        "id": "gold-p1-main",
+        "x": 4498.394100391065,
+        "y": 1227.3202076015787,
+        "amount": 0
+      },
+      {
+        "id": "gold-p2-main",
+        "x": 6105.679792398421,
+        "y": 4333.394100391065,
+        "amount": 0
+      },
+      {
+        "id": "gold-p3-main",
+        "x": 2999.605899608935,
+        "y": 5940.679792398421,
+        "amount": 3410
+      },
+      {
+        "id": "gold-p4-main",
+        "x": 1392.3202076015782,
+        "y": 2834.605899608935,
+        "amount": 0
+      },
+      {
+        "id": "gold-mainland-0",
+        "x": 3790.354897209134,
+        "y": 2935.0591876004346,
+        "amount": 8930
+      },
+      {
+        "id": "gold-mainland-1",
+        "x": 4188.785396184071,
+        "y": 3271.044498111192,
+        "amount": 9000
+      },
+      {
+        "id": "gold-mainland-2",
+        "x": 4232.940812399565,
+        "y": 3790.354897209134,
+        "amount": 6470
+      },
+      {
+        "id": "gold-mainland-3",
+        "x": 3896.955501888808,
+        "y": 4188.785396184071,
+        "amount": 6260
+      },
+      {
+        "id": "gold-mainland-4",
+        "x": 3377.645102790866,
+        "y": 4232.940812399565,
+        "amount": 5460
+      },
+      {
+        "id": "gold-mainland-5",
+        "x": 2979.2146038159285,
+        "y": 3896.9555018888077,
+        "amount": 1700
+      },
+      {
+        "id": "gold-mainland-6",
+        "x": 2935.0591876004346,
+        "y": 3377.645102790866,
+        "amount": 8920
+      },
+      {
+        "id": "gold-mainland-7",
+        "x": 3271.044498111191,
+        "y": 2979.214603815929,
+        "amount": 9000
+      }
+    ]
+  },
+  {
+    "map": "gullIsland",
+    "players": {
+      "p1": {
+        "gold": 90,
+        "workers": [
+          {
+            "id": "unit-p1-worker-3",
+            "x": 1299.2049279711766,
+            "y": 1002.4930344367756,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-1014",
+            "x": 2600.9627221014316,
+            "y": 2568.192544420286,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-5",
+              "phase": "gather",
+              "timer": 100
+            }
+          },
+          {
+            "id": "unit-p1-worker-1024",
+            "x": 3145.5664028761016,
+            "y": 3955.805031254132,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-2",
+              "phase": "gather",
+              "timer": 53
+            }
+          },
+          {
+            "id": "unit-p1-worker-1033",
+            "x": 3144.973352750245,
+            "y": 3955.856925566322,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-2",
+              "phase": "gather",
+              "timer": 21
+            }
+          },
+          {
+            "id": "unit-p1-worker-1193",
+            "x": 3145.543137513576,
+            "y": 3955.8070366396587,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-2",
+              "phase": "gather",
+              "timer": 85
+            }
+          },
+          {
+            "id": "unit-p1-worker-1198",
+            "x": 1395.7598994652685,
+            "y": 2323.2742145547504,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-6",
+              "phase": "gather",
+              "timer": 79
+            }
+          },
+          {
+            "id": "unit-p1-worker-1207",
+            "x": 1395.761748965835,
+            "y": 2323.274000119902,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-6",
+              "phase": "gather",
+              "timer": 47
+            }
+          },
+          {
+            "id": "unit-p1-worker-1332",
+            "x": 1398.6192702269345,
+            "y": 2322.9426933070213,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-6",
+              "phase": "gather",
+              "timer": 15
+            }
+          },
+          {
+            "id": "unit-p1-worker-1980",
+            "x": 1262.318065720204,
+            "y": 1003.2279738921278,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-2043",
+            "x": 3174.9232896277827,
+            "y": 3952.8309663456293,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-2212",
+            "x": 1395.764123779452,
+            "y": 2323.273724779193,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-2213",
+            "x": 2004.3698947853106,
+            "y": 1108.4595757810785,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-2932",
+            "x": 1339.8934991095284,
+            "y": 958.3981212964269,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-3202",
+            "x": 1438.5841353841608,
+            "y": 1087.409202430684,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-3203",
+            "x": 1397.2071873375191,
+            "y": 2322.0169655805203,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-6",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-4488",
+            "x": 3146.378643679813,
+            "y": 3955.762135730299,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-2",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-4885",
+            "x": 2601.3173692430673,
+            "y": 2568.263473848613,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-5",
+              "phase": "gather",
+              "timer": 4
+            }
+          },
+          {
+            "id": "unit-p1-worker-4998",
+            "x": 2600.923146023058,
+            "y": 2568.1846292046116,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-5",
+              "phase": "gather",
+              "timer": 68
+            }
+          },
+          {
+            "id": "unit-p1-worker-6980",
+            "x": 2603.0608491187904,
+            "y": 2568.612169823758,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-5",
+              "phase": "gather",
+              "timer": 36
+            }
+          },
+          {
+            "id": "unit-p1-worker-7756",
+            "x": 2601.5363124615396,
+            "y": 2568.3072507413403,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-5",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p1-worker-9111",
+            "x": 1343.918350352034,
+            "y": 1005.3573141378432,
+            "order": {
+              "type": "idle"
+            }
+          },
+          {
+            "id": "unit-p1-worker-9112",
+            "x": 1319.6523740099722,
+            "y": 980.5407691666368,
+            "order": {
+              "type": "idle"
+            }
+          }
+        ],
+        "townHalls": [
+          {
+            "id": "building-p1-townhall",
+            "x": 1136,
+            "y": 1136,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-1188",
+            "x": 1936,
+            "y": 1104,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-2161",
+            "x": 1488,
+            "y": 2320,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-3613",
+            "x": 2704,
+            "y": 2576,
+            "complete": true,
+            "hp": 900
+          },
+          {
+            "id": "building-p1-townHall-29294",
+            "x": 3248,
+            "y": 3952,
+            "complete": true,
+            "hp": 900
+          }
+        ]
+      },
+      "p2": {
+        "gold": 374,
+        "workers": [],
+        "townHalls": []
+      },
+      "player": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy2": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      }
+    },
+    "versions": [
+      "v7",
+      "v5"
+    ],
+    "tick": 26618,
+    "winner": "p1",
+    "errors": {},
+    "born": {
+      "worker": 47,
+      "ogreMage": 6,
+      "ogreWarrior": 4,
+      "deepSnapper": 4,
+      "tidePriest": 2,
+      "murlocHunter": 2,
+      "redDragon": 1,
+      "dragonWhelp": 2,
+      "ogreLord": 2,
+      "footman": 7,
+      "sparkArcher": 36,
+      "summoner": 37,
+      "spirit": 473,
+      "transport": 3,
+      "emberAcolyte": 6,
+      "ballista": 1,
+      "carrier": 1,
+      "warship": 6,
+      "cutter": 3,
+      "catapult": 1
+    },
+    "commands": {
+      "mine": 146,
+      "train:worker": 42,
+      "build": 79,
+      "train:footman": 7,
+      "train:sparkArcher": 36,
+      "attackMove": 922,
+      "move": 21939,
+      "train:summoner": 37,
+      "cast:summon": 473,
+      "train:transport": 3,
+      "board": 6,
+      "stop": 4,
+      "train:emberAcolyte": 6,
+      "pickupItem": 30,
+      "useItem": 28,
+      "attack": 579,
+      "research": 2,
+      "cast:emberMend": 12,
+      "train:ballista": 1,
+      "cast:pinningBolt": 1,
+      "repair": 1,
+      "train:carrier": 1,
+      "train:warship": 6,
+      "train:cutter": 3,
+      "train:catapult": 1,
+      "train:siegeRam": 1
+    },
+    "landed": 0,
+    "resources": [
+      {
+        "id": "gold-p1-main",
+        "x": 1313,
+        "y": 992,
+        "amount": 0
+      },
+      {
+        "id": "gold-p2-main",
+        "x": 3807,
+        "y": 4128,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-1",
+        "x": 2016,
+        "y": 1160,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-2",
+        "x": 3104,
+        "y": 3960,
+        "amount": 1200
+      },
+      {
+        "id": "gold-gen-3",
+        "x": 4283,
+        "y": 837,
+        "amount": 6000
+      },
+      {
+        "id": "gold-gen-4",
+        "x": 837,
+        "y": 4283,
+        "amount": 6000
+      },
+      {
+        "id": "gold-gen-5",
+        "x": 2560,
+        "y": 2560,
+        "amount": 5010
+      },
+      {
+        "id": "gold-gen-6",
+        "x": 1355,
+        "y": 2328,
+        "amount": 780
+      },
+      {
+        "id": "gold-gen-7",
+        "x": 3765,
+        "y": 2792,
+        "amount": 3980
+      }
+    ]
+  },
+  {
+    "map": "twoShores",
+    "players": {
+      "p1": {
+        "gold": 72,
+        "workers": [],
+        "townHalls": []
+      },
+      "p2": {
+        "gold": 112,
+        "workers": [],
+        "townHalls": []
+      },
+      "p3": {
+        "gold": 60,
+        "workers": [
+          {
+            "id": "unit-p3-worker-17043",
+            "x": 3700.4879846469526,
+            "y": 912.8983579928573,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-1",
+              "phase": "return",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p3-worker-113990",
+            "x": 2180.5382692668863,
+            "y": 1410.1993994682655,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-1",
+              "phase": "return",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p3-worker-129547",
+            "x": 3553.526609287343,
+            "y": 1125.150497957503,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-10",
+              "phase": "return",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p3-worker-137646",
+            "x": 3884.436154869643,
+            "y": 855.9732818364146,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-10",
+              "phase": "toMine",
+              "timer": 0
+            }
+          },
+          {
+            "id": "unit-p3-worker-142788",
+            "x": 3200.271915520402,
+            "y": 1706.4222063338968,
+            "order": {
+              "type": "mine",
+              "resourceId": "gold-gen-10",
+              "phase": "return",
+              "timer": 0
+            }
+          }
+        ],
+        "townHalls": [
+          {
+            "id": "building-p3-townhall",
+            "x": 3952,
+            "y": 624,
+            "complete": true,
+            "hp": 900
+          }
+        ]
+      },
+      "p4": {
+        "gold": 37,
+        "workers": [],
+        "townHalls": []
+      },
+      "player": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      },
+      "enemy2": {
+        "gold": 500,
+        "workers": [],
+        "townHalls": []
+      }
+    },
+    "versions": [
+      "v8",
+      "v5",
+      "v7",
+      "v8"
+    ],
+    "tick": 74486,
+    "winner": "p3",
+    "errors": {},
+    "born": {
+      "worker": 116,
+      "ogreWarrior": 8,
+      "ogreMage": 8,
+      "deepSnapper": 5,
+      "tidePriest": 3,
+      "murlocHunter": 5,
+      "redDragon": 1,
+      "dragonWhelp": 2,
+      "murlocPeon": 2,
+      "contractArcher": 3,
+      "footman": 7,
+      "lancer": 10,
+      "emberRavager": 52,
+      "sparkArcher": 19,
+      "summoner": 26,
+      "spirit": 1736,
+      "priest": 5,
+      "emberAcolyte": 7,
+      "raider": 23,
+      "witch": 6,
+      "ashChieftain": 25,
+      "ashHexer": 4,
+      "catapult": 7,
+      "transport": 7,
+      "knight": 12,
+      "carrier": 1,
+      "warship": 4
+    },
+    "commands": {
+      "mine": 367,
+      "train:worker": 104,
+      "build": 151,
+      "move": 114243,
+      "hire": 3,
+      "train:footman": 7,
+      "train:lancer": 10,
+      "train:emberRavager": 52,
+      "attackMove": 2480,
+      "pickupItem": 4,
+      "useItem": 4,
+      "train:sparkArcher": 19,
+      "train:summoner": 26,
+      "cast:summon": 1735,
+      "train:priest": 5,
+      "cast:heal": 48,
+      "train:emberAcolyte": 7,
+      "cast:emberMend": 49,
+      "train:raider": 23,
+      "setAutocast": 20,
+      "train:witch": 6,
+      "repair": 7,
+      "cast:charge": 37,
+      "attack": 1233,
+      "research": 9,
+      "train:catapult": 7,
+      "train:ashChieftain": 25,
+      "train:ashHexer": 4,
+      "train:transport": 8,
+      "board": 11,
+      "stop": 11,
+      "cast:curse": 40,
+      "train:knight": 12,
+      "cast:siegeBarrage": 221,
+      "cast:ashCurse": 21,
+      "unload": 4,
+      "train:carrier": 1,
+      "train:warship": 5
+    },
+    "landed": 4,
+    "resources": [
+      {
+        "id": "gold-p1-main",
+        "x": 1520,
+        "y": 480,
+        "amount": 0
+      },
+      {
+        "id": "gold-p2-main",
+        "x": 1520,
+        "y": 5152,
+        "amount": 0
+      },
+      {
+        "id": "gold-p3-main",
+        "x": 4112,
+        "y": 480,
+        "amount": 0
+      },
+      {
+        "id": "gold-p4-main",
+        "x": 4112,
+        "y": 5152,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-1",
+        "x": 1452,
+        "y": 1445,
+        "amount": 840
+      },
+      {
+        "id": "gold-gen-2",
+        "x": 1452,
+        "y": 4187,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-3",
+        "x": 3525,
+        "y": 1421,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-4",
+        "x": 3525,
+        "y": 4211,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-5",
+        "x": 410,
+        "y": 2816,
+        "amount": 6000
+      },
+      {
+        "id": "gold-gen-6",
+        "x": 2462,
+        "y": 2816,
+        "amount": 6000
+      },
+      {
+        "id": "gold-gen-7",
+        "x": 5222,
+        "y": 2816,
+        "amount": 6000
+      },
+      {
+        "id": "gold-gen-8",
+        "x": 1087,
+        "y": 2085,
+        "amount": 1060
+      },
+      {
+        "id": "gold-gen-9",
+        "x": 1087,
+        "y": 3547,
+        "amount": 0
+      },
+      {
+        "id": "gold-gen-10",
+        "x": 3134,
+        "y": 2094,
+        "amount": 460
+      },
+      {
+        "id": "gold-gen-11",
+        "x": 3134,
+        "y": 3538,
+        "amount": 0
+      }
+    ]
+  }
+]

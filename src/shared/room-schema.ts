@@ -1,10 +1,10 @@
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
-import { isMapId } from "./map-ids";
+import { isMapId, isMapIdea } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
-import type { CreateRoomInput, SlotPatch } from "./rooms";
-import type { BuildingKind, GameSetupOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
+import { ROOM_AI_VERSIONS, type CreateRoomInput, type SlotPatch } from "./rooms";
+import type { BuildingKind, GameSetupOptions, GeneratedLayoutOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
-const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge"] satisfies ItemKind[];
+const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge", "speedBoots", "regenRing", "healingScroll", "ivoryTower"] satisfies ItemKind[];
 
 export type CreateRoomRequest = Omit<CreateRoomInput, "id"> & { id?: string };
 export type MapUpdateRequest = { mapId: MapId };
@@ -133,7 +133,21 @@ export function parseGameSetupOptions(value: unknown): GameSetupOptions | undefi
     if (!scenario) return undefined;
     options.scenario = scenario;
   }
+  if (value.layout !== undefined) {
+    const layout = parseLayout(value.layout);
+    if (!layout) return undefined;
+    options.layout = layout;
+  }
   return options;
+}
+
+// A generated layout (see @@@generated-map): its seed, and its kind, idea and size when given.
+function parseLayout(value: unknown): GeneratedLayoutOptions | undefined {
+  if (!isRecord(value) || typeof value.seed !== "string") return undefined;
+  if (value.kind !== undefined && value.kind !== "ring" && value.kind !== "sides") return undefined;
+  if (value.idea !== undefined && !isMapIdea(value.idea)) return undefined;
+  if (value.size !== undefined && (typeof value.size !== "number" || !Number.isInteger(value.size) || value.size <= 0)) return undefined;
+  return { seed: value.seed, ...(value.kind ? { kind: value.kind } : {}), ...(value.idea !== undefined ? { idea: value.idea } : {}), ...(value.size !== undefined ? { size: value.size } : {}) };
 }
 
 export function parseSlotPatch(value: unknown): SlotPatch | undefined {
@@ -148,8 +162,12 @@ export function parseSlotPatch(value: unknown): SlotPatch | undefined {
     patch.team = value.team;
   }
   if (value.race !== undefined) {
-    if (!isRaceId(value.race)) return undefined;
+    if (value.race !== "random" && !isRaceId(value.race)) return undefined;
     patch.race = value.race;
+  }
+  if (value.aiVersion !== undefined) {
+    if (value.aiVersion !== "random" && !(ROOM_AI_VERSIONS as readonly unknown[]).includes(value.aiVersion)) return undefined;
+    patch.aiVersion = value.aiVersion as RoomAiVersion | "random";
   }
   if (value.ready !== undefined) {
     if (typeof value.ready !== "boolean") return undefined;
@@ -253,7 +271,7 @@ function isRaceId(value: unknown): value is RaceId {
 }
 
 function isAiVersionMap(value: unknown): value is GameSetupOptions["aiVersions"] {
-  return isRecord(value) && Object.entries(value).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2"));
+  return isRecord(value) && Object.entries(value).every(([owner, version]) => isPlayerId(owner) && (version === "v1" || version === "v2" || (ROOM_AI_VERSIONS as readonly unknown[]).includes(version)));
 }
 
 function isResourceSeed(value: unknown) {

@@ -5,12 +5,14 @@ import { gauntletFailureReplayManifest, gauntletPlaytestReplay } from "./gauntle
 describe("AI gauntlet CLI helpers", () => {
   it("builds exact playtest replay args from a gauntlet match and selection", () => {
     const catalog = createAiGauntletCatalog({ seed: "gauntlet-cli-seed", mapCount: 2 });
-    const match = catalog.matches.find((candidate) => candidate.name === "mixed-v2-external score wildMarches official triangle");
+    const slot = catalog.selectedRichScoreMapIds[0]!;
+    const match = catalog.matches.find((candidate) => candidate.name === `mixed-v2-external score ${slot} official triangle`);
 
-    expect(match).toBeDefined();
+    expect(slot).toMatch(/^ladder-\d\d$/);
+    expect(match).toMatchObject({ mapId: "ladder", options: { layout: { seed: `layout:gauntlet-cli-seed:${slot}:0` } } });
     expect(gauntletPlaytestReplay(match!, catalog)).toEqual({
-      args: ["new", "--file", ".playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json", "--from-gauntlet", match!.name, "--gauntlet-seed", "gauntlet-cli-seed", "--gauntlet-map-count", "2", "--you", "v2", "--assist-you"],
-      command: "npm run play:ai -- new --file .playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json --from-gauntlet \"mixed-v2-external score wildMarches official triangle\" --gauntlet-seed gauntlet-cli-seed --gauntlet-map-count 2 --you v2 --assist-you",
+      args: ["new", "--file", `.playtests/gauntlet-mixed-v2-external-score-${slot}-official-triangle.json`, "--from-gauntlet", match!.name, "--gauntlet-seed", "gauntlet-cli-seed", "--gauntlet-map-count", "2", "--you", "v2", "--assist-you"],
+      command: `npm run play:ai -- new --file .playtests/gauntlet-mixed-v2-external-score-${slot}-official-triangle.json --from-gauntlet "mixed-v2-external score ${slot} official triangle" --gauntlet-seed gauntlet-cli-seed --gauntlet-map-count 2 --you v2 --assist-you`,
     });
   });
 
@@ -20,8 +22,8 @@ describe("AI gauntlet CLI helpers", () => {
 
     expect(
       gauntletFailureReplayManifest([
-        { failed: true, playtestName: "failed match", lane: "score", controllerCase: "mixed-v2-external", mapId: "wildMarches", winnerTeam: "south", tick: 1200, playtest: failedReplay },
-        { failed: false, playtestName: "passed match", lane: "score", controllerCase: "mixed-v2-external", mapId: "verdigrisSpire", winnerTeam: "north", tick: 900, playtest: passedReplay },
+        { failed: true, playtestName: "failed match", lane: "score", controllerCase: "mixed-v2-external", mapId: "ladder", winnerTeam: "south", tick: 1200, playtest: failedReplay },
+        { failed: false, playtestName: "passed match", lane: "score", controllerCase: "mixed-v2-external", mapId: "ladder", winnerTeam: "north", tick: 900, playtest: passedReplay },
       ]),
     ).toEqual({
       failureCount: 1,
@@ -30,7 +32,7 @@ describe("AI gauntlet CLI helpers", () => {
           name: "failed match",
           lane: "score",
           controllerCase: "mixed-v2-external",
-          mapId: "wildMarches",
+          mapId: "ladder",
           winnerTeam: "south",
           tick: 1200,
           playtest: failedReplay,

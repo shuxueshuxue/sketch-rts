@@ -35,6 +35,8 @@ describe("shared room setup schema", () => {
       ready: false,
     });
     expect(parseSlotPatch({ controller: "bot" })).toBeUndefined();
+    expect(parseSlotPatch({ aiVersion: "v8" })).toEqual({ aiVersion: "v8" });
+    expect(parseSlotPatch({ aiVersion: "v6" })).toBeUndefined();
     expect(parseSlotCountsRequest({ humanCount: 2, aiCount: 3 })).toEqual({ humanCount: 2, aiCount: 3 });
     expect(parseSlotCountsRequest({ humanCount: 0, aiCount: 3 })).toBeUndefined();
     expect(parseSlotCountsRequest({ humanCount: 30, aiCount: 29 })).toBeUndefined();
@@ -44,6 +46,12 @@ describe("shared room setup schema", () => {
       options: { aiPlayers: ["enemy"], races: { player: "grove", enemy: "ember" } },
     });
     expect(parseResetRoomRequest({ mapId: "missing", options: {} })).toBeUndefined();
+    // A generated layout goes through as asked, its idea included (see @@@generated-ideas); an idea there is none of is not.
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "northIsles" } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "northIsles" } } });
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", idea: "archipelago" } } })).toBeUndefined();
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "isle2-f", kind: "square" } } })).toBeUndefined();
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } })).toEqual({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", kind: "ring", size: 4096 } } });
+    expect(parseResetRoomRequest({ mapId: "ladder", options: { layout: { seed: "pool-r2-1", size: "big" } } })).toBeUndefined();
   });
 
   it("validates scenario seeds in the same place as reset options", () => {

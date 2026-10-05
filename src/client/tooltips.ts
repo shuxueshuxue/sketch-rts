@@ -1,6 +1,11 @@
-import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../shared/catalog";
-import { leadershipRegenPerSecond } from "../shared/sim";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
+import { unitRegenPerSecond } from "../shared/sim";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
+import type { AutocastSwitch } from "./command-button-state";
+import { ABILITY_CARDS } from "./content/abilities";
+import { BUILDING_CARDS } from "./content/buildings";
+import { TRAINED_UNIT_CARDS } from "./content/units";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
 
 export type GameplayTooltip = {
@@ -8,6 +13,8 @@ export type GameplayTooltip = {
   body: string;
   stats: string[];
   requirements: string[];
+  // How the player works the button beyond a click (a spell's autocast switch).
+  notes?: string[];
   hotkey?: string | undefined;
 };
 
@@ -19,16 +26,18 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
   const stats = UNIT_DEFS[kind];
   return {
     title: labelKind(kind, i18n),
-    body: UNIT_DESCRIPTIONS[i18n.locale][kind],
+    body: TRAINED_UNIT_CARDS[kind].description[i18n.locale],
     stats: [
       tooltipLine(i18n.locale, "cost", stats.cost),
       tooltipLine(i18n.locale, "supply", stats.supplyUsed),
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
-      tooltipLine(i18n.locale, "range", stats.attackRange),
+      tooltipLine(i18n.locale, "range", stats.weapon?.minRange ? `${stats.weapon.minRange}-${stats.attackRange}` : stats.attackRange),
+      ...(stats.carries ? [i18n.locale === "zh" ? `运载人口：${stats.carries}` : `Cargo supply: ${stats.carries}`] : []),
+      ...(stats.weapon?.buildingMultiplier ? [i18n.locale === "zh" ? `对建筑伤害 ×${stats.weapon.buildingMultiplier}` : `Structure damage ×${stats.weapon.buildingMultiplier}`] : []),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
     ],
-    requirements: stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [],
+    requirements: [...(stats.tier ? [tierRequirement(stats.tier, requiredSupplyCap(kind), i18n)] : []), ...(stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [])],
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -39,7 +48,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   if (!representative) return { title, body: "", stats: [], requirements: [] };
   const totalHp = units.reduce((sum, unit) => sum + unit.hp, 0);
   const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
-  const regenValues = units.map((unit) => leadershipRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
+  const regenValues = units.map((unit) => unitRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
   const maxRegen = Math.max(0, ...regenValues);
   return {
     title,
@@ -50,14 +59,47 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
+      ...cargoLines(kind, units, i18n.locale),
     ],
     requirements: [],
   };
 }
 
-export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
-  const tooltip = ABILITY_TOOLTIPS[i18n.locale][ability];
-  return { ...tooltip, hotkey: formatHotkey(hotkey) };
+// A spell's words come from its card, its numbers from the catalog; `autocast` is how its switch stands on the selected
+// units, when the player can switch it.
+export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, autocast?: AutocastSwitch): GameplayTooltip {
+  const text = TEXT[i18n.locale];
+  return {
+    title: labelKind(ability, i18n),
+    body: ABILITY_CARDS[ability].description[i18n.locale],
+    stats: abilityStats(ability, i18n.locale),
+    requirements: ABILITY_REQUIREMENTS[i18n.locale][ability].map((line) => fillAbilityNumbers(line, ability)),
+    ...(autocast ? { notes: [text.autocast[autocast], text.autocast.toggle] } : {}),
+    hotkey: formatHotkey(hotkey),
+  };
+}
+
+function abilityStats(ability: AbilityKind, locale: Locale) {
+  const def = ABILITY_DEFS[ability];
+  const cooldown = tooltipLine(locale, "cooldown", formatSeconds(def.cooldown));
+  if (def.behavior === "weapon") return [tooltipLine(locale,"attack",def.damage),tooltipLine(locale,"range",`${def.weapon.minRange??0}-${def.range}`),cooldown];
+  if (def.behavior === "heal") return [tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
+  if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
+  if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
+  if (def.behavior === "stomp" || def.behavior === "bloodlust" || def.behavior === "web") return [tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.effectDuration)), cooldown];
+  return [
+    tooltipLine(locale, "enemyDamage", def.damageMultiplier),
+    ...(def.summonedDamage ? [tooltipLine(locale, "summonedDamage", def.summonedDamage)] : []),
+    ...(def.scorchedDamageMultiplier ? [tooltipLine(locale, "scorchedDamage", def.scorchedDamageMultiplier)] : []),
+    tooltipLine(locale, "range", def.range),
+    tooltipLine(locale, "duration", formatSeconds(def.effectDuration)),
+    cooldown,
+  ];
+}
+
+function fillAbilityNumbers(line: string, ability: AbilityKind) {
+  const def = ABILITY_DEFS[ability];
+  return def.behavior === "charge" ? line.replace("{min}", String(def.minRange)).replace("{max}", String(def.range)) : line;
 }
 
 export function itemTooltip(kind: ItemKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
@@ -76,14 +118,14 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
       ? tooltipLine(i18n.locale, "speedBonus", Math.round((level.speedMultiplier - 1) * 100))
       : level.attackRangeMultiplier
         ? tooltipLine(i18n.locale, "unitRangeBonus", Math.round((level.attackRangeMultiplier - 1) * 100))
-        : level.veteranRegenPerStar
-          ? tooltipLine(i18n.locale, "veteranRegenPerStar", level.veteranRegenPerStar)
-    : level.attackBonus > 0
-      ? tooltipLine(i18n.locale, "attackBonus", level.attackBonus)
-      : tooltipLine(i18n.locale, "maxHpBonus", level.maxHpBonus);
+        : level.veteranRegenByStars
+          ? tooltipLine(i18n.locale, "veteranRegenByStars", level.veteranRegenByStars.join("/"))
+    : level.attackMultiplier
+      ? tooltipLine(i18n.locale, "attackBonus", Math.round((level.attackMultiplier - 1) * 100))
+      : tooltipLine(i18n.locale, "maxHpBonus", Math.round(((level.maxHpMultiplier ?? 1) - 1) * 100));
   const requirements = level.buildingMaxHpMultiplier
     ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsBuildings]
-    : level.veteranRegenPerStar
+    : level.veteranRegenByStars
       ? [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsStarredUnits]
     : [researchAtRequirement(upgrade.researchBuildingKinds, i18n), TEXT[i18n.locale].requirements.affectsCombatUnits, affected];
   return {
@@ -107,7 +149,7 @@ export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n 
   ];
   return {
     title: labelKind(kind, i18n),
-    body: BUILDING_DESCRIPTIONS[i18n.locale][kind],
+    body: BUILDING_CARDS[kind].description[i18n.locale],
     stats: [
       tooltipLine(i18n.locale, "cost", def.cost),
       tooltipLine(i18n.locale, "build", formatSeconds(def.buildTime)),
@@ -121,7 +163,15 @@ export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n 
 }
 
 export function tooltipText(tooltip: GameplayTooltip) {
-  return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements].filter(Boolean).join("\n");
+  return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements, ...(tooltip.notes ?? [])].filter(Boolean).join("\n");
+}
+
+// Transports: the supply of passengers aboard against what they carry (see @@@transport).
+function cargoLines(kind: UnitKind, units: Unit[], locale: Locale) {
+  const carries = UNIT_DEFS[kind].carries;
+  if (!carries) return [];
+  const aboard = units.flatMap((unit) => unit.cargo ?? []).reduce((total, passenger) => total + UNIT_DEFS[passenger.kind].supplyUsed, 0);
+  return [tooltipLine(locale, "cargo", `${aboard}/${carries * units.length}`)];
 }
 
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {
@@ -130,6 +180,10 @@ function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: num
 
 function labelKind(kind: string, i18n: I18n) {
   return i18n.label(kind as LabelKey);
+}
+
+function tierRequirement(tier: 2 | 3, cap: number, i18n: I18n) {
+  return TEXT[i18n.locale].requirements[tier === 2 ? "tierAdvanced" : "tierElite"].replace("{cap}", String(cap));
 }
 
 function abilityListRequirement(abilities: readonly AbilityKind[], i18n: I18n) {
@@ -154,12 +208,13 @@ export function formatTooltipDataset(tooltip: GameplayTooltip) {
     body: tooltip.body,
     stats: tooltip.stats.join("|"),
     requirements: tooltip.requirements.join("|"),
+    notes: (tooltip.notes ?? []).join("|"),
     hotkey: tooltip.hotkey ?? "",
   };
 }
 
 function formatSeconds(ticks: number) {
-  return `${(ticks / 20).toFixed(1)}s`;
+  return `${(ticks / SIM_TICKS_PER_SECOND).toFixed(1)}s`;
 }
 
 function statRange(values: number[]) {
@@ -181,23 +236,32 @@ const TEXT = {
   en: {
     stats: {
       attack: "Attack {value}",
-      attackBonus: "+{value} attack",
+      attackBonus: "+{value}% attack",
       build: "Build {value}",
       buildingHpBonus: "+{value}% building HP",
       cost: "Cost {value} gold",
       hp: "HP {value}",
       currentHp: "HP {value}",
-      maxHpBonus: "+{value} max HP",
+      maxHpBonus: "+{value}% max HP",
       range: "Range {value}",
       research: "Research {value}",
       currentRegen: "Regen {value} HP/s",
+      cargo: "Aboard {value} supply",
       speedBonus: "+{value}% move speed",
       speed: "Speed {value}",
       supply: "Supply {value}",
       supplyBonus: "Supply +{value}",
       train: "Train {value}",
       unitRangeBonus: "+{value}% unit range",
-      veteranRegenPerStar: "+{value} HP/s per star",
+      veteranRegenByStars: "+{value} HP/s at 1/2/3 stars",
+      restoresHp: "Restores {value} HP",
+      summonsSpirit: "Summons 1 spirit",
+      enemyDamage: "Enemy damage x{value}",
+      summonedDamage: "{value} damage to summoned units",
+      scorchedDamage: "Scorched enemy damage x{value}",
+      chargeDamage: "Strikes for x{value} its attack",
+      duration: "Duration {value}",
+      cooldown: "Cooldown {value}",
     },
     requirements: {
       abilities: "Abilities: {abilities}.",
@@ -206,28 +270,45 @@ const TEXT = {
       affectsStarredUnits: "Affects starred units.",
       provides: "Provides: {production}.",
       researchAt: "Research at {building}.",
+      tierAdvanced: "Advanced unit: needs a supply cap of {cap}.",
+      tierElite: "Elite unit: needs a supply cap of {cap}.",
+    },
+    autocast: {
+      on: "Autocast: on",
+      off: "Autocast: off",
+      mixed: "Autocast: on for some",
+      toggle: "Right-click: autocast on/off",
     },
   },
   zh: {
     stats: {
       attack: "攻击 {value}",
-      attackBonus: "+{value} 攻击",
+      attackBonus: "+{value}% 攻击",
       build: "建造 {value}",
       buildingHpBonus: "+{value}% 建筑生命",
       cost: "花费 {value} 金",
       hp: "生命 {value}",
       currentHp: "生命 {value}",
-      maxHpBonus: "+{value} 最大生命",
+      maxHpBonus: "+{value}% 最大生命",
       range: "射程 {value}",
       research: "研究 {value}",
       currentRegen: "回复 {value} 生命/秒",
+      cargo: "载 {value} 人口",
       speedBonus: "+{value}% 移动速度",
       speed: "移速 {value}",
       supply: "人口 {value}",
       supplyBonus: "人口 +{value}",
       train: "训练 {value}",
       unitRangeBonus: "+{value}% 单位射程",
-      veteranRegenPerStar: "每颗星 +{value} 生命/秒",
+      veteranRegenByStars: "1/2/3 星 +{value} 生命/秒",
+      restoresHp: "恢复 {value} 生命",
+      summonsSpirit: "召唤 1 个灵体",
+      enemyDamage: "敌方伤害 x{value}",
+      summonedDamage: "对召唤物 {value} 伤害",
+      scorchedDamage: "灼烧目标伤害 x{value}",
+      chargeDamage: "伤害为普攻 x{value}",
+      duration: "持续 {value}",
+      cooldown: "冷却 {value}",
     },
     requirements: {
       abilities: "技能：{abilities}。",
@@ -236,158 +317,45 @@ const TEXT = {
       affectsStarredUnits: "影响有星单位。",
       provides: "提供：{production}。",
       researchAt: "在{building}研究。",
+      tierAdvanced: "进阶兵种：人口上限需达到 {cap}。",
+      tierElite: "高级兵种：人口上限需达到 {cap}。",
+    },
+    autocast: {
+      on: "自动施法：开",
+      off: "自动施法：关",
+      mixed: "自动施法：部分开启",
+      toggle: "右键：开/关自动施法",
     },
   },
 } as const;
 
-const UNIT_DESCRIPTIONS: Record<Locale, Record<TrainableUnitKind, string>> = {
+// What a spell's button needs besides a ready caster ({min} and {max}: a charge's window, filled from the catalog).
+const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
   en: {
-    worker: "Worker. Gathers gold, builds structures, repairs the economy, and can defend itself only in a pinch.",
-    footman: "Front-line melee soldier for early fights and body-blocking fragile units.",
-    archer: "Light ranged unit. Strong when kept behind melee units, fragile if caught.",
-    raider: "Fast melee harasser for chasing workers and punishing isolated targets.",
-    lancer: "Reach melee fighter with a slightly longer attack range than ordinary infantry.",
-    groveWarden: "Durable grove infantry that holds the line better than basic soldiers.",
-    emberRavager: "Aggressive ember infantry with strong close-range damage.",
-    cinderRunner: "Fast ember melee unit for chasing weak targets and forcing fights.",
-    sparkArcher: "Fragile ember ranged unit with quick pressure and shorter reach.",
-    emberAcolyte: "Ember support caster with a targeted heal for wounded allies.",
-    ashHexer: "Ember debuff caster that weakens enemy damage through curse.",
-    pyreCaller: "Ember summoner that creates temporary spirits near the fight.",
-    knight: "Heavy cavalry for decisive fights and base pressure.",
-    priest: "Support caster with a targeted heal for wounded allies.",
-    summoner: "Caster that creates a temporary spirit at a target point.",
-    witch: "Debuff caster that weakens enemy damage through curse.",
-    golem: "Slow heavy siege body with high health and strong melee damage.",
+    ramBreach: ["Target an enemy structure."], pinningBolt:["Target an enemy unit or structure."], siegeBarrage:["Target a point outside the dead zone."], grapeshot:["Target a direction."], incendiaryFlume:["Target a point."],
+    heal: ["Priest or field medic must be ready."],
+    summon: ["Summoner must be ready.", "Target a point; a far one is walked to first."],
+    curse: ["Witch must be ready.", "Target an enemy unit."],
+    emberMend: ["Ember acolyte must be ready."],
+    cinderSoul: ["Pyre caller must be ready.", "Target a point; a far one is walked to first."],
+    ashCurse: ["Ash hexer must be ready.", "Target an enemy unit."],
+    charge: ["Raider or knight must be ready.", "Target an enemy unit at least {min} away; a farther one is ridden up to first."],
+    stomp: ["Cast by a granite golem on its own."],
+    bloodlust: ["Cast by an ogre mage on its own."],
+    web: ["Cast by a spider queen on its own."],
   },
   zh: {
-    worker: "农民。采集金矿、建造建筑、修理经济体系，紧急时也能勉强自卫。",
-    footman: "前排近战士兵，用于早期交战并保护脆弱单位。",
-    archer: "轻型远程单位。站在近战单位后方时很强，被贴身时很脆。",
-    raider: "高速近战骚扰单位，用于追击农民并惩罚落单目标。",
-    lancer: "长柄近战单位，攻击距离比普通步兵稍长。",
-    groveWarden: "耐久的林地步兵，比基础士兵更适合顶线。",
-    emberRavager: "进攻性的余烬步兵，近距离伤害很强。",
-    cinderRunner: "高速余烬近战单位，用于追击弱目标并强行开战。",
-    sparkArcher: "脆弱的余烬远程单位，压制速度快但射程较短。",
-    emberAcolyte: "余烬支援施法者，可以对受伤友军进行定点治疗。",
-    ashHexer: "余烬减益施法者，通过诅咒削弱敌方伤害。",
-    pyreCaller: "余烬召唤者，可以在战斗附近召唤临时灵体。",
-    knight: "重骑兵，用于决定性会战和基地压制。",
-    priest: "支援施法者，可以对受伤友军进行定点治疗。",
-    summoner: "施法者，可以在目标点召唤临时灵体。",
-    witch: "减益施法者，通过诅咒削弱敌方伤害。",
-    golem: "缓慢的重型攻坚单位，生命值高，近战伤害强。",
-  },
-};
-
-const BUILDING_DESCRIPTIONS: Record<Locale, Record<BuildingKind, string>> = {
-  en: {
-    townHall: "Main economy building. Trains workers, receives gold, researches building durability, and provides base supply.",
-    barracks: "Core military building that trains melee soldiers and researches army upgrades.",
-    archeryRange: "Ranged production building that trains archers.",
-    stables: "Mounted unit production building for fast raiders and heavy knights.",
-    sanctum: "Caster production building for priests, summoners, and witches.",
-    workshop: "Heavy unit production building that trains golems.",
-    defenseTower: "Static defense that fires at nearby enemy units.",
-    moonWell: "Support building that periodically heals wounded friendly soldiers nearby.",
-    emberForge: "Ember military building that trains ravagers and cinder runners.",
-    cinderSpire: "Ember support building that trains ranged units and casters.",
-    emberShrine: "Ember support building that periodically heals wounded friendly soldiers nearby.",
-    farm: "Supply building. Build more farms before training past the cap.",
-  },
-  zh: {
-    townHall: "主要经济建筑。训练农民、接收金矿、研究建筑耐久，并提供基础人口。",
-    barracks: "核心军事建筑。训练近战士兵，并研究军队升级。",
-    archeryRange: "远程生产建筑，用于训练弓箭手。",
-    stables: "骑乘单位生产建筑，用于高速掠袭者和重骑士。",
-    sanctum: "施法者生产建筑，用于牧师、召唤师和女巫。",
-    workshop: "重型单位生产建筑，用于训练魔像。",
-    defenseTower: "静态防御建筑，会攻击附近敌方单位。",
-    moonWell: "支援建筑，会周期性治疗附近受伤友方士兵。",
-    emberForge: "余烬军事建筑，用于训练劫掠者和奔袭者。",
-    cinderSpire: "余烬支援建筑，用于训练远程单位和施法者。",
-    emberShrine: "余烬支援建筑，会周期性治疗附近受伤友方士兵。",
-    farm: "人口建筑。超过人口上限前需要建造更多农场。",
-  },
-};
-
-const ABILITY_TOOLTIPS: Record<Locale, Record<AbilityKind, GameplayTooltip>> = {
-  en: {
-    heal: {
-      title: "Heal",
-      body: "Restores health to an allied unit in range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
-      requirements: ["Priest or field medic must be ready."],
-    },
-    summon: {
-      title: "Summon",
-      body: "Creates a spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Cooldown 11.0s"],
-      requirements: ["Summoner must be ready.", "Target a nearby point."],
-    },
-    curse: {
-      title: "Curse",
-      body: "Weakens an enemy unit so its attacks deal less damage.",
-      stats: ["Enemy damage x0.4", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
-      requirements: ["Witch must be ready.", "Target an enemy unit."],
-    },
-    emberMend: {
-      title: "Ember Mend",
-      body: "Quickly restores health to an allied unit at shorter range.",
-      stats: ["Restores 55 HP", "Range 240", "Cooldown 6.0s"],
-      requirements: ["Ember acolyte must be ready."],
-    },
-    cinderSoul: {
-      title: "Cinder Soul",
-      body: "Creates a shorter-lived spirit at a nearby ground point.",
-      stats: ["Summons 1 spirit", "Range 260", "Duration 45.0s", "Cooldown 11.0s"],
-      requirements: ["Pyre caller must be ready.", "Target a nearby point."],
-    },
-    ashCurse: {
-      title: "Ash Curse",
-      body: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty.",
-      stats: ["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"],
-      requirements: ["Ash hexer must be ready.", "Target an enemy unit."],
-    },
-  },
-  zh: {
-    heal: {
-      title: "治疗",
-      body: "为射程内的友方单位恢复生命。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
-      requirements: ["牧师或战地医师必须准备就绪。"],
-    },
-    summon: {
-      title: "召唤",
-      body: "在附近地面目标点召唤一个灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "冷却 11.0s"],
-      requirements: ["召唤师必须准备就绪。", "目标必须是附近点位。"],
-    },
-    curse: {
-      title: "诅咒",
-      body: "削弱敌方单位，使其攻击造成更少伤害。",
-      stats: ["敌方伤害 x0.4", "射程 280", "持续 18.0s", "冷却 7.5s"],
-      requirements: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
-    },
-    emberMend: {
-      title: "余烬疗愈",
-      body: "以较短射程快速治疗友方单位。",
-      stats: ["恢复 55 生命", "射程 240", "冷却 6.0s"],
-      requirements: ["余烬侍僧必须准备就绪。"],
-    },
-    cinderSoul: {
-      title: "余火魂灵",
-      body: "在附近地面目标点召唤一个持续时间较短的灵体。",
-      stats: ["召唤 1 个灵体", "射程 260", "持续 45.0s", "冷却 11.0s"],
-      requirements: ["烬火召唤者必须准备就绪。", "目标必须是附近点位。"],
-    },
-    ashCurse: {
-      title: "灰烬诅咒",
-      body: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。",
-      stats: ["敌方伤害 x0.45", "灼烧目标伤害 x0.3", "射程 280", "持续 18.0s", "冷却 7.5s"],
-      requirements: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
-    },
+    ramBreach: ["目标必须是敌方建筑或路障。"], pinningBolt:["目标必须是敌方单位或建筑。"], siegeBarrage:["选择近程死角之外的落点。"], grapeshot:["选择射击方向。"], incendiaryFlume:["选择燃油弹落点。"],
+    heal: ["牧师或战地医师必须准备就绪。"],
+    summon: ["召唤师必须准备就绪。", "目标是一个点位，远了会先走过去。"],
+    curse: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
+    emberMend: ["余烬侍僧必须准备就绪。"],
+    cinderSoul: ["烬火召唤者必须准备就绪。", "目标是一个点位，远了会先走过去。"],
+    ashCurse: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
+    charge: ["掠袭者或骑士必须准备就绪。", "目标是至少 {min} 外的敌方单位，更远的会先骑过去再冲。"],
+    stomp: ["花岗岩魔像自己施放。"],
+    bloodlust: ["食人魔法师自己施放。"],
+    web: ["蛛后自己施放。"],
   },
 };
 
@@ -429,6 +397,30 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
       stats: ["260 building damage", "Range 280", "Consumed on use"],
       requirements: ["Needs an enemy building in range.", "Carrier must not be neutral."],
     },
+    speedBoots: {
+      title: "Boots of Speed",
+      body: "Its carrier moves a fifth faster. A second pair adds nothing.",
+      stats: ["+20% move speed", "Sold at shops"],
+      requirements: ["Passive item. No manual use."],
+    },
+    regenRing: {
+      title: "Ring of Regeneration",
+      body: "Its carrier heals over time. A second ring adds nothing.",
+      stats: ["+2 HP per second", "Sold at shops"],
+      requirements: ["Passive item. No manual use."],
+    },
+    healingScroll: {
+      title: "Scroll of Healing",
+      body: "Consumed to heal every allied unit near the reader at once.",
+      stats: ["Heals 75", "Radius 300", "Consumed on use"],
+      requirements: ["Carrier must not be neutral."],
+    },
+    ivoryTower: {
+      title: "Ivory Tower",
+      body: "Consumed to raise a finished defense tower at half health near its carrier.",
+      stats: ["Range 200", "Consumed on use"],
+      requirements: ["Target open ground near the carrier."],
+    },
   },
   zh: {
     lightningRod: {
@@ -466,6 +458,30 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
       body: "消耗后近距离爆破一个敌方建筑。",
       stats: ["建筑伤害 260", "射程 280", "使用后消耗"],
       requirements: ["需要射程内敌方建筑。", "携带者不能是中立单位。"],
+    },
+    speedBoots: {
+      title: "速度之靴",
+      body: "携带者移速提高五分之一。带两双不叠加。",
+      stats: ["移速 +20%", "商店出售"],
+      requirements: ["被动物品，无法手动使用。"],
+    },
+    regenRing: {
+      title: "回复戒指",
+      body: "携带者持续回血。带两枚不叠加。",
+      stats: ["每秒回 2 血", "商店出售"],
+      requirements: ["被动物品，无法手动使用。"],
+    },
+    healingScroll: {
+      title: "治疗卷轴",
+      body: "消耗后，使用者身边所有友军立即回血。",
+      stats: ["回复 75", "半径 300", "使用后消耗"],
+      requirements: ["携带者不能是中立单位。"],
+    },
+    ivoryTower: {
+      title: "象牙塔",
+      body: "消耗后，在携带者身边立起一座半血的防御塔，立即可用。",
+      stats: ["距离 200 以内", "使用后消耗"],
+      requirements: ["目标必须是携带者附近的空地。"],
     },
   },
 };

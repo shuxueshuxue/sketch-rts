@@ -1,4 +1,4 @@
-import { createInitialMercenaryCamps, createInitialResources, RICH_SCORE_MAP_IDS } from "../../shared/map";
+import { createInitialMercenaryCamps, createInitialResources, LADDER_SLOT_IDS } from "../../shared/map";
 import type { MapId, PlayerId, RaceId, ScenarioOverride } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmark } from "../../sdk/benchmark/core";
@@ -6,35 +6,36 @@ import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import type { ArmyBalanceStats } from "./army-balance-stats";
 import type { AiCommandStats } from "./command-stats";
 import type { ExpansionClaimTimelineStats } from "./expansion-claim-timeline";
+import type { UnitRosterStats } from "./unit-roster-stats";
 import type { WoundedMoonWellStats } from "./wounded-moonwell-stats";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
 import { DEFAULT_AI_THINK_INTERVAL } from "../runtime";
 import { recordBenchmarkDashboardReportRun, type BenchmarkDashboardStoreOptions, type SpecializedBenchmarkDashboardRun } from "./dashboard-store";
-import { createAiMeleeControlMatches, selectGauntletRichScoreMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
+import { createAiMeleeControlMatches, gauntletLadderGame, gauntletMapOf, selectGauntletLadderMaps, serializableAiBenchmarkInput, type AiVersionBenchmarkOptions, type GauntletMapSelection } from "./presets";
 
 export type AiMeleeControlBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 export type AiCrossRaceBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 export type AiV3VsProdV2BenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 export type AiV4TrVsV3BenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 export type AiV5VsHybridBenchmarkInput = {
   input: BenchmarkInput<AiGameAgent>;
-  selection: GauntletMapSelection<MapId>;
+  selection: GauntletMapSelection;
 };
 
 export type AiV5EconomyStressBenchmarkInput = {
@@ -85,6 +86,7 @@ export type AiMeleeControlMatchDetail = {
   woundedMoonWellStats?: WoundedMoonWellStats;
   armyBalanceStats?: ArmyBalanceStats;
   expansionClaimTimeline?: ExpansionClaimTimelineStats;
+  unitRosterStats?: UnitRosterStats;
 };
 
 export type AiMeleeControlPlayerDetail = {
@@ -232,11 +234,7 @@ const FROZEN_PROD_V2_REVISION = "2521715";
 const V5_ECONOMY_STRESS_MAP_IDS = ["goldGrid", "mercPocket"] as const satisfies readonly MapId[];
 
 export function createAiV3VsProdV2BenchmarkInput(options: AiV3VsProdV2BenchmarkOptions = {}): AiV3VsProdV2BenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   const controller = options.controller ?? "external-agent";
   const matchOptions = {
     controller,
@@ -252,7 +250,7 @@ export function createAiV3VsProdV2BenchmarkInput(options: AiV3VsProdV2BenchmarkO
         {
           name: "v3 race-aware vs v2-prod grove",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createAiV3VsProdV2Matches(mapId, index, matchOptions)),
+          matches: selection.mapIds.flatMap((slot, index) => createAiV3VsProdV2Matches(slot, index, matchOptions)),
         },
       ],
     },
@@ -260,11 +258,7 @@ export function createAiV3VsProdV2BenchmarkInput(options: AiV3VsProdV2BenchmarkO
 }
 
 export function createAiV4TrVsV3BenchmarkInput(options: AiV4TrVsV3BenchmarkOptions = {}): AiV4TrVsV3BenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   const controller = options.controller ?? "external-agent";
   const matchOptions = {
     controller,
@@ -280,7 +274,7 @@ export function createAiV4TrVsV3BenchmarkInput(options: AiV4TrVsV3BenchmarkOptio
         {
           name: "v4-tr tower merc vs v3 random race",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createAiV4TrVsV3Matches(mapId, index, matchOptions)),
+          matches: selection.mapIds.flatMap((slot, index) => createAiV4TrVsV3Matches(slot, index, matchOptions)),
         },
       ],
     },
@@ -288,11 +282,7 @@ export function createAiV4TrVsV3BenchmarkInput(options: AiV4TrVsV3BenchmarkOptio
 }
 
 export function createAiV5VsHybridBenchmarkInput(options: AiV5VsHybridBenchmarkOptions = {}): AiV5VsHybridBenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   const controller = options.controller ?? "external-agent";
   const matchOptions = {
     controller,
@@ -308,7 +298,7 @@ export function createAiV5VsHybridBenchmarkInput(options: AiV5VsHybridBenchmarkO
         {
           name: "v5 hybrid 1v2 vs v3 plus v4-tr",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createAiV5VsHybridMatches(mapId, index, matchOptions)),
+          matches: selection.mapIds.flatMap((slot, index) => createAiV5VsHybridMatches(slot, index, matchOptions)),
         },
       ],
     },
@@ -346,14 +336,11 @@ export function createAiV5EconomyStressBenchmarkInput(options: AiV5EconomyStress
 }
 
 export function createAiCrossRaceBenchmarkInput(options: AiCrossRaceBenchmarkOptions = {}): AiCrossRaceBenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   const controller = options.controller ?? "external-agent";
   const matchOptions = {
     controller,
+    seed: selection.seed,
     ...(options.maxTicks !== undefined ? { maxTicks: options.maxTicks } : {}),
     ...(options.thinkInterval !== undefined ? { thinkInterval: options.thinkInterval } : {}),
   };
@@ -365,7 +352,7 @@ export function createAiCrossRaceBenchmarkInput(options: AiCrossRaceBenchmarkOpt
         {
           name: "v2 ember vs v2 grove",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId) => createAiCrossRaceMatches(mapId, matchOptions)),
+          matches: selection.mapIds.flatMap((slot, index) => createAiCrossRaceMatches(slot, index, matchOptions)),
         },
       ],
     },
@@ -373,11 +360,7 @@ export function createAiCrossRaceBenchmarkInput(options: AiCrossRaceBenchmarkOpt
 }
 
 export function createAiMeleeControlBenchmarkInput(options: AiMeleeControlBenchmarkOptions = {}): AiMeleeControlBenchmarkInput {
-  const selection = selectGauntletRichScoreMaps([...RICH_SCORE_MAP_IDS], {
-    ...(options.seed !== undefined ? { AI_GAUNTLET_SEED: options.seed } : {}),
-    ...(options.mapCount !== undefined ? { AI_GAUNTLET_MAP_COUNT: String(options.mapCount) } : {}),
-    ...(options.full ? { AI_GAUNTLET_FULL: "1" } : {}),
-  });
+  const selection = selectGauntletLadderMaps(options);
   return {
     selection,
     input: {
@@ -386,7 +369,7 @@ export function createAiMeleeControlBenchmarkInput(options: AiMeleeControlBenchm
         {
           name: "1v1 score control",
           tag: "melee",
-          matches: selection.mapIds.flatMap((mapId, index) => createAiMeleeControlMatches(mapId, index, options)),
+          matches: selection.mapIds.flatMap((slot, index) => createAiMeleeControlMatches(selection.seed, slot, index, options)),
         },
       ],
     },
@@ -472,7 +455,7 @@ export async function recordAiV3VsProdV2BenchmarkDashboardRun(options: AiV3VsPro
     {
       kind: "ai-specialized-benchmark",
       seed: selection.seed,
-      mapPoolSize: RICH_SCORE_MAP_IDS.length,
+      mapPoolSize: LADDER_SLOT_IDS.length,
       selectedRichScoreMapIds: selection.mapIds,
       targetPlayerId: "v3",
       report,
@@ -492,7 +475,7 @@ export async function recordAiV4TrVsV3BenchmarkDashboardRun(options: AiV4TrVsV3B
     {
       kind: "ai-specialized-benchmark",
       seed: selection.seed,
-      mapPoolSize: RICH_SCORE_MAP_IDS.length,
+      mapPoolSize: LADDER_SLOT_IDS.length,
       selectedRichScoreMapIds: selection.mapIds,
       targetPlayerId: "v4-tr",
       report,
@@ -512,7 +495,7 @@ export async function recordAiV5VsHybridBenchmarkDashboardRun(options: AiV5VsHyb
     {
       kind: "ai-specialized-benchmark",
       seed: selection.seed,
-      mapPoolSize: RICH_SCORE_MAP_IDS.length,
+      mapPoolSize: LADDER_SLOT_IDS.length,
       selectedRichScoreMapIds: selection.mapIds,
       targetPlayerId: "v5",
       report,
@@ -729,13 +712,13 @@ export function summarizeAiV5EconomyStressBenchmark(input: { seed: string; selec
   };
 }
 
-function createAiCrossRaceMatches(mapId: MapId, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> = {}) {
+function createAiCrossRaceMatches(slot: string, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? 48_000;
   const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
   const match = (name: string, teams: { ember: string; grove: string }): BenchmarkMatchInput<AiGameAgent> => ({
     name,
-    mapId,
+    ...gauntletLadderGame(options.seed, slot, index),
     agents: {
       ember: { controller, team: teams.ember, race: "ember", version: "v2", versionLabel: "v2 ember" },
       grove: { controller, team: teams.grove, race: "grove", version: "v2", versionLabel: "v2 grove" },
@@ -744,18 +727,18 @@ function createAiCrossRaceMatches(mapId: MapId, options: Pick<AiVersionBenchmark
     maxTicks,
     thinkInterval,
   });
-  return [match(`${mapId} ember north`, { ember: "north", grove: "south" }), match(`${mapId} ember south`, { ember: "south", grove: "north" })];
+  return [match(`${slot} ember north`, { ember: "north", grove: "south" }), match(`${slot} ember south`, { ember: "south", grove: "north" })];
 }
 
-function createAiV3VsProdV2Matches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
+function createAiV3VsProdV2Matches(slot: string, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? 48_000;
   const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
   const match = (name: string, v3Team: string, prodTeam: string, sideIndex: number): BenchmarkMatchInput<AiGameAgent> => {
-    const v3Race = v3RaceForMatch(options.seed, mapId, index, sideIndex);
+    const v3Race = v3RaceForMatch(options.seed, slot, index, sideIndex);
     return {
       name,
-      mapId,
+      ...gauntletLadderGame(options.seed, slot, index),
       agents: {
         v3: { controller, team: v3Team, race: v3Race, version: "v3", policyVersion: v3Race === "ember" ? "v3-ember" : "v3-grove", versionLabel: `v3 ${v3Race}` },
         "v2-prod": { controller, team: prodTeam, race: "grove", version: "v2-prod", policyVersion: "v2-prod", versionLabel: "v2-prod grove" },
@@ -765,18 +748,18 @@ function createAiV3VsProdV2Matches(mapId: MapId, index: number, options: Pick<Ai
       thinkInterval,
     };
   };
-  return [match(`${mapId} v3 north`, "north", "south", 0), match(`${mapId} v3 south`, "south", "north", 1)];
+  return [match(`${slot} v3 north`, "north", "south", 0), match(`${slot} v3 south`, "south", "north", 1)];
 }
 
-function createAiV4TrVsV3Matches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
+function createAiV4TrVsV3Matches(slot: string, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? 48_000;
   const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
   const match = (name: string, v4Team: string, v3Team: string, sideIndex: number): BenchmarkMatchInput<AiGameAgent> => {
-    const v3Race = v3RaceForMatch(options.seed, mapId, index, sideIndex);
+    const v3Race = v3RaceForMatch(options.seed, slot, index, sideIndex);
     return {
       name,
-      mapId,
+      ...gauntletLadderGame(options.seed, slot, index),
       agents: {
         "v4-tr": { controller, team: v4Team, race: "grove", version: "v4-tr", policyVersion: "v4-tr", versionLabel: "v4-tr" },
         v3: { controller, team: v3Team, race: v3Race, version: "v3", policyVersion: v3Race === "ember" ? "v3-ember" : "v3-grove", versionLabel: `v3 ${v3Race}` },
@@ -786,16 +769,16 @@ function createAiV4TrVsV3Matches(mapId: MapId, index: number, options: Pick<AiVe
       thinkInterval,
     };
   };
-  return [match(`${mapId} v4-tr north`, "north", "south", 0), match(`${mapId} v4-tr south`, "south", "north", 1)];
+  return [match(`${slot} v4-tr north`, "north", "south", 0), match(`${slot} v4-tr south`, "south", "north", 1)];
 }
 
-function createAiV5VsHybridMatches(mapId: MapId, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
+function createAiV5VsHybridMatches(slot: string, index: number, options: Pick<AiVersionBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }) {
   const controller = options.controller ?? "external-agent";
   const maxTicks = options.maxTicks ?? 48_000;
   const thinkInterval = options.thinkInterval ?? DEFAULT_AI_THINK_INTERVAL;
   const match = (name: string, v5Team: string, opponentTeam: string, sideIndex: number): BenchmarkMatchInput<AiGameAgent> => {
-    const v5Race = v5RaceForMatch(options.seed, mapId, index, sideIndex);
-    const v3Race = v3RaceForMatch(options.seed, mapId, index, sideIndex);
+    const v5Race = v5RaceForMatch(options.seed, slot, index, sideIndex);
+    const v3Race = v3RaceForMatch(options.seed, slot, index, sideIndex);
     const v5Agent: AiGameAgent & { policyVersion: string } = { controller, team: v5Team, race: v5Race, version: "v5", policyVersion: "v5", versionLabel: `v5 ${v5Race}` };
     const v3Agent: AiGameAgent & { policyVersion: string } = {
       controller,
@@ -806,10 +789,10 @@ function createAiV5VsHybridMatches(mapId: MapId, index: number, options: Pick<Ai
       versionLabel: `v3 ${v3Race}`,
     };
     const v4TrAgent: AiGameAgent & { policyVersion: string } = { controller, team: opponentTeam, race: "grove", version: "v4-tr", policyVersion: "v4-tr", versionLabel: "v4-tr" };
-    const opponentAgents = v4TrBeforeV3ForMatch(options.seed, mapId, index, sideIndex) ? { "v4-tr": v4TrAgent, v3: v3Agent } : { v3: v3Agent, "v4-tr": v4TrAgent };
+    const opponentAgents = v4TrBeforeV3ForMatch(options.seed, slot, index, sideIndex) ? { "v4-tr": v4TrAgent, v3: v3Agent } : { v3: v3Agent, "v4-tr": v4TrAgent };
     return {
       name,
-      mapId,
+      ...gauntletLadderGame(options.seed, slot, index),
       agents: {
         v5: v5Agent,
         ...opponentAgents,
@@ -819,7 +802,7 @@ function createAiV5VsHybridMatches(mapId: MapId, index: number, options: Pick<Ai
       thinkInterval,
     };
   };
-  return [match(`${mapId} v5 north`, "north", "south", 0), match(`${mapId} v5 south`, "south", "north", 1)];
+  return [match(`${slot} v5 north`, "north", "south", 0), match(`${slot} v5 south`, "south", "north", 1)];
 }
 
 function createAiV5GoldGridStressMatch(index: number, options: Pick<AiV5EconomyStressBenchmarkOptions, "controller" | "maxTicks" | "thinkInterval"> & { seed: string }): BenchmarkMatchInput<AiGameAgent> {
@@ -959,7 +942,7 @@ function requirePlacement(placements: Map<PlayerId, number>, owner: PlayerId) {
   return seat;
 }
 
-function v3RaceForMatch(seed: string, mapId: string, mapIndex: number, sideIndex: number): RaceId {
+export function v3RaceForMatch(seed: string, mapId: string, mapIndex: number, sideIndex: number): RaceId {
   return hashString(`${seed}:${mapId}:${mapIndex}:${sideIndex}`) % 2 === 0 ? "grove" : "ember";
 }
 
@@ -980,7 +963,7 @@ function hashString(value: string) {
   return hash >>> 0;
 }
 
-function hashCoin(value: string) {
+export function hashCoin(value: string) {
   const hash = hashString(value);
   // @@@hash-coin - Race sampling must not use only FNV's lowest bit, because fixed string prefixes can deterministically flip it.
   return ((hash ^ (hash >>> 16)) & 1) === 0;
@@ -1059,6 +1042,7 @@ export function filterAiMeleeControlBenchmarkInput(input: BenchmarkInput<AiGameA
   return filterBenchmarkInput(input, filter);
 }
 
+// `mapIds` keeps a game on one of the maps named: a ladder slot (the name's first word) or a fixed map's id.
 export function filterBenchmarkInput<TAgent extends AiGameAgent>(input: BenchmarkInput<TAgent>, filter: { mapIds?: readonly string[]; matchNames?: readonly string[] } = {}): BenchmarkInput<TAgent> {
   const mapIds = filter.mapIds ? new Set(filter.mapIds) : undefined;
   const matchNames = filter.matchNames ? new Set(filter.matchNames) : undefined;
@@ -1068,7 +1052,7 @@ export function filterBenchmarkInput<TAgent extends AiGameAgent>(input: Benchmar
     evaluations: input.evaluations.map((evaluation) => ({
       ...evaluation,
       matches: evaluation.matches.filter((match) => {
-        const mapMatches = !mapIds || (match.mapId !== undefined && mapIds.has(match.mapId));
+        const mapMatches = !mapIds || mapIds.has(gauntletMapOf(match)) || (match.mapId !== undefined && mapIds.has(match.mapId));
         const nameMatches = !matchNames || matchNames.has(match.name);
         return mapMatches && nameMatches;
       }),
@@ -1103,5 +1087,6 @@ function controlMatchDetail(match: BenchmarkMatchReport): AiMeleeControlMatchDet
     ...(match.result.trackers.woundedMoonWellStats ? { woundedMoonWellStats: match.result.trackers.woundedMoonWellStats as WoundedMoonWellStats } : {}),
     ...(match.result.trackers.armyBalanceStats ? { armyBalanceStats: match.result.trackers.armyBalanceStats as ArmyBalanceStats } : {}),
     ...(match.result.trackers.expansionClaimTimeline ? { expansionClaimTimeline: match.result.trackers.expansionClaimTimeline as ExpansionClaimTimelineStats } : {}),
+    ...(match.result.trackers.unitRosterStats ? { unitRosterStats: match.result.trackers.unitRosterStats as UnitRosterStats } : {}),
   };
 }

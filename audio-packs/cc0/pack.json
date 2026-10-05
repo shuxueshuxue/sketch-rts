@@ -1,0 +1,47 @@
+{
+  "name": "Freesound CC0",
+  "sounds": {
+    "melee": {
+      "file": "melee.ogg",
+      "volume": 1,
+      "pitch": 0.08,
+      "max": 4
+    },
+    "arrowShot": {
+      "file": "arrowShot.ogg",
+      "volume": 1,
+      "pitch": 0.06,
+      "max": 3
+    },
+    "arrowHit": {
+      "file": "arrowHit.ogg",
+      "volume": 1,
+      "pitch": 0.08,
+      "max": 3
+    },
+    "death": {
+      "file": "death.ogg",
+      "volume": 1,
+      "pitch": 0.05,
+      "max": 2
+    },
+    "built": {
+      "file": "built.ogg",
+      "volume": 1,
+      "pitch": 0.02,
+      "max": 1
+    },
+    "buildingDown": {
+      "file": "buildingDown.ogg",
+      "volume": 1,
+      "pitch": 0.04,
+      "max": 1
+    },
+    "click": {
+      "file": "click.ogg",
+      "volume": 1,
+      "pitch": 0.03,
+      "max": 2
+    }
+  }
+}

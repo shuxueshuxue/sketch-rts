@@ -1,3 +1,4 @@
+import { canCast } from "../../shared/ability-cooldowns";
 import { UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
@@ -10,7 +11,7 @@ import type { PresetAiPolicyOptions } from "./types";
 
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
-  for (const caster of units(snapshot, owner).filter((unit) => unit.cooldown === 0)) {
+  for (const caster of units(snapshot, owner).filter(canCast)) {
     const abilities = UNIT_DEFS[caster.kind].abilities;
     if (abilities.includes("heal")) {
       const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);

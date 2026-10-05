@@ -19,19 +19,20 @@ describe("static solo deployment runtime", () => {
     const runtime = new StaticSoloDeploymentRuntime();
 
     await expect(runtime.createRoom({ id: "room-invalid", host, mapId: "missing-map" as never })).rejects.toThrow("Malformed room create input");
+    await expect(runtime.createRoom({ id: "room-pool", host, mapId: "pineshade" })).resolves.toMatchObject({ mapId: "pineshade" });
   });
 
   it("uses shared room helpers for map, slot, and slot-count edits", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-setup", host, humanCount: 1, aiCount: 1 });
 
-    await runtime.updateRoomMap("room-setup", "wildMarches");
+    await runtime.updateRoomMap("room-setup", "ladder");
     await runtime.updateRoomSlotCounts("room-setup", 1, 2);
-    const room = await runtime.updateRoomSlot("room-setup", "slot-2", { controller: "ai", team: "south" });
+    const room = await runtime.updateRoomSlot("room-setup", "slot-2", { controller: "ai", team: "team-2" });
 
-    expect(room.mapId).toBe("wildMarches");
+    expect(room).toMatchObject({ mapId: "ladder" });
     expect(room.slots).toHaveLength(3);
-    expect(room.slots[1]).toMatchObject({ controller: "ai", team: "south", ready: true });
+    expect(room.slots[1]).toMatchObject({ controller: "ai", team: "team-2", ready: true });
   });
 
   it("starts a local match and advances AI-driven ticks without backend transport", async () => {

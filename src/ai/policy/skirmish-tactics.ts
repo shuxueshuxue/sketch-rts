@@ -4,10 +4,10 @@ import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { opponentPlayerIds } from "./ownership";
 import { buildings, combatUnits, enemyBuildings, hostileCombatUnits, units } from "./snapshot";
-import { averagePoint, clamp, distance, nearestEntity, type Point } from "./spatial";
+import { averagePoint, clamp, distance, nearestEntity, withinRangeOf, type Point } from "./spatial";
 import { behaviorDisabled, recordBehavior } from "./telemetry";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
 
@@ -18,7 +18,8 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   }
 
   const ownBase = mainBase(snapshot, owner);
-  const ownCombat = combatUnits(snapshot, owner);
+  // V6's spirits are free and expire on their own: they fight to the end instead of walking home wounded.
+  const ownCombat = combatUnits(snapshot, owner).filter((unit) => !(isV6Policy(options) && unit.kind === "spirit"));
   // @@@creep-preservation - Neutral camps are real combat threats; v2 must stop donating wounded units while creeping.
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const retreatPoint = skirmishRetreatPoint(snapshot, owner, enemies, ownBase);
@@ -190,7 +191,34 @@ function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: 
   };
 }
 
+// @@@v5-stutter-step - A shooter reloading next to a melee attacker is taking free swings. While its weapon is on cooldown it
+// steps away exactly as far as it can walk before the next shot is ready, then fires again: no damage lost, fewer hits taken.
+const STUTTER_MIN_STEP = 30;
+const STUTTER_MAX_STEP = 160;
+const STUTTER_THREAT_MARGIN = 60;
+const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "emberAcolyte", "fieldMedic"]);
+
+function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
+  const threat = enemies
+    .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN)
+    .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
+  if (!threat) return undefined;
+  const step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown);
+  if (step < STUTTER_MIN_STEP) return undefined;
+  const dx = unit.x - threat.x;
+  const dy = unit.y - threat.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const homeX = safePoint.x - unit.x;
+  const homeY = safePoint.y - unit.y;
+  const homeLength = Math.hypot(homeX, homeY) || 1;
+  const x = clamp(unit.x + (dx / length) * step + (homeX / homeLength) * step * 0.3, 0, snapshot.map.width);
+  const y = clamp(unit.y + (dy / length) * step + (homeY / homeLength) * step * 0.3, 0, snapshot.map.height);
+  return resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [unit.id], x, y }, options);
+}
+
 function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
+  if (isV5HybridPolicy(options)) return v5StutterStepCommand(snapshot, owner, unit, enemies, safePoint, options);
   if (options.version !== "v2" || unit.attackRange <= 100 || unit.hp >= unit.maxHp * 0.82) return undefined;
   const closeMelee = enemies
     .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= Math.max(75, enemy.attackRange + enemy.radius + unit.radius))
@@ -210,13 +238,15 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
 
 function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], ownBase: Point, options: PresetAiPolicyOptions): { allies: Unit[]; enemies: Unit[] } | undefined {
   const enemyBase = options.version === "v4-tr" ? nearestEnemyBase(snapshot, owner, ownBase, options) : undefined;
+  const enemiesNear = withinRangeOf(enemies, 560);
+  const alliesNear = withinRangeOf(ownCombat, 520);
   for (const anchor of ownCombat) {
     // @@@enemy-base-skirmish - V2/V3 should preserve bad enemy-base dives; V4-TR wins by keeping tower/merc pressure committed.
     if (distance(anchor, ownBase) < 700) continue;
     if (enemyBase && distance(anchor, enemyBase) < 700) continue;
-    const localEnemies = enemies.filter((unit) => distance(unit, anchor) <= 560);
+    const localEnemies = enemiesNear(anchor);
     if (localEnemies.length < 2) continue;
-    const allies = localSkirmishAllies(snapshot, owner, ownCombat, anchor, localEnemies, options);
+    const allies = localSkirmishAllies(snapshot, owner, alliesNear(anchor), localEnemies, options);
     if (allies.length < 2) continue;
     if (dormantNeutralThreatsStillOnRoute(localEnemies, allies)) continue;
     if (armyPower(localEnemies) <= armyPower(allies) * 1.05) continue;
@@ -225,8 +255,8 @@ function localSkirmish(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[
   return undefined;
 }
 
-function localSkirmishAllies(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], anchor: Unit, localEnemies: Unit[], options: PresetAiPolicyOptions) {
-  const nearbyAllies = ownCombat.filter((unit) => distance(unit, anchor) <= 520);
+// nearbyAllies: the own combat units within 520 of the anchor, in their order.
+function localSkirmishAllies(snapshot: GameSnapshot, owner: PlayerId, nearbyAllies: Unit[], localEnemies: Unit[], options: PresetAiPolicyOptions) {
   if (!isV5HybridPolicy(options) || opponentPlayerIds(snapshot, owner, options).length < 2) return nearbyAllies;
   if (playerState(snapshot, owner).race !== "ember") return nearbyAllies;
   const localEnemyIds = new Set(localEnemies.map((unit) => unit.id));

@@ -128,6 +128,19 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     if (lifecycleListeners.get(roomId)?.size === 0) lifecycleListeners.delete(roomId);
   }
 
+  // When each room was last attended (see closeIdleRooms).
+  const lastAttended = new Map<string, number>();
+
+  function closeHostedRoom(roomId: string, userId: string): RoomState {
+    const hosted = getHosted(roomId);
+    const closed = lifecycle.closeRoom(roomId, userId);
+    notifyHostedRoomLifecycle(hosted, { room: closed });
+    hostedRooms.delete(roomId);
+    lastAttended.delete(roomId);
+    dropEmptyListenerSets(roomId);
+    return closed;
+  }
+
   return {
     listRooms(viewerUserId?: string): RoomState[] {
       return lifecycle.listRooms(viewerUserId);
@@ -188,11 +201,25 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     },
 
     closeRoom(roomId: string, userId: string): RoomState {
-      const hosted = getHosted(roomId);
-      const closed = lifecycle.closeRoom(roomId, userId);
-      notifyHostedRoomLifecycle(hosted, { room: closed });
-      hostedRooms.delete(roomId);
-      dropEmptyListenerSets(roomId);
+      return closeHostedRoom(roomId, userId);
+    },
+
+    // @@@idle-room-reaper - A room nobody attends (no browser in it, no lobby watching it) for `idleMs` is closed as its
+    // host would close it, and freed. Rooms used to stay for good, every abandoned game in memory, and when the game went
+    // public the server ran out of heap within hours (10-02 22:08).
+    closeIdleRooms(attended: (roomId: string) => boolean, now: number, idleMs: number): string[] {
+      const closed: string[] = [];
+      for (const [roomId, hosted] of [...hostedRooms]) {
+        if (attended(roomId)) {
+          lastAttended.set(roomId, now);
+          continue;
+        }
+        const since = lastAttended.get(roomId) ?? now;
+        lastAttended.set(roomId, since);
+        if (now - since < idleMs) continue;
+        closeHostedRoom(roomId, hosted.room.hostUserId);
+        closed.push(roomId);
+      }
       return closed;
     },
 
@@ -267,6 +294,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         ...(options.aiVersions ?? setup.options.aiVersions ? { aiVersions: options.aiVersions ?? setup.options.aiVersions } : {}),
         ...(options.teams ?? setup.options.teams ? { teams: options.teams ?? setup.options.teams } : {}),
         ...(options.races ?? setup.options.races ? { races: options.races ?? setup.options.races } : {}),
+        ...(options.layout ?? setup.options.layout ? { layout: options.layout ?? setup.options.layout } : {}),
       };
       const game = createGame(mapId, mergedOptions);
       const aiRuntime = createHostedAiRuntime(mergedOptions.aiPlayers ?? [], mergedOptions.aiVersions);

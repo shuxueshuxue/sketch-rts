@@ -21,7 +21,7 @@ try {
 
   await waitForSdk();
   const catalog = await sdk.catalog();
-  must(catalog.maps.some((map) => map.id === "wildMarches"), "catalog did not expose map scenarios");
+  must(catalog.maps.some((map) => map.id === "ladder"), "catalog did not expose map scenarios");
   must(catalog.units.includes("summoner"), "catalog did not expose unit roster");
   must(catalog.buildings.includes("townHall"), "catalog did not expose buildable town hall");
   must(catalog.races.some((race) => race.id === "ember"), "catalog did not expose ember race slot");
@@ -29,8 +29,8 @@ try {
   await sdk.createRoom({ id: roomId, host, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 1 });
   roomCreated = true;
 
-  const startedWild = await sdk.resetRoom(roomId, "wildMarches");
-  must(startedWild.snapshot.map.id === "wildMarches", "SDK room reset did not select wildMarches");
+  const startedLadder = await sdk.resetRoom(roomId, "ladder");
+  must(startedLadder.snapshot.map.id === "ladder", "SDK room reset did not select the ladder map");
 
   const resetResult = await sdk.resetRoom(roomId, "bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
   const reset = resetResult.snapshot;

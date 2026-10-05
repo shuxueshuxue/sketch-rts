@@ -3,6 +3,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { benchmarkDashboardLogsDir, benchmarkDashboardRunsDir, listBenchmarkDashboardRuns, listBenchmarkDashboardRunsPage, readBenchmarkDashboardRun, readBenchmarkDashboardRunPage, recordBenchmarkDashboardReportRun, recordAiVersionBenchmarkDashboardRun } from "./dashboard-store";
+import { gauntletMapOf } from "./presets";
 
 describe("benchmark dashboard store", () => {
   it("lists dashboard summaries with backend pagination metadata", async () => {
@@ -141,8 +142,9 @@ describe("benchmark dashboard store", () => {
       expect(detail.report.evaluations.map((evaluation) => evaluation.name)).toEqual(["1v2 score", "1v1 score control", "1v3 probe", "2v3 probe", "15v20 mixed combat", "10v12 mixed combat"]);
       expect(detail.report.evaluations.map((evaluation) => evaluation.tag)).toEqual(["melee", "melee", "melee", "melee", "combat", "combat"]);
       expect(detail.report.evaluations.map((evaluation) => evaluation.matches.length)).toEqual([12, 24, 3, 3, 5, 5]);
-      expect([detail.report.evaluations[0]!, ...detail.report.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(detail.selectedRichScoreMapIds);
-      expect(detail.report.evaluations[1]!.matches.map((match) => match.setup.map.id)).toEqual(detail.report.evaluations[0]!.matches.flatMap((match) => [match.setup.map.id, match.setup.map.id]));
+      expect([detail.report.evaluations[0]!, ...detail.report.evaluations.slice(2, 4)].flatMap((evaluation) => evaluation.matches.map(gauntletMapOf))).toEqual(detail.selectedRichScoreMapIds);
+      expect(detail.report.evaluations.slice(0, 4).every((evaluation) => evaluation.matches.every((match) => match.setup.map.id === "ladder"))).toBe(true);
+      expect(detail.report.evaluations[1]!.matches.map(gauntletMapOf)).toEqual(detail.report.evaluations[0]!.matches.flatMap((match) => [gauntletMapOf(match), gauntletMapOf(match)]));
       expect(detail.report.evaluations.slice(4).flatMap((evaluation) => evaluation.matches.map((match) => match.setup.map.id))).toEqual(Array.from({ length: 10 }, () => "combatArena"));
       await expect(readFile(path.join(benchmarkDashboardLogsDir({ rootDir }), `${second.id}.log`), "utf8")).resolves.toContain("cpu time:");
     } finally {
@@ -171,7 +173,7 @@ describe("benchmark dashboard store", () => {
           kind: "ai-specialized-benchmark",
           seed: "v3-specialized",
           mapPoolSize: 64,
-          selectedRichScoreMapIds: ["wildMarches", "emberFen"],
+          selectedRichScoreMapIds: ["ladder-01", "ladder-02"],
           targetPlayerId: "v3",
           report: {
             name: "AI V3 vs Frozen Production V2 Benchmark",
@@ -190,17 +192,17 @@ describe("benchmark dashboard store", () => {
                 matchCount: 2,
                 matches: [
                   {
-                    name: "wildMarches v3 north",
+                    name: "ladder-01 v3 north",
                     elapsedMs: 1,
                     cpuMs: 2,
-                    setup: { map: { id: "wildMarches" }, players: benchmarkSetupPlayers({ v3Race: "grove" }) },
+                    setup: { map: { id: "ladder" }, players: benchmarkSetupPlayers({ v3Race: "grove" }) },
                     result: { gameSecond: 10, winner: "v3", winnerTeam: "north", players: minimalBenchmarkPlayers() },
                   },
                   {
-                    name: "emberFen v3 south",
+                    name: "ladder-02 v3 south",
                     elapsedMs: 1,
                     cpuMs: 2,
-                    setup: { map: { id: "emberFen" }, players: benchmarkSetupPlayers({ v3Race: "ember" }) },
+                    setup: { map: { id: "ladder" }, players: benchmarkSetupPlayers({ v3Race: "ember" }) },
                     result: { gameSecond: 12, winner: "v2-prod", winnerTeam: "north", players: minimalBenchmarkPlayers() },
                   },
                 ],
@@ -363,7 +365,7 @@ describe("benchmark dashboard store", () => {
           seed: "old-seed",
           name: "AI Version Benchmark",
           mapPoolSize: 64,
-          selectedRichScoreMapIds: ["pearlBog"],
+          selectedRichScoreMapIds: ["ladder-07"],
           scoreSummary: { name: "1v2 score", wins: 1, losses: 0, failures: 0, successRate: 1, matchCount: 1 },
           elapsedMs: 1,
           matchCount: 2,
@@ -403,7 +405,7 @@ function specializedRunFile(input: { id: string; createdAt: string; tag: string;
     createdAt: input.createdAt,
     seed: input.id,
     mapPoolSize: 64,
-    selectedRichScoreMapIds: ["pearlBog"],
+    selectedRichScoreMapIds: ["ladder-07"],
     mapCount: 1,
     full: false,
     targetPlayerId: "v3",
@@ -426,7 +428,7 @@ function specializedRunFile(input: { id: string; createdAt: string; tag: string;
             name: `${input.id} match ${index}`,
             elapsedMs: 1,
             cpuMs: 2,
-            setup: { map: { id: "pearlBog" } },
+            setup: { map: { id: "ladder" } },
             result: { gameSecond: 10, winner: "v3", winnerTeam: "north", players: minimalBenchmarkPlayers() },
           })),
         },

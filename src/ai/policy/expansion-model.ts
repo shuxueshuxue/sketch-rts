@@ -9,6 +9,7 @@ import { enemyPressure } from "./threats";
 import { hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy } from "./versions";
+import { onHomeGround } from "./ground";
 
 export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
   const townHalls = completeBuildings(snapshot, owner, "townHall");
@@ -18,8 +19,9 @@ export function desiredExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
     .sort((a, b) => distance(a, base) - distance(b, base))[0];
 }
 
+// A mine the owner's workers can walk to (see @@@ai-home-ground) with no hall by it.
 function unoccupiedExpansionMine(snapshot: GameSnapshot, owner: PlayerId, resource: ResourceNode, ownTownHalls = completeBuildings(snapshot, owner, "townHall")) {
-  return ownTownHalls.every((townHall) => distance(resource, townHall) > 520) && allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340);
+  return onHomeGround(snapshot, owner, resource) && ownTownHalls.every((townHall) => distance(resource, townHall) > 520) && allBuildings(snapshot).every((building) => building.kind !== "townHall" || distance(resource, building) > 340);
 }
 
 export function desiredCatchUpExpansionMine(snapshot: GameSnapshot, owner: PlayerId) {
@@ -44,11 +46,11 @@ export function desiredForwardExpansionMine(snapshot: GameSnapshot, owner: Playe
     .sort((a, b) => distance(a, center) - distance(b, center))[0];
 }
 
+// A hall mines when a mine with gold left is within 260 of it. (This read the nearest such mine, from a sorted copy of the
+// list made per hall, and tested its distance: the same as asking whether any is that near.)
 export function activeMiningBaseCount(snapshot: GameSnapshot, owner: PlayerId) {
-  return completeBuildings(snapshot, owner, "townHall").filter((townHall) => {
-    const mine = nearestResource(activeResources(snapshot), townHall);
-    return Boolean(mine && distance(mine, townHall) < 260);
-  }).length;
+  const mines = activeResources(snapshot);
+  return completeBuildings(snapshot, owner, "townHall").filter((townHall) => mines.some((mine) => distance(mine, townHall) < 260)).length;
 }
 
 export function expansionBaseTarget(options: PresetAiPolicyOptions) {

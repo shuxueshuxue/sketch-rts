@@ -23,7 +23,7 @@ export function syncFrontendWorldView(adapter: GameAdapter, state: FrontendWorld
   pruneControlGroups(state.controlGroups, liveIds);
 
   const selectedCampId =
-    state.selectedCampId && snapshot.mercenaryCamps.some((camp) => camp.id === state.selectedCampId) ? state.selectedCampId : undefined;
+    state.selectedCampId && [...snapshot.mercenaryCamps, ...(snapshot.shops ?? [])].some((post) => post.id === state.selectedCampId) ? state.selectedCampId : undefined;
 
   return {
     ...state,

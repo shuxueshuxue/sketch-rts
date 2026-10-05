@@ -1,3 +1,84 @@
+/* @@@antique-ui - The look of an old campaign table, after Age of Empires: parchment panels in carved walnut frames,
+   dark brown ink and dark gold, serif letters. Every colour, surface and frame is a token below, so the menus and the
+   match's HUD read as one set. A frame is a 9-slice SVG (border-image, slice 16): its corners keep their nails, its edges
+   stretch. */
+
+/* @@@cinzel - The display face, Cinzel (Natanael Gama; SIL Open Font License 1.1, fonts/cinzel/OFL.txt): its Latin
+   letters, every weight from 400 to 900 in one file, served with the game, no font service. Text shows at once in the
+   fallbacks after it in --font-display and takes Cinzel when it arrives; other scripts (Chinese) never fetch it. It was
+   named first in --font-display but never loaded, so the English titles and buttons were set in Palatino. */
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("./fonts/cinzel/cinzel-latin-wght.woff2") format("woff2");
+  /* Its capitals in the middle of its line: the ascent it lays out with, less its descent, is its cap height (0.70 em),
+     the two adding to the 1.35 em of its own. With its own metrics a home button's capitals sat 2 px high in their
+     60 px (and a Chinese label, whose line takes Cinzel's metrics as the first font, 1 px high). */
+  ascent-override: 102.5%;
+  descent-override: 32.5%;
+  line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --font-display: "Cinzel", "Trajan Pro", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+  --font-body: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+
+  /* Surfaces: speckle and stains for paper, streaks for wood. */
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .16 0 0 0 0 .06 0 0 0 .6 -.18'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='c' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .12 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='600' height='600' filter='url(%23c)'/%3E%3C/svg%3E");
+  --tex-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='w' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005 .11' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .02 0 0 0 0 0 0 0 0 1.5 -.6'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23w)'/%3E%3C/svg%3E");
+  --parchment: radial-gradient(ellipse at 35% 20%, #f5edda 0%, #e8dcc0 65%, #d9c7a0 100%);
+  --walnut: var(--tex-wood), linear-gradient(180deg, #3f2716 0%, #2a180b 100%);
+
+  /* The frame: walnut with a gold inlay and brass nails. */
+  --frame-walnut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cdefs%3E%3CradialGradient id='n' cx='.38' cy='.34' r='.66'%3E%3Cstop offset='0' stop-color='%23fff0b8'/%3E%3Cstop offset='.5' stop-color='%23b8903f'/%3E%3Cstop offset='1' stop-color='%23402a0c'/%3E%3C/radialGradient%3E%3Cfilter id='g' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.04 .45' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .01 0 0 0 1 -.35'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='48' height='48' fill='%231a0e05'/%3E%3Cpath d='M1 1H47L32 16H16Z' fill='%237d5434'/%3E%3Cpath d='M1 1L16 16V32L1 47Z' fill='%236a4428'/%3E%3Cpath d='M47 1V47L32 32V16Z' fill='%234a2c15'/%3E%3Cpath d='M1 47L16 32H32L47 47Z' fill='%233d230f'/%3E%3Crect x='1' y='1' width='46' height='46' filter='url(%23g)'/%3E%3Crect x='11.5' y='11.5' width='25' height='25' fill='none' stroke='%23d1ad5f'/%3E%3Crect x='15' y='15' width='18' height='18' fill='none' stroke='%231a0e05' stroke-width='2'/%3E%3Ccircle cx='6.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='6.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3C/svg%3E");
+
+  /* Parchment panels in walnut frames, dark brown ink, dark gold. */
+  --panel: var(--parchment);
+  --ink: #2e1d0e;
+  --ink-soft: #6a5133;
+  --title: #4d1d10;
+  --title-shadow: 0 1px 0 rgba(255, 246, 220, 0.7);
+  --accent: #8a6420;
+  --rule: rgba(90, 60, 25, 0.38);
+  --frame: var(--frame-walnut);
+  --inset: rgba(255, 249, 230, 0.45);
+  --inset-edge: rgba(90, 60, 25, 0.38);
+  --inset-ink: #2e1d0e;
+  --inset-ink-soft: #6a5133;
+  --selected: linear-gradient(90deg, rgba(150, 100, 30, 0.34), rgba(150, 100, 30, 0.06));
+  --selected-mark: #8a1f14;
+  --field: #faf2da;
+  --field-edge: #8a6a3e;
+  --field-ink: #2e1d0e;
+  --btn: linear-gradient(#7c5333, #4c2e16);
+  --btn-hover: linear-gradient(#90633d, #5c391c);
+  --btn-edge: #1c0f06;
+  --btn-ink: #f4e1ad;
+  --primary: linear-gradient(#e2c272, #a37b2d);
+  --primary-hover: linear-gradient(#efd38f, #b68b38);
+  --primary-edge: #4a300c;
+  --primary-ink: #2a1806;
+  --bar-value: #f3d07a;
+  --slot: linear-gradient(#f4e9cb, #dfcb9a);
+  --slot-edge: #3d230f;
+  --slot-ink: #3a2412;
+  --tip: var(--parchment);
+  --tip-ink: #2e1d0e;
+  --tip-soft: #6a5133;
+  --tip-title: #4d1d10;
+  /* Quiet lacquer and brass distinguish live controls from the paper map. */
+  --hud-panel: linear-gradient(145deg, #323a38, #202725);
+  --hud-ink: #e3decd;
+  --font-ui: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --scene-filter: saturate(0.96) brightness(0.98);
+  --shade: radial-gradient(ellipse at 62% 48%, rgba(40, 22, 8, 0) 25%, rgba(30, 16, 6, 0.6) 100%);
+  --danger: #8e2a1f;
+}
+
 html,
 body,
 #app {
@@ -8,27 +89,95 @@ body,
 }
 
 body {
-  background: #e9ead2;
-  color: #233126;
-  font-family:
-    ui-rounded,
-    "Trebuchet MS",
-    system-ui,
-    sans-serif;
+  background: #1a0f07;
+  color: var(--ink);
+  font-family: var(--font-body);
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-button {
+button,
+input,
+select {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"],
+input[type="range"] {
+  accent-color: #8a6420;
+}
+
+/* Scrollbars in the look's materials: a thin walnut track and a brass thumb. Chrome and Edge draw them from the
+   ::-webkit-scrollbar rules (which a scrollbar-color would switch off there), Firefox from scrollbar-color alone. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, #2a170b, #4a2c15 50%, #2a170b);
+  box-shadow: inset 0 0 0 1px #1a0e05;
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(180deg, #2a170b, #4a2c15 50%, #2a170b);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #2a170b;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(180deg, #8a6420, #e2c272 50%, #8a6420);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #a77b2c, #f2d792 50%, #a77b2c);
+}
+
+::-webkit-scrollbar-corner {
+  background: #2a170b;
+}
+
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9a14f #3b2414;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 700;
 }
 
 .game-shell {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #f5f0d8;
+  background: #1a0f07;
 }
 
 .game-canvas {
@@ -41,12 +190,31 @@ button {
   user-select: none;
 }
 
+.menu-open .game-canvas {
+  filter: var(--scene-filter);
+}
+
 .placement-active .game-canvas {
   cursor: copy;
 }
 
 .targeting-active .game-canvas {
   cursor: crosshair;
+}
+
+/* Over an enemy's or the creeps' (see @@@relation-ink), the attack cursor: a red ring and cross, dark-edged to read on
+   any ground; under pointer lock, the drawn cursor turns red. Placing a building keeps its own. */
+.pointer-over-enemy:not(.placement-active) .game-canvas {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cg stroke='%232e1d0e' stroke-width='4.5'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3Cg stroke='%23d8382b' stroke-width='2.2'%3E%3Ccircle cx='12' cy='12' r='6.5'/%3E%3Cpath d='M12 2v5M12 17v5M2 12h5M17 12h5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
+}
+
+.pointer-over-enemy:not(.placement-active) .virtual-pointer::before {
+  border-color: #6e1610;
+  background: rgba(216, 56, 43, 0.6);
+}
+
+.pointer-over-enemy:not(.placement-active) .virtual-pointer::after {
+  background: #6e1610;
 }
 
 .pointer-locked .game-canvas {
@@ -61,16 +229,16 @@ button {
   height: 18px;
   z-index: 1000;
   pointer-events: none;
-  filter: drop-shadow(0 2px 0 rgba(36, 49, 38, 0.16));
+  filter: drop-shadow(0 2px 0 rgba(20, 10, 4, 0.3));
 }
 
 .virtual-pointer::before {
   position: absolute;
   inset: 0;
   content: "";
-  border: 2px solid #243126;
+  border: 2px solid #2e1d0e;
   border-radius: 50%;
-  background: rgba(255, 250, 226, 0.42);
+  background: rgba(255, 244, 214, 0.45);
 }
 
 .virtual-pointer::after {
@@ -81,55 +249,65 @@ button {
   height: 4px;
   border-radius: 50%;
   content: "";
-  background: #243126;
+  background: #2e1d0e;
 }
+
+/* Carved frames belong to the menu, separate from the battle HUD. */
+.menu-window, .pointer-lock-panel, .map-preview-frame {
+  border:12px solid transparent;
+  border-image:var(--frame) 16 / 12px stretch;
+}
+
+/* ---------------------------------------------------------------- menus */
 
 .main-menu {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(280px, min(720px, calc(100vw - 40px)));
-  align-content: center;
-  justify-content: start;
-  gap: 14px;
-  padding: clamp(20px, 6vw, 76px);
+  place-items: center;
+  box-sizing: border-box;
+  padding: 28px;
+  overflow: hidden;
+  background: var(--shade);
   pointer-events: none;
 }
 
-.main-menu[data-menu-view="setup"] {
-  grid-template-columns: minmax(900px, min(1500px, calc(100vw - 88px)));
-  align-content: start;
-  padding: clamp(18px, 4vw, 52px);
+.main-menu.hidden {
+  display: none;
 }
 
-.main-menu[data-menu-view="rooms"] {
-  grid-template-columns: minmax(720px, min(1120px, calc(100vw - 88px)));
-  align-content: start;
-  padding: clamp(18px, 4vw, 52px);
-}
-
-.main-menu[data-menu-view="home"] {
-  grid-template-columns: minmax(280px, min(420px, calc(100vw - 40px)));
+.menu-window {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  gap: 14px;
+  width: min(1240px, calc(100vw - 56px));
+  max-height: calc(100dvh - 56px);
+  overflow: hidden;
+  padding: 18px 26px 22px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
 }
 
 .menu-title {
-  color: #233126;
-  font-size: clamp(44px, 8vw, 92px);
-  font-weight: 900;
-  letter-spacing: 0;
-  line-height: 0.92;
-  text-shadow: 0 2px 0 rgba(255, 250, 226, 0.72);
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  line-height: 1.1;
+  text-shadow: var(--title-shadow);
 }
 
 .menu-status {
-  width: fit-content;
-  max-width: 360px;
-  border: 1px solid rgba(59, 72, 50, 0.28);
-  border-radius: 6px;
-  background: rgba(255, 250, 226, 0.72);
-  padding: 6px 9px;
+  color: var(--ink-soft);
   font-size: 13px;
-  font-weight: 800;
+  font-style: italic;
 }
 
 .menu-status:empty {
@@ -138,60 +316,241 @@ button {
 
 .map-list {
   display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.room-section-title,
+.profile-id {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* The home screen: the game's name and three ways in down the left, nothing else; the scene (see @@@menu-scenes) plays
+   on the right, darkened and softened under the buttons. */
+.main-menu[data-menu-view="home"] {
+  place-items: center start;
+  padding-left: 9vw;
+  background:
+    linear-gradient(90deg, rgba(10, 5, 2, 0.9) 0%, rgba(10, 5, 2, 0.6) 30%, rgba(10, 5, 2, 0) 62%),
+    radial-gradient(ellipse 90% 80% at 65% 50%, rgba(8, 4, 1, 0) 50%, rgba(8, 4, 1, 0.7) 100%);
+}
+
+.main-menu[data-menu-view="home"]::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 30%, transparent 60%);
+}
+
+.main-menu[data-menu-view="home"] .menu-window {
+  z-index: 1;
+  width: auto;
+  max-height: none;
+  justify-items: start;
+  gap: 44px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-image: none;
+  background: none;
+  box-shadow: none;
+}
+
+.main-menu[data-menu-view="home"] .menu-title {
+  padding: 0;
+  border: 0;
+  background: linear-gradient(180deg, #fff4d2 0%, #ecd08c 46%, #a97f36 54%, #e0bf74 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(56px, 7vw, 104px);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow: none;
+  text-transform: uppercase;
+  filter: drop-shadow(0 3px 0 #1a0e05) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.75));
+}
+
+.main-menu[data-menu-view="home"] .map-list {
+  width: min(340px, calc(100vw - 56px));
+  gap: 16px;
+}
+
+.main-menu[data-menu-view="home"] .map-button {
+  align-items: center;
+  min-height: 60px;
+  padding: 0 24px;
+  border: 7px solid transparent;
+  border-image: var(--frame) 16 / 7px stretch;
+  background: var(--walnut);
+  color: #e9d29a;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.main-menu[data-menu-view="home"] .map-button:hover,
+.main-menu[data-menu-view="home"] .map-button:focus-visible {
+  outline: none;
+  background: var(--tex-wood), linear-gradient(180deg, #5a3a20, #3a2311);
+  color: #fff1c6;
+  text-shadow: 0 0 12px rgba(255, 214, 120, 0.6);
+}
+
+.main-menu[data-menu-view="home"] .map-button-name {
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+
+.main-menu[data-menu-view="home"] .map-button:first-child {
+  color: #f6dc94;
+}
+
+/* The scene's switch, bottom right of the home screen: the scene's name, a click for the next. */
+.scene-switch {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  z-index: 1;
+  display: none;
+  align-items: center;
   gap: 8px;
+  border: 1px solid rgba(214, 178, 101, 0.45);
+  border-radius: 2px;
+  background: rgba(20, 11, 4, 0.55);
+  color: #e9d29a;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: 0.15em;
   pointer-events: auto;
 }
 
+.scene-switch:hover,
+.scene-switch:focus-visible {
+  background: rgba(40, 24, 10, 0.75);
+  color: #fff1c6;
+}
+
+.scene-switch-mark {
+  font-size: 15px;
+}
+
+.main-menu[data-menu-view="home"] .scene-switch {
+  display: inline-flex;
+}
+
+/* A menu entry: a board with its name and, where it helps, a line under it. */
+/* A button holds its label in its middle whatever the font: its lines in a column centred down the button, each 1.2
+   high. As a grid its one row filled the button and the label sat at the top of that row, under the top edge; and a
+   Latin font's own line (Palatino, Cinzel's fallback, is 1.37 high with a deep descent) lifted the capitals further. */
 .map-button {
-  display: grid;
-  gap: 5px;
-  border: 1px solid rgba(45, 61, 43, 0.36);
-  border-radius: 7px;
-  background: rgba(255, 250, 226, 0.84);
-  color: #233126;
-  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 2px;
+  background: var(--btn);
+  color: var(--btn-ink);
+  padding: 10px 14px;
   text-align: left;
-  box-shadow:
-    inset 0 -2px 0 rgba(36, 49, 38, 0.08),
-    0 2px 0 rgba(44, 50, 38, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 236, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .map-button:hover,
 .map-button:focus-visible {
-  border-color: #315f87;
-  outline: none;
-  background: rgba(255, 250, 226, 0.94);
-}
-
-.map-button.selected {
-  border-color: rgba(49, 95, 135, 0.72);
-  background: rgba(232, 241, 220, 0.96);
+  background: var(--btn-hover);
 }
 
 .map-button-name {
-  font-size: 17px;
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .map-button-note {
   font-size: 12px;
-  line-height: 1.28;
+  line-height: 1.35;
+  opacity: 0.82;
 }
 
-.map-button-tags {
+.menu-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.map-button-tags span {
-  border: 1px solid rgba(49, 95, 135, 0.28);
-  border-radius: 4px;
-  color: #315f87;
-  padding: 1px 5px;
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 800;
+.menu-actions button,
+.pointer-lock-panel button,
+.match-action,
+.slot-actions button {
+  min-height: 34px;
+  border: 1px solid var(--btn-edge);
+  border-radius: 2px;
+  background: var(--btn);
+  color: var(--btn-ink);
+  padding: 6px 16px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.menu-actions button:hover,
+.slot-actions button:hover,
+.match-action:hover {
+  background: var(--btn-hover);
+}
+
+.menu-actions button:first-child,
+.pointer-lock-panel button {
+  min-width: 140px;
+  border-color: var(--primary-edge);
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.menu-actions button:first-child:hover,
+.pointer-lock-panel button:hover {
+  background: var(--primary-hover);
+}
+
+.menu-actions button:disabled,
+.slot-actions button:disabled {
+  opacity: 0.45;
+}
+
+.slot-actions .danger-button {
+  color: #f4ab92;
+}
+
+.profile-form input:not([type="range"]):not([type="checkbox"]),
+.profile-form select,
+.create-game-form input:not([type="checkbox"]),
+.slot-row select,
+.slot-controller-badge {
+  box-sizing: border-box;
+  min-height: 32px;
+  border: 1px solid var(--field-edge);
+  border-radius: 2px;
+  background: var(--field);
+  color: var(--field-ink);
+  padding: 5px 9px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
 }
 
 .profile-form,
@@ -200,150 +559,367 @@ button {
 .room-setup,
 .results-panel {
   display: grid;
-  gap: 10px;
-  pointer-events: auto;
-}
-
-.room-browser {
-  width: min(1120px, calc(100vw - 88px));
-  height: min(56vh, 520px);
-  grid-template-columns: minmax(220px, 0.32fr) minmax(420px, 0.68fr);
   gap: 14px;
-  min-height: 0;
 }
 
-.room-browser-actions,
-.room-browser-list {
+.profile-form label,
+.create-game-form label {
   display: grid;
-  align-content: start;
-  gap: 8px;
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid rgba(45, 61, 43, 0.24);
-  border-radius: 7px;
-  background: rgba(255, 250, 226, 0.42);
-  padding: 10px;
-  overflow: auto;
-}
-
-.room-browser-actions {
-  grid-auto-rows: max-content;
-}
-
-.room-browser-list .map-button-note {
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.empty-room-list {
-  border: 1px dashed rgba(45, 61, 43, 0.28);
-  border-radius: 7px;
-  color: rgba(35, 49, 38, 0.68);
-  padding: 14px;
+  gap: 5px;
+  color: var(--ink-soft);
   font-size: 13px;
-  font-weight: 800;
 }
 
-.create-game-grid {
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.main-menu[data-menu-view="profile"] .menu-window {
+  width: min(520px, calc(100vw - 56px));
+}
+
+.sound-settings {
   display: grid;
   gap: 10px;
-  max-width: 420px;
+  margin: 0;
+  border: 1px solid var(--inset-edge);
+  border-radius: 2px;
+  background: var(--inset);
+  padding: 10px 14px 12px;
 }
 
-.room-setup {
-  width: min(1500px, calc(100vw - 88px));
-  height: min(72vh, 720px);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
+.sound-settings legend {
+  padding: 0 6px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
-.room-setup .map-button {
-  padding: 8px 10px;
+.sound-settings label:not(.checkbox-row) {
+  grid-template-columns: 64px 1fr;
+  align-items: center;
 }
 
-.room-setup .map-button-note {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.room-setup .room-map-grid {
-  grid-template-columns: 1fr;
-  max-height: none;
-  min-height: 0;
-}
-
-.room-setup .slot-list {
-  min-height: 0;
-  overflow: auto;
-  padding-right: 3px;
-}
-
-.room-setup .menu-actions {
-  position: sticky;
-  bottom: 0;
-  padding-top: 6px;
-  background: linear-gradient(rgba(245, 240, 216, 0), rgba(245, 240, 216, 0.96) 28%);
-}
-
-.room-setup-header,
-.room-setup-layout,
-.room-map-pane,
+/* Insets: the lists and notes sunk into a panel. */
+.map-browser,
+.map-info,
+.room-browser-actions,
+.room-browser-list,
 .room-slot-pane,
-.slot-pane-head {
-  min-width: 0;
+.room-map-pane,
+.results-panel .result-list,
+.room-list-note {
+  border: 1px solid var(--inset-edge);
+  border-radius: 2px;
+  background: var(--inset);
+  color: var(--inset-ink);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
 }
 
-.room-setup-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
+/* @@@one-screen-menus - The create screen and the lobby are one screen, as a game's are: the window takes the height it is
+   given and never scrolls as a page; the map list and the seats scroll in their own boxes, and the map's picture
+   (--preview) is what the window's height leaves after its other rows, so a short window shrinks the picture first. */
+.main-menu[data-menu-view="create"],
+.main-menu[data-menu-view="setup"] {
+  padding: 16px;
+}
+
+.main-menu[data-menu-view="create"] {
+  --preview: clamp(200px, calc(100dvh - 300px), 560px);
+}
+
+.main-menu[data-menu-view="setup"] {
+  --preview: clamp(150px, calc(100dvh - 440px), 400px);
+}
+
+.main-menu[data-menu-view="create"] .menu-window,
+.main-menu[data-menu-view="setup"] .menu-window {
+  width: min(1240px, calc(100vw - 32px));
+  height: min(900px, calc(100dvh - 32px));
+  max-height: none;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px 24px 18px;
+}
+
+.main-menu[data-menu-view="create"] .menu-title,
+.main-menu[data-menu-view="setup"] .menu-title {
+  grid-row: 1;
+  padding-bottom: 6px;
+  font-size: 26px;
+}
+
+.main-menu[data-menu-view="create"] .menu-status,
+.main-menu[data-menu-view="setup"] .menu-status,
+.main-menu[data-menu-view="rooms"] .menu-status {
+  grid-row: 2;
+}
+
+.main-menu[data-menu-view="create"] .map-list,
+.main-menu[data-menu-view="setup"] .map-list,
+.main-menu[data-menu-view="rooms"] .map-list {
+  grid-row: 3;
+}
+
+.create-game-form {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   gap: 12px;
 }
 
-.room-setup-name {
-  overflow: hidden;
-  color: #233126;
-  font-size: 18px;
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.room-setup {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
 }
 
-.room-slot-summary,
-.slot-capacity,
-.create-slot-total {
-  color: rgba(35, 49, 38, 0.78);
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 900;
+/* The create screen (see @@@map-chooser). */
+.map-chooser {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 18px;
+  min-height: 0;
 }
 
-.room-slot-summary {
-  margin-top: 2px;
+.map-browser {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 12px;
+  min-height: 0;
 }
 
+.map-browser .room-section-title,
+.room-map-pane .room-section-title,
+.room-slot-pane .room-section-title {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.map-entries {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  overflow: auto;
+}
+
+.map-entry {
+  position: relative;
+  border: 0;
+  border-radius: 1px;
+  background: transparent;
+  color: var(--inset-ink);
+  padding: 7px 10px 7px 16px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.map-entry:hover {
+  background: rgba(150, 100, 30, 0.14);
+}
+
+.map-entry.selected {
+  background: var(--selected);
+  font-weight: 700;
+}
+
+.map-entry.selected::before {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  content: "";
+  border: 4px solid transparent;
+  border-left: 5px solid var(--selected-mark);
+  transform: translateY(-50%);
+}
+
+.map-detail {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr);
+  gap: 18px;
+  align-items: start;
+  min-width: 0;
+}
+
+.map-preview-frame {
+  border-width: 10px;
+  border-image-width: 10px;
+  background: #1a0e05;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  line-height: 0;
+}
+
+.map-preview {
+  display: block;
+  width: var(--preview, 440px);
+  height: var(--preview, 440px);
+}
+
+.map-info {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.map-info-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.map-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 5px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.map-facts dt {
+  color: var(--inset-ink-soft);
+}
+
+.map-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.create-options {
+  display: grid;
+  grid-template-columns: minmax(200px, 420px) auto;
+  align-items: end;
+  gap: 18px;
+}
+
+.create-options .checkbox-row {
+  padding-bottom: 8px;
+}
+
+/* The room browser: the rooms, then the way out and the way to a new room, as the other screens end.
+   @@@steady-rooms - Its window is one size however many rooms there are and while they load: a share of the screen's
+   height within bounds, the list taking what the title and the buttons leave and scrolling inside it, with room kept
+   for its scrollbar whether or not there is one. The window took the size of what it held: the home screen's buttons
+   until the rooms came, then as many rooms as there were. */
+.main-menu[data-menu-view="rooms"] .menu-window {
+  width: min(900px, calc(100vw - 56px));
+  height: min(max(320px, 76dvh), 720px, calc(100dvh - 56px));
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.room-browser {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.room-browser-list {
+  display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 12px;
+}
+
+.room-browser-actions {
+  order: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.room-browser-actions .map-button {
+  min-width: 140px;
+  align-items: center;
+  padding: 7px 16px;
+}
+
+.room-browser-actions .map-button:first-child {
+  border-color: var(--primary-edge);
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.room-browser-actions .map-button-name {
+  font-size: 13px;
+}
+
+.room-browser-list .map-button {
+  border-color: var(--inset-edge);
+  background: transparent;
+  color: var(--inset-ink);
+  box-shadow: none;
+}
+
+.room-browser-list .map-button:hover {
+  background: var(--selected);
+}
+
+.room-list-note {
+  padding: 16px;
+  color: var(--inset-ink-soft);
+  font-style: italic;
+}
+
+/* The lobby: seats on the left, the map on the right, as Warcraft III's. */
 .room-setup-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 0.42fr) minmax(520px, 0.58fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
   min-height: 0;
 }
 
-.room-map-pane,
-.room-slot-pane {
-  display: grid;
-  min-height: 0;
-}
-
+.room-slot-pane,
 .room-map-pane {
-  grid-template-rows: auto minmax(0, 1fr);
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.room-map-pane .map-detail {
+  grid-template-columns: auto;
+}
+
+.room-map-pane .map-info {
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.room-map-pane .map-info-name {
+  font-size: 18px;
+}
+
+.room-map-pane .map-facts {
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: 3px 12px;
+  font-size: 13px;
 }
 
 .room-slot-pane {
   grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  min-height: 0;
 }
 
 .slot-pane-head {
@@ -351,308 +927,122 @@ button {
   align-items: start;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid rgba(45, 61, 43, 0.18);
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--inset-edge);
 }
 
 .slot-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: end;
+  justify-content: flex-end;
   gap: 6px;
 }
 
 .slot-actions button {
   min-height: 28px;
-  border: 1px solid rgba(45, 61, 43, 0.28);
-  border-radius: 4px;
-  background: rgba(255, 250, 226, 0.86);
-  color: #315f87;
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.slot-actions button:hover,
-.slot-actions button:focus-visible {
-  outline: none;
-  background: rgba(232, 241, 220, 0.96);
-}
-
-.slot-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.46;
-}
-
-.slot-actions .danger-button {
-  border-color: rgba(155, 47, 47, 0.32);
-  color: #8d2d2d;
-}
-
-.profile-form label,
-.create-game-form label {
-  display: grid;
-  gap: 5px;
-  max-width: 360px;
-  color: #233126;
+  padding: 3px 10px;
   font-size: 12px;
-  font-weight: 900;
-}
-
-.profile-form input,
-.create-game-form input,
-.create-game-form select {
-  border: 1px solid rgba(45, 61, 43, 0.36);
-  border-radius: 5px;
-  background: rgba(255, 250, 226, 0.92);
-  color: #233126;
-  padding: 8px 9px;
-  font: inherit;
-}
-
-.create-count-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  max-width: 360px;
-}
-
-.checkbox-row {
-  display: flex !important;
-  grid-template-columns: none;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox-row input {
-  width: auto;
-}
-
-.profile-id,
-.room-section-title {
-  color: rgba(35, 49, 38, 0.74);
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.menu-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.menu-actions button {
-  min-height: 32px;
-  border: 1px solid rgba(49, 95, 135, 0.42);
-  border-radius: 5px;
-  background: rgba(255, 250, 226, 0.86);
-  color: #315f87;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.menu-actions button:hover,
-.menu-actions button:focus-visible {
-  outline: none;
-  background: rgba(232, 241, 220, 0.96);
-}
-
-.room-map-grid {
-  display: grid;
-  max-height: min(42vh, 360px);
-  gap: 7px;
-  overflow: auto;
-  padding-right: 3px;
-  scrollbar-gutter: stable;
 }
 
 .slot-list {
   display: grid;
   align-content: start;
-  grid-auto-rows: max-content;
-  gap: 5px;
-  scrollbar-gutter: stable;
+  gap: 4px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .slot-row {
-  display: grid;
-  grid-template-columns: 24px minmax(110px, 1fr) 96px 88px 88px auto;
-  gap: 8px;
+  display: flex;
   align-items: center;
-  border: 1px solid rgba(45, 61, 43, 0.24);
-  border-radius: 5px;
-  background: rgba(255, 250, 226, 0.68);
-  padding: 7px 8px;
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 800;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--inset-edge);
+  font-size: 13px;
 }
 
 .slot-index {
-  color: rgba(35, 49, 38, 0.56);
-  text-align: right;
+  flex: 0 0 22px;
+  color: var(--selected-mark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
 }
 
-.slot-row select {
-  width: 100%;
+.slot-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-row select,
+.slot-controller-badge {
+  flex: 0 0 92px;
   min-height: 28px;
-  border: 1px solid rgba(45, 61, 43, 0.28);
-  border-radius: 4px;
-  background: rgba(255, 250, 226, 0.9);
-  color: #233126;
-  font: inherit;
+  padding: 2px 6px;
+}
+
+.slot-row [data-slot-ai] {
+  flex-basis: 64px;
 }
 
 .slot-controller-badge {
-  min-height: 28px;
-  border: 1px solid rgba(45, 61, 43, 0.18);
-  border-radius: 4px;
-  background: rgba(232, 241, 220, 0.72);
-  color: rgba(35, 49, 38, 0.76);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 7px;
-  text-transform: lowercase;
 }
 
 .slot-ready {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
   white-space: nowrap;
 }
 
-.slot-name {
-  min-width: 0;
-  overflow: hidden;
-  font-family: inherit;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 960px) {
-  .main-menu[data-menu-view="setup"],
-  .main-menu[data-menu-view="rooms"] {
-    grid-template-columns: minmax(280px, calc(100vw - 32px));
-    padding: 18px 16px;
-  }
-
-  .room-browser {
-    width: calc(100vw - 32px);
-    height: min(72vh, 640px);
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .room-setup {
-    width: calc(100vw - 32px);
-    height: min(78vh, 760px);
-  }
-
-  .room-setup-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(180px, 0.44fr) minmax(260px, 0.56fr);
-  }
-
-  .slot-row {
-    grid-template-columns: 22px minmax(96px, 1fr) 82px 76px 76px auto;
-    gap: 6px;
-  }
-}
-
+/* The results. */
 .results-panel {
-  width: min(620px, calc(100vw - 40px));
+  width: min(680px, 100%);
 }
 
 .result-winner {
-  border: 1px solid rgba(49, 95, 135, 0.35);
-  border-radius: 6px;
-  background: rgba(232, 241, 220, 0.92);
-  padding: 9px 10px;
-  color: #233126;
-  font-size: 18px;
-  font-weight: 900;
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: var(--title-shadow);
+}
+
+.result-list {
+  display: grid;
+  max-height: min(42vh, 360px);
+  overflow: auto;
 }
 
 .result-head,
 .result-row {
   display: grid;
   grid-template-columns: minmax(92px, 1.4fr) repeat(6, minmax(42px, 0.7fr));
-  gap: 6px;
   align-items: center;
-  border: 1px solid rgba(45, 61, 43, 0.22);
-  border-radius: 5px;
-  background: rgba(255, 250, 226, 0.72);
-  padding: 7px 8px;
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 800;
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .result-head {
-  background: rgba(49, 95, 135, 0.12);
-  color: rgba(35, 49, 38, 0.72);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.result-list {
-  display: grid;
-  max-height: min(42vh, 360px);
-  gap: 5px;
-  overflow: auto;
-}
-
-.menu-open .top-strip,
-.menu-open .selection-chip,
-.menu-open .command-dock,
-.menu-open .item-dock,
-.menu-open .chat-overlay,
-.menu-open .status-line {
-  display: none;
-}
-
-.top-strip,
-.selection-chip,
-.command-dock,
-.item-dock,
-.status-line,
-.pointer-lock-panel {
-  position: absolute;
-  border: 1px solid rgba(59, 72, 50, 0.28);
-  background: rgba(255, 250, 226, 0.86);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 0 rgba(44, 50, 38, 0.08);
-}
-
-.top-strip {
-  top: 12px;
-  left: 12px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 6px;
-}
-
-.brand {
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.resource-readout {
-  color: #8a6418;
-  font-weight: 700;
-}
-
-.supply-readout {
-  color: #315f87;
-  font-weight: 700;
+.result-row + .result-row {
+  border-top: 1px solid var(--inset-edge);
 }
 
 .chat-overlay {
@@ -676,13 +1066,11 @@ button {
 
 .chat-message {
   max-width: 100%;
-  color: rgba(21, 28, 20, 0.94);
-  font-size: 13px;
+  color: #fff3d6;
+  font-size: 14px;
   line-height: 1.35;
   overflow-wrap: anywhere;
-  text-shadow:
-    0 1px 0 rgba(255, 251, 231, 0.82),
-    0 0 5px rgba(255, 251, 231, 0.72);
+  text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9);
   transition: opacity 1.2s ease;
 }
 
@@ -691,8 +1079,8 @@ button {
 }
 
 .chat-sender {
-  color: #6d4a11;
-  font-weight: 800;
+  color: #f0c95e;
+  font-weight: 700;
 }
 
 .chat-input-row {
@@ -703,18 +1091,13 @@ button {
 .chat-input-row input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 250, 226, 0.54);
-  border-radius: 6px;
-  background: rgba(28, 35, 24, 0.72);
-  color: #fff8dc;
-  font: inherit;
-  font-size: 13px;
+  border: 1px solid #9c7a34;
+  border-radius: 2px;
+  background: rgba(20, 11, 4, 0.82);
+  color: #fff3d6;
+  font-size: 14px;
   outline: none;
   padding: 8px 10px;
-}
-
-.chat-input-row input:focus {
-  border-color: rgba(242, 199, 102, 0.88);
 }
 
 .pointer-lock-gate {
@@ -723,314 +1106,218 @@ button {
   z-index: 1200;
   display: grid;
   place-items: center;
-  background: rgba(35, 49, 38, 0.18);
+  background: rgba(15, 8, 3, 0.45);
   pointer-events: auto;
 }
 
 .pointer-lock-panel {
-  position: static;
   display: grid;
-  width: min(420px, calc(100vw - 32px));
-  gap: 12px;
-  border-radius: 7px;
-  padding: 18px;
+  width: min(440px, calc(100vw - 32px));
+  box-sizing: border-box;
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
 
 .pointer-lock-panel h2 {
   margin: 0;
-  color: #233126;
-  font-size: 22px;
-  line-height: 1.05;
+  color: var(--title);
+  font-family: var(--font-display);
+  font-size: 24px;
+  text-shadow: var(--title-shadow);
 }
 
 .pointer-lock-panel p {
   margin: 0;
-  color: rgba(35, 49, 38, 0.86);
+  color: var(--ink-soft);
   font-size: 14px;
-  font-weight: 700;
-  line-height: 1.42;
+  line-height: 1.6;
 }
 
 .pointer-lock-panel button {
-  justify-self: start;
-  border: 1px solid rgba(49, 95, 135, 0.42);
-  border-radius: 5px;
-  background: #315f87;
-  color: #fffbe3;
-  padding: 8px 11px;
-  font-size: 13px;
-  font-weight: 900;
+  justify-self: stretch;
+  min-height: 40px;
 }
 
-.selection-chip {
-  left: 12px;
-  bottom: 12px;
-  max-width: min(520px, calc(100vw - 260px));
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow-x: auto;
-  padding: 5px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 800;
+/* A narrow window stacks the create screen and the lobby only when it is also tall; a short one (a phone on its side)
+   keeps them side by side (see the short window below). Stacked, a screen is taller than the window, so the window
+   scrolls as a whole instead of keeping one screen (see @@@one-screen-menus): held to the window's height, it squeezed
+   the map list and the seats to nothing and laid the form over the map's facts. The list keeps its own few rows, and
+   the picture fits the width (on a phone upright it ran off the window's right edge). */
+@media (max-width: 960px) and (min-height: 601px) {
+  .map-chooser,
+  .map-detail,
+  .room-setup-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .main-menu[data-menu-view="create"] {
+    --preview: min(calc(100vw - 124px), 400px);
+  }
+
+  .main-menu[data-menu-view="setup"] {
+    --preview: min(calc(100vw - 148px), 400px);
+  }
+
+  /* Every row as tall as what it holds: a flexible row under the window's max-height is shared out again and squeezed. */
+  .main-menu[data-menu-view="create"] .menu-window,
+  .main-menu[data-menu-view="setup"] .menu-window {
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    grid-template-rows: auto;
+  }
+
+  .create-game-form,
+  .room-setup,
+  .map-browser,
+  .room-slot-pane {
+    height: auto;
+    grid-template-rows: auto;
+  }
+
+  .map-entries {
+    max-height: 32dvh;
+  }
+
+  /* A seat's controls go to a second line rather than the seat scrolling sideways. */
+  .slot-list .slot-row {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .room-map-pane .map-facts {
+    grid-template-columns: auto 1fr;
+  }
 }
 
-.selection-model {
-  position: relative;
-  display: grid;
-  width: 48px;
-  height: 38px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(45, 61, 43, 0.32);
-  border-radius: 5px;
-  background: rgba(251, 247, 223, 0.88);
-  padding: 0;
-  box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.08);
+/* A short window (a phone on its side): the create screen and the lobby keep one screen by spending less on their
+   frame and title, putting the room's name beside the buttons, leaving out the lobby's map facts (chosen on the create
+   screen), and giving the map's picture what the height leaves (see @@@one-screen-menus). */
+@media (max-height: 600px) {
+  .main-menu[data-menu-view="create"],
+  .main-menu[data-menu-view="setup"] {
+    padding: 8px;
+  }
+
+  .main-menu[data-menu-view="create"] {
+    --preview: clamp(96px, calc(100dvh - 175px), 560px);
+  }
+
+  .main-menu[data-menu-view="setup"] {
+    --preview: clamp(96px, calc(100dvh - 220px), 400px);
+  }
+
+  .main-menu[data-menu-view="create"] .menu-window,
+  .main-menu[data-menu-view="setup"] .menu-window {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    gap: 6px;
+    padding: 8px 14px 10px;
+  }
+
+  .main-menu[data-menu-view="create"] .menu-title,
+  .main-menu[data-menu-view="setup"] .menu-title {
+    padding-bottom: 2px;
+    font-size: 20px;
+  }
+
+  .create-game-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 8px 14px;
+  }
+
+  .create-game-form .map-chooser {
+    grid-column: 1 / -1;
+  }
+
+  .create-game-form .create-options {
+    grid-template-columns: minmax(140px, 300px) auto;
+    gap: 12px;
+  }
+
+  .create-game-form .menu-actions {
+    align-self: end;
+  }
+
+  .map-chooser {
+    grid-template-columns: minmax(170px, 240px) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .map-browser {
+    padding: 8px;
+  }
+
+  .map-detail {
+    gap: 12px;
+  }
+
+  .map-info {
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .room-setup {
+    gap: 8px;
+  }
+
+  .room-setup-layout {
+    gap: 12px;
+  }
+
+  .room-map-pane .map-facts {
+    display: none;
+  }
+
+  .slot-row select,
+  .slot-controller-badge {
+    flex-basis: 80px;
+  }
+
+  .slot-row [data-slot-ai] {
+    flex-basis: 56px;
+  }
+
+  /* The narrower controls fit a seat in the pane, so it need not scroll sideways (the narrow window's 520). */
+  .slot-list .slot-row {
+    min-width: 0;
+  }
 }
 
-.selection-model.focused {
-  border-color: rgba(49, 95, 135, 0.78);
-  background: #fffbe7;
-  box-shadow: 0 0 0 2px rgba(49, 95, 135, 0.14), inset 0 -2px 0 rgba(36, 49, 38, 0.08);
+@media (max-width: 960px) {
+  .create-options {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .slot-list {
+    overflow-x: auto;
+  }
+
+  .slot-row {
+    min-width: 520px;
+  }
 }
 
-.selection-model.dimmed {
-  opacity: 0.62;
+@media (max-width: 600px) {
+  .main-menu {
+    padding: 12px;
+  }
+
+  .main-menu[data-menu-view="home"] {
+    place-items: center;
+    padding-left: 12px;
+  }
+
+  .menu-window {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 14px 16px;
+  }
 }
 
-.selection-model:hover,
-.selection-model:focus-visible {
-  opacity: 1;
-  border-color: rgba(49, 95, 135, 0.66);
-}
-
-.selection-model-canvas {
-  width: 34px;
-  height: 34px;
-}
-
-.selection-model-count {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  min-width: 16px;
-  border-radius: 2px;
-  background: rgba(36, 49, 38, 0.78);
-  color: #fffbe7;
-  font-family: ui-monospace, monospace;
-  font-size: 9px;
-  line-height: 11px;
-}
-
-.command-dock {
-  left: 12px;
-  bottom: 64px;
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 6px;
-}
-
-.item-dock {
-  left: 12px;
-  bottom: 110px;
-  display: flex;
-  gap: 5px;
-  padding: 5px;
-  border-radius: 6px;
-}
-
-.hidden {
-  display: none;
-}
-
-.item-button,
-.command-button {
-  position: relative;
-  border: 1px solid rgba(45, 61, 43, 0.34);
-  border-radius: 5px;
-  background: #fbf7df;
-  color: #243126;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  text-align: center;
-  box-shadow: inset 0 -2px 0 rgba(36, 49, 38, 0.1);
-}
-
-.item-button-cooldown {
-  opacity: 0.72;
-}
-
-.item-cooldown {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
-  background: rgba(36, 49, 38, 0.48);
-  color: #fbf7df;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.research-progress-button[aria-disabled="true"] {
-  opacity: 1;
-}
-
-.research-progress-fill {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: var(--research-progress);
-  height: 4px;
-  border-radius: 0 0 0 4px;
-  background: #315f87;
-}
-
-.research-progress-text {
-  position: absolute;
-  right: 3px;
-  bottom: 6px;
-  color: #315f87;
-  font-family: ui-monospace, monospace;
-  font-size: 9px;
-  font-weight: 900;
-}
-
-.item-icon {
-  display: block;
-  font-size: 19px;
-  line-height: 34px;
-  font-weight: 900;
-}
-
-.command-icon {
-  display: block;
-  font-size: 20px;
-  line-height: 34px;
-  font-weight: 800;
-}
-
-.hotkey {
-  position: absolute;
-  right: 3px;
-  bottom: 2px;
-  min-width: 12px;
-  border-radius: 2px;
-  background: rgba(36, 49, 38, 0.78);
-  color: #fffbe7;
-  font-family: ui-monospace, monospace;
-  font-size: 9px;
-  line-height: 11px;
-}
-
-.command-button:disabled {
-  color: #8f947f;
-  background: rgba(246, 241, 214, 0.72);
-}
-
-.command-button-disabled {
-  cursor: not-allowed;
-  opacity: 0.82;
-}
-
-.command-button[data-disabled-label]::after {
-  content: attr(data-disabled-label);
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  max-width: calc(100% - 6px);
-  overflow: hidden;
-  padding: 1px 3px;
-  border-radius: 3px;
-  background: rgba(36, 49, 38, 0.82);
-  color: #fffbe7;
-  font-family: ui-monospace, monospace;
-  font-size: 8px;
-  font-weight: 900;
-  line-height: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.command-button-cooldown::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(36, 49, 38, 0.24);
-  pointer-events: none;
-}
-
-.tooltip-layer {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 20;
-  max-width: min(320px, calc(100vw - 20px));
-  padding: 9px 10px;
-  border: 1px solid rgba(36, 49, 38, 0.32);
-  border-radius: 6px;
-  background: rgba(255, 251, 231, 0.98);
-  color: #243126;
-  font-size: 12px;
-  line-height: 1.35;
-  pointer-events: none;
-  box-shadow: 0 8px 18px rgba(36, 49, 38, 0.14);
-}
-
-.tooltip-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  font-weight: 900;
-}
-
-.tooltip-title span {
-  min-width: 16px;
-  border-radius: 2px;
-  background: rgba(36, 49, 38, 0.78);
-  color: #fffbe7;
-  font-family: ui-monospace, monospace;
-  font-size: 9px;
-  line-height: 12px;
-  text-align: center;
-}
-
-.tooltip-body {
-  margin-top: 5px;
-}
-
-.tooltip-stats,
-.tooltip-requirements {
-  display: grid;
-  gap: 2px;
-  margin-top: 7px;
-  color: rgba(36, 49, 38, 0.78);
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-}
-
-.tooltip-requirements {
-  color: rgba(112, 74, 51, 0.9);
-}
-
-.status-line {
-  right: 12px;
-  top: 12px;
-  width: 300px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.error {
-  color: #9b2f2f;
-  font-weight: 700;
-}
+/* The map browser keeps its three rows after removing campaign tabs. */
+.play-browser .create-game-form { grid-template-rows:minmax(0,1fr) auto auto; }

@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createAiGauntletCatalog } from "../src/ai/benchmark/gauntlet";
 
 describe("AI version gauntlet CLI", () => {
   it("is exposed as a first-class benchmark npm script", () => {
@@ -37,11 +38,12 @@ describe("AI version gauntlet CLI", () => {
   });
 
   it("filters dry-run output to one exact gauntlet match name", () => {
+    const slot = createAiGauntletCatalog({ seed: "gauntlet-cli-seed", mapCount: 2 }).selectedRichScoreMapIds[0]!;
     const target = {
-      name: "mixed-v2-external score wildMarches official triangle",
+      name: `mixed-v2-external score ${slot} official triangle`,
       lane: "score",
       controllerCase: "mixed-v2-external",
-      mapId: "wildMarches",
+      mapId: "ladder",
     };
 
     const focused = JSON.parse(runGauntletCli("--seed", "gauntlet-cli-seed", "--map-count", "2", "--dry-run", "--match", target.name));
@@ -52,17 +54,25 @@ describe("AI version gauntlet CLI", () => {
         expect.objectContaining({
           ...target,
           playtest: {
-            args: ["new", "--file", ".playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json", "--from-gauntlet", target.name, "--gauntlet-seed", "gauntlet-cli-seed", "--gauntlet-map-count", "2", "--you", "v2", "--assist-you"],
-            command: "npm run play:ai -- new --file .playtests/gauntlet-mixed-v2-external-score-wild-marches-official-triangle.json --from-gauntlet \"mixed-v2-external score wildMarches official triangle\" --gauntlet-seed gauntlet-cli-seed --gauntlet-map-count 2 --you v2 --assist-you",
+            args: ["new", "--file", `.playtests/gauntlet-mixed-v2-external-score-${slot}-official-triangle.json`, "--from-gauntlet", target.name, "--gauntlet-seed", "gauntlet-cli-seed", "--gauntlet-map-count", "2", "--you", "v2", "--assist-you"],
+            command: `npm run play:ai -- new --file .playtests/gauntlet-mixed-v2-external-score-${slot}-official-triangle.json --from-gauntlet "mixed-v2-external score ${slot} official triangle" --gauntlet-seed gauntlet-cli-seed --gauntlet-map-count 2 --you v2 --assist-you`,
           },
         }),
       ],
     });
   });
+
+  it("filters dry-run output to the games of one ladder slot", () => {
+    const slot = createAiGauntletCatalog({ seed: "gauntlet-cli-seed", mapCount: 2 }).selectedRichScoreMapIds[1]!;
+    const focused = JSON.parse(runGauntletCli("--seed", "gauntlet-cli-seed", "--map-count", "2", "--dry-run", "--maps", slot));
+
+    expect(focused.matchCount).toBe(4);
+    expect(focused.matches.map((match: { name: string }) => match.name)).toEqual(["internal-only", "external-only", "mixed-v2-external", "mixed-v2-internal"].map((controllerCase) => `${controllerCase} score ${slot} official triangle`));
+  });
 });
 
 function runGauntletCli(...args: string[]) {
-  return execFileSync("npx", ["tsx", "scripts/ai-version-gauntlet.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-version-gauntlet.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

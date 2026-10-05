@@ -85,6 +85,11 @@ export class RoomNetHub {
     return new Set(this.rooms.keys());
   }
 
+  // Whether any browser is connected to the room (see @@@idle-room-reaper).
+  isAttended(roomId: string): boolean {
+    return (this.rooms.get(roomId)?.sockets.size ?? 0) > 0;
+  }
+
   checksumsForTick(roomId: string, tick: number): Record<PlayerId, string> {
     return this.stateFor(roomId).coordinator.checksumsForTick(tick);
   }

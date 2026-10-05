@@ -1,6 +1,6 @@
 import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { MapId, PlayerId } from "../../shared/types";
+import type { PlayerId } from "../../shared/types";
 import type { BenchmarkEvaluationReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import type { AiVersionBenchmarkDashboardReport, AiVersionBenchmarkOptions, BenchmarkEvaluationSummary } from "./presets";
 import { runAiVersionBenchmark, runAiVersionBenchmarkParallel, summarizeCombatEvaluation, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
@@ -22,7 +22,7 @@ type BenchmarkDashboardRunBase = {
   createdAt: string;
   seed: string;
   mapPoolSize: number;
-  selectedRichScoreMapIds: MapId[];
+  selectedRichScoreMapIds: string[];
   mapCount: number;
   full: boolean;
   report: BenchmarkReport;
@@ -55,7 +55,7 @@ export type BenchmarkDashboardRunSummary = {
   name: string;
   tags: string[];
   mapPoolSize: number;
-  selectedRichScoreMapIds: MapId[];
+  selectedRichScoreMapIds: string[];
   primarySummary: BenchmarkEvaluationSummary;
   evaluationSummaries: BenchmarkEvaluationSummary[];
   scoreSummary?: BenchmarkEvaluationSummary;
@@ -128,7 +128,7 @@ export async function recordBenchmarkDashboardReportRun(
     kind: "ai-specialized-benchmark";
     seed: string;
     mapPoolSize: number;
-    selectedRichScoreMapIds: MapId[];
+    selectedRichScoreMapIds: string[];
     targetPlayerId: PlayerId;
     report: BenchmarkReport;
     full?: boolean;

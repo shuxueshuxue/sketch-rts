@@ -1,0 +1,143 @@
+import { describe, expect, it } from "vitest";
+import { abilityCooldown } from "./ability-cooldowns";
+import { ABILITY_DEFS, UNIT_DEFS, type AbilityDef } from "./catalog";
+import { createGame, issueCommand, issuePlayerCommand, snapshotGame, stepGame } from "./sim";
+import { checkCommandLegality } from "./sim/command-validation";
+import type { Unit } from "./types";
+
+const CHARGE = ABILITY_DEFS.charge as Extract<AbilityDef, { behavior: "charge" }>;
+// Riders stand at x 500; a foe at INSIDE is in the middle of the charge window.
+const INSIDE = 500 + (CHARGE.minRange + CHARGE.range) / 2;
+const TOO_NEAR_TEXT = `at least ${CHARGE.minRange} away`;
+
+function duel() {
+  const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [] });
+  game.units = [];
+  return game;
+}
+
+function steps(game: ReturnType<typeof duel>, ticks: number) {
+  for (let tick = 0; tick < ticks; tick += 1) stepGame(game);
+}
+
+// The rider's blow on a footman, doubled: what a charge takes off it.
+function chargeBlow(rider: Unit) {
+  return Math.round(rider.attackDamage * CHARGE.damageMultiplier);
+}
+
+describe("cavalry charge", () => {
+  it("is the raider's and the knight's", () => {
+    expect(UNIT_DEFS.raider.abilities).toContain("charge");
+    expect(UNIT_DEFS.knight.abilities).toContain("charge");
+  });
+
+  it("dashes at a unit inside the window, strikes it for twice a blow, and fights on", () => {
+    const game = duel();
+    const raider = game.spawnUnit("player", "raider", 500, 500);
+    const footman = game.spawnUnit("enemy", "footman", INSIDE, 500);
+    issueCommand(game, { type: "setAutocast", unitIds: [raider.id], ability: "charge", enabled: false });
+    issueCommand(game, { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id });
+    expect(raider.order.type).toBe("charge");
+    expect(game.effects.some((effect) => effect.type === "chargeTrail" && effect.unitId === raider.id)).toBe(true);
+    // Mid-window at dashSpeed a tick: on it well inside a second, far sooner than it could ride there.
+    steps(game, 16);
+    expect(footman.hp).toBe(footman.maxHp - chargeBlow(raider));
+    expect(Math.hypot(raider.x - footman.x, raider.y - footman.y)).toBeLessThanOrEqual(raider.attackRange);
+    expect(raider.order).toMatchObject({ type: "attack", targetId: footman.id });
+    expect(abilityCooldown(raider, "charge")).toBeGreaterThan(CHARGE.cooldown - 20);
+    expect(game.effects.some((effect) => effect.type === "chargeImpact")).toBe(true);
+  });
+
+  it("carries its momentum into the unit it meets: a knight throws a footman back and hardly moves a golem", () => {
+    const thrown = (kind: "footman" | "golem") => {
+      const game = duel();
+      const knight = game.spawnUnit("player", "knight", 500, 500);
+      const foe = game.spawnUnit("enemy", kind, INSIDE, 500);
+      issueCommand(game, { type: "setAutocast", unitIds: [knight.id], ability: "charge", enabled: false });
+      issuePlayerCommand(game, "enemy", { type: "holdPosition", unitIds: [foe.id] });
+      issueCommand(game, { type: "cast", unitId: knight.id, ability: "charge", targetId: foe.id });
+      steps(game, 40);
+      expect(foe.maxHp - foe.hp).toBeGreaterThanOrEqual(chargeBlow(knight));
+      return foe.x - INSIDE;
+    };
+    expect(thrown("footman")).toBeGreaterThan(20);
+    expect(thrown("golem")).toBeLessThan(thrown("footman") / 2);
+  });
+
+  it("refuses a unit nearer than the shortest charge, and rides up to one beyond the window first (see cast-order)", () => {
+    const game = duel();
+    const raider = game.spawnUnit("player", "raider", 500, 500);
+    const near = game.spawnUnit("enemy", "footman", 500 + CHARGE.minRange - 50, 500);
+    const command = { type: "cast", unitId: raider.id, ability: "charge", targetId: near.id } as const;
+    expect(checkCommandLegality(snapshotGame(game), "player", command)).toMatchObject({ message: expect.stringContaining(TOO_NEAR_TEXT) });
+    expect(() => issueCommand(game, command)).toThrow(TOO_NEAR_TEXT);
+
+    const far = game.spawnUnit("enemy", "footman", 500, 500 + CHARGE.range + 50);
+    const ride = { type: "cast", unitId: raider.id, ability: "charge", targetId: far.id } as const;
+    expect(checkCommandLegality(snapshotGame(game), "player", ride)).toBeUndefined();
+    issueCommand(game, ride);
+    expect(raider.order).toMatchObject({ type: "cast", ability: "charge", targetId: far.id });
+  });
+
+  it("charges on its own an enemy that comes inside the window, and not once switched off", () => {
+    const charged = (autocast: boolean) => {
+      const game = duel();
+      const raider = game.spawnUnit("player", "raider", 500, 500);
+      const footman = game.spawnUnit("enemy", "footman", INSIDE + 20, 500);
+      if (!autocast) issueCommand(game, { type: "setAutocast", unitIds: [raider.id], ability: "charge", enabled: false });
+      steps(game, 24);
+      return footman.maxHp - footman.hp;
+    };
+    expect(charged(true)).toBeGreaterThanOrEqual(chargeBlow({ attackDamage: UNIT_DEFS.raider.attackDamage } as Unit));
+    expect(charged(false)).toBe(0);
+  });
+
+  it("spreads a line's charges over the enemies inside the window instead of piling onto the nearest", () => {
+    const game = duel();
+    const riders = [0, 1, 2, 3].map((index) => game.spawnUnit("player", "raider", 500, 440 + index * 40));
+    const foes = [0, 1, 2, 3].map((index) => game.spawnUnit("enemy", "footman", INSIDE + index * 10, 440 + index * 40));
+    steps(game, 2);
+    const targets = riders.map((rider) => (rider.order.type === "charge" ? rider.order.targetId : undefined));
+    expect(targets.every((target) => target !== undefined)).toBe(true);
+    expect(new Set(targets).size).toBe(foes.length);
+  });
+
+  it("does not charge a creep minding its camp, nor while riding where it was told", () => {
+    const creep = duel();
+    const rider = creep.spawnUnit("player", "raider", 500, 500);
+    creep.spawnUnit("neutral", "wildling", INSIDE, 500);
+    steps(creep, 20);
+    expect(rider.order.type).not.toBe("charge");
+    expect(abilityCooldown(rider, "charge")).toBe(0);
+
+    const moving = duel();
+    const passer = moving.spawnUnit("player", "raider", 500, 500);
+    // Riding off sideways, the foe stays inside the window for these 20 ticks.
+    moving.spawnUnit("enemy", "footman", INSIDE, 500);
+    issueCommand(moving, { type: "move", unitIds: [passer.id], x: 500, y: 300 });
+    steps(moving, 20);
+    expect(abilityCooldown(passer, "charge")).toBe(0);
+  });
+
+  it("finishes the dash before an order given during it", () => {
+    const game = duel();
+    const knight = game.spawnUnit("player", "knight", 500, 500);
+    const footman = game.spawnUnit("enemy", "footman", INSIDE, 500);
+    issueCommand(game, { type: "cast", unitId: knight.id, ability: "charge", targetId: footman.id });
+    steps(game, 2);
+    issueCommand(game, { type: "move", unitIds: [knight.id], x: 200, y: 200 });
+    expect(knight.order.type).toBe("charge");
+    steps(game, 16);
+    expect(footman.hp).toBe(footman.maxHp - chargeBlow(knight));
+    expect(knight.order).toMatchObject({ type: "move", x: 200, y: 200 });
+  });
+
+  it("lets the enemy's rider charge too", () => {
+    const game = duel();
+    const raider = game.spawnUnit("enemy", "raider", 500, 500);
+    const footman = game.spawnUnit("player", "footman", INSIDE, 500);
+    issuePlayerCommand(game, "enemy", { type: "cast", unitId: raider.id, ability: "charge", targetId: footman.id });
+    steps(game, 16);
+    expect(footman.hp).toBeLessThan(footman.maxHp);
+  });
+});

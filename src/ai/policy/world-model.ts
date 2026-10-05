@@ -1,17 +1,16 @@
-import { UNIT_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 import { activeUnitClaim } from "./claims";
 import { buildings, completeBuildings, units } from "./snapshot";
 import { distance, nearestEntity, type Point } from "./spatial";
 
-const BUILD_RANGE = 46;
-
 type AvailableBuilderOptions = {
   memory?: AiPolicyMemory;
 };
 
 export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point: Point, options: AvailableBuilderOptions = {}) {
+  if (units(snapshot, owner).some(unit => unit.order.type === "build")) return undefined;
   return units(snapshot, owner)
     .filter((unit) => unit.kind === "worker")
     .filter((unit) => !activeUnitClaim(snapshot, owner, unit, options))
@@ -19,21 +18,15 @@ export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point:
     .sort((a, b) => distance(a, point) - distance(b, point))[0];
 }
 
+// A worker building one of its owner's sites: a site goes up with the work of the workers whose order is to repair it
+// (see the sim's updateConstruction).
 export function isReservedBuilder(snapshot: GameSnapshot, owner: PlayerId, worker: Unit) {
-  if (worker.order.type !== "move") return false;
-  return buildings(snapshot, owner).some((building) => !building.complete && distance(worker.order as Point, building) <= BUILD_RANGE + 40);
+  const order = worker.order;
+  return order.type === "build" || order.type === "repair" && buildings(snapshot, owner).some((building) => building.id === order.buildingId && !building.complete);
 }
 
 export function hasAssignedBuilder(snapshot: GameSnapshot, owner: PlayerId, building: Building) {
-  return units(snapshot, owner).some(
-    (unit) =>
-      unit.kind === "worker" &&
-      (distance(unit, building) <= BUILD_RANGE + 20 || (unit.order.type === "move" && distance(unit.order, building) <= BUILD_RANGE + 40)),
-  );
-}
-
-export function nearOwnIncompleteBuilding(snapshot: GameSnapshot, owner: PlayerId, worker: Unit) {
-  return buildings(snapshot, owner).some((building) => !building.complete && distance(worker, building) <= BUILD_RANGE + 35);
+  return units(snapshot, owner).some((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id);
 }
 
 export function mainBase(snapshot: GameSnapshot, owner: PlayerId) {
@@ -64,6 +57,29 @@ export function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: key
   return projectedSupplyUsed(snapshot, owner) + UNIT_DEFS[unitKind].supplyUsed <= playerState(snapshot, owner).supplyCap;
 }
 
+// @@@gold-in-soldiers - A bank the AI waits for is written in basic soldiers (a footman's price), not in gold, so it follows
+// the price list: make every unit a fifth dearer and every bank grows with it. Rounded, so a whole bank stays whole.
+export function soldiersWorth(count: number) {
+  return Math.round(count * UNIT_DEFS.footman.cost);
+}
+
+// @@@ai-unit-tiers - Advanced and elite units wait for the supply cap to reach their tier's bar (TIER_SUPPLY_CAP).
+export function tierUnlocked(snapshot: GameSnapshot, owner: PlayerId, unitKind: keyof typeof UNIT_DEFS) {
+  return playerState(snapshot, owner).supplyCap >= requiredSupplyCap(unitKind);
+}
+
+// The lowest tier bar a finished production building of the owner is waiting on (a sanctum before 42), if any: the farms
+// that lift the cap to it are what the building's units cost first.
+export function tierBarWaitedOn(snapshot: GameSnapshot, owner: PlayerId): number | undefined {
+  const cap = playerState(snapshot, owner).supplyCap;
+  const bars = buildings(snapshot, owner)
+    .filter((building) => building.complete)
+    .flatMap((building) => BUILDING_DEFS[building.kind].trains)
+    .map(requiredSupplyCap)
+    .filter((bar) => bar > cap);
+  return bars.length > 0 ? Math.min(...bars) : undefined;
+}
+
 export function playerState(snapshot: GameSnapshot, owner: PlayerId) {
   const player = snapshot.players[owner];
   if (!player) throw new Error(`Unknown player ${owner}`);
@@ -74,7 +90,9 @@ export function projectedSupplyUsed(snapshot: GameSnapshot, owner: PlayerId) {
   const queued = buildings(snapshot, owner)
     .flatMap((building) => building.queue)
     .reduce((total, job) => total + UNIT_DEFS[job.unitKind].supplyUsed, 0);
-  return units(snapshot, owner).reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0) + queued;
+  // Passengers aboard a transport count too (see @@@transport), as the sim counts them.
+  const supply = (unit: Unit): number => UNIT_DEFS[unit.kind].supplyUsed + (unit.cargo ?? []).reduce((total, passenger) => total + supply(passenger), 0);
+  return units(snapshot, owner).reduce((total, unit) => total + supply(unit), 0) + queued;
 }
 
 export function queuedUnitCount(snapshot: GameSnapshot, owner: PlayerId, unitKind: TrainableUnitKind) {

@@ -9,9 +9,15 @@ service_name="${SERVICE_NAME:-sketch-rts.service}"
 node_bin="${NODE_BIN:-/root/.nvm/versions/node/v20.20.0/bin/node}"
 port="${PORT:-34574}"
 base_path="${SKETCH_RTS_BASE_PATH:-/sketch-rts/}"
-keep_releases="${KEEP_RELEASES:-3}"
 
-lock_path="/var/lock/sketch-rts-deploy.lock"
+if [[ ! "$revision" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Revision must be a full Git commit SHA." >&2
+  exit 1
+fi
+health_url="http://127.0.0.1:$port${base_path%/}/api/catalog"
+
+lock_path="${DEPLOY_LOCK_PATH:-/var/lock/sketch-rts-deploy.lock}"
+unit_dir="${SYSTEMD_UNIT_DIR:-/etc/systemd/system}"
 releases_dir="$deploy_root/releases"
 shared_dir="$deploy_root/shared"
 current_link="$deploy_root/current"
@@ -44,7 +50,15 @@ if [[ -z "$previous_release" && -f "$deploy_root/dist-server/index.mjs" && -d "$
   fi
 fi
 
-rm -rf "$tmp_release" "$release_dir"
+if [[ "$previous_release" == "$release_dir" ]] && curl --noproxy 127.0.0.1 -fsS --max-time 3 "$health_url" >/dev/null; then
+  printf 'already deployed %s\n' "$revision"
+  exit 0
+fi
+
+if [[ -e "$release_dir" ]]; then
+  echo "Release already exists: $release_dir; refusing to overwrite it." >&2
+  exit 1
+fi
 mkdir -p "$tmp_release"
 tar -xzf "$artifact_path" -C "$tmp_release"
 
@@ -53,11 +67,17 @@ if [[ ! -f "$tmp_release/dist/index.html" || ! -f "$tmp_release/dist-server/inde
   exit 1
 fi
 
+# Nginx reads static assets as an unprivileged user. Admin jobs inherit umask
+# 077, so explicitly publish only the frontend and its parent directory.
+chmod 755 "$tmp_release"
+find "$tmp_release/dist" -type d -exec chmod 755 {} +
+find "$tmp_release/dist" -type f -exec chmod 644 {} +
 ln -sfn "$shared_dir/.benchmark-dashboard" "$tmp_release/.benchmark-dashboard"
 printf '%s\n' "$revision" > "$tmp_release/.deployed-revision"
 mv "$tmp_release" "$release_dir"
 
-cat > "/etc/systemd/system/$service_name" <<UNIT
+if [[ ! -f "$unit_dir/$service_name" ]]; then
+cat > "$unit_dir/$service_name" <<UNIT
 [Unit]
 Description=Sketch RTS hosted server
 After=network.target
@@ -80,8 +100,24 @@ StandardError=journal
 [Install]
 WantedBy=multi-user.target
 UNIT
+fi
+
+switched=0
+rollback_on_error() {
+  status=$?
+  trap - ERR
+  if [[ "$switched" == "1" && -n "$previous_release" && -d "$previous_release" ]]; then
+    systemctl stop "$service_name" || true
+    ln -sfn "$previous_release" "$current_link.next"
+    mv -Tf "$current_link.next" "$current_link"
+    systemctl start "$service_name" || true
+  fi
+  exit "$status"
+}
+trap rollback_on_error ERR
 
 systemctl daemon-reload
+switched=1
 systemctl stop "$service_name"
 
 ln -sfn "$release_dir" "$current_link.next"
@@ -92,7 +128,7 @@ systemctl start "$service_name"
 health_url="http://127.0.0.1:$port${base_path%/}/api/catalog"
 healthy=0
 for _ in $(seq 1 30); do
-  if curl -fsS "$health_url" >/dev/null; then
+  if curl --noproxy 127.0.0.1 -fsS --max-time 3 "$health_url" >/dev/null; then
     healthy=1
     break
   fi
@@ -101,13 +137,7 @@ done
 
 if [[ "$healthy" != "1" ]]; then
   echo "Health check failed for $health_url" >&2
-  systemctl stop "$service_name"
-  if [[ -n "$previous_release" && -d "$previous_release" ]]; then
-    ln -sfn "$previous_release" "$current_link.next"
-    mv -Tf "$current_link.next" "$current_link"
-    systemctl start "$service_name"
-  fi
-  exit 1
+  false
 fi
 
 printf '%s\n' "$revision" > "$deploy_root/.deployed-revision"
@@ -115,26 +145,6 @@ if [[ -d "$deploy_root/.benchmark-dashboard" && ! -L "$deploy_root/.benchmark-da
   rm -rf "$deploy_root/.benchmark-dashboard"
   ln -sfn "$shared_dir/.benchmark-dashboard" "$deploy_root/.benchmark-dashboard"
 fi
-rm -rf \
-  "$deploy_root/dist" \
-  "$deploy_root/dist-server" \
-  "$deploy_root/docs" \
-  "$deploy_root/scripts" \
-  "$deploy_root/src" \
-  "$deploy_root/benchmark.html" \
-  "$deploy_root/index.html" \
-  "$deploy_root/package-lock.json" \
-  "$deploy_root/package.json" \
-  "$deploy_root/README.md" \
-  "$deploy_root/tsconfig.json" \
-  "$deploy_root/vite.config.ts"
-
-find "$releases_dir" -mindepth 1 -maxdepth 1 -type d ! -name ".$revision-*" -printf '%T@ %p\n' \
-  | sort -rn \
-  | tail -n +"$((keep_releases + 1))" \
-  | cut -d' ' -f2- \
-  | xargs -r rm -rf
-
-find /tmp -maxdepth 1 -type d -name "sketch-rts-deploy-*" -mmin +10 -exec rm -rf {} +
+# Retain legacy files and previous releases for recovery.
 
 printf 'deployed %s\n' "$revision"

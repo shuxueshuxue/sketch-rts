@@ -1,13 +1,25 @@
-import { UNIT_DEFS } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { combatUnits, completeBuildings, units } from "./snapshot";
 import { aiPlaybook } from "./playbook";
-import { playerState } from "./world-model";
+import { playerState, soldiersWorth, tierUnlocked } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV5ShooterCorePolicy } from "./versions";
 
+// A choice whose tier is still locked falls back to what the same building can already make (a spire's spark archers
+// before its casters), or to nothing.
 export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions = {}): TrainableUnitKind | undefined {
+  const choice = preferredTrainingChoice(snapshot, owner, building, options);
+  if (!choice || tierUnlocked(snapshot, owner, choice)) return choice;
+  return BUILDING_DEFS[building.kind].trains.find((kind) => kind !== "worker" && tierUnlocked(snapshot, owner, kind));
+}
+
+function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building, options: PresetAiPolicyOptions): TrainableUnitKind | undefined {
   const race = playerState(snapshot, owner).race;
+  if (isV5ShooterCorePolicy(options)) {
+    const rangedCore = v5RangedCoreChoice(snapshot, owner, building);
+    if (rangedCore !== "default") return rangedCore;
+  }
   if (building.kind === "emberForge") return emberForgeChoice(snapshot, owner);
   if (building.kind === "cinderSpire") return emberSpireChoice(snapshot, owner, options);
   if (building.kind === "barracks") return soldierChoice(snapshot, owner);
@@ -45,6 +57,22 @@ export function trainingChoice(snapshot: GameSnapshot, owner: PlayerId, building
   return undefined;
 }
 
+// @@@v5-ranged-core - Replayed on its own, every captured V5 fight traded 2.6 to 1 with its melee swapped for archers and
+// 1.1 to 1 with its archers swapped for melee (1.5 as built). V3 and V4-TR bring footmen, ravagers and mercenaries that
+// run at a kiting line and die on the way in.
+// A melee front made it worse again (2.15 to 1 with two melee kept): melee bodies run ahead and pull the shooters in.
+// Barracks and forges only fill the gap until the first shooter building stands.
+function v5RangedCoreChoice(snapshot: GameSnapshot, owner: PlayerId, building: Building): TrainableUnitKind | undefined | "default" {
+  const army = combatUnits(snapshot, owner);
+  const shooterBuilding = playerState(snapshot, owner).race === "ember" ? "cinderSpire" : "archeryRange";
+  if (building.kind === "barracks" || building.kind === "emberForge") return completeBuildings(snapshot, owner, shooterBuilding).length > 0 ? undefined : "default";
+  if (building.kind === "cinderSpire") {
+    const acolytes = army.filter((unit) => unit.kind === "emberAcolyte").length;
+    return army.length >= 6 && acolytes < 1 ? "emberAcolyte" : "sparkArcher";
+  }
+  return "default";
+}
+
 function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUnitKind {
   const army = combatUnits(snapshot, owner);
   const ravagers = army.filter((unit) => unit.kind === "emberRavager").length;
@@ -76,7 +104,7 @@ function emberSpireChoice(snapshot: GameSnapshot, owner: PlayerId, options: Pres
 
 function shouldTrainKnight(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const gold = playerState(snapshot, owner).gold;
-  if (gold > 520) return true;
+  if (gold > soldiersWorth(5.2)) return true;
   if (options.version !== "v2") return false;
   return completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 10 && gold >= UNIT_DEFS.knight.cost;
 }
@@ -92,7 +120,7 @@ function v2LateCasterTarget(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   if (options.version !== "v2") return { priests: 1, summoners: 1, witches: 1 };
   const army = combatUnits(snapshot, owner);
   const gold = playerState(snapshot, owner).gold;
-  if (army.length < 8 && gold < 480) return { priests: 1, summoners: 1, witches: 1 };
+  if (army.length < 8 && gold < soldiersWorth(4.8)) return { priests: 1, summoners: 1, witches: 1 };
   return { priests: 2, summoners: 2, witches: 2 };
 }
 

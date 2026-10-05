@@ -26,11 +26,14 @@ if (boolFlag(args, "dry-run")) {
 }
 
 if (boolFlag(args, "runner-probe") || process.env.AI_GAUNTLET_RUNNER_PROBE === "1") {
+  // On the first selected map: its first score game's ladder layout.
+  const probeMap = catalog.matches.find((match) => match.lane === "score");
   const probeMatch = {
     name: "runner probe",
     lane: "robustness",
     controllerCase: "internal-only",
-    mapId: catalog.selectedRichScoreMapIds[0] ?? "bareDuel",
+    mapId: probeMap?.mapId ?? "bareDuel",
+    ...(probeMap?.options ? { options: probeMap.options } : {}),
     agents: {
       v2: { controller: "internal-ai", team: "north", race: "grove", version: "v2" },
       v1a: { controller: "internal-ai", team: "south", race: "grove", version: "v1" },
@@ -178,7 +181,8 @@ function gauntletMatchesFromArgs(matches: AiGauntletMatch[], args: readonly stri
   const filter = benchmarkFilterFromArgs(args);
   const selected = matches.filter((match) => {
     if (filter.matchNames && !filter.matchNames.includes(match.name)) return false;
-    if (filter.mapIds && !filter.mapIds.includes(match.mapId)) return false;
+    // A map is a fixed map's id or a ladder slot, which the game's name carries.
+    if (filter.mapIds && !filter.mapIds.some((map) => map === match.mapId || match.name.split(" ").includes(map))) return false;
     return true;
   });
   if (filter.matchNames && selected.length !== filter.matchNames.length) {

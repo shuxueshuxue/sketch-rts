@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRoom } from "./rooms";
 import { assertSaveGameInput, createSaveGameRecord, parseSaveGameInput, restoreGameFromSave } from "./savegame";
-import { checksumGame } from "./sim/checksum";
+import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { createGame, stepGame } from "./sim";
 
 describe("savegame runtime sync metadata", () => {
@@ -30,6 +30,7 @@ describe("savegame runtime sync metadata", () => {
     const restored = restoreGameFromSave(save);
 
     expect(save.runtime.checksum).toBe(checksumGame(game));
+    expect(save.runtime.checksumVersion).toBe(CHECKSUM_VERSION);
     expect(restored.projectiles).toEqual(game.projectiles);
     expect(checksumGame(restored)).toBe(save.runtime.checksum);
   });

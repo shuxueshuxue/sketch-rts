@@ -1,56 +1,46 @@
+import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
+import type { Terrain } from "./terrain";
 
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
 export type MapId = (typeof MAP_IDS)[number];
 export type RaceId = "grove" | "ember";
-export type UnitKind =
-  | "worker"
-  | "footman"
-  | "archer"
-  | "raider"
-  | "lancer"
-  | "groveWarden"
-  | "emberRavager"
-  | "cinderRunner"
-  | "sparkArcher"
-  | "emberAcolyte"
-  | "ashHexer"
-  | "pyreCaller"
-  | "knight"
-  | "priest"
-  | "summoner"
-  | "witch"
-  | "golem"
-  | "spirit"
-  | "mercenary"
-  | "contractArcher"
-  | "fieldMedic"
-  | "wildling"
-  | "mossGnawer"
-  | "thornSlinger"
-  | "barkMender"
-  | "stonebackBrute"
-  | "gladeWitch"
-  | "ancientStag";
+// Unit and building kinds are the rows of the catalog's rule tables (shared/catalog.ts); a trainable unit is one with a
+// building that trains it.
+export type UnitKind = keyof typeof UNIT_RULES;
 export type WildlingUnitKind = "wildling" | "mossGnawer" | "thornSlinger" | "barkMender" | "stonebackBrute" | "gladeWitch" | "ancientStag";
+// The creep families of the camp templates (see shared/camps.ts).
+export type CreepFamilyUnitKind =
+  | "murlocPeon" | "murlocHunter" | "tidePriest" | "deepSnapper"
+  | "rubbleGolem" | "rockGolem" | "graniteGolem"
+  | "ogreWarrior" | "ogreMage" | "ogreLord"
+  | "spiderling" | "venomSpider" | "spiderQueen"
+  | "dragonWhelp" | "redDragon";
 export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
-export type TrainableUnitKind = Exclude<UnitKind, "spirit" | MercenaryUnitKind | WildlingUnitKind>;
-export type BuildingKind = "townHall" | "barracks" | "archeryRange" | "stables" | "sanctum" | "workshop" | "defenseTower" | "moonWell" | "emberForge" | "cinderSpire" | "emberShrine" | "farm";
+export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
+export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse";
-export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge";
+export type AbilityKind = "ramBreach" | "pinningBolt" | "siegeBarrage" | "grapeshot" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
+// What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
+export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
-  type: "curse" | "guardian" | "scorch";
+  // @@@creep-status - slow (a murloc's net), stun (a golem's stomp), root (a spider queen's web), poison (a venom spider's
+  // bite), bloodlust (an ogre mage's): see sim updateUnitStatusEffects and statusPace.
+  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust";
   remaining: number;
   damageMultiplier?: number;
+  // Who poisoned the unit, credited with what the poison does.
+  sourceId?: string;
 };
 
 export type WorldEffect = {
   id: string;
   type:
+    | "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround"
     | "heal"
     | "summon"
     | "curse"
@@ -73,7 +63,12 @@ export type WorldEffect = {
     | "experienceBurst"
     | "flameBurn"
     | "scorch"
-    | "storm";
+    | "storm"
+    | "chargeTrail"
+    | "chargeImpact"
+    | "stomp"
+    | "web"
+    | "bloodlust";
   x: number;
   y: number;
   remaining: number;
@@ -86,6 +81,11 @@ export type WorldEffect = {
   damage?: number;
   radius?: number;
   tickEvery?: number;
+  /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt, or whose weapon dealt a hit, so the
+   * client can sound the blow. Presentation only. */
+  sourceKind?: UnitKind | BuildingKind;
+  /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
+  unitId?: string;
 };
 
 export type Projectile = {
@@ -100,9 +100,14 @@ export type Projectile = {
   damage: number;
   remaining: number;
   duration: number;
+  weapon?: WeaponDef;
+  sourceKind?: UnitKind;
+  rootTicks?: number;
+  burnTicks?: number;
 };
 
 export type UnitOrder =
+  | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
   | { type: "follow"; targetId: string }
@@ -110,17 +115,35 @@ export type UnitOrder =
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
-  | { type: "pickupItem"; itemId: string };
+  | { type: "repairShip"; targetId: string }
+  | { type: "pickupItem"; itemId: string }
+  // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
+  | { type: "hold"; x: number; y: number }
+  // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
+  | { type: "board"; transportId: string; berth?: { x: number; y: number } }
+  | { type: "unload"; x: number; y: number }
+  // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
+  | { type: "charge"; targetId: string; resume: SettledUnitOrder }
+  // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
+  | { type: "cast"; ability: AbilityKind; targetId?: string; x?: number; y?: number };
+
+// Any order but a charge.
+export type SettledUnitOrder = Exclude<UnitOrder, { type: "charge" }>;
 
 export type RallyTarget =
   | { type: "point" }
   | { type: "resource"; resourceId: string }
   | { type: "unit"; unitId: string };
 
+// How a melee fighter lands its blow (see @@@melee-stances).
+export type MeleeStance = "pursue" | "brace" | "shock";
+
 export type Unit = {
   id: string;
   owner: Owner;
   kind: UnitKind;
+  // A campaign unit's variant id (see unit-variants): it plays by its variant's numbers and is drawn by its own model.
+  variant?: string | undefined;
   x: number;
   y: number;
   homeX?: number;
@@ -131,13 +154,29 @@ export type Unit = {
   attackDamage: number;
   attackRange: number;
   attackCooldown: number;
+  // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;
+  // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
+  abilityCooldowns?: Partial<Record<AbilityKind, number>> | undefined;
+  // Autocast switched away from its ability's default (see autocast): true on, false off; an absent ability keeps the default.
+  autocast?: Partial<Record<AbilityKind, boolean>> | undefined;
+  // A melee fighter's stance (see @@@melee-stances); absent is pursue.
+  stance?: Exclude<MeleeStance, "pursue"> | undefined;
+  // The velocity a shove gave the unit, in units a tick (see @@@push); absent when it is not sliding.
+  pushX?: number | undefined;
+  pushY?: number | undefined;
+  // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
+  arrivedAt?: { x: number; y: number } | undefined;
+  // A transport's passengers, out of the game while aboard (see @@@transport).
+  cargo?: Unit[] | undefined;
+  /** Larger mission transports can carry a different population than their base hull. */
+  cargoCapacity?: number;
   radius: number;
   carryingGold: number;
   kills: number;
   xp: number;
   level: number;
-  expiresTick?: number;
+  expiresTick?: number | undefined;
   effects: UnitStatusEffect[];
   order: UnitOrder;
   orderQueue?: UnitOrder[];
@@ -151,6 +190,8 @@ export type Building = {
   y: number;
   hp: number;
   maxHp: number;
+  /** A mission ward; normal matches leave this absent. */
+  invulnerable?: boolean;
   radius: number;
   complete: boolean;
   buildProgress: number;
@@ -167,6 +208,7 @@ export type Building = {
 };
 
 export type TrainingJob = {
+  id?: string;
   unitKind: TrainableUnitKind;
   remaining: number;
 };
@@ -186,6 +228,13 @@ export type ResourceNode = {
   harvestCooldownRemaining?: number;
 };
 
+// @@@obstacle - Rocks or a stone gate across a way, as Warcraft III's destructible rocks and gates: it stands in the way as
+// a building does (see @@@building-pathing) until it is broken, and then the way is open. It is nobody's: nobody strikes it
+// unbidden (no unit or tower seeks it out), only a player's attack order; it strikes nobody, and breaking it pays nothing
+// and counts as no kill. `along`: the way it stands across, a unit vector (its art lies across it).
+export type ObstacleKind = "rocks" | "gate";
+export type Obstacle = { id: string; kind: ObstacleKind; owner: "neutral"; x: number; y: number; radius: number; hp: number; maxHp: number; along: { x: number; y: number } };
+
 export type MercenaryCamp = {
   id: string;
   x: number;
@@ -197,6 +246,15 @@ export type MercenaryCamp = {
   cooldown: number;
   cooldownRemaining: number;
 };
+
+// @@@shop - A neutral post where any player's units buy goods with their owner's gold, as at a Warcraft III goblin
+// merchant: it is struck by nobody and stands in nobody's way, and each of its goods has a stock that comes back one at a
+// time, `restock` ticks after it last ran short (see shared/shop.ts).
+export type ShopGood = { kind: ItemKind; cost: number; stock: number; maxStock: number; restock: number; restockRemaining: number };
+export type Shop = { id: string; x: number; y: number; radius: number; goods: ShopGood[] };
+
+// A spot a generated map sets aside for a post of the game's (see @@@shop): the generator says where, the game makes it.
+export type MapSite = { kind: "shop"; x: number; y: number };
 
 export type WorldItem = {
   id: string;
@@ -236,9 +294,39 @@ export type OwnerNumberMap = Record<Owner, number> & {
   neutral: number;
 };
 
-export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5";
+export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9";
+
+// A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
+export type GeneratedLayoutKind = "ring" | "sides";
+// The ideas a generated map is drawn on (see @@@generated-ideas; MAP_IDEAS lists them).
+export type MapIdea =
+  | "openRing"
+  | "openSides"
+  | "fountainRing"
+  | "turtleIsle"
+  | "twistedPaths"
+  | "outerSea"
+  | "oneMarket"
+  | "floodedValley"
+  | "hiddenHill"
+  | "bridgeStand"
+  | "deepJungle"
+  | "northIsles"
+  | "riverValley"
+  | "twoShores"
+  | "islandStarts";
+export type GeneratedLayoutOptions = {
+  seed: string;
+  // Drawn from the seed (or the idea) when absent; "sides" needs exactly two teams.
+  kind?: GeneratedLayoutKind;
+  // Drawn from the seed when absent, among the ideas that take the kind and the seats.
+  idea?: MapIdea;
+  // The map's side, one of the sizes the generator draws for the kind and player count; drawn from the seed when absent.
+  size?: number;
+};
 
 export type GameSetupOptions = {
+  layout?: GeneratedLayoutOptions;
   aiPlayers?: PlayerId[];
   aiVersions?: Partial<Record<PlayerId, AiScriptVersion>>;
   players?: PlayerId[];
@@ -254,6 +342,8 @@ export type ScenarioUnitSeed = {
   x: number;
   y: number;
   hp?: number;
+  // Health as a share of the unit's maximum once its upgrades and level are applied.
+  hpRatio?: number;
   xp?: number;
   order?: UnitOrder;
 };
@@ -269,7 +359,14 @@ export type ScenarioBuildingSeed = {
   complete?: boolean;
 };
 
+export type ScenarioPlayerSeed = {
+  gold?: number;
+  upgrades?: Partial<Record<UpgradeKind, number>>;
+};
+
 export type ScenarioOverride = {
+  // Applied before units are added, so seeded units start with these upgrades.
+  players?: Partial<Record<PlayerId, ScenarioPlayerSeed>>;
   replaceDefaultUnits?: boolean;
   replaceDefaultBuildings?: boolean;
   replaceDefaultResources?: boolean;
@@ -277,6 +374,7 @@ export type ScenarioOverride = {
   replaceDefaultLandmarks?: boolean;
   addResources?: ResourceNode[];
   addMercenaryCamps?: MercenaryCamp[];
+  addShops?: Shop[];
   addItems?: WorldItem[];
   addUnits?: ScenarioUnitSeed[];
   addBuildings?: ScenarioBuildingSeed[];
@@ -306,32 +404,81 @@ export type GameMap = {
   width: number;
   height: number;
   landmarks: TerrainLandmark[];
+  // Ground a unit cannot cross (see @@@terrain); a map without it is open everywhere.
+  terrain?: Terrain;
 };
 
+// Scenery for the eye only: no unit is stopped or slowed by any of it. A generated map dresses its ground in the small kinds
+// (see @@@generated-decor).
 export type TerrainLandmark = {
   id: string;
-  kind: "grove" | "ridge" | "ruin" | "ditch" | "road" | "campMark" | "mineScar" | "bannerStone";
+  kind:
+    | "grove"
+    | "ridge"
+    | "ruin"
+    | "ditch"
+    | "road"
+    | "campMark"
+    | "mineScar"
+    | "bannerStone"
+    | "flowers"
+    | "bush"
+    | "stump"
+    | "log"
+    | "mushrooms"
+    | "pebbles"
+    | "bones"
+    | "reeds"
+    | "lilies"
+    | "wreck"
+    | "campfire"
+    | "signpost"
+    | "pillar";
   x: number;
   y: number;
   size: number;
   rotation: number;
+  straight?: boolean;
 };
 
 export type GameCommand =
+  | { type: "cancelTraining"; buildingId: string; jobId: string }
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "follow"; unitIds: string[]; targetId: string; queued?: boolean }
+  | { type: "stop"; unitIds: string[] }
+  | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
+  | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
-  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
+  | { type: "buy"; shopId: string; item: ItemKind }
+  | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
+  | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
+  | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
+  | { type: "unload"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
+
+/** Persistent battlefield remains. Separate from live entities and transient effects. */
+export type Corpse = {
+  id: string;
+  unitId: string;
+  kind: UnitKind;
+  owner: Owner;
+  x: number;
+  y: number;
+  radius: number;
+  diedAtTick: number;
+  variant?: string;
+};
 
 export type GameSnapshot = {
   tick: number;
@@ -346,6 +493,13 @@ export type GameSnapshot = {
   items: WorldItem[];
   projectiles: Projectile[];
   effects: WorldEffect[];
+  corpses?: Corpse[];
+  // A campaign game's own units' rules, by variant id (see unit-variants). A standard match has none.
+  variants?: Record<string, VariantRules>;
+  // The map's shops (see @@@shop); a map without one has none, and no key.
+  shops?: Shop[];
+  // The rocks and gates still standing (see @@@obstacle); a map without any has none, and no key.
+  obstacles?: Obstacle[];
 };
 
 export type LocalUserProfile = {
@@ -355,14 +509,22 @@ export type LocalUserProfile = {
 
 export type SlotController = "human" | "ai" | "open" | "closed";
 
+// The computer players a room offers, per AI slot.
+export type RoomAiVersion = "v5" | "v7" | "v8";
+// A seat's race or computer player, or one drawn when the match starts (see resolvedRoomSlots).
+export type RaceChoice = RaceId | "random";
+export type RoomAiChoice = RoomAiVersion | "random";
+
 export type RoomSlot = {
   id: string;
   playerId: PlayerId;
   controller: SlotController;
+  // An AI slot's computer player (unset: the room default).
+  aiVersion?: RoomAiChoice;
   userId?: string;
   name: string;
   team: string;
-  race: RaceId;
+  race: RaceChoice;
   ready: boolean;
 };
 

@@ -1,0 +1,425 @@
+{
+  "run": "04",
+  "outcome": "victory",
+  "tick": 6880,
+  "wallMs": 33375.729995,
+  "commands": 188,
+  "casts": 47,
+  "refusals": {
+    "黄金不足": 3
+  },
+  "initial": 5047,
+  "remaining": 849,
+  "state": {
+    "version": 1,
+    "reserves": [
+      "unit-fleet-knight-3342",
+      "unit-fleet-archer-3343",
+      "unit-fleet-footman-3345",
+      "unit-fleet-groveWarden-3346",
+      "unit-fleet-footman-3348",
+      "unit-fleet-lancer-3349",
+      "unit-fleet-footman-3351",
+      "unit-fleet-knight-3352",
+      "unit-fleet-footman-3355",
+      "unit-fleet-footman-3357",
+      "unit-fleet-footman-3358",
+      "unit-fleet-footman-3361",
+      "unit-fleet-priest-3364",
+      "unit-fleet-footman-3367",
+      "unit-fleet-archer-3370",
+      "unit-fleet-footman-3385",
+      "unit-fleet-footman-3388",
+      "unit-fleet-footman-3397",
+      "unit-fleet-archer-3400",
+      "unit-fleet-archer-3403",
+      "unit-fleet-groveWarden-3406",
+      "unit-fleet-footman-3407",
+      "unit-fleet-lancer-3409",
+      "unit-fleet-knight-3412",
+      "unit-fleet-footman-3415",
+      "unit-fleet-groveWarden-3416",
+      "unit-fleet-footman-3417",
+      "unit-fleet-footman-3418",
+      "unit-fleet-lancer-3419",
+      "unit-fleet-footman-3421",
+      "unit-fleet-knight-3422",
+      "unit-fleet-archer-3423",
+      "unit-fleet-priest-3424",
+      "unit-fleet-footman-3425",
+      "unit-fleet-groveWarden-3426",
+      "unit-fleet-footman-3427",
+      "unit-fleet-footman-3428",
+      "unit-fleet-lancer-3429",
+      "unit-fleet-archer-3430",
+      "unit-fleet-knight-3432",
+      "unit-fleet-archer-3433",
+      "unit-fleet-priest-3434",
+      "unit-fleet-footman-3435",
+      "unit-fleet-groveWarden-3436",
+      "unit-fleet-footman-3437",
+      "unit-fleet-footman-3438",
+      "unit-fleet-lancer-3439",
+      "unit-fleet-footman-3441",
+      "unit-fleet-knight-3442",
+      "unit-fleet-priest-3444",
+      "unit-fleet-footman-3445",
+      "unit-fleet-footman-3447",
+      "unit-fleet-footman-3448",
+      "unit-fleet-archer-3450",
+      "unit-fleet-footman-3451",
+      "unit-fleet-archer-3453",
+      "unit-fleet-priest-3454",
+      "unit-fleet-groveWarden-3456",
+      "unit-fleet-footman-3457",
+      "unit-fleet-lancer-3459",
+      "unit-fleet-archer-3460",
+      "unit-fleet-knight-3462",
+      "unit-fleet-archer-3463",
+      "unit-fleet-footman-3465",
+      "unit-fleet-groveWarden-3466",
+      "unit-fleet-footman-3468",
+      "unit-fleet-lancer-3469",
+      "unit-fleet-knight-3472",
+      "unit-fleet-footman-3475",
+      "unit-fleet-footman-3481",
+      "unit-fleet-lancer-3499",
+      "unit-fleet-knight-3502",
+      "unit-fleet-footman-3505",
+      "unit-fleet-footman-3508",
+      "unit-fleet-footman-3511",
+      "unit-fleet-priest-3514",
+      "unit-fleet-footman-3517",
+      "unit-fleet-archer-3520",
+      "unit-fleet-footman-3521",
+      "unit-fleet-archer-3523",
+      "unit-fleet-groveWarden-3526"
+    ],
+    "plans": [],
+    "ports": [
+      {
+        "id": "north",
+        "name": "北岬船坞",
+        "x": 3800,
+        "y": 1600,
+        "value": 3,
+        "owner": "crown",
+        "progress": 100,
+        "contested": false,
+        "captures": 2
+      },
+      {
+        "id": "heart",
+        "name": "王座海峡",
+        "x": 4100,
+        "y": 4000,
+        "value": 5,
+        "owner": "fleet",
+        "progress": -100,
+        "contested": false,
+        "captures": 1
+      },
+      {
+        "id": "south",
+        "name": "白盐港",
+        "x": 3800,
+        "y": 6400,
+        "value": 3,
+        "owner": "fleet",
+        "progress": -100,
+        "contested": false,
+        "captures": 1
+      },
+      {
+        "id": "west",
+        "name": "灯塔岛",
+        "x": 1250,
+        "y": 4000,
+        "value": 4,
+        "owner": "fleet",
+        "progress": -100,
+        "contested": false,
+        "captures": 0
+      },
+      {
+        "id": "east",
+        "name": "黑礁军港",
+        "x": 6950,
+        "y": 4000,
+        "value": 4,
+        "owner": "crown",
+        "progress": 100,
+        "contested": false,
+        "captures": 0
+      }
+    ],
+    "defense": {
+      "tide-building-1016": "watch",
+      "tide-building-1017": "lance",
+      "tide-building-1018": "flame",
+      "tide-building-1019": "mortar",
+      "tide-building-1020": "wall",
+      "tide-building-1021": "ward",
+      "tide-building-1023": "watch",
+      "tide-building-1024": "lance",
+      "tide-building-1025": "flame",
+      "tide-building-1026": "mortar",
+      "tide-building-1027": "wall",
+      "tide-building-1028": "ward",
+      "tide-building-1030": "watch",
+      "tide-building-1031": "lance",
+      "tide-building-1032": "flame",
+      "tide-building-1033": "mortar",
+      "tide-building-1034": "wall",
+      "tide-building-1035": "ward",
+      "tide-building-3542": "watch",
+      "tide-building-3543": "lance",
+      "tide-building-3544": "flame",
+      "tide-building-3545": "mortar",
+      "tide-building-3546": "wall",
+      "tide-building-3547": "ward",
+      "tide-building-3549": "watch",
+      "tide-building-3550": "lance",
+      "tide-building-3551": "flame",
+      "tide-building-3552": "mortar",
+      "tide-building-3553": "wall",
+      "tide-building-3554": "ward",
+      "tide-building-3556": "watch",
+      "tide-building-3557": "lance",
+      "tide-building-3558": "flame",
+      "tide-building-3559": "mortar",
+      "tide-building-3560": "wall",
+      "tide-building-3561": "ward",
+      "tide-building-7676": "watch",
+      "tide-building-107018": "watch",
+      "tide-building-150058": "watch"
+    },
+    "cooldowns": [
+      6720,
+      7000,
+      6860,
+      6920,
+      7280,
+      4980
+    ],
+    "outcome": "victory",
+    "phase": 2,
+    "hold": 60,
+    "losses": 4597,
+    "peak": 5049,
+    "supply": {
+      "fleet": 2043,
+      "crown": 911
+    },
+    "log": [
+      {
+        "tick": 0,
+        "text": "联军已在三处海峡接敌。你指挥远征队，主力由海军议会调度。夺取港口可维持补给。"
+      },
+      {
+        "tick": 600,
+        "text": "北岬船坞已被联军占领，补给航线改变。"
+      },
+      {
+        "tick": 620,
+        "text": "白盐港已被联军占领，补给航线改变。"
+      },
+      {
+        "tick": 620,
+        "text": "三座港口接通。突破王廷堡垒，摧毁王座。"
+      },
+      {
+        "tick": 4120,
+        "text": "王座海峡已被联军占领，补给航线改变。"
+      },
+      {
+        "tick": 5700,
+        "text": "王座已陷落。控制至少三港，守住最后 60 秒。"
+      },
+      {
+        "tick": 6800,
+        "text": "北岬船坞已被王廷占领，补给航线改变。"
+      },
+      {
+        "tick": 6880,
+        "text": "潮汐王座：远征胜利。海峡航路重归自由诸港。"
+      }
+    ],
+    "builds": 3,
+    "repairs": 2,
+    "casts": 47,
+    "recruits": 15,
+    "difficulty": "standard"
+  },
+  "samples": [
+    {
+      "minute": 1,
+      "units": 4382,
+      "hero": 4106.199999999952,
+      "citadel": 10000,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          null,
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          true
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "losses": 716
+    },
+    {
+      "minute": 2,
+      "units": 3033,
+      "hero": 1697.2000000000398,
+      "citadel": 10000,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          null,
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "losses": 2140
+    },
+    {
+      "minute": 3,
+      "units": 2209,
+      "hero": 2297.200000000149,
+      "citadel": 10000,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          null,
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "losses": 3039
+    },
+    {
+      "minute": 4,
+      "units": 1424,
+      "hero": 2587.200000000258,
+      "citadel": 10000,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          "fleet",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "losses": 3899
+    },
+    {
+      "minute": 5,
+      "units": 992,
+      "hero": 3239.2000000003673,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          "fleet",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "losses": 4404
+    }
+  ]
+}

@@ -34,6 +34,34 @@ describe("AI spell and focus tactics", () => {
     expect(planAbilityCommands(snapshotGame(game), "v2", { version: "v2" })[0]).toEqual({ type: "cast", unitId: "priest", ability: "heal", targetId: "critical-wound" });
   });
 
+  it("V8 heals the soldier it would miss most: a hurt veteran ahead of an equally hurt rookie, a rookie near death ahead of a scratched veteran", () => {
+    const plan = (veteranHp: number, rookieHp: number) => {
+      const game = sketchScene("spell-tactics-v8-heal-worth")
+        .map("bareDuel")
+        .replaceDefaults()
+        .player("v8", { team: "north", race: "grove" })
+        .townHall("v8", 500, 500)
+        .unit("v8", "priest", 540, 500, { id: "priest" })
+        .unit("v8", "raider", 570, 500, { id: "veteran" })
+        .unit("v8", "raider", 600, 500, { id: "rookie" })
+        .unit("v8", "worker", 560, 530, { id: "worker", hp: 10 })
+        .build()
+        .createGame();
+      const veteran = game.units.find((unit) => unit.id === "veteran")!;
+      const rookie = game.units.find((unit) => unit.id === "rookie")!;
+      veteran.level = 3;
+      veteran.maxHp = Math.round(rookie.maxHp * 1.75);
+      veteran.hp = Math.round(veteran.maxHp * veteranHp);
+      rookie.hp = Math.round(rookie.maxHp * rookieHp);
+      const cast = (options: { version: "v2"; requestedVersion?: "v8" }) => planAbilityCommands(snapshotGame(game), "v8", options).find((command) => command.type === "cast");
+      return { v8: cast({ version: "v2", requestedVersion: "v8" }), shared: cast({ version: "v2" }) };
+    };
+    expect(plan(0.5, 0.5).v8).toMatchObject({ unitId: "priest", ability: "heal", targetId: "veteran" });
+    expect(plan(0.75, 0.2).v8).toMatchObject({ targetId: "rookie" });
+    expect(plan(0.5, 0.45).shared).toMatchObject({ targetId: "worker" });
+    expect(plan(0.5, 0.45).v8).toMatchObject({ targetId: "veteran" });
+  });
+
   it("moves an idle healer toward a safe wounded group outside heal range", () => {
     const game = sketchScene("spell-tactics-healer-regroups-to-wounded")
       .map("bareDuel")
@@ -414,7 +442,7 @@ describe("AI spell and focus tactics", () => {
       .townHall("v2", 500, 500)
       .unit("v2", "archer", 660, 720, { id: "last-archer" })
       .unit("v1", "summoner", 940, 760, { id: "killable-summoner", hp: 6 })
-      .unit("v1", "contractArcher", 900, 720, { id: "healthy-archer", hp: 95 })
+      .unit("v1", "contractArcher", 900, 720, { id: "healthy-archer", hp: 81 })
       .unit("v1", "priest", 910, 780, { id: "wounded-priest", hp: 40 })
       .build()
       .createGame();

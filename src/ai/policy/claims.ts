@@ -1,6 +1,7 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
-import { createSnapshotQuery } from "../../sdk/snapshot-query";
+import type { createSnapshotQuery } from "../../sdk/snapshot-query";
 import type { AiPolicyMemory, AiPolicyUnitClaim } from "../memory";
+import { aiSnapshotQuery } from "./snapshot";
 
 type Point = {
   x: number;
@@ -25,8 +26,10 @@ const UNIT_CLAIM_TTL_TICKS = 900;
 const OBJECTIVE_CLAIM_TTL_TICKS = 3600;
 const OBJECTIVE_ABANDON_GRACE_TICKS = 300;
 
+// The claims read the snapshot through the plan's cached query (aiSnapshotQuery) rather than a query of their own each
+// call: a query only reads its snapshot, so both give the same answers, and activeUnitClaim runs once per unit per script.
 export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
-  const query = createSnapshotQuery(snapshot);
+  const query = aiSnapshotQuery(snapshot);
   for (const [unitId, claim] of Object.entries(memory.unitClaims)) {
     const unit = query.unitById(unitId);
     if (!unit || unit.owner !== owner || claim.expiresTick < snapshot.tick || objectiveClaimAbandoned(unit, claim, snapshot.tick) || !claimTargetExists(query, owner, claim)) delete memory.unitClaims[unitId];
@@ -35,7 +38,7 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
 }
 
 export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory, options: RecordAiMemoryOptions = {}) {
-  const query = createSnapshotQuery(snapshot, options.teams ? { teams: options.teams } : {});
+  const query = aiSnapshotQuery(snapshot, options.teams);
   for (const command of commands) {
     if ((scriptId === "expansion" || scriptId === "economicCatchUp") && command.type === "build" && command.buildingKind === "townHall") {
       memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
@@ -255,7 +258,7 @@ export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: U
   const claim = options.memory?.unitClaims[unit.id];
   if (!claim || claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
   if (objectiveClaimAbandoned(unit, claim, snapshot.tick)) return undefined;
-  return claimTargetExists(createSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
+  return claimTargetExists(aiSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
 }
 
 function objectiveClaimAbandoned(unit: Unit, claim: AiPolicyUnitClaim, currentTick: number) {
@@ -273,7 +276,7 @@ function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner:
   if (claim.kind === "expansion") return expansionClaimStillNeedsArmy(query, owner, claim);
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
   if (claim.kind === "harass") return Boolean(query.targetById(claim.targetId));
-  if (claim.kind === "build") return claim.sinceTick >= query.snapshot.tick || query.buildings().some((building) => !building.complete && distance(building, claim) <= 80);
+  if (claim.kind === "build") return query.unitsFor(owner).some(unit => unit.order.type === "build" && distance(unit.order, claim) <= 80) || claim.sinceTick >= query.snapshot.tick || query.buildingsFor(owner).some((building) => !building.complete && distance(building, claim) <= 80);
   return true;
 }
 

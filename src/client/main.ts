@@ -1,8 +1,13 @@
 import "./styles.css";
-import { buildPlacementCommand, type BuildPlacement } from "./build-placement-controls";
-import { BUILDING_GLYPHS, type BuildingGlyph, type BuildingGlyphMark } from "./building-glyphs";
+import "./battle-hud.css";
+import { BattleHudSelection, type HudIdentity } from "./battle-hud";
+import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
+import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
+import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
-import { abilityCommandState, booleanCommandState, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, type CommandButtonState } from "./command-button-state";
+import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
+import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
   controlGroupCenter,
   controlGroupRecallTap,
@@ -22,8 +27,13 @@ import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities
 import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
-import { drawLevelStar } from "./level-star";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
+import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
+import { drawMinimapMap } from "./minimap-art";
+import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
+import { NO_SOUND_PACK, Soundboard } from "./sound";
+import { soundCues, type SoundCue } from "./sound-cues";
+import { servedSoundPacks, SOUND_PACKS } from "./sound-packs";
 import {
   isMicrosoftEdgeUserAgent,
   moveVirtualPointer,
@@ -33,34 +43,43 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
-import { shouldRenderBuildingRally } from "./rally-visual";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
+import { buildingAt, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, type PointerTarget } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
-import { UNIT_GLYPHS, unitGlyphScale, type GlyphMark, type UnitGlyph } from "./glyphs";
-import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
+import { UnitFacingTracker } from "./unit-facing";
+import { UnitMotionSmoother } from "./unit-motion";
+import { UnitAnimationTracker } from "./unit-animation";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
-import { trainingProgressButtonsForSelection, trainingQueueCountText, type TrainingProgressButton } from "./training-queue";
+import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { renderWorldEffects } from "./effect-renderer";
-import { virtualClickableTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { ABILITY_DEFS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, UNIT_DEFS } from "../shared/catalog";
-import { MAP_SCENARIOS } from "../shared/map";
-import { isMapId } from "../shared/map-ids";
-import { createMapPresentation, projectWorldToRect, type MapPresentationMark } from "../shared/presentation";
-import { MAX_ROOM_SLOTS, resolveRoomSlotCounts } from "../shared/room-slot-counts";
-import { canStartRoom, type SlotPatch } from "../shared/rooms";
-import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MercenaryCamp, Owner, PlayerId, ResourceNode, RoomState, TerrainLandmark, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
-import type { MapId } from "../shared/types";
+import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
+import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
+import { abilityCooldown } from "../shared/ability-cooldowns";
+import { canAutocast } from "../shared/autocast";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
+import { drawPaintedItem } from "./art/items";
+import { ABILITY_CARDS } from "./content/abilities";
+import { BUILDING_CARDS } from "./content/buildings";
+import { TRAINED_UNIT_CARDS } from "./content/units";
+import { LADDER_MAP_ID } from "../shared/map-ids";
+import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
+import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomTeam, seatTeam, type SlotPatch } from "../shared/rooms";
+import { snapToFootprint } from "../shared/terrain";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
+import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"] };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
-type CommandMode = { type: "attackMove" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
+type MenuView = "play" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -78,64 +97,41 @@ type CommandButton = {
   tooltip: () => GameplayTooltip;
   state: () => CommandButtonState;
   run: () => void;
+  // Right-click on the button (a spell's autocast switch).
+  contextAction?: () => void;
 };
 
-const BUILD_COMMANDS = [
-  { kind: "townHall", icon: "⌂", hotkey: "h" },
-  { kind: "barracks", icon: "▱", hotkey: "b" },
-  { kind: "archeryRange", icon: "⌁", hotkey: "r" },
-  { kind: "stables", icon: "⌂", hotkey: "s" },
-  { kind: "sanctum", icon: "✣", hotkey: "c" },
-  { kind: "workshop", icon: "⚙", hotkey: "o" },
-  { kind: "defenseTower", icon: "⌖", hotkey: "t" },
-  { kind: "moonWell", icon: "◐", hotkey: "m" },
-  { kind: "emberForge", icon: "▰", hotkey: "b" },
-  { kind: "cinderSpire", icon: "♢", hotkey: "c" },
-  { kind: "emberShrine", icon: "◒", hotkey: "m" },
-  { kind: "farm", icon: "⌗", hotkey: "e" },
-] satisfies { kind: BuildingKind; icon: string; hotkey: string }[];
+// The command card's build and train buttons come from the building and unit cards, in catalog order.
+const BUILD_COMMANDS = BUILDABLE_BUILDING_KINDS.map((kind) => ({ kind, ...BUILDING_CARDS[kind].command }));
 
-const TRAIN_COMMANDS = [
-  { kind: "worker", icon: "⌘", hotkey: "w" },
-  { kind: "footman", icon: "△", hotkey: "f" },
-  { kind: "archer", icon: "⋉", hotkey: "a" },
-  { kind: "raider", icon: "◇", hotkey: "r" },
-  { kind: "lancer", icon: "↗", hotkey: "l" },
-  { kind: "groveWarden", icon: "◭", hotkey: "v" },
-  { kind: "emberRavager", icon: "◆", hotkey: "v" },
-  { kind: "cinderRunner", icon: "◇", hotkey: "r" },
-  { kind: "sparkArcher", icon: "⋊", hotkey: "a" },
-  { kind: "emberAcolyte", icon: "+", hotkey: "p" },
-  { kind: "ashHexer", icon: "☾", hotkey: "x" },
-  { kind: "pyreCaller", icon: "◎", hotkey: "u" },
-  { kind: "knight", icon: "♜", hotkey: "k" },
-  { kind: "priest", icon: "+", hotkey: "p" },
-  { kind: "summoner", icon: "◎", hotkey: "u" },
-  { kind: "witch", icon: "☾", hotkey: "c" },
-  { kind: "golem", icon: "▣", hotkey: "g" },
-] satisfies { kind: TrainableUnitKind; icon: string; hotkey: string }[];
+const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UNIT_CARDS[kind].command }));
 
-const SPELL_COMMANDS = [
-  { ability: "heal", icon: "+", hotkey: "h" },
-  { ability: "summon", icon: "◎", hotkey: "u" },
-  { ability: "curse", icon: "☾", hotkey: "c" },
-  { ability: "emberMend", icon: "+", hotkey: "m" },
-  { ability: "cinderSoul", icon: "◎", hotkey: "o" },
-  { ability: "ashCurse", icon: "☾", hotkey: "x" },
-] satisfies { ability: AbilityKind; icon: string; hotkey: string }[];
+const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
+// A shop's goods, in SHOP_GOODS order: a shop selected shows no other button.
+const SHOP_HOTKEYS = ["q", "w", "e", "r", "t"];
+// Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
+// hides every other button, so X does not meet a hexer's curse.
+const STANCE_MENU_COMMAND = { icon: "⇄", hotkey: "z" } as const;
+const STANCE_COMMANDS = [
+  { stance: "pursue", icon: "»", hotkey: "z", title: "command.stance.pursue.title", body: "command.stance.pursue.body", stats: "command.stance.pursue.stats" },
+  { stance: "brace", icon: "▥", hotkey: "j", title: "command.stance.brace.title", body: "command.stance.brace.body", stats: "command.stance.brace.stats" },
+  { stance: "shock", icon: "⇥", hotkey: "x", title: "command.stance.shock.title", body: "command.stance.shock.body", stats: "command.stance.shock.stats" },
+] as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
 const i18n = createBrowserI18n();
 const t = i18n.t;
 const tl = i18n.label;
+const worldLabels = worldLabelsFor(i18n);
 document.documentElement.lang = i18n.locale;
 app.innerHTML = gameShellMarkup(i18n);
 
 const canvas = requireElement<HTMLCanvasElement>(".game-canvas");
 const shell = requireElement<HTMLDivElement>(".game-shell");
 const mainMenu = requireElement<HTMLDivElement>("[data-main-menu]");
-const menuTitle = requireElement<HTMLDivElement>("[data-menu-title]");
+const menuWindow = requireElement<HTMLDivElement>(".menu-window");
+const menuTitle = requireElement<HTMLHeadingElement>("[data-menu-title]");
 const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
 const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
@@ -155,14 +151,31 @@ const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]
 const pointerLockGateTitle = requireElement<HTMLHeadingElement>("[data-pointer-lock-gate-title]");
 const pointerLockGateBody = requireElement<HTMLParagraphElement>("[data-pointer-lock-gate-body]");
 const pointerLockGateAction = requireElement<HTMLButtonElement>("[data-pointer-lock-gate-action]");
+const sceneSwitch = requireElement<HTMLButtonElement>("[data-scene-switch]");
+const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
+const minimapTab = requireElement<HTMLDivElement>("[data-minimap-tab]");
+const matchMenuButton = requireElement<HTMLButtonElement>("[data-match-menu-button]");
+const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-relations]");
+const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
+const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
+const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
+// The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
+const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
+const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
+// The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs) and those the server offers (see
+// @@@served-sound-packs); until the player chooses one, the one a build names in VITE_SOUND_PACK, else the server's, else none.
+const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
+void servedSoundPacks(import.meta.env.BASE_URL).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
 let currentRoomId: string | undefined;
-let pendingRoomMapScrollTop: number | undefined;
 let localPlayerId: PlayerId = "player";
 let spectatingRoom = false;
+// The minimap in friend-or-foe colours (see @@@minimap-relations): as the player sets it this match, or, until they do,
+// on when they have an ally.
+let minimapRelations: boolean | undefined;
 let activeGameAdapter: GameAdapter;
 let activeChat: MatchChat | undefined;
 let activeChatUnsubscribe: (() => void) | undefined;
@@ -170,11 +183,18 @@ let activeRoomUnwatch: (() => void) | undefined;
 let activeRoomWatchId: string | undefined;
 let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
+const unitFacing = new UnitFacingTracker();
+const unitMotion = new UnitMotionSmoother();
+const unitAnimation = new UnitAnimationTracker();
+const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
+let inspectedShopItem: WorldItem["kind"] | undefined;
+let shopInventoryCarrierId: string | undefined;
 const controlGroups: ControlGroups = {};
 let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
+let worldZoom = 1;
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
@@ -189,9 +209,12 @@ let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
-let selectedMapId: MapId = "verdantCrossroads";
+// @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
+// @@@map-pool), the chosen one's picture and facts on the right (see @@@map-preview).
+let chosenMapId: PoolMapId = MAP_POOL[0].id;
 let commandMode: CommandMode | undefined;
-let buildPaletteOpen = false;
+// The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
+let openPalette: "build" | "stance" | undefined;
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
@@ -214,6 +237,13 @@ const commandButtons: CommandButton[] = [
     requirements: [t("command.attackMove.requirements")],
     hotkey: "A",
   })),
+  createCommandButton(t("command.unload.title"), "⤓", "d", unloadButtonState, beginUnloadMode, () => ({
+    title: t("command.unload.title"),
+    body: t("command.unload.body"),
+    stats: [t("command.unload.stats")],
+    requirements: [t("command.unload.requirements")],
+    hotkey: "D",
+  })),
   createCommandButton(t("command.build.title"), "⌘", "b", () => booleanCommandState(canOpenBuildPalette()), openBuildPalette, () => ({
     title: t("command.build.title"),
     body: t("command.build.body"),
@@ -222,16 +252,52 @@ const commandButtons: CommandButton[] = [
     hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n)),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
-    createCommandButton(t("command.castSpecific", { ability: labelKind(command.ability) }), command.icon, command.hotkey, () => abilityButtonState(command.ability), () => beginSpellTargeting(command.ability), () => abilityTooltip(command.ability, command.hotkey, i18n)),
+    withAutocastRing(createCommandButton(
+      t("command.castSpecific", { ability: labelKind(command.ability) }),
+      command.icon,
+      command.hotkey,
+      () => abilityButtonState(command.ability),
+      () => beginSpellTargeting(command.ability),
+      () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
+      undefined,
+      () => toggleAutocast(command.ability),
+    ), command.ability),
+  ),
+  withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, STANCE_MENU_COMMAND.hotkey, stanceMenuButtonState, openStancePalette, () => ({
+    title: t("command.stance.menu.title"),
+    body: t("command.stance.menu.body", { stance: currentStanceLabel() }),
+    stats: [],
+    requirements: [t("command.stance.requirements")],
+    hotkey: STANCE_MENU_COMMAND.hotkey.toUpperCase(),
+  }))),
+  ...STANCE_COMMANDS.map((command) =>
+    withRing(createCommandButton(t(command.title), command.icon, command.hotkey, () => stanceButtonState(command.stance), () => setStance(command.stance), () => ({
+      title: t(command.title),
+      body: t(command.body),
+      stats: [t(command.stats, { share: BRACE_DAMAGE_SHARE, knockback: KNOCKBACK, most: MAX_SHOVE, taken: SHOCK_DAMAGE_TAKEN, pace: LUNGE_PACE })],
+      requirements: [t("command.stance.requirements")],
+      hotkey: command.hotkey.toUpperCase(),
+    }))),
+  ),
+  ...SHOP_GOODS.map((good, index) =>
+    createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), SHOP_HOTKEYS[index]!, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
+      const tooltip = itemTooltip(good.kind, SHOP_HOTKEYS[index], i18n);
+      return {
+        ...tooltip,
+        title: t("command.buy.title", { item: tooltip.title }),
+        stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
+        requirements: [t("command.buy.requirements")],
+      };
+    }, { type: "item", kind: good.kind }),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -252,6 +318,11 @@ document.addEventListener("pointerout", hideTooltipFromEvent, true);
 document.addEventListener("focusin", showTooltipFromEvent, true);
 document.addEventListener("focusout", hideTooltipFromEvent, true);
 document.addEventListener("pointerlockchange", syncPointerLockState);
+document.addEventListener("click", onInterfaceClick, true);
+document.addEventListener("keydown", () => soundboard.unlock(), true);
+document.addEventListener("change", (event) => {
+  if (event.target instanceof HTMLSelectElement) soundboard.play("click");
+}, true);
 document.addEventListener("pointerlockerror", () => {
   if (pointerLockArmed && !pointerLockFieldClickOnError) return;
   const fieldClickOnError = pointerLockFieldClickOnError;
@@ -267,7 +338,34 @@ document.addEventListener("mouseup", suppressPointerLockDocumentMouseDefault, { 
 document.addEventListener("mousemove", suppressPointerLockDocumentMouseDefault, { capture: true });
 document.addEventListener("contextmenu", suppressPointerLockDocumentMouseDefault, { capture: true });
 pointerLockGateAction.addEventListener("click", () => void requestRequiredPointerLock());
-forfeitButton.addEventListener("click", () => void forfeitCurrentMatch());
+sceneSwitch.addEventListener("click", () => {
+  const scene = menuBackdrop.next();
+  try {
+    localStorage.setItem(MENU_SCENE_STORAGE_KEY, scene.id);
+  } catch {
+    // Without storage the pick lasts this visit.
+  }
+  labelSceneSwitch();
+});
+labelSceneSwitch();
+// The match's menu (≡ in the top right): the map being played, concede, and back to the game.
+matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
+minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
+matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
+forfeitButton.addEventListener("click", () => {
+  matchMenu.classList.add("hidden");
+  void forfeitCurrentMatch();
+});
+// @@@status-flash - The status line speaks when something happens, near the top of the screen, and fades a few
+// seconds later (see .status-line), so no box stands over the battlefield between messages.
+const STATUS_SHOWN_MS = 3500;
+let statusFade: number | undefined;
+new MutationObserver(() => {
+  window.clearTimeout(statusFade);
+  const shown = (statusLabel.textContent ?? "").trim() !== "";
+  statusLabel.classList.toggle("shown", shown);
+  if (shown) statusFade = window.setTimeout(() => statusLabel.classList.remove("shown"), STATUS_SHOWN_MS);
+}).observe(statusLabel, { childList: true, characterData: true, subtree: true });
 canvas.addEventListener("contextmenu", suppressCanvasMouseDefault);
 canvas.addEventListener("auxclick", suppressCanvasMouseDefault);
 canvas.addEventListener("dragstart", suppressCanvasMouseDefault);
@@ -278,6 +376,11 @@ canvas.addEventListener("pointerdown", suppressCanvasPointerGestureDefault);
 canvas.addEventListener("pointerup", suppressCanvasPointerGestureDefault);
 canvas.addEventListener("mousedown", onMouseDown);
 canvas.addEventListener("mousemove", onMouseMove);
+// Off pointer lock the canvas hears no move over the interface, so the cursor is followed across the whole page too,
+// after the canvas's own handler (which reads the point before), for edge scrolling over the top bar and the docks.
+document.addEventListener("mousemove", (event) => {
+  if (document.pointerLockElement !== canvas) lastMouse = mousePoint(event);
+});
 canvas.addEventListener("mouseup", onMouseUp);
 
 renderMainMenu();
@@ -285,7 +388,7 @@ void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
 
-function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip): CommandButton {
+function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
@@ -293,10 +396,53 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.dataset.hotkey = hotkey.toUpperCase();
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
-  element.addEventListener("click", run);
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  if (portrait) drawCommandPortrait(element, portrait);
+  else {
+    const paths: Record<string, string> = {
+      "⌁": "M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4",
+      "⌘": "M12 33l13-19M17 7l7-3 12 8-5 8-8-5-7 1-4-5zM9 31l5 3-3 5-5-3z",
+      "⤓": "M6 27h30l-5 8H12zM21 4v19m-6-6l6 6 6-6M7 38l6 2 8-2 8 2 7-2",
+    };
+    if (paths[icon]) element.querySelector(".command-icon")!.innerHTML = `<svg class="command-symbol" viewBox="0 0 42 42" aria-hidden="true"><path d="${paths[icon]}"/></svg>`;
+  }
+  const guardedRun = () => { const current = state(); if (!current.visible) return; if (!current.enabled) { showCommandUnavailable(current, label); return; } run(); };
+  element.addEventListener("click", guardedRun);
+  // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
+  element.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    contextAction?.();
+  });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run };
+  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}) };
+}
+
+// @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
+// player cannot switch gets none.
+function withAutocastRing(button: CommandButton, ability: AbilityKind) {
+  return canAutocast(ability) ? withRing(button) : button;
+}
+
+// The ring itself, lit by the button's state: a spell's autocast, or a stance the selected fighters are in.
+function withRing(button: CommandButton) {
+  const ring = document.createElement("span");
+  ring.className = "autocast-ring";
+  ring.setAttribute("aria-hidden", "true");
+  button.element.append(ring);
+  return button;
+}
+
+function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
+  const icon = document.createElement("canvas");
+  icon.width = icon.height = 96;
+  icon.className = "command-portrait";
+  icon.setAttribute("aria-hidden", "true");
+  const brush = requireCanvasContext(icon);
+  const center = { x: 48, y: 48 };
+  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, ownerInk(localPlayerId));
+  else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
+  else drawAtlasBuildingPortrait(brush, portrait.kind, 96, ownerInk(localPlayerId));
+  element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -305,6 +451,7 @@ function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
   element.dataset.tooltipBody = dataset.body;
   element.dataset.tooltipStats = dataset.stats;
   element.dataset.tooltipRequirements = dataset.requirements;
+  element.dataset.tooltipNotes = dataset.notes;
   element.dataset.tooltipHotkey = dataset.hotkey;
 }
 
@@ -316,6 +463,10 @@ function renderCommandButtonState(element: HTMLButtonElement, state: CommandButt
   else delete element.dataset.disabledLabel;
   if (state.reason) element.dataset.disabledReason = state.reason;
   else delete element.dataset.disabledReason;
+  if (state.autocast) element.dataset.autocast = state.autocast;
+  else delete element.dataset.autocast;
+  if (state.pressed) element.dataset.pressed = state.pressed;
+  else delete element.dataset.pressed;
 }
 
 function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonState): GameplayTooltip {
@@ -325,10 +476,11 @@ function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonStat
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) return t("hud.commandCooldownShort", { ticks: state.cooldownTicks });
+  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / 20)}s`;
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
+  if (state.reason === "tier") return t("hud.commandTierShort", { cap: state.supplyCap ?? 0 });
   if (state.reason === "position") return t("hud.commandNeedUnitShort");
   return undefined;
 }
@@ -338,6 +490,7 @@ function commandButtonStateRequirement(state: CommandButtonState) {
   if (state.reason === "stock") return t("hud.commandNoStock");
   if (state.reason === "gold") return t("hud.commandNoGold");
   if (state.reason === "supply") return t("hud.commandNoSupply");
+  if (state.reason === "tier") return t("hud.commandTier", { cap: state.supplyCap ?? 0 });
   if (state.reason === "position") return t("hud.commandNeedUnit");
   return undefined;
 }
@@ -374,12 +527,14 @@ function tooltipTarget(target: EventTarget | null) {
 function renderTooltip(target: HTMLElement) {
   const stats = splitTooltipList(target.dataset.tooltipStats);
   const requirements = splitTooltipList(target.dataset.tooltipRequirements);
+  const notes = splitTooltipList(target.dataset.tooltipNotes);
   const hotkey = target.dataset.tooltipHotkey;
   tooltipLayer.innerHTML = `
     <div class="tooltip-title">${escapeHtml(target.dataset.tooltipTitle ?? "")}${hotkey ? `<span>${escapeHtml(hotkey)}</span>` : ""}</div>
     ${target.dataset.tooltipBody ? `<div class="tooltip-body">${escapeHtml(target.dataset.tooltipBody)}</div>` : ""}
     ${stats.length > 0 ? `<div class="tooltip-stats">${stats.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
     ${requirements.length > 0 ? `<div class="tooltip-requirements">${requirements.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
+    ${notes.length > 0 ? `<div class="tooltip-notes">${notes.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}</div>` : ""}
   `;
   tooltipLayer.classList.remove("hidden");
 }
@@ -459,6 +614,9 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
+  mainMenu.classList.remove("play-browser");
+  // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
+  if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
   menuTitle.textContent =
     menuView === "home"
@@ -472,6 +630,7 @@ function renderMainMenu() {
             : menuView === "results"
               ? t("home.results.title")
               : t("home.roomSetup.title");
+  if (menuView === "play") { renderCreateGameMenu(); return; }
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -492,96 +651,162 @@ function renderMainMenu() {
     renderRoomSetup();
     return;
   }
-  menuStatus.textContent = t("home.signedIn", { name: localUser.name });
+  menuStatus.textContent = "";
   mapList.replaceChildren(
-    menuButton(t("home.rooms.label"), t("home.rooms.note"), "data-open-room-browser", () => {
+    menuButton(t("home.play"), "", "data-open-create", () => {
+      openMenuRoute({ screen: "play" });
+    }),
+    menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
     }),
-    menuButton(t("profile.open.label"), t("profile.open.note", { id: localUser.id.slice(0, 8) }), "data-open-profile", () => {
+    menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
   );
 }
 
+// The create screen (see @@@map-chooser).
 function renderCreateGameMenu() {
+  mainMenu.dataset.menuView = "create";
+  mainMenu.classList.add("play-browser");
+  menuTitle.textContent = t("home.play");
   menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "create-game-form";
   form.dataset.createGameForm = "true";
   form.innerHTML = `
-    <div class="create-game-grid">
-      <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <label>${escapeHtml(t("roomCreate.map.label"))}
-        <select name="mapId">
-          ${MAP_SCENARIOS.map((scenario) => `<option value="${escapeHtml(scenario.id)}" ${scenario.id === selectedMapId ? "selected" : ""}>${escapeHtml(scenario.name)} - ${escapeHtml(mapCapacityLabel(scenario.id))}</option>`).join("")}
-        </select>
-      </label>
-      <div class="create-count-grid">
-        <label>${escapeHtml(t("roomCreate.humanPlayers.label"))}<input name="humanCount" type="number" min="1" max="${MAX_ROOM_SLOTS}" value="1" /></label>
-        <label>${escapeHtml(t("roomCreate.aiPlayers.label"))}<input name="aiCount" type="number" min="0" max="${MAX_ROOM_SLOTS - 1}" value="1" /></label>
-      </div>
-      <div class="create-slot-total" data-create-slot-total>${escapeHtml(t("roomCreate.slotCountLabel", { count: 2 }))}</div>
+    <div class="map-chooser">
+      <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
+        <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
+        <div class="map-entries" data-map-entries></div>
+      </section>
+      ${mapDetailMarkup()}
     </div>
-    <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+    <div class="create-options">
+      <label class="create-name">${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
+      <label class="checkbox-row"><input name="privateRoom" type="checkbox" checked /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+    </div>
     <div class="menu-actions">
       <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
+  const entries = form.querySelector<HTMLDivElement>("[data-map-entries]")!;
+  const renderMaps = () => {
+    entries.replaceChildren(
+      ...MAP_POOL.map((map) => {
+        const entry = document.createElement("button");
+        entry.type = "button";
+        entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
+        entry.dataset.mapId = map.id;
+        entry.textContent = mapEntryLabel(map.id);
+        entry.addEventListener("click", () => {
+          chosenMapId = map.id;
+          renderMaps();
+        });
+        return entry;
+      }),
+    );
+    showMapDetail(form, chosenMapId, roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: chosenMapId, ...poolSeatCounts(chosenMapId) })));
+  };
+  renderMaps();
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const mapId = String(data.get("mapId"));
-    const humanCount = Number(data.get("humanCount"));
-    const aiCount = Number(data.get("aiCount"));
     const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
-    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
-    if (!slotCounts) {
-      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.slotCountRangeError"))}</span>`;
-      return;
-    }
-    if (!isMapId(mapId)) {
-      menuStatus.innerHTML = `<span class="error">${escapeHtml(t("roomCreate.knownMapError"))}</span>`;
-      return;
-    }
-    void createConfiguredRoom({
-      name,
-      mapId,
-      humanCount: slotCounts.humanCount,
-      aiCount: slotCounts.aiCount,
-      visibility: data.get("privateRoom") === "on" ? "private" : "public",
-    });
+    void createConfiguredRoom({ name, mapId: chosenMapId, ...poolSeatCounts(chosenMapId), visibility: data.get("privateRoom") === "on" ? "private" : "public" });
   });
-  const refreshSlotTotal = () => {
-    const humanCount = Number((form.elements.namedItem("humanCount") as HTMLInputElement).value);
-    const aiCount = Number((form.elements.namedItem("aiCount") as HTMLInputElement).value);
-    const total = humanCount + aiCount;
-    const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
-    const totalLabel = form.querySelector<HTMLElement>("[data-create-slot-total]")!;
-    totalLabel.textContent = Number.isInteger(total) ? t("roomCreate.slotCountLabel", { count: total }) : t("roomCreate.slotCountFallback");
-    totalLabel.classList.toggle("error", !slotCounts);
-  };
-  form.querySelectorAll<HTMLInputElement>("input[name='humanCount'], input[name='aiCount']").forEach((input) => input.addEventListener("input", refreshSlotTotal));
   form.querySelector("[data-back-home]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "home" });
   });
   mapList.replaceChildren(form);
 }
 
+// A new room on a map: its host and a computer in every other seat; the host opens seats to players in the lobby.
+function poolSeatCounts(mapId: MapId) {
+  return { humanCount: 1, aiCount: (poolMap(mapId)?.players ?? 2) - 1 };
+}
+
+function mapDetailMarkup() {
+  return `
+    <section class="map-detail">
+      <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div>
+      <div class="map-info">
+        <div class="map-info-name" data-map-name></div>
+        <dl class="map-facts" data-map-facts></dl>
+      </div>
+    </section>`;
+}
+
+function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[]) {
+  const preview = mapPreview(mapId, seats);
+  drawMapPreview(root.querySelector<HTMLCanvasElement>("[data-map-preview]")!, preview);
+  const { facts } = preview;
+  const layout = poolMap(mapId)?.layout;
+  root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
+  root.querySelector("[data-map-facts]")!.innerHTML = [
+    [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
+    ...(layout?.idea ? [[t("map.fact.layout"), t(`map.idea.${layout.idea}`)]] : []),
+    [t("map.fact.size"), `${facts.size} × ${facts.size}`],
+    [t("map.fact.mines"), facts.mines],
+    [t("map.fact.camps"), facts.camps],
+    [t("map.fact.posts"), facts.posts],
+    [t("map.fact.items"), facts.items],
+  ].map(([term, value]) => `<dt>${escapeHtml(String(term))}</dt><dd>${escapeHtml(String(value))}</dd>`).join("");
+}
+
+// A pool map by its name in the reader's language; any other map by its id.
+function mapName(mapId: MapId) {
+  const map = poolMap(mapId);
+  return map ? map.name[i18n.locale] : mapId;
+}
+
+function mapEntryLabel(mapId: MapId) {
+  return t("map.entry", { players: poolMap(mapId)?.players ?? 2, name: mapName(mapId) });
+}
+
+// Every seat that will play, open ones included (a player takes each before the start); closed seats stay empty.
+function roomPreviewSeats(room: RoomState): PreviewSeat[] {
+  return room.slots.filter((slot) => slot.controller !== "closed").map((slot) => ({ playerId: slot.playerId, team: seatTeam(slot) }));
+}
+
 function renderProfileMenu() {
-  menuStatus.textContent = t("profile.status");
+  menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "profile-form";
   form.dataset.profileForm = "true";
   form.innerHTML = `
     <label>${escapeHtml(t("profile.displayName"))}<input name="name" value="${escapeHtml(localUser.name)}" /></label>
     <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
+    <fieldset class="sound-settings" data-sound-settings>
+      <legend>${escapeHtml(t("settings.sound"))}</legend>
+      <label>${escapeHtml(t("settings.soundPack"))}<select data-sound-pack>${[{ id: NO_SOUND_PACK, name: t("settings.soundPackNone") }, ...soundboard.packs]
+        .map((pack) => `<option value="${escapeHtml(pack.id)}" ${pack.id === (soundboard.pack?.id ?? NO_SOUND_PACK) ? "selected" : ""}>${escapeHtml(pack.name)}</option>`)
+        .join("")}</select></label>
+      <label>${escapeHtml(t("settings.effects"))}<input type="range" min="0" max="100" data-volume="effects" value="${Math.round(soundboard.settings.effects * 100)}" /></label>
+      <label>${escapeHtml(t("settings.interface"))}<input type="range" min="0" max="100" data-volume="ui" value="${Math.round(soundboard.settings.ui * 100)}" /></label>
+      <label class="checkbox-row"><input type="checkbox" data-mute ${soundboard.settings.muted ? "checked" : ""} /> ${escapeHtml(t("settings.mute"))}</label>
+    </fieldset>
     <div class="menu-actions">
       <button type="submit">${escapeHtml(t("common.save"))}</button>
       <button type="button" data-regenerate-user>${escapeHtml(t("profile.regenerate"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
+  // A volume takes effect as it moves, with a sound of its group to hear it by.
+  form.querySelectorAll<HTMLInputElement>("[data-volume]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const group = input.dataset.volume === "ui" ? "ui" : "effects";
+      soundboard.update({ [group]: Number(input.value) / 100 });
+      soundboard.play(group === "ui" ? "click" : "melee");
+    });
+  });
+  form.querySelector<HTMLSelectElement>("[data-sound-pack]")?.addEventListener("change", (event) => {
+    soundboard.update({ pack: (event.currentTarget as HTMLSelectElement).value });
+  });
+  form.querySelector<HTMLInputElement>("[data-mute]")?.addEventListener("change", (event) => {
+    soundboard.update({ muted: (event.currentTarget as HTMLInputElement).checked });
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -605,42 +830,48 @@ function renderProfileMenu() {
   mapList.replaceChildren(form);
 }
 
+// The browser is laid out at once, its list saying the rooms are loading, and they fill it when they come (see
+// @@@steady-rooms).
 async function renderRoomBrowser() {
-  menuStatus.textContent = t("roomBrowser.status");
-  const rooms = await deploymentRuntime.listRooms(localUser.id);
+  menuStatus.textContent = "";
   const browser = document.createElement("div");
   browser.className = "room-browser";
-  browser.dataset.roomBrowser = "true";
   browser.innerHTML = `
     <div class="room-browser-actions"></div>
     <div class="room-browser-list" data-room-browser-list></div>
   `;
   const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
   actions.replaceChildren(
-    menuButton(t("roomBrowser.create.title"), t("roomBrowser.create.note"), "data-create-room", () => {
+    menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
       openMenuRoute({ screen: "create" });
     }),
-    menuButton(t("common.back"), t("roomBrowser.back.note"), "data-back-home", () => {
+    menuButton(t("common.back"), "", "data-back-home", () => {
       openMenuRoute({ screen: "home" });
     }),
   );
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
+  list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
+  mapList.replaceChildren(browser);
+  const rooms = await deploymentRuntime.listRooms(localUser.id);
+  // Left, or laid out again, while they loaded.
+  if (!browser.isConnected) return;
   const visibleRooms = roomBrowserEntries(rooms, localUser.id);
   list.replaceChildren(
     ...(visibleRooms.length > 0
       ? visibleRooms.map((entry) =>
           menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
         )
-      : [emptyRoomList()]),
+      : [roomListNote(t("roomBrowser.noVisible"), "empty")]),
   );
-  mapList.replaceChildren(browser);
+  // Marked once its rooms are in: what a script waits on.
+  browser.dataset.roomBrowser = "true";
 }
 
 function renderRoomSetup() {
   const setupAction = roomSetupViewAction(currentRoom);
   if (setupAction === "empty") {
     menuStatus.textContent = t("roomSetup.empty");
-    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), t("roomSetup.createMissing.note"), "data-create-room", () => {
+    mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
       openMenuRoute({ screen: "create" });
     }));
     return;
@@ -655,37 +886,26 @@ function renderRoomSetup() {
     return;
   }
   const room = currentRoom!;
-  selectedMapId = room.mapId;
   menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
   const setup = document.createElement("div");
   setup.className = "room-setup";
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = `
-    <div class="room-setup-header">
-      <div>
-        <div class="room-section-title">${escapeHtml(t("roomSetup.room"))}</div>
-        <div class="room-setup-name">${escapeHtml(room.name)}</div>
-      </div>
-    </div>
     <div class="room-setup-layout">
-      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
-        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
-        <div class="room-map-grid"></div>
-      </section>
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
           <div>
             <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
-            <div class="room-slot-summary" data-slot-summary>${escapeHtml(slotSummaryText(room))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" data-add-player-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addPlayer"))}</button>
-            <button type="button" data-add-ai-slot ${room.slots.length >= MAX_ROOM_SLOTS ? "disabled" : ""}>${escapeHtml(t("roomSetup.addAi"))}</button>
-            <button type="button" data-remove-slot ${canRemoveLastRoomSlot(room) ? "" : "disabled"}>${escapeHtml(t("roomSetup.removeSlot"))}</button>
             <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
           </div>
         </div>
         <div class="slot-list"></div>
+      </section>
+      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
+        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
+        ${mapDetailMarkup()}
       </section>
     </div>
     <div class="menu-actions">
@@ -696,31 +916,26 @@ function renderRoomSetup() {
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
-  const mapGrid = setup.querySelector<HTMLDivElement>(".room-map-grid")!;
-  mapGrid.replaceChildren(...MAP_SCENARIOS.map((scenario) => mapChoiceButton(scenario.id)));
+  // Teams that split a sides map unevenly cannot start on it; meanwhile it shows with the seats a new room gets.
+  const seats = roomPreviewSeats(room);
+  const pool = poolMap(room.mapId);
+  showMapDetail(setup, room.mapId, !pool || poolSeatsFit(pool, seats.map((seat) => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) })));
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
-  slotList.replaceChildren(...room.slots.map(slotRow));
-  setup.querySelector("[data-add-player-slot]")?.addEventListener("click", () => void addPlayerRoomSlot());
-  setup.querySelector("[data-add-ai-slot]")?.addEventListener("click", () => void addAiRoomSlot());
-  setup.querySelector("[data-remove-slot]")?.addEventListener("click", () => void removeLastRoomSlot());
+  const local = deploymentRuntime.isLocalRoom(room.id);
+  slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(slot, index, local)));
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "rooms" });
   });
   mapList.replaceChildren(setup);
-  if (pendingRoomMapScrollTop !== undefined) {
-    // @@@preserve-map-list-scroll - Map selection swaps this DOM subtree; keep the user's scroll position stable.
-    mapGrid.scrollTop = pendingRoomMapScrollTop;
-    pendingRoomMapScrollTop = undefined;
-  }
 }
 
 function renderResultsMenu() {
   const result = currentRoom?.result;
   if (!currentRoom || !result) {
     menuStatus.textContent = t("results.noCompleted");
-    mapList.replaceChildren(menuButton(t("results.backHome"), t("roomBrowser.back.note"), "data-return-home", returnHome));
+    mapList.replaceChildren(menuButton(t("results.backHome"), "", "data-return-home", returnHome));
     return;
   }
 
@@ -733,8 +948,8 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(labelKind(slot.controller))}</span>
-        <span>${escapeHtml(labelKind(slot.team))}</span>
+        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase()}` : labelKind(slot.controller))}</span>
+        <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
         <span>${spent}</span>
@@ -762,10 +977,6 @@ function renderResultsMenu() {
   mapList.replaceChildren(panel);
 }
 
-async function createLocalRoom() {
-  await createConfiguredRoom({ name: `${localUser.name}'s Room`, mapId: selectedMapId, humanCount: 1, aiCount: 1, visibility: "private" });
-}
-
 async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCount: number; aiCount: number; visibility: "private" | "public" }) {
   currentRoom = await deploymentRuntime.createRoom({
     id: `room-${Date.now().toString(36)}`,
@@ -777,17 +988,10 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
   renderMainMenu();
 }
 
-async function selectRoomMap(mapId: MapId) {
-  selectedMapId = mapId;
-  pendingRoomMapScrollTop = document.querySelector<HTMLDivElement>(".room-map-grid")?.scrollTop;
-  if (currentRoom) currentRoom = await deploymentRuntime.updateRoomMap(currentRoom.id, mapId);
-  renderMainMenu();
-}
-
 async function startCurrentRoom() {
   if (!currentRoom) return;
   clearRoomWatch();
-  if (hasSeenPointerLockGuide()) {
+  if (hasSeenPointerLockGuide() && hasMouse()) {
     const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
   }
@@ -797,7 +1001,6 @@ async function startCurrentRoom() {
   localPlayerId = started.playerId;
   activateStartedMatch(started.adapter, started.snapshot, started.chat);
   syncDebugView();
-  camera = { x: 0, y: 0 };
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = undefined;
@@ -808,9 +1011,9 @@ async function startCurrentRoom() {
   syncPointerLockGate();
 }
 
+// A rematch: a private room on the same map, computers in the other seats.
 async function createReplayRoom(room: RoomState) {
-  selectedMapId = room.mapId;
-  await createLocalRoom();
+  await createConfiguredRoom({ name: t("roomCreate.defaultName", { name: localUser.name }), mapId: room.mapId, ...poolSeatCounts(room.mapId), visibility: "private" });
 }
 
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
@@ -818,50 +1021,39 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   button.className = "map-button";
   button.type = "button";
   button.setAttribute(dataName, dataValue);
-  button.innerHTML = `
-    <span class="map-button-name">${escapeHtml(label)}</span>
-    <span class="map-button-note">${escapeHtml(note)}</span>
-  `;
+  button.innerHTML = `<span class="map-button-name">${escapeHtml(label)}</span>${note ? `<span class="map-button-note">${escapeHtml(note)}</span>` : ""}`;
   button.addEventListener("click", onClick);
   return button;
 }
 
-function mapChoiceButton(mapId: MapId) {
-  const scenario = MAP_SCENARIOS.find((candidate) => candidate.id === mapId)!;
-  const button = document.createElement("button");
-  button.className = `map-button ${selectedMapId === scenario.id ? "selected" : ""}`;
-  button.type = "button";
-  button.dataset.mapId = scenario.id;
-  button.setAttribute("aria-label", t("map.choose", { name: scenario.name }));
-  button.innerHTML = `
-    <span class="map-button-name">${escapeHtml(scenario.name)}</span>
-    <span class="map-button-note">${escapeHtml(scenario.note)}</span>
-    <span class="map-button-tags">${[mapCapacityLabel(scenario.id), ...scenario.tags].map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</span>
-  `;
-  button.addEventListener("click", () => void selectRoomMap(scenario.id));
-  return button;
-}
-
-function slotRow(slot: RoomState["slots"][number], index: number) {
+function slotRow(slot: RoomState["slots"][number], index: number, local: boolean) {
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
-  const controllerOptions = ["ai", "open", "closed"]
+  // A seat is a computer's or open to a player; a pool map plays with every seat taken (see @@@map-pool). A room played
+  // in this browser (see @@@private-rooms-local) has nobody else to come in, so its computers' seats stay theirs.
+  const controllerOptions = ["ai", "open"]
     .map((controller) => `<option value="${controller}" ${slot.controller === controller ? "selected" : ""}>${escapeHtml(labelKind(controller))}</option>`)
     .join("");
-  const raceOptions = RACE_IDS.map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
+  // @@@seat-race-first - A seat's race first, then its computer player among those that play that race (see
+  // @@@room-ai-races), random by default; a seat on a random race has its computer player drawn too, so that one is locked.
+  const aiChoice = slot.race === "random" ? "random" : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
+  const aiChoices: RoomAiChoice[] = slot.race === "random" ? ["random"] : ["random", ...roomAiVersionsFor(slot.race)];
+  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase()}</option>`).join("");
+  const raceOptions = [...RACE_IDS, "random" as const].map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     ${
-      slot.controller === "human"
-        ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind("human"))}</span>`
+      slot.controller === "human" || local
+        ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind(slot.controller))}</span>`
         : `<select data-slot-controller aria-label="${escapeHtml(t("roomSetup.slotController"))}">${controllerOptions}</select>`
     }
     <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}">
-      ${["north", "south", "east", "west"].map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
+      ${ROOM_TEAMS.map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
     <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
+    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" ? "disabled" : ""}>${aiOptions}</select>` : ""}
     <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
@@ -872,7 +1064,13 @@ function slotRow(slot: RoomState["slots"][number], index: number) {
     void updateCurrentRoomSlot(slot.id, { team: (event.currentTarget as HTMLSelectElement).value });
   });
   row.querySelector<HTMLSelectElement>("[data-slot-race]")?.addEventListener("change", (event) => {
-    void updateCurrentRoomSlot(slot.id, { race: (event.currentTarget as HTMLSelectElement).value });
+    const race = (event.currentTarget as HTMLSelectElement).value as RaceChoice;
+    // A computer player that does not play the new race gives way to a random one.
+    const keeps = race !== "random" && slot.aiVersion !== undefined && slot.aiVersion !== "random" && ROOM_AI_RACES[slot.aiVersion].includes(race);
+    void updateCurrentRoomSlot(slot.id, slot.controller === "ai" && !keeps ? { race, aiVersion: "random" } : { race });
+  });
+  row.querySelector<HTMLSelectElement>("[data-slot-ai]")?.addEventListener("change", (event) => {
+    void updateCurrentRoomSlot(slot.id, { aiVersion: (event.currentTarget as HTMLSelectElement).value });
   });
   row.querySelector<HTMLInputElement>("[data-slot-ready]")?.addEventListener("change", (event) => {
     void updateCurrentRoomSlot(slot.id, { ready: (event.currentTarget as HTMLInputElement).checked });
@@ -884,47 +1082,6 @@ async function updateCurrentRoomSlot(slotId: string, patch: Record<string, unkno
   if (!currentRoom) return;
   currentRoom = await deploymentRuntime.updateRoomSlot(currentRoom.id, slotId, patch as SlotPatch);
   renderMainMenu();
-}
-
-async function updateCurrentRoomSlotCounts(humanCount: number, aiCount: number) {
-  if (!currentRoom) return;
-  const slotCounts = resolveRoomSlotCounts({ humanCount, aiCount });
-  if (!slotCounts) return;
-  currentRoom = await deploymentRuntime.updateRoomSlotCounts(currentRoom.id, slotCounts.humanCount, slotCounts.aiCount);
-  renderMainMenu();
-}
-
-async function addPlayerRoomSlot() {
-  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) + 1, aiSeatCount(currentRoom));
-}
-
-async function addAiRoomSlot() {
-  if (!currentRoom || currentRoom.slots.length >= MAX_ROOM_SLOTS) return;
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) + 1);
-}
-
-async function removeLastRoomSlot() {
-  if (!currentRoom || !canRemoveLastRoomSlot(currentRoom)) return;
-  const last = currentRoom.slots.at(-1);
-  if (!last) return;
-  if (last.controller === "ai") {
-    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom) - 1);
-    return;
-  }
-  if (last.controller === "closed") {
-    await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom), aiSeatCount(currentRoom));
-    return;
-  }
-  await updateCurrentRoomSlotCounts(humanSeatCount(currentRoom) - 1, aiSeatCount(currentRoom));
-}
-
-function canRemoveLastRoomSlot(room: RoomState) {
-  const last = room.slots.at(-1);
-  if (!last || room.slots.length <= 2 || last.controller === "human") return false;
-  if (last.controller === "ai") return aiSeatCount(room) > 0;
-  if (last.controller === "closed") return humanSeatCount(room) + aiSeatCount(room) >= 2;
-  return humanSeatCount(room) > 1;
 }
 
 async function closeCurrentRoom() {
@@ -948,39 +1105,18 @@ function activeSlotCount(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
 }
 
-function humanSeatCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "open").length;
-}
-
-function aiSeatCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "ai").length;
-}
-
-function slotSummaryText(room: RoomState) {
-  const tally = room.slots.reduce(
-    (counts, slot) => ({ ...counts, [slot.controller]: counts[slot.controller] + 1 }),
-    { human: 0, ai: 0, open: 0, closed: 0 },
-  );
-  const openText = tally.open > 0 ? t("roomSetup.summaryOpen", { count: tally.open }) : "";
-  const closedText = tally.closed > 0 ? t("roomSetup.summaryClosed", { count: tally.closed }) : "";
-  return t("roomSetup.summary", { total: room.slots.length, max: MAX_ROOM_SLOTS, human: tally.human, ai: tally.ai, open: openText, closed: closedText });
-}
-
 function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
   const ownedSlot = slotForUser(room, localUser.id);
   const access = ownedSlot ? t("roomCard.access.youAre", { playerId: ownedSlot.playerId }) : action === "watch" ? t("roomCard.access.watch") : room.status === "open" ? t("roomCard.access.open") : t("roomCard.access.alreadyStarted");
-  return `${room.mapId} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
+  return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
 }
 
-function emptyRoomList() {
-  const empty = document.createElement("div");
-  empty.className = "empty-room-list";
-  empty.textContent = t("roomBrowser.noVisible");
-  return empty;
-}
-
-function mapCapacityLabel(mapId: MapId) {
-  return mapId === "grandThirty" ? t("map.capacity.grandThirty") : t("map.capacity.configurable");
+function roomListNote(text: string, state: "loading" | "empty") {
+  const note = document.createElement("div");
+  note.className = "room-list-note";
+  note.dataset.roomList = state;
+  note.textContent = text;
+  return note;
 }
 
 function slotForUser(room: RoomState, userId: string) {
@@ -999,7 +1135,7 @@ function returnHome() {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   menuView = "home";
   replaceRoomRouteHash({ screen: "home" });
   renderMainMenu();
@@ -1039,11 +1175,16 @@ async function enterRoom(roomId: string) {
 
 function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
   disconnectActiveMatch();
+  minimapRelations = undefined;
   activeGameAdapter = adapter;
   activeChat = chat;
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
   resetChatOverlay();
   snapshot = nextSnapshot;
+  // The match opens on the player's own base, wherever its seat put it; a spectator, with none, on the map's middle.
+  const entities = [...nextSnapshot.buildings, ...nextSnapshot.units];
+  const own = entities.filter((entity) => entity.owner === localPlayerId).map((entity) => entity.id);
+  centerCameraOnWorld(controlGroupCenter(own, entities) ?? { x: nextSnapshot.map.width / 2, y: nextSnapshot.map.height / 2 });
   pruneSelection();
   updateHud();
   syncMatchActions();
@@ -1069,6 +1210,7 @@ function syncActiveGameAdapterSnapshot() {
   if (menuOpen) return false;
   const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
   if (!view.snapshot) return false;
+  if (snapshot && view.snapshot !== snapshot) playCues(soundCues(snapshot, view.snapshot, localPlayerId));
   snapshot = view.snapshot;
   selectedIds = view.selectedIds;
   focusedSelectionId = view.focusedSelectionId;
@@ -1098,7 +1240,7 @@ function openResults(room: RoomState) {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   menuOpen = true;
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");
@@ -1120,7 +1262,8 @@ async function forfeitCurrentMatch() {
 }
 
 function syncMatchActions() {
-  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch());
+  forfeitButton.classList.toggle("hidden", menuOpen || !currentRoomId || !deploymentRuntime.canForfeitMatch(currentRoomId));
+  if (menuOpen) matchMenu.classList.add("hidden");
 }
 
 function releasePointerLockForMenu() {
@@ -1162,8 +1305,13 @@ function markPointerLockGuideSeen() {
   localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY, "seen");
 }
 
+// Pointer lock is a mouse's: on a touch screen with no mouse there is none to lock, so no gate and no request.
+function hasMouse() {
+  return window.matchMedia("(any-pointer: fine)").matches;
+}
+
 function syncPointerLockGate() {
-  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable })) {
+  if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable || !hasMouse() })) {
     hidePointerLockGate();
     return;
   }
@@ -1293,23 +1441,24 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (menuOpen) {
-    const mapIndex = Number(key) - 1;
-    const scenario = MAP_SCENARIOS[mapIndex];
-    if (scenario && menuView === "setup") {
-      event.preventDefault();
-      void selectRoomMap(scenario.id);
-    }
     return;
   }
   if (event.repeat) return;
+  // Alt+A, as in Warcraft III: the minimap in friend-or-foe colours or the players' own. By its key, as Alt changes the
+  // letter a Mac types.
+  if (event.altKey && event.code === "KeyA") {
+    event.preventDefault();
+    toggleMinimapRelations();
+    return;
+  }
   if (key === "escape" && commandMode) {
     event.preventDefault();
     cancelCommandMode();
     return;
   }
-  if (key === "escape" && buildPaletteOpen) {
+  if (key === "escape" && openPalette) {
     event.preventDefault();
-    closeBuildPalette(t("status.buildMenuClosed"));
+    closePalette(t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
     return;
   }
   if (key === "tab") {
@@ -1338,8 +1487,10 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
+    return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
@@ -1396,6 +1547,29 @@ function resetChatOverlay() {
 
 function showInvalidCommand(message: string) {
   statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+}
+
+// A battlefield sound is heard where it happens: panned across the view, full inside it and fading out within a screen's
+// half-width beyond its edges.
+let lastSoundCamera: Point | undefined;
+function playCues(cues: SoundCue[]) {
+  if (lastSoundCamera && Math.hypot(camera.x - lastSoundCamera.x, camera.y - lastSoundCamera.y) > Math.min(canvas.width, canvas.height) * .45) soundboard.stopEffects();
+  lastSoundCamera = { x: camera.x, y: camera.y };
+  // A frame's visible battle gets the voice budget before peripheral events.
+  const distance = (cue: SoundCue) => { const at = worldToScreen(cue); return Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height); };
+  for (const cue of cues.sort((a, b) => distance(a) - distance(b))) {
+    const at = worldToScreen(cue);
+    const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
+    const gain = 1 - outside / (canvas.width / 2);
+    if (gain <= 0) continue;
+    soundboard.play(cue.id, { pan: ((at.x / canvas.width) * 2 - 1) * 0.7, gain }, cue.kind);
+  }
+}
+
+// The interface has one sound: a click for a button, a map or a portrait chosen. Pointing at one is silent.
+function onInterfaceClick(event: MouseEvent) {
+  soundboard.unlock();
+  if (event.target instanceof Element && event.target.closest("button, .map-entry, .selection-model")) soundboard.play("click");
 }
 
 function onMouseDown(event: MouseEvent) {
@@ -1471,12 +1645,20 @@ function onMouseUp(event: MouseEvent) {
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
-    else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point);
+    else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
+    else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
     else if (event.button === 2) cancelCommandMode();
     selectionStart = undefined;
     selectionEnd = undefined;
     return;
+  }
+  if (event.button === 2 && document.pointerLockElement === canvas) {
+    const target = virtualContextTargetAt(point);
+    if (target) {
+      openVirtualContextMenu(target);
+      return;
+    }
   }
   if (event.button === 2) {
     issueContextCommand(point, event.shiftKey);
@@ -1516,48 +1698,50 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     return;
   }
 
-  const resource = hitResource(world);
-  const item = hitGroundItem(world);
-  const target = hitAttackTarget(world);
-  const repairTarget = hitBuilding(world, (building) => building.owner === localPlayerId && building.hp < building.maxHp);
-  if (item) {
-    const command = pickupItemCommand(focusedPlayerUnits(), item);
+  // What the pointer is on decides (see @@@pointer-target): an item is picked up, anything else is ordered as
+  // @@@context-target says, and nothing (or nothing the selection can act on) is a move there.
+  const target = pointerTarget(snapshot, world);
+  if (target?.kind === "item") {
+    const command = pickupItemCommand(focusedPlayerUnits(), target.item);
     if (!command) {
       showInvalidCommand(t("status.pickupNeedsFocus"));
       return;
     }
     sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued });
-    statusLabel.textContent = t("status.itemPickup", { item: labelKind(item.kind) });
+    statusLabel.textContent = t("status.itemPickup", { item: labelKind(target.item.kind) });
     return;
   }
-  if (resource && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "mine", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), resourceId: resource.id, queued });
-    statusLabel.textContent = t("status.mineOrdered");
-    return;
-  }
-  if (repairTarget && selectedUnits.some((unit) => unit.kind === "worker")) {
-    sendCommand({ type: "repair", unitIds: selectedUnits.filter((unit) => unit.kind === "worker").map((unit) => unit.id), buildingId: repairTarget.id, queued });
-    statusLabel.textContent = t("status.repairOrdered", { building: labelBuilding(repairTarget) });
-    return;
-  }
-  if (target) {
-    sendCommand({ type: "attack", unitIds, targetId: target.id, queued });
-    statusLabel.textContent = target.owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
+  const command = target ? targetCommand(snapshot, localPlayerId, selectedUnits, target, queued) : undefined;
+  if (target && command) {
+    sendCommand(command);
+    statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }
   sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
   statusLabel.textContent = t("status.moveOrdered");
 }
 
+function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
+  if (command.type === "mine") return t("status.mineOrdered");
+  if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
+  if (command.type === "repairShip" && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
+  if (command.type === "board") return t("status.boardOrdered");
+  if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
+  if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
+  const owner = target.kind === "unit" ? target.unit.owner : target.kind === "building" ? target.building.owner : undefined;
+  return owner === "neutral" ? t("status.attackWildlingsOrdered") : t("status.attackOrdered");
+}
+
 function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   if (!snapshot) return;
-  const friendlyUnit = hitUnit(world, (unit) => unit.owner === localPlayerId);
+  const target = pointerTarget(snapshot, world);
+  const friendlyUnit = target?.kind === "unit" && target.unit.owner === localPlayerId ? target.unit : undefined;
   if (friendlyUnit) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: friendlyUnit.x, y: friendlyUnit.y, target: { type: "unit", unitId: friendlyUnit.id } });
     statusLabel.textContent = t("status.rallyFollow", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint"), target: labelAnyKind(friendlyUnit.kind) });
     return;
   }
-  const resource = hitResource(world);
+  const resource = target?.kind === "resource" ? target.resource : undefined;
   if (resource) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: resource.x, y: resource.y, target: { type: "resource", resourceId: resource.id } });
     statusLabel.textContent = t("status.rallyGold", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
@@ -1567,26 +1751,62 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   statusLabel.textContent = t("status.rallySet", { label: buildings.length > 1 ? t("hud.rallyPoints") : t("hud.rallyPoint") });
 }
 
+function loadedTransports() {
+  return selectedPlayerUnits().filter((unit) => UNIT_DEFS[unit.kind].carries && (unit.cargo?.length ?? 0) > 0);
+}
+
+function unloadButtonState(): CommandButtonState {
+  if (commandMode || openPalette || !selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].carries)) return HIDDEN_COMMAND_STATE;
+  return booleanCommandState(loadedTransports().length > 0);
+}
+
+function beginUnloadMode() {
+  if (loadedTransports().length === 0) {
+    showInvalidCommand(t("status.unloadNeedsTransport"));
+    return;
+  }
+  commandMode = { type: "unload" };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent = t("status.unloadMode");
+  updateHud();
+}
+
+function issueUnloadAt(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection()) return;
+  if (!commandMode || commandMode.type !== "unload") return;
+  const unitIds = loadedTransports().map((unit) => unit.id);
+  clearCommandModeClasses();
+  commandMode = undefined;
+  if (unitIds.length === 0) showInvalidCommand(t("status.unloadNeedsTransport"));
+  else {
+    const world = screenToWorld(point);
+    sendCommand({ type: "unload", unitIds, x: world.x, y: world.y, queued });
+    statusLabel.textContent = t("status.unloadOrdered");
+  }
+  updateHud();
+}
+
 function canAttackMove() {
-  return !commandMode && !buildPaletteOpen && selectedPlayerUnits().length > 0;
+  return !commandMode && !openPalette && selectedPlayerUnits().length > 0;
 }
 
 function canOpenBuildPalette() {
-  return !commandMode && !buildPaletteOpen && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && !openPalette && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canBuild(kind: BuildingKind) {
   const player = currentPlayerState();
-  return !commandMode && buildPaletteOpen && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
+  return !commandMode && openPalette === "build" && BUILDABLE_BUILDING_KINDS.includes(kind) && Boolean(player && RACE_DEFS[player.race].buildableBuildings.includes(kind)) && focusedPlayerUnits().some((unit) => unit.kind === "worker");
 }
 
 function canTrain(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return !commandMode && !buildPaletteOpen && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
+  return !commandMode && !openPalette && Boolean(player && RACE_DEFS[player.race].trainableUnits.includes(unitKind)) && focusedPlayerBuildings().some((building) => building.complete && BUILDING_DEFS[building.kind].trains.includes(unitKind));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
-  return !commandMode && !buildPaletteOpen && researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
+  return !commandMode && !openPalette && researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).some((command) => command.upgradeKind === upgradeKind);
 }
 
 function canCast(ability: AbilityKind) {
@@ -1598,13 +1818,54 @@ function canHireMercenary() {
 }
 
 function abilityButtonState(ability: AbilityKind): CommandButtonState {
-  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
-  return abilityCommandState(focusedPlayerUnits(), ability);
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits());
+}
+
+function stanceMenuButtonState(): CommandButtonState {
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  return stanceMenuCommandState(focusedPlayerUnits(), selectedPlayerUnits());
+}
+
+function stanceButtonState(stance: MeleeStance): CommandButtonState {
+  if (commandMode || openPalette !== "stance") return HIDDEN_COMMAND_STATE;
+  return stanceCommandState(focusedPlayerUnits(), stance, selectedPlayerUnits());
+}
+
+function currentStanceLabel() {
+  const stance = sharedStance(selectedPlayerUnits());
+  const command = STANCE_COMMANDS.find((candidate) => candidate.stance === stance);
+  return command ? t(command.title) : t("command.stance.mixed");
+}
+
+function openStancePalette() {
+  if (!stanceMenuButtonState().visible) return;
+  openPalette = "stance";
+  statusLabel.textContent = t("status.stanceMenuOpened");
+  updateHud();
+}
+
+function setStance(stance: MeleeStance) {
+  if (!syncBeforeCommandProjection()) return;
+  const unitIds = stanceFighters(selectedPlayerUnits()).map((unit) => unit.id);
+  if (unitIds.length === 0) return;
+  sendCommand({ type: "setStance", unitIds, stance });
+  const command = STANCE_COMMANDS.find((candidate) => candidate.stance === stance)!;
+  closePalette(t("status.stanceSet", { stance: t(command.title) }));
+}
+
+function toggleAutocast(ability: AbilityKind) {
+  if (!syncBeforeCommandProjection()) return;
+  if (!abilityButtonState(ability).visible) return;
+  const toggle = autocastToggle(selectedPlayerUnits(), ability);
+  if (!toggle) return;
+  sendCommand({ type: "setAutocast", unitIds: toggle.unitIds, ability, enabled: toggle.enabled });
+  statusLabel.textContent = t(toggle.enabled ? "status.autocastOn" : "status.autocastOff", { ability: labelKind(ability) });
 }
 
 function hireMercenaryButtonState(): CommandButtonState {
   const camp = selectedMercenaryCamp();
-  if (commandMode || buildPaletteOpen) return HIDDEN_COMMAND_STATE;
+  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
   return mercenaryHireCommandState({
     camp,
     player: currentPlayerState(),
@@ -1617,7 +1878,7 @@ function openBuildPalette() {
     showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
-  buildPaletteOpen = true;
+  openPalette = "build";
   statusLabel.textContent = t("status.buildMenuOpened");
   updateHud();
 }
@@ -1641,7 +1902,7 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
     showInvalidCommand(t("status.buildNeedsWorker"));
     return;
   }
-  buildPaletteOpen = false;
+  openPalette = undefined;
   commandMode = { type: "build", placement: { workerId: worker.id, buildingKind } };
   shell.classList.add("placement-active");
   shell.classList.remove("targeting-active");
@@ -1655,7 +1916,7 @@ function beginSpellTargeting(ability: AbilityKind) {
     showCommandUnavailable(state, t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
   }
-  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && unit.cooldown <= 0);
+  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && abilityCooldown(unit, ability) <= 0);
   if (!caster) {
     showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
@@ -1663,21 +1924,35 @@ function beginSpellTargeting(ability: AbilityKind) {
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
-  const behavior = ABILITY_DEFS[ability].behavior;
+  const abilityDef = ABILITY_DEFS[ability];
+  const behavior = abilityDef.behavior;
+  const reach = chargeWindow(ability);
   statusLabel.textContent =
     behavior === "summon"
       ? t("status.summonMode")
-      : t("status.spellMode", { ability: labelKind(ability) });
+      : reach
+        ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange })
+        : t(abilityDef.behavior === "weapon" && abilityDef.target === "point" ? "status.spellPointMode" : "status.spellMode", { ability: labelKind(ability) });
   updateHud();
+}
+
+function placementRefusalText(refusal: PlacementRefusal, kind: BuildingKind) {
+  const building = labelKind(kind);
+  if (refusal.reason === "worker") return t("status.buildNeedsWorker");
+  if (refusal.reason === "tooClose") return t("status.placementTooClose", { building, blocker: labelKind(refusal.blocker) });
+  if (refusal.reason === "ground") return t("status.placementGround", { building });
+  if (refusal.reason === "shore") return t("status.placementShore", { building });
+  if (refusal.reason === "gold") return t("status.placementGold", { building, cost: refusal.cost });
+  return refusal.message;
 }
 
 function confirmBuildPlacement(point: Point) {
   if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "build" || !snapshot) return;
   const world = screenToWorld(point);
-  const result = buildPlacementCommand(snapshot, commandMode.placement, world);
-  if ("error" in result) {
-    showInvalidCommand(result.error);
+  const result = buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
+  if ("refusal" in result) {
+    showInvalidCommand(placementRefusalText(result.refusal, commandMode.placement.buildingKind));
     return;
   }
   sendCommand(result.command);
@@ -1706,15 +1981,15 @@ function issueAttackMoveAt(point: Point, queued = false) {
   updateHud();
 }
 
-function issueSpellAt(point: Point) {
+function issueSpellAt(point: Point, queued = false) {
   if (!syncBeforeCommandProjection()) return;
   if (!commandMode || commandMode.type !== "spell") return;
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
   const behavior = ABILITY_DEFS[ability].behavior;
-  if (behavior === "summon") {
-    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y });
-    statusLabel.textContent = t("status.summonOrdered");
+  if (behavior === "summon" || (ABILITY_DEFS[ability].behavior === "weapon" && (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).target === "point")) {
+    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y, queued });
+    statusLabel.textContent = t("status.spellOrdered",{ability:labelKind(ability)});
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1722,6 +1997,7 @@ function issueSpellAt(point: Point) {
   }
 
   const target =
+    behavior === "weapon" ? (hitUnit(world, unit=>["enemy","creep"].includes(relationTo(snapshot!,localPlayerId,unit.owner))) ?? buildingAt(snapshot!.buildings,world,building=>relationTo(snapshot!,localPlayerId,building.owner)==="enemy")) :
     behavior === "heal"
       ? hitUnit(world, (unit) => unit.owner === localPlayerId)
       : hitUnit(world, (unit) => unit.owner !== localPlayerId);
@@ -1729,7 +2005,13 @@ function issueSpellAt(point: Point) {
     showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
     return;
   }
-  sendCommand({ type: "cast", unitId: casterId, ability, targetId: target.id });
+  const reach = chargeWindow(ability);
+  const caster = reach ? chargeRiderFor(readyChargers(selectedPlayerUnits(), ability), target, reach, casterId) : { id: casterId };
+  if (!caster) {
+    showInvalidCommand(t("status.chargeTooClose", { ability: labelKind(ability), min: reach!.minRange }));
+    return;
+  }
+  sendCommand({ type: "cast", unitId: caster.id, ability, targetId: target.id, queued });
   statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
   commandMode = undefined;
@@ -1741,7 +2023,7 @@ function beginItemTargeting(entry: { item: WorldItem; carrier: Unit }) {
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
   statusLabel.textContent =
-    entry.item.kind === "stormStaff"
+    entry.item.kind === "stormStaff" || entry.item.kind === "ivoryTower"
       ? t("status.itemModePoint", { item: labelKind(entry.item.kind) })
       : t("status.itemModeTarget", { item: labelKind(entry.item.kind) });
   updateHud();
@@ -1755,6 +2037,14 @@ function issueItemAt(point: Point) {
   if (kind === "stormStaff") {
     const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
     sendCommand(target ? { type: "useItem", unitId, itemId, x: target.x, y: target.y } : { type: "useItem", unitId, itemId, x: world.x, y: world.y });
+    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
+    clearCommandModeClasses();
+    commandMode = undefined;
+    updateHud();
+    return;
+  }
+  if (kind === "ivoryTower") {
+    sendCommand({ type: "useItem", unitId, itemId, x: world.x, y: world.y });
     statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
     clearCommandModeClasses();
     commandMode = undefined;
@@ -1795,11 +2085,13 @@ function cancelCommandMode() {
   statusLabel.textContent =
     canceled === "attackMove"
       ? t("status.attackMoveCanceled")
-      : canceled === "spell"
-        ? t("status.spellCanceled")
-        : canceled === "item"
-          ? t("status.itemCanceled")
-          : t("status.buildCanceled");
+      : canceled === "unload"
+        ? t("status.unloadCanceled")
+        : canceled === "spell"
+          ? t("status.spellCanceled")
+          : canceled === "item"
+            ? t("status.itemCanceled")
+            : t("status.buildCanceled");
   updateHud();
 }
 
@@ -1807,8 +2099,8 @@ function clearCommandModeClasses() {
   shell.classList.remove("placement-active", "targeting-active");
 }
 
-function closeBuildPalette(message?: string) {
-  buildPaletteOpen = false;
+function closePalette(message?: string) {
+  openPalette = undefined;
   if (message) statusLabel.textContent = message;
   updateHud();
 }
@@ -1825,7 +2117,9 @@ function train(unitKind: TrainableUnitKind) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  sendCommand({ type: "train", buildingId: building.id, unitKind });
+  const state = trainCommandState(unitKind, player, true);
+  if (!state.enabled) { showCommandUnavailable(state, labelKind(unitKind)); return; }
+  if (!sendCommand({ type: "train", buildingId: building.id, unitKind })) return;
   statusLabel.textContent = t("status.trainQueued", { unit: labelKind(unitKind) });
 }
 
@@ -1838,6 +2132,38 @@ function research(upgradeKind: UpgradeKind) {
   }
   sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind });
   statusLabel.textContent = t("status.researchStarted", { upgrade: labelKind(command.upgradeKind) });
+}
+
+function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
+  const shop = selectedShop();
+  if (!shop || commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  const good = shop.goods.find((candidate) => candidate.kind === kind);
+  const player = currentPlayerState();
+  if (!good) return HIDDEN_COMMAND_STATE;
+  if (!player) return { visible: true, enabled: false, reason: "missing" };
+  if (good.stock <= 0) return { visible: true, enabled: false, cooldownTicks: good.restockRemaining, reason: "cooldown" };
+  if (player.gold < good.cost) return { visible: true, enabled: false, reason: "gold" };
+  if (!snapshot?.units.some((unit) => unit.owner === localPlayerId && standsAtShop(unit, shop))) return { visible: true, enabled: false, reason: "position" };
+  return ENABLED_COMMAND_STATE;
+}
+
+function buyGood(kind: WorldItem["kind"]) {
+  if (!syncBeforeCommandProjection()) return;
+  const shop = selectedShop();
+  if (!shop) return;
+  const state = shopGoodButtonState(kind);
+  if (!state.enabled) {
+    showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
+    return;
+  }
+  shopInventoryCarrierId = snapshot && shopBuyer(snapshot, localPlayerId, shop)?.id;
+  sendCommand({ type: "buy", shopId: shop.id, item: kind });
+  inspectedShopItem = kind;
+  selectedIds = new Set();
+  focusedSelectionId = undefined;
+  selectedCampId = shop.id;
+  statusLabel.textContent = t("status.itemBought", { item: labelKind(kind) });
+  updateHud();
 }
 
 function hireMercenary() {
@@ -1862,37 +2188,41 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
   selectedIds = result.selectedIds;
   focusedSelectionId = result.focusedSelectionId;
   if (selectedIds.size > 0 || !additive) selectedCampId = undefined;
-  if (selectedIds.size > 0 || !additive) buildPaletteOpen = false;
+  if (selectedIds.size > 0 || !additive) openPalette = undefined;
 }
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
-  const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
+  if (selectedIds.size && !selectedPlayerUnits().length && !selectedPlayerBuildings().length) additive = false;
+  const unit = hitUnit(world, () => true);
   if (unit) {
-    const result = sameKind
+    if (unit.owner !== localPlayerId) additive = false;
+    const result = sameKind && unit.owner === localPlayerId
       ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
       : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
-    buildPaletteOpen = false;
+    openPalette = undefined;
     return;
   }
-  const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
+  const building = hitBuilding(world, () => true);
   if (building) {
+    if (building.owner !== localPlayerId) additive = false;
     const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
     selectedCampId = undefined;
-    buildPaletteOpen = false;
+    openPalette = undefined;
     return;
   }
   if (additive) return;
-  const camp = hitMercenaryCamp(world);
+  const camp = hitMercenaryCamp(world) ?? hitShop(world);
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = camp?.id;
-  buildPaletteOpen = false;
+  inspectedShopItem = undefined;
+  openPalette = undefined;
 }
 
 function selectedPlayerUnits() {
@@ -1919,6 +2249,17 @@ function focusedPlayerBuildings() {
 
 function selectedMercenaryCamp() {
   return snapshot?.mercenaryCamps.find((camp) => camp.id === selectedCampId);
+}
+
+function selectedShop() {
+  return snapshot?.shops?.find((shop) => shop.id === selectedCampId);
+}
+
+function inventoryCarriers() {
+  const shop = selectedShop();
+  const previous = snapshot?.units.find(unit => unit.id === shopInventoryCarrierId && unit.owner === localPlayerId);
+  const buyer = snapshot && shop && ((previous && standsAtShop(previous, shop) ? previous : undefined) ?? shopBuyer(snapshot, localPlayerId, shop) ?? snapshot.units.find(unit => unit.owner === localPlayerId && standsAtShop(unit, shop)));
+  return buyer ? [buyer] : focusedPlayerUnits();
 }
 
 function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
@@ -1952,12 +2293,13 @@ function pruneSelection() {
       clearCommandModeClasses();
     }
   }
-  if (buildPaletteOpen && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) buildPaletteOpen = false;
+  if (openPalette === "build" && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) openPalette = undefined;
+  if (openPalette === "stance" && stanceFighters(focusedPlayerUnits()).length === 0) openPalette = undefined;
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if (!snapshot) return false;
-  const inventoryEntries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const inventoryEntries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
   const intent = gameplayKeyIntent(event, {
     controlGroups: reservedGroupDigits,
@@ -1973,11 +2315,11 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
     return Boolean(command);
   }
   if (intent.type === "controlGroupReplace") {
-    if (selectedIds.size === 0) {
+    if (selectedPlayerUnits().length + selectedPlayerBuildings().length === 0) {
       showInvalidCommand(t("status.groupNeedsSelection", { slot: intent.slot }));
       return true;
     }
-    replaceControlGroup(controlGroups, intent.slot, selectedIds);
+    replaceControlGroup(controlGroups, intent.slot, new Set([...selectedPlayerUnits(), ...selectedPlayerBuildings()].map(entity => entity.id)));
     lastControlGroupRecall = undefined;
     statusLabel.textContent = t("status.groupSet", { slot: intent.slot });
     return true;
@@ -1999,7 +2341,7 @@ function selectControlGroup(slot: number) {
   selectedIds = new Set(ids);
   focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   selectedCampId = undefined;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   statusLabel.textContent = t("status.groupSelected", { slot });
   if (recallTap.shouldCenterCamera) centerCameraOnControlGroup(ids);
   updateHud();
@@ -2010,7 +2352,7 @@ function cycleFocusedSelection(direction: 1 | -1) {
   const nextFocus = cycleFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId, direction);
   if (!nextFocus || nextFocus === focusedSelectionId) return;
   focusedSelectionId = nextFocus;
-  buildPaletteOpen = false;
+  openPalette = undefined;
   updateHud();
 }
 
@@ -2019,33 +2361,54 @@ function updateHud() {
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
-  mapReadout.textContent = t("hud.mapReadout", { width: snapshot.map.width, height: snapshot.map.height });
+  mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
-  if (groups.length > 0) {
+  if (selectedShop()) {
+    const shop = selectedShop()!;
+    const buyer = inventoryCarriers()[0];
+    const identity: HudIdentity = {
+      key: shop.id, name: t("hud.shop"), caption: t("hud.neutral"),
+      detail: buyer ? t("hud.buyer", { name:labelKind(buyer.kind) }) : t("hud.shopApproach"),
+      art: { key:"shop", paint: canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "shop", canvas.width, "#8b7355") },
+    };
+    if (inspectedShopItem) identity.inspection = {
+      name:labelKind(inspectedShopItem), detail:t("hud.purchasedItem"),
+      art:{ key:inspectedShopItem, paint: canvas => drawPaintedItem(requireCanvasContext(canvas), inspectedShopItem!, { x:canvas.width/2,y:canvas.height/2 }, canvas.width*.8) },
+    };
+    hudSelection.render(identity, [], t("hud.nothingSelected"));
+  } else if (groups.length > 0) {
     renderSelectionGroups(groups);
   } else if (camp) {
-    selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
-  } else {
-    selectionLabel.textContent = t("hud.nothingSelected");
-  }
+    hudSelection.render({
+      key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
+      detail:t("hud.campStock", { stock:camp.stock }) + (camp.cooldownRemaining > 0 ? t("hud.restocking") : ""),
+      art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.width, "#8b7355") },
+    }, [], t("hud.nothingSelected"));
+  } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
     button.element.hidden = !state.visible;
-    button.element.disabled = !state.enabled;
+    button.element.disabled = false;
+    button.element.setAttribute("aria-disabled", String(!state.enabled));
     button.element.classList.toggle("command-button-disabled", state.visible && !state.enabled);
     button.element.classList.toggle("command-button-cooldown", state.cooldownTicks !== undefined);
     renderCommandButtonState(button.element, state);
     applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
     if (state.visible) visibleCount += 1;
   }
-  commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
+  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
+  const previousTraining = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-training-progress]"), button => [button.dataset.jobId, button]));
   for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {
-    commandDock.append(renderTrainingProgressButton(progress));
+    const previous = previousTraining.get(progress.jobId);
+    const button = renderTrainingProgressButton(progress, previous);
+    if (!previous) commandDock.append(button);
+    previousTraining.delete(progress.jobId);
     visibleCount += 1;
   }
+  for (const button of previousTraining.values()) button.remove();
   for (const progress of researchProgressButtonsForSelection(focusedBuildings, player)) {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
@@ -2055,36 +2418,27 @@ function updateHud() {
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
-  selectionLabel.replaceChildren(
-    ...groups.map((group) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
-      button.dataset.selectionGroup = group.id;
-      button.setAttribute("aria-label", selectionGroupTitle(group));
-      applyTooltip(button, selectionGroupTooltip(group));
-      const canvas = document.createElement("canvas");
-      canvas.width = 34;
-      canvas.height = 34;
-      canvas.className = "selection-model-canvas";
-      const count = document.createElement("span");
-      count.className = "selection-model-count";
-      count.textContent = `x${group.count}`;
-      button.append(canvas, count);
-      button.addEventListener("click", () => {
-        focusedSelectionId = group.ids[0];
-        buildPaletteOpen = false;
-        updateHud();
-      });
-      drawSelectionModel(canvas, group);
-      return button;
-    }),
-  );
-}
-
-function selectionGroupTitle(group: SelectionGroup) {
-  const label = labelAnyKind(group.kind);
-  return `${label} x${group.count}${group.focused ? t("hud.selectionCurrent") : ""}`;
+  const focused = groups.find(group => group.focused) ?? groups[0]!;
+  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focused.ids[0]);
+  const total = groups.reduce((sum, group) => sum + group.count, 0);
+  const owner = entity?.owner ?? localPlayerId;
+  const identity: HudIdentity = {
+    key:focused.id,
+    name:labelAnyKind(focused.kind),
+    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : owner,
+    detail:entity && "attackDamage" in entity ? t("hud.attackValue", { damage:entity.attackDamage }) : t("hud.structure"),
+    art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+  };
+  hudSelection.render(identity, groups.map(group => {
+    const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+    return {
+      key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
+      art:{ key:`${group.kind}:${owner}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
+      decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
+    };
+  }), t("hud.nothingSelected"));
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -2098,128 +2452,10 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
-  mini.save();
-  mini.translate(canvas.width / 2, canvas.height / 2 + 1);
-  mini.scale(group.entityType === "building" ? 0.42 : 0.54, group.entityType === "building" ? 0.42 : 0.54);
-  mini.lineCap = "round";
-  mini.lineJoin = "round";
-  mini.strokeStyle = group.focused ? "#315f87" : "rgba(36, 49, 38, 0.62)";
-  mini.fillStyle = group.focused ? "#fffbe7" : "rgba(255, 250, 226, 0.66)";
-  mini.lineWidth = group.focused ? 3.4 : 2.4;
-  if (group.entityType === "unit") drawMiniUnitModel(mini, UNIT_GLYPHS[group.kind]);
-  else drawMiniBuildingModel(mini, BUILDING_GLYPHS[group.kind]);
-  mini.restore();
-}
-
-function drawMiniUnitModel(mini: CanvasRenderingContext2D, glyph: UnitGlyph) {
-  mini.beginPath();
-  if (glyph.silhouette === "worker-apron") {
-    mini.moveTo(-11, -15);
-    mini.lineTo(9, -13);
-    mini.lineTo(16, 14);
-    mini.lineTo(-13, 16);
-    mini.lineTo(-17, -5);
-  } else if (glyph.silhouette === "shield-triangle") {
-    mini.moveTo(0, -20);
-    mini.lineTo(17, 15);
-    mini.lineTo(-17, 15);
-  } else if (glyph.silhouette === "bow-crest") {
-    mini.moveTo(-14, -16);
-    mini.quadraticCurveTo(18, -18, 14, 15);
-    mini.quadraticCurveTo(-10, 20, -16, -4);
-  } else if (glyph.silhouette === "raider-kite") {
-    mini.moveTo(0, -20);
-    mini.lineTo(18, -2);
-    mini.lineTo(7, 19);
-    mini.lineTo(-15, 10);
-    mini.lineTo(-18, -7);
-  } else if (glyph.silhouette === "lancer-pennant") {
-    mini.moveTo(-15, -14);
-    mini.lineTo(17, -9);
-    mini.lineTo(8, 16);
-    mini.lineTo(-18, 13);
-  } else if (glyph.silhouette === "knight-helm") {
-    mini.arc(0, -2, 17, Math.PI * 0.95, Math.PI * 2.05);
-    mini.lineTo(15, 17);
-    mini.lineTo(-15, 17);
-  } else if (glyph.silhouette === "priest-medallion") {
-    mini.arc(0, 0, 14, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "summoner-ring") {
-    mini.ellipse(0, 0, 17, 13, 0.2, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "witch-crescent") {
-    mini.arc(4, 0, 17, Math.PI * 0.52, Math.PI * 1.58);
-    mini.quadraticCurveTo(-15, 0, 4, -17);
-  } else if (glyph.silhouette === "golem-block") {
-    mini.rect(-17, -17, 34, 34);
-  } else if (glyph.silhouette === "spirit-wisp") {
-    mini.moveTo(0, -18);
-    mini.quadraticCurveTo(18, -4, 4, 18);
-    mini.quadraticCurveTo(-18, 4, 0, -18);
-  } else if (glyph.silhouette === "mercenary-badge") {
-    mini.moveTo(0, -19);
-    mini.lineTo(16, -3);
-    mini.lineTo(8, 18);
-    mini.lineTo(-12, 14);
-    mini.lineTo(-16, -6);
-  } else {
-    mini.moveTo(-15, -15);
-    mini.lineTo(15, 15);
-    mini.moveTo(15, -15);
-    mini.lineTo(-15, 15);
-  }
-  mini.closePath();
-  mini.fill();
-  mini.stroke();
-}
-
-function drawMiniBuildingModel(mini: CanvasRenderingContext2D, glyph: BuildingGlyph) {
-  mini.beginPath();
-  if (glyph.frame === "town-hall") {
-    mini.moveTo(-26, -2);
-    mini.lineTo(0, -24);
-    mini.lineTo(26, -2);
-    mini.lineTo(21, 24);
-    mini.lineTo(-21, 24);
-  } else if (glyph.frame === "tower-spire") {
-    mini.moveTo(0, -27);
-    mini.lineTo(16, -7);
-    mini.lineTo(12, 25);
-    mini.lineTo(-12, 25);
-    mini.lineTo(-16, -7);
-  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
-    mini.ellipse(0, 6, 22, 13, 0, 0, Math.PI * 2);
-    mini.moveTo(-18, 2);
-    mini.quadraticCurveTo(0, -24, 18, 2);
-  } else if (glyph.frame === "ember-forge") {
-    mini.rect(-24, -17, 48, 36);
-    mini.moveTo(-20, 19);
-    mini.lineTo(20, 19);
-    mini.moveTo(-15, -17);
-    mini.lineTo(0, -27);
-    mini.lineTo(15, -17);
-  } else if (glyph.frame === "cinder-spire") {
-    mini.moveTo(0, -27);
-    mini.lineTo(18, -2);
-    mini.lineTo(11, 25);
-    mini.lineTo(-11, 25);
-    mini.lineTo(-18, -2);
-  } else if (glyph.frame === "workshop-gear") {
-    for (let i = 0; i < 12; i += 1) {
-      const angle = (i / 12) * Math.PI * 2;
-      const radius = i % 2 === 0 ? 25 : 18;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      if (i === 0) mini.moveTo(x, y);
-      else mini.lineTo(x, y);
-    }
-  } else {
-    mini.rect(-24, -17, 48, 36);
-    mini.moveTo(-20, 19);
-    mini.lineTo(20, 19);
-  }
-  mini.closePath();
-  mini.fill();
-  mini.stroke();
+  const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+  const color = ownerInk(owner ?? localPlayerId);
+  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
+  else drawAtlasBuildingPortrait(mini, group.kind, canvas.width, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2248,29 +2484,36 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   return button;
 }
 
-function renderTrainingProgressButton(progress: TrainingProgressButton) {
+function renderTrainingProgressButton(progress: TrainingProgressButton, previous?: HTMLButtonElement) {
   const percent = Math.floor(progress.progress * 100);
   const label = t(progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: labelKind(progress.unitKind) });
-  const button = document.createElement("button");
+  const button = previous ?? document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
   button.className = "command-button research-progress-button";
-  button.setAttribute("aria-disabled", "true");
+  button.classList.add("training-cancel-button");
+  button.disabled = !progress.jobId;
+  if (!previous) button.addEventListener("click", () => {
+    if (progress.jobId) sendCommand({ type: "cancelTraining", buildingId: progress.buildingId, jobId: progress.jobId });
+  });
+  if (progress.jobId) button.dataset.jobId = progress.jobId;
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
   const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
   applyTooltip(button, {
     ...tooltip,
-    title: label,
+    title: `${label} · ${t("hud.cancelTraining")}`,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
-  button.innerHTML = `
+  if (!previous) button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
     <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
   `;
+  if (!previous) drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? String(percent) : "Q";
   return button;
 }
 
@@ -2280,36 +2523,40 @@ function renderItemDock() {
     itemDock.replaceChildren();
     return;
   }
-  const entries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.classList.toggle("hidden", entries.length === 0);
-  itemDock.replaceChildren(
-    ...entries.map(({ item, carrier }, index) => {
-      const hotkey = hotkeys[index] ?? "";
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "item-button";
-      button.dataset.itemId = item.id;
-      const itemName = labelKind(item.kind);
-      const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks: item.cooldownRemaining }) : "";
-      button.setAttribute("aria-label", `${itemName} (${hotkey})${cooldownText}`);
-      applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
-      button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
-      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
-      button.addEventListener("click", () => useCarriedItem(item.id));
-      button.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
-        dropCarriedItem(item.id, carrier.id);
-      });
-      return button;
-    }),
-  );
+  const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
+  entries.forEach(({ item, carrier }, index) => {
+    const hotkey = hotkeys[index] ?? "";
+    let button = previous.get(item.id);
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button"; button.className = "item-button"; button.dataset.itemId = item.id;
+      button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
+      const liveButton = button;
+      button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
+      button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
+      drawCommandPortrait(button, { type:"item", kind:item.kind });
+    }
+    button.dataset.carrierId = carrier.id;
+    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
+    button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
+    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
+    button.querySelector(".hotkey")!.textContent = hotkey;
+    const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
+    cooldown.hidden = item.cooldownRemaining <= 0;
+    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / 20)}s`;
+    if (itemDock.children[index] !== button) itemDock.insertBefore(button, itemDock.children[index] ?? null);
+    previous.delete(item.id);
+  });
+  for (const button of previous.values()) button.remove();
 }
 
 function useInventoryItem(index: number) {
   if (!syncBeforeCommandProjection()) return false;
   if (!snapshot) return false;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits())[index];
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers())[index];
   if (!entry) return false;
   useCarriedItem(entry.item.id);
   return true;
@@ -2318,9 +2565,9 @@ function useInventoryItem(index: number) {
 function useCarriedItem(itemId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
-  if (entry.item.kind === "flameCloak") {
+  if (entry.item.kind === "flameCloak" || entry.item.kind === "speedBoots" || entry.item.kind === "regenRing") {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
     return;
   }
@@ -2328,7 +2575,7 @@ function useCarriedItem(itemId: string) {
     showInvalidCommand(t("status.itemRecharging", { item: labelKind(entry.item.kind) }));
     return;
   }
-  if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge") {
+  if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge" || entry.item.kind === "ivoryTower") {
     beginItemTargeting(entry);
     return;
   }
@@ -2344,14 +2591,14 @@ function useCarriedItem(itemId: string) {
 function dropCarriedItem(itemId: string, carrierId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
   sendCommand(dropItemCommand(entry.item, entry.carrier));
   statusLabel.textContent = t("status.itemDropped", { item: labelKind(entry.item.kind) });
 }
 
 function itemIcon(kind: WorldItem["kind"]) {
-  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : "✦";
+  return kind === "lightningRod" ? "↯" : kind === "stormStaff" ? "☈" : kind === "flameCloak" ? "♨" : kind === "guardianScroll" ? "▤" : kind === "speedBoots" ? "»" : kind === "regenRing" ? "◯" : kind === "healingScroll" ? "✚" : kind === "ivoryTower" ? "♜" : "✦";
 }
 
 function trainIcon(kind: TrainableUnitKind) {
@@ -2359,910 +2606,76 @@ function trainIcon(kind: TrainableUnitKind) {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (menuOpen) {
-    drawMenuBackdrop(performance.now());
+    // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
+    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now(), reducedUnitMotion.matches);
     return;
   }
-  drawPaperMap();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!snapshot) {
+    drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.width, canvas.height);
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
     ctx.fillText(t("canvas.connecting"), 32, 48);
     return;
   }
-  const presentationMarks = createMapPresentation(snapshot);
-  drawLandmarks(snapshot.map.landmarks);
-  drawResources(snapshot.resources);
-  drawMercenaryCamps(snapshot.mercenaryCamps);
-  drawItems(snapshot.items);
-  drawBuildings(snapshot.buildings);
-  drawUnits(snapshot.units);
-  drawCarriedItems(snapshot.items);
-  drawEffects(snapshot.effects);
+  const viewer = matchViewer();
+  const hovered = hoveredTarget();
+  // Over an enemy's or the creeps', the cursor is the red one of an attack; over a friend's, it stays as it is.
+  const hostile = viewer && hovered ? relationTo(snapshot, viewer, hovered.owner) : undefined;
+  shell.classList.toggle("pointer-over-enemy", hostile === "enemy" || hostile === "creep");
+  drawWorld({
+    ctx,
+    snapshot,
+    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height, zoom:worldZoom },
+    now: performance.now(),
+    facing: unitFacing,
+    motion: unitMotion,
+    animation: unitAnimation,
+    reducedMotion: reducedUnitMotion.matches,
+    labels: worldLabels,
+    selectedIds,
+    controlGroups,
+    ...(selectedCampId ? { selectedCampId } : {}),
+    ...(viewer ? { viewer } : {}),
+    ...(hovered ? { hoveredId: hovered.id } : {}),
+  });
   drawBuildPlacementPreview();
   drawAttackMovePreview();
   drawSpellPreview();
   drawSelectionBox();
-  drawMinimap(presentationMarks);
+  drawMinimap(createMapPresentation(snapshot));
 }
 
-function drawMenuBackdrop(now: number) {
-  ctx.fillStyle = "#f6f1d8";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const t = now / 1000;
-  const stride = 170;
-  ctx.lineWidth = 1;
-  for (let x = -80; x < canvas.width + stride; x += stride) {
-    for (let y = -60; y < canvas.height + stride; y += stride) {
-      const wave = Math.sin(t * 0.45 + x * 0.009 + y * 0.007);
-      ctx.strokeStyle = `rgba(62, 91, 57, ${0.08 + Math.max(0, wave) * 0.06})`;
-      ctx.beginPath();
-      ctx.moveTo(x + 12, y + 72 + wave * 8);
-      ctx.quadraticCurveTo(x + 58, y + 38, x + 112, y + 82 - wave * 7);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(123, 101, 66, 0.12)";
-      ctx.beginPath();
-      ctx.moveTo(x + 104, y + 112);
-      ctx.lineTo(x + 134, y + 96 + wave * 6);
-      ctx.lineTo(x + 158, y + 116);
-      ctx.stroke();
-    }
-  }
-
-  drawMenuRoute(t, canvas.width * 0.12, canvas.height * 0.72, canvas.width * 0.88, canvas.height * 0.28);
-  drawMenuMine(canvas.width * 0.28, canvas.height * 0.28, t);
-  drawMenuCamp(canvas.width * 0.72, canvas.height * 0.68, t);
-  drawMenuSquad(canvas.width * 0.18 + ((t * 34) % (canvas.width * 0.64)), canvas.height * 0.7 - Math.sin(t * 1.3) * 18, "#315f87", t);
-  drawMenuSquad(canvas.width * 0.82 - ((t * 28) % (canvas.width * 0.58)), canvas.height * 0.32 + Math.sin(t * 1.1) * 16, "#963c36", t + 1.7);
-
-  ctx.strokeStyle = "rgba(36, 49, 38, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
-}
-
-function drawMenuRoute(t: number, x1: number, y1: number, x2: number, y2: number) {
-  ctx.save();
-  ctx.strokeStyle = "rgba(78, 67, 48, 0.28)";
-  ctx.lineWidth = 3;
-  ctx.setLineDash([22, 16]);
-  ctx.lineDashOffset = -t * 16;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.bezierCurveTo(canvas.width * 0.42, canvas.height * 0.58, canvas.width * 0.56, canvas.height * 0.42, x2, y2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuMine(x: number, y: number, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(Math.sin(t * 0.7) * 0.03);
-  ctx.strokeStyle = "#8a6418";
-  ctx.fillStyle = "rgba(242, 208, 92, 0.34)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(-36, 26);
-  ctx.lineTo(-18, -22);
-  ctx.lineTo(8, 18);
-  ctx.lineTo(30, -28);
-  ctx.lineTo(44, 24);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuCamp(x: number, y: number, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.strokeStyle = "#704a33";
-  ctx.fillStyle = "rgba(255, 250, 226, 0.5)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.ellipse(0, 6, 62 + Math.sin(t * 1.1) * 3, 28, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-34, 24);
-  ctx.lineTo(0, -44);
-  ctx.lineTo(34, 24);
-  ctx.moveTo(-18, 24);
-  ctx.lineTo(-18, -10);
-  ctx.moveTo(18, 24);
-  ctx.lineTo(18, -10);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawMenuSquad(x: number, y: number, color: string, t: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.strokeStyle = color;
-  ctx.fillStyle = "rgba(255, 250, 226, 0.68)";
-  ctx.lineWidth = 2.5;
-  for (let i = 0; i < 5; i += 1) {
-    const ox = (i - 2) * 24;
-    const oy = Math.sin(t * 4 + i) * 5;
-    ctx.beginPath();
-    ctx.ellipse(ox, oy + 16, 13, 6, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(ox, oy - 16);
-    ctx.lineTo(ox + 12, oy + 12);
-    ctx.lineTo(ox - 12, oy + 12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(ox + 10, oy - 4);
-    ctx.lineTo(ox + 24, oy - 14 + Math.sin(t * 5 + i) * 3);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawPaperMap() {
-  ctx.fillStyle = "#f6f1d8";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  for (const stroke of generateTerrainLinework({ mapId: snapshot?.map.id ?? selectedMapId, camera, width: canvas.width, height: canvas.height })) {
-    drawTextureStroke(stroke);
-  }
-}
-
-function drawTextureStroke(stroke: TextureStroke) {
-  if (stroke.points.length === 0) return;
-  ctx.strokeStyle = stroke.color;
-  ctx.lineWidth = stroke.width;
-  ctx.beginPath();
-  ctx.moveTo(stroke.points[0]!.x, stroke.points[0]!.y);
-  for (const point of stroke.points.slice(1)) ctx.lineTo(point.x, point.y);
-  ctx.stroke();
-}
-
-function drawLandmarks(landmarks: TerrainLandmark[]) {
-  for (const landmark of landmarks) {
-    const point = worldToScreen(landmark);
-    if (!nearScreen(point, landmark.size + 80)) continue;
-    ctx.save();
-    ctx.translate(point.x, point.y);
-    ctx.rotate(landmark.rotation);
-    ctx.lineWidth = 2;
-    if (landmark.kind === "road") {
-      ctx.strokeStyle = "rgba(123, 101, 66, 0.28)";
-      ctx.setLineDash([18, 14]);
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size / 2, 0);
-      ctx.quadraticCurveTo(0, -landmark.size / 8, landmark.size / 2, 0);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else if (landmark.kind === "grove") {
-      ctx.strokeStyle = "rgba(64, 108, 66, 0.34)";
-      for (let i = 0; i < 9; i += 1) {
-        const angle = (i / 9) * Math.PI * 2;
-        const x = Math.cos(angle) * landmark.size * 0.28;
-        const y = Math.sin(angle) * landmark.size * 0.18;
-        ctx.beginPath();
-        ctx.arc(x, y, 16 + (i % 3) * 4, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    } else if (landmark.kind === "ridge") {
-      ctx.strokeStyle = "rgba(84, 90, 68, 0.36)";
-      for (let i = -2; i <= 2; i += 1) {
-        ctx.beginPath();
-        ctx.moveTo(-landmark.size / 2, i * 18);
-        ctx.lineTo(-landmark.size / 4, i * 18 - 18);
-        ctx.lineTo(0, i * 18 + 10);
-        ctx.lineTo(landmark.size / 3, i * 18 - 14);
-        ctx.lineTo(landmark.size / 2, i * 18 + 8);
-        ctx.stroke();
-      }
-    } else if (landmark.kind === "ruin") {
-      ctx.strokeStyle = "rgba(81, 73, 61, 0.42)";
-      ctx.strokeRect(-landmark.size * 0.22, -landmark.size * 0.18, landmark.size * 0.28, landmark.size * 0.22);
-      ctx.strokeRect(landmark.size * 0.02, landmark.size * 0.02, landmark.size * 0.22, landmark.size * 0.2);
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size * 0.35, landmark.size * 0.22);
-      ctx.lineTo(landmark.size * 0.38, -landmark.size * 0.25);
-      ctx.stroke();
-    } else if (landmark.kind === "ditch") {
-      ctx.strokeStyle = "rgba(54, 100, 112, 0.28)";
-      ctx.beginPath();
-      ctx.moveTo(-landmark.size / 2, 0);
-      ctx.bezierCurveTo(-landmark.size / 4, 42, landmark.size / 4, -42, landmark.size / 2, 0);
-      ctx.stroke();
-    } else if (landmark.kind === "campMark") {
-      ctx.strokeStyle = "rgba(112, 74, 51, 0.34)";
-      ctx.beginPath();
-      ctx.arc(0, 0, landmark.size * 0.24, 0, Math.PI * 2);
-      ctx.moveTo(-landmark.size * 0.2, -landmark.size * 0.2);
-      ctx.lineTo(landmark.size * 0.2, landmark.size * 0.2);
-      ctx.moveTo(landmark.size * 0.2, -landmark.size * 0.2);
-      ctx.lineTo(-landmark.size * 0.2, landmark.size * 0.2);
-      ctx.stroke();
-    } else if (landmark.kind === "mineScar") {
-      ctx.strokeStyle = "rgba(184, 133, 31, 0.3)";
-      for (let i = 0; i < 4; i += 1) {
-        ctx.beginPath();
-        ctx.moveTo(-landmark.size * 0.3 + i * 26, landmark.size * 0.22);
-        ctx.lineTo(-landmark.size * 0.18 + i * 26, -landmark.size * 0.2);
-        ctx.stroke();
-      }
-    } else {
-      ctx.strokeStyle = "rgba(46, 58, 47, 0.4)";
-      ctx.strokeRect(-18, -18, 36, 36);
-      ctx.beginPath();
-      ctx.moveTo(0, -landmark.size * 0.32);
-      ctx.lineTo(0, landmark.size * 0.32);
-      ctx.moveTo(-landmark.size * 0.22, -landmark.size * 0.12);
-      ctx.lineTo(landmark.size * 0.22, -landmark.size * 0.12);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-}
-
-function drawResources(resources: ResourceNode[]) {
-  for (const resource of resources) {
-    const point = worldToScreen(resource);
-    if (!nearScreen(point, 80)) continue;
-    ctx.strokeStyle = "#b9861b";
-    ctx.fillStyle = "#dcae30";
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 5; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo(point.x - 26 + i * 12, point.y + 22);
-      ctx.lineTo(point.x - 14 + i * 12, point.y - 20);
-      ctx.stroke();
-    }
-    ctx.font = "12px ui-monospace, monospace";
-    ctx.fillText(`${Math.ceil(resource.amount)}`, point.x - 22, point.y + 42);
-  }
-}
-
-function drawMercenaryCamps(camps: MercenaryCamp[]) {
-  for (const camp of camps) {
-    const point = worldToScreen(camp);
-    if (!nearScreen(point, 110)) continue;
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "rgba(255, 250, 226, 0.62)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, camp.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    if (selectedCampId === camp.id) drawSelectionHalo(point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#704a33");
-    ctx.beginPath();
-    ctx.moveTo(point.x - 30, point.y + 24);
-    ctx.lineTo(point.x, point.y - 34);
-    ctx.lineTo(point.x + 30, point.y + 24);
-    ctx.moveTo(point.x - 18, point.y + 24);
-    ctx.lineTo(point.x - 18, point.y - 6);
-    ctx.moveTo(point.x + 18, point.y + 24);
-    ctx.lineTo(point.x + 18, point.y - 6);
-    ctx.stroke();
-    ctx.font = "11px ui-monospace, monospace";
-    ctx.fillStyle = "#704a33";
-    ctx.fillText(t("canvas.mercenaryStock", { stock: camp.stock }), point.x - 24, point.y + 48);
-    if (camp.cooldownRemaining > 0) drawProgress(point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
-  }
-}
-
-function drawBuildings(buildings: Building[]) {
-  for (const building of buildings) {
-    const shake = hitFeedbackOffset(building, building.radius);
-    const point = worldToScreen({ x: building.x + shake.x, y: building.y + shake.y });
-    const selected = selectedIds.has(building.id);
-    const trainable = BUILDING_DEFS[building.kind].trains.length > 0;
-    const rallyPoint = worldToScreen({ x: building.rallyX, y: building.rallyY });
-    const showRally = shouldRenderBuildingRally({ selected, trainable });
-    if (!nearScreen(point, 120)) {
-      if (showRally) drawBuildingRally(building, point, rallyPoint);
-      continue;
-    }
-    ctx.strokeStyle = ownerInk(building.owner);
-    ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
-    ctx.lineWidth = selected ? 4 : 2;
-    const size = building.kind === "townHall" ? 76 : 58;
-    if (selected) drawSelectionHalo(point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ownerInk(building.owner));
-    drawBuildingGlyph(BUILDING_GLYPHS[building.kind], point, size);
-    if (showRally) drawBuildingRally(building, point, rallyPoint);
-    drawHp(point.x, point.y - size / 2 - 13, building.hp, building.maxHp);
-    if (!building.complete) drawProgress(point.x, point.y + size / 2 + 10, building.buildProgress / building.buildTime);
-    if (building.complete && building.queue[0]) {
-      drawTrainingProgress(point.x, point.y + size / 2 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
-    }
-  }
-}
-
-function drawBuildingRally(building: Building, from: Point, to: Point) {
-  const ink = building.rallyTarget?.type === "resource" ? "#b9861b" : building.rallyTarget?.type === "unit" ? "#5d8b4c" : "#315f87";
-  ctx.save();
-  ctx.strokeStyle = ink;
-  ctx.fillStyle = ink;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 5]);
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.arc(to.x, to.y, 7, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(to.x, to.y - 16);
-  ctx.lineTo(to.x, to.y + 8);
-  ctx.lineTo(to.x + 15, to.y - 8);
-  ctx.lineTo(to.x, to.y - 8);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawBuildingGlyph(glyph: BuildingGlyph, point: Point, size: number) {
-  drawBuildingFrame(glyph, point, size);
-  for (const mark of glyph.marks) drawBuildingMark(mark, point, size);
-}
-
-function drawBuildingFrame(glyph: BuildingGlyph, point: Point, size: number) {
-  const half = size / 2;
-  ctx.beginPath();
-  if (glyph.frame === "town-hall") {
-    ctx.moveTo(point.x - half, point.y - half * 0.1);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half, point.y - half * 0.1);
-    ctx.lineTo(point.x + half * 0.78, point.y + half);
-    ctx.lineTo(point.x - half * 0.78, point.y + half);
-  } else if (glyph.frame === "barracks-yard") {
-    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
-    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
-  } else if (glyph.frame === "archery-range") {
-    ctx.moveTo(point.x - half, point.y + half * 0.58);
-    ctx.lineTo(point.x - half * 0.65, point.y - half * 0.65);
-    ctx.quadraticCurveTo(point.x, point.y - half, point.x + half * 0.65, point.y - half * 0.65);
-    ctx.lineTo(point.x + half, point.y + half * 0.58);
-  } else if (glyph.frame === "stables-gate") {
-    ctx.rect(point.x - half, point.y - half * 0.5, size, size * 0.82);
-    ctx.moveTo(point.x - half, point.y - half * 0.5);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half, point.y - half * 0.5);
-  } else if (glyph.frame === "sanctum-dome") {
-    ctx.arc(point.x, point.y, half * 0.86, Math.PI, Math.PI * 2);
-    ctx.lineTo(point.x + half * 0.86, point.y + half * 0.62);
-    ctx.lineTo(point.x - half * 0.86, point.y + half * 0.62);
-  } else if (glyph.frame === "workshop-gear") {
-    for (let i = 0; i < 12; i += 1) {
-      const angle = (i / 12) * Math.PI * 2;
-      const radius = i % 2 === 0 ? half * 0.94 : half * 0.72;
-      const x = point.x + Math.cos(angle) * radius;
-      const y = point.y + Math.sin(angle) * radius;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-  } else if (glyph.frame === "tower-spire") {
-    ctx.moveTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.5, point.y - half * 0.18);
-    ctx.lineTo(point.x + half * 0.38, point.y + half);
-    ctx.lineTo(point.x - half * 0.38, point.y + half);
-    ctx.lineTo(point.x - half * 0.5, point.y - half * 0.18);
-  } else if (glyph.frame === "moon-well" || glyph.frame === "ember-shrine") {
-    ctx.ellipse(point.x, point.y + half * 0.13, half * 0.76, half * 0.43, 0, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.58, point.y + half * 0.02);
-    ctx.quadraticCurveTo(point.x, point.y - half * 0.72, point.x + half * 0.58, point.y + half * 0.02);
-    ctx.moveTo(point.x - half * 0.44, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.44, point.y + half * 0.22);
-  } else if (glyph.frame === "ember-forge") {
-    ctx.rect(point.x - half, point.y - half * 0.72, size, size * 0.92);
-    ctx.moveTo(point.x - half * 0.82, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.82, point.y + half * 0.22);
-    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.72);
-    ctx.lineTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.45, point.y - half * 0.72);
-  } else if (glyph.frame === "cinder-spire") {
-    ctx.moveTo(point.x, point.y - half);
-    ctx.lineTo(point.x + half * 0.56, point.y - half * 0.04);
-    ctx.lineTo(point.x + half * 0.34, point.y + half);
-    ctx.lineTo(point.x - half * 0.34, point.y + half);
-    ctx.lineTo(point.x - half * 0.56, point.y - half * 0.04);
-  } else {
-    ctx.rect(point.x - half * 0.9, point.y - half * 0.45, size * 0.9, size * 0.72);
-    ctx.moveTo(point.x - half * 0.9, point.y - half * 0.1);
-    ctx.lineTo(point.x + half * 0.9, point.y - half * 0.1);
-    ctx.moveTo(point.x, point.y - half * 0.45);
-    ctx.lineTo(point.x, point.y + half * 0.27);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-}
-
-function drawBuildingMark(mark: BuildingGlyphMark, point: Point, size: number) {
-  const half = size / 2;
-  ctx.beginPath();
-  if (mark === "roof") {
-    ctx.moveTo(point.x - half * 0.64, point.y - half * 0.05);
-    ctx.lineTo(point.x, point.y - half * 0.44);
-    ctx.lineTo(point.x + half * 0.64, point.y - half * 0.05);
-  } else if (mark === "banner") {
-    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.62);
-    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.12);
-    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.36);
-    ctx.lineTo(point.x + half * 0.12, point.y - half * 0.5);
-  } else if (mark === "door") {
-    ctx.rect(point.x - half * 0.18, point.y + half * 0.2, half * 0.36, half * 0.38);
-  } else if (mark === "crossedBlades") {
-    ctx.moveTo(point.x - half * 0.45, point.y + half * 0.22);
-    ctx.lineTo(point.x + half * 0.42, point.y - half * 0.42);
-    ctx.moveTo(point.x + half * 0.45, point.y + half * 0.22);
-    ctx.lineTo(point.x - half * 0.42, point.y - half * 0.42);
-  } else if (mark === "target") {
-    ctx.arc(point.x, point.y - half * 0.08, half * 0.28, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.34, point.y - half * 0.08);
-    ctx.lineTo(point.x + half * 0.34, point.y - half * 0.08);
-    ctx.moveTo(point.x, point.y - half * 0.42);
-    ctx.lineTo(point.x, point.y + half * 0.26);
-  } else if (mark === "bowRack") {
-    ctx.arc(point.x - half * 0.45, point.y, half * 0.28, -Math.PI / 2, Math.PI / 2);
-    ctx.moveTo(point.x - half * 0.45, point.y - half * 0.28);
-    ctx.lineTo(point.x - half * 0.45, point.y + half * 0.28);
-  } else if (mark === "horseshoe") {
-    ctx.arc(point.x, point.y, half * 0.28, Math.PI * 0.18, Math.PI * 0.82, true);
-    ctx.moveTo(point.x - half * 0.27, point.y);
-    ctx.lineTo(point.x - half * 0.27, point.y + half * 0.28);
-    ctx.moveTo(point.x + half * 0.27, point.y);
-    ctx.lineTo(point.x + half * 0.27, point.y + half * 0.28);
-  } else if (mark === "rail") {
-    ctx.moveTo(point.x - half * 0.6, point.y + half * 0.18);
-    ctx.lineTo(point.x + half * 0.6, point.y + half * 0.18);
-    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
-    ctx.lineTo(point.x + half * 0.5, point.y + half * 0.36);
-  } else if (mark === "moonRune") {
-    ctx.arc(point.x - half * 0.05, point.y - half * 0.08, half * 0.24, Math.PI * 0.55, Math.PI * 1.55);
-    ctx.arc(point.x + half * 0.08, point.y - half * 0.08, half * 0.18, Math.PI * 1.55, Math.PI * 0.55, true);
-  } else if (mark === "sparkRune") {
-    ctx.moveTo(point.x + half * 0.43, point.y - half * 0.4);
-    ctx.lineTo(point.x + half * 0.43, point.y - half * 0.12);
-    ctx.moveTo(point.x + half * 0.29, point.y - half * 0.26);
-    ctx.lineTo(point.x + half * 0.57, point.y - half * 0.26);
-  } else if (mark === "cog") {
-    ctx.arc(point.x, point.y, half * 0.24, 0, Math.PI * 2);
-    ctx.moveTo(point.x - half * 0.34, point.y);
-    ctx.lineTo(point.x + half * 0.34, point.y);
-    ctx.moveTo(point.x, point.y - half * 0.34);
-    ctx.lineTo(point.x, point.y + half * 0.34);
-  } else if (mark === "hammer") {
-    ctx.moveTo(point.x - half * 0.5, point.y + half * 0.36);
-    ctx.lineTo(point.x + half * 0.3, point.y - half * 0.34);
-    ctx.moveTo(point.x + half * 0.12, point.y - half * 0.48);
-    ctx.lineTo(point.x + half * 0.48, point.y - half * 0.16);
-  } else if (mark === "arrowSlit") {
-    ctx.rect(point.x - half * 0.08, point.y - half * 0.18, half * 0.16, half * 0.52);
-  } else if (mark === "watchEye") {
-    ctx.ellipse(point.x, point.y - half * 0.34, half * 0.24, half * 0.12, 0, 0, Math.PI * 2);
-    ctx.moveTo(point.x, point.y - half * 0.46);
-    ctx.lineTo(point.x, point.y - half * 0.22);
-  } else if (mark === "furrows") {
-    for (let i = -2; i <= 2; i += 1) {
-      ctx.moveTo(point.x + i * half * 0.18, point.y - half * 0.38);
-      ctx.lineTo(point.x + i * half * 0.18, point.y + half * 0.25);
-    }
-  } else {
-    ctx.moveTo(point.x - half * 0.32, point.y - half * 0.42);
-    ctx.lineTo(point.x, point.y - half * 0.16);
-    ctx.lineTo(point.x + half * 0.32, point.y - half * 0.42);
-    ctx.moveTo(point.x, point.y - half * 0.16);
-    ctx.lineTo(point.x, point.y + half * 0.24);
-  }
-  ctx.stroke();
-}
-
-function drawUnits(units: Unit[]) {
-  for (const unit of units) {
-    const shake = hitFeedbackOffset(unit, unit.radius);
-    const point = worldToScreen({ x: unit.x + shake.x, y: unit.y + shake.y });
-    const scale = unitGlyphScale(unit.radius);
-    if (!nearScreen(point, Math.max(60, unit.radius * 3))) continue;
-    ctx.strokeStyle = ownerInk(unit.owner);
-    ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
-    ctx.lineWidth = selectedIds.has(unit.id) ? 4 : 2;
-    if (hasCarriedItem(unit, "flameCloak")) drawFlameCloakAura(point, performance.now(), unit.radius);
-    if (selectedIds.has(unit.id)) {
-      ctx.beginPath();
-      ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    drawUnitGlyph(UNIT_GLYPHS[unit.kind], point, scale);
-    if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(point.x, point.y);
-    if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    drawHp(point.x, point.y - unit.radius * 1.55, unit.hp, unit.maxHp);
-  }
-}
-
-function hasCarriedItem(unit: Unit, kind: WorldItem["kind"]) {
-  return snapshot?.items.some((item) => item.kind === kind && item.carrierId === unit.id) ?? false;
-}
-
-function drawFlameCloakAura(point: Point, now: number, radius: number) {
-  const pulse = 0.55 + Math.sin(now / 140) * 0.14;
-  ctx.save();
-  ctx.strokeStyle = `rgba(150, 60, 54, ${pulse})`;
-  ctx.fillStyle = "rgba(242, 137, 75, 0.12)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 13, radius + 14, (radius + 14) * 0.42, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(242, 137, 75, 0.72)";
-  for (let index = 0; index < 5; index += 1) {
-    const angle = now / 260 + index * 1.26;
-    const x = point.x + Math.cos(angle) * (radius + 8);
-    const y = point.y + 13 + Math.sin(angle) * (radius * 0.34);
-    ctx.beginPath();
-    ctx.moveTo(x, y + 5);
-    ctx.quadraticCurveTo(x - 5, y - 3, x + 1, y - 11);
-    ctx.quadraticCurveTo(x + 6, y - 3, x + 3, y + 5);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawItems(items: WorldItem[]) {
-  for (const item of items) {
-    if (item.carrierId) continue;
-    const point = worldToScreen(item);
-    if (!nearScreen(point, 42)) continue;
-    drawItemGlyph(item, point, performance.now(), false);
-  }
-}
-
-function drawCarriedItems(items: WorldItem[]) {
-  for (const item of items) {
-    if (!item.carrierId) continue;
-    const point = worldToScreen(item);
-    if (!nearScreen(point, 60)) continue;
-    drawItemGlyph(item, { x: point.x + 12, y: point.y - 34 }, performance.now(), true);
-  }
-}
-
-function drawUnitGlyph(glyph: UnitGlyph, point: Point, scale = 1) {
-  ctx.save();
-  ctx.translate(point.x, point.y);
-  ctx.scale(scale, scale);
-  const localPoint = { x: 0, y: 0 };
-  drawGlyphSilhouette(glyph, localPoint);
-  for (const mark of glyph.marks) drawGlyphMark(mark, localPoint);
-  ctx.restore();
-}
-
-function drawGlyphSilhouette(glyph: UnitGlyph, point: Point) {
-  ctx.beginPath();
-  if (glyph.silhouette === "worker-apron") {
-    ctx.moveTo(point.x - 11, point.y - 15);
-    ctx.lineTo(point.x + 9, point.y - 13);
-    ctx.lineTo(point.x + 16, point.y + 14);
-    ctx.lineTo(point.x - 13, point.y + 16);
-    ctx.lineTo(point.x - 17, point.y - 5);
-  } else if (glyph.silhouette === "shield-triangle") {
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 17, point.y + 15);
-    ctx.lineTo(point.x - 17, point.y + 15);
-  } else if (glyph.silhouette === "bow-crest") {
-    ctx.moveTo(point.x - 14, point.y - 16);
-    ctx.quadraticCurveTo(point.x + 18, point.y - 18, point.x + 14, point.y + 15);
-    ctx.quadraticCurveTo(point.x - 10, point.y + 20, point.x - 16, point.y - 4);
-  } else if (glyph.silhouette === "raider-kite") {
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 18, point.y - 2);
-    ctx.lineTo(point.x + 7, point.y + 19);
-    ctx.lineTo(point.x - 15, point.y + 10);
-    ctx.lineTo(point.x - 18, point.y - 7);
-  } else if (glyph.silhouette === "lancer-pennant") {
-    ctx.moveTo(point.x - 15, point.y - 14);
-    ctx.lineTo(point.x + 17, point.y - 9);
-    ctx.lineTo(point.x + 8, point.y + 16);
-    ctx.lineTo(point.x - 18, point.y + 13);
-  } else if (glyph.silhouette === "knight-helm") {
-    ctx.arc(point.x, point.y - 2, 17, Math.PI * 0.95, Math.PI * 2.05);
-    ctx.lineTo(point.x + 15, point.y + 17);
-    ctx.lineTo(point.x - 15, point.y + 17);
-  } else if (glyph.silhouette === "priest-medallion") {
-    ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "summoner-ring") {
-    ctx.ellipse(point.x, point.y, 17, 13, 0.2, 0, Math.PI * 2);
-  } else if (glyph.silhouette === "witch-crescent") {
-    ctx.arc(point.x + 4, point.y, 17, Math.PI * 0.52, Math.PI * 1.58);
-    ctx.quadraticCurveTo(point.x - 15, point.y, point.x + 4, point.y - 17);
-  } else if (glyph.silhouette === "golem-block") {
-    ctx.rect(point.x - 17, point.y - 17, 34, 34);
-  } else if (glyph.silhouette === "spirit-wisp") {
-    ctx.moveTo(point.x, point.y - 18);
-    ctx.quadraticCurveTo(point.x + 18, point.y - 4, point.x + 4, point.y + 18);
-    ctx.quadraticCurveTo(point.x - 18, point.y + 4, point.x, point.y - 18);
-  } else if (glyph.silhouette === "mercenary-badge") {
-    ctx.moveTo(point.x, point.y - 19);
-    ctx.lineTo(point.x + 16, point.y - 3);
-    ctx.lineTo(point.x + 8, point.y + 18);
-    ctx.lineTo(point.x - 12, point.y + 14);
-    ctx.lineTo(point.x - 16, point.y - 6);
-  } else {
-    ctx.moveTo(point.x - 15, point.y - 15);
-    ctx.lineTo(point.x + 15, point.y + 15);
-    ctx.moveTo(point.x + 15, point.y - 15);
-    ctx.lineTo(point.x - 15, point.y + 15);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-}
-
-function drawGlyphMark(mark: GlyphMark, point: Point) {
-  ctx.beginPath();
-  if (mark === "pick") {
-    ctx.moveTo(point.x - 18, point.y - 11);
-    ctx.lineTo(point.x + 9, point.y + 15);
-    ctx.moveTo(point.x - 20, point.y - 9);
-    ctx.quadraticCurveTo(point.x - 8, point.y - 24, point.x + 4, point.y - 15);
-  } else if (mark === "satchel") {
-    ctx.rect(point.x - 19, point.y + 3, 10, 9);
-    ctx.moveTo(point.x - 17, point.y + 3);
-    ctx.quadraticCurveTo(point.x - 14, point.y - 4, point.x - 11, point.y + 3);
-  } else if (mark === "shieldBar") {
-    ctx.moveTo(point.x - 10, point.y + 2);
-    ctx.lineTo(point.x + 10, point.y + 2);
-    ctx.moveTo(point.x, point.y - 14);
-    ctx.lineTo(point.x, point.y + 13);
-  } else if (mark === "shortSword") {
-    ctx.moveTo(point.x + 10, point.y - 15);
-    ctx.lineTo(point.x + 22, point.y - 24);
-    ctx.moveTo(point.x + 11, point.y - 14);
-    ctx.lineTo(point.x + 17, point.y - 8);
-  } else if (mark === "bow") {
-    ctx.arc(point.x + 14, point.y, 16, -Math.PI / 2, Math.PI / 2);
-    ctx.moveTo(point.x + 14, point.y - 16);
-    ctx.lineTo(point.x + 14, point.y + 16);
-  } else if (mark === "arrow") {
-    ctx.moveTo(point.x - 18, point.y + 2);
-    ctx.lineTo(point.x + 17, point.y - 8);
-    ctx.moveTo(point.x + 17, point.y - 8);
-    ctx.lineTo(point.x + 9, point.y - 11);
-    ctx.moveTo(point.x + 17, point.y - 8);
-    ctx.lineTo(point.x + 11, point.y - 2);
-  } else if (mark === "reins") {
-    ctx.moveTo(point.x - 13, point.y - 5);
-    ctx.quadraticCurveTo(point.x + 2, point.y - 18, point.x + 16, point.y - 1);
-  } else if (mark === "spur") {
-    ctx.moveTo(point.x - 7, point.y + 18);
-    ctx.lineTo(point.x - 16, point.y + 25);
-    ctx.lineTo(point.x - 9, point.y + 23);
-  } else if (mark === "longSpear") {
-    ctx.moveTo(point.x - 20, point.y + 17);
-    ctx.lineTo(point.x + 24, point.y - 22);
-  } else if (mark === "flag") {
-    ctx.moveTo(point.x + 7, point.y - 19);
-    ctx.lineTo(point.x + 22, point.y - 16);
-    ctx.lineTo(point.x + 10, point.y - 7);
-  } else if (mark === "visor") {
-    ctx.moveTo(point.x - 12, point.y - 5);
-    ctx.lineTo(point.x + 12, point.y - 5);
-    ctx.moveTo(point.x - 8, point.y);
-    ctx.lineTo(point.x + 9, point.y);
-  } else if (mark === "towerShield") {
-    ctx.rect(point.x - 20, point.y - 4, 10, 18);
-    ctx.moveTo(point.x - 20, point.y + 3);
-    ctx.lineTo(point.x - 10, point.y + 3);
-  } else if (mark === "halo") {
-    ctx.ellipse(point.x, point.y - 19, 15, 5, 0, 0, Math.PI * 2);
-  } else if (mark === "cross") {
-    ctx.moveTo(point.x - 10, point.y);
-    ctx.lineTo(point.x + 10, point.y);
-    ctx.moveTo(point.x, point.y - 10);
-    ctx.lineTo(point.x, point.y + 10);
-  } else if (mark === "outerRing") {
-    ctx.ellipse(point.x, point.y, 22, 17, -0.2, 0, Math.PI * 2);
-  } else if (mark === "innerSigil") {
-    ctx.moveTo(point.x, point.y - 9);
-    ctx.lineTo(point.x + 8, point.y + 6);
-    ctx.lineTo(point.x - 8, point.y + 6);
-    ctx.closePath();
-  } else if (mark === "crescent") {
-    ctx.arc(point.x - 2, point.y - 1, 16, Math.PI * 0.65, Math.PI * 1.55);
-    ctx.arc(point.x + 5, point.y - 1, 12, Math.PI * 1.55, Math.PI * 0.65, true);
-  } else if (mark === "curseSlash") {
-    ctx.moveTo(point.x - 15, point.y + 14);
-    ctx.lineTo(point.x + 16, point.y - 15);
-  } else if (mark === "rune") {
-    ctx.moveTo(point.x - 6, point.y - 8);
-    ctx.lineTo(point.x + 8, point.y - 8);
-    ctx.lineTo(point.x - 2, point.y + 9);
-    ctx.lineTo(point.x + 10, point.y + 9);
-  } else if (mark === "blockSeams") {
-    ctx.moveTo(point.x - 17, point.y - 2);
-    ctx.lineTo(point.x + 17, point.y - 2);
-    ctx.moveTo(point.x - 3, point.y - 17);
-    ctx.lineTo(point.x - 3, point.y + 17);
-  } else if (mark === "tail") {
-    ctx.moveTo(point.x - 5, point.y + 13);
-    ctx.quadraticCurveTo(point.x - 27, point.y + 24, point.x - 13, point.y + 34);
-  } else if (mark === "spark") {
-    ctx.moveTo(point.x + 18, point.y - 17);
-    ctx.lineTo(point.x + 18, point.y - 5);
-    ctx.moveTo(point.x + 12, point.y - 11);
-    ctx.lineTo(point.x + 24, point.y - 11);
-  } else if (mark === "coinSlash") {
-    ctx.arc(point.x + 13, point.y + 11, 5, 0, Math.PI * 2);
-    ctx.moveTo(point.x + 9, point.y + 15);
-    ctx.lineTo(point.x + 17, point.y + 7);
-  } else if (mark === "scar") {
-    ctx.moveTo(point.x - 11, point.y - 8);
-    ctx.lineTo(point.x + 10, point.y + 10);
-  } else {
-    ctx.moveTo(point.x - 18, point.y - 4);
-    ctx.lineTo(point.x, point.y - 20);
-    ctx.lineTo(point.x + 18, point.y - 4);
-    ctx.moveTo(point.x, point.y - 20);
-    ctx.lineTo(point.x, point.y + 16);
-  }
-  ctx.stroke();
-}
-
-function drawSelectionHalo(x: number, y: number, rx: number, ry: number, color: string) {
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 250, 226, 0.8)";
-  ctx.beginPath();
-  ctx.ellipse(x - 2, y - 3, rx * 0.82, ry * 0.7, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawCarriedGold(x: number, y: number) {
-  ctx.save();
-  ctx.strokeStyle = "#8a6418";
-  ctx.fillStyle = "#f2d05c";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x - 6, y - 24);
-  ctx.lineTo(x + 2, y - 34);
-  ctx.lineTo(x + 10, y - 23);
-  ctx.lineTo(x + 1, y - 18);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawItemGlyph(item: WorldItem, point: Point, now: number, carried: boolean) {
-  const bob = carried ? Math.sin(now / 180 + point.x * 0.03) * 2.5 : 0;
-  const x = point.x;
-  const y = point.y + bob;
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (item.kind === "lightningRod") {
-    ctx.strokeStyle = "#315f87";
-    ctx.fillStyle = "#9ed8ff";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(x - 3, y + 9);
-    ctx.lineTo(x + 6, y - 11);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x + 3, y - 13);
-    ctx.lineTo(x + 11, y - 6);
-    ctx.lineTo(x + 6, y - 6);
-    ctx.lineTo(x + 12, y + 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "stormStaff") {
-    ctx.strokeStyle = "#596073";
-    ctx.fillStyle = "#d6d4f2";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 9);
-    ctx.lineTo(x + 5, y - 10);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x + 6, y - 11, 5, 0.15, Math.PI * 1.8);
-    ctx.stroke();
-  } else if (item.kind === "flameCloak") {
-    ctx.strokeStyle = "#963c36";
-    ctx.fillStyle = "rgba(242, 137, 75, 0.72)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y + 8);
-    ctx.quadraticCurveTo(x - 13, y - 4, x - 4, y - 12);
-    ctx.quadraticCurveTo(x + 12, y - 4, x + 7, y + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  } else if (item.kind === "guardianScroll") {
-    ctx.strokeStyle = "#704a33";
-    ctx.fillStyle = "#fff6d0";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.rect(x - 8, y - 6, 16, 12);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y - 2);
-    ctx.lineTo(x + 5, y - 2);
-    ctx.moveTo(x - 4, y + 3);
-    ctx.lineTo(x + 4, y + 3);
-    ctx.stroke();
-  } else if (item.kind === "breachCharge") {
-    ctx.strokeStyle = "#5f3a24";
-    ctx.fillStyle = "#d28445";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y + 1, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 2, y - 7);
-    ctx.quadraticCurveTo(x + 2, y - 13, x + 7, y - 9);
-    ctx.stroke();
-  } else {
-    ctx.strokeStyle = "#8a6418";
-    ctx.fillStyle = "#f2d05c";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 10);
-    ctx.lineTo(x + 8, y);
-    ctx.lineTo(x, y + 10);
-    ctx.lineTo(x - 8, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-  if (carried) {
-    ctx.strokeStyle = "rgba(49, 95, 135, 0.36)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(x, y + 13, 10, 3.2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawEffects(effects: GameSnapshot["effects"]) {
-  renderWorldEffects({ ctx, effects, worldToScreen, nearScreen });
-}
+// The build mode's preview stands where the sim will lay the building (see snapToFootprint), on the cells it would take:
+// green where it can go, its blocking cells red where it cannot (see @@@footprint-preview), every cell red when nothing
+// on the ground is in the way (gold short, a shipyard off the shore).
+const PLACEMENT_INK = { clear: "#4f9a52", blocked: "#b2483c" } as const;
 
 function drawBuildPlacementPreview() {
-  if (!commandMode || commandMode.type !== "build" || !lastMouse) return;
-  const def = BUILDING_DEFS[commandMode.placement.buildingKind];
-  const point = lastMouse;
-  const size = 58;
-  const world = screenToWorld(point);
-  const placement = snapshot ? buildPlacementCommand(snapshot, commandMode.placement, world) : undefined;
-  const validPlacement = !placement || "command" in placement;
+  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
+  const kind = commandMode.placement.buildingKind;
+  const def = BUILDING_DEFS[kind];
+  const size = buildingGlyphSize(kind)*worldZoom;
+  const world = screenToWorld(lastMouse);
+  const at = snapToFootprint(snapshot.map, def.radius, world);
+  const point = worldToScreen(at);
+  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
+  const ink = validPlacement ? PLACEMENT_INK.clear : PLACEMENT_INK.blocked;
+  const square = footprintSquare(snapshot, at, def.radius);
+  if (square) {
+    const blocked = validPlacement ? new Set<string>() : blockedFootprintCells(snapshot, kind, square);
+    const everyCell = !validPlacement && blocked.size === 0;
+    ctx.save();ctx.scale(worldZoom,worldZoom);
+    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));ctx.restore();
+  }
   ctx.save();
-  ctx.strokeStyle = validPlacement ? "#315f87" : "#9f3a3a";
-  ctx.fillStyle = validPlacement ? "rgba(49, 95, 135, 0.08)" : "rgba(159, 58, 58, 0.11)";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 5]);
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + size / 2 - 3, def.radius, def.radius * 0.36, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
-  ctx.strokeRect(point.x - size / 2, point.y - size / 2, size, size);
-  ctx.beginPath();
-  ctx.moveTo(point.x - size / 2, point.y - size / 2);
-  ctx.lineTo(point.x + size / 2, point.y + size / 2);
-  ctx.moveTo(point.x + size / 2, point.y - size / 2);
-  ctx.lineTo(point.x - size / 2, point.y + size / 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = validPlacement ? "#315f87" : "#9f3a3a";
+  ctx.globalAlpha = 0.62;
+  drawAtlasBuilding(ctx, kind, point, size, ink);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = ink;
   ctx.font = "11px ui-monospace, monospace";
-  ctx.fillText(t("canvas.buildPreview", { building: labelKind(commandMode.placement.buildingKind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
+  ctx.fillText(t("canvas.buildPreview", { building: labelKind(kind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
   ctx.restore();
 }
 
@@ -3295,16 +2708,21 @@ function drawSpellPreview() {
   if (!commandMode || commandMode.type !== "spell" || !lastMouse) return;
   const point = lastMouse;
   const ability = commandMode.targeting.ability;
+  const reach = chargeWindow(ability);
+  if (reach) {
+    drawChargePreview(point, ability, reach, commandMode.targeting.casterId);
+    return;
+  }
   const behavior = ABILITY_DEFS[ability].behavior;
-  const color = behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
-  const fill = behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  const color = behavior === "weapon" ? "#c6ae7b" : behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
+  const fill = behavior === "weapon" ? "rgba(198,174,123,0.08)" : behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = fill;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
-  ctx.arc(point.x, point.y, behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, behavior === "weapon" ? Math.min(90, (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).weapon.radius ?? 20) * worldZoom : behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.setLineDash([]);
@@ -3331,6 +2749,91 @@ function drawSpellPreview() {
   ctx.restore();
 }
 
+// @@@charge-preview - While a charge is being aimed, every ready rider shows its window: the ring band between the
+// shortest and longest charge. The rider that would take the hovered enemy (see chargeRiderFor) is drawn strong with a
+// lane to it; a hovered enemy too near every rider is marked out of reach.
+const CHARGE_PREVIEW_INK = { band: "rgba(212, 180, 119, 0.12)", ring: "#b9861b", reach: "#387d72", miss: "#a85644" } as const;
+
+function drawChargePreview(point: Point, ability: AbilityKind, reach: ChargeWindow, preferredId: string) {
+  const riders = readyChargers(selectedPlayerUnits(), ability);
+  const world = screenToWorld(point);
+  const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
+  const rider = target ? chargeRiderFor(riders, target, reach, preferredId) : undefined;
+  const lead = rider ?? riders.reduce<Unit | undefined>((best, candidate) => (!best || distance(candidate, world) < distance(best, world) ? candidate : best), undefined);
+  ctx.save();
+  for (const candidate of riders) drawChargeWindow(worldToScreen(candidate), reach, candidate === lead);
+  const ink = target ? (rider ? CHARGE_PREVIEW_INK.reach : CHARGE_PREVIEW_INK.miss) : CHARGE_PREVIEW_INK.ring;
+  if (target && rider) {
+    const from = worldToScreen(rider);
+    const to = worldToScreen(target);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 6]);
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const mark = target ? worldToScreen(target) : point;
+  ctx.strokeStyle = ink;
+  ctx.fillStyle = target ? `${ink}22` : "rgba(185, 134, 27, 0.08)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(mark.x, mark.y, target ? target.radius + 10 : 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Two chevrons pointing in: the rider's lunge.
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(mark.x + side * 30, mark.y - 9);
+    ctx.lineTo(mark.x + side * 21, mark.y);
+    ctx.lineTo(mark.x + side * 30, mark.y + 9);
+    ctx.stroke();
+  }
+  if (target && !rider) {
+    ctx.beginPath();
+    ctx.moveTo(mark.x - 9, mark.y - 9);
+    ctx.lineTo(mark.x + 9, mark.y + 9);
+    ctx.moveTo(mark.x + 9, mark.y - 9);
+    ctx.lineTo(mark.x - 9, mark.y + 9);
+    ctx.stroke();
+  }
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.fillStyle = ink;
+  ctx.fillText(labelKind(ability), point.x - 20, point.y + 44);
+  ctx.restore();
+}
+
+function drawChargeWindow(center: Point, reach: ChargeWindow, lead: boolean) {
+  if (!nearScreen(center, reach.range)) return;
+  ctx.save();
+  ctx.globalAlpha = lead ? 1 : 0.45;
+  ctx.fillStyle = CHARGE_PREVIEW_INK.band;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.range, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, reach.minRange, 0, Math.PI * 2, true);
+  ctx.fill();
+  ctx.strokeStyle = CHARGE_PREVIEW_INK.ring;
+  ctx.lineWidth = lead ? 2 : 1.5;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.range, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, reach.minRange, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (lead) {
+    ctx.font = "10px ui-monospace, monospace";
+    ctx.fillStyle = CHARGE_PREVIEW_INK.ring;
+    ctx.textAlign = "center";
+    ctx.fillText(String(reach.minRange), center.x, center.y - reach.minRange - 4);
+    ctx.fillText(String(reach.range), center.x, center.y - reach.range - 4);
+  }
+  ctx.restore();
+}
+
 function drawSelectionBox() {
   if (!selectionStart || !selectionEnd) return;
   const left = Math.min(selectionStart.x, selectionEnd.x);
@@ -3348,126 +2851,37 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
-  ctx.fillStyle = "rgba(255, 250, 226, 0.9)";
-  ctx.strokeStyle = "rgba(47, 61, 42, 0.44)";
-  ctx.lineWidth = 2;
-  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-  ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-  for (const mark of marks) {
-    const point = projectWorldToRect(mark, snapshot.map, rect);
-    if (mark.category === "terrain") {
-      drawMiniTerrainMark(mark, point);
-    } else if (mark.category === "goldMine") {
-      ctx.fillStyle = "#c4921e";
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - 3);
-      ctx.lineTo(point.x + 3, point.y);
-      ctx.lineTo(point.x, point.y + 3);
-      ctx.lineTo(point.x - 3, point.y);
-      ctx.closePath();
-      ctx.fill();
-    } else if (mark.category === "mercenaryCamp") {
-      ctx.strokeStyle = "#704a33";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (mark.category === "wildlingCamp") {
-      ctx.fillStyle = "#704a33";
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (mark.category === "building") {
-      ctx.fillStyle = ownerInk(mark.owner);
-      ctx.fillRect(point.x - 3, point.y - 3, 6, 6);
-    } else {
-      ctx.fillStyle = ownerInk(mark.owner);
-      const size = mark.owner === "neutral" ? 2.2 : 3;
-      ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
-    }
-  }
-  for (const item of snapshot.items) {
-    const point = projectWorldToRect(item, snapshot.map, rect);
-    ctx.strokeStyle = item.kind === "lightningRod" || item.kind === "stormStaff" ? "#315f87" : item.kind === "flameCloak" ? "#963c36" : item.kind === "breachCharge" ? "#5f3a24" : "#8a6418";
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(point.x - 2.5, point.y + 2.5);
-    ctx.lineTo(point.x + 2.5, point.y - 2.5);
-    ctx.stroke();
-  }
+  const relations = minimapRelationsOn();
+  if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
+  const viewer = matchViewer();
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined);
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
 }
 
-function drawMiniTerrainMark(mark: MapPresentationMark, point: Point) {
-  ctx.save();
-  ctx.lineWidth = 1;
-  if (mark.kind === "road") {
-    ctx.strokeStyle = "rgba(123, 101, 66, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 4, point.y);
-    ctx.lineTo(point.x + 4, point.y);
-    ctx.stroke();
-  } else if (mark.kind === "grove") {
-    ctx.strokeStyle = "rgba(64, 108, 66, 0.62)";
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, 2.3, 0, Math.PI * 2);
-    ctx.stroke();
-  } else if (mark.kind === "ridge") {
-    ctx.strokeStyle = "rgba(84, 90, 68, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 3, point.y + 2);
-    ctx.lineTo(point.x, point.y - 2);
-    ctx.lineTo(point.x + 3, point.y + 2);
-    ctx.stroke();
-  } else if (mark.kind === "ditch") {
-    ctx.strokeStyle = "rgba(54, 100, 112, 0.62)";
-    ctx.beginPath();
-    ctx.moveTo(point.x - 3, point.y);
-    ctx.quadraticCurveTo(point.x, point.y + 2, point.x + 3, point.y);
-    ctx.stroke();
-  } else if (mark.kind === "mineScar") {
-    ctx.fillStyle = "rgba(184, 133, 31, 0.58)";
-    ctx.fillRect(point.x - 1.5, point.y - 1.5, 3, 3);
-  } else {
-    ctx.fillStyle = "rgba(47, 61, 42, 0.48)";
-    ctx.fillRect(point.x - 1.2, point.y - 1.2, 2.4, 2.4);
-  }
-  ctx.restore();
+// The player the match is seen as: none for a spectator.
+function matchViewer() {
+  return !spectatingRoom && snapshot?.players[localPlayerId] ? localPlayerId : undefined;
 }
 
-function drawHp(x: number, y: number, hp: number, maxHp: number) {
-  const width = 34;
-  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
-  ctx.fillRect(x - width / 2, y, width, 4);
-  ctx.fillStyle = hp / maxHp > 0.45 ? "#5d8b4c" : "#a23d34";
-  ctx.fillRect(x - width / 2, y, width * Math.max(0, hp / maxHp), 4);
+// The unit or building under the pointer on the battlefield, not over the interface or the minimap.
+function hoveredTarget() {
+  if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
+  const target = snapshot ? pointerTarget(snapshot, screenToWorld(lastMouse)) : undefined;
+  return target?.kind === "unit" ? target.unit : target?.kind === "building" ? target.building : undefined;
 }
 
-function drawProgress(x: number, y: number, ratio: number) {
-  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
-  ctx.fillRect(x - 28, y, 56, 5);
-  ctx.fillStyle = "#315f87";
-  ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
+function minimapRelationsOn() {
+  const viewer = matchViewer();
+  return Boolean(snapshot && viewer && (minimapRelations ?? hasAlly(snapshot, viewer)));
 }
 
-function drawTrainingProgress(x: number, y: number, remaining: number, unitKind: TrainableUnitKind, queueLength: number) {
-  const total = UNIT_DEFS[unitKind].trainTime;
-  drawProgress(x, y, 1 - remaining / total);
-  ctx.fillStyle = "#315f87";
-  ctx.font = "9px ui-monospace, monospace";
-  const countText = trainingQueueCountText(queueLength);
-  ctx.fillText(`${labelKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
-}
-
-function hitFeedbackOffset(entity: Unit | Building, scale: number): Point {
-  if (!snapshot) return { x: 0, y: 0 };
-  const hit = snapshot.effects.find((effect) => effect.type === "hit" && distance(effect, entity) <= scale + 8);
-  if (!hit) return { x: 0, y: 0 };
-  const pulse = Math.sin(hit.remaining * 1.7) * Math.max(2, scale * 0.18);
-  return { x: pulse, y: -pulse * 0.35 };
+function toggleMinimapRelations() {
+  if (!matchViewer()) return;
+  minimapRelations = !minimapRelationsOn();
+  statusLabel.textContent = t(minimapRelations ? "status.minimapRelationsOn" : "status.minimapRelationsOff");
 }
 
 function updateCamera() {
@@ -3477,22 +2891,25 @@ function updateCamera() {
   if (keys.has("arrowright") || keys.has("d")) camera.x += speed;
   if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;
   if (keys.has("arrowdown") || keys.has("s")) camera.y += speed;
-  const edge = edgeScrollDelta(edgeScrollPoint(), { width: canvas.width, height: canvas.height });
+  const aim = edgeScrollAim();
+  const edge = edgeScrollDelta(aim?.point, { width: canvas.width, height: canvas.height }, aim?.overInterface);
   camera.x += edge.x;
   camera.y += edge.y;
   clampCamera();
 }
 
-function edgeScrollPoint() {
+// @@@edge-scroll-ui - The window's edge scrolls the camera whatever covers it (the top bar runs along the whole top);
+// over the interface only the last few pixels do (see edgeScrollDelta), so a panel near an edge can be read and used
+// without the camera drifting.
+function edgeScrollAim() {
   if (!lastMouse || draggingMinimapViewport || isInsideRect(lastMouse, minimapRect())) return undefined;
-  // @@@edge-scroll-ui - UI overlays near the viewport edge should not make the camera drift.
-  return document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+  return { point: lastMouse, overInterface: document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas };
 }
 
 function clampCamera() {
   if (!snapshot) return;
-  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width, camera.x));
-  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height, camera.y));
+  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width/worldZoom, camera.x));
+  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height/worldZoom, camera.y));
 }
 
 function resizeCanvas() {
@@ -3500,6 +2917,15 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
+  const mini = minimapRect();
+  minimapFrame.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
+  minimapFrame.style.width = `${mini.width}px`;
+  minimapFrame.style.height = `${mini.height}px`;
+  // The treasury rides on the minimap's frame, just above it (see .minimap-tab).
+  minimapTab.style.transform = `translate(${mini.x}px, ${mini.y}px) translateY(-100%)`;
+  minimapTab.style.width = `${mini.width}px`;
+  // The friend-or-foe button stands at the frame's top left, outside it (see .minimap-relations).
+  minimapRelationsButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
 }
 
 function mousePoint(event: MouseEvent): Point {
@@ -3547,26 +2973,41 @@ function virtualClickableTargetAt(point: Point) {
   return virtualClickableTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
 }
 
+// A button under the pointer-lock cursor, disabled or not: a right-click on it is the button's, never a battlefield order.
+function virtualContextTargetAt(point: Point) {
+  return virtualContextTargetFromElement(document.elementFromPoint(point.x, point.y)) as HTMLElement | undefined;
+}
+
+function openVirtualContextMenu(target: HTMLElement) {
+  const command = commandButtons.find((button) => button.element === target);
+  if (command) {
+    command.contextAction?.();
+    return;
+  }
+  target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+}
+
 function screenToWorld(point: Point): Point {
-  return { x: point.x + camera.x, y: point.y + camera.y };
+  return { x: point.x / worldZoom + camera.x, y: point.y / worldZoom + camera.y };
 }
 
 function worldToScreen(point: Point): Point {
-  return { x: point.x - camera.x, y: point.y - camera.y };
+  return { x: (point.x - camera.x)*worldZoom, y: (point.y - camera.y)*worldZoom };
 }
 
 function nearScreen(point: Point, pad: number) {
   return point.x >= -pad && point.y >= -pad && point.x <= canvas.width + pad && point.y <= canvas.height + pad;
 }
 
+// The minimap keeps clear of the window's edge by its frame's width (see .minimap-frame).
 function minimapRect(): ScreenRect {
-  const size = Math.min(220, Math.max(150, Math.floor(Math.min(canvas.width, canvas.height) * 0.24)));
-  return { x: canvas.width - size - 12, y: canvas.height - size - 12, width: size, height: size };
+  const size = Math.min(184, Math.max(132, Math.floor(Math.min(canvas.width, canvas.height) * 0.2)));
+  return { x: canvas.width - size - 16, y: canvas.height - size - 16, width: size, height: size };
 }
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
   if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
-  return minimapViewportRectFor(rect, camera, { width: canvas.width, height: canvas.height }, snapshot.map);
+  return minimapViewportRectFor(rect, camera, { width: canvas.width/worldZoom, height: canvas.height/worldZoom }, snapshot.map);
 }
 
 function centerCameraFromMinimap(point: Point) {
@@ -3584,33 +3025,25 @@ function centerCameraOnControlGroup(ids: string[]) {
 
 function centerCameraOnWorld(world: Point) {
   if (!snapshot) return;
-  camera.x = world.x - canvas.width / 2;
-  camera.y = world.y - canvas.height / 2;
+  camera.x = world.x - canvas.width / (2*worldZoom);
+  camera.y = world.y - canvas.height / (2*worldZoom);
   clampCamera();
 }
 
-function hitResource(world: Point) {
-  return snapshot?.resources.find((resource) => distance(resource, world) < 84);
+function hitShop(world: Point) {
+  return snapshot?.shops?.find((shop) => distance(shop, world) < shop.radius + 16);
 }
 
 function hitMercenaryCamp(world: Point) {
   return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
 }
 
-function hitGroundItem(world: Point) {
-  return snapshot?.items.find((item) => !item.carrierId && distance(item, world) < 34);
-}
-
-function hitAttackTarget(world: Point) {
-  return hitUnit(world, (unit) => unit.owner !== localPlayerId) ?? hitBuilding(world, (building) => building.owner !== localPlayerId);
-}
-
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
-  return snapshot?.units.find((unit) => predicate(unit) && distance(unit, world) < 34);
+  return unitAt(snapshot?.units ?? [], world, predicate);
 }
 
 function hitBuilding(world: Point, predicate: (building: Building) => boolean) {
-  return snapshot?.buildings.find((building) => predicate(building) && distance(building, world) < (building.kind === "townHall" ? 58 : 46));
+  return buildingAt(snapshot?.buildings ?? [], world, predicate);
 }
 
 function labelBuilding(building: Building) {
@@ -3633,15 +3066,21 @@ function distance(a: Point, b: Point) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function ownerInk(owner: Owner | undefined) {
-  if (owner === "player") return "#315f87";
-  if (owner === "enemy") return "#963c36";
-  if (owner === "enemy2") return "#7f3a70";
-  if (!owner || owner === "neutral") return "#704a33";
-  const palette = ["#315f87", "#963c36", "#7f3a70", "#5d8b4c", "#b97927", "#596a8c", "#8d5a46", "#2f766f"];
-  let hash = 0;
-  for (const char of owner) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length]!;
+function initialMenuScene() {
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(MENU_SCENE_STORAGE_KEY);
+  } catch {
+    // Storage blocked: a scene at random.
+  }
+  const index = MENU_SCENES.findIndex((scene) => scene.id === stored);
+  return index >= 0 ? index : Math.floor(Math.random() * MENU_SCENES.length);
+}
+
+function labelSceneSwitch() {
+  const name = menuBackdrop.scene.name[i18n.locale];
+  sceneSwitch.innerHTML = `<span class="scene-switch-mark" aria-hidden="true">⟳</span>${escapeHtml(name)}`;
+  sceneSwitch.setAttribute("aria-label", t("home.switchScene", { name }));
 }
 
 function loadLocalUserProfile(): LocalUserProfile {

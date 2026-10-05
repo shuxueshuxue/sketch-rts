@@ -135,22 +135,25 @@ async page => {
     await page.waitForSelector("[data-main-menu]:not(.hidden)", { timeout: 5000 });
     await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   };
-  const enterRoomSetup = async () => {
+  // A room on a pool map is chosen on the create screen; any other map (a test fixture) is set through the room API.
+  const enterRoomSetup = async (poolMapId) => {
     await page.click("[data-open-room-browser]");
     await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
     await page.click("[data-create-room]");
     await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+    if (poolMapId) await page.click("[data-map-entries] [data-map-id='" + poolMapId + "']");
     await page.click("[data-submit-create-game]");
     await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
     activeRoomId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
     must(activeRoomId, "room setup did not expose room id");
   };
-  const startLocalRoom = async (mapId, viaKeyboardIndex = null) => {
-    await enterRoomSetup();
-    if (viaKeyboardIndex !== null) {
-      await page.keyboard.press(String(viaKeyboardIndex + 1));
-    } else {
-      await page.click("[data-map-id='" + mapId + "']");
+  const startLocalRoom = async (mapId, pool = false) => {
+    await enterRoomSetup(pool ? mapId : undefined);
+    if (!pool) {
+      await page.evaluate(async ({ roomId, mapId }) => {
+        const res = await fetch("/api/rooms/" + roomId + "/map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId }) });
+        if (!res.ok) throw new Error(await res.text());
+      }, { roomId: requireActiveRoomId(), mapId });
     }
     await page.click("[data-start-room]");
     await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
@@ -247,10 +250,15 @@ async page => {
   await waitForMenu();
   const menuCatalog = await catalog();
   must((await page.locator("[data-map-id]").count()) === 0, "home menu should not expose the direct map picker");
-  await enterRoomSetup();
-  const setupMenuButtons = await page.locator("[data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
-  must(setupMenuButtons.length === menuCatalog.maps.length, "room setup does not expose every catalog map");
-  for (const map of menuCatalog.maps) must(setupMenuButtons.includes(map.id), "room setup missing map " + map.id);
+  await page.click("[data-open-room-browser]");
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.click("[data-create-room]");
+  await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
+  const createMapEntries = await page.locator("[data-map-entries] [data-map-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-map-id")));
+  const poolMapIds = menuCatalog.maps.filter((map) => map.tags.includes("pool")).map((map) => map.id);
+  must(poolMapIds.length >= 12 && createMapEntries.join(",") === poolMapIds.join(","), "the create screen should list exactly the pool's maps: " + JSON.stringify({ createMapEntries, poolMapIds }));
+  await page.reload();
+  await waitForMenu();
 
   const menuBackdropA = await canvasPatch(640, 400, 180, 120);
   await sleep(260);
@@ -258,19 +266,19 @@ async page => {
   must(menuBackdropA.hash !== menuBackdropB.hash, "main menu background is not visibly animated");
 
   const mapSelectionProof = [];
-  for (let index = 0; index < menuCatalog.maps.length; index += 1) {
-    const map = menuCatalog.maps[index];
+  for (const mapId of ["greystonePass", "twoShores"]) {
     await page.reload();
     activeRoomId = undefined;
     await waitForMenu();
-    await startLocalRoom(map.id, index === 1 ? index : null);
+    await startLocalRoom(mapId, true);
     const current = await snapshot();
     const readout = await text("[data-map-readout]");
     const terrain = await visibleTerrainProof();
-    must(current.map.id === map.id, "menu selection did not start map " + map.id + "; saw " + current.map.id);
-    must(readout?.includes(current.map.width + " x " + current.map.height), "map readout does not expose selected map size after selecting " + map.id);
-    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "selected map " + map.id + " terrain linework is missing or too dense: " + JSON.stringify(terrain));
-    mapSelectionProof.push({ id: map.id, via: index === 1 ? "keyboard-number" : "click", terrain });
+    const named = menuCatalog.maps.find((map) => map.id === mapId)?.name;
+    must(current.map.id === mapId && current.map.terrain, "room setup did not start the chosen pool map; saw " + current.map.id);
+    must(named && readout === named, "the match menu should name the map being played: " + JSON.stringify({ readout, named }));
+    must(terrain.readableReferenceSamples >= 2 && terrain.saturatedSamples <= 3, "pool map terrain is missing or too dense on " + mapId + ": " + JSON.stringify(terrain));
+    mapSelectionProof.push({ id: current.map.id, size: current.map.width, terrain });
   }
 
   await page.reload();
@@ -342,22 +350,22 @@ async page => {
   );
   const virtualPointerOverlayProof = await page.evaluate(() => {
     const pointer = document.querySelector("[data-virtual-pointer]");
-    const topStrip = document.querySelector(".top-strip");
+    const hudPanel = document.querySelector(".match-menu");
     const pointerStyle = pointer ? getComputedStyle(pointer) : null;
-    const topStripStyle = topStrip ? getComputedStyle(topStrip) : null;
+    const hudPanelStyle = hudPanel ? getComputedStyle(hudPanel) : null;
     return {
       exists: !!pointer,
       position: pointerStyle?.position,
       pointerEvents: pointerStyle?.pointerEvents,
       zIndex: pointerStyle?.zIndex,
-      topStripZIndex: topStripStyle?.zIndex,
+      hudPanelZIndex: hudPanelStyle?.zIndex,
     };
   });
   must(virtualPointerOverlayProof.exists, "virtual pointer overlay is missing");
   must(virtualPointerOverlayProof.position === "absolute", "virtual pointer is not an overlay: " + JSON.stringify(virtualPointerOverlayProof));
   must(virtualPointerOverlayProof.pointerEvents === "none", "virtual pointer can intercept player input: " + JSON.stringify(virtualPointerOverlayProof));
   must(
-    Number(virtualPointerOverlayProof.zIndex) > (virtualPointerOverlayProof.topStripZIndex === "auto" ? 0 : Number(virtualPointerOverlayProof.topStripZIndex || 0)),
+    Number(virtualPointerOverlayProof.zIndex) > (virtualPointerOverlayProof.hudPanelZIndex === "auto" ? 0 : Number(virtualPointerOverlayProof.hudPanelZIndex || 0)),
     "virtual pointer is not above HUD UI: " + JSON.stringify(virtualPointerOverlayProof),
   );
   const beforePointerLockClickState = await page.evaluate(() => ({

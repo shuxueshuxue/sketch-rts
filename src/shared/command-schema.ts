@@ -1,20 +1,25 @@
 import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
+import { isMeleeStance } from "./push";
 
 export function isGameCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
   const command = value as Record<string, unknown>;
   if (command.type === "move") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attackMove") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
-  if (command.type === "attack") return isStringArray(command.unitIds) && typeof command.targetId === "string";
+  if (command.type === "attack" || command.type === "follow") return isStringArray(command.unitIds) && typeof command.targetId === "string";
+  if (command.type === "stop" || command.type === "holdPosition") return isStringArray(command.unitIds);
   if (command.type === "mine") return isStringArray(command.unitIds) && typeof command.resourceId === "string";
   if (command.type === "repair") return isStringArray(command.unitIds) && typeof command.buildingId === "string";
+  if (command.type === "repairShip") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "build") return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "setRally") return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
+  if (command.type === "cancelTraining") return typeof command.buildingId === "string" && typeof command.jobId === "string";
   if (command.type === "train") return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   if (command.type === "research") return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
   if (command.type === "hire") return typeof command.campId === "string";
+  if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string";
   if (command.type === "cast") {
     return (
       typeof command.unitId === "string" &&
@@ -24,6 +29,10 @@ export function isGameCommand(value: unknown): value is GameCommand {
       (command.y === undefined || isNumber(command.y))
     );
   }
+  if (command.type === "setAutocast") return isStringArray(command.unitIds) && isAbilityKind(command.ability) && typeof command.enabled === "boolean";
+  if (command.type === "setStance") return isStringArray(command.unitIds) && isMeleeStance(command.stance);
+  if (command.type === "board") return isStringArray(command.unitIds) && typeof command.transportId === "string";
+  if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "pickupItem") return typeof command.unitId === "string" && typeof command.itemId === "string";
   if (command.type === "dropItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
   if (command.type === "useItem") {

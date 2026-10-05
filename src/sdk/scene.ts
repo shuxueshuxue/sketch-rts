@@ -1,9 +1,10 @@
+import { BUILDING_DEFS, TIER_SUPPLY_CAP } from "../shared/catalog";
 import { createDebugReplayTrace, type DebugReplayTrace } from "../shared/replay";
 import { createRoom } from "../shared/rooms";
 import { createSaveGameRecord, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
 import { createGame, type Game } from "../shared/sim";
 import { seconds } from "../shared/time";
-import type { BuildingKind, GameSetupOptions, ItemKind, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, TerrainLandmark, UnitKind, UnitOrder, WorldItem } from "../shared/types";
+import type { BuildingKind, GameSetupOptions, ItemKind, MapId, MercenaryCamp, Owner, PlayerId, RaceId, ScenarioOverride, ScenarioPlayerSeed, TerrainLandmark, UnitKind, UnitOrder, WorldItem } from "../shared/types";
 
 type ScenePlayerOptions = {
   team?: string;
@@ -14,6 +15,7 @@ type ScenePlayerOptions = {
 type SceneUnitOptions = {
   id?: string;
   hp?: number;
+  hpRatio?: number;
   xp?: number;
   order?: UnitOrder;
 };
@@ -56,6 +58,11 @@ export class SceneBuilder {
     return this;
   }
 
+  playerState(owner: PlayerId, seed: ScenarioPlayerSeed) {
+    this.scenario.players = { ...(this.scenario.players ?? {}), [owner]: seed };
+    return this;
+  }
+
   replaceDefaults() {
     this.scenario.replaceDefaultUnits = true;
     this.scenario.replaceDefaultBuildings = true;
@@ -75,6 +82,7 @@ export class SceneBuilder {
         x,
         y,
         ...(options.hp !== undefined ? { hp: options.hp } : {}),
+        ...(options.hpRatio !== undefined ? { hpRatio: options.hpRatio } : {}),
         ...(options.xp !== undefined ? { xp: options.xp } : {}),
         ...(options.order ? { order: options.order } : {}),
       },
@@ -105,6 +113,17 @@ export class SceneBuilder {
 
   townHall(owner: PlayerId, x: number, y: number, options: SceneBuildingOptions = {}) {
     return this.building(owner, "townHall", x, y, options);
+  }
+
+  // A row of finished farms eastward from (x, y).
+  farms(owner: PlayerId, count: number, x: number, y: number) {
+    for (let index = 0; index < count; index += 1) this.building(owner, "farm", x + index * 64, y);
+    return this;
+  }
+
+  // Enough farms that the supply cap passes every tier's bar on their own, whatever the bars are set to.
+  farmsPastTiers(owner: PlayerId, x: number, y: number) {
+    return this.farms(owner, Math.ceil(Math.max(...Object.values(TIER_SUPPLY_CAP)) / BUILDING_DEFS.farm.supplyProvided), x, y);
   }
 
   tower(owner: PlayerId, x: number, y: number, options: SceneBuildingOptions = {}) {

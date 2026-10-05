@@ -22,18 +22,18 @@ describe("terrain texture linework", () => {
     const sample = (mapId: MapId) => hashStrokes(generateTerrainLinework({ mapId, camera: { x: 640, y: 480 }, ...VIEWPORT }));
 
     expect(sample("verdantCrossroads")).toBe(sample("verdantCrossroads"));
-    expect(new Set([sample("verdantCrossroads"), sample("bareDuel"), sample("wildMarches")]).size).toBe(3);
+    expect(new Set([sample("verdantCrossroads"), sample("bareDuel"), sample("ladder")]).size).toBe(3);
   });
 
-  it("generates deterministic sparse linework for rich official maps without hand-authored recipes", () => {
-    const strokes = generateTerrainLinework({ mapId: "sundialReach", camera: { x: 640, y: 480 }, ...VIEWPORT });
+  it("draws sparse deterministic paper behind the menu while the ladder map is chosen", () => {
+    const strokes = generateTerrainLinework({ mapId: "ladder", camera: { x: 640, y: 480 }, ...VIEWPORT });
     const coverage = estimateTextureInkCoverage(strokes, VIEWPORT.width, VIEWPORT.height);
 
     expect(strokes.length).toBeGreaterThan(6);
     expect(strokes.length).toBeLessThan(55);
     expect(coverage).toBeGreaterThan(0.002);
     expect(coverage).toBeLessThan(0.03);
-    expect(hashStrokes(strokes)).toBe(hashStrokes(generateTerrainLinework({ mapId: "sundialReach", camera: { x: 640, y: 480 }, ...VIEWPORT })));
+    expect(hashStrokes(strokes)).toBe(hashStrokes(generateTerrainLinework({ mapId: "ladder", camera: { x: 640, y: 480 }, ...VIEWPORT })));
   });
 
   it("covers the selectable combat arena map", () => {
