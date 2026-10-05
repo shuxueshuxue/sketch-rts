@@ -154,7 +154,7 @@ describe("transports", () => {
     const { sim, ferry } = loadedFerry(14);
     const command = { type: "unloadPassenger" as const, transportId: "ferry", passengerId: "a" };
     expect(commandValidationError(snapshotGame(sim), "player", command)).toMatch(/No land nearby/);
-    applyCommandFrame(sim, { tick: sim.tick, sequence: 0, commands: [{ playerId: "player", command }] });
+    applyCommandFrame(sim, { roomId: "test", tick: sim.tick, sequence: 0, commands: [{ playerId: "player", command }] });
     expect(ferry.cargo).toHaveLength(2);
     expect(unit(sim, "a")).toBeUndefined();
     expect(ferry.order.type).toBe("idle");
@@ -173,7 +173,7 @@ describe("transports", () => {
 
   it("replays several portrait clicks in one network frame without replacing earlier unloads", () => {
     const { sim, ferry } = loadedFerry();
-    applyCommandFrame(sim, { tick: sim.tick, sequence: 0, commands: ["a", "a", "b"].map(passengerId => ({ playerId: "player", command: { type: "unloadPassenger", transportId: "ferry", passengerId } })) });
+    applyCommandFrame(sim, { roomId: "test", tick: sim.tick, sequence: 0, commands: ["a", "a", "b"].map(passengerId => ({ playerId: "player", command: { type: "unloadPassenger", transportId: "ferry", passengerId } })) });
     expect(ferry.cargo).toBeUndefined();
     expect(sim.units.filter(candidate => candidate.id === "a" || candidate.id === "b")).toHaveLength(2);
   });
