@@ -153,13 +153,13 @@ describe("V7 creeping", () => {
       { x: 680, y: 1_010 },
       { x: 720, y: 980 },
     ];
-    // Rated 2.33, taken for its own sake with a margin of 3.5: six footmen (6.0) take it, six ravagers (7.2 by price, 5.7 by
-    // health and damage) do not.
+    // This small ranged camp is safe for the tougher footmen, despite the ravagers costing more.
     const camp: Creep[] = [
-      { kind: "stonebackBrute", x: 1_500, y: 1_000 },
+      { kind: "wildling", x: 1_500, y: 1_000 },
       { kind: "thornSlinger", x: 1_540, y: 1_040 },
       { kind: "thornSlinger", x: 1_560, y: 980 },
       { kind: "wildling", x: 1_520, y: 960 },
+      { kind: "thornSlinger", x: 1_580, y: 1000 },
     ];
     const footmen = scene("v7-creep-rating-footmen", six, camp);
     const footmenCamps = neutralCamps(footmen.snapshot());
