@@ -1,4 +1,5 @@
-import { MAX_UPGRADE_LEVEL, XP_STAR_THRESHOLDS } from "../../shared/catalog";
+import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
+import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
 import { resolveAiCommandIntent } from "./commands";
 import { carriedItemsFor, combatUnits, enemyBuildingsNear, groundItems, hostileUnitsNear, items, units } from "./snapshot";
@@ -96,9 +97,9 @@ function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOp
 
 function experienceBookCarrierScore(unit: Unit, durable: number) {
   if (unit.level >= MAX_UPGRADE_LEVEL) return -10_000 + unit.attackDamage * 0.1;
-  const nextThreshold = XP_STAR_THRESHOLDS[unit.level] ?? Number.POSITIVE_INFINITY;
+  const nextThreshold = xpStarThresholds(UNIT_DEFS[unit.kind])[unit.level] ?? Number.POSITIVE_INFINITY;
   const xpNeeded = Math.max(0, nextThreshold - unit.xp);
-  const bookXp = 160;
+  const bookXp = EXPERIENCE_BOOK_XP;
   const willLevel = xpNeeded <= bookXp ? 1 : 0;
   return willLevel * 90 + Math.max(0, bookXp - xpNeeded) * 0.4 + unit.attackDamage * 1.2 + durable * 2;
 }
