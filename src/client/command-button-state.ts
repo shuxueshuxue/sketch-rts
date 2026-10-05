@@ -3,6 +3,7 @@ import { autocastEnabled, canAutocast } from "../shared/autocast";
 import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
 import { canTakeStance } from "../shared/push";
 import type { AbilityKind, MeleeStance, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
+import { readyAbilityCasters, type CastCommand } from "./ability-targeting";
 
 export type CommandButtonDisabledReason = "cooldown" | "stock" | "gold" | "supply" | "position" | "missing" | "tier";
 
@@ -29,15 +30,14 @@ export function booleanCommandState(enabled: boolean): CommandButtonState {
   return enabled ? ENABLED_COMMAND_STATE : HIDDEN_COMMAND_STATE;
 }
 
-// `units` are the focused ones (the card shows their buttons); `selected` all the selected ones, whose switches the
-// button's autocast state reports and a right-click flips (see autocastToggle).
-export function abilityCommandState(units: readonly Unit[], ability: AbilityKind, selected: readonly Unit[] = units): CommandButtonState {
-  const casters = units.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability));
-  if (casters.length === 0) return HIDDEN_COMMAND_STATE;
+// Focus controls which buttons appear; availability, cooldown and autocast read every applicable selected unit.
+export function abilityCommandState(units: readonly Unit[], ability: AbilityKind, selected: readonly Unit[] = units, pending: readonly CastCommand[] = []): CommandButtonState {
+  if (!units.some(unit => UNIT_DEFS[unit.kind].abilities.includes(ability))) return HIDDEN_COMMAND_STATE;
+  const casters = selected.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability));
   const autocast = autocastSwitch(selected, ability);
   const withAutocast = (state: CommandButtonState): CommandButtonState => (autocast ? { ...state, autocast } : state);
-  const ready = casters.find((unit) => abilityCooldown(unit, ability) <= 0);
-  if (ready) return withAutocast(ENABLED_COMMAND_STATE);
+  if (readyAbilityCasters(casters, ability, pending).length) return withAutocast(ENABLED_COMMAND_STATE);
+  if (casters.some(unit => abilityCooldown(unit, ability) <= 0)) return withAutocast({ visible: true, enabled: false, reason: "missing" });
   const cooldownTicks = Math.min(...casters.map((unit) => abilityCooldown(unit, ability)));
   return withAutocast({ visible: true, enabled: false, cooldownTicks, reason: "cooldown" });
 }

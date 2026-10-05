@@ -3,6 +3,7 @@ import type { LockstepClient } from "./net/lockstep-client";
 
 export type GameAdapter = {
   sendCommand(command: GameCommand): void;
+  pendingCasts?(): readonly Extract<GameCommand, { type: "cast" }>[];
   currentSnapshot(): GameSnapshot | undefined;
   updateToRenderTime(): boolean;
   close(): void;
@@ -37,6 +38,10 @@ export class LockstepRoomGameAdapter implements GameAdapter {
 
   currentSnapshot(): GameSnapshot {
     return this.client.currentSnapshot();
+  }
+
+  pendingCasts() {
+    return this.client.pendingCasts();
   }
 
   updateToRenderTime(): boolean {
