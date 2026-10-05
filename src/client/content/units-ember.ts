@@ -1,3 +1,4 @@
+import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
 import { ASH, EMBER, EMBER_GLOW, GOLD, INK, LEATHER_DARK, LINEN, SKIN, WOOD, arm, belt, blade, bow, darker, ellipse, halo, head, hemTrim, hood, hornedCap, legs, lighter, line, polygon, quiver, staff, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
@@ -20,12 +21,14 @@ export const EMBER_UNITS = {
       belt(b, LEATHER_DARK);
       arm(b, [-6, -7], [-13, 2], SKIN, SKIN, 4.4);
       line(b, [[-12, -1], [-13, 1]], EMBER, 2.4);
-      b.beginPath(); b.moveTo(13, 0); b.lineTo(15, -17); b.quadraticCurveTo(32, -28, 29, -9); b.lineTo(17, -4); b.closePath();
-      b.fillStyle = "#cfd6c8"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1.1; b.stroke();
-      line(b, [[16, -12], [25.5, -9]], EMBER, 1.6);
-      line(b, [[12, 3], [15, -12]], WOOD, 2.4);
-      arm(b, [6, -7], [13, 1], SKIN, SKIN, 4.4);
-      line(b, [[12, -2], [13.5, 0]], EMBER, 2.4);
+      articulated(b, "weapon", () => {
+        b.beginPath(); b.moveTo(13, 0); b.lineTo(15, -17); b.quadraticCurveTo(32, -28, 29, -9); b.lineTo(17, -4); b.closePath();
+        b.fillStyle = "#cfd6c8"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1.1; b.stroke();
+        line(b, [[16, -12], [25.5, -9]], EMBER, 1.6);
+        line(b, [[12, 3], [15, -12]], WOOD, 2.4);
+        arm(b, [6, -7], [13, 1], SKIN, SKIN, 4.4);
+        line(b, [[12, -2], [13.5, 0]], EMBER, 2.4);
+      });
       head(b);
       hornedCap(b);
     },
@@ -43,10 +46,12 @@ export const EMBER_UNITS = {
       b.fillStyle = lighter(team, 0.1); b.fill(); b.strokeStyle = INK; b.lineWidth = 1; b.stroke();
       torso(b, team, 8, 0, 2);
       belt(b, ASH);
-      blade(b, [-10, 2], [-17, -3], 2.2);
-      arm(b, [-5, -6], [-10, 2], team);
-      blade(b, [14, 1], [21, -6], 2.2);
-      arm(b, [7, -6], [14, 1], team);
+      articulated(b, "weapon", () => {
+        blade(b, [-10, 2], [-17, -3], 2.2);
+        arm(b, [-5, -6], [-10, 2], team);
+        blade(b, [14, 1], [21, -6], 2.2);
+        arm(b, [7, -6], [14, 1], team);
+      });
       head(b, SKIN, 2);
       hood(b, darker(team, 0.25));
       line(b, [[-3, -12], [6, -11]], ASH, 2.4);
@@ -65,13 +70,15 @@ export const EMBER_UNITS = {
       torso(b, team);
       line(b, [[-7, -8], [7, 5]], ASH, 2.4);
       belt(b, ASH);
-      arm(b, [6, -6], [12, -2], team);
       head(b);
       hood(b, ASH);
       line(b, [[-2, -20], [4.5, -18.5]], EMBER, 1.4);
-      bow(b, 14, -3, 17, "#6b4b36", EMBER_GLOW);
-      polygon(b, [[20, -17], [23, -23], [25, -14]], EMBER, INK, 0.8);
-      ellipse(b, 29, -4, 3.5, 3.5, "#f4c86e55");
+      articulated(b, "bow", () => {
+        arm(b, [6, -6], [12, -2], team);
+        bow(b, 14, -3, 17, "#6b4b36", EMBER_GLOW);
+        polygon(b, [[20, -17], [23, -23], [25, -14]], EMBER, INK, 0.8);
+        ellipse(b, 29, -4, 3.5, 3.5, "#f4c86e55");
+      });
     },
   },
   emberAcolyte: {
@@ -85,12 +92,14 @@ export const EMBER_UNITS = {
       line(b, [[-8, -8], [9, 12]], team, 3.4);
       hemTrim(b, 15, 2);
       belt(b, "#b89c63", GOLD);
-      staff(b, 16, -26);
-      line(b, [[16, -26], [21, -28], [22, -24]], "#6b5a45", 1.6);
-      ellipse(b, 22, -17, 6, 6, "#f4c86e40");
-      polygon(b, [[19.5, -22], [24.5, -22], [25, -14], [19, -14]], EMBER_GLOW, GOLD, 1.2);
-      line(b, [[22, -21], [22, -15]], EMBER, 1.4);
-      arm(b, [6, -6], [15, 0], LINEN);
+      articulated(b, "staff", () => {
+        staff(b, 16, -26);
+        line(b, [[16, -26], [21, -28], [22, -24]], "#6b5a45", 1.6);
+        ellipse(b, 22, -17, 6, 6, "#f4c86e40");
+        polygon(b, [[19.5, -22], [24.5, -22], [25, -14], [19, -14]], EMBER_GLOW, GOLD, 1.2);
+        line(b, [[22, -21], [22, -15]], EMBER, 1.4);
+        arm(b, [6, -6], [15, 0], LINEN);
+      });
       head(b);
       line(b, [[-7, -19.5], [5, -19.5]], GOLD, 1.8);
       polygon(b, [[-1, -21], [0.5, -24.5], [2, -21]], EMBER, "transparent", 0);
@@ -107,10 +116,12 @@ export const EMBER_UNITS = {
       line(b, [[-10.5, 11], [10.5, 11]], team, 2.4);
       hemTrim(b, 15, 2);
       belt(b, "#3a3632", GOLD);
-      line(b, [[16, 16], [15, -8], [18, -16], [14, -24], [17, -29]], "#4f4238", 2.4);
-      for (const [x, y, r] of [[19, -33, 3], [15, -37, 2.4], [20, -40, 1.8]]) ellipse(b, x!, y!, r!, r!, "#8f8a8266");
-      ellipse(b, 17, -29, 2, 2, EMBER);
-      arm(b, [6, -6], [15, -2], ASH);
+      articulated(b, "staff", () => {
+        line(b, [[16, 16], [15, -8], [18, -16], [14, -24], [17, -29]], "#4f4238", 2.4);
+        for (const [x, y, r] of [[19, -33, 3], [15, -37, 2.4], [20, -40, 1.8]]) ellipse(b, x!, y!, r!, r!, "#8f8a8266");
+        ellipse(b, 17, -29, 2, 2, EMBER);
+        arm(b, [6, -6], [15, -2], ASH);
+      });
       head(b);
       hood(b, darker(ASH, 0.2));
       polygon(b, [[-3, -20], [7, -19], [6, -10], [2, -8], [-2, -12]], "#e8dfc6", INK, 1);
@@ -130,11 +141,13 @@ export const EMBER_UNITS = {
       polygon(b, [[-9, -9], [8, -9], [10, -1], [-10, -1]], darker(team, 0.25));
       hemTrim(b, 15, 2);
       belt(b, darker(team, 0.4), GOLD);
-      staff(b, 16, -23);
-      polygon(b, [[10, -24], [22, -24], [19, -19], [13, -19]], GOLD, INK, 1);
-      polygon(b, [[12, -24], [14, -31], [16, -28], [18, -35], [21, -24]], EMBER, "#9c4a36", 1);
-      polygon(b, [[14.5, -24], [16.5, -29], [18.5, -24]], EMBER_GLOW, "transparent", 0);
-      arm(b, [6, -6], [15, -1], team);
+      articulated(b, "staff", () => {
+        staff(b, 16, -23);
+        polygon(b, [[10, -24], [22, -24], [19, -19], [13, -19]], GOLD, INK, 1);
+        polygon(b, [[12, -24], [14, -31], [16, -28], [18, -35], [21, -24]], EMBER, "#9c4a36", 1);
+        polygon(b, [[14.5, -24], [16.5, -29], [18.5, -24]], EMBER_GLOW, "transparent", 0);
+        arm(b, [6, -6], [15, -1], team);
+      });
       head(b);
       line(b, [[-7, -19], [5, -19]], GOLD, 1.6);
     },
@@ -155,11 +168,13 @@ export const EMBER_UNITS = {
       line(b, [[-8, -6], [8, 6]], LEATHER_DARK, 2.8);
       belt(b, LEATHER_DARK, EMBER_GLOW);
       for (const x of [-5, -1, 3]) ellipse(b, x, -7, 1.4, 1.8, "#e4dcc0", INK);
-      line(b, [[13, 10], [17, -26]], WOOD, 2.6);
-      b.beginPath(); b.moveTo(16, -24); b.quadraticCurveTo(30, -26, 28, -12); b.lineTo(16, -15); b.closePath();
-      b.fillStyle = "#cfd6c8"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1.1; b.stroke();
-      line(b, [[18, -22], [27, -14]], EMBER, 1.6);
-      arm(b, [6, -7], [14, -4], team, SKIN, 4.6);
+      articulated(b, "weapon", () => {
+        line(b, [[13, 10], [17, -26]], WOOD, 2.6);
+        b.beginPath(); b.moveTo(16, -24); b.quadraticCurveTo(30, -26, 28, -12); b.lineTo(16, -15); b.closePath();
+        b.fillStyle = "#cfd6c8"; b.fill(); b.strokeStyle = INK; b.lineWidth = 1.1; b.stroke();
+        line(b, [[18, -22], [27, -14]], EMBER, 1.6);
+        arm(b, [6, -7], [14, -4], team, SKIN, 4.6);
+      });
       arm(b, [-6, -7], [-11, 2], team, SKIN, 4.6);
       head(b);
       hornedCap(b);
@@ -179,8 +194,10 @@ export const EMBER_UNITS = {
       line(b, [[-5, -7], [-1, -1], [-4, 6]], EMBER_GLOW, 1.6);
       line(b, [[4, -6], [1, 1], [5, 7]], EMBER, 1.4);
       belt(b, team);
-      blade(b, [13, 1], [22, -10], 2.4, "#e8b27a", EMBER_GLOW);
-      arm(b, [6, -6], [13, 1], "#4a4440", "#3a3431");
+      articulated(b, "weapon", () => {
+        blade(b, [13, 1], [22, -10], 2.4, "#e8b27a", EMBER_GLOW);
+        arm(b, [6, -6], [13, 1], "#4a4440", "#3a3431");
+      });
       arm(b, [-6, -6], [-11, 1], "#4a4440", "#3a3431");
       head(b, "#3a3431");
       b.beginPath(); b.moveTo(-7, -18); b.quadraticCurveTo(-6, -30, -1, -34); b.quadraticCurveTo(1, -28, 4, -31); b.quadraticCurveTo(7, -24, 6, -18); b.closePath();
