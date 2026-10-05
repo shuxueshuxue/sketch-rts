@@ -281,16 +281,16 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
   const feet=m.faces.flatMap(f=>f.p.filter(p=>p[2]<=3).map(([x,y])=>project([x,y,0])));
   const hull=groundHull(feet);
   if(hull.length>2){
-    polygon(b,hull.map(([x,y],i)=>[x*1.1+(noise(i)-.5)*2,19+(y-19)*1.13]),'#79745738','transparent',0);
+    polygon(b,hull.map(([x,y],i)=>[x*1.14+(noise(i)-.5)*2,19+(y-19)*1.2]),'#79745738','transparent',0);
     polygon(b,hull.map(([x,y])=>[x*1.035,19+(y-19)*1.045]),'#30382e60','transparent',0);
   }
   // Union silhouettes into a single fill: overlapping faces do not darken shadows.
   b.beginPath();
   for(const f of m.faces){
-    const p=f.p.map(([x,y,z])=>project([x+z*.48,y+z*.32,0]));
+    const p=f.p.map(([x,y,z])=>project([x+z*.6,y+z*.42,0]));
     p.forEach(([x,y],i)=>i?b.lineTo(x,y):b.moveTo(x,y));b.closePath();
   }
-  b.fillStyle='#292b2d32';b.fill();
+  b.fillStyle='#292b2d3b';b.fill();
   m.faces.sort((a,z)=>{
     const gap=depth(a)-depth(z);
     return Math.abs(gap)>.001?gap:height(a)-height(z);

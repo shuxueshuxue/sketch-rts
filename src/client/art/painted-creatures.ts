@@ -12,12 +12,18 @@ const creatures: Partial<Record<UnitKind, { shape: Shape; color: string; size?: 
   dragonWhelp:{shape:'dragon',color:'#a17b5e',size:.8}, redDragon:{shape:'dragon',color:'#8d5445',size:1.17,crown:true},
   golem:{shape:'stone',color:'#747b71',crown:true}, rubbleGolem:{shape:'stone',color:'#a0957f',size:.8}, rockGolem:{shape:'stone',color:'#7d8078'}, graniteGolem:{shape:'stone',color:'#646b70',size:1.17,crown:true},
   stonebackBrute:{shape:'wood',color:'#707360',size:1.12},
-  ogreWarrior:{shape:'ogre',color:'#998875'}, ogreMage:{shape:'ogre',color:'#819195'}, ogreLord:{shape:'ogre',color:'#8d8074',size:1.14,crown:true},
+  ogreWarrior:{shape:'ogre',color:'#998875',size:.88}, ogreMage:{shape:'ogre',color:'#819195',size:.88}, ogreLord:{shape:'ogre',color:'#8d8074',size:1.02,crown:true},
   murlocPeon:{shape:'fish',color:'#848c70',size:.86}, murlocHunter:{shape:'fish',color:'#72817d'}, tidePriest:{shape:'fish',color:'#697d8a',crown:true},
   deepSnapper:{shape:'turtle',color:'#697564'}, spirit:{shape:'spirit',color:'#c5c9b9'},
   transport:{shape:'ship',color:'#877258'}, warship:{shape:'ship',color:'#706251',crown:true},
 };
 export const hasPaintedCreature = (kind: UnitKind) => !!creatures[kind];
+export function creatureShadow(kind: UnitKind) {
+  const def = creatures[kind];
+  if (!def || def.shape === 'ship' || def.shape === 'spirit') return undefined;
+  const rx = def.shape === 'ogre' || def.shape === 'stone' || def.shape === 'wood' ? 22 : def.shape === 'fish' ? 18 : def.shape === 'spider' ? 29 : 31;
+  return { rx: rx * (def.size ?? 1), ry: (def.shape === 'ogre' ? 5.5 : 5) * (def.size ?? 1), y: def.shape === 'ogre' ? 18 : (def.shape === 'stone' || def.shape === 'wood' ? 23 : 18) * (def.size ?? 1) };
+}
 const ink='#30312e';
 function plane(b: Brush, points: number[][], color: string) {
   polygon(b, points, color, ink, .65);
@@ -45,7 +51,10 @@ export function paintCreature(b: Brush, kind: UnitKind, team: string, pose: Unit
   const {shape,color,crown}=def;
   const walk=pose.mode==='walk'?Math.sin(pose.frame/8*Math.PI*2):0;
   const strike=pose.mode==='attack'||pose.mode==='cast'?Math.sin(pose.frame/5*Math.PI):0;
-  b.save(); b.scale(def.size??1,def.size??1);
+  const size = def.size ?? 1;
+  b.save();
+  if (shape === 'ogre') b.translate(0, 18 - 23 * size);
+  b.scale(size,size);
   if(shape==='ship') {
     ellipse(b,0,20,43,7,'#b1b7a92b');
     line(b,[[-45,20],[-22,25],[24,25],[45,17]],'#d3d3bd88',1);
