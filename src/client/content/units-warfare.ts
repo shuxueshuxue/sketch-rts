@@ -15,7 +15,7 @@ const MARKS: Record<string, GlyphMark[]> = { cutter: ["mast", "flag", "arrow"], 
 function card(en: string, zh: string, description: string, model: string, hotkey: string, naval = false): TrainedUnitCard {
     return { name: { en, zh }, description: { en: EN[model]!, zh: description }, command: { icon: naval ? "⚓" : "⚙", hotkey },
         glyph: { silhouette: naval ? "warship-hull" : "golem-block", marks: MARKS[model]! },
-        art: { tier: model === "cutter" ? "basic" : "elite", bearing: naval ? "vessel" : "construct", faction: "grove" }, paint: warfarePainter(model) };
+        art: { tier: model === "cutter" ? "basic" : "elite", bearing: naval ? "vessel" : "construct", faction: ["ram", "mortar", "organ"].includes(model) ? "ember" : "grove" }, paint: warfarePainter(model) };
 }
 export const WARFARE_UNITS = {
     cutter: card("Cutter", "巡海快艇", "轻型快速舰艇，适合侦察、追击和骚扰；不宜与重舰正面对射。", "cutter", "q", true),
