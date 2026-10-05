@@ -18,8 +18,8 @@ describe('persistent remains',()=>{
   for(let i=0;i<800;i++)stepGame(game);
   expect(game.corpses).toHaveLength(1);
   expect(game.entityById?.has(id)).toBe(false);
-  const legacy={...saved};delete legacy.corpses;
-  restoreSnapshotIntoGame(game,legacy,nextId);expect(game.corpses).toBeUndefined();
+  const older={...saved};delete older.corpses;
+  restoreSnapshotIntoGame(game,older,nextId);expect(game.corpses).toBeUndefined();
  });
  it('does not mistake expiry, a scripted exit, or passengers aboard a wreck for field corpses',()=>{
   const game=createGame('bareDuel');game.scriptedVictory=true;

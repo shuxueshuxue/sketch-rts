@@ -1,4 +1,4 @@
-import type { BUILDING_RULES, UNIT_RULES, VariantRules } from "./catalog";
+import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
 
@@ -21,7 +21,7 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type AbilityKind = "ramBreach" | "pinningBolt" | "siegeBarrage" | "grapeshot" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
 export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
@@ -40,6 +40,7 @@ export type UnitStatusEffect = {
 export type WorldEffect = {
   id: string;
   type:
+    | "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround"
     | "heal"
     | "summon"
     | "curse"
@@ -99,10 +100,14 @@ export type Projectile = {
   damage: number;
   remaining: number;
   duration: number;
+  weapon?: WeaponDef;
+  sourceKind?: UnitKind;
+  rootTicks?: number;
+  burnTicks?: number;
 };
 
 export type UnitOrder =
-  | { type: "build"; buildingKind: BuildingKind; x: number; y: number }
+  | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
   | { type: "follow"; targetId: string }
@@ -307,7 +312,8 @@ export type MapIdea =
   | "deepJungle"
   | "northIsles"
   | "riverValley"
-  | "twoShores";
+  | "twoShores"
+  | "islandStarts";
 export type GeneratedLayoutOptions = {
   seed: string;
   // Drawn from the seed (or the idea) when absent; "sides" needs exactly two teams.

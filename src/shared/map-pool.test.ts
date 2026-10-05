@@ -11,6 +11,7 @@ import { createGame } from "./sim";
 // redrawn on purpose: give it a new name or take the new hash knowingly. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
+  brokenSea: "39c43479ca06a312",
   templeSpring: "89d478ee42c291c3",
   turtleLake: "185a1f243b2bb342",
   elderwood: "ea14bcd697fe7b7c",

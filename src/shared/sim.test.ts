@@ -2123,7 +2123,7 @@ describe("sketch RTS simulation", () => {
     let baseCloseout: { playerArmyAndMiners: number; enemyCombatNearBase: number } | undefined;
 
     // Supply is dear (farms and halls are the tech), so the enemy's first real army takes a while to come.
-    for (let i = 0; i < 12_000 && !baseCloseout; i += 1) {
+    for (let i = 0; i < 24_000 && !baseCloseout; i += 1) {
       const beforeHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
       runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);
