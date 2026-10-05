@@ -80,7 +80,7 @@ describe("AI V4-TR versus V3 benchmark CLI", () => {
 });
 
 function runV4BenchmarkCli(args: string[], env: NodeJS.ProcessEnv = {}) {
-  return execFileSync("npx", ["tsx", "scripts/ai-v4-tr-vs-v3-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-v4-tr-vs-v3-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, ...env, FORCE_COLOR: "0" },
