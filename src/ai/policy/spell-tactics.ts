@@ -1,4 +1,5 @@
 import { abilityCooldown } from "../../shared/ability-cooldowns";
+import { canReach } from "../../shared/naval";
 import { isEnemyOwner } from "./ownership";
 import { canCast } from "../../shared/ability-cooldowns";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
@@ -36,7 +37,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
     if (healAbility) {
       const def = ABILITY_DEFS[healAbility];
-      const target = (isV8Policy(options) && def.behavior === "heal" ? v8HealTarget(snapshot, owner, caster, def) : undefined) ?? healTarget(snapshot, owner, caster, def.plannerRange);
+      const target = (isV8Policy(options) && def.behavior === "heal" ? v8HealTarget(snapshot, owner, caster, def, options) : undefined) ?? healTarget(snapshot, owner, caster, def.plannerRange, options);
       if (target) {
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
@@ -74,8 +75,12 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   return commands;
 }
 
-function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number) {
-  return units(snapshot, owner)
+function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
+  return isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner);
+}
+
+function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions) {
+  return healingAllies(snapshot, owner, options)
     .filter((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= healRange)
     .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || b.maxHp - b.hp - (a.maxHp - a.hp) || distance(a, caster) - distance(b, caster))[0];
 }
@@ -86,10 +91,10 @@ function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healR
 // most health, so a three-star veteran and a rookie that both stand at half health were one to them. Workers only get the
 // shared rule's heal, when no soldier wants one. Over nudged replays V8 won 6301 of 8000 tune games against 6270, 6267 of
 // 8000 on 40 unseen seeds against 6240, and 1582 of 2000 on the final seeds against 1559.
-function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: { plannerRange: number; healAmount: number }) {
+function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: { plannerRange: number; healAmount: number }, options: PresetAiPolicyOptions) {
   let best: Unit | undefined;
   let bestPriority = 0;
-  for (const unit of units(snapshot, owner)) {
+  for (const unit of healingAllies(snapshot, owner, options)) {
     if (unit.kind === "worker" || unit.maxHp - unit.hp < def.healAmount / 2 || distance(unit, caster) > def.plannerRange) continue;
     const priority = unitStrength({ ...unit, hp: unit.maxHp }) * (1 - unit.hp / unit.maxHp);
     if (priority > bestPriority) {
@@ -201,7 +206,8 @@ function focusFireAttackers(snapshot: GameSnapshot, owner: PlayerId, fighters: U
 // twelve fell having killed 829 gold's worth, where twelve left to their own blows lost 563 and killed every enemy (the V9
 // exam's S1, against V8's ember).
 function focusFireCanJoinTarget(snapshot: GameSnapshot, owner: PlayerId, fighter: Unit, target: Unit, options: PresetAiPolicyOptions) {
-  if (isV9Policy(options) && fighter.attackRange <= 100 && distance(fighter, target) > fighter.attackRange + fighter.radius + target.radius) return false;
+  if (canReach(snapshot.map, fighter, target) && v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options)) return true;
+  if (isV5HybridPolicy(options) && (!canReach(snapshot.map, fighter, target) || (fighter.attackRange <= 100 && distance(fighter, target) > fighter.attackRange + fighter.radius + target.radius))) return false;
   if (distance(fighter, target) <= focusFireJoinRange(fighter)) return true;
   return v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options);
 }
@@ -229,7 +235,7 @@ function focusFireJoinIndex(snapshot: GameSnapshot, owner: PlayerId, fighters: U
     for (let x = cx - 1; x <= cx + 1; x += 1) {
       for (let y = cy - 1; y <= cy + 1; y += 1) {
         const bucket = cells.get(focusFireCellKey(x, y));
-        if (bucket?.some((fighter) => distance(fighter, target) <= focusFireJoinRange(fighter) && (!test || test(fighter)))) return true;
+        if (bucket?.some((fighter) => focusFireCanJoinTarget(snapshot, owner, fighter, target, options) && (!test || test(fighter)))) return true;
       }
     }
     return counterFocusers.some((fighter) => v5ArrivedMercenaryClaimCanCounterFocus(snapshot, owner, fighter, target, options) && (!test || test(fighter)));

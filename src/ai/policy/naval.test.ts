@@ -97,6 +97,74 @@ function lakeGame(pond = false, tower = false) {
 }
 
 describe("the AI on the water", () => {
+  it("brings passengers home when an assault target disappears instead of leaving a loaded boat idle", () => {
+    const game = islandGame();
+    game.scriptedVictory = true;
+    const boat = createUnit("ferry", "player", "transport", at(12, 9).x, at(12, 9).y);
+    boat.cargo = [createUnit("passenger", "player", "footman", 0, 0)];
+    game.units.push(boat);
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    options.memory.naval = { ferries: { ferry: { purpose: "assault", targetId: "destroyed-hall", from: at(9, 9), to: at(19, 9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9) });
+    expect(options.memory.naval.ferries!.ferry!.phase).toBe("return");
+    for (const command of planNavalTactics(snapshotGame(game), "player", options)) issuePlayerCommand(game, "player", command);
+    for (let tick = 0; tick < 500; tick++) stepGame(game);
+    const passenger = game.units.find(unit => unit.id === "passenger");
+    expect(passenger).toBeDefined();
+    expect(sameGround(game.map, passenger!, game.buildings[0]!)).toBe(true);
+    planNavalTactics(snapshotGame(game), "player", options);
+    expect(options.memory.naval.ferries!.ferry).toBeUndefined();
+  });
+
+  it("turns back from an assault whose landing has become much stronger", () => {
+    const game = islandGame();
+    game.buildings.push({ ...game.buildings[0]!, id: "enemy-hall", owner: "enemy", ...at(22, 9) });
+    for (let i = 0; i < 4; i++) game.units.push(createUnit(`defender-${i}`, "enemy", "knight", at(22, 9).x, at(22, 9).y + i * 25));
+    const boat = createUnit("ferry", "player", "transport", at(12, 9).x, at(12, 9).y);
+    boat.cargo = [createUnit("passenger", "player", "footman", 0, 0)];
+    game.units.push(boat);
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    options.memory.naval = { ferries: { ferry: { purpose: "assault", targetId: "enemy-hall", from: at(9, 9), to: at(19, 9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9) });
+    expect(options.memory.naval.ferries!.ferry!.phase).toBe("return");
+  });
+
+  it("buys more transport capacity when a full ferry cannot carry the army needed for the landing", () => {
+    const game = islandGame();
+    game.players.player!.supplyCap = 100;
+    const hall = game.buildings[0]!;
+    game.buildings.push({ ...hall, id: "enemy-hall", owner: "enemy", ...at(22, 9) });
+    game.buildings.push({ ...hall, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
+    for (let i = 0; i < 12; i++) game.units.push(createUnit(`army-${i}`, "player", "knight", at(3, 8).x, at(3, 8).y + i * 10));
+    for (let i = 0; i < 4; i++) game.units.push(createUnit(`defender-${i}`, "enemy", "footman", at(22, 9).x, at(22, 9).y + i * 10));
+    const boat = createUnit("ferry", "player", "transport", at(9, 9).x, at(9, 9).y);
+    boat.cargo = [createUnit("passenger", "player", "knight", 0, 0)];
+    game.units.push(boat);
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    options.memory.naval = { ferries: { ferry: { purpose: "assault", targetId: "enemy-hall", from: at(9, 9), to: at(19, 9), phase: "loading", crewIds: [], sinceTick: 0 } } };
+    const want = navalWant(snapshotGame(game), "player", options);
+    expect(want?.id).toBe("naval:carrier");
+    expect(want?.issue(new Set())).toMatchObject({ type: "train", unitKind: "carrier", buildingId: "yard" });
+  });
+
+  it("evacuates an isolated soldier and engineers from an island they cannot hold", () => {
+    const game = islandGame();
+    game.units.push(createUnit("ferry", "player", "transport", at(18, 9).x, at(18, 9).y));
+    game.units.push(createUnit("stranded", "player", "footman", at(21, 9).x, at(21, 9).y));
+    game.units.push(createUnit("engineer", "player", "worker", at(21, 10).x, at(21, 10).y));
+    for (let i = 0; i < 4; i++) game.units.push(createUnit(`invader-${i}`, "enemy", "knight", at(24, 9).x, at(24, 9).y + i * 15));
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    const commands = planNavalTactics(snapshotGame(game), "player", options);
+    expect(options.memory.naval?.ferries?.ferry?.purpose).toBe("evacuate");
+    // The boat may first approach the departure shore. Once alongside, it boards the threatened group.
+    const mission = options.memory.naval!.ferries!.ferry!;
+    const boat = game.units.find(unit => unit.id === "ferry")!;
+    boat.x = mission.from.x;
+    boat.y = mission.from.y;
+    const boarding = [...commands, ...planNavalTactics(snapshotGame(game), "player", options)].filter(command => command.type === "board");
+    expect(boarding.flatMap(command => command.unitIds)).toEqual(expect.arrayContaining(["stranded", "engineer"]));
+  });
+
   it("wants a shipyard on its own shore for an island's mine once it holds two bases", () => {
     const game = islandGame();
     const snapshot = snapshotGame(game);
