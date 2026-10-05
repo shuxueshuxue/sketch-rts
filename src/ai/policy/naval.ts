@@ -191,6 +191,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const warships = armed.length;
     // A transport on other water serves nothing here (one from an island's ferry sat on its own lake through an assault).
     const transported = fleet.some((unit) => carries(unit) > 0 && sameGround(snapshot.map, unit, water, "sea"));
+    const convoy = fleet.filter(unit => carries(unit) > 0 && sameGround(snapshot.map, unit, water, "sea"));
     const held = outgunned(snapshot, owner, options, water);
     // @@@blockade - Water the enemy's ships hold is crossed by no transport: in the closeout the fleet grows past its escort
     // until it outweighs them (see outgunned) and strikes together (see planNavalTactics), and in any other assault nothing
@@ -200,10 +201,20 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const nearTowers = enemyTowers(snapshot, owner, options).some(tower => distance(tower, water) < 1100) || Boolean(assault && distance(assault.target, water) - assault.target.radius > UNIT_DEFS.warship.attackRange);
     const enemyFleet = snapshot.units.filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(snapshot.map, unit, water, "sea"));
     const advanced = playerState(snapshot, owner).supplyCap >= requiredSupplyCap("bombardShip");
+    // An army larger than a single ferry must cross together. Waiting for a safe landing with one full boat while the
+    // rest stands ashore is a deadlock; buy enough lift once the whole expedition can win the landing.
+    const waiting = assault ? fleet.filter(unit => unitMover(unit.kind) === "land" && unit.kind !== "worker" && !unit.expiresTick && !sameGround(snapshot.map, unit, assault.target)) : [];
+    const passengers = convoy.flatMap(unit => unit.cargo ?? []);
+    const crossing = [...waiting, ...passengers];
+    const defense = assault ? landingDefense(snapshot, owner, options, assault.landing) : 0;
+    const committedAssault = assault && convoy.some(unit => navalMemory(options).ferries?.[unit.id]?.purpose === "assault" && navalMemory(options).ferries?.[unit.id]?.targetId === assault.target.id);
+    const moreLift = assault && (!plan || committedAssault) && transported && crossing.reduce((n, unit) => n + combatRating(unit), 0) >= defense * 1.4
+        && crossing.reduce((n, unit) => n + UNIT_DEFS[unit.kind].supplyUsed, 0) > convoy.reduce((n, unit) => n + carries(unit), 0);
     const guardedIsland = plan && snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 600).reduce((n, unit) => n + combatRating(unit), 0) > 3;
     const ship: TrainableUnitKind | undefined = held
         ? (warships < 6 ? "warship" : undefined)
         : !transported && (plan || assault) ? "transport"
+            : moreLift ? (advanced ? "carrier" : "transport")
             : advanced && guardedIsland && !fleet.some(unit => unit.kind === "carrier" && sameGround(snapshot.map, unit, water, "sea")) ? "carrier"
             : warships < WARSHIPS ? "warship"
                 : advanced && nearTowers && !armed.some(unit => unit.kind === "bombardShip") ? "bombardShip"
@@ -338,26 +349,34 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (!halls.length)
         return [];
     if (!mission) {
+        const evacuation = evacuationRoute(snapshot, owner, options, boat, halls);
         const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < 320));
         const dryWorkers = own.filter(unit => unit.kind === "worker" && unit.order.type === "idle"
             && !rich.some(mine => sameGround(map, mine, unit)));
         const relocation = dryWorkers.flatMap(worker => rich.map(mine => ({ worker, mine, from: coastOnWater(snapshot, worker, boat), to: coastOnWater(snapshot, mine, boat) })))
             .filter(route => route.from && route.to && !sameGround(map, route.worker, route.mine))
             .sort((a, b) => distance(a.worker, boat) - distance(b.worker, boat))[0];
-        const target = relocation?.mine ?? island?.mine ?? assault?.target;
+        const target = evacuation?.hall ?? relocation?.mine ?? island?.mine ?? assault?.target;
         if (!target)
             return [];
         const sources = [...halls, ...own.filter(unit => unitMover(unit.kind) === "land" && unit.kind !== "worker" && unit.expiresTick === undefined)];
         const candidates = sources.filter(point => !sameGround(map, point, target) && coastOnWater(snapshot, point, boat));
         const readiness = (point: Point) => own.filter(unit => sameGround(map, unit, point) && unitMover(unit.kind) === "land" && (island ? unit.kind === "worker" : unit.kind !== "worker")).reduce((n, unit) => n + UNIT_DEFS[unit.kind].supplyUsed, 0);
-        const base = relocation?.worker ?? candidates.sort((a, b) => Math.min(24, readiness(b)) - Math.min(24, readiness(a)) || (distance(a, boat) + distance(a, target)) - (distance(b, boat) + distance(b, target)))[0];
+        const base = evacuation?.source ?? relocation?.worker ?? candidates.sort((a, b) => Math.min(24, readiness(b)) - Math.min(24, readiness(a)) || (distance(a, boat) + distance(a, target)) - (distance(b, boat) + distance(b, target)))[0];
         if (!base)
             return [];
-        const shore = relocation?.from ?? coastOnWater(snapshot, base, boat);
-        const landing = relocation?.to ?? coastOnWater(snapshot, target, boat);
+        const shore = evacuation?.from ?? relocation?.from ?? coastOnWater(snapshot, base, boat);
+        const landing = evacuation?.to ?? relocation?.to ?? coastOnWater(snapshot, target, boat);
         if (!shore || !landing)
             return [];
-        mission = ferries[boat.id] = { purpose: relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
+        mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
+    }
+    // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
+    if (mission.phase === "return") {
+        if (boat.cargo?.length) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from }];
+        if (distance(boat, mission.from) > 100) return needsMove(boat, mission.from) ? [{ type: "move", unitIds: [boat.id], ...mission.from }] : [];
+        delete ferries[boat.id];
+        return [];
     }
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
@@ -371,31 +390,21 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
         if (!mine || mine.amount <= 0 || !island || buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) < 320)) {
-            delete ferries[boat.id];
-            return [];
+            return cancelFerry(snapshot, boat, mission);
         }
     }
-    const target = mission.purpose !== "assault" ? snapshot.resources.find(resource => resource.id === mission!.targetId) : snapshot.buildings.find(building => building.id === mission!.targetId);
+    const target = mission.purpose === "assault" || mission.purpose === "evacuate" ? snapshot.buildings.find(building => building.id === mission!.targetId) : snapshot.resources.find(resource => resource.id === mission!.targetId);
     if (!target) {
-        delete ferries[boat.id];
-        return [];
+        return cancelFerry(snapshot, boat, mission);
     }
     const commands: GameCommand[] = [];
-    if (mission.phase === "return") {
-        if (distance(boat, mission.from) > 100) {
-            if (needsMove(boat, mission.from))
-                commands.push({ type: "move", unitIds: [boat.id], ...mission.from });
-        }
-        else
-            delete ferries[boat.id];
-        return commands;
-    }
     if (mission.phase === "sailing") {
         if (!boat.cargo?.length) {
             mission.phase = "return";
             mission.crewIds = [];
             return commands;
         }
+        if ((mission.purpose === "assault" || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission);
         if (boat.order.type !== "unload")
             commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
         return commands;
@@ -419,7 +428,9 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const crew: Unit[] = [];
     const workerCount = [...cargo, ...boarding].filter(unit => unit.kind === "worker").length;
     const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, mine, loadGround) && halls.some(hall => distance(hall, mine) < 320)) ? 3 : 0;
-    if (mission.purpose === "rebase")
+    if (mission.purpose === "evacuate")
+        crew.push(...own.filter(unit => unit.kind === "worker" && sameGround(map, unit, loadGround) && !attached.has(unit.id) && unit.order.type !== "board").slice(0, Math.min(2, room)));
+    else if (mission.purpose === "rebase")
         crew.push(...workers.slice(0, Math.max(0, room)));
     else if (mission.purpose === "settle" && workerCount < 2 && workers.length > reserveMiners)
         crew.push(...workers.slice(0, Math.min(2 - workerCount, workers.length - reserveMiners, room)));
@@ -433,7 +444,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const threats = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(map, unit, loadGround) && unit.attackDamage > 0);
     let strengthLeft = strengthOf(soldiers);
     for (const soldier of mission.purpose === "rebase" ? [] : soldiers) {
-        if (UNIT_DEFS[soldier.kind].supplyUsed > room || strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3)
+        if (UNIT_DEFS[soldier.kind].supplyUsed > room || (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3))
             continue;
         crew.push(soldier);
         room -= UNIT_DEFS[soldier.kind].supplyUsed;
@@ -450,7 +461,10 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Do not repeatedly drown the economy in a blockade the escort has yet to clear.
     if (outgunned(snapshot, owner, options, mission.to))
         return commands;
-    if (mission.purpose === "settle" && !landingSafe(snapshot, owner, options, boat, target)) return commands;
+    if ((mission.purpose === "settle" || mission.purpose === "assault") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) {
+        if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission);
+        return commands;
+    }
     if (boarding.length && cargo.length && snapshot.tick - mission.sinceTick > seconds(60) && (mission.purpose !== "settle" || hasWorkers) && (mission.purpose === "rebase" || hasSoldiers || !guardsRemain)) {
         commands.push({ type: "stop", unitIds: boarding.map(unit => unit.id) });
         mission.phase = "sailing";
@@ -467,11 +481,38 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 function unitStrengthForFerry(unit: Unit) { return strengthOf([unit]); }
 
+function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string]): GameCommand[] {
+    const boarding = snapshot.units.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
+    mission.phase = "return";
+    mission.crewIds = [];
+    return [
+        ...(boarding.length ? [{ type: "stop" as const, unitIds: boarding.map(unit => unit.id) }] : []),
+        ...(boat.cargo?.length ? [{ type: "unload" as const, unitIds: [boat.id], ...mission.from }] : []),
+    ];
+}
+
+function evacuationRoute(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, halls: Building[]) {
+    if (boat.cargo?.length) return undefined;
+    const own = units(snapshot, owner).filter(unit => unitMover(unit.kind) === "land" && !unit.expiresTick && unit.order.type !== "board");
+    const enemies = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && unit.attackDamage > 0 && unitMover(unit.kind) === "land");
+    const home = halls[0]!;
+    for (const source of own.filter(unit => !sameGround(snapshot.map, unit, home))) {
+        const local = own.filter(unit => sameGround(snapshot.map, source, unit) && distance(source, unit) < 850);
+        const threat = enemies.filter(unit => sameGround(snapshot.map, source, unit) && distance(source, unit) < 700);
+        if (!threat.length || strengthOf(threat) < strengthOf(local) * 1.4) continue;
+        const from = coastOnWater(snapshot, source, boat);
+        if (!from) continue;
+        const destination = halls.filter(hall => !sameGround(snapshot.map, hall, source) && !enemies.some(unit => sameGround(snapshot.map, unit, hall) && distance(unit, hall) < 700))
+            .map(hall => ({ hall, to: coastOnWater(snapshot, hall, boat) })).find(entry => entry.to);
+        if (destination?.to) return { source, from, hall: destination.hall, to: destination.to };
+    }
+    return undefined;
+}
+
 function landingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, target: Point) {
     const guards = snapshot.units.filter(unit => unit.attackDamage > 0 && distance(unit, target) < 400 && sameGround(snapshot.map, unit, target)
         && (unit.owner === "neutral" || isOpponentOwner(snapshot, owner, unit.owner, options)));
-    const towers = enemyTowers(snapshot, owner, options).filter(tower => sameGround(snapshot.map, tower, target) && distance(tower, target) < 600);
-    const defenders = guards.reduce((n, unit) => n + combatRating(unit), 0) + towers.length * TOWER_STRENGTH;
+    const defenders = landingDefense(snapshot, owner, options, target);
     if (!defenders) return true;
     const landed = units(snapshot, owner).filter(unit => unitMover(unit.kind) === "land" && sameGround(snapshot.map, unit, target) && distance(unit, target) < 700);
     const support = units(snapshot, owner).filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0
@@ -479,6 +520,13 @@ function landingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     const convoy = units(snapshot, owner).filter(unit => carries(unit) > 0 && sameGround(snapshot.map, unit, boat, "sea")
         && navalMemory(options).ferries?.[unit.id]?.targetId === navalMemory(options).ferries?.[boat.id]?.targetId);
     return [...convoy.flatMap(unit => unit.cargo ?? []), ...landed, ...support].reduce((n, unit) => n + combatRating(unit), 0) >= defenders * 1.4;
+}
+
+function landingDefense(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, target: Point) {
+    const guards = snapshot.units.filter(unit => unit.attackDamage > 0 && distance(unit, target) < 400 && sameGround(snapshot.map, unit, target)
+        && (unit.owner === "neutral" || isOpponentOwner(snapshot, owner, unit.owner, options)));
+    const towers = enemyTowers(snapshot, owner, options).filter(tower => sameGround(snapshot.map, tower, target) && distance(tower, target) < 600);
+    return guards.reduce((n, unit) => n + combatRating(unit), 0) + towers.length * TOWER_STRENGTH;
 }
 
 /** A clear, reachable land mine is cheaper than a new overseas economy. */

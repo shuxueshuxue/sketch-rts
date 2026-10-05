@@ -6,6 +6,17 @@ import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
 
 describe("AI script runner", () => {
+  it("preserves an earlier transport assignment when a later army module claims the same passenger", () => {
+    const game = sketchScene("claim-priority").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .townHall("v2", 500, 500).townHall("v1", 3400, 3400)
+      .unit("v2", "footman", 620, 520, { id: "passenger" }).build().createGame();
+    const scripts: AiScript[] = [
+      { id: "ferry", phase: "tactics", claimsUnits: () => new Set(["passenger"]), run: () => ({ type: "move", unitIds: ["passenger"], x: 1000, y: 500 }) },
+      { id: "army", phase: "tactics", claimsUnits: () => new Set(["passenger"]), run: () => ({ type: "attackMove", unitIds: ["passenger"], x: 3400, y: 3400 }) },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshotGame(game), "v2", scripts).map(entry => entry.scriptId)).toEqual(["ferry"]);
+  });
   it("lets a boarding healer reach its ferry instead of restarting land spells every think", () => {
     const game = sketchScene("boarding-caster-reservation").map("bareDuel").replaceDefaults()
       .player("v2", { race: "grove" }).player("v1", { race: "ember" })

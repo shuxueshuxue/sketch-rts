@@ -1,7 +1,7 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { opponentPlayerIds } from "../ownership";
 import { walkingDistance } from "../../../shared/terrain";
-import { onOwnGround, sameGroundAs, withoutShips } from "../ground";
+import { sameGroundAs, withoutShips } from "../ground";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, withinRangeOf, type Point } from "../spatial";
 import type { PresetAiPolicyOptions } from "../types";
@@ -75,7 +75,7 @@ export function readV6Intel(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   const army = withoutShips(snapshot, units(snapshot, owner).filter((unit) => unit.kind !== "worker"));
   const home = ownHalls[0] ?? ownBuildings[0] ?? { x: snapshot.map.width / 2, y: snapshot.map.height / 2 };
   const neutrals = snapshot.units.filter((unit) => unit.owner === "neutral");
-  const enemies = opponentPlayerIds(snapshot, owner, options).map((enemy) => readEnemy(snapshot, owner, enemy, ownBuildings, neutrals));
+  const enemies = opponentPlayerIds(snapshot, owner, options).map((enemy) => readEnemy(snapshot, enemy, ownBuildings, neutrals));
   const intrusion = readIntrusion(ownBuildings, enemies, isV9Policy(options));
   const intel: V6Intel = {
     tick: snapshot.tick,
@@ -94,11 +94,13 @@ export function readV6Intel(snapshot: GameSnapshot, owner: PlayerId, options: Pr
 
 // An enemy as the owner's walking army sees it: its ships and what stands on ground the owner cannot walk to are the naval
 // script's (see @@@ai-home-ground).
-function readEnemy(snapshot: GameSnapshot, owner: PlayerId, enemy: PlayerId, ownBuildings: Building[], neutrals: Unit[]): V6EnemyIntel {
-  const all = withoutShips(snapshot, units(snapshot, enemy));
+function readEnemy(snapshot: GameSnapshot, enemy: PlayerId, ownBuildings: Building[], neutrals: Unit[]): V6EnemyIntel {
+  const home = ownBuildings.find(building => building.kind === "townHall" && building.complete) ?? ownBuildings[0];
+  // A colony does not make its island reachable by the main army. The naval commander owns that separate front.
+  const all = withoutShips(snapshot, units(snapshot, enemy)).filter(unit => !home || sameGroundAs(snapshot, home, unit));
   const army = all.filter((unit) => unit.kind !== "worker");
   const workers = all.filter((unit) => unit.kind === "worker");
-  const enemyBuildings = onOwnGround(snapshot, owner, buildings(snapshot, enemy));
+  const enemyBuildings = buildings(snapshot, enemy).filter(building => !home || sameGroundAs(snapshot, home, building));
   const halls = enemyBuildings.filter((building) => building.kind === "townHall");
   const center = army.length > 0 ? averagePoint(army) : undefined;
   const bases = halls.map((hall): V6BaseIntel => {

@@ -1,4 +1,6 @@
 import { engineeringWant } from "./engineering";
+import { planAllySupport, supportUnitIds } from "./ally-support";
+import { planBattlefieldCommands } from "./battlefield";
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -140,6 +142,8 @@ const FIRST_EXPANSION_BANK_SUPPORT_UNITS = new Set<UnitKind>(["fieldMedic", "pri
 const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "desperateWorkerFight"]);
 
 export const AI_SCRIPT_LIBRARY = {
+  allySupport: { id: "allySupport", phase: "tactics", run: planAllySupport, claimsUnits: supportUnitIds },
+  battlefield: { id: "battlefield", phase: "tactics", run: planBattlefieldCommands },
   economy: { id: "economy", phase: "economy", run: planEconomy },
   constructionRecovery: { id: "constructionRecovery", phase: "economy", run: planConstructionRecovery },
   emergencyDefense: { id: "emergencyDefense", phase: "economy", run: planEmergencyDefense },
@@ -228,9 +232,11 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.engineering,
   AI_SCRIPT_LIBRARY.training,
   AI_SCRIPT_LIBRARY.naval,
+  AI_SCRIPT_LIBRARY.allySupport,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
+  AI_SCRIPT_LIBRARY.battlefield,
   AI_SCRIPT_LIBRARY.focusFire,
   AI_SCRIPT_LIBRARY.towerBreaker,
   // @@@v5-objective-before-raids - Fresh V5 1v2 armies should finish nearby value camps before peeling into worker raids.
@@ -269,18 +275,22 @@ const V7_REPLACEMENTS = new Map<AiScript, AiScript>([
   [AI_SCRIPT_LIBRARY.focusFire, AI_SCRIPT_LIBRARY.v7FocusFire],
   [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.v7Skirmish],
 ]);
-export const V7_AI_STACK: AiScript[] = V6_AI_STACK.map((script) => V7_REPLACEMENTS.get(script) ?? script);
+export const V7_AI_STACK: AiScript[] = V6_AI_STACK.flatMap((script) => [
+  ...(script === AI_SCRIPT_LIBRARY.items ? [AI_SCRIPT_LIBRARY.allySupport] : []),
+  ...(script === AI_SCRIPT_LIBRARY.v6Backline ? [AI_SCRIPT_LIBRARY.battlefield] : []),
+  V7_REPLACEMENTS.get(script) ?? script,
+]);
 
 // V8 starts as V7's stack, against V5 and V7 with neither a shooter nor a summoner (see v8-forbidden-units). Its general
 // alone moves its army (see v8-one-voice): the shared tower breaker, which sent the same footmen at a tower every other
 // think while the general sent them at the hall behind it, is left out, and the general takes the tower first itself.
-// Its riders' charges are its own (see v8-charge), aimed last so that a rider dashes out of whatever order it was given.
+// Its riders' charges are its own (see v8-charge), chosen before ordinary movement so the runner preserves the dash.
 // @@@v8-no-closeout - Nor does V8 send the closeout's detachment after a beaten opponent's last buildings: three to six
 // fighters walked 2500 paces past the living opponent's archers to a farm, thirteen times in one game (sableRun, 12:00 to
 // 18:00), each shot down on the way. The general takes a beaten opponent's buildings with the whole army, as any target.
 export const V8_AI_STACK: AiScript[] = [
-  ...V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker && script !== AI_SCRIPT_LIBRARY.v6Closeout),
-  AI_SCRIPT_LIBRARY.v8Charge,
+  ...V7_AI_STACK.filter((script) => script !== AI_SCRIPT_LIBRARY.towerBreaker && script !== AI_SCRIPT_LIBRARY.v6Closeout)
+    .flatMap((script) => script === AI_SCRIPT_LIBRARY.battlefield ? [AI_SCRIPT_LIBRARY.v8Charge, script] : [script]),
 ];
 
 // V9 starts as V8's stack, against V5, V7 and V8 together, with no unit kind forbidden (see v9-blind), and shops (see

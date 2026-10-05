@@ -28,6 +28,7 @@ function isRider(unit: Unit) {
 
 function worth(unit: Unit) {
   if (unit.kind === "worker") return 2;
+  if (UNIT_DEFS[unit.kind].weapon) return 5;
   if (hasSpell(unit.kind) || unit.attackRange > 100) return 4;
   return 1;
 }

@@ -2,9 +2,29 @@
 
 This document is the durable spec for the built-in RTS AI, SDK benchmark loop, and AI debugging surface.
 
-The target is not a clever one-off script. The target is an AI stack that can keep improving under benchmark pressure without corrupting the stable baseline. V1 should remain boring and stable. V2 can experiment, but the benchmark must keep it honest.
+The current goal is natural, varied skirmish play: decisive attacks, practical retreats, allied support, transport
+commitments and useful roles for different units. V5 keeps its ranged core, V7 its adaptable doctrines, and V8 its melee
+line with healing and cavalry. Shared repairs should improve their judgment without erasing those differences.
 
-## Goals
+## Current acceptance criteria
+
+- Reproduce an observed mistake with a deterministic scene, then verify the command actually works in the simulation.
+- Evaluate priorities and outcomes: missed openings, failed rescues, interrupted orders, unsafe landings and idle armies.
+- Use natural duels, team games, free-for-all games and unseen terrain seeds. Keep unfinished games and command errors in
+  the report. `node --import tsx scripts/ai-behavior-playtest.ts` records behavior without a leaderboard.
+- Decisions use the current board, terrain, unit roles and explicit assignments. Do not branch on opponent AI versions,
+  map names, player IDs or benchmark fixtures.
+- Preserve deterministic simulation and shared command validation. V1 remains the historical policy anchor; global
+  balance changes apply equally to humans and every AI version.
+- Basic ranged attacks use 80% of their former reach, including ranged creeps and ships. Ranged weapon skills use the same
+  reduction; melee reach, charge windows, support spells and building ranges retain their definitions.
+- Win rate is diagnostic information, not the optimization target. Full tournament sweeps and 100% pass rates are not
+  acceptance requirements for this work.
+
+## Historical V2 benchmark goals
+
+The remaining benchmark workflow records the earlier V2 project. Its scoring targets do not supersede the current
+gameplay criteria above.
 
 - V2 must eventually pass the standard benchmark bundle at 100%.
 - Every scored `1v2` map must include a same-map `1v1 score control`, so V2 cannot gain multi-enemy tricks while becoming unable to beat V1 on the same terrain.

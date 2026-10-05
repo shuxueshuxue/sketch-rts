@@ -29,7 +29,7 @@ describe("native engineering weapons", () => {
         expect(game.effects.some(effect => effect.type === "siegeImpact")).toBe(true);
     });
     it("pierces a line with diminishing damage and roots targets instead of homing after a dodging unit", () => {
-        const game = battle([{ id: "gun", owner: "p1", kind: "ballista", x: 1000, y: 1000 }, ...[1300, 1400, 1500].map((x, i) => ({ id: `f${i}`, owner: "p2", kind: "footman" as const, x, y: 1000 })), { id: "side", owner: "p2", kind: "footman", x: 1400, y: 1100 }]);
+        const game = battle([{ id: "gun", owner: "p1", kind: "ballista", x: 1030, y: 1000 }, ...[1300, 1400, 1500].map((x, i) => ({ id: `f${i}`, owner: "p2", kind: "footman" as const, x, y: 1000 })), { id: "side", owner: "p2", kind: "footman", x: 1400, y: 1100 }]);
         const command = { type: "cast" as const, unitId: "gun", ability: "pinningBolt" as const, targetId: "f2" };
         expect(commandValidationError(snapshotGame(game), "p1", command)).toBeUndefined();
         issuePlayerCommand(game, "p1", command);
@@ -55,7 +55,7 @@ describe("native engineering weapons", () => {
         expect(game.effects.some(effect => effect.type === "grapeshot")).toBe(true);
     });
     it("keeps shell flight, burn damage and source attribution deterministic after saving and the shooter's death", () => {
-        const game = battle([{ id: "gun", owner: "p1", kind: "fireShip", x: 1000, y: 1000 }, { id: "foe", owner: "p2", kind: "footman", x: 1250, y: 1000 }]);
+        const game = battle([{ id: "gun", owner: "p1", kind: "fireShip", x: 1030, y: 1000 }, { id: "foe", owner: "p2", kind: "footman", x: 1250, y: 1000 }]);
         issuePlayerCommand(game, "p1", { type: "cast", unitId: "gun", ability: "incendiaryFlume", x: 1250, y: 1000 });
         run(game, 5);
         removeUnit(game, "gun");

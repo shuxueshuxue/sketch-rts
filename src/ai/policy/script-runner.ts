@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from "../../shared/catalog";
+import { ABILITY_DEFS, BUILDING_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./claims";
@@ -32,7 +32,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
-      reserveOrderedUnits(scriptCommands, movedUnitIds);
+      reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
       if (script.id === "economy") continue;
       break;
     }
@@ -44,7 +44,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
-    reserveOrderedUnits(scriptCommands, movedUnitIds);
+    reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }
 
@@ -53,7 +53,8 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
 
 function unitClaims(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext) {
   const claims = new Map<string, string>();
-  for (const script of scripts) for (const unitId of script.claimsUnits?.(snapshot, owner, options) ?? []) claims.set(unitId, script.id);
+  // Earlier scripts own higher-priority assignments: a ferry or rescue cannot be stolen by a later army module.
+  for (const script of scripts) for (const unitId of script.claimsUnits?.(snapshot, owner, options) ?? []) if (!claims.has(unitId)) claims.set(unitId, script.id);
   return claims;
 }
 
@@ -66,6 +67,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
       return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
     }
     if (command.type === "pickupItem") return free(command.unitId) ? [command] : [];
+    if (command.type === "cast" && ABILITY_DEFS[command.ability].behavior === "charge") return free(command.unitId) ? [command] : [];
     return [command];
   });
 }
@@ -99,8 +101,15 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
   return filtered;
 }
 
-function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>) {
+function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>, snapshot: GameSnapshot) {
   for (const command of commands) {
     if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type !== "cast") continue;
+    const def = ABILITY_DEFS[command.ability];
+    const caster = snapshot.units.find((unit) => unit.id === command.unitId);
+    const target = command.targetId ? [...snapshot.units, ...snapshot.buildings].find((entity) => entity.id === command.targetId) : command;
+    // Instant spells leave movement alone. A charge or a walk-to-cast owns the order until it finishes.
+    const radius = target && !("order" in target) && "radius" in target ? target.radius : 0;
+    if (def.behavior === "charge" || (caster && target && target.x !== undefined && target.y !== undefined && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius)) movedUnitIds.add(command.unitId);
   }
 }
