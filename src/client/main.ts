@@ -25,7 +25,7 @@ import { edgeScrollDelta } from "./edge-scroll";
 import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
 import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
-import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, type SelectionGroup } from "./hud-model";
+import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, selectedCargoTransports, type SelectionGroup } from "./hud-model";
 import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
@@ -60,7 +60,8 @@ import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type 
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
-import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules } from "../shared/catalog";
+import { carries, passengerLandingSpot } from "../shared/naval";
 import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
 import { drawPaintedItem } from "./art/items";
 import { ABILITY_CARDS } from "./content/abilities";
@@ -69,7 +70,7 @@ import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import { createMapPresentation, type MapPresentationMark } from "../shared/presentation";
-import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomTeam, seatTeam, type SlotPatch } from "../shared/rooms";
+import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomTeam, seatTeam, winningResultSlots, type SlotPatch } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
@@ -944,6 +945,7 @@ function renderResultsMenu() {
   }
 
   menuStatus.textContent = t("results.finished", { name: currentRoom.name, tick: result.endedAtTick ?? "?" });
+  const winners = winningResultSlots(result);
   const rows = result.slots.map((slot) => {
     const kills = result.stats.unitsKilled[slot.playerId] ?? 0;
     const losses = result.stats.unitsLost[slot.playerId] ?? 0;
@@ -965,7 +967,7 @@ function renderResultsMenu() {
   panel.className = "results-panel";
   panel.dataset.resultsScreen = currentRoom.id;
   panel.innerHTML = `
-    <div class="result-winner" data-result-winner>${escapeHtml(t("results.winner", { winner: result.winner ?? t("results.draw") }))}</div>
+    <div class="result-winner" data-result-winner>${escapeHtml(t("results.winner", { winner: winners.map(slot => slot.name).join("、") || result.winner || t("results.draw") }))}</div>
     <div class="result-head">
       <span>${escapeHtml(t("results.player"))}</span><span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span><span>${escapeHtml(t("results.race"))}</span><span>${escapeHtml(t("results.killsLosses"))}</span><span>${escapeHtml(t("results.gold"))}</span><span>${escapeHtml(t("results.buildings"))}</span>
     </div>
@@ -1757,11 +1759,11 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
 }
 
 function loadedTransports() {
-  return selectedPlayerUnits().filter((unit) => UNIT_DEFS[unit.kind].carries && (unit.cargo?.length ?? 0) > 0);
+  return selectedPlayerUnits().filter((unit) => carries(unit) > 0 && (unit.cargo?.length ?? 0) > 0);
 }
 
 function unloadButtonState(): CommandButtonState {
-  if (commandMode || openPalette || !selectedPlayerUnits().some((unit) => UNIT_DEFS[unit.kind].carries)) return HIDDEN_COMMAND_STATE;
+  if (commandMode || openPalette || !selectedPlayerUnits().some((unit) => carries(unit) > 0)) return HIDDEN_COMMAND_STATE;
   return booleanCommandState(loadedTransports().length > 0);
 }
 
@@ -1790,6 +1792,18 @@ function issueUnloadAt(point: Point, queued = false) {
     statusLabel.textContent = t("status.unloadOrdered");
   }
   updateHud();
+}
+
+function unloadPassenger(transportId: string, passengerId: string) {
+  if (!syncBeforeCommandProjection() || !snapshot) return;
+  const transport = selectedCargoTransports(snapshot, selectedIds, localPlayerId).find(unit => unit.id === transportId);
+  const passenger = transport?.cargo?.find(unit => unit.id === passengerId);
+  if (!transport || !passenger) return;
+  if (!passengerLandingSpot(snapshot.map, transport, passengerId)) {
+    showInvalidCommand(t("status.unloadNoLand"));
+    return;
+  }
+  if (sendCommand({ type: "unloadPassenger", transportId, passengerId })) statusLabel.textContent = t("status.passengerUnloaded", { name: labelKind(passenger.kind) });
 }
 
 function canAttackMove() {
@@ -2461,7 +2475,17 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
       decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
     };
-  }), t("hud.nothingSelected"));
+  }), t("hud.nothingSelected"), selectedCargoTransports(snapshot!, selectedIds, localPlayerId).map(transport => ({
+    key: transport.id,
+    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: (transport.cargo ?? []).reduce((sum, passenger) => sum + unitRules(snapshot!, passenger).supplyUsed, 0), capacity: carries(transport) }),
+    passengers: (transport.cargo ?? []).map(passenger => ({
+      key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
+      health: { current: passenger.hp, max: passenger.maxHp },
+      art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.width, ownerInk(passenger.owner)) },
+      activate: () => unloadPassenger(transport.id, passenger.id),
+      decorate: (button: HTMLButtonElement) => applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [t("hud.unloadPassengerHint")] }),
+    })),
+  })));
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
