@@ -24,6 +24,56 @@ function stepUntil(game: Game, maxTicks: number, done: () => boolean) {
 }
 
 describe("player unit aggro", () => {
+  it.each(["attack", "attackMove"] as const)("reconsiders an automatic %s during a strike and answers a live threat", (type) => {
+    const game = duel(`automatic-threat-${type}`)
+      .building("v1", "farm", 1_050, 1_000, { id: "old-target" })
+      .unit("v2", "footman", 1_000, 1_000, { id: "guard", order: type === "attack"
+        ? { type: "attack", targetId: "old-target", leashX: 1_000, leashY: 1_000 }
+        : { type: "attackMove", targetId: "old-target", x: 1_800, y: 1_000 } })
+      .unit("v1", "footman", 1_000, 1_090, { id: "reinforcement", order: { type: "attack", targetId: "guard" } })
+      .build().createGame();
+    stepGame(game);
+    expect(unit(game, "guard")!.order).toMatchObject({ type, targetId: "reinforcement" });
+    if (type === "attackMove") expect(unit(game, "guard")!.order).toMatchObject({ x: 1_800, y: 1_000 });
+  });
+
+  it("keeps a human's explicit target even while it and its neighbours are hit", () => {
+    const game = duel("explicit-target-wins")
+      .building("v1", "farm", 1_050, 1_000, { id: "farm" })
+      .unit("v2", "footman", 1_000, 1_000, { id: "soldier" })
+      .unit("v1", "footman", 1_000, 1_042, { id: "attacker", order: { type: "attack", targetId: "soldier" } })
+      .build().createGame();
+    issuePlayerCommand(game, "v2", { type: "attack", unitIds: ["soldier"], targetId: "farm" });
+    const soldier = unit(game, "soldier")!;
+    expect(stepUntil(game, 30, () => soldier.hp < soldier.maxHp)).toBe(true);
+    expect(soldier.order).toEqual({ type: "attack", targetId: "farm" });
+  });
+
+  it("keeps its combat target when two comparable attackers alternate hits", () => {
+    const game = duel("stable-threat")
+      .unit("v2", "footman", 1_000, 1_000, { id: "guard", order: { type: "attack", targetId: "first", leashX: 1_000, leashY: 1_000 } })
+      .unit("v1", "footman", 1_040, 1_000, { id: "first", order: { type: "attack", targetId: "guard" } })
+      .unit("v1", "footman", 1_000, 1_040, { id: "second", order: { type: "attack", targetId: "guard" } })
+      .build().createGame();
+    for (let tick = 0; tick < 30; tick++) stepGame(game);
+    expect(unit(game, "guard")!.order).toMatchObject({ targetId: "first" });
+  });
+
+  it("lets a neutral change from a harmless quarry to a reachable attacker, while respecting its camp leash", () => {
+    const game = duel("neutral-threat")
+      .unit("neutral", "stonebackBrute", 1_000, 1_000, { id: "beast", order: { type: "attack", targetId: "decoy", leashX: 1_000, leashY: 1_000 } })
+      .worker("v1", 1_040, 1_000, { id: "decoy", order: { type: "hold", x: 1_040, y: 1_000 } })
+      .unit("v2", "footman", 1_000, 1_045, { id: "hunter", order: { type: "attack", targetId: "beast" } })
+      .build().createGame();
+    unit(game, "beast")!.homeX = 1_000;
+    unit(game, "beast")!.homeY = 1_000;
+    stepGame(game);
+    expect(unit(game, "beast")!.order).toMatchObject({ targetId: "hunter", leashX: 1_000, leashY: 1_000 });
+    unit(game, "hunter")!.x = 2_000;
+    unit(game, "hunter")!.order = { type: "hold", x: 2_000, y: 1_045 };
+    stepGame(game);
+    expect(unit(game, "beast")!.order.type).not.toBe("attack");
+  });
   it("turns a soldier shot from outside acquisition range on the shooter, and its idle neighbours come to help", () => {
     const game = duel("aggro-shot-from-range")
       .unit("v1", "archer", 1_000, 1_000, { id: "shooter" })

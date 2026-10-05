@@ -1,3 +1,4 @@
+import { combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
@@ -135,7 +136,6 @@ const HELP_CALL_RANGE = 300;
 // raider cannot drag a base's defenders across the map. Commanded attacks and attack-moves are not leashed.
 const GUARD_LEASH_RANGE = 600;
 // Threat: an enemy that is attacking our side outranks a bystander about 100px nearer.
-const AGGRESSOR_TARGET_BONUS = 90;
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
 const DEFAULT_TEAMS: Record<string, string> = { player: "player", enemy: "enemy", enemy2: "enemy2" };
 const DEFAULT_RACES: Record<string, PlayerState["race"]> = { player: "grove", enemy: "ember", enemy2: "grove" };
@@ -953,13 +953,10 @@ function updateUnits(game: Game): Ferry | undefined {
     }
     if (unit.kind === "worker" && updateAutoRepair(game, unit)) continue;
     if (unit.kind !== "worker") {
-      const target = nearestEnemyTarget(game, unit, AUTO_ACQUIRE_RANGE);
+      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE);
       if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
     }
-    if (unit.owner === "neutral") {
-      const target = firstNearbyUnit(game, unit, 150, (candidate) => areEnemyOwners(game, unit.owner, candidate.owner) && distanceSquared(unit, candidate) <= 150 * 150 && canReach(game.map, unit, candidate));
-      if (target) unit.order = { type: "attack", targetId: target.id };
-    }
+
   }
   return ferry;
 }
@@ -1051,7 +1048,9 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
   if (order.targetId) {
     const target = findTarget(game, order.targetId);
     if (target && target.hp > 0 && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target)) {
-      attackMoveTowardTarget(game, unit, target);
+      const chosen = automaticCombatTarget(game, unit, target);
+      unit.order = { ...order, targetId: chosen.id };
+      attackMoveTowardTarget(game, unit, chosen);
       return;
     }
     unit.order = { type: "attackMove", x: order.x, y: order.y };
@@ -1084,7 +1083,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
 function updateAttackOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "attack") return;
-  const target = findStrikeTarget(game, order.targetId);
+  let target = findStrikeTarget(game, order.targetId);
   if (!target) {
     unit.order = { type: "idle" };
     return;
@@ -1099,6 +1098,11 @@ function updateAttackOrder(game: Game, unit: Unit) {
     unit.order = { ...order, targetId: replacement.id };
     updateAttackOrder(game, unit);
     return;
+  }
+  // Only automatic orders reconsider living targets here. Explicit player attacks keep their target.
+  if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
+    target = automaticCombatTarget(game, unit, target);
+    unit.order = { ...order, targetId: target.id };
   }
   const gap = targetGap(unit, target);
   if (backOutOfDeadZone(game, unit, target)) return;
@@ -2403,12 +2407,16 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
 function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit | Building) {
   if (!areEnemyOwners(game, damagedNeutral.owner, attacker.owner)) return;
   const origin = neutralHomeOrCurrentPoint(damagedNeutral);
-  // @@@neutral-assist - Damage is louder than idle acquisition, but existing valid targets should not twitch on every hit.
+  // @@@neutral-assist - Damage wakes the camp; an ongoing fight changes target only for a substantially greater threat.
   for (const unit of game.units) {
     if (unit.owner !== "neutral" || unit.hp <= 0) continue;
     if (distance(unit, damagedNeutral) > NEUTRAL_ASSIST_RANGE) continue;
-    if (neutralHasValidAttackTarget(game, unit) || (isUnit(attacker) && !canReach(game.map, unit, attacker))) continue;
-    unit.order = { type: "attack", targetId: attacker.id, leashX: origin.x, leashY: origin.y };
+    if (!canReach(game.map, unit, attacker)) continue;
+    const responseOrigin = neutralResponseOrigin(unit) ?? origin;
+    if (distance(attacker, responseOrigin) > NEUTRAL_DAMAGE_RESPONSE_RANGE) continue;
+    if (neutralHasValidAttackTarget(game, unit) && unit.order.type === "attack") {
+      if (incomingThreatOutranks(game, unit, unit.order.targetId, attacker, damagedNeutral)) unit.order = { ...unit.order, targetId: attacker.id };
+    } else unit.order = { type: "attack", targetId: attacker.id, leashX: origin.x, leashY: origin.y };
   }
 }
 
@@ -2417,15 +2425,15 @@ function triggerNeutralAssist(game: Game, damagedNeutral: Unit, attacker: Unit |
 // to turn on.
 function triggerPlayerAggro(game: Game, victim: Unit | Building, attacker: Unit | Building) {
   if (!areEnemyOwners(game, victim.owner, attacker.owner) || attacker.hp <= 0 || findTarget(game, attacker.id) !== attacker) return;
-  if (isUnit(victim)) takeUpAttacker(game, victim, attacker);
+  if (isUnit(victim)) takeUpAttacker(game, victim, attacker, victim);
   const reach = HELP_CALL_RANGE + (isUnit(victim) ? 0 : victim.radius);
   forEachNearbyUnit(game, victim, reach, (ally) => {
     if (ally === victim || ally.owner !== victim.owner || distance(ally, victim) > reach) return;
-    takeUpAttacker(game, ally, attacker);
+    takeUpAttacker(game, ally, attacker, victim);
   });
 }
 
-function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building) {
+function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building, victim: Unit | Building) {
   if (unit.hp <= 0 || unit.kind === "worker" || unit.attackDamage <= 0 || !canReach(game.map, unit, attacker)) return;
   const order = unit.order;
   if (order.type === "idle") {
@@ -2433,21 +2441,29 @@ function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building) {
     return;
   }
   if (order.type === "attackMove") {
-    if (!order.targetId || attackerOutranksUnreachedTarget(game, unit, order.targetId, attacker)) unit.order = { ...order, targetId: attacker.id };
+    if (!order.targetId || incomingThreatOutranks(game, unit, order.targetId, attacker, victim)) unit.order = { ...order, targetId: attacker.id };
     return;
   }
   const selfDirected = order.type === "attack" && order.leashX !== undefined;
-  if (selfDirected && attackerOutranksUnreachedTarget(game, unit, order.targetId, attacker)) unit.order = { ...order, targetId: attacker.id };
+  if (selfDirected && incomingThreatOutranks(game, unit, order.targetId, attacker, victim)) unit.order = { ...order, targetId: attacker.id };
 }
 
-// A unit already fighting keeps its target. One still walking to it may turn to the attacker, but only when the attacker is
-// the better target by the ordinary priority score, so a tower's arrow cannot pull a soldier off the soldier it is chasing.
-function attackerOutranksUnreachedTarget(game: Game, unit: Unit, targetId: string, attacker: Unit | Building) {
+// The same score and hysteresis apply to damage responses and ordinary acquisition, even during a strike.
+function incomingThreatOutranks(game: Game, unit: Unit, targetId: string, attacker: Unit | Building, victim: Unit | Building) {
   if (targetId === attacker.id) return false;
   const current = findTarget(game, targetId);
-  if (!current || current.hp <= 0) return true;
-  if (targetGap(unit, current) <= unit.attackRange) return false;
-  return targetPriorityScore(game, unit.owner, attacker, distanceSquared(unit, attacker)) > targetPriorityScore(game, unit.owner, current, distanceSquared(unit, current));
+  if (!current || current.hp <= 0 || !canReach(game.map, unit, current)) return true;
+  const incoming = combatTargetScore(attacker, targetGap(unit, attacker), victim.id === unit.id ? "self" : "ally", projectedHpAfterPendingProjectiles(game, unit.owner, attacker));
+  return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current) ** 2, unit), incoming);
+}
+
+function automaticCombatTarget(game: Game, unit: Unit, current: Unit | Building): Unit | Building {
+  // Incoming damage reacts immediately; ordinary reconsideration happens as the next shot becomes available.
+  if (unit.cooldown > 0) return current;
+  const next = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange));
+  if (!next || next.id === current.id) return current;
+  return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current) ** 2, unit),
+    targetPriorityScore(game, unit.owner, next, targetGap(unit, next) ** 2, unit)) ? next : current;
 }
 
 function neutralHasValidAttackTarget(game: Game, unit: Unit) {
@@ -2687,7 +2703,7 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 // The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
 // (see @@@reach).
 function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
-  if (!isPlayerId(unit.owner) || unit.attackDamage <= 0) return undefined;
+  if (unit.attackDamage <= 0) return undefined;
   return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit);
 }
 
@@ -2706,15 +2722,15 @@ function targetGap(from: { x: number; y: number }, target: Unit | Building | Obs
   return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
 }
 
-function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: number; y: number }, range: number, attacker?: Unit): Unit | Building | undefined {
+function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyEnemyUnit(game, owner, point, range, (candidate) => {
     const candidateDistance = distanceSquared(point, candidate);
     if (candidateDistance > limit) return;
-    if (attacker && !canReach(game.map, attacker, candidate)) return;
-    const score = targetPriorityScore(game, owner, candidate, candidateDistance);
+    if (attacker && !automaticCandidateReachable(game, attacker, candidate)) return;
+    const score = targetPriorityScore(game, owner, candidate, candidateDistance, attacker);
     if (score > bestScore) {
       best = candidate;
       bestScore = score;
@@ -2723,8 +2739,8 @@ function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: nu
   forEachNearbyEnemyBuilding(game, owner, point, range + MAX_BUILDING_RADIUS, (building) => {
     const gap = targetGap(point, building);
     if (gap > range) return;
-    if (attacker && !canReach(game.map, attacker, building)) return;
-    const score = targetPriorityScore(game, owner, building, gap * gap);
+    if (attacker && !automaticCandidateReachable(game, attacker, building)) return;
+    const score = targetPriorityScore(game, owner, building, gap * gap, attacker);
     if (score > bestScore) {
       best = building;
       bestScore = score;
@@ -2733,17 +2749,18 @@ function nearestEnemyTargetFromPoint(game: Game, owner: PlayerId, point: { x: nu
   return best;
 }
 
-function targetPriorityScore(game: Game, attackerOwner: Owner, target: Unit | Building, distanceSq: number) {
-  if (projectedHpAfterPendingProjectiles(game, attackerOwner, target) <= 0) return Number.NEGATIVE_INFINITY;
-  const distancePenalty = Math.sqrt(distanceSq) * 0.9;
-  return targetPriorityBase(target) + targetThreatBonus(target) + aggressorBonus(game, attackerOwner, target) - distancePenalty;
+function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building): boolean {
+  if (!canReach(game.map, unit, candidate)) return false;
+  if (unit.owner !== "neutral") return true;
+  const origin = neutralResponseOrigin(unit);
+  return !origin || distance(candidate, origin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE;
 }
 
-function aggressorBonus(game: Game, owner: Owner, target: Unit | Building) {
-  if (!isUnit(target)) return 0;
-  const victimId = target.order.type === "attack" || target.order.type === "attackMove" ? target.order.targetId : undefined;
+function targetPriorityScore(game: Game, owner: Owner, target: Unit | Building, distanceSq: number, attacker?: Unit) {
+  const victimId = combatVictimId(target);
   const victim = victimId ? findTarget(game, victimId) : undefined;
-  return victim && !areEnemyOwners(game, owner, victim.owner) ? AGGRESSOR_TARGET_BONUS : 0;
+  const threat: TargetThreat = victim && !areEnemyOwners(game, owner, victim.owner) ? victim === attacker ? "self" : "ally" : "none";
+  return combatTargetScore(target, Math.sqrt(distanceSq), threat, projectedHpAfterPendingProjectiles(game, owner, target));
 }
 
 function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building | Obstacle) {
@@ -2773,18 +2790,6 @@ function projectilesAt(game: Game, targetId: string): Projectile[] {
   return index.byTarget.get(targetId) ?? NO_PROJECTILES;
 }
 
-function targetPriorityBase(target: Unit | Building) {
-  if (isUnit(target)) return target.kind === "worker" ? 260 : 430;
-  if (target.kind === "defenseTower") return 360;
-  if (target.kind === "townHall") return 120;
-  return 220;
-}
-
-function targetThreatBonus(target: Unit | Building) {
-  if (!isUnit(target)) return 0;
-  const missingHp = Math.max(0, target.maxHp - target.hp);
-  return missingHp * 1.4 + target.attackDamage * 2 + (target.attackRange > 100 ? 20 : 0);
-}
 
 function findTarget(game: Game, targetId: string): Unit | Building | undefined {
   return game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
