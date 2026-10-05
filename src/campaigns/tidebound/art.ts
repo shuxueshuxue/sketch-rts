@@ -6,12 +6,12 @@ import {SHIPS,SIEGE} from './campaign';
 const ink='#252f34',wood='#77634c',metal='#7d9298',ivory='#d9d0b6';
 function plate(b:Brush,p:number[][],color:string){polygon(b,p,color,ink,.8);line(b,p.slice(0,2),'#e3d4ad88',.7);}
 function ship(id:string):UnitModel{return {shadow:'none',paint(b,team){
- const heavy=id==='bombard'||id==='frigate',w=id==='cutter'?32:45;
+ const heavy=id==='bombard'||id==='frigate',w=id==='cutter'?32:id==='carrier'?58:45;
  ellipse(b,0,17,w+3,8,'#c9ded533');line(b,[[-w-5,18],[-w/2,25],[w/2,24],[w+5,14]],'#d3e1d799',1);
  plate(b,[[-w,0],[-w+12,17],[w-12,19],[w,-1],[12,6]],'#4b443c');
  plate(b,[[-w,0],[-w+20,-13],[w-12,-11],[w,-1],[12,6]],wood);
  for(let y=-4;y<11;y+=4)line(b,[[-w+14,y],[w-12,y-2]],'#b19b7166',.8);
- if(id==='transport'){for(let x=-20;x<=20;x+=13)plate(b,[[x,-3],[x+10,-3],[x+10,6],[x,6]],'#998365');}
+ if(id==='transport'||id==='carrier'){for(let x=id==='carrier'?-35:-20;x<=(id==='carrier'?35:20);x+=13)plate(b,[[x,-3],[x+10,-3],[x+10,6],[x,6]],'#998365');}
  if(id==='fireship'){
   for(let x=-20;x<=18;x+=13){ellipse(b,x,0,5,6,'#45352a');plate(b,[[x-3,-1],[x-2,-20],[x+3,-10],[x+5,-2]],'#c8843c');}
  }else{

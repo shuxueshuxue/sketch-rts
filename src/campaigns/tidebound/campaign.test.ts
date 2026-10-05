@@ -1,8 +1,37 @@
 import {describe,it,expect} from 'vitest';
 import {TideboundCampaign, HERO, PLAYER, SHIPS, SIEGE, DEFENSES} from './campaign';
-import {isWalkable} from '../../shared/terrain';
+import {isWalkable,sameGround} from '../../shared/terrain';
+import {HOME,LANDING,tideboundMap,CITADEL} from './world';
+import {issuePlayerCommand} from '../../shared/sim';
 import {UNIT_DEFS} from '../../shared/catalog';
 describe('Tidal Throne campaign contracts',()=>{
+ it('separates rear bases and the front with navigable sea channels',()=>{
+  const map=tideboundMap();expect(map.width*map.height).toBe(8192*8192*6.75);
+  expect(sameGround(map,HOME,LANDING,'land')).toBe(false);
+  expect(sameGround(map,{x:7000,y:7600},{x:9000,y:6400},'sea')).toBe(true);
+ });
+ it('does not let the main armies finish the opening mission for the player',()=>{
+  const c=new TideboundCampaign();for(let i=0;i<660;i++)c.step();
+  expect(c.state.mission.stage).toBe(0);expect(c.state.mission.convoySpawned).toBe(false);
+ });
+ it('keeps an embarked hero alive and clears reservations from sunk transports',()=>{
+  const c=new TideboundCampaign(),hero=c.game.units.find(u=>u.id===HERO)!,boat=c.game.units.find(u=>u.owner===PLAYER&&u.kind==='transport')!;
+  boat.cargo=[hero];c.game.units=c.game.units.filter(u=>u!==hero);
+  c.state.voyages['sunk-transport']={target:'north',stage:'loading',since:0,crew:['test']};
+  for(let i=0;i<100;i++)c.step();
+  expect(c.state.outcome).toBe('playing');expect(c.state.voyages['sunk-transport']).toBeUndefined();
+ });
+ it('blocks actual attacks on the citadel until the seal is destroyed',()=>{
+  const c=new TideboundCampaign(),citadel=c.game.buildings.find(b=>b.id==='citadel')!;
+  c.game.units=c.game.units.filter(u=>u.owner===PLAYER);
+  const archer=c.game.spawnUnit(PLAYER,'archer',CITADEL.x-300,CITADEL.y);archer.attackRange=1000;archer.attackDamage=300;
+  c.state.mission.stage=3;
+  issuePlayerCommand(c.game,PLAYER,{type:'attack',unitIds:[archer.id],targetId:citadel.id});
+  for(let i=0;i<20;i++)c.step();expect(citadel.hp).toBe(18000);
+  c.game.buildings=c.game.buildings.filter(b=>b.id!=='tide-seal');
+  for(let i=0;i<80;i++)c.step();
+  expect(c.state.mission.sealBroken).toBe(true);expect(citadel.hp).toBeLessThan(18000);
+ });
  it('starts with real armies, all battlefield roles and valid ground',()=>{
   const c=new TideboundCampaign();expect(c.game.units.length).toBeGreaterThanOrEqual(5000);
   for(const d of [...SHIPS,...SIEGE])expect(c.game.units.some(u=>u.variant===`tide/${d.id}`)).toBe(true);
@@ -29,7 +58,7 @@ describe('Tidal Throne campaign contracts',()=>{
  });
  it('holds evacuated units so a retreat does not immediately re-engage',()=>{
   const c=new TideboundCampaign(),h=c.game.units.find(u=>u.id===HERO)!;
-  expect(c.cast(5,2500,3800)).toBeUndefined();expect(h.order.type).toBe('hold');
+  expect(c.cast(5,h.x-200,h.y)).toBeUndefined();expect(h.order.type).toBe('hold');
  });
  it('restores full deterministic state and then advances identically',()=>{
   const c=new TideboundCampaign();for(let i=0;i<25;i++)c.step();
