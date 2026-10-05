@@ -1908,14 +1908,15 @@ function beginSpellTargeting(ability: AbilityKind) {
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
-  const behavior = ABILITY_DEFS[ability].behavior;
+  const abilityDef = ABILITY_DEFS[ability];
+  const behavior = abilityDef.behavior;
   const reach = chargeWindow(ability);
   statusLabel.textContent =
     behavior === "summon"
       ? t("status.summonMode")
       : reach
         ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange })
-        : t("status.spellMode", { ability: labelKind(ability) });
+        : t(abilityDef.behavior === "weapon" && abilityDef.target === "point" ? "status.spellPointMode" : "status.spellMode", { ability: labelKind(ability) });
   updateHud();
 }
 
