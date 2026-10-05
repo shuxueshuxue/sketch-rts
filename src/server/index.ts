@@ -1,3 +1,4 @@
+import { CampaignRelay } from "./campaign-relay";
 import express, { type Response } from "express";
 import { createServer, type IncomingMessage } from "node:http";
 import { randomUUID } from "node:crypto";
@@ -28,6 +29,8 @@ const roomAutoTick = process.env.ROOM_AUTOTICK !== "0";
 const app = express();
 const router = express.Router();
 const server = createServer(app);
+const campaignRelay = new CampaignRelay();
+const campaignWss = new WebSocketServer({ noServer: true, maxPayload: 8 * 1024 * 1024, perMessageDeflate: true });
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
 const roomHost = createRoomHost({ autoTick: roomAutoTick });
@@ -44,6 +47,12 @@ router.get("/favicon.ico", (_request, response) => {
 });
 
 server.on("upgrade", (request, socket, head) => {
+  const url = new URL(request.url ?? '/', 'http://localhost');
+  const campaignPrefix = `${publicBasePath}ws/campaigns/`;
+  if (url.pathname.startsWith(campaignPrefix)) {
+    campaignWss.handleUpgrade(request, socket, head, ws => campaignRelay.connect(ws, decodeURIComponent(url.pathname.slice(campaignPrefix.length)), url.searchParams.get('create') === '1', url.searchParams.get('name') ?? '指挥官'));
+    return;
+  }
   const route = classifyWebSocketUpgrade(request.url, publicBasePath);
   if (route.type === "room") {
     roomWss.handleUpgrade(request, socket, head, (ws) => {
