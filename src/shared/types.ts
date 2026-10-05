@@ -61,6 +61,7 @@ export type WorldEffect = {
     | "chainLightning"
     | "guardianField"
     | "experienceBurst"
+    | "goldBounty"
     | "flameBurn"
     | "scorch"
     | "storm"
@@ -79,6 +80,7 @@ export type WorldEffect = {
   toY?: number;
   owner?: Owner;
   damage?: number;
+  amount?: number;
   radius?: number;
   tickEvery?: number;
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt, or whose weapon dealt a hit, so the
