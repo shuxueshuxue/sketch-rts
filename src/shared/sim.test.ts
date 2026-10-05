@@ -50,7 +50,7 @@ function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof r
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(ticks);
-  expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
+  expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS * Math.max(1, ticks / 36_000));
   expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
   expect(game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
   expect(game.match.stats.unitsKilled.player).toBeGreaterThan(0);
@@ -156,12 +156,12 @@ describe("sketch RTS simulation", () => {
   it("applies the ranged nerf and curse-support balance slice without changing melee prices", () => {
     expect(UNIT_DEFS.footman).toMatchObject({ attackDamage: 16, attackRange: 48, cost: 100 });
     expect(UNIT_DEFS.mercenary).toMatchObject({ attackDamage: 28, attackRange: 62, cost: 160 });
-    expect(UNIT_DEFS.archer).toMatchObject({ attackDamage: 13, attackRange: 399, cost: 115 });
-    expect(UNIT_DEFS.contractArcher).toMatchObject({ attackDamage: 19, attackRange: 441, cost: 145 });
-    expect(UNIT_DEFS.priest).toMatchObject({ attackDamage: 7, attackRange: 252, cost: 135 });
-    expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 8, attackRange: 273, cost: 180 });
-    expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 8, attackRange: 315, cost: 145 });
-    expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 8, attackRange: 263, cost: 155 });
+    expect(UNIT_DEFS.archer).toMatchObject({ attackDamage: 13, attackRange: 319.2, cost: 115 });
+    expect(UNIT_DEFS.contractArcher).toMatchObject({ attackDamage: 19, attackRange: 352.8, cost: 145 });
+    expect(UNIT_DEFS.priest).toMatchObject({ attackDamage: 7, attackRange: 201.6, cost: 135 });
+    expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 8, attackRange: 218.4, cost: 180 });
+    expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 8, attackRange: 252, cost: 145 });
+    expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 8, attackRange: 210.4, cost: 155 });
     expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 16, attackRange: 480, cost: 125 });
     expect(BUILDING_DEFS.moonWell).toMatchObject({ attackDamage: 0, attackRange: 210, cost: 115 });
 
@@ -374,7 +374,7 @@ describe("sketch RTS simulation", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
       .townHall("v2", 180, 1000)
-      .unit("v2", "archer", 800, 1000, { id: "pulling-archer" })
+      .unit("v2", "archer", 880, 1000, { id: "pulling-archer" })
       .unit("neutral", "mossGnawer", 1188, 1000, { id: "damaged-creep" })
       .unit("neutral", "mossGnawer", 1220, 1070, { id: "called-creep" })
       .townHall("v1", 3500, 3500)
@@ -422,7 +422,7 @@ describe("sketch RTS simulation", () => {
       .player("v2", { team: "north", race: "grove" })
       .player("v1", { team: "south", race: "grove" })
       .townHall("v2", 180, 1000)
-      .unit("v2", "archer", 789, 1000, { id: "pulling-archer" })
+      .unit("v2", "archer", 875, 1000, { id: "pulling-archer" })
       .unit("neutral", "mossGnawer", 1188, 1000, { id: "damaged-creep" })
       .unit("neutral", "mossGnawer", 1268, 1070, { id: "called-wide-creep" })
       .townHall("v1", 3500, 3500)
@@ -2198,7 +2198,8 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel with neutral camp clearing and mercenary combat", () => {
-    const result = runTwoAiDuel("verdantCrossroads");
+    // With shorter ranged weapons this duel takes longer to resolve; retain the same CPU allowance per simulated tick.
+    const result = runTwoAiDuel("verdantCrossroads", 48_000);
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 

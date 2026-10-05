@@ -116,7 +116,7 @@ const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.at
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 export const AUTO_ACQUIRE_RANGE = 230;
 // A weapon reaching farther than this throws a missile; within it, it strikes in melee.
-export const RANGED_ATTACK_RANGE_THRESHOLD = 90;
+export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
 // A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take
 // and one at point blank lands at once; with a fixed flight time a shot from close in crept to its target.
 const PROJECTILE_SPEED = 18;
@@ -2206,11 +2206,13 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
     fireWeapon(game, attacker, target, damage, weapon, attackRange);
     return;
   }
-  if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
+  const baseRange = isUnit(attacker) ? unitRules(game, attacker).attackRange : attackRange;
+  if (baseRange > RANGED_ATTACK_RANGE_THRESHOLD) {
     launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, damage));
     return;
   }
-  applyAttackDamage(game, attacker, target, damage, attackRange);
+  // Range upgrades extend a melee weapon; they do not turn it into a projectile or change its armor interaction.
+  applyAttackDamage(game, attacker, target, damage, baseRange);
 }
 
 // Heavy armor is settled when the shot is fired, so a shot still counts as a shooter's after its shooter has died.
@@ -2256,7 +2258,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   if (attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
-  const kind: WorldEffect["type"] = attackRange > 90 ? "projectile" : "melee";
+  const kind: WorldEffect["type"] = attackRange > RANGED_ATTACK_RANGE_THRESHOLD ? "projectile" : "melee";
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y });
   addHitEffect(game, target, taken, attacker);
 }
