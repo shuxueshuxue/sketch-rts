@@ -1,5 +1,3 @@
-import { abilityCooldown } from "../../shared/ability-cooldowns";
-import { isEnemyOwner } from "./ownership";
 import { canCast } from "../../shared/ability-cooldowns";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
@@ -21,18 +19,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   let enemyWithin620: ((point: Point) => boolean) | undefined;
   const regroupPointHasEnemy = (point: Point) => (enemyWithin620 ??= anyWithinRangeOf(enemyCombatUnits(snapshot, owner, options.teams), 620))(point);
   for (const caster of units(snapshot, owner).filter(canCast)) {
-    if (caster.order.type === "board") continue;
     const abilities = UNIT_DEFS[caster.kind].abilities;
-    for (const ability of abilities) {
-      const def=ABILITY_DEFS[ability];
-      if(def.behavior!=="weapon" || abilityCooldown(caster,ability)>0)continue;
-      const targets=[...snapshot.units,...snapshot.buildings].filter(target=>isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0) && (ability!=="ramBreach" || !("order" in target)));
-      const target=targets.sort((a,b)=> {
-        const score=(target:typeof a)=>targets.filter(other=>distance(other,target)<(def.weapon.radius??80)).length + (!("order" in target)?(def.weapon.buildingMultiplier??1)*2:target.attackDamage/15);
-        return score(b)-score(a)||distance(caster,a)-distance(caster,b);
-      })[0];
-      if(target) commands.push(def.target==="point"?{type:"cast",unitId:caster.id,ability,x:target.x,y:target.y}:{type:"cast",unitId:caster.id,ability,targetId:target.id});
-    }
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
     if (healAbility) {
       const def = ABILITY_DEFS[healAbility];

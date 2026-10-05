@@ -120,17 +120,6 @@ describe("ships", () => {
 });
 
 describe("transports", () => {
-  it("honors a larger campaign ship capacity through native boarding and supply accounting", () => {
-    const sim = game([
-      { id: "carrier", owner: "player", kind: "transport", ...at(11, 9) },
-      ...Array.from({length: 12}, (_,i) => ({id:`crew-${i}`,owner:"player",kind:"worker" as const,...at(5+i%2,5+Math.floor(i/2))})),
-    ]);
-    const carrier=unit(sim,"carrier")!;carrier.cargoCapacity=30;
-    const supply=sim.players.player!.supplyUsed;
-    issuePlayerCommand(sim,"player",{type:"board",unitIds:sim.units.filter(u=>u.kind==="worker").map(u=>u.id),transportId:carrier.id});
-    run(sim,500);
-    expect(carrier.cargo).toHaveLength(12);expect(sim.players.player!.supplyUsed).toBe(supply);
-  });
   it("take aboard the soldiers told to board up to eight supply, and set them ashore on an island", () => {
     const sim = game([
       { id: "transport", owner: "player", kind: "transport", ...at(11, 9) },
@@ -189,43 +178,5 @@ describe("transports", () => {
     run(sim, 200);
     expect(["idle", "move"]).toContain(unit(sim, "transport")!.order.type);
     expect(Math.hypot(unit(sim, "transport")!.x - at(16, 4).x, unit(sim, "transport")!.y - at(16, 4).y)).toBeLessThan(5);
-  });
-});
-
-
-describe("stable shore rendezvous and ship repair", () => {
-  it("boards workers approaching opposite ends of the coast without chasing them alternately", () => {
-    const sim = game([
-      { id:"north", owner:"player", kind:"worker", ...at(7,2) },
-      { id:"south", owner:"player", kind:"worker", ...at(7,17) },
-      { id:"middle", owner:"player", kind:"worker", ...at(7,10) },
-      { id:"ferry", owner:"player", kind:"transport", ...at(15,10) },
-    ]);
-    issuePlayerCommand(sim,"player",{type:"board",unitIds:["north","south","middle"],transportId:"ferry"});
-    run(sim,1200);
-    expect(unit(sim,"ferry")!.cargo?.map(u=>u.id).sort()).toEqual(["middle","north","south"]);
-  });
-
-  it("lets a worker pay to repair a vessel at the shore without a shipyard", () => {
-    const sim = game([
-      { id:"worker", owner:"player", kind:"worker", ...at(8,8) },
-      { id:"ship", owner:"player", kind:"warship", ...at(9,8), hp:50 },
-    ]);
-    const gold=sim.players.player!.gold;
-    issuePlayerCommand(sim,"player",{type:"repairShip",unitIds:["worker"],targetId:"ship"});
-    run(sim,600);
-    expect(unit(sim,"ship")!.hp).toBe(unit(sim,"ship")!.maxHp);
-    expect(sim.players.player!.gold).toBeLessThan(gold);
-    expect(unit(sim,"worker")!.order.type).toBe("idle");
-  });
-
-  it("cannot repair a deep-water ship from an unreachable shore or an enemy vessel", () => {
-    const sim=game([{id:"worker",owner:"player",kind:"worker",...at(8,8)}, {id:"ship",owner:"player",kind:"warship",...at(14,8),hp:50}]);
-    const gold=sim.players.player!.gold;
-    issuePlayerCommand(sim,"player",{type:"repairShip",unitIds:["worker"],targetId:"ship"});
-    run(sim,200);
-    expect(unit(sim,"ship")!.hp).toBe(50); expect(sim.players.player!.gold).toBe(gold);
-    unit(sim,"ship")!.owner="enemy";
-    expect(commandValidationError(snapshotGame(sim),"player",{type:"repairShip",unitIds:["worker"],targetId:"ship"})).toMatch(/Unknown/);
   });
 });

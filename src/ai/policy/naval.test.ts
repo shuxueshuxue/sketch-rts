@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createUnit } from "../../shared/map";
-import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../../shared/sim";
-import { isShoreFootprint, isWalkable, sameGround, type Terrain } from "../../shared/terrain";
+import { createGame, snapshotGame } from "../../shared/sim";
+import { isShoreFootprint, isWalkable, type Terrain } from "../../shared/terrain";
 import { createAiPolicyMemory } from "../memory";
 import { desiredExpansionMine } from "./expansion-model";
-import { navalUnitIds, navalWant, navalBudgetReserve, planNavalTactics } from "./naval";
+import { navalUnitIds, navalWant, planNavalTactics } from "./naval";
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
 
@@ -38,7 +37,6 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
       addBuildings: [
         { id: "hall-a", owner: "player", kind: "townHall", ...at(3, 3) },
         { id: "hall-b", owner: "player", kind: "townHall", ...at(3, 15) },
-        { id: "farm", owner: "player", kind: "farm", ...at(5, 18) },
       ],
       addResources: [
         { id: "main", kind: "goldMine", ...at(1, 3), amount: 6_000 },
@@ -52,7 +50,6 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
     },
   });
   game.map = { ...game.map, width: terrain.cols * terrain.cell, height: terrain.rows * terrain.cell, terrain };
-  for(let i=3;i<=6;i++)game.units.push({...createUnit(`w${i}`,"player","worker",at(3,4+i).x,at(3,4+i).y),order:{type:"mine",resourceId:"main",phase:"toMine",timer:0}});
   return game;
 }
 
@@ -76,7 +73,6 @@ function lakeGame(pond = false, tower = false) {
       addBuildings: [
         { id: "hall-a", owner: "player", kind: "townHall", ...at(3, 3) },
         { id: "hall-b", owner: "player", kind: "townHall", ...at(3, 15) },
-        { id: "farm", owner: "player", kind: "farm", ...at(5, 18) },
         { id: "hall-e", owner: "enemy", kind: "townHall", ...at(24, 9) },
         ...(tower ? [{ id: "tower-e", owner: "enemy", kind: "defenseTower" as const, ...at(21, 6) }] : []),
       ],
@@ -107,8 +103,8 @@ describe("the AI on the water", () => {
     if (command?.type !== "build") throw new Error("no build");
     expect(isShoreFootprint(snapshot.map, command.x, command.y, 44)).toBe(true);
     expect(command.x).toBeLessThan(at(10, 0).x);
-    // Every live policy shares the same terrain-driven naval capability.
-    expect(navalWant(snapshot, "player", { version: "v2", requestedVersion: "v9", memory: createAiPolicyMemory() })?.id).toBe("naval:shipyard");
+    // V9 leaves the island's mine alone (see @@@v9-water).
+    expect(navalWant(snapshot, "player", { version: "v2", requestedVersion: "v9", memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
   it("raises its shipyard on a shore no enemy tower covers", () => {
@@ -130,15 +126,15 @@ describe("the AI on the water", () => {
     expect(Math.hypot(command.x - ship.x, command.y - ship.y)).toBeGreaterThan(390 + 44 + 100);
   });
 
-  it("builds an escort instead of abandoning contested water", () => {
+  it("buys no ship for water the enemy's warships hold, but meets one warship with its escort", () => {
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const game = islandGame();
     game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
     const enemyShip = (id: string, col: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, owner: "enemy" as const, kind: "warship" as const, ...at(col, 17), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 });
     game.units.push(enemyShip("e1", 14));
-    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:transport");
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
     game.units.push(enemyShip("e2", 16));
-    expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.id).toBe("naval:warship");
+    expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
   it("breaks a blockade in the closeout: another warship, and no transport, until its fleet outweighs the enemy's", () => {
@@ -187,8 +183,7 @@ describe("the AI on the water", () => {
     const footman = game.units.find((unit) => unit.id === "w1")!;
     game.buildings.push({ ...hall, id: "rival-shore", owner: "rival", ...at(6, 17) });
     game.units.push(...[8, 10].map((row) => ({ ...footman, id: `guard-${row}`, owner: "enemy", kind: "footman" as const, ...at(21, row), order: { type: "idle" as const }, radius: 18 })));
-    // A naval raid remains possible; transporting the outmatched land army does not.
-    expect(planNavalTactics(snapshotGame(game),"player",{version:"v8",memory:createAiPolicyMemory()}).some(command=>command.type==="board")).toBe(false);
+    expect(navalWant(snapshotGame(game), "player", { version: "v8" as const, memory: createAiPolicyMemory() })).toBeUndefined();
   });
 
   it("assaults an enemy's last base on an island: a transport first, idle soldiers aboard, the landed at its hall", () => {
@@ -202,12 +197,11 @@ describe("the AI on the water", () => {
     const footman = (id: string, col: number, row: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, kind: "footman" as const, ...at(col, row), order: { type: "idle" as const }, radius: 18 });
     game.units.push(footman("f1", 5, 5), footman("f2", 6, 5), footman("f3", 5, 6));
     expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:transport");
-    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ferry", kind: "transport", ...at(11, 3), order: { type: "idle" }, radius: 30 });
+    game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ferry", kind: "transport", ...at(11, 9), order: { type: "idle" }, radius: 30 });
     const board = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "board");
     expect(board).toMatchObject({ type: "board", transportId: "ferry" });
     if (board?.type !== "board") throw new Error("no boarding");
-    expect(board.unitIds).toEqual(expect.arrayContaining(["f1","f2","f3"]));
-    expect(board.unitIds.filter(id=>id.startsWith("w"))).toHaveLength(1);
+    expect([...board.unitIds].sort()).toEqual(["f1", "f2", "f3"]);
     // One stands on the island already: it goes for the hall, and is the naval script's to move.
     game.units.push(footman("landed", 21, 11));
     const landed = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "attackMove" && command.unitIds.includes("landed"));
@@ -220,7 +214,7 @@ describe("the AI on the water", () => {
     const worker = game.units.find((unit) => unit.id === "w1")!;
     game.units = game.units.filter((unit) => unit !== worker);
     game.units.push({ ...game.units[0]!, id: "ferry", kind: "transport", x: at(12, 4).x, y: at(12, 4).y, cargo: [worker] });
-    expect(projectedSupplyUsed(snapshotGame(game), "player")).toBe(6 + 1);
+    expect(projectedSupplyUsed(snapshotGame(game), "player")).toBe(1 + 1 + 1);
   });
 
   it("raids the enemy's door across a lake: a shipyard on its own shore, then its warships shoot the enemy's worker", () => {
@@ -261,62 +255,5 @@ describe("the AI on the water", () => {
     const snapshot = snapshotGame(game);
     expect(navalWant(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() })).toBeUndefined();
     expect(navalUnitIds(snapshot, "player", { version: "v8", memory: createAiPolicyMemory() }).size).toBe(0);
-  });
-  it("ships workers away from a depleted island to a live owned mine", () => {
-    const game = islandGame();
-    game.scriptedVictory = true;
-    for (const mine of game.resources) if (mine.id !== "island") mine.amount = 0;
-    game.buildings.push({ ...game.buildings[0]!, id: "rich-hall", ...at(23, 11) });
-    for (const worker of game.units) worker.order = { type: "idle" };
-    const boat = createUnit("ferry", "player", "transport", at(10, 9).x, at(10, 9).y);
-    game.units.push(boat);
-    const options = { version: "v8" as const, memory: createAiPolicyMemory(), teams: game.teams };
-    let boarded = false;
-    for (let tick = 0; tick < 1600; tick++) {
-      if (tick % 30 === 0) for (const command of planNavalTactics(snapshotGame(game), "player", options)) {
-        boarded ||= command.type === "board";
-        issuePlayerCommand(game, "player", command);
-      }
-      stepGame(game);
-    }
-    expect(boarded).toBe(true);
-    const richMine = game.resources.find(mine => mine.id === "island")!;
-    expect(game.units.filter(unit => unit.kind === "worker" && sameGround(game.map, unit, richMine))).toHaveLength(6);
-    expect(options.memory.naval?.ferries?.ferry?.purpose).not.toBe("settle");
-  });
-
-  it("keeps the hall budget while settlers sail, and a ferry budget before local gold runs out", () => {
-    const game = islandGame();
-    const memory = createAiPolicyMemory();
-    memory.naval = { ferries: { ferry: { purpose: "settle", targetId: "island", from: at(9,9), to: at(20,9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
-    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(400);
-    for (const mine of game.resources) if (mine.id !== "island") mine.amount = 0;
-    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(560);
-  });
-
-});
-
-
-describe("naval strategic choices", () => {
-  it("develops an unclaimed reachable mainland mine before buying an overseas expedition", () => {
-    const sim=islandGame();
-    sim.buildings=sim.buildings.filter(b=>b.id!=="hall-b");
-    sim.players.player!.supplyUsed=25;
-    const want = navalWant(snapshotGame(sim),"player",{version:"v7",memory:createAiPolicyMemory()});
-    expect(want?.issue(new Set())).toMatchObject({type:"build",buildingKind:"townHall"});
-  });
-
-  it("keeps a weak loaded landing force offshore until the mine guards are cleared", () => {
-    const sim=islandGame();
-    const mine=sim.resources.find(m=>m.id==="island")!;
-    const boat=createUnit("ferry","player","transport",at(9,9).x,at(9,9).y);
-    boat.cargo=[createUnit("builder","player","worker",0,0),createUnit("soldier","player","footman",0,0)];
-    sim.units=[boat,createUnit("guard","neutral","redDragon",mine.x,mine.y)];
-    const memory=createAiPolicyMemory();
-    memory.naval={ferries:{ferry:{purpose:"settle",targetId:mine.id,from:at(9,9),to:at(19,9),phase:"loading",crewIds:[],sinceTick:0}}};
-    const options={version:"v7" as const,memory};
-    expect(planNavalTactics(snapshotGame(sim),"player",options).some(c=>c.type==="unload")).toBe(false);
-    sim.units=sim.units.filter(u=>u.id!=="guard");
-    expect(planNavalTactics(snapshotGame(sim),"player",options).some(c=>c.type==="unload")).toBe(true);
   });
 });

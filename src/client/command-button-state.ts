@@ -96,9 +96,6 @@ export function trainCommandState(unitKind: TrainableUnitKind, player: PlayerSta
   if (!trainable) return HIDDEN_COMMAND_STATE;
   const supplyCap = requiredSupplyCap(unitKind);
   if (player && player.supplyCap < supplyCap) return { visible: true, enabled: false, reason: "tier", supplyCap };
-  if (!player) return { visible: true, enabled: false, reason: "missing" };
-  if (player.supplyUsed + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) return { visible: true, enabled: false, reason: "supply" };
-  if (player.gold < UNIT_DEFS[unitKind].cost) return { visible: true, enabled: false, reason: "gold" };
   return ENABLED_COMMAND_STATE;
 }
 

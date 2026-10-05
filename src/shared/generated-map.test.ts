@@ -14,7 +14,6 @@ const DUEL = { d1: "d1", d2: "d2" };
 const gap = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 // The seats every idea takes in these tests: a duel, four on a ring, or two pairs.
 const SEATS: Record<MapIdea, Record<string, string>> = {
-  islandStarts: TEAMS,
   openRing: TEAMS,
   openSides: PAIRS,
   fountainRing: TEAMS,
@@ -65,7 +64,7 @@ function sea(map: ReturnType<typeof generateMap>, at: { x: number; y: number }) 
 
 describe("generated maps", () => {
   it("draws every idea for its seats: every start walks to every other start and every mine but an island's, over ground it can stand on", () => {
-    for (const idea of MAP_IDEAS.filter(idea => idea !== "islandStarts")) {
+    for (const idea of MAP_IDEAS) {
       for (let index = 0; index < 3; index += 1) {
         const { map, halls, ground } = layout(`walk-${index}`, idea);
         expect(map.idea).toBe(idea);
@@ -161,7 +160,7 @@ describe("generated maps", () => {
   });
 
   it("keeps creeps out of every start's opening economy and everything on the map", () => {
-    for (const idea of MAP_IDEAS.filter(idea => idea !== "islandStarts")) {
+    for (const idea of MAP_IDEAS) {
       const { map } = layout(`safe-${idea}`, idea);
       const spots = Object.values(map.starts).flatMap((start) => [{ x: start.baseX, y: start.baseY }, { x: start.mineX, y: start.mineY }]);
       const neutrals = map.units.filter((unit) => unit.owner === "neutral");
@@ -266,7 +265,7 @@ describe("generated maps", () => {
   it("fills every camp with a template of its colour, mostly of its ground's family, and every copy of a camp alike", () => {
     let own = 0;
     let all = 0;
-    for (const idea of MAP_IDEAS.filter(idea => idea !== "islandStarts")) {
+    for (const idea of MAP_IDEAS) {
       const { map } = layout("camps-1", idea);
       const signatures = map.camps.map((camp, index) => {
         const kinds = map.units.filter((unit) => unit.id.startsWith(`creep-gen-${index + 1}-`)).map((unit) => unit.kind).sort();

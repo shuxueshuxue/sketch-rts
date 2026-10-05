@@ -24,7 +24,6 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     if (effect.type === "projectile" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
     else if (effect.type === "hit" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowHit", ...at });
     else if (effect.type === "hit" && meleeStriker(effect.sourceKind)) cues.push({ id: "melee", ...at, kind: effect.sourceKind });
-    else if (effect.type === "hit") cues.push({ id: "impact", ...at });
   }
   // Soldiers aboard a transport are out of the field but not dead (see @@@transport): going aboard is no death.
   const aboard = (snapshot: GameSnapshot) => snapshot.units.flatMap((unit) => unit.cargo ?? []).map((unit) => unit.id);

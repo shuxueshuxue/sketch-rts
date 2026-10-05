@@ -10,9 +10,8 @@ type Point = { x: number; y: number };
 // whole and no ship is afloat, nothing is set aside and nothing new is made.
 export function onHomeGround(snapshot: GameSnapshot, owner: PlayerId, point: Point) {
   if (groundWholes(snapshot.map) <= 1) return true;
-  const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === "townHall" && building.complete);
   const home = homeOf(snapshot, owner);
-  return halls.length ? halls.some(hall => sameGround(snapshot.map, hall, point)) : !home || sameGround(snapshot.map, home, point);
+  return !home || sameGround(snapshot.map, home, point);
 }
 
 // Whether the point stands on the same ground as the home (always, where the land is one whole).

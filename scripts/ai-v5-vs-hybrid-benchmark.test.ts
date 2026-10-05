@@ -100,7 +100,7 @@ describe("AI V5 versus hybrid V3 plus V4-TR benchmark CLI", () => {
 });
 
 function runV5BenchmarkCli(args: string[], env: NodeJS.ProcessEnv = {}) {
-  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-v5-vs-hybrid-benchmark.ts", ...args], {
+  return execFileSync("npx", ["tsx", "scripts/ai-v5-vs-hybrid-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, ...env, FORCE_COLOR: "0" },

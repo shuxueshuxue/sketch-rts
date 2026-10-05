@@ -1,11 +1,9 @@
-import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
-import type { WeaponDef } from "./catalog";
 import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
-import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
-import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
+import { footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
+import { alongside, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -69,7 +67,6 @@ export const GAME_SNAPSHOT_RESTORE_KEYS = [
   "items",
   "projectiles",
   "effects",
-  "corpses",
   "variants",
   "obstacles",
 ] as const satisfies readonly (keyof GameSnapshot)[];
@@ -122,8 +119,7 @@ export const RANGED_ATTACK_RANGE_THRESHOLD = 90;
 const PROJECTILE_SPEED = 18;
 const NEUTRAL_LEASH_RANGE = 520;
 // @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
-// A new long-range siege weapon must not expand every creep's pursuit radius.
-const NEUTRAL_DAMAGE_RESPONSE_RANGE = NEUTRAL_LEASH_RANGE;
+const NEUTRAL_DAMAGE_RESPONSE_RANGE = Math.max(BUILDING_DEFS.defenseTower.attackRange, ...Object.values(UNIT_DEFS).map((unit) => unit.attackRange));
 const NEUTRAL_RETURN_STOP_RANGE = 8;
 const NEUTRAL_ASSIST_RANGE = 360;
 // @@@player-aggro - Player units answer damage the way neutral camps do: the hit unit turns on its attacker and idle
@@ -150,12 +146,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   // A pool map is its own layout (see @@@map-pool); the ladder map has none of its own: a game on it without a layout is
   // drawn from the seed "ladder".
   const layout = options.layout ?? poolMap(mapId)?.layout ?? (mapId === LADDER_MAP_ID ? { seed: "ladder" } : undefined);
-  // Named two-shore maps retain their geometry when players change alliances.
-  // Only the layout uses these physical sides; game diplomacy uses `teams`.
-  const teamSizes = [...new Set(Object.values(teams))].map(team => activePlayers.filter(id => teams[id] === team).length);
-  const layoutTeams = !options.layout && poolMap(mapId)?.layout.kind === "sides" && (teamSizes.length !== 2 || teamSizes[0] !== teamSizes[1])
-    ? Object.fromEntries(activePlayers.map((id, index) => [id, `shore-${index % 2}`])) : teams;
-  const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
+  const generated = layout ? generateMap(layout, activePlayers, teams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {
     tick: 0,
@@ -418,14 +409,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     addRepairHammerEffect(game, building, command.queued);
     return;
   }
-  if (command.type === "repairShip") {
-    const ship = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner && unitMover(candidate.kind) === "sea");
-    if (!ship) throw new Error(`Unknown ${owner} ship ${command.targetId}`);
-    if (ship.hp >= ship.maxHp) throw new Error(`${ship.kind} is already fully repaired`);
-    for (const worker of unitsByIds(game, command.unitIds, owner).filter(unit => unit.kind === "worker"))
-      assignUnitOrder(worker, { type: "repairShip", targetId: ship.id }, command.queued);
-    return;
-  }
 
   if (command.type === "build") {
     const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
@@ -434,24 +417,17 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const blocker = buildingPlacementBlocker(game, command.buildingKind, command);
     if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
     if (terrainBlocksPlacement(game.map, command.buildingKind, command)) throw new Error(`${command.buildingKind} placement is on blocked ground`);
-    if (playerState(game, owner).gold < BUILDING_DEFS[command.buildingKind].cost) throw new Error("Not enough gold");
+    spendGold(game, owner, BUILDING_DEFS[command.buildingKind].cost);
+    // Laid on whole cells (see @@@building-footprint), where its placement was checked.
     const at = snapToFootprint(game.map, BUILDING_DEFS[command.buildingKind].radius, command);
-    // A plan is an order, not an entity: no remote HP, vision, collision or attack target.
-    assignUnitOrder(worker, { type: "build", buildingKind: command.buildingKind, ...at, progressTick: game.tick, progressX: worker.x, progressY: worker.y });
-
-    return;
-  }
-
-  if (command.type === "cancelTraining") {
-    const building = game.buildings.find(b => b.id === command.buildingId && b.owner === owner);
-    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
-    const index = building.queue.findIndex(job => job.id === command.jobId);
-    // A delayed/duplicate click must never cancel the following soldier.
-    if (index < 0) return;
-    const [job] = building.queue.splice(index, 1);
-    playerState(game, owner).gold += UNIT_DEFS[job!.unitKind].cost;
-    game.match.stats.goldSpent[owner] = Math.max(0, (game.match.stats.goldSpent[owner] ?? 0) - UNIT_DEFS[job!.unitKind].cost);
-    updateSupplyState(game);
+    const building = createBuilding(`building-${owner}-${command.buildingKind}-${game.nextId}`, owner, command.buildingKind, at.x, at.y, false);
+    applyDerivedBuildingStats(game, building);
+    building.hp = constructionStartHp(building.maxHp);
+    game.nextId += 1;
+    game.buildings.push(building);
+    // The builder walks to the site and builds it from beside its walls (see updateConstruction).
+    worker.order = { type: "repair", buildingId: building.id };
+    addEffect(game, "build", at.x, at.y, 60);
     return;
   }
 
@@ -498,9 +474,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const transport = game.units.find((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
     if (!transport) throw new Error(`Unknown ${owner} transport ${command.transportId}`);
     const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => unitMover(unit.kind) === "land");
-    const existing = game.units.find(unit => unit.order.type === "board" && unit.order.transportId === transport.id);
-    const berth = (existing?.order.type === "board" ? existing.order.berth : undefined) ?? (boarders[0] && boardingBerth(game.map, boarders[0], transport));
-    for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id, ...(berth ? { berth } : {}) }, command.queued);
+    for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id }, command.queued);
     return;
   }
 
@@ -563,7 +537,6 @@ export function stepGame(game: Game) {
   updateItems(game);
   updateMoonWellHealing(game);
   updateRegeneration(game);
-  updateDockRepairs(game);
   updateTowerAttacks(game);
   const ferry = updateUnits(game);
   if (ferry) ferryUnits(game, ferry);
@@ -630,7 +603,6 @@ export function snapshotGame(game: Game): GameSnapshot {
     items: game.items.map((item) => ({ ...item })),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
-    ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse })) } : {}),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
     ...(game.obstacles ? { obstacles: game.obstacles.map((obstacle) => ({ ...obstacle, along: { ...obstacle.along } })) } : {}),
@@ -643,7 +615,6 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.map = cloneSnapshotValue(snapshot.map);
   game.teams = snapshot.teams ? definedTeams(snapshot.teams) : { ...game.teams };
   game.players = cloneSnapshotValue(snapshot.players);
-  if (snapshot.teams) game.activePlayers = Object.keys(snapshot.teams).filter(owner => snapshot.players[owner] !== undefined);
   game.units = cloneSnapshotValue(snapshot.units).map(withUnitShape);
   game.buildings = cloneSnapshotValue(snapshot.buildings);
   game.resources = cloneSnapshotValue(snapshot.resources);
@@ -653,8 +624,6 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   game.items = cloneSnapshotValue(snapshot.items);
   game.projectiles = cloneSnapshotValue(snapshot.projectiles);
   game.effects = cloneSnapshotValue(snapshot.effects);
-  if (snapshot.corpses) game.corpses = cloneSnapshotValue(snapshot.corpses);
-  else delete game.corpses;
   if (snapshot.variants) game.variants = cloneSnapshotValue(snapshot.variants);
   else delete game.variants;
   if (snapshot.obstacles) game.obstacles = cloneSnapshotValue(snapshot.obstacles);
@@ -690,7 +659,6 @@ function updateConstruction(game: Game) {
     // owner, 10-02).
     const builders = game.units.filter((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id && workGap(unit, building) <= WORK_REACH);
     if (builders.length === 0) continue;
-    for (const builder of builders) addWorkerHammerEffect(game, builder, building);
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
     // same share of the health it started without.
     const before = building.buildProgress;
@@ -770,16 +738,6 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
     targetScore = score;
   });
   return target;
-}
-
-function updateDockRepairs(game: Game) {
-  if (game.tick % 20) return;
-  for (const ship of game.units) {
-    if (unitMover(ship.kind)!=="sea" || ship.hp>=ship.maxHp || !isPlayerId(ship.owner) || ship.order.type==="attack" || ship.order.type==="attackMove") continue;
-    const dock=game.buildings.find(building=>building.owner===ship.owner && building.kind==="shipyard" && building.complete && distance(ship,building)<240);
-    if (!dock || playerState(game,ship.owner).gold<1)continue;
-    spendGold(game,ship.owner,1);ship.hp=Math.min(ship.maxHp,ship.hp+3);
-  }
 }
 
 function updateRegeneration(game: Game) {
@@ -891,16 +849,8 @@ function updateUnits(game: Game): Ferry | undefined {
       updateMineOrder(game, unit);
       continue;
     }
-    if (unit.order.type === "build") {
-      updateBuildOrder(game, unit);
-      continue;
-    }
     if (unit.order.type === "repair") {
       updateRepairOrder(game, unit);
-      continue;
-    }
-    if (unit.order.type === "repairShip") {
-      updateShipRepairOrder(game, unit);
       continue;
     }
     if (unit.order.type === "pickupItem") {
@@ -975,10 +925,7 @@ function updateNeutralLeash(game: Game, unit: Unit) {
     return false;
   }
   const target = unit.order.type === "attack" ? findTarget(game, unit.order.targetId) : undefined;
-  const returning = unit.order.type === "move" && distance(unit.order, home) <= NEUTRAL_RETURN_STOP_RANGE;
-  const lostQuarry = !target && (unit.order.type === "idle" || unit.order.type === "attack");
-  if (homeDistance <= NEUTRAL_LEASH_RANGE && !returning && (!lostQuarry || homeDistance <= NEUTRAL_RETURN_STOP_RANGE)
-    && (!target || distance(target, responseOrigin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE)) return false;
+  if (homeDistance <= NEUTRAL_LEASH_RANGE && (!target || distance(target, responseOrigin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE)) return false;
 
   // @@@neutral-leash - Creeps reset to their authored camp instead of dragging fights into worker lines forever.
   unit.order = { type: "move", x: home.x, y: home.y };
@@ -1007,7 +954,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
     unit.order = { type: "attackMove", x: order.x, y: order.y };
   }
 
-  const target = nearestEnemyTarget(game, unit, unitRules(game,unit).weapon ? Math.max(AUTO_ACQUIRE_RANGE,unit.attackRange) : AUTO_ACQUIRE_RANGE);
+  const target = nearestEnemyTarget(game, unit, AUTO_ACQUIRE_RANGE);
   if (target) {
     unit.order = { type: "attackMove", x: order.x, y: order.y, targetId: target.id };
     attackMoveTowardTarget(game, unit, target);
@@ -1019,7 +966,6 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building) {
   const gap = targetGap(unit, target);
-  if (backOutOfDeadZone(game, unit, target)) return;
   if (gap > unit.attackRange) {
     moveToward(unit, target.x, target.y, game.map);
     return;
@@ -1049,7 +995,6 @@ function updateAttackOrder(game: Game, unit: Unit) {
     return;
   }
   const gap = targetGap(unit, target);
-  if (backOutOfDeadZone(game, unit, target)) return;
   if (gap > unit.attackRange) {
     if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       unit.order = { type: "move", x: order.leashX, y: order.leashY };
@@ -1120,8 +1065,8 @@ function updateBoardOrder(game: Game, unit: Unit) {
     return;
   }
   if (alongside(unit, transport)) return;
-  const goal = transport.order.type === "idle" ? unit.order.berth ?? transport : transport;
-  moveToward(unit, goal.x, goal.y, game.map);
+  moveToward(unit, transport.x, transport.y, game.map);
+  if (transport.order.type === "idle") moveToward(transport, unit.x, unit.y, game.map);
 }
 
 // After every unit has moved: soldiers alongside the transport they were told to board go aboard while their supply fits
@@ -1129,15 +1074,6 @@ function updateBoardOrder(game: Game, unit: Unit) {
 // that find no land near enough stay aboard) and stops (see @@@transport).
 function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
   if (boarding.length > 0) {
-    const approached = new Set<string>();
-    for (const passenger of boarding) {
-      if (passenger.order.type !== "board" || approached.has(passenger.order.transportId)) continue;
-      const boat = findTarget(game, passenger.order.transportId);
-      if (!boat || !isUnit(boat) || boat.order.type !== "idle") continue;
-      approached.add(boat.id);
-      const berth = passenger.order.berth ?? boardingBerth(game.map, passenger, boat);
-      if (berth && !alongside(passenger, boat)) moveToward(boat, berth.x, berth.y, game.map);
-    }
     const aboard = new Set<Unit>();
     for (const unit of boarding) {
       if (unit.order.type !== "board") continue;
@@ -1189,36 +1125,6 @@ function upkeepGoldIncome(carriedGold: number, supplyUsed: number) {
   return carriedGold;
 }
 
-function updateBuildOrder(game: Game, unit: Unit) {
-  if (unit.order.type !== "build" || !isPlayerId(unit.owner)) return;
-  const order = unit.order;
-  const def = BUILDING_DEFS[order.buildingKind];
-  const half = footprintHalf(def.radius, TERRAIN_CELL);
-  const gap = Math.hypot(Math.max(0, Math.abs(unit.x-order.x)-half), Math.max(0, Math.abs(unit.y-order.y)-half));
-  if (gap > WORK_REACH) {
-    // Track movement rather than a fixed journey limit: long walks are valid, blocked plans must release their worker.
-    if (order.progressTick === undefined || Math.hypot(unit.x - (order.progressX ?? unit.x), unit.y - (order.progressY ?? unit.y)) > 24) {
-      order.progressTick = game.tick; order.progressX = unit.x; order.progressY = unit.y;
-    } else if (game.tick - order.progressTick > seconds(20)) {
-      unit.order = { type: "idle" }; return;
-    }
-    moveToward(unit, order.x, order.y, game.map); return;
-  }
-  // Revalidate at arrival: two builders cannot claim the same site, and money is paid only on breaking ground.
-  if (buildingPlacementBlocker(game, order.buildingKind, order) || terrainBlocksPlacement(game.map, order.buildingKind, order)) {
-    unit.order = { type: "idle" }; return;
-  }
-  if (playerState(game, unit.owner).gold < def.cost) return; // Wait for funds, retaining the visible plan.
-  spendGold(game, unit.owner, def.cost);
-  const building = createBuilding(`building-${unit.owner}-${order.buildingKind}-${game.nextId++}`, unit.owner, order.buildingKind, order.x, order.y, false);
-  applyDerivedBuildingStats(game, building);
-  building.hp = constructionStartHp(building.maxHp);
-  game.buildings.push(building);
-  syncBuildingBodies(game);
-  unit.order = { type: "repair", buildingId: building.id };
-  addEffect(game, "build", building.x, building.y, 60);
-}
-
 function updateRepairOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "repair" || !isPlayerId(unit.owner)) return;
   const order = unit.order;
@@ -1246,33 +1152,6 @@ function updateAutoRepair(game: Game, unit: Unit) {
   return repairBuildingTick(game, unit, building);
 }
 
-function updateShipRepairOrder(game: Game, worker: Unit) {
-  if (worker.order.type !== "repairShip" || !isPlayerId(worker.owner)) return;
-  const targetId = worker.order.targetId;
-  const ship = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner && unitMover(unit.kind) === "sea");
-  if (!ship || ship.hp <= 0 || ship.hp >= ship.maxHp) { worker.order = { type: "idle" }; return; }
-  if (distance(worker, ship) > worker.radius + ship.radius + WORK_REACH) {
-    moveToward(worker, ship.x, ship.y, game.map);
-    return;
-  }
-  addWorkerHammerEffect(game, worker, ship);
-  if (worker.cooldown > 0) return;
-  const player = playerState(game, worker.owner);
-  if (player.gold < 1) return;
-  const fullCost = Math.max(1, Math.round(UNIT_DEFS[ship.kind].cost * REPAIR_FULL_COST_FRACTION));
-  const healed = Math.max(1, ship.maxHp / fullCost);
-  spendGold(game, worker.owner, 1);
-  ship.hp = Math.min(ship.maxHp, ship.hp + healed);
-  worker.cooldown = Math.max(1, Math.round(healed / REPAIR_HP_PER_TICK));
-}
-
-function addWorkerHammerEffect(game: Game, worker: Unit, target: Unit | Building) {
-  if (game.effects.some(effect => effect.type === "repair" && effect.unitId === worker.id)) return;
-  // Presentation IDs must not advance the entity counter or change army ordering.
-  game.effects.push({ id: `work-${worker.id}-${game.tick}`, type: "repair", x:worker.x, y:worker.y,
-    duration:seconds(0.65), remaining:seconds(0.65), unitId:worker.id, fromX:target.x, fromY:target.y });
-}
-
 function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   if (!isPlayerId(unit.owner)) return false;
   const owner = unit.owner;
@@ -1283,7 +1162,6 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
   unit.cooldown = Math.max(1, Math.round(hpPerGold / REPAIR_HP_PER_TICK));
-  addWorkerHammerEffect(game, unit, building);
   addRepairHammerEffect(game, building);
   return true;
 }
@@ -1304,7 +1182,7 @@ function queueTraining(game: Game, building: Building, unitKind: TrainableUnitKi
     throw new Error(`Need more supply to train ${unitKind}`);
   }
   spendGold(game, building.owner, UNIT_DEFS[unitKind].cost);
-  building.queue.push({ id: `training-${game.nextId++}`, unitKind, remaining: trainTimeFor(unitKind) });
+  building.queue.push({ unitKind, remaining: trainTimeFor(unitKind) });
   updateSupplyState(game);
 }
 
@@ -1543,17 +1421,6 @@ function castAbility(
     addEffect(game, queued ? "queuedMove" : "move", at.x, at.y, queued ? 38 : 24);
   };
 
-  if (def.behavior === "weapon") {
-    const target = targetId ? findStrikeTarget(game, targetId) : undefined;
-    if (def.target === "enemy" && (!target || !areEnemyOwners(game, owner, target.owner))) throw new Error("Weapon skill requires an enemy target");
-    if (ability === "ramBreach" && (!target || isUnit(target))) throw new Error("Breach requires a building or obstacle");
-    const point = target ?? (isNumber(x) && isNumber(y) ? { x, y } : undefined);
-    if (!point) throw new Error("Weapon skill requires a target point");
-    if (def.weapon.minRange && distance(caster, point) < def.weapon.minRange) throw new Error("Target inside weapon minimum range");
-    if (queued || distance(caster, point) > def.range + (target && !isUnit(target) ? target.radius : 0)) later({type:"cast",ability,...(target ? {targetId:target.id} : {x:point.x,y:point.y})},point);
-    else applyWeaponAbility(game,caster,ability,point,def,target?.id);
-    return;
-  }
   if (def.behavior === "heal") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && !areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Heal requires an allied unit target");
@@ -1591,26 +1458,24 @@ function updateCastOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "cast") return;
   const def = ABILITY_DEFS[order.ability];
-  const target = order.targetId === undefined ? undefined : findStrikeTarget(game, order.targetId);
+  const target = order.targetId === undefined ? undefined : game.units.find((candidate) => candidate.id === order.targetId);
   const end = () => {
     unit.order = { type: "idle" };
   };
   if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end();
   const at = target ?? (isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined);
   if (!at) return end();
-  if (def.behavior === "weapon" && def.weapon.minRange && distance(unit, at)<def.weapon.minRange) return end();
-  if (distance(unit, at) > def.range + (def.behavior === "weapon" && target && !isUnit(target) ? target.radius : 0)) {
+  if (distance(unit, at) > def.range) {
     moveToward(unit, at.x, at.y, game.map);
     // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
     if (walkEnded(game, unit, at, 5)) end();
     return;
   }
   if (abilityCooldown(unit, order.ability) > 0) return end();
-  if (def.behavior === "weapon") applyWeaponAbility(game,unit,order.ability,at,def,target?.id);
-  else if (def.behavior === "heal" && target && isUnit(target)) applyHeal(game, unit, order.ability, target, def);
-  else if (def.behavior === "curse" && target && isUnit(target)) applyCurse(game, unit, order.ability, target, def);
+  if (def.behavior === "heal" && target) applyHeal(game, unit, order.ability, target, def);
+  else if (def.behavior === "curse" && target) applyCurse(game, unit, order.ability, target, def);
   else if (def.behavior === "summon") applySummon(game, unit, order.ability, at.x, at.y, def);
-  else if (def.behavior === "charge" && target && isUnit(target) && distance(unit, target) >= def.minRange && canReach(game.map, unit, target)) {
+  else if (def.behavior === "charge" && target && distance(unit, target) >= def.minRange && canReach(game.map, unit, target)) {
     // The charge's own rule sees to what follows it (see endCharge): the next queued order, else attacking its unit.
     startCharge(game, unit, order.ability, target, def, false);
     return;
@@ -1747,7 +1612,7 @@ function autocastStep(game: Game, unit: Unit) {
       if (applyBloodlust(game, unit, ability, def)) return;
     } else if (def.behavior === "web") {
       if (applyWeb(game, unit, ability, def)) return;
-    } else if (def.behavior === "charge" && unit.order.type !== "hold") {
+    } else if (unit.order.type !== "hold") {
       const target = autocastChargeTarget(game, unit, def);
       if (target) return startCharge(game, unit, ability, target, def, false);
     }
@@ -1886,13 +1751,11 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
     return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) && canReach(game.map, rider, target) ? target : undefined;
   }
   if (order.type !== "idle" && order.type !== "attackMove") return undefined;
-  let charged: Set<string> | undefined;
+  const charged = new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
   let free: Unit | undefined;
   let any: Unit | undefined;
   forEachNearbyUnit(game, rider, def.range, (candidate) => {
     if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def) || !canReach(game.map, rider, candidate)) return;
-    // Most riders are out of charge range: only scan existing charges when a candidate exists.
-    charged ??= new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
     if (!any || distance(rider, candidate) < distance(rider, any)) any = candidate;
     if (!charged.has(candidate.id) && (!free || distance(rider, candidate) < distance(rider, free))) free = candidate;
   });
@@ -2065,15 +1928,6 @@ function updateWorldEffects(game: Game) {
 }
 
 function applyWorldEffectTick(game: Game, effect: WorldEffect) {
-  if (effect.type === "burningGround" && effect.owner && effect.damage && effect.radius && effect.tickEvery) {
-    if (effect.remaining % effect.tickEvery !== 0) return;
-    const source = effect.unitId ? findTarget(game,effect.unitId) : undefined;
-    const attacker = source ?? scriptSource({id:effect.unitId ?? effect.id,owner:effect.owner,x:effect.x,y:effect.y});
-    for (const target of [...game.units,...game.buildings]) if (target.hp>0 && areEnemyOwners(game,effect.owner,target.owner) && distance(effect,target)<=effect.radius+target.radius) {
-      const taken=applyDamage(game,attacker,target,effect.damage);if(taken!==undefined)addHitEffect(game,target,taken,source);
-    }
-    return;
-  }
   if (effect.type !== "storm" || !effect.owner || !effect.damage || !effect.radius || !effect.tickEvery) return;
   if (effect.remaining !== effect.duration && effect.remaining % effect.tickEvery !== 0) return;
   forEachNearbyUnit(game, effect, effect.radius, (target) => {
@@ -2096,7 +1950,6 @@ function updateProjectiles(game: Game) {
 }
 
 function applyProjectileImpact(game: Game, projectile: Projectile) {
-  if (projectile.weapon) { impactWeapon(game, projectile); return; }
   const target = findStrikeTarget(game, projectile.targetId);
   if (!target || target.hp <= 0 || !areEnemyOwners(game, projectile.owner, target.owner)) return;
   const shooter = findTarget(game, projectile.attackerId);
@@ -2147,65 +2000,7 @@ function updateUnitStatusEffects(game: Game) {
   }
 }
 
-type WeaponAbility = Extract<(typeof ABILITY_DEFS)[AbilityKind],{behavior:"weapon"}>;
-function applyWeaponAbility(game:Game,caster:Unit,ability:AbilityKind,at:{x:number;y:number},def:WeaponAbility,targetId?:string){
-  caster.abilityCooldowns=withAbilityCooldown(caster,ability,def.cooldown);
-  fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId);
-}
-function backOutOfDeadZone(game:Game,unit:Unit,target:Unit|Building|Obstacle){
-  const minimum=unitRules(game,unit).weapon?.minRange;if(!minimum||distance(unit,target)>=minimum)return false;
-  const dx=unit.x-target.x,dy=unit.y-target.y,length=Math.hypot(dx,dy)||1;
-  moveToward(unit,unit.x+(dx||1)/length*(minimum+32),unit.y+dy/length*(minimum+32),game.map);return true;
-}
-function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:string},damage:number,weapon:WeaponDef,range:number,skill:{rootTicks?:number;burnTicks?:number}={},targetId=at.id){
-  if(weapon.delivery==="ram"){
-    const target=targetId?findStrikeTarget(game,targetId):undefined;
-    if(target&&areEnemyOwners(game,attacker.owner,target.owner))hitWeapon(game,attacker,target,damage,weapon);
-    addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind});return;
-  }
-  if(weapon.delivery==="cone"){
-    for(const target of [...game.units,...game.buildings])if(target.hp>0&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(attacker,at,target,range,weapon.coneAngle??.6))hitWeapon(game,attacker,target,damage*(weapon.burst??1),weapon);
-    addEffect(game,"grapeshot",at.x,at.y,14,{fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind,radius:range});return;
-  }
-  const flight=Math.max(4,Math.ceil(distance(attacker,at)/(weapon.delivery==="shell"?12:28)));
-  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,damage,remaining:flight,duration:flight,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
-  game.projectiles.push(projectile);
-  addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",at.x,at.y,flight,{fromX:attacker.x,fromY:attacker.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind,radius:weapon.radius??0});
-}
-function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number){
-  const dealt=weaponDamage(weapon,damage,!isUnit(target),isUnit(target)&&unitMover(target.kind)==="sea",share);
-  const armored=weapon.delivery==="ram"?dealt:heavyArmoredDamage(game,attacker,target,dealt);
-  const taken=applyDamage(game,attacker,target,armored);if(taken===undefined)return;
-  addHitEffect(game,target,taken,attacker);
-  if(rootTicks&&isUnit(target)&&target.hp>0)setStatus(target,{type:"root",remaining:rootTicks});
-}
-function impactWeapon(game:Game,projectile:Projectile){
-  const weapon=projectile.weapon!;
-  // Remember the shooter's kind if it died during flight: armor and attribution remain consistent.
-  const source=findTarget(game,projectile.attackerId);
-  const fallback=projectileAttacker(projectile);
-  const attacker=source??(projectile.sourceKind?{...fallback,kind:projectile.sourceKind,order:{type:"idle"},effects:[],xp:0,level:0,kills:0,abilityCooldown:0,speed:0} as unknown as Unit:fallback);
-  const from={x:projectile.fromX,y:projectile.fromY},to={x:projectile.toX,y:projectile.toY};
-  const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&areEnemyOwners(game,projectile.owner,t.owner));
-  if(weapon.delivery==="bolt"){
-    const hits=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!).slice(0,weapon.maxHits??1);
-    hits.forEach(({target},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks));
-  }else{
-    for(const target of foes){const gap=Math.max(0,distance(to,target)-target.radius);if(gap>(weapon.radius??0))continue;
-      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks);
-    }
-    addEffect(game,"siegeImpact",to.x,to.y,24,{radius:weapon.radius??0,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
-    if(projectile.burnTicks)addEffect(game,"burningGround",to.x,to.y,projectile.burnTicks,{owner:projectile.owner,unitId:projectile.attackerId,damage:3,radius:weapon.radius??0,tickEvery:10,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
-  }
-}
-
 function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
-  const weapon = isUnit(attacker) ? unitRules(game, attacker).weapon : undefined;
-  if (weapon) {
-    if (weapon.minRange && distance(attacker, target) < weapon.minRange) return;
-    fireWeapon(game, attacker, target, damage, weapon, attackRange);
-    return;
-  }
   if (attackRange > RANGED_ATTACK_RANGE_THRESHOLD) {
     launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, damage));
     return;
@@ -2317,7 +2112,6 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
 function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number): number | undefined {
-  if ('invulnerable' in target && target.invulnerable) return undefined;
   if (isObstacle(target)) {
     // A rock pile or gate wakes nobody and pays nothing when it falls (see @@@obstacle).
     const hpBefore = target.hp;
@@ -2594,7 +2388,7 @@ function completeBuildings(game: Game, owner: PlayerId, kind: Building["kind"]) 
 
 function nearestCompleteTownHall(game: Game, owner: Unit["owner"], x: number, y: number) {
   if (!isPlayerId(owner)) return undefined;
-  return completeBuildings(game, owner, "townHall").filter(building => sameGround(game.map, { x, y }, building)).reduce<Building | undefined>((best, building) => {
+  return completeBuildings(game, owner, "townHall").reduce<Building | undefined>((best, building) => {
     if (!best) return building;
     return distance({ x, y }, building) < distance({ x, y }, best) ? building : best;
   }, undefined);
@@ -2755,14 +2549,6 @@ function removeDead(game: Game) {
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
   dropItemsFromDeadUnits(game, deadUnits);
-  // Only actual field deaths create remains. Boarding, scripted exits and
-  // summon expiry do not; passengers stay aboard the wreck. IDs do not consume
-  // the live-entity counter, and remains never join targeting or pathing indexes.
-  for (const unit of game.units) if (unit.hp <= 0) {
-    (game.corpses ??= []).push({ id: `corpse-${unit.id}-${game.tick}`, unitId: unit.id,
-      kind: unit.kind, owner: unit.owner, x: unit.x, y: unit.y, radius: unit.radius,
-      diedAtTick: game.tick, ...(unit.variant ? { variant: unit.variant } : {}) });
-  }
   game.units = game.units.filter((unit) => unit.hp > 0);
   game.buildings = game.buildings.filter((building) => building.hp > 0);
   // A rock pile or gate broken is gone, and its way open (see @@@obstacle).

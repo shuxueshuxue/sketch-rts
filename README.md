@@ -4,21 +4,21 @@
 
 [中文说明](docs/README.zh.md) · [Play online](https://lexicalmathical.com/sketch-rts/) · [Quick start](#quick-start) · [How to play](#how-to-play) · [AI](#ai) · [Development](#development)
 
-![Native skirmish: painted units, physical buildings and the compact command deck](docs/reviews/skirmish-live.jpg)
+![Sketch RTS — the home screen with a live scene behind the menu](docs/art/menu.webp)
 
-Selection stress scene: 23 unit types seeded through the SDK to exercise the portrait grid, rather than a normal starting army.
-
-Build a base, send workers to the gold mines, and grow a small army into a large one. Two races with their own buildings and tech; casters, cavalry charges and heavy elites; neutral camps that guard the best mines, mercenaries for hire, and shops; six ship types and four siege engines for fights across land and water. The map pool has thirteen maps, plus seeded generated layouts.
+Build a base, send workers to the gold mines, and grow a small army into a large one. Two races with their own buildings and tech; casters, cavalry charges and heavy elites; neutral camps that guard the best mines, mercenaries for hire, and shops; warships and transports for maps cut by water. Every match runs on twelve maps drawn by a seeded generator after classic ladder maps.
 
 Play in the browser against the computer, host a room for friends, or write an opponent yourself: the SDK, the replay tools, the AI benchmarks and the game all run the same command-frame simulation.
 
-> **In development.** The rules, the AI and the maps change often; the hosted build can be deployed from a reviewed development branch. Campaign mode has been removed; the playable mode is skirmish, solo or multiplayer.
+> **In development.** The rules, the AI and the maps change often; the hosted game follows the repository's `main` with some delay.
 
 ## The game
 
+![A grown base: town hall, production buildings, farms, a tower and a moon well; workers at the mine; an army selected, with the command card and the minimap](docs/art/match.webp)
+
 ### Two races
 
-Both races build town halls (which train workers), farms, defense towers, workshops and shipyards. Everything else is their own.
+Both races build town halls (which train workers), farms, defense towers and shipyards. Everything else is their own.
 
 | | Grove Kin | Ember Pact |
 | --- | --- | --- |
@@ -26,27 +26,31 @@ Both races build town halls (which train workers), farms, defense towers, worksh
 | Advanced — supply cap 42 | Raider (stables); priest, summoner, witch (sanctum) | Ember acolyte, ash hexer, pyre caller (cinder spire) |
 | Elite — supply cap 60 | Knight (stables); golem (workshop) | Ash chieftain, cinder revenant (ashen hall) |
 | Healing building | Moon well | Ember shrine |
-| Ships (shipyard) | Transport, warship, cutter, bombard ship, fire ship, carrier | The same six ships |
+| Ships (shipyard) | Transport, warship | Transport, warship |
 
 - **Supply is the tech.** Advanced units unlock at a supply cap of 42 and elites at 60. The cap counts the halls and farms you have built, not the supply in use: a farm gives 6 for 120 gold, a town hall 8. A locked unit stays on the command card, greyed, with the cap it waits for.
 - **Upkeep.** From 51 supply in use, mined gold comes in at 70%; from 81, at 40%.
 - **Heavy armor.** The four elites take half damage from shooters and casters and 70% from towers; melee blows land in full.
-- **Spells have their own cooldowns**, as in Warcraft III: a caster casts whenever its spell is ready, whatever its weapon is doing. A heal restores 55 health every 12 seconds; the witch's curse takes 60% off a unit's damage for 18 seconds and deals 100 damage to a summoned unit. Supported caster spells can be switched to autocast (right-click the button); physical siege and naval abilities are aimed manually. A spell aimed beyond its range is walked to and cast on arrival.
+- **Spells have their own cooldowns**, as in Warcraft III: a caster casts whenever its spell is ready, whatever its weapon is doing. A heal restores 55 health every 12 seconds; the witch's curse takes 60% off a unit's damage for 18 seconds and deals 100 damage to a summoned unit. Every spell can be switched to cast on its own (right-click its button). A spell aimed beyond its range is walked to and cast on arrival.
 - **Cavalry charges.** The raider and the knight charge an enemy 180 to 300 away for a double blow; a target farther off is ridden up to first.
 - **Melee stances.** Melee units fight in one of three stances (`Z`): *pursue* (chase and strike, the all-round choice), *brace* (each blow shoves the enemy back) and *shock* (each blow shoves the enemy and carries the unit in after it).
 - **Ember's elites have jobs of their own.** The ash chieftain deals 50% more damage to casters and summoned units; the cinder revenant has less health but regenerates 7 health per second.
 - **Units fight back.** A unit hit while it has no orders turns on its attacker, and idle soldiers nearby come to help; a unit that starts its own chase gives up after a while and walks back. Orders you give are never overridden.
-- **Buildings take whole cells,** as in Warcraft III. The build preview snaps to the grid and shows the cells a building would take, green where it can stand and red where it cannot. A distant build order remains a private worker intention: the building, collision and gold payment begin only when its worker reaches the site. Enemies cannot destroy an unstarted intention.
+- **Buildings take whole cells,** as in Warcraft III. The build preview snaps to the grid and shows the cells a building would take, green where it can stand and red where it cannot.
 
 ### Neutrals, mercenaries and items
 
+![An army attacking a neutral camp](docs/art/camp.webp)
+
 Neutral camps guard the gold mines away from your main: wildlings, murlocs, golems, ogres, spiders and dragons, in camps of rising strength. The strongest have abilities of their own — a golem's stomp, an ogre mage's bloodlust, a spider queen's web. Camps pay gold and experience when cleared, and some drop items. Units gain levels from experience.
 
-Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls, guardian scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys. Ground drops, inventory slots and shop cards share the painted item models. A purchase goes to the nearest eligible friendly unit at the shop; the shop retains its building portrait and name while the purchased item appears in a separate detail row and the recipient’s inventory remains visible. Right-click an inventory slot to drop its item.
+Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys.
 
 ### Maps
 
-The map pool holds thirteen layouts. Most reinterpret classic ladder maps; Broken Sea tests independent island starts:
+![The map chooser with Gull Island selected: two home islands, island mines, and the map's facts](docs/art/maps.webp)
+
+The map pool holds twelve maps, each drawn by the generator on one idea taken from a Warcraft III ladder map:
 
 | Map | Players | Idea |
 | --- | --- | --- |
@@ -62,30 +66,25 @@ The map pool holds thirteen layouts. Most reinterpret classic ladder maps; Broke
 | Gull Island | 2 | Home islands, a contested isle between them, mines only ships reach (Northern Isles) |
 | Stillwater | 4 | Two teams across a river, forded and bridged, a shop on each bank (Gnoll Wood) |
 | Two Shores | 4 | Two teams on the banks of a strait, its mines on islands between the fords |
-| Broken Sea | 4 | A 6144 × 6144 sea, separate starting islands and a contested central mainland |
 
-On the classic land layouts, each main sits on a plateau with a single ramp, its natural expansion at the ramp's foot behind a guard camp; forests, rock piles and gates narrow the ways into chokes; and wherever there is open water, every start has a beach for a shipyard. The generator also draws fresh maps for any seed and any number of players (the `ladder` map).
+What every map shares: each main sits on a plateau with a single ramp, its natural expansion at the ramp's foot behind a guard camp; forests, rock piles and gates narrow the ways into chokes; and wherever there is open water, every start has a beach for a shipyard. The generator also draws fresh maps for any seed and any number of players (the `ladder` map).
 
 ### Navy and islands
 
-Shipyards stand on beaches. Right-click land troops onto a friendly transport to board; unload with `D`. Capacity is measured in supply, not head count: a transport carries 8 supply and a carrier 24. Passengers and an idle ship meet at a shared reachable shore.
+![Warships and transports leaving a shipyard to meet an enemy squadron](docs/art/naval.webp)
 
-| Ship | Role | Active ability |
-| --- | --- | --- |
-| Transport | Early ferry, 8 supply | Unload |
-| Warship | General naval combat | — |
-| Cutter | Fast scouting and pursuit | — |
-| Bombard ship | Long-range coast and building attack; minimum firing range | Siege barrage |
-| Fire ship | Close-range burning attack | Fire broadside |
-| Carrier | Large landing force, 24 supply | Unload |
-
-Workers can repair damaged friendly ships within reach of the shore: select workers and right-click the ship. Repair costs gold; workers cannot reach a ship out in deep water. Shipyards also repair nearby out-of-combat friendly ships for gold.
-
-Workshops train a ram, ballista, catapult and organ gun. They have distinct attacks, projectile art and active abilities: ram impact, bolt volley, siege barrage and grapeshot. Siege guns obey their minimum range; active physical abilities have their own cooldown and do not use caster mana.
+A shipyard stands on a beach. Warships fight at long range on water; transports carry eight soldiers — right-click your soldiers onto a transport to board it, and unload them (`D`) on another shore. Island mines, the far side of a strait and the backs of bases on a sea map are reached by ship.
 
 ### Units and buildings
 
-The art is drawn with Canvas and reused on the battlefield, in portraits and on command buttons. Building volume uses projected faces and grounded shadows; fallen units leave persistent sketch corpses. Item art lives in `src/client/art/items.ts`. Run `npm run dev` and open `/unit-sheet.html` to see the catalog live. See the [art notes](docs/woodland-atlas.md) for how it is built.
+<details>
+<summary><strong>Every unit and building, drawn by the game's own code</strong></summary>
+
+![Unit and building catalog](docs/art/catalog.webp)
+
+</details>
+
+The art is drawn with Canvas and reused on the battlefield, in portraits and on command buttons. Run `npm run dev` and open `/unit-sheet.html` to see the catalog live. See the [art notes](docs/woodland-atlas.md) for how it is built.
 
 ## How to play
 
@@ -95,12 +94,10 @@ The art is drawn with Canvas and reused on the battlefield, in portraits and on 
 2. On a desktop, click the battlefield to lock the mouse to it (`Esc` releases it).
 3. Select a worker, right-click a gold mine, press `B` to open the building palette, build a barracks and train your first soldiers.
 
-The battle HUD uses transparent model portraits on compact slate surfaces. A single selection has a large subject portrait beside its name, health and attack. Mixed armies add a four-column roster below; click a portrait or use `Tab` to focus its commands. Large rosters scroll vertically within a fixed height and retain their scroll position during updates. Buildings, shops and mercenary camps share the subject layout; commands and inventory form a closely spaced stack beside it.
-
 | Control | Action |
 | --- | --- |
 | Left-click / drag | Select a unit or building / select several units |
-| Right-click | Move, gather, attack, repair a building/ship, or board a transport |
+| Right-click | Move, gather, attack, or board a transport — whatever fits the target |
 | `Shift` + order | Queue the order after the current ones |
 | `A`, then click | Attack-move |
 | `B` (worker selected) | Building palette |
@@ -122,17 +119,7 @@ The computer players are scripted AIs that read the game state and issue the sam
 - **V7** — plays without being told whom it faces, as either race, and reads the opponent from the board.
 - **V8** — like V7, but fights at arm's length with no shooters or summoners: melee lines, healers and cavalry charges.
 
-**V9** remains an experimental **1 against 3** benchmark opponent. Historical win rates do not describe the current rules or balance. Earlier versions (V1–V4, V6) remain for benchmarks.
-
-Shared skirmish policies handle siege units, fleet combat, ferry boarding, island colonies and worker relocation using terrain connectivity rather than map names. Reachable safe land mines take priority over overseas expansion; guarded landings need an adequate force. An empty home mine is not global resource exhaustion: living idle workers and remaining reachable or ferry-accessible gold are audited as an economy failure.
-
-Run native island self-play (including previously unseen generated layouts) with:
-
-```bash
-SELFPLAY_TICKS=90000 node --import tsx scripts/naval-selfplay.ts /tmp/naval-selfplay.json
-```
-
-See the [skirmish review](docs/reviews/skirmish-naval-repair.zh.md) for tested behavior and remaining limits.
+**V9** is the current subject of work: it plays **1 against 3** — V5, V7 and V8 at once — on the generated maps, and is measured by a 500-game gauntlet; it currently wins about half of them. Earlier versions (V1–V4, V6) remain for benchmarks.
 
 ```bash
 npm run benchmark:ai-v9-gauntlet -- --seed v5-hybrid-50-2026-06-12 --map-count 50
@@ -256,7 +243,7 @@ A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](src/recorde
 
 - Touch controls for phones and tablets.
 - A V9 that beats three opponents at once with solid play across every unit type and map.
-- More races and abilities, with further skirmish balance and naval strategy work.
+- More races and abilities; a campaign built on the story tools in `src/story/`.
 - Better reconnection and spectator tools.
 - Map and mod authoring.
 

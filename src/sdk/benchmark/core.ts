@@ -317,7 +317,11 @@ function updateStandardOnCommand(state: StandardBenchmarkState, game: Game, owne
   }
   if (command.type === "train") state.unitTrainingGoldSpent[owner] = (state.unitTrainingGoldSpent[owner] ?? 0) + UNIT_DEFS[command.unitKind].cost;
   if (command.type === "build" && command.buildingKind === "townHall") {
-    // The foundation appears on the worker's arrival and is registered after that simulation step.
+    // @@@expansion-hall-id - This runs after the command, so a hall it placed is on the board: the owner's town hall
+    // standing where the command put it (two halls cannot share a spot). The id used to be guessed from game.nextId, which
+    // the build had already moved past the hall's number, so no hall ever matched and both expansion counts stayed null.
+    const hall = game.buildings.find((building) => building.owner === owner && building.kind === "townHall" && building.x === command.x && building.y === command.y);
+    if (hall && hall.id !== state.mainTownHallIds[owner]) state.expansionTownHallIds[owner]?.add(hall.id);
   }
 }
 
@@ -358,10 +362,6 @@ function lazily<T>(make: () => T): () => T {
 }
 
 function updateStandardAfterStep(state: StandardBenchmarkState, before: StepState, after: GameSnapshot, itemsBefore: ItemStates, itemsAfter: ItemStates) {
-  // Construction intents create their foundation on arrival, after the command's telemetry has run.
-  for (const building of after.buildings) if (building.kind === "townHall" && building.id !== state.mainTownHallIds[building.owner]) {
-    state.expansionTownHallIds[building.owner]?.add(building.id);
-  }
   // @@@step-maps-on-demand - The by-id maps and the missing neutrals are only read before a player's first engagement or
   // expansion hit, when a neutral dies, or when a well heals, so they are built the first time one of those asks, from
   // the same lists and in the same order (the game does not move while the counts run).

@@ -1,4 +1,3 @@
-import { WARFARE_UNITS } from "./units-warfare";
 import type { TrainableUnitKind, UnitKind } from "../../shared/types";
 import type { TrainedUnitCard, UnitCard } from "./cards";
 import { COMMON_UNITS } from "./units-common";
@@ -8,7 +7,7 @@ import { CREEP_UNITS } from "./units-creeps";
 import { NEUTRAL_UNITS } from "./units-neutral";
 
 // Every trainable unit needs a full card (tooltip words and a command button); the rest need a name and a painter.
-export const TRAINED_UNIT_CARDS: Record<TrainableUnitKind, TrainedUnitCard> = { ...COMMON_UNITS, ...GROVE_UNITS, ...EMBER_UNITS, ...WARFARE_UNITS };
+export const TRAINED_UNIT_CARDS: Record<TrainableUnitKind, TrainedUnitCard> = { ...COMMON_UNITS, ...GROVE_UNITS, ...EMBER_UNITS };
 
 export const UNIT_CARDS: Record<UnitKind, UnitCard> = { ...TRAINED_UNIT_CARDS, ...NEUTRAL_UNITS, ...CREEP_UNITS };
 

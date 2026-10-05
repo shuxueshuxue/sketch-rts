@@ -196,7 +196,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   shipyard: {
     name: { en: "Shipyard", zh: "船坞" },
-    description: { en: "Builds ships on the coast. Repairs nearby ships outside combat for 1 gold and 3 health per second.", zh: "在海岸建造船只。附近未进攻的船只每秒消耗 1 金修复 3 点生命。" },
+    description: { en: "Builds ships. Stands on the shore: part of it on land or shallows, part over open water.", zh: "建造船只。只能建在岸边：一部分在陆地或浅水上，一部分伸进开阔水面。" },
     command: { icon: "⚓", hotkey: "y" },
     glyph: { frame: "shipyard-dock", marks: ["anchor", "waves", "banner"] },
     paint(b, team) {

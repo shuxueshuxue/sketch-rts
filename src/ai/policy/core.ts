@@ -1,4 +1,3 @@
-import { engineeringWant } from "./engineering";
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -176,7 +175,6 @@ export const AI_SCRIPT_LIBRARY = {
   v6General: { id: "v6General", phase: "tactics", run: planV6General, claimsUnits: v7CreepGroupIds },
   v6Economy: { id: "v6Economy", phase: "economy", run: planV6Economy },
   v8Charge: { id: "v8Charge", phase: "tactics", run: planV8Charge },
-  engineering: { id: "engineering", phase: "economy", run: (snapshot,owner,options) => { const want=engineeringWant(snapshot,owner,options); return want && playerState(snapshot,owner).gold>=want.cost ? want.issue(new Set()) : undefined; } },
   navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
   naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
   v9Shop: { id: "v9Shop", phase: "tactics", run: planV9Shopping, claimsUnits: v9ShopperIds },
@@ -187,7 +185,6 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
-  AI_SCRIPT_LIBRARY.navalEconomy,
   AI_SCRIPT_LIBRARY.supply,
   AI_SCRIPT_LIBRARY.defense,
   AI_SCRIPT_LIBRARY.healingWell,
@@ -195,9 +192,7 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.expansion,
   AI_SCRIPT_LIBRARY.productionBuilding,
   AI_SCRIPT_LIBRARY.tech,
-  AI_SCRIPT_LIBRARY.engineering,
   AI_SCRIPT_LIBRARY.training,
-  AI_SCRIPT_LIBRARY.naval,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
@@ -225,9 +220,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.earlyTech,
   AI_SCRIPT_LIBRARY.productionBuilding,
   AI_SCRIPT_LIBRARY.tech,
-  AI_SCRIPT_LIBRARY.engineering,
   AI_SCRIPT_LIBRARY.training,
-  AI_SCRIPT_LIBRARY.naval,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
@@ -240,6 +233,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.expansionDenial,
   AI_SCRIPT_LIBRARY.workerDefense,
   AI_SCRIPT_LIBRARY.attackWave,
+  AI_SCRIPT_LIBRARY.naval,
 ];
 
 // V6 is its own AI (src/ai/policy/v6): one economy module spends all its gold, and its army modules decide where the army
@@ -249,7 +243,6 @@ export const V6_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.v6Economy,
-  AI_SCRIPT_LIBRARY.naval,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.v6Backline,
@@ -260,6 +253,7 @@ export const V6_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.focusFire,
   AI_SCRIPT_LIBRARY.towerBreaker,
   AI_SCRIPT_LIBRARY.workerDefense,
+  AI_SCRIPT_LIBRARY.naval,
 ];
 
 // V7 starts as V6's stack; it plays both races and must hold against any pair of V3, V5 and V6.
@@ -298,7 +292,6 @@ export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.mercenary,
   AI_SCRIPT_LIBRARY.expansion,
   AI_SCRIPT_LIBRARY.training,
-  AI_SCRIPT_LIBRARY.naval,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
@@ -364,18 +357,6 @@ function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">)
 // A hall's mine takes only workers that can walk to it: a hall on an island is mined by the workers ferried there (see
 // @@@ai-home-ground, @@@ai-naval).
 function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
-  // Recover duplicated intentions from an older save without cancelling the first builder.
-  const seen = new Set<string>();
-  const duplicates: Unit[] = [];
-  for (const worker of units(snapshot, owner)) {
-    if (worker.order.type !== "build") continue;
-    const key = `${worker.order.buildingKind}:${worker.order.x}:${worker.order.y}`;
-    if (seen.has(key)) duplicates.push(worker); else seen.add(key);
-  }
-  if (duplicates.length) {
-    const mine = activeResources(snapshot).find(resource => sameGroundAs(snapshot, duplicates[0]!, resource) && completeBuildings(snapshot, owner, "townHall").some(base => distance(base, resource) < BASE_LOCAL_MINE_RANGE));
-    if (mine) return { type: "mine", unitIds: duplicates.filter(worker => sameGroundAs(snapshot, worker, mine)).map(worker => worker.id), resourceId: mine.id };
-  }
   const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);

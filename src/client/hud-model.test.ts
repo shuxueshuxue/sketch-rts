@@ -147,11 +147,3 @@ function building(id: string, kind: Building["kind"]): Building {
     researchQueue: [],
   };
 }
-
-it('inspects a foreign entity while keeping its command authority empty', () => {
-  const snapshot=snapshotWith({units:[unit('enemy','knight','enemy')]});
-  const selected=new Set(['enemy']);
-  expect(resolveFocusedSelectionId(snapshot,selected,undefined,'player')).toBe('enemy');
-  expect(buildSelectionGroups(snapshot,selected,'enemy','player')[0]?.kind).toBe('knight');
-  expect(focusedSelectionEntities(snapshot,'enemy','player')).toEqual({units:[],buildings:[]});
-});
