@@ -1,3 +1,5 @@
+import { seconds } from "../../../shared/time";
+import { isOpponentOwner } from "../ownership";
 import { unitMover } from "../../../shared/catalog";
 import { MAX_CARRIED_ITEMS, SHOP_REACH as BUY_REACH, carriedItemCount, shopBuyer, standsAtShop } from "../../../shared/shop";
 import { AUTO_ACQUIRE_RANGE } from "../../../shared/sim";
@@ -9,33 +11,23 @@ import { averagePoint, distance } from "../spatial";
 import type { AiPolicyContext } from "../types";
 import { enemyPowerNear, readV6Intel } from "../v6/intel";
 import { v6Memory } from "../v6/memory";
-import { isV9Policy } from "../versions";
+import { isV5HybridPolicy } from "../versions";
 import { playerState } from "../world-model";
 
-// @@@v9-shop - V9 shops (see @@@shop), the owner's guess for how one army beats three: in a lull (no enemy army near its
-// own, none in its bases) it sends one unit at a time from its army to a shop on its own ground within SHOP_REACH of the
-// army that no enemy army or tower is near, nor any creep that takes on its buyer standing there (one within the sim's
-// AUTO_ACQUIRE_RANGE of it: creeps killed 157 of V9's shoppers in 500 games against three, 116 of them within 100 of the
-// shop, by the camp beside it), and buys there what that unit is sent for, when it is the unit standing
-// nearest the shop with room (so the good is its). It buys scrolls, read in the fight (see item-tactics): a guardian
-// scroll while nobody in an army of six carries one, a healing scroll while its army is worn (under WORN of its health).
-// Rings and boots it leaves: over 48 of the 1v3 gauntlet's games with a shop by every start, V9 bought 4 rings and 3
-// boots a game and fell a minute sooner (11.4 minutes against 12.2 without the shop); with scrolls alone it lasted 12.0.
-// The gold is the economy's: an errand under way is one of V9's goals (see v6/economy shopGoals), held for at
-// SHOP_PRIORITY while the unit walks, and spent when it stands at the shop; the errand ends with the purchase, or after
-// ERRAND_TICKS.
+// The V9 shop errand is shared by the humanized V5/V7/V8 stacks: one safe shopper in a lull, a reserved
+// purchase budget, and cancellation when danger appears. Scrolls serve the army; gear serves a bounded specialist.
 export const SHOP_PRIORITY = 45;
 const WORN = 0.7;
 const SHOP_REACH = 900;
 const SHOP_CLEARANCE = 900;
-const ERRAND_TICKS = 20 * 60;
+const ERRAND_TICKS = seconds(60);
 
 type Errand = NonNullable<ReturnType<typeof v6Memory>["shop"]>;
 
-export function planV9Shopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  if (!isV9Policy(options) || !snapshot.shops?.length) return [];
+export function planArmyShopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  if (!isV5HybridPolicy(options) || !snapshot.shops?.length) return [];
   const memory = v6Memory(options);
-  const errand = liveErrand(snapshot, owner, memory.shop);
+  const errand = liveErrand(snapshot, owner, memory.shop, options);
   if (!errand) delete memory.shop;
   if (errand) {
     const shop = snapshot.shops.find((candidate) => candidate.id === errand.shopId)!;
@@ -57,25 +49,29 @@ export function planV9Shopping(snapshot: GameSnapshot, owner: PlayerId, options:
 }
 
 // What the errand under way costs, for the economy to hold (see v6/economy shopGoals).
-export function v9ShopErrandCost(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): number | undefined {
-  if (!isV9Policy(options)) return undefined;
-  const errand = liveErrand(snapshot, owner, v6Memory(options).shop);
+export function shopErrandCost(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): number | undefined {
+  if (!isV5HybridPolicy(options)) return undefined;
+  const errand = liveErrand(snapshot, owner, v6Memory(options).shop, options);
   if (!errand) return undefined;
   return snapshot.shops?.find((shop) => shop.id === errand.shopId)?.goods.find((good) => good.kind === errand.kind)?.cost;
 }
 
 // The unit on an errand is the shop's to move until it buys.
-export function v9ShopperIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
-  if (!isV9Policy(options) || !snapshot.shops?.length) return new Set();
-  const errand = v6Memory(options).shop;
-  return errand && snapshot.tick - errand.since < ERRAND_TICKS ? new Set([errand.unitId]) : new Set();
+export function shopperIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
+  if (!isV5HybridPolicy(options) || !snapshot.shops?.length) return new Set();
+  const errand = liveErrand(snapshot, owner, v6Memory(options).shop, options);
+  return errand ? new Set([errand.unitId]) : new Set();
 }
 
-function liveErrand(snapshot: GameSnapshot, owner: PlayerId, errand: Errand | undefined): Errand | undefined {
+function liveErrand(snapshot: GameSnapshot, owner: PlayerId, errand: Errand | undefined, options: AiPolicyContext): Errand | undefined {
   if (!errand || snapshot.tick - errand.since >= ERRAND_TICKS) return undefined;
   const shop = snapshot.shops?.find((candidate) => candidate.id === errand.shopId);
   const unit = units(snapshot, owner).find((candidate) => candidate.id === errand.unitId);
-  return shop && unit ? errand : undefined;
+  if (!shop || !unit) return undefined;
+  const enemies = snapshot.units.filter(enemy => enemy.kind !== "worker" && enemy.attackDamage > 0 && isOpponentOwner(snapshot, owner, enemy.owner, options));
+  if (enemies.some(enemy => distance(enemy, unit) < 600 || distance(enemy, shop) < 600
+    || snapshot.buildings.some(base => base.owner === owner && base.kind === "townHall" && distance(base, enemy) < 700))) return undefined;
+  return errand;
 }
 
 function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): { shop: Shop; kind: ItemKind; unit: Unit } | undefined {
@@ -108,6 +104,20 @@ function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   if (health < WORN && carried("healingScroll").length === 0 && stocked("healingScroll") && army.length >= 6) {
     const unit = nearest(free.filter((candidate) => candidate.attackRange <= 100));
     if (unit) return { shop, kind: "healingScroll", unit };
+  }
+  if (playerState(snapshot, owner).gold >= 500 && army.length >= 8) {
+    if (!carried("speedBoots").length && stocked("speedBoots")) {
+      const unit = nearest(free.filter(unit => unit.speed >= 70 && unit.attackRange <= 100));
+      if (unit) return { shop, kind: "speedBoots", unit };
+    }
+    if (!carried("regenRing").length && stocked("regenRing")) {
+      const unit = nearest(free.filter(unit => unit.level > 0 && unit.hp < unit.maxHp * .85));
+      if (unit) return { shop, kind: "regenRing", unit };
+    }
+    if (!carried("ivoryTower").length && stocked("ivoryTower") && towers.length > 0) {
+      const unit = nearest(free.filter(unit => unit.hp >= unit.maxHp * .7 && unit.attackRange <= 100));
+      if (unit) return { shop, kind: "ivoryTower", unit };
+    }
   }
   return undefined;
 }
