@@ -1,14 +1,16 @@
 import type { UnitDef } from "./catalog";
 import type { Unit } from "./types";
+import { perTick } from "./time";
 
 type Point = { x: number; y: number };
 export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
 export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
+export const AIM_SPEED_MULTIPLIER = 2 / 3;
 
 export function aimingProfile(rules: UnitDef) {
   if (rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
   return {
-    speed: rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 20 : 24),
+    speed: (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER,
     moveTolerance: rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE,
   };
 }
@@ -37,8 +39,9 @@ export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number) {
     }
     const dx = target.x - aim.x, dy = target.y - aim.y;
     const gap = Math.hypot(dx, dy);
-    if (gap <= profile.speed) { aim.x = target.x; aim.y = target.y; }
-    else { aim.x += dx / gap * profile.speed; aim.y += dy / gap * profile.speed; }
+    const step = perTick(profile.speed);
+    if (gap <= step) { aim.x = target.x; aim.y = target.y; }
+    else { aim.x += dx / gap * step; aim.y += dy / gap * step; }
     aim.updatedTick = tick;
   }
   aim.tracking = aim.x !== target.x || aim.y !== target.y;

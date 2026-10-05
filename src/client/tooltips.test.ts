@@ -17,7 +17,7 @@ describe("gameplay tooltips", () => {
 
     expect(tooltip.title).toBe("Archer");
     expect(tooltip.body).toContain("ranged");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 115 gold", "Supply 2", "HP 72", "Attack 13", "Range 319.2", "Train 7.8s"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 115 gold", "Supply 2", "HP 83", "Attack 13", "Range 319.2", "Reticle speed: 320 / second", "Train 7.8s"]));
     expect(tooltip.hotkey).toBe("A");
   });
 
@@ -113,11 +113,11 @@ describe("gameplay tooltips", () => {
 
   it("describes selected units with live combat stats and leadership regeneration", () => {
     const snapshot = snapshotWithPlayerUpgrades({ leadership: 3 });
-    const veteran = unit("golem", { hp: 100, maxHp: 300, attackDamage: 50, attackRange: 48, speed: 2.2, level: 3 });
+    const veteran = unit("golem", { hp: 100, maxHp: 300, attackDamage: 50, attackRange: 48, speed: 44, level: 3 });
 
     expect(unitSelectionTooltip("golem", [veteran], snapshot)).toMatchObject({
       title: "Golem",
-      stats: expect.arrayContaining(["HP 100/300", "Attack 50", "Range 48", "Speed 2.2", "Regen +12 HP/s"]),
+      stats: expect.arrayContaining(["HP 100/300", "Attack 50", "Range 48", "Speed 44/s", "Regen +12 HP/s"]),
     });
 
     const zh = createI18n("zh");
@@ -139,7 +139,7 @@ describe("gameplay tooltips", () => {
     expect(unitTooltip("archer", "a", zh)).toMatchObject({
       title: "弓箭手",
       body: expect.stringContaining("远程"),
-      stats: expect.arrayContaining(["花费 115 金", "人口 2", "生命 72", "攻击 13", "射程 319.2", "训练 7.8s"]),
+      stats: expect.arrayContaining(["花费 115 金", "人口 2", "生命 83", "攻击 13", "射程 319.2", "准心速度：320 / 秒", "训练 7.8s"]),
       hotkey: "A",
     });
     expect(abilityTooltip("heal", "h", zh)).toMatchObject({

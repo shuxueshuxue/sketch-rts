@@ -1,3 +1,4 @@
+import { perTick } from "./time";
 import { describe, expect, it } from "vitest";
 import { abilityCooldown } from "./ability-cooldowns";
 import { ABILITY_DEFS } from "./catalog";
@@ -82,7 +83,7 @@ describe("casting out of reach", () => {
       }),
     ).toBe(true);
     expect(from).toBeGreaterThanOrEqual(charge.minRange);
-    expect(from).toBeLessThanOrEqual(charge.range + knight.speed);
+    expect(from).toBeLessThanOrEqual(charge.range + perTick(knight.speed));
     expect(abilityCooldown(knight, "charge")).toBeGreaterThan(0);
     expect(stepUntil(game, 40, () => foe.hp < foe.maxHp)).toBe(true);
   });

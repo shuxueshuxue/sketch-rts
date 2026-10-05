@@ -6,7 +6,8 @@ import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } f
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
-import { chargeRiderFor, chargeWindow, readyChargers, type ChargeWindow } from "./charge-targeting";
+import { chargeRiderFor, chargeWindow, type ChargeWindow } from "./charge-targeting";
+import { castCommandForSelection, readyAbilityCasters } from "./ability-targeting";
 import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
 import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
@@ -58,7 +59,6 @@ import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
-import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
 import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
@@ -1824,7 +1824,7 @@ function canHireMercenary() {
 
 function abilityButtonState(ability: AbilityKind): CommandButtonState {
   if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
-  return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits());
+  return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits(), activeGameAdapter.pendingCasts?.());
 }
 
 function stanceMenuButtonState(): CommandButtonState {
@@ -1940,7 +1940,8 @@ function beginSpellTargeting(ability: AbilityKind) {
     showCommandUnavailable(state, t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
   }
-  const caster = focusedPlayerUnits().find((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability) && abilityCooldown(unit, ability) <= 0);
+  const ready = readyAbilityCasters(selectedPlayerUnits(), ability, activeGameAdapter.pendingCasts?.());
+  const caster = ready.find(unit => unit.id === focusedSelectionId) ?? ready[0];
   if (!caster) {
     showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
@@ -2007,35 +2008,33 @@ function issueAttackMoveAt(point: Point, queued = false) {
 
 function issueSpellAt(point: Point, queued = false) {
   if (!syncBeforeCommandProjection()) return;
-  if (!commandMode || commandMode.type !== "spell") return;
+  if (!commandMode || commandMode.type !== "spell" || !snapshot) return;
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
-  const behavior = ABILITY_DEFS[ability].behavior;
-  if (behavior === "summon" || (ABILITY_DEFS[ability].behavior === "weapon" && (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).target === "point")) {
-    sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y, queued });
-    statusLabel.textContent = t("status.spellOrdered",{ability:labelKind(ability)});
-    clearCommandModeClasses();
-    commandMode = undefined;
-    updateHud();
-    return;
-  }
-
-  const target =
-    behavior === "weapon" ? (hitUnit(world, unit=>["enemy","creep"].includes(relationTo(snapshot!,localPlayerId,unit.owner))) ?? buildingAt(snapshot!.buildings,world,building=>relationTo(snapshot!,localPlayerId,building.owner)==="enemy")) :
-    behavior === "heal"
-      ? hitUnit(world, (unit) => unit.owner === localPlayerId)
-      : hitUnit(world, (unit) => unit.owner !== localPlayerId);
-  if (!target) {
+  const def = ABILITY_DEFS[ability];
+  const pointTarget = def.behavior === "summon" || (def.behavior === "weapon" && def.target === "point");
+  const target = pointTarget ? undefined : def.behavior === "weapon"
+    ? (hitUnit(world, unit => ["enemy", "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)))
+      ?? buildingAt(snapshot.buildings, world, building => relationTo(snapshot!, localPlayerId, building.owner) === "enemy"))
+    : hitUnit(world, unit => [def.behavior === "heal" ? "own" : "enemy", def.behavior === "heal" ? "ally" : "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
+  if (!pointTarget && !target) {
     showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
     return;
   }
+  const pending = activeGameAdapter.pendingCasts?.();
+  const ready = readyAbilityCasters(selectedPlayerUnits(), ability, pending);
+  if (!ready.length) {
+    showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
+    return;
+  }
   const reach = chargeWindow(ability);
-  const caster = reach ? chargeRiderFor(readyChargers(selectedPlayerUnits(), ability), target, reach, casterId) : { id: casterId };
-  if (!caster) {
+  if (reach && target && !chargeRiderFor(ready, target, reach, casterId)) {
     showInvalidCommand(t("status.chargeTooClose", { ability: labelKind(ability), min: reach!.minRange }));
     return;
   }
-  sendCommand({ type: "cast", unitId: caster.id, ability, targetId: target.id, queued });
+  const command = castCommandForSelection(snapshot, localPlayerId, selectedPlayerUnits(), ability, target ? { targetId: target.id } : world, casterId, queued, pending);
+  if (!command) { showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) })); return; }
+  if (!sendCommand(command)) return;
   statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2779,7 +2778,7 @@ function drawSpellPreview() {
 const CHARGE_PREVIEW_INK = { band: "rgba(212, 180, 119, 0.12)", ring: "#b9861b", reach: "#387d72", miss: "#a85644" } as const;
 
 function drawChargePreview(point: Point, ability: AbilityKind, reach: ChargeWindow, preferredId: string) {
-  const riders = readyChargers(selectedPlayerUnits(), ability);
+  const riders = readyAbilityCasters(selectedPlayerUnits(), ability, activeGameAdapter.pendingCasts?.());
   const world = screenToWorld(point);
   const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
   const rider = target ? chargeRiderFor(riders, target, reach, preferredId) : undefined;

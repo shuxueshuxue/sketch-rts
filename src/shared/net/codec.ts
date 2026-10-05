@@ -108,7 +108,8 @@ function decodeDesyncMessage(message: Record<string, unknown>): ServerNetMessage
 
 function decodeErrorMessage(message: Record<string, unknown>): ServerNetMessage {
   if (!isString(message.roomId) || !isString(message.message)) throw new Error("Malformed server error message");
-  return { type: "error", roomId: message.roomId, message: message.message };
+  if (message.clientSeq !== undefined && (!Number.isInteger(message.clientSeq) || Number(message.clientSeq) < 0)) throw new Error("Malformed server error sequence");
+  return { type: "error", roomId: message.roomId, message: message.message, ...(message.clientSeq !== undefined ? { clientSeq: Number(message.clientSeq) } : {}) };
 }
 
 function decodeServerChatMessage(message: Record<string, unknown>): ServerNetMessage {

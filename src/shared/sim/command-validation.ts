@@ -288,7 +288,6 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     if (def.behavior !== "weapon") return commandError("Unknown weapon ability");
     const target = command.targetId ? [...snapshot.units, ...snapshot.buildings, ...(snapshot.obstacles ?? [])].find(target => target.id === command.targetId && areEnemyOwners(snapshot, owner, target.owner)) : undefined;
     if (def.target === "enemy" && !target) return commandError("Weapon requires an enemy target");
-    if (command.ability === "ramBreach" && target && "order" in target) return commandError("Breach requires a structure");
     const at = target ?? (Number.isFinite(command.x) && Number.isFinite(command.y) ? {x:command.x!, y:command.y!} : undefined);
     if (!at) return commandError("Weapon requires a target point");
     if (def.weapon.minRange && Math.hypot(at.x-caster.x,at.y-caster.y)<def.weapon.minRange) return commandError("Target is inside the weapon's minimum range",true);

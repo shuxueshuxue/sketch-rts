@@ -1,3 +1,4 @@
+import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { aimingProfile } from "../../shared/aiming";
 import { UNIT_DEFS } from "../../shared/catalog";
@@ -208,11 +209,11 @@ function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Uni
   if (!threat) return undefined;
   const profile = aimingProfile(UNIT_DEFS[unit.kind]);
   if (unit.aim && unit.kind !== "horseArcher" && profile) {
-    const contactTicks = Math.max(0, distance(threat, unit) - threat.attackRange - unit.radius - threat.radius) / Math.max(.1, threat.speed);
-    const shotTicks = unit.cooldown + Math.hypot(threat.x - unit.aim.x, threat.y - unit.aim.y) / profile.speed;
-    if (unit.hp >= unit.maxHp * .6 && contactTicks > shotTicks + 2) return undefined;
+    const contactSeconds = Math.max(0, distance(threat, unit) - threat.attackRange - unit.radius - threat.radius) / Math.max(2, threat.speed);
+    const shotSeconds = unit.cooldown / SIM_TICKS_PER_SECOND + Math.hypot(threat.x - unit.aim.x, threat.y - unit.aim.y) / profile.speed;
+    if (unit.hp >= unit.maxHp * .6 && contactSeconds > shotSeconds + 0.1) return undefined;
   }
-  let step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown);
+  let step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown / SIM_TICKS_PER_SECOND);
   if (unit.kind === "horseArcher" && unit.aim && profile) {
     const budget = Math.max(0, profile.moveTolerance - Math.hypot(unit.x - unit.aim.anchorX, unit.y - unit.aim.anchorY));
     step = Math.min(step, budget / 1.3);

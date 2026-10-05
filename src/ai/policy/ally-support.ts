@@ -55,8 +55,8 @@ export function supportUnitIds(snapshot: GameSnapshot, owner: PlayerId, options:
       const threat = strengthOf(enemies);
       const help = army.filter((unit) => sameGround(snapshot.map, unit, base));
       const dps = enemies.reduce((n, unit) => n + unit.attackDamage * 20 / Math.max(1, unit.attackCooldown), 0);
-      const contact = Math.min(...enemies.map(unit => Math.max(0, distance(unit, base) - unit.attackRange - base.radius) / Math.max(1, unit.speed * 20)));
-      const arrival = walk / Math.max(1, Math.min(...help.map(unit => unit.speed)) * 20);
+      const contact = Math.min(...enemies.map(unit => Math.max(0, distance(unit, base) - unit.attackRange - base.radius) / Math.max(1, unit.speed)));
+      const arrival = walk / Math.max(1, Math.min(...help.map(unit => unit.speed)));
       const window = contact + base.hp / Math.max(1, dps) + strengthOf(defenders) * 8;
       if (arrival > window * 1.25) return [];
       if (strengthOf(defenders) + cover >= threat * 1.15 || strengthOf(help) + strengthOf(defenders) + cover < threat * 1.05) return [];

@@ -583,11 +583,11 @@ function guardedExpansionLeavesBaseToIncomingArmy(snapshot: GameSnapshot, owner:
   if (opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   // @@@guarded-expansion-arrival - A natural clear is a short job: walk out, kill the guards, walk home. Only enemies that can reach the natural inside that window can punish it; a merc ball idling at its own camp across the map is not incoming.
   const main = mainBase(snapshot, owner);
-  const slowest = Math.min(...soldiers.map((unit) => unit.speed)) * SIM_TICKS_PER_SECOND;
+  const slowest = Math.min(...soldiers.map((unit) => unit.speed));
   const guards = neutralUnitsNear(snapshot, mine, 280);
   const squadDps = soldiers.reduce((total, unit) => total + unit.attackDamage / Math.max(1, unit.attackCooldown / SIM_TICKS_PER_SECOND), 0);
   const jobSeconds = (distance(averagePoint(soldiers), mine) + distance(mine, main)) / slowest + guards.reduce((total, unit) => total + unit.hp, 0) / Math.max(1, squadDps);
-  const incoming = enemyCombatUnits(snapshot, owner, options.teams).filter((enemy) => distance(enemy, mine) / (enemy.speed * SIM_TICKS_PER_SECOND) <= jobSeconds);
+  const incoming = enemyCombatUnits(snapshot, owner, options.teams).filter((enemy) => distance(enemy, mine) / enemy.speed <= jobSeconds);
   return armyPower(incoming) > armyPower(combatUnits(snapshot, owner)) * GUARDED_EXPANSION_INCOMING_RATIO;
 }
 

@@ -162,9 +162,9 @@ describe("SDK benchmark", () => {
     });
 
     const match = report.evaluations[0]!.matches[0]!;
-    // Five ticks of aiming, followed by seven ticks of arrow flight, put the first impact on tick 12.
-    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(0.6);
-    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(0.6);
+    // Seven ticks of aiming, followed by seven ticks of arrow flight, put the first impact on tick 14.
+    expect(match.result.players.v2!.firstEnemyEngagementSecond).toBe(0.7);
+    expect(match.result.players.v1!.firstEnemyEngagementSecond).toBe(0.7);
   });
 
   it("watches an expansion hall built during the game for expansion attacks", () => {

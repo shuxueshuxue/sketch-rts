@@ -1,3 +1,4 @@
+import { perTick } from "./time";
 import { describe, expect, it } from "vitest";
 import { isGameCommand } from "./command-schema";
 import { BRACE_DAMAGE_SHARE, LUNGE_PACE, MAX_SHOVE, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, STAND_SPEED, blowStrength, isStaggered, lungeStrength, pushSpeed, pushedSpeed, shove, slide } from "./push";
@@ -52,7 +53,7 @@ describe("push", () => {
       }
       expect(unit.x - 1000).toBeCloseTo(strength, 6);
       expect(unit.y).toBe(1000);
-      if (pushSpeed(strength) <= 24 + PUSH_FRICTION / 2) expect(ticks).toBe(Math.ceil(pushSpeed(strength) / PUSH_FRICTION));
+      if (perTick(pushSpeed(strength)) <= 24 + perTick(perTick(PUSH_FRICTION)) / 2) expect(ticks).toBe(Math.ceil(pushSpeed(strength) / perTick(PUSH_FRICTION)));
       expect(unit.pushY).toBeUndefined();
     }
   });
@@ -68,10 +69,10 @@ describe("push", () => {
       const speed = pushedSpeed(footman);
       stepGame(game);
       // Only the slide moves it, back the way it was shoved.
-      expect(x - footman.x).toBeCloseTo(speed - PUSH_FRICTION / 2, 9);
+      expect(x - footman.x).toBeCloseTo(perTick(speed) - perTick(perTick(PUSH_FRICTION)) / 2, 9);
       staggered += 1;
     }
-    expect(staggered).toBe(Math.ceil((pushSpeed(100) - STAND_SPEED) / PUSH_FRICTION));
+    expect(staggered).toBe(Math.ceil((pushSpeed(100) - STAND_SPEED) / perTick(PUSH_FRICTION)));
     expect(footman.order.type).toBe("move");
     const x = footman.x;
     slideOut(game, footman);
@@ -224,8 +225,12 @@ describe("melee stances", () => {
     const lancer = game.spawnUnit("player", "lancer", 1000, 1000);
     const archer = game.spawnUnit("player", "archer", 1100, 1000);
     const worker = game.spawnUnit("player", "worker", 1200, 1000);
-    issueCommand(game, { type: "setStance", unitIds: [lancer.id, archer.id, worker.id], stance: "shock" });
+    const footman = game.spawnUnit("player", "footman", 1300, 1000);
+    const knight = game.spawnUnit("player", "knight", 1400, 1000);
+    issueCommand(game, { type: "setStance", unitIds: [lancer.id, footman.id, knight.id, archer.id, worker.id], stance: "shock" });
     expect(lancer.stance).toBe("shock");
+    expect(footman.stance).toBe("shock");
+    expect(knight.stance).toBe("shock");
     expect(archer.stance).toBeUndefined();
     expect(worker.stance).toBeUndefined();
     expect(checkCommandLegality(snapshotGame(game), "player", { type: "setStance", unitIds: [archer.id, worker.id], stance: "brace" })).toMatchObject({ message: expect.stringContaining("melee") });

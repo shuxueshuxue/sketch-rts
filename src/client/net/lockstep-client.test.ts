@@ -7,8 +7,57 @@ import { SimulationEngine } from "../../shared/sim/engine";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import type { NetTransport } from "./transport";
 import { LockstepClient } from "./lockstep-client";
+import { castCommandForSelection, type CastCommand } from "../ability-targeting";
 
 describe("lockstep client", () => {
+  it("reserves three different priests before network frames arrive and releases only acknowledged casts", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = [];
+    const priests = [0, 1, 2].map(index => game.spawnUnit("player", "priest", 1_000, 1_000 + index * 50));
+    for (const priest of priests) priest.autocast = { heal: false };
+    const patient = game.spawnUnit("player", "knight", 1_100, 1_000);
+    patient.hp = 1;
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    for (let i = 0; i < 3; i++) {
+      const command = castCommandForSelection(client.currentSnapshot(), "player", priests, "heal", { targetId: patient.id }, priests[0]!.id, false, client.pendingCasts())!;
+      client.sendCommand(command);
+    }
+    expect(new Set(client.pendingCasts().map(command => command.unitId)).size).toBe(3);
+    const [first, second, third] = client.pendingCasts();
+    // Another player's sequence and an un-applied future frame do not acknowledge our cast.
+    client.receiveFrame({ roomId: "room-1", tick: 0, sequence: 0, commands: [{ playerId: "enemy", clientSeq: 0, command: { type: "stop", unitIds: [] } }] });
+    client.updateToRenderTime();
+    expect(client.pendingCasts()).toHaveLength(3);
+    client.receiveFrame({ roomId: "room-1", tick: 1, sequence: 1, commands: [{ playerId: "player", clientSeq: 0, command: first! }] });
+    expect(client.pendingCasts()).toHaveLength(3);
+    client.updateToRenderTime();
+    expect(client.pendingCasts()).toEqual([second, third]);
+    transport.emit({ type: "error", roomId: "room-1", clientSeq: 1, message: "Rejected cast" });
+    expect(client.pendingCasts()).toEqual([third]);
+    client.receiveFrame({ roomId: "room-1", tick: 2, sequence: 2, commands: [{ playerId: "player", clientSeq: 2, command: third! }] });
+    client.updateToRenderTime();
+    expect(client.pendingCasts()).toEqual([]);
+    expect(patient.hp).toBeGreaterThan(1);
+    client.sendCommand(second!);
+    client.close();
+    expect(client.pendingCasts()).toEqual([]);
+  });
+
+  it("releases a cast after a failed transport send and resets reservations on a checkpoint", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const command: CastCommand = { type: "cast", unitId: "priest", ability: "heal", targetId: "patient" };
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    transport.send = () => { throw new Error("Offline"); };
+    expect(() => client.sendCommand(command)).toThrow("Offline");
+    expect(client.pendingCasts()).toEqual([]);
+    transport.send = message => { transport.sent.push(message); };
+    client.sendCommand(command);
+    expect(client.pendingCasts()).toEqual([command]);
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: game.tick, snapshot: snapshotGame(game), nextId: game.nextId }, epoch: 1 });
+    expect(client.pendingCasts()).toEqual([]);
+  });
   it("sends commands over transport and applies only server-authored frames", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");

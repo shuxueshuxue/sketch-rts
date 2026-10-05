@@ -101,7 +101,7 @@ function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOp
   if (item.kind === "flameCloak") return durable * 7 + melee * 18 + star * (6 + v2Bonus * 4) + health * 5 - unit.attackRange / 80;
   if (item.kind === "experienceBook") return experienceBookCarrierScore(unit, durable);
   if (item.kind === "lightningRod" || item.kind === "stormStaff") return ranged * 14 + unit.attackRange / 14 + star * 3 + health * 3;
-  if (item.kind === "breachCharge") return durable * 4 + melee * 8 + unit.speed * 3 + health * 3;
+  if (item.kind === "breachCharge") return durable * 4 + melee * 8 + unit.speed * 0.15 + health * 3;
   if (item.kind === "guardianScroll") return durable * 6 + melee * 6 + health * 5;
   return 0;
 }
