@@ -42,7 +42,7 @@ Both races build town halls (which train workers), farms, defense towers, worksh
 
 Neutral camps guard the gold mines away from your main: wildlings, murlocs, golems, ogres, spiders and dragons, in camps of rising strength. The strongest have abilities of their own — a golem's stomp, an ogre mage's bloodlust, a spider queen's web. Camps pay gold and experience when cleared, and some drop items. Units gain levels from experience.
 
-Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls, guardian scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys. Ground drops, inventory slots and shop cards share the painted item models. A purchase goes to the nearest eligible friendly unit at the shop; inspecting the purchase keeps the item selected and that recipient’s inventory visible. Right-click an inventory slot to drop its item.
+Mercenary posts hire out mercenaries, contract archers and field medics. Shops sell speed boots, regeneration rings, healing scrolls, guardian scrolls and ivory towers. The stronger camps guard a treasure — a flame cloak, a lightning rod, a storm staff, a guardian scroll, an experience book or a breach charge — that one of their creeps carries, and uses, until it falls. A unit carries up to six items and uses them with the number keys. Ground drops, inventory slots and shop cards share the painted item models. A purchase goes to the nearest eligible friendly unit at the shop; the shop retains its building portrait and name while the purchased item appears in a separate detail row and the recipient’s inventory remains visible. Right-click an inventory slot to drop its item.
 
 ### Maps
 
@@ -95,7 +95,7 @@ The art is drawn with Canvas and reused on the battlefield, in portraits and on 
 2. On a desktop, click the battlefield to lock the mouse to it (`Esc` releases it).
 3. Select a worker, right-click a gold mine, press `B` to open the building palette, build a barracks and train your first soldiers.
 
-The selection panel groups units by kind in a wrapping portrait grid. Click a portrait or use `Tab` to focus its commands; the header shows its health and attack. Large mixed armies expand downwards and scroll vertically inside the panel, while commands remain accessible beside it. The panel keeps its scroll position as the HUD updates.
+The battle HUD uses transparent model portraits on compact slate surfaces. A single selection has a large subject portrait beside its name, health and attack. Mixed armies add a four-column roster below; click a portrait or use `Tab` to focus its commands. Large rosters scroll vertically within a fixed height and retain their scroll position during updates. Buildings, shops and mercenary camps share the subject layout; commands and inventory form a closely spaced stack beside it.
 
 | Control | Action |
 | --- | --- |
