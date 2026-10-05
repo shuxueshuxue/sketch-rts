@@ -1,3 +1,4 @@
+import {hasWarfareUnit,paintWarfareUnit} from './warfare-units';
 /** Hand-painted cutout figures. Geometry is authored here, not generated artwork.
  * One restrained material set; six action keys and eight locomotion keys.
  * Feet stay at y=16 and each figure lives inside the atlas's 128px tile. */
@@ -20,7 +21,7 @@ const figures: Partial<Record<UnitKind, Figure>> = {
   ashChieftain:{role:'axe',armor:true,elite:true,ember:true}, cinderRevenant:{role:'sword',armor:true,elite:true,ember:true},
   mercenary:{role:'sword',armor:true}, contractArcher:{role:'bow'}, fieldMedic:{role:'priest'},
 };
-export const hasPaintedUnit = (kind: UnitKind) => !!figures[kind] || hasPaintedCreature(kind);
+export const hasPaintedUnit = (kind: UnitKind) => hasWarfareUnit(kind) || !!figures[kind] || hasPaintedCreature(kind);
 const INK='#292b29', STEEL='#8d9897', EDGE='#d0cbbc', SHADE='#525e60';
 const SKIN='#ba9575', HIDE='#665342', BOOT='#373631', LINEN='#c9bda0';
 function poly(b:Brush,p:number[][],fill:string,edge=INK,w=.55){
@@ -130,7 +131,8 @@ function mount(b:Brush,team:string,phase:number,elite:boolean,facing:number){
 }
 
 export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimationFrame,facing:1|-1):boolean{
-  const f=figures[kind];if(!f)return paintCreature(b,kind,team,pose);
+  if(hasWarfareUnit(kind))return paintWarfareUnit(b,kind,team,pose);
+ const f=figures[kind];if(!f)return paintCreature(b,kind,team,pose);
   b.save();b.lineJoin='round';b.lineCap='round';
   const walking=pose.mode==='walk'; const phase=walking?pose.frame*Math.PI/4:0;
   const stride=walking?Math.sin(phase):0;
