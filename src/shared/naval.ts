@@ -1,6 +1,6 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
-import { isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
+import { isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
 import type { Building, GameMap, Obstacle, Unit } from "./types";
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
@@ -34,6 +34,30 @@ export function carries(unit: Unit) {
 
 export function alongside(unit: Unit, transport: Unit) {
   return Math.hypot(unit.x - transport.x, unit.y - transport.y) <= unit.radius + transport.radius + BOARDING_GAP;
+}
+
+/** One reachable shore for the whole boat, rather than chasing each passenger in turn. */
+export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
+  if (!map.terrain) return { x: transport.x, y: transport.y };
+  const terrain = map.terrain;
+  const candidates: { x: number; y: number; score: number }[] = [];
+  for (let index = 0; index < terrain.cells.length; index++) {
+    if (terrain.cells[index] !== ",") continue;
+    const point = { x: (index % terrain.cols + 0.5) * terrain.cell, y: (Math.floor(index / terrain.cols) + 0.5) * terrain.cell };
+    if (!isOpenGround(map, point.x, point.y) || !isOpenGround(map, point.x, point.y, "sea")) continue;
+    if (!sameGround(map, passenger, point) || !sameGround(map, transport, point, "sea")) continue;
+    const score = Math.hypot(point.x - transport.x, point.y - transport.y) * 2 + Math.hypot(point.x - passenger.x, point.y - passenger.y) * 0.15;
+    candidates.push({ ...point, score });
+  }
+  for (const point of candidates.sort((a,b) => a.score-b.score)) {
+    const land = walkDestination(map, passenger, point);
+    const sea = walkDestination(map, transport, point, "sea");
+    if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && Math.hypot(sea.x-point.x, sea.y-point.y) < 1)
+      return { x: point.x, y: point.y };
+  }
+  const land = walkDestination(map, passenger, walkableGoal(map, transport.x, transport.y));
+  const sea = walkDestination(map, transport, walkableGoal(map, land.x, land.y, "sea"), "sea");
+  return Math.hypot(land.x-sea.x, land.y-sea.y) <= passenger.radius+transport.radius+BOARDING_GAP ? sea : undefined;
 }
 
 // Where the transport's passenger number `index` of `count` steps ashore: the land nearest a point on the transport's side,

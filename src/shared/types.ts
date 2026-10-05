@@ -115,11 +115,12 @@ export type UnitOrder =
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
+  | { type: "repairShip"; targetId: string }
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
-  | { type: "board"; transportId: string }
+  | { type: "board"; transportId: string; berth?: { x: number; y: number } }
   | { type: "unload"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
@@ -450,6 +451,7 @@ export type GameCommand =
   | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
+  | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }

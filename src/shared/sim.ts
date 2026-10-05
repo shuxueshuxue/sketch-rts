@@ -5,7 +5,7 @@ import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
-import { alongside, canReach, carries, landingSpot } from "./naval";
+import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
@@ -418,6 +418,14 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     addRepairHammerEffect(game, building, command.queued);
     return;
   }
+  if (command.type === "repairShip") {
+    const ship = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner && unitMover(candidate.kind) === "sea");
+    if (!ship) throw new Error(`Unknown ${owner} ship ${command.targetId}`);
+    if (ship.hp >= ship.maxHp) throw new Error(`${ship.kind} is already fully repaired`);
+    for (const worker of unitsByIds(game, command.unitIds, owner).filter(unit => unit.kind === "worker"))
+      assignUnitOrder(worker, { type: "repairShip", targetId: ship.id }, command.queued);
+    return;
+  }
 
   if (command.type === "build") {
     const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
@@ -490,7 +498,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const transport = game.units.find((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
     if (!transport) throw new Error(`Unknown ${owner} transport ${command.transportId}`);
     const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => unitMover(unit.kind) === "land");
-    for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id }, command.queued);
+    const existing = game.units.find(unit => unit.order.type === "board" && unit.order.transportId === transport.id);
+    const berth = (existing?.order.type === "board" ? existing.order.berth : undefined) ?? (boarders[0] && boardingBerth(game.map, boarders[0], transport));
+    for (const unit of boarders) assignUnitOrder(unit, { type: "board", transportId: transport.id, ...(berth ? { berth } : {}) }, command.queued);
     return;
   }
 
@@ -680,6 +690,7 @@ function updateConstruction(game: Game) {
     // owner, 10-02).
     const builders = game.units.filter((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id && workGap(unit, building) <= WORK_REACH);
     if (builders.length === 0) continue;
+    for (const builder of builders) addWorkerHammerEffect(game, builder, building);
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
     // same share of the health it started without.
     const before = building.buildProgress;
@@ -886,6 +897,10 @@ function updateUnits(game: Game): Ferry | undefined {
     }
     if (unit.order.type === "repair") {
       updateRepairOrder(game, unit);
+      continue;
+    }
+    if (unit.order.type === "repairShip") {
+      updateShipRepairOrder(game, unit);
       continue;
     }
     if (unit.order.type === "pickupItem") {
@@ -1105,8 +1120,8 @@ function updateBoardOrder(game: Game, unit: Unit) {
     return;
   }
   if (alongside(unit, transport)) return;
-  moveToward(unit, transport.x, transport.y, game.map);
-  if (transport.order.type === "idle") moveToward(transport, unit.x, unit.y, game.map);
+  const goal = transport.order.type === "idle" ? unit.order.berth ?? transport : transport;
+  moveToward(unit, goal.x, goal.y, game.map);
 }
 
 // After every unit has moved: soldiers alongside the transport they were told to board go aboard while their supply fits
@@ -1114,6 +1129,15 @@ function updateBoardOrder(game: Game, unit: Unit) {
 // that find no land near enough stay aboard) and stops (see @@@transport).
 function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
   if (boarding.length > 0) {
+    const approached = new Set<string>();
+    for (const passenger of boarding) {
+      if (passenger.order.type !== "board" || approached.has(passenger.order.transportId)) continue;
+      const boat = findTarget(game, passenger.order.transportId);
+      if (!boat || !isUnit(boat) || boat.order.type !== "idle") continue;
+      approached.add(boat.id);
+      const berth = passenger.order.berth ?? boardingBerth(game.map, passenger, boat);
+      if (berth && !alongside(passenger, boat)) moveToward(boat, berth.x, berth.y, game.map);
+    }
     const aboard = new Set<Unit>();
     for (const unit of boarding) {
       if (unit.order.type !== "board") continue;
@@ -1222,6 +1246,33 @@ function updateAutoRepair(game: Game, unit: Unit) {
   return repairBuildingTick(game, unit, building);
 }
 
+function updateShipRepairOrder(game: Game, worker: Unit) {
+  if (worker.order.type !== "repairShip" || !isPlayerId(worker.owner)) return;
+  const targetId = worker.order.targetId;
+  const ship = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner && unitMover(unit.kind) === "sea");
+  if (!ship || ship.hp <= 0 || ship.hp >= ship.maxHp) { worker.order = { type: "idle" }; return; }
+  if (distance(worker, ship) > worker.radius + ship.radius + WORK_REACH) {
+    moveToward(worker, ship.x, ship.y, game.map);
+    return;
+  }
+  addWorkerHammerEffect(game, worker, ship);
+  if (worker.cooldown > 0) return;
+  const player = playerState(game, worker.owner);
+  if (player.gold < 1) return;
+  const fullCost = Math.max(1, Math.round(UNIT_DEFS[ship.kind].cost * REPAIR_FULL_COST_FRACTION));
+  const healed = Math.max(1, ship.maxHp / fullCost);
+  spendGold(game, worker.owner, 1);
+  ship.hp = Math.min(ship.maxHp, ship.hp + healed);
+  worker.cooldown = Math.max(1, Math.round(healed / REPAIR_HP_PER_TICK));
+}
+
+function addWorkerHammerEffect(game: Game, worker: Unit, target: Unit | Building) {
+  if (game.effects.some(effect => effect.type === "repair" && effect.unitId === worker.id)) return;
+  // Presentation IDs must not advance the entity counter or change army ordering.
+  game.effects.push({ id: `work-${worker.id}-${game.tick}`, type: "repair", x:worker.x, y:worker.y,
+    duration:seconds(0.65), remaining:seconds(0.65), unitId:worker.id, fromX:target.x, fromY:target.y });
+}
+
 function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   if (!isPlayerId(unit.owner)) return false;
   const owner = unit.owner;
@@ -1232,6 +1283,7 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
   unit.cooldown = Math.max(1, Math.round(hpPerGold / REPAIR_HP_PER_TICK));
+  addWorkerHammerEffect(game, unit, building);
   addRepairHammerEffect(game, building);
   return true;
 }
