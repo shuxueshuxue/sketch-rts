@@ -205,6 +205,13 @@ export function finishRoom(room: RoomState, snapshot: GameSnapshot): RoomState {
   return { ...room, status: "ended", result };
 }
 
+export function winningResultSlots(result: RoomResult): RoomSlot[] {
+  const winner = result.slots.find(slot => slot.playerId === result.winner);
+  if (!winner) return [];
+  if (winner.team === FREE_FOR_ALL) return [winner];
+  return result.slots.filter(slot => roomTeam(slot.team) === roomTeam(winner.team));
+}
+
 export function activeRoomSlots(room: RoomState) {
   return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai");
 }

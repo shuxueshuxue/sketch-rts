@@ -23,7 +23,7 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
 // @@@transport - A transport (a unit whose kind carries) takes aboard the soldiers told to board it once they come
 // alongside, while their supply fits in what it carries, and sets them ashore, on the land nearest it, when it reaches the
 // water nearest the point it was told to unload at. Aboard they are out of the game (nobody sees, strikes or orders them)
-// but still count toward their owner's supply, and they drown with it.
+// but their owner can inspect and unload them from the cargo panel. They still count toward supply and drown with it.
 export const BOARDING_GAP = 24;
 // A passenger steps ashore only on land this near the transport's side.
 export const LANDING_REACH = 72;
@@ -66,4 +66,10 @@ export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, 
   const angle = (index / Math.max(1, count)) * Math.PI * 2;
   const spot = walkableGoal(map, transport.x + detCos(angle) * transport.radius, transport.y + detSin(angle) * transport.radius, "land");
   return Math.hypot(spot.x - transport.x, spot.y - transport.y) <= transport.radius + LANDING_REACH ? spot : undefined;
+}
+
+export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, passengerId: string) {
+  const passengers = transport.cargo ?? [];
+  const index = passengers.findIndex(passenger => passenger.id === passengerId);
+  return index < 0 ? undefined : landingSpot(map, transport, index, passengers.length);
 }

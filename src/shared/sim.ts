@@ -513,6 +513,12 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "unloadPassenger") {
+    const transport = unitsByIds(game, [command.transportId], owner)[0];
+    if (transport) unloadCargo(game, transport, command.passengerId);
+    return;
+  }
+
   if (command.type === "unload") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y }, command.queued);
@@ -1208,30 +1214,39 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
   }
   for (const transport of unloading) {
     if (transport.order.type !== "unload" || !walkEnded(game, transport, transport.order, 8)) continue;
-    const passengers = transport.cargo ?? [];
-    const staying: Unit[] = [];
-    passengers.forEach((passenger, index) => {
-      if (passenger.expiresTick !== undefined && passenger.expiresTick <= game.tick) {
-        // A summon whose time ran out aboard is gone; what it carried is left where the transport is.
-        passenger.x = transport.x;
-        passenger.y = transport.y;
-        dropItemsFromDeadUnits(game, [passenger]);
-        return;
-      }
-      const spot = landingSpot(game.map, transport, index, passengers.length);
-      if (!spot) {
-        staying.push(passenger);
-        return;
-      }
-      passenger.x = spot.x;
-      passenger.y = spot.y;
-      passenger.order = { type: "idle" };
-      game.units.push(passenger);
-    });
-    transport.cargo = staying.length > 0 ? staying : undefined;
+    unloadCargo(game, transport);
     transport.order = { type: "idle" };
-    updateSupplyState(game);
   }
+}
+
+// A portrait click unloads immediately at the ship's current shore, without replacing its sailing order.
+function unloadCargo(game: Game, transport: Unit, passengerId?: string) {
+  const passengers = transport.cargo ?? [];
+  const staying: Unit[] = [];
+  passengers.forEach((passenger, index) => {
+    if (passengerId !== undefined && passenger.id !== passengerId) {
+      staying.push(passenger);
+      return;
+    }
+    if (passenger.expiresTick !== undefined && passenger.expiresTick <= game.tick) {
+      // A summon whose time ran out aboard is gone; what it carried is left where the transport is.
+      passenger.x = transport.x;
+      passenger.y = transport.y;
+      dropItemsFromDeadUnits(game, [passenger]);
+      return;
+    }
+    const spot = landingSpot(game.map, transport, index, passengers.length);
+    if (!spot) {
+      staying.push(passenger);
+      return;
+    }
+    passenger.x = spot.x;
+    passenger.y = spot.y;
+    assignUnitOrder(passenger, { type: "idle" });
+    game.units.push(passenger);
+  });
+  transport.cargo = staying.length > 0 ? staying : undefined;
+  updateSupplyState(game);
 }
 
 function cargoSupply(game: Game, transport: Unit) {
