@@ -9,7 +9,7 @@ import { seconds } from "./time";
 import { World } from "./world";
 
 const ranger = defineUnit({ id: "test/ranger", name: "Ranger", color: "#2f7d6d", rules: { base: "archer", hp: 600, attackDamage: 30 }, model: { paint: () => undefined } });
-const brute = defineUnit({ id: "test/brute", name: "Brute", rules: { base: "footman", hp: 40, attackDamage: 4, speed: 2 }, model: { paint: () => undefined } });
+const brute = defineUnit({ id: "test/brute", name: "Brute", rules: { base: "footman", hp: 40, attackDamage: 4, speed: 40 }, model: { paint: () => undefined } });
 
 type Vars = { log: string[]; picked?: string };
 
