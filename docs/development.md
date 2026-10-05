@@ -2,7 +2,7 @@
 
 [Back to the README](../README.md) · [中文说明](README.zh.md)
 
-Detailed workflows for controlling matches, developing AI policies, and running a hosted game. Run these commands from the repository root after `npm ci`. Shell examples that set environment variables inline use Bash; PowerShell equivalents are shown in the README.
+Detailed workflows for controlling matches, developing AI policies, and running a hosted game. Run these commands from the repository root after `npm ci`. Shell examples that set environment variables inline use Bash. In PowerShell, set each variable first with `$env:NAME = 'value'`.
 
 ## Command-Frame Workflow
 
@@ -40,9 +40,11 @@ Static mode is for local browser gameplay without a backend. The browser owns th
 ### Hosted Server
 
 ```bash
-npm run build
-NODE_ENV=production HOST=0.0.0.0 PORT=34573 npm run server
+npm run build:production
+NODE_ENV=production HOST=0.0.0.0 PORT=34573 node dist-server/index.mjs
 ```
+
+When serving under a subpath, set both `SKETCH_RTS_BASE_PATH` and `VITE_SKETCH_RTS_BASE_PATH` (for example `/sketch-rts/`) for the build and server.
 
 Hosted mode serves the game and owns the shared room control plane:
 
@@ -164,3 +166,59 @@ The benchmark system is a first-class AI development loop:
 - browser dashboard at `benchmark.html`.
 
 The benchmark path is deliberately close to the real SDK/runtime path. It should measure the AI that actually plays the game, not a private benchmark-only implementation.
+
+## Available Opponents
+
+Room setup offers V5 (a shooter-based hybrid policy), V7 (race-aware play) and V8 (melee, healing and cavalry). V9 is an experimental 1v3 benchmark opponent; earlier versions remain available in the benchmark tools. Historical win rates do not describe current balance.
+
+For the V9 gauntlet and native naval self-play:
+
+```bash
+npm run benchmark:ai-v9-gauntlet -- --seed v5-hybrid-50-2026-06-12 --map-count 50
+SELFPLAY_TICKS=90000 node --import tsx scripts/naval-selfplay.ts /tmp/naval-selfplay.json
+```
+
+Current self-play results and limitations are documented in the [skirmish review](reviews/skirmish-naval-repair.zh.md).
+
+## Adding a unit or building
+
+A unit or building lives in two places:
+
+1. **Rules:** a row in `UNIT_RULES` or `BUILDING_RULES` in [`src/shared/catalog.ts`](../src/shared/catalog.ts) — its stats, where it is trained (`trainedAt`), its race, and special rules as data (`armor`, `casterSlayer`, `regenPerSecond`). Kinds, training lists and race rosters are derived from these rows.
+2. **Card:** an entry in [`src/client/content/`](../src/client/content/) — the English and Chinese name and description, the command icon and hotkey, and the function that draws it. Labels, tooltips, the command card and the unit sheet read from the cards.
+
+TypeScript reports a missing card, and `src/client/content/cards.test.ts` checks both languages, that each unit is trained at a building its race can build, and that no menu repeats a hotkey.
+
+## Sound packs
+
+The game is silent until a sound pack is chosen in **Settings → Sound pack**. A pack is a folder `audio-packs/<id>/` with a `pack.json` and the files it names:
+
+```json
+{
+  "name": "My pack",
+  "sounds": {
+    "melee": { "pitch": 0.08, "max": 4, "kinds": { "footman": { "file": "sword.ogg" }, "golem": { "file": "rock.ogg", "volume": 1.2 } } },
+    "arrowShot": { "file": "bow.ogg" },
+    "click": { "file": "click.ogg" }
+  }
+}
+```
+
+The events are `melee`, `arrowShot`, `arrowHit`, `death`, `construction` (a building placed), `built`, `buildingDown` and `click`; an event a pack leaves out is silent. An event plays one recording, or one per unit kind of whoever caused it (`kinds`). `volume` 1 is as recorded, `pitch` is how far each play may stray (0.08 is 8%), and `max` is how many plays of the event may sound at once.
+
+There are two ways for a game to find packs:
+
+- **Built in:** packs under `audio-packs/` are found when the game is built or served. The repository carries only `audio-packs/cc0`; git ignores every other folder there. `VITE_SOUND_PACK=<id>` picks the pack played until the player chooses one.
+- **Served:** the client also reads `audio-packs/served.json` next to the page — `{"packs": ["<id>"], "default": "<id>"}` — and loads the listed packs from the folders beside it. The repository's file lists none; a server puts its own folder at that path to offer packs without a new build, and withdraws one by removing it from the list.
+
+## Recording clips
+
+`npm run record` films a scene in Node, with no browser: it runs the match on the game's command-frame runtime and draws every frame with the client's own world renderer.
+
+```bash
+npm run record -- --list
+npm run record -- --scene infantry-clash --seconds 14 --size 1280x720 --out clip.mp4 --out clip.gif --gif-size 640x360
+npm run record -- --scene cavalry-flank --follow 'owner=north,kind=raider|knight' --zoom 1.2
+```
+
+A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](../src/recorder/scene.ts)); the built-in scenes in [`src/recorder/scenes/`](../src/recorder/scenes/) are worked examples. `npm run record -- --help` lists every option.
