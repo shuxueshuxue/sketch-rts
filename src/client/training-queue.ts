@@ -3,6 +3,7 @@ import type { Building, TrainableUnitKind } from "../shared/types";
 
 export type TrainingProgressButton = {
   buildingId: string;
+  jobId?: string | undefined;
   unitKind: TrainableUnitKind;
   remaining: number;
   duration: number;
@@ -21,6 +22,7 @@ export function trainingProgressButtonsForSelection(buildings: Building[]): Trai
       if (duration <= 0) return [];
       return [{
         buildingId: building.id,
+        jobId: job.id,
         unitKind: job.unitKind,
         remaining: job.remaining,
         duration,

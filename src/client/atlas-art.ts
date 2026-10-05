@@ -1,12 +1,22 @@
-import { type Brush, type Point, ellipse, flag, line, polygon } from "./art/kit";
+import { unitMover } from "../shared/catalog";
+import { paintCorpse } from "./art/corpses";
+import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
+import { hasPaintedUnit, paintFigure } from "./art/painted-units";
+import { creatureShadow } from "./art/painted-creatures";
+import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
-import { BUILDING_CARDS } from "./content/buildings";
 import { UNIT_CARDS } from "./content/units";
 import type { BuildingKind, Obstacle, TerrainLandmark, UnitKind } from "../shared/types";
 import type { Facing } from "./unit-facing";
+import { IDLE_FRAME, type UnitAnimationFrame } from "./unit-animation";
+import { withUnitPose } from "./art/pose";
 
 const sprites = new Map<string, HTMLCanvasElement>();
 const MAX_SPRITES = 256;
+// Posed frames share the cache. Bound pixels too: count alone does not bound
+// memory when a recorder asks for high-density sprites (RGBA, about 48 MiB).
+const MAX_SPRITE_PIXELS = 12 * 1024 * 1024;
+let spritePixels = 0;
 
 // Cache at a resolution suited to the drawing size, including the enlarged
 // title illustration. Team colors and marks keep faction variants distinct.
@@ -23,7 +33,17 @@ function sprite(c: Brush, key: string, point: Point, scale: number, paint: (brus
     brush.translate(64, 64);
     brush.lineJoin = brush.lineCap = "round";
     paint(brush);
-    if (sprites.size >= MAX_SPRITES) sprites.delete(sprites.keys().next().value!);
+    while (sprites.size && (sprites.size >= MAX_SPRITES || spritePixels + source.width * source.height > MAX_SPRITE_PIXELS)) {
+      const oldest = sprites.keys().next().value!;
+      const evicted = sprites.get(oldest)!;
+      spritePixels -= evicted.width * evicted.height;
+      sprites.delete(oldest);
+    }
+    sprites.set(cacheKey, source);
+    spritePixels += source.width * source.height;
+  } else {
+    // Keep frequently reused troop frames ahead of old zoom levels and colors.
+    sprites.delete(cacheKey);
     sprites.set(cacheKey, source);
   }
   if (!mirrored) {
@@ -42,24 +62,76 @@ function brushZoom(c: Brush) {
   return Math.hypot(transform.a, transform.b);
 }
 
-export function drawAtlasBuilding(c: Brush, kind: BuildingKind, point: Point, size: number, color: string) {
-  const card = BUILDING_CARDS[kind];
-  sprite(c, `b:${card.glyph.frame}:${color}`, point, size / 76, (b) => {
-    ellipse(b, 6, 33, 48, 14, "#31433824");
-    polygon(b, [[-48, 17], [-8, -1], [48, 16], [9, 43]], "#b7ba95", "#899779", 1);
-    polygon(b, [[-39, 21], [-8, 6], [39, 19], [8, 36]], "#cec9a7", "#9da080", 0.7);
-    card.paint(b, color);
+export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, point: Point, size: number, color: string) {
+  sprite(c, `b:${kind}:${color}`, point, size / 64, (b) => {
+    paintBuildingModel(b, kind, color);
   });
 }
 
+const sitePortraits = new Map<string, { canvas: HTMLCanvasElement; x: number; y: number; width: number; height: number }>();
+/** Fit the actual architecture to its visible bounds, including tall roofs and awnings. */
+export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteModelKind, size: number, color: string) {
+  const key = `${kind}:${color}`;
+  let source = sitePortraits.get(key);
+  if (!source) {
+    const canvas = createScratchCanvas(256, 256);
+    const brush = canvas.getContext("2d")!;
+    brush.translate(128, 128); brush.scale(2, 2);
+    paintBuildingModel(brush, kind, color);
+    const pixels = brush.getImageData(0, 0, 256, 256).data;
+    let left = 256, top = 256, right = 0, bottom = 0;
+    for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) if (pixels[(y * 256 + x) * 4 + 3]! > 8) {
+      left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+    }
+    source = { canvas, x:left, y:top, width:right-left+1, height:bottom-top+1 };
+    if (sitePortraits.size >= 128) sitePortraits.delete(sitePortraits.keys().next().value!);
+    sitePortraits.set(key, source);
+  }
+  const scale = size * .92 / Math.max(source.width, source.height);
+  const width = source.width * scale, height = source.height * scale;
+  c.drawImage(source.canvas, source.x, source.y, source.width, source.height, (size-width)/2, (size-height)/2, width, height);
+}
+
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
-export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1) {
-  sprite(c, `u:${kind}:${color}`, point, scale, (b) => {
+export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
+  if (hasPaintedUnit(kind)) {
+    sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
+      const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
+      const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
+      const feet = creatureShadow(kind);
+      if (unitMover(kind) !== "sea") {
+        ellipse(b, 3, feet?.y ?? 18, feet ? feet.rx * 1.12 : broad ? 29 : 14, feet ? feet.ry * 1.2 : broad ? 6 : 4.5, "#29282418");
+        ellipse(b, 1, feet?.y ?? 17, feet?.rx ?? (broad ? 24 : 10), feet?.ry ?? (broad ? 4.5 : 2.8), "#29282438");
+      }
+      paintFigure(b, kind, color, pose, facing);
+    }, facing === -1);
+    return;
+  }
+  sprite(c, `u:${kind}:${color}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
     const card = UNIT_CARDS[kind];
+    if (card.art.bearing === "construct") ellipse(b, 1, 17, 28, 6, "#29282438");
     if (card.art.bearing === "foot" && kind !== "wildling") ellipse(b, 2, 16, 17, 6, "#30483630");
     else if (kind === "wildling" || kind === "mossGnawer" || kind === "spirit") ellipse(b, 2, 15, 14, 5, "#30483630");
-    card.paint(b, color);
+    withUnitPose(b, pose, () => card.paint(b, color));
   }, facing === -1);
+}
+
+/** A close portrait shares the actual model, but gives faces and equipment the
+ * space that a full-body thumbnail cannot. Mounted units and beasts keep their
+ * silhouette. Coordinates and clipping stay local to the requested rectangle. */
+export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
+  const { bearing } = UNIT_CARDS[kind].art;
+  const foot = bearing === "foot";
+  const painted = hasPaintedUnit(kind);
+  // Busts use head/shoulder space; cavalry retains enough mount to read its role.
+  const extent = foot ? (painted ? 40 : 48) : bearing === "mounted" ? 86 : kind === "redDragon" ? 112 : 94;
+  const scale = size / extent;
+  c.save();
+  c.beginPath(); c.rect(x, y, size, size); c.clip();
+  const anchorY = foot ? (painted ? 49 : 36) * scale : (bearing === "mounted" ? 61 : 60) * scale;
+  drawAtlasUnit(c, kind, { x: x + size * .5, y: y + anchorY }, scale, color);
+
+  c.restore();
 }
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
@@ -86,11 +158,19 @@ export function drawAtlasTree(c: Brush, x: number, y: number, size: number, tone
 
 function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
   c.save(); c.translate(x, y); c.scale(size, size);
-  ellipse(c, 5, 4, 16, 6, "#304f3b19");
-  line(c, [[0, 4], [0, -12]], "#79744f", 3);
-  polygon(c, [[-17, -5], [-9, -20], [-12, -20], [0, -44], [12, -20], [8, -20], [17, -5], [0, 0]], tone % 2 ? "#71866a" : "#577762", "#526951", 1);
-  polygon(c, [[0, -41], [0, -3], [-14, -7], [-6, -19], [-9, -20]], tone % 2 ? "#8d9d78" : "#799573", "transparent", 0);
-  line(c, [[-8, -13], [-2, -11], [-2, -27]], "#afbb8b", 0.8);
+  const shade = tone % 3;
+  const dark = ["#394940", "#424d40", "#3b4947"][shade < 0 ? 0 : shade]!;
+  polygon(c, [[-8,3],[6,-2],[23,7],[12,10]], "#29372d20", "transparent", 0);
+  line(c, [[0,5],[-1,-53]], "#625a44", 2.7);
+  line(c, [[-1,3],[-1,-47]], "#a19068", .65);
+  for (let tier=5;tier>=0;tier--) {
+    const y=-59+tier*9, span=3+tier*4.6;
+    const sway=Math.sin(tone*2.1+tier)*1.5;
+    polygon(c, [[sway,y-10],[-span*.38,y-1],[-span*.75,y+1],[-span*.55,y+2],[-span,y+5],[-span*.62,y+5],[-span*.91,y+8],[-span*.25,y+6],[sway,y+8],[span*.43,y+6],[span,y+7],[span*.75,y+3],[span*.95,y+4],[span*.45,y-1]], dark, "#2d3b342b", .5);
+    polygon(c, [[sway,y-8],[-span*.33,y],[-span*.62,y+2],[-span*.44,y+3],[-span*.82,y+5],[-span*.27,y+4],[sway+1,y+6],[sway-1,y]], tier%2?"#6c7557":"#77806a", "transparent",0);
+    line(c, [[-span*.5,y+3],[-span*.22,y+2],[sway,y-2]], "#a5a27a55", .65);
+    line(c, [[span*.25,y+3],[span*.68,y+5]], "#88907855", .6);
+  }
   c.restore();
 }
 
@@ -123,7 +203,8 @@ export function drawAtlasLandmark(c: Brush, landmark: TerrainLandmark, point: Po
     c.rotate(landmark.rotation);
     const river = landmark.kind === "ditch";
     c.beginPath(); c.moveTo(-size / 2, 0);
-    c.bezierCurveTo(-size / 4, river ? 42 : -20, size / 4, river ? -42 : -20, size / 2, 0);
+    if(landmark.straight)c.lineTo(size/2,0);
+    else c.bezierCurveTo(-size / 4, river ? 42 : -20, size / 4, river ? -42 : -20, size / 2, 0);
     c.lineWidth = river ? 17 : 13; c.strokeStyle = river ? "#799c912c" : "#ac99772a"; c.stroke();
     c.lineWidth = river ? 9 : 7; c.strokeStyle = river ? "#7caca169" : "#d0be9970"; c.stroke();
     c.lineWidth = 1; c.strokeStyle = river ? "#e0e4c9a6" : "#a7967433"; c.stroke();
@@ -229,16 +310,24 @@ function drawDecor(c: Brush, kind: DecorKind, size: number, rotation: number) {
 
 export function drawAtlasMine(c: Brush, point: Point) {
   sprite(c, "gold-mine", point, 1, (b) => {
-    ellipse(b, 3, 20, 37, 12, "#35493724");
-    polygon(b, [[-35, 13], [-25, -9], [-11, -22], [6, -18], [17, -27], [31, -9], [37, 16], [5, 25]], "#a9ac91", "#6e806d");
-    polygon(b, [[-34, 12], [-11, -22], [-5, 2], [-15, 18]], "#cfceb0", "transparent", 0);
-    polygon(b, [[5, -17], [17, -27], [22, -5], [7, 3]], "#d0c5a0", "transparent", 0);
-    polygon(b, [[-10, 20], [-9, -1], [0, -8], [10, -2], [13, 21]], "#354a3e");
-    line(b, [[-14, 21], [-14, -2], [0, -12], [14, -3], [16, 21]], "#8d7449", 4);
-    line(b, [[-12, -1], [13, -1]], "#d0af70", 2);
-    for (const [x, y] of [[-23, 3], [22, 3], [27, 14], [-21, 17]]) polygon(b, [[x! - 4, y!], [x!, y! - 8], [x! + 5, y! - 3], [x! + 3, y! + 3]], "#dfba65", "#9f8450", 0.8);
-    line(b, [[-3, 17], [-10, 30]], "#847450", 2);
-    line(b, [[7, 18], [5, 32]], "#847450", 2);
+    ellipse(b, 4, 22, 42, 12, "#38302920");
+    ellipse(b, 1, 22, 32, 7, "#38302935");
+    const rock = (p:number[][], color:string) => { polygon(b,p,color,"#55554d",.65); line(b,p.slice(0,3),"#c5bfab",.75); };
+    rock([[-40,16],[-34,-5],[-21,-23],[-7,-19],[0,7],[-14,25]],"#8f9083");
+    rock([[-25,-7],[-16,-31],[4,-36],[16,-20],[7,7]],"#a3a293");
+    rock([[4,-27],[21,-34],[38,-12],[42,17],[24,25],[12,7]],"#85897f");
+    rock([[21,-34],[35,-22],[38,-12],[21,-16]],"#b9b4a0");
+    polygon(b,[[-13,22],[-12,-8],[0,-15],[14,-8],[16,22]],"#242825","#57564a",.8);
+    for(const x of [-15,15]) { line(b,[[x,23],[x,-10]],"#554735",5); line(b,[[x-1,21],[x-1,-10]],"#ad936c",1.2); }
+    line(b,[[-19,-11],[18,-11]],"#766047",6); line(b,[[-19,-13],[18,-13]],"#b09a74",1);
+    line(b,[[-15,-3],[-5,-11]],"#8c7656",2); line(b,[[15,-3],[5,-11]],"#8c7656",2);
+    for(let i=0;i<5;i++) line(b,[[-10-i*1.8,22+i*3],[12+i,22+i*3]],"#6c5c47",2);
+    line(b,[[-4,14],[-13,39]],"#8d9490",1.5); line(b,[[7,14],[12,39]],"#8d9490",1.5);
+    polygon(b,[[21,17],[34,17],[32,28],[22,28]],"#655846","#3e3a32",.7);
+    for(const x of [23,30]) ellipse(b,x,29,2.8,2.8,"#373a37","#9a9787");
+    for(const [x,y] of [[-29,8],[-20,20],[30,15],[24,16],[28,16]]) rock([[x!-3,y!],[x!,y!-4],[x!+4,y!-1],[x!+2,y!+2]],"#bdab73");
+    line(b,[[20,-10],[27,-10],[27,1]],"#61513e",1.3);
+    polygon(b,[[24,-1],[30,-1],[30,5],[24,5]],"#d9b777","#4e4536",.6);
   });
 }
 
@@ -309,36 +398,16 @@ export function obstacleArtTop(obstacle: Pick<Obstacle, "kind" | "radius" | "alo
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
-  sprite(c, "mercenary-camp", point, size, (b) => {
-    ellipse(b, 4, 24, 45, 14, "#3b4b3822");
-    polygon(b, [[-39, 22], [-9, -30], [30, -18], [43, 22], [1, 32]], "#a37750", "#62573f");
-    polygon(b, [[-39, 22], [-9, -30], [1, 32]], "#e3cb99", "#726448");
-    polygon(b, [[-26, 24], [-9, -9], [-2, 29]], "#465443");
-    line(b, [[-9, -30], [1, 32]], "#f0d9a5", 2);
-    line(b, [[13, -22], [26, 26]], "#dfbf85", 3);
-    flag(b, -9, -38, "#a3734e", 0.6);
-    ellipse(b, 34, 30, 10, 5, "#837354");
-    polygon(b, [[29, 29], [31, 18], [36, 24], [39, 29]], "#e0b05d", "#a37843", 1);
-  });
+  sprite(c, "mercenary-camp", point, size, b => paintBuildingModel(b, "camp", "#8b7355"));
 }
 
-// A shop (see @@@shop): a merchant's stall under a striped awning, its goods on the counter, a coin hung at its post.
+/** Neutral trading house: slate roof, linen awning, wares and hanging brass sign. */
 export function drawAtlasShop(c: Brush, point: Point, size = 1) {
-  sprite(c, "shop", point, size, (b) => {
-    ellipse(b, 2, 24, 42, 12, "#3b4b3822");
-    polygon(b, [[-30, 22], [-30, -4], [30, -4], [30, 22]], "#c9a874", "#62573f");
-    polygon(b, [[-22, 22], [-22, 6], [22, 6], [22, 22]], "#7a5a3a", "#62573f");
-    polygon(b, [[-36, -4], [-28, -26], [28, -26], [36, -4]], "#b5523f", "#62573f");
-    for (const x of [-18, 0, 18]) polygon(b, [[x - 5, -4], [x - 3, -26], [x + 3, -26], [x + 5, -4]], "#f0e3c0", "#b5523f", 0.8);
-    ellipse(b, -10, 2, 5, 3, "#d9b25a", "#8a6418");
-    ellipse(b, 8, 2, 6, 3, "#9ed8ff", "#315f87");
-    line(b, [[38, 22], [38, -16]], "#62573f", 2);
-    ellipse(b, 38, -19, 6, 6, "#f2d05c", "#8a6418");
-  });
+  sprite(c, "shop", point, size, b => paintBuildingModel(b, "shop", "#8b7355"));
 }
 
 /** The paper's own colour, under the washes and specks of the ground tile. */
-export const PAPER_BASE = "#e8e3ca";
+export const PAPER_BASE = "#b9b49e";
 
 let groundTile: HTMLCanvasElement | undefined;
 export function drawAtlasGround(c: Brush, width: number, height: number, camera: Point) {
@@ -351,10 +420,10 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
     for (let i = 0; i < 18; i++) {
       const x = random() * 512, y = random() * 512, r = 45 + random() * 110;
       const wash = b.createRadialGradient(x, y, 0, x, y, r);
-      wash.addColorStop(0, "#8caa7514"); wash.addColorStop(1, "#8caa7500");
+      wash.addColorStop(0, "#727b4d14"); wash.addColorStop(1, "#727b4d00");
       b.fillStyle = wash; b.fillRect(0, 0, 512, 512);
     }
-    for (let i = 0; i < 7000; i++) { b.fillStyle = i % 2 ? "#6c705407" : "#fff9df20"; b.fillRect(random() * 512, random() * 512, 1, 1); }
+    for (let i = 0; i < 7000; i++) { b.fillStyle = i % 2 ? "#6c705407" : "#ece4c51a"; b.fillRect(random() * 512, random() * 512, 1, 1); }
     for (let i = 0; i < 42; i++) {
       const x = 8 + random() * 496, y = 8 + random() * 496;
       line(b, [[x - 3, y], [x - 4, y - 3], [x, y + 1], [x + 1, y - 4]], "#7c8d671c", 0.8);
@@ -362,5 +431,12 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
   }
   const offsetX = ((-camera.x % 512) + 512) % 512 - 512;
   const offsetY = ((-camera.y % 512) + 512) % 512 - 512;
-  for (let x = offsetX; x < width; x += 512) for (let y = offsetY; y < height; y += 512) c.drawImage(groundTile, x, y);
+  for (let x = offsetX; x < width; x += 512) for (let y = offsetY; y < height; y += 512) c.drawImage(groundTile, x, y, 512.35, 512.35);
+}
+
+/** Remains use their own low silhouette, cached once per unit kind. */
+export function drawAtlasCorpse(c:Brush,kind:UnitKind,point:Point,scale:number,variant=0){
+  c.save();c.translate(point.x,point.y+7);c.rotate((variant%3-1)*.14);
+  sprite(c,`corpse:${kind}`,{x:0,y:0},scale, b=>paintCorpse(b,kind),variant%2===1);
+  c.restore();
 }

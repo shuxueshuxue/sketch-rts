@@ -1,5 +1,7 @@
 import "./styles.css";
-import { drawAtlasBuilding, drawAtlasUnit } from "./atlas-art";
+import "./battle-hud.css";
+import { BattleHudSelection, type HudIdentity } from "./battle-hud";
+import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -48,16 +50,18 @@ import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
+import { UnitAnimationTracker } from "./unit-animation";
 import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
-import { buildingGlyphSize, drawPaperMap, drawWorld, worldLabelsFor } from "./world-renderer";
+import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS } from "../shared/catalog";
-import { SHOP_GOODS, standsAtShop } from "../shared/shop";
+import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
+import { drawPaintedItem } from "./art/items";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
@@ -70,12 +74,12 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, Lo
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
 type Point = { x: number; y: number };
-type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind };
+type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"; kind: BuildingKind } | { type: "item"; kind: WorldItem["kind"] };
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type MenuView = "play" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -155,6 +159,7 @@ const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
+const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
 const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
@@ -180,11 +185,16 @@ let localUser = loadLocalUserProfile();
 let selectedIds = new Set<string>();
 const unitFacing = new UnitFacingTracker();
 const unitMotion = new UnitMotionSmoother();
+const unitAnimation = new UnitAnimationTracker();
+const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
+let inspectedShopItem: WorldItem["kind"] | undefined;
+let shopInventoryCarrierId: string | undefined;
 const controlGroups: ControlGroups = {};
 let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
+let worldZoom = 1;
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
@@ -287,7 +297,7 @@ const commandButtons: CommandButton[] = [
         stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
         requirements: [t("command.buy.requirements")],
       };
-    }),
+    }, { type: "item", kind: good.kind }),
   ),
   createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
     title: t("command.hire.title"),
@@ -386,16 +396,25 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.dataset.hotkey = hotkey.toUpperCase();
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
-  element.addEventListener("click", run);
+  else {
+    const paths: Record<string, string> = {
+      "⌁": "M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4",
+      "⌘": "M12 33l13-19M17 7l7-3 12 8-5 8-8-5-7 1-4-5zM9 31l5 3-3 5-5-3z",
+      "⤓": "M6 27h30l-5 8H12zM21 4v19m-6-6l6 6 6-6M7 38l6 2 8-2 8 2 7-2",
+    };
+    if (paths[icon]) element.querySelector(".command-icon")!.innerHTML = `<svg class="command-symbol" viewBox="0 0 42 42" aria-hidden="true"><path d="${paths[icon]}"/></svg>`;
+  }
+  const guardedRun = () => { const current = state(); if (!current.visible) return; if (!current.enabled) { showCommandUnavailable(current, label); return; } run(); };
+  element.addEventListener("click", guardedRun);
   // A right-click on the command card never reaches the battlefield or opens the browser menu; a spell switches autocast.
   element.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     contextAction?.();
   });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run, ...(contextAction ? { contextAction } : {}) };
+  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}) };
 }
 
 // @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
@@ -415,14 +434,15 @@ function withRing(button: CommandButton) {
 
 function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const icon = document.createElement("canvas");
-  icon.width = icon.height = 68;
+  icon.width = icon.height = 96;
   icon.className = "command-portrait";
   icon.setAttribute("aria-hidden", "true");
   const brush = requireCanvasContext(icon);
-  const center = { x: 34, y: 39 };
-  if (portrait.type === "unit") drawAtlasUnit(brush, portrait.kind, center, 1.13, "#467d6c");
-  else drawAtlasBuilding(brush, portrait.kind, center, 56, "#467d6c");
-  element.querySelector(".command-icon")?.replaceChildren(icon);
+  const center = { x: 48, y: 48 };
+  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, ownerInk(localPlayerId));
+  else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
+  else drawAtlasBuildingPortrait(brush, portrait.kind, 96, ownerInk(localPlayerId));
+  element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -456,7 +476,7 @@ function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonStat
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) return t("hud.commandCooldownShort", { ticks: state.cooldownTicks });
+  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / 20)}s`;
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
@@ -594,6 +614,7 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
+  mainMenu.classList.remove("play-browser");
   // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
   if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
@@ -609,6 +630,7 @@ function renderMainMenu() {
             : menuView === "results"
               ? t("home.results.title")
               : t("home.roomSetup.title");
+  if (menuView === "play") { renderCreateGameMenu(); return; }
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -632,7 +654,7 @@ function renderMainMenu() {
   menuStatus.textContent = "";
   mapList.replaceChildren(
     menuButton(t("home.play"), "", "data-open-create", () => {
-      openMenuRoute({ screen: "create" });
+      openMenuRoute({ screen: "play" });
     }),
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
@@ -645,6 +667,9 @@ function renderMainMenu() {
 
 // The create screen (see @@@map-chooser).
 function renderCreateGameMenu() {
+  mainMenu.dataset.menuView = "create";
+  mainMenu.classList.add("play-browser");
+  menuTitle.textContent = t("home.play");
   menuStatus.textContent = "";
   const form = document.createElement("form");
   form.className = "create-game-form";
@@ -1462,8 +1487,10 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
+    return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
@@ -1524,8 +1551,13 @@ function showInvalidCommand(message: string) {
 
 // A battlefield sound is heard where it happens: panned across the view, full inside it and fading out within a screen's
 // half-width beyond its edges.
+let lastSoundCamera: Point | undefined;
 function playCues(cues: SoundCue[]) {
-  for (const cue of cues) {
+  if (lastSoundCamera && Math.hypot(camera.x - lastSoundCamera.x, camera.y - lastSoundCamera.y) > Math.min(canvas.width, canvas.height) * .45) soundboard.stopEffects();
+  lastSoundCamera = { x: camera.x, y: camera.y };
+  // A frame's visible battle gets the voice budget before peripheral events.
+  const distance = (cue: SoundCue) => { const at = worldToScreen(cue); return Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height); };
+  for (const cue of cues.sort((a, b) => distance(a) - distance(b))) {
     const at = worldToScreen(cue);
     const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
     const gain = 1 - outside / (canvas.width / 2);
@@ -1692,6 +1724,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
 function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
   if (command.type === "mine") return t("status.mineOrdered");
   if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
+  if (command.type === "repairShip" && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
   if (command.type === "board") return t("status.boardOrdered");
   if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
   if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
@@ -1891,14 +1924,15 @@ function beginSpellTargeting(ability: AbilityKind) {
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
   shell.classList.add("targeting-active");
   shell.classList.remove("placement-active");
-  const behavior = ABILITY_DEFS[ability].behavior;
+  const abilityDef = ABILITY_DEFS[ability];
+  const behavior = abilityDef.behavior;
   const reach = chargeWindow(ability);
   statusLabel.textContent =
     behavior === "summon"
       ? t("status.summonMode")
       : reach
         ? t("status.chargeMode", { ability: labelKind(ability), min: reach.minRange })
-        : t("status.spellMode", { ability: labelKind(ability) });
+        : t(abilityDef.behavior === "weapon" && abilityDef.target === "point" ? "status.spellPointMode" : "status.spellMode", { ability: labelKind(ability) });
   updateHud();
 }
 
@@ -1953,9 +1987,9 @@ function issueSpellAt(point: Point, queued = false) {
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
   const behavior = ABILITY_DEFS[ability].behavior;
-  if (behavior === "summon") {
+  if (behavior === "summon" || (ABILITY_DEFS[ability].behavior === "weapon" && (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).target === "point")) {
     sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y, queued });
-    statusLabel.textContent = t("status.summonOrdered");
+    statusLabel.textContent = t("status.spellOrdered",{ability:labelKind(ability)});
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -1963,6 +1997,7 @@ function issueSpellAt(point: Point, queued = false) {
   }
 
   const target =
+    behavior === "weapon" ? (hitUnit(world, unit=>["enemy","creep"].includes(relationTo(snapshot!,localPlayerId,unit.owner))) ?? buildingAt(snapshot!.buildings,world,building=>relationTo(snapshot!,localPlayerId,building.owner)==="enemy")) :
     behavior === "heal"
       ? hitUnit(world, (unit) => unit.owner === localPlayerId)
       : hitUnit(world, (unit) => unit.owner !== localPlayerId);
@@ -2082,7 +2117,9 @@ function train(unitKind: TrainableUnitKind) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  sendCommand({ type: "train", buildingId: building.id, unitKind });
+  const state = trainCommandState(unitKind, player, true);
+  if (!state.enabled) { showCommandUnavailable(state, labelKind(unitKind)); return; }
+  if (!sendCommand({ type: "train", buildingId: building.id, unitKind })) return;
   statusLabel.textContent = t("status.trainQueued", { unit: labelKind(unitKind) });
 }
 
@@ -2119,8 +2156,14 @@ function buyGood(kind: WorldItem["kind"]) {
     showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
     return;
   }
+  shopInventoryCarrierId = snapshot && shopBuyer(snapshot, localPlayerId, shop)?.id;
   sendCommand({ type: "buy", shopId: shop.id, item: kind });
+  inspectedShopItem = kind;
+  selectedIds = new Set();
+  focusedSelectionId = undefined;
+  selectedCampId = shop.id;
   statusLabel.textContent = t("status.itemBought", { item: labelKind(kind) });
+  updateHud();
 }
 
 function hireMercenary() {
@@ -2150,9 +2193,11 @@ function selectUnitsInBox(start: Point, end: Point, additive = false) {
 
 function selectSingle(point: Point, additive = false, sameKind = false) {
   const world = screenToWorld(point);
-  const unit = hitUnit(world, (candidate) => candidate.owner === localPlayerId);
+  if (selectedIds.size && !selectedPlayerUnits().length && !selectedPlayerBuildings().length) additive = false;
+  const unit = hitUnit(world, () => true);
   if (unit) {
-    const result = sameKind
+    if (unit.owner !== localPlayerId) additive = false;
+    const result = sameKind && unit.owner === localPlayerId
       ? selectNearbySameKindUnits(snapshot!, localPlayerId, unit.id, DOUBLE_CLICK_SAME_KIND_RADIUS, { selectedIds, focusedSelectionId }, additive)
       : applySelectionPick({ selectedIds, focusedSelectionId }, [unit.id], additive);
     selectedIds = result.selectedIds;
@@ -2161,8 +2206,9 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
     openPalette = undefined;
     return;
   }
-  const building = hitBuilding(world, (candidate) => candidate.owner === localPlayerId);
+  const building = hitBuilding(world, () => true);
   if (building) {
+    if (building.owner !== localPlayerId) additive = false;
     const result = applySelectionPick({ selectedIds, focusedSelectionId }, [building.id], additive);
     selectedIds = result.selectedIds;
     focusedSelectionId = result.focusedSelectionId;
@@ -2175,6 +2221,7 @@ function selectSingle(point: Point, additive = false, sameKind = false) {
   selectedIds = new Set();
   focusedSelectionId = undefined;
   selectedCampId = camp?.id;
+  inspectedShopItem = undefined;
   openPalette = undefined;
 }
 
@@ -2206,6 +2253,13 @@ function selectedMercenaryCamp() {
 
 function selectedShop() {
   return snapshot?.shops?.find((shop) => shop.id === selectedCampId);
+}
+
+function inventoryCarriers() {
+  const shop = selectedShop();
+  const previous = snapshot?.units.find(unit => unit.id === shopInventoryCarrierId && unit.owner === localPlayerId);
+  const buyer = snapshot && shop && ((previous && standsAtShop(previous, shop) ? previous : undefined) ?? shopBuyer(snapshot, localPlayerId, shop) ?? snapshot.units.find(unit => unit.owner === localPlayerId && standsAtShop(unit, shop)));
+  return buyer ? [buyer] : focusedPlayerUnits();
 }
 
 function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
@@ -2245,7 +2299,7 @@ function pruneSelection() {
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if (!snapshot) return false;
-  const inventoryEntries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const inventoryEntries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
   const intent = gameplayKeyIntent(event, {
     controlGroups: reservedGroupDigits,
@@ -2261,11 +2315,11 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
     return Boolean(command);
   }
   if (intent.type === "controlGroupReplace") {
-    if (selectedIds.size === 0) {
+    if (selectedPlayerUnits().length + selectedPlayerBuildings().length === 0) {
       showInvalidCommand(t("status.groupNeedsSelection", { slot: intent.slot }));
       return true;
     }
-    replaceControlGroup(controlGroups, intent.slot, selectedIds);
+    replaceControlGroup(controlGroups, intent.slot, new Set([...selectedPlayerUnits(), ...selectedPlayerBuildings()].map(entity => entity.id)));
     lastControlGroupRecall = undefined;
     statusLabel.textContent = t("status.groupSet", { slot: intent.slot });
     return true;
@@ -2311,31 +2365,50 @@ function updateHud() {
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
-  if (groups.length > 0) {
+  if (selectedShop()) {
+    const shop = selectedShop()!;
+    const buyer = inventoryCarriers()[0];
+    const identity: HudIdentity = {
+      key: shop.id, name: t("hud.shop"), caption: t("hud.neutral"),
+      detail: buyer ? t("hud.buyer", { name:labelKind(buyer.kind) }) : t("hud.shopApproach"),
+      art: { key:"shop", paint: canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "shop", canvas.width, "#8b7355") },
+    };
+    if (inspectedShopItem) identity.inspection = {
+      name:labelKind(inspectedShopItem), detail:t("hud.purchasedItem"),
+      art:{ key:inspectedShopItem, paint: canvas => drawPaintedItem(requireCanvasContext(canvas), inspectedShopItem!, { x:canvas.width/2,y:canvas.height/2 }, canvas.width*.8) },
+    };
+    hudSelection.render(identity, [], t("hud.nothingSelected"));
+  } else if (groups.length > 0) {
     renderSelectionGroups(groups);
   } else if (camp) {
-    selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
-  } else if (selectedShop()) {
-    selectionLabel.textContent = t("hud.shop");
-  } else {
-    selectionLabel.textContent = t("hud.nothingSelected");
-  }
+    hudSelection.render({
+      key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
+      detail:t("hud.campStock", { stock:camp.stock }) + (camp.cooldownRemaining > 0 ? t("hud.restocking") : ""),
+      art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.width, "#8b7355") },
+    }, [], t("hud.nothingSelected"));
+  } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
     button.element.hidden = !state.visible;
-    button.element.disabled = !state.enabled;
+    button.element.disabled = false;
+    button.element.setAttribute("aria-disabled", String(!state.enabled));
     button.element.classList.toggle("command-button-disabled", state.visible && !state.enabled);
     button.element.classList.toggle("command-button-cooldown", state.cooldownTicks !== undefined);
     renderCommandButtonState(button.element, state);
     applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
     if (state.visible) visibleCount += 1;
   }
-  commandDock.querySelectorAll("[data-research-progress], [data-training-progress]").forEach((element) => element.remove());
+  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
+  const previousTraining = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-training-progress]"), button => [button.dataset.jobId, button]));
   for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {
-    commandDock.append(renderTrainingProgressButton(progress));
+    const previous = previousTraining.get(progress.jobId);
+    const button = renderTrainingProgressButton(progress, previous);
+    if (!previous) commandDock.append(button);
+    previousTraining.delete(progress.jobId);
     visibleCount += 1;
   }
+  for (const button of previousTraining.values()) button.remove();
   for (const progress of researchProgressButtonsForSelection(focusedBuildings, player)) {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
@@ -2345,36 +2418,27 @@ function updateHud() {
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
-  selectionLabel.replaceChildren(
-    ...groups.map((group) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
-      button.dataset.selectionGroup = group.id;
-      button.setAttribute("aria-label", selectionGroupTitle(group));
-      applyTooltip(button, selectionGroupTooltip(group));
-      const canvas = document.createElement("canvas");
-      canvas.width = 34;
-      canvas.height = 34;
-      canvas.className = "selection-model-canvas";
-      const count = document.createElement("span");
-      count.className = "selection-model-count";
-      count.textContent = `x${group.count}`;
-      button.append(canvas, count);
-      button.addEventListener("click", () => {
-        focusedSelectionId = group.ids[0];
-        openPalette = undefined;
-        updateHud();
-      });
-      drawSelectionModel(canvas, group);
-      return button;
-    }),
-  );
-}
-
-function selectionGroupTitle(group: SelectionGroup) {
-  const label = labelAnyKind(group.kind);
-  return `${label} x${group.count}${group.focused ? t("hud.selectionCurrent") : ""}`;
+  const focused = groups.find(group => group.focused) ?? groups[0]!;
+  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focused.ids[0]);
+  const total = groups.reduce((sum, group) => sum + group.count, 0);
+  const owner = entity?.owner ?? localPlayerId;
+  const identity: HudIdentity = {
+    key:focused.id,
+    name:labelAnyKind(focused.kind),
+    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : owner,
+    detail:entity && "attackDamage" in entity ? t("hud.attackValue", { damage:entity.attackDamage }) : t("hud.structure"),
+    art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+  };
+  hudSelection.render(identity, groups.map(group => {
+    const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+    return {
+      key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
+      art:{ key:`${group.kind}:${owner}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
+      decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
+    };
+  }), t("hud.nothingSelected"));
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -2388,10 +2452,10 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
-  const point = { x: canvas.width / 2, y: canvas.height / 2 + 4 };
-  const color = group.focused ? "#42796e" : "#7c9078";
-  if (group.entityType === "unit") drawAtlasUnit(mini, group.kind, point, 0.61, color);
-  else drawAtlasBuilding(mini, group.kind, point, 30, color);
+  const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
+  const color = ownerInk(owner ?? localPlayerId);
+  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
+  else drawAtlasBuildingPortrait(mini, group.kind, canvas.width, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2420,30 +2484,36 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   return button;
 }
 
-function renderTrainingProgressButton(progress: TrainingProgressButton) {
+function renderTrainingProgressButton(progress: TrainingProgressButton, previous?: HTMLButtonElement) {
   const percent = Math.floor(progress.progress * 100);
   const label = t(progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: labelKind(progress.unitKind) });
-  const button = document.createElement("button");
+  const button = previous ?? document.createElement("button");
   button.type = "button";
   button.tabIndex = -1;
   button.className = "command-button research-progress-button";
-  button.setAttribute("aria-disabled", "true");
+  button.classList.add("training-cancel-button");
+  button.disabled = !progress.jobId;
+  if (!previous) button.addEventListener("click", () => {
+    if (progress.jobId) sendCommand({ type: "cancelTraining", buildingId: progress.buildingId, jobId: progress.jobId });
+  });
+  if (progress.jobId) button.dataset.jobId = progress.jobId;
   button.dataset.trainingProgress = progress.unitKind;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
   const tooltip = unitTooltip(progress.unitKind, undefined, i18n);
   applyTooltip(button, {
     ...tooltip,
-    title: label,
+    title: `${label} · ${t("hud.cancelTraining")}`,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
-  button.innerHTML = `
+  if (!previous) button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
     <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
   `;
-  drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  if (!previous) drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? String(percent) : "Q";
   return button;
 }
 
@@ -2453,36 +2523,40 @@ function renderItemDock() {
     itemDock.replaceChildren();
     return;
   }
-  const entries = carriedItemsForSelection(snapshot, focusedPlayerUnits()).slice(0, 6);
+  const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.classList.toggle("hidden", entries.length === 0);
-  itemDock.replaceChildren(
-    ...entries.map(({ item, carrier }, index) => {
-      const hotkey = hotkeys[index] ?? "";
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "item-button";
-      button.dataset.itemId = item.id;
-      const itemName = labelKind(item.kind);
-      const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks: item.cooldownRemaining }) : "";
-      button.setAttribute("aria-label", `${itemName} (${hotkey})${cooldownText}`);
-      applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
-      button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
-      button.innerHTML = `<span class="item-icon">${itemIcon(item.kind)}</span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${item.cooldownRemaining}</span>` : ""}`;
-      button.addEventListener("click", () => useCarriedItem(item.id));
-      button.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
-        dropCarriedItem(item.id, carrier.id);
-      });
-      return button;
-    }),
-  );
+  const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
+  entries.forEach(({ item, carrier }, index) => {
+    const hotkey = hotkeys[index] ?? "";
+    let button = previous.get(item.id);
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button"; button.className = "item-button"; button.dataset.itemId = item.id;
+      button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
+      const liveButton = button;
+      button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
+      button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
+      drawCommandPortrait(button, { type:"item", kind:item.kind });
+    }
+    button.dataset.carrierId = carrier.id;
+    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
+    button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
+    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
+    button.querySelector(".hotkey")!.textContent = hotkey;
+    const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
+    cooldown.hidden = item.cooldownRemaining <= 0;
+    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / 20)}s`;
+    if (itemDock.children[index] !== button) itemDock.insertBefore(button, itemDock.children[index] ?? null);
+    previous.delete(item.id);
+  });
+  for (const button of previous.values()) button.remove();
 }
 
 function useInventoryItem(index: number) {
   if (!syncBeforeCommandProjection()) return false;
   if (!snapshot) return false;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits())[index];
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers())[index];
   if (!entry) return false;
   useCarriedItem(entry.item.id);
   return true;
@@ -2491,7 +2565,7 @@ function useInventoryItem(index: number) {
 function useCarriedItem(itemId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item }) => item.id === itemId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
   if (entry.item.kind === "flameCloak" || entry.item.kind === "speedBoots" || entry.item.kind === "regenRing") {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
@@ -2517,7 +2591,7 @@ function useCarriedItem(itemId: string) {
 function dropCarriedItem(itemId: string, carrierId: string) {
   if (!syncBeforeCommandProjection()) return;
   if (!snapshot) return;
-  const entry = carriedItemsForSelection(snapshot, focusedPlayerUnits()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
+  const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
   sendCommand(dropItemCommand(entry.item, entry.carrier));
   statusLabel.textContent = t("status.itemDropped", { item: labelKind(entry.item.kind) });
@@ -2534,7 +2608,7 @@ function trainIcon(kind: TrainableUnitKind) {
 function draw() {
   if (menuOpen) {
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
-    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now());
+    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now(), reducedUnitMotion.matches);
     return;
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2553,12 +2627,15 @@ function draw() {
   drawWorld({
     ctx,
     snapshot,
-    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height },
+    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height, zoom:worldZoom },
     now: performance.now(),
     facing: unitFacing,
     motion: unitMotion,
+    animation: unitAnimation,
+    reducedMotion: reducedUnitMotion.matches,
     labels: worldLabels,
     selectedIds,
+    controlGroups,
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
@@ -2579,7 +2656,7 @@ function drawBuildPlacementPreview() {
   if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
   const kind = commandMode.placement.buildingKind;
   const def = BUILDING_DEFS[kind];
-  const size = buildingGlyphSize(kind);
+  const size = buildingGlyphSize(kind)*worldZoom;
   const world = screenToWorld(lastMouse);
   const at = snapToFootprint(snapshot.map, def.radius, world);
   const point = worldToScreen(at);
@@ -2589,7 +2666,8 @@ function drawBuildPlacementPreview() {
   if (square) {
     const blocked = validPlacement ? new Set<string>() : blockedFootprintCells(snapshot, kind, square);
     const everyCell = !validPlacement && blocked.size === 0;
-    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));
+    ctx.save();ctx.scale(worldZoom,worldZoom);
+    drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));ctx.restore();
   }
   ctx.save();
   ctx.globalAlpha = 0.62;
@@ -2636,15 +2714,15 @@ function drawSpellPreview() {
     return;
   }
   const behavior = ABILITY_DEFS[ability].behavior;
-  const color = behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
-  const fill = behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  const color = behavior === "weapon" ? "#c6ae7b" : behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
+  const fill = behavior === "weapon" ? "rgba(198,174,123,0.08)" : behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = fill;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
-  ctx.arc(point.x, point.y, behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, behavior === "weapon" ? Math.min(90, (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).weapon.radius ?? 20) * worldZoom : behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.setLineDash([]);
@@ -2830,8 +2908,8 @@ function edgeScrollAim() {
 
 function clampCamera() {
   if (!snapshot) return;
-  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width, camera.x));
-  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height, camera.y));
+  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width/worldZoom, camera.x));
+  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height/worldZoom, camera.y));
 }
 
 function resizeCanvas() {
@@ -2910,11 +2988,11 @@ function openVirtualContextMenu(target: HTMLElement) {
 }
 
 function screenToWorld(point: Point): Point {
-  return { x: point.x + camera.x, y: point.y + camera.y };
+  return { x: point.x / worldZoom + camera.x, y: point.y / worldZoom + camera.y };
 }
 
 function worldToScreen(point: Point): Point {
-  return { x: point.x - camera.x, y: point.y - camera.y };
+  return { x: (point.x - camera.x)*worldZoom, y: (point.y - camera.y)*worldZoom };
 }
 
 function nearScreen(point: Point, pad: number) {
@@ -2923,13 +3001,13 @@ function nearScreen(point: Point, pad: number) {
 
 // The minimap keeps clear of the window's edge by its frame's width (see .minimap-frame).
 function minimapRect(): ScreenRect {
-  const size = Math.min(220, Math.max(150, Math.floor(Math.min(canvas.width, canvas.height) * 0.24)));
+  const size = Math.min(184, Math.max(132, Math.floor(Math.min(canvas.width, canvas.height) * 0.2)));
   return { x: canvas.width - size - 16, y: canvas.height - size - 16, width: size, height: size };
 }
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
   if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
-  return minimapViewportRectFor(rect, camera, { width: canvas.width, height: canvas.height }, snapshot.map);
+  return minimapViewportRectFor(rect, camera, { width: canvas.width/worldZoom, height: canvas.height/worldZoom }, snapshot.map);
 }
 
 function centerCameraFromMinimap(point: Point) {
@@ -2947,8 +3025,8 @@ function centerCameraOnControlGroup(ids: string[]) {
 
 function centerCameraOnWorld(world: Point) {
   if (!snapshot) return;
-  camera.x = world.x - canvas.width / 2;
-  camera.y = world.y - canvas.height / 2;
+  camera.x = world.x - canvas.width / (2*worldZoom);
+  camera.y = world.y - canvas.height / (2*worldZoom);
   clampCamera();
 }
 
