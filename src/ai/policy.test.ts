@@ -7,6 +7,7 @@ import { runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, createAiPolicyMemory, createAiTelemetry, planAiCommandEntriesFromScripts, planAiCommandsFromScripts, planPresetAiCommandEntries, planPresetAiCommands } from "./policy";
 import { sketchScene } from "../sdk/scene";
+import { xpStarThresholds } from "../shared/unit-value";
 
 describe("SDK preset AI policy", () => {
   it("exposes named AI script versions for SDK and room adapters", () => {
@@ -10134,9 +10135,9 @@ describe("SDK preset AI policy", () => {
       .building("v5", "archeryRange", 700, 620)
       .building("v5", "stables", 780, 620)
       .building("v5", "sanctum", 860, 620, { id: "v5-leadership-sanctum" })
-      .unit("v5", "knight", 820, 680, { xp: 260 })
-      .unit("v5", "golem", 860, 680, { xp: 130 })
-      .unit("v5", "archer", 900, 680, { xp: 60 })
+      .unit("v5", "knight", 820, 680, { xp: xpStarThresholds(UNIT_DEFS.knight)[2]! })
+      .unit("v5", "golem", 860, 680, { xp: xpStarThresholds(UNIT_DEFS.golem)[1]! })
+      .unit("v5", "archer", 900, 680, { xp: xpStarThresholds(UNIT_DEFS.archer)[0]! })
       .townHall("v3", 3300, 3300)
       .townHall("v4-tr", 3300, 3700);
     const game = scene.build().createGame();
