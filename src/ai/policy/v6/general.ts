@@ -1,3 +1,4 @@
+import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import { canCast } from "../../../shared/ability-cooldowns";
 import { HIGH_UPKEEP_SUPPLY } from "../../../shared/catalog";
 import type { V6PolicyMemory } from "../../memory";
@@ -285,7 +286,7 @@ function canTradeBases(intel: V6Intel, group: Unit[], target: V6BaseIntel): bool
   const fallback = intel.ownHalls.some(hall => hall.id !== intrusion.building.id && enemyPowerNear(intel, hall, 750) === 0);
   if (!fallback) return false;
   const dps = intrusion.attackers.reduce((total, unit) => total + unit.attackDamage * 20 / Math.max(1, unit.attackCooldown), 0);
-  const arrival = distance(center, intrusion.building) / Math.max(1, Math.min(...group.map(unit => unit.speed)) * 20);
+  const arrival = distance(center, intrusion.building) / Math.max(1, Math.min(...group.map(unit => unit.speed)));
   return arrival > intrusion.building.hp / Math.max(1, dps);
 }
 
@@ -438,9 +439,9 @@ const QUICK_STRIKE_RANGE = 300;
 // before the strikers bring it down.
 function quickStrikeHolds(intel: V6Intel, strikers: Unit[], target: V6BaseIntel, aggression: number) {
   const hall = target.hall;
-  const perTick = strikers.reduce((total, unit) => total + unit.attackDamage / Math.max(1, unit.attackCooldown), 0);
-  const window = hall.hp / Math.max(perTick, 0.01);
-  const inTime = intel.enemies.flatMap((enemy) => enemy.army).filter((unit) => Math.max(0, distance(unit, hall) - unit.attackRange) / Math.max(unit.speed, 0.1) <= window);
+  const damagePerSecond = strikers.reduce((total, unit) => total + unit.attackDamage / Math.max(1 / SIM_TICKS_PER_SECOND, unit.attackCooldown / SIM_TICKS_PER_SECOND), 0);
+  const window = hall.hp / Math.max(damagePerSecond, 0.2);
+  const inTime = intel.enemies.flatMap((enemy) => enemy.army).filter((unit) => Math.max(0, distance(unit, hall) - unit.attackRange) / Math.max(unit.speed, 2) <= window);
   return marchStrength(strikers) * (1 + aggression) >= (strengthOf(inTime) + target.towers.length * TOWER_STRENGTH) * V8_ATTACK_MARGIN;
 }
 

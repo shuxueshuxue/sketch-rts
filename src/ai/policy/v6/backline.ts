@@ -1,3 +1,4 @@
+import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { aimingProfile } from "../../../shared/aiming";
 import { UNIT_DEFS } from "../../../shared/catalog";
@@ -65,9 +66,9 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
       && !towers.some(tower => distance(caster, tower) <= tower.attackRange)) {
       const profile = aimingProfile(UNIT_DEFS[caster.kind])!;
       const reticle = caster.aim ?? caster;
-      const shotTicks = caster.cooldown + Math.hypot(quarry.x - reticle.x, quarry.y - reticle.y) / profile.speed;
-      const contactTicks = Math.min(...local.filter(enemy => enemy.attackRange <= 80).map(enemy => Math.max(0, distance(caster, enemy) - enemy.attackRange - enemy.radius - caster.radius) / Math.max(.1, enemy.speed)));
-      if (contactTicks > shotTicks + 3) {
+      const shotSeconds = caster.cooldown / SIM_TICKS_PER_SECOND + Math.hypot(quarry.x - reticle.x, quarry.y - reticle.y) / profile.speed;
+      const contactSeconds = Math.min(...local.filter(enemy => enemy.attackRange <= 80).map(enemy => Math.max(0, distance(caster, enemy) - enemy.attackRange - enemy.radius - caster.radius) / Math.max(2, enemy.speed)));
+      if (contactSeconds > shotSeconds + 0.15) {
         if (caster.order.type !== "attack" || caster.order.targetId !== quarry.id) commands.push({ type: "attack", unitIds: [caster.id], targetId: quarry.id });
         continue;
       }
