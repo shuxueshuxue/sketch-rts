@@ -1,8 +1,10 @@
+import { BUILDING_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./claims";
 import type { AiCommandEntry, AiPolicyContext, AiScript, PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy } from "./versions";
+import { navalBudgetReserve } from "./naval";
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
@@ -20,8 +22,13 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
+  const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0);
+  const economySnapshot = pendingCost ? { ...snapshot, players: { ...snapshot.players, [owner]: { ...snapshot.players[owner]!, gold: Math.max(0, snapshot.players[owner]!.gold - pendingCost) } } } : snapshot;
+  const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
+  const reservedSnapshot = navalReserve ? { ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...economySnapshot.players[owner]!, gold: economySnapshot.players[owner]!.gold - navalReserve } } } : economySnapshot;
   for (const script of economyScripts) {
-    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(snapshot, owner, policyOptions)), claims, script.id);
+    const budget = script.id === "v6Economy" || script.id === "economy" ? economySnapshot : reservedSnapshot;
+    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
@@ -92,6 +99,6 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
 
 function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>) {
   for (const command of commands) {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "repair") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "repair" || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
   }
 }
