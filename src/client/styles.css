@@ -2102,18 +2102,67 @@ input[type="range"] {
 [data-tide-hero-health].critical { color:#ffc29d;background:#733a30;padding:6px;border-left:3px solid #e8a370; }
 .tide-result {position:absolute;z-index:30;left:50%;top:46%;transform:translate(-50%,-50%);width:min(520px,80vw);padding:42px;background:linear-gradient(135deg,#27373f,#121c23);border:1px solid #b39765;border-top:3px solid #d6bc81;color:#e7ddc6;box-shadow:0 25px 100px #071017b3;font:15px/1.8 var(--font-ui);text-align:center;}
 .tide-result small{font:10px var(--font-ui);letter-spacing:4px;color:#bca478}.tide-result h2{font:36px var(--font-display);letter-spacing:5px;margin:18px 0}.tide-result div{font-size:13px;color:#9cafb7;margin:25px 0}.tide-result button{background:#b9a16e;border:0;color:#182128;padding:12px 30px;font:14px var(--font-ui);cursor:pointer}
-/* Campaign journal: a destination within Play, with its own map, progress and party. */
-.main-menu.campaign-home{padding:30px;background:#101b22ed;align-items:center;justify-content:center}
-.main-menu.campaign-home::before{display:none}
-.main-menu.campaign-home .menu-window{width:min(1120px,94vw);max-height:92vh;overflow:auto;box-sizing:border-box;padding:26px 32px;background:#19262ceF;border:1px solid #77816d;border-image:none;box-shadow:0 25px 80px #0008;border-radius:3px}
-.main-menu.campaign-home .menu-title{font-size:20px;text-align:left;color:#e7dec9;letter-spacing:6px;margin:0 0 6px}
-.main-menu.campaign-home .menu-status{color:#a5997e;text-align:left;letter-spacing:2px;font:11px var(--font-ui);margin-bottom:24px}
-.main-menu.campaign-home .map-list{display:block;width:auto;max-width:none}
-.campaign-journal{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(360px,1.1fr);gap:40px;color:#c1c9c6;font:14px/1.7 var(--font-ui)}
-.campaign-chart{background:#21353e;border:1px solid #556769;align-self:start;position:relative}.campaign-chart svg{display:block;width:100%}.campaign-chart-caption{padding:16px 20px;color:#b1bdba;font-size:12px;border-top:1px solid #53635d}
-.campaign-kicker{color:#c6ad7e;font-size:11px;letter-spacing:3px}.campaign-story h2{font:42px var(--font-display);color:#f0e5cd;letter-spacing:8px;margin:12px 0 24px}.campaign-lead{font:21px/1.6 var(--font-display);color:#ddd9cc}.campaign-facts{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.campaign-facts span{font-size:11px;border:1px solid #53605a;padding:3px 8px;color:#d1bd94}
-.campaign-chapters{list-style:none;padding:0;margin:20px 0}.campaign-chapters li{display:flex;gap:18px;padding:10px 0;border-top:1px solid #45504c}.campaign-chapters b{font:25px var(--font-display);color:#8c846e}.campaign-chapters strong{color:#e4dccb;font-weight:500}.campaign-chapters p{margin:3px 0;font-size:12px;color:#a6b1af}.campaign-progress{color:#b7a784;font-size:12px}.campaign-actions{display:flex;gap:10px;flex-wrap:wrap}.campaign-home .map-button{background:#293b42;color:#eee3ce;border:1px solid #63706b;border-image:none;text-shadow:none;padding:12px 18px;margin-bottom:10px;font:14px var(--font-ui);min-height:0}.campaign-home .map-button-name{font-size:15px}.campaign-home .map-button-detail{font-size:11px;color:#a5b6b8}.campaign-home details{font-size:12px;margin:12px 0}.campaign-join{display:flex;gap:10px;align-items:end;margin:20px 0}.campaign-join label{flex:1;font-size:11px}.campaign-join input,.campaign-lobby input{display:block;box-sizing:border-box;width:100%;padding:10px;background:#111d24;color:#d4dfdc;border:1px solid #516168;user-select:text}.campaign-join button{padding:9px 16px}.campaign-lobby{color:#cfdbd7;font:15px/1.8 var(--font-ui);max-width:650px}.campaign-lobby h2{color:#eadfc6}.campaign-lobby>p{padding:8px 0}.campaign-lobby input{font-size:12px}
-/* Keep mission controls above the command deck; details expand only on demand. */
-.tide-panel{width:228px;max-height:calc(100vh - 300px);padding:12px;top:12px;left:12px;font-size:11px}
-.tide-panel header{padding-bottom:6px;gap:2px}.tide-panel header strong{font-size:19px;letter-spacing:3px}.tide-panel header small{display:none}.tide-panel button{padding:5px 6px}.tide-panel details{margin-top:6px;padding-top:6px}.tide-ports{display:grid;grid-template-columns:1fr 1fr;gap:4px}.tide-tools{gap:4px}.tide-log{display:none}
-@media(max-width:850px){.campaign-journal{grid-template-columns:1fr;gap:20px}.campaign-chart{display:none}.main-menu.campaign-home{padding:12px}.main-menu.campaign-home .menu-window{padding:20px}.campaign-story h2{font-size:32px}.tide-panel{width:190px;max-height:calc(100vh - 280px)}}
+/* Play is one map browser. Modes are tabs within the same window. */
+.play-browser .create-game-form { grid-template-rows:auto minmax(0,1fr) auto auto; }
+.play-tabs { display:flex;align-items:end;gap:4px;border-bottom:1px solid var(--rule);min-height:44px; }
+.play-tab { border:1px solid transparent;border-bottom:0;background:transparent;color:var(--ink-soft);padding:12px 26px 13px;font:600 15px var(--font-ui);cursor:pointer;position:relative; }
+.play-tab[aria-selected="true"] { color:var(--ink);background:var(--inset);border-color:var(--rule); }
+.play-tab[aria-selected="true"]::after { content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent); }
+.play-tab:hover { color:var(--ink);background:var(--selected); }
+.play-rooms { margin-left:auto;margin-bottom:8px;border:0;background:none;color:var(--ink-soft);font:13px var(--font-ui);cursor:pointer;padding:8px 12px; }
+.play-mode-body { min-height:0;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px; }
+.campaign-browser { min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:12px; }
+.campaign-entry-sub { display:block;font-size:11px;font-weight:400;opacity:.7;margin-top:5px; }
+.campaign-library { background:var(--inset);border:1px solid var(--rule); }
+.campaign-arc-list { margin-top:20px;border-top:1px solid var(--rule); }
+.campaign-arc { display:flex;gap:12px;padding:14px 4px;border-bottom:1px solid var(--rule); }
+.campaign-arc>span { color:var(--ink-soft);font:20px var(--font-display); }
+.campaign-arc strong { display:block;font:500 14px var(--font-ui); }
+.campaign-arc small { display:block;font-size:11px;color:var(--ink-soft);margin-top:4px; }
+.campaign-arc.completed>span { color:#567c69; }
+.campaign-save-note { font:12px/1.6 var(--font-ui);color:var(--ink-soft);margin:0; }
+.campaign-detail { min-height:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(240px,.9fr);gap:20px;background:var(--inset);padding:16px;border:1px solid var(--rule);overflow:auto; }
+.campaign-map-frame { position:relative;align-self:center; }
+.campaign-map-frame canvas { display:block;width:100%;height:auto;border:1px solid #687d80;box-shadow:0 8px 18px #0002; }
+.campaign-map-scale { display:block;text-align:center;color:var(--ink-soft);font:11px var(--font-ui);margin-top:10px; }
+.campaign-description { align-self:center;font:14px/1.8 var(--font-ui); }
+.campaign-description h2 { font:30px var(--font-display);letter-spacing:4px;margin:4px 0 18px;color:var(--ink); }
+.campaign-description p { margin:12px 0; }
+.campaign-description .campaign-kicker { color:var(--ink-soft);letter-spacing:2px;font-size:11px; }
+.campaign-description .campaign-facts { display:flex;flex-wrap:wrap;gap:6px;margin:18px 0; }
+.campaign-description .campaign-facts span { color:var(--ink-soft);border-color:var(--rule); }
+.campaign-opening { border-top:1px solid var(--rule);padding-top:16px;font-size:12px; }
+.campaign-opening strong { display:block;color:var(--accent);margin-bottom:6px; }
+.campaign-launch-bar,.campaign-launch-actions { display:flex;gap:10px;align-items:center; }
+.campaign-launch-bar>button { margin-left:auto; }
+.campaign-invite-form { display:flex;gap:10px;align-items:center;font:12px var(--font-ui);color:var(--ink-soft); }
+.campaign-invite-form label { display:flex;gap:12px;align-items:center; }
+.campaign-invite-form input { width:230px;min-width:0; }
+.campaign-invite-form small { margin-left:auto;max-width:260px; }
+.play-browser .campaign-lobby { margin:auto;width:min(650px,100%);color:var(--ink); }
+.play-browser .campaign-lobby h2 { color:var(--ink); }
+.play-browser .campaign-lobby input { background:var(--inset);color:var(--ink);border-color:var(--rule); }
+/* A small mission book; command and item docks remain reachable below it. */
+.tide-panel { width:260px;max-height:calc(100dvh - 290px);top:12px;left:12px;padding:12px; }
+.tide-panel [data-tide-objective] { font-size:13px;margin:12px 0 8px; }
+.tide-objectives { display:grid;gap:5px; }
+.tide-panel .tide-objective-row { display:grid;grid-template-columns:16px 1fr;gap:3px 5px;text-align:left;padding:9px;background:#17232b;border-color:#3e5058; }
+.tide-objective-row>span { color:#d6b978; }
+.tide-objective-row>strong { font:500 11px/1.5 var(--font-ui); }
+.tide-objective-row>small { grid-column:2;color:#a9b9be;font:10px/1.5 var(--font-ui); }
+.tide-objective-row.completed>span { color:#8db79b; }.tide-objective-row.completed>strong { color:#8db79b; }
+.tide-mission-actions { display:flex;flex-wrap:wrap;gap:5px;margin:10px 0; }
+.tide-mission-actions button[hidden] { display:none; }
+.tide-dispatch { display:grid;gap:4px;margin-top:6px; }
+.tide-dialogue { border-left:2px solid #b79c67;padding:8px 10px;background:#b9a3760b;margin-top:10px; }
+.tide-dialogue strong { color:#c6b084;font:500 10px var(--font-ui); }
+.tide-dialogue p { margin:5px 0 0;font:11px/1.7 var(--font-ui);color:#c1cdcc; }
+.tide-history { padding-left:18px;color:#a7b9bd;font:10px/1.7 var(--font-ui); }.tide-history li { margin:8px 0; }
+@media(max-width:1100px) { .campaign-detail { grid-template-columns:1fr;gap:14px; }.campaign-map-frame{max-width:450px;margin:auto}.campaign-description h2{font-size:24px}.campaign-description{font-size:12px}.campaign-description .campaign-facts{margin:8px 0}.campaign-invite-form small{display:none} }
+@media(max-width:750px) { .campaign-chooser{grid-template-columns:160px minmax(0,1fr);gap:8px}.campaign-arc{padding:10px 0;gap:7px}.campaign-arc strong{font-size:12px}.campaign-detail{padding:10px}.play-tab{padding:10px 18px}.campaign-invite-form label{gap:6px}.campaign-invite-form input{width:160px}.tide-panel{width:205px;max-height:calc(100dvh - 260px)} }
+.campaign-invite-form button { min-height:32px;border:1px solid var(--btn-edge);background:var(--btn);color:var(--btn-ink);border-radius:2px;padding:6px 16px;font:600 12px var(--font-ui);cursor:pointer; }
+.campaign-invite-form button:hover { background:var(--btn-hover); }
+.campaign-launch-bar { justify-content:space-between; }
+.campaign-lobby { font:14px/1.8 var(--font-ui);padding:24px;box-sizing:border-box; }
+.campaign-lobby>p { padding:8px 0; }.campaign-lobby input { width:100%;box-sizing:border-box;padding:10px;user-select:text; }
+.tide-ports { grid-template-columns:1fr 1fr; }.tide-tools{gap:4px;margin:8px 0}.tide-panel header strong{font-size:19px;letter-spacing:3px}.tide-panel header small{display:none}

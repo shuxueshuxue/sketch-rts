@@ -178,7 +178,8 @@ export function drawAtlasLandmark(c: Brush, landmark: TerrainLandmark, point: Po
     c.rotate(landmark.rotation);
     const river = landmark.kind === "ditch";
     c.beginPath(); c.moveTo(-size / 2, 0);
-    c.bezierCurveTo(-size / 4, river ? 42 : -20, size / 4, river ? -42 : -20, size / 2, 0);
+    if(landmark.straight)c.lineTo(size/2,0);
+    else c.bezierCurveTo(-size / 4, river ? 42 : -20, size / 4, river ? -42 : -20, size / 2, 0);
     c.lineWidth = river ? 17 : 13; c.strokeStyle = river ? "#799c912c" : "#ac99772a"; c.stroke();
     c.lineWidth = river ? 9 : 7; c.strokeStyle = river ? "#7caca169" : "#d0be9970"; c.stroke();
     c.lineWidth = 1; c.strokeStyle = river ? "#e0e4c9a6" : "#a7967433"; c.stroke();

@@ -76,7 +76,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
       const level = terrain.levels?.[row * terrain.cols + start];
       const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
       if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#c3bea9" : undefined;
+      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#c3bea9" : terrain.palette==='coastal'?'#a5ab91':undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);
@@ -111,6 +111,15 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const cells = (visit: (col: number, row: number, x: number, y: number) => void) => {
     for (let row = low.row; row <= high.row; row += 1) for (let col = low.col; col <= high.col; col += 1) visit(col, row, (col + 0.5) * size, (row + 0.5) * size);
   };
+  if(terrain.palette==='coastal')cells((col,row,x,y)=>{
+    if(kindAt(col,row)!=='.')return;
+    b.fillStyle='#a5a891';b.fillRect(col*size,row*size,size+1,size+1);
+    for(let i=0;i<12;i++){
+      const px=x+(jitter(col,row,200+i)-.5)*size,py=y+(jitter(col,row,240+i)-.5)*size;
+      line(b,[[px,py],[px+3+jitter(col,row,260+i)*5,py-1]],i%3?'#68766320':'#e6dfbd2a',.8);
+    }
+    if(jitter(col,row,301)<.16){const px=x+(jitter(col,row,302)-.5)*size*.7,py=y+(jitter(col,row,303)-.5)*size*.7;line(b,[[px-4,py],[px-2,py-5],[px,py],[px+3,py-7],[px+4,py]],'#66775866',.8);}
+  });
 
   // Plateaus: a lighter ground flecked with grass, the ramp paved, and steps where the ramp meets the plateau.
   cells((col, row, x, y) => {

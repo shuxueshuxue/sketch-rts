@@ -3,12 +3,12 @@ import type { GameCommand,GameSnapshot } from '../shared/types';
 import type { CampaignSave, CampaignState } from '../campaigns/tidebound/campaign';
 import type { CampaignFrame } from '../shared/campaign-session';
 import type { CampaignSession } from './campaign-session';
-export const TIDE_SAVE='sketch-rts-tidebound-v1';
+export const TIDE_SAVE='sketch-rts-tidebound-v2';
 export class TideboundAdapter implements GameAdapter {
  private worker?:Worker;
  private snapshot?:GameSnapshot; state?:CampaignState;paused=true;
  constructor(options:{save?:CampaignSave;session?:CampaignSession;ready:(snapshot:GameSnapshot)=>void;notice:(message:string)=>void}){
-  let ready=false,lastSent=-1;
+  let ready=false,lastSent=-Infinity;
   const frame=(data:CampaignFrame)=>{
    this.paused=data.paused;
    if(this.snapshot)data.snapshot.map=this.snapshot.map;
@@ -24,9 +24,9 @@ export class TideboundAdapter implements GameAdapter {
   this.worker.onmessage=({data})=>{
    if(data.type==='frame'){
     frame(data);
-    if(options.session&&(data.paused||data.snapshot.tick-lastSent>=4)){lastSent=data.snapshot.tick;options.session.publish(data);}
+    if(options.session&&(data.paused||performance.now()-lastSent>=200)){lastSent=performance.now();options.session.publish(data);}
    }
-   if(data.type==='notice')options.notice(data.message);
+   if(data.type==='notice'){options.notice(data.message);options.session?.notice(data.message);}
    if(data.type==='save')try{localStorage.setItem(TIDE_SAVE,JSON.stringify(data.save));options.notice('战役已保存');}catch{options.notice('存储空间不足，存档未保存');}
   };
   this.worker.onerror=event=>options.notice(`战役运行错误：${event.message}`);
