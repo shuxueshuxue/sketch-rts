@@ -15,6 +15,7 @@ export type Terrain = {
   rows: number;
   cells: string;
   levels?: string;
+  palette?: 'coastal';
 };
 
 export type TerrainCellKind = "ground" | "shallow" | "mud" | "bridge" | "forest" | "rock" | "water";
@@ -59,6 +60,9 @@ const SHORT_LOOK = 3;
 // Fields kept per terrain for the AIs' walking distances and routes; the least recently used goes first and its arrays
 // serve the next one.
 const FIELD_CACHE = 128;
+// 8K local 30x30 fields cap their typed arrays at about 56 MiB per routing layer.
+// Evict one old goal, never flush every soldier's route at once.
+const GOAL_FIELD_CACHE = 8192;
 // The flow tiles' squares (see @@@flow-tiles), and the regions one square may hold (a square split by a cliff or a wall).
 const SECTOR = 10;
 const MAX_REGIONS = 64;
@@ -682,7 +686,11 @@ function downhill(state: TerrainRuntime, field: BoxField, at: number) {
 // The goal's own field, over its square and the squares round it, from its seeds (see goalSeeds).
 function goalFieldOf(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, target: number) {
   const known = tiles.goals.get(target);
-  if (known) return known;
+  if (known) {
+    tiles.goals.delete(target);
+    tiles.goals.set(target, known);
+    return known;
+  }
   const sector = sectorOf(state, tiles, target);
   const col = (sector % tiles.columns) * SECTOR;
   const row = Math.floor(sector / tiles.columns) * SECTOR;
@@ -691,7 +699,7 @@ function goalFieldOf(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles
   const box = { left: left + 1, top: top + 1, width: Math.min(state.terrain.cols, col + 2 * SECTOR) - left, height: Math.min(state.terrain.rows, row + 2 * SECTOR) - top };
   const { seeds, costs } = goalSeeds(state, ground, target, box);
   const goal = { field: growBox(state, box, seeds, costs), seeds };
-  if (tiles.goals.size > 2_048) tiles.goals.clear();
+  if (tiles.goals.size >= GOAL_FIELD_CACHE) tiles.goals.delete(tiles.goals.keys().next().value!);
   tiles.goals.set(target, goal);
   return goal;
 }
@@ -737,6 +745,8 @@ function goalSeeds(state: TerrainRuntime, ground: TerrainRuntime, target: number
 // buildings) goes as near as it can and stands there instead of pressing against what is in its way.
 function reachableTarget(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, near: number, target: number) {
   const island = tiles.island[near]!;
+  // An open target is its own sole seed; connectivity alone answers this query.
+  if (state.walk[target] === 1 && tiles.island[target] === island) return target;
   if (goalFieldOf(state, ground, tiles, target).seeds.some((seed) => tiles.island[seed] === island)) return target;
   const key = target * state.walk.length + island;
   const known = tiles.nearest.get(key);

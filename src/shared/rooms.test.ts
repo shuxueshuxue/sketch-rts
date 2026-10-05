@@ -153,7 +153,7 @@ describe("room model", () => {
     const sides = createRoom({ id: "room-two-sides", host, mapId: "stillwater", humanCount: 1, aiCount: 3 });
     expect(sides.slots.map((slot) => slot.team)).toEqual(["team-1", "team-2", "team-1", "team-2"]);
     expect(canStartRoom(sides)).toBe(true);
-    expect(canStartRoom(sides.slots.reduce((edited, slot) => updateRoomSlot(edited, slot.id, { team: "ffa" }), sides))).toBe(false);
+    expect(canStartRoom(sides.slots.reduce((edited, slot) => updateRoomSlot(edited, slot.id, { team: "ffa" }), sides))).toBe(true);
   });
 
   it("reads the north, south, east and west of rooms and saves from before as teams 1 to 4", () => {
@@ -240,13 +240,13 @@ describe("room model", () => {
     expect(roomToGameSetup(updateRoomMap(ladder, "pineshade")).options.layout).toBeUndefined();
   });
 
-  it("starts a room on a pool map only with all its seats taken, and a sides map with two even teams", () => {
+  it("starts a full pool map with custom alliances, including two-shore maps", () => {
     const duel = createRoom({ id: "room-duel", host, mapId: "pineshade", humanCount: 1, aiCount: 1 });
     expect(canStartRoom(duel)).toBe(true);
     expect(canStartRoom(createRoom({ id: "room-crowd", host, mapId: "pineshade", humanCount: 1, aiCount: 2 }))).toBe(false);
     const sides = createRoom({ id: "room-sides", host, mapId: "twoShores", humanCount: 1, aiCount: 3 });
     expect(canStartRoom(sides)).toBe(true);
-    expect(canStartRoom(updateRoomSlot(sides, "slot-2", { team: "team-1" }))).toBe(false);
+    expect(canStartRoom(updateRoomSlot(sides, "slot-2", { team: "team-1" }))).toBe(true);
     const ring = createRoom({ id: "room-ring", host, mapId: "elderwood", humanCount: 1, aiCount: 3 });
     expect(canStartRoom(updateRoomSlot(ring, "slot-2", { team: "team-3" }))).toBe(true);
     expect(canStartRoom(updateRoomSlot(ring, "slot-4", { controller: "closed" }))).toBe(false);
