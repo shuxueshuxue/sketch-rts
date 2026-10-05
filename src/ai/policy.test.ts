@@ -24,6 +24,8 @@ describe("SDK preset AI policy", () => {
     v5Expected.splice(v5Expected.indexOf("objectiveControl"), 1);
     v5Expected.splice(v5Expected.indexOf("workerPressure"), 0, "objectiveControl");
     v5Expected.splice(v5Expected.indexOf("focusFire") + 1, 0, "towerBreaker");
+    v5Expected.splice(v5Expected.indexOf("items"), 0, "allySupport");
+    v5Expected.splice(v5Expected.indexOf("focusFire"), 0, "battlefield");
     // All policies share naval capabilities; only the strategic economy and combat priorities differ.
     expect(v5ScriptIds).toEqual(v5Expected);
 
