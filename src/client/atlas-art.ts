@@ -68,6 +68,30 @@ export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, 
   });
 }
 
+const sitePortraits = new Map<string, { canvas: HTMLCanvasElement; x: number; y: number; width: number; height: number }>();
+/** Fit the actual architecture to its visible bounds, including tall roofs and awnings. */
+export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteModelKind, size: number, color: string) {
+  const key = `${kind}:${color}`;
+  let source = sitePortraits.get(key);
+  if (!source) {
+    const canvas = createScratchCanvas(256, 256);
+    const brush = canvas.getContext("2d")!;
+    brush.translate(128, 128); brush.scale(2, 2);
+    paintBuildingModel(brush, kind, color);
+    const pixels = brush.getImageData(0, 0, 256, 256).data;
+    let left = 256, top = 256, right = 0, bottom = 0;
+    for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) if (pixels[(y * 256 + x) * 4 + 3]! > 8) {
+      left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+    }
+    source = { canvas, x:left, y:top, width:right-left+1, height:bottom-top+1 };
+    if (sitePortraits.size >= 128) sitePortraits.delete(sitePortraits.keys().next().value!);
+    sitePortraits.set(key, source);
+  }
+  const scale = size * .92 / Math.max(source.width, source.height);
+  const width = source.width * scale, height = source.height * scale;
+  c.drawImage(source.canvas, source.x, source.y, source.width, source.height, (size-width)/2, (size-height)/2, width, height);
+}
+
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
   if (hasPaintedUnit(kind)) {
@@ -104,9 +128,6 @@ export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: nu
   const scale = size / extent;
   c.save();
   c.beginPath(); c.rect(x, y, size, size); c.clip();
-  const wash = c.createLinearGradient(x, y, x + size, y + size);
-  wash.addColorStop(0, "#555956"); wash.addColorStop(.55, "#343b3d"); wash.addColorStop(1, "#20272b");
-  c.fillStyle = wash; c.fillRect(x, y, size, size);
   const anchorY = foot ? (painted ? 49 : 36) * scale : (bearing === "mounted" ? 61 : 60) * scale;
   drawAtlasUnit(c, kind, { x: x + size * .5, y: y + anchorY }, scale, color);
 

@@ -1,5 +1,7 @@
 import "./styles.css";
-import { drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
+import "./battle-hud.css";
+import { BattleHudSelection, type HudIdentity } from "./battle-hud";
+import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -157,6 +159,7 @@ const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
+const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
 const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
@@ -438,7 +441,7 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const center = { x: 48, y: 48 };
   if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, ownerInk(localPlayerId));
   else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
-  else drawAtlasBuilding(brush, portrait.kind, center, 78, ownerInk(localPlayerId));
+  else drawAtlasBuildingPortrait(brush, portrait.kind, 96, ownerInk(localPlayerId));
   element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
 }
 
@@ -2364,21 +2367,26 @@ function updateHud() {
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
   if (selectedShop()) {
     const shop = selectedShop()!;
-    selectionLabel.replaceChildren();
-    if (inspectedShopItem) {
-      const art = document.createElement("canvas"); art.width = art.height = 96; art.className = "shop-item-portrait";
-      drawPaintedItem(requireCanvasContext(art), inspectedShopItem, { x:48, y:48 }, 76);
-      const text = document.createElement("span"); text.className = "shop-item-summary";
-      text.textContent = `${labelKind(inspectedShopItem)} · ${t("hud.shop")}`;
-      selectionLabel.append(art, text);
-    } else selectionLabel.textContent = t("hud.shop");
+    const buyer = inventoryCarriers()[0];
+    const identity: HudIdentity = {
+      key: shop.id, name: t("hud.shop"), caption: t("hud.neutral"),
+      detail: buyer ? t("hud.buyer", { name:labelKind(buyer.kind) }) : t("hud.shopApproach"),
+      art: { key:"shop", paint: canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "shop", canvas.width, "#8b7355") },
+    };
+    if (inspectedShopItem) identity.inspection = {
+      name:labelKind(inspectedShopItem), detail:t("hud.purchasedItem"),
+      art:{ key:inspectedShopItem, paint: canvas => drawPaintedItem(requireCanvasContext(canvas), inspectedShopItem!, { x:canvas.width/2,y:canvas.height/2 }, canvas.width*.8) },
+    };
+    hudSelection.render(identity, [], t("hud.nothingSelected"));
   } else if (groups.length > 0) {
     renderSelectionGroups(groups);
   } else if (camp) {
-    selectionLabel.textContent = t("hud.mercenaryCamp", { stock: camp.stock, restocking: camp.cooldownRemaining > 0 ? t("hud.restocking") : "" });
-  } else {
-    selectionLabel.textContent = t("hud.nothingSelected");
-  }
+    hudSelection.render({
+      key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
+      detail:t("hud.campStock", { stock:camp.stock }) + (camp.cooldownRemaining > 0 ? t("hud.restocking") : ""),
+      art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.width, "#8b7355") },
+    }, [], t("hud.nothingSelected"));
+  } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
@@ -2410,86 +2418,27 @@ function updateHud() {
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
-  let grid = selectionLabel.querySelector<HTMLDivElement>(".selection-grid");
-  let header = selectionLabel.querySelector<HTMLDivElement>(".selection-header");
-  if (!grid || !header) {
-    header = document.createElement("div");
-    header.className = "selection-header";
-    const title = document.createElement("span");
-    title.className = "selection-header-title";
-    const details = document.createElement("span");
-    details.className = "selection-details";
-    header.append(title, details);
-    grid = document.createElement("div");
-    grid.className = "selection-grid";
-    grid.tabIndex = 0;
-    grid.setAttribute("aria-label", t("hud.selectionTypes"));
-    selectionLabel.replaceChildren(header, grid);
-  }
-  const previousFocus = grid.dataset.focusGroup;
-  const focusedGroup = groups.find(group => group.focused) ?? groups[0]!;
-  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focusedGroup.ids[0]);
-  header.children[0]!.textContent = labelAnyKind(focusedGroup.kind);
-  header.children[1]!.textContent = entity ? `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "") : "";
-  grid.style.setProperty("--selection-columns", String(Math.min(3, groups.length)));
-  // Keep live cards and the scroll container: replacing them each frame interrupted wheel, thumb and keyboard input.
-  const existing = new Map(Array.from(grid.querySelectorAll<HTMLButtonElement>(".selection-model"), button => [button.dataset.selectionGroup, button]));
-  groups.forEach((group, index) => {
-    let button = existing.get(group.id);
-    if (!button) {
-      button = document.createElement("button");
-      button.type = "button";
-      button.dataset.selectionGroup = group.id;
-      const canvas = document.createElement("canvas");
-      canvas.width = 96;
-      canvas.height = 96;
-      canvas.className = "selection-model-canvas";
-      const count = document.createElement("span");
-      count.className = "selection-model-count";
-      const name = document.createElement("span");
-      name.className = "selection-model-name";
-      button.append(canvas, name, count);
-      const card = button;
-      button.addEventListener("click", () => {
-        focusedSelectionId = card.dataset.focusId;
-        openPalette = undefined;
-        updateHud();
-      });
-    }
-    button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
-    button.dataset.focusId = group.ids[0];
-    button.setAttribute("aria-label", selectionGroupTitle(group));
-    button.setAttribute("aria-pressed", String(group.focused));
-    applyTooltip(button, selectionGroupTooltip(group));
-    button.children[1]!.textContent = labelAnyKind(group.kind);
-    const count = button.children[2] as HTMLElement;
-    count.textContent = `x${group.count}`;
-    count.hidden = group.count === 1;
+  const focused = groups.find(group => group.focused) ?? groups[0]!;
+  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focused.ids[0]);
+  const total = groups.reduce((sum, group) => sum + group.count, 0);
+  const owner = entity?.owner ?? localPlayerId;
+  const identity: HudIdentity = {
+    key:focused.id,
+    name:labelAnyKind(focused.kind),
+    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : owner,
+    detail:entity && "attackDamage" in entity ? t("hud.attackValue", { damage:entity.attackDamage }) : t("hud.structure"),
+    art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
+    ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+  };
+  hudSelection.render(identity, groups.map(group => {
     const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
-    const artKey = `${group.kind}:${owner}`;
-    if (button.dataset.artKey !== artKey) {
-      drawSelectionModel(button.children[0] as HTMLCanvasElement, group);
-      button.dataset.artKey = artKey;
-    }
-    if (grid!.children[index] !== button) grid!.insertBefore(button, grid!.children[index] ?? null);
-    existing.delete(group.id);
-  });
-  for (const removed of existing.values()) removed.remove();
-  grid.dataset.focusGroup = focusedGroup.id;
-  // Only a changed focus brings its card into view; normal stat updates leave scrolling alone.
-  if (previousFocus && previousFocus !== focusedGroup.id) {
-    const focused = grid.querySelector<HTMLElement>(".focused");
-    if (focused) {
-      const top = focused.offsetTop;
-      if (top < grid.scrollTop) grid.scrollTop = top;
-      else if (top + focused.offsetHeight > grid.scrollTop + grid.clientHeight) grid.scrollTop = top + focused.offsetHeight - grid.clientHeight;
-    }
-  }
-}
-
-function selectionGroupTitle(group: SelectionGroup) {
-  const label = labelAnyKind(group.kind);
-  return `${label} x${group.count}${group.focused ? t("hud.selectionCurrent") : ""}`;
+    return {
+      key:group.id, name:labelAnyKind(group.kind), count:group.count, focused:group.focused,
+      art:{ key:`${group.kind}:${owner}`, paint:(canvas:HTMLCanvasElement) => drawSelectionModel(canvas, group) },
+      activate:() => { focusedSelectionId = group.ids[0]; openPalette = undefined; updateHud(); },
+      decorate:(button:HTMLButtonElement) => applyTooltip(button, selectionGroupTooltip(group)),
+    };
+  }), t("hud.nothingSelected"));
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -2503,11 +2452,10 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
   mini.clearRect(0, 0, canvas.width, canvas.height);
-  const point = { x: canvas.width / 2, y: canvas.height / 2 };
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
   const color = ownerInk(owner ?? localPlayerId);
   if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
-  else drawAtlasBuilding(mini, group.kind, point, 78, color);
+  else drawAtlasBuildingPortrait(mini, group.kind, canvas.width, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2578,28 +2526,31 @@ function renderItemDock() {
   const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.classList.toggle("hidden", entries.length === 0);
-  itemDock.replaceChildren(
-    ...entries.map(({ item, carrier }, index) => {
-      const hotkey = hotkeys[index] ?? "";
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "item-button";
-      button.dataset.itemId = item.id;
-      const itemName = labelKind(item.kind);
-      const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks: item.cooldownRemaining }) : "";
-      button.setAttribute("aria-label", `${itemName} (${hotkey})${cooldownText}`);
-      applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
-      button.classList.toggle("item-button-cooldown", item.cooldownRemaining > 0);
-      button.innerHTML = `<span class="item-icon"></span><span class="hotkey">${hotkey}</span>${item.cooldownRemaining > 0 ? `<span class="item-cooldown">${Math.ceil(item.cooldownRemaining / 20)}s</span>` : ""}`;
-      drawCommandPortrait(button, { type: "item", kind: item.kind });
-      button.addEventListener("click", () => useCarriedItem(item.id));
-      button.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
-        dropCarriedItem(item.id, carrier.id);
-      });
-      return button;
-    }),
-  );
+  const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
+  entries.forEach(({ item, carrier }, index) => {
+    const hotkey = hotkeys[index] ?? "";
+    let button = previous.get(item.id);
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button"; button.className = "item-button"; button.dataset.itemId = item.id;
+      button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
+      const liveButton = button;
+      button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
+      button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
+      drawCommandPortrait(button, { type:"item", kind:item.kind });
+    }
+    button.dataset.carrierId = carrier.id;
+    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
+    button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
+    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
+    button.querySelector(".hotkey")!.textContent = hotkey;
+    const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
+    cooldown.hidden = item.cooldownRemaining <= 0;
+    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / 20)}s`;
+    if (itemDock.children[index] !== button) itemDock.insertBefore(button, itemDock.children[index] ?? null);
+    previous.delete(item.id);
+  });
+  for (const button of previous.values()) button.remove();
 }
 
 function useInventoryItem(index: number) {

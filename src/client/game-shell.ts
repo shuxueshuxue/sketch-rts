@@ -36,8 +36,10 @@ export function gameShellMarkup(i18n: I18n) {
     <button type="button" class="minimap-relations" data-minimap-relations aria-pressed="false" aria-label="${escapeHtml(t("hud.minimapRelations"))}" title="${escapeHtml(t("hud.minimapRelations"))}"><span aria-hidden="true"></span></button>
     <div class="control-deck">
       <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
-      <div class="command-dock hidden" data-command-dock></div>
-      <div class="item-dock hidden" data-item-dock></div>
+      <div class="hud-actions">
+        <div class="command-dock hidden" data-command-dock></div>
+        <div class="item-dock hidden" data-item-dock></div>
+      </div>
     </div>
     <div class="tooltip-layer hidden" data-tooltip-layer role="tooltip"></div>
     <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
