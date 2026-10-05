@@ -21,7 +21,7 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "ramBreach" | "pinningBolt" | "siegeBarrage" | "grapeshot" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
 export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
@@ -119,7 +119,7 @@ export type UnitOrder =
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
-  // Stay in place and prepare a reticle at a point, engaging enemies that enter weapon range.
+  // Walk into weapon range, then prepare a reticle at a point and engage enemies entering range.
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; berth?: { x: number; y: number } }
@@ -162,6 +162,7 @@ export type Unit = {
   homeY?: number;
   hp: number;
   maxHp: number;
+  /** Movement distance per second. */
   speed: number;
   attackDamage: number;
   attackRange: number;
@@ -177,7 +178,7 @@ export type Unit = {
   autocast?: Partial<Record<AbilityKind, boolean>> | undefined;
   // A melee fighter's stance (see @@@melee-stances); absent is pursue.
   stance?: Exclude<MeleeStance, "pursue"> | undefined;
-  // The velocity a shove gave the unit, in units a tick (see @@@push); absent when it is not sliding.
+  // The velocity a shove gave the unit, in distance per second (see @@@push); absent when it is not sliding.
   pushX?: number | undefined;
   pushY?: number | undefined;
   // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
@@ -497,6 +498,8 @@ export type Corpse = {
 };
 
 export type GameSnapshot = {
+  /** Unmarked older snapshots store movement and push rates per tick at 20 Hz. */
+  rateUnits?: "perSecond";
   tick: number;
   match: MatchState;
   map: GameMap;

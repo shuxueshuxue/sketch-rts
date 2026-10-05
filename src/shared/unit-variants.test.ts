@@ -17,11 +17,11 @@ function duel() {
 describe("unit variants", () => {
   it("plays a variant by its own numbers while it keeps its base kind", () => {
     const game = duel();
-    game.variants = { "test/champion": resolveVariant({ base: "footman", hp: 600, attackDamage: 40, speed: 4, radius: 22 }) };
+    game.variants = { "test/champion": resolveVariant({ base: "footman", hp: 600, attackDamage: 40, speed: 80, radius: 22 }) };
     const champion = spawnVariantUnit(game, "north", "test/champion", 1000, 1000);
     expect(champion.kind).toBe("footman");
     expect(champion.variant).toBe("test/champion");
-    expect([champion.hp, champion.maxHp, champion.attackDamage, champion.speed, champion.radius]).toEqual([600, 600, 40, 4, 22]);
+    expect([champion.hp, champion.maxHp, champion.attackDamage, champion.speed, champion.radius]).toEqual([600, 600, 40, 80, 22]);
     // Whatever it does not restate, it takes from its base.
     expect(unitRules(game, champion).attackCooldown).toBe(UNIT_DEFS.footman.attackCooldown);
   });

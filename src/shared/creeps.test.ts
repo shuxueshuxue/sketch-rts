@@ -1,3 +1,4 @@
+import { perTick } from "./time";
 import { describe, expect, it } from "vitest";
 import { ABILITY_DEFS, POISON_DAMAGE, SLOW_PACE, SPLASH_SHARE, UNIT_DEFS } from "./catalog";
 import { createGame, issuePlayerCommand, stepGame, type Game } from "./sim";
@@ -26,7 +27,7 @@ describe("the new creeps", () => {
     const before = { ...unit(game, "footman") };
     issuePlayerCommand(game, "player", { type: "move", unitIds: ["footman"], x: 2_000, y: 1_000 });
     step(game, 10);
-    expect(unit(game, "footman").x - before.x).toBeCloseTo(UNIT_DEFS.footman.speed * SLOW_PACE * 10, 0);
+    expect(unit(game, "footman").x - before.x).toBeCloseTo(perTick(UNIT_DEFS.footman.speed) * SLOW_PACE * 10, 0);
   });
 
   it("a venom spider's bite poisons, a second a time, credited to the spider", () => {
