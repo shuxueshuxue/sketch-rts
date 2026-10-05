@@ -18,6 +18,7 @@ export function canonicalGameState(game: Game) {
     items: game.items,
     projectiles: game.projectiles,
     effects: game.effects,
+    corpses: game.corpses,
     obstacles: game.obstacles,
     runtime: {
       nextId: game.nextId,
