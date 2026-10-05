@@ -44,3 +44,8 @@ describe("unit art tiers", () => {
     expect(mounted).toEqual([...BUILDING_DEFS.stables.trains].sort());
   });
 });
+
+it('has a painted model for every living unit, including neutral creatures and ships', async () => {
+  const {hasPaintedUnit}=await import('./art/painted-units');
+  expect(kinds.filter(kind=>!hasPaintedUnit(kind))).toEqual([]);
+});

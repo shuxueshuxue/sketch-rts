@@ -15,7 +15,7 @@ export const MAP_IDS = [...BASE_MAP_IDS, LADDER_MAP_ID, "grandThirty", ...MAP_PO
 export const LADDER_SLOT_IDS: readonly string[] = Array.from({ length: 64 }, (_, index) => `ladder-${String(index + 1).padStart(2, "0")}`);
 
 // The ideas a generated map is drawn on (see @@@generated-ideas).
-export const MAP_IDEAS = ["openRing", "openSides", "fountainRing", "turtleIsle", "twistedPaths", "outerSea", "oneMarket", "floodedValley", "hiddenHill", "bridgeStand", "deepJungle", "northIsles", "riverValley", "twoShores"] as const satisfies readonly MapIdea[];
+export const MAP_IDEAS = ["openRing", "openSides", "fountainRing", "turtleIsle", "twistedPaths", "outerSea", "oneMarket", "floodedValley", "hiddenHill", "bridgeStand", "deepJungle", "northIsles", "riverValley", "twoShores", "islandStarts"] as const satisfies readonly MapIdea[];
 
 export function isMapIdea(value: unknown): value is MapIdea {
   return typeof value === "string" && (MAP_IDEAS as readonly string[]).includes(value);

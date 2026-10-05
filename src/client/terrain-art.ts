@@ -11,17 +11,14 @@ import type { Terrain } from "../shared/terrain";
 
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
-const FOREST_FLOOR = "#6f8a67";
-const FOREST_EDGE = "#56705a";
-const ROCK = "#b3b097";
-const ROCK_LIGHT = "#cfcbb0";
-const ROCK_INK = "#7d8570";
-const CLIFF_FACE = "#8e8a72";
-const SHORE = "#d9cda4";
-const WATER = "#8db4ad";
-const WATER_DEEP = "#7aa39f";
-const PLATEAU = "#f4efd9";
-const RAMP = "#e6dcc0";
+const FOREST_FLOOR = "#58614d";
+const FOREST_EDGE = "#69705a";
+const ROCK = "#a7a596";
+const ROCK_INK = "#868779";
+const CLIFF_FACE = "#85877b";
+const WATER = "#799897";
+const PLATEAU = "#c3bea9";
+const RAMP = "#b9af94";
 const MUD = "#c2ab84";
 const MUD_DARK = "#a48d66";
 const DECK = "#b88e5c";
@@ -77,7 +74,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
       const level = terrain.levels?.[row * terrain.cols + start];
       const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
       if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#4d6b50" : kind === "#" ? "#8b8a74" : kind === "~" ? "#6f9c9a" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#ece6c9" : undefined;
+      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#c3bea9" : terrain.palette==='coastal'?'#a5ab91':undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);
@@ -112,13 +109,26 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const cells = (visit: (col: number, row: number, x: number, y: number) => void) => {
     for (let row = low.row; row <= high.row; row += 1) for (let col = low.col; col <= high.col; col += 1) visit(col, row, (col + 0.5) * size, (row + 0.5) * size);
   };
+  if(terrain.palette==='coastal')cells((col,row,x,y)=>{
+    if(kindAt(col,row)!=='.')return;
+    b.fillStyle='#a5a891';b.fillRect(col*size,row*size,size+1,size+1);
+    for(let i=0;i<12;i++){
+      const px=x+(jitter(col,row,200+i)-.5)*size,py=y+(jitter(col,row,240+i)-.5)*size;
+      line(b,[[px,py],[px+3+jitter(col,row,260+i)*5,py-1]],i%3?'#68766320':'#e6dfbd2a',.8);
+    }
+    if(jitter(col,row,301)<.16){const px=x+(jitter(col,row,302)-.5)*size*.7,py=y+(jitter(col,row,303)-.5)*size*.7;line(b,[[px-4,py],[px-2,py-5],[px,py],[px+3,py-7],[px+4,py]],'#66775866',.8);}
+  });
 
   // Plateaus: a lighter ground flecked with grass, the ramp paved, and steps where the ramp meets the plateau.
   cells((col, row, x, y) => {
     if (!walkable(col, row) || levelAt(col, row) === "0") return;
     b.fillStyle = levelAt(col, row) === "2" ? RAMP : PLATEAU;
     b.fillRect(col * size - 1, row * size - 1, size + 2, size + 2);
-    if (levelAt(col, row) === "1" && jitter(col, row, 5) < 0.35) line(b, [[x - 3, y + 2], [x - 1, y - 3], [x + 1, y + 2], [x + 3, y - 2]], "#a9b58a66", 0.9);
+    for(let i=0;i<7;i++) {
+      const px=x+(jitter(col,row,110+i)-.5)*size, py=y+(jitter(col,row,130+i)-.5)*size;
+      line(b,[[px,py],[px+2+jitter(col,row,140+i)*3,py-.5]],i%2?"#e4dec221":"#72785f15",.7);
+    }
+    if (levelAt(col, row) === "1" && jitter(col, row, 5) < 0.35) line(b, [[x - 3, y + 2], [x - 1, y - 3], [x + 1, y + 2], [x + 3, y - 2]], "#78806244", 0.65);
     if (levelAt(col, row) === "2") line(b, [[x - size * 0.4, y - size * 0.2], [x + size * 0.4, y - size * 0.2]], "#b8a98266", 1);
   });
   cells((col, row, x, y) => {
@@ -132,24 +142,25 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     }
   });
 
-  // Water: a sandy shore, the wash, a few ripples.
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "~") return;
-    ellipse(b, x, y, size * 0.95, size * 0.95, SHORE);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "~") return;
-    ellipse(b, x, y, size * 0.78, size * 0.78, WATER);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "~") return;
-    const deep = [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => kindAt(col + dx!, row + dy!) === "~");
-    if (deep) ellipse(b, x, y, size * 0.62, size * 0.62, WATER_DEEP);
-    if (jitter(col, row, 3) < 0.28) line(b, [[x - 7, y], [x - 2, y - 2], [x + 3, y], [x + 8, y - 2]], "#e3ead899", 1);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== ",") return;
-    ellipse(b, x, y, size * 0.7, size * 0.7, "#b9d0c299");
+  // Marching-squares coast contours connect cell centres. The simulation grid
+  // remains unchanged; diagonal shore segments avoid a staircase silhouette.
+  const contours:number[][][]=[[],[[0,4,7]],[[1,5,4]],[[0,1,5,7]],[[2,6,5]],[[0,4,7],[2,6,5]],[[1,2,6,4]],[[0,1,2,6,7]],[[3,7,6]],[[0,4,6,3]],[[1,5,4],[3,7,6]],[[0,1,5,6,3]],[[2,3,7,5]],[[0,4,5,2,3]],[[4,1,2,3,7]],[[0,1,2,3]]];
+  const waterLayer=(inside:(col:number,row:number)=>boolean,color:string,shore:boolean)=>{
+    for(let row=low.row-1;row<=high.row;row++)for(let col=low.col-1;col<=high.col;col++){
+      const mask=(inside(col,row)?1:0)|(inside(col+1,row)?2:0)|(inside(col+1,row+1)?4:0)|(inside(col,row+1)?8:0);
+      if(!mask)continue;const x=(col+.5)*size,y=(row+.5)*size;
+      const points=[[x,y],[x+size,y],[x+size,y+size],[x,y+size],[x+size*.5,y],[x+size,y+size*.5],[x+size*.5,y+size],[x,y+size*.5]];
+      for(const shape of contours[mask]!){polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
+        if(shore&&mask!==15){const edge=shape.filter(i=>i>=4).map(i=>points[i]!);if(edge.length===2){line(b,edge,'#d5c69d38',10);line(b,edge,'#e8dfbd80',1.1);}}
+      }
+    }
+  };
+  waterLayer(wet,'#8eaaa5',true);
+  waterLayer((col,row)=>kindAt(col,row)==='~','#486773',false);
+  cells((col,row,x,y)=>{
+    if(!wet(col,row)||jitter(col,row,3)>.18)return;
+    const px=x+(jitter(col,row,7)-.5)*size*.5,py=y+(jitter(col,row,8)-.5)*size*.5;
+    line(b,[[px-9,py],[px,py-1],[px+8,py]],'#c4d7d33d',.7);
   });
 
   // Mud: a brown wash, flecked darker, its edge soft.
@@ -202,20 +213,31 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   });
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "#") return;
-    const j = (salt: number) => (jitter(col, row, salt) - 0.5) * size * 0.3;
-    const r = size * 0.62;
-    polygon(b, [[x - r + j(1), y - r * 0.7 + j(2)], [x - r * 0.2 + j(3), y - r + j(4)], [x + r + j(5), y - r * 0.55 + j(6)], [x + r * 0.9 + j(7), y + r * 0.6 + j(8)], [x - r * 0.4 + j(9), y + r * 0.75 + j(10)], [x - r * 1.05 + j(11), y + r * 0.2 + j(12)]], ROCK, ROCK_INK, 1);
-    polygon(b, [[x - r * 0.8, y - r * 0.5], [x - r * 0.15, y - r * 0.85], [x + r * 0.1, y - r * 0.1], [x - r * 0.5, y + r * 0.1]], ROCK_LIGHT, "transparent", 0);
+    const r = size * .52;
+    const exposed = walkable(col,row+1);
+    b.fillStyle=ROCK;b.fillRect(x-size*.51,y-size*.51,size*1.02,size*1.02);
+    const h=3+jitter(col,row,1)*4;
+    const skew=(jitter(col,row,9)-.5)*r;
+    if(jitter(col,row,2)<.6) polygon(b, [[x-r*.8,y-r*.8],[x+skew,y-r-h],[x+r*.7,y+skew],[x+skew,y+r*.4]], "#b3b19f55", "transparent", 0);
+    if(exposed) {
+      polygon(b,[[x-r,y+r*.25],[x-r*.4,y+r*.7],[x+r*.9,y+r*.35],[x+r*.85,y+r*.7+8],[x-r*.3,y+r+8],[x-r,y+r*.7]],CLIFF_FACE,ROCK_INK,.55);
+      line(b,[[x-r*.3,y+r*.65],[x-r*.25,y+r+6]],"#626d6266",.8);
+    }
+    if(jitter(col,row,7)<.55) line(b,[[x-r*.8,y-r*.7],[x-r*.3,y-r*.1],[x+r*.3,y+r*.15]],"#777f714d",.6);
+    for(let i=0;i<5;i++){
+      const px=x+(jitter(col,row,80+i)-.5)*size,py=y+(jitter(col,row,90+i)-.5)*size;
+      line(b,[[px,py],[px+2,py-.6]],i%2?"#efe4c533":"#72786626",.6);
+    }
   });
 
   // Forest: a dark floor under the trees so it reads as one mass, then the trees back to front.
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "T") return;
-    ellipse(b, x, y, size * 0.9, size * 0.9, FOREST_EDGE);
+    polygon(b, [[x-size*.62,y-size*.4],[x-size*.35,y-size*.63],[x+size*.6,y-size*.47],[x+size*.66,y+size*.4],[x+size*.2,y+size*.6],[x-size*.6,y+size*.48]],FOREST_EDGE,"transparent",0);
   });
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "T") return;
-    ellipse(b, x, y, size * 0.72, size * 0.72, FOREST_FLOOR);
+    ellipse(b,x,y,size*.61,size*.47,FOREST_FLOOR);
   });
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "T") return;

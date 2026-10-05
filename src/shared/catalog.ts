@@ -4,6 +4,19 @@ import { seconds } from "./time";
 
 export const MERCENARY_HIRE_RANGE = 220;
 
+/** Weapon rules belong to the simulation, independent of maps and AI versions. */
+export type WeaponDef = {
+  delivery: "ram" | "bolt" | "shell" | "cone";
+  buildingMultiplier?: number;
+  navalMultiplier?: number;
+  minRange?: number;
+  radius?: number;
+  maxHits?: number;
+  pierceShare?: number;
+  coneAngle?: number;
+  burst?: number;
+};
+
 // @@@catalog-rules - A unit's rules say where it comes from: the building that trains it and the race that owns it (no
 // race: every race). Unit kinds, each building's training list, each race's units and buildings, and the lists command
 // validation checks against are all derived from these rows, so a new unit or building is one row here (plus its card
@@ -35,17 +48,15 @@ export type UnitDef = {
   naval?: true;
   // A transport (see @@@transport): the supply of passengers it carries.
   carries?: number;
+  weapon?: WeaponDef;
   // @@@creep-traits - What a creep's blow does besides its damage: slows its target (a murloc hunter's net), poisons it (a
   // venom spider's bite), or strikes every enemy round it for a share of the blow (a red dragon's fire).
   slowOnHit?: true;
   poisonOnHit?: true;
   splash?: true;
   // How much harder a camp with this creep is than its health and damage say: the AIs weigh camps by it (see ai
-  // combatRating). @@@creep-threat - Measured, not guessed: two of the kind at a camp against squads of two footmen to an
-  // archer walked in, six starts a squad; the smallest squad that wins half of them, by what it spends, over the creep's
-  // rating; and that over what the old wildlings of the same reach spend (melee 0.47, shooters 0.85), with a squad of
-  // footmen alone the second measure. A big body few blows reach counts (an ogre lord, a rock golem), a poison bite most
-  // (1.7); armor against a third of archers next to nothing.
+  // combatRating). These account for body size, armor and status effects beyond raw DPS.
+  // Recalibrate the whole ladder with scripts/neutral-balance.ts after changing creep stats.
   threat?: number;
 };
 
@@ -79,6 +90,7 @@ export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
 export type AutocastDefault = "on" | "off" | "none";
 
 export type AbilityDef = { autocast: AutocastDefault } & (
+  | { behavior: "weapon"; target: "enemy" | "point"; weapon: WeaponDef; range: number; plannerRange: number; cooldown: number; damage: number; rootTicks?: number; burnTicks?: number; effectType: "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround" }
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
   // A dash at an enemy unit between minRange and range away, striking it for damageMultiplier times the weapon's blow.
@@ -176,12 +188,12 @@ export const UNIT_RULES = {
   mercenary: { hp: 155, speed: 3.7, radius: 18, attackDamage: 28, attackRange: 62, attackCooldown: seconds(0.9), cost: 160, trainTime: seconds(0.05), supplyUsed: 2, xpReward: 36, abilities: [] },
   contractArcher: { hp: 81, speed: 3.2, radius: 16, attackDamage: 19, attackRange: 441, attackCooldown: seconds(1.35), cost: 145, trainTime: seconds(0.05), supplyUsed: 2, xpReward: 34, abilities: [] },
   fieldMedic: { hp: 105, speed: 3.1, radius: 16, attackDamage: 8, attackRange: 263, attackCooldown: seconds(1.7), cost: 155, trainTime: seconds(0.05), supplyUsed: 2, xpReward: 36, abilities: ["heal"] },
-  wildling: { hp: 76, speed: 2.5, radius: 15, attackDamage: 7, attackRange: 42, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 18, creepFoodPower: 1, goldBounty: 20, abilities: [] },
-  mossGnawer: { hp: 54, speed: 3.4, radius: 13, attackDamage: 6, attackRange: 34, attackCooldown: seconds(1.3), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
-  thornSlinger: { hp: 72, speed: 2.8, radius: 18, attackDamage: 10, attackRange: 165, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [] },
-  barkMender: { hp: 68, speed: 2.6, radius: 18, attackDamage: 5, attackRange: 110, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 24, creepFoodPower: 2, goldBounty: 35, abilities: ["heal"] },
-  stonebackBrute: { hp: 210, speed: 2.0, radius: 24, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
-  gladeWitch: { hp: 110, speed: 2.7, radius: 22, attackDamage: 9, attackRange: 150, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["curse"] },
+  wildling: { hp: 76, speed: 2.5, radius: 15, attackDamage: 10, attackRange: 42, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 18, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  mossGnawer: { hp: 54, speed: 3.4, radius: 13, attackDamage: 8, attackRange: 34, attackCooldown: seconds(1.3), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  thornSlinger: { hp: 72, speed: 2.8, radius: 18, attackDamage: 13, attackRange: 165, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [] },
+  barkMender: { hp: 68, speed: 2.6, radius: 18, attackDamage: 7, attackRange: 110, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 24, creepFoodPower: 2, goldBounty: 35, abilities: ["heal"] },
+  stonebackBrute: { hp: 210, speed: 2.0, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
+  gladeWitch: { hp: 110, speed: 2.7, radius: 22, attackDamage: 13, attackRange: 150, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["curse"] },
   // @@@ships - Both races' ships, from the shipyard. The warship is Warcraft II's destroyer to our archer: about two
   // archers' price, two and a half times the health and the same reach (a little under the grove archer's, over the spark
   // archer's, well under a tower's), and a little less fight for its gold than an archer (damage a second times health,
@@ -189,8 +201,16 @@ export const UNIT_RULES = {
   // transport is Warcraft II's too: half again the warship's health, three quarters of its price, no weapon; it carries
   // eight supply of passengers, who drown with it.
   transport: { trainedAt: "shipyard", hp: 270, speed: 3.2, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, xpReward: 30, abilities: [], naval: true, carries: 8 },
-  warship: { trainedAt: "shipyard", hp: 180, speed: 3, radius: 28, attackDamage: 20, attackRange: 390, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, xpReward: 40, abilities: [], naval: true },
-  ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 32, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
+  warship: { trainedAt: "shipyard", hp: 180, speed: 3, radius: 28, attackDamage: 20, attackRange: 390, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, xpReward: 40, abilities: [], naval: true, weapon: { delivery: "bolt", radius: 14, maxHits: 1, navalMultiplier: 1.4 } },
+  cutter: { trainedAt: "shipyard", hp: 110, speed: 4.2, radius: 24, attackDamage: 10, attackRange: 330, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, xpReward: 28, abilities: [], naval: true },
+  bombardShip: { trainedAt: "shipyard", hp: 260, speed: 2.2, radius: 32, attackDamage: 36, attackRange: 720, attackCooldown: seconds(3.6), cost: 350, trainTime: seconds(19), supplyUsed: 4, xpReward: 55, abilities: ["siegeBarrage"], naval: true, tier: 2, weapon: { delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { trainedAt: "shipyard", hp: 340, speed: 3.5, radius: 28, attackDamage: 18, attackRange: 180, attackCooldown: seconds(1.2), cost: 230, trainTime: seconds(15), supplyUsed: 3, xpReward: 45, abilities: ["incendiaryFlume"], naval: true, weapon: { delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  carrier: { trainedAt: "shipyard", hp: 480, speed: 2.7, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, xpReward: 42, abilities: [], naval: true, carries: 24, armor: "heavy", tier: 2 },
+  siegeRam: { trainedAt: "workshop", hp: 420, speed: 2.5, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, xpReward: 50, abilities: ["ramBreach"], armor: "heavy", tier: 2, weapon: { delivery: "ram", buildingMultiplier: 3.3 } },
+  ballista: { trainedAt: "workshop", hp: 150, speed: 2.3, radius: 24, attackDamage: 27, attackRange: 590, attackCooldown: seconds(2.4), cost: 240, trainTime: seconds(15), supplyUsed: 3, xpReward: 45, abilities: ["pinningBolt"], tier: 2, weapon: { delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
+  catapult: { trainedAt: "workshop", hp: 180, speed: 1.9, radius: 27, attackDamage: 38, attackRange: 760, attackCooldown: seconds(3.8), cost: 300, trainTime: seconds(19), supplyUsed: 4, xpReward: 55, abilities: ["siegeBarrage"], tier: 2, weapon: { delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
+  organGun: { trainedAt: "workshop", hp: 190, speed: 2.3, radius: 25, attackDamage: 12, attackRange: 380, attackCooldown: seconds(2.5), cost: 270, trainTime: seconds(17), supplyUsed: 3, xpReward: 50, abilities: ["grapeshot"], tier: 2, weapon: { delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
+  ancientStag: { hp: 360, speed: 3.1, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [] },
   // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
   // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:
   // health and damage were set so that a squad of two footmen to an archer sized to the tier (3, 5, 7) loses as much,
@@ -199,21 +219,21 @@ export const UNIT_RULES = {
   // @@@creep-traits), and none reaches past a tower's 480, so no creep wakes from farther than today. None is wider
   // than 28: a blow's reach is measured from center to center, and a footman (radius 18, reach 48) could not strike a
   // wider one through their bodies.
-  murlocPeon: { hp: 80, speed: 2.8, radius: 14, attackDamage: 9, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
-  murlocHunter: { hp: 85, speed: 2.8, radius: 15, attackDamage: 9, attackRange: 150, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], slowOnHit: true, threat: 1.05 },
-  tidePriest: { hp: 100, speed: 2.6, radius: 17, attackDamage: 7, attackRange: 200, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["heal"] },
-  deepSnapper: { hp: 395, speed: 2.2, radius: 26, attackDamage: 24, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [], armor: "heavy", threat: 1.25 },
-  rubbleGolem: { hp: 202, speed: 2, radius: 22, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [], armor: "heavy" },
-  rockGolem: { hp: 241, speed: 2, radius: 25, attackDamage: 18, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [], armor: "heavy", threat: 1.3 },
-  graniteGolem: { hp: 396, speed: 1.9, radius: 28, attackDamage: 25, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
-  ogreWarrior: { hp: 178, speed: 2.6, radius: 22, attackDamage: 16, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
-  ogreMage: { hp: 145, speed: 2.6, radius: 22, attackDamage: 10, attackRange: 200, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: ["bloodlust"], threat: 1.15 },
-  ogreLord: { hp: 375, speed: 2.6, radius: 28, attackDamage: 25, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: [], threat: 1.35 },
-  spiderling: { hp: 65, speed: 3.6, radius: 12, attackDamage: 8, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
-  venomSpider: { hp: 105, speed: 3.2, radius: 15, attackDamage: 10, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
-  spiderQueen: { hp: 400, speed: 3, radius: 26, attackDamage: 26, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
-  dragonWhelp: { hp: 170, speed: 3, radius: 22, attackDamage: 9, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
-  redDragon: { hp: 500, speed: 2.8, radius: 28, attackDamage: 19, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.5 },
+  murlocPeon: { hp: 80, speed: 2.8, radius: 14, attackDamage: 11, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  murlocHunter: { hp: 85, speed: 2.8, radius: 15, attackDamage: 13, attackRange: 150, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], slowOnHit: true, threat: 1.05 },
+  tidePriest: { hp: 100, speed: 2.6, radius: 17, attackDamage: 10, attackRange: 200, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: ["heal"] },
+  deepSnapper: { hp: 350, speed: 2.2, radius: 26, attackDamage: 31, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: [], armor: "heavy", threat: 1.25 },
+  rubbleGolem: { hp: 190, speed: 2, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [], armor: "heavy" },
+  rockGolem: { hp: 235, speed: 2, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { hp: 390, speed: 1.9, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  ogreWarrior: { hp: 178, speed: 2.6, radius: 22, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 42, creepFoodPower: 3, goldBounty: 50, abilities: [] },
+  ogreMage: { hp: 145, speed: 2.6, radius: 22, attackDamage: 15, attackRange: 200, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: ["bloodlust"], threat: 1.15 },
+  ogreLord: { hp: 380, speed: 2.6, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 84, creepFoodPower: 6, goldBounty: 100, abilities: [], threat: 1.35 },
+  spiderling: { hp: 65, speed: 3.6, radius: 12, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 12, creepFoodPower: 1, goldBounty: 20, abilities: [] },
+  venomSpider: { hp: 105, speed: 3.2, radius: 15, attackDamage: 13, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 22, creepFoodPower: 2, goldBounty: 35, abilities: [], poisonOnHit: true, threat: 1.7 },
+  spiderQueen: { hp: 350, speed: 3, radius: 26, attackDamage: 33, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 70, creepFoodPower: 5, goldBounty: 85, abilities: ["web"] },
+  dragonWhelp: { hp: 170, speed: 3, radius: 22, attackDamage: 17, attackRange: 180, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 56, creepFoodPower: 4, goldBounty: 68, abilities: [] },
+  redDragon: { hp: 600, speed: 2.8, radius: 28, attackDamage: 42, attackRange: 220, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, xpReward: 112, creepFoodPower: 8, goldBounty: 130, abilities: [], splash: true, threat: 1.3 },
 } satisfies Record<string, UnitDef>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = UNIT_RULES;
@@ -274,13 +294,19 @@ export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
-export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web"];
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web", "ramBreach", "pinningBolt", "siegeBarrage", "grapeshot", "incendiaryFlume"];
 
 // What a curse deals at once to a summoned unit (a spirit has 85 hp): both races' curses are the answer to a summoner's
 // free army, so they share the one number.
 const CURSE_SUMMONED_DAMAGE = 100;
 
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
+  ramBreach: { behavior: "weapon", target: "enemy", weapon: { delivery: "ram", buildingMultiplier: 2.5 }, range: 90, plannerRange: 90, cooldown: seconds(12), damage: 55, effectType: "siegeImpact", autocast: "none" },
+  pinningBolt: { behavior: "weapon", target: "enemy", weapon: { delivery: "bolt", radius: 20, maxHits: 3, pierceShare: 0.7 }, range: 590, plannerRange: 590, cooldown: seconds(14), damage: 36, rootTicks: seconds(2), effectType: "siegeBolt", autocast: "none" },
+  siegeBarrage: { behavior: "weapon", target: "point", weapon: { delivery: "shell", radius: 120, minRange: 180, buildingMultiplier: 2 }, range: 760, plannerRange: 760, cooldown: seconds(18), damage: 60, effectType: "shellFlight", autocast: "none" },
+  grapeshot: { behavior: "weapon", target: "point", weapon: { delivery: "cone", coneAngle: 0.95, buildingMultiplier: 0.35 }, range: 380, plannerRange: 380, cooldown: seconds(14), damage: 34, effectType: "grapeshot", autocast: "none" },
+  incendiaryFlume: { behavior: "weapon", target: "point", weapon: { delivery: "shell", radius: 85, buildingMultiplier: 0.7 }, range: 280, plannerRange: 280, cooldown: seconds(18), damage: 14, burnTicks: seconds(4), effectType: "burningGround", autocast: "none" },
+
   // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
   // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
   // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
@@ -303,7 +329,7 @@ export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
 
 // A spell, as against a blow of the body like the charge: what a caster is, and what the ash chieftain hunts.
 export function isSpell(ability: AbilityKind) {
-  return ABILITY_DEFS[ability].behavior !== "charge";
+  return ABILITY_DEFS[ability].behavior !== "charge" && ABILITY_DEFS[ability].behavior !== "weapon";
 }
 
 export function hasSpell(kind: UnitKind) {
@@ -316,7 +342,7 @@ export const BUILDING_RULES = {
   archeryRange: { race: "grove", hp: 520, radius: 38, cost: 150, buildTime: seconds(10), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   stables: { race: "grove", hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), researches: ["speedTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   sanctum: { race: "grove", hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), researches: ["leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  workshop: { race: "grove", hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), researches: ["rangeTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
+  workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), researches: ["rangeTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   defenseTower: { hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), researches: [], attackDamage: 16, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { race: "grove", hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   emberForge: { race: "ember", hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },

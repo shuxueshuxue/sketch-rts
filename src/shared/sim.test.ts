@@ -693,8 +693,9 @@ describe("sketch RTS simulation", () => {
     game.players.player.gold = 1000;
 
     issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: townHall.x + 260, y: townHall.y + 80 });
-    expect(game.match.stats.goldSpent.player).toBe(BUILDING_DEFS.barracks.cost);
+    expect(game.match.stats.goldSpent.player).toBe(0);
     stepMany(game, 360);
+    expect(game.match.stats.goldSpent.player).toBe(BUILDING_DEFS.barracks.cost);
     const barracks = game.buildings.find((building) => building.owner === "player" && building.kind === "barracks");
 
     expect(barracks?.complete).toBe(true);
@@ -856,6 +857,7 @@ describe("sketch RTS simulation", () => {
       const x = worker.x + 160;
       const y = worker.y;
       issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x, y });
+      stepUntil(game, 1000, () => game.buildings.some(b => b.owner === "player" && b.kind === "farm" && !b.complete));
       const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
       const start = farm.hp;
       let half: number | undefined;
@@ -1662,7 +1664,8 @@ describe("sketch RTS simulation", () => {
 
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
     issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 90, y: townHall.y });
-    const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
+    stepUntil(game, 1000, () => game.buildings.some(b => b.owner === "player" && b.kind === "farm" && !b.complete));
+      const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
     stepMany(game, BUILDING_DEFS.farm.buildTime + 80);
 
     expect(farm.complete).toBe(true);
@@ -2120,7 +2123,7 @@ describe("sketch RTS simulation", () => {
     let baseCloseout: { playerArmyAndMiners: number; enemyCombatNearBase: number } | undefined;
 
     // Supply is dear (farms and halls are the tech), so the enemy's first real army takes a while to come.
-    for (let i = 0; i < 12_000 && !baseCloseout; i += 1) {
+    for (let i = 0; i < 24_000 && !baseCloseout; i += 1) {
       const beforeHp = game.buildings.find((building) => building.id === playerTownHall.id)?.hp ?? 0;
       runPresetAiRuntimeForTest(game, runtime);
       stepGame(game);

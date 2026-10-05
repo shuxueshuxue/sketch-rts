@@ -4,6 +4,11 @@ import type { AbilityCard } from "./cards";
 // The command card's spell buttons, in catalog order (see ABILITY_KINDS). Two abilities one race's units carry never
 // share a hotkey: a selection can show all of them at once.
 export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
+  ramBreach: { name:{en:"Breach",zh:"破门撞击"},description:{en:"A heavy impact against an enemy structure.",zh:"猛击敌方建筑或障碍物，造成额外结构伤害。"},command:{icon:"↠",hotkey:"q"}},
+  pinningBolt: { name:{en:"Pinning Bolt",zh:"钉射"},description:{en:"A piercing bolt that briefly roots units it hits.",zh:"沿直线射出穿透弩矢，命中的单位短暂定身；侧向移动可以躲避。"},command:{icon:"⤳",hotkey:"b"}},
+  siegeBarrage: { name:{en:"Barrage",zh:"压制炮击"},description:{en:"Lob a larger explosive shot at a fixed point, outside the dead zone.",zh:"向固定地面落点抛射范围石弹或炮弹；近距离无法施放。"},command:{icon:"◉",hotkey:"p"}},
+  grapeshot: { name:{en:"Grapeshot",zh:"霰射"},description:{en:"Sweep a wide forward cone; weak against structures.",zh:"朝目标方向释放宽角度霰射，克制步兵，对建筑较弱。"},command:{icon:"⋙",hotkey:"n"}},
+  incendiaryFlume: { name:{en:"Burning Oil",zh:"燃油弹"},description:{en:"Lob oil that burns its fixed impact area for four seconds.",zh:"抛射燃油弹，落点持续燃烧四秒，影响区域内敌军。"},command:{icon:"♨",hotkey:"f"}},
   heal: {
     name: { en: "Heal", zh: "治疗" },
     description: { en: "Restores health to an allied unit in range.", zh: "为射程内的友方单位恢复生命。" },

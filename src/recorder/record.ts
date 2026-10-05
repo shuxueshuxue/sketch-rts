@@ -5,6 +5,7 @@ import { PAPER_BASE } from "../client/atlas-art";
 import { createI18n, type Locale } from "../client/i18n";
 import { UnitFacingTracker } from "../client/unit-facing";
 import { UnitMotionSmoother } from "../client/unit-motion";
+import { UnitAnimationTracker } from "../client/unit-animation";
 import { drawWorld, trackUnitFacing, worldLabelsFor } from "../client/world-renderer";
 import { snapshotGame } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
@@ -97,6 +98,7 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
   trackUnitFacing(facing, game);
   // Charging riders glide between ticks by the frame clock, as in the client (see unit-motion).
   const motion = new UnitMotionSmoother();
+  const animation = new UnitAnimationTracker();
   const canvas = createCanvas(options.width, options.height);
   const ctx = canvas.getContext("2d");
   const camera = new RecorderCamera(options.camera, options);
@@ -126,6 +128,7 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       if (storyCamera && stage) storyCamera.view(game, stage, elapsed);
       else camera.view(game, elapsed);
       motion.update(game, (index * 1000) / options.fps);
+      animation.update(game, (index * 1000) / options.fps);
       continue;
     }
     const snapshot = visibleSnapshot(snapshotGame(game), options);
@@ -141,6 +144,7 @@ export async function recordScene(scene: RecordingScene, options: RecordOptions,
       facing,
       labels,
       motion,
+      animation,
       ...(story && stage ? { story: stage, models: (variant: string) => story.models(variant), props: (kind: string) => story.props(kind), locale: options.locale ?? "zh" } : {}),
     });
     const frame: RecordedFrame = {

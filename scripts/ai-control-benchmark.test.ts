@@ -58,7 +58,7 @@ describe("AI control benchmark CLI", () => {
 });
 
 function runControlBenchmarkCli(...args: string[]) {
-  return execFileSync("npx", ["tsx", "scripts/ai-control-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-control-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

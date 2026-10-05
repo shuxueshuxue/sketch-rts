@@ -4,7 +4,7 @@ import { AI_PLAYTEST_COMMAND_MANIFEST, commandFromPlaytestArgs } from "./playtes
 
 describe("AI playtest command manifest", () => {
   it("is importable as the same command contract printed by the CLI", () => {
-    const cliManifest = JSON.parse(execFileSync("npx", ["tsx", "scripts/ai-playtest.ts", "commands"], { encoding: "utf8" }));
+    const cliManifest = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-playtest.ts", "commands"], { encoding: "utf8" }));
     const importableManifest = AI_PLAYTEST_COMMAND_MANIFEST.map(({ buildCommand: _buildCommand, ...command }) => command);
 
     expect(cliManifest).toEqual({ version: 1, commands: importableManifest });

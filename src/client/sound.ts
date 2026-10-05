@@ -10,9 +10,10 @@ import type { UnitKind } from "../shared/types";
 // a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click"];
+export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
+  impact: "effects",
   melee: "effects",
   arrowShot: "effects",
   arrowHit: "effects",
@@ -85,6 +86,9 @@ export class Soundboard {
   private buffers = new Map<string, AudioBuffer>();
   private playing = new Map<SoundEvent, number>();
   private voices = 0;
+  private activeEffects = new Set<() => void>();
+
+  stopEffects() { for (const stop of [...this.activeEffects]) stop(); }
 
   /** `packs` are the packs to choose from; `fallback` is the one played until the player chooses (none: silence). */
   constructor(
@@ -146,7 +150,7 @@ export class Soundboard {
   /** `kind` is the unit kind of who caused the event, for a pack that sounds it per kind. */
   play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }, kind?: UnitKind) {
     const ctx = this.ctx;
-    const sound = this.pack?.sounds[event];
+    const sound = this.pack?.sounds[event] ?? (event === "impact" ? this.pack?.sounds.arrowHit : undefined);
     const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
     const groupName = EVENT_GROUPS[event];
     const group = this.groups.get(groupName);
@@ -163,17 +167,23 @@ export class Soundboard {
     out.connect(panner).connect(group);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = 1 + (Math.random() * 2 - 1) * clip.pitch;
+    source.playbackRate.value = (event === "impact" ? .78 : 1) * (1 + (Math.random() * 2 - 1) * clip.pitch);
     source.connect(out);
     source.start();
     this.voices += 1;
     this.playing.set(event, playing + 1);
-    source.onended = () => {
+    let ended = false;
+    const cleanup = () => {
+      if (ended) return; ended = true;
+      this.activeEffects.delete(stop);
       this.voices -= 1;
       this.playing.set(event, (this.playing.get(event) ?? 1) - 1);
       out.disconnect();
       panner.disconnect();
     };
+    const stop = () => { source.stop(); cleanup(); };
+    if (groupName === "effects") this.activeEffects.add(stop);
+    source.onended = cleanup;
   }
 
   private applySettings() {

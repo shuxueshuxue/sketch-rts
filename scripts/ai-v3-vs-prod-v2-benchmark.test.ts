@@ -84,7 +84,7 @@ describe("AI V3 versus frozen production V2 benchmark CLI", () => {
 });
 
 function runV3BenchmarkCli(args: string[], env: NodeJS.ProcessEnv = {}) {
-  return execFileSync("npx", ["tsx", "scripts/ai-v3-vs-prod-v2-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-v3-vs-prod-v2-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, ...env, FORCE_COLOR: "0" },

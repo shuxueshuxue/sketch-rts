@@ -24,9 +24,7 @@ describe("SDK preset AI policy", () => {
     v5Expected.splice(v5Expected.indexOf("objectiveControl"), 1);
     v5Expected.splice(v5Expected.indexOf("workerPressure"), 0, "objectiveControl");
     v5Expected.splice(v5Expected.indexOf("focusFire") + 1, 0, "towerBreaker");
-    // The water's (see @@@ai-naval): its spending right after emergency defense, its ships and crew last.
-    v5Expected.splice(v5Expected.indexOf("emergencyDefense") + 1, 0, "navalEconomy");
-    v5Expected.push("naval");
+    // All policies share naval capabilities; only the strategic economy and combat priorities differ.
     expect(v5ScriptIds).toEqual(v5Expected);
 
     const game = createGame("bareDuel", { aiPlayers: [] });
@@ -1149,12 +1147,14 @@ describe("SDK preset AI policy", () => {
       },
     );
 
-    if (attackWave?.type === "attackMove") expect(attackWave.x).toBeLessThanOrEqual(2300);
-    const deepAttackMoveOrders = result.game.units
-      .filter((unit) => unit.owner === "v2" && unit.kind !== "worker")
-      .filter((unit) => unit.order.type === "attackMove" && unit.order.x > 2300)
-      .map((unit) => unit.id);
-    expect(deepAttackMoveOrders).toEqual([]);
+    // The natural and the army now advance at different times with the stronger camp ladder.
+    // Measure depth against the actual enemy structures instead of an obsolete world-space x coordinate.
+    const enemyStructures = result.game.buildings.filter(building => building.owner !== "v2");
+    const safelyStaged = (point: { x: number; y: number }) => enemyStructures.every(building =>
+      Math.hypot(point.x - building.x, point.y - building.y) > 650);
+    if (attackWave?.type === "attackMove") expect(safelyStaged(attackWave)).toBe(true);
+    expect(result.game.units.filter(unit => unit.owner === "v2" && unit.kind !== "worker"
+      && unit.order.type === "attackMove" && !safelyStaged(unit.order))).toEqual([]);
   });
 
   it("v2 fights a nearby dead-economy residual army before racing buildings", () => {

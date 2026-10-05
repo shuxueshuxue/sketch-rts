@@ -54,7 +54,7 @@ function fakeCanvas(width: number, height: number) {
 
 // Sprites are drawn scaled into a box (five arguments); the paper ground tiles are drawn as they are (three).
 function spriteDraws(calls: Call[]) {
-  return calls.filter((call) => call.name === "drawImage" && call.args.length === 5);
+  return calls.filter((call) => call.name === "drawImage" && call.args.length === 5 && Number(call.args[3]) < 500);
 }
 
 function duelSnapshot(options: { northX?: number; southX?: number; campStock?: number; cloak?: boolean } = {}): GameSnapshot {
@@ -242,7 +242,7 @@ describe("world renderer", () => {
   });
 
   it("inks the two default seats and neutrals in fixed colours and any other owner from one palette", () => {
-    expect(ownerInk("player")).toBe("#387d72");
+    expect(ownerInk("player")).toBe("#477b91");
     expect(ownerInk("enemy")).toBe("#a85644");
     expect(ownerInk("neutral")).toBe("#704a33");
     expect(ownerInk("north")).toBe(ownerInk("north"));

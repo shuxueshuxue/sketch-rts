@@ -131,6 +131,7 @@ describe("buildings as bodies", () => {
     game.players.player!.gold = 1000;
     const worker = game.spawnUnit("player", "worker", 900, 600);
     issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: 700, y: 600 });
+    for(let tick=0;tick<100 && !game.buildings.some(building=>building.kind==="barracks");tick++)stepGame(game);
     const site = game.buildings.find((building) => building.kind === "barracks")!;
     let touched = false;
     for (let tick = 0; tick < 500 && !site.complete; tick += 1) {
