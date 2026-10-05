@@ -17,7 +17,7 @@ describe("gameplay tooltips", () => {
 
     expect(tooltip.title).toBe("Archer");
     expect(tooltip.body).toContain("ranged");
-    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 115 gold", "Supply 2", "HP 72", "Attack 13", "Range 399", "Train 7.8s"]));
+    expect(tooltip.stats).toEqual(expect.arrayContaining(["Cost 115 gold", "Supply 2", "HP 72", "Attack 13", "Range 319.2", "Train 7.8s"]));
     expect(tooltip.hotkey).toBe("A");
   });
 
@@ -139,7 +139,7 @@ describe("gameplay tooltips", () => {
     expect(unitTooltip("archer", "a", zh)).toMatchObject({
       title: "弓箭手",
       body: expect.stringContaining("远程"),
-      stats: expect.arrayContaining(["花费 115 金", "人口 2", "生命 72", "攻击 13", "射程 399", "训练 7.8s"]),
+      stats: expect.arrayContaining(["花费 115 金", "人口 2", "生命 72", "攻击 13", "射程 319.2", "训练 7.8s"]),
       hotkey: "A",
     });
     expect(abilityTooltip("heal", "h", zh)).toMatchObject({
