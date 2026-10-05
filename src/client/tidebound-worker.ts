@@ -50,7 +50,7 @@ self.onmessage = ({data}) => {
     if (data.type === 'start') {
       if (timer) clearTimeout(timer);
       campaign = new TideboundCampaign(data.difficulty, data.save);
-      paused = Boolean(data.save);
+      paused = true;
       criticalArmed = baseArmed = true;
       publish();
       loop();

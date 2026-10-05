@@ -1,5 +1,6 @@
 import type { SiteModelKind } from "./art/building-models";
 import { tideModel } from "../campaigns/tidebound/art";
+import { CampaignSession } from "./campaign-session";
 import { TideboundAdapter, TIDE_SAVE } from "./tidebound-adapter";
 import { TITLE, HERO, RELICS, SHIPS, SIEGE, DEFENSES, type CampaignSave } from "../campaigns/tidebound/campaign";
 import "./styles.css";
@@ -80,7 +81,7 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type MenuView = "play" | "campaigns" | "campaign" | "campaignRoom" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -205,10 +206,13 @@ let lastMouse: Point | undefined;
 let draggingMinimapViewport = false;
 let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
+let campaignSession: CampaignSession | undefined;
+let campaignStarting=false;
 let tideAdapter: TideboundAdapter | undefined;
 let tideTarget: {type:"cast";index:number}|{type:"fortify";id:string}|undefined;
 let tidePanel: HTMLElement | undefined;
 let tidePanelTick=-1;
+let lastTidePanelState: unknown;
 let menuOpen = true;
 let menuView: MenuView = "home";
 // @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
@@ -570,6 +574,10 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>) {
 }
 
 async function openRouteFromHash() {
+  if(window.location.hash.startsWith('#campaign-room=')){
+    if(!campaignSession)joinCampaignRoom(decodeURIComponent(window.location.hash.slice(15)),false);
+    return;
+  }
   const route = parseRoomRouteHash(window.location.hash);
   if (route.screen === "room") {
     await enterRoom(route.roomId);
@@ -607,7 +615,7 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
-  mainMenu.classList.remove("tide-briefing");
+  mainMenu.classList.remove("tide-briefing", "campaign-home");
   // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
   if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
@@ -623,6 +631,9 @@ function renderMainMenu() {
             : menuView === "results"
               ? t("home.results.title")
               : t("home.roomSetup.title");
+  if (menuView === "play") { renderPlayMenu(); return; }
+  if (menuView === "campaigns" || menuView === "campaign") { openTideBriefing(); return; }
+  if (menuView === "campaignRoom") { renderCampaignRoom(); return; }
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -645,9 +656,8 @@ function renderMainMenu() {
   }
   menuStatus.textContent = "";
   mapList.replaceChildren(
-    menuButton("战役 · 潮汐王座", "5000 人战场 · 群岛远征", "data-open-campaign", () => openTideBriefing()),
     menuButton(t("home.play"), "", "data-open-create", () => {
-      openMenuRoute({ screen: "create" });
+      openMenuRoute({ screen: "play" });
     }),
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
@@ -1198,6 +1208,7 @@ function handleRuntimeRoomUpdate(room: RoomState) {
 
 function syncActiveGameAdapterSnapshot() {
   if (menuOpen) return false;
+  if(tideAdapter && activeGameAdapter.currentSnapshot() === snapshot)return Boolean(snapshot);
   const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
   if (!view.snapshot) return false;
   if (snapshot && view.snapshot !== snapshot) playCues(soundCues(snapshot, view.snapshot, localPlayerId));
@@ -3101,37 +3112,69 @@ function requireCanvasContext(target: HTMLCanvasElement) {
 }
 
 
+function renderPlayMenu(){
+ menuTitle.textContent='开始游戏';menuStatus.textContent='选择你的战场';
+ mapList.replaceChildren(
+  menuButton('战役','故事、远征与合作作战','data-open-campaign',()=>openMenuRoute({screen:'campaigns'})),
+  menuButton('遭遇战','选择地图，组织玩家与电脑对战','data-open-skirmish',()=>openMenuRoute({screen:'create'})),
+  menuButton('加入房间','寻找朋友的战场','data-open-rooms',()=>openMenuRoute({screen:'rooms'})),
+  menuButton('返回','','data-back-home',()=>openMenuRoute({screen:'home'})));
+}
 function openTideBriefing(){
- menuTitle.textContent=TITLE;mainMenu.classList.add('tide-briefing');
- menuStatus.textContent="王廷封锁海峡，联军主力在三条战线作战。你统领一支远征队和一座基地，决定这场战争的突破口。";
- mapList.replaceChildren();
- const brief=document.createElement('div');brief.className='tide-brief';brief.innerHTML=`<p>第一幕 · 打通航路</p><span>占领至少三座港口。港口持续提供补给，驻军必须将敌人逐出旗帜周围。</span><p>第二幕 · 王座之战</p><span>突破东岸防线，摧毁王廷堡垒。古龙会焚烧密集军队，用工程和遗物打开缺口。</span><p>第三幕 · 最后一潮</p><span>王座陷落后，守住三座港口 60 秒。统帅和远征司令部必须存活。</span><hr><small>左键选择 / 拖框编队，右键移动或攻击；A 攻击移动；Ctrl + 数字编队；工人可修理、采矿、建造。运输舰用右键登船、D 卸载。点击左侧遗物，再选择战场目标。点击港口按钮跳转战线。支持暂停、手动保存和自动存档。</small>`;
- mapList.append(brief,menuButton('开始远征','标准战役 · 保留全部 5000 余名真实单位','data-start-campaign',()=>startTideCampaign()));
- if(localStorage.getItem(TIDE_SAVE))mapList.append(menuButton('继续远征','读取最近的战役存档','data-load-campaign',()=>{try{startTideCampaign(JSON.parse(localStorage.getItem(TIDE_SAVE)!));}catch{menuStatus.textContent='存档读取失败，请开始新的远征。';}}));
- mapList.append(menuButton('返回','','data-campaign-back',()=>renderMainMenu()));
+ mainMenu.classList.add('campaign-home');mainMenu.dataset.menuView='campaign';menuTitle.textContent='战役';menuStatus.textContent='CHRONICLES OF THE FRONTIER';
+ let saved:CampaignSave|undefined;try{const raw=localStorage.getItem(TIDE_SAVE);if(raw)saved=JSON.parse(raw);}catch{}
+ const page=document.createElement('section');page.className='campaign-journal';
+ page.innerHTML=`<div class="campaign-chart" aria-label="潮汐王座海峡作战图"><svg viewBox="0 0 500 570" role="img" aria-label="三条海峡战线与两座争夺岛屿"><defs><pattern id="chart-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#b8c2b0" stroke-opacity=".09"/></pattern></defs><rect width="500" height="570" fill="#21353e"/><rect width="500" height="570" fill="url(#chart-grid)"/><g fill="#7e8973" stroke="#c0b58f" stroke-width="2"><path d="M100 65L145 40 215 60 270 40 369 72 400 122 354 168 250 156 185 181 115 138Z"/><path d="M90 245L155 203 240 226 314 205 405 243 416 284 375 332 310 343 228 320 157 353 96 313Z"/><path d="M105 428L170 387 229 405 300 383 385 421 404 475 345 516 260 503 177 529 108 486Z"/><path d="M18 270L45 240 68 274 60 313 22 306Z"/><path d="M441 274L470 248 485 278 472 317 447 308Z"/></g><g stroke="#dfc188" stroke-width="1.5" stroke-dasharray="5 7" fill="none"><path d="M150 285Q250 242 360 270M245 105L242 274 253 456M45 280Q260 355 463 280"/></g><g fill="#e6c889" stroke="#17272f" stroke-width="3"><circle cx="245" cy="105" r="7"/><circle cx="242" cy="274" r="8"/><circle cx="253" cy="456" r="7"/></g><g fill="#e3dcc7" font-size="14" text-anchor="middle"><text x="245" y="92">北岬船坞</text><text x="242" y="259">王座海峡</text><text x="253" y="443">白盐港</text><text x="65" y="339">灯塔岛</text><text x="427" y="342">黑礁军港</text></g><path d="M443 37V82M424 61H464" stroke="#bfa775"/><text x="443" y="27" text-anchor="middle" fill="#bfa775" font-size="13">N</text><text x="30" y="550" fill="#bfa775" font-size="11" letter-spacing="3">THE STRAIT / CAMPAIGN I</text></svg><div class="campaign-chart-caption">诸港之间，一场战争的走向。</div></div>
+ <div class="campaign-story"><span class="campaign-kicker">第一远征 · 群岛战争</span><h2>潮汐王座</h2><p class="campaign-lead">王廷封锁了海峡。<br>自由诸港，还剩最后一条航路。</p><p>海军议会的主力已在三条战线展开。你与同行的指挥官率领远征队，经营后方基地，争夺航港，并为联军打开通往王廷的突破口。</p><div class="campaign-facts"><span>单人 / 多人合作</span><span>共享远征队与基地</span><span>动态海陆战场</span></div><ol class="campaign-chapters"><li><b>01</b><div><strong>打通航路</strong><p>驱逐守军，接通三座港口的补给。</p></div></li><li><b>02</b><div><strong>王座之战</strong><p>协同主力与攻城器械，突破东岸堡垒。</p></div></li><li><b>03</b><div><strong>最后一潮</strong><p>王座陷落后，守住航路，迎接最后反扑。</p></div></li></ol><p class="campaign-progress">${saved?`最近远征：第 ${saved.state.phase+1} 幕 · ${Math.floor(saved.snapshot.tick/1200)} 分钟 · ${saved.state.outcome==='victory'?'已完成':saved.state.outcome==='defeat'?'战败':'进行中'}`:'尚未开始远征 · 三幕在同一张持续演化的战场上推进'}</p><div class="campaign-actions"></div><details><summary>出征前须知</summary><p>左键选择与拖框，右键下令，A 攻击移动，H 固守。金色旗帜标记统帅。工人负责采矿、修理与建造。开局暂停，可先部署再继续；所有合作玩家共享部队、资源和胜负。</p></details></div>`;
+ const actions=page.querySelector('.campaign-actions')!;
+ actions.append(menuButton('单人远征','进入准备阶段','data-start-campaign',()=>startTideCampaign()),menuButton('创建合作房间','邀请朋友一起指挥','data-create-campaign-room',()=>joinCampaignRoom(crypto.randomUUID(),true)));
+ if(saved&&saved.state.outcome==='playing')actions.append(menuButton('继续远征','读取最近存档','data-load-campaign',()=>startTideCampaign(saved)));
+ const join=document.createElement('form');join.className='campaign-join';join.innerHTML='<label>加入合作远征<input name="room" placeholder="粘贴邀请链接或房间编号" required aria-label="远征邀请链接或房间编号"></label><button type="submit">加入</button>';
+ join.onsubmit=e=>{e.preventDefault();const input=String(new FormData(join).get('room')??'').trim();const id=input.includes('#campaign-room=')?input.split('#campaign-room=')[1]!:input;if(!/^[a-zA-Z0-9-]{8,64}$/.test(id)){menuStatus.textContent='请输入有效的邀请链接或房间编号';return;}joinCampaignRoom(id,false);};
+ page.querySelector('.campaign-story')!.append(join);mapList.replaceChildren(page,menuButton('返回开始游戏','','data-campaign-back',()=>openMenuRoute({screen:'play'})));
+}
+function joinCampaignRoom(id:string,create:boolean){
+ campaignSession?.close();menuView='campaignRoom';mainMenu.classList.add('campaign-home');menuTitle.textContent='远征准备';mapList.replaceChildren();menuStatus.textContent='正在连接合作房间……';
+ history.replaceState(null,'',`${location.pathname}#campaign-room=${encodeURIComponent(id)}`);
+ campaignSession=new CampaignSession(id,create,localUser.name,{lobby:()=>{if(menuOpen)renderCampaignRoom();},start:()=>startTideCampaign(),notice:text=>{menuStatus.textContent=text;statusLabel.textContent=text;},ended:()=>{if(menuOpen)renderCampaignRoom();tideAdapter?.action({type:'pause',paused:true});if(tideAdapter)tideAdapter.paused=true;}});
+}
+function renderCampaignRoom(){
+ mainMenu.classList.add('campaign-home');mainMenu.dataset.menuView='campaignRoom';menuTitle.textContent='远征准备';
+ const session=campaignSession;if(!session?.lobby){mapList.replaceChildren(menuButton('返回战役主页','','data-campaign-retry',()=>{campaignSession?.close();campaignSession=undefined;openMenuRoute({screen:'campaigns'});}));return;}
+ menuStatus.textContent='潮汐王座 · 多人合作 · 共同指挥同一支远征队';
+ const panel=document.createElement('section');panel.className='campaign-lobby';
+ const heading=document.createElement('h2');heading.textContent='同行的指挥官';panel.append(heading);
+ for(const member of session.lobby.members){const row=document.createElement('p');row.textContent=`${member.id===session.lobby.hostId?'◆ 房主':'◇ 指挥官'} · ${member.name}${member.id===session.id?'（你）':''}`;panel.append(row);}
+ const input=document.createElement('input');input.readOnly=true;input.value=location.href;input.setAttribute('aria-label','远征邀请链接');panel.append(input);
+ const hint=document.createElement('p');hint.textContent='把邀请链接发给朋友。进入战场后先共同部署，任意指挥官均可暂停或继续。房主离开时战役暂停，可用房主存档再次出征。';panel.append(hint);
+ if(session.host)panel.append(menuButton('全员出征','进入共同部署阶段','data-start-coop',()=>session.start()));
+ else{const wait=document.createElement('p');wait.textContent='等待房主开始远征……';panel.append(wait);}
+ panel.append(menuButton('离开房间','','data-leave-campaign',()=>{session.close();campaignSession=undefined;openMenuRoute({screen:'campaigns'});}));mapList.replaceChildren(panel);
 }
 function startTideCampaign(save?:CampaignSave){
+ if(campaignStarting)return;campaignStarting=true;
  menuStatus.textContent='正在集结远征军、构建海陆导航……';
- const adapter=new TideboundAdapter({...(save?{save}:{}),notice:(text)=>statusLabel.textContent=text,ready:(initial)=>{
-  worldZoom=.7;localPlayerId='player';currentRoomId=undefined;spectatingRoom=false;
+ const adapter=new TideboundAdapter({...(save?{save}:{}),...(campaignSession?{session:campaignSession}:{}),notice:(text)=>{statusLabel.textContent=text;if(menuOpen)menuStatus.textContent=text;},ready:(initial)=>{
+  campaignStarting=false;worldZoom=.85;localPlayerId='player';currentRoomId=undefined;spectatingRoom=false;
   activateStartedMatch(adapter,initial,{send:()=>{},onMessage:()=>()=>{}});tideAdapter=adapter;
   selectedIds=new Set([HERO]);focusedSelectionId=HERO;
   const hero=initial.units.find(u=>u.id===HERO);if(hero)centerCameraOnWorld(hero);
   menuOpen=false;shell.classList.remove('menu-open');mainMenu.classList.add('hidden');
   pointerLockUnavailable=true;localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY,'seen');
-  createTidePanel();syncMatchActions();statusLabel.textContent='远征开始：先视察三条战线。统帅携带六件主动遗物。';
+  createTidePanel();updateHud();syncMatchActions();statusLabel.textContent='部署阶段：选择部队、查看目标，准备好后点击继续。';
  }});
 }
 function createTidePanel(){
  tidePanel?.remove();tidePanel=document.createElement('aside');tidePanel.className='tide-panel';
- tidePanel.innerHTML=`<header><small>THE TIDAL THRONE</small><strong>${TITLE}</strong><span data-tide-clock></span></header><div data-tide-hero-health></div><div data-tide-objective></div><div class="tide-ports"></div><div class="tide-tools"><button data-tide-hero>统帅</button><button data-tide-army>远征军</button><button data-tide-hold>固守 H</button><button data-tide-base>司令部</button><button data-tide-citadel>王廷堡垒</button><button data-tide-zoom>缩放 70%</button><button data-tide-pause>暂停</button><button data-tide-speed>速度 1×</button><button data-tide-save>保存</button><button data-tide-exit>退出</button></div><details open><summary>六件遗物 · 点击后选择目标</summary><div class="tide-relics"></div></details><details><summary>舰队、攻城与工程</summary><div class="tide-recruits"></div><div class="tide-jobs"></div></details><p class="tide-log"></p>`;
+ tidePanel.innerHTML=`<header><small>THE TIDAL THRONE</small><strong>${TITLE}</strong><span data-tide-clock></span></header><div data-tide-hero-health></div><div data-tide-objective></div><div class="tide-ports"></div><div class="tide-tools"><button data-tide-hero>统帅</button><button data-tide-army>远征军</button><button data-tide-hold>固守 H</button><button data-tide-base>司令部</button><button data-tide-citadel>王廷堡垒</button><button data-tide-zoom>缩放 85%</button><button data-tide-pause>暂停</button><button data-tide-speed>速度 1×</button><button data-tide-save>保存</button><button data-tide-exit>退出</button></div><details><summary>六件遗物 · 点击后选择目标</summary><div class="tide-relics"></div></details><details><summary>舰队、攻城与工程</summary><div class="tide-recruits"></div><div class="tide-jobs"></div></details><p class="tide-log"></p>`;
  shell.append(tidePanel);
+ if(campaignSession&&!campaignSession.host)for(const selector of ['[data-tide-save]','[data-tide-speed]'])(tidePanel.querySelector(selector) as HTMLElement).hidden=true;
  tidePanel.querySelector('[data-tide-hero]')!.addEventListener('click',()=>{const hero=snapshot?.units.find(u=>u.id===HERO);if(hero){selectedIds=new Set([HERO]);focusedSelectionId=HERO;centerCameraOnWorld(hero);}});
  tidePanel.querySelector('[data-tide-army]')!.addEventListener('click',()=>{selectedIds=new Set(snapshot?.units.filter(u=>u.owner==='player'&&u.kind!=='worker'&&u.kind!=='warship'&&u.kind!=='transport').map(u=>u.id));focusedSelectionId=HERO;});
  tidePanel.querySelector('[data-tide-citadel]')!.addEventListener('click',()=>{const target=snapshot?.buildings.find(b=>b.id==='citadel');if(target)centerCameraOnWorld(target);});
  tidePanel.querySelector('[data-tide-base]')!.addEventListener('click',()=>{const base=snapshot?.buildings.find(b=>b.id==='expedition');if(base)centerCameraOnWorld(base);});
  tidePanel.querySelector('[data-tide-hold]')!.addEventListener('click',()=>sendCommand({type:'holdPosition',unitIds:[...selectedIds]}));
- tidePanel.querySelector('[data-tide-zoom]')!.addEventListener('click',()=>{const center=screenToWorld({x:canvas.width/2,y:canvas.height/2});worldZoom=worldZoom===.7?.45:worldZoom===.45?1:.7;centerCameraOnWorld(center);tidePanel!.querySelector('[data-tide-zoom]')!.textContent='缩放 '+Math.round(worldZoom*100)+'%';});
+ tidePanel.querySelector('[data-tide-zoom]')!.addEventListener('click',()=>{const center=screenToWorld({x:canvas.width/2,y:canvas.height/2});worldZoom=worldZoom===.85?.6:worldZoom===.6?1:.85;centerCameraOnWorld(center);tidePanel!.querySelector('[data-tide-zoom]')!.textContent='缩放 '+Math.round(worldZoom*100)+'%';});
  tidePanel.querySelector('[data-tide-pause]')!.addEventListener('click',()=>{if(!tideAdapter)return;tideAdapter.paused=!tideAdapter.paused;tideAdapter.action({type:'pause',paused:tideAdapter.paused});tidePanel!.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';});
  let tideSpeed=1;tidePanel.querySelector('[data-tide-speed]')!.addEventListener('click',()=>{tideSpeed=tideSpeed===1?2:tideSpeed===2?4:1;tideAdapter?.action({type:'speed',speed:tideSpeed});tidePanel!.querySelector('[data-tide-speed]')!.textContent='速度 '+tideSpeed+'×';});
  tidePanel.querySelector('[data-tide-save]')!.addEventListener('click',()=>tideAdapter?.action({type:'save'}));
@@ -3143,7 +3186,7 @@ function createTidePanel(){
 }
 function updateTidePanel(){
  if(!tidePanel||!tideAdapter?.state||!snapshot)return;
- if(!tideAdapter.paused&&snapshot.tick-tidePanelTick<10&&tidePanelTick>=0)return;tidePanelTick=snapshot.tick;const s=tideAdapter.state;
+ if(lastTidePanelState===tideAdapter.state&&tidePanel?.dataset.paused===String(tideAdapter.paused))return;lastTidePanelState=tideAdapter.state;tidePanel.dataset.paused=String(tideAdapter.paused);if(!tideAdapter.paused&&snapshot.tick-tidePanelTick<10&&tidePanelTick>=0)return;tidePanelTick=snapshot.tick;const s=tideAdapter.state;
  tidePanel.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';
  tidePanel.querySelector('[data-tide-clock]')!.textContent=`${Math.floor(snapshot.tick/1200)}:${String(Math.floor(snapshot.tick/20)%60).padStart(2,'0')} · ${snapshot.units.length.toLocaleString()} 名作战单位`;
  tidePanel.querySelector('[data-tide-objective]')!.textContent=s.outcome==='victory'?'远征胜利 · 自由诸港重获航路':s.outcome==='defeat'?'远征失败 · 统帅或司令部陷落':s.phase===2?`最后一潮 · 守住三港 ${s.hold}/60 秒`:s.phase===1?'王座之战 · 摧毁东岸王廷堡垒':'打通航路 · 占领三座港口';

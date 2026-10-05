@@ -171,7 +171,7 @@ export function drawWorld(frame: WorldFrame) {
   }
   trackUnitFacing(painter.facing,painter.snapshot);
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
-  const actors=[...snapshot.buildings,...snapshot.units].sort((a,b)=>a.y-b.y);
+  const actors=[...snapshot.buildings,...snapshot.units].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
   for(const actor of actors)if('order' in actor)drawUnits(painter,[actor]);else drawBuildings(painter,[actor]);
   drawCarriedItems(painter, snapshot.items);
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
@@ -365,7 +365,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
     const shake = hitFeedbackOffset(painter.snapshot, unit);
     const at = drawnPosition(painter, unit);
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y });
-    const scale = unitGlyphScale(unit.radius);
+    const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
     const selected = painter.selectedIds.has(unit.id);
     ctx.strokeStyle = ownerInk(unit.owner);
@@ -384,6 +384,10 @@ function drawUnits(painter: Painter, units: Unit[]) {
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
     else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion ? undefined : painter.animation?.frame(unit, now));
+    if(unit.id==='tide-admiral'){
+      ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();
+    }
     const scorch = unit.effects.find((effect) => effect.type === "scorch");
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
