@@ -38,6 +38,14 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (building.hp >= building.maxHp) return commandError(`${building.kind} is already fully repaired`, true);
     return undefined;
   }
+  if (command.type === "repairShip") {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    const ship = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && UNIT_DEFS[unit.kind].naval);
+    if (!ship) return commandError(`Unknown ${owner} ship ${command.targetId}`, true);
+    if (ship.hp >= ship.maxHp) return commandError(`${ship.kind} is already fully repaired`, true);
+    return undefined;
+  }
   if (command.type === "build") {
     const worker = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
     if (!worker) return commandError(`Unknown ${owner} worker ${command.unitId}`, true);
@@ -157,6 +165,11 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     const building = currentBuilding(game, owner, command.buildingId);
     if (unitIds.length === 0 || !building) return undefined;
     return { ...command, unitIds };
+  }
+  if (command.type === "repairShip") {
+    const unitIds = currentWorkerIds(game, owner, command.unitIds);
+    const ship = currentUnit(game, owner, command.targetId);
+    return unitIds.length && ship ? { ...command, unitIds } : undefined;
   }
   if (command.type === "build") {
     if (currentUnit(game, owner, command.unitId)?.kind !== "worker") return undefined;
