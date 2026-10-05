@@ -4,7 +4,7 @@ import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
-import { canReach } from "../naval";
+import { canReach, carries, passengerLandingSpot } from "../naval";
 import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, UnitKind } from "../types";
@@ -29,10 +29,16 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(unitRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit");
   }
   if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") return missingUnitError(snapshot, owner, command.unitIds);
+  if (command.type === "unloadPassenger") {
+    const transport = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
+    if (!transport) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
+    if (!transport.cargo?.some(passenger => passenger.id === command.passengerId)) return commandError("Passenger is no longer aboard", true);
+    return passengerLandingSpot(snapshot.map, transport, command.passengerId) ? undefined : commandError("No land nearby to unload; move the transport closer to shore", true);
+  }
   if (command.type === "board") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    return snapshot.units.some((unit) => unit.id === command.transportId && unit.owner === owner && UNIT_DEFS[unit.kind].carries) ? undefined : commandError(`Unknown ${owner} transport ${command.transportId}`, true);
+    return snapshot.units.some((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0) ? undefined : commandError(`Unknown ${owner} transport ${command.transportId}`, true);
   }
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
   if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, true));
@@ -144,6 +150,9 @@ function commandError(message: string, transient = false): CommandLegalityError 
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
+  if (command.type === "unloadPassenger") {
+    return currentUnit(game, owner, command.transportId)?.cargo?.some(passenger => passenger.id === command.passengerId) ? command : undefined;
+  }
   if (command.type === "move" || command.type === "attackMove" || command.type === "aim" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 ? { ...command, unitIds } : undefined;
