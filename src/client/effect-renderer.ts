@@ -613,7 +613,7 @@ export function projectileLook(sourceKind: WorldEffect["sourceKind"]): Projectil
   if (sourceKind === "murlocHunter") return "spear";
   if (sourceKind === "thornSlinger") return "stone";
   if (sourceKind === "warship" || sourceKind === "bombardShip" || sourceKind === "catapult" || sourceKind === "organGun") return "shell";
-  if (sourceKind === "archer" || sourceKind === "sparkArcher" || sourceKind === "contractArcher" || sourceKind === "defenseTower" || sourceKind === "cutter" || sourceKind === "ballista") return "arrow";
+  if (sourceKind === "archer" || sourceKind === "horseArcher" || sourceKind === "sparkArcher" || sourceKind === "contractArcher" || sourceKind === "defenseTower" || sourceKind === "cutter" || sourceKind === "ballista") return "arrow";
   if (isUnitKind(sourceKind) && hasSpell(sourceKind)) return "orb";
   return "stone";
 }

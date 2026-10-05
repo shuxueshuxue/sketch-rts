@@ -1,4 +1,5 @@
 import "./styles.css";
+import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
 import { BattleHudSelection, type HudIdentity } from "./battle-hud";
 import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
@@ -78,7 +79,7 @@ type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
-type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
+type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
 type MenuView = "play" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
@@ -230,6 +231,9 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
 const baseGameAdapter = deploymentRuntime.initialAdapter();
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
+  createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
+    title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")], hotkey: "J",
+  })),
   createCommandButton(t("command.attackMove.title"), "⌁", "a", () => booleanCommandState(canAttackMove()), beginAttackMoveMode, () => ({
     title: t("command.attackMove.title"),
     body: t("command.attackMove.body"),
@@ -1645,6 +1649,7 @@ function onMouseUp(event: MouseEvent) {
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
+    else if (event.button === 0 && commandMode.type === "aim") issueAimAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
@@ -1883,6 +1888,25 @@ function openBuildPalette() {
   updateHud();
 }
 
+function beginAimMode() {
+  commandMode = { type: "aim" };
+  shell.classList.add("targeting-active");
+  shell.classList.remove("placement-active");
+  statusLabel.textContent = t("status.aimMode");
+  updateHud();
+}
+
+function issueAimAt(point: Point, queued = false) {
+  if (!syncBeforeCommandProjection() || commandMode?.type !== "aim") return;
+  const unitIds = selectedPlayerUnits().filter(unit => aimingProfile(UNIT_DEFS[unit.kind])).map(unit => unit.id);
+  if (!unitIds.length) { showInvalidCommand(t("command.aim.requirements")); return; }
+  sendCommand({ type: "aim", unitIds, ...screenToWorld(point), queued });
+  commandMode = undefined;
+  clearCommandModeClasses();
+  statusLabel.textContent = t("status.aimOrdered");
+  updateHud();
+}
+
 function beginAttackMoveMode() {
   if (!canAttackMove()) {
     showInvalidCommand(t("status.attackMoveNeedsUnits"));
@@ -2083,7 +2107,7 @@ function cancelCommandMode() {
   commandMode = undefined;
   clearCommandModeClasses();
   statusLabel.textContent =
-    canceled === "attackMove"
+    canceled === "aim" ? t("status.aimCanceled") : canceled === "attackMove"
       ? t("status.attackMoveCanceled")
       : canceled === "unload"
         ? t("status.unloadCanceled")
@@ -2680,7 +2704,7 @@ function drawBuildPlacementPreview() {
 }
 
 function drawAttackMovePreview() {
-  if (!commandMode || commandMode.type !== "attackMove" || !lastMouse) return;
+  if (!commandMode || (commandMode.type !== "attackMove" && commandMode.type !== "aim") || !lastMouse) return;
   const point = lastMouse;
   ctx.save();
   ctx.strokeStyle = "rgba(155, 47, 47, 0.72)";
@@ -2700,7 +2724,7 @@ function drawAttackMovePreview() {
   ctx.stroke();
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillStyle = "#9b2f2f";
-  ctx.fillText(t("canvas.attackMove"), point.x - 20, point.y + 44);
+  ctx.fillText(t(commandMode.type === "aim" ? "command.aim.title" : "canvas.attackMove"), point.x - 20, point.y + 44);
   ctx.restore();
 }
 

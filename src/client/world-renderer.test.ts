@@ -88,6 +88,22 @@ describe("world renderer", () => {
   beforeEach(() => setScratchCanvasFactory(fakeCanvas));
   afterEach(() => setScratchCanvasFactory(undefined));
 
+  it("draws prepared reticles only for the owning viewer, excluding allies and spectators", () => {
+    const snapshot = duelSnapshot();
+    const unit = snapshot.units.find(unit => unit.owner === "north")!;
+    unit.kind = "archer";
+    unit.order = { type: "aim", x: 450, y: 300 };
+    unit.aim = { x: 360, y: 300, anchorX: unit.x, anchorY: unit.y, tracking: true, updatedTick: 1 };
+    snapshot.players.ally = { ...snapshot.players.north! };
+    snapshot.teams = { ...snapshot.teams, ally: snapshot.teams?.north ?? "north" };
+    for (const viewer of ["north", "south", "ally", undefined]) {
+      const rendered = frame(snapshot, { ...(viewer ? { viewer } : {}) });
+      drawWorld(rendered);
+      const strokes = rendered.calls.filter(call => call.name === "stroke" && call.ink === "#c59b56");
+      expect(strokes.length).toBe(viewer === "north" ? 2 : 0);
+    }
+  });
+
   it("draws every unit in view through the atlas and mirrors one that faces left", () => {
     // south attacks north from the left, so it faces right; north has never moved and faces right too.
     const facingRight = frame(duelSnapshot({ northX: 300, southX: 200 }));
