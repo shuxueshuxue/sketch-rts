@@ -72,7 +72,7 @@ describe("AI version gauntlet CLI", () => {
 });
 
 function runGauntletCli(...args: string[]) {
-  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-version-gauntlet.ts", ...args], {
+  return execFileSync("npx", ["tsx", "scripts/ai-version-gauntlet.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

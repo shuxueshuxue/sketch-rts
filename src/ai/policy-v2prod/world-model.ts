@@ -10,7 +10,6 @@ type AvailableBuilderOptions = {
 };
 
 export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point: Point, options: AvailableBuilderOptions = {}) {
-  if (units(snapshot, owner).some(unit => unit.order.type === "build")) return undefined;
   return units(snapshot, owner)
     .filter((unit) => unit.kind === "worker")
     .filter((unit) => !activeUnitClaim(snapshot, owner, unit, options))
@@ -22,7 +21,7 @@ export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point:
 // (see the sim's updateConstruction).
 export function isReservedBuilder(snapshot: GameSnapshot, owner: PlayerId, worker: Unit) {
   const order = worker.order;
-  return order.type === "build" || order.type === "repair" && buildings(snapshot, owner).some((building) => building.id === order.buildingId && !building.complete);
+  return order.type === "repair" && buildings(snapshot, owner).some((building) => building.id === order.buildingId && !building.complete);
 }
 
 export function hasAssignedBuilder(snapshot: GameSnapshot, owner: PlayerId, building: Building) {

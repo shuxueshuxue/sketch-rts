@@ -1,4 +1,3 @@
-import { archipelagoMap } from "./archipelago-map";
 import { campRoster, type CampHabitat, type CampTier } from "./camps";
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
@@ -142,7 +141,6 @@ type IdeaSpec = {
 const duel = (count: number) => count === 2;
 const four = (count: number) => count === 4;
 const IDEAS: Record<MapIdea, IdeaSpec> = {
-  islandStarts: { kind: "ring", seats: count => count === 2 || count === 4, sizes: () => [6144], walk: WALK_SHARE, layout: openRing },
   openRing: { kind: "ring", seats: () => true, sizes: (count) => sizesFor("ring", count), walk: WALK_SHARE, layout: openRing },
   openSides: { kind: "sides", seats: () => true, sizes: (count) => sizesFor("sides", count), walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "open") },
   fountainRing: { kind: "ring", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: fountainRing },
@@ -161,14 +159,13 @@ const IDEAS: Record<MapIdea, IdeaSpec> = {
 const FALLBACK: Record<GeneratedLayoutKind, MapIdea> = { ring: "openRing", sides: "openSides" };
 
 export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[], teams: Record<PlayerId, string>): GeneratedMap {
-  if (options.idea === "islandStarts") return archipelagoMap(options, players);
   const random = seededRandom(options.seed);
   const teamOrder = [...new Set(players.map((player) => teams[player] ?? player))];
   const teamSizes = teamOrder.map((team) => players.filter((player) => (teams[player] ?? player) === team).length);
   const evenTeams = teamOrder.length === 2 && teamSizes[0] === teamSizes[1] && teamSizes[0]! >= 2;
   const kind = options.kind ?? (options.idea ? IDEAS[options.idea].kind : evenTeams && random() < 1 / 3 ? "sides" : "ring");
   if (kind === "sides" && !evenTeams) throw new Error(`A sides layout needs two teams of the same size (two or more), not ${teamSizes.join(" and ")}`);
-  const fitting = (Object.keys(IDEAS) as MapIdea[]).filter((idea) => IDEAS[idea].kind === kind && idea !== FALLBACK[kind] && idea !== "islandStarts" && IDEAS[idea].seats(players.length));
+  const fitting = (Object.keys(IDEAS) as MapIdea[]).filter((idea) => IDEAS[idea].kind === kind && idea !== FALLBACK[kind] && IDEAS[idea].seats(players.length));
   const idea = options.idea ?? (fitting.length > 0 ? pick(random, fitting) : FALLBACK[kind]);
   const spec = IDEAS[idea];
   if (spec.kind !== kind || !spec.seats(players.length)) throw new Error(`The ${idea} idea is not drawn as a ${kind} layout for ${players.length} players`);

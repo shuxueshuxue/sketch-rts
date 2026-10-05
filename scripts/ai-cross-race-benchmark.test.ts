@@ -33,7 +33,7 @@ describe("AI cross-race benchmark CLI", () => {
 });
 
 function runCrossRaceBenchmarkCli(...args: string[]) {
-  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-cross-race-benchmark.ts", ...args], {
+  return execFileSync("npx", ["tsx", "scripts/ai-cross-race-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

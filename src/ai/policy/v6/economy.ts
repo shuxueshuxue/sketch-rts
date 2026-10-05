@@ -1,4 +1,3 @@
-import { engineeringWant } from "../engineering";
 import { isBuildPlacementClear } from "../../../shared/build-placement";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
 import { detCos, detSin } from "../../../shared/det-math";
@@ -18,7 +17,7 @@ import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
-import { navalWant, navalBudgetReserve, navalReservePurchase } from "../naval";
+import { navalWant } from "../naval";
 import { SHOP_PRIORITY, v9ShopErrandCost } from "../v9/shop";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
@@ -67,25 +66,18 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!isV6Policy(options)) return [];
   const goals = rankV6Goals(snapshot, owner, options);
   let gold = playerState(snapshot, owner).gold;
-  let supply = projectedSupplyUsed(snapshot, owner);
-  const navalReserve = navalBudgetReserve(snapshot, owner, options);
   const builders = new Set<string>();
   const commands: GameCommand[] = [];
   const bought = new Set<string>();
   for (const goal of goals) {
-    if (goal.cost > gold - (navalReservePurchase(goal.id) ? 0 : navalReserve)) {
-      if (goal.save && goal.cost > gold) break;
+    if (goal.cost > gold) {
+      if (goal.save) break;
       continue;
     }
     const command = goal.issue(builders);
     if (!command) {
       if (goal.hold) gold -= goal.cost;
       continue;
-    }
-    if (command.type === "train") {
-      const used = UNIT_DEFS[command.unitKind].supplyUsed;
-      if (supply + used > playerState(snapshot, owner).supplyCap) continue;
-      supply += used;
     }
     commands.push(command);
     bought.add(goal.id);
@@ -99,7 +91,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
+  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -380,11 +372,6 @@ const NAVAL_PRIORITY = 60;
 // (65 and 61, aged to 85 and 81) kept its shipyard for the island's last base from ever being bought (pool-templeSpring-1).
 const CLOSEOUT_PRIORITY = 80;
 
-function engineeringGoals(economy:Economy):Goal[]{
-  const want=engineeringWant(economy.snapshot,economy.owner,economy.options);
-  return want?[goal(want.id,54,want.cost,true,want.issue)]:[];
-}
-
 function navalGoals(economy: Economy): Goal[] {
   const want = navalWant(economy.snapshot, economy.owner, economy.options);
   return want ? [goal(want.id, want.closeout ? CLOSEOUT_PRIORITY : NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
@@ -433,7 +420,6 @@ function goal(id: string, priority: number, cost: number, save: boolean, issue: 
 // toward the enemies and its farm's search both landed across a cliff from every worker, and neither site ever began
 // (pool-elderwood-4, from 1791 s).
 function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
-  if (used.size || economy.workers.some(worker => worker.order.type === "build")) return undefined;
   const builder = economy.workers
     .filter((worker) => !used.has(worker.id) && !isReservedBuilder(economy.snapshot, economy.owner, worker) && sameGroundAs(economy.snapshot, worker, point))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];

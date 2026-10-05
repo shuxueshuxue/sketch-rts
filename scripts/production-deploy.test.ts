@@ -2,10 +2,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("production CD contract", () => {
-  it("deploys main and production with serialized releases", () => {
+  it("deploys only from the production branch and serializes releases", () => {
     const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 
-    expect(workflow).toContain("branches: [main, production]");
+    expect(workflow).toContain("branches: [production]");
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).toContain("main_sha:");
     expect(workflow).toContain("concurrency:");
@@ -29,13 +29,16 @@ describe("production CD contract", () => {
     expect(workflow).not.toContain("--clobber");
   });
 
-  it("promotes the main tree without importing merge history", () => {
+  it("deploys production only when its tree matches main", () => {
     const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
-    const script = readFileSync("scripts/resolve-production-revision.sh", "utf8");
-    expect(workflow).toContain("bash scripts/resolve-production-revision.sh");
-    expect(script).toContain('git commit-tree "$deploy_sha^{tree}" -p "$production_tip"');
-    expect(script).toContain('git push origin "$release_commit:refs/heads/production"');
-    expect(script).not.toContain("--force");
+
+    expect(workflow).toContain("Resolve production deployment revision");
+    expect(workflow).toContain("git fetch --no-tags origin main");
+    expect(workflow).toContain('deploy_sha="$MAIN_SHA"');
+    expect(workflow).toContain('main_tip="$(git rev-parse origin/main)"');
+    expect(workflow).toContain('git push origin "$deploy_sha:refs/heads/production"');
+    expect(workflow).toContain('git diff --quiet "$deploy_sha" "origin/main"');
+    expect(workflow).toContain('echo "DEPLOY_SHA=$deploy_sha" >> "$GITHUB_ENV"');
   });
 
   it("does not keep a pull-request merge lane for production promotion", () => {
@@ -55,8 +58,8 @@ describe("production CD contract", () => {
     expect(script).toContain("releases");
     expect(script).toContain("current");
     expect(script).toContain(".benchmark-dashboard");
-    expect(script).toContain("Retain legacy files and previous releases");
-    expect(script).toContain("trap rollback_on_error ERR");
-    expect(script).toContain("--noproxy 127.0.0.1");
+    expect(script).toContain("find \"$releases_dir\"");
+    expect(script).toContain("-mindepth 1 -maxdepth 1");
+    expect(script).toContain("sketch-rts-deploy-*");
   });
 });

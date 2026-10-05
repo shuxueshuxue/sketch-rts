@@ -38,14 +38,6 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (building.hp >= building.maxHp) return commandError(`${building.kind} is already fully repaired`, true);
     return undefined;
   }
-  if (command.type === "repairShip") {
-    const missing = missingUnitError(snapshot, owner, command.unitIds);
-    if (missing) return missing;
-    const ship = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && UNIT_DEFS[unit.kind].naval);
-    if (!ship) return commandError(`Unknown ${owner} ship ${command.targetId}`, true);
-    if (ship.hp >= ship.maxHp) return commandError(`${ship.kind} is already fully repaired`, true);
-    return undefined;
-  }
   if (command.type === "build") {
     const worker = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
     if (!worker) return commandError(`Unknown ${owner} worker ${command.unitId}`, true);
@@ -64,7 +56,6 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (rallyless) return commandError(`${rallyless.kind} has no training rally point`);
     return rallyTargetError(snapshot, owner, command.target);
   }
-  if (command.type === "cancelTraining") return missingBuildingError(snapshot, owner, [command.buildingId]);
   if (command.type === "train") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, true);
@@ -166,11 +157,6 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (unitIds.length === 0 || !building) return undefined;
     return { ...command, unitIds };
   }
-  if (command.type === "repairShip") {
-    const unitIds = currentWorkerIds(game, owner, command.unitIds);
-    const ship = currentUnit(game, owner, command.targetId);
-    return unitIds.length && ship ? { ...command, unitIds } : undefined;
-  }
   if (command.type === "build") {
     if (currentUnit(game, owner, command.unitId)?.kind !== "worker") return undefined;
     return command;
@@ -180,7 +166,6 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (buildingIds.length === 0 || isStaleRallyTarget(game, owner, command.target)) return undefined;
     return { ...command, buildingIds };
   }
-  if (command.type === "cancelTraining") return currentBuilding(game, owner, command.buildingId)?.queue.some(job => job.id === command.jobId) ? command : undefined;
   if (command.type === "train") {
     const building = currentBuilding(game, owner, command.buildingId);
     if (!building) return undefined;
@@ -276,17 +261,6 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
   if (abilityCooldown(caster, command.ability) > 0) return commandError(`${caster.kind} is on cooldown`, true);
   const behavior = ABILITY_DEFS[command.ability].behavior;
-  if (behavior === "weapon") {
-    const def = ABILITY_DEFS[command.ability];
-    if (def.behavior !== "weapon") return commandError("Unknown weapon ability");
-    const target = command.targetId ? [...snapshot.units, ...snapshot.buildings, ...(snapshot.obstacles ?? [])].find(target => target.id === command.targetId && areEnemyOwners(snapshot, owner, target.owner)) : undefined;
-    if (def.target === "enemy" && !target) return commandError("Weapon requires an enemy target");
-    if (command.ability === "ramBreach" && target && "order" in target) return commandError("Breach requires a structure");
-    const at = target ?? (Number.isFinite(command.x) && Number.isFinite(command.y) ? {x:command.x!, y:command.y!} : undefined);
-    if (!at) return commandError("Weapon requires a target point");
-    if (def.weapon.minRange && Math.hypot(at.x-caster.x,at.y-caster.y)<def.weapon.minRange) return commandError("Target is inside the weapon's minimum range",true);
-    return undefined;
-  }
   if (behavior === "heal") {
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined

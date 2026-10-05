@@ -52,7 +52,7 @@ describe("sound cues", () => {
     expect(heard).toContain("arrowHit");
   });
 
-  it("hears an arrow loosed where its bowman or tower stands and where it lands, and also hears non-arrow impacts", () => {
+  it("hears an arrow loosed where its bowman or tower stands and where it lands, and no other shot", () => {
     const shots = later((next) =>
       next.effects.push(
         effect("a", "projectile", { sourceKind: "archer", fromX: 10, fromY: 20 }),
@@ -69,8 +69,6 @@ describe("sound cues", () => {
       { id: "arrowShot", x: 10, y: 20 },
       { id: "arrowShot", x: 30, y: 40 },
       { id: "arrowHit", x: 100, y: 200 },
-      { id: "impact", x: 100, y: 200 },
-      { id: "impact", x: 100, y: 200 },
     ]);
   });
 

@@ -175,14 +175,14 @@ describe("SDK benchmark", () => {
       .player("v1", { team: "south", race: "ember" })
       .playerState("v2", { gold: 1000 })
       .townHall("v2", 500, 500, { id: "v2-main" })
-      .worker("v2", 1350, 700, { id: "v2-builder" })
+      .worker("v2", 1300, 700, { id: "v2-builder" })
       .townHall("v1", 3400, 3400, { id: "v1-main" })
-      .unit("v1", "raider", 1800, 700, { id: "v1-raider" })
+      .unit("v1", "raider", 1470, 700, { id: "v1-raider" })
       .build();
     // v2 lays an expansion hall down on the first tick; v1's raider attacks it as soon as it stands.
     const commandPlanner = ({ game, owner, source }: SdkGameCommandPlannerContext) => {
       if (owner === "v2" && game.tick === 0) return [{ playerId: owner, source, scriptId: "expand", command: { type: "build" as const, unitId: "v2-builder", buildingKind: "townHall" as const, x: 1400, y: 700 } }];
-      const hall = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main");
+      const hall = game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.x === 1400);
       if (owner === "v1" && hall) return [{ playerId: owner, source, scriptId: "raid", command: { type: "attack" as const, unitIds: ["v1-raider"], targetId: hall.id } }];
       return [];
     };
@@ -201,7 +201,7 @@ describe("SDK benchmark", () => {
                 v1: { controller: "external-agent", team: "south", race: "ember", versionLabel: "v1" },
               },
               commandPlanner,
-              maxTicks: 240,
+              maxTicks: 80,
               thinkInterval: 1,
             },
           ],

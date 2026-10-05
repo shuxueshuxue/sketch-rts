@@ -171,10 +171,7 @@ describe("deterministic command-frame simulation", () => {
         ],
       }),
     ).not.toThrow();
-    expect(game.buildings.filter(building=>building.kind==="farm")).toHaveLength(0);
-    for(let tick=0;tick<500 && !game.buildings.some(building=>building.kind==="farm");tick++)stepGame(game);
-    for(let tick=0;tick<60;tick++)stepGame(game);
-    expect(game.buildings.filter(building=>building.kind==="farm")).toHaveLength(1);
+    expect(game.buildings.filter((building) => building.owner === "player" && building.kind === "farm" && building.x === x && building.y === y)).toHaveLength(1);
   });
 
   it("treats command-frame training that loses the same-frame gold race as a no-op", () => {

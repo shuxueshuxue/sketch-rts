@@ -1,5 +1,3 @@
-import { warfarePainter } from "../art/warfare-units";
-import { articulated } from "../art/pose";
 import type { TrainableUnitKind } from "../../shared/types";
 import { type Brush, GOLD, INK, LINEN, WOOD, arm, belt, ellipse, head, legs, line, polygon, torso } from "../art/kit";
 import type { TrainedUnitCard } from "./cards";
@@ -18,11 +16,9 @@ export const COMMON_UNITS = {
       polygon(b, [[-5, -6], [4, -6], [6, 8], [-7, 8]], LINEN, INK, 0.8);
       belt(b);
       ellipse(b, -12, 5, 4, 5, "#92764d", INK); line(b, [[-5, -9], [-12, 1]], "#856b46", 1.6);
-      articulated(b, "weapon", () => {
-        line(b, [[9, 10], [21, -20]], "#78684d", 2.6);
-        line(b, [[11, -20], [21, -23], [28, -17]], "#a8b7ab", 3);
-        arm(b, [6, -6], [13, 1], "#b7a176");
-      });
+      line(b, [[9, 10], [21, -20]], "#78684d", 2.6);
+      line(b, [[11, -20], [21, -23], [28, -17]], "#a8b7ab", 3);
+      arm(b, [6, -6], [13, 1], "#b7a176");
       head(b);
       ellipse(b, -1, -19, 11, 2.6, "#d9c07a", INK);
       polygon(b, [[-7, -19], [-5, -25], [3, -25.5], [5, -19]], "#d9c07a");
@@ -36,7 +32,12 @@ export const COMMON_UNITS = {
     command: { icon: "⛴", hotkey: "t" },
     glyph: { silhouette: "transport-hull", marks: ["mast", "cargo", "flag"] },
     art: { tier: "advanced", bearing: "vessel", faction: "grove" },
-    paint: warfarePainter("transport"),
+    paint(b, team) {
+      hull(b, 30, 12);
+      for (const x of [-14, -3, 8]) polygon(b, [[x, -2], [x + 9, -2], [x + 9, 6], [x, 6]], "#b9925e", INK, 0.8);
+      line(b, [[-1, 6], [-1, -34]], WOOD, 2.2);
+      polygon(b, [[-1, -32], [17, -24], [-1, -14]], team);
+    },
   },
   warship: {
     name: { en: "Warship", zh: "战船" },
@@ -44,7 +45,15 @@ export const COMMON_UNITS = {
     command: { icon: "⚔", hotkey: "w" },
     glyph: { silhouette: "warship-hull", marks: ["mast", "cannon", "flag"] },
     art: { tier: "elite", bearing: "vessel", faction: "grove" },
-    paint: warfarePainter("frigate"),
+    paint(b, team) {
+      hull(b, 28, 10);
+      line(b, [[14, 0], [27, -4]], "#4c4f4a", 3.4);
+      ellipse(b, 27, -4, 2, 2, "#2e302c");
+      line(b, [[-4, 4], [-4, -38]], WOOD, 2.4);
+      polygon(b, [[-4, -36], [-22, -24], [-4, -12]], team);
+      polygon(b, [[-4, -36], [10, -28], [-4, -20]], LINEN);
+      ellipse(b, -4, -40, 2, 2, GOLD, INK);
+    },
   },
 } satisfies Partial<Record<TrainableUnitKind, TrainedUnitCard>>;
 

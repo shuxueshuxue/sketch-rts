@@ -19,7 +19,7 @@ function steps(game: ReturnType<typeof duel>, ticks: number) {
 
 describe("autocast", () => {
   it("starts on for every unit ability, and keeps only what the player switched away from that", () => {
-    for (const ability of ABILITY_KINDS) expect(ABILITY_DEFS[ability].autocast).toBe(ABILITY_DEFS[ability].behavior === "weapon" ? "none" : "on");
+    for (const ability of ABILITY_KINDS) expect(ABILITY_DEFS[ability].autocast).toBe("on");
     const priest = { kind: "priest" as const };
     expect(autocastEnabled(priest, "heal")).toBe(true);
     expect(autocastEnabled(priest, "curse")).toBe(false);

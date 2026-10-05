@@ -1,4 +1,4 @@
-import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
+import type { BUILDING_RULES, UNIT_RULES, VariantRules } from "./catalog";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
 
@@ -21,7 +21,7 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "ramBreach" | "pinningBolt" | "siegeBarrage" | "grapeshot" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type AbilityKind = "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
 export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
 export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
@@ -40,7 +40,6 @@ export type UnitStatusEffect = {
 export type WorldEffect = {
   id: string;
   type:
-    | "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround"
     | "heal"
     | "summon"
     | "curse"
@@ -100,14 +99,9 @@ export type Projectile = {
   damage: number;
   remaining: number;
   duration: number;
-  weapon?: WeaponDef;
-  sourceKind?: UnitKind;
-  rootTicks?: number;
-  burnTicks?: number;
 };
 
 export type UnitOrder =
-  | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
   | { type: "move"; x: number; y: number }
   | { type: "follow"; targetId: string }
@@ -115,12 +109,11 @@ export type UnitOrder =
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
-  | { type: "repairShip"; targetId: string }
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
-  | { type: "board"; transportId: string; berth?: { x: number; y: number } }
+  | { type: "board"; transportId: string }
   | { type: "unload"; x: number; y: number }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
@@ -169,8 +162,6 @@ export type Unit = {
   arrivedAt?: { x: number; y: number } | undefined;
   // A transport's passengers, out of the game while aboard (see @@@transport).
   cargo?: Unit[] | undefined;
-  /** Larger mission transports can carry a different population than their base hull. */
-  cargoCapacity?: number;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -190,8 +181,6 @@ export type Building = {
   y: number;
   hp: number;
   maxHp: number;
-  /** A mission ward; normal matches leave this absent. */
-  invulnerable?: boolean;
   radius: number;
   complete: boolean;
   buildProgress: number;
@@ -208,7 +197,6 @@ export type Building = {
 };
 
 export type TrainingJob = {
-  id?: string;
   unitKind: TrainableUnitKind;
   remaining: number;
 };
@@ -313,8 +301,7 @@ export type MapIdea =
   | "deepJungle"
   | "northIsles"
   | "riverValley"
-  | "twoShores"
-  | "islandStarts";
+  | "twoShores";
 export type GeneratedLayoutOptions = {
   seed: string;
   // Drawn from the seed (or the idea) when absent; "sides" needs exactly two teams.
@@ -438,11 +425,9 @@ export type TerrainLandmark = {
   y: number;
   size: number;
   rotation: number;
-  straight?: boolean;
 };
 
 export type GameCommand =
-  | { type: "cancelTraining"; buildingId: string; jobId: string }
   | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
@@ -451,7 +436,6 @@ export type GameCommand =
   | { type: "holdPosition"; unitIds: string[]; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
-  | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
@@ -467,19 +451,6 @@ export type GameCommand =
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
-/** Persistent battlefield remains. Separate from live entities and transient effects. */
-export type Corpse = {
-  id: string;
-  unitId: string;
-  kind: UnitKind;
-  owner: Owner;
-  x: number;
-  y: number;
-  radius: number;
-  diedAtTick: number;
-  variant?: string;
-};
-
 export type GameSnapshot = {
   tick: number;
   match: MatchState;
@@ -493,7 +464,6 @@ export type GameSnapshot = {
   items: WorldItem[];
   projectiles: Projectile[];
   effects: WorldEffect[];
-  corpses?: Corpse[];
   // A campaign game's own units' rules, by variant id (see unit-variants). A standard match has none.
   variants?: Record<string, VariantRules>;
   // The map's shops (see @@@shop); a map without one has none, and no key.

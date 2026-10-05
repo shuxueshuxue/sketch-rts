@@ -189,18 +189,14 @@ export class Director<Vars = unknown> {
     if (save.story !== options.id) throw new Error(`Save belongs to story ${save.story}, not ${options.id}`);
     // A save hashed another way cannot be checked by this build: say so, rather than that it does not replay.
     const checksumVersion = save.checksumVersion ?? 1;
-    if (checksumVersion !== CHECKSUM_VERSION && checksumVersion !== 2) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
+    if (checksumVersion !== CHECKSUM_VERSION) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
     const game = reviveGame(save.checkpoint.game);
     const director = new Director<Vars>({ ...options, game, vars: clone(save.checkpoint.vars) }, clone(save.checkpoint));
     director.replaying = clone(save.inputs);
     director.begin(save.checkpoint.label);
     while (director.game.tick < save.tick) director.advance();
     delete director.replaying;
-    // Version 2 did not hash remains: verify its original representation while
-    // retaining the replay-generated records in the loaded game.
-    const checkedGame = { ...director.game };
-    if (checksumVersion === 2) delete checkedGame.corpses;
-    const checksum = checksumGame(checkedGame);
+    const checksum = checksumGame(director.game);
     if (checksum !== save.checksum) throw new Error(`Save of ${save.story} does not replay: tick ${save.tick} hashes ${checksum}, the save says ${save.checksum}`);
     if (options.pilot) director.startPilot(save.checkpoint.label);
     director.settle();

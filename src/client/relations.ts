@@ -87,8 +87,6 @@ export function targetCommand(
     return damaged && workers.length > 0 ? { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued } : undefined;
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
-  if (UNIT_DEFS[target.unit.kind].naval && target.unit.hp < target.unit.maxHp && workers.length)
-    return { type: "repairShip", unitIds: ids(workers), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval);
   return UNIT_DEFS[target.unit.kind].carries && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;
 }

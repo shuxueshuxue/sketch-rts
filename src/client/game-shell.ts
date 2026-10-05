@@ -25,7 +25,7 @@ export function gameShellMarkup(i18n: I18n) {
       <button type="button" class="match-action" data-forfeit-match>${escapeHtml(t("shell.concede"))}</button>
       <button type="button" class="match-action" data-match-menu-close>${escapeHtml(t("shell.resume"))}</button>
     </div>
-    <div class="status-line" data-status role="status" aria-live="polite">${escapeHtml(t("shell.connectingMatch"))}</div>
+    <div class="status-line" data-status>${escapeHtml(t("shell.connectingMatch"))}</div>
     <div class="chat-overlay" data-chat-overlay>
       <div class="chat-messages" data-chat-messages></div>
       <form class="chat-input-row hidden" data-chat-form>
@@ -34,13 +34,9 @@ export function gameShellMarkup(i18n: I18n) {
     </div>
     <div class="minimap-frame" data-minimap-frame aria-hidden="true"></div>
     <button type="button" class="minimap-relations" data-minimap-relations aria-pressed="false" aria-label="${escapeHtml(t("hud.minimapRelations"))}" title="${escapeHtml(t("hud.minimapRelations"))}"><span aria-hidden="true"></span></button>
-    <div class="control-deck">
-      <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
-      <div class="hud-actions">
-        <div class="command-dock hidden" data-command-dock></div>
-        <div class="item-dock hidden" data-item-dock></div>
-      </div>
-    </div>
+    <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
+    <div class="command-dock hidden" data-command-dock></div>
+    <div class="item-dock hidden" data-item-dock></div>
     <div class="tooltip-layer hidden" data-tooltip-layer role="tooltip"></div>
     <div class="virtual-pointer hidden" data-virtual-pointer aria-hidden="true"></div>
     <div class="pointer-lock-gate hidden" data-pointer-lock-gate role="dialog" aria-modal="true" aria-labelledby="pointer-lock-gate-title">

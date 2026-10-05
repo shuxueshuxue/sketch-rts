@@ -246,7 +246,7 @@ describe("interactive playtest SDK", () => {
             { id: "v2-footman", owner: "v2", kind: "footman", x: 320, y: 300 },
             { id: "wild-camp-1", owner: "neutral", kind: "wildling", x: 900, y: 920 },
           ],
-          addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 }, { id: "v1a-main", owner: "v1a", kind: "townHall", x: 1700, y: 1700 }],
+          addBuildings: [{ id: "v2-main", owner: "v2", kind: "townHall", x: 230, y: 260 }],
           addResources: [
             { id: "gold-v2-main", kind: "goldMine", x: 260, y: 260, amount: 6000 },
             { id: "gold-natural", kind: "goldMine", x: 760, y: 760, amount: 6000 },
@@ -257,9 +257,6 @@ describe("interactive playtest SDK", () => {
     });
 
     applyInteractivePlaytestCommand(session, { type: "expand", resourceId: "gold-natural" });
-    expect(session.game.units.find(unit => unit.id === "v2-worker")?.order).toMatchObject({ type: "build", buildingKind: "townHall", x: 760, y: 760 });
-    expect(session.game.buildings).toHaveLength(2);
-    stepInteractivePlaytestSession(session, 200);
     expect(session.game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main")).toMatchObject({
       x: 760,
       y: 760,

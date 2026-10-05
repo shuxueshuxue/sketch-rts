@@ -58,7 +58,7 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
     } else if (command.type === "move") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
-    } else if ((command.type === "repair" || command.type === "repairShip")) {
+    } else if (command.type === "repair") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
     } else {
@@ -70,6 +70,6 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
 
 function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>) {
   for (const command of commands) {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip")) for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "repair") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
   }
 }

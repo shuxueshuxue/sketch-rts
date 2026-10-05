@@ -11,7 +11,6 @@ import { createGame } from "./sim";
 // redrawn on purpose: give it a new name or take the new hash knowingly. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
-  brokenSea: "39c43479ca06a312",
   templeSpring: "89d478ee42c291c3",
   turtleLake: "185a1f243b2bb342",
   elderwood: "ea14bcd697fe7b7c",
@@ -78,17 +77,4 @@ describe("map pool", () => {
       expect(game.buildings.filter((building) => building.kind === "townHall")).toHaveLength(map.players);
     }
   });
-});
-
-it('keeps named shores and requested diplomacy when alliances are uneven or free-for-all', () => {
-  for(const map of MAP_POOL.filter(map=>map.layout.kind==='sides')) {
-    const {players,teams}=seatsOf(map);
-    const baseline=createGame(map.id,{players,teams,aiPlayers:[]});
-    for(const custom of [Object.fromEntries(players.map((p,i)=>[p,i===0?'a':'b'])),Object.fromEntries(players.map(p=>[p,p]))]) {
-      const game=createGame(map.id,{players,teams:custom,aiPlayers:[]});
-      expect(game.map.terrain?.cells).toBe(baseline.map.terrain?.cells);
-      expect(game.teams).toEqual(custom);
-      expect(game.buildings.filter(b=>b.kind==='townHall')).toHaveLength(4);
-    }
-  }
 });

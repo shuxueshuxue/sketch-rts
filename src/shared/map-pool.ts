@@ -16,7 +16,6 @@ export type PoolMap = {
 };
 
 export const MAP_POOL = [
-  { id: "brokenSea", name: { en: "Broken Sea", zh: "碎海" }, players: 4, layout: { seed: "pool-brokenSea-1", kind: "ring", idea: "islandStarts" } },
   { id: "templeSpring", name: { en: "Temple Spring", zh: "神泉殿" }, players: 4, layout: { seed: "pool-templeSpring-1", kind: "ring", idea: "fountainRing" } },
   { id: "turtleLake", name: { en: "Turtle Lake", zh: "龟湖" }, players: 4, layout: { seed: "pool-turtleLake-1", kind: "ring", idea: "turtleIsle" } },
   { id: "elderwood", name: { en: "Elderwood", zh: "古木林" }, players: 4, layout: { seed: "pool-elderwood-1", kind: "ring", idea: "twistedPaths" } },
@@ -37,7 +36,10 @@ export function poolMap(id: string): PoolMap | undefined {
   return MAP_POOL.find((map) => map.id === id);
 }
 
-/** Alliances are independent of a named map's physical starting seats. */
+/** Whether these teams, one per player, can play the map: all its seats taken, and on a sides map two teams of one size. */
 export function poolSeatsFit(map: PoolMap, teams: readonly string[]) {
-  return teams.length === map.players;
+  if (teams.length !== map.players) return false;
+  if (map.layout.kind !== "sides") return true;
+  const sizes = [...new Set(teams)].map((team) => teams.filter((other) => other === team).length);
+  return sizes.length === 2 && sizes[0] === sizes[1];
 }

@@ -171,7 +171,7 @@ describe("shared AI runtime", () => {
 
     expect(result.commands).toHaveLength(1);
     expect(result.commands[0]?.playerId).toBe("player");
-    expect(game.units.some(unit => unit.owner === "player" && unit.order.type === "build" && unit.order.buildingKind === "farm")).toBe(true);
+    expect(game.buildings.some((building) => building.owner === "player" && building.kind === "farm" && !building.complete)).toBe(true);
     expect(game.units.filter((unit) => unit.owner === "enemy").every((unit) => unit.order.type === "idle")).toBe(true);
   });
 
@@ -202,7 +202,7 @@ describe("shared AI runtime", () => {
 
     expect(result.commands).toHaveLength(1);
     expect(result.commands[0]).toMatchObject({ playerId: "player", source: "external-agent", scriptId: "mixed-source-frame-probe" });
-    expect(game.units.some(unit => unit.owner === "player" && unit.order.type === "build" && unit.order.buildingKind === "farm")).toBe(true);
+    expect(game.buildings.some((building) => building.owner === "player" && building.kind === "farm" && !building.complete)).toBe(true);
     expect(game.units.filter((unit) => unit.owner === "enemy").every((unit) => unit.order.type === "idle")).toBe(true);
   });
 
@@ -230,12 +230,12 @@ describe("shared AI runtime", () => {
           observations.push(game.buildings.some((building) => building.owner === "player" && building.kind === "farm") ? "before-built" : "before-clear");
         },
         afterIssue() {
-          observations.push(game.units.some(unit => unit.owner === "player" && unit.order.type === "build") ? "after-planned" : "after-clear");
+          observations.push(game.buildings.some((building) => building.owner === "player" && building.kind === "farm") ? "after-built" : "after-clear");
         },
       },
     );
 
-    expect(observations).toEqual(["before-clear", "after-planned"]);
+    expect(observations).toEqual(["before-clear", "after-built"]);
   });
 
   it("normalizes a missing external memory pointer into writable policy memory", () => {

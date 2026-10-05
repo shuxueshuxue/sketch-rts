@@ -155,8 +155,3 @@ function mercenaryCamp(overrides: Partial<MercenaryCamp> = {}): MercenaryCamp {
     ...overrides,
   };
 }
-
-it('explains unaffordable and supply-blocked training, including reserved queue supply', () => {
-  expect(trainCommandState('worker',playerState({gold:0,supplyUsed:0,supplyCap:20}),true).reason).toBe('gold');
-  expect(trainCommandState('worker',playerState({gold:1000,supplyUsed:20,supplyCap:20}),true).reason).toBe('supply');
-});
