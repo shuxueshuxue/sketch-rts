@@ -133,9 +133,9 @@ describe("director", () => {
     advanceUntil(director, () => director.vars.log.some((entry) => entry.startsWith("second")));
     const save = director.save();
     expect(save.checksumVersion).toBe(CHECKSUM_VERSION);
-    const legacyGame = { ...director.game };delete legacyGame.corpses;
-    const legacy = { ...save, checksumVersion: 2, checksum: checksumGame(legacyGame) };
-    expect(Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, legacy).tick).toBe(director.tick);
+    const olderGame = { ...director.game };delete olderGame.corpses;
+    const versionTwo = { ...save, checksumVersion: 2, checksum: checksumGame(olderGame) };
+    expect(Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, versionTwo).tick).toBe(director.tick);
     // A save from before checksum versions (version 1) carries none.
     const { checksumVersion: _version, ...older } = save;
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, older)).toThrow(`checksum version 1; this build checks version ${CHECKSUM_VERSION}`);
