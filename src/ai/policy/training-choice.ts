@@ -25,6 +25,8 @@ function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, buildi
   if (building.kind === "barracks") return soldierChoice(snapshot, owner);
   if (building.kind === "archeryRange") return "archer";
   if (building.kind === "stables") {
+    const army = combatUnits(snapshot, owner);
+    if (isV5HybridPolicy(options) && army.length >= 6 && army.filter(unit => unit.kind === "horseArcher").length < Math.max(1, Math.floor(army.length / 6))) return "horseArcher";
     const knights = units(snapshot, owner).filter((unit) => unit.kind === "knight").length;
     const raiders = units(snapshot, owner).filter((unit) => unit.kind === "raider").length;
     const preferred = aiPlaybook(race).unitsByBuilding.stables?.[0] ?? "raider";
@@ -77,6 +79,8 @@ function emberForgeChoice(snapshot: GameSnapshot, owner: PlayerId): TrainableUni
   const army = combatUnits(snapshot, owner);
   const ravagers = army.filter((unit) => unit.kind === "emberRavager").length;
   const runners = army.filter((unit) => unit.kind === "cinderRunner").length;
+  const wardens = army.filter((unit) => unit.kind === "ashWarden").length;
+  if (army.length >= 6 && wardens < Math.max(1, Math.floor(army.length / 6))) return "ashWarden";
   if (ravagers < 1) return "emberRavager";
   if (runners < 1) return "cinderRunner";
   if (runners < Math.max(1, Math.ceil(ravagers / 2))) return "cinderRunner";

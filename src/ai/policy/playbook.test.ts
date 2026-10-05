@@ -6,9 +6,9 @@ describe("AI playbook", () => {
     expect(aiPlaybook()).toEqual({
       productionPlan: ["barracks", "archeryRange", "stables", "sanctum"],
       unitsByBuilding: {
-        barracks: ["footman", "lancer", "groveWarden"],
+        barracks: ["footman", "lancer"],
         archeryRange: ["archer"],
-        stables: ["knight", "raider"],
+        stables: ["knight", "raider", "horseArcher"],
         sanctum: ["priest", "summoner", "witch"],
         workshop: ["golem"],
       },
@@ -16,7 +16,7 @@ describe("AI playbook", () => {
     expect(aiPlaybook("ember")).toEqual({
       productionPlan: ["emberForge", "cinderSpire", "emberForge", "cinderSpire"],
       unitsByBuilding: {
-        emberForge: ["emberRavager", "cinderRunner"],
+        emberForge: ["emberRavager", "cinderRunner", "ashWarden"],
         cinderSpire: ["sparkArcher", "emberAcolyte", "ashHexer", "pyreCaller"],
       },
     });

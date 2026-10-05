@@ -38,7 +38,8 @@ export class UnitFacingTracker {
     const next = new Map<string, FacingState>();
     for (const unit of units) {
       const targetId = attackTargetId(unit.order);
-      next.set(unit.id, nextFacing(this.states.get(unit.id), unit, targetId ? locate(targetId) : undefined));
+      const aiming = unit.aim && (unit.order.type === "attack" || unit.order.type === "attackMove" || unit.order.type === "hold" || unit.order.type === "aim" || unit.order.type === "cast");
+      next.set(unit.id, nextFacing(this.states.get(unit.id), unit, aiming ? unit.aim : targetId ? locate(targetId) : undefined));
     }
     this.states = next;
   }

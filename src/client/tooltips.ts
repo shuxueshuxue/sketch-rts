@@ -1,4 +1,5 @@
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
+import { aimingProfile } from "../shared/aiming";
 import { unitRegenPerSecond } from "../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
@@ -33,6 +34,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
       tooltipLine(i18n.locale, "range", stats.weapon?.minRange ? `${stats.weapon.minRange}-${stats.attackRange}` : stats.attackRange),
+      ...(aimingProfile(stats) ? [i18n.locale === "zh" ? `瞄准位移容错：${aimingProfile(stats)!.moveTolerance}` : `Aim movement tolerance: ${aimingProfile(stats)!.moveTolerance}`] : []),
       ...(stats.carries ? [i18n.locale === "zh" ? `运载人口：${stats.carries}` : `Cargo supply: ${stats.carries}`] : []),
       ...(stats.weapon?.buildingMultiplier ? [i18n.locale === "zh" ? `对建筑伤害 ×${stats.weapon.buildingMultiplier}` : `Structure damage ×${stats.weapon.buildingMultiplier}`] : []),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),

@@ -200,7 +200,7 @@ describe("shorter ranged weapons", () => {
     const game = field("short-ranged-creep").unit("us", "barkMender", 1_500, 1_500, { id: "shooter" })
       .unit("enemy", "knight", 1_575, 1_500, { id: "target" }).build().createGame();
     issuePlayerCommand(game, "us", { type: "attack", unitIds: ["shooter"], targetId: "target" });
-    stepGame(game);
+    for (let i = 0; i < 4; i++) stepGame(game);
     expect(game.projectiles.some(shot => shot.attackerId === "shooter")).toBe(true);
     for (let i = 0; i < 10; i++) stepGame(game);
     expect(game.units.find(unit => unit.id === "target")!.hp).toBe(UNIT_DEFS.knight.hp - Math.round(UNIT_DEFS.barkMender.attackDamage * 0.5));

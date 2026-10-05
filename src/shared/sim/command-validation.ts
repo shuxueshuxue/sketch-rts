@@ -1,4 +1,5 @@
 import { abilityCooldown } from "../ability-cooldowns";
+import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
@@ -21,6 +22,12 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
+  if (command.type === "aim") {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) return commandError("Aim requires a finite point");
+    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(unitRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit");
+  }
   if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") return missingUnitError(snapshot, owner, command.unitIds);
   if (command.type === "board") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
@@ -137,7 +144,7 @@ function commandError(message: string, transient = false): CommandLegalityError 
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
-  if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") {
+  if (command.type === "move" || command.type === "attackMove" || command.type === "aim" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length > 0 ? { ...command, unitIds } : undefined;
   }

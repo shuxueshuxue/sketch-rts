@@ -69,7 +69,7 @@ export const COMBAT_SCENARIO_RECIPES: CombatScenarioRecipe[] = [
   {
     name: "high-star heavy",
     slug: "high-star-heavy",
-    units: ["knight", "golem", "groveWarden", "summoner", "witch", "priest", "raider", "archer", "lancer", "footman"],
+    units: ["knight", "golem", "ashWarden", "summoner", "witch", "priest", "raider", "archer", "lancer", "footman"],
     itemLoadout: [
       ["flameCloak", 0],
       ["guardianScroll", 3],

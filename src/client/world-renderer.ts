@@ -18,7 +18,7 @@ import type { UnitAnimationTracker } from "./unit-animation";
 import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "./story-renderer";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
-import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../shared/catalog";
 import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -174,6 +174,7 @@ export function drawWorld(frame: WorldFrame) {
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
   const actors=[...snapshot.buildings,...snapshot.units].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
   for(const actor of actors)if('order' in actor)drawUnits(painter,[actor]);else drawBuildings(painter,[actor]);
+  if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
   renderWorldEffects({
@@ -345,6 +346,28 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
   }
 }
 
+/** Reticles are an owner-only overlay, including during multiplayer and allied shared vision. */
+function drawAimLines(painter: Painter) {
+  const { ctx } = painter;
+  for (const unit of painter.snapshot.units) {
+    const aim = unit.aim;
+    if (unit.owner !== painter.viewer || !aim || !["attack", "attackMove", "hold", "aim", "cast"].includes(unit.order.type)) continue;
+    const from = worldToScreen(painter, drawnPosition(painter, unit)), to = worldToScreen(painter, aim);
+    if (!nearScreen(painter, from, 80) && !nearScreen(painter, to, 80)) continue;
+    ctx.save();
+    ctx.globalAlpha = painter.selectedIds.has(unit.id) ? .8 : .4;
+    ctx.strokeStyle = aim.tracking ? "#c59b56" : "#72a98b";
+    ctx.lineWidth = 1;
+    ctx.setLineDash(aim.tracking ? [4, 4] : []);
+    ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(to.x, to.y, 4, 0, Math.PI * 2);
+    ctx.moveTo(to.x - 7, to.y); ctx.lineTo(to.x + 7, to.y);
+    ctx.moveTo(to.x, to.y - 7); ctx.lineTo(to.x, to.y + 7); ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Point) {
   ctx.save();
   const x = to.x, y = to.y;
@@ -384,7 +407,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
     }
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
-    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion ? undefined : painter.animation?.frame(unit, now));
+    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now));
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();

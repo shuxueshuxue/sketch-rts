@@ -28,6 +28,17 @@ function field(name: string, spirits: number) {
 }
 
 describe("v6 backline", () => {
+  it("lets a screened healthy caster complete an in-range shot, but repositions when contact is imminent", () => {
+    const { game, snapshot } = field("v7-aim-window", 4);
+    const caster = snapshot.units.find(unit => unit.id === "summoner")!;
+    caster.x = 1_850;
+    for (const guard of snapshot.units.filter(unit => unit.owner === "v6" && unit.kind === "spirit")) guard.x = 1_920;
+    const options = { version: "v2" as const, requestedVersion: "v7" as const, teams: game.teams, memory: createAiPolicyMemory() };
+    expect(planV6CasterScreen(snapshot, "v6", options)).toContainEqual({ type: "attack", unitIds: [caster.id], targetId: expect.any(String) });
+    const foe = snapshot.units.find(unit => unit.owner === "v5")!;
+    foe.kind = "footman"; foe.attackRange = 48; foe.x = caster.x + 55; foe.y = caster.y;
+    expect(planV6CasterScreen(snapshot, "v6", options)).toContainEqual(expect.objectContaining({ type: "move", unitIds: [caster.id] }));
+  });
   it("stands a summoner behind its spirits, on the far side from the enemy and out of the shooters' reach", () => {
     const { game, snapshot } = field("v6-screen-behind", 4);
     const [command] = planV6CasterScreen(snapshot, "v6", { ...V6, teams: game.teams, memory: createAiPolicyMemory() }) as Extract<GameCommand, { type: "move" }>[];
