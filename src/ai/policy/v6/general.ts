@@ -128,9 +128,9 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const memory = v6Memory(options);
   const intel = readV6Intel(snapshot, owner, options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
-  const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? [])]);
-  const front = intel.army.filter((unit) => !busy.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0);
-  const available = intel.army.filter((unit) => !busy.has(unit.id));
+  const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? []), ...(options.memory.support?.unitIds ?? []), ...Object.values(options.memory.naval?.ferries ?? {}).flatMap((ferry) => ferry.crewIds)]);
+  const available = intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
+  const front = available.filter((unit) => !isBacklineKind(unit) && unit.attackDamage > 0);
   const strength = strengthOf(available);
   // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
   // and at home under its towers while the armies closing on it outweigh it (see v9-fall-back).
@@ -145,6 +145,16 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   const current = memory.general;
 
   const defense = isV7Policy(options) ? v7DefendTarget(intel, options) : defendTarget(intel);
+  if (defense && isV7Policy(options) && current?.mode === "attack") {
+    const target = findBase(intel, current.targetHallId);
+    const group = attackGroup(available, front, current.group ?? []);
+    if (target && canTradeBases(intel, group, target)) {
+      if (!current.baseTrade) recordPlay(memory, "general:baseTrade");
+      const commands = attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? marchStrength(group), options, {}, isMain(intel, target));
+      memory.general!.baseTrade = true;
+      return commands;
+    }
+  }
   if (defense) {
     if (isV7Policy(options)) delete memory.creep;
     const edge = current?.mode === "defend" ? defense.stay : defense.edge;
@@ -178,7 +188,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     const facing = center ? enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
     const gaps = center ? enemyGaps(intel, center) : {};
-    const incoming = !center ? 0 : isV8Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
+    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
     const holds = strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + profile.aggression) < (facing + incoming) * RETREAT_LINE;
     if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, gaps, isMain(intel, target)));
@@ -226,12 +236,13 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   // A main is a long walk into two armies' reach: V6 marched four summoners at an enemy main 3165 away at 240s because both
   // armies had left it, met them on the way, and came home to lose its own. An expansion needs no such floor.
   const mainFloor = isV9Policy(options) && intel.ownTowers.length >= V9_FORTRESS_TOWERS ? V9_MAIN_ATTACK_FLOOR : MAIN_ATTACK_FLOOR;
-  const ready = !isMain(intel, target?.base) || marching >= mainFloor;
+  const exposed = target && intel.enemies.find((enemy) => enemy.owner === target.base.owner)!.power < marching * 0.5;
+  const ready = !isMain(intel, target?.base) || marching >= mainFloor || (isV7Policy(options) && exposed && marching >= target!.need);
   // @@@v7-far-attack - Against two opponents a march across the map meets both armies on the way: V7 sent five ravagers at
   // an expansion 1650 away at 5:20 because they had idled at the rally, and lost all five before 7:00. A target far from
   // V7's halls waits for an army worth most of the two opponents' together; one near home is still fair game.
   const farOff = isV7Policy(options) && target !== undefined && ![intel.home, ...intel.ownHalls].some((hall) => distance(hall, target.base.hall) <= V7_HOME_REACH);
-  const opposing = isV8Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
+  const opposing = isV7Policy(options) && target ? respondingPower(intel, target.base, front) : intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
   // @@@v9-stale-front - Two V9s (or two pairs of them) each waiting for an army worth half again the other's never moved:
   // both stood at their rallies with thirty soldiers for half an hour and the game ran out (base-sides-2,
   // pool-turtleLake-1). An army that has held V9_STALE_TICKS goes for a far target too, if it can break the base's own
@@ -262,6 +273,20 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     return order(snapshot, owner, memory, "creep", front, camp, options);
   }
   return order(snapshot, owner, memory, "hold", front, rally, options);
+}
+
+// Calling an army all the way home after its hall will already have fallen throws away both sides of a base trade.
+// Finish a weak enemy base only with another safe own hall, a favorable local fight, and a target already within reach.
+function canTradeBases(intel: V6Intel, group: Unit[], target: V6BaseIntel): boolean {
+  const intrusion = intel.intrusion;
+  if (!intrusion || !group.length || target.hall.hp > target.hall.maxHp * 0.5) return false;
+  const center = averagePoint(group);
+  if (distance(center, target.hall) > 650 || strengthOf(group) < enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH) return false;
+  const fallback = intel.ownHalls.some(hall => hall.id !== intrusion.building.id && enemyPowerNear(intel, hall, 750) === 0);
+  if (!fallback) return false;
+  const dps = intrusion.attackers.reduce((total, unit) => total + unit.attackDamage * 20 / Math.max(1, unit.attackCooldown), 0);
+  const arrival = distance(center, intrusion.building) / Math.max(1, Math.min(...group.map(unit => unit.speed)) * 20);
+  return arrival > intrusion.building.hp / Math.max(1, dps);
 }
 
 // @@@v7-wanted-base - The next expansion's guard is cleared only while the phase wants a base V7 has not started. With its
@@ -333,7 +358,7 @@ function v7DefendTarget(intel: V6Intel, options: AiPolicyContext) {
   const intrusion = intel.intrusion;
   if (!intrusion) return undefined;
   const attackers = averagePoint(intrusion.attackers);
-  const rising = isV9Policy(options) && intrusion.building.kind === "townHall" && !intrusion.building.complete;
+  const rising = intrusion.building.kind === "townHall" && !intrusion.building.complete;
   const halls = rising ? [...intel.ownHalls, intrusion.building] : intel.ownHalls;
   const hall = halls.reduce<Point | undefined>((best, candidate) => (!best || distance(candidate, attackers) < distance(best, attackers) ? candidate : best), undefined) ?? intel.home;
   const towers = intel.ownTowers.filter((tower) => distance(tower, hall) <= tower.attackRange + TOWER_COVER);
@@ -627,7 +652,7 @@ function approachingPower(intel: V6Intel, center: Point, before: Record<string, 
 }
 
 function rememberCenters(memory: V6PolicyMemory, intel: V6Intel, options: AiPolicyContext, commands: GameCommand[]): GameCommand[] {
-  if (isV8Policy(options) && memory.general) memory.general.enemyCenters = Object.fromEntries(intel.enemies.filter((enemy) => enemy.center).map((enemy) => [enemy.owner, { x: enemy.center!.x, y: enemy.center!.y }]));
+  if (isV7Policy(options) && memory.general) memory.general.enemyCenters = Object.fromEntries(intel.enemies.filter((enemy) => enemy.center).map((enemy) => [enemy.owner, { x: enemy.center!.x, y: enemy.center!.y }]));
   return commands;
 }
 

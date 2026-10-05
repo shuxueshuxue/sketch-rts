@@ -304,18 +304,19 @@ describe("v6 general", () => {
     expect(holding.memory.v6?.general?.mode).toBe("defend");
   });
 
-  it("V9 defends its natural while it is still rising, where V7 stands in front of its main", () => {
+  it("defends a natural while it is still rising, including V7 and V8", () => {
     const rally = [0, 1, 2, 3, 4, 5].map((index) => ({ x: 560 + index * 30, y: 800 }));
-    const defended = (requestedVersion: "v7" | "v9") => {
+    const defended = (requestedVersion: "v7" | "v8" | "v9") => {
       const { game, memory } = naturalBoard(`v9-general-rising-${requestedVersion}`, { footmen: rally, attackers: 6, naturalComplete: false });
       memory.v6!.doctrine = { profileId: "steady", strategyId: "grove-cavalry-line", decidedTick: 0 };
       planV6General(snapshotGame(game), "v6", { version: "v2", requestedVersion, teams: game.teams, memory });
       expect(memory.v6?.general?.mode).toBe("defend");
       return memory.v6!.general!.target!;
     };
-    expect(Math.hypot(defended("v7").x - 500, defended("v7").y - 500)).toBeLessThanOrEqual(200 + 1);
-    const natural = defended("v9");
-    expect(Math.hypot(natural.x - NATURAL.x, natural.y - NATURAL.y)).toBeCloseTo(200, 0);
+    for (const version of ["v7", "v8", "v9"] as const) {
+      const natural = defended(version);
+      expect(Math.hypot(natural.x - NATURAL.x, natural.y - NATURAL.y)).toBeCloseTo(200, 0);
+    }
   });
 
   it("V7 steps its badly wounded back to the hall behind the line while the rest hold it", () => {
