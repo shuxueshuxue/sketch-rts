@@ -24,6 +24,8 @@ export class CampaignRelay {
    if(Date.now()-last>1000){count=0;last=Date.now();}if(++count>60)return;
    let data;try{data=JSON.parse(raw.toString());}catch{return;}
    if(!data||typeof data!=='object')return;
+   if(data.type==='ping'){send(ws,JSON.stringify({type:'pong'}));return;}
+   if(ws===r.host&&data.type==='notice'&&typeof data.message==='string')for(const s of r.members.keys())if(s!==ws)send(s,JSON.stringify({type:'notice',message:data.message.slice(0,500)}));
    if(ws===r.host&&data.type==='start'&&!r.started){r.started=true;lobby();for(const s of r.members.keys())send(s,JSON.stringify({type:'start'}));}
    if(ws===r.host&&data.type==='frame'&&r.started&&data.snapshot&&data.state){r.frame=data;for(const s of r.members.keys())if(s!==ws)send(s,raw.toString());}
    if(ws===r.host&&data.type==='frameDelta'&&r.started&&r.frame&&Array.isArray(data.units)&&Array.isArray(data.removed)&&Array.isArray(data.positions)){try{r.frame=applyCampaignDelta(r.frame,data);}catch{ws.close(1008,'Invalid campaign update');return;}for(const s of r.members.keys())if(s!==ws){if(s.bufferedAmount<256_000)send(s,raw.toString());else {s.close(1013,'Connection too slow; rejoin to synchronize');}}}
@@ -35,7 +37,7 @@ export class CampaignRelay {
   ws.on('error',()=>{});
   ws.on('close',()=>{
    r.members.delete(ws);
-   if(ws===r.host){this.rooms.delete(roomId);for(const s of r.members.keys()){send(s,JSON.stringify({type:'ended',message:'房主已离开，远征已暂停。请由房主读取存档重新开房。'}));s.close();}}
+   if(ws===r.host){this.rooms.delete(roomId);for(const s of r.members.keys()){send(s,JSON.stringify({type:'ended',message:'房主已离开，本次协作远征已结束。房主可从检查点继续单人远征，或新建协作房间。'}));s.close();}}
    else if(this.rooms.has(roomId))lobby();
   });
  }

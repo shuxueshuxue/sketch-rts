@@ -4,6 +4,13 @@ import type {WebSocket} from 'ws';
 import {CampaignRelay} from './campaign-relay';
 class Socket extends EventEmitter{readyState=1;bufferedAmount=0;messages:any[]=[];send(s:string){this.messages.push(JSON.parse(s));}close(){this.readyState=3;this.emit('close');}input(v:unknown){this.emit('message',Buffer.from(JSON.stringify(v)));}asWs(){return this as unknown as WebSocket;}}
 describe('cooperative campaign rooms',()=>{
+ it('keeps paused rooms alive and relays mission orders and host feedback',()=>{
+  const relay=new CampaignRelay(),host=new Socket(),guest=new Socket();relay.connect(host.asWs(),'mission-room',true,'Host');relay.connect(guest.asWs(),'mission-room',false,'Guest');host.input({type:'start'});
+  guest.input({type:'ping'});expect(guest.messages.at(-1).type).toBe('pong');
+  guest.input({type:'action',action:{type:'mission',id:'landSouth'}});expect(host.messages.at(-1).action).toEqual({type:'mission',id:'landSouth'});
+  host.input({type:'notice',message:'黄金不足'});expect(guest.messages.at(-1).message).toBe('黄金不足');
+  const count=host.messages.length;guest.input({type:'action',action:{type:'mission',id:'teleport'}});expect(host.messages).toHaveLength(count);
+ });
  it('shares lobby, start, frames and commands with a single authoritative host',()=>{
   const relay=new CampaignRelay(),host=new Socket(),guest=new Socket();relay.connect(host.asWs(),'test-room',true,'Host');relay.connect(guest.asWs(),'test-room',false,'Guest');
   expect(guest.messages.at(-1).members).toHaveLength(2);guest.input({type:'start'});expect(host.messages.at(-1).type).toBe('lobby');
