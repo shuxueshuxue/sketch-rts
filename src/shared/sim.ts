@@ -1,4 +1,6 @@
 import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
+import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
+export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
 import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
@@ -115,8 +117,6 @@ const REPAIR_FULL_COST_FRACTION = 0.35;
 const REPAIR_HP_PER_TICK = UNIT_DEFS.footman.attackDamage / UNIT_DEFS.footman.attackCooldown;
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 export const AUTO_ACQUIRE_RANGE = 230;
-// A weapon reaching farther than this throws a missile; within it, it strikes in melee.
-export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
 // A shot flies at one speed, so a shot across an archer's full reach (399) takes the 22 ticks every shot used to take
 // and one at point blank lands at once; with a fixed flight time a shot from close in crept to its target.
 const PROJECTILE_SPEED = 18;
@@ -364,6 +364,14 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "aim") {
+    if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) throw new Error("Aim requires a finite point");
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      if (aimingProfile(unitRules(game, unit))) assignUnitOrder(unit, { type: "aim", x: clamp(command.x, 0, game.map.width), y: clamp(command.y, 0, game.map.height) }, command.queued);
+    }
+    return;
+  }
+
   // @@@hold-position - A unit told to hold its ground stays where it stands: it strikes whatever comes within its own reach
   // and nothing further, does not turn on an attacker out of reach, and does not dash. An idle or attack-moving unit
   // chases whoever shoots it (see player-aggro), which lets a shooter draw a whole army out after it.
@@ -570,6 +578,7 @@ export function stepGame(game: Game) {
   slideUnits(game);
   separateUnits(game);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
+  for (const unit of game.units) invalidateMovedAim(unit, unitRules(game, unit));
   removeExpiredUnits(game);
   removeDead(game);
   syncBuildingBodies(game);
@@ -610,6 +619,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
     units: game.units.map((unit) => ({
       ...unit,
+      ...(unit.aim ? { aim: { ...unit.aim } } : {}),
       ...(unit.abilityCooldowns ? { abilityCooldowns: { ...unit.abilityCooldowns } } : {}),
       ...(unit.autocast ? { autocast: { ...unit.autocast } } : {}),
       order: { ...unit.order },
@@ -844,6 +854,7 @@ type Ferry = { boarding: Unit[]; unloading: Unit[] };
 function updateUnits(game: Game): Ferry | undefined {
   let ferry: Ferry | undefined;
   for (const unit of game.units) {
+    invalidateMovedAim(unit, unitRules(game, unit));
     unit.cooldown = Math.max(0, unit.cooldown - 1);
     if (unit.abilityCooldowns) {
       const left = tickedAbilityCooldowns(unit.abilityCooldowns);
@@ -873,6 +884,12 @@ function updateUnits(game: Game): Ferry | undefined {
     }
     if (unit.order.type === "hold") {
       updateHoldOrder(game, unit);
+      continue;
+    }
+    if (unit.order.type === "aim") {
+      const target = nearestEnemyTarget(game, unit, unit.attackRange);
+      if (target) updateHoldOrder(game, unit);
+      else aimAt(unit, unitRules(game, unit), unit.order, game.tick);
       continue;
     }
     if (unit.order.type === "follow") {
@@ -991,7 +1008,9 @@ function updateHoldOrder(game: Game, unit: Unit) {
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
+  if (!aimAt(unit, unitRules(game, unit), target, game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
+  markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
 }
 
@@ -1000,7 +1019,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.targetId) {
     const target = findTarget(game, order.targetId);
-    if (target && target.hp > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target)) {
+    if (target && target.hp > 0 && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target)) {
       attackMoveTowardTarget(game, unit, target);
       return;
     }
@@ -1025,7 +1044,9 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
     return;
   }
   if (unit.cooldown > 0) return;
+  if (!aimAt(unit, unitRules(game, unit), target, game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
+  markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
 }
 
@@ -1059,7 +1080,9 @@ function updateAttackOrder(game: Game, unit: Unit) {
     return;
   }
   if (unit.cooldown > 0) return;
+  if (!aimAt(unit, unitRules(game, unit), target, game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(unit))), unit.attackRange);
+  markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
 }
 
@@ -1146,6 +1169,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
       unit.order = { type: "idle" };
       unit.orderQueue = [];
       if (cargoSupply(game, transport) + unitRules(game, unit).supplyUsed > carries(transport)) continue;
+      unit.aim = undefined;
       transport.cargo = [...(transport.cargo ?? []), unit];
       aboard.add(unit);
     }
@@ -1550,7 +1574,7 @@ function castAbility(
     const point = target ?? (isNumber(x) && isNumber(y) ? { x, y } : undefined);
     if (!point) throw new Error("Weapon skill requires a target point");
     if (def.weapon.minRange && distance(caster, point) < def.weapon.minRange) throw new Error("Target inside weapon minimum range");
-    if (queued || distance(caster, point) > def.range + (target && !isUnit(target) ? target.radius : 0)) later({type:"cast",ability,...(target ? {targetId:target.id} : {x:point.x,y:point.y})},point);
+    if (queued || aimingProfile(unitRules(game, caster)) || distance(caster, point) > def.range + (target && !isUnit(target) ? target.radius : 0)) later({type:"cast",ability,...(target ? {targetId:target.id} : {x:point.x,y:point.y})},point);
     else applyWeaponAbility(game,caster,ability,point,def,target?.id);
     return;
   }
@@ -1606,7 +1630,11 @@ function updateCastOrder(game: Game, unit: Unit) {
     return;
   }
   if (abilityCooldown(unit, order.ability) > 0) return end();
-  if (def.behavior === "weapon") applyWeaponAbility(game,unit,order.ability,at,def,target?.id);
+  if (def.behavior === "weapon") {
+    if (!aimAt(unit, unitRules(game, unit), at, game.tick)) return;
+    applyWeaponAbility(game,unit,order.ability,at,def,target?.id);
+    markAimShot(unit);
+  }
   else if (def.behavior === "heal" && target && isUnit(target)) applyHeal(game, unit, order.ability, target, def);
   else if (def.behavior === "curse" && target && isUnit(target)) applyCurse(game, unit, order.ability, target, def);
   else if (def.behavior === "summon") applySummon(game, unit, order.ability, at.x, at.y, def);
@@ -1721,7 +1749,7 @@ function endCharge(unit: Unit, resume: SettledUnitOrder) {
 //   the nearest alone, a line of twelve riders all charged the same ravager, the last four landed on a corpse, and the
 //   wing, bunched on one spot, was cut down.
 const AUTOCAST_EVERY_TICKS = 2;
-const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove", "hold"]);
+const AUTOCAST_ORDERS = new Set<UnitOrder["type"]>(["idle", "attack", "attackMove", "hold", "aim"]);
 const SUMMON_ALERT_MARGIN = 100;
 const SUMMON_COMPANY_RANGE = 320;
 const SUMMON_STEP = 60;

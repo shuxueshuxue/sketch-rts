@@ -22,7 +22,7 @@ describe("native engineering weapons", () => {
         const game = battle([{ id: "gun", owner: "p1", kind: "catapult", x: 1000, y: 1000 }, { id: "a", owner: "p2", kind: "cinderRunner", x: 1500, y: 1000 }, { id: "b", owner: "p2", kind: "footman", x: 1560, y: 1020 }, { id: "ally", owner: "p1", kind: "footman", x: 1600, y: 1070 }]);
         issuePlayerCommand(game, "p1", { type: "cast", unitId: "gun", ability: "siegeBarrage", x: 1500, y: 1000 });
         issuePlayerCommand(game, "p2", { type: "move", unitIds: ["a"], x: 1500, y: 1500 });
-        run(game, 50);
+        run(game, 80);
         expect(get(game, "a").hp).toBe(UNIT_DEFS.cinderRunner.hp);
         expect(get(game, "b").hp).toBeLessThan(UNIT_DEFS.footman.hp);
         expect(get(game, "ally").hp).toBe(UNIT_DEFS.footman.hp);
@@ -33,7 +33,7 @@ describe("native engineering weapons", () => {
         const command = { type: "cast" as const, unitId: "gun", ability: "pinningBolt" as const, targetId: "f2" };
         expect(commandValidationError(snapshotGame(game), "p1", command)).toBeUndefined();
         issuePlayerCommand(game, "p1", command);
-        run(game, 20);
+        run(game, 40);
         expect(get(game, "f0").hp).toBeLessThan(get(game, "f1").hp);
         expect(get(game, "f1").hp).toBeLessThan(get(game, "f2").hp);
         expect(get(game, "f0").effects.some(effect => effect.type === "root")).toBe(true);
@@ -50,6 +50,7 @@ describe("native engineering weapons", () => {
     it("uses a directional fan for grapeshot, with no damage behind the gun", () => {
         const game = battle([{ id: "gun", owner: "p1", kind: "organGun", x: 1000, y: 1000 }, { id: "front", owner: "p2", kind: "footman", x: 1250, y: 1030 }, { id: "back", owner: "p2", kind: "footman", x: 750, y: 1000 }]);
         issuePlayerCommand(game, "p1", { type: "cast", unitId: "gun", ability: "grapeshot", x: 1300, y: 1000 });
+        run(game, 13);
         expect(get(game, "front").hp).toBeLessThan(UNIT_DEFS.footman.hp);
         expect(get(game, "back").hp).toBe(UNIT_DEFS.footman.hp);
         expect(game.effects.some(effect => effect.type === "grapeshot")).toBe(true);
@@ -57,7 +58,8 @@ describe("native engineering weapons", () => {
     it("keeps shell flight, burn damage and source attribution deterministic after saving and the shooter's death", () => {
         const game = battle([{ id: "gun", owner: "p1", kind: "fireShip", x: 1030, y: 1000 }, { id: "foe", owner: "p2", kind: "footman", x: 1250, y: 1000 }]);
         issuePlayerCommand(game, "p1", { type: "cast", unitId: "gun", ability: "incendiaryFlume", x: 1250, y: 1000 });
-        run(game, 5);
+        run(game, 10);
+        expect(game.projectiles).toHaveLength(1);
         removeUnit(game, "gun");
         const restored = createGame("bareDuel");
         restoreSnapshotIntoGame(restored, snapshotGame(game), game.nextId);

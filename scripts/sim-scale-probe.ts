@@ -20,7 +20,7 @@ import { fixedSetGames } from "./sim-perf-games";
 type Bucket = { steps: number; units: number; stepMs: number; planMs: Record<string, number>; plans: Record<string, number> };
 
 const LINE_UNITS: Record<string, UnitKind[]> = {
-  grove: ["footman", "archer", "lancer", "groveWarden", "knight", "priest"],
+  grove: ["footman", "archer", "lancer", "ashWarden", "knight", "priest"],
   ember: ["emberRavager", "cinderRunner", "sparkArcher", "ashChieftain", "cinderRevenant", "emberAcolyte"],
 };
 

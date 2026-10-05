@@ -8,6 +8,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   const command = value as Record<string, unknown>;
   if (command.type === "move") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attackMove") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
+  if (command.type === "aim") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attack" || command.type === "follow") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "stop" || command.type === "holdPosition") return isStringArray(command.unitIds);
   if (command.type === "mine") return isStringArray(command.unitIds) && typeof command.resourceId === "string";

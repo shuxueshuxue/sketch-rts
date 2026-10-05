@@ -1,4 +1,6 @@
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { aimingProfile } from "../../shared/aiming";
+import { UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
@@ -192,7 +194,7 @@ function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: 
 }
 
 // @@@v5-stutter-step - A shooter reloading next to a melee attacker is taking free swings. While its weapon is on cooldown it
-// steps away exactly as far as it can walk before the next shot is ready, then fires again: no damage lost, fewer hits taken.
+// weighs the next shot against melee contact. Mounted shooters can spend a larger movement budget without losing aim.
 const STUTTER_MIN_STEP = 30;
 const STUTTER_MAX_STEP = 160;
 const STUTTER_THREAT_MARGIN = 60;
@@ -204,7 +206,17 @@ function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Uni
     .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN)
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!threat) return undefined;
-  const step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown);
+  const profile = aimingProfile(UNIT_DEFS[unit.kind]);
+  if (unit.aim && unit.kind !== "horseArcher" && profile) {
+    const contactTicks = Math.max(0, distance(threat, unit) - threat.attackRange - unit.radius - threat.radius) / Math.max(.1, threat.speed);
+    const shotTicks = unit.cooldown + Math.hypot(threat.x - unit.aim.x, threat.y - unit.aim.y) / profile.speed;
+    if (unit.hp >= unit.maxHp * .6 && contactTicks > shotTicks + 2) return undefined;
+  }
+  let step = Math.min(STUTTER_MAX_STEP, unit.speed * unit.cooldown);
+  if (unit.kind === "horseArcher" && unit.aim && profile) {
+    const budget = Math.max(0, profile.moveTolerance - Math.hypot(unit.x - unit.aim.anchorX, unit.y - unit.aim.anchorY));
+    step = Math.min(step, budget / 1.3);
+  }
   if (step < STUTTER_MIN_STEP) return undefined;
   const dx = unit.x - threat.x;
   const dy = unit.y - threat.y;
