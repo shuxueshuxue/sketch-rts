@@ -10,7 +10,7 @@ const c=b as unknown as CanvasRenderingContext2D;
 b.fillStyle='#b9b49e';b.fillRect(0,0,1440,980);
 b.fillStyle='#303a35';b.font='bold 28px sans-serif';b.fillText('PAINTED FRONTIER / ACTUAL CANVAS ART',32,43);
 b.font='15px sans-serif';b.fillText('Hand-authored figures + projected building geometry. Enlarged studies above; native scale below.',32,72);
-const units:UnitKind[]=['worker','footman','archer','lancer','groveWarden','knight','priest','witch','emberRavager','sparkArcher','ashChieftain','pyreCaller'];
+const units:UnitKind[]=['worker','footman','archer','lancer','ashWarden','knight','priest','witch','emberRavager','sparkArcher','ashChieftain','pyreCaller'];
 units.forEach((kind,i)=>{
  const x=30+(i%6)*232,y=100+Math.floor(i/6)*245;
  b.fillStyle='#c8c2af';b.fillRect(x,y,218,230);
