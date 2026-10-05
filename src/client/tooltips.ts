@@ -1,8 +1,11 @@
-import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../shared/catalog";
+import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "../shared/unit-value";
+import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "../shared/item-rules";
+import { BOOTS_SPEED, RING_REGEN_PER_SECOND, HEALING_SCROLL_RADIUS, HEALING_SCROLL_HEAL, IVORY_TOWER_REACH, SHOP_GOODS } from "../shared/shop";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
 import { aimingProfile } from "../shared/aiming";
 import { unitRegenPerSecond } from "../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
+import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, RaceId, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
 import type { AutocastSwitch } from "./command-button-state";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
@@ -33,6 +36,9 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "supply", stats.supplyUsed),
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
+      tooltipLine(i18n.locale, "speed", stats.speed),
+      tooltipLine(i18n.locale, "cooldown", formatSeconds(stats.attackCooldown)),
+      ...unitRuleLines(stats, i18n.locale),
       tooltipLine(i18n.locale, "range", stats.weapon?.minRange ? `${stats.weapon.minRange}-${stats.attackRange}` : stats.attackRange),
       ...(aimingProfile(stats) ? [
         i18n.locale === "zh" ? `准心速度：${Math.round(aimingProfile(stats)!.speed)} / 秒` : `Reticle speed: ${Math.round(aimingProfile(stats)!.speed)} / second`,
@@ -43,6 +49,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
     ],
     requirements: [...(stats.tier ? [tierRequirement(stats.tier, requiredSupplyCap(kind), i18n)] : []), ...(stats.abilities.length > 0 ? [abilityListRequirement(stats.abilities, i18n)] : [])],
+    ...(aimingProfile(stats) ? { notes: [localized(i18n.locale, "先瞄准再射击；超过上次瞄准或射击站位的位移容错后重置准心，换目标可沿用准心位置。", "Aim before firing. Moving beyond the tolerance from the last aim or shot resets the reticle; switching targets can reuse its position.")] } : {}),
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -55,9 +62,11 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
   const totalMaxHp = units.reduce((sum, unit) => sum + unit.maxHp, 0);
   const regenValues = units.map((unit) => unitRegenPerSecond(snapshot, unit)).filter((regen) => regen > 0);
   const maxRegen = Math.max(0, ...regenValues);
+  const rules = unitRules(snapshot, representative);
+  const earnsStars = representative.owner !== "neutral" && !(representative.variant && snapshot.variants?.[representative.variant]?.heroic);
   return {
     title,
-    body: "",
+    body: unitDescription(kind, i18n),
     stats: [
       tooltipLine(i18n.locale, "currentHp", `${formatStatNumber(totalHp)}/${formatStatNumber(totalMaxHp)}`),
       tooltipLine(i18n.locale, "attack", statRange(units.map((unit) => unit.attackDamage))),
@@ -65,6 +74,10 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
       ...cargoLines(kind, units, i18n.locale),
+      ...unitRuleLines(rules, i18n.locale, representative.level, earnsStars),
+      ...(units.length === 1 && earnsStars ? [
+        i18n.locale === "zh" ? `星级 ${representative.level}；经验 ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}` : `Stars ${representative.level}; XP ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}`,
+      ] : []),
     ],
     requirements: [],
   };
@@ -87,7 +100,10 @@ export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n
 function abilityStats(ability: AbilityKind, locale: Locale) {
   const def = ABILITY_DEFS[ability];
   const cooldown = tooltipLine(locale, "cooldown", formatSeconds(def.cooldown));
-  if (def.behavior === "weapon") return [tooltipLine(locale,"attack",def.damage),tooltipLine(locale,"range",`${def.weapon.minRange??0}-${def.range}`),cooldown];
+  if (def.behavior === "weapon") return [tooltipLine(locale,"attack",def.damage),tooltipLine(locale,"range",`${def.weapon.minRange??0}-${def.range}`),cooldown,
+    ...(def.rootTicks ? [localized(locale, `定身 ${formatSeconds(def.rootTicks)}`, `Root ${formatSeconds(def.rootTicks)}`)] : []),
+    ...(def.burnTicks ? [tooltipLine(locale, "duration", formatSeconds(def.burnTicks))] : []),
+  ];
   if (def.behavior === "heal") return [tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
   if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
   if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
@@ -109,7 +125,7 @@ function fillAbilityNumbers(line: string, ability: AbilityKind) {
 
 export function itemTooltip(kind: ItemKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
   const tooltip = ITEM_TOOLTIPS[i18n.locale][kind];
-  return { ...tooltip, hotkey: formatHotkey(hotkey) };
+  return { ...tooltip, stats: itemStats(kind, i18n.locale), hotkey: formatHotkey(hotkey) };
 }
 
 export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel = 0, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
@@ -146,10 +162,10 @@ export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel 
   };
 }
 
-export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
+export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, race?: RaceId): GameplayTooltip {
   const def = BUILDING_DEFS[kind];
   const production = [
-    ...def.trains.map((unitKind) => labelKind(unitKind, i18n)),
+    ...def.trains.filter(unitKind => !race || !UNIT_DEFS[unitKind].race || UNIT_DEFS[unitKind].race === race).map((unitKind) => labelKind(unitKind, i18n)),
     ...def.researches.map((upgradeKind) => labelKind(upgradeKind, i18n)),
   ];
   return {
@@ -159,6 +175,9 @@ export function buildingTooltip(kind: BuildingKind, hotkey?: string, i18n: I18n 
       tooltipLine(i18n.locale, "cost", def.cost),
       tooltipLine(i18n.locale, "build", formatSeconds(def.buildTime)),
       tooltipLine(i18n.locale, "hp", def.hp),
+      ...(isHealingBuildingKind(kind) ? [tooltipLine(i18n.locale, "restoresHp", SUPPORT_BUILDING_HEAL), tooltipLine(i18n.locale, "range", def.attackRange), tooltipLine(i18n.locale, "cooldown", formatSeconds(def.attackCooldown))] : []),
+      ...(kind === "shipyard" ? [localized(i18n.locale, `维修：每秒 ${DOCK_REPAIR.goldPerSecond} 金恢复 ${DOCK_REPAIR.hpPerSecond} 生命，范围 ${DOCK_REPAIR.range}`, `Repair: ${DOCK_REPAIR.goldPerSecond} gold for ${DOCK_REPAIR.hpPerSecond} HP/s, range ${DOCK_REPAIR.range}`)] : []),
+      ...(def.neutralDamageMultiplier !== undefined ? [localized(i18n.locale, `对野怪伤害：${Math.round(def.neutralDamageMultiplier * 100)}%（再计算护甲）`, `Damage to neutral creatures: ${Math.round(def.neutralDamageMultiplier * 100)}% (before armor)`)] : []),
       ...(def.supplyProvided > 0 ? [tooltipLine(i18n.locale, "supplyBonus", def.supplyProvided)] : []),
       ...(def.attackDamage > 0 ? [tooltipLine(i18n.locale, "attack", def.attackDamage), tooltipLine(i18n.locale, "range", def.attackRange)] : []),
     ],
@@ -369,61 +388,61 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     lightningRod: {
       title: "Lightning Rod",
       body: "Strikes an enemy unit, then jumps to nearby enemies with reduced damage.",
-      stats: ["84 initial damage", "3 jumps", "Range 280", "Bounce range 170", "Cooldown 18.0s"],
+      stats: [],
       requirements: ["Needs a visible enemy unit in range."],
     },
     stormStaff: {
       title: "Storm Staff",
       body: "Calls a storm at a target point, damaging enemies on impact and over time.",
-      stats: ["24 impact damage", "6 damage per tick", "Radius 145", "Range 320", "Cooldown 27.0s"],
+      stats: [],
       requirements: ["Target a visible enemy or nearby point."],
     },
     flameCloak: {
       title: "Flame Cloak",
       body: "Passive aura that burns nearby enemies while carried.",
-      stats: ["12 aura damage", "Radius 90", "Cooldown 2.0s"],
+      stats: [],
       requirements: ["Passive item. No manual use."],
     },
     guardianScroll: {
       title: "Guardian Scroll",
       body: "Protects nearby allied units from incoming attack damage for a short time.",
-      stats: ["Radius 280", "Duration 7.0s", "Cooldown 45.0s"],
+      stats: [],
       requirements: ["Carrier must not be neutral."],
     },
     experienceBook: {
       title: "Experience Book",
       body: "Consumed by the carrier to gain veteran experience immediately.",
-      stats: ["Grants 160 XP", "Consumed on use"],
+      stats: [],
       requirements: ["Carrier must not be neutral."],
     },
     breachCharge: {
       title: "Breach Charge",
       body: "Consumed to blast an enemy building at close range.",
-      stats: ["260 building damage", "Range 280", "Consumed on use"],
+      stats: [],
       requirements: ["Needs an enemy building in range.", "Carrier must not be neutral."],
     },
     speedBoots: {
       title: "Boots of Speed",
-      body: "Its carrier moves a fifth faster. A second pair adds nothing.",
-      stats: ["+20% move speed", "Sold at shops"],
+      body: "Its carrier moves faster. A second pair adds nothing.",
+      stats: [],
       requirements: ["Passive item. No manual use."],
     },
     regenRing: {
       title: "Ring of Regeneration",
       body: "Its carrier heals over time. A second ring adds nothing.",
-      stats: ["+2 HP per second", "Sold at shops"],
+      stats: [],
       requirements: ["Passive item. No manual use."],
     },
     healingScroll: {
       title: "Scroll of Healing",
       body: "Consumed to heal every allied unit near the reader at once.",
-      stats: ["Heals 75", "Radius 300", "Consumed on use"],
+      stats: [],
       requirements: ["Carrier must not be neutral."],
     },
     ivoryTower: {
       title: "Ivory Tower",
-      body: "Consumed to raise a finished defense tower at half health near its carrier.",
-      stats: ["Range 200", "Consumed on use"],
+      body: "Consumed to raise a finished defense tower with partial health near its carrier.",
+      stats: [],
       requirements: ["Target open ground near the carrier."],
     },
   },
@@ -431,61 +450,61 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     lightningRod: {
       title: "闪电权杖",
       body: "打击一个敌方单位，然后以较低伤害跳向附近敌人。",
-      stats: ["初始伤害 84", "跳跃 3 次", "射程 280", "弹跳范围 170", "冷却 18.0s"],
+      stats: [],
       requirements: ["需要射程内可见的敌方单位。"],
     },
     stormStaff: {
       title: "风暴法杖",
       body: "在目标点召唤风暴，对敌人造成落点伤害和持续伤害。",
-      stats: ["落点伤害 24", "每 tick 伤害 6", "半径 145", "射程 320", "冷却 27.0s"],
+      stats: [],
       requirements: ["目标必须是可见敌人或附近点位。"],
     },
     flameCloak: {
       title: "烈焰斗篷",
       body: "携带时产生被动光环，灼烧附近敌人。",
-      stats: ["光环伤害 12", "半径 90", "冷却 2.0s"],
+      stats: [],
       requirements: ["被动物品，无法手动使用。"],
     },
     guardianScroll: {
       title: "守护卷轴",
-      body: "短时间保护附近友方单位，降低受到的攻击伤害。",
-      stats: ["半径 280", "持续 7.0s", "冷却 45.0s"],
+      body: "短时间保护附近友方单位，免疫受到的伤害。",
+      stats: [],
       requirements: ["携带者不能是中立单位。"],
     },
     experienceBook: {
       title: "经验书",
       body: "由携带者消耗，立即获得老兵经验。",
-      stats: ["获得 160 经验", "使用后消耗"],
+      stats: [],
       requirements: ["携带者不能是中立单位。"],
     },
     breachCharge: {
       title: "破城炸药",
       body: "消耗后近距离爆破一个敌方建筑。",
-      stats: ["建筑伤害 260", "射程 280", "使用后消耗"],
+      stats: [],
       requirements: ["需要射程内敌方建筑。", "携带者不能是中立单位。"],
     },
     speedBoots: {
       title: "速度之靴",
-      body: "携带者移速提高五分之一。带两双不叠加。",
-      stats: ["移速 +20%", "商店出售"],
+      body: "携带者移速提高。带两双不叠加。",
+      stats: [],
       requirements: ["被动物品，无法手动使用。"],
     },
     regenRing: {
       title: "回复戒指",
       body: "携带者持续回血。带两枚不叠加。",
-      stats: ["每秒回 2 血", "商店出售"],
+      stats: [],
       requirements: ["被动物品，无法手动使用。"],
     },
     healingScroll: {
       title: "治疗卷轴",
       body: "消耗后，使用者身边所有友军立即回血。",
-      stats: ["回复 75", "半径 300", "使用后消耗"],
+      stats: [],
       requirements: ["携带者不能是中立单位。"],
     },
     ivoryTower: {
       title: "象牙塔",
-      body: "消耗后，在携带者身边立起一座半血的防御塔，立即可用。",
-      stats: ["距离 200 以内", "使用后消耗"],
+      body: "消耗后，在携带者身边立起一座防御塔（初始生命见数值），立即可用。",
+      stats: [],
       requirements: ["目标必须是携带者附近的空地。"],
     },
   },
@@ -509,3 +528,48 @@ const UPGRADE_DESCRIPTIONS: Record<Locale, Record<UpgradeKind, string>> = {
     leadership: "让己方有星级单位按星级持续回复生命。",
   },
 };
+
+function localized(locale: Locale, zh: string, en: string) { return locale === "zh" ? zh : en; }
+
+function unitDescription(kind: UnitKind, i18n: I18n) {
+  if (kind in TRAINED_UNIT_CARDS) return TRAINED_UNIT_CARDS[kind as TrainableUnitKind].description[i18n.locale];
+  return localized(i18n.locale, UNIT_DEFS[kind].creepFoodPower ? "中立营地守卫；受攻击会呼叫附近同伴，追击受营地范围限制。" : "雇佣兵提供即时支援；临时召唤物会在持续时间结束后消失。", UNIT_DEFS[kind].creepFoodPower ? "Neutral camp guardian. Calls nearby allies when attacked and remains within its camp leash." : "Hired troops provide immediate support; temporary summons expire after their duration.");
+}
+
+function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, earnsStars = true) {
+  const lines: string[] = [];
+  if (def.armor === "heavy") lines.push(localized(locale, `重甲：远程伤害 ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%，防御塔伤害 ${HEAVY_ARMOR_DAMAGE.tower * 100}%`, `Heavy armor: ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% ranged damage, ${HEAVY_ARMOR_DAMAGE.tower * 100}% tower damage`));
+  if (def.casterSlayer) lines.push(localized(locale, `对法师／召唤物伤害 ×${def.casterSlayer}`, `Caster/summon damage ×${def.casterSlayer}`));
+  if (def.regenPerSecond) lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
+  if (def.slowOnHit) lines.push(localized(locale, `命中减速至 ${SLOW_PACE * 100}%，持续 ${formatSeconds(SLOW_TICKS)}`, `Hit slows to ${SLOW_PACE * 100}% for ${formatSeconds(SLOW_TICKS)}`));
+  if (def.poisonOnHit) lines.push(localized(locale, `中毒 ${POISON_DAMAGE} 伤害/秒，持续 ${formatSeconds(POISON_TICKS)}`, `Poison ${POISON_DAMAGE} damage/s for ${formatSeconds(POISON_TICKS)}`));
+  if (def.splash) lines.push(localized(locale, `溅射 ${SPLASH_SHARE * 100}% 伤害，半径 ${SPLASH_RADIUS}`, `Splash ${SPLASH_SHARE * 100}% damage, radius ${SPLASH_RADIUS}`));
+  if (def.weapon?.maxHits) lines.push(localized(locale, `穿透最多 ${def.weapon.maxHits} 个目标`, `Pierces up to ${def.weapon.maxHits} targets`));
+  if (def.weapon?.burst) lines.push(localized(locale, `每轮 ${def.weapon.burst} 发`, `${def.weapon.burst} shots per volley`));
+  if (def.goldBounty) lines.push(localized(locale, `击败奖励 ${def.goldBounty} 金`, `Defeat bounty ${def.goldBounty} gold`));
+  if (def.xpReward > 0) lines.push(localized(locale, `击杀经验 ${killXpReward(def, level)}`, `Kill reward ${killXpReward(def, level)} XP`));
+  if (earnsStars && def.cost > 0) lines.push(localized(locale, `1/2/3 星累计经验 ${xpStarThresholds(def).join(" / ")}；每星攻击和生命 +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}%`, `1/2/3-star XP ${xpStarThresholds(def).join(" / ")}; each star +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}% attack and HP`));
+  return lines;
+}
+
+function itemStats(kind: ItemKind, locale: Locale) {
+  const range = (n: number) => tooltipLine(locale, "range", n);
+  const radius = (n: number) => localized(locale, `半径 ${n}`, `Radius ${n}`);
+  const consumed = localized(locale, "使用后消耗", "Consumed on use");
+  let stats: string[];
+  switch (kind) {
+    case "lightningRod": stats = [localized(locale, `初始伤害 ${LIGHTNING_ROD.damage}`, `${LIGHTNING_ROD.damage} initial damage`), localized(locale, `最多命中 ${LIGHTNING_ROD.hits} 个目标`, `Up to ${LIGHTNING_ROD.hits} targets`), range(LIGHTNING_ROD.range), localized(locale, `弹跳范围 ${LIGHTNING_ROD.bounceRange}`, `Bounce range ${LIGHTNING_ROD.bounceRange}`), tooltipLine(locale, "cooldown", formatSeconds(LIGHTNING_ROD.cooldown))]; break;
+    case "stormStaff": stats = [localized(locale, `落点伤害 ${STORM_STAFF.impactDamage}`, `${STORM_STAFF.impactDamage} impact damage`), localized(locale, `每 ${formatSeconds(STORM_STAFF.pulseEvery)} 造成 ${STORM_STAFF.pulseDamage} 伤害`, `${STORM_STAFF.pulseDamage} damage every ${formatSeconds(STORM_STAFF.pulseEvery)}`), radius(STORM_STAFF.radius), range(STORM_STAFF.range), tooltipLine(locale, "duration", formatSeconds(STORM_STAFF.duration)), tooltipLine(locale, "cooldown", formatSeconds(STORM_STAFF.cooldown))]; break;
+    case "flameCloak": stats = [localized(locale, `每 ${formatSeconds(FLAME_CLOAK.interval)} 造成 ${FLAME_CLOAK.damage} 伤害`, `${FLAME_CLOAK.damage} damage every ${formatSeconds(FLAME_CLOAK.interval)}`), radius(FLAME_CLOAK.radius)]; break;
+    case "guardianScroll": stats = [radius(GUARDIAN_SCROLL.radius), tooltipLine(locale, "duration", formatSeconds(GUARDIAN_SCROLL.duration)), consumed]; break;
+    case "experienceBook": stats = [localized(locale, `获得 ${EXPERIENCE_BOOK_XP} 经验`, `Grants ${EXPERIENCE_BOOK_XP} XP`), consumed]; break;
+    case "breachCharge": stats = [localized(locale, `建筑伤害 ${BREACH_CHARGE.damage}`, `${BREACH_CHARGE.damage} building damage`), range(BREACH_CHARGE.range), consumed]; break;
+    case "speedBoots": stats = [tooltipLine(locale, "speedBonus", Math.round((BOOTS_SPEED - 1) * 100))]; break;
+    case "regenRing": stats = [tooltipLine(locale, "currentRegen", `+${RING_REGEN_PER_SECOND}`)]; break;
+    case "healingScroll": stats = [tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
+    case "ivoryTower": stats = [range(IVORY_TOWER_REACH), localized(locale, `初始生命 ${IVORY_TOWER_HP_SHARE * 100}%`, `Starting HP ${IVORY_TOWER_HP_SHARE * 100}%`), consumed]; break;
+  }
+  const good = SHOP_GOODS.find(good => good.kind === kind);
+  if (good) stats.push(tooltipLine(locale, "cost", good.cost), localized(locale, `补货 ${formatSeconds(good.restock)}`, `Restock ${formatSeconds(good.restock)}`));
+  return stats;
+}

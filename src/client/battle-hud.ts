@@ -1,3 +1,4 @@
+import { healthBarColor } from "./health-bars";
 /** Presentation only: the match controller supplies identity, artwork and commands.
  * Keep nodes alive across simulation frames so focus, scroll and pointer presses survive. */
 export type HudArt = { key: string; paint: (canvas: HTMLCanvasElement) => void };
@@ -77,6 +78,7 @@ export class BattleHudSelection {
       if (identity.health) {
         const hp = identity.health;
         this.healthFill.style.width = `${Math.max(0, Math.min(100, hp.current / Math.max(1, hp.max) * 100))}%`;
+        this.healthFill.style.backgroundColor = healthBarColor(hp.current, hp.max);
         this.healthText.textContent = `${Math.ceil(hp.current)} / ${hp.max}`;
       }
       if (identity.inspection) {

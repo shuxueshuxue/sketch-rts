@@ -28,7 +28,7 @@
 .hud-subject-name { color:var(--battle-ink); font-size:14px; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
 .hud-subject-detail { color:var(--battle-muted); font-size:10px; line-height:1.4; }
 .hud-health { position:relative; height:17px; background:#0d161c; border-radius:3px; overflow:hidden; }
-.hud-health > span:first-child { position:absolute; inset:0 auto 0 0; background:#baa57145; border-right:1px solid #d1b782a6; }
+.hud-health > span:first-child { position:absolute; inset:0 auto 0 0; background:#baa57145; border-right:1px solid #ffffff55; }
 .hud-health-text { position:relative; display:block; color:#e4dec9; text-align:center; font-size:10px; line-height:17px; }
 .hud-roster {
   position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
