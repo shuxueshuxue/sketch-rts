@@ -29,7 +29,7 @@ export const GROVE_UNITS = {
   },
   archer: {
     name: { en: "Archer", zh: "弓箭手" },
-    description: { en: "Light ranged unit. Strong when kept behind melee units, fragile if caught.", zh: "轻型远程单位。站在近战单位后方时很强，被贴身时很脆。" },
+    description: { en: "A steady ranged firing line behind melee protection. Moving too far forces a fresh aim.", zh: "远程阵线单位，适合在近战保护下持续射击；大幅移动后需要重新瞄准。" },
     command: { icon: "⋉", hotkey: "a" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "satchel"] },
     art: { tier: "basic", bearing: "foot", faction: "grove" },
@@ -109,7 +109,7 @@ export const GROVE_UNITS = {
   },
   knight: {
     name: { en: "Knight", zh: "骑士" },
-    description: { en: "Heavy cavalry for decisive fights and base pressure. Heavy armor: takes 50% damage from shooters and casters, 70% from towers.", zh: "重骑兵，用于决定性会战和基地压制。重甲：受到射手和法师攻击的伤害为 50%，防御塔为 70%。" },
+    description: { en: "Heavy cavalry for decisive fights and base pressure.", zh: "重骑兵，用于决定性会战和基地压制。" },
     command: { icon: "♜", hotkey: "k" },
     glyph: { silhouette: "knight-helm", marks: ["visor", "towerShield", "shortSword"] },
     art: { tier: "elite", bearing: "mounted", faction: "grove" },
@@ -186,7 +186,7 @@ export const GROVE_UNITS = {
   },
   witch: {
     name: { en: "Witch", zh: "女巫" },
-    description: { en: "Debuff caster that weakens enemy damage through curse; a cursed summoned unit also takes 100 damage.", zh: "减益施法者，通过诅咒削弱敌方伤害；被诅咒的召唤物还会受到 100 点伤害。" },
+    description: { en: "Debuff caster that weakens enemy damage through curse; also damages summoned targets.", zh: "减益施法者，通过诅咒削弱敌方伤害；还能直接伤害被诅咒的召唤物。" },
     command: { icon: "☾", hotkey: "c" },
     glyph: { silhouette: "witch-crescent", marks: ["crescent", "curseSlash", "spark"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },
@@ -208,7 +208,7 @@ export const GROVE_UNITS = {
   },
   golem: {
     name: { en: "Golem", zh: "魔像" },
-    description: { en: "Slow heavy siege body with high health and strong melee damage. Heavy armor: takes 50% damage from shooters and casters, 70% from towers.", zh: "缓慢的重型攻坚单位，生命值高，近战伤害强。重甲：受到射手和法师攻击的伤害为 50%，防御塔为 70%。" },
+    description: { en: "Slow heavy siege body with high health and strong melee damage.", zh: "缓慢的重型攻坚单位，生命值高，近战伤害强。" },
     command: { icon: "▣", hotkey: "g" },
     glyph: { silhouette: "golem-block", marks: ["rune", "blockSeams", "scar"] },
     art: { tier: "elite", bearing: "construct", faction: "grove" },

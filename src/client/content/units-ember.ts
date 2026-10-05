@@ -84,7 +84,7 @@ export const EMBER_UNITS = {
   },
   sparkArcher: {
     name: { en: "Spark Archer", zh: "火花弓手" },
-    description: { en: "Fragile ember ranged unit with quick pressure and shorter reach.", zh: "脆弱的余烬远程单位，压制速度快但射程较短。" },
+    description: { en: "A quick-firing Ember archer with shorter reach. Scorches targets to support allied melee attacks.", zh: "射击较快、射程较短的灰烬射手；灼烧目标，为友军近战攻击提供支援。" },
     command: { icon: "⋊", hotkey: "a" },
     glyph: { silhouette: "bow-crest", marks: ["bow", "arrow", "spark"] },
     art: { tier: "basic", bearing: "foot", faction: "ember" },
@@ -179,7 +179,7 @@ export const EMBER_UNITS = {
   },
   ashChieftain: {
     name: { en: "Ash Chieftain", zh: "灰烬酋长" },
-    description: { en: "Ember war leader who hunts casters: deals 50% extra damage to summoned units and casters. Heavy armor: takes 50% damage from shooters and casters, 70% from towers.", zh: "猎杀法师的余烬首领：对召唤生物和法师造成 50% 额外伤害。重甲：受到射手和法师攻击的伤害为 50%，防御塔为 70%。" },
+    description: { en: "Ember war leader who hunts casters: deals extra damage to summoned units and casters.", zh: "猎杀法师的余烬首领：对召唤生物和法师造成额外伤害。" },
     command: { icon: "♛", hotkey: "h" },
     glyph: { silhouette: "ember-bruiser", marks: ["visor", "spark", "curseSlash"] },
     art: { tier: "elite", bearing: "foot", faction: "ember" },
@@ -208,7 +208,7 @@ export const EMBER_UNITS = {
   },
   cinderRevenant: {
     name: { en: "Cinder Revenant", zh: "余烬复生者" },
-    description: { en: "Ember elite with modest health that burns its wounds away, regenerating 7 health per second. Heavy armor: takes 50% damage from shooters and casters, 70% from towers.", zh: "生命值不高的余烬精英，伤口在余烬中迅速愈合，每秒恢复 7 点生命。重甲：受到射手和法师攻击的伤害为 50%，防御塔为 70%。" },
+    description: { en: "Ember elite with modest health that burns its wounds away.", zh: "生命值不高的余烬精英，伤口在余烬中迅速愈合。" },
     command: { icon: "✺", hotkey: "n" },
     glyph: { silhouette: "ember-bruiser", marks: ["spark", "halo", "scar"] },
     art: { tier: "elite", bearing: "foot", faction: "ember" },
