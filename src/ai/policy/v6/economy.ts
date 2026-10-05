@@ -67,6 +67,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (!isV6Policy(options)) return [];
   const goals = rankV6Goals(snapshot, owner, options);
   let gold = playerState(snapshot, owner).gold;
+  let supply = projectedSupplyUsed(snapshot, owner);
   const navalReserve = navalBudgetReserve(snapshot, owner, options);
   const builders = new Set<string>();
   const commands: GameCommand[] = [];
@@ -80,6 +81,11 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
     if (!command) {
       if (goal.hold) gold -= goal.cost;
       continue;
+    }
+    if (command.type === "train") {
+      const used = UNIT_DEFS[command.unitKind].supplyUsed;
+      if (supply + used > playerState(snapshot, owner).supplyCap) continue;
+      supply += used;
     }
     commands.push(command);
     bought.add(goal.id);
