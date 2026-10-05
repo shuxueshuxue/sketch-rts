@@ -2410,13 +2410,30 @@ function updateHud() {
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
-  selectionLabel.replaceChildren(
-    ...groups.map((group) => {
+  const previousGrid = selectionLabel.querySelector<HTMLDivElement>(".selection-grid");
+  const previousScroll = previousGrid?.scrollTop ?? 0;
+  const previousFocus = previousGrid?.querySelector<HTMLElement>(".focused")?.dataset.selectionGroup;
+  const focusedGroup = groups.find(group => group.focused) ?? groups[0]!;
+  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focusedGroup.ids[0]);
+  const header = document.createElement("div");
+  header.className = "selection-header";
+  const title = document.createElement("span");
+  title.className = "selection-header-title";
+  title.textContent = labelAnyKind(focusedGroup.kind);
+  const details = document.createElement("span");
+  details.className = "selection-details";
+  if (entity) details.textContent = `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "");
+  header.append(title, details);
+  const grid = document.createElement("div");
+  grid.className = "selection-grid";
+  grid.style.setProperty("--selection-columns", String(Math.min(3, groups.length)));
+  grid.replaceChildren(...groups.map((group) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = `selection-model ${group.focused ? "focused" : "dimmed"}`;
       button.dataset.selectionGroup = group.id;
       button.setAttribute("aria-label", selectionGroupTitle(group));
+      button.setAttribute("aria-pressed", String(group.focused));
       applyTooltip(button, selectionGroupTooltip(group));
       const canvas = document.createElement("canvas");
       canvas.width = 96;
@@ -2430,12 +2447,6 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       name.className = "selection-model-name";
       name.textContent = labelAnyKind(group.kind);
       button.append(canvas, name, count);
-      const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0]);
-      if (entity && group.focused) {
-        const detail = document.createElement("span"); detail.className = "selection-details";
-        detail.textContent = `HP ${Math.ceil(entity.hp)}/${entity.maxHp}` + ("attackDamage" in entity ? ` · ⚔ ${entity.attackDamage}` : "") + (entity.owner !== localPlayerId ? ` · ${entity.owner}` : "");
-        button.append(detail);
-      }
       button.addEventListener("click", () => {
         focusedSelectionId = group.ids[0];
         openPalette = undefined;
@@ -2443,8 +2454,18 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       });
       drawSelectionModel(canvas, group);
       return button;
-    }),
-  );
+    }));
+  selectionLabel.replaceChildren(header, grid);
+  // HUD refreshes retain the player's place. Only a changed focus brings its card into view.
+  grid.scrollTop = previousScroll;
+  if (previousFocus && previousFocus !== focusedGroup.id) {
+    const focused = grid.querySelector<HTMLElement>(".focused");
+    if (focused) {
+      const top = focused.offsetTop;
+      if (top < grid.scrollTop) grid.scrollTop = top;
+      else if (top + focused.offsetHeight > grid.scrollTop + grid.clientHeight) grid.scrollTop = top + focused.offsetHeight - grid.clientHeight;
+    }
+  }
 }
 
 function selectionGroupTitle(group: SelectionGroup) {
