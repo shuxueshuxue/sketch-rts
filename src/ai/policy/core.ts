@@ -1,6 +1,7 @@
 import { engineeringWant } from "./engineering";
+import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
-import { planBattlefieldCommands } from "./battlefield";
+import { battlefieldUnitIds, planBattlefieldCommands } from "./battlefield";
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
@@ -88,7 +89,7 @@ import { v7CreepGroupIds } from "./v7/creep";
 import { planV7FocusFire, planV7Skirmish } from "./v7/discipline";
 import { planV8Charge } from "./v8/charge";
 import { navalUnitIds, planNavalEconomy, planNavalTactics } from "./naval";
-import { planV9Shopping, v9ShopperIds } from "./v9/shop";
+import { planArmyShopping, shopperIds } from "./v9/shop";
 import { onHomeGround, sameGroundAs } from "./ground";
 import { planV6Raid, v6RaidUnitIds } from "./v6/raid";
 import { isTowerMercPolicy, isV5HybridPolicy, isV5ShooterCorePolicy, isV9Policy } from "./versions";
@@ -143,7 +144,8 @@ const COMMAND_CONFLICT_BYPASS_SCRIPT_IDS = new Set(["workerPressureCloseout", "d
 
 export const AI_SCRIPT_LIBRARY = {
   allySupport: { id: "allySupport", phase: "tactics", run: planAllySupport, claimsUnits: supportUnitIds },
-  battlefield: { id: "battlefield", phase: "tactics", run: planBattlefieldCommands },
+  battlefield: { id: "battlefield", phase: "tactics", run: planBattlefieldCommands, claimsUnits: battlefieldUnitIds },
+  readiness: { id: "readiness", phase: "tactics", run: planCombatReadiness, claimsUnits: readinessUnitIds },
   economy: { id: "economy", phase: "economy", run: planEconomy },
   constructionRecovery: { id: "constructionRecovery", phase: "economy", run: planConstructionRecovery },
   emergencyDefense: { id: "emergencyDefense", phase: "economy", run: planEmergencyDefense },
@@ -183,7 +185,7 @@ export const AI_SCRIPT_LIBRARY = {
   engineering: { id: "engineering", phase: "economy", run: (snapshot,owner,options) => { const want=engineeringWant(snapshot,owner,options); return want && playerState(snapshot,owner).gold>=want.cost ? want.issue(new Set()) : undefined; } },
   navalEconomy: { id: "navalEconomy", phase: "economy", run: planNavalEconomy },
   naval: { id: "naval", phase: "tactics", run: planNavalTactics, claimsUnits: navalUnitIds },
-  v9Shop: { id: "v9Shop", phase: "tactics", run: planV9Shopping, claimsUnits: v9ShopperIds },
+  shopping: { id: "shopping", phase: "tactics", run: planArmyShopping, claimsUnits: shopperIds },
 } satisfies Record<string, AiScript>;
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
@@ -233,10 +235,12 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.training,
   AI_SCRIPT_LIBRARY.naval,
   AI_SCRIPT_LIBRARY.allySupport,
+  AI_SCRIPT_LIBRARY.shopping,
   AI_SCRIPT_LIBRARY.items,
   AI_SCRIPT_LIBRARY.abilities,
   AI_SCRIPT_LIBRARY.skirmishPreservation,
   AI_SCRIPT_LIBRARY.battlefield,
+  AI_SCRIPT_LIBRARY.readiness,
   AI_SCRIPT_LIBRARY.focusFire,
   AI_SCRIPT_LIBRARY.towerBreaker,
   // @@@v5-objective-before-raids - Fresh V5 1v2 armies should finish nearby value camps before peeling into worker raids.
@@ -276,8 +280,8 @@ const V7_REPLACEMENTS = new Map<AiScript, AiScript>([
   [AI_SCRIPT_LIBRARY.skirmishPreservation, AI_SCRIPT_LIBRARY.v7Skirmish],
 ]);
 export const V7_AI_STACK: AiScript[] = V6_AI_STACK.flatMap((script) => [
-  ...(script === AI_SCRIPT_LIBRARY.items ? [AI_SCRIPT_LIBRARY.allySupport] : []),
-  ...(script === AI_SCRIPT_LIBRARY.v6Backline ? [AI_SCRIPT_LIBRARY.battlefield] : []),
+  ...(script === AI_SCRIPT_LIBRARY.items ? [AI_SCRIPT_LIBRARY.allySupport, AI_SCRIPT_LIBRARY.shopping] : []),
+  ...(script === AI_SCRIPT_LIBRARY.v6Backline ? [AI_SCRIPT_LIBRARY.battlefield, AI_SCRIPT_LIBRARY.readiness] : []),
   V7_REPLACEMENTS.get(script) ?? script,
 ]);
 
@@ -295,7 +299,7 @@ export const V8_AI_STACK: AiScript[] = [
 
 // V9 starts as V8's stack, against V5, V7 and V8 together, with no unit kind forbidden (see v9-blind), and shops (see
 // @@@v9-shop).
-export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK, AI_SCRIPT_LIBRARY.v9Shop];
+export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK];
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
   AI_SCRIPT_LIBRARY.economy,

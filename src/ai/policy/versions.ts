@@ -44,7 +44,7 @@ export function isV9Policy(options: PresetAiPolicyOptions) {
   return options.requestedVersion === "v9";
 }
 
-export const SHOOTER_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(["archer", "sparkArcher", "contractArcher"]);
+export const SHOOTER_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(["archer", "horseArcher", "sparkArcher", "contractArcher"]);
 
 // Units whose ability summons (the grove summoner, the Ember pyre caller, and any other): read from the catalog.
 export const SUMMONING_UNIT_KINDS: ReadonlySet<UnitKind> = new Set(
