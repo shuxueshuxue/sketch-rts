@@ -1,4 +1,4 @@
-import { TideboundCampaign, HERO, RELICS } from '../campaigns/tidebound/campaign';
+import { TideboundCampaign, HERO, RELICS, type CampaignSave } from '../campaigns/tidebound/campaign';
 import { snapshotGame } from '../shared/sim';
 
 let campaign: TideboundCampaign | undefined;
@@ -9,6 +9,7 @@ let speed = 1;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let lastStage = 0;
 let lastPublished = -Infinity;
+let stageCheckpoint:CampaignSave|undefined;
 
 function publish() {
   lastPublished = performance.now();
@@ -23,7 +24,8 @@ function loop() {
       if (campaign.state.mission.stage !== lastStage) {
         lastStage = campaign.state.mission.stage;
         paused = true;
-        postMessage({type:'save', save:campaign.save()});
+        stageCheckpoint=campaign.save();
+        postMessage({type:'save', save:stageCheckpoint});
         notice('新任务阶段：' + campaign.state.mission.dialogue.at(-1)?.text + ' · 部署完毕后点击继续。');
       }
       const hero = campaign.game.units.find(u => u.id === HERO);
@@ -38,7 +40,7 @@ function loop() {
         baseArmed = false;
         notice('远征司令部告急：清除围攻部队并派工程兵修理。');
       }
-      if (campaign.state.outcome !== 'playing') {paused = true;postMessage({type:'save', save:campaign.save()});}
+      if (campaign.state.outcome !== 'playing') {paused = true;postMessage({type:'save', save:campaign.save()});if(campaign.state.outcome==='defeat'&&stageCheckpoint)postMessage({type:'save',save:stageCheckpoint});}
       // Publish at 10 Hz at normal speed; the simulation remains fixed at 20 Hz.
       if (paused || performance.now()-lastPublished>=100) publish();
       if (campaign.state.outcome === 'playing' && campaign.game.tick % 1200 === 0) {
@@ -58,6 +60,7 @@ self.onmessage = ({data}) => {
       if (timer) clearTimeout(timer);
       campaign = new TideboundCampaign(data.difficulty, data.save);
       lastStage = campaign.state.mission.stage;
+      stageCheckpoint=campaign.save();
       paused = true;
       criticalArmed = baseArmed = true;
       publish();
