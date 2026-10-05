@@ -15,6 +15,7 @@ export type Terrain = {
   rows: number;
   cells: string;
   levels?: string;
+  palette?: 'coastal';
 };
 
 export type TerrainCellKind = "ground" | "shallow" | "mud" | "bridge" | "forest" | "rock" | "water";

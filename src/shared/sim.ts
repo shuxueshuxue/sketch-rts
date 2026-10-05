@@ -2156,6 +2156,7 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
 function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number): number | undefined {
+  if ('invulnerable' in target && target.invulnerable) return undefined;
   if (isObstacle(target)) {
     // A rock pile or gate wakes nobody and pays nothing when it falls (see @@@obstacle).
     const hpBefore = target.hp;

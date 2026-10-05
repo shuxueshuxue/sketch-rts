@@ -29,7 +29,7 @@ export const BOARDING_GAP = 24;
 export const LANDING_REACH = 72;
 
 export function carries(unit: Unit) {
-  return UNIT_DEFS[unit.kind].carries ?? 0;
+  return unit.cargoCapacity ?? UNIT_DEFS[unit.kind].carries ?? 0;
 }
 
 export function alongside(unit: Unit, transport: Unit) {

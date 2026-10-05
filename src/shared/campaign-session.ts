@@ -6,6 +6,7 @@ export type CampaignAction =
  | {type:'cast';index:number;x:number;y:number}
  | {type:'fortify';id:string;x:number;y:number}
  | {type:'recruit'|'cancelRecruit';id:string}
+ | {type:'mission';id:'repairBeacon'|'embark'|'landNorth'|'landHeart'|'landSouth'|'escort'|'north'|'heart'|'south'}
  | {type:'pause';paused:boolean}
  | {type:'speed';speed:number}
  | {type:'save'};
@@ -20,6 +21,7 @@ export function isCampaignAction(v:unknown): v is CampaignAction {
  case 'cast':return Number.isInteger(a.index)&&Number(a.index)>=0&&Number(a.index)<6&&point();
  case 'fortify':return typeof a.id==='string'&&a.id.length<40&&point();
  case 'recruit':case 'cancelRecruit':return typeof a.id==='string'&&a.id.length<100;
+ case 'mission':return ['repairBeacon','embark','landNorth','landHeart','landSouth','escort','north','heart','south'].includes(String(a.id));
  case 'pause':return typeof a.paused==='boolean';
  case 'speed':return [1,2,4].includes(Number(a.speed));
  case 'save':return true;

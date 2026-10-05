@@ -120,6 +120,17 @@ describe("ships", () => {
 });
 
 describe("transports", () => {
+  it("honors a larger campaign ship capacity through native boarding and supply accounting", () => {
+    const sim = game([
+      { id: "carrier", owner: "player", kind: "transport", ...at(11, 9) },
+      ...Array.from({length: 12}, (_,i) => ({id:`crew-${i}`,owner:"player",kind:"worker" as const,...at(5+i%2,5+Math.floor(i/2))})),
+    ]);
+    const carrier=unit(sim,"carrier")!;carrier.cargoCapacity=30;
+    const supply=sim.players.player!.supplyUsed;
+    issuePlayerCommand(sim,"player",{type:"board",unitIds:sim.units.filter(u=>u.kind==="worker").map(u=>u.id),transportId:carrier.id});
+    run(sim,500);
+    expect(carrier.cargo).toHaveLength(12);expect(sim.players.player!.supplyUsed).toBe(supply);
+  });
   it("take aboard the soldiers told to board up to eight supply, and set them ashore on an island", () => {
     const sim = game([
       { id: "transport", owner: "player", kind: "transport", ...at(11, 9) },

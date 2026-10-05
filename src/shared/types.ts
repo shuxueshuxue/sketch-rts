@@ -163,6 +163,8 @@ export type Unit = {
   arrivedAt?: { x: number; y: number } | undefined;
   // A transport's passengers, out of the game while aboard (see @@@transport).
   cargo?: Unit[] | undefined;
+  /** Larger mission transports can carry a different population than their base hull. */
+  cargoCapacity?: number;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -182,6 +184,8 @@ export type Building = {
   y: number;
   hp: number;
   maxHp: number;
+  /** A mission ward; normal matches leave this absent. */
+  invulnerable?: boolean;
   radius: number;
   complete: boolean;
   buildProgress: number;
@@ -427,6 +431,7 @@ export type TerrainLandmark = {
   y: number;
   size: number;
   rotation: number;
+  straight?: boolean;
 };
 
 export type GameCommand =
