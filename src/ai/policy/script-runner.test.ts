@@ -1,10 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { snapshotGame } from "../../shared/sim";
+import { issuePlayerCommand, snapshotGame } from "../../shared/sim";
+import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import { sketchScene } from "../../sdk/scene";
 import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
 
 describe("AI script runner", () => {
+  it("lets a boarding healer reach its ferry instead of restarting land spells every think", () => {
+    const game = sketchScene("boarding-caster-reservation").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .townHall("v2", 500,500).townHall("v1",3400,3400)
+      .unit("v2", "priest",620,520,{id:"healer"})
+      .unit("v2", "footman",700,520,{id:"patient"})
+      .unit("v2", "transport",1000,520,{id:"ferry"}).build().createGame();
+    issuePlayerCommand(game,"v2",{type:"board",unitIds:["healer"],transportId:"ferry"});
+    const scripts:AiScript[]=[{id:"abilities",phase:"tactics",run:()=>({type:"cast",unitId:"healer",ability:"heal",targetId:"patient"})}];
+    expect(runAiCommandEntriesFromScripts(snapshotGame(game),"v2",scripts)).toEqual([]);
+  });
   it("keeps later tactical scripts from reusing units reserved by earlier scripts", () => {
     const scene = sketchScene("script-runner-unit-reservations")
       .map("bareDuel")
@@ -64,4 +76,25 @@ describe("AI script runner", () => {
 
     expect(entries).toEqual([]);
   });
+  it("keeps the money for a walking builder without changing the shared snapshot", () => {
+    const game = sketchScene("pending-build-budget").map("bareDuel").replaceDefaults()
+      .player("v2", { team: "north", race: "grove" }).player("v1", { team: "south", race: "ember" })
+      .playerState("v2", { gold: BUILDING_DEFS.townHall.cost + UNIT_DEFS.footman.cost - 1 })
+      .townHall("v2", 500, 500).townHall("v1", 3400, 3400)
+      .worker("v2", 600, 600, { id: "builder" }).unit("v2", "footman", 620, 520, { id: "guard" })
+      .building("v2", "barracks", 750, 500, { id: "producer" }).build().createGame();
+    issuePlayerCommand(game, "v2", { type: "build", unitId: "builder", buildingKind: "townHall", x: 1500, y: 1500 });
+    const snapshot = snapshotGame(game);
+    const scripts: AiScript[] = [
+      { id: "training", phase: "economy", run: state => state.players.v2!.gold >= UNIT_DEFS.footman.cost
+        ? { type: "train", buildingId: "producer", unitKind: "footman" } : undefined },
+      { id: "guard", phase: "tactics", run: () => ({ type: "move", unitIds: ["guard"], x: 1400, y: 1400 }) },
+    ];
+    expect(runAiCommandEntriesFromScripts(snapshot, "v2", scripts).map(entry => entry.command)).toEqual([
+      { type: "move", unitIds: ["guard"], x: 1400, y: 1400 },
+    ]);
+    expect(snapshot.players.v2!.gold).toBe(BUILDING_DEFS.townHall.cost + UNIT_DEFS.footman.cost - 1);
+    expect(game.buildings.some(building => building.x === 1500)).toBe(false);
+  });
+
 });

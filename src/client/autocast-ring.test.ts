@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 
-// The autocast border is pure CSS (styles.css); these read the rules that decide when it shows and when it moves.
-const CSS = fs.readFileSync("src/client/styles.css", "utf8");
+// The autocast border is pure CSS (battle-hud.css); these read the rules that decide when it shows and when it moves.
+const CSS = fs.readFileSync("src/client/battle-hud.css", "utf8");
 
 function rule(selector: string, source = CSS) {
   const start = source.indexOf(`${selector} {`);
@@ -12,7 +12,7 @@ function rule(selector: string, source = CSS) {
 
 function reducedMotionBlock() {
   const start = CSS.indexOf("@media (prefers-reduced-motion: reduce)");
-  expect(start, "styles.css has a reduced-motion block").toBeGreaterThanOrEqual(0);
+  expect(start, "battle-hud.css has a reduced-motion block").toBeGreaterThanOrEqual(0);
   let depth = 0;
   for (let index = CSS.indexOf("{", start); index < CSS.length; index += 1) {
     if (CSS[index] === "{") depth += 1;

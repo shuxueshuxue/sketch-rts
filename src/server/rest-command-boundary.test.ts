@@ -203,7 +203,7 @@ async function waitForSocketOpen(socket: WebSocket): Promise<void> {
 }
 
 async function startServer(port: number): Promise<ChildProcessWithoutNullStreams> {
-  const server = spawn("./node_modules/.bin/tsx", ["src/server/index.ts"], {
+  const server = spawn(process.execPath, ["--import", "tsx", "src/server/index.ts"], {
     cwd: process.cwd(),
     env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), ROOM_AUTOTICK: "0" },
   });

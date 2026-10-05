@@ -79,7 +79,7 @@ describe("AI version benchmark CLI", () => {
 });
 
 function runVersionBenchmarkCli(env: Record<string, string>) {
-  return execFileSync("npx", ["tsx", "scripts/ai-version-benchmark.ts"], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-version-benchmark.ts"], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0", AI_BENCHMARK_WORKERS: "1", ...env },
@@ -87,7 +87,7 @@ function runVersionBenchmarkCli(env: Record<string, string>) {
 }
 
 function runVersionBenchmarkCliWithArgs(...args: string[]) {
-  return execFileSync("npx", ["tsx", "scripts/ai-version-benchmark.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-version-benchmark.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },

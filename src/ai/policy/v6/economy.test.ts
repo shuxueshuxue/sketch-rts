@@ -56,22 +56,26 @@ function of<T extends GameCommand["type"]>(commands: GameCommand[], type: T) {
 }
 
 describe("v6 economy", () => {
-  it("opens on the basic line while its casters are locked: a barracks for footmen and a farm toward the bar, no sanctum or tower", () => {
+  it("opens one building at a time, preserving the remaining miners until the barracks stands", () => {
     const { plan } = base("v6-econ-opening", { gold: 450, farms: ONE_FARM_SHORT - 1 });
-    expect(of(plan(), "build").map((command) => command.buildingKind).sort()).toEqual(["barracks", "farm"]);
+    expect(of(plan(), "build").map((command) => command.buildingKind)).toEqual(["barracks"]);
+    const next = base("v6-econ-opening-farm", { gold: 450, farms: ONE_FARM_SHORT - 1, buildings: ["barracks"] });
+    expect(of(next.plan(), "build").map((command) => command.buildingKind)).toEqual(["farm"]);
   });
 
   it("puts the sanctum up once one more farm reaches the casters' bar, and trains footmen in the summoners' place until then", () => {
     const { plan } = base("v6-econ-sanctum-timing", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT });
     const commands = plan();
-    expect(of(commands, "build").map((command) => command.buildingKind)).toContain("sanctum");
+    expect(of(commands, "build").map((command) => command.buildingKind)).toEqual(["farm"]);
+    const ready = base("v6-econ-sanctum-ready", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT + 1 });
+    expect(of(ready.plan(), "build").map((command) => command.buildingKind)).toEqual(["sanctum"]);
     expect(of(commands, "train").map((command) => command.unitKind)).toContain("footman");
     const early = base("v6-econ-sanctum-early", { gold: 1_000, buildings: ["barracks"], farms: ONE_FARM_SHORT - 1 }).plan();
     expect(of(early, "build").map((command) => command.buildingKind)).not.toContain("sanctum");
   });
 
   it("moves to the second phase once most of its summoners stand, and asks for a second sanctum", () => {
-    const { plan, memory } = base("v6-econ-phase-two", { gold: 600, buildings: ["sanctum"], army: ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner"] });
+    const { plan, memory } = base("v6-econ-phase-two", { gold: 600, buildings: ["barracks", "sanctum"], farms: 6, army: ["summoner", "summoner", "summoner", "summoner", "summoner", "summoner"] });
     expect(of(plan(), "build").map((command) => command.buildingKind)).toContain("sanctum");
     expect(memory.v6?.phase).toBe(1);
     expect(memory.v6?.plays?.["phase:2"]).toBe(1);

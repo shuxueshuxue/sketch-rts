@@ -509,7 +509,7 @@ describe("AI playtest CLI", () => {
 });
 
 function runPlaytestCli(...args: string[]) {
-  return execFileSync(join(process.cwd(), "node_modules", ".bin", "tsx"), ["scripts/ai-playtest.ts", ...args], {
+  return execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-playtest.ts", ...args], {
     cwd: process.cwd(),
     encoding: "utf8",
   });

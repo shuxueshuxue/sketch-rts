@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
+import { drawWarfareEffect } from "./warfare-effects";
 import { seconds } from "../shared/time";
 import type { UnitKind, WorldEffect } from "../shared/types";
 
@@ -74,6 +75,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
   const { ctx, effects, worldToScreen, nearScreen, unitPosition } = options;
   const renderer = { ctx, worldToScreen };
   for (const effect of effects) {
+    if (drawWarfareEffect(ctx,effect,worldToScreen,nearScreen)) continue;
     if (effect.type === "chargeTrail" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
       const to = worldToScreen({ x: effect.toX, y: effect.toY });
@@ -103,7 +105,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
         const sourceKind = effect.sourceKind!;
         const launch = launchPoint(from, to, sourceKind);
         if (look === "arrow") drawArrow(ctx, arrowFrame(launch, to, progress, isUnitKind(sourceKind) ? 1 : TOWER_ARROW_SCALE));
-        else drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        else if (look === "orb") drawSpellOrb(ctx, launch, to, progress, spellOrbPalette(sourceKind));
+        else drawPhysicalMissile(ctx, launch, to, progress, look);
         continue;
       }
       const head = {
@@ -114,22 +117,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
-    if (effect.type === "melee" && hasEffectVector(effect)) {
-      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
-      const to = worldToScreen({ x: effect.toX, y: effect.toY });
-      const thrust = 0.45 + Math.sin((1 - effect.remaining / effect.duration) * Math.PI) * 0.35;
-      const tip = {
-        x: from.x + (to.x - from.x) * thrust,
-        y: from.y + (to.y - from.y) * thrust,
-      };
-      ctx.strokeStyle = "#243126";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(tip.x, tip.y);
-      ctx.stroke();
-      continue;
-    }
+    // Weapon poses carry the swing; a source-to-target line duplicates it.
+    if (effect.type === "melee") continue;
 
     if (effect.type === "chainLightning" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
@@ -146,28 +135,27 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     const radius = 9 + (1 - life) * 22;
 
     if (effect.type === "hit") {
-      ctx.strokeStyle = "#9b2f2f";
-      ctx.lineWidth = 2;
+      // Brief, local contact glint, no expanding cross across adjacent troops.
+      if (life < .55) continue;
+      ctx.save();
+      ctx.globalAlpha *= (life-.55)/.45*.7;
+      ctx.strokeStyle = "#e4d2aa"; ctx.lineWidth = 1.3;
+      const at = effect.unitId ? unitPosition?.(effect.unitId) : undefined;
+      const contact = at ? worldToScreen(at) : point;
       ctx.beginPath();
-      ctx.moveTo(point.x - radius, point.y);
-      ctx.lineTo(point.x + radius, point.y);
-      ctx.moveTo(point.x, point.y - radius);
-      ctx.lineTo(point.x, point.y + radius);
-      ctx.stroke();
+      ctx.moveTo(contact.x-2,contact.y-10);ctx.lineTo(contact.x+2,contact.y-14);
+      ctx.moveTo(contact.x+1,contact.y-10);ctx.lineTo(contact.x+3,contact.y-9);
+      ctx.stroke();ctx.restore();
       continue;
     }
 
     if (effect.type === "attackTarget" || effect.type === "queuedAttackTarget") {
-      const pulse = 0.55 + Math.sin(effect.remaining * 0.9) * 0.22;
+      const pulse = life * .5;
       ctx.setLineDash(effect.type === "queuedAttackTarget" ? [5, 5] : []);
       ctx.strokeStyle = effect.type === "queuedAttackTarget" ? `rgba(155, 47, 47, ${pulse * 0.58})` : `rgba(155, 47, 47, ${pulse})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.ellipse(point.x, point.y + 10, radius * 1.15, radius * 0.5, 0, 0, Math.PI * 2);
-      ctx.moveTo(point.x - radius * 1.25, point.y + 10);
-      ctx.lineTo(point.x - radius * 0.45, point.y + 10);
-      ctx.moveTo(point.x + radius * 0.45, point.y + 10);
-      ctx.lineTo(point.x + radius * 1.25, point.y + 10);
+      ctx.ellipse(point.x, point.y + 10, 14, 6, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
       continue;
@@ -179,12 +167,15 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "repair") {
-      drawHammerEffect(ctx, "repair", point, life, effect.remaining);
+      if (effect.unitId) {
+        const at = unitPosition?.(effect.unitId) ?? effect;
+        drawWorkerHammer(ctx, worldToScreen(at), effect.remaining, (effect.fromX ?? effect.x) < at.x);
+      }
       continue;
     }
 
     if (effect.type === "build") {
-      drawHammerEffect(ctx, "build", point, life, effect.remaining);
+      // The actual builders animate at their hands; a site needs no floating icon.
       continue;
     }
 
@@ -264,7 +255,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     ctx.strokeStyle = effect.type === "mine" || effect.type === "queuedMine" ? "#b9861b" : effect.type === "attack" || effect.type === "queuedAttack" ? "#9b2f2f" : "#243126";
     if (isQueuedEffect(effect.type)) ctx.globalAlpha *= 0.58;
     ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.globalAlpha *= life * .6;
+    ctx.arc(point.x, point.y, 8 + (1-life)*3, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -655,15 +647,52 @@ function strokePolyline(ctx: CanvasRenderingContext2D, points: Point[]) {
   ctx.stroke();
 }
 
-export type ProjectileLook = "arrow" | "orb" | "streak";
+export type ProjectileLook = "arrow" | "orb" | "streak" | "fire" | "spear" | "stone" | "shell";
 
 // @@@projectile-look - The shooter's rules pick the missile: a unit with a spell throws a small spell orb (its weapon is
 // weak), any other ranged unit and a tower shoot an arrow (a rider's charge is no spell). Item blasts carry no shooter
 // and keep the old streak.
 export function projectileLook(sourceKind: WorldEffect["sourceKind"]): ProjectileLook {
   if (!sourceKind) return "streak";
+  if (sourceKind === "redDragon" || sourceKind === "dragonWhelp" || sourceKind === "fireShip") return "fire";
+  if (sourceKind === "murlocHunter") return "spear";
+  if (sourceKind === "thornSlinger") return "stone";
+  if (sourceKind === "warship" || sourceKind === "bombardShip" || sourceKind === "catapult" || sourceKind === "organGun") return "shell";
+  if (sourceKind === "archer" || sourceKind === "sparkArcher" || sourceKind === "contractArcher" || sourceKind === "defenseTower" || sourceKind === "cutter" || sourceKind === "ballista") return "arrow";
   if (isUnitKind(sourceKind) && hasSpell(sourceKind)) return "orb";
-  return "arrow";
+  return "stone";
+}
+
+function drawPhysicalMissile(ctx: CanvasRenderingContext2D, from: Point, to: Point, progress: number, look: "fire" | "spear" | "stone" | "shell") {
+  const frame = arrowFrame(from, to, progress, look === "spear" ? 1.15 : 0.55);
+  ctx.save(); ctx.translate(frame.tip.x, frame.tip.y); ctx.rotate(frame.angle);
+  if (look === "fire") {
+    const glow = ctx.createRadialGradient(-3, 0, 1, -3, 0, 15);
+    glow.addColorStop(0, '#e8b466a8'); glow.addColorStop(1, '#b8522b00');
+    ctx.fillStyle = glow; ctx.fillRect(-20,-16,36,32);
+    ctx.fillStyle = '#b96539'; ctx.beginPath(); ctx.moveTo(6,0); ctx.quadraticCurveTo(-3,-8,-18,-3); ctx.lineTo(-13,0); ctx.lineTo(-21,4); ctx.quadraticCurveTo(-2,8,6,0); ctx.fill();
+    ctx.fillStyle = '#f0d092'; ctx.beginPath(); ctx.ellipse(0,0,5,2.5,0,0,Math.PI*2); ctx.fill();
+  } else if (look === "spear") {
+    ctx.strokeStyle='#9a8767'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.moveTo(-24,0); ctx.lineTo(-3,0); ctx.stroke();
+    ctx.fillStyle='#c0c5b7'; ctx.strokeStyle='#373e3d'; ctx.lineWidth=.7; ctx.beginPath(); ctx.moveTo(3,0); ctx.lineTo(-5,-2.5); ctx.lineTo(-4,2.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.fillStyle = look === "stone" ? '#8b8874' : '#555b59'; ctx.strokeStyle='#292f30'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(0,0,look === "stone" ? 4.5 : 3.5,3.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='#d8cdb09a'; ctx.beginPath(); ctx.moveTo(-2,-2); ctx.lineTo(1,-3); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawWorkerHammer(ctx: CanvasRenderingContext2D, point: Point, remaining: number, left: boolean) {
+  const strike = Math.sin(remaining / 2.6);
+  ctx.save(); ctx.translate(point.x + (left ? -13 : 13), point.y - 12); ctx.scale(left ? -1 : 1,1); ctx.rotate(-.5 + strike*.65);
+  ctx.lineCap='round'; ctx.strokeStyle='#343a36'; ctx.lineWidth=3.3;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-12); ctx.stroke();
+  ctx.strokeStyle='#a88b62'; ctx.lineWidth=1.8; ctx.stroke();
+  ctx.fillStyle='#77817f'; ctx.strokeStyle='#30393a'; ctx.lineWidth=.8;
+  ctx.fillRect(-5,-15,10,4); ctx.strokeRect(-5,-15,10,4);
+  ctx.strokeStyle='#d5d0b3'; ctx.beginPath(); ctx.moveTo(-4,-15); ctx.lineTo(4,-15); ctx.stroke();
+  ctx.restore();
 }
 
 function isUnitKind(kind: NonNullable<WorldEffect["sourceKind"]>): kind is UnitKind {
@@ -933,9 +962,9 @@ function drawChargeTrail(ctx: CanvasRenderingContext2D, frame: ChargeTrailFrame)
     ctx.stroke();
   }
   ctx.lineCap = "round";
-  for (const streak of frame.streaks) {
+  for (const streak of frame.streaks.slice(0, 1)) {
     const gradient = ctx.createLinearGradient(streak.from.x, streak.from.y, streak.to.x, streak.to.y);
-    gradient.addColorStop(0, rgba(INK, streak.alpha));
+    gradient.addColorStop(0, rgba(INK, streak.alpha * .2));
     gradient.addColorStop(1, rgba(INK, 0));
     ctx.strokeStyle = gradient;
     ctx.lineWidth = streak.width;
@@ -1029,7 +1058,7 @@ function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFram
     ctx.fill();
     ctx.stroke();
   }
-  for (const ray of frame.rays) {
+  for (const ray of frame.rays.slice(0, 2)) {
     ctx.strokeStyle = rgba(SPARK, ray.alpha * 0.85);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1040,7 +1069,7 @@ function drawChargeImpact(ctx: CanvasRenderingContext2D, frame: ChargeImpactFram
     ctx.lineWidth = 0.8;
     ctx.stroke();
   }
-  for (const spark of frame.sparks) {
+  for (const spark of frame.sparks.slice(0, 2)) {
     ctx.strokeStyle = rgba(SPARK, spark.alpha);
     ctx.lineWidth = 1.5;
     ctx.beginPath();

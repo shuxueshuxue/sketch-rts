@@ -266,7 +266,7 @@ function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner:
   if (claim.kind === "expansion") return expansionClaimStillNeedsArmy(query, owner, claim);
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
   if (claim.kind === "harass") return Boolean(query.targetById(claim.targetId));
-  if (claim.kind === "build") return claim.sinceTick >= query.snapshot.tick || query.buildings().some((building) => !building.complete && distance(building, claim) <= 80);
+  if (claim.kind === "build") return query.snapshot.units.some(unit => unit.owner === owner && unit.order.type === "build" && distance(unit.order, claim) <= 80) || claim.sinceTick >= query.snapshot.tick || query.buildings().some((building) => !building.complete && distance(building, claim) <= 80);
   return true;
 }
 

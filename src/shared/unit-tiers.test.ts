@@ -26,7 +26,7 @@ describe("unit tiers", () => {
   it("puts the casters and raiders behind the advanced bar and the heavies behind the elite bar; the basic line needs none", () => {
     const tiers = (cap: number) => (Object.keys(UNIT_DEFS) as TrainableUnitKind[]).filter((kind) => requiredSupplyCap(kind) === cap).sort();
     expect(TIER_SUPPLY_CAP[3]).toBeGreaterThan(TIER_SUPPLY_CAP[2]);
-    expect(tiers(TIER_SUPPLY_CAP[2])).toEqual(["ashHexer", "emberAcolyte", "priest", "pyreCaller", "raider", "summoner", "witch"]);
+    expect(tiers(TIER_SUPPLY_CAP[2])).toEqual(["ashHexer", "ballista", "bombardShip", "carrier", "catapult", "emberAcolyte", "organGun", "priest", "pyreCaller", "raider", "siegeRam", "summoner", "witch"]);
     expect(tiers(TIER_SUPPLY_CAP[3])).toEqual(["ashChieftain", "cinderRevenant", "golem", "knight"]);
     for (const kind of ["worker", "footman", "lancer", "groveWarden", "archer", "emberRavager", "cinderRunner", "sparkArcher", "contractArcher"] as const) expect(requiredSupplyCap(kind)).toBe(0);
   });

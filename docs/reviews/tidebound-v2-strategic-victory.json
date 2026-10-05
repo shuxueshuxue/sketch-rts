@@ -1,0 +1,583 @@
+{
+  "outcome": "victory",
+  "tick": 13900,
+  "stages": [
+    {
+      "stage": 0,
+      "tick": 0
+    },
+    {
+      "stage": 1,
+      "tick": 660
+    },
+    {
+      "stage": 2,
+      "tick": 1380
+    },
+    {
+      "stage": 3,
+      "tick": 3320
+    },
+    {
+      "stage": 4,
+      "tick": 11360
+    }
+  ],
+  "actions": 147,
+  "elapsedMs": 67446.784087,
+  "samples": [
+    {
+      "tick": 1200,
+      "stage": 1,
+      "units": 4959,
+      "aboard": true,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          null,
+          true
+        ],
+        [
+          "heart",
+          null,
+          true
+        ],
+        [
+          "south",
+          null,
+          true
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 10274.342379
+    },
+    {
+      "tick": 2400,
+      "stage": 2,
+      "units": 4028,
+      "hero": 3956.4000000000315,
+      "aboard": false,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          null,
+          true
+        ],
+        [
+          "heart",
+          "crown",
+          false
+        ],
+        [
+          "south",
+          null,
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 21518.249267
+    },
+    {
+      "tick": 3600,
+      "stage": 3,
+      "units": 2921,
+      "aboard": true,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 30769.068633
+    },
+    {
+      "tick": 4800,
+      "stage": 3,
+      "units": 1955,
+      "aboard": true,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 37413.637171999995
+    },
+    {
+      "tick": 6000,
+      "stage": 3,
+      "units": 1439,
+      "aboard": true,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          true
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 43635.483806
+    },
+    {
+      "tick": 7200,
+      "stage": 3,
+      "units": 1067,
+      "hero": 4200,
+      "aboard": false,
+      "citadel": 18000,
+      "seal": 5200,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          true
+        ],
+        [
+          "heart",
+          "crown",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 47941.024091
+    },
+    {
+      "tick": 8400,
+      "stage": 3,
+      "units": 1010,
+      "hero": 2241.400000000054,
+      "aboard": false,
+      "citadel": 18000,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 51275.559209
+    },
+    {
+      "tick": 9600,
+      "stage": 3,
+      "units": 759,
+      "hero": 1824.4000000001633,
+      "aboard": false,
+      "citadel": 17890,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          false
+        ],
+        [
+          "south",
+          "crown",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 54846.627512
+    },
+    {
+      "tick": 10800,
+      "stage": 3,
+      "units": 745,
+      "hero": 1824.4000000002725,
+      "aboard": false,
+      "citadel": 14448,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "fleet",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          true
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 57846.88564
+    },
+    {
+      "tick": 12000,
+      "stage": 4,
+      "units": 637,
+      "hero": 2914.4000000003816,
+      "aboard": false,
+      "ports": [
+        [
+          "north",
+          "crown",
+          false
+        ],
+        [
+          "heart",
+          "crown",
+          true
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 0,
+      "elapsedMs": 60876.163147
+    },
+    {
+      "tick": 13200,
+      "stage": 4,
+      "units": 557,
+      "hero": 2839.4000000004908,
+      "aboard": false,
+      "ports": [
+        [
+          "north",
+          "fleet",
+          false
+        ],
+        [
+          "heart",
+          "fleet",
+          false
+        ],
+        [
+          "south",
+          "fleet",
+          false
+        ],
+        [
+          "west",
+          "fleet",
+          false
+        ],
+        [
+          "east",
+          "crown",
+          false
+        ]
+      ],
+      "hold": 25,
+      "elapsedMs": 64565.87560399999
+    }
+  ],
+  "mission": {
+    "revision": 2,
+    "stage": 4,
+    "stageTick": 11360,
+    "completed": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "raiders": [
+      "tide-raider-0",
+      "tide-raider-1",
+      "tide-raider-2",
+      "tide-raider-3",
+      "tide-raider-4",
+      "tide-raider-5",
+      "tide-raider-6",
+      "tide-raider-7",
+      "tide-raider-8",
+      "tide-raider-9",
+      "tide-raider-10",
+      "tide-raider-11",
+      "tide-raider-12",
+      "tide-raider-13",
+      "tide-raider-14",
+      "tide-raider-15",
+      "tide-raider-16",
+      "tide-raider-17",
+      "tide-raider-18",
+      "tide-raider-19",
+      "tide-raider-20",
+      "tide-raider-21",
+      "tide-raider-22",
+      "tide-raider-23"
+    ],
+    "cargo": [
+      {
+        "id": "tide-cargo-0",
+        "waypoint": 4,
+        "delivered": true,
+        "lost": false
+      },
+      {
+        "id": "tide-cargo-1",
+        "waypoint": 4,
+        "delivered": true,
+        "lost": false
+      }
+    ],
+    "convoySpawned": true,
+    "portHold": 0,
+    "mageRescued": true,
+    "sealBroken": true,
+    "objectives": [
+      {
+        "id": "last-ports",
+        "title": "守住两处港口 60 秒",
+        "detail": "60/60 秒",
+        "done": true,
+        "x": 12800,
+        "y": 9200
+      },
+      {
+        "id": "evacuation",
+        "title": "掩护撤离船抵达灯塔",
+        "detail": "最后一艘船会沿南侧水道西行，拦截追击舰队",
+        "done": true,
+        "x": 6040,
+        "y": 8740
+      }
+    ],
+    "dialogue": [
+      {
+        "tick": 0,
+        "speaker": "港务长 · 伊蕾",
+        "text": "舰队还在雾外等信号。先清掉岸上的袭击队，再让工程兵修复灯塔；灯不亮，补给船就进不来。"
+      },
+      {
+        "tick": 600,
+        "speaker": "港务长 · 伊蕾",
+        "text": "袭击队正在向灯塔靠拢。让工程队开工，远征军去挡住他们！"
+      },
+      {
+        "tick": 660,
+        "speaker": "船长 · 赫恩",
+        "text": "两艘船，装着北线整个月的粮食。我们走西侧水道，护住船队。你的人可以乘登陆舰先上岸。"
+      },
+      {
+        "tick": 1380,
+        "speaker": "船长 · 赫恩",
+        "text": "粮船靠岸了。北岬的工坊和补给站交给你；这里现在可以生产攻城器械。"
+      },
+      {
+        "tick": 1380,
+        "speaker": "海军议会",
+        "text": "北线有了粮，南线却快撑不住了。夺取两座海峡港口，并让它们持续运转。白盐港的法师还活着——找到她，巨龙就不再不可阻挡。"
+      },
+      {
+        "tick": 1400,
+        "speaker": "海军议会",
+        "text": "白盐港已收到调度：120 人预备队正在增援。"
+      },
+      {
+        "tick": 2600,
+        "speaker": "海军议会",
+        "text": "王座海峡已收到调度：120 人预备队正在增援。"
+      },
+      {
+        "tick": 3320,
+        "speaker": "统帅 · 艾登",
+        "text": "王廷的护城结界由潮汐枢纽供能。主力会牵制正面，你率精锐摧毁枢纽，再让攻城队打进王廷。"
+      },
+      {
+        "tick": 5540,
+        "speaker": "大法师 · 瑟芙",
+        "text": "龙血的契约已经断了。把你的人展开，不要聚在它的吐息下。我的风暴会为你打开缺口。"
+      },
+      {
+        "tick": 8220,
+        "speaker": "海军议会",
+        "text": "潮汐枢纽已毁，结界正在崩解。主力转向王廷堡垒。"
+      },
+      {
+        "tick": 11360,
+        "speaker": "港务长 · 伊蕾",
+        "text": "堡垒倒了，敌军的舰队还没有。守住两处港口，直到最后一艘撤离船回到灯塔。工事、修理和舰队，现在一样也不能少。"
+      },
+      {
+        "tick": 13900,
+        "speaker": "远征记录",
+        "text": "撤离船已抵达灯塔，诸港仍在我们手中。海峡重获航路。"
+      }
+    ],
+    "dispatchTick": 13300,
+    "finalMobilized": true,
+    "rewardGold": 3500,
+    "evacuation": {
+      "id": "tide-evacuation",
+      "waypoint": 5,
+      "arrived": true,
+      "lost": false,
+      "delivered": true
+    }
+  }
+}

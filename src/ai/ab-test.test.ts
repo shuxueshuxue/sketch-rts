@@ -39,7 +39,7 @@ describe("SDK AI behavior A/B runner", () => {
       owner: "v2",
       behavior: "economicCatchUp",
       scripts: [AI_SCRIPT_LIBRARY.economicCatchUp],
-      maxTicks: 2,
+      maxTicks: 1_800,
       thinkInterval: 1,
       prepare(game) {
         game.buildings = game.buildings.filter((building) =>

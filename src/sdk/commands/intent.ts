@@ -15,6 +15,7 @@ export type SdkCommandIntent =
   | { type: "retreatWounded"; unitIds?: SdkUnitSelector; hpRatio?: number; x?: number; y?: number }
   | { type: "mine"; unitIds?: SdkUnitSelector; resourceId?: string }
   | { type: "repair"; unitIds?: SdkUnitSelector; buildingId: string }
+  | { type: "repairShip"; unitIds?: SdkUnitSelector; targetId: string }
   | { type: "expand"; resourceId?: string; unitId?: string }
   | { type: "creepCamp"; campId?: string; unitIds?: SdkUnitSelector }
   | { type: "build"; unitId?: string; buildingKind: BuildingKind; x: number; y: number }
@@ -40,6 +41,7 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   }
   if (intent.type === "mine") return { type: "mine", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), resourceId: intent.resourceId ?? nearestResourceId(snapshot, owner) };
   if (intent.type === "repair") return { type: "repair", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), buildingId: intent.buildingId };
+  if (intent.type === "repairShip") return { type: "repairShip", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), targetId: intent.targetId };
   if (intent.type === "expand") {
     const resource = expansionResource(snapshot, owner, intent.resourceId);
     return { type: "build", unitId: intent.unitId ?? nearestWorkerId(snapshot, owner, resource), buildingKind: "townHall", x: resource.x, y: resource.y };
