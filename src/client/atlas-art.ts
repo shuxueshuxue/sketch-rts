@@ -1,3 +1,4 @@
+import { unitMover } from "../shared/catalog";
 import { paintCorpse } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
 import { hasPaintedUnit, paintFigure } from "./art/painted-units";
@@ -72,7 +73,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
     sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
       const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
-      if (kind !== "transport" && kind !== "warship") {
+      if (unitMover(kind) !== "sea") {
         ellipse(b, 3, 18, broad ? 29 : 14, broad ? 6 : 4.5, "#29282418");
         ellipse(b, 1, 17, broad ? 24 : 10, broad ? 4.5 : 2.8, "#29282438");
       }
@@ -82,6 +83,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
   }
   sprite(c, `u:${kind}:${color}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
     const card = UNIT_CARDS[kind];
+    if (card.art.bearing === "construct") ellipse(b, 1, 17, 28, 6, "#29282438");
     if (card.art.bearing === "foot" && kind !== "wildling") ellipse(b, 2, 16, 17, 6, "#30483630");
     else if (kind === "wildling" || kind === "mossGnawer" || kind === "spirit") ellipse(b, 2, 15, 14, 5, "#30483630");
     withUnitPose(b, pose, () => card.paint(b, color));

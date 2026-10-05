@@ -2065,29 +2065,7 @@ input[type="range"] {
 
 .selection-model.focused .selection-model-canvas { width: 96px; height: 96px; display: block; margin: 0 auto; border-radius: 0; }
 
-/* Tidebound: one quiet instrument panel, slate / ivory / aged gold. */
-.tide-brief { padding: 18px 22px; background: #182126ed; color: #cec9ba; border: 1px solid #59615f; font: 14px/1.65 var(--font-ui); }
-.tide-brief p { color: #ddbf86; font-weight: 600; margin: 12px 0 4px; }
-.tide-brief small { display:block; color:#a9b4b6; }
-.tide-panel { position:absolute; z-index:7; left:18px; top:18px; width:252px; max-height:calc(100vh - 270px); overflow:auto; color:#d5d8d2; background:linear-gradient(125deg,#20292ef5,#141a20f5); border:1px solid #6e746d; border-top:2px solid #c8a96e; border-radius:3px; box-shadow:0 8px 30px #10141955; padding:16px; font:12px/1.5 var(--font-ui); }
-.tide-panel header { display:flex; flex-direction:column; gap:5px; padding-bottom:12px; border-bottom:1px solid #475258; }
-.tide-panel header small { letter-spacing:3px; font-size:9px; color:#ac9471; }
-.tide-panel header strong { font:26px var(--font-display); letter-spacing:5px; color:#ece5d5; }
-.tide-panel header span { color:#90a3ab; font-variant-numeric:tabular-nums; }
-[data-tide-objective] { margin:12px 0; color:#e0c58d; font-weight:600; }
-.tide-ports { display:grid; gap:4px; }
-.tide-panel button { border:1px solid #4b595e; border-radius:2px; padding:7px 8px; color:#d0d8d8; background:#28343a; font:11px var(--font-ui); cursor:pointer; text-shadow:none; }
-.tide-panel button:hover { color:#fff0cc; border-color:#c0a16c; background:#35444b; }
-.tide-ports button { text-align:left; border-left:3px solid #8f958f; }
-.tide-ports [data-side='fleet'] { border-left-color:#82b2be; }
-.tide-ports [data-side='crown'] { border-left-color:#bc7f69; }
-.tide-tools { display:flex; gap:4px; margin:12px 0; flex-wrap:wrap; }
-.tide-panel details { border-top:1px solid #3a494e; padding-top:10px; margin-top:10px; }
-.tide-panel summary { cursor:pointer; color:#aab9bd; margin-bottom:8px; }
-.tide-relics,.tide-recruits { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-.tide-log { color:#9fadaf; font-size:11px; border-top:1px solid #3a494e; padding-top:10px; margin-bottom:0; }
-@media(max-height:750px) { .tide-panel{top:10px;left:10px;width:225px;max-height:calc(100vh - 225px);padding:10px}.tide-panel header strong{font-size:20px}.tide-panel button{padding:5px}.tide-log{display:none} }
-/* Live HUD material matches the campaign instruments, independent of faction. */
+/* Live HUD material uses slate, ivory and aged metal, independent of faction. */
 .game-shell { --hud-panel:linear-gradient(140deg,#293137,#1a2025); --hud-ink:#e1dfd4; }
 .selection-chip,.command-dock,.item-dock,.match-menu { border-color:#657077;box-shadow:inset 0 1px #e5d8b81c,0 6px 20px #10151a55;border-radius:4px; }
 .command-button,.item-button { background:linear-gradient(140deg,#42494a,#2b343a);color:#e4ddcb;border-color:#69716d;box-shadow:inset 0 1px #f6e2b31c; }
@@ -2095,74 +2073,6 @@ input[type="range"] {
 .command-portrait {background:transparent;}
 .minimap-tab {background:linear-gradient(#38464d,#202a31);border-color:#758084;}
 .match-menu-button {background:#26323a;border-color:#8c958e;}
-.tide-briefing .menu-status { color:#eee4cd; font:14px/1.6 var(--font-ui); max-width:550px; text-shadow:0 1px 4px #101820; }
-.tide-jobs { display:flex;flex-wrap:wrap;gap:4px;padding-top:8px; }
-.tide-jobs button { color:#dcc8a0;border-color:#927451; }
-[data-tide-hero-health] { font-size:11px; margin-top:10px; color:#adc2c1; font-variant-numeric:tabular-nums; }
-[data-tide-hero-health].critical { color:#ffc29d;background:#733a30;padding:6px;border-left:3px solid #e8a370; }
-.tide-result {position:absolute;z-index:30;left:50%;top:46%;transform:translate(-50%,-50%);width:min(520px,80vw);padding:42px;background:linear-gradient(135deg,#27373f,#121c23);border:1px solid #b39765;border-top:3px solid #d6bc81;color:#e7ddc6;box-shadow:0 25px 100px #071017b3;font:15px/1.8 var(--font-ui);text-align:center;}
-.tide-result small{font:10px var(--font-ui);letter-spacing:4px;color:#bca478}.tide-result h2{font:36px var(--font-display);letter-spacing:5px;margin:18px 0}.tide-result div{font-size:13px;color:#9cafb7;margin:25px 0}.tide-result button{background:#b9a16e;border:0;color:#182128;padding:12px 30px;font:14px var(--font-ui);cursor:pointer}
-/* Play is one map browser. Modes are tabs within the same window. */
-.play-browser .create-game-form { grid-template-rows:auto minmax(0,1fr) auto auto; }
-.play-tabs { display:flex;align-items:end;gap:4px;border-bottom:1px solid var(--rule);min-height:44px; }
-.play-tab { border:1px solid transparent;border-bottom:0;background:transparent;color:var(--ink-soft);padding:12px 26px 13px;font:600 15px var(--font-ui);cursor:pointer;position:relative; }
-.play-tab[aria-selected="true"] { color:var(--ink);background:var(--inset);border-color:var(--rule); }
-.play-tab[aria-selected="true"]::after { content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent); }
-.play-tab:hover { color:var(--ink);background:var(--selected); }
-.play-rooms { margin-left:auto;margin-bottom:8px;border:0;background:none;color:var(--ink-soft);font:13px var(--font-ui);cursor:pointer;padding:8px 12px; }
-.play-mode-body { min-height:0;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px; }
-.campaign-browser { min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:12px; }
-.campaign-entry-sub { display:block;font-size:11px;font-weight:400;opacity:.7;margin-top:5px; }
-.campaign-library { background:var(--inset);border:1px solid var(--rule); }
-.campaign-arc-list { margin-top:20px;border-top:1px solid var(--rule); }
-.campaign-arc { display:flex;gap:12px;padding:14px 4px;border-bottom:1px solid var(--rule); }
-.campaign-arc>span { color:var(--ink-soft);font:20px var(--font-display); }
-.campaign-arc strong { display:block;font:500 14px var(--font-ui); }
-.campaign-arc small { display:block;font-size:11px;color:var(--ink-soft);margin-top:4px; }
-.campaign-arc.completed>span { color:#567c69; }
-.campaign-save-note { font:12px/1.6 var(--font-ui);color:var(--ink-soft);margin:0; }
-.campaign-detail { min-height:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(240px,.9fr);gap:20px;background:var(--inset);padding:16px;border:1px solid var(--rule);overflow:auto; }
-.campaign-map-frame { position:relative;align-self:center; }
-.campaign-map-frame canvas { display:block;width:100%;height:auto;border:1px solid #687d80;box-shadow:0 8px 18px #0002; }
-.campaign-map-scale { display:block;text-align:center;color:var(--ink-soft);font:11px var(--font-ui);margin-top:10px; }
-.campaign-description { align-self:center;font:14px/1.8 var(--font-ui); }
-.campaign-description h2 { font:30px var(--font-display);letter-spacing:4px;margin:4px 0 18px;color:var(--ink); }
-.campaign-description p { margin:12px 0; }
-.campaign-description .campaign-kicker { color:var(--ink-soft);letter-spacing:2px;font-size:11px; }
-.campaign-description .campaign-facts { display:flex;flex-wrap:wrap;gap:6px;margin:18px 0; }
-.campaign-description .campaign-facts span { color:var(--ink-soft);border-color:var(--rule); }
-.campaign-opening { border-top:1px solid var(--rule);padding-top:16px;font-size:12px; }
-.campaign-opening strong { display:block;color:var(--accent);margin-bottom:6px; }
-.campaign-launch-bar,.campaign-launch-actions { display:flex;gap:10px;align-items:center; }
-.campaign-launch-bar>button { margin-left:auto; }
-.campaign-invite-form { display:flex;gap:10px;align-items:center;font:12px var(--font-ui);color:var(--ink-soft); }
-.campaign-invite-form label { display:flex;gap:12px;align-items:center; }
-.campaign-invite-form input { width:230px;min-width:0; }
-.campaign-invite-form small { margin-left:auto;max-width:260px; }
-.play-browser .campaign-lobby { margin:auto;width:min(650px,100%);color:var(--ink); }
-.play-browser .campaign-lobby h2 { color:var(--ink); }
-.play-browser .campaign-lobby input { background:var(--inset);color:var(--ink);border-color:var(--rule); }
-/* A small mission book; command and item docks remain reachable below it. */
-.tide-panel { width:260px;max-height:calc(100dvh - 290px);top:12px;left:12px;padding:12px; }
-.tide-panel [data-tide-objective] { font-size:13px;margin:12px 0 8px; }
-.tide-objectives { display:grid;gap:5px; }
-.tide-panel .tide-objective-row { display:grid;grid-template-columns:16px 1fr;gap:3px 5px;text-align:left;padding:9px;background:#17232b;border-color:#3e5058; }
-.tide-objective-row>span { color:#d6b978; }
-.tide-objective-row>strong { font:500 11px/1.5 var(--font-ui); }
-.tide-objective-row>small { grid-column:2;color:#a9b9be;font:10px/1.5 var(--font-ui); }
-.tide-objective-row.completed>span { color:#8db79b; }.tide-objective-row.completed>strong { color:#8db79b; }
-.tide-mission-actions { display:flex;flex-wrap:wrap;gap:5px;margin:10px 0; }
-.tide-mission-actions button[hidden] { display:none; }
-.tide-dispatch { display:grid;gap:4px;margin-top:6px; }
-.tide-dialogue { border-left:2px solid #b79c67;padding:8px 10px;background:#b9a3760b;margin-top:10px; }
-.tide-dialogue strong { color:#c6b084;font:500 10px var(--font-ui); }
-.tide-dialogue p { margin:5px 0 0;font:11px/1.7 var(--font-ui);color:#c1cdcc; }
-.tide-history { padding-left:18px;color:#a7b9bd;font:10px/1.7 var(--font-ui); }.tide-history li { margin:8px 0; }
-@media(max-width:1100px) { .campaign-detail { grid-template-columns:1fr;gap:14px; }.campaign-map-frame{max-width:450px;margin:auto}.campaign-description h2{font-size:24px}.campaign-description{font-size:12px}.campaign-description .campaign-facts{margin:8px 0}.campaign-invite-form small{display:none} }
-@media(max-width:750px) { .campaign-chooser{grid-template-columns:160px minmax(0,1fr);gap:8px}.campaign-arc{padding:10px 0;gap:7px}.campaign-arc strong{font-size:12px}.campaign-detail{padding:10px}.play-tab{padding:10px 18px}.campaign-invite-form label{gap:6px}.campaign-invite-form input{width:160px}.tide-panel{width:205px;max-height:calc(100dvh - 260px)} }
-.campaign-invite-form button { min-height:32px;border:1px solid var(--btn-edge);background:var(--btn);color:var(--btn-ink);border-radius:2px;padding:6px 16px;font:600 12px var(--font-ui);cursor:pointer; }
-.campaign-invite-form button:hover { background:var(--btn-hover); }
-.campaign-launch-bar { justify-content:space-between; }
-.campaign-lobby { font:14px/1.8 var(--font-ui);padding:24px;box-sizing:border-box; }
-.campaign-lobby>p { padding:8px 0; }.campaign-lobby input { width:100%;box-sizing:border-box;padding:10px;user-select:text; }
-.tide-ports { grid-template-columns:1fr 1fr; }.tide-tools{gap:4px;margin:8px 0}.tide-panel header strong{font-size:19px;letter-spacing:3px}.tide-panel header small{display:none}
+
+/* The map browser keeps its original three rows after removing campaign tabs. */
+.play-browser .create-game-form { grid-template-rows:minmax(0,1fr) auto auto; }

@@ -1,13 +1,5 @@
-import type { SiteModelKind } from "./art/building-models";
-import { tideModel } from "../campaigns/tidebound/art";
-import { CampaignSession } from "./campaign-session";
-import { TideboundAdapter, TIDE_SAVE } from "./tidebound-adapter";
-import { CHAPTERS } from "../campaigns/tidebound/mission";
-import { tideboundMap, HOME, BEACON, LANES, WORLD } from "../campaigns/tidebound/world";
-import { terrainMinimap } from "./terrain-art";
-import { TITLE, HERO, RELICS, SHIPS, SIEGE, DEFENSES, type CampaignSave } from "../campaigns/tidebound/campaign";
 import "./styles.css";
-import { drawAtlasModel, drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
+import { drawAtlasBuilding, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
@@ -84,7 +76,7 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "play" | "campaigns" | "campaign" | "campaignRoom" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type MenuView = "play" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -209,13 +201,6 @@ let lastMouse: Point | undefined;
 let draggingMinimapViewport = false;
 let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
-let campaignSession: CampaignSession | undefined;
-let campaignStarting=false;
-let tideAdapter: TideboundAdapter | undefined;
-let tideTarget: {type:"cast";index:number}|{type:"fortify";id:string}|undefined;
-let tidePanel: HTMLElement | undefined;
-let tidePanelTick=-1;
-let lastTidePanelState: unknown;
 let menuOpen = true;
 let menuView: MenuView = "home";
 // @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
@@ -577,10 +562,6 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>) {
 }
 
 async function openRouteFromHash() {
-  if(window.location.hash.startsWith('#campaign-room=')){
-    if(!campaignSession)joinCampaignRoom(decodeURIComponent(window.location.hash.slice(15)),false);
-    return;
-  }
   const route = parseRoomRouteHash(window.location.hash);
   if (route.screen === "room") {
     await enterRoom(route.roomId);
@@ -618,7 +599,7 @@ function replaceRoomRouteHash(route: RoomRoute) {
 }
 
 function renderMainMenu() {
-  mainMenu.classList.remove("tide-briefing", "campaign-home", "play-browser");
+  mainMenu.classList.remove("play-browser");
   // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
   if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
@@ -634,9 +615,7 @@ function renderMainMenu() {
             : menuView === "results"
               ? t("home.results.title")
               : t("home.roomSetup.title");
-  if (menuView === "play") { renderPlayMenu(); return; }
-  if (menuView === "campaigns" || menuView === "campaign") { openTideBriefing(); return; }
-  if (menuView === "campaignRoom") { renderCampaignRoom(); return; }
+  if (menuView === "play") { renderCreateGameMenu(); return; }
   if (menuView === "profile") {
     renderProfileMenu();
     return;
@@ -697,7 +676,6 @@ function renderCreateGameMenu() {
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
-  form.prepend(playTabs("skirmish"));
   const entries = form.querySelector<HTMLDivElement>("[data-map-entries]")!;
   const renderMaps = () => {
     entries.replaceChildren(
@@ -1215,7 +1193,6 @@ function handleRuntimeRoomUpdate(room: RoomState) {
 
 function syncActiveGameAdapterSnapshot() {
   if (menuOpen) return false;
-  if(tideAdapter && activeGameAdapter.currentSnapshot() === snapshot)return Boolean(snapshot);
   const view = syncFrontendWorldView(activeGameAdapter, { owner: localPlayerId, snapshot, selectedIds, focusedSelectionId, selectedCampId, controlGroups });
   if (!view.snapshot) return false;
   if (snapshot && view.snapshot !== snapshot) playCues(soundCues(snapshot, view.snapshot, localPlayerId));
@@ -1284,7 +1261,6 @@ function releasePointerLockForMenu() {
 
 function frame() {
   syncActiveGameAdapterSnapshot();
-  updateTidePanel();
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
@@ -1470,8 +1446,6 @@ function onKeyDown(event: KeyboardEvent) {
     closePalette(t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
     return;
   }
-  if(tideAdapter&&key==='h'){event.preventDefault();sendCommand({type:'holdPosition',unitIds:[...selectedIds]});return;}
-  if(tideAdapter&&key==='escape'&&tideTarget){tideTarget=undefined;return;}
   if (key === "tab") {
     event.preventDefault();
     cycleFocusedSelection(event.shiftKey ? -1 : 1);
@@ -1653,7 +1627,6 @@ function onMouseUp(event: MouseEvent) {
     virtualUiMouseDownTarget = undefined;
   }
   if (!snapshot) return;
-  if(tideTarget && tideAdapter){if(event.button===0)tideAdapter.action({...tideTarget,...screenToWorld(point)});tideTarget=undefined;selectionStart=undefined;selectionEnd=undefined;return;}
   if (commandMode) {
     if (event.button === 0 && commandMode.type === "build") confirmBuildPlacement(point);
     else if (event.button === 0 && commandMode.type === "attackMove") issueAttackMoveAt(point, event.shiftKey);
@@ -1997,9 +1970,9 @@ function issueSpellAt(point: Point, queued = false) {
   const { ability, casterId } = commandMode.targeting;
   const world = screenToWorld(point);
   const behavior = ABILITY_DEFS[ability].behavior;
-  if (behavior === "summon") {
+  if (behavior === "summon" || (ABILITY_DEFS[ability].behavior === "weapon" && (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).target === "point")) {
     sendCommand({ type: "cast", unitId: casterId, ability, x: world.x, y: world.y, queued });
-    statusLabel.textContent = t("status.summonOrdered");
+    statusLabel.textContent = t("status.spellOrdered",{ability:labelKind(ability)});
     clearCommandModeClasses();
     commandMode = undefined;
     updateHud();
@@ -2007,6 +1980,7 @@ function issueSpellAt(point: Point, queued = false) {
   }
 
   const target =
+    behavior === "weapon" ? (hitUnit(world, unit=>["enemy","creep"].includes(relationTo(snapshot!,localPlayerId,unit.owner))) ?? buildingAt(snapshot!.buildings,world,building=>relationTo(snapshot!,localPlayerId,building.owner)==="enemy")) :
     behavior === "heal"
       ? hitUnit(world, (unit) => unit.owner === localPlayerId)
       : hitUnit(world, (unit) => unit.owner !== localPlayerId);
@@ -2417,9 +2391,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       count.textContent = `x${group.count}`;
       const name = document.createElement("span");
       name.className = "selection-model-name";
-      const first=snapshot?.units.find(u=>u.id===group.ids[0]);
-      const variant=first?.variant?.replace('tide/','');
-      name.textContent=first?.id===HERO?'远征统帅':variant?([...SHIPS,...SIEGE].find(d=>d.id===variant)?.name??(variant==='dragon'?'王廷古龙':variant==='archmage'?'议会大法师':labelAnyKind(group.kind))):labelAnyKind(group.kind);
+      name.textContent = labelAnyKind(group.kind);
       button.append(canvas, name, count);
       const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0]);
       if (entity && group.focused) {
@@ -2457,10 +2429,7 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const point = { x: canvas.width / 2, y: canvas.height / 2 };
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
   const color = ownerInk(owner ?? localPlayerId);
-  const modelUnit=snapshot?.units.find(u=>u.id===group.ids[0]);
-  const model=modelUnit?.variant?tideModel(modelUnit.variant):undefined;
-  if(model&&modelUnit?.variant)drawAtlasModel(mini,modelUnit.variant,model,{x:canvas.width/2,y:canvas.height*.68},canvas.width/100,color);
-  else if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
+  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
   else drawAtlasBuilding(mini, group.kind, point, 78, color);
 }
 
@@ -2638,12 +2607,10 @@ function draw() {
     labels: worldLabels,
     selectedIds,
     controlGroups,
-    ...(tideAdapter ? {models:tideModel,buildingModels:{citadel:'citadel' as SiteModelKind,...Object.fromEntries(Object.entries(tideAdapter.state?.defense??{}).filter(([,id])=>id!=='watch').map(([key,id])=>[key,`fort-${id}` as SiteModelKind]))}} : {}),
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
   });
-  drawTideObjectives();
   drawBuildPlacementPreview();
   drawAttackMovePreview();
   drawSpellPreview();
@@ -2718,15 +2685,15 @@ function drawSpellPreview() {
     return;
   }
   const behavior = ABILITY_DEFS[ability].behavior;
-  const color = behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
-  const fill = behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  const color = behavior === "weapon" ? "#c6ae7b" : behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
+  const fill = behavior === "weapon" ? "rgba(198,174,123,0.08)" : behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = fill;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
-  ctx.arc(point.x, point.y, behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, behavior === "weapon" ? Math.min(90, (ABILITY_DEFS[ability] as Extract<typeof ABILITY_DEFS[AbilityKind],{behavior:"weapon"}>).weapon.radius ?? 20) * worldZoom : behavior === "summon" ? 28 : 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   ctx.setLineDash([]);
@@ -3116,145 +3083,4 @@ function requireCanvasContext(target: HTMLCanvasElement) {
   const context = target.getContext("2d");
   if (!context) throw new Error("Canvas 2D context is unavailable");
   return context;
-}
-
-
-function playTabs(active:'skirmish'|'campaign'){
- const tabs=document.createElement('div');tabs.className='play-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','游戏模式');
- for(const [id,name,route] of [['skirmish','遭遇战','play'],['campaign','战役','campaigns']] as const){
-  const button=document.createElement('button');button.type='button';button.className='play-tab';button.id=`play-tab-${id}`;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(id===active));button.tabIndex=id===active?0:-1;button.textContent=name;
-  button.onclick=()=>openMenuRoute({screen:route});
-  button.onkeydown=event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();openMenuRoute({screen:active==='skirmish'?'campaigns':'play'});mapList.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus();}};
-  tabs.append(button);
- }
- const rooms=document.createElement('button');rooms.type='button';rooms.className='play-rooms';rooms.textContent=t('home.rooms.label');rooms.onclick=()=>openMenuRoute({screen:'rooms'});tabs.append(rooms);return tabs;
-}
-function renderPlayMenu(){renderCreateGameMenu();}
-function campaignSave(){try{const raw=localStorage.getItem(TIDE_SAVE);if(raw){const save=JSON.parse(raw) as CampaignSave;if(save.state.mission?.revision===2)return save;}}catch{}return undefined;}
-function openTideBriefing(){
- mainMenu.dataset.menuView='create';mainMenu.classList.add('play-browser');menuTitle.textContent=t('home.play');menuStatus.textContent='';
- const saved=campaignSave(),page=document.createElement('section');page.className='campaign-browser';page.setAttribute('role','tabpanel');page.setAttribute('aria-labelledby','play-tab-campaign');
- page.innerHTML=`<div class="map-chooser campaign-chooser">
- <section class="map-browser campaign-library" aria-label="战役列表"><div class="room-section-title">战役</div><div class="map-entries"><button type="button" class="map-entry selected" aria-current="true">潮汐王座<span class="campaign-entry-sub">诸港群岛 · 海陆远征</span></button><div class="campaign-arc-list">${CHAPTERS.map((c,i)=>`<div class="campaign-arc ${saved&&saved.state.mission.completed.includes(String(i))?'completed':''}"><span>${String(i+1).padStart(2,'0')}</span><div><strong>${c.title}</strong><small>${c.summary}</small></div></div>`).join('')}</div></div><p class="campaign-save-note">${saved?`最近记录：${CHAPTERS[saved.state.mission.stage]?.title??'远征结束'} · ${Math.floor(saved.snapshot.tick/1200)} 分钟`:'五个任务阶段，贯穿同一片持续演化的群岛战场。'}</p></section>
- <section class="campaign-detail"><div class="campaign-map-frame"><canvas width="768" height="576" data-campaign-preview aria-label="诸港群岛地图：西侧后方、三处主战场及东侧王廷"></canvas><span class="campaign-map-scale">24,576 × 18,432 · 八座岛屿</span></div><div class="campaign-description"><div><span class="campaign-kicker">群岛战争</span><h2>潮汐王座</h2></div><p>王廷用巨龙和岸炮封锁了诸港。你率一支远征队，点亮灯塔、护送补给、建立登陆场，协助海军议会撕开封锁。</p><div class="campaign-facts"><span>单人 / 合作</span><span>5,000+ 全图兵力</span><span>基地 · 补给 · 工程 · 舰队</span></div><p class="campaign-opening"><strong>开局任务</strong>清除灯塔旁的袭击队，让工程兵修复航标。舰队在雾外等你的信号。</p></div></section>
- </div><div class="campaign-launch-bar menu-actions"><div class="campaign-launch-actions"></div><button type="button" data-campaign-back>${escapeHtml(t('common.back'))}</button></div><form class="campaign-invite-form"><label>加入合作远征<input name="room" placeholder="邀请链接或房间编号" aria-label="远征邀请链接或房间编号" required></label><button type="submit">加入</button><small>合作玩家共享远征军与基地；主力仍由 AI 指挥。</small></form>`;
- const wrapper=document.createElement('div');wrapper.className='play-mode-body';wrapper.append(playTabs('campaign'),page);mapList.replaceChildren(wrapper);
- const actions=page.querySelector('.campaign-launch-actions')!;
- const launch=(label:string,attr:string,handler:()=>void)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute(attr,'');b.onclick=handler;actions.append(b);};
- launch('开始远征','data-start-campaign',()=>{campaignSession?.close();campaignSession=undefined;startTideCampaign();});
- launch('创建合作房间','data-create-campaign-room',()=>joinCampaignRoom(crypto.randomUUID(),true));
- if(saved?.state.outcome==='playing')launch('继续远征','data-load-campaign',()=>{campaignSession?.close();campaignSession=undefined;startTideCampaign(saved);});
- page.querySelector('[data-campaign-back]')!.addEventListener('click',()=>openMenuRoute({screen:'home'}));
- const join=page.querySelector<HTMLFormElement>('.campaign-invite-form')!;join.onsubmit=e=>{e.preventDefault();const input=String(new FormData(join).get('room')??'').trim();const id=input.includes('#campaign-room=')?input.split('#campaign-room=')[1]!:input;if(!/^[a-zA-Z0-9-]{8,64}$/.test(id)){menuStatus.textContent='请输入有效的邀请链接或房间编号';return;}joinCampaignRoom(id,false);};
- drawCampaignPreview(page.querySelector<HTMLCanvasElement>('[data-campaign-preview]')!);
-}
-function drawCampaignPreview(canvas:HTMLCanvasElement){
- const brush=canvas.getContext('2d')!;const map=tideboundMap();brush.drawImage(terrainMinimap(map.terrain!),0,0,canvas.width,canvas.height);
- const point=(x:number,y:number)=>({x:x/WORLD.width*canvas.width,y:y/WORLD.height*canvas.height});
- brush.font='16px var(--font-ui), sans-serif';brush.textAlign='center';
- for(const [label,x,y,ink] of [['远征基地',HOME.x,HOME.y,'#e5cc86'],['灯塔',BEACON.x,BEACON.y,'#e5cc86'],['北岬船坞',12800,LANES[0],'#b9ced2'],['王座海峡',12800,LANES[1],'#b9ced2'],['白盐港',12800,LANES[2],'#b9ced2'],['王廷堡垒',17000,9200,'#d49b83'],['黑礁军港',20700,9200,'#d49b83']] as const){const at=point(x,y);brush.fillStyle=ink;brush.beginPath();brush.arc(at.x,at.y,5,0,Math.PI*2);brush.fill();brush.fillStyle='#14232ce6';const w=brush.measureText(label).width+14;brush.fillRect(at.x-w/2,at.y+10,w,25);brush.fillStyle='#e1ded0';brush.fillText(label,at.x,at.y+28);}
- brush.setLineDash([5,6]);brush.strokeStyle='#c4b178';brush.lineWidth=2;brush.beginPath();const start=point(6400,9200);brush.moveTo(start.x,start.y);for(const p of [{x:7800,y:6600},{x:10300,y:5360}]){const at=point(p.x,p.y);brush.lineTo(at.x,at.y);}brush.stroke();brush.setLineDash([]);
-}
-function joinCampaignRoom(id:string,create:boolean){
- campaignSession?.close();menuView='campaignRoom';mainMenu.classList.add('play-browser');mainMenu.dataset.menuView='create';menuTitle.textContent='合作远征';mapList.replaceChildren();menuStatus.textContent='正在连接合作房间……';
- history.replaceState(null,'',`${location.pathname}#campaign-room=${encodeURIComponent(id)}`);
- campaignSession=new CampaignSession(id,create,localUser.name,{lobby:()=>{if(menuOpen)renderCampaignRoom();},start:()=>startTideCampaign(),notice:text=>{menuStatus.textContent=text;statusLabel.textContent=text;},ended:()=>{if(menuOpen)renderCampaignRoom();tideAdapter?.action({type:'pause',paused:true});if(tideAdapter)tideAdapter.paused=true;}});
-}
-function renderCampaignRoom(){
- mainMenu.classList.add('play-browser');mainMenu.dataset.menuView='create';menuTitle.textContent='合作远征';
- const session=campaignSession;if(!session?.lobby){mapList.replaceChildren(menuButton('返回战役主页','','data-campaign-retry',()=>{campaignSession?.close();campaignSession=undefined;openMenuRoute({screen:'campaigns'});}));return;}
- menuStatus.textContent='潮汐王座 · 多人合作 · 共同指挥同一支远征队';
- const panel=document.createElement('section');panel.className='campaign-lobby';
- const heading=document.createElement('h2');heading.textContent='同行的指挥官';panel.append(heading);
- for(const member of session.lobby.members){const row=document.createElement('p');row.textContent=`${member.id===session.lobby.hostId?'◆ 房主':'◇ 指挥官'} · ${member.name}${member.id===session.id?'（你）':''}`;panel.append(row);}
- const input=document.createElement('input');input.readOnly=true;input.value=location.href;input.setAttribute('aria-label','远征邀请链接');panel.append(input);
- const hint=document.createElement('p');hint.textContent='把邀请链接发给朋友。进入战场后先共同部署，任意指挥官均可暂停或继续。房主离开后，本次合作房间结束；房主的本机存档可用于单人续战。';panel.append(hint);
- if(session.host)panel.append(menuButton('全员出征','进入共同部署阶段','data-start-coop',()=>session.start()));
- else{const wait=document.createElement('p');wait.textContent='等待房主开始远征……';panel.append(wait);}
- panel.append(menuButton('离开房间','','data-leave-campaign',()=>{session.close();campaignSession=undefined;openMenuRoute({screen:'campaigns'});}));mapList.replaceChildren(panel);
-}
-function startTideCampaign(save?:CampaignSave){
- if(campaignStarting)return;campaignStarting=true;
- menuStatus.textContent='正在集结远征军、构建海陆导航……';
- const adapter=new TideboundAdapter({...(save?{save}:{}),...(campaignSession?{session:campaignSession}:{}),notice:(text)=>{statusLabel.textContent=text;if(menuOpen){menuStatus.textContent=text;campaignStarting=false;}},ready:(initial)=>{
-  campaignStarting=false;worldZoom=.85;localPlayerId='player';currentRoomId=undefined;spectatingRoom=false;
-  activateStartedMatch(adapter,initial,{send:()=>{},onMessage:()=>()=>{}});tideAdapter=adapter;
-  selectedIds=new Set([HERO]);focusedSelectionId=HERO;
-  const hero=initial.units.find(u=>u.id===HERO);if(hero)centerCameraOnWorld(hero);
-  menuOpen=false;shell.classList.remove('menu-open');mainMenu.classList.add('hidden');
-  pointerLockUnavailable=true;localStorage.setItem(POINTER_LOCK_GUIDE_STORAGE_KEY,'seen');
-  createTidePanel();updateHud();syncMatchActions();statusLabel.textContent='部署阶段：选择部队、查看目标，准备好后点击继续。';
- }});
-}
-function createTidePanel(){
- tidePanel?.remove();tidePanel=document.createElement('aside');tidePanel.className='tide-panel';
- tidePanel.innerHTML=`<header><small>THE TIDAL THRONE</small><strong>${TITLE}</strong><span data-tide-clock></span></header><div data-tide-hero-health></div><div data-tide-objective></div><div class="tide-objectives"></div><div class="tide-mission-actions"><button data-mission="repairBeacon">派工程队修复灯塔</button><button data-mission="embark">登陆北岬</button><button data-mission="landHeart">登陆中线</button><button data-mission="landSouth">登陆白盐港</button><button data-mission="escort">舰队护航</button><button data-tide-workers>工程队</button><button data-tide-fleet>舰队</button></div><details class="tide-fronts"><summary>战区与主力调度</summary><div class="tide-ports"></div><div class="tide-dispatch"></div></details><div class="tide-tools"><button data-tide-hero>统帅</button><button data-tide-army>远征军</button><button data-tide-hold>固守 H</button><button data-tide-base>司令部</button><button data-tide-citadel>王廷堡垒</button><button data-tide-zoom>缩放 85%</button><button data-tide-pause>暂停</button><button data-tide-speed>速度 1×</button><button data-tide-save>保存</button><button data-tide-exit>退出</button></div><details><summary>六件遗物 · 点击后选择目标</summary><div class="tide-relics"></div></details><details><summary>舰队、攻城与工程</summary><div class="tide-recruits"></div><div class="tide-jobs"></div></details><div class="tide-dialogue" aria-live="polite"><strong data-tide-speaker></strong><p data-tide-dialogue></p></div><details><summary>远征记录</summary><ol class="tide-history"></ol></details>`;
- shell.append(tidePanel);
- if(campaignSession&&!campaignSession.host)for(const selector of ['[data-tide-save]','[data-tide-speed]'])(tidePanel.querySelector(selector) as HTMLElement).hidden=true;
- tidePanel.querySelectorAll<HTMLButtonElement>('[data-mission]').forEach(button=>button.onclick=()=>tideAdapter?.action({type:'mission',id:button.dataset.mission}));
- tidePanel.querySelector('[data-tide-workers]')!.addEventListener('click',()=>{const units=snapshot?.units.filter(u=>u.owner==='player'&&u.kind==='worker')??[];selectedIds=new Set(units.map(u=>u.id));focusedSelectionId=units[0]?.id;const worker=units[0];if(worker)centerCameraOnWorld(worker);updateHud();});
- tidePanel.querySelector('[data-tide-fleet]')!.addEventListener('click',()=>{const units=snapshot?.units.filter(u=>u.owner==='player'&&(u.kind==='warship'||u.kind==='transport'))??[];selectedIds=new Set(units.map(u=>u.id));focusedSelectionId=units[0]?.id;if(units[0])centerCameraOnWorld(units[0]);updateHud();});
- for(const [id,name] of [['north','北线'],['heart','中线'],['south','南线']] as const){const b=document.createElement('button');b.textContent=name+'增援 · 400 补给';b.title='调动该战线预备队；60 秒冷却';b.onclick=()=>tideAdapter?.action({type:'mission',id});tidePanel.querySelector('.tide-dispatch')!.append(b);}
- tidePanel.querySelector('[data-tide-hero]')!.addEventListener('click',()=>{const hero=snapshot?.units.find(u=>u.id===HERO),boat=snapshot?.units.find(u=>u.cargo?.some(p=>p.id===HERO));if(hero||boat){selectedIds=new Set([(hero??boat)!.id]);focusedSelectionId=(hero??boat)!.id;centerCameraOnWorld((hero??boat)!);updateHud();}});
- tidePanel.querySelector('[data-tide-army]')!.addEventListener('click',()=>{selectedIds=new Set(snapshot?.units.filter(u=>u.owner==='player'&&u.kind!=='worker'&&u.kind!=='warship'&&u.kind!=='transport').map(u=>u.id));focusedSelectionId=HERO;updateHud();});
- tidePanel.querySelector('[data-tide-citadel]')!.addEventListener('click',()=>{const target=snapshot?.buildings.find(b=>b.id==='citadel');if(target)centerCameraOnWorld(target);});
- tidePanel.querySelector('[data-tide-base]')!.addEventListener('click',()=>{const base=snapshot?.buildings.find(b=>b.id==='expedition');if(base)centerCameraOnWorld(base);});
- tidePanel.querySelector('[data-tide-hold]')!.addEventListener('click',()=>sendCommand({type:'holdPosition',unitIds:[...selectedIds]}));
- tidePanel.querySelector('[data-tide-zoom]')!.addEventListener('click',()=>{const center=screenToWorld({x:canvas.width/2,y:canvas.height/2});worldZoom=worldZoom===.85?.6:worldZoom===.6?1:.85;centerCameraOnWorld(center);tidePanel!.querySelector('[data-tide-zoom]')!.textContent='缩放 '+Math.round(worldZoom*100)+'%';});
- tidePanel.querySelector('[data-tide-pause]')!.addEventListener('click',()=>{if(!tideAdapter)return;tideAdapter.paused=!tideAdapter.paused;tideAdapter.action({type:'pause',paused:tideAdapter.paused});tidePanel!.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';});
- let tideSpeed=1;tidePanel.querySelector('[data-tide-speed]')!.addEventListener('click',()=>{tideSpeed=tideSpeed===1?2:tideSpeed===2?4:1;tideAdapter?.action({type:'speed',speed:tideSpeed});tidePanel!.querySelector('[data-tide-speed]')!.textContent='速度 '+tideSpeed+'×';});
- tidePanel.querySelector('[data-tide-save]')!.addEventListener('click',()=>tideAdapter?.action({type:'save'}));
- tidePanel.querySelector('[data-tide-exit]')!.addEventListener('click',()=>{tideAdapter?.action({type:'save'});tideAdapter?.action({type:'pause',paused:true});setTimeout(()=>{location.hash='campaigns';location.reload();},400);});
- RELICS.forEach((r,index)=>{const b=document.createElement('button');b.title=r.description+' · 射程 '+r.range;b.dataset.relic=String(index);b.textContent=r.name;b.onclick=()=>{tideTarget={type:'cast',index};statusLabel.textContent=r.description+'：请选择目标';};tidePanel!.querySelector('.tide-relics')!.append(b);});
- [...SHIPS,...SIEGE].forEach(d=>{const b=document.createElement('button');b.textContent=d.name+' · '+d.cost;b.title=d.role;b.onclick=()=>tideAdapter?.action({type:'recruit',id:d.id});tidePanel!.querySelector('.tide-recruits')!.append(b);});
- DEFENSES.forEach(d=>{const b=document.createElement('button');b.textContent=d.name+' · '+d.cost;b.title=d.role;b.onclick=()=>{tideTarget={type:'fortify',id:d.id};statusLabel.textContent='请选择工程兵附近的陆地';};tidePanel!.querySelector('.tide-recruits')!.append(b);});
- tidePanelTick=-1;
-}
-function updateTidePanel(){
- if(!tidePanel||!tideAdapter?.state||!snapshot)return;
- if(lastTidePanelState===tideAdapter.state&&tidePanel?.dataset.paused===String(tideAdapter.paused))return;lastTidePanelState=tideAdapter.state;tidePanel.dataset.paused=String(tideAdapter.paused);if(!tideAdapter.paused&&snapshot.tick-tidePanelTick<10&&tidePanelTick>=0)return;tidePanelTick=snapshot.tick;const s=tideAdapter.state;
- tidePanel.querySelector('[data-tide-pause]')!.textContent=tideAdapter.paused?'继续':'暂停';
- tidePanel.querySelector('[data-tide-clock]')!.textContent=`${Math.floor(snapshot.tick/1200)}:${String(Math.floor(snapshot.tick/20)%60).padStart(2,'0')} · ${snapshot.units.length.toLocaleString()} 名作战单位`;
- const mission=s.mission;
- tidePanel.querySelector('[data-tide-objective]')!.textContent=s.outcome==='victory'?'远征胜利 · 诸港重获航路':s.outcome==='defeat'?'远征失败':`${String(mission.stage+1).padStart(2,'0')} / 05 · ${CHAPTERS[mission.stage]?.title??TITLE}`;
- const objectives=tidePanel.querySelector('.tide-objectives')!;
- const objectiveSignature=mission.objectives.map(o=>o.id).join(',');
- if(objectives.getAttribute('data-objectives')!==objectiveSignature){objectives.setAttribute('data-objectives',objectiveSignature);objectives.replaceChildren(...mission.objectives.map(o=>{const b=document.createElement('button');b.className='tide-objective-row';b.dataset.objective=o.id;b.innerHTML='<span></span><strong></strong><small></small>';b.onclick=()=>{const current=tideAdapter?.state?.mission.objectives.find(v=>v.id===o.id);if(current)centerCameraOnWorld(current);};return b;}));}
- mission.objectives.forEach(o=>{const b=objectives.querySelector<HTMLElement>(`[data-objective="${o.id}"]`)!;b.classList.toggle('completed',o.done);b.querySelector('span')!.textContent=o.done?'✓':o.optional?'◇':'◆';b.querySelector('strong')!.textContent=o.title+(o.optional?'（支线）':'');b.querySelector('small')!.textContent=o.detail;});
- tidePanel.querySelector<HTMLElement>('[data-mission="repairBeacon"]')!.hidden=mission.stage!==0;
- tidePanel.querySelectorAll<HTMLElement>('[data-mission="embark"],[data-mission="landHeart"],[data-mission="landSouth"]').forEach(b=>b.hidden=mission.stage<1);
- tidePanel.querySelector<HTMLElement>('[data-mission="escort"]')!.hidden=mission.stage!==1&&mission.stage!==4;
- const hero=snapshot.units.find(u=>u.id===HERO)??snapshot.units.flatMap(u=>u.cargo??[]).find(u=>u.id===HERO);
- const health=tidePanel.querySelector('[data-tide-hero-health]')!;health.textContent=hero?`统帅 ${Math.ceil(hero.hp)} / ${hero.maxHp}${snapshot.units.some(u=>u.cargo?.some(p=>p.id===HERO))?' · 船上':''}`:'统帅已阵亡';const base=snapshot.buildings.find(b=>b.id==='expedition');health.textContent+=base?` · 基地 ${Math.ceil(base.hp/base.maxHp*100)}%`:' · 基地已陷落';health.classList.toggle('critical',!hero||hero.hp<hero.maxHp*.35);
- const dialogue=mission.dialogue.at(-1);tidePanel.querySelector('[data-tide-speaker]')!.textContent=dialogue?.speaker??'';tidePanel.querySelector('[data-tide-dialogue]')!.textContent=dialogue?.text??'';
- const history=tidePanel.querySelector('.tide-history')!;if(history.children.length!==mission.dialogue.length){history.replaceChildren(...mission.dialogue.map(d=>{const li=document.createElement('li');li.textContent=`${Math.floor(d.tick/1200)}:${String(Math.floor(d.tick/20)%60).padStart(2,'0')} · ${d.speaker}：${d.text}`;return li;}));}
- const ports=tidePanel.querySelector('.tide-ports')!;if(!ports.children.length)for(const p of s.ports){const b=document.createElement('button');b.onclick=()=>centerCameraOnWorld(p);ports.append(b);}
- s.ports.forEach((p,i)=>{const b=ports.children[i] as HTMLElement;b.textContent=`${p.contested?'交战':p.owner==='fleet'?'联军':p.owner==='crown'?'王廷':'中立'} · ${p.name}`;b.dataset.side=p.owner??'neutral';});
- RELICS.forEach((r,i)=>{const b=tidePanel!.querySelector(`[data-relic="${i}"]`)!;const seconds=Math.max(0,Math.ceil((s.cooldowns[i]!-snapshot!.tick)/20));b.textContent=r.name+(seconds?` ${seconds}s`:'');});
- const jobs=tidePanel.querySelector('.tide-jobs')!;const signature=s.jobs.map(j=>j.id).join(',');if(jobs.getAttribute('data-jobs')!==signature){jobs.setAttribute('data-jobs',signature);jobs.replaceChildren(...s.jobs.map(j=>{const b=document.createElement('button');b.title='取消生产并退还黄金';b.textContent=([...SHIPS,...SIEGE].find(d=>d.id===j.kind)?.name??j.kind)+' ×';b.onclick=()=>tideAdapter?.action({type:'cancelRecruit',id:j.id});return b;}));}
-
- if(s.outcome!=='playing'&&!document.querySelector('.tide-result')){
-  const result=document.createElement('section');result.className='tide-result';result.setAttribute('role','dialog');result.setAttribute('aria-label',s.outcome==='victory'?'远征胜利':'远征失败');
-  result.innerHTML=`<small>THE TIDAL THRONE</small><h2>${s.outcome==='victory'?'海峡重归自由':'潮水终将再起'}</h2><p>${s.outcome==='victory'?'远征胜利 · 王廷堡垒已陷落，撤离船已安全归航。':'远征失败 · 统帅与司令部必须存活。读取最近的自动存档，重新部署军队。'}</p><div>${Math.floor(snapshot.tick/1200)} 分 ${Math.floor(snapshot.tick/20)%60} 秒 · 峰值 ${s.peak} 名作战单位<br>完成 ${s.mission.completed.length} 个阶段 · 粮船 ${s.mission.cargo.filter(c=>c.delivered).length}/2 抵达<br>港口易手 ${s.ports.reduce((n,p)=>n+p.captures,0)} 次 · 施放遗物 ${s.casts} 次</div><button>返回主菜单</button>`;
-  result.querySelector('button')!.onclick=()=>{location.hash='campaigns';location.reload();};shell.append(result);
- }
-
-}
-
-function drawTideObjectives(){
- if(!tideAdapter?.state)return;
- if(tideTarget?.type==='cast'&&snapshot&&lastMouse){
-  const relic=RELICS[tideTarget.index as number];const hero=snapshot.units.find(u=>u.id===HERO);
-  if(relic&&hero){const at=worldToScreen(hero);const valid=distance(hero,screenToWorld(lastMouse))<=relic.range;
-   ctx.save();ctx.strokeStyle=valid?'#e3c58b':'#c77b68';ctx.fillStyle=valid?'#e3c58b18':'#c77b6820';ctx.lineWidth=1;ctx.setLineDash([5,7]);ctx.beginPath();ctx.arc(at.x,at.y,relic.range*worldZoom,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(lastMouse.x,lastMouse.y,relic.radius*worldZoom,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
-  }
- }
- if(snapshot){const citadel=snapshot.buildings.find(b=>b.id==='citadel');if(citadel?.invulnerable){const at=worldToScreen(citadel);if(nearScreen(at,150)){ctx.save();ctx.strokeStyle='#90b9cb';ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.ellipse(at.x,at.y,120*worldZoom,80*worldZoom,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#d0e0e4';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('潮汐结界 · 枢纽供能',at.x,at.y-95*worldZoom);ctx.restore();}}}
- for(const objective of tideAdapter.state.mission.objectives){if(objective.done||objective.optional)continue;const at=worldToScreen(objective);if(!nearScreen(at,60))continue;ctx.save();ctx.strokeStyle='#ead097';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(at.x,at.y-75);ctx.lineTo(at.x+7,at.y-66);ctx.lineTo(at.x,at.y-57);ctx.lineTo(at.x-7,at.y-66);ctx.closePath();ctx.stroke();ctx.restore();}
- for(const p of tideAdapter.state.ports){const at=worldToScreen(p);if(!nearScreen(at,80))continue;
-  ctx.save();ctx.strokeStyle='#d6c19a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(at.x,at.y+5);ctx.lineTo(at.x,at.y-42);ctx.stroke();
-  ctx.fillStyle=p.owner==='fleet'?'#7ea5b2':p.owner==='crown'?'#bc725b':'#d1c39c';ctx.beginPath();ctx.moveTo(at.x+1,at.y-41);ctx.lineTo(at.x+28,at.y-33);ctx.lineTo(at.x+1,at.y-23);ctx.fill();
-  ctx.font='11px sans-serif';ctx.textAlign='center';const label=p.name+(p.contested?' · 争夺中':'');const w=ctx.measureText(label).width+16;
-  ctx.fillStyle='#19232bda';ctx.fillRect(at.x-w/2,at.y+10,w,24);ctx.fillStyle='#e7d9bb';ctx.fillText(label,at.x,at.y+25);ctx.restore();
- }
 }

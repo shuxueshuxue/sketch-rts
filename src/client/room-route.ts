@@ -1,4 +1,4 @@
-export type RoomRoute = { screen: "play" } | { screen: "campaigns" } | { screen: "campaign" } | { screen: "home" } | { screen: "profile" } | { screen: "rooms" } | { screen: "create" } | { screen: "room"; roomId: string };
+export type RoomRoute = { screen: "play" } | { screen: "home" } | { screen: "profile" } | { screen: "rooms" } | { screen: "create" } | { screen: "room"; roomId: string };
 
 export function formatRoomRouteHash(route: RoomRoute): string {
   if (route.screen === "room") return `#room=${encodeURIComponent(route.roomId)}`;
@@ -9,7 +9,8 @@ export function formatRoomRouteHash(route: RoomRoute): string {
 export function parseRoomRouteHash(hash: string): RoomRoute {
   const normalized = hash.startsWith("#") ? hash.slice(1) : hash;
   if (!normalized) return { screen: "home" };
-  if (normalized === "play" || normalized === "campaigns" || normalized === "campaign") return {screen:normalized};
+  if (normalized === "play") return {screen:normalized};
+  if (normalized === "campaigns" || normalized === "campaign" || normalized.startsWith("campaign-room=")) return { screen: "play" };
   if (normalized === "profile") return { screen: "profile" };
   if (normalized === "rooms") return { screen: "rooms" };
   if (normalized === "create") return { screen: "create" };

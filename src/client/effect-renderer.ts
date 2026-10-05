@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
+import { drawWarfareEffect } from "./warfare-effects";
 import { seconds } from "../shared/time";
 import type { UnitKind, WorldEffect } from "../shared/types";
 
@@ -74,6 +75,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
   const { ctx, effects, worldToScreen, nearScreen, unitPosition } = options;
   const renderer = { ctx, worldToScreen };
   for (const effect of effects) {
+    if (drawWarfareEffect(ctx,effect,worldToScreen,nearScreen)) continue;
     if (effect.type === "chargeTrail" && hasEffectVector(effect)) {
       const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
       const to = worldToScreen({ x: effect.toX, y: effect.toY });
