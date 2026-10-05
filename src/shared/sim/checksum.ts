@@ -6,7 +6,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // localeCompare (locale-dependent); 2: by code unit (see @@@canonical-order). Checksums of different versions cannot be
 // compared: the same game mostly hashes differently under each.
 // 3: persistent corpse records participate in deterministic state checks.
-export const CHECKSUM_VERSION = 3;
+// 4: movement and push velocities use distance per second.
+export const CHECKSUM_VERSION = 4;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
