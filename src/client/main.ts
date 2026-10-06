@@ -4,6 +4,7 @@ import { EquipmentPanel } from "./equipment-panel";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile } from "../shared/ship-geometry";
 import { deckLoad } from "../shared/decks";
+import { purchasePlacement, type PurchaseSeller } from "../shared/purchase";
 import "./styles.css";
 import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
@@ -53,7 +54,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { buildingAt, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, type PointerTarget } from "./relations";
+import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, type PointerTarget } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -69,7 +70,7 @@ import { virtualClickableTargetFromElement, virtualContextTargetFromElement, vir
 import { canAutocast } from "../shared/autocast";
 import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules } from "../shared/catalog";
 import { carries, passengerLandingSpot } from "../shared/naval";
-import { SHOP_GOODS, shopBuyer, standsAtShop } from "../shared/shop";
+import { SHOP_GOODS } from "../shared/shop";
 import { drawPaintedItem } from "./art/items";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
@@ -87,7 +88,7 @@ type CommandPortrait = { type: "unit"; kind: Unit["kind"] } | { type: "building"
 type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
-type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
+type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
 type MenuView = "play" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
@@ -155,7 +156,6 @@ const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
-const equipmentButton=document.createElement("button");equipmentButton.type="button";equipmentButton.className="equipment-open";itemDock.parentElement!.append(equipmentButton);equipmentButton.addEventListener("click",()=>{keys.clear();equipmentPanel.show(inventoryCarriers());if(document.pointerLockElement===canvas)document.exitPointerLock();});
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
@@ -201,7 +201,8 @@ const reducedUnitMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let focusedSelectionId: string | undefined;
 let selectedCampId: string | undefined;
 let inspectedShopItem: WorldItem["kind"] | undefined;
-let shopInventoryCarrierId: string | undefined;
+const purchaseRecipients=new Map<string,string>();
+let purchaseRecipientFlash:{id:string;until:number}|undefined;
 const controlGroups: ControlGroups = {};
 let lastControlGroupRecall: ControlGroupRecallTap | undefined;
 let camera = { x: 560, y: 560 };
@@ -241,6 +242,8 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
 const baseGameAdapter = deploymentRuntime.initialAdapter();
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
+  createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","i",()=>({visible:focusedPlayerUnits().some(canEquip),enabled:true}),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
+  createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","i",()=>({visible:focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit))),enabled:true}),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
   createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
     title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")], hotkey: "J",
   })),
@@ -302,7 +305,8 @@ const commandButtons: CommandButton[] = [
       hotkey: command.hotkey.toUpperCase(),
     }))),
   ),
-  ...(["shipCannon","shipMortar","flameProjector"] as const).map((kind,index)=>createCommandButton(i18n.locale==="zh"?`制造${labelKind(kind)}`:`Produce ${labelKind(kind)}`,"●",["c","v","b"][index]!,()=>{const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);return {visible:Boolean(dock),enabled:Boolean(dock && (currentPlayerState()?.gold ?? 0)>=SHIP_WEAPONS[kind].cost)};},()=>{const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);if(dock)sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind});},()=>({...itemTooltip(kind,undefined,i18n),stats:[...itemTooltip(kind,undefined,i18n).stats,`${SHIP_WEAPONS[kind].cost} G`]}),{type:"item",kind})),
+  (()=>{const button=createCommandButton(i18n.locale==="zh"?"指定接收者":"Choose recipient","◎","o",()=>purchaseSeller()&&!commandMode&&!openPalette ? ENABLED_COMMAND_STATE : HIDDEN_COMMAND_STATE,startPurchaseRecipient,()=>({title:i18n.locale==="zh"?"指定购买接收者":"Choose purchase recipient",body:i18n.locale==="zh"?"点击附近的己方人物或船。商品直接进入其装备位或船舱；位置、空位或载重不足时不扣钱。":"Choose a nearby friendly character or ship. Purchases go directly into its equipment or hold; failed delivery costs nothing.",stats:[purchaseRecipientCaption()],requirements:[],hotkey:"O"}));button.element.dataset.purchaseRecipient="true";return button;})(),
+  ...(["shipCannon","shipMortar","flameProjector"] as const).map((kind,index)=>createCommandButton(i18n.locale==="zh"?`购买${labelKind(kind)}`:`Buy ${labelKind(kind)}`,"●",["c","v","b"][index]!,()=>dockGoodButtonState(kind),()=>buyDockGood(kind),()=>({...itemTooltip(kind,undefined,i18n),stats:[...itemTooltip(kind,undefined,i18n).stats,`${SHIP_WEAPONS[kind].cost} G`,purchaseRecipientCaption()],requirements:[purchaseProblem(kind)??(i18n.locale==="zh"?"直接送入接收者；船炮随后安装到炮位。":"Delivered to the recipient; install guns from the hold afterwards.")]}),{type:"item",kind})),
   ...SHOP_GOODS.map((good, index) =>
     createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), SHOP_HOTKEYS[index]!, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
       const tooltip = itemTooltip(good.kind, SHOP_HOTKEYS[index], i18n);
@@ -310,7 +314,7 @@ const commandButtons: CommandButton[] = [
         ...tooltip,
         title: t("command.buy.title", { item: tooltip.title }),
         stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
-        requirements: [t("command.buy.requirements")],
+        requirements: [purchaseProblem(good.kind)??purchaseRecipientCaption()],
       };
     }, { type: "item", kind: good.kind }),
   ),
@@ -497,6 +501,7 @@ function commandButtonStateLabel(state: CommandButtonState) {
 }
 
 function commandButtonStateRequirement(state: CommandButtonState) {
+  if(state.detail)return state.detail;
   if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { ticks: state.cooldownTicks });
   if (state.reason === "stock") return t("hud.commandNoStock");
   if (state.reason === "gold") return t("hud.commandNoGold");
@@ -1147,6 +1152,7 @@ function returnHome() {
   focusedSelectionId = undefined;
   selectedCampId = undefined;
   commandMode = undefined;
+  purchaseRecipients.clear();purchaseRecipientFlash=undefined;
   openPalette = undefined;
   menuView = "home";
   replaceRoomRouteHash({ screen: "home" });
@@ -1187,6 +1193,8 @@ async function enterRoom(roomId: string) {
 
 function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
   disconnectActiveMatch();
+  purchaseRecipients.clear();
+  purchaseRecipientFlash=undefined;
   minimapRelations = undefined;
   activeGameAdapter = adapter;
   activeChat = chat;
@@ -1287,12 +1295,20 @@ function releasePointerLockForMenu() {
 }
 
 function frame() {
+  requestAnimationFrame(frame);
   syncActiveGameAdapterSnapshot();
   updateCamera();
   draw();
   syncVirtualPointerOverlay();
   syncPointerLockGate();
-  requestAnimationFrame(frame);
+}
+
+function openSelectedEquipment() {
+  if(!syncBeforeCommandProjection())return;
+  keys.clear();selectionStart=selectionEnd=undefined;draggingMinimapViewport=false;
+  commandMode=undefined;openPalette=undefined;
+  equipmentPanel.show(focusedPlayerUnits());
+  if(document.pointerLockElement===canvas)document.exitPointerLock();
 }
 
 function syncDebugView() {
@@ -1501,11 +1517,6 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
-    if (!["stop", "cast", "setAutocast", "setStance", "unloadPassenger"].includes(command.type)) {
-      const ids = "unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
-      const unit = snapshot?.units.find(unit => unit.owner === localPlayerId && ids.includes(unit.id));
-      if (unit) soundboard.play("order", undefined, unit.kind);
-    }
     return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
@@ -1585,10 +1596,10 @@ function playCues(cues: SoundCue[]) {
   }
 }
 
-// The interface has one sound: a click for a button, a map or a portrait chosen. Pointing at one is silent.
+// Menu navigation and action buttons have separate fixed, nonverbal cues.
 function onInterfaceClick(event: MouseEvent) {
   soundboard.unlock();
-  if (event.target instanceof Element && event.target.closest("button, .map-entry, .selection-model")) soundboard.play("click");
+  if (event.target instanceof Element && event.target.closest("button, .map-entry")) soundboard.play(mainMenu.contains(event.target) ? "menu" : "click");
 }
 
 function onMouseDown(event: MouseEvent) {
@@ -1668,6 +1679,7 @@ function onMouseUp(event: MouseEvent) {
     else if (event.button === 0 && commandMode.type === "unload") issueUnloadAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "spell") issueSpellAt(point, event.shiftKey);
     else if (event.button === 0 && commandMode.type === "item") issueItemAt(point);
+    else if (event.button === 0 && commandMode.type === "purchaseRecipient") choosePurchaseRecipientAt(point);
     else if (event.button === 2) cancelCommandMode();
     selectionStart = undefined;
     selectionEnd = undefined;
@@ -1737,7 +1749,8 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }
-  sendCommand({ type: "move", unitIds, x: world.x, y: world.y, queued });
+  const destination = deckMovePoint(snapshot.units, selectedUnits, world);
+  sendCommand({ type: "move", unitIds, x: destination.x, y: destination.y, queued });
   statusLabel.textContent = t("status.moveOrdered");
 }
 
@@ -2193,8 +2206,84 @@ function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
   if (!player) return { visible: true, enabled: false, reason: "missing" };
   if (good.stock <= 0) return { visible: true, enabled: false, cooldownTicks: good.restockRemaining, reason: "cooldown" };
   if (player.gold < good.cost) return { visible: true, enabled: false, reason: "gold" };
-  if (!snapshot?.units.some((unit) => unit.owner === localPlayerId && standsAtShop(unit, shop))) return { visible: true, enabled: false, reason: "position" };
+  const problem=purchaseProblem(kind);
+  if (problem) return { visible: true, enabled: false, reason: "position",detail:problem };
   return ENABLED_COMMAND_STATE;
+}
+
+function purchaseSeller(){return selectedShop() ?? focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);}
+function purchaseRecipient(seller:PurchaseSeller&{id:string},kind:WorldItem['kind']='experienceBook'){
+  if(!snapshot)return;
+  const chosen=purchaseRecipients.get(seller.id);
+  if(chosen)return snapshot.units.find(unit=>unit.id===chosen && unit.owner===localPlayerId && unit.hp>0);
+  const dock="kind" in seller && seller.kind==="shipyard";
+  const candidates=snapshot.units.filter(unit=>unit.owner===localPlayerId && unit.hp>0 && (canEquip(unit)||shipProfile(unit)) && "placement" in purchasePlacement(snapshot!,localPlayerId,seller,kind,unit.id));
+  candidates.sort((a,b)=>(dock ? Number(Boolean(shipProfile(b)))-Number(Boolean(shipProfile(a))) : 0) || distance(a,seller)-distance(b,seller));
+  const recipient=candidates[0];if(recipient)purchaseRecipients.set(seller.id,recipient.id);
+  return recipient;
+}
+function purchaseRecipientCaption(){
+  const seller=purchaseSeller(),recipient=seller&&purchaseRecipient(seller,"kind" in seller ? "shipCannon" : "experienceBook");
+  return recipient ? `${i18n.locale==="zh"?"接收":"To"}：${labelKind(recipient.kind)}` : i18n.locale==="zh"?"指定接收者":"Choose recipient";
+}
+function purchaseFeedback(reason:string){
+  if(i18n.locale!=="zh")return reason;
+  const text:Record<string,string>={
+    "Choose a living unit or ship of yours":"请指定己方的人物或船作为接收者。",
+    "Move the recipient closer to the seller":"接收者距离过远，请先靠近商店或船坞。",
+    "The ship cannot carry more weight":"船只载重不足，请先腾出载重。",
+    "The hold needs four consecutive free positions":"船炮需要船舱中连续四个空位。",
+    "The hold has no free position":"船舱已满，请先腾出空位。",
+    "This unit cannot carry equipment":"该单位不能接收装备。",
+    "The recipient has no compatible free position":"接收者没有兼容的空装备位。",
+  };return text[reason]??reason;
+}
+function purchaseProblem(kind:WorldItem['kind']){
+  const seller=purchaseSeller();if(!seller || !snapshot)return;
+  const recipient=purchaseRecipient(seller,kind);
+  if(!recipient)return purchaseFeedback("Choose a living unit or ship of yours");
+  const result=purchasePlacement(snapshot,localPlayerId,seller,kind,recipient.id);
+  return "refusal" in result ? purchaseFeedback(result.refusal) : undefined;
+}
+function startPurchaseRecipient(){
+  const seller=purchaseSeller();if(!seller)return;
+  commandMode={type:"purchaseRecipient",sellerId:seller.id};
+  statusLabel.textContent=i18n.locale==="zh"?"点击附近的己方人物或船，指定购买接收者。":"Click a nearby friendly character or ship to receive purchases.";
+  updateHud();
+}
+function choosePurchaseRecipientAt(point:Point){
+  if(!snapshot || commandMode?.type!=="purchaseRecipient")return;
+  const sellerId=commandMode.sellerId;
+  const seller=snapshot.shops?.find(s=>s.id===sellerId) ?? snapshot.buildings.find(s=>s.id===sellerId);
+  const recipient=unitAt(snapshot.units,screenToWorld(point),unit=>unit.owner===localPlayerId && unit.hp>0 && Boolean(canEquip(unit)||shipProfile(unit)));
+  if(!seller || !recipient){showInvalidCommand(purchaseFeedback("Choose a living unit or ship of yours"));return;}
+  const check=purchasePlacement(snapshot,localPlayerId,seller,"experienceBook",recipient.id);
+  if("refusal" in check && check.refusal==="Move the recipient closer to the seller"){showInvalidCommand(purchaseFeedback(check.refusal));return;}
+  purchaseRecipients.set(seller.id,recipient.id);purchaseRecipientFlash={id:recipient.id,until:performance.now()+900};
+  commandMode=undefined;statusLabel.textContent=purchaseRecipientCaption();updateHud();
+}
+function dockGoodButtonState(kind:keyof typeof SHIP_WEAPONS):CommandButtonState{
+  const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);
+  if(!dock || commandMode || openPalette)return HIDDEN_COMMAND_STATE;
+  if((currentPlayerState()?.gold??0)<SHIP_WEAPONS[kind].cost)return {visible:true,enabled:false,reason:"gold"};
+  const problem=purchaseProblem(kind);
+  return problem ? {visible:true,enabled:false,reason:"position",detail:problem} : ENABLED_COMMAND_STATE;
+}
+function buyDockGood(kind:keyof typeof SHIP_WEAPONS){
+  if(!syncBeforeCommandProjection())return;
+  const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);
+  if(!dock)return;
+  const state=dockGoodButtonState(kind);if(!state.enabled){showCommandUnavailable(state,purchaseProblem(kind)??"");return;}
+  const recipient=purchaseRecipient(dock,kind);if(!recipient)return;
+  sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind,recipientId:recipient.id});
+  statusLabel.textContent=t("status.itemBought",{item:labelKind(kind)});
+}
+function drawPurchaseRecipientFlash(){
+  const flash=purchaseRecipientFlash;if(!flash || !snapshot || performance.now()>flash.until)return;
+  const unit=snapshot.units.find(unit=>unit.id===flash.id);if(!unit)return;
+  const point=worldToScreen(unit),alpha=(flash.until-performance.now())/900;
+  ctx.save();ctx.strokeStyle=`rgba(245,210,115,${alpha})`;ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(point.x,point.y,(unit.radius+8)*worldZoom,(unit.radius+8)*worldZoom*.6,0,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
 
 function buyGood(kind: WorldItem["kind"]) {
@@ -2206,8 +2295,8 @@ function buyGood(kind: WorldItem["kind"]) {
     showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
     return;
   }
-  shopInventoryCarrierId = snapshot && shopBuyer(snapshot, localPlayerId, shop)?.id;
-  sendCommand({ type: "buy", shopId: shop.id, item: kind });
+  const recipient=purchaseRecipient(shop,kind);if(!recipient)return;
+  sendCommand({ type: "buy", shopId: shop.id, item: kind,recipientId:recipient.id });
   inspectedShopItem = kind;
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -2307,8 +2396,7 @@ function selectedShop() {
 
 function inventoryCarriers() {
   const shop = selectedShop();
-  const previous = snapshot?.units.find(unit => unit.id === shopInventoryCarrierId && unit.owner === localPlayerId);
-  const buyer = snapshot && shop && ((previous && standsAtShop(previous, shop) ? previous : undefined) ?? shopBuyer(snapshot, localPlayerId, shop) ?? snapshot.units.find(unit => unit.owner === localPlayerId && standsAtShop(unit, shop)));
+  const buyer=shop && purchaseRecipient(shop);
   return buyer ? [buyer] : focusedPlayerUnits();
 }
 
@@ -2407,11 +2495,8 @@ function cycleFocusedSelection(direction: 1 | -1) {
   updateHud();
 }
 
-let voicedSelection: string | undefined;
 function updateHud() {
   if (!snapshot) return;
-  const voiceUnit = snapshot.units.find(unit => unit.id === focusedSelectionId && unit.owner === localPlayerId);
-  if (voiceUnit?.id !== voicedSelection) { voicedSelection = voiceUnit?.id; if (voiceUnit) soundboard.play("select", undefined, voiceUnit.kind); }
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
@@ -2444,6 +2529,7 @@ function updateHud() {
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
+    if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     button.element.hidden = !state.visible;
     button.element.disabled = false;
     button.element.setAttribute("aria-disabled", String(!state.enabled));
@@ -2586,7 +2672,6 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
 
 function renderItemDock() {
   equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
-  const equipmentSelection=inventoryCarriers();equipmentButton.hidden=menuOpen || !equipmentSelection.some(unit=>canEquip(unit) || shipProfile(unit));equipmentButton.textContent=i18n.locale==="zh"?"装备 / 船舱":"Equipment / Hold";
 
   if (!snapshot || menuOpen) {
     itemDock.classList.add("hidden");
@@ -2711,6 +2796,7 @@ function draw() {
     ...(hovered ? { hoveredId: hovered.id } : {}),
   });
   drawBuildPlacementPreview();
+  drawPurchaseRecipientFlash();
   drawAttackMovePreview();
   drawSpellPreview();
   drawSelectionBox();

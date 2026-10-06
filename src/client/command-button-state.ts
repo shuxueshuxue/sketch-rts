@@ -15,6 +15,7 @@ export type CommandButtonState = {
   enabled: boolean;
   cooldownTicks?: number;
   reason?: CommandButtonDisabledReason;
+  detail?:string;
   // The supply cap a locked unit waits for (reason "tier").
   supplyCap?: number;
   // A spell the player can switch to autocast (right-click on its button), and how it stands.

@@ -10,8 +10,8 @@ import type { UnitKind } from "../shared/types";
 // a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "shipShot" | "shipHit" | "shipSink" | "spell" | "board" | "unload" | "select" | "order";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "shipShot", "shipHit", "shipSink", "spell", "board", "unload", "select", "order"];
+export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "board" | "unload" | "select" | "order";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "board", "unload", "select", "order"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   impact: "effects",
   melee: "effects",
@@ -22,6 +22,7 @@ const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   built: "effects",
   buildingDown: "effects",
   click: "ui",
+  menu: "ui",
   shipShot: "effects", shipHit: "effects", shipSink: "effects", spell: "effects",
   board: "effects", unload: "effects", select: "ui", order: "ui",
 };
@@ -89,7 +90,6 @@ export class Soundboard {
   private buffers = new Map<string, AudioBuffer>();
   private loading = new Map<string, Promise<AudioBuffer | undefined>>();
   private failed = new Set<string>();
-  private lastVoice = -Infinity;
   private playing = new Map<SoundEvent, number>();
   private voices = 0;
   private activeEffects = new Set<() => void>();
@@ -155,21 +155,20 @@ export class Soundboard {
 
   /** `kind` is the unit kind of who caused the event, for a pack that sounds it per kind. */
   play(event: SoundEvent, place: SoundPlace = { pan: 0, gain: 1 }, kind?: UnitKind) {
+    // Older packs may advertise these voiced acknowledgements. They have no
+    // place in this game's generic feedback, even when a pack is still cached.
+    if (event === 'select' || event === 'order') return;
     const fallback = event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
     const sound = this.pack?.sounds[event] ?? (fallback && this.pack?.sounds[fallback]);
     const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
     if (!sound || !clip || !this.ctx || this.settings.muted) return;
-    const voice = event === "select" || event === "order";
-    if (voice && this.ctx.currentTime - this.lastVoice < .7) return;
-    if (voice) this.lastVoice = this.ctx.currentTime;
-    const choices = [{ file: clip.file, url: clip.url }, ...(clip.variants ?? [])];
-    const url = choices[Math.floor(Math.random() * choices.length)]!.url;
+    const url = clip.url;
     const buffer = this.buffers.get(url);
     if (buffer) return this.playClip(event, sound, clip, buffer, place);
     const pack = this.pack, requestedAt = this.ctx.currentTime;
     void this.loadClip(url).then(buffer => {
       // Do not play a delayed battle or a previous pack's voice after settings change.
-      if (buffer && this.pack === pack && this.ctx && this.ctx.currentTime - requestedAt < (voice ? 1 : .35)) this.playClip(event, sound, clip, buffer, place);
+      if (buffer && this.pack === pack && this.ctx && this.ctx.currentTime - requestedAt < .35) this.playClip(event, sound, clip, buffer, place);
     });
   }
 
@@ -182,13 +181,13 @@ export class Soundboard {
     if (this.voices >= MAX_VOICES || playing >= sound.max) return;
     const out = ctx.createGain();
     // Each copy of a sound already playing is quieter, and every play a little louder or softer (±0.6 dB).
-    out.gain.value = ((clip.volume * place.gain) / Math.sqrt(1 + playing)) * 10 ** ((Math.random() - 0.5) * 0.06);
+    out.gain.value = ((clip.volume * place.gain) / Math.sqrt(1 + playing)) * (groupName === 'ui' ? 1 : 10 ** ((Math.random() - 0.5) * 0.06));
     const panner = ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, place.pan));
     out.connect(panner).connect(group);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = (event === "impact" ? .78 : 1) * (1 + (Math.random() * 2 - 1) * clip.pitch);
+    source.playbackRate.value = groupName === 'ui' ? 1 : (event === "impact" ? .78 : 1) * (1 + (Math.random() * 2 - 1) * clip.pitch);
     source.connect(out);
     source.start();
     this.voices += 1;
@@ -213,7 +212,7 @@ export class Soundboard {
     for (const [group, node] of this.groups) node.gain.value = this.settings[group];
   }
 
-  // Warm only common default sounds; unit voices and variants are loaded on demand.
+  // Warm common default clips; individual combat clips load on demand.
   private loadPack() {
     if (!this.ctx) return;
     const clips = Object.values(this.pack?.sounds ?? {}).flatMap(sound => sound.clip ? [sound.clip] : []);
