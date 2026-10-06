@@ -51,6 +51,10 @@ export class EquipmentPanel {
     private shipId: string | undefined;
     private fingerprint = '';
     private dragging: string | undefined;
+    private pointerDrag: { id: string; x: number; y: number; active: boolean; ghost?: HTMLElement; target?: HTMLElement | undefined } | undefined;
+    private dropTargets = new WeakMap<HTMLElement, { destination: ItemDestination | undefined; hand: 'right' | 'left' | undefined }>();
+    private suppressClickUntil = 0;
+    private selectedItem: string | undefined;
     private open = false;
     constructor(private i18n: () => I18n, private send: (command: GameCommand) => void, private use?: (item: WorldItem, unit: Unit) => void) {
         this.root.className = 'equipment-panel';
@@ -64,7 +68,7 @@ export class EquipmentPanel {
         document.body.append(this.root);
     }
     isOpen() { return this.open; }
-    close() { this.open = false; this.root.hidden = true; this.dragging = undefined; }
+    close() { this.open = false; this.root.hidden = true; this.clearPointerDrag(); }
     update(snapshot: GameSnapshot | undefined, owner: PlayerId) { this.snapshot = snapshot; this.owner = owner; if (!snapshot) {
         this.close();
         return;
@@ -78,6 +82,7 @@ export class EquipmentPanel {
         this.unitId = unit?.id;
         this.shipId = ship?.id ?? unit?.deck?.shipId ?? this.snapshot.units.find(candidate => candidate.owner === this.owner && shipProfile(candidate) && unit && canExchange(this.snapshot!, unit, candidate))?.id;
         this.open = true;
+        this.selectedItem = undefined;
         this.root.hidden = false;
         this.fingerprint = '';
         this.render();
@@ -142,7 +147,9 @@ export class EquipmentPanel {
         button.type = 'button';
         button.className = 'equipment-item';
         button.dataset.itemId = item.id;
-        button.draggable = true;
+        // Pointer capture keeps the drag intact while the match continues to run,
+        // and also supports touch/pen without relying on browser HTML drag timing.
+        button.draggable = false;
         button.title = this.name(item);
         button.setAttribute('aria-label', this.name(item));
         const art = document.createElement('canvas');
@@ -153,14 +160,73 @@ export class EquipmentPanel {
         const name = document.createElement('span');
         name.textContent = this.name(item);
         button.append(name);
-        button.addEventListener('dragstart', event => { this.dragging = item.id; event.dataTransfer?.setData('application/x-sketch-item', item.id); if (event.dataTransfer)
-            event.dataTransfer.effectAllowed = 'move'; });
+        button.addEventListener('pointerdown', event => {
+            if (event.button !== 0) return;
+            button.setPointerCapture(event.pointerId);
+            this.dragging = item.id;
+            this.pointerDrag = { id: item.id, x: event.clientX, y: event.clientY, active: false };
+        });
+        button.addEventListener('pointermove', event => {
+            const drag = this.pointerDrag;
+            if (!drag || drag.id !== item.id) return;
+            if (!drag.active && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 6) return;
+            if (!drag.active) {
+                drag.active = true;
+                const ghost = document.createElement('div');
+                ghost.className = 'equipment-drag-ghost';
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 80;
+                drawPaintedItem(canvas.getContext('2d')!, item.kind, { x: 40, y: 40 }, 58);
+                ghost.append(canvas);
+                document.body.append(ghost);
+                drag.ghost = ghost;
+            }
+            drag.ghost!.style.left = `${event.clientX + 12}px`;
+            drag.ghost!.style.top = `${event.clientY + 12}px`;
+            drag.target?.classList.remove('drop-ready');
+            const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('.equipment-cell');
+            drag.target = target && this.root.contains(target) ? target : undefined;
+            drag.target?.classList.add('drop-ready');
+        });
+        button.addEventListener('pointerup', event => {
+            const drag = this.pointerDrag;
+            if (!drag || drag.id !== item.id) return;
+            const destination = drag.active && drag.target ? this.dropTargets.get(drag.target) : undefined;
+            if (drag.active) {
+                this.suppressClickUntil = performance.now() + 150;
+                event.preventDefault();
+            }
+            this.clearPointerDrag();
+            if (destination?.hand) this.wield(item.id, destination.hand);
+            else if (destination?.destination) this.transfer(item, destination.destination);
+            this.render();
+        });
+        button.addEventListener('pointercancel', () => { this.clearPointerDrag(); this.render(); });
         button.addEventListener('dblclick', () => this.quickTransfer(item));
-        button.addEventListener('click', () => { for (const other of this.root.querySelectorAll('.equipment-item.chosen'))
-            other.classList.remove('chosen'); button.classList.add('chosen'); const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${def.mass} kg${itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`; actions.append(description); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.unitId && this.shipId) {
+        button.addEventListener('click', () => { if (performance.now() < this.suppressClickUntil) return; this.selectedItem = item.id; this.selectItem(item); });
+        return button;
+    }
+    private selectItem(item: WorldItem) {
+        for (const button of this.root.querySelectorAll<HTMLElement>('.equipment-item'))
+            button.classList.toggle('chosen', button.dataset.itemId === item.id);
+        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${def.mass} kg${itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`; actions.append(description); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.unitId && this.shipId) {
             const ship = this.snapshot!.units.find(unit => unit.id === this.shipId)!;
-            for (const mount of shipMounts(ship).filter(mount => mount.accepts.includes(item.kind as never)))
-                this.action(actions, `${this.text('安装到', 'Install at')} ${this.mountLabel(mount.id)}`, () => this.transfer(item, { shipId: ship.id, mountId: mount.id, installerId: this.unitId! }));
+            if (item.mountId)
+                this.action(actions, this.text('拆到船舱', 'Stow in hold'), () => this.stowFitting(item));
+            const mounts = shipMounts(ship).filter(mount => mount.accepts.includes(item.kind as never) && !this.snapshot!.items.some(other => other.shipId === ship.id && other.mountId === mount.id));
+            if (mounts.length) {
+                const select = document.createElement('select');
+                select.className = 'equipment-install-select';
+                select.setAttribute('aria-label', this.text('安装炮位', 'Install fitting'));
+                for (const mount of mounts) {
+                    const option = document.createElement('option');
+                    option.value = mount.id;
+                    option.textContent = this.mountLabel(mount.id);
+                    select.append(option);
+                }
+                actions.append(select);
+                this.action(actions, this.text('安装', 'Install'), () => this.transfer(item, { shipId: ship.id, mountId: select.value, installerId: this.unitId! }));
+            }
         } if (item.carrierId === this.unitId) {
             if (!def.slot && !isShipEquipment(item.kind)) {
                 this.action(actions, this.text('拿到主手', 'Main hand'), () => this.wield(item.id, 'right'));
@@ -176,13 +242,32 @@ export class EquipmentPanel {
                     this.use(item, unit);
                 else
                     this.command({ type: 'useItem', unitId: unit.id, itemId: item.id }); });
-        } });
-        return button;
+        }
+    }
+    private clearPointerDrag() {
+        this.pointerDrag?.ghost?.remove();
+        this.pointerDrag?.target?.classList.remove('drop-ready');
+        this.pointerDrag = undefined;
+        this.dragging = undefined;
+    }
+    private stowFitting(item: WorldItem) {
+        const snapshot = this.snapshot!, unit = snapshot.units.find(unit => unit.id === this.unitId), ship = snapshot.units.find(unit => unit.id === item.shipId);
+        if (!unit || !ship || !canExchange(snapshot, unit, ship)) {
+            this.feedback('A crew member must be nearby to install or remove weapons');
+            return;
+        }
+        const slot = Array.from({ length: shipHoldSlots(ship) }, (_, i) => i).find(slot => !transferRefusal(snapshot, this.owner, item.id, { shipId: ship.id, slot }));
+        if (slot === undefined) {
+            this.feedback('No room in the hold');
+            return;
+        }
+        this.transfer(item, { shipId: ship.id, slot });
     }
     private action(parent: HTMLElement, label: string, run: () => void) { const button = document.createElement('button'); button.type = 'button'; button.className = 'equipment-action'; button.textContent = label; button.addEventListener('click', run); parent.append(button); }
     private cell(label: string, item: WorldItem | undefined, destination?: ItemDestination, hand?: 'right' | 'left') {
         const cell = document.createElement('div');
         cell.className = 'equipment-cell';
+        this.dropTargets.set(cell, { destination, hand });
         cell.tabIndex = 0;
         cell.setAttribute('aria-label', label);
         cell.classList.toggle('empty', !item);
@@ -191,7 +276,15 @@ export class EquipmentPanel {
         const title = document.createElement('small');
         title.textContent = label;
         cell.append(title);
-        if (item)
+        if (hand) {
+            cell.classList.add('equipment-hand');
+            const name = document.createElement('span');
+            name.className = 'equipment-hand-name';
+            name.textContent = item ? this.name(item) : this.text('空手', 'Empty');
+            name.title = name.textContent;
+            cell.append(name);
+        }
+        else if (item)
             cell.append(this.itemButton(item));
         const drop = (event: DragEvent) => { event.preventDefault(); cell.classList.remove('drop-ready'); const id = event.dataTransfer?.getData('application/x-sketch-item') || this.dragging; const held = this.snapshot!.items.find(item => item.id === id); if (held) {
             if (hand)
@@ -213,7 +306,8 @@ export class EquipmentPanel {
             this.close();
             return;
         }
-        const key = JSON.stringify([bakedAssetsVersion(), this.i18n().locale, this.unitId, this.shipId, own.map(unit => unit.id), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
+        const holdColumns = this.root.clientWidth < 850 ? 4 : ship && shipHoldSlots(ship) > 32 && this.root.clientWidth >= 1000 ? 12 : 8;
+        const key = JSON.stringify([holdColumns, bakedAssetsVersion(), this.i18n().locale, this.unitId, this.shipId, own.map(unit => unit.id), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
         if (key === this.fingerprint || this.dragging) {
             this.updateValues(unit, ship);
             return;
@@ -266,8 +360,11 @@ export class EquipmentPanel {
             for (const hand of ['right', 'left'] as const) {
                 const item = snapshot.items.find(item => item.id === unit.hands?.[hand]);
                 const main = snapshot.items.find(item => item.id === unit.hands?.right);
-                const label = hand === 'right' ? this.text('主手', 'Main hand') : main && itemHands(main) === 2 ? this.text('副手 · 被双手武器占用', 'Off hand · Two-handed weapon') : this.text('副手', 'Off hand');
+                const blocked = hand === 'left' && main && itemHands(main) === 2;
+                const label = hand === 'right' ? this.text('主手', 'Main hand') : this.text('副手', 'Off hand');
                 const cell = this.cell(label, item, undefined, hand);
+                if (blocked)
+                    cell.querySelector('.equipment-hand-name')!.textContent = this.text('双手武器占用', 'Two-handed');
                 hands.append(cell);
                 if (item)
                     this.action(cell, this.text('收起', 'Stow'), () => this.wield(undefined, hand));
@@ -284,11 +381,13 @@ export class EquipmentPanel {
             else
                 for (const slot of CARRY_SLOTS) {
                     const item = itemsFor(snapshot, unit).find(item => itemSlot(snapshot, unit, item) === slot);
-                    carried.append(this.cell(this.text(...SLOT_LABELS[slot]), item, { unitId: unit.id, slot }));
+                    const held = item?.id === unit.hands?.right ? this.text('主手', 'Main hand') : item?.id === unit.hands?.left ? this.text('副手', 'Off hand') : this.text('背挂', 'Stowed');
+                    const label = `${Number(slot.slice(5)) + 1} · ${item ? held : this.text('携行', 'Carry')}`;
+                    carried.append(this.cell(label, item, { unitId: unit.id, slot }));
                 }
             const explanation = document.createElement('p');
             explanation.className = 'equipment-note';
-            explanation.textContent = this.text('手持与背挂共用以上 4 格。主副手显示当前持用，不增加容量。', 'Hands and back share the four positions above. Hand displays do not add capacity.');
+            explanation.textContent = this.text('四个携行位共用；将武器拖到主手或副手即可持用。', 'Four shared carrying positions. Drag a weapon to a hand to wield it.');
             character.append(explanation);
             const stats = document.createElement('div');
             stats.dataset.equipmentStats = '';
@@ -346,41 +445,60 @@ export class EquipmentPanel {
             cargo.append(fittingsTitle);
             const fittings = document.createElement('div');
             fittings.className = 'equipment-fittings';
+            fittings.style.setProperty('--fitting-count', String(shipMounts(ship).length));
             cargo.append(fittings);
             for (const mount of shipMounts(ship)) {
                 const item = snapshot.items.find(item => item.shipId === ship.id && item.mountId === mount.id);
                 const cell = this.cell(this.mountLabel(mount.id), item, { shipId: ship.id, mountId: mount.id, installerId: unit?.id ?? '' });
+                cell.querySelector('small')!.textContent = this.shortMountLabel(mount.id);
                 cell.dataset.mountId = mount.id;
                 cell.title = `${mount.accepts.map(kind => labelKind(kind, this.i18n())).join(' / ')} · ${this.text('射界', 'Firing arc')} ±${Math.round(mount.halfArc * 180 / Math.PI)}°`;
                 if (item) {
                     const hp = document.createElement('small');
                     hp.dataset.weaponDurability = item.id;
                     cell.append(hp);
-                    this.action(cell, this.text('拆到船舱', 'Stow in hold'), () => { if (!unit || !canExchange(snapshot, unit, ship)) {
-                        this.feedback('A crew member must be nearby to install or remove weapons');
-                        return;
-                    } const slot = Array.from({ length: shipHoldSlots(ship) }, (_, i) => i).find(slot => !transferRefusal(this.snapshot!, this.owner, item.id, { shipId: ship.id, slot })); if (slot === undefined) {
-                        this.feedback('No room in the hold');
-                        return;
-                    } this.transfer(item, { shipId: ship.id, slot }); });
                 }
                 fittings.append(cell);
             }
+            if (shipMounts(ship).length === 1) {
+                cargo.classList.add('equipment-single-fitting');
+                fittingsTitle.remove();
+                summary.append(fittings);
+            }
             const holdTitle = document.createElement('h3');
             holdTitle.className = 'equipment-section-title';
-            holdTitle.textContent = this.text('船舱储物', 'Cargo hold');
+            holdTitle.textContent = `${this.text('船舱储物', 'Cargo hold')} · ${shipHoldSlots(ship)} ${this.text('格', 'positions')}`;
             cargo.append(holdTitle);
             const grid = document.createElement('div');
             grid.className = 'equipment-hold';
+            grid.style.setProperty('--hold-columns', String(holdColumns));
             cargo.append(grid);
             for (let i = 0; i < shipHoldSlots(ship); i++) {
                 const occupying = snapshot.items.find(item => item.shipId === ship.id && item.holdSlot !== undefined && i >= item.holdSlot && i < item.holdSlot + (ITEM_DEFS[item.kind].span ?? 1));
                 if (occupying && occupying.holdSlot !== i)
                     continue;
-                const cell = this.cell(String(i + 1), occupying, { shipId: ship.id, slot: i });
-                if (occupying && ITEM_DEFS[occupying.kind].span === 4)
-                    cell.classList.add('equipment-four-slots');
-                grid.append(cell);
+                const span = occupying ? ITEM_DEFS[occupying.kind].span ?? 1 : 1;
+                // Preserve the actual numbered hold positions even when a large item
+                // wraps across a row. CSS auto-placement would silently shift them.
+                for (let offset = 0; offset < span;) {
+                    const start = i + offset, width = Math.min(span - offset, holdColumns - start % holdColumns);
+                    const label = width > 1 ? `${start + 1}–${start + width}` : String(start + 1);
+                    const cell = this.cell(label, occupying, { shipId: ship.id, slot: start });
+                    cell.dataset.holdSlot = String(start);
+                    cell.dataset.holdSpan = String(width);
+                    cell.style.gridColumn = `${start % holdColumns + 1} / span ${width}`;
+                    cell.style.gridRow = String(Math.floor(start / holdColumns) + 1);
+                    if (span > 1) {
+                        cell.classList.add('equipment-heavy');
+                        cell.classList.toggle('equipment-heavy-wide', width >= 3);
+                        if (offset) {
+                            cell.classList.add('equipment-continuation');
+                            cell.querySelector('small')!.textContent += this.text(' · 续', ' · cont.');
+                        }
+                    }
+                    grid.append(cell);
+                    offset += width;
+                }
             }
         }
         else {
@@ -390,15 +508,23 @@ export class EquipmentPanel {
         }
         const actions = document.createElement('footer');
         actions.dataset.equipmentActions = '';
+        const hint = document.createElement('p');
+        hint.className = 'equipment-action-hint';
+        hint.textContent = this.text('选择物品，查看重量与操作', 'Select an item for its weight and actions');
+        actions.append(hint);
         this.root.append(actions);
         const feedback = document.createElement('p');
         feedback.dataset.equipmentFeedback = '';
         feedback.setAttribute('role', 'status');
         feedback.textContent = this.text('拖拽放置 · 双击转移 · 单击持用或安装 · Esc 返回战场', 'Drag to place · Double-click to transfer · Click for actions · Esc to return');
         this.root.append(feedback);
+        const selected = snapshot.items.find(item => item.id === this.selectedItem && (unit && item.carrierId === unit.id || ship && item.shipId === ship.id));
+        if (selected) this.selectItem(selected);
+        else this.selectedItem = undefined;
         this.updateValues(unit, ship);
     }
     private mountLabel(id: string) { return id === 'bow' ? this.text('艏部炮位', 'Bow fitting') : id === 'aft' ? this.text('中后部炮位', 'Aft fitting') : id.startsWith('port') ? `${this.text('左舷炮位', 'Port fitting')} ${Number(id.slice(4)) + 1}` : `${this.text('右舷炮位', 'Starboard fitting')} ${Number(id.slice(9)) + 1}`; }
+    private shortMountLabel(id: string) { return id === 'bow' ? this.text('船首', 'Bow') : id === 'aft' ? this.text('船尾', 'Aft') : id.startsWith('port') ? `${this.text('左', 'Port ')}${Number(id.slice(4)) + 1}` : `${this.text('右', 'Stbd ')}${Number(id.slice(9)) + 1}`; }
     private selector(parent: HTMLElement, label: string, units: Unit[], selected: string | undefined, change: (id: string) => void) { const container = document.createElement('label'); container.className = 'equipment-selector'; container.textContent = label; const select = document.createElement('select'); select.setAttribute('aria-label', label); for (const [index, unit] of units.entries()) {
         const option = document.createElement('option');
         option.value = unit.id;
