@@ -27,14 +27,14 @@ export class Ship3DLayer {
   private card = new THREE.PlaneGeometry(60, 60).translate(0, 60*(122/128-.5), 0);
 
   private constructor(private scene: THREE.Scene, private camera: THREE.Camera,
-    private hull: THREE.Object3D, private gun: THREE.Object3D) {}
+    private hull: THREE.Object3D, private gun: THREE.Object3D, private crewAnisotropy: number) {}
 
-  static async load(scene: THREE.Scene, camera: THREE.Camera, url: string) {
+  static async load(scene: THREE.Scene, camera: THREE.Camera, url: string, maxAnisotropy = 1) {
     const gltf = await new GLTFLoader().loadAsync(url);
     const hull=gltf.scene.getObjectByName('Hull'), gun=gltf.scene.getObjectByName('Gun');
     if(!hull || !gun) throw new Error('Warship GLB must contain Hull and Gun components');
     gltf.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.castShadow=true;object.receiveShadow=true;}});
-    return new Ship3DLayer(scene,camera,hull,gun);
+    return new Ship3DLayer(scene,camera,hull,gun,Math.max(1,Math.min(8,maxAnisotropy)));
   }
 
   private deckPoint(id: string, now: number) {
@@ -85,7 +85,15 @@ export class Ship3DLayer {
         const color=ownerInk(unit.owner),key=`${unit.kind}:${color}:${frame.mode}:${frame.frame}:${facing}`;
         if(this.poses.get(unit.id)!==key){
           let texture=this.textures.get(key);
-          if(!texture){const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const ctx=canvas.getContext('2d')!;ctx.translate(64,96);ctx.scale(1.5*facing,1.5);paintFigure(ctx,unit.kind,color,frame,facing);texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;this.textures.set(key,texture);}
+          if(!texture){
+            // Repaint the vector figure at 4× sampling density; do not enlarge an
+            // already rasterized 128px image or change its physical deck footprint.
+            const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+            const ctx=canvas.getContext('2d')!;ctx.scale(4,4);ctx.translate(64,96);ctx.scale(1.5*facing,1.5);
+            paintFigure(ctx,unit.kind,color,frame,facing);
+            texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+            texture.anisotropy=this.crewAnisotropy;this.textures.set(key,texture);
+          }
           const material=mesh.material as THREE.MeshBasicMaterial;material.map=texture;material.needsUpdate=true;this.poses.set(unit.id,key);
         }
       }
