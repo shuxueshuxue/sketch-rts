@@ -68,6 +68,23 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
 }
 
 describe('shared dock outfitting', () => {
+  for(const version of ['v5','v7','v8'] as const)it(`${version} adds a working broadside battery to an important crewed warship`,()=>{
+    const game=islandGame();game.scriptedVictory=true;game.players.player!.gold=3000;
+    game.buildings.push({...game.buildings[0]!,id:'battery-yard',kind:'shipyard',x:275,y:336,radius:44,complete:true});
+    const ship=game.spawnUnit('player','warship',400,336),crew=game.spawnUnit('player','footman',400,336);
+    expect(boardUnit(ship,crew,game.units)).toBe(true);
+    for(let i=0;i<6;i++)game.spawnUnit('player','footman',130,100+i*40);
+    const options={version,memory:createAiPolicyMemory()};
+    for(let tick=0;tick<seconds(40)&&installedWeapons(game,ship).length<3;tick++){
+      const snapshot=snapshotGame(game),want=navalWant(snapshot,'player',options);
+      if(want?.id==='naval:gun'){const command=want.issue(new Set());if(command)issuePlayerCommand(game,'player',command);}
+      for(const command of planNavalTactics(snapshotGame(game),'player',options))issuePlayerCommand(game,'player',command);
+      stepGame(game);
+    }
+    expect(installedWeapons(game,ship)).toHaveLength(3);
+    expect(new Set(installedWeapons(game,ship).map(gun=>gun.mountId)).size).toBe(3);
+    expect(crew.deck?.shipId).toBe(ship.id);
+  });
   for(const version of ['v5','v7','v8'] as const)it(`${version} completes a real island colony and puts its settlers to work`,()=>{
     const terrain=coast();terrain.cells=Array.from({length:terrain.rows},(_,row)=>Array.from({length:terrain.cols},(_,col)=>
       col<=8 || col>=20 && col<=27 && row>=5 && row<=14 ? '.' : col===9 || col>=19 && col<=28 && row>=4 && row<=15 ? ',' : '~').join('')).join('');
@@ -305,7 +322,7 @@ describe("the AI on the water", () => {
     game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: 275, y: at(0, 10).y, radius: 44 });
     const enemyShip = (id: string, col: number) => ({ ...game.units.find((unit) => unit.id === "w1")!, id, owner: "enemy" as const, kind: "warship" as const, ...at(col, 17), order: { type: "idle" as const }, hp: 180, maxHp: 180, attackDamage: 20, attackRange: 390, radius: 28 });
     game.units.push(enemyShip("e1", 14));
-    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:transport");
+    expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
     game.units.push(enemyShip("e2", 16));
     expect(navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() })?.id).toBe("naval:warship");
   });

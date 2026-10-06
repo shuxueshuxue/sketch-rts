@@ -5,12 +5,15 @@ import { MAP_IDS } from "./map-ids";
 import { MAP_POOL, type PoolMap, type PoolMapId } from "./map-pool";
 import { createRoom, roomToGameSetup } from "./rooms";
 import { createGame } from "./sim";
+import {isWalkable,sameGround} from './terrain';
 
 // @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items, shops and
 // obstacles. A change to the generator that moves anything on a pool map fails here; if the change is meant, the map is
 // redrawn on purpose: give it a new name or take the new hash knowingly. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
+  sapphireArchipelago:'41d17c77736cf15f',
+  grandEstuary:'db641d7853948cbe',
   brokenSea: "39c43479ca06a312",
   templeSpring: "89d478ee42c291c3",
   turtleLake: "185a1f243b2bb342",
@@ -80,6 +83,18 @@ describe("map pool", () => {
   });
 });
 
+it('opens every resource and camp on the six/eight player maps, with useful distinct theaters',()=>{
+ for(const id of ['sapphireArchipelago','grandEstuary'] as const){
+  const map=MAP_POOL.find(map=>map.id===id)!,{players,teams}=seatsOf(map),game=createGame(id,{players,teams,aiPlayers:[]});
+  expect(game.map.terrain!.surfaces).toHaveLength(game.map.terrain!.cells.length);
+  for(const point of [...game.resources,...game.units,...game.buildings])expect(isWalkable(game.map,point.x,point.y),`${id}: ${point.id}`).toBe(true);
+  const homes=game.buildings.filter(building=>building.kind==='townHall');
+  if(id==='grandEstuary')for(const home of homes)expect(sameGround(game.map,homes[0]!,home)).toBe(true);
+  else for(const home of homes.slice(1))expect(sameGround(game.map,homes[0]!,home)).toBe(false);
+  expect(game.map.landmarks.length).toBeGreaterThan(80);
+ }
+});
+
 it('keeps named shores and requested diplomacy when alliances are uneven or free-for-all', () => {
   for(const map of MAP_POOL.filter(map=>map.layout.kind==='sides')) {
     const {players,teams}=seatsOf(map);
@@ -88,7 +103,7 @@ it('keeps named shores and requested diplomacy when alliances are uneven or free
       const game=createGame(map.id,{players,teams:custom,aiPlayers:[]});
       expect(game.map.terrain?.cells).toBe(baseline.map.terrain?.cells);
       expect(game.teams).toEqual(custom);
-      expect(game.buildings.filter(b=>b.kind==='townHall')).toHaveLength(4);
+      expect(game.buildings.filter(b=>b.kind==='townHall')).toHaveLength(map.players);
     }
   }
 });

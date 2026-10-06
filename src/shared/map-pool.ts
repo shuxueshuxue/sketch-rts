@@ -9,13 +9,15 @@ export type PoolMap = {
   id: string;
   name: { en: string; zh: string };
   // The map's seats: a room on it plays with exactly this many players.
-  players: 2 | 4;
+  players: 2 | 4 | 6 | 8;
   // The idea the map is drawn on (see @@@generated-ideas); a size given is the map's, absent the seed draws one of the
   // idea's.
   layout: GeneratedLayoutOptions & { kind: GeneratedLayoutKind; idea: MapIdea };
 };
 
 export const MAP_POOL = [
+  { id: "sapphireArchipelago", name: { en: "Sapphire Archipelago", zh: "蓝宝群岛" }, players: 6, layout: { seed: "pool-sapphire-1", kind: "ring", idea: "islandStarts", size:8192 } },
+  { id: "grandEstuary", name: { en: "Grand Estuary", zh: "八方河湾" }, players: 8, layout: { seed: "pool-grandEstuary-1", kind: "sides", idea: "riverValley", size:8192 } },
   { id: "brokenSea", name: { en: "Broken Sea", zh: "碎海" }, players: 4, layout: { seed: "pool-brokenSea-1", kind: "ring", idea: "islandStarts" } },
   { id: "templeSpring", name: { en: "Temple Spring", zh: "神泉殿" }, players: 4, layout: { seed: "pool-templeSpring-1", kind: "ring", idea: "fountainRing" } },
   { id: "turtleLake", name: { en: "Turtle Lake", zh: "龟湖" }, players: 4, layout: { seed: "pool-turtleLake-1", kind: "ring", idea: "turtleIsle" } },

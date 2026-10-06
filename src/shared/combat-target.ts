@@ -1,7 +1,15 @@
-import type { Building, Unit } from "./types";
+import type { Building, Unit, Owner } from "./types";
+import {shipProfile} from './ship-geometry';
 
 export type CombatTarget = Unit | Building;
 export type TargetThreat = "none" | "ally" | "self";
+/** Boarding an empty hull is an intentional claim. Automatic guards should not
+ * destroy it under friendly boarders; an explicit player attack still prevails. */
+export function automaticTargetAllowed(units:readonly Unit[],owner:Owner,target:CombatTarget){
+  if(!('order' in target)||!shipProfile(target))return true;
+  if(units.some(unit=>unit.hp>0&&unit.deck?.shipId===target.id))return true;
+  return !units.some(unit=>unit.hp>0&&unit.owner===owner&&unit.deck&&unit.order.type==='board'&&unit.order.transportId===target.id);
+}
 
 // Mechanical target choice shared by automatic combat, neutrals and AI. Ownership, reachability, orders and
 // strategic assignments belong to the caller; this function never changes an order or knows an AI version.

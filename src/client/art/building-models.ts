@@ -239,15 +239,31 @@ function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
       m.box(0,25,0,14,10,2,CUT);break;
     }
     case 'shipyard': {
-      for(let i=0;i<12;i++)m.box(-28+i*5,0,0,4.7,52,2.5,WOOD);
-      // Exposed boat ribs on the slipway and an asymmetrical lifting crane.
-      for(let i=0;i<6;i++){
-        const y=-17+i*7,w=7+Math.sin(i*Math.PI/5)*8;
-        m.face([[-w,y,11],[-w*.6,y,4],[w*.6,y,4],[w,y,11],[w-2,y,11],[w*.45,y,6],[-w*.45,y,6],[-w+2,y,11]],'#a18c67',[0,1,0]);
+      // An open wet berth between two piers, backed by a stone shipwright's
+      // workshop. Every dark edge is model geometry, including the piles.
+      m.box(0,-26,0,66,17,5,STONE);
+      for(const x of [-26,26]){
+        for(let i=0;i<10;i++)m.box(x,-16+i*5,3,13,4.7,2.5,WOOD);
+        for(const y of [-16,4,25]){m.drum(x,y,-5,2.7,9,WOOD,8);m.drum(x,y,4,3.1,1,IRON,8);}
+        m.box(x,31,3,14,3,3,CUT);
       }
-      m.box(-23,-13,0,3,3,40,WOOD);m.box(-7,-13,37,35,2.5,3,WOOD);
-      m.box(9,-13,14,.7,.7,24,IRON);m.box(9,-13,12,4,2,3,IRON);
-      m.roof(21,-13,15,17,24,8,'#a99e7f');break;
+      m.box(-11,-27,5,35,16,20,STONE);
+      m.roof(-11,-27,25,40,22,12,'#647b77');
+      for(const x of [-28,6])m.box(x,-17,5,2,2,22,WOOD);
+      m.door(-13,-18.8,5,8,15);m.box(1,-18.7,14,5,.5,6,'#26312b');
+      m.box(17,-23,5,13,15,3,WOOD);
+      m.box(17,-23,8,10,10,4,WOOD);
+      for(const x of [-21,21])m.box(x,4,5,3,3,32,WOOD);
+      m.box(0,4,35,48,4,4,WOOD);
+      m.drum(4,4,28,2.5,6,BRASS,8);m.box(4,4,13,.6,.6,15,IRON);
+      m.box(4,4,11,4,2,2,IRON);
+      m.box(0,0,5,5,32,2,WOOD);
+      for(let i=0;i<6;i++){
+        const y=-12+i*5,w=5+Math.sin(i*Math.PI/5)*6;
+        m.face([[-w,y,14],[-w*.6,y,7],[w*.6,y,7],[w,y,14],[w-1.5,y,14],[w*.45,y,8.5],[-w*.45,y,8.5],[-w+1.5,y,14]],'#a18c67',[0,1,0]);
+      }
+      m.drum(24,-16,5,3.8,7,WOOD,8);m.drum(24,-16,7,4,.8,IRON,8);
+      m.box(-27,-8,5,6,7,6,WOOD);m.banner(-23,-22,37,team);break;
     }
     case 'emberForge': {
       m.drum(0,0,0,29,4,BASALT,8);m.drum(0,0,4,23,20,BASALT,8,18);m.cap(0,0,24,22,10,COPPER,8);

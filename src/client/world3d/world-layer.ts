@@ -106,11 +106,14 @@ export class World3DLayer {
       if(!visible(building.x,building.y,height*TILT+180))continue;
       this.batches.add(`building:${modelKey}:${building.owner}:${building.complete}`,model,pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner),!building.complete);
     }
+    const revealedShips=new Set<string>();
+    for(const unit of snapshot.units)if(frame.selectedIds?.has(unit.id)){if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
     for(const ship of ships.values()){
       const at=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0,scale=shipScale(ship),profile=shipProfile(ship)!;
       this.positions.set(ship.id,{x:at.x,y:at.y,bodyY:at.y,topY:at.y-(profile.deckHeight+profile.mastHeight)*TILT});
       if(!visible(at.x,at.y,profile.length*scale+profile.mastHeight))continue;
-      const hull=this.template(`ships/${ship.kind}`,'Hull');if(hull)this.batches.add(`ship:${ship.kind}`,hull,pose(at.x,at.y,0,heading,scale),ship.id);
+      const reveal=revealedShips.has(ship.id);
+      const hull=this.template(`ships/${ship.kind}`,'Hull');if(hull)this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,pose(at.x,at.y,0,heading,scale),ship.id,undefined,false,reveal);
       const mast=profile.obstacles.find(obstacle=>obstacle.type==='mast');
       if(mast){const mastAt=localToWorld({...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}},mast);this.batches.add(`flag:${ship.owner}`,this.flag,new THREE.Matrix4().compose(new THREE.Vector3(mastAt.x,profile.deckHeight+profile.mastHeight,mastAt.y),rotation,new THREE.Vector3(scale,scale,scale)),ship.id,ownerInk(ship.owner));}
       const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};

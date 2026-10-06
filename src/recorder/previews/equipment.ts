@@ -1,3 +1,4 @@
+import {commandIconMarkup} from '../../client/command-icons';
 import {WorldPresentation} from '../../client/world-presentation';
 /** Review harness exercising the same equipment dialog, commands and simulation as a match. */
 import '../../client/styles.css';
@@ -76,6 +77,11 @@ const hudFrame=document.createElement('div');hudFrame.className='game-shell';hud
 const hudDeck=document.createElement('div');hudDeck.className='control-deck';hudDeck.style.pointerEvents='auto';
 const hudCard=document.createElement('div');hudCard.className='selection-chip';hudDeck.append(hudCard);hudFrame.append(hudDeck);document.body.append(hudFrame);
 const hud=new BattleHudSelection(hudCard,'船员');
+const actions=document.createElement('div');actions.className='hud-actions';const commands=document.createElement('div');commands.className='command-dock';actions.append(commands);hudDeck.append(actions);
+for(const [label,icon,key,run] of [['装备','▣','I',()=>showShip(portraitShip)],['攻击','⚔','A',()=>{}],['停止','▥','S',()=>{}]] as const){
+ const button=document.createElement('button');button.className='command-button';button.innerHTML=`<span class="command-icon">${commandIconMarkup(icon)}</span><span class="command-label">${label}</span><span class="hotkey">${key}</span>`;button.addEventListener('click',run);commands.append(button);
+}
+
 function updatePortraits(){
   const art=(kind:typeof ship.kind)=>({key:kind,paint:(target:HTMLCanvasElement)=>drawAtlasUnitPortrait(target.getContext('2d')!,kind,0,0,target.clientWidth,'#819b82')});
   hud.render({key:portraitShip.id,name:i18n.label(portraitShip.kind),caption:'己方船只',detail:'甲板布阵 · 船舱装备',art:art(portraitShip.kind),health:{current:portraitShip.hp,max:portraitShip.maxHp}},[],'',[{key:portraitShip.id,label:'船员',passengers:shipPassengers(game.units,portraitShip).map(crew=>({key:crew.id,name:i18n.label(crew.kind),actionLabel:`卸载 ${i18n.label(crew.kind)}`,art:art(crew.kind),health:{current:crew.hp,max:crew.maxHp},activate:()=>{try{issuePlayerCommand(game,'player',{type:'unloadPassenger',transportId:portraitShip.id,passengerId:crew.id});}catch(error){note.textContent=String(error);}},decorate:()=>{}}))}]);
@@ -90,6 +96,13 @@ for (const [label, action] of [['人物装备', () => panel.show([archer])], ['�
     button.addEventListener('click', action);
     toolbar.append(button);
 }
+const lockMode=document.createElement('button');lockMode.className='equipment-action';lockMode.textContent='锁定鼠标测试';toolbar.append(lockMode);
+let lockedAt={x:680,y:470};
+lockMode.addEventListener('click',()=>{void canvas.requestPointerLock();});
+const cursor=document.createElement('span');cursor.style.cssText='position:fixed;width:12px;height:12px;border:1px solid white;border-radius:50%;pointer-events:none;z-index:200;display:none';document.body.append(cursor);
+document.addEventListener('pointerlockchange',()=>{cursor.style.display=document.pointerLockElement?'block':'none';});
+document.addEventListener('mousemove',event=>{if(document.pointerLockElement!==canvas)return;lockedAt={x:Math.max(0,Math.min(innerWidth,lockedAt.x+event.movementX)),y:Math.max(0,Math.min(innerHeight,lockedAt.y+event.movementY))};cursor.style.left=`${lockedAt.x}px`;cursor.style.top=`${lockedAt.y}px`;panel.virtualPointer('pointermove',lockedAt,event.buttons,event);});
+for(const type of ['mousedown','mouseup'] as const)document.addEventListener(type,event=>{if(document.pointerLockElement===canvas&&event.button===0)panel.virtualPointer(type==='mousedown'?'pointerdown':'pointerup',lockedAt,event.buttons,event);});
 const note = document.createElement('span');
 note.textContent = '拖拽 / 双击转移 · 火炮占四格 · 不影响线上对局';
 toolbar.append(note);
