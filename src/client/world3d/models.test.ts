@@ -4,7 +4,6 @@ import {Box3,Vector3,Mesh} from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {matchModelKeys} from './model-library';
 import {SHIP_KINDS,shipProfile} from '../../shared/ship-geometry';
-import {loadImage} from '@napi-rs/canvas';
 import type {Unit} from '../../shared/types';
 
 describe('production authored models',()=>{
@@ -21,8 +20,5 @@ describe('production authored models',()=>{
         expect(Boolean(model.getObjectByName('Gun'))).toBe(['warship','bombardShip','fireShip'].includes(kind));
       }
     }
-  });
-  it('uses compact consistent ship portraits rather than fetching direction atlases for a button',async()=>{
-    for(const kind of SHIP_KINDS){const bytes=readFileSync(`public/art/portraits/${kind}.png`),image=await loadImage(bytes);expect([image.width,image.height]).toEqual([256,256]);expect(bytes.byteLength).toBeLessThan(100_000);}
   });
 });

@@ -1,5 +1,5 @@
 import { itemEquipped } from "../shared/equipment";
-import { drawBakedShip,drawShipOcclusion,deckVisualHeight,drawShipFlag,drawShipWeapon } from "./art/baked-ships";
+import { drawCanvasShip,deckVisualHeight,drawShipFlag } from "./art/canvas-ships";
 import { localToWorld,shipProfile,shipPassengers } from "../shared/ship-geometry";
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
@@ -404,12 +404,10 @@ function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Poin
 function drawShipGroup(painter:Painter,ship:Unit) {
   const point=worldToScreen(painter,drawnPosition(painter,ship));
   if(painter.motion && ship.sailing)ship={...ship,sailing:{...ship.sailing,heading:painter.motion.heading(ship,painter.now)}};
-  if(!drawBakedShip(painter.ctx,ship,point,"base")){drawUnits(painter,[ship]);drawItems(painter,painter.snapshot.items,ship);for(const unit of shipPassengers(painter.snapshot.units,ship))drawUnits(painter,[unit]);return;}
-  drawBakedShip(painter.ctx,ship,point,"upper");
-  drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,undefined,painter.snapshot.items);
+  drawCanvasShip(painter.ctx,ship,point,painter.snapshot.items);
   drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner));
   drawItems(painter,painter.snapshot.items,ship);
-  for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y)){drawUnits(painter,[crew]);drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,crew,painter.snapshot.items);drawShipOcclusion(painter.ctx,ship,point,crew);}
+  for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y))drawUnits(painter,[crew]);
   drawUnits(painter,[ship],true);
 }
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
 import { deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, unitPointerPosition } from "./relations";
 import { boardUnit, syncDecks } from '../shared/decks';
-import { deckVisualHeight } from './art/baked-ships';
+import { deckVisualHeight } from './art/canvas-ships';
 import type { GameSnapshot, Unit } from "../shared/types";
 
 // The player and "enemy" on one team, "enemy2" on the other.

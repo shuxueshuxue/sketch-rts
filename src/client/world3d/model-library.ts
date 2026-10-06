@@ -25,5 +25,8 @@ export class ModelLibrary {
     })().catch(error=>{this.pending.delete(key);throw error;});this.pending.set(key,pending);}return pending;
   }
   component(key:string,name:string){const root=this.models.get(key);if(!root)return undefined;const source=root.getObjectByName(name);if(!source)return undefined;const object=source.clone(true);object.position.set(0,0,0);object.updateMatrixWorld(true);return object;}
+  portraitModel(key:string){return this.models.get(key);}
   dispose(){const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();for(const root of this.models.values())root.traverse(object=>{if(object instanceof THREE.Mesh){geometries.add(object.geometry);for(const mat of Array.isArray(object.material)?object.material:[object.material])materials.add(mat);}});for(const item of geometries)item.dispose();for(const item of materials)item.dispose();this.models.clear();this.pending.clear();}
 }
+/** World actors and UI share decoded geometry as well as the resource request. */
+export const worldModels=new ModelLibrary();

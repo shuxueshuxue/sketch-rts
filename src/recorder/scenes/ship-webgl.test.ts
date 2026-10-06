@@ -7,12 +7,12 @@ import { issuePlayerCommand, stepGame } from '../../shared/sim';
 import { createShipWebglScene } from './ship-webgl';
 
 it('keeps the authored gun pivot and only two model components in the GLB',()=>{
-  const bytes=readFileSync('public/art/ships3d/warship.glb');
+  const bytes=readFileSync('public/art/world3d/ships/warship.glb');
   expect(bytes.readUInt32LE(0)).toBe(0x46546c67);expect(bytes.readUInt32LE(4)).toBe(2);expect(bytes.readUInt32LE(8)).toBe(bytes.length);
   const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
   expect(gltf.nodes.map((node:{name:string})=>node.name).sort()).toEqual(['Gun','Hull']);
   const [x,y,z]=geometry.ships.warship.weaponPivot;
-  expect(gltf.nodes.find((node:{name:string})=>node.name==='Gun').translation).toEqual([x,z,-y!||0]);
+  expect(gltf.nodes.find((node:{name:string})=>node.name==='Gun').translation).toEqual([x,z,y!||0]);
   expect(gltf.meshes).toHaveLength(2);expect(bytes.length).toBeLessThan(1024*1024);
 });
 

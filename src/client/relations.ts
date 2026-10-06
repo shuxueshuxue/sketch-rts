@@ -1,7 +1,7 @@
 import { shipNeedsRepair } from "../shared/ship-equipment";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
-import { deckVisualHeight } from "./art/baked-ships";
+import { deckVisualHeight } from "./art/canvas-ships";
 import { unitGlyphScale } from "./glyphs";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";

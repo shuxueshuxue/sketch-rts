@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Rebuild every authored building in Blender, with shared subdued materials.
 
-Exports the editable .blend scenes and deployed color/team-mask PNGs. Geometry
-comes from export-building-geometry.ts, which contains no baked illumination.
+Exports editable .blend scenes. Runtime models use export-world-gltf.py.
+Geometry comes from export-building-geometry.ts.
 """
 import argparse
 import math
@@ -14,7 +14,6 @@ import json
 
 ROOT=Path(__file__).resolve().parents[2]
 BUILD=ROOT/".art-build/buildings"
-OUTPUT=ROOT/"public/art/buildings"
 
 def render():
     import bpy
@@ -23,27 +22,19 @@ def render():
     selected=os.environ.get("SKETCH_BUILDING_KINDS", "").split(",")
     if selected != [""]:
         models={kind:models[kind] for kind in selected}
-    OUTPUT.mkdir(parents=True,exist_ok=True)
     for kind,faces in models.items():
         bpy.ops.wm.read_factory_settings(use_empty=True)
         materials={}
-        def material(color,mask=False):
-            key=(color,mask)
+        def material(color):
+            key=color
             if key in materials:return materials[key]
             m=bpy.data.materials.new("team flag" if color=="#ff00ff" else color)
             m.use_nodes=True
-            if mask:
-                nodes=m.node_tree.nodes;nodes.clear()
-                emission=nodes.new("ShaderNodeEmission")
-                value=1 if color=="#ff00ff" else 0
-                emission.inputs[0].default_value=(value,value,value,1)
-                out=nodes.new("ShaderNodeOutputMaterial");m.node_tree.links.new(emission.outputs[0],out.inputs[0])
-            else:
-                c=(.36,.39,.37) if color=="#ff00ff" else tuple((int(color[i:i+2],16)/255)**2.2 for i in (1,3,5))
-                p=m.node_tree.nodes.get("Principled BSDF")
-                p.inputs["Base Color"].default_value=(*c,1)
-                p.inputs["Roughness"].default_value=.82
-                p.inputs["Metallic"].default_value=.35 if color in ("#86948f","#b3825d","#d2b779") else 0
+            c=(.36,.39,.37) if color=="#ff00ff" else tuple((int(color[i:i+2],16)/255)**2.2 for i in (1,3,5))
+            p=m.node_tree.nodes.get("Principled BSDF")
+            p.inputs["Base Color"].default_value=(*c,1)
+            p.inputs["Roughness"].default_value=.82
+            p.inputs["Metallic"].default_value=.35 if color in ("#86948f","#b3825d","#d2b779") else 0
             materials[key]=m
             return m
         objects=[]
@@ -82,34 +73,17 @@ def render():
         ground.is_shadow_catcher=True
         ground.data.materials.append(material("#b4b4b4"))
         bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f"{kind}.blend"))
-        scene.render.filepath=str(BUILD/f"{kind}-color.png");bpy.ops.render.render(write_still=True)
-        ground.hide_render=True
-        for obj,color in objects:obj.data.materials[0]=material(color,True)
-        scene.view_settings.view_transform="Raw";scene.view_settings.look="None";scene.view_settings.exposure=0
-        scene.render.filepath=str(BUILD/f"{kind}-team.png");bpy.ops.render.render(write_still=True)
-        print("BUILDING_BAKED",kind,flush=True)
+        print("BUILDING_MODEL",kind,flush=True)
 
 def main():
-    from PIL import Image, ImageChops
-    from io import BytesIO
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--blender',default=os.environ.get('BLENDER_BIN','blender'))
-    p.add_argument('--kinds',nargs='+',help='Render only these building kinds')
+    p.add_argument('--kinds',nargs='+',help='Build only these building kinds')
     args=p.parse_args()
     subprocess.run(['node','--import','tsx','tools/art/export-building-geometry.ts'],cwd=ROOT,check=True)
     subprocess.run([args.blender,'--background','--factory-startup','--python-exit-code','1','--python',str(Path(__file__).resolve())],check=True,
                    env={**os.environ,"SKETCH_BUILDING_KINDS":','.join(args.kinds or [])})
-    OUTPUT.mkdir(parents=True,exist_ok=True)
-    for path in BUILD.glob('*-color.png'):
-        image=Image.open(path).convert('RGBA')
-        target=OUTPUT/path.name.replace('-color','')
-        buffer=BytesIO();image.save(buffer,format='PNG',optimize=True);target.write_bytes(buffer.getvalue())
-    for path in BUILD.glob('*-team.png'):
-        image=Image.open(path).convert('RGBA')
-        image.putalpha(ImageChops.multiply(image.getchannel('R'),image.getchannel('A')))
-        target=OUTPUT/path.name
-        buffer=BytesIO();image.save(buffer,format='PNG',optimize=True);target.write_bytes(buffer.getvalue())
-    print('Building sprites exported to',OUTPUT)
+    print('Building models exported to',BUILD)
 
 if __name__=='__main__':
     if 'bpy' in sys.modules:render()

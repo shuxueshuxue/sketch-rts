@@ -9,7 +9,8 @@ const mocks=vi.hoisted(()=>({
   create:vi.fn(),
 }));
 vi.mock('./resources',()=>({resources:{warm:mocks.warm},resourceText:(_zh:string,en:string)=>en}));
-vi.mock('./art/baked-assets',()=>({loadBakedImage:mocks.image}));
+vi.mock('./world3d/model-library',()=>({worldModels:{prepare:async(keys:string[],phase:string)=>Promise.all(keys.map(key=>mocks.image(key,phase)))},matchModelKeys:['ships/warship','buildings/farm'],snapshotModelKeys:(scene:GameSnapshot)=>scene.buildings.map(building=>`buildings/${building.kind}`)}));
+vi.mock('./world3d/model-portraits',()=>({activateModelPortraits:vi.fn()}));
 vi.mock('./resource-panel',()=>({resourcePanel:()=>mocks.panel}));
 vi.mock('./world-renderer',()=>({drawWorld:mocks.draw}));
 vi.mock('./world3d/world-layer',()=>({World3DLayer:{create:mocks.create},PHYSICAL_EFFECTS:new Set()}));
