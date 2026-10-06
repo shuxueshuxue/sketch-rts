@@ -9,3 +9,5 @@ Production lists come from the catalog and the building owner's faction. Unit, a
 World health bars appear for any injury, selection, hover, nearby combat or construction, using the same rules for all owners, ships, soldiers and structures. Healthy idle objects hide them. Green means above 50%, amber above 25%, red at or below 25%; the HUD uses the same thresholds. Unit bars sit above the rendered body. Still title-screen scenes omit world bars.
 
 Buildings use lighter stone, wood and metal palettes, front-facing daylight with ambient light on their sides, lighter contact/cast shadows and softer outlines. The ground and water palettes support this brighter matte style. Geometry, texture density and animation counts are unchanged. `npx tsx scripts/render-presentation-review.ts /tmp/presentation-review` renders the actual world, all buildable building portraits and the bounty effect for visual review.
+
+Ships keep a steady hull while sailing instead of inheriting the land-unit walking bounce. Movement and facing still follow the simulation; land siege wheels retain their animation.
