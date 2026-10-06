@@ -83,3 +83,15 @@ describe("right-click orders", () => {
     expect(hasAlly(snapshotGame(createGame("bareDuel", { aiPlayers: [] })), "player")).toBe(false);
   });
 });
+
+it('treats an empty hostile deck as walkable ground while defenders remain attack targets',()=>{
+  const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];delete game.map.terrain;
+  const own=game.spawnUnit('player','transport',700,700),enemy=game.spawnUnit('enemy','transport',880,700),crew=game.spawnUnit('player','footman',700,700);
+  boardUnit(own,crew,game.units);syncDecks(game.units);
+  const snapshot=snapshotGame(game),point={x:enemy.x,y:enemy.y-deckVisualHeight(enemy)};
+  expect(pointerTarget(snapshot,point)).toMatchObject({kind:'unit',unit:{id:enemy.id}});
+  expect(targetCommand(snapshot,'player',[crew],{kind:'unit',unit:enemy})).toBeUndefined();
+  expect(deckMovePoint(game.units,[crew],point)).toEqual({x:enemy.x,y:enemy.y});
+  const defender=game.spawnUnit('enemy','footman',enemy.x,enemy.y);boardUnit(enemy,defender,game.units);syncDecks(game.units);
+  expect(targetCommand(snapshotGame(game),'player',[crew],{kind:'unit',unit:defender})).toMatchObject({type:'attack',targetId:defender.id});
+});

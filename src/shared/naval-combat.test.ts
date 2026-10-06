@@ -2,8 +2,9 @@ import { installedWeapons, mountedWeaponPose, SHIP_WEAPONS } from "./ship-equipm
 import { describe, expect, it } from 'vitest';
 import { createGame, issuePlayerCommand, removeUnit, restoreSnapshotIntoGame, snapshotGame, stepGame } from './sim';
 import { boardUnit, deckPlacement, syncDecks } from './decks';
-import { localToWorld, shipWeaponPose } from './ship-geometry';
+import { localToWorld, shipProfile, shipWeaponPose } from './ship-geometry';
 import { UNIT_DEFS } from './catalog';
+import { nearestShipPose } from './ship-navigation';
 import { DECK_HULL_DAMAGE } from './deck-combat';
 import { checksumGame } from './sim/checksum';
 import type { Unit } from './types';
@@ -114,6 +115,7 @@ describe('live naval combat', () => {
 describe('connected physical surfaces and capture', () => {
     it('walks between touching decks at normal speed and takes an empty hostile ship', () => {
         const game = match('water'), a = game.spawnUnit('player', 'transport', 800, 800), b = game.spawnUnit('enemy', 'transport', 800, 880), unit = game.spawnUnit('player', 'footman', 800, 800);
+        b.x=a.x;b.y=a.y+shipProfile(a)!.beam+.05; // Real broadside contact without intersecting hulls.
         place(game, a, unit, 20, 0);
         unit.speed = UNIT_DEFS.footman.speed;
         const goal = deckPlacement(b, unit, game.units, { x: 20, y: 0 }, false)!;
@@ -162,7 +164,7 @@ describe('connected physical surfaces and capture', () => {
         issuePlayerCommand(game, 'player', { type: 'move', unitIds: [unit.id], ...localToWorld(ship, { x: 30, y: 0 }) });
         run(game, 100);
         expect(unit.deck).toBeUndefined();
-        ship.x = 840;
+        Object.assign(ship,nearestShipPose(game.map,ship,{x:840,y:900})!);
         run(game, 10);
         const restored = createGame('bareDuel');
         restoreSnapshotIntoGame(restored, snapshotGame(game), game.nextId);

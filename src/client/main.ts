@@ -1,4 +1,5 @@
 import { commandIconMarkup } from "./command-icons";
+import { paintPortrait } from './portrait-cache';
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
 import { formatMass } from "./format-mass";
@@ -110,6 +111,7 @@ type CommandButton = {
   run: () => void;
   // Right-click on the button (a spell's autocast switch).
   contextAction?: () => void;
+  portrait?: CommandPortrait;
 };
 
 // The command card's build and train buttons come from the building and unit cards, in catalog order.
@@ -430,7 +432,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
     contextAction?.();
   });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}) };
+  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}), ...(portrait ? {portrait} : {}) };
 }
 
 // @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
@@ -449,16 +451,21 @@ function withRing(button: CommandButton) {
 }
 
 function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
-  const icon = document.createElement("canvas");
-  icon.width = icon.height = 96;
-  icon.className = "command-portrait";
-  icon.setAttribute("aria-hidden", "true");
-  const brush = requireCanvasContext(icon);
-  const center = { x: 48, y: 48 };
-  if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, ownerInk(localPlayerId));
-  else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
-  else drawAtlasBuildingPortrait(brush, portrait.kind, 96, ownerInk(localPlayerId));
-  element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
+  const icon = element.querySelector<HTMLCanvasElement>('canvas.command-portrait') ?? document.createElement("canvas");
+  if(!icon.classList.contains('command-portrait')){
+    icon.width = icon.height = 96;
+    icon.className = "command-portrait";
+    icon.setAttribute("aria-hidden", "true");
+    element.querySelector(".command-icon, .item-icon")?.replaceChildren(icon);
+  }
+  const color=ownerInk(localPlayerId);
+  paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}`,()=>{
+    const brush = requireCanvasContext(icon);
+    const center = { x: 48, y: 48 };
+    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, color);
+    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
+    else drawAtlasBuildingPortrait(brush, portrait.kind, 96, color);
+  });
 }
 
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
@@ -2533,6 +2540,7 @@ function updateHud() {
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
+    if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
     if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     button.element.hidden = !state.visible;
     button.element.disabled = false;
@@ -2669,7 +2677,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
     <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
   `;
-  if (!previous) drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
   button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? String(percent) : "Q";
   return button;
 }
@@ -2752,7 +2760,7 @@ function dropCarriedItem(itemId: string, carrierId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item, carrier }) => item.id === itemId && carrier.id === carrierId);
   if (!entry) return;
-  sendCommand(dropItemCommand(entry.item, entry.carrier));
+  sendCommand(dropItemCommand(entry.item, entry.carrier,snapshot!.units));
   statusLabel.textContent = t("status.itemDropped", { item: labelKind(entry.item.kind) });
 }
 

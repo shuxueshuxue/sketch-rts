@@ -197,14 +197,16 @@ describe('physical ship equipment', () => {
         expect(worker.gearMass).toBe(0);
         expect(target.fittings?.[0]?.id).toBe(cannon.id);
     });
-    it('checks mount compatibility, personnel, deck clearance and four-cell hold space', () => {
+    it('checks mount compatibility, deck clearance and hold space without requiring a nearby crew member', () => {
         const game = match(), ship = game.spawnUnit('player', 'cutter', 900, 800), worker = game.spawnUnit('player', 'worker', 900, 760);
         const cannon: WorldItem = { id: 'mortar', kind: 'shipMortar', shipId: ship.id, holdSlot: 0, x: ship.x, y: ship.y, cooldownRemaining: 0 };
         game.items.push(cannon);
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: ship.id, mountId: 'bow', installerId: worker.id } })).toThrow(/does not fit/);
         cannon.kind = 'shipCannon';
         worker.x = 200;
-        expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: ship.id, mountId: 'bow', installerId: worker.id } })).toThrow(/crew member/);
+        issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: ship.id, mountId: 'bow' } });
+        expect(cannon.mountId).toBe('bow');
+        issuePlayerCommand(game,'player',{type:'transferItem',itemId:cannon.id,destination:{shipId:ship.id,slot:0}});
         worker.x = 900;
         expect(shipMounts(ship)).toHaveLength(1);
         const transport = game.spawnUnit('player', 'transport', 700, 700), crew = game.spawnUnit('player', 'footman', 700, 700);
@@ -263,6 +265,7 @@ describe('physical ship equipment', () => {
         game.map.width = 2000;
         game.map.height = 1600;
         const rescue = game.spawnUnit('player', 'transport', 800, 800), ship = game.spawnUnit('player', 'transport', 800, 880), worker = game.spawnUnit('player', 'worker', 800, 800);
+        ship.x=rescue.x;ship.y=rescue.y+shipProfile(rescue)!.beam+.05; // Adjacent non-overlapping hulls, rather than intersecting launch positions.
         boardUnit(rescue, worker, game.units);
         worker.deck = { shipId: rescue.id, ...deckPlacement(rescue, worker, game.units, { x: 20, y: 0 })! };
         syncDecks(game.units);

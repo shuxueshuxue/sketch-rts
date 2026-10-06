@@ -3,7 +3,7 @@ import { bodyMass } from "./physical-body";
 import { shipsIn, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { perTick } from "./time";
 import type { Unit } from "./types";
-import { capsuleClearsCircles, diskInConvex } from './navigation-math';
+import { capsuleClearsCircles, diskInConvex, expandConvex } from './navigation-math';
 
 export function deckLoad(units: readonly Unit[], ship: Unit) {
   return (ship.holdMass ?? 0)+shipPassengers(units,ship).reduce((sum,unit)=>sum+bodyMass(unit),0);
@@ -25,6 +25,25 @@ export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[
     if(value<score && deckPointFits(ship,passenger,point,units,occupied)){best=point;score=value;}
   }
   return best;
+}
+/** Project a pointer onto the usable floor, including the passenger's footprint.
+ * Dragging past a railing stays at the railing; fittings and crew choose the
+ * closest remaining free position rather than rejecting the whole gesture. */
+export function projectDeckPoint(ship: Unit, passenger: Unit, preferred: Point, units: readonly Unit[]) {
+  const profile=shipProfile(ship);
+  if(!profile)return undefined;
+  if(deckPointFits(ship,passenger,preferred,units))return preferred;
+  if(diskInConvex(preferred,passenger.radius+1,profile.deck))return deckPlacement(ship,passenger,units,preferred,true,2);
+  const floor=expandConvex(profile.deck,-passenger.radius-1-1e-6);
+  let nearest:Point|undefined,score=Infinity;
+  for(let i=0;i<floor.length;i++) {
+    const a=floor[i]!,b=floor[(i+1)%floor.length]!,dx=b.x-a.x,dy=b.y-a.y;
+    const t=Math.max(0,Math.min(1,((preferred.x-a.x)*dx+(preferred.y-a.y)*dy)/(dx*dx+dy*dy)));
+    const point={x:a.x+dx*t,y:a.y+dy*t},distance=(point.x-preferred.x)**2+(point.y-preferred.y)**2;
+    if(distance<score){nearest=point;score=distance;}
+  }
+  if(nearest && deckPointFits(ship,passenger,nearest,units))return nearest;
+  return deckPlacement(ship,passenger,units,preferred,true,2);
 }
 export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);

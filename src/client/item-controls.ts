@@ -1,4 +1,5 @@
 import { ITEM_DEFS } from "../shared/equipment";
+import { localToWorld, shipProfile } from '../shared/ship-geometry';
 import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../shared/types";
 
 export function itemHotkey(index: number) {
@@ -35,7 +36,9 @@ export function useItemCommand(snapshot: GameSnapshot, owner: PlayerId, item: Wo
   return { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id };
 }
 
-export function dropItemCommand(item: WorldItem, carrier: Unit): GameCommand {
+export function dropItemCommand(item: WorldItem, carrier: Unit, units: readonly Unit[] = []): GameCommand {
+  const ship=shipProfile(carrier) ? carrier : carrier.deck && units.find(ship=>ship.id===carrier.deck!.shipId);
+  if(ship){const point=localToWorld(ship,{x:0,y:shipProfile(ship)!.beam/2+18});return{type:'dropItem',unitId:carrier.id,itemId:item.id,...point};}
   return { type: "dropItem", unitId: carrier.id, itemId: item.id, x: carrier.x + carrier.radius + 18, y: carrier.y + 8 };
 }
 

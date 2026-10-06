@@ -30,8 +30,11 @@ export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: Wea
         return undefined;
     const along = ((target.x - from.x) * dx + (target.y - from.y) * dy) / length;
     const side = Math.abs((target.x - from.x) * dy - (target.y - from.y) * dx) / length;
-    const body = target.radius ?? 0;
-    return along >= -body && along <= length + body && side <= width + body ? along : undefined;
+    const body = (target.radius ?? 0)+width;
+    if(side>body+1e-7)return undefined;
+    const halfChord=Math.sqrt(Math.max(0,body*body-side*side));
+    const enter=along-halfChord,leave=along+halfChord;
+    return leave>=-1e-7 && enter<=length+1e-7 ? Math.max(0,along) : undefined;
 }
 export function inWeaponCone(from: WeaponPoint, toward: WeaponPoint, target: WeaponPoint, range: number, angle: number) {
     const dx = toward.x - from.x, dy = toward.y - from.y;

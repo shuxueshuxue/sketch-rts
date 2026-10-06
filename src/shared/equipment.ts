@@ -123,10 +123,14 @@ export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
     return selected ? { ...body, attackDamage: selected.damage, attackRange: selected.range, attackCooldown: selected.cooldown } : base;
 }
 export function shipHoldSlots(ship: Unit) { const profile = shipProfile(ship); return profile ? Math.max(4, Math.floor(profile.loadCapacity / 100)) : 0; }
-export function shipItemMass(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { return (itemIndex(snapshot.items).byShip.get(ship.id) ?? []).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0); }
+export function shipItemMass(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { return (itemIndex(snapshot.items).byShip.get(ship.id) ?? []).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0)+snapshot.items.filter(item=>!item.shipId && !item.carrierId && item.deck?.shipId===ship.id).reduce((sum,item)=>sum+ITEM_DEFS[item.kind].mass,0); }
 export function unitItemMass(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit) { return itemsFor(snapshot, unit).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0); }
 export function canExchange(snapshot: Pick<GameSnapshot, 'units'>, unit: Unit, ship: Unit) {
     return unit.deck?.shipId === ship.id || distanceToHull(ship, unit) <= ITEM_TRANSFER_REACH + unit.radius;
+}
+export function exchangeRecipient(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, ship: Unit, kind: ItemKind, preferredId?: string) {
+    return snapshot.units.filter(unit=>unit.owner===owner && unit.hp>0 && canEquip(unit) && canExchange(snapshot,unit,ship) && freeItemSlot(snapshot,unit,kind))
+        .sort((a,b)=>Number(b.id===preferredId)-Number(a.id===preferredId) || distanceToHull(ship,a)-distanceToHull(ship,b) || (a.id<b.id?-1:1))[0];
 }
 export type ItemDestination = {
     unitId: string;
@@ -137,7 +141,7 @@ export type ItemDestination = {
 } | {
     shipId: string;
     mountId: string;
-    installerId: string;
+    installerId?: string;
 };
 export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId: string, destination: ItemDestination): string | undefined {
     const item = snapshot.items.find(item => item.id === itemId);
@@ -149,8 +153,6 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
     const target = snapshot.units.find(unit => unit.id === ('unitId' in destination ? destination.unitId : destination.shipId));
     if (!target || target.owner !== owner || target.hp <= 0)
         return 'Destination is no longer available';
-    if (item.mountId && !snapshot.units.some(unit => unit.owner === owner && canEquip(unit) && canExchange(snapshot, unit, source)))
-        return 'A crew member must be nearby to install or remove weapons';
     if (source.id !== target.id) {
         const ship = shipProfile(source) ? source : shipProfile(target) ? target : undefined, unit = ship === source ? target : source;
         if (ship ? !canExchange(snapshot, unit, ship) : source.deck?.shipId !== target.deck?.shipId || Math.hypot(source.x - target.x, source.y - target.y) > ITEM_TRANSFER_REACH)
@@ -177,9 +179,6 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
                 return 'This weapon does not fit this ship position';
             if (snapshot.items.some(other => other.id !== item.id && other.shipId === target.id && other.mountId === mount.id))
                 return 'This fitting is occupied';
-            const installer = snapshot.units.find(unit => unit.id === destination.installerId && unit.owner === owner && canEquip(unit) && unit.hp > 0);
-            if (!installer || !canExchange(snapshot, installer, target))
-                return 'A crew member must be nearby to install or remove weapons';
             if (snapshot.units.some(unit => unit.deck?.shipId === target.id && Math.hypot(unit.deck.x - mount.x, unit.deck.y - mount.y) < unit.radius + mount.radius + 1))
                 return 'Clear the deck around this fitting first';
         }
@@ -201,10 +200,11 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
 export function dropRefusal(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, unitId: string, itemId: string): string | undefined {
     const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);
     const item = snapshot.items.find(item => item.id === itemId);
-    if (!unit || !canEquip(unit) || !item) return 'Item or carrier is no longer available';
+    if (!unit || !item || !canEquip(unit) && !shipProfile(unit)) return 'Item or carrier is no longer available';
     if (item.carrierId === unit.id) return;
     const ship = snapshot.units.find(ship => ship.id === item.shipId && ship.owner === owner && ship.hp > 0);
     if (!ship) return 'You can only move your own equipment';
+    if(unit.id===ship.id)return;
     if (!canExchange(snapshot, unit, ship)) return 'A crew member must be nearby to install or remove weapons';
 }
 export function removeFromHands(unit: Unit, itemId: string) {
@@ -224,6 +224,7 @@ export function wieldRefusal(snapshot: GameSnapshot, owner: PlayerId, unitId: st
     const item = itemsFor(snapshot, unit).find(item => item.id === itemId);
     if (!item)
         return 'The item must be carried by this unit';
+    if(isShipEquipment(item.kind))return 'Ship weapons can only fire from a ship fitting';
     if (!isCarrySlot(itemSlot(snapshot, unit, item)!))
         return 'Move the item to a carrying position first';
     if (hand === 'left' && itemHands(item) === 2)
@@ -244,6 +245,7 @@ export function normalizeEquipment(snapshot: GameSnapshot, issue = false) {
         if (issue) unit.hands ??= {};
         const occupied = new Set<EquipmentSlot>();
         for (const item of snapshot.items.filter(item => item.carrierId === unit.id)) {
+            if(isShipEquipment(item.kind))removeFromHands(unit,item.id);
             const worn = ITEM_DEFS[item.kind].slot;
             const slot = ITEM_DEFS[item.kind].span === 4 ? CARRY_SLOTS.every(slot => !occupied.has(slot)) ? "carry0" : undefined : item.slot && !occupied.has(item.slot) ? item.slot : worn && !occupied.has(worn) ? worn : CARRY_SLOTS.find(slot => !occupied.has(slot));
             if (slot) {

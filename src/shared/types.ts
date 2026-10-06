@@ -215,7 +215,7 @@ export type Unit = {
   deck?: { shipId: string; x: number; y: number } | undefined;
   /** Continuous heading and rates; visuals select one of the baked directions. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number } | undefined;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number} }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number } | undefined;
   } | undefined;
   /** Physical scaling for unusually large campaign hulls. */
   deckScale?: number;
@@ -313,6 +313,8 @@ export type WorldItem = {
   slot?: EquipmentSlot;
   weaponKind?: UnitKind;
   shipId?: string;
+  /** Loose, unowned floor item supported by a moving deck. */
+  deck?: { shipId: string; x: number; y: number };
   holdSlot?: number;
   mountId?: string;
   durability?: number;
@@ -524,7 +526,7 @@ export type GameCommand =
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
-  | { type: "transferItem"; itemId: string; destination: { unitId: string; slot: EquipmentSlot } | { shipId: string; slot: number } | { shipId:string; mountId:string; installerId:string } }
+  | { type: "transferItem"; itemId: string; destination: { unitId: string; slot: EquipmentSlot } | { shipId: string; slot: number } | { shipId:string; mountId:string; installerId?:string } }
   | { type: "wieldItem"; unitId: string; itemId?: string; hand: "right" | "left" }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
