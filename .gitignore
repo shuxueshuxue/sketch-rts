@@ -1,5 +1,5 @@
 .DS_Store
-node_modules/
+node_modules
 dist/
 dist-server/
 coverage/
@@ -10,6 +10,7 @@ coverage/
 .playtest/
 .benchmark-dashboard/
 recordings/
+.art-build/
 
 # Sound packs (see @@@sound-packs): only the cc0 pack is ours to publish; any other pack stays on its machine.
 audio-packs/*

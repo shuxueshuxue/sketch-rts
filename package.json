@@ -23,6 +23,8 @@
     "benchmark:ai-v9-gauntlet": "tsx scripts/ai-v9-gauntlet-benchmark.ts",
     "benchmark:ai-gauntlet": "tsx scripts/ai-version-gauntlet.ts",
     "play:ai": "tsx scripts/ai-playtest.ts",
+    "art:ships": "python3 tools/art/build-ships.py",
+    "art:buildings": "python3 tools/art/build-buildings.py",
     "record": "tsx src/recorder/cli.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",
     "test:sdk-ai-ab": "vitest --run src/ai/ab-test.test.ts",
