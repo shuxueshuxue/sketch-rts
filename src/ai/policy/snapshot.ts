@@ -17,7 +17,7 @@ export function aiSnapshotQuery(snapshot: GameSnapshot, teams?: Partial<Record<P
   }
   let query = byTeams.get(key);
   if (!query) {
-    query = createSnapshotQuery(snapshot, teams ? { teams } : {});
+    query = createSnapshotQuery(snapshot, { ...(teams ? { teams } : {}), excludeIssuedWeapons:true });
     byTeams.set(key, query);
   }
   lastQuery = { snapshot, key, query };
