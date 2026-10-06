@@ -2799,7 +2799,7 @@ function draw() {
   if(!visualsReady)return;
   if (menuOpen) {
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
-    menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame));
+    menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame,'home'));
     return;
   }
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
@@ -2830,7 +2830,7 @@ function draw() {
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
-  });
+  },'match');
   drawBuildPlacementPreview();
   drawPurchaseRecipientFlash();
   drawAttackMovePreview();
