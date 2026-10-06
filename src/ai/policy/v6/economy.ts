@@ -119,7 +119,7 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     intel,
     strategy,
     own,
-    workers: units(snapshot, owner).filter((unit) => unit.kind === "worker"),
+    workers: units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck),
     bases,
     ...(threatened ? { threatened } : {}),
   };
