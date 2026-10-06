@@ -43,11 +43,11 @@
 .map-button,.menu-actions button,.slot-actions button,.match-action { border-radius:1px; box-shadow:inset 0 1px #cdb57a55,inset 0 -2px #0005,0 2px 3px #0004; }
 .menu-window :is(input,select) { border-radius:1px; box-shadow:inset 0 1px 3px #58482540; }
 .scene-switch { border-radius:1px; background:var(--game-wood); box-shadow:var(--game-inset); }
-.control-deck { gap:0; align-items:stretch; }
-.selection-chip { border-radius:1px 0 0 1px; padding:12px; border:1px solid #a58c57; background:var(--game-leather); box-shadow:var(--game-frame); }
-.hud-actions { justify-content:flex-end; gap:0; }
+.control-deck { gap:12px; align-items:end; }
+.selection-chip { border-radius:1px; padding:12px; border:1px solid #a58c57; background:var(--game-leather); box-shadow:var(--game-frame); }
+.hud-actions { justify-content:flex-end; gap:12px; }
 .command-dock,.item-dock { border-radius:1px; border:1px solid #a58c57; background:var(--game-wood); box-shadow:var(--game-frame); padding:8px; gap:5px; }
-.command-dock { position:relative; margin-bottom:7px; }
+.command-dock { position:relative; margin-bottom:0; }
 .hud-subject { grid-template-columns:90px minmax(0,1fr); gap:10px; }
 .hud-subject-art { width:90px; height:104px; object-fit:contain; border:1px solid #95835260; background:radial-gradient(ellipse at 50% 70%,#837e4e45,#101912); box-shadow:var(--game-inset); }
 .hud-subject-name { font:600 16px/1.35 var(--game-serif); color:#e4c78d; }
@@ -76,7 +76,7 @@
 .tooltip-title { color:#e0c58d; font-family:var(--game-serif); }
 .tooltip-title span { border-radius:1px; }
 .tooltip-stats,.tooltip-notes { color:#bdb49b; }
-@media(max-width:650px) { .control-deck { gap:7px; } .hud-subject-art { width:72px; height:80px; } .hud-subject { grid-template-columns:72px minmax(0,1fr); } }
+@media(max-width:650px) { .hud-subject-art { width:72px; height:80px; } .hud-subject { grid-template-columns:72px minmax(0,1fr); } }
 @media(prefers-reduced-motion:reduce) { .equipment-item canvas { transition:none; } }
 
 /* Bound both tracks before wrapping commands beside the portrait. */
@@ -87,5 +87,5 @@
   .control-deck { grid-template-columns:212px minmax(0,1fr); }
 }
 @media (max-width:650px) {
-  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 165px); }
+  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 210px); }
 }

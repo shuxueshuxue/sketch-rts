@@ -1,6 +1,7 @@
 import { commandIconMarkup } from "./command-icons";
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
+import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile } from "../shared/ship-geometry";
 import { deckLoad } from "../shared/decks";
@@ -1308,6 +1309,9 @@ function openSelectedEquipment() {
   keys.clear();selectionStart=selectionEnd=undefined;draggingMinimapViewport=false;
   commandMode=undefined;openPalette=undefined;
   equipmentPanel.show(focusedPlayerUnits());
+  // Arm the next battlefield click before this intentional unlock. Closing an
+  // in-game panel returns directly to play; it is not a browser Escape pause.
+  if(equipmentPanel.isOpen()){pointerLockArmed=true;hidePointerLockGate();}
   if(document.pointerLockElement===canvas)document.exitPointerLock();
 }
 
@@ -2580,8 +2584,8 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     };
   }), t("hud.nothingSelected"), selectedCargoTransports(snapshot!, selectedIds, localPlayerId).map(transport => ({
     key: transport.id,
-    health: { current: transport.hp, max: transport.maxHp },
-    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: deckLoad(snapshot!.units,transport), capacity: carries(transport) }),
+    ...(transport.id === entity?.id ? {} : { health: { current: transport.hp, max: transport.maxHp } }),
+    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: formatMass(deckLoad(snapshot!.units,transport)), capacity: formatMass(carries(transport)) }),
     passengers: shipPassengers(snapshot!.units,transport).map(passenger => ({
       canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
