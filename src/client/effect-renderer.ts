@@ -101,7 +101,7 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       const to = worldToScreen({ x: effect.toX, y: effect.toY-(effect.toHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
       if (!nearScreen(to, 90) && !nearScreen(from, 90)) continue;
       const progress = 1 - effect.remaining / effect.duration;
-      const look = projectileLook(effect.sourceKind);
+      const look = projectileLook(effect.sourceKind,effect.attackKind);
       if (look !== "streak") {
         const sourceKind = effect.sourceKind!;
         const launch = launchPoint(from, to, sourceKind);
@@ -626,7 +626,8 @@ export type ProjectileLook = "arrow" | "orb" | "streak" | "fire" | "spear" | "st
 // @@@projectile-look - The shooter's rules pick the missile: a unit with a spell throws a small spell orb (its weapon is
 // weak), any other ranged unit and a tower shoot an arrow (a rider's charge is no spell). Item blasts carry no shooter
 // and keep the old streak.
-export function projectileLook(sourceKind: WorldEffect["sourceKind"]): ProjectileLook {
+export function projectileLook(sourceKind: WorldEffect["sourceKind"], attackKind?: WorldEffect["attackKind"]): ProjectileLook {
+  if(attackKind) return attackKind==="magic" ? "orb" : attackKind==="cannon" || attackKind==="mortar" ? "shell" : attackKind==="bolt" ? "arrow" : attackKind==="flame" ? "fire" : ["arrow","spear","stone","fire"].includes(attackKind) ? attackKind as ProjectileLook : "streak";
   if (!sourceKind) return "streak";
   if (sourceKind === "redDragon" || sourceKind === "dragonWhelp" || sourceKind === "fireShip") return "fire";
   if (sourceKind === "murlocHunter") return "spear";

@@ -10,9 +10,10 @@ import type { UnitKind } from "../shared/types";
 // a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "board" | "unload" | "select" | "order";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "board", "unload", "select", "order"];
+export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "board" | "unload" | "select" | "order" | "cannonShot" | "mortarShot" | "boltShot" | "flameShot" | "stoneShot" | "spellShot" | "grapeshotShot";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "board", "unload", "select", "order", "cannonShot", "mortarShot", "boltShot", "flameShot", "stoneShot", "spellShot", "grapeshotShot"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
+  cannonShot: "effects", mortarShot: "effects", boltShot: "effects", flameShot: "effects", stoneShot: "effects", spellShot: "effects", grapeshotShot: "effects",
   impact: "effects",
   melee: "effects",
   arrowShot: "effects",
@@ -158,7 +159,7 @@ export class Soundboard {
     // Older packs may advertise these voiced acknowledgements. They have no
     // place in this game's generic feedback, even when a pack is still cached.
     if (event === 'select' || event === 'order') return;
-    const fallback = event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
+    const fallback = event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
     const sound = this.pack?.sounds[event] ?? (fallback && this.pack?.sounds[fallback]);
     const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
     if (!sound || !clip || !this.ctx || this.settings.muted) return;

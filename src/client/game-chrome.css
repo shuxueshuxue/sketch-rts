@@ -78,3 +78,14 @@
 .tooltip-stats,.tooltip-notes { color:#bdb49b; }
 @media(max-width:650px) { .control-deck { gap:7px; } .hud-subject-art { width:72px; height:80px; } .hud-subject { grid-template-columns:72px minmax(0,1fr); } }
 @media(prefers-reduced-motion:reduce) { .equipment-item canvas { transition:none; } }
+
+/* Bound both tracks before wrapping commands beside the portrait. */
+.control-deck,.control-deck * { box-sizing:border-box; }
+.control-deck > .hud-actions { width:100%; min-width:0; }
+.control-deck .command-dock,.control-deck .item-dock { width:100%; max-width:100%; }
+@media (max-width:900px) {
+  .control-deck { grid-template-columns:212px minmax(0,1fr); }
+}
+@media (max-width:650px) {
+  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 165px); }
+}

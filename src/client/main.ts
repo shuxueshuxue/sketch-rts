@@ -1750,7 +1750,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     return;
   }
   const destination = deckMovePoint(snapshot.units, selectedUnits, world);
-  sendCommand({ type: "move", unitIds, x: destination.x, y: destination.y, queued });
+  sendCommand({ type: "move", unitIds, x: destination.x, y: destination.y, queued, avoidCombat:true });
   statusLabel.textContent = t("status.moveOrdered");
 }
 

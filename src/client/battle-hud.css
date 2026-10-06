@@ -9,8 +9,8 @@
 .menu-open :is(.control-deck,.minimap-tab,.minimap-relations,.match-menu-button,.match-menu,.chat-overlay,.status-line,.minimap-frame) { display:none; }
 .control-deck {
   position:absolute; left:16px; bottom:16px;
-  display:grid; grid-template-columns:232px minmax(0,max-content); align-items:end;
-  gap:6px 10px; max-width:calc(100vw - 224px); max-height:calc(100dvh - 80px);
+  display:grid; grid-template-columns:232px minmax(0,1fr); align-items:end;
+  gap:6px 10px; width:min(605px,calc(100vw - 224px)); max-width:calc(100vw - 224px); max-height:calc(100dvh - 80px);
   color:var(--battle-ink); font-family:var(--font-ui); font-variant-numeric:tabular-nums;
 }
 .control-deck > div { box-sizing:border-box; min-width:0; }
