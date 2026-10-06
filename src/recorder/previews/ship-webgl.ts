@@ -18,7 +18,7 @@ async function start() {
   const {game,ship,target}=createShipWebglScene();
   let renderer:THREE.WebGLRenderer|undefined;
   try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{ /* The same commands remain available in the 2D comparison. */ }
-  if(renderer){renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;
+  if(renderer){renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
     renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;}
   const gpuCanvas=renderer?.domElement??document.createElement('canvas');gpuCanvas.hidden=!renderer;document.body.append(gpuCanvas);
   const flat=document.createElement('canvas');flat.hidden=!!renderer;document.body.append(flat);
@@ -32,7 +32,7 @@ async function start() {
   const shore=new THREE.Mesh(new THREE.PlaneGeometry(1800,600),new THREE.MeshStandardMaterial({color:'#6c7358',roughness:1}));shore.rotation.x=-Math.PI/2;shore.position.set(900,1,-300);shore.receiveShadow=true;scene.add(shore);
   const dummy=new THREE.Group();dummy.position.set(target.x,1,-target.y);scene.add(dummy);
   for(const [x,y,z,w,h,d] of [[-15,25,0,8,50,8],[15,25,0,8,50,8],[0,42,0,40,7,7],[0,30,0,29,22,4]] as const){const block=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:'#8c7655',roughness:1}));block.position.set(x,y,z);block.castShadow=block.receiveShadow=true;dummy.add(block);}
-  const layer=renderer?await Ship3DLayer.load(scene,camera,new URL('./warship.glb',import.meta.url).href):undefined;
+  const layer=renderer?await Ship3DLayer.load(scene,camera,new URL('./warship.glb',import.meta.url).href,renderer.capabilities.getMaxAnisotropy()):undefined;
   const marker=new THREE.Mesh(new THREE.RingGeometry(14,16,32),new THREE.MeshBasicMaterial({color:'#d2b778',side:THREE.DoubleSide}));marker.rotation.x=-Math.PI/2;scene.add(marker);
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   let selected=ship.id,view:'3d'|'2d'=renderer?'3d':'2d',perf=false,paused=false,patrol=false;
@@ -53,7 +53,8 @@ async function start() {
   if(!renderer)status.textContent='浏览器未启用 WebGL2 · 当前为 2D 对照';
   button('性能',()=>{perf=!perf;statistics.hidden=!perf;});button('重置',()=>location.reload());
   const names={warship:'战船',worker:'农民',footman:'步兵',archer:'弓箭手'};
-  const resize=()=>{const w=innerWidth,h=innerHeight;renderer?.setSize(w,h);flat.width=w;flat.height=h;camera.left=-h*(w/h)/2;camera.right=h*(w/h)/2;camera.top=h/2;camera.bottom=-h/2;camera.zoom=Math.max(.9,Math.min(1.65,h/500));camera.updateProjectionMatrix();};
+  let pixelRatio=1;
+  const resize=()=>{const w=innerWidth,h=innerHeight;pixelRatio=Math.min(devicePixelRatio,2);renderer?.setPixelRatio(pixelRatio);renderer?.setSize(w,h);flat.width=Math.round(w*pixelRatio);flat.height=Math.round(h*pixelRatio);camera.left=-h*(w/h)/2;camera.right=h*(w/h)/2;camera.top=h/2;camera.bottom=-h/2;camera.zoom=Math.max(.9,Math.min(1.65,h/500));camera.updateProjectionMatrix();};
   resize();addEventListener('resize',resize);
   const groundPoint=(event:PointerEvent,height:number)=>{const box=gpuCanvas.getBoundingClientRect();pointer.set((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1);ray.setFromCamera(pointer,camera);const point=new THREE.Vector3();return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-height),point)?{x:point.x,y:-point.z}:undefined;};
   for(const canvas of [gpuCanvas,flat]){
@@ -106,7 +107,7 @@ async function start() {
     for(const map of [flights,flashes])for(const [id,mesh] of map)if(!live.has(id)){scene.remove(mesh);map.delete(id);}
     }
     if(view==='3d'&&renderer)renderer.render(scene,camera);
-    else {const ctx=flat.getContext('2d')!;ctx.clearRect(0,0,flat.width,flat.height);flatFacing.update(snapshot.units,id=>snapshot.units.find(u=>u.id===id));flatAnimation.update(snapshot,now);flatMotion.update(snapshot,now);drawWorld({ctx,snapshot,view:{x:900-innerWidth/2/camera.zoom,y:790-innerHeight/2/camera.zoom,width:innerWidth,height:innerHeight,zoom:camera.zoom},viewer:'player',selectedIds:new Set([selected]),facing:flatFacing,animation:flatAnimation,motion:flatMotion,now,labels:worldLabelsFor(createI18n('zh'))});}
+    else {const ctx=flat.getContext('2d')!;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,flat.width,flat.height);ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);flatFacing.update(snapshot.units,id=>snapshot.units.find(u=>u.id===id));flatAnimation.update(snapshot,now);flatMotion.update(snapshot,now);drawWorld({ctx,snapshot,view:{x:900-innerWidth/2/camera.zoom,y:790-innerHeight/2/camera.zoom,width:innerWidth,height:innerHeight,zoom:camera.zoom},viewer:'player',selectedIds:new Set([selected]),facing:flatFacing,animation:flatAnimation,motion:flatMotion,now,labels:worldLabelsFor(createI18n('zh'))});}
     sample(renderTimes,performance.now()-start);
     if(now-lastStats>500){lastStats=now;statistics.textContent=`${view==='3d'?'3D':'2D'} · ${Math.round(1000/Math.max(1,percentile(frameTimes,.5)))} FPS\n帧 P95 ${percentile(frameTimes,.95).toFixed(1)} ms · 渲染 CPU P95 ${percentile(renderTimes,.95).toFixed(1)} ms\n模拟 P95 ${percentile(simTimes,.95).toFixed(2)} ms${view==='3d'&&renderer?` · ${renderer.info.render.calls} 次绘制 · ${renderer.info.render.triangles} 三角形`:''}`;}
     requestAnimationFrame(draw);
