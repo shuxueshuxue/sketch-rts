@@ -1,4 +1,5 @@
 import { bakedAssetsVersion } from "./art/baked-assets";
+import { formatMass } from "./format-mass";
 import { SHIP_WEAPONS, isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
 import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
 import { localToWorld, shipPassengers, shipProfile } from '../shared/ship-geometry';
@@ -530,7 +531,7 @@ export class EquipmentPanel {
             const fill = this.root.querySelector<HTMLElement>('.equipment-load-meter > i');
             if (fill)
                 fill.style.width = `${Math.min(100, (ship.sailing?.load ?? 0) / shipProfile(ship)!.loadCapacity * 100)}%`;
-            load.textContent = `${this.text('船上装备', 'Equipment aboard')} ${shipItemMass(this.snapshot!, ship).toFixed(1)} kg · ${this.text('总载重', 'Payload')} ${Math.round(ship.sailing?.load ?? 0)} / ${Math.round(shipProfile(ship)!.loadCapacity)} kg`;
+            load.textContent = `${this.text('船上装备', 'Equipment aboard')} ${formatMass(shipItemMass(this.snapshot!, ship))} kg · ${this.text('总载重', 'Payload')} ${formatMass(ship.sailing?.load ?? 0)} / ${formatMass(shipProfile(ship)!.loadCapacity)} kg`;
         }
     }
 }
