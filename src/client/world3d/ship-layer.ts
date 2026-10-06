@@ -4,6 +4,8 @@ import { paintFigure } from '../art/painted-units';
 import { UnitAnimationTracker } from '../unit-animation';
 import { UnitMotionSmoother } from '../unit-motion';
 import { ownerInk } from '../world-renderer';
+import { attackTargetId } from '../unit-facing';
+import { CrewFacingTracker, uprightCrewRotation } from './crew-pose';
 import { mountedWeaponPose, installedWeapons } from '../../shared/ship-equipment';
 import { shipProfile, shipScale } from '../../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -18,9 +20,11 @@ export class Ship3DLayer {
   private poses = new Map<string, string>();
   private deckMotion = new Map<string, { from: {x:number;y:number}; to: {x:number;y:number}; at:number }>();
   private animation = new UnitAnimationTracker();
+  private facing = new CrewFacingTracker();
   private motion = new UnitMotionSmoother();
   private tick = -1;
-  private card = new THREE.PlaneGeometry(60, 60).translate(0, 26.25, 0);
+  // The painted feet are at row 122 / 128, rather than at the texture edge.
+  private card = new THREE.PlaneGeometry(60, 60).translate(0, 60*(122/128-.5), 0);
 
   private constructor(private scene: THREE.Scene, private camera: THREE.Camera,
     private hull: THREE.Object3D, private gun: THREE.Object3D) {}
@@ -41,7 +45,7 @@ export class Ship3DLayer {
 
   update(snapshot: GameSnapshot, now: number) {
     if(this.tick!==snapshot.tick){
-      this.animation.update(snapshot,now);this.motion.update(snapshot,now);
+      this.animation.update(snapshot,now);this.motion.update(snapshot,now);this.facing.update(snapshot);
       const continuous=snapshot.tick===this.tick+1;
       for(const unit of snapshot.units) if(unit.deck){
         const old=this.deckMotion.get(unit.id),to={x:unit.deck.x,y:unit.deck.y};
@@ -50,6 +54,8 @@ export class Ship3DLayer {
       this.tick=snapshot.tick;
     }
     const liveHulls=new Set<string>(),liveGuns=new Set<string>(),liveCrew=new Set<string>();
+    const cardRotation=uprightCrewRotation(this.camera),cameraRight=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
+    const targets=new Map([...snapshot.units,...snapshot.buildings].map(entity=>[entity.id,entity]));
     for(const ship of snapshot.units.filter(unit=>unit.kind==='warship')){
       liveHulls.add(ship.id);
       let hull=this.hulls.get(ship.id);
@@ -69,8 +75,10 @@ export class Ship3DLayer {
         if(!mesh){mesh=new THREE.Mesh(this.card,new THREE.MeshStandardMaterial({alphaTest:.4,side:THREE.DoubleSide,roughness:1,metalness:0}));mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.unitId=unit.id;this.crew.set(unit.id,mesh);this.scene.add(mesh);}
         const deck=this.deckPoint(unit.id,now),c=Math.cos(heading),s=Math.sin(heading);
         mesh.position.set(at.x+deck.x*c-deck.y*s,shipProfile(ship)!.deckHeight,-at.y-deck.x*s-deck.y*c);
-        mesh.quaternion.copy(this.camera.quaternion);
-        const frame=this.animation.frame(unit,now),facing=unit.aim&&unit.aim.x<unit.x?-1:1;
+        mesh.quaternion.copy(cardRotation);
+        const targetId=attackTargetId(unit.order),aiming=unit.aim && ['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
+        const target=aiming?unit.aim:targetId?targets.get(targetId):undefined;
+        const frame=this.animation.frame(unit,now),facing=this.facing.facing(unit,heading,cameraRight,target);
         const color=ownerInk(unit.owner),key=`${unit.kind}:${color}:${frame.mode}:${frame.frame}:${facing}`;
         if(this.poses.get(unit.id)!==key){
           let texture=this.textures.get(key);
