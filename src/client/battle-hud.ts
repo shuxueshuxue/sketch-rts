@@ -1,3 +1,4 @@
+import { healthBarColor } from "./health-bars";
 /** Presentation only: the match controller supplies identity, artwork and commands.
  * Keep nodes alive across simulation frames so focus, scroll and pointer presses survive. */
 export type HudArt = { key: string; paint: (canvas: HTMLCanvasElement) => void };
@@ -88,6 +89,7 @@ export class BattleHudSelection {
       if (identity.health) {
         const hp = identity.health;
         this.healthFill.style.width = `${Math.max(0, Math.min(100, hp.current / Math.max(1, hp.max) * 100))}%`;
+        this.healthFill.style.backgroundColor = healthBarColor(hp.current, hp.max);
         this.healthText.textContent = `${Math.ceil(hp.current)} / ${hp.max}`;
       }
       if (identity.inspection) {
@@ -164,7 +166,9 @@ export class BattleHudSelection {
         card.button.children[1]!.textContent = passenger.name;
         const health = card.button.children[2] as HTMLElement;
         health.title = `${Math.ceil(passenger.health.current)} / ${passenger.health.max}`;
-        (health.firstElementChild as HTMLElement).style.width = `${Math.max(0, Math.min(100, passenger.health.current / Math.max(1, passenger.health.max) * 100))}%`;
+        const fill = health.firstElementChild as HTMLElement;
+        fill.style.width = `${Math.max(0, Math.min(100, passenger.health.current / Math.max(1, passenger.health.max) * 100))}%`;
+        fill.style.backgroundColor = healthBarColor(passenger.health.current, passenger.health.max);
         passenger.decorate(card.button); paint(card.button.children[0] as HTMLCanvasElement, passenger.art);
         if (entry.grid.children[index] !== card.button) entry.grid.insertBefore(card.button, entry.grid.children[index] ?? null);
       });

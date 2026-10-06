@@ -1,9 +1,11 @@
+import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "./item-rules";
+import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
-import { ABILITY_DEFS, BUILDING_DEFS, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, XP_STAR_THRESHOLDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
@@ -98,19 +100,10 @@ const GATHER_DURATION = seconds(5);
 const GOLD_MINE_ENTRY_COOLDOWN = seconds(1.6);
 const LOW_UPKEEP_GOLD_RATE = 0.7;
 const HIGH_UPKEEP_GOLD_RATE = 0.4;
-const VETERANCY_STEP = 0.25;
+
 const ITEM_PICKUP_RANGE = 72;
-const GUARDIAN_SCROLL_DURATION = seconds(7);
 const SCORCH_DURATION = seconds(8);
-const LIGHTNING_ROD_COOLDOWN = seconds(18);
-const STORM_STAFF_DURATION = seconds(4.8);
-const STORM_STAFF_TICK_INTERVAL = seconds(1.2);
-const STORM_STAFF_COOLDOWN = seconds(27);
-const BREACH_CHARGE_RANGE = 280;
-const BREACH_CHARGE_DAMAGE = 260;
 const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
-const FLAME_CLOAK_COOLDOWN = seconds(2);
-const MOON_WELL_HEAL_AMOUNT = 5;
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 // @@@repair - A worker repairs a building as fast as a footman strikes one (the owner's word, 10-02: a tower held by its
 // workers holds), at the price it always had: 1 gold for each REPAIR_FULL_COST_FRACTION-th of the building's price worth
@@ -788,7 +781,7 @@ function updateMoonWellHealing(game: Game) {
     if (building.cooldown > 0) continue;
     const target = mostWoundedSoldierNear(game, building);
     if (!target) continue;
-    target.hp = Math.min(target.maxHp, target.hp + MOON_WELL_HEAL_AMOUNT);
+    target.hp = Math.min(target.maxHp, target.hp + SUPPORT_BUILDING_HEAL);
     building.cooldown = building.attackCooldown;
     addEffect(game, "heal", target.x, target.y, MOON_WELL_HEAL_EFFECT_DURATION, { fromX: building.x, fromY: building.y, toX: target.x, toY: target.y });
   }
@@ -808,12 +801,12 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
 }
 
 function updateDockRepairs(game: Game) {
-  if (game.tick % 20) return;
+  if (game.tick % seconds(1)) return;
   for (const ship of game.units) {
     if (unitMover(ship.kind)!=="sea" || ship.hp>=ship.maxHp || !isPlayerId(ship.owner) || ship.order.type==="attack" || ship.order.type==="attackMove") continue;
-    const dock=game.buildings.find(building=>building.owner===ship.owner && building.kind==="shipyard" && building.complete && distance(ship,building)<240);
-    if (!dock || playerState(game,ship.owner).gold<1)continue;
-    spendGold(game,ship.owner,1);ship.hp=Math.min(ship.maxHp,ship.hp+3);
+    const dock=game.buildings.find(building=>building.owner===ship.owner && building.kind==="shipyard" && building.complete && distance(ship,building)<DOCK_REPAIR.range);
+    if (!dock || playerState(game,ship.owner).gold<DOCK_REPAIR.goldPerSecond)continue;
+    spendGold(game,ship.owner,DOCK_REPAIR.goldPerSecond);ship.hp=Math.min(ship.maxHp,ship.hp+DOCK_REPAIR.hpPerSecond);
   }
 }
 
@@ -2014,38 +2007,38 @@ function activateItem(
   if (item.cooldownRemaining > 0) return;
   if (item.kind === "lightningRod") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && areEnemyOwners(game, carrier.owner, unit.owner)) : undefined;
-    if (!target || distance(carrier, target) > 280) return;
+    if (!target || distance(carrier, target) > LIGHTNING_ROD.range) return;
     applyChainLightning(game, carrier, item, target);
     return;
   }
   if (item.kind === "stormStaff") {
     const point = targetId ? game.units.find((unit) => unit.id === targetId) : isNumber(x) && isNumber(y) ? { x, y } : undefined;
-    if (!point || distance(carrier, point) > 320) return;
+    if (!point || distance(carrier, point) > STORM_STAFF.range) return;
     applyStormStaff(game, carrier, item, point.x, point.y);
     return;
   }
   if (item.kind === "guardianScroll") {
     if (carrier.owner === "neutral") return;
-    forEachNearbyUnit(game, carrier, 280, (unit) => {
-      if (distance(unit, carrier) > 280 || areEnemyOwners(game, carrier.owner, unit.owner)) return;
+    forEachNearbyUnit(game, carrier, GUARDIAN_SCROLL.radius, (unit) => {
+      if (distance(unit, carrier) > GUARDIAN_SCROLL.radius || areEnemyOwners(game, carrier.owner, unit.owner)) return;
       unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
-      unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL_DURATION });
+      unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL.duration });
     });
-    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL_DURATION, { radius: 280 });
+    addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL.duration, { radius: GUARDIAN_SCROLL.radius });
     consumeItem(game, item);
     return;
   }
   if (item.kind === "breachCharge") {
     if (carrier.owner === "neutral") return;
     const target = targetId ? game.buildings.find((building) => building.id === targetId && areEnemyOwners(game, carrier.owner, building.owner)) : undefined;
-    if (!target || distance(carrier, target) > BREACH_CHARGE_RANGE) return;
-    applyAttackDamage(game, carrier, target, BREACH_CHARGE_DAMAGE, BREACH_CHARGE_RANGE);
+    if (!target || distance(carrier, target) > BREACH_CHARGE.range) return;
+    applyAttackDamage(game, carrier, target, BREACH_CHARGE.damage, BREACH_CHARGE.range);
     consumeItem(game, item);
     return;
   }
   if (item.kind === "experienceBook") {
     if (carrier.owner === "neutral") return;
-    carrier.xp += 160;
+    carrier.xp += EXPERIENCE_BOOK_XP;
     applyXpLevel(game, carrier);
     addEffect(game, "experienceBurst", carrier.x, carrier.y, 48);
     consumeItem(game, item);
@@ -2068,7 +2061,7 @@ function activateItem(
     const at = snapToFootprint(game.map, BUILDING_DEFS.defenseTower.radius, { x, y });
     const tower = createBuilding(`building-${carrier.owner}-defenseTower-${game.nextId}`, carrier.owner, "defenseTower", at.x, at.y, true);
     game.nextId += 1;
-    tower.hp = Math.round(tower.maxHp / 2);
+    tower.hp = Math.round(tower.maxHp * IVORY_TOWER_HP_SHARE);
     game.buildings.push(tower);
     addEffect(game, "summon", at.x, at.y, 34);
     consumeItem(game, item);
@@ -2086,17 +2079,17 @@ function consumeItem(game: Game, item: WorldItem) {
 function applyChainLightning(game: Game, carrier: Unit, item: WorldItem, firstTarget: Unit) {
   const struck = new Set<string>();
   let current = firstTarget;
-  let damage = 84;
-  for (let bounce = 0; bounce < 3; bounce += 1) {
+  let damage = LIGHTNING_ROD.damage;
+  for (let bounce = 0; bounce < LIGHTNING_ROD.hits; bounce += 1) {
     struck.add(current.id);
     applyAttackDamage(game, carrier, current, damage, 240);
     addEffect(game, "chainLightning", current.x, current.y, 28, { fromX: carrier.x, fromY: carrier.y, toX: current.x, toY: current.y });
-    const next = nearestChainTarget(game, carrier, current, struck, 170);
+    const next = nearestChainTarget(game, carrier, current, struck, LIGHTNING_ROD.bounceRange);
     if (!next) break;
     current = next;
-    damage = Math.max(18, Math.round(damage * 0.68));
+    damage = Math.max(LIGHTNING_ROD.minimumDamage, Math.round(damage * LIGHTNING_ROD.decay));
   }
-  item.cooldownRemaining = LIGHTNING_ROD_COOLDOWN;
+  item.cooldownRemaining = LIGHTNING_ROD.cooldown;
 }
 
 function nearestChainTarget(game: Game, carrier: Unit, from: Unit, struck: Set<string>, range: number) {
@@ -2114,25 +2107,25 @@ function nearestChainTarget(game: Game, carrier: Unit, from: Unit, struck: Set<s
 }
 
 function applyStormStaff(game: Game, carrier: Unit, item: WorldItem, x: number, y: number) {
-  forEachNearbyUnit(game, { x, y }, 145, (target) => {
-    if (distance(target, { x, y }) > 145 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, 24, 260);
+  forEachNearbyUnit(game, { x, y }, STORM_STAFF.radius, (target) => {
+    if (distance(target, { x, y }) > STORM_STAFF.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
+    applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage, STORM_STAFF.range);
   });
-  addEffect(game, "storm", x, y, STORM_STAFF_DURATION, { owner: carrier.owner, damage: 6, radius: 145, tickEvery: STORM_STAFF_TICK_INTERVAL });
-  item.cooldownRemaining = STORM_STAFF_COOLDOWN;
+  addEffect(game, "storm", x, y, STORM_STAFF.duration, { owner: carrier.owner, damage: STORM_STAFF.pulseDamage, radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
+  item.cooldownRemaining = STORM_STAFF.cooldown;
 }
 
 function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   if (item.cooldownRemaining > 0) return;
   let burned = false;
-  forEachNearbyUnit(game, carrier, 90, (target) => {
-    if (distance(target, carrier) > 90 || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, 12, 70);
+  forEachNearbyUnit(game, carrier, FLAME_CLOAK.radius, (target) => {
+    if (distance(target, carrier) > FLAME_CLOAK.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
+    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage, 70);
     addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
   if (!burned) return;
-  item.cooldownRemaining = FLAME_CLOAK_COOLDOWN;
+  item.cooldownRemaining = FLAME_CLOAK.interval;
 }
 
 function updateWorldEffects(game: Game) {
@@ -2287,7 +2280,7 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
   }
   const baseRange = isUnit(attacker) ? unitRules(game, attacker).attackRange : attackRange;
   if (baseRange > RANGED_ATTACK_RANGE_THRESHOLD) {
-    launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, damage));
+    launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, buildingTargetDamage(attacker, target, damage)));
     return;
   }
   // Range upgrades extend a melee weapon; they do not turn it into a projectile or change its armor interaction.
@@ -2330,7 +2323,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
 }
 
 function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
-  const dealt = attackDamageAgainstTarget(game, attacker, target, damage);
+  const dealt = attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
   const taken = applyDamage(game, attacker, target, dealt);
   if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target);
@@ -2347,6 +2340,11 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
 // the client can sound the blow.
 function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building) {
   addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(striker ? { sourceKind: striker.kind } : {}) });
+}
+
+function buildingTargetDamage(attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
+  if (isUnit(attacker) || !isUnit(target) || target.owner !== "neutral") return damage;
+  return damage * (BUILDING_DEFS[attacker.kind]?.neutralDamageMultiplier ?? 1);
 }
 
 function attackDamageAgainstTarget(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
@@ -2516,10 +2514,10 @@ function recordKill(game: Game, attacker: Unit | Building, target: Unit | Buildi
     if (isPlayerId(attacker.owner) && isMercenaryUnitKind(attacker.kind) && areEnemyOwners(game, attacker.owner, target.owner)) {
       incrementStat(game.match.stats.mercenaryKills, attacker.owner, 1);
     }
-    if (isPlayerId(attacker.owner) && target.owner === "neutral") {
-      incrementStat(game.match.stats.neutralUnitsKilled, attacker.owner, 1);
-      awardNeutralGoldBounty(game, attacker.owner, target);
-    }
+  }
+  if (isUnit(target) && target.owner === "neutral" && isPlayerId(attackerOwner)) {
+    incrementStat(game.match.stats.neutralUnitsKilled, attackerOwner, 1);
+    awardNeutralGoldBounty(game, attackerOwner, target);
   }
   if (!isUnit(target) && isPlayerId(attackerOwner)) {
     incrementStat(game.match.stats.buildingsDestroyed, attackerOwner, 1);
@@ -2533,7 +2531,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "toX" | "toY" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "amount">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;
@@ -2549,7 +2547,7 @@ function isObstacle(entity: Unit | Building | Obstacle): entity is Obstacle {
 
 function awardKillXp(game: Game, attacker: Unit, target: Unit) {
   if (attacker.owner === "neutral" || !areEnemyOwners(game, attacker.owner, target.owner)) return;
-  attacker.xp += unitRules(game, target).xpReward;
+  attacker.xp += killXpReward(unitRules(game, target), target.level);
   applyXpLevel(game, attacker);
 }
 
@@ -2557,18 +2555,12 @@ function awardNeutralGoldBounty(game: Game, owner: PlayerId, target: Unit) {
   const bounty = unitRules(game, target).goldBounty ?? 0;
   if (bounty <= 0) return;
   playerState(game, owner).gold += bounty;
-}
-
-function starLevelForXp(xp: number) {
-  if (xp >= XP_STAR_THRESHOLDS[2]!) return 3;
-  if (xp >= XP_STAR_THRESHOLDS[1]!) return 2;
-  if (xp >= XP_STAR_THRESHOLDS[0]!) return 1;
-  return 0;
+  addEffect(game, "goldBounty", target.x, target.y, seconds(1.2), { owner, amount: bounty });
 }
 
 function applyXpLevel(game: Game, unit: Unit) {
   if (unit.variant !== undefined && game.variants?.[unit.variant]?.heroic) return;
-  const nextLevel = starLevelForXp(unit.xp);
+  const nextLevel = xpStarThresholds(unitRules(game, unit)).filter(threshold => unit.xp >= threshold).length;
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
   applyDerivedUnitStats(game, unit);
@@ -2577,7 +2569,7 @@ function applyXpLevel(game: Game, unit: Unit) {
 function applyDerivedUnitStats(game: Game, unit: Unit) {
   const previousMaxHp = unit.maxHp;
   const base = nonStarUnitStats(game, unit);
-  const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_STEP;
+  const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_GAIN_PER_STAR;
   unit.attackDamage = Math.round(base.attackDamage * multiplier);
   unit.maxHp = Math.round(base.maxHp * multiplier);
   unit.speed = base.speed;

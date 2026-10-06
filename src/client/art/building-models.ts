@@ -5,7 +5,7 @@ import type { BuildingKind } from '../../shared/types';
 import { type Brush, polygon, line, darker } from './kit';
 type V = [number,number,number];
 type Face = { p:V[]; color:string; normal:V; grain:number };
-const STONE='#c0b59c', CUT='#9c9787', WOOD='#655343', SLATE='#52686b', IRON='#555e5d';
+const STONE='#dfd3b7', CUT='#b8b5a0', WOOD='#8b7054', SLATE='#71928f', IRON='#86948f';
 const project=([x,y,z]:V):[number,number]=>[x*.82-y*.57,x*.28+y*.4-z+19];
 function tint(hex:string,light:number){
   const n=parseInt(hex.slice(1),16);
@@ -66,7 +66,7 @@ class Construction {
     for(const z of [3,6])this.box(x,y,z,w,1,1,WOOD);
   }
 }
-const BASALT='#64645c', COPPER='#92664c', BRASS='#b7a075';
+const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779';
 export type SiteModelKind = 'citadel' | 'shop' | 'camp' | 'well' | 'statue' | 'beacon' | 'fort-lance' | 'fort-flame' | 'fort-mortar' | 'fort-ward' | 'fort-wall';
 function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
   const m=new Construction();
@@ -281,25 +281,27 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
   const feet=m.faces.flatMap(f=>f.p.filter(p=>p[2]<=3).map(([x,y])=>project([x,y,0])));
   const hull=groundHull(feet);
   if(hull.length>2){
-    polygon(b,hull.map(([x,y],i)=>[x*1.14+(noise(i)-.5)*2,19+(y-19)*1.2]),'#79745738','transparent',0);
-    polygon(b,hull.map(([x,y])=>[x*1.035,19+(y-19)*1.045]),'#30382e60','transparent',0);
+    polygon(b,hull.map(([x,y],i)=>[x*1.14+(noise(i)-.5)*2,19+(y-19)*1.2]),'#a59c7424','transparent',0);
+    polygon(b,hull.map(([x,y])=>[x*1.035,19+(y-19)*1.045]),'#59624b30','transparent',0);
   }
   // Union silhouettes into a single fill: overlapping faces do not darken shadows.
   b.beginPath();
   for(const f of m.faces){
-    const p=f.p.map(([x,y,z])=>project([x+z*.6,y+z*.42,0]));
+    const p=f.p.map(([x,y,z])=>project([x+z*.45,y+z*.3,0]));
     p.forEach(([x,y],i)=>i?b.lineTo(x,y):b.moveTo(x,y));b.closePath();
   }
-  b.fillStyle='#292b2d3b';b.fill();
+  b.fillStyle='#56686b20';b.fill();
   m.faces.sort((a,z)=>{
     const gap=depth(a)-depth(z);
     return Math.abs(gap)>.001?gap:height(a)-height(z);
   });
   for(const f of m.faces){
     const p=f.p.map(project);
-    const light=.55+Math.max(0,-f.normal[0]*.28-f.normal[1]*.42+f.normal[2]*.85)*.72;
+    // Soft daylight: the front faces receive sun and the sides retain cool
+    // ambient fill. Geometry and texture density are unchanged.
+    const light=.8+Math.max(0,-f.normal[0]*.35+f.normal[1]*.45+f.normal[2]*.82)*.45;
     const fill=tint(f.color,light);
-    polygon(b,p,fill,darker(f.color,.32),.45);
+    polygon(b,p,fill,darker(f.color,.18),.38);
     // Narrow highlights on dressed edges; broad stone/wood faces remain matte.
     if (light > 1 && (f.color === IRON || f.color === SLATE || f.color === CUT)) {
       let edge = 0;
@@ -308,7 +310,7 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
     }
     if(f.normal[2]===0){
       const foot=f.p.filter(p=>p[2]===0);
-      if(foot.length===2)line(b,foot.map(project),'#4d5042',1.1);
+      if(foot.length===2)line(b,foot.map(project),'#69705b99',.75);
     }
     if(f.grain){
       b.save();b.clip();
@@ -317,7 +319,7 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
       // Stable dry-brush flecks locked to each projected face, baked only once.
       for(let i=0;i<Math.min(50,w*h/13);i++){
         const x=minX+noise(i+f.p[0]![0]*13)*w,y=minY+noise(i*3.7+f.p[0]![1]*17)*h;
-        line(b,[[x,y],[x+1+noise(i+7)*2,y-.35]],i%3?'#eee0bc18':'#292e2c14',.55);
+        line(b,[[x,y],[x+1+noise(i+7)*2,y-.35]],i%3?'#fff4d91a':'#5862530b',.55);
       }b.restore();
     }
   }

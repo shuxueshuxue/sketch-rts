@@ -1,3 +1,4 @@
+import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
@@ -312,6 +313,7 @@ function drawShops(painter: Painter, shops: Shop[]) {
 
 function drawBuildings(painter: Painter, buildings: Building[]) {
   const { ctx } = painter;
+  const engaged = engagedEntityIds(painter.snapshot);
   for (const building of buildings) {
     const shake = hitFeedbackOffset(painter.snapshot, building);
     const point = worldToScreen(painter, { x: building.x + shake.x, y: building.y + shake.y });
@@ -338,7 +340,7 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
-    if (!painter.still) drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp);
+    if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
     if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
       drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
@@ -385,6 +387,7 @@ function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Poin
 
 function drawUnits(painter: Painter, units: Unit[]) {
   const { ctx, now } = painter;
+  const engaged = engagedEntityIds(painter.snapshot);
   for (const unit of units) {
     const shake = hitFeedbackOffset(painter.snapshot, unit);
     const at = drawnPosition(painter, unit);
@@ -416,7 +419,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    if (!painter.still && (selected || painter.hoveredId===unit.id || unit.hp<unit.maxHp*.85)) drawHp(ctx, point.x, point.y - unit.radius * 1.8 - 6, unit.hp, unit.maxHp);
+    if (shouldShowHealthBar({ hp: unit.hp, maxHp: unit.maxHp, selected, hovered: painter.hoveredId === unit.id, engaged: engaged.has(unit.id), still: painter.still })) drawHp(ctx, point.x, point.y - Math.max(unit.radius * 1.8 + 6, 64 * scale + 6), unit.hp, unit.maxHp);
     if (selected && painter.controlGroups) {
       const digits = Object.entries(painter.controlGroups).filter(([, ids]) => ids.includes(unit.id)).map(([digit]) => digit).join("·");
       if (digits) {
@@ -507,12 +510,11 @@ function drawItemGlyph(ctx: Brush, item: WorldItem, point: Point, _now: number, 
   drawPaintedItem(ctx, item.kind, point, 30, true);
 }
 
-function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number) {
-  const width = 30;
-  const ratio = Math.max(0, Math.min(1, hp / maxHp));
+function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number, width = 34) {
+  const ratio = Math.max(0, Math.min(1, hp / Math.max(1, maxHp)));
   ctx.fillStyle = "#31483a";
   ctx.fillRect(x - width / 2 - 1, y - 1, width + 2, 5);
-  ctx.fillStyle = ratio > 0.45 ? "#90b781" : "#cd8062";
+  ctx.fillStyle = healthBarColor(hp, maxHp);
   ctx.fillRect(x - width / 2, y, width * ratio, 3);
 }
 

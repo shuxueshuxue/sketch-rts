@@ -257,7 +257,7 @@ const commandButtons: CommandButton[] = [
     hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n), { type: "building", kind: command.kind }),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
     createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n), { type: "unit", kind: command.kind }),
@@ -2493,7 +2493,8 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
     const units = snapshot?.units.filter((unit) => group.ids.includes(unit.id)) ?? [];
     return unitSelectionTooltip(group.kind, units, snapshot!, i18n);
   }
-  return buildingTooltip(group.kind, undefined, i18n);
+  const building = snapshot?.buildings.find(building => building.id === group.ids[0]);
+  return buildingTooltip(group.kind, undefined, i18n, building ? snapshot?.players[building.owner]?.race : undefined);
 }
 
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {

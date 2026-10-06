@@ -11,18 +11,18 @@ import type { Terrain } from "../shared/terrain";
 
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
-const FOREST_FLOOR = "#58614d";
-const FOREST_EDGE = "#69705a";
-const ROCK = "#a7a596";
-const ROCK_INK = "#868779";
-const CLIFF_FACE = "#85877b";
-const WATER = "#799897";
-const PLATEAU = "#c3bea9";
-const RAMP = "#b9af94";
-const MUD = "#c2ab84";
-const MUD_DARK = "#a48d66";
-const DECK = "#b88e5c";
-const DECK_INK = "#7c5a36";
+const FOREST_FLOOR = "#6e805b";
+const FOREST_EDGE = "#849372";
+const ROCK = "#bfc0ac";
+const ROCK_INK = "#989f89";
+const CLIFF_FACE = "#a0a58f";
+const WATER = "#91b5b7";
+const PLATEAU = "#e4ddc2";
+const RAMP = "#d0c4a4";
+const MUD = "#ceb88f";
+const MUD_DARK = "#b79e74";
+const DECK = "#c7a472";
+const DECK_INK = "#916e44";
 
 type Cache = { chunks: Map<string, HTMLCanvasElement>; minimap?: HTMLCanvasElement };
 const caches = new WeakMap<Terrain, Cache>();
@@ -74,7 +74,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
       const level = terrain.levels?.[row * terrain.cols + start];
       const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
       if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#c3bea9" : terrain.palette==='coastal'?'#a5ab91':undefined;
+      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#e4ddc2" : terrain.palette==='coastal'?'#a5ab91':undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);

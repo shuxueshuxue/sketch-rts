@@ -407,7 +407,7 @@ export function drawAtlasShop(c: Brush, point: Point, size = 1) {
 }
 
 /** The paper's own colour, under the washes and specks of the ground tile. */
-export const PAPER_BASE = "#b9b49e";
+export const PAPER_BASE = "#ddd5bb";
 
 let groundTile: HTMLCanvasElement | undefined;
 export function drawAtlasGround(c: Brush, width: number, height: number, camera: Point) {
@@ -420,10 +420,10 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
     for (let i = 0; i < 18; i++) {
       const x = random() * 512, y = random() * 512, r = 45 + random() * 110;
       const wash = b.createRadialGradient(x, y, 0, x, y, r);
-      wash.addColorStop(0, "#727b4d14"); wash.addColorStop(1, "#727b4d00");
+      wash.addColorStop(0, "#8d9b6310"); wash.addColorStop(1, "#8d9b6300");
       b.fillStyle = wash; b.fillRect(0, 0, 512, 512);
     }
-    for (let i = 0; i < 7000; i++) { b.fillStyle = i % 2 ? "#6c705407" : "#ece4c51a"; b.fillRect(random() * 512, random() * 512, 1, 1); }
+    for (let i = 0; i < 7000; i++) { b.fillStyle = i % 2 ? "#7f8b6805" : "#fff8e720"; b.fillRect(random() * 512, random() * 512, 1, 1); }
     for (let i = 0; i < 42; i++) {
       const x = 8 + random() * 496, y = 8 + random() * 496;
       line(b, [[x - 3, y], [x - 4, y - 3], [x, y + 1], [x + 1, y - 4]], "#7c8d671c", 0.8);

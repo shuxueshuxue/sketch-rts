@@ -188,3 +188,14 @@ function pointRecorder() {
   }) as unknown as CanvasRenderingContext2D;
   return { ctx, points };
 }
+
+describe("gold bounty receipts", () => {
+  it("renders the awarded amount instead of a fixed generic gold number", () => {
+    const labels: string[] = [];
+    const { ctx } = pointRecorder();
+    ctx.fillText = (text: string) => { labels.push(text); };
+    const effect: WorldEffect = { id: "bounty", type: "goldBounty", x: 50, y: 60, duration: 24, remaining: 12, amount: 130, owner: "player" };
+    renderWorldEffects({ ctx, effects: [effect], worldToScreen: point => point, nearScreen: () => true });
+    expect(labels).toEqual(["+130"]);
+  });
+});
