@@ -213,7 +213,7 @@ export type Unit = {
   cargoCapacity?: number;
   /** Position on a moving ship, in its local physical coordinate system. */
   deck?: { shipId: string; x: number; y: number } | undefined;
-  /** Continuous heading and rates; visuals select one of the baked directions. */
+  /** Continuous heading and rates, shared by physical motion and real-time rendering. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
     route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number} }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number } | undefined;
   } | undefined;
