@@ -51,7 +51,7 @@ def build_in_blender():
         if preview and kind not in ("transport", "warship"):
             continue
         bpy.ops.wm.read_factory_settings(use_empty=True)
-        base, upper = [], []
+        base, upper, weapon = [], [], []
         wood = material("weathered oak", (.23, .115, .06))
         plank = material("deck oak", (.39, .29, .18))
         edge = material("cut oak", (.29, .18, .095))
@@ -197,23 +197,31 @@ def build_in_blender():
                 spar("stern ensign staff", (x-8, 0, z+height), (x-12, 0, z+height+20), .85, edge, upper)
             elif obstacle["type"] == "gun":
                 cylinder("gun carriage", (x, y, z+2), r, 4, edge, upper)
-                cylinder("cannon", (x+8, y, z+7), 4.2, 35, iron, upper, (0, math.pi/2, 0))
-                cylinder("muzzle", (x+26, y, z+7), 4.4, 1.6, brass, upper, (0, math.pi/2, 0))
+                cylinder("cannon", (x+8, y, z+7), 4.2, 35, iron, weapon, (0, math.pi/2, 0))
+                cylinder("muzzle", (x+26, y, z+7), 4.4, 1.6, brass, weapon, (0, math.pi/2, 0))
             elif obstacle["type"] == "mortar":
                 cylinder("mortar bed", (x, y, z+2), r, 4, iron, upper)
-                cylinder("bombard barrel", (x+3, y, z+12), 9, 24, iron, upper, (0, .45, 0))
-                cylinder("bombard lip", (x+8, y, z+24), 9.5, 2.5, brass, upper, (0, .45, 0))
+                cylinder("bombard barrel", (x+3, y, z+12), 9, 24, iron, weapon, (0, .45, 0))
+                cylinder("bombard lip", (x+8, y, z+24), 9.5, 2.5, brass, weapon, (0, .45, 0))
             else:
                 box("fuel housing", (x, y, z+7), (r*1.6, r*1.3, 14), iron, upper)
                 for yy in (-r*.36, r*.36):
                     cylinder("fuel tank", (x, yy, z+9), 6, 28, brass, upper, (0, math.pi/2, 0))
-                cylinder("flame nozzle", (x+26, 0, z+6), 3, 32, iron, upper, (0, math.pi/2, 0))
+                cylinder("flame nozzle", (x+26, 0, z+6), 3, 32, iron, weapon, (0, math.pi/2, 0))
         box("stern rudder", (-length/2-2, 0, z*.30), (5, 2, z*.6), dark, base)
         fittings = base + upper
         rig = bpy.data.objects.new("ship origin", None)
         bpy.context.collection.objects.link(rig)
         for obj in fittings:
             obj.parent = rig
+        weapon_rig = bpy.data.objects.new("traversing weapon", None)
+        bpy.context.collection.objects.link(weapon_rig)
+        weapon_rig.parent = rig
+        pivot = Vector(spec["weaponPivot"] or (0, 0, 0))
+        weapon_rig.location = pivot
+        for obj in weapon:
+            obj.location -= pivot
+            obj.parent = weapon_rig
 
         scene = bpy.context.scene
         scene.render.engine = "CYCLES"
@@ -267,15 +275,23 @@ def build_in_blender():
         bpy.ops.wm.save_as_mainfile(filepath=str(build / (kind + ".blend")))
         for direction in ((0, 4, 8, 12) if preview else range(settings["directions"])):
             rig.rotation_euler.z = direction * math.tau / settings["directions"]
-            for layer in ("base", "upper", "depth"):
+            layers = ("base", "upper", "depth", "weapon", "weapon-depth") if weapon else ("base", "upper", "depth")
+            for layer in layers:
+                weapon_layer = layer.startswith("weapon")
+                depth_layer = layer.endswith("depth")
+                rig.rotation_euler.z = 0 if weapon_layer else direction * math.tau / settings["directions"]
+                weapon_rig.location = (0, 0, 0) if weapon_layer else pivot
+                weapon_rig.rotation_euler.z = direction * math.tau / settings["directions"] if weapon_layer else 0
                 for obj in base:
                     obj.hide_render = layer != "base"
                 for obj in upper:
-                    obj.hide_render = layer == "base"
-                scene.view_layers[0].material_override = depth if layer == "depth" else None
-                scene.view_settings.view_transform = "Raw" if layer == "depth" else "Standard"
-                scene.view_settings.look = "None" if layer == "depth" else "Medium High Contrast"
-                scene.view_settings.exposure = 0 if layer == "depth" else -.2
+                    obj.hide_render = layer not in ("upper", "depth")
+                for obj in weapon:
+                    obj.hide_render = not weapon_layer
+                scene.view_layers[0].material_override = depth if depth_layer else None
+                scene.view_settings.view_transform = "Raw" if depth_layer else "Standard"
+                scene.view_settings.look = "None" if depth_layer else "Medium High Contrast"
+                scene.view_settings.exposure = 0 if depth_layer else -.2
                 scene.render.dither_intensity = 0
                 scene.render.filepath = str(build / f"{kind}-{layer}-{direction:02}.png")
                 bpy.ops.render.render(write_still=True)
@@ -309,11 +325,12 @@ def main():
     cos = math.cos(config["camera"]["tilt"])
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for kind in config["ships"]:
-        for layer in ("base", "upper", "depth"):
+        layers = ("base", "upper", "depth", "weapon", "weapon-depth") if config["ships"][kind]["weaponPivot"] else ("base", "upper", "depth")
+        for layer in layers:
             atlas = Image.new("RGBA", (frame*8, frame*4))
             for direction in range(config["camera"]["directions"]):
                 image = ImageOps.mirror(Image.open(BUILD / f"{kind}-{layer}-{direction:02}.png"))
-                stretched = image.resize((frame, round(frame/cos)), Image.Resampling.NEAREST if layer == "depth" else Image.Resampling.LANCZOS)
+                stretched = image.resize((frame, round(frame/cos)), Image.Resampling.NEAREST if layer.endswith("depth") else Image.Resampling.LANCZOS)
                 # Reserve more space above the waterline for tall sails. The client
                 # uses the same anchor, so this padding never shifts the physical deck.
                 top = (stretched.height-frame)//2 - round(config["camera"].get("anchorY", 0)/config["camera"]["worldSize"]*frame)
