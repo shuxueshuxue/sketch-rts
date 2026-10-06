@@ -1,10 +1,11 @@
-import { ABILITY_DEFS, BUILDING_DEFS } from "../../shared/catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./claims";
 import type { AiCommandEntry, AiPolicyContext, AiScript, PresetAiPolicyOptions } from "./types";
-import { isV5HybridPolicy } from "./versions";
+import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { navalBudgetReserve } from "./naval";
+import { shopErrandCost } from "./v9/shop";
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
@@ -25,13 +26,17 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0);
   const economySnapshot = pendingCost ? { ...snapshot, players: { ...snapshot.players, [owner]: { ...snapshot.players[owner]!, gold: Math.max(0, snapshot.players[owner]!.gold - pendingCost) } } } : snapshot;
   const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
-  const reservedSnapshot = navalReserve ? { ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...economySnapshot.players[owner]!, gold: economySnapshot.players[owner]!.gold - navalReserve } } } : economySnapshot;
+  const shopReserve = shopErrandCost(economySnapshot, owner, policyOptions) ?? 0;
+  let spent = 0;
+  const budgetAfter = (reserve: number) => ({ ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...economySnapshot.players[owner]!, gold: Math.max(0, economySnapshot.players[owner]!.gold - spent) - reserve } } });
   for (const script of economyScripts) {
-    const budget = script.id === "v6Economy" || script.id === "economy" ? economySnapshot : reservedSnapshot;
+    const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" ? shopReserve : navalReserve + shopReserve;
+    const budget = budgetAfter(reserve);
     const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
+      spent += scriptCommands.reduce((total, command) => total + purchaseCost(snapshot, owner, command), 0);
       reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
       if (script.id === "economy") continue;
       break;
@@ -39,7 +44,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   }
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
-    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(snapshot, owner, policyOptions)), claims, script.id);
+    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
@@ -49,6 +54,15 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   }
 
   return commands;
+}
+
+function purchaseCost(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): number {
+  if (command.type === "build") return BUILDING_DEFS[command.buildingKind].cost;
+  if (command.type === "train") return UNIT_DEFS[command.unitKind].cost;
+  if (command.type === "research") return UPGRADE_DEFS[command.upgradeKind].levels[snapshot.players[owner]!.upgrades[command.upgradeKind] ?? 0]?.cost ?? 0;
+  if (command.type === "hire") return snapshot.mercenaryCamps.find(camp => camp.id === command.campId)?.cost ?? 0;
+  if (command.type === "buy") return snapshot.shops?.find(shop => shop.id === command.shopId)?.goods.find(good => good.kind === command.item)?.cost ?? 0;
+  return 0;
 }
 
 function unitClaims(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext) {
@@ -62,7 +76,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
   if (claims.size === 0) return commands;
   const free = (unitId: string) => (claims.get(unitId) ?? scriptId) === scriptId;
   return commands.flatMap((command): GameCommand[] => {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip") || command.type === "mine") {
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || command.type === "setStance" || (command.type === "repair" || command.type === "repairShip") || command.type === "mine") {
       const unitIds = command.unitIds.filter(free);
       return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
     }
@@ -86,7 +100,7 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
     } else if (command.type === "attackMove") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push({ ...command, unitIds });
-    } else if (command.type === "move") {
+    } else if (command.type === "move" || command.type === "aim") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
       if (unitIds.length > 0) filtered.push({ ...command, unitIds });
     } else if ((command.type === "repair" || command.type === "repairShip")) {
@@ -103,7 +117,7 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
 
 function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>, snapshot: GameSnapshot) {
   for (const command of commands) {
-    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || (command.type === "repair" || command.type === "repairShip") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
+    if (command.type === "move" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || (command.type === "repair" || command.type === "repairShip") || command.type === "board") for (const unitId of command.unitIds) movedUnitIds.add(unitId);
     if (command.type !== "cast") continue;
     const def = ABILITY_DEFS[command.ability];
     const caster = snapshot.units.find((unit) => unit.id === command.unitId);

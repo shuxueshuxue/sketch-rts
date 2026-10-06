@@ -1,4 +1,5 @@
 import { engineeringWant } from "../engineering";
+import { adaptiveArmyWants } from "../adaptive-army";
 import { isBuildPlacementClear } from "../../../shared/build-placement";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
 import { detCos, detSin } from "../../../shared/det-math";
@@ -19,7 +20,7 @@ import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Int
 import { recordPlay, v6Memory } from "./memory";
 import { v6Doctrine } from "./select";
 import { navalWant, navalBudgetReserve, navalReservePurchase } from "../naval";
-import { SHOP_PRIORITY, v9ShopErrandCost } from "../v9/shop";
+import { SHOP_PRIORITY, shopErrandCost } from "../v9/shop";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
 // come first, as in AMAI. Then the current phase of the strategy states its wants; each want that is not met becomes a
@@ -72,6 +73,7 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
   const builders = new Set<string>();
   const commands: GameCommand[] = [];
   const bought = new Set<string>();
+  const producers = new Set<string>();
   for (const goal of goals) {
     if (goal.cost > gold - (navalReservePurchase(goal.id) ? 0 : navalReserve)) {
       if (goal.save && goal.cost > gold) break;
@@ -83,9 +85,11 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
       continue;
     }
     if (command.type === "train") {
+      if (producers.has(command.buildingId)) continue;
       const used = UNIT_DEFS[command.unitKind].supplyUsed;
       if (supply + used > playerState(snapshot, owner).supplyCap) continue;
       supply += used;
+      producers.add(command.buildingId);
     }
     commands.push(command);
     bought.add(goal.id);
@@ -231,7 +235,7 @@ function outweighingPush(economy: Economy): { hall: Building; threat: number } |
 function wantGoals(economy: Economy): Goal[] {
   const goals: Goal[] = [];
   const claimed = new Set<string>();
-  const wants = [...economy.phase.wants].sort((a, b) => b.priority - a.priority);
+  const wants = [...economy.phase.wants, ...adaptiveArmyWants(economy.snapshot, economy.owner, economy.options)].sort((a, b) => b.priority - a.priority);
   for (const want of wants) {
     const priority = want.priority + (economy.threatened && "unit" in want ? THREAT_BONUS : 0);
     if ("unit" in want) {
@@ -392,7 +396,7 @@ function navalGoals(economy: Economy): Goal[] {
 
 // V9's shop errand under way (see @@@v9-shop): its gold held at SHOP_PRIORITY until the shop script spends it.
 function shopGoals(economy: Economy): Goal[] {
-  const cost = v9ShopErrandCost(economy.snapshot, economy.owner, economy.options);
+  const cost = shopErrandCost(economy.snapshot, economy.owner, economy.options);
   return cost === undefined ? [] : [{ ...goal("v9shop", SHOP_PRIORITY, cost, true, () => undefined), hold: true }];
 }
 
