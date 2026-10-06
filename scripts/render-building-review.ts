@@ -1,11 +1,14 @@
 /** All fourteen actual building sprites, enlarged and at gameplay scale. */
-import {createCanvas} from '@napi-rs/canvas';
+import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {installHeadlessCanvas} from '../src/recorder/record';
 import {drawAtlasBuilding} from '../src/client/atlas-art';
 import {BUILDING_CARDS} from '../src/client/content/buildings';
 import type {BuildingKind} from '../src/shared/types';
+import {installBakedImage} from '../src/client/art/baked-assets';
 installHeadlessCanvas();
+const kinds=Object.keys(BUILDING_CARDS) as BuildingKind[];
+await Promise.all(kinds.flatMap(kind=>['','-team'].map(async layer=>installBakedImage(`buildings/${kind}${layer}`,await loadImage(`public/art/buildings/${kind}${layer}.png`) as unknown as CanvasImageSource))));
 const canvas=createCanvas(1280,1030),b=canvas.getContext('2d'),c=b as unknown as CanvasRenderingContext2D;
 b.fillStyle='#b9b49e';b.fillRect(0,0,1280,1030);b.fillStyle='#303b34';b.font='bold 26px sans-serif';b.fillText('NEW ARCHITECTURE / 14 BUILDINGS',24,37);
 b.font='14px sans-serif';b.fillText('Actual cached geometry. Enlarged study + gameplay-size sprite in each panel.',24,66);
