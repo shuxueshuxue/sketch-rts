@@ -36,6 +36,24 @@ function setup(){
   return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('reveals only the selected ship sails, including selection through its crew',async()=>{
+    const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
+    const crew=game.units.find(unit=>unit.deck?.shipId===ship.id)!;
+    frame.selectedIds=new Set([crew.id]);layer.draw(frame);
+    const materials=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.visible).flatMap(object=>{
+      const mesh=object as InstancedMesh;return Array.isArray(mesh.material)?mesh.material:[mesh.material];
+    });
+    const sails=materials.filter(material=>material.name.startsWith('unbleached sail'));
+    expect(sails.length).toBeGreaterThan(0);expect(sails.some(material=>material.opacity===.22)).toBe(true);
+    for(const material of materials.filter(material=>!material.name.startsWith('unbleached sail')&&material.name!=='TeamColor'))
+      expect(material.opacity).not.toBe(.22);
+    frame.selectedIds=new Set();layer.draw(frame);
+    const opaque=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.visible).flatMap(object=>{
+      const mesh=object as InstancedMesh;return Array.isArray(mesh.material)?mesh.material:[mesh.material];
+    }).filter(material=>material.name.startsWith('unbleached sail'));
+    for(const material of opaque)expect(material.opacity).toBe(1);
+    layer.dispose();
+  });
   it('uses actual model geometry, painted alpha picking and deck coordinate inversion without mutating simulation',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
     const original=JSON.stringify(frame.snapshot);layer.draw(frame);

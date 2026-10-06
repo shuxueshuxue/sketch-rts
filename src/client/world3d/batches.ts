@@ -9,12 +9,20 @@ export class ActorBatches {
   private frame=0;
   constructor(private scene:THREE.Scene){}
   begin(){this.frame++;for(const batch of this.batches.values()){batch.matrices=[];batch.ids=[];}}
-  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false){
+  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false){
     let batch=this.batches.get(key);
     if(!batch){
       const parts:Part[]=[];template.updateMatrixWorld(true);
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
-        const map=(source:THREE.Material)=>{const material=source.clone();if(source.name==='TeamColor' && 'color' in material)(material as THREE.MeshStandardMaterial).color.set(color??'#88977c');if(constructing){material.transparent=true;material.opacity=.48;}return material;};
+        const map=(source:THREE.Material)=>{
+          const material=source.clone();
+          if(source.name==='TeamColor' && 'color' in material)(material as THREE.MeshStandardMaterial).color.set(color??'#88977c');
+          if(constructing){material.transparent=true;material.opacity=.48;}
+          // Cloth alone becomes translucent. The hull still occludes, collides
+          // and casts shadows normally; selection never mutates shared assets.
+          if(revealDeck && source.name.startsWith('unbleached sail')){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
+          return material;
+        };
         parts.push({geometry:object.geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone()});
       });
       batch={parts,meshes:[],matrices:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
