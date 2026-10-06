@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
-import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip } from "./tooltips";
+import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, withTooltipRequirement } from "./tooltips";
 import { ABILITY_DEFS } from "../shared/catalog";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
@@ -12,6 +12,15 @@ if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
 const CHARGE_COOLDOWN_SECONDS = (CHARGE.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
+  it('shows a live purchase refusal once even when the purchase tooltip already includes it', () => {
+    for(const reason of ['接收者距离过远，请先靠近商店或船坞。','金币不足','Move the recipient closer to the seller']) {
+      const base={...itemTooltip('shipCannon'),requirements:[reason,'Delivered to the recipient.']};
+      const projected=withTooltipRequirement(base,reason);
+      expect(tooltipText(projected).split(reason)).toHaveLength(2);
+      expect(projected.requirements).toEqual([reason,'Delivered to the recipient.']);
+      expect(base.requirements).toEqual([reason,'Delivered to the recipient.']);
+    }
+  });
   it("describes trainable units with live catalog stats", () => {
     const tooltip = unitTooltip("archer", "a");
 

@@ -63,7 +63,7 @@ import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, type GameplayTooltip } from "./tooltips";
+import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { applySelectionPick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
@@ -493,9 +493,7 @@ function renderCommandButtonState(element: HTMLButtonElement, state: CommandButt
 }
 
 function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonState): GameplayTooltip {
-  const reason = commandButtonStateRequirement(state);
-  if (!reason) return tooltip;
-  return { ...tooltip, requirements: [reason, ...tooltip.requirements] };
+  return withTooltipRequirement(tooltip, commandButtonStateRequirement(state));
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
