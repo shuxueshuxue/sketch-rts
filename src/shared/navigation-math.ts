@@ -69,14 +69,40 @@ export function convexHull(points: readonly Point[]) {
   const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
   const cross = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
   const half = (list: readonly Point[]) => { const out: Point[] = []; for (const p of list) {
-    while (out.length > 1 && cross(out[out.length - 2]!, out[out.length - 1]!, p) <= 0)
+    const last=out.at(-1);
+    if(last && Math.hypot(p.x-last.x,p.y-last.y)<1e-8)continue;
+    while (out.length > 1) {
+      const a=out[out.length-2]!,b=out[out.length-1]!;
+      // Nearly identical rotated endpoints can leave a zero-length edge or
+      // parallel offset planes. Remove numerical corners before offsetting.
+      const tolerance=1e-10*Math.hypot(b.x-a.x,b.y-a.y)*Math.hypot(p.x-b.x,p.y-b.y);
+      if(cross(a,b,p)>tolerance)break;
       out.pop();
+    }
     out.push(p);
   } return out; };
   const lower = half(sorted), upper = half([...sorted].reverse());
   lower.pop();
   upper.pop();
-  return [...lower, ...upper];
+  const result=[...lower,...upper];
+  if(result.length>1 && Math.hypot(result[0]!.x-result.at(-1)!.x,result[0]!.y-result.at(-1)!.y)<1e-8)result.pop();
+  return result;
+}
+/** Merge CCW edge directions, then remove numerical corners. This avoids
+ * generating and sorting every pair of vertices for a convex Minkowski sum. */
+export function minkowskiSum(a:readonly Point[],b:readonly Point[]):Point[] {
+  if(!a.length || !b.length)return[];
+  const first=(p:readonly Point[])=>p.reduce((best,point,i)=>point.y<p[best]!.y || point.y===p[best]!.y && point.x<p[best]!.x ? i:best,0);
+  const ai=first(a),bi=first(b),at=(p:readonly Point[],start:number,i:number)=>p[(start+i)%p.length]!;
+  let i=0,j=0;const out:Point[]=[];
+  while(i<a.length || j<b.length){
+    const aa=at(a,ai,i),bb=at(b,bi,j);out.push({x:aa.x+bb.x,y:aa.y+bb.y});
+    const an=at(a,ai,i+1),bn=at(b,bi,j+1),cross=(an.x-aa.x)*(bn.y-bb.y)-(an.y-aa.y)*(bn.x-bb.x);
+    if(!Number.isFinite(cross))throw new Error('Convex sums require finite polygon vertices');
+    const takeA=i<a.length && (j===b.length || cross>=-1e-9),takeB=j<b.length && (i===a.length || cross<=1e-9);
+    if(takeA)i++;if(takeB)j++;
+  }
+  return convexHull(out);
 }
 export function segmentDistanceSquared(a: Point, b: Point, c: Point, d: Point) {
   const cross = (p: Point, q: Point, r: Point) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);

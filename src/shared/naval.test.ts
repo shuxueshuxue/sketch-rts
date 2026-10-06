@@ -3,6 +3,7 @@ import { UNIT_DEFS } from "./catalog";
 import { shipPassengers } from "./ship-geometry";
 import { deckPointFits, deckLoad } from "./decks";
 import { hullFits } from "./ship-navigation";
+import { keepShipsOnWater } from "./sailing";
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
 import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
@@ -39,6 +40,7 @@ function game(units: ScenarioUnitSeed[], buildings: ScenarioBuildingSeed[] = [])
   });
   const terrain = coast();
   created.map = { ...created.map, width: terrain.cols * terrain.cell, height: terrain.rows * terrain.cell, terrain };
+  keepShipsOnWater(created.map,created.units);
   return created;
 }
 
@@ -258,7 +260,7 @@ describe("transports", () => {
     ]);
     issuePlayerCommand(sim, "player", { type: "attackMove", unitIds: ["transport"], ...at(16, 4) });
     expect(unit(sim, "transport")!.order.type).toBe("move");
-    run(sim, 200);
+    run(sim, 400); // Includes a bounded turn and a physical departure from the parallel berth.
     expect(["idle", "move"]).toContain(unit(sim, "transport")!.order.type);
     expect(Math.hypot(unit(sim, "transport")!.x - at(16, 4).x, unit(sim, "transport")!.y - at(16, 4).y)).toBeLessThan(5);
   });

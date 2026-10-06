@@ -8,7 +8,15 @@ import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
 import { shipScale, DEFAULT_SHIP_SCALE } from './ship-geometry';
 export type ShipPose = Point & {
   heading: number;
+  pivot?: Point;
 };
+/** Rotation around a fixed bow/stern contact point, used for a real departure
+ * maneuver rather than translating a hull sideways without turning it. */
+export function shipPoseAt(from: ShipPose, to: ShipPose, fraction: number): ShipPose {
+  const heading=from.heading+headingDifference(from.heading,to.heading)*fraction;
+  if(to.pivot){const lever=(from.x-to.pivot.x)*detCos(from.heading)+(from.y-to.pivot.y)*detSin(from.heading);return{x:to.pivot.x+lever*detCos(heading),y:to.pivot.y+lever*detSin(heading),heading};}
+  return{x:from.x+(to.x-from.x)*fraction,y:from.y+(to.y-from.y)*fraction,heading};
+}
 type SeaMap = Pick<GameMap, "terrain" | "width" | "height">;
 const waterFields = new WeakMap<object, {
   cells: string;
@@ -79,16 +87,19 @@ export function hullFits(map: SeaMap, ship: Unit, pose: ShipPose = { x: ship.x, 
 export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: ShipPose) {
   const hull = shipProfile(ship)!.hull;
   const turn = headingDifference(from.heading, to.heading);
-  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)));
+  const radius = Math.max(...hull.map(p => Math.hypot(p.x, p.y)))+(to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):0);
   if (openWaterBox(map, Math.min(from.x, to.x) - radius, Math.min(from.y, to.y) - radius, Math.max(from.x, to.x) + radius, Math.max(from.y, to.y) + radius))
     return true;
-  const steps = Math.max(1, Math.ceil(Math.abs(turn) * radius / 2));
+  if(turn && (!hullFits(map,ship,from) || !hullFits(map,ship,to)))return false;
+  // Subdivide by a geometric error bound, rather than vertex travel. Every
+  // envelope still contains the whole arc, with at most 0.025 units padding.
+  const steps = Math.max(1, Math.ceil(Math.abs(turn) * Math.sqrt(radius / (8 * .025))));
   // Linear interpolation error of a rotating vertex is at most R Δθ² / 8.
   // The expanded convex envelope contains the entire intermediate hull.
   const error = turn ? radius * (turn / steps) ** 2 / 8 + 1e-7 : 0;
   for (let i = 0; i < steps; i++) {
-    const a = { x: from.x + (to.x - from.x) * i / steps, y: from.y + (to.y - from.y) * i / steps, heading: from.heading + turn * i / steps };
-    const b = { x: from.x + (to.x - from.x) * (i + 1) / steps, y: from.y + (to.y - from.y) * (i + 1) / steps, heading: from.heading + turn * (i + 1) / steps };
+    const a = shipPoseAt(from,to,i/steps);
+    const b = shipPoseAt(from,to,(i+1)/steps);
     const envelope = convexHull([...outline(hull, a), ...outline(hull, b)]);
     if (!clearOutline(map, error ? expandConvex(envelope, error) : envelope))
       return false;
@@ -120,7 +131,12 @@ export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin
     const hull = outline(shipProfile(ship)!.hull, { x: 0, y: 0, heading: preferred });
     const x = Math.max(-Math.min(...hull.map(p => p.x)), Math.min(map.width - Math.max(...hull.map(p => p.x)), point.x));
     const y = Math.max(-Math.min(...hull.map(p => p.y)), Math.min(map.height - Math.max(...hull.map(p => p.y)), point.y));
-    return hullFits(map, ship, { x, y, heading: preferred }) && accepts({x,y,heading:preferred}) ? { x, y, heading: preferred } : undefined;
+    if(hullFits(map, ship, { x, y, heading: preferred }) && accepts({x,y,heading:preferred}))return{x,y,heading:preferred};
+    for(let distance=16;distance<=shipProfile(ship)!.length*4;distance+=16)for(let i=0;i<16;i++){
+      const angle=i*Math.PI/8,at={x:x+distance*detCos(angle),y:y+distance*detSin(angle),heading:preferred};
+      if(hullFits(map,ship,at) && accepts(at))return at;
+    }
+    return undefined;
   }
   for (const heading of headings)
     if (hullFits(map, ship, { ...point, heading }) && accepts({...point,heading}) && sameGround(map, seaStart, point, "sea"))
@@ -254,13 +270,73 @@ class Frontier {
     return result;
   }
 }
+/** Straight travel is forward or astern along the keel. All connectors obey
+ * the same constraint as route edges; grid alignment is never a side-slip. */
+function keelConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+  const gap=Math.hypot(goal.x-from.x,goal.y-from.y);
+  if(gap<1e-7)return[];
+  const direction=Math.atan2(goal.y-from.y,goal.x-from.x);
+  const headings=[direction,direction+Math.PI].sort((a,b)=>Math.abs(headingDifference(from.heading,a))-Math.abs(headingDifference(from.heading,b)));
+  for(const heading of headings){
+    const turned={x:from.x,y:from.y,heading},end={...goal,heading};
+    if(hullPassageClear(map,ship,from,turned) && traffic(from,turned) && hullPassageClear(map,ship,turned,end) && traffic(turned,end))
+      return Math.abs(headingDifference(from.heading,heading))<1e-7?[end]:[turned,end];
+  }
+}
+function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+  const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0},length=shipProfile(ship)!.length;
+  const desired=Math.atan2(goal.y-start.y,goal.x-start.x);
+  const differences=[headingDifference(start.heading,desired),headingDifference(start.heading,desired+Math.PI)];
+  for(const difference of differences)for(const lever of [length/2,-length/2]){
+    if(Math.abs(difference)<1e-7)continue;
+    const angle=Math.max(-Math.PI/2,Math.min(Math.PI/2,difference));
+    const pivot={x:start.x-lever*detCos(start.heading),y:start.y-lever*detSin(start.heading)};
+    const heading=start.heading+angle,end={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading,pivot};
+    if(hullPassageClear(map,ship,start,end) && traffic(start,end))return[end];
+  }
+  // In a channel too narrow to turn, travel along the current keel to an
+  // opening. Backing out remains possible without inventing lateral thrust.
+  for(const direction of [1,-1])for(let distance=map.terrain!.cell;distance<=length*4;distance+=map.terrain!.cell){
+    const end={x:start.x+direction*distance*detCos(start.heading),y:start.y+direction*distance*detSin(start.heading),heading:start.heading};
+    if(!hullPassageClear(map,ship,start,end) || !traffic(start,end))break;
+    if(keelConnector(map,ship,end,goal,traffic))return[end];
+  }
+}
+/** A berth can be reached with a turning arc even when a straight final leg
+ * would point its bow through the coast. Stage in open water, then swing the
+ * bow/stern around a fixed point on the keel. No sideways docking shortcut. */
+function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean) {
+  const length=shipProfile(ship)!.length;
+  const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
+  for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
+    const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
+    const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
+    if(!hullFits(map,ship,stage) || !traffic(stage,stage))continue;
+    if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))continue;
+    arcs.push({stage,end,angle});
+  }
+  // These swept arrival arcs depend only on the berth. Validate them once
+  // per search, then reuse them at every nearby lattice state.
+  return (from:ShipPose):ShipPose[]|undefined=>{
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const {stage,end,angle} of arcs){
+      const connection=keelConnector(map,ship,from,stage,traffic);if(!connection)continue;
+      const last=connection.at(-1) ?? from;
+      if(!hullPassageClear(map,ship,last,stage) || !traffic(last,stage))continue;
+      const cost=Math.hypot(stage.x-from.x,stage.y-from.y)+length/2*(Math.abs(angle)+Math.abs(headingDifference(last.heading,stage.heading)));
+      if(cost>=bestCost)continue;
+      bestCost=cost;best=[...connection,...(Math.abs(headingDifference(last.heading,stage.heading))>1e-7?[stage]:[]),end];
+    }
+    return best;
+  }
+}
 /** Heading-aware water routing. A long, narrow hull can pass a channel that it cannot turn inside. */
 export function shipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true): ShipPose[] {
   return planShipRoute(map,ship,goal,trafficClear).points;
 }
 /** A deterministic expansion budget bounds temporary traffic searches. Partial
  * routes remain journeys, never arrivals at the requested destination. */
-export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity): {points:ShipPose[];partial:boolean} {
+export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity): {points:ShipPose[];partial:boolean} {
   const t = map.terrain;
   if (!t)
     return {points:[{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }],partial:false};
@@ -275,19 +351,28 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear
     if(!trafficFits[id]){const at=pose(id);trafficFits[id]=trafficClear(at,at)?1:-1;}
     return trafficFits[id]===1;
   };
-  const target = nearestShipPose(map, ship, goal,ship,pose=>trafficClear(pose,pose));
+  const requested=goal.heading===undefined?undefined:{x:goal.x,y:goal.y,heading:goal.heading};
+  const target = requested && hullFits(map,ship,requested) && trafficClear(requested,requested) ? requested : nearestShipPose(map, ship, goal,ship,pose=>trafficClear(pose,pose));
   if (!target)
     return {points:[],partial:false};
   const length = shipProfile(ship)!.length;
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
-  const desired = Math.round(Math.atan2(target.y - ship.y, target.x - ship.x) * 1e9) / 1e9;
-  const turned = { ...start, heading: desired }, direct = { x: target.x, y: target.y, heading: desired };
-  if (hullPassageClear(map, ship, start, turned) && hullPassageClear(map, ship, turned, direct) && trafficClear(start,turned) && trafficClear(turned,direct))
-    return {points:[direct],partial:false};
+  const direct=keelConnector(map,ship,start,target,trafficClear);
+  // The executor already turns before thrust. Keeping a zero-distance turn
+  // waypoint here would stop propulsion on every moving-target replan.
+  if(direct)return {points:direct.length?[direct.at(-1)!]:[],partial:false};
+  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
+  const arrival=arrive(start);
+  if(arrival)return {points:arrival,partial:false};
+  const direction=Math.atan2(target.y-start.y,target.x-start.x);
+  if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
+    const departure=departureRoute(map,ship,target,trafficClear);
+    if(departure)return {points:departure,partial:true};
+  }
   const workspace = searchWorkspace(size), { costs, parents: previous, stamps, generation } = workspace, frontier = new Frontier();
   const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
   const setCost = (id: number, value: number, parent: number) => { stamps[id] = generation; costs[id] = value; previous[id] = parent; };
-  const startTurns = new Int8Array(DIRECTIONS);
+  const prefixes=new Map<number,ShipPose[]>();
   const col = Math.floor(ship.x / lattice.cell), row = Math.floor(ship.y / lattice.cell);
   for (let y = Math.max(0, row - 1); y <= Math.min(lattice.rows - 1, row + 1); y++)
     for (let x = Math.max(0, col - 1); x <= Math.min(lattice.cols - 1, col + 1); x++)
@@ -295,15 +380,17 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear
         const id = (y * lattice.cols + x) * DIRECTIONS + h, p = pose(id);
         if (!fits(id))
           continue;
-        if (!startTurns[h])
-          startTurns[h] = hullPassageClear(map, ship, start, { ...start, heading: p.heading }) && trafficClear(start,{...start,heading:p.heading}) ? 1 : -1;
-        if (startTurns[h] !== 1 || !hullPassageClear(map, ship, { ...start, heading: p.heading }, p) || !trafficClear({...start,heading:p.heading},p))
-          continue;
-        const g = Math.hypot(p.x - ship.x, p.y - ship.y) + Math.abs(headingDifference(start.heading, p.heading)) * length / 2;
-        setCost(id, g, -1);
+        const prefix=keelConnector(map,ship,start,p,trafficClear);
+        if(!prefix)continue;
+        const end=prefix.at(-1) ?? start;
+        if(!hullPassageClear(map,ship,end,p) || !trafficClear(end,p))continue;
+        const turns=prefix.reduce((sum,point,i)=>sum+Math.abs(headingDifference(i?prefix[i-1]!.heading:start.heading,point.heading)),0)+Math.abs(headingDifference(end.heading,p.heading));
+        const g=Math.hypot(p.x-ship.x,p.y-ship.y)+turns*length/2;
+        setCost(id,g,-1);prefixes.set(id,[...prefix,...(Math.abs(headingDifference(end.heading,p.heading))>1e-7?[p]:[])]);
         frontier.push({ id, cost: g, score: g + Math.hypot(p.x - target.x, p.y - target.y) });
       }
-  let best = -1, bestGap = Infinity,visited=0,partial=false;
+  if(!frontier.items.length){const departure=departureRoute(map,ship,target,trafficClear);return{points:departure ?? [],partial:!!departure};}
+  let best = -1, bestGap = Infinity,visited=0,partial=false,terminal:ShipPose[]|undefined;
   while (frontier.items.length) {
     const next = frontier.pop();
     if (next.cost !== cost(next.id))
@@ -315,9 +402,9 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear
       best = id;
       bestGap = gap;
     }
-    if (gap <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: p.heading }) && hullPassageClear(map, ship, p, { ...target, heading: p.heading }) && trafficClear(p,{...target,heading:p.heading})) {
-      best = id;
-      break;
+    if(gap<=lattice.cell*1.5){
+      const connection=keelConnector(map,ship,p,target,trafficClear) ?? arrive(p);
+      if(connection){best=id;terminal=connection;break;}
     }
     const visit = (to: number, weight: number, slot: Int8Array, index: number, mask: OccupancyMask) => {
       const value = cost(id) + weight;
@@ -333,8 +420,8 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear
     };
     visit(cell * DIRECTIONS + (h + 1) % DIRECTIONS, ANGLE * length / 2, grid.turns, id * 2, grid.masks[h]![1]!);
     visit(cell * DIRECTIONS + (h + DIRECTIONS - 1) % DIRECTIONS, ANGLE * length / 2, grid.turns, id * 2 + 1, grid.masks[h]![2]!);
-    // Slow docking maneuvers let a ship back away or move seaward before turning beside a coast.
-    for (let maneuver = 0; maneuver < 4; maneuver++) {
+    // Only ahead/astern edges. A hull cannot strafe along the route.
+    for (const maneuver of [0,2]) {
       const [dx, dy] = STEPS[(h + maneuver * 2) % DIRECTIONS]!, nx = x + dx, ny = y + dy;
       if (nx >= 0 && ny >= 0 && nx < lattice.cols && ny < lattice.rows)
         visit((ny * lattice.cols + nx) * DIRECTIONS + h, lattice.cell * (dx && dy ? Math.SQRT2 : 1) * [1, 1.8, 1.4, 1.8][maneuver]!, grid.moves, id * 4 + maneuver, grid.masks[h]![maneuver + 3]!);
@@ -346,11 +433,10 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear
   for (let at = best; at >= 0; at = previous[at]!)
     path.push(pose(at));
   path.reverse();
-  const first = path[0]!;
-  if (Math.abs(headingDifference(start.heading, first.heading)) > 1e-7)
-    path.unshift({ ...start, heading: first.heading });
-  const end = path[path.length - 1]!;
-  if (Math.hypot(end.x - target.x, end.y - target.y) <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: end.heading }) && hullPassageClear(map, ship, end, { ...target, heading: end.heading }) && trafficClear(end,{...target,heading:end.heading}))
-    path.push({ ...target, heading: end.heading });
+  const root=path[0]!;
+  const rootId=(Math.floor(root.y/lattice.cell)*lattice.cols+Math.floor(root.x/lattice.cell))*DIRECTIONS+Math.round(root.heading/ANGLE)%DIRECTIONS;
+  const prefix=prefixes.get(rootId) ?? [root];
+  path.splice(0,1,...prefix);
+  if(terminal)path.push(...terminal);
   return {points:path,partial};
 }

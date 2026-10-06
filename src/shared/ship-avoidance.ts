@@ -1,46 +1,55 @@
-import { clipToConvex, convexHull, expandConvex, pointSegmentDistanceSquared, polygonPlanes } from "./navigation-math";
-import { localToWorld, shipProfile, type Point } from "./ship-geometry";
+import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonPlanes } from "./navigation-math";
+import { circleInPolygon, localToWorld, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { hullPassageClear } from "./ship-navigation";
 import type { GameMap, Unit } from "./types";
 import { detCos, detSin } from "./det-math";
-import { headingDifference, type ShipPose } from "./ship-navigation";
+import { headingDifference, shipPoseAt, type ShipPose } from "./ship-navigation";
 
 const trafficShapes=new Map<string,Point[]>();
 
 /** Frozen traffic geometry for one route search. The same continuous swept
  * hull used for coasts also constrains lattice positions and turns. */
-export function shipTraffic(ship:Unit,units:readonly Unit[]) {
+export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   const hull=shipProfile(ship)!.hull,radius=Math.max(...hull.map(p=>Math.hypot(p.x,p.y)));
-  const bodies=units.filter(other=>other!==ship && other.hp>0 && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
+  const bodies=units.filter(other=>other!==ship && other.hp>0 && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<range)
     .map(other=>({other,center:{x:other.x,y:other.y},radius:Math.max(...shipProfile(other)!.hull.map(p=>Math.hypot(p.x,p.y)))}));
-  const configurations=new Map<string,{center:Point;radius:number;polygon:Point[]}[]>();
-  const configuration=(from:number,to=from)=>{
-    const key=`${from}:${to}`,known=configurations.get(key);if(known)return known;
-    const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
-    for(let i=0;i<=steps;i++){const angle=from+turn*i/steps,c=detCos(angle),s=detSin(angle);
-      points.push(...hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c})));}
-    let shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);
-    const obstacles=bodies.map(body=>{
-      const profile=shipProfile(body.other)!,angle=body.other.sailing?.heading ?? 0;
-      const shapeKey=`${ship.kind}:${shipProfile(ship)!.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}`;
-      let polygon=trafficShapes.get(shapeKey);
-      if(!polygon){const c=detCos(angle),s=detSin(angle),outline=profile.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));
-        polygon=convexHull(outline.flatMap(b=>shape.map(a=>({x:b.x-a.x,y:b.y-a.y}))));
-        if(trafficShapes.size>=512)trafficShapes.delete(trafficShapes.keys().next().value!);trafficShapes.set(shapeKey,polygon);}
-      return {...body,polygon};
-    });
-    configurations.set(key,obstacles);return obstacles;
+  const configurations=new Map<string,Point[]>(),sweeps=new Map<string,Point[]>();
+  const configuration=(from:number,to:number,body:typeof bodies[number],padding:number)=>{
+    const key=`${from}:${to}:${body.other.id}:${padding}`,known=configurations.get(key);if(known)return known;
+    const profile=shipProfile(body.other)!,angle=body.other.sailing?.heading ?? 0;
+    const shapeKey=`${ship.kind}:${shipProfile(ship)!.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}:${padding}`;
+    let polygon=trafficShapes.get(shapeKey);
+    if(!polygon){
+      const sweepKey=`${from}:${to}`;let shape=sweeps.get(sweepKey);
+      if(!shape){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
+        for(let i=0;i<=steps;i++){const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);points.push(...hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c})));}
+        shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);sweeps.set(sweepKey,shape);
+      }
+      const c=detCos(angle),s=detSin(angle),outline=profile.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));
+      polygon=minkowskiSum(outline,shape.map(p=>({x:-p.x,y:-p.y})));
+      if(padding)polygon=expandConvex(polygon,padding);
+      if(trafficShapes.size>=512)trafficShapes.delete(trafficShapes.keys().next().value!);trafficShapes.set(shapeKey,polygon);
+    }
+    configurations.set(key,polygon);return polygon;
   };
   const interior=(point:Point,polygon:readonly Point[])=>polygonPlanes(polygon).every(p=>point.x*p.x+point.y*p.y>p.min+1e-6);
-  const clear=(from:ShipPose,to:ShipPose)=>{
+  const clear=(from:ShipPose,to:ShipPose,padding=0):boolean=>{
     if(!bodies.length)return true;
+    if(to.pivot){
+      const turn=headingDifference(from.heading,to.heading),lever=Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y);
+      const steps=Math.max(1,Math.ceil(Math.abs(turn)*Math.sqrt((radius+lever)/(8*.025))));
+      const error=lever*(turn/steps)**2/8+1e-7;
+      for(let i=0;i<steps;i++)if(!clear(shipPoseAt(from,to,i/steps),shipPoseAt(from,to,(i+1)/steps),error))return false;
+      return true;
+    }
     const dx=to.x-from.x,dy=to.y-from.y,turn=headingDifference(from.heading,to.heading);
-    return configuration(from.heading,to.heading).every(body=>{
-      if(pointSegmentDistanceSquared(body.center,from,to)>(radius+body.radius)**2)return true;
+    return bodies.every(body=>{
+      if(pointSegmentDistanceSquared(body.center,from,to)>(radius+body.radius+padding)**2)return true;
+      const polygon=configuration(from.heading,to.heading,body,padding);
       const start={x:from.x-body.center.x,y:from.y-body.center.y},end={x:to.x-body.center.x,y:to.y-body.center.y};
-      const clip=clipToConvex(start,end,body.polygon);if(!clip || clip[1]-clip[0]<1e-7)return true;
+      const clip=clipToConvex(start,end,polygon);if(!clip || clip[1]-clip[0]<1e-7)return true;
       const middle=(clip[0]+clip[1])/2;
-      if(!interior({x:start.x+dx*middle,y:start.y+dy*middle},body.polygon))return true;
+      if(!interior({x:start.x+dx*middle,y:start.y+dy*middle},polygon))return true;
       // Initial contact may separate, but cannot rotate deeper into contact.
       return Math.abs(turn)<1e-7 && clip[0]<=1e-7 && dx*(from.x-body.center.x)+dy*(from.y-body.center.y)>0;
     });
@@ -51,6 +60,22 @@ export function shipTraffic(ship:Unit,units:readonly Unit[]) {
 export function shipTrafficKey(ship:Unit,units:readonly Unit[]) {
   return units.filter(other=>other!==ship && other.hp>0 && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<600)
     .map(other=>`${other.id}:${Math.round(other.x/16)}:${Math.round(other.y/16)}:${Math.round((other.sailing?.heading ?? 0)*16/Math.PI)}`).join('|');
+}
+/** A destination on another deck means hull contact. Compute the berth in
+ * configuration space, then let normal surge/yaw routing reach that pose. */
+export function shipContactGoal(ship:Unit,goal:Point,units:readonly Unit[]):ShipPose|undefined {
+  const other=units.find(other=>other!==ship && other.hp>0 && shipProfile(other) && circleInPolygon(worldToLocal(other,goal),0,shipProfile(other)!.hull));
+  if(!other)return;
+  const dx=goal.x-ship.x,dy=goal.y-ship.y,length=Math.hypot(dx,dy);if(length<1e-7)return;
+  const direction=Math.atan2(dy,dx),preferred=ship.sailing?.heading ?? 0;
+  const headings=[preferred,...[direction,direction+Math.PI].sort((a,b)=>Math.abs(headingDifference(preferred,a))-Math.abs(headingDifference(preferred,b)))];
+  for(const heading of headings){
+    const c=detCos(heading),s=detSin(heading),hull=shipProfile(ship)!.hull.map(p=>({x:p.x*c-p.y*s,y:p.x*s+p.y*c}));
+    const polygon=minkowskiSum(shipProfile(other)!.hull.map(p=>localToWorld(other,p)),hull.map(a=>({x:-a.x,y:-a.y})));
+    const clip=clipToConvex(ship,goal,polygon);if(!clip || clip[0]<=1e-7)continue;
+    const fraction=Math.max(0,clip[0]-.05/length);
+    return{x:ship.x+dx*fraction,y:ship.y+dy*fraction,heading};
+  }
 }
 
 /** A local visibility graph in configuration space: B ⊕ −A accounts for
@@ -64,7 +89,7 @@ export function avoidShipHulls(map:GameMap,ship:Unit,goal:Point,units:readonly U
   const obstacles=units.filter(other=>other!==ship && shipProfile(other) && Math.hypot(other.x-ship.x,other.y-ship.y)<500
     && pointSegmentDistanceSquared(other,start,end)<((p.length+shipProfile(other)!.length)/2+20)**2).map(other=>{
       const outline=shipProfile(other)!.hull.map(point=>localToWorld(other,point));
-      const polygon=expandConvex(convexHull(outline.flatMap(b=>hull.map(a=>({x:b.x-a.x,y:b.y-a.y})))),.1);
+      const polygon=expandConvex(minkowskiSum(outline,hull.map(a=>({x:-a.x,y:-a.y}))),.1);
       return{center:other,polygon};
     });
   if(!obstacles.length)return goal;

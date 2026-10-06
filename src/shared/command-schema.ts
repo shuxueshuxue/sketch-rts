@@ -40,7 +40,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if(command.type==="wieldItem")return typeof command.unitId==="string" && (command.itemId===undefined || typeof command.itemId==="string") && (command.hand==="right" || command.hand==="left");
   if(command.type==="transferItem"){
     const d=command.destination as Record<string,unknown>|undefined;
-    return typeof command.itemId==="string" && !!d && typeof d==="object" && (typeof d.unitId==="string" && [...ARMOR_SLOTS,...CARRY_SLOTS].includes(d.slot as never) || typeof d.shipId==="string" && (Number.isInteger(d.slot) && Number(d.slot)>=0 || typeof d.mountId==="string" && typeof d.installerId==="string"));
+    return typeof command.itemId==="string" && !!d && typeof d==="object" && (typeof d.unitId==="string" && [...ARMOR_SLOTS,...CARRY_SLOTS].includes(d.slot as never) || typeof d.shipId==="string" && (Number.isInteger(d.slot) && Number(d.slot)>=0 || typeof d.mountId==="string" && (d.installerId===undefined || typeof d.installerId==="string")));
   }
   if (command.type === "pickupItem") return typeof command.unitId === "string" && typeof command.itemId === "string";
   if (command.type === "dropItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);

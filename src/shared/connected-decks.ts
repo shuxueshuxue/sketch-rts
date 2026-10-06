@@ -120,7 +120,9 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     return false;
   const source = passenger.deck && hulls.find(ship => ship.id === passenger.deck!.shipId);
   let target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, world), 0, shipProfile(ship)!.hull));
-  if (!source && !target) {
+  // A ground journey does not silently turn into boarding merely because a
+  // passing hull overlaps the shallows. Enter a deck when it is the destination.
+  if (!source && !target && !isOpenGround(map,world.x,world.y,'land')) {
     const dx = world.x - passenger.x, dy = world.y - passenger.y, len = Math.hypot(dx, dy) || 1;
     const next = { x: passenger.x + dx / len * perTick(passenger.speed) * pace, y: passenger.y + dy / len * perTick(passenger.speed) * pace };
     target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, next), 0, shipProfile(ship)!.hull));
