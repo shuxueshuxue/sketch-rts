@@ -24,6 +24,8 @@
     "benchmark:ai-gauntlet": "tsx scripts/ai-version-gauntlet.ts",
     "play:ai": "tsx scripts/ai-playtest.ts",
     "art:ships": "python3 tools/art/build-ships.py",
+    "art:navigation": "tsx scripts/build-navigation-masks.ts",
+    "benchmark:naval-navigation": "tsx scripts/naval-navigation-benchmark.ts",
     "art:buildings": "python3 tools/art/build-buildings.py",
     "record": "tsx src/recorder/cli.ts",
     "test:sdk-ai-matrix": "tsx scripts/sdk-ai-matrix.ts",
