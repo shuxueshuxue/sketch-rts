@@ -143,35 +143,44 @@ def build_in_blender():
                 h = spec["mastHeight"]
                 cylinder("mast footing", (x, y, z+1.4), r, 2.8, iron, upper)
                 cylinder("mast", (x, y, z+h/2), 2.2, h, edge, upper)
-                cylinder("lower yard", (x, y, z+h*.68), 1.2, beam*1.10, edge, upper, (math.pi/2, 0, 0))
-                # A curved sail gives a readable silhouette from every direction.
-                vertices, faces = [], []
-                for row in range(8):
-                    for col in range(11):
-                        u, v = col/10, row/7
-                        yy = (u-.5)*beam*(.92+.16*v)
-                        bulge = math.sin(u*math.pi)*math.sin(v*math.pi)*17
-                        vertices.append((x+bulge, y+yy, z+h*(.22+v*.45)+math.sin(u*math.pi)*3))
-                for row in range(7):
-                    for col in range(10):
-                        i = row*11+col
-                        faces.append((i, i+1, i+12, i+11))
-                sail = mesh("canvas sail", vertices, faces, canvas, upper)
-                solid = sail.modifiers.new("sail thickness", "SOLIDIFY")
-                solid.thickness = .18
-                if kind not in ("cutter", "fireShip"):
-                    cylinder("topsail yard", (x, y, z+h*.98), .9, beam*.73, edge, upper, (math.pi/2, 0, 0))
-                    top_vertices, top_faces = [], []
-                    for row in range(5):
-                        for col in range(9):
-                            u, v = col/8, row/4
-                            top_vertices.append((x+math.sin(u*math.pi)*math.sin(v*math.pi)*7,
-                                                 y+(u-.5)*beam*(.64+.08*v), z+h*(.74+v*.23)))
-                    for row in range(4):
-                        for col in range(8):
-                            i = row*9+col
-                            top_faces.append((i, i+1, i+10, i+9))
-                    mesh("square topsail", top_vertices, top_faces, canvas, upper)
+                if kind in ("cutter", "fireShip"):
+                    # An aft-raked lateen rig, deliberately distinct from the
+                    # square-rigged fighting ships; the foredeck stays visible.
+                    spar("lateen yard", (x-20, -beam*.35, z+h*.92),
+                         (x+40, beam*.4, z+h*.30), 1.2, edge, upper)
+                    mesh("lateen sail", [(x-19,-beam*.34,z+h*.90),
+                         (x+39,beam*.39,z+h*.31),(x+18,-beam*.22,z+h*.24)],
+                         [(0,1,2)],canvas,upper)
+                else:
+                    cylinder("lower yard", (x, y, z+h*.68), 1.2, beam*1.10, edge, upper, (math.pi/2, 0, 0))
+                    # A curved sail gives a readable silhouette from every direction.
+                    vertices, faces = [], []
+                    for row in range(8):
+                        for col in range(11):
+                            u, v = col/10, row/7
+                            yy = (u-.5)*beam*(.92+.16*v)
+                            bulge = math.sin(u*math.pi)*math.sin(v*math.pi)*17
+                            vertices.append((x+bulge, y+yy, z+h*(.22+v*.45)+math.sin(u*math.pi)*3))
+                    for row in range(7):
+                        for col in range(10):
+                            i = row*11+col
+                            faces.append((i, i+1, i+12, i+11))
+                    sail = mesh("canvas sail", vertices, faces, canvas, upper)
+                    solid = sail.modifiers.new("sail thickness", "SOLIDIFY")
+                    solid.thickness = .18
+                    if kind in ("warship", "carrier"):
+                        cylinder("topsail yard", (x, y, z+h*.98), .9, beam*.73, edge, upper, (math.pi/2, 0, 0))
+                        top_vertices, top_faces = [], []
+                        for row in range(5):
+                            for col in range(9):
+                                u, v = col/8, row/4
+                                top_vertices.append((x+math.sin(u*math.pi)*math.sin(v*math.pi)*7,
+                                                     y+(u-.5)*beam*(.64+.08*v), z+h*(.74+v*.23)))
+                        for row in range(4):
+                            for col in range(8):
+                                i = row*9+col
+                                top_faces.append((i, i+1, i+10, i+9))
+                        mesh("square topsail", top_vertices, top_faces, canvas, upper)
                 for side in (-1, 1):
                     spar("mast shroud", (x, y, z+h*.72), (x-12, y+side*beam*.40, z+8), .45, dark, upper)
                     spar("sail sheet", (x, y+side*beam*.46, z+h*.22), (x+25, side*beam*.35, z+8), .45, dark, upper)
@@ -179,7 +188,7 @@ def build_in_blender():
                 # Broad cloth, rigging and a sterncastle remain readable at gameplay scale.
                 mesh("forward staysail", [(x+3, 0, z+h*.78), (length*.57, 0, z+24), (x+24, 0, z+24)], [(0, 1, 2)], canvas, upper)
             elif obstacle["type"] == "cabin":
-                height = 12 if kind == "cutter" else 25 if kind == "carrier" else 22
+                height = {"cutter": 9, "fireShip": 12, "transport": 17, "bombardShip": 15, "warship": 22, "carrier": 30}[kind]
                 box("sterncastle", (x, y, z+height/2), (r*1.5, r*1.35, height), wood, upper)
                 box("raised quarterdeck", (x, y, z+height+1.4), (r*1.65, r*1.48, 2.8), plank, upper)
                 for side in (-1, 1):
@@ -207,6 +216,17 @@ def build_in_blender():
                     spar("fuel feed", (x+14,yy,z+9), (x+22,0,z+6), 1.6, brass, weapon)
                 cylinder("flame nozzle", (x+26, 0, z+6), 4, 32, iron, weapon, (0, math.pi/2, 0))
                 cylinder("projector mouth", (x+42,0,z+6), 5, 3, brass, weapon, (0, math.pi/2, 0))
+        if kind == "transport":
+            box("flush cargo hatch", (length*.03, 0, z+.4), (length*.22, beam*.44, .8), dark, base)
+            for offset in (-beam*.15, 0, beam*.15):
+                box("hatch grating", (length*.03, offset, z+1), (length*.21, .6, .5), edge, base)
+        if kind in ("warship", "carrier"):
+            for side in (-1, 1):
+                for x in (-length*.23, 0, length*.22):
+                    box("iron gunport shutter", (x, side*beam*.44, z*.68), (10, 1.8, 6), iron, base)
+        if kind == "bombardShip":
+            for side in (-1,1):
+                box("reinforced mortar coaming", (length*.16, side*beam*.31,z+3), (length*.3,3,6), iron, upper)
         box("stern rudder", (-length/2-2, 0, z*.30), (5, 2, z*.6), dark, base)
         fittings = base + upper
         rig = bpy.data.objects.new("ship origin", None)

@@ -4,6 +4,7 @@ Run the ship builder with SKETCH_SHIP_MODELS_ONLY=1 and export-building-geometry
 first. No runtime geometry is guessed from a sprite or from a unit's cost.
 """
 import json
+import os
 from pathlib import Path
 import bpy
 from mathutils import Vector, Matrix
@@ -25,6 +26,8 @@ def export(objects, path):
 
 
 for kind, spec in config["ships"].items():
+    if os.environ.get('SKETCH_MODEL_ONLY') and kind not in os.environ['SKETCH_MODEL_ONLY'].split(','):
+        continue
     bpy.ops.wm.open_mainfile(filepath=str(ROOT / f".art-build/ships/{kind}.blend"))
     depsgraph = bpy.context.evaluated_depsgraph_get()
     groups = {"Hull": [], "Gun": []}
@@ -70,6 +73,8 @@ for kind, spec in config["ships"].items():
 
 models = json.loads((ROOT / ".art-build/buildings/geometry.json").read_text())
 for kind, faces in models.items():
+    if os.environ.get('SKETCH_MODEL_ONLY') and kind not in os.environ['SKETCH_MODEL_ONLY'].split(','):
+        continue
     bpy.ops.wm.read_factory_settings(use_empty=True)
     materials = {}
     vertices, polygons, material_ids = [], [], []

@@ -1,4 +1,5 @@
 import { engineeringWant } from "../engineering";
+import {seconds,SIM_TICKS_PER_SECOND} from '../../../shared/time';
 import { adaptiveArmyWants } from "../adaptive-army";
 import { isBuildPlacementClear } from "../../../shared/build-placement";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "../../../shared/catalog";
@@ -45,7 +46,7 @@ type Economy = {
   threatened?: { hall: Building; threat: number };
 };
 
-const WORKER_CAP = 26;
+const WORKER_CAP = 36;
 const MIN_WORKERS = 6;
 const WORKERS_PER_MINE = 5;
 const FARM_LIMIT = 15;
@@ -62,7 +63,7 @@ const AGE_SECONDS_PER_POINT = 6;
 const MAX_AGE_BONUS = 20;
 // A goal can drop out for a moment (an enemy walks near the mine, a building finishes): it keeps its waiting time unless it
 // stays gone this long. Resetting on every flicker kept the natural at the bottom for a whole game.
-const AGE_MEMORY_TICKS = 10 * 20;
+const AGE_MEMORY_TICKS = seconds(10);
 
 export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
@@ -103,7 +104,10 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
   const economy = readEconomy(snapshot, owner, options);
-  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
+  const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
+  const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
+  const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
+  return aged(economy, [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)]);
 }
 
 function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Economy {
@@ -143,7 +147,7 @@ function currentPhase(economy: Omit<Economy, "phase">): V6Phase {
     const phase = phases[index]!;
     const supply = playerState(economy.snapshot, economy.owner).supplyUsed;
     const basesShort = activeMiningBaseCount(economy.snapshot, economy.owner) < (phase.advanceBases ?? 0);
-    const due = phase.advanceBy !== undefined && economy.snapshot.tick >= phase.advanceBy * 20;
+    const due = phase.advanceBy !== undefined && economy.snapshot.tick >= seconds(phase.advanceBy);
     if ((unitShare(economy, phase) < phase.advanceShare || basesShort) && supply < phase.advanceSupply && !due) break;
     index += 1;
     recordPlay(memory, `phase:${index + 1}`);
@@ -353,7 +357,6 @@ function baseGoal(economy: Economy, target: number, priority: number): Goal[] {
   const halls = economy.own.filter((building) => building.kind === "townHall");
   if (activeMiningBaseCount(economy.snapshot, economy.owner) >= target || halls.some((hall) => !hall.complete)) return [];
   // V9 expands under a threat elsewhere (see v9-bases-first); only one near the mine holds it back.
-  if (economy.threatened && !isV9Policy(economy.options)) return [];
   const mine = isV9Policy(economy.options) ? v9ExpansionMine(economy.snapshot, economy.intel) : nextExpansionMine(economy.snapshot, economy.intel);
   if (economy.threatened && mine && distance(economy.threatened.hall, mine) < V9_THREAT_CLEARANCE) return [];
   if (!mine || mineGuards(economy.snapshot, mine).length > 0) return [];
@@ -423,7 +426,7 @@ function aged(economy: Economy, goals: Goal[]): Goal[] {
     .map((candidate) => {
       const age = (ages[candidate.id] ??= { since: tick, seen: tick });
       age.seen = tick;
-      const bonus = Math.min(MAX_AGE_BONUS, Math.floor((tick - age.since) / 20 / AGE_SECONDS_PER_POINT));
+      const bonus = Math.min(MAX_AGE_BONUS, Math.floor((tick - age.since) / SIM_TICKS_PER_SECOND / AGE_SECONDS_PER_POINT));
       return { ...candidate, priority: candidate.priority + bonus };
     })
     .sort((a, b) => b.priority - a.priority);

@@ -6,8 +6,8 @@
   position:fixed; z-index:80; left:50%; top:50%; transform:translate(-50%,-50%);
   box-sizing:border-box; width:min(1160px,calc(100vw - 32px)); height:min(560px,calc(100dvh - 32px));
   display:flex; flex-direction:column; gap:8px; overflow:clip; padding:14px;
-  border:3px solid #6e5a38; color:var(--game-ink); background:var(--game-wood);
-  box-shadow:inset 0 0 0 1px #b59b65,inset 0 0 0 5px #211f19,inset 0 0 28px #000b,0 18px 80px #000d,0 0 0 100vmax #0c100e99;
+  border:1px solid var(--game-brass); color:var(--game-ink); background:var(--game-wood);
+  box-shadow:var(--game-frame),0 0 0 100vmax #0c100e99;
   font-family:var(--game-text);
 }
 .equipment-panel[hidden],.equipment-panel [hidden] { display:none!important; }
@@ -162,3 +162,28 @@
 .equipment-panel[data-short=true] .equipment-four-slots { grid-column:1 / -1; grid-row:2 / span 2; }
 .equipment-panel[data-short=true] .equipment-positions { grid-template-columns:60px minmax(0,1fr)120px; gap:5px; }
 .equipment-panel[data-short=true] h2 { font-size:15px; letter-spacing:0; }
+
+/* A fitted frame and sunk inventory sockets; no ornamental rows consume space. */
+.equipment-panel { border:1px solid var(--game-brass); background:var(--game-wood); box-shadow:var(--game-frame),0 0 0 100vmax #0b110f91; }
+.equipment-panel::before { inset:4px; border-color:#adb49830; }
+.equipment-panel::after { display:none; }
+.equipment-panel header { border-bottom:1px solid var(--game-edge); }
+.equipment-panel h2 { letter-spacing:.5px; color:var(--game-title); font-weight:500; }
+.equipment-panel :is(.equipment-character,.equipment-cargo,.equipment-vessel) { border:0; background:transparent; box-shadow:none; padding:6px; }
+.equipment-panel :is(.equipment-character,.equipment-vessel) { border-right:1px solid var(--game-edge); }
+.equipment-panel[data-mode=character] .equipment-character { border-right:0; }
+.equipment-panel .equipment-cell { border:1px solid #7d89705c; background:linear-gradient(135deg,#101a15,#1b251e); box-shadow:inset 0 2px 7px #000a,0 1px #abb89918; }
+.equipment-panel .equipment-cell > small { color:var(--game-muted); }
+.equipment-panel .equipment-item { color:var(--game-ink); }
+.equipment-panel .equipment-cell.empty::after { opacity:.12; }
+.equipment-panel .equipment-positions { background:radial-gradient(ellipse at center,#7f95672b,transparent 65%); }
+.equipment-panel :is(.equipment-section-title,.equipment-positions h3) { color:var(--game-muted); letter-spacing:.5px; }
+.equipment-panel .equipment-section-title { border-bottom-color:var(--game-edge); }
+.equipment-panel .equipment-context strong { color:var(--game-title); }
+.equipment-panel :is(.equipment-context small,.equipment-stat small,.equipment-load p,[data-equipment-parts]) { color:var(--game-muted); }
+.equipment-panel .equipment-stat strong { color:var(--game-ink); }
+.equipment-panel footer { border-color:var(--game-edge); }
+.equipment-panel .equipment-crew { background:#1e2c23; border-color:#9da78b; box-shadow:0 2px 4px #000a; }
+.equipment-panel .equipment-pane-tabs { border-bottom:1px solid var(--game-edge); }
+.equipment-panel .equipment-pane-tabs button { border:0; background:transparent; box-shadow:none; }
+.equipment-panel .equipment-pane-tabs button[aria-pressed=true] { background:transparent; color:var(--game-title); box-shadow:inset 0 -2px var(--game-brass-lit); }

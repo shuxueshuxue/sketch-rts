@@ -46,7 +46,7 @@ describe("canonical game state", () => {
     // Map geometry still uses det-math; key/id ordering is independent of locale.
     expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("b3a1487c");
     const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
-    // Balance changes and per-second movement rates change the spawned units' live stats.
-    expect(checksumGame(ladder)).toBe("f7839496");
+    // The seeded map now includes deterministic ground cover and denser scenery.
+    expect(checksumGame(ladder)).toBe("7e515585");
   });
 });

@@ -63,6 +63,8 @@ export class EquipmentPanel {
     private pointerDrag: { id: string; x: number; y: number; active: boolean; ghost?: HTMLElement; target?: HTMLElement | undefined } | undefined;
     private dropTargets = new WeakMap<HTMLElement, { destination: ItemDestination | undefined; hand: 'right' | 'left' | undefined }>();
     private suppressClickUntil = 0;
+    private virtualDragTarget: HTMLElement | undefined;
+    private virtualClick: {key:string;at:number}|undefined;
     private selectedItem: string | undefined;
     private notice: { text: string; invalid: boolean; until: number } | undefined;
     private holdPage = 0;
@@ -81,7 +83,28 @@ export class EquipmentPanel {
         new ResizeObserver(() => { if (this.open) this.render(); }).observe(this.root);
     }
     isOpen() { return this.open; }
-    close() { this.open = false; this.root.hidden = true; this.clearPointerDrag(); this.clearCrewDrag(); }
+    close() { this.open = false; this.root.hidden = true; this.virtualDragTarget=undefined; this.clearPointerDrag(); this.clearCrewDrag(); }
+    /** Pointer lock supplies screen coordinates, rather than native DOM targeting. */
+    virtualPointer(type:'pointerdown'|'pointermove'|'pointerup',point:{x:number;y:number},buttons:number,modifiers:Pick<MouseEvent,'ctrlKey'|'shiftKey'|'altKey'>={ctrlKey:false,shiftKey:false,altKey:false}){
+        if(!this.open)return;
+        const hit=document.elementFromPoint(point.x,point.y)?.closest<HTMLElement>('button,.equipment-cell');
+        if(type==='pointerdown')this.virtualDragTarget=hit && this.root.contains(hit)?hit:undefined;
+        const target=this.virtualDragTarget;
+        if(target)target.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,clientX:point.x,clientY:point.y,button:0,buttons,pointerId:1,pointerType:'mouse',...modifiers}));
+        if(type==='pointerup'){
+            this.virtualDragTarget=undefined;
+            if(target===hit && target && performance.now()>=this.suppressClickUntil){
+                const current=document.elementFromPoint(point.x,point.y)?.closest<HTMLElement>('button,.equipment-cell');
+                if(!current||!this.root.contains(current))return;
+                if(current!==target && current.dataset.itemId!==target.dataset.itemId)return;
+                const key=current.dataset.itemId,now=performance.now();
+                current.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,...modifiers}));
+                if(key&&this.virtualClick?.key===key&&now-this.virtualClick.at<350){
+                    current.dispatchEvent(new MouseEvent('dblclick',{bubbles:true,cancelable:true,...modifiers}));this.virtualClick=undefined;
+                }else this.virtualClick=key?{key,at:now}:undefined;
+            }
+        }
+    }
     update(snapshot: GameSnapshot | undefined, owner: PlayerId) { this.snapshot = snapshot; this.owner = owner; if (!snapshot) {
         this.close();
         return;
@@ -195,7 +218,7 @@ export class EquipmentPanel {
         }
         button.addEventListener('pointerdown', event => {
             if (event.button !== 0) return;
-            button.setPointerCapture(event.pointerId);
+            if(event.isTrusted)button.setPointerCapture(event.pointerId);
             this.dragging = item.id;
             this.pointerDrag = { id: item.id, x: event.clientX, y: event.clientY, active: false };
         });
@@ -483,7 +506,7 @@ export class EquipmentPanel {
                     this.clearCrewDrag();origin={x:event.clientX,y:event.clientY};const raw=position(event);offset={x:latest.deck.x-raw.x,y:latest.deck.y-raw.y};this.crewDrag=crew.id;
                     const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('viewBox',`0 0 ${projection.width} ${projection.height}`);arrow.setAttribute('class','equipment-crew-route');arrow.setAttribute('aria-hidden','true');arrow.style.display='none';arrow.innerHTML='<line/><path/><circle/>';scene.append(arrow);
                     this.crewRoute={crewId:crew.id,shipId:ship.id,arrow,point:{x:latest.deck.x,y:latest.deck.y},valid:true};
-                    token.setPointerCapture(event.pointerId);event.preventDefault();});
+                    if(event.isTrusted)token.setPointerCapture(event.pointerId);event.preventDefault();});
                 token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id || !this.crewRoute)return;
                     if(!origin || Math.hypot(event.clientX-origin.x,event.clientY-origin.y)<=4)return;
                     const point=destination(event);this.crewRoute.point=point??position(event);this.crewRoute.valid=!!point;this.crewRoute.arrow.style.display='';this.updateCrewRoute();});

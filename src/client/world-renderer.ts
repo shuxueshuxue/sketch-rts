@@ -452,10 +452,10 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     if (selected && painter.controlGroups) {
       const digits = Object.entries(painter.controlGroups).filter(([, ids]) => ids.includes(unit.id)).map(([digit]) => digit).join("·");
       if (digits) {
-        ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center";
-        const w = ctx.measureText(digits).width + 7;
-        ctx.fillStyle = "#242321e8"; ctx.fillRect(point.x - w / 2, point.y + unit.radius + 5, w, 15);
-        ctx.fillStyle = "#f0dfb9"; ctx.fillText(digits, point.x, point.y + unit.radius + 16); ctx.restore();
+        ctx.save(); ctx.font = "11px sans-serif"; ctx.textAlign = "left";
+        ctx.lineWidth=2; ctx.strokeStyle="#17201caa"; ctx.fillStyle="#fff";
+        ctx.strokeText(digits,point.x+unit.radius*.7,point.y+unit.radius+10);
+        ctx.fillText(digits,point.x+unit.radius*.7,point.y+unit.radius+10); ctx.restore();
       }
     }
   }
