@@ -1,4 +1,5 @@
 import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./catalog";
+import type { AttackKind } from "./attack-presentation";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
 
@@ -93,6 +94,7 @@ export type WorldEffect = {
   /** Who fired a weapon projectile, so the client can draw an arrow or a spell bolt, or whose weapon dealt a hit, so the
    * client can sound the blow. Presentation only. */
   sourceKind?: UnitKind | BuildingKind;
+  attackKind?: AttackKind;
   /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
   unitId?: string;
   itemId?: string;
@@ -114,6 +116,7 @@ export type Projectile = {
   duration: number;
   weapon?: WeaponDef;
   sourceKind?: UnitKind;
+  attackKind?: AttackKind;
   rootTicks?: number;
   burnTicks?: number;
 };
@@ -121,7 +124,7 @@ export type Projectile = {
 export type UnitOrder =
   | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
-  | { type: "move"; x: number; y: number; deckPoint?: { x: number; y: number }; deckShipId?: string }
+  | { type: "move"; x: number; y: number; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
@@ -135,7 +138,7 @@ export type UnitOrder =
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
   | { type: "board"; transportId: string; berth?: { x: number; y: number } }
-  | { type: "unload"; x: number; y: number }
+  | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
   // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
@@ -212,7 +215,7 @@ export type Unit = {
   deck?: { shipId: string; x: number; y: number } | undefined;
   /** Continuous heading and rates; visuals select one of the baked directions. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number }[]; end: { x: number; y: number } } | undefined;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number } | undefined;
   } | undefined;
   /** Physical scaling for unusually large campaign hulls. */
   deckScale?: number;
@@ -496,7 +499,7 @@ export type TerrainLandmark = {
 
 export type GameCommand =
   | { type: "cancelTraining"; buildingId: string; jobId: string }
-  | { type: "move"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "move"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "attack"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "follow"; unitIds: string[]; targetId: string; queued?: boolean }
@@ -516,7 +519,7 @@ export type GameCommand =
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
-  | { type: "unload"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "unload"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "unloadPassenger"; transportId: string; passengerId: string }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }

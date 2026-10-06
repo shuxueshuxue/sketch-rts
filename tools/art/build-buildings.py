@@ -20,6 +20,9 @@ def render():
     import bpy
     from mathutils import Vector
     models=json.loads((BUILD/"geometry.json").read_text())
+    selected=os.environ.get("SKETCH_BUILDING_KINDS", "").split(",")
+    if selected != [""]:
+        models={kind:models[kind] for kind in selected}
     OUTPUT.mkdir(parents=True,exist_ok=True)
     for kind,faces in models.items():
         bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -55,7 +58,7 @@ def render():
             obj.data.materials.append(material(face["color"]))
             objects.append((obj,face["color"]))
         scene=bpy.context.scene
-        scene.render.engine="CYCLES";scene.cycles.device="CPU";scene.cycles.samples=24;scene.cycles.use_denoising=False
+        scene.render.engine="CYCLES";scene.cycles.device="CPU";scene.cycles.samples=512;scene.cycles.use_denoising=False
         scene.render.threads_mode="FIXED";scene.render.threads=4
         scene.render.resolution_x=scene.render.resolution_y=256;scene.render.resolution_percentage=100
         scene.render.film_transparent=True;scene.render.image_settings.color_mode="RGBA";scene.render.image_settings.file_format="PNG"
@@ -64,7 +67,7 @@ def render():
         scene.world.node_tree.nodes["Background"].inputs[0].default_value=(.45,.48,.52,1)
         scene.world.node_tree.nodes["Background"].inputs[1].default_value=.8
         bpy.ops.object.light_add(type="AREA",location=(-90,-110,190))
-        lamp=bpy.context.object;lamp.data.energy=180000;lamp.data.size=140
+        lamp=bpy.context.object;lamp.data.energy=180000;lamp.data.size=60
         lamp.rotation_euler=(-lamp.location).to_track_quat('-Z','Y').to_euler()
         # A stable oblique architectural view, independent of the unit's heading.
         bpy.ops.object.camera_add(location=(100,144,155))
@@ -72,8 +75,15 @@ def render():
         target=Vector((0,0,18))
         camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
         camera.data.type="ORTHO";camera.data.ortho_scale=128;scene.camera=camera
+        # Cycles catches the building's actual cast/contact shadow on a
+        # transparent ground. It shares the model's projection and light.
+        bpy.ops.mesh.primitive_plane_add(size=600,location=(0,0,-.1))
+        ground=bpy.context.object;ground.name="transparent shadow ground"
+        ground.is_shadow_catcher=True
+        ground.data.materials.append(material("#b4b4b4"))
         bpy.ops.wm.save_as_mainfile(filepath=str(BUILD/f"{kind}.blend"))
         scene.render.filepath=str(BUILD/f"{kind}-color.png");bpy.ops.render.render(write_still=True)
+        ground.hide_render=True
         for obj,color in objects:obj.data.materials[0]=material(color,True)
         scene.view_settings.view_transform="Raw";scene.view_settings.look="None";scene.view_settings.exposure=0
         scene.render.filepath=str(BUILD/f"{kind}-team.png");bpy.ops.render.render(write_still=True)
@@ -84,9 +94,11 @@ def main():
     from io import BytesIO
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--blender',default=os.environ.get('BLENDER_BIN','blender'))
+    p.add_argument('--kinds',nargs='+',help='Render only these building kinds')
     args=p.parse_args()
     subprocess.run(['node','--import','tsx','tools/art/export-building-geometry.ts'],cwd=ROOT,check=True)
-    subprocess.run([args.blender,'--background','--factory-startup','--python-exit-code','1','--python',str(Path(__file__).resolve())],check=True)
+    subprocess.run([args.blender,'--background','--factory-startup','--python-exit-code','1','--python',str(Path(__file__).resolve())],check=True,
+                   env={**os.environ,"SKETCH_BUILDING_KINDS":','.join(args.kinds or [])})
     OUTPUT.mkdir(parents=True,exist_ok=True)
     for path in BUILD.glob('*-color.png'):
         image=Image.open(path).convert('RGBA')

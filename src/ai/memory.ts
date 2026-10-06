@@ -53,8 +53,10 @@ export type V6PolicyMemory = {
 // The naval script's plans (see @@@ai-naval), each with the tick it was looked for: the island's mine and the water a ship
 // lands at, the assault's target and its water, the raid's water.
 export type NavalPlanMemory = {
-  outfit?: {shipId:string; workerId:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'};
-  ferries?: Record<string, {purpose:"settle"|"assault"|"rebase"|"evacuate";targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number}>;
+  outfit?: {shipId:string; workerId:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};
+  outfitRetryUntil?: number;
+  ferries?: Record<string, {purpose:"settle"|"assault"|"rebase"|"evacuate";targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;progress?:{tick:number;x:number;y:number;phase:string;crew:string}}>;
+  ferryRetryUntil?: Record<string,number>;
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
   assault?: { tick: number; plan?: { targetId: string; landing: { x: number; y: number } } };
   raid?: { tick: number; water?: { x: number; y: number } };

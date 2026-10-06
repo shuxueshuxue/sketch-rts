@@ -35,6 +35,13 @@ def recipe(paths):
             'cutter': entry('Abilities/Weapons/Arrow/ArrowAttack1.wav', .65),
             'bombardShip': entry('Abilities/Weapons/Catapult/CatapultMissile1.wav', .8),
             'fireShip': entry('Units/Creeps/InfernalCannonFlame/InfernalJuggernautFire1.wav', .7)}),
+        'cannonShot': entry('Abilities/Weapons/CannonTowerMissile/CannonTowerMissileLaunch1.wav', .8),
+        'mortarShot': entry('Abilities/Weapons/CannonTowerMissile/CannonTowerMissileLaunch1.wav', .8),
+        'boltShot': entry('Abilities/Weapons/Arrow/ArrowAttack1.wav', .7),
+        'stoneShot': entry('Abilities/Weapons/Catapult/CatapultMissile1.wav', .7),
+        'flameShot': entry('Units/Creeps/InfernalCannonFlame/InfernalJuggernautFire1.wav', .7),
+        'spellShot': entry('Abilities/Weapons/SorceressMissile/SorceressMissileLaunch1.wav', .4),
+        'grapeshotShot': entry('Abilities/Weapons/CannonTowerMissile/CannonTowerMissileLaunch1.wav', .7),
         'shipHit': entry('Abilities/Weapons/CannonTowerMissile/CannonTowerMissile1.wav', .7),
         'shipSink': entry('Doodads/Northrend/Water/Battleship/BattleShipDeath1.wav', .8, max=2),
         'spell': entry('Abilities/Spells/Orc/FeralSpirit/FeralSpiritTarget1.wav', .65, kinds={

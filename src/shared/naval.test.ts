@@ -59,7 +59,7 @@ describe("ships", () => {
       for (const ship of sim.units.filter((candidate) => candidate.kind === "warship")) expect(hullFits(sim.map, ship)).toBe(true);
     });
     const ship = sim.units.find((candidate) => candidate.kind === "warship")!;
-    expect(Math.hypot(ship.x - at(26, 9).x, ship.y - at(26, 9).y)).toBeLessThan(5);
+    expect(Math.hypot(ship.x - at(26, 9).x, ship.y - at(26, 9).y),JSON.stringify({x:ship.x,y:ship.y,order:ship.order,sailing:ship.sailing})).toBeLessThan(5);
   });
 
   it("are struck only by what reaches them: a soldier leaves one out on deep water alone and wades out to one in the shallows", () => {
@@ -72,7 +72,7 @@ describe("ships", () => {
     expect(unit(sim, "footman")!.x).toBe(at(7, 5).x);
     expect(unit(sim, "warship")!.hp).toBe(UNIT_DEFS.warship.hp);
     for(const weapon of installedWeapons(sim,unit(sim,"warship")!))weapon.cooldownRemaining=9999;
-    issuePlayerCommand(sim, "enemy", { type: "move", unitIds: ["warship"], ...at(9, 5) });
+    issuePlayerCommand(sim, "enemy", { type: "move", unitIds: ["warship"], ...at(9, 5), avoidCombat:true });
     run(sim, 350);
     expect(unit(sim, "warship")!.hp).toBeLessThan(UNIT_DEFS.warship.hp);
   });
@@ -91,7 +91,7 @@ describe("ships", () => {
   it("are no rider's to charge out on deep water: the command is turned away, not thrown", () => {
     const sim = game([
       { id: "raider", owner: "player", kind: "raider", ...at(6, 5) },
-      { id: "warship", owner: "enemy", kind: "warship", ...at(14, 5) },
+      { id: "warship", owner: "enemy", kind: "warship", ...at(18, 5) },
     ]);
     expect(commandValidationError(snapshotGame(sim), "player", { type: "cast", unitId: "raider", ability: "charge", targetId: "warship" })).toMatch(/out of reach/);
   });

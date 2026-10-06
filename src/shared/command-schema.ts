@@ -7,7 +7,7 @@ import { isMeleeStance } from "./push";
 export function isGameCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
   const command = value as Record<string, unknown>;
-  if (command.type === "move") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
+  if (command.type === "move") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y) && (command.avoidCombat===undefined || typeof command.avoidCombat==='boolean');
   if (command.type === "attackMove") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "aim") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "attack" || command.type === "follow") return isStringArray(command.unitIds) && typeof command.targetId === "string";
@@ -35,7 +35,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "setAutocast") return isStringArray(command.unitIds) && isAbilityKind(command.ability) && typeof command.enabled === "boolean";
   if (command.type === "setStance") return isStringArray(command.unitIds) && isMeleeStance(command.stance);
   if (command.type === "board") return isStringArray(command.unitIds) && typeof command.transportId === "string";
-  if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
+  if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y) && (command.avoidCombat===undefined || typeof command.avoidCombat==='boolean');
   if (command.type === "unloadPassenger") return typeof command.transportId === "string" && typeof command.passengerId === "string";
   if(command.type==="wieldItem")return typeof command.unitId==="string" && (command.itemId===undefined || typeof command.itemId==="string") && (command.hand==="right" || command.hand==="left");
   if(command.type==="transferItem"){

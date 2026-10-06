@@ -1,4 +1,6 @@
+import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
+import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, rebuildShipFittings, repairShipParts, shipNeedsRepair, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
 import { ITEM_DEFS, canEquip, dropRefusal, equipmentProtection, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
@@ -368,7 +370,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "move") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      assignUnitOrder(unit, deckPointOrder(game, unit, { type: "move", x: command.x, y: command.y }), command.queued);
+      assignUnitOrder(unit, deckPointOrder(game, unit, { type: "move", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }), command.queued);
     }
     addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
     return;
@@ -543,7 +545,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "unload") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y }, command.queued);
+      if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }, command.queued);
     }
     addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24);
     return;
@@ -936,31 +938,45 @@ function updateMercenaryCamps(game: Game) {
 
 function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;heading:number}>){
   for(const ship of shipsIn(game.units)){
-    if(ship.hp<=0 || !shipProfile(ship) || !["attack","attackMove","hold","idle","aim"].includes(ship.order.type))continue;
+    if(ship.hp<=0 || isStaggered(ship) || isStunned(ship) || !shipProfile(ship) || "avoidCombat" in ship.order && ship.order.avoidCombat)continue;
     const order=ship.order;
     const requested=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
-    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle"].includes(order.type) ? nearestEnemyTarget(game,ship,ship.attackRange) : undefined);
+    const reaction=shipTravelThreat(game,ship);
+    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,ship.attackRange) : reaction);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
-    if(facingPoint && distance(ship,facingPoint)<=ship.attackRange && ["attack","attackMove","idle","aim"].includes(order.type)) {
+    if(facingPoint && strikeGap(ship,facingPoint)<=ship.attackRange && (["attack","attackMove","idle","hold","aim"].includes(order.type) || !!reaction)) {
       ship.sailing!.speed=0;
       turnShipToward(ship,bestFiringHeading(game,ship,facingPoint),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
     }
     for(const item of installedWeapons(game,ship)){
       if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && ship.cooldown>0)continue;
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
-      let target=requested && areEnemyOwners(game,ship.owner,requested.owner) ? requested : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,def.range,ship,candidate=>shipGunCanAim(ship,item,candidate));
+      let target=requested && areEnemyOwners(game,ship.owner,requested.owner) ? requested : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,def.range,ship,candidate=>shipGunCanAim(ship,item,candidate) && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0));
       if(target && !isObstacle(target))target=navalCombatTarget(game,ship,target);
-      const point=order.type==="aim" && !target ? order : target;
+      const aimTarget=order.type==="aim" && !target ? order : target;
+      const point=aimTarget && strikePoint(pose.pivot,aimTarget);
       if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>def.range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
-      const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:{shipId:ship.id,x:0,y:0},aim:item.aim};
+      const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:undefined,aim:item.aim};
       const rules={...unitRules(game,ship),attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon};
-      const ready=aimAt(proxy,rules,point,game.tick);if(proxy.aim)item.aim=proxy.aim;if(proxy.facing!==undefined)item.facing=proxy.facing;
+      const ready=aimAt(proxy,rules,point,game.tick);if(proxy.aim)item.aim=proxy.aim;else delete item.aim;if(proxy.facing!==undefined)item.facing=proxy.facing;
       if(!ready || !target)continue;
       const multiplier=1+ship.level*VETERANCY_GAIN_PER_STAR;
       fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*multiplier*outgoingDamageMultiplier(game,ship)),def.weapon,def.range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!});
       markAimShot(proxy);item.cooldownRemaining=def.cooldown;if(item.mountId==="bow")ship.cooldown=def.cooldown;
     }
   }
+}
+
+/** Tactical interception does not replace the strategic journey. Ordinary
+ * movement fires opportunistically; an armed threat attacking the convoy can
+ * briefly interrupt sailing. Explicit withdrawal suppresses this reaction. */
+function shipTravelThreat(game:Game,ship:Unit) {
+  if(!["move","unload","follow"].includes(ship.order.type) || "avoidCombat" in ship.order && ship.order.avoidCombat || ship.attackDamage<=0)return undefined;
+  return nearestEnemyTargetFromPoint(game,ship.owner,ship,ship.attackRange,ship,target=>{
+    if(target.attackDamage<=0 || !("order" in target))return false;
+    const victim=combatVictimId(target),entity=victim && findTarget(game,victim);
+    return !!entity && !areEnemyOwners(game,ship.owner,entity.owner) && distance(entity,ship)<500;
+  });
 }
 
 function refreshEquipmentMass(game:Game,units:readonly Unit[]=game.units){for(const unit of units){unit.gearMass=unitItemMass(game,unit);if(shipProfile(unit))unit.holdMass=shipItemMass(game,unit);}}
@@ -1022,7 +1038,7 @@ function updateUnits(game: Game): Ferry | undefined {
       continue;
     }
     if (unit.order.type === "move") {
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
+      if(!shipProfile(unit) || !shipTravelThreat(game,unit))moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
       if (walkEnded(game, unit, unit.order, 5)) arrive(unit, unit.order);
       continue;
     }
@@ -1039,7 +1055,7 @@ function updateUnits(game: Game): Ferry | undefined {
       continue;
     }
     if (unit.order.type === "follow") {
-      updateFollowOrder(game, unit);
+      if(!shipProfile(unit) || !shipTravelThreat(game,unit))updateFollowOrder(game, unit);
       continue;
     }
     if (unit.order.type === "cast") {
@@ -1076,7 +1092,7 @@ function updateUnits(game: Game): Ferry | undefined {
       continue;
     }
     if (unit.order.type === "unload") {
-      moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
+      if(!shipProfile(unit) || !shipTravelThreat(game,unit))moveToward(unit, unit.order.x, unit.order.y, game.map, game.units);
       (ferry ??= { boarding: [], unloading: [] }).unloading.push(unit);
       continue;
     }
@@ -1091,6 +1107,9 @@ function updateUnits(game: Game): Ferry | undefined {
 }
 
 function deckPointOrder(game: Game, unit: Unit, order: Extract<UnitOrder, { type: "move" | "attackMove" }>): UnitOrder {
+  // A water destination under another hull is still water for a ship. Only
+  // walking bodies can enter a deck or follow its moving local coordinates.
+  if (unitMover(unit.kind) !== "land") return order;
   const ship=game.units.find(ship=>shipProfile(ship) && circleInPolygon(worldToLocal(ship,order),0,shipProfile(ship)!.hull))
 ;
   return ship ? {...order,deckPoint:worldToLocal(ship,order),deckShipId:ship.id} : order;
@@ -1181,7 +1200,7 @@ function updateHoldOrder(game: Game, unit: Unit) {
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
-  if (!aimAt(unit, weaponRules(game, unit), target, game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
@@ -1239,7 +1258,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
   }
   if(shipProfile(unit) && installedWeapons(game,unit).length)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), target, game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
@@ -1285,7 +1304,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
   }
   if(shipProfile(unit) && installedWeapons(game,unit).length)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), target, game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(unit);
@@ -2393,7 +2412,7 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage), projectile.hullDamageShare);
   if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target);
-  addHitEffect(game, target, taken, shooter);
+  addHitEffect(game, target, taken, shooter, projectile.attackKind);
   });
 }
 
@@ -2466,29 +2485,32 @@ function combatVisualHeight(game: Game, entity: {id?:string}) {
 
 function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:string},damage:number,weapon:WeaponDef,range:number,skill:{rootTicks?:number;burnTicks?:number}={},targetId=at.id, mounted?:{item:WorldItem;pose:NonNullable<ReturnType<typeof mountedWeaponPose>>}){
   const origin = mounted?.pose.muzzle ?? weaponOrigin(attacker);
+  const target = targetId ? findStrikeTarget(game,targetId) : undefined;
+  const point = target ? strikePoint(origin,target) : at;
   const fromHeight=mounted?.pose.height || (isUnit(attacker) && shipWeaponPose(attacker)?.height) || combatVisualHeight(game,attacker);
-  const visuals={fromX:origin.x,fromY:origin.y,fromHeight,toX:at.x,toY:at.y,toHeight:combatVisualHeight(game,at),owner:attacker.owner,sourceKind:attacker.kind,unitId:attacker.id,...(mounted?{itemId:mounted.item.id}:{})};
-  if(mounted || isUnit(attacker) && shipProfile(attacker)?.weaponPivot)addEffect(game,"muzzleFlash",origin.x,origin.y,seconds(.65),visuals);
+  const attackKind=weapon.presentation ?? (weapon.delivery==="cone" ? "grapeshot" : weapon.delivery==="shell" ? "stone" : "bolt");
+  const visuals={attackKind,fromX:origin.x,fromY:origin.y,fromHeight,toX:point.x,toY:point.y,toHeight:combatVisualHeight(game,at),owner:attacker.owner,sourceKind:attacker.kind,unitId:attacker.id,...(mounted?{itemId:mounted.item.id}:{})};
+  if((attackKind==="cannon" || attackKind==="mortar" || attackKind==="grapeshot") && (mounted || isUnit(attacker)))addEffect(game,"muzzleFlash",origin.x,origin.y,seconds(.65),visuals);
   if(weapon.delivery==="ram"){
     const target=targetId?findStrikeTarget(game,targetId):undefined;
     if(target&&areEnemyOwners(game,attacker.owner,target.owner))hitWeapon(game,attacker,target,damage,weapon);
-    addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:origin.x,fromY:origin.y,toX:at.x,toY:at.y,owner:attacker.owner,sourceKind:attacker.kind});return;
+    addEffect(game,"siegeImpact",at.x,at.y,18,{fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,owner:attacker.owner,sourceKind:attacker.kind});return;
   }
   if(weapon.delivery==="cone"){
-    const hits=[...game.units,...game.buildings].filter(target=>target.hp>0&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(origin,at,target,range,weapon.coneAngle??.6));
+    const hits=[...game.units,...game.buildings].filter(target=>target.hp>0&&areEnemyOwners(game,attacker.owner,target.owner)&&inWeaponCone(origin,point,target,range,weapon.coneAngle??.6));
     withDeckDamageBatch(game,()=>{for(const target of crewBeforeHulls(hits))hitWeapon(game,attacker,target,damage*(weapon.burst??1),weapon);});
-    addEffect(game,"grapeshot",at.x,at.y,seconds(.7),{...visuals,radius:range});return;
+    addEffect(game,"grapeshot",point.x,point.y,seconds(.7),{...visuals,radius:range});return;
   }
-  const flight=Math.max(seconds(0.2),Math.ceil(distance(origin,at)/perTick(weapon.delivery==="shell"?240:560)));
-  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:at.x,toY:at.y,damage,remaining:flight,duration:flight,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
+  const flight=Math.max(seconds(0.2),Math.ceil(distance(origin,point)/perTick(weapon.delivery==="shell"?240:560)));
+  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,remaining:flight,duration:flight,attackKind,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
   game.projectiles.push(projectile);
-  addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",at.x,at.y,flight,{...visuals,radius:weapon.radius??0});
+  addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",point.x,point.y,flight,{...visuals,radius:weapon.radius??0});
 }
-function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number){
+function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number,impact=strikePoint(attacker,target)){
   const dealt=weaponDamage(weapon,damage,!isUnit(target),isUnit(target)&&unitMover(target.kind)==="sea",share);
   const armored=weapon.delivery==="ram"?dealt:heavyArmoredDamage(game,attacker,target,dealt);
-  const taken=applyDamage(game,attacker,target,armored,deckHullDamageShare(game,attacker,weapon),target,weapon.blastRadius ?? weapon.radius ?? 0);if(taken===undefined)return;
-  addHitEffect(game,target,taken,attacker);
+  const taken=applyDamage(game,attacker,target,armored,deckHullDamageShare(game,attacker,weapon),impact,weapon.blastRadius ?? weapon.radius ?? 0);if(taken===undefined)return;
+  addHitEffect(game,target,taken,attacker,weapon.presentation);
   if(rootTicks&&isUnit(target)&&target.hp>0)setStatus(target,{type:"root",remaining:rootTicks});
 }
 function impactWeapon(game:Game,projectile:Projectile){
@@ -2499,24 +2521,25 @@ function impactWeapon(game:Game,projectile:Projectile){
   const fallback=projectileAttacker(projectile);
   const attacker=source??(projectile.sourceKind?{...fallback,kind:projectile.sourceKind,order:{type:"idle"},effects:[],xp:0,level:0,kills:0,abilityCooldown:0,speed:0} as unknown as Unit:fallback);
   const from={x:projectile.fromX,y:projectile.fromY},to={x:projectile.toX,y:projectile.toY};
+  const flightLength=distance(from,to),impactAt=(along:number)=>{const share=flightLength?Math.max(0,Math.min(1,along/flightLength)):0;return{x:from.x+(to.x-from.x)*share,y:from.y+(to.y-from.y)*share};};
   const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&areEnemyOwners(game,projectile.owner,t.owner));
   if(weapon.delivery==="bolt"){
     const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
     const eligible=new Set(crewBeforeHulls(intersections.map(hit=>hit.target)));
     const hits=intersections.filter(hit=>eligible.has(hit.target)).slice(0,weapon.maxHits??1);
     if(weapon.blastRadius && hits[0]){
-      const impact=hits[0].target;
-      for(const target of crewBeforeHulls(foes.filter(target=>Math.max(0,distance(impact,target)-target.radius)<=weapon.blastRadius!))) {
-        const share=Math.max(.4,1-Math.max(0,distance(impact,target)-target.radius)/weapon.blastRadius*.6);
-        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks);
+      const impact=impactAt(hits[0].along!);
+      for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(impact,target)<=weapon.blastRadius!))) {
+        const share=Math.max(.4,1-bodyGap(impact,target)/weapon.blastRadius*.6);
+        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks,impact);
       }
       addEffect(game,"siegeImpact",impact.x,impact.y,seconds(.65),{radius:weapon.blastRadius,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
       return;
     }
-    hits.forEach(({target},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks));
+    hits.forEach(({target,along},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks,impactAt(along!)));
   }else{
-    for(const target of crewBeforeHulls(foes.filter(target=>Math.max(0,distance(to,target)-target.radius)<=(weapon.radius??0)))){const gap=Math.max(0,distance(to,target)-target.radius);
-      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks);
+    for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(to,target)<=(weapon.radius??0)))){const gap=bodyGap(to,target);
+      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks,to);
     }
     addEffect(game,"siegeImpact",to.x,to.y,24,{radius:weapon.radius??0,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
     if(projectile.burnTicks)addEffect(game,"burningGround",to.x,to.y,projectile.burnTicks,{owner:projectile.owner,unitId:projectile.attackerId,damage:3,radius:weapon.radius??0,tickEvery:10,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
@@ -2553,6 +2576,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   const dy = target.y - attacker.y;
   const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / perTick(PROJECTILE_SPEED)));
   const projectile = {
+    attackKind: innateMissile(attacker.kind),
     id: `projectile-${game.nextId}`,
     owner: attacker.owner,
     attackerId: attacker.id,
@@ -2575,6 +2599,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
     toX: projectile.toX,
     toY: projectile.toY,
     sourceKind: attacker.kind,
+    attackKind: projectile.attackKind,
     fromHeight: combatVisualHeight(game,attacker),
     toHeight: combatVisualHeight(game,target),
   });
@@ -2596,8 +2621,9 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
 // The flinch of whatever was struck, carrying who it was and what it took, so the client shakes it by the share of its
 // full health the blow took, and the kind of who struck it (a weapon's blow; a spell's or a gone shooter's has none) so
 // the client can sound the blow.
-function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building) {
-  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(striker ? { sourceKind: striker.kind } : {}) });
+function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building, attackKind?: AttackKind) {
+  attackKind ??= striker ? isUnit(striker) && weaponRules(game,striker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD ? "melee" : innateMissile(striker.kind) : undefined;
+  addEffect(game, "hit", target.x, target.y, 14, { unitId: target.id, damage: taken, ...(attackKind ? {attackKind} : {}), ...(striker ? { sourceKind: striker.kind } : {}) });
 }
 
 function buildingTargetDamage(attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
@@ -2668,7 +2694,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   const taken = isUnit(target) && target.stance === "shock" ? Math.max(1, Math.round(damage * SHOCK_DAMAGE_TAKEN)) : damage;
   const hpBefore = target.hp;
   target.hp -= taken;
-  if(isUnit(target) && shipProfile(target)){damageShipParts(game,target,impact ?? target,taken,blastRadius);if(target.hp>0)applyDerivedUnitStats(game,target);}
+  if(isUnit(target) && shipProfile(target)){damageShipParts(game,target,impact ?? strikePoint(attacker,target),taken,blastRadius);if(target.hp>0)applyDerivedUnitStats(game,target);}
   if (hpBefore > 0 && isUnit(target)) {
     if (shipProfile(target) && game.deckDamageBatch) {
       const entry = game.deckDamageBatch.get(target.id) ?? { ship: target, direct: 0, collateral: 0 };
@@ -2835,7 +2861,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount" | "attackKind">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;
@@ -3033,8 +3059,7 @@ function workGap(unit: Unit, building: Building) {
 // @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a
 // town hall's wall, 48 from a center 66 away. While units could walk into a building they struck it from inside.
 function targetGap(from: { x: number; y: number }, target: Unit | Building | Obstacle) {
-  if(isUnit(target) && shipProfile(target))return distanceToHull(target,from);
-  return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
+  return strikeGap(from,target);
 }
 
 function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean): Unit | Building | undefined {
@@ -3308,7 +3333,7 @@ function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, withi
   if(unit.deck){const ship=game.units.find(ship=>ship.id===unit.deck!.shipId);if(!ship)return true;const order=unit.order;if((order.type==="move"||order.type==="attackMove")&&order.deckShipId && order.deckShipId!==ship.id && game.units.some(target=>target.id===order.deckShipId && target.hp>0))return false;const local=deckPlacement(ship,unit,game.units,worldToLocal(ship,deckGoal(unit,ship,goal,game.units)),false);return !local || distance(unit,localToWorld(ship,local))<within || restsAgainstArrivedFriend(game,unit,goal,localToWorld(ship,local));}
   if(shipProfile(unit)) {
     const route=unit.sailing?.route;
-    if(map.terrain && route && route.goalX===goal.x && route.goalY===goal.y)return route.points.length===0 && distance(unit,route.end)<within;
+    if(map.terrain && route && route.goalX===goal.x && route.goalY===goal.y)return !route.partial && route.points.length===0 && distance(unit,route.end)<within;
     const end=nearestShipPose(map,unit,goal);
     return !end || distance(unit,end)<within;
   }

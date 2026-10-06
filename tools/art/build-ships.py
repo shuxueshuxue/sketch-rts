@@ -33,10 +33,13 @@ def build_in_blender():
     config = json.loads(SOURCE.read_text())
     settings = config["camera"]
     preview = os.environ.get("SKETCH_SHIP_PREVIEW") == "1"
+    selected = os.environ.get("SKETCH_SHIP_KINDS", "").split(",")
     build = ROOT / ".art-build/ship-redesign-preview" if preview else BUILD
     build.mkdir(parents=True, exist_ok=True)
     metadata = {"sourceSha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
                 "camera": settings, "ships": {}}
+    if selected != [""]:
+        metadata["ships"] = json.loads((ROOT / "src/shared/generated/ship-geometry.json").read_text())["ships"]
 
     def material(name, color, roughness=.85, metallic=0):
         m = bpy.data.materials.new(name)
@@ -48,6 +51,8 @@ def build_in_blender():
         return m
 
     for kind, spec in config["ships"].items():
+        if selected != [""] and kind not in selected:
+            continue
         if preview and kind not in ("transport", "warship"):
             continue
         bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -196,18 +201,20 @@ def build_in_blender():
                         box("stern gallery window", (x-r*.86, dy, z+height*.62), (.8, r*.20, height*.28), dark, upper)
                 spar("stern ensign staff", (x-8, 0, z+height), (x-12, 0, z+height+20), .85, edge, upper)
             elif obstacle["type"] == "gun":
-                cylinder("gun carriage", (x, y, z+2), r, 4, edge, upper)
+                cylinder("gun carriage", (x, y, z+2), r, 4, edge, weapon)
                 cylinder("cannon", (x+8, y, z+7), 4.2, 35, iron, weapon, (0, math.pi/2, 0))
                 cylinder("muzzle", (x+26, y, z+7), 4.4, 1.6, brass, weapon, (0, math.pi/2, 0))
             elif obstacle["type"] == "mortar":
-                cylinder("mortar bed", (x, y, z+2), r, 4, iron, upper)
+                cylinder("mortar bed", (x, y, z+2), r, 4, iron, weapon)
                 cylinder("bombard barrel", (x+3, y, z+12), 9, 24, iron, weapon, (0, .45, 0))
                 cylinder("bombard lip", (x+8, y, z+24), 9.5, 2.5, brass, weapon, (0, .45, 0))
             else:
-                box("fuel housing", (x, y, z+7), (r*1.6, r*1.3, 14), iron, upper)
+                box("fuel housing", (x, y, z+7), (r*1.6, r*1.3, 14), iron, weapon)
                 for yy in (-r*.36, r*.36):
-                    cylinder("fuel tank", (x, yy, z+9), 6, 28, brass, upper, (0, math.pi/2, 0))
-                cylinder("flame nozzle", (x+26, 0, z+6), 3, 32, iron, weapon, (0, math.pi/2, 0))
+                    cylinder("fuel tank", (x, yy, z+9), 6, 28, brass, weapon, (0, math.pi/2, 0))
+                    spar("fuel feed", (x+14,yy,z+9), (x+22,0,z+6), 1.6, brass, weapon)
+                cylinder("flame nozzle", (x+26, 0, z+6), 4, 32, iron, weapon, (0, math.pi/2, 0))
+                cylinder("projector mouth", (x+42,0,z+6), 5, 3, brass, weapon, (0, math.pi/2, 0))
         box("stern rudder", (-length/2-2, 0, z*.30), (5, 2, z*.6), dark, base)
         fittings = base + upper
         rig = bpy.data.objects.new("ship origin", None)
@@ -310,12 +317,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--blender", default=os.environ.get("BLENDER_BIN", "blender"))
     parser.add_argument("--pack-only", action="store_true")
+    parser.add_argument("--kinds", nargs="+", help="Render only these ship kinds")
     parser.add_argument("--preview", action="store_true", help="Render transport and warship in four directions without changing deployed atlases")
     args = parser.parse_args()
     if not args.pack_only:
         subprocess.run([args.blender, "--background", "--factory-startup", "--python-exit-code", "1",
                         "--python", str(Path(__file__).resolve())], check=True,
-                       env={**os.environ, "SKETCH_SHIP_PREVIEW": "1" if args.preview else "0"})
+                       env={**os.environ, "SKETCH_SHIP_PREVIEW": "1" if args.preview else "0", "SKETCH_SHIP_KINDS": ",".join(args.kinds or [])})
     if args.preview:
         return
     config = json.loads(SOURCE.read_text())
@@ -325,6 +333,8 @@ def main():
     cos = math.cos(config["camera"]["tilt"])
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for kind in config["ships"]:
+        if args.kinds and kind not in args.kinds:
+            continue
         layers = ("base", "upper", "depth", "weapon", "weapon-depth") if config["ships"][kind]["weaponPivot"] else ("base", "upper", "depth")
         for layer in layers:
             atlas = Image.new("RGBA", (frame*8, frame*4))

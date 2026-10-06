@@ -1,5 +1,6 @@
 import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
-import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts } from "../../shared/ship-equipment";
+import { nearestShipPose } from "../../shared/ship-navigation";
+import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts, shipNeedsRepair } from "../../shared/ship-equipment";
 import { canEquip, canExchange, freeItemSlot, itemsFor, transferRefusal } from "../../shared/equipment";
 import { deckPlacement } from "../../shared/decks";
 import type { NavalPlanMemory } from "../memory";
@@ -7,7 +8,7 @@ import { bodyMass } from "../../shared/physical-body";
 import { boardUnit } from "../../shared/decks";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
-import { canReach, carries } from "../../shared/naval";
+import { canReach, carries, boardingBerth } from "../../shared/naval";
 import { purchasePlacement } from "../../shared/purchase";
 import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
@@ -333,7 +334,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
         if (ship.hp < ship.maxHp * HURT && home && distance(ship, home) > 250) {
             if (needsMove(ship, home))
-                commands.push({ type: "move", unitIds: [ship.id], ...home });
+                commands.push({ type: "move", unitIds: [ship.id], ...home, avoidCombat:true });
             continue;
         }
         // Ordinary guns avoid tower coverage; bombard vessels counter the coast from outside it.
@@ -346,11 +347,24 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
             : plan ? offshore(snapshot, plan.landing, plan.mine) : assault ? offshore(snapshot, assault.landing, assault.target) : home;
         const attackers = boat ? danger.filter(target => "order" in target && (distance(target, boat) < target.attackRange + 160 || target.order.type === "attack" && target.order.targetId === boat.id)) : [];
         const target = nearestOf(attackers, boat ?? ship) ?? nearestOf(danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!boat || distance(target,boat)<700 || station && distance(target,station)<700)), ship) ?? (!boat || station && distance(ship,station)<250 ? targets.filter(target=>!boat || station && distance(target,station)<450)[0] : undefined);
-        if (target && (ship.order.type !== "attack" || ship.order.targetId !== target.id))
-            commands.push({ type: "attack", unitIds: [ship.id], targetId: target.id });
+        // The planner chooses the engagement area; mechanical attack-move
+        // chooses and revises threats between planning frames. A player's
+        // explicit attack command continues to retain its chosen target.
+        if (target && (ship.order.type !== "attackMove" || distance(ship.order,target)>80))
+            commands.push({ type: "attackMove", unitIds: [ship.id], x:target.x, y:target.y });
         else if (!target) {
-            if (station && distance(ship, station) > 200 && needsMove(ship, station))
-                commands.push({ type: "move", unitIds: [ship.id], ...station });
+            // A convoy follows a formation beside the ferry, never its center.
+            // Continuing an old move to the ferry's center jammed the decks
+            // together even after the escort was already within 200 units.
+            const companions = boat ? [...escorts].filter(([, escorted]) => escorted.id === boat.id).map(([id]) => id) : [];
+            const index = companions.indexOf(ship.id);
+            const spacing = boat ? (shipProfile(boat)!.length + shipProfile(ship)!.length) / 2 + 60 : 0;
+            const angle = (boat?.sailing?.heading ?? 0) + (index % 2 ? -1 : 1) * Math.PI / 2;
+            const destination = boat && station === boat
+                ? nearestShipPose(snapshot.map, ship, { x: boat.x + Math.cos(angle) * spacing, y: boat.y + Math.sin(angle) * spacing })
+                : station;
+            if (destination && distance(ship, destination) > (boat ? 70 : 200) && needsMove(ship, destination))
+                commands.push({ type: "move", unitIds: [ship.id], x: destination.x, y: destination.y });
         }
     }
     // Landed troops clear the landing, attack enemies on their component, and protect engineers establishing a base.
@@ -360,7 +374,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const interventions = engagementTargets(snapshot, owner, options);
     for (const troop of expedition) {
         const target = interventions.get(troop.id);
-        if (target && (troop.order.type !== "attack" || troop.order.targetId !== target.id)) commands.push({ type:"attack",unitIds:[troop.id],targetId:target.id });
+        if (target && (troop.order.type !== "attackMove" || distance(troop.order,target)>80)) commands.push({ type:"attackMove",unitIds:[troop.id],x:target.x,y:target.y });
     }
     for (const anchor of expedition) {
         if (handled.has(anchor.id)) continue;
@@ -385,7 +399,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault));
     for (const worker of own.filter(unit => unit.deck && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
-        if (hull && hull.hp < hull.maxHp * .8 && playerState(snapshot, owner).gold > 50)
+        if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
             commands.push({ type: "repairShip", unitIds: [worker.id], targetId: hull.id });
     }
     return commands;
@@ -416,6 +430,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const halls = buildings(snapshot, owner).filter(building => building.kind === "townHall" && building.complete);
     if (!halls.length)
         return [];
+    if ((memory.ferryRetryUntil?.[boat.id] ?? 0) > snapshot.tick) return [];
     if (!mission) {
         const evacuation = evacuationRoute(snapshot, owner, options, boat, halls);
         const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < 320));
@@ -439,10 +454,19 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             return [];
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
     }
+    const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
+    if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32)
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,phase:mission.phase,crew:aboardIds};
+    else if(snapshot.tick-progress.tick>seconds(40)){
+        (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
+        if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,phase:'return',crew:aboardIds};
+        return cancelFerry(snapshot,boat,mission);
+    }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
     if (mission.phase === "return") {
-        if (shipPassengers(snapshot.units,boat).length) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from }];
-        if (distance(boat, mission.from) > 100) return needsMove(boat, mission.from) ? [{ type: "move", unitIds: [boat.id], ...mission.from }] : [];
+        if (shipPassengers(snapshot.units,boat).length) return boat.order.type === "unload" && distance(boat.order, mission.from) < 80 ? [] : [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
+        if (distance(boat, mission.from) > 100) return needsMove(boat, mission.from) ? [{ type: "move", unitIds: [boat.id], ...mission.from, avoidCombat:true }] : [];
         delete ferries[boat.id];
         return [];
     }
@@ -480,11 +504,11 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     if (distance(boat, mission.from) > 100 && !shipPassengers(snapshot.units,boat).length && !waiting.length) {
         if (needsMove(boat, mission.from))
-            commands.push({ type: "move", unitIds: [boat.id], ...mission.from });
+            commands.push({ type: "move", unitIds: [boat.id], ...mission.from, avoidCombat:true });
         return commands;
     }
     if (mission.purpose === "settle" && shipPassengers(snapshot.units,boat).length && !shipPassengers(snapshot.units,boat).some(unit => unit.kind === "worker") && shipPassengers(snapshot.units,boat).reduce((n, unit) => n + bodyMass(unit), 0) >= ferryCapacity(boat) - 1) {
-        return [{ type: "unload", unitIds: [boat.id], ...mission.from }];
+        return [{ type: "unload", unitIds: [boat.id], ...mission.from, avoidCombat:true }];
     }
     const boarding = own.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     const cargo = shipPassengers(snapshot.units,boat);
@@ -559,7 +583,7 @@ function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<No
     mission.crewIds = [];
     return [
         ...(boarding.length ? [{ type: "stop" as const, unitIds: boarding.map(unit => unit.id) }] : []),
-        ...(shipPassengers(snapshot.units,boat).length ? [{ type: "unload" as const, unitIds: [boat.id], ...mission.from }] : []),
+        ...(shipPassengers(snapshot.units,boat).length ? [{ type: "unload" as const, unitIds: [boat.id], ...mission.from, avoidCombat:true }] : []),
     ];
 }
 
@@ -730,8 +754,17 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         const ship = own.find(unit => unit.id === job!.shipId), worker = own.find(unit => unit.id === job!.workerId);
         const filled = ship && snapshot.items.some(item => item.shipId === ship.id && item.mountId === job!.mountId);
         if (!ship || !worker || dangerous(ship) || filled) { delete memory.outfit; job = undefined; }
+        else {
+            const progress=job.progress;
+            if(!progress || distance(ship,progress)>16 || Math.hypot(worker.x-progress.workerX,worker.y-progress.workerY)>16 || progress.itemId!==job.itemId)
+                job.progress={tick:snapshot.tick,x:ship.x,y:ship.y,workerX:worker.x,workerY:worker.y,...(job.itemId?{itemId:job.itemId}:{})};
+            else if(snapshot.tick-progress.tick>seconds(30)){
+                delete memory.outfit;memory.outfitRetryUntil=snapshot.tick+seconds(20);return;
+            }
+        }
     }
     if (!job) {
+        if((memory.outfitRetryUntil ?? 0)>snapshot.tick)return;
         // Outfitting is a surplus dock errand. Never interrupt an opening army
         // or an active landing to buy another gun.
         if (own.filter(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land').length < 6) return;
@@ -759,8 +792,8 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
 function outfitCommands(snapshot: GameSnapshot, owner: PlayerId, job: Outfit): GameCommand[] {
     const worker = snapshot.units.find(unit=>unit.id===job.workerId)!, ship = snapshot.units.find(unit=>unit.id===job.shipId)!;
     const dock = buildings(snapshot,owner).find(building=>building.kind==='shipyard' && building.complete)!;
-    const commands: GameCommand[] = [], berth = walkableGoal(snapshot.map,dock.x,dock.y,'sea');
-    if (distance(ship,berth)>40) { if (needsMove(ship,berth)) commands.push({type:'move',unitIds:[ship.id],...berth}); }
+    const commands: GameCommand[] = [], berth = boardingBerth(snapshot.map,worker,ship);
+    if (berth && distance(ship,berth)>8) { if (needsMove(ship,berth)) commands.push({type:'move',unitIds:[ship.id],...berth}); }
     else if (ship.order.type!=='idle') commands.push({type:'stop',unitIds:[ship.id]});
     const item = snapshot.items.find(item=>item.id===job.itemId);
     if (!item) return commands;
@@ -777,16 +810,8 @@ function outfitCommands(snapshot: GameSnapshot, owner: PlayerId, job: Outfit): G
         }
         if (!blocked.length && !transferRefusal(snapshot,owner,item.id,destination)) commands.push({type:'transferItem',itemId:item.id,destination});
     } else {
-        const profile=shipProfile(ship)!, reach=profile.length/2+100, cell=snapshot.map.terrain?.cell ?? 32;
-        const spots:Point[]=[];
-        for (let dx=-reach;dx<=reach;dx+=cell/2) for (let dy=-reach;dy<=reach;dy+=cell/2) {
-            const point={x:ship.x+dx,y:ship.y+dy};
-            if (![point,{x:point.x-worker.radius,y:point.y},{x:point.x+worker.radius,y:point.y},{x:point.x,y:point.y-worker.radius},{x:point.x,y:point.y+worker.radius}].every(p=>isWalkable(snapshot.map,p.x,p.y,'land'))) continue;
-            if (snapshot.buildings.some(building=>Math.hypot(Math.max(0,Math.abs(point.x-building.x)-footprintHalf(building.radius,cell)),Math.max(0,Math.abs(point.y-building.y)-footprintHalf(building.radius,cell)))<worker.radius+2)) continue;
-            if (canExchange(snapshot,{...worker,...point},ship)) spots.push(point);
-        }
-        const point=spots.sort((a,b)=>distance(worker,a)-distance(worker,b))[0];
-        if (point && needsMove(worker,point)) commands.push({type:'move',unitIds:[worker.id],...point});
+        if(worker.order.type!=='board' || worker.order.transportId!==ship.id)commands.push({type:'board',unitIds:[worker.id],transportId:ship.id});
+        return commands;
     }
     return commands;
 }
