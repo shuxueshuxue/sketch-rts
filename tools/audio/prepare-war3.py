@@ -2,7 +2,7 @@
 """Build a private, curated War3 pack from the owner's extracted archive.
 
 No recordings are committed. Core events remain readable by older clients;
-extras.json supplies naval sounds, spells and voices to the new runtime.
+extras.json supplies naval sounds, spells and menu feedback to the runtime.
 """
 import argparse
 import csv
@@ -12,51 +12,25 @@ from pathlib import Path
 import re
 import subprocess
 
-VOICES = {
-    'worker': 'Units/Human/Peasant/Peasant',
-    'footman': 'Units/Human/Footman/Footman',
-    'lancer': 'Units/Human/Footman/Footman',
-    'archer': 'Units/NightElf/Archer/Archer',
-    'horseArcher': 'Units/NightElf/Archer/Archer',
-    'sparkArcher': 'Units/NightElf/Archer/Archer',
-    'knight': 'Units/Human/Knight/Knight',
-    'raider': 'Units/Orc/Wolfrider/Wolfrider',
-    'priest': 'Units/Human/Priest/Priest',
-    'summoner': 'Units/Orc/Shaman/Shaman',
-    'pyreCaller': 'Units/Orc/Shaman/Shaman',
-    'witch': 'Units/Human/Sorceress/Sorceress',
-    'ashHexer': 'Units/Human/Sorceress/Sorceress',
-    'siegeRam': 'Units/Human/SteamTank/SteamTank',
-    'ballista': 'Units/NightElf/Ballista/Ballista',
-    'catapult': 'Units/Orc/Catapult/Catapult',
-    'organGun': 'Units/Human/MortarTeam/MortarTeam',
-    **{k: 'Units/Creeps/HumanTransportShip/Boat' for k in
-       ('cutter', 'transport', 'warship', 'bombardShip', 'fireShip', 'carrier')},
-}
 
 def recipe(paths):
     def entry(path, volume=.7, **extra):
         if path not in paths:
             raise ValueError('Missing archive sound: ' + path)
-        stem = re.sub(r'\d+(?=\.wav$)', '', path)
-        siblings = [p for p in sorted(paths) if p != path and re.sub(r'\d+(?=\.wav$)', '', p) == stem]
-        return {'sources': [path] + siblings[:2], 'volume': volume, 'pitch': .025, **extra}
+        return {'sources': [path], 'volume': volume, 'pitch': .025, **extra}
     core = {
         'impact': entry('Sound/Units/Combat/MetalMediumBashFlesh1.wav', .55),
         'melee': entry('Sound/Units/Combat/MetalMediumSliceFlesh1.wav', .6),
         'arrowShot': entry('Abilities/Weapons/Arrow/ArrowAttack1.wav', .65),
         'arrowHit': entry('Abilities/Weapons/Arrow/ArrowImpact.wav', .6),
-        'death': entry('Units/Human/Footman/FootmanDeath.wav', .6),
+        'death': entry('Sound/Units/Combat/MetalMediumBashFlesh1.wav', .35),
         'construction': entry('Sound/Buildings/Shared/BuildingPlacement.wav', .45),
         'built': entry('Sound/Interface/GoodJob.wav', .4, max=1),
         'buildingDown': entry('Sound/Buildings/Death/BuildingDeath.wav', .65),
-        'click': entry('Sound/Interface/MouseClick1.wav', .4),
+        'click': entry('Sound/Interface/MouseClick1.wav', .4, pitch=0),
     }
     extras = {
-        'select': {'volume': .55, 'pitch': 0, 'max': 1, 'kinds':
-                   {k: entry(prefix + 'What1.wav', .55, pitch=0) for k, prefix in VOICES.items()}},
-        'order': {'volume': .55, 'pitch': 0, 'max': 1, 'kinds':
-                  {k: entry(prefix + 'Yes1.wav', .55, pitch=0) for k, prefix in VOICES.items()}},
+        'menu': entry('Sound/Interface/MouseClick2.wav', .4, pitch=0),
         'shipShot': entry('Abilities/Weapons/CannonTowerMissile/CannonTowerMissileLaunch1.wav', .8, kinds={
             'cutter': entry('Abilities/Weapons/Arrow/ArrowAttack1.wav', .65),
             'bombardShip': entry('Abilities/Weapons/Catapult/CatapultMissile1.wav', .8),
@@ -69,11 +43,6 @@ def recipe(paths):
         'board': entry('Abilities/Spells/Other/LoadUnload/Loading.wav', .5, max=2),
         'unload': entry('Abilities/Spells/Other/LoadUnload/Loading.wav', .5, max=2),
     }
-    for kind, prefix in VOICES.items():
-        folder = prefix.rsplit('/', 1)[0] + '/'
-        deaths = sorted(p for p in paths if p.startswith(folder) and 'Death' in p and 'Explode' not in p)
-        if deaths:
-            core['death'].setdefault('kinds', {})[kind] = entry(deaths[0], .6)
     return {'core': core, 'extras': extras}
 
 def sources(entries):
