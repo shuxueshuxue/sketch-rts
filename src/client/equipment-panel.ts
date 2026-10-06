@@ -63,6 +63,7 @@ export class EquipmentPanel {
     private dropTargets = new WeakMap<HTMLElement, { destination: ItemDestination | undefined; hand: 'right' | 'left' | undefined }>();
     private suppressClickUntil = 0;
     private selectedItem: string | undefined;
+    private notice: { text: string; invalid: boolean; until: number } | undefined;
     private holdPage = 0;
     private activePane: 'character' | 'hold' | 'ship' = 'hold';
     private open = false;
@@ -98,6 +99,7 @@ export class EquipmentPanel {
         this.open = true;
         this.activePane = ship ? 'hold' : 'character';
         this.selectedItem = undefined;
+        this.notice = undefined;
         this.holdPage = 0;
         this.root.hidden = false;
         this.fingerprint = '';
@@ -106,15 +108,24 @@ export class EquipmentPanel {
     }
     private text(zh: string, en: string) { return this.i18n().locale === 'zh' ? zh : en; }
     private name(item: WorldItem) { return item.kind === 'issuedWeapon' && item.weaponKind ? `${labelKind(item.weaponKind, this.i18n())} · ${this.text('制式武器', 'Service weapon')}` : labelKind(item.kind, this.i18n()); }
-    private feedback(message: string) { const node = this.root.querySelector<HTMLElement>('[data-equipment-feedback]'); if (node) {
+    private feedback(message: string) {
         const translated = FEEDBACK[message];
-        node.textContent = translated ? this.text(...translated) : message;
-        node.classList.add('invalid');
-    } }
-    private command(command: GameCommand) { this.send(command); const node = this.root.querySelector<HTMLElement>('[data-equipment-feedback]'); if (node) {
-        node.textContent = command.type==='move' ? this.text('已更新船员布阵', 'Crew position ordered') : this.text('已发出物品操作', 'Item action sent');
-        node.classList.remove('invalid');
-    } }
+        this.notice = { text: translated ? this.text(...translated) : message, invalid: true, until: performance.now() + 4000 };
+        this.updateFeedback();
+    }
+    private command(command: GameCommand) {
+        this.send(command);
+        this.notice = { text: command.type==='move' ? this.text('已更新船员布阵', 'Crew position ordered') : this.text('已发出物品操作', 'Item action sent'), invalid: false, until: performance.now() + 2000 };
+        this.updateFeedback();
+    }
+    private updateFeedback() {
+        const node = this.root.querySelector<HTMLElement>('[data-equipment-feedback]');
+        if (!node) return;
+        if (this.notice && performance.now() >= this.notice.until) this.notice = undefined;
+        node.hidden = !this.notice;
+        node.textContent = this.notice?.text ?? '';
+        node.classList.toggle('invalid', this.notice?.invalid ?? false);
+    }
     private transfer(item: WorldItem, destination: ItemDestination) {
         const refusal = transferRefusal(this.snapshot!, this.owner, item.id, destination);
         if (refusal) {
@@ -231,7 +242,7 @@ export class EquipmentPanel {
         this.root.dataset.itemSelected='true';
         for (const button of this.root.querySelectorAll<HTMLElement>('.equipment-item'))
             button.classList.toggle('chosen', button.dataset.itemId === item.id);
-        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${formatMass(def.mass)} kg${isShipEquipment(item.kind) ? this.text(' · 搬运占四格 · 安装后使用', ' · Four carrying slots · Fire from a fitting') : itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`;
+        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.hidden = false; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${formatMass(def.mass)} kg${isShipEquipment(item.kind) ? this.text(' · 搬运占四格 · 安装后使用', ' · Four carrying slots · Fire from a fitting') : itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`;
         if (weaponCondition(item)) { const condition = document.createElement('span'); condition.dataset.conditionSummary = item.id; description.append(condition); }
         actions.append(description); this.updateWeaponConditions(); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.shipId) {
             const ship = this.snapshot!.units.find(unit => unit.id === this.shipId)!;
@@ -335,7 +346,9 @@ export class EquipmentPanel {
         const unit = own.find(unit => unit.id === this.unitId), ship = own.find(unit => unit.id === this.shipId && shipProfile(unit));
         if (!unit && !ship) { this.close(); return; }
         this.root.dataset.mode = ship ? 'ship' : 'character';
-        const narrow = !!ship && this.root.clientWidth < 900, short = this.root.clientHeight < 500;
+        this.root.dataset.hasCharacter = String(!!unit);
+        if (ship && !unit && this.activePane === 'character') this.activePane = 'hold';
+        const narrow = !!ship && this.root.clientWidth < 900, short = this.root.clientHeight < 430;
         const holdColumns = narrow ? 4 : 8;
         // Whole rows are paged, so a numbered position never changes identity.
         const holdRows = Math.max(1, Math.floor((this.root.clientHeight - (narrow ? 294 : 254)) / 55));
@@ -351,20 +364,23 @@ export class EquipmentPanel {
         this.root.dataset.short = String(short);
         this.root.replaceChildren();
         const header = document.createElement('header');
-        const crest = document.createElement('span'); crest.className = 'equipment-crest'; crest.setAttribute('aria-hidden', 'true'); crest.textContent = '⚔';
-        const title = document.createElement('div'); title.innerHTML = `<small>${this.text('军械', 'EQUIPMENT')}</small><h2>${ship ? labelKind(ship.kind, this.i18n()) + this.text(' · 船舱与炮位', ' · Hold & fittings') : labelKind(unit!.kind, this.i18n()) + this.text(' · 装备', ' · Equipment')}</h2>`;
+        const title = document.createElement('h2'); title.textContent = ship ? labelKind(ship.kind, this.i18n()) + this.text(' · 船舱与炮位', ' · Hold & fittings') : labelKind(unit!.kind, this.i18n()) + this.text(' · 装备', ' · Equipment');
         const close = document.createElement('button'); close.type = 'button'; close.className = 'equipment-close'; close.textContent = '×';
         close.setAttribute('aria-label', this.text('关闭', 'Close')); close.addEventListener('click', () => this.close());
-        header.append(crest, title, close); this.root.append(header);
+        header.append(title, close); this.root.append(header);
         const tabs = document.createElement('nav'); tabs.className = 'equipment-pane-tabs'; tabs.setAttribute('aria-label', this.text('装备面板', 'Equipment panes'));
         for (const [pane, zh, en] of [['character', '人物', 'Character'], ['hold', '船舱', 'Hold'], ['ship', '船体', 'Ship']] as const) {
+            if (!ship || pane === 'character' && !unit) continue;
             const button = document.createElement('button'); button.type = 'button'; button.textContent = this.text(zh, en);
             button.setAttribute('aria-pressed', String(this.activePane === pane)); button.addEventListener('click', () => { this.activePane = pane; this.render(); }); tabs.append(button);
         }
         this.root.append(tabs);
         const columns = document.createElement('div'); columns.className = 'equipment-columns'; this.root.append(columns);
         const character = document.createElement('section'); character.className = 'equipment-character'; columns.append(character);
-        this.selector(character, this.shipContext ? this.text('船员', 'Crew') : this.text('人物', 'Character'), characters, this.unitId, id => { this.unitId = id; this.render(); });
+        if (this.shipContext || characters.length > 1) {
+            character.classList.add('has-context');
+            this.selector(character, this.shipContext ? this.text('船员', 'Crew') : this.text('人物', 'Character'), characters, this.unitId, id => { this.unitId = id; this.render(); });
+        }
         if (unit) {
             const positions = document.createElement('div'); positions.className = 'equipment-positions'; character.append(positions);
             const outfit = document.createElement('div'); outfit.className = 'equipment-outfit';
@@ -403,8 +419,7 @@ export class EquipmentPanel {
             character.append(stats);
         } else this.emptyNote(character, this.text('附近没有己方人物。船舱整理与炮位配置可以直接操作。', 'No friendly character nearby. Hold and fitting actions remain available.'));
         const cargo = document.createElement('section'); cargo.className = 'equipment-cargo'; if (ship) columns.append(cargo);
-        this.selector(cargo, this.text('船舱', 'Cargo hold'), ship ? [ship] : [], this.shipId, () => {});
-        const access = document.createElement('p'); access.dataset.equipmentAccess = ''; cargo.append(access);
+        const cargoTitle = document.createElement('h3'); cargoTitle.className = 'equipment-section-title'; cargoTitle.textContent = `${this.text('船舱', 'CARGO HOLD')} · ${total} ${this.text('格', 'positions')}`; cargo.append(cargoTitle);
         if (ship) {
             const grid = document.createElement('div'); grid.className = 'equipment-hold'; grid.style.setProperty('--hold-columns', String(holdColumns));
             const first = this.holdPage * capacity, end = Math.min(total, first + capacity);
@@ -421,15 +436,18 @@ export class EquipmentPanel {
                 if (span > 1) { cell.classList.add('equipment-heavy'); cell.classList.toggle('equipment-heavy-wide', width >= 3); if (i > itemStart) { cell.classList.add('equipment-continuation'); cell.querySelector('small')!.textContent += this.text(' · 续', ' · cont.'); } }
                 grid.append(cell); i += width;
             }
+            if (pageCount > 1) {
             const pages = document.createElement('div'); pages.className = 'equipment-pages';
             const previous = document.createElement('button'); previous.type = 'button'; previous.textContent = '‹'; previous.setAttribute('aria-label', this.text('上一页船舱', 'Previous hold page')); previous.disabled = this.holdPage === 0;
             previous.addEventListener('click', () => { this.holdPage--; this.render(); });
             const range = document.createElement('span'); range.textContent = `${first + 1}–${end} / ${total} ${this.text('格', 'positions')}`;
             const next = document.createElement('button'); next.type = 'button'; next.textContent = '›'; next.setAttribute('aria-label', this.text('下一页船舱', 'Next hold page')); next.disabled = this.holdPage === pageCount - 1;
             next.addEventListener('click', () => { this.holdPage++; this.render(); }); pages.append(previous, range, next); cargo.append(pages);
+            }
             const load = document.createElement('div'); load.className = 'equipment-load';
             const text = document.createElement('p'); text.dataset.equipmentLoad = ''; const meter = document.createElement('span'); meter.className = 'equipment-load-meter'; meter.append(document.createElement('i'));
             load.append(text, meter); cargo.append(load);
+            const access = document.createElement('p'); access.dataset.equipmentAccess = ''; access.hidden = true; cargo.append(access);
         } else { this.emptyNote(cargo, this.text('暂无己方船只，人物仍可穿戴或切换武器。', 'No friendly ship. You can still equip the character.')); }
         const vessel = document.createElement('section'); vessel.className = 'equipment-vessel'; if (ship) columns.append(vessel);
         const shipTitle = document.createElement('h3'); shipTitle.className = 'equipment-section-title'; shipTitle.textContent = this.text('船体装备', 'SHIP FITTINGS'); vessel.append(shipTitle);
@@ -480,10 +498,9 @@ export class EquipmentPanel {
             }
             const parts = document.createElement('p'); parts.dataset.equipmentParts = ''; vessel.append(parts);
         } else this.emptyNote(vessel, this.text('选择船只后查看炮位、船帆与船舵。', 'Select a ship to view fittings, rigging and rudder.'));
-        const actions = document.createElement('footer'); actions.dataset.equipmentActions = '';
-        const hint = document.createElement('p'); hint.className = 'equipment-action-hint'; hint.textContent = this.text('选择物品查看重量和操作；人物没有背包。', 'Select an item for its weight and actions. Characters have no backpack.'); actions.append(hint); this.root.append(actions);
+        const actions = document.createElement('footer'); actions.dataset.equipmentActions = ''; actions.hidden = true; this.root.append(actions);
         const feedback = document.createElement('p'); feedback.dataset.equipmentFeedback = ''; feedback.setAttribute('role', 'status');
-        feedback.textContent = this.text('拖拽放置 · Ctrl + 单击 / 双击转移 · Esc 返回战场', 'Drag to place · Ctrl-click / double-click to transfer · Esc to return'); this.root.append(feedback);
+        feedback.hidden = true; this.root.append(feedback);
         const selected = snapshot.items.find(item => item.id === this.selectedItem && (unit && item.carrierId === unit.id || ship && item.shipId === ship.id));
         if (selected) this.selectItem(selected); else {this.selectedItem = undefined;delete this.root.dataset.itemSelected;}
         this.updateValues(unit, ship);
@@ -532,7 +549,8 @@ export class EquipmentPanel {
         const access = this.root.querySelector<HTMLElement>('[data-equipment-access]');
         if (access) {
             const ready = ship && (!unit || canExchange(this.snapshot!, unit, ship));
-            access.textContent = ready ? this.text('交换通路畅通', 'Ready to exchange') : this.text('让人物靠近船只或登船后交换', 'Move the character closer or board to exchange');
+            access.hidden = !!ready;
+            access.textContent = ready ? '' : this.text('让人物靠近船只或登船后交换', 'Move the character closer or board to exchange');
             access.classList.toggle('invalid', !ready);
         }
         const parts = this.root.querySelector<HTMLElement>('[data-equipment-parts]');
@@ -541,6 +559,7 @@ export class EquipmentPanel {
             parts.textContent = `${this.text('船帆', 'Rigging')} ${Math.ceil(ship.shipParts?.rigging ?? max.rigging)} / ${max.rigging} · ${this.text('船舵', 'Rudder')} ${Math.ceil(ship.shipParts?.rudder ?? max.rudder)} / ${max.rudder}`;
         }
         this.updateWeaponConditions();
+        this.updateFeedback();
         const load = this.root.querySelector<HTMLElement>('[data-equipment-load]');
         if (load && ship) {
             const fill = this.root.querySelector<HTMLElement>('.equipment-load-meter > i');

@@ -4,21 +4,19 @@
 
 .equipment-panel {
   position:fixed; z-index:80; left:50%; top:50%; transform:translate(-50%,-50%);
-  box-sizing:border-box; width:min(1160px,calc(100vw - 32px)); height:min(640px,calc(100dvh - 32px));
-  display:grid; grid-template-rows:46px 0 minmax(0,1fr)78px 22px; gap:8px; overflow:clip; padding:18px;
+  box-sizing:border-box; width:min(1160px,calc(100vw - 32px)); height:min(560px,calc(100dvh - 32px));
+  display:flex; flex-direction:column; gap:8px; overflow:clip; padding:14px;
   border:3px solid #6e5a38; color:#ded0ae; background:var(--game-wood);
   box-shadow:inset 0 0 0 1px #b59b65,inset 0 0 0 5px #211f19,inset 0 0 28px #000b,0 18px 80px #000d,0 0 0 100vmax #0c100e99;
   font-family:var(--game-text);
 }
-.equipment-panel[hidden] { display:none; }
-.equipment-panel[data-mode=character] { width:min(560px,calc(100vw - 32px)); }
+.equipment-panel[hidden],.equipment-panel [hidden] { display:none!important; }
+.equipment-panel[data-mode=character] { width:min(560px,calc(100vw - 32px)); height:min(480px,calc(100dvh - 32px)); }
 .equipment-panel::before,.equipment-panel::after { content:''; position:absolute; pointer-events:none; inset:7px; border:1px solid #a48b5550; }
 .equipment-panel::after { inset:9px; border-color:#090b09; }
-.equipment-panel header { grid-row:1; display:flex; align-items:center; gap:12px; border-bottom:2px ridge #86704e; padding:0 4px 8px; }
-.equipment-crest { width:28px; height:32px; display:grid; place-items:center; color:#d4b87b; font:24px var(--game-serif); }
-.equipment-panel h2 { margin:0; font:600 20px/1.3 var(--game-serif); letter-spacing:2px; color:#e4c88c; text-shadow:0 2px 1px #000; }
-.equipment-panel header small { color:#93876b; font-size:9px; letter-spacing:3px; }
-.equipment-close { margin-left:auto; width:32px; height:32px; padding:0; font:24px var(--game-serif); }
+.equipment-panel header { flex:none; display:flex; align-items:center; gap:8px; min-width:0; border-bottom:2px ridge #86704e; padding:0 0 6px; }
+.equipment-panel h2 { min-width:0; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 18px/1.3 var(--game-serif); letter-spacing:1px; color:#e4c88c; text-shadow:0 2px 1px #000; }
+.equipment-close { flex:none; margin-left:auto; width:30px; height:30px; padding:0; font:24px var(--game-serif); }
 .equipment-panel button { color:#daca9f; cursor:pointer; }
 .equipment-close,.equipment-context button,.equipment-pages button,.equipment-action,.equipment-pane-tabs button {
   border:1px solid #9b8354; border-radius:0; background:var(--game-grain),linear-gradient(#514735,#29291f);
@@ -27,15 +25,19 @@
 .equipment-panel button:hover { border-color:#e3c184; color:#ffe2a7; }
 .equipment-panel button:focus-visible,.equipment-cell:focus-visible { outline:2px solid #e3c184; outline-offset:2px; }
 .equipment-panel button:disabled { opacity:.3; cursor:default; }
-.equipment-pane-tabs { display:none; }
-.equipment-columns { grid-row:3; min-height:0; display:grid; grid-template-columns:300px 290px minmax(0,1fr); grid-template-areas:'person vessel cargo'; gap:14px; }
+.equipment-pane-tabs { display:none; flex:none; }
+.equipment-columns { flex:1; min-height:0; display:grid; grid-template-columns:300px 290px minmax(0,1fr); grid-template-areas:'person vessel cargo'; gap:12px; }
 .equipment-panel[data-mode=character] .equipment-columns { grid-template-columns:1fr; grid-template-areas:'person'; }
+.equipment-panel[data-has-character=false] .equipment-columns { grid-template-columns:290px minmax(0,1fr); grid-template-areas:'vessel cargo'; }
+.equipment-panel[data-has-character=false] .equipment-character { display:none; }
 .equipment-character,.equipment-cargo,.equipment-vessel { min-width:0; min-height:0; padding:10px; border:1px solid #6c593b; box-shadow:inset 0 0 22px #0008; background:var(--game-leather); }
-.equipment-character { grid-area:person; display:grid; grid-template-rows:42px minmax(0,1fr)34px 38px; gap:8px; }
-.equipment-cargo { grid-area:cargo; display:grid; grid-template-rows:42px 24px minmax(0,1fr)24px 40px; gap:6px; background:var(--game-grain),linear-gradient(120deg,#342c20,#20231b); }
-.equipment-vessel { grid-area:vessel; display:grid; grid-template-rows:28px minmax(0,1fr)44px; gap:8px; }
+.equipment-character { grid-area:person; display:grid; grid-template-rows:minmax(0,1fr)28px 32px; gap:6px; }
+.equipment-character.has-context { grid-template-rows:36px minmax(0,1fr)28px 32px; }
+.equipment-cargo { grid-area:cargo; display:flex; flex-direction:column; gap:6px; background:var(--game-grain),linear-gradient(120deg,#342c20,#20231b); }
+.equipment-cargo > :not(.equipment-hold) { flex:none; }
+.equipment-vessel { grid-area:vessel; display:grid; grid-template-rows:26px minmax(0,1fr)auto; gap:6px; }
 .equipment-context { display:flex; align-items:center; gap:8px; min-width:0; border-bottom:1px solid #9b805b50; padding-bottom:6px; }
-.equipment-context canvas { width:36px; height:36px; object-fit:contain; flex:none; filter:drop-shadow(0 3px 2px #0008); }
+.equipment-context canvas { width:30px; height:30px; object-fit:contain; flex:none; filter:drop-shadow(0 3px 2px #0008); }
 .equipment-context > div { min-width:0; flex:1; }
 .equipment-context small { display:block; color:#a39473; font-size:9px; }
 .equipment-context strong { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:#e2d0a2; font:600 15px var(--game-serif); }
@@ -71,7 +73,7 @@
 .equipment-stat small { color:#a7a18b; font-size:9px; }
 .equipment-stat strong { color:#e6d4a9; font:15px/1.2 var(--game-serif); }
 [data-equipment-access] { margin:0; color:#b8c29b; font-size:10px; align-self:center; }
-.equipment-hold { min-height:0; display:grid; grid-template-columns:repeat(var(--hold-columns),minmax(0,1fr)); grid-template-rows:repeat(var(--hold-rows),minmax(0,55px)); align-content:start; gap:3px; }
+.equipment-hold { flex:0 1 auto; min-height:0; display:grid; grid-template-columns:repeat(var(--hold-columns),minmax(0,1fr)); grid-template-rows:repeat(var(--hold-rows),minmax(0,55px)); align-content:start; gap:3px; }
 .equipment-hold .equipment-cell > small { padding:2px 4px; font-size:8px; color:#aaa083; }
 .equipment-hold .equipment-item { position:absolute; inset:0; height:100%; padding:8px 0 0; }
 .equipment-hold .equipment-item canvas { width:46px; height:46px; max-height:85%; }
@@ -93,15 +95,14 @@
 .equipment-fittings .equipment-item span { display:none; }
 [data-equipment-parts] { margin:0; font-size:10px; line-height:1.7; color:#b6b39b; align-self:center; }
 .equipment-empty-note { color:#a9a58d; font-size:12px; line-height:1.8; align-self:center; }
-.equipment-panel footer { grid-row:4; display:flex; flex-wrap:wrap; gap:5px 7px; align-content:center; align-items:center; min-width:0; border-top:2px ridge #86704e; padding:8px 4px 0; }
+.equipment-panel footer { flex:none; display:flex; flex-wrap:wrap; gap:4px 6px; align-items:center; min-width:0; border-top:1px solid #86704e; padding:6px 0 0; }
 .equipment-panel footer p { flex:1 1 100%; margin:0; color:#e2c992; font-size:11px; }
-.equipment-panel footer .equipment-action-hint { color:#939680; }
 .equipment-install-select { min-width:0; max-width:145px; padding:5px 8px; border:1px solid #7c724d; background:#262c22; color:#d5c6a4; font:10px var(--game-text); }
 .equipment-action { padding:5px 10px; font:11px var(--game-text); }
-.equipment-panel > [data-equipment-feedback] { grid-row:5; margin:0; color:#a6a18e; font-size:10px; text-align:center; }
+.equipment-panel > [data-equipment-feedback] { flex:none; margin:0; color:#a6a18e; font-size:10px; }
 .equipment-panel .invalid { color:#e5a18c; }
-.equipment-panel[data-compact=true] { grid-template-rows:40px 0 minmax(0,1fr)78px 24px 30px; padding:12px; gap:7px; }
-.equipment-panel[data-compact=true] .equipment-pane-tabs { grid-row:6; display:flex; justify-content:center; gap:8px; }
+.equipment-panel[data-compact=true] { padding:12px; gap:7px; }
+.equipment-panel[data-compact=true] .equipment-pane-tabs { display:flex; gap:6px; }
 .equipment-pane-tabs button { min-width:80px; padding:4px 8px; font:11px var(--game-text); }
 .equipment-pane-tabs button[aria-pressed=true] { color:#efcf96; border-color:#c1a063; background:#4c4731; }
 .equipment-panel[data-compact=true] .equipment-columns { display:block; }
@@ -111,13 +112,12 @@
 .equipment-panel[data-compact=true][data-pane=ship] :is(.equipment-character,.equipment-cargo) { display:none; }
 .equipment-panel[data-compact=true] .equipment-positions { max-width:430px; width:100%; justify-self:center; }
 .equipment-panel[data-compact=true] .equipment-fittings { width:min(100%,280px); justify-self:center; }
-.equipment-panel[data-short=true] { padding:9px; gap:4px; grid-template-rows:30px 0 minmax(0,1fr)65px 18px; }
+.equipment-panel[data-short=true] { padding:9px; gap:4px; }
 .equipment-panel[data-short=true] h2 { font-size:16px; }
-.equipment-panel[data-short=true] header small { display:none; }
-.equipment-panel[data-short=true] .equipment-character { grid-template-rows:30px minmax(0,1fr)28px 32px; gap:4px; }
+.equipment-panel[data-short=true] .equipment-character { grid-template-rows:minmax(0,1fr)24px 28px; gap:4px; }
+.equipment-panel[data-short=true] .equipment-character.has-context { grid-template-rows:30px minmax(0,1fr)24px 28px; }
 .equipment-panel[data-short=true] .equipment-context canvas { width:28px; height:28px; }
 .equipment-panel[data-short=true] .equipment-item span { display:none; }
-.equipment-panel[data-compact=true][data-short=true] { grid-template-rows:30px 0 minmax(0,1fr)65px 18px 26px; }
 
 /* Hull, fittings and crew share one projection without SVG letterboxing. */
 .equipment-deck-scene { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
@@ -155,5 +155,3 @@
 .equipment-panel[data-short=true] .equipment-four-slots { grid-column:1 / -1; grid-row:2 / span 2; }
 .equipment-panel[data-short=true] .equipment-positions { grid-template-columns:60px minmax(0,1fr)120px; gap:5px; }
 .equipment-panel[data-short=true] h2 { font-size:15px; letter-spacing:0; }
-.equipment-panel[data-short=true]:not([data-item-selected]) { grid-template-rows:30px 0 minmax(0,1fr)22px 18px; }
-.equipment-panel[data-compact=true][data-short=true]:not([data-item-selected]) { grid-template-rows:30px 0 minmax(0,1fr)22px 18px 26px; }
