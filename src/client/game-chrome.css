@@ -87,5 +87,5 @@
   .control-deck { grid-template-columns:212px minmax(0,1fr); }
 }
 @media (max-width:650px) {
-  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 180px); }
+  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 210px); }
 }
