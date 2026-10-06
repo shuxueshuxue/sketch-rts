@@ -1,4 +1,7 @@
 import { commandIconMarkup } from "./command-icons";
+import { WorldPresentation } from './world-presentation';
+import { resources,resourceText } from './resources';
+import { resourcePanel } from './resource-panel';
 import { paintPortrait } from './portrait-cache';
 import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
@@ -56,7 +59,7 @@ import {
   virtualPointerTransform,
 } from "./pointer-lock";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, type PointerTarget } from "./relations";
+import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { formatRoomRouteHash, parseRoomRouteHash, type RoomRoute } from "./room-route";
 import { roomBrowserEntries } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
@@ -173,6 +176,9 @@ const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
+const worldPresentation=new WorldPresentation(canvas);
+let visualsReady=false;
+let matchAssets:Promise<void>|undefined;
 const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
@@ -180,7 +186,7 @@ const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
 // The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs) and those the server offers (see
 // @@@served-sound-packs); until the player chooses one, the one a build names in VITE_SOUND_PACK, else the server's, else none.
 const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
-void servedSoundPacks(import.meta.env.BASE_URL).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
+const soundPacksLoaded=servedSoundPacks(import.meta.env.BASE_URL,async(input)=>new Response(await resources.bytes(String(input),`audio-packs/${String(input).split('audio-packs/').at(-1)}`,'home'))).then(({ packs, fallback }) => soundboard.addPacks(packs, fallback));
 
 let snapshot: GameSnapshot | undefined;
 let currentRoom: RoomState | undefined;
@@ -368,12 +374,14 @@ sceneSwitch.addEventListener("click", () => {
     // Without storage the pick lasts this visit.
   }
   labelSceneSwitch();
+  void prepareHome().catch(console.error);
 });
 labelSceneSwitch();
 // The match's menu (≡ in the top right): the map being played, concede, and back to the game.
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
 minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
+const resourceAction=document.createElement('button');resourceAction.className='match-action';resourceAction.textContent=resourceText('资源载入记录','Resource loading report');resourceAction.onclick=()=>resourcePanel().open();matchMenu.append(resourceAction);
 forfeitButton.addEventListener("click", () => {
   matchMenu.classList.add("hidden");
   void forfeitCurrentMatch();
@@ -406,9 +414,19 @@ document.addEventListener("mousemove", (event) => {
 canvas.addEventListener("mouseup", onMouseUp);
 
 renderMainMenu();
-void openRouteFromHash();
 resizeCanvas();
 requestAnimationFrame(frame);
+
+async function prepareHome(){
+  visualsReady=false;const scene=menuBackdrop.prepare(performance.now());
+  await resourcePanel().run('home',resourceText('读取当前首页场景','Loading the current home scene'),async()=>{await soundPacksLoaded;await worldPresentation.prepare(scene,'home',menuBackdrop.architectureKinds);});
+  visualsReady=true;
+}
+export async function initializeVisuals(){await prepareHome();await openRouteFromHash();}
+async function ensureMatchResources(){
+  if(!matchAssets){visualsReady=false;matchAssets=resourcePanel().run('match',resourceText('读取遭遇战模型与作战资源','Loading skirmish models and combat resources'),async()=>{await worldPresentation.prepare(menuBackdrop.prepare(performance.now()),'match');await soundboard.prepareMatch();}).catch(error=>{matchAssets=undefined;throw error;}).finally(()=>{visualsReady=true;});}
+  await matchAssets;
+}
 
 function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
   const element = document.createElement("button");
@@ -684,6 +702,7 @@ function renderMainMenu() {
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
+    menuButton(resourceText('资源载入记录','Resource loading report'),'', 'data-open-resources',()=>resourcePanel().open()),
   );
 }
 
@@ -1013,9 +1032,10 @@ async function createConfiguredRoom(input: { name: string; mapId: MapId; humanCo
 
 async function startCurrentRoom() {
   if (!currentRoom) return;
+  await ensureMatchResources();
   clearRoomWatch();
   if (hasSeenPointerLockGuide() && hasMouse()) {
-    const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
+    const point = lastMouse ?? { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
     await requestPointerLock(point, { fieldClickOnError: true });
   }
   const started = await deploymentRuntime.startRoom(currentRoom.id, localUser, handleRuntimeRoomUpdate);
@@ -1177,6 +1197,7 @@ async function enterRoom(roomId: string) {
       return;
     }
     if (room.status === "inMatch") {
+      await ensureMatchResources();
       clearRoomWatch();
       currentRoomId = room.id;
       const started = deploymentRuntime.connectRoom(room, localPlayerId, spectatingRoom, handleRuntimeRoomUpdate);
@@ -1198,6 +1219,7 @@ async function enterRoom(roomId: string) {
 }
 
 function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
+  worldPresentation.reset();
   disconnectActiveMatch();
   purchaseRecipients.clear();
   purchaseRecipientFlash=undefined;
@@ -1380,7 +1402,7 @@ function hidePointerLockGate() {
 
 async function requestRequiredPointerLock() {
   if (pointerLockGateKind === "guide") markPointerLockGuideSeen();
-  const point = lastMouse ?? { x: canvas.width / 2, y: canvas.height / 2 };
+  const point = lastMouse ?? { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
   await requestPointerLock(point, { fieldClickOnError: true });
   syncPointerLockGate();
 }
@@ -1592,16 +1614,16 @@ function showInvalidCommand(message: string) {
 // half-width beyond its edges.
 let lastSoundCamera: Point | undefined;
 function playCues(cues: SoundCue[]) {
-  if (lastSoundCamera && Math.hypot(camera.x - lastSoundCamera.x, camera.y - lastSoundCamera.y) > Math.min(canvas.width, canvas.height) * .45) soundboard.stopEffects();
+  if (lastSoundCamera && Math.hypot(camera.x - lastSoundCamera.x, camera.y - lastSoundCamera.y) > Math.min(canvas.clientWidth, canvas.clientHeight) * .45) soundboard.stopEffects();
   lastSoundCamera = { x: camera.x, y: camera.y };
   // A frame's visible battle gets the voice budget before peripheral events.
-  const distance = (cue: SoundCue) => { const at = worldToScreen(cue); return Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height); };
+  const distance = (cue: SoundCue) => { const at = worldToScreen(cue); return Math.max(0, -at.x, at.x - canvas.clientWidth, -at.y, at.y - canvas.clientHeight); };
   for (const cue of cues.sort((a, b) => distance(a) - distance(b))) {
     const at = worldToScreen(cue);
-    const outside = Math.max(0, -at.x, at.x - canvas.width, -at.y, at.y - canvas.height);
-    const gain = 1 - outside / (canvas.width / 2);
+    const outside = Math.max(0, -at.x, at.x - canvas.clientWidth, -at.y, at.y - canvas.clientHeight);
+    const gain = 1 - outside / (canvas.clientWidth / 2);
     if (gain <= 0) continue;
-    soundboard.play(cue.id, { pan: ((at.x / canvas.width) * 2 - 1) * 0.7, gain }, cue.kind);
+    soundboard.play(cue.id, { pan: ((at.x / canvas.clientWidth) * 2 - 1) * 0.7, gain }, cue.kind);
   }
 }
 
@@ -1741,7 +1763,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
 
   // What the pointer is on decides (see @@@pointer-target): an item is picked up, anything else is ordered as
   // @@@context-target says, and nothing (or nothing the selection can act on) is a move there.
-  const target = pointerTarget(snapshot, world);
+  const target = visualPointerTarget(world);
   if (target?.kind === "item") {
     const command = pickupItemCommand(focusedPlayerUnits(), target.item);
     if (!command) {
@@ -1758,7 +1780,9 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }
-  const destination = deckMovePoint(snapshot.units, selectedUnits, world);
+  const deckShip=target?.kind==='unit'?(shipProfile(target.unit)?target.unit:target.unit.deck?snapshot.units.find(unit=>unit.id===target.unit.deck!.shipId):undefined):undefined;
+  const projected=worldPresentation.is3D&&deckShip&&!selectedUnits.some(unit=>shipProfile(unit))?worldPresentation.plane(worldToScreen(world),shipProfile(deckShip)!.deckHeight):undefined;
+  const destination = projected??deckMovePoint(snapshot.units, selectedUnits, world);
   sendCommand({ type: "move", unitIds, x: destination.x, y: destination.y, queued, avoidCombat:true });
   statusLabel.textContent = t("status.moveOrdered");
 }
@@ -1776,7 +1800,7 @@ function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget,
 
 function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
   if (!snapshot) return;
-  const target = pointerTarget(snapshot, world);
+  const target = visualPointerTarget(world);
   const friendlyUnit = target?.kind === "unit" && target.unit.owner === localPlayerId ? target.unit : undefined;
   if (friendlyUnit) {
     sendCommand({ type: "setRally", buildingIds: buildings.map((building) => building.id), x: friendlyUnit.x, y: friendlyUnit.y, target: { type: "unit", unitId: friendlyUnit.id } });
@@ -2264,7 +2288,7 @@ function choosePurchaseRecipientAt(point:Point){
   if(!snapshot || commandMode?.type!=="purchaseRecipient")return;
   const sellerId=commandMode.sellerId;
   const seller=snapshot.shops?.find(s=>s.id===sellerId) ?? snapshot.buildings.find(s=>s.id===sellerId);
-  const recipient=unitAt(snapshot.units,screenToWorld(point),unit=>unit.owner===localPlayerId && unit.hp>0 && Boolean(canEquip(unit)||shipProfile(unit)));
+  const recipient=hitUnit(screenToWorld(point),unit=>unit.owner===localPlayerId && unit.hp>0 && Boolean(canEquip(unit)||shipProfile(unit)));
   if(!seller || !recipient){showInvalidCommand(purchaseFeedback("Choose a living unit or ship of yours"));return;}
   const check=purchasePlacement(snapshot,localPlayerId,seller,"experienceBook",recipient.id);
   if("refusal" in check && check.refusal==="Move the recipient closer to the seller"){showInvalidCommand(purchaseFeedback(check.refusal));return;}
@@ -2332,7 +2356,7 @@ function hireMercenary() {
 
 function selectUnitsInBox(start: Point, end: Point, additive = false) {
   if (!snapshot) return;
-  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive);
+  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive,unit=>{const at=worldPresentation.position(unit.id);return at?{x:at.x,y:at.bodyY}:unitPointerPosition(snapshot!.units,unit);});
   selectedIds = result.selectedIds;
   focusedSelectionId = result.focusedSelectionId;
   if (selectedIds.size > 0 || !additive) selectedCampId = undefined;
@@ -2519,11 +2543,11 @@ function updateHud() {
     const identity: HudIdentity = {
       key: shop.id, name: t("hud.shop"), caption: t("hud.neutral"),
       detail: buyer ? t("hud.buyer", { name:labelKind(buyer.kind) }) : t("hud.shopApproach"),
-      art: { key:"shop", paint: canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "shop", canvas.width, "#8b7355") },
+      art: { key:"shop", paint: canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "shop", canvas.clientWidth, "#8b7355") },
     };
     if (inspectedShopItem) identity.inspection = {
       name:labelKind(inspectedShopItem), detail:t("hud.purchasedItem"),
-      art:{ key:inspectedShopItem, paint: canvas => drawPaintedItem(requireCanvasContext(canvas), inspectedShopItem!, { x:canvas.width/2,y:canvas.height/2 }, canvas.width*.8) },
+      art:{ key:inspectedShopItem, paint: canvas => drawPaintedItem(requireCanvasContext(canvas), inspectedShopItem!, { x:canvas.clientWidth/2,y:canvas.clientHeight/2 }, canvas.clientWidth*.8) },
     };
     hudSelection.render(identity, [], t("hud.nothingSelected"));
   } else if (groups.length > 0) {
@@ -2532,7 +2556,7 @@ function updateHud() {
     hudSelection.render({
       key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
       detail:t("hud.campStock", { stock:camp.stock }) + (camp.cooldownRemaining > 0 ? t("hud.restocking") : ""),
-      art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.width, "#8b7355") },
+      art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
   let visibleCount = 0;
@@ -2596,7 +2620,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
-      art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.width, ownerInk(passenger.owner)) },
+      art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.clientWidth, ownerInk(passenger.owner)) },
       activate: () => unloadPassenger(transport.id, passenger.id),
       decorate: (button: HTMLButtonElement) => applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [t("hud.unloadPassengerHint")] }),
     })),
@@ -2614,11 +2638,11 @@ function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
 
 function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   const mini = requireCanvasContext(canvas);
-  mini.clearRect(0, 0, canvas.width, canvas.height);
+  mini.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   const owner = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === group.ids[0])?.owner;
   const color = ownerInk(owner ?? localPlayerId);
-  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.width, color);
-  else drawAtlasBuildingPortrait(mini, group.kind, canvas.width, color);
+  if (group.entityType === "unit") drawAtlasUnitPortrait(mini, group.kind, 0, 0, canvas.clientWidth, color);
+  else drawAtlasBuildingPortrait(mini, group.kind, canvas.clientWidth, color);
 }
 
 function renderResearchProgressButton(progress: ResearchProgressButton) {
@@ -2771,14 +2795,15 @@ function trainIcon(kind: TrainableUnitKind) {
 }
 
 function draw() {
+  if(!visualsReady)return;
   if (menuOpen) {
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
-    menuBackdrop.draw(ctx, canvas.width, canvas.height, performance.now(), reducedUnitMotion.matches);
+    menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame));
     return;
   }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   if (!snapshot) {
-    drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.width, canvas.height);
+    drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.clientWidth, canvas.clientHeight);
     ctx.fillStyle = "#243126";
     ctx.font = "24px ui-rounded, system-ui";
     ctx.fillText(t("canvas.connecting"), 32, 48);
@@ -2789,10 +2814,10 @@ function draw() {
   // Over an enemy's or the creeps', the cursor is the red one of an attack; over a friend's, it stays as it is.
   const hostile = viewer && hovered ? relationTo(snapshot, viewer, hovered.owner) : undefined;
   shell.classList.toggle("pointer-over-enemy", hostile === "enemy" || hostile === "creep");
-  drawWorld({
+  worldPresentation.draw({
     ctx,
     snapshot,
-    view: { x: camera.x, y: camera.y, width: canvas.width, height: canvas.height, zoom:worldZoom },
+    view: { x: camera.x, y: camera.y, width: canvas.clientWidth, height: canvas.clientHeight, zoom:worldZoom },
     now: performance.now(),
     facing: unitFacing,
     motion: unitMotion,
@@ -3035,7 +3060,7 @@ function matchViewer() {
 // The unit or building under the pointer on the battlefield, not over the interface or the minimap.
 function hoveredTarget() {
   if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
-  const target = snapshot ? pointerTarget(snapshot, screenToWorld(lastMouse)) : undefined;
+  const target = snapshot ? visualPointerTarget(screenToWorld(lastMouse)) : undefined;
   return target?.kind === "unit" ? target.unit : target?.kind === "building" ? target.building : undefined;
 }
 
@@ -3059,7 +3084,7 @@ function updateCamera() {
   if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;
   if (keys.has("arrowdown") || keys.has("s")) camera.y += speed;
   const aim = edgeScrollAim();
-  const edge = edgeScrollDelta(aim?.point, { width: canvas.width, height: canvas.height }, aim?.overInterface);
+  const edge = edgeScrollDelta(aim?.point, { width: canvas.clientWidth, height: canvas.clientHeight }, aim?.overInterface);
   camera.x += edge.x;
   camera.y += edge.y;
   clampCamera();
@@ -3075,13 +3100,15 @@ function edgeScrollAim() {
 
 function clampCamera() {
   if (!snapshot) return;
-  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.width/worldZoom, camera.x));
-  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.height/worldZoom, camera.y));
+  camera.x = Math.max(0, Math.min(snapshot.map.width - canvas.clientWidth/worldZoom, camera.x));
+  camera.y = Math.max(0, Math.min(snapshot.map.height - canvas.clientHeight/worldZoom, camera.y));
 }
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const density=Math.min(devicePixelRatio,2);
+  canvas.width = Math.round(window.innerWidth*density);
+  canvas.height = Math.round(window.innerHeight*density);
+  ctx.setTransform(density,0,0,density,0,0);
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
   const mini = minimapRect();
@@ -3103,7 +3130,7 @@ function mousePoint(event: MouseEvent): Point {
 function inputPoint(event: MouseEvent): Point {
   if (document.pointerLockElement !== canvas) return mousePoint(event);
   const movement = event.type === "mousemove" ? { x: event.movementX, y: event.movementY } : { x: 0, y: 0 };
-  virtualMouse = moveVirtualPointer(virtualMouse, movement, { width: canvas.width, height: canvas.height });
+  virtualMouse = moveVirtualPointer(virtualMouse, movement, { width: canvas.clientWidth, height: canvas.clientHeight });
   return virtualMouse;
 }
 
@@ -3163,18 +3190,18 @@ function worldToScreen(point: Point): Point {
 }
 
 function nearScreen(point: Point, pad: number) {
-  return point.x >= -pad && point.y >= -pad && point.x <= canvas.width + pad && point.y <= canvas.height + pad;
+  return point.x >= -pad && point.y >= -pad && point.x <= canvas.clientWidth + pad && point.y <= canvas.clientHeight + pad;
 }
 
 // The minimap keeps clear of the window's edge by its frame's width (see .minimap-frame).
 function minimapRect(): ScreenRect {
-  const size = Math.min(184, Math.max(132, Math.floor(Math.min(canvas.width, canvas.height) * 0.2)));
-  return { x: canvas.width - size - 16, y: canvas.height - size - 16, width: size, height: size };
+  const size = Math.min(184, Math.max(132, Math.floor(Math.min(canvas.clientWidth, canvas.clientHeight) * 0.2)));
+  return { x: canvas.clientWidth - size - 16, y: canvas.clientHeight - size - 16, width: size, height: size };
 }
 
 function minimapViewportRect(rect = minimapRect()): ScreenRect {
   if (!snapshot) return { x: rect.x, y: rect.y, width: 0, height: 0 };
-  return minimapViewportRectFor(rect, camera, { width: canvas.width/worldZoom, height: canvas.height/worldZoom }, snapshot.map);
+  return minimapViewportRectFor(rect, camera, { width: canvas.clientWidth/worldZoom, height: canvas.clientHeight/worldZoom }, snapshot.map);
 }
 
 function centerCameraFromMinimap(point: Point) {
@@ -3192,25 +3219,36 @@ function centerCameraOnControlGroup(ids: string[]) {
 
 function centerCameraOnWorld(world: Point) {
   if (!snapshot) return;
-  camera.x = world.x - canvas.width / (2*worldZoom);
-  camera.y = world.y - canvas.height / (2*worldZoom);
+  camera.x = world.x - canvas.clientWidth / (2*worldZoom);
+  camera.y = world.y - canvas.clientHeight / (2*worldZoom);
   clampCamera();
 }
 
 function hitShop(world: Point) {
+  const hit=visualHit(world);if(hit)return snapshot?.shops?.find(shop=>shop.id===hit.id);
   return snapshot?.shops?.find((shop) => distance(shop, world) < shop.radius + 16);
 }
 
 function hitMercenaryCamp(world: Point) {
+  const hit=visualHit(world);if(hit)return snapshot?.mercenaryCamps.find(camp=>camp.id===hit.id);
   return snapshot?.mercenaryCamps.find((camp) => distance(camp, world) < camp.radius + 16);
 }
 
 function hitUnit(world: Point, predicate: (unit: Unit) => boolean) {
+  const hit=visualHit(world);if(hit)return snapshot?.units.find(unit=>unit.id===hit.id && predicate(unit));
   return unitAt(snapshot?.units ?? [], world, predicate);
 }
 
 function hitBuilding(world: Point, predicate: (building: Building) => boolean) {
+  const hit=visualHit(world);if(hit)return snapshot?.buildings.find(building=>building.id===hit.id && predicate(building));
   return buildingAt(snapshot?.buildings ?? [], world, predicate);
+}
+
+function visualHit(world:Point){const point=worldToScreen(world);return point.x<0||point.y<0||point.x>canvas.clientWidth||point.y>canvas.clientHeight?undefined:worldPresentation.pick(point);}
+function visualPointerTarget(world:Point):PointerTarget|undefined{
+  if(!snapshot)return undefined;const hit=visualHit(world);
+  if(hit){const unit=snapshot.units.find(unit=>unit.id===hit.id);if(unit)return{kind:'unit',unit};const building=snapshot.buildings.find(building=>building.id===hit.id);if(building)return{kind:'building',building};}
+  return pointerTarget(snapshot,world);
 }
 
 function labelBuilding(building: Building) {
