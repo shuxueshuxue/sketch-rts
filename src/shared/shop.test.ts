@@ -19,7 +19,7 @@ function shopGame(units: ScenarioUnitSeed[], items: WorldItem[] = []): Game {
 }
 
 const unit = (game: Game, id: string) => game.units.find((candidate) => candidate.id === id)!;
-const carried = (game: Game, id: string) => game.items.filter((item) => item.carrierId === id).map((item) => item.kind);
+const carried = (game: Game, id: string) => game.items.filter((item) => item.carrierId === id && item.kind!=="issuedWeapon").map((item) => item.kind);
 const cost = (kind: string) => SHOP_GOODS.find((good) => good.kind === kind)!.cost;
 const step = (game: Game, ticks: number) => {
   for (let tick = 0; tick < ticks; tick += 1) stepGame(game);
@@ -54,13 +54,13 @@ describe("a shop", () => {
       ],
       books("near"),
     );
-    issuePlayerCommand(game, "player", { type: "buy", shopId: "shop", item: "regenRing" });
-    expect(carried(game, "farther")).toEqual(["regenRing"]);
+    issuePlayerCommand(game, "player", { type: "buy", shopId: "shop", item: "healingScroll" });
+    expect(carried(game, "farther")).toEqual(["healingScroll"]);
     game.items.push(...books("farther").slice(1));
     issuePlayerCommand(game, "player", { type: "buy", shopId: "shop", item: "healingScroll" });
-    const scroll = game.items.find((item) => item.kind === "healingScroll")!;
+    const scroll = game.items.find((item) => item.kind === "healingScroll" && !item.carrierId)!;
     expect(scroll.carrierId).toBeUndefined();
-    expect(commandValidationError(snapshotGame(game), "player", { type: "pickupItem", unitId: "near", itemId: scroll.id })).toMatch(/items already/);
+    expect(commandValidationError(snapshotGame(game), "player", { type: "pickupItem", unitId: "near", itemId: scroll.id })).toMatch(/equipment position/);
   });
 
   it("is in no game whose map has none", () => {

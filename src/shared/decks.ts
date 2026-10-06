@@ -1,11 +1,11 @@
 import { detCos, detSin } from "./det-math";
 import { bodyMass } from "./physical-body";
-import { circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
+import { shipsIn, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { perTick } from "./time";
 import type { Unit } from "./types";
 
 export function deckLoad(units: readonly Unit[], ship: Unit) {
-  return shipPassengers(units,ship).reduce((sum,unit)=>sum+bodyMass(unit),0);
+  return (ship.holdMass ?? 0)+shipPassengers(units,ship).reduce((sum,unit)=>sum+bodyMass(unit),0);
 }
 export function deckPointFits(ship: Unit, passenger: Unit, point: Point, units: readonly Unit[], occupied=true) {
   const profile=shipProfile(ship);
@@ -41,10 +41,11 @@ export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   return true;
 }
 export function syncDecks(units: readonly Unit[]) {
-  const ships=new Map(units.filter(ship=>shipProfile(ship)).map(ship=>[ship.id,ship]));
+  const vessels=shipsIn(units);if(!vessels.length)return;
+  const ships=new Map(vessels.map(ship=>[ship.id,ship]));
   for(const ship of ships.values()) {
     const profile=shipProfile(ship)!, crew=shipPassengers(units,ship);
-    const load=crew.reduce((sum,unit)=>sum+bodyMass(unit),0);
+    const load=(ship.holdMass ?? 0)+crew.reduce((sum,unit)=>sum+bodyMass(unit),0);
     const offset=load ? Math.hypot(crew.reduce((s,u)=>s+u.deck!.x*bodyMass(u),0),crew.reduce((s,u)=>s+u.deck!.y*bodyMass(u),0))/load : 0;
     ship.sailing??={heading:0,speed:0,load:0,balance:0};
     ship.sailing.load=load;

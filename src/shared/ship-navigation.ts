@@ -226,7 +226,7 @@ export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
   const desired = Math.round(Math.atan2(target.y - ship.y, target.x - ship.x) * 1e9) / 1e9;
   const turned = { ...start, heading: desired }, direct = { x: target.x, y: target.y, heading: desired };
   if (hullPassageClear(map, ship, start, turned) && hullPassageClear(map, ship, turned, direct))
-    return [turned, direct];
+    return [direct];
   const cost = new Float64Array(size).fill(Infinity), previous = new Int32Array(size).fill(-1), frontier = new Frontier();
   const col = Math.floor(ship.x / t.cell), row = Math.floor(ship.y / t.cell);
   for (let y = Math.max(0, row - 1); y <= Math.min(t.rows - 1, row + 1); y++)

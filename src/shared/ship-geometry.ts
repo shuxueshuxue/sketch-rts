@@ -11,15 +11,43 @@ export function isShipKind(kind: UnitKind): kind is ShipKind { return kind in ge
 export function shipScale(ship: Unit) {
   return ship.deckScale ?? (ship.cargoCapacity === undefined ? 1 : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
 }
+type ShipProfile = ReturnType<typeof computeShipProfile>;
+const profiles=new WeakMap<Unit,{kind:ShipKind;scale:number;fittings:Unit['fittings'];profile:ShipProfile}>();
+/** Profiles are local geometry; only scale or a replaced fitting layout changes them. */
 export function shipProfile(ship: Unit) {
   if (!isShipKind(ship.kind)) return undefined;
-  const raw = geometry.ships[ship.kind], scale = shipScale(ship);
+  const scale=shipScale(ship),cached=profiles.get(ship);
+  if(cached && cached.kind===ship.kind && cached.scale===scale && cached.fittings===ship.fittings)return cached.profile;
+  const profile=computeShipProfile(ship,ship.kind,scale);
+  profiles.set(ship,{kind:ship.kind,scale,fittings:ship.fittings,profile});return profile;
+}
+function computeShipProfile(ship:Unit,kind:ShipKind,scale:number){
+  const raw = geometry.ships[kind];
   return { ...raw, length: raw.length*scale, beam: raw.beam*scale, deckHeight: raw.deckHeight*scale, mastHeight: raw.mastHeight*scale,
     hullMass: raw.hullMass*scale**3, loadCapacity: raw.loadCapacity*scale**2,
     hull: raw.hull.map(([x,y]) => ({ x:x!*scale, y:y!*scale })),
     deck: raw.deck.map(([x,y]) => ({ x:x!*scale, y:y!*scale })),
     weaponMount: raw.weaponMount?.map(value => value*scale) ?? null,
-    obstacles: raw.obstacles.map(o => ({ ...o, x:o.x*scale, y:o.y*scale, radius:o.radius*scale })) };
+    weaponPivot: raw.weaponPivot?.map(value => value*scale) ?? null,
+    obstacles: [...raw.obstacles.filter(o=>!["gun","mortar","flame"].includes(o.type) || !ship.fittings),...(ship.fittings ?? []).map(fitting=>({...fitting,type:"weapon"}))].map(o => ({ ...o, x:o.x*("accepts" in o?1:scale), y:o.y*("accepts" in o?1:scale), radius:o.radius*("accepts" in o?1:scale) })) };
+}
+const shipLists=new WeakMap<readonly Unit[],{length:number;ships:Unit[]}>();
+/** Units change kind only when created; additions and a new simulation list invalidate this view. */
+export function shipsIn(units:readonly Unit[]){
+  const cached=shipLists.get(units);if(cached?.length===units.length)return cached.ships;
+  const ships=units.filter(unit=>isShipKind(unit.kind));shipLists.set(units,{length:units.length,ships});return ships;
+}
+/** The baked gun traverses around this deck mount independently of the sailing hull. */
+export function shipWeaponPose(ship: Unit) {
+  const profile = shipProfile(ship), mount = profile?.weaponMount;
+  if (!mount) return undefined;
+  const pivot = profile.weaponPivot;
+  const heading = pivot ? (ship.facing ?? ship.sailing?.heading ?? 0) : (ship.sailing?.heading ?? 0);
+  const base = localToWorld(ship, { x: pivot?.[0] ?? mount[0]!, y: pivot?.[1] ?? mount[1]! });
+  const reach = pivot ? mount[0]! - pivot[0]! : 0;
+  const lateral = pivot ? mount[1]! - pivot[1]! : 0;
+  return { pivot: base, pivotHeight: pivot?.[2] ?? mount[2]!, heading,
+    muzzle: { x: base.x+reach*detCos(heading)-lateral*detSin(heading), y: base.y+reach*detSin(heading)+lateral*detCos(heading) }, height: mount[2]! };
 }
 export function localToWorld(ship: Unit, point: Point): Point {
   const angle=ship.sailing?.heading ?? 0, c=detCos(angle), s=detSin(angle);
@@ -52,6 +80,12 @@ export function distanceToHull(ship:Unit,world:Point) {
     gap=Math.min(gap,Math.hypot(point.x-a.x-dx*t,point.y-a.y-dy*t));
   }
   return gap;
+}
+export function hullGap(a:Unit,b:Unit) {
+  const aa=shipProfile(a),bb=shipProfile(b);
+  if(!aa || !bb)return Infinity;
+  if(hullContact(a,b))return 0;
+  return Math.min(...aa.hull.map(point=>distanceToHull(b,localToWorld(a,point))),...bb.hull.map(point=>distanceToHull(a,localToWorld(b,point))));
 }
 /** SAT contact between convex hulls, using the same outline exported by Blender. */
 export function hullContact(a: Unit, b: Unit) {

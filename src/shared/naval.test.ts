@@ -1,3 +1,5 @@
+import { installedWeapons } from "./ship-equipment";
+import { UNIT_DEFS } from "./catalog";
 import { shipPassengers } from "./ship-geometry";
 import { deckPointFits, deckLoad } from "./decks";
 import { hullFits } from "./ship-navigation";
@@ -65,13 +67,14 @@ describe("ships", () => {
       { id: "footman", owner: "player", kind: "footman", ...at(7, 5) },
       { id: "warship", owner: "enemy", kind: "warship", ...at(14, 5) },
     ]);
-    run(sim, 100);
+    run(sim, 300);
     expect(unit(sim, "footman")!.hp).toBeLessThan(145);
     expect(unit(sim, "footman")!.x).toBe(at(7, 5).x);
-    expect(unit(sim, "warship")!.hp).toBe(180);
+    expect(unit(sim, "warship")!.hp).toBe(UNIT_DEFS.warship.hp);
+    for(const weapon of installedWeapons(sim,unit(sim,"warship")!))weapon.cooldownRemaining=9999;
     issuePlayerCommand(sim, "enemy", { type: "move", unitIds: ["warship"], ...at(9, 5) });
-    run(sim, 100);
-    expect(unit(sim, "warship")!.hp).toBeLessThan(180);
+    run(sim, 350);
+    expect(unit(sim, "warship")!.hp).toBeLessThan(UNIT_DEFS.warship.hp);
   });
 
   it("and the workers wading their shallows pass each other by, on layers of their own (see @@@ship-layer)", () => {
@@ -110,8 +113,8 @@ describe("ships", () => {
       { id: "archer", owner: "player", kind: "archer", ...at(7, 12) },
       { id: "warship", owner: "enemy", kind: "warship", ...at(13, 12) },
     ]);
-    run(sim, 120);
-    expect(unit(sim, "warship")!.hp).toBeLessThan(180);
+    run(sim, 260);
+    expect(unit(sim, "warship")!.hp).toBeLessThan(UNIT_DEFS.warship.hp);
     expect(unit(sim, "archer")!.hp).toBeLessThan(72);
   });
 
@@ -241,7 +244,7 @@ describe("transports", () => {
     run(sim, 200);
     expect(shipPassengers(sim.units, unit(sim, "transport")!)).toHaveLength(2);
     issuePlayerCommand(sim, "enemy", { type: "attack", unitIds: ["warship"], targetId: "transport" });
-    run(sim, 400);
+    run(sim, 1200);
     expect(unit(sim, "transport")).toBeUndefined();
     expect(sim.match.stats.unitsLost.player).toBe(3);
     expect(sim.match.stats.unitsKilled.enemy).toBe(3);

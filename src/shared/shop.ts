@@ -1,3 +1,4 @@
+import { canEquip, freeItemSlot } from "./equipment";
 import { unitMover } from "./catalog";
 import { seconds } from "./time";
 import type { GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "./types";
@@ -8,6 +9,9 @@ import type { GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "./types";
 // it 3.3); a healing scroll heals every friend within HEALING_SCROLL_RADIUS by HEALING_SCROLL_HEAL at once; the guardian
 // scroll is the one camps drop; an ivory tower raises a defense tower at half its health where its carrier stands.
 export const SHOP_GOODS: readonly { kind: ItemKind; cost: number; maxStock: number; restock: number }[] = [
+  { kind:"leatherArmor",cost:120,maxStock:1,restock:seconds(90) },
+  { kind:"roundShield",cost:90,maxStock:1,restock:seconds(90) },
+  { kind:"greatSword",cost:140,maxStock:1,restock:seconds(120) },
   { kind: "speedBoots", cost: 100, maxStock: 1, restock: seconds(90) },
   { kind: "regenRing", cost: 75, maxStock: 1, restock: seconds(90) },
   { kind: "healingScroll", cost: 100, maxStock: 2, restock: seconds(45) },
@@ -26,7 +30,7 @@ export const SHOP_RADIUS = 40;
 export const SHOP_REACH = 120;
 // @@@carried-items - What one unit carries at most, a worker as much as a knight (the owner: 「别看不起人民群众！」): it
 // buys, picks up and is handed nothing more.
-export const MAX_CARRIED_ITEMS = 6;
+export const MAX_CARRIED_ITEMS = 4;
 
 export function createShop(id: string, x: number, y: number): Shop {
   return { id, x, y, radius: SHOP_RADIUS, goods: SHOP_GOODS.map((good) => ({ ...good, stock: good.maxStock, restockRemaining: 0 })) };
@@ -45,11 +49,11 @@ export function standsAtShop(unit: Unit, shop: Shop) {
 
 // Who takes what the owner buys: its unit standing at the shop with room for one more, nearest the shop; when none has
 // room, nobody (the good is left at the shop's door).
-export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner: PlayerId, shop: Shop): Unit | undefined {
+export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner: PlayerId, shop: Shop, kind:ItemKind="experienceBook"): Unit | undefined {
   let best: Unit | undefined;
   let bestGap = Infinity;
   for (const unit of snapshot.units) {
-    if (unit.owner !== owner || !standsAtShop(unit, shop) || carriedItemCount(snapshot, unit.id) >= MAX_CARRIED_ITEMS) continue;
+    if (unit.owner !== owner || !standsAtShop(unit, shop) || !canEquip(unit) || !freeItemSlot(snapshot,unit,kind)) continue;
     const gap = Math.hypot(unit.x - shop.x, unit.y - shop.y);
     if (gap < bestGap) {
       best = unit;

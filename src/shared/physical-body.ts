@@ -15,5 +15,5 @@ const MASSES: Partial<Record<Unit["kind"],number>> = {
 };
 export function bodyMass(unit: Unit): number {
   const ship=shipProfile(unit);
-  return ship ? ship.hullMass+(unit.sailing?.load ?? 0) : Math.round((MASSES[unit.kind] ?? 85*(UNIT_DEFS[unit.kind].radius/UNIT_DEFS.archer.radius)**3)*(unit.radius/UNIT_DEFS[unit.kind].radius)**3);
+  return ship ? ship.hullMass+(unit.sailing?.load ?? 0) : (unit.gearMass ?? 0)+Math.round((MASSES[unit.kind] ?? 85*(UNIT_DEFS[unit.kind].radius/UNIT_DEFS.archer.radius)**3)*((unit.bodyRadius ?? unit.radius)/UNIT_DEFS[unit.kind].radius)**3);
 }

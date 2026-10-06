@@ -1,3 +1,4 @@
+import { SHIP_HULL_COST, SHIP_WEAPONS } from "./ship-equipment";
 import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";
 import { creepGoldBounty, unitValue } from "./unit-value";
@@ -14,6 +15,9 @@ export type WeaponDef = {
   navalMultiplier?: number;
   minRange?: number;
   radius?: number;
+  /** A direct cannonball bursts at its first impact; engineering bolts keep piercing. */
+  blastRadius?: number;
+  hullDamageShare?: number;
   maxHits?: number;
   pierceShare?: number;
   coneAngle?: number;
@@ -50,6 +54,8 @@ export type UnitDef = {
   tier?: 2 | 3;
   // A ship (see @@@naval): it sails deep and shallow water and nothing else.
   naval?: true;
+  /** Ship passives applied to live passengers, removed immediately on unloading. */
+  passengerDamageMultiplier?: number;
   weapon?: WeaponDef;
   /** Weapon/proficiency reticle distance per second before the global multiplier; allowed displacement from the last shot. */
   aimSpeed?: number;
@@ -203,17 +209,13 @@ export const UNIT_RULES = {
   barkMender: { hp: 68, speed: 64, radius: 18, attackDamage: 7, attackRange: 88, aimSpeed: 400, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: ["heal"] },
   stonebackBrute: { hp: 210, speed: 72, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
   gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
-  // @@@ships - Both races' ships, from the shipyard. The warship is Warcraft II's destroyer to our archer: about two
-  // archers' price, two and a half times the health and the same reach (a little under the grove archer's, over the spark
-  // archer's, well under a tower's), and a little less fight for its gold than an archer (damage a second times health,
-  // each over its price: 86% of the archer's), so the default army stays the best buy and a tower holds the shore. The
-  // transport is Warcraft II's too: half again the warship's health, three quarters of its price, no weapon; it carries
-  // eight supply of passengers, who drown with it.
-  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true },
-  warship: { trainedAt: "shipyard", hp: 180, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: { delivery: "bolt", radius: 14, maxHits: 1, navalMultiplier: 1.4 } },
+  // @@@ships - Both races can board every ship. Transport passengers deal half damage;
+  // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
+  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
+  warship: { trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
   cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true },
-  bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: 450, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
-  fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: 260, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
   carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
   siegeRam: { trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { delivery: "ram", buildingMultiplier: 3.3 } },
   ballista: { trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
