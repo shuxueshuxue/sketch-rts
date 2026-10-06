@@ -1,4 +1,9 @@
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit, UnitKind } from "../shared/types";
+import { carries } from "../shared/naval";
+
+export function selectedCargoTransports(snapshot: GameSnapshot, selectedIds: Set<string>, owner: PlayerId) {
+  return snapshot.units.filter(unit => selectedIds.has(unit.id) && unit.owner === owner && carries(unit) > 0);
+}
 
 export type SelectionGroup =
   | { id: string; entityType: "unit"; kind: UnitKind; count: number; ids: string[]; focused: boolean }

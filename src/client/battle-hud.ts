@@ -10,6 +10,12 @@ export type HudGroup = {
   key: string; name: string; count: number; focused: boolean; art: HudArt;
   activate: () => void; decorate: (button: HTMLButtonElement) => void;
 };
+export type HudPassenger = {
+  key: string; name: string; actionLabel: string; art: HudArt;
+  health: { current: number; max: number };
+  activate: () => void; decorate: (button: HTMLButtonElement) => void;
+};
+export type HudCargo = { key: string; label: string; passengers: HudPassenger[] };
 
 function canvas(className: string) {
   const node = document.createElement("canvas");
@@ -42,6 +48,9 @@ export class BattleHudSelection {
   private readonly inspectionName = text("hud-inspection-name");
   private readonly inspectionDetail = text("hud-inspection-detail");
   private readonly empty = text("hud-empty");
+  private readonly cargo = document.createElement("div");
+  private cargoShips = new Map<string, { section: HTMLDivElement; label: HTMLSpanElement; grid: HTMLDivElement }>();
+  private passengers = new Map<string, { button: HTMLButtonElement; passenger: HudPassenger }>();
   private groups = new Map<string, { button: HTMLButtonElement; group: HudGroup }>();
   private focusedKey: string | undefined;
 
@@ -58,16 +67,18 @@ export class BattleHudSelection {
     const itemCopy = document.createElement("div");
     itemCopy.append(this.inspectionName, this.inspectionDetail);
     this.inspection.append(this.inspectionArt, itemCopy);
-    root.replaceChildren(this.identity, this.grid, this.inspection, this.empty);
+    this.cargo.className = "hud-cargo";
+    root.replaceChildren(this.identity, this.grid, this.cargo, this.inspection, this.empty);
   }
 
-  render(identity: HudIdentity | undefined, groups: HudGroup[], emptyLabel: string) {
+  render(identity: HudIdentity | undefined, groups: HudGroup[], emptyLabel: string, cargo: HudCargo[] = []) {
     this.root.hidden = !identity;
     this.empty.hidden = Boolean(identity); this.empty.textContent = emptyLabel;
     this.identity.hidden = !identity;
     this.grid.hidden = groups.length < 2;
     this.inspection.hidden = !identity?.inspection;
     this.root.dataset.mode = groups.length > 1 ? "roster" : "subject";
+    this.renderCargo(cargo);
     if (identity) {
       this.root.dataset.subject = identity.key;
       this.name.textContent = identity.name; this.caption.textContent = identity.caption;
@@ -118,5 +129,45 @@ export class BattleHudSelection {
       else if (card && card.offsetTop + card.offsetHeight > this.grid.scrollTop + this.grid.clientHeight)
         this.grid.scrollTop = card.offsetTop + card.offsetHeight - this.grid.clientHeight;
     }
+  }
+
+  private renderCargo(ships: HudCargo[]) {
+    this.cargo.hidden = ships.length === 0;
+    const liveShips = new Set(ships.map(ship => ship.key));
+    const livePassengers = new Set(ships.flatMap(ship => ship.passengers.map(passenger => `${ship.key}:${passenger.key}`)));
+    for (const [key, entry] of this.cargoShips) if (!liveShips.has(key)) { entry.section.remove(); this.cargoShips.delete(key); }
+    for (const [key, entry] of this.passengers) if (!livePassengers.has(key)) { entry.button.remove(); this.passengers.delete(key); }
+    ships.forEach((ship, shipIndex) => {
+      let entry = this.cargoShips.get(ship.key);
+      if (!entry) {
+        const section = document.createElement("div"); section.className = "hud-cargo-ship";
+        const label = text("hud-cargo-label");
+        const grid = document.createElement("div"); grid.className = "hud-cargo-grid";
+        section.append(label, grid); entry = { section, label, grid }; this.cargoShips.set(ship.key, entry);
+      }
+      entry.label.textContent = ship.label;
+      if (this.cargo.children[shipIndex] !== entry.section) this.cargo.insertBefore(entry.section, this.cargo.children[shipIndex] ?? null);
+      ship.passengers.forEach((passenger, index) => {
+        const key = `${ship.key}:${passenger.key}`;
+        let card = this.passengers.get(key);
+        if (!card) {
+          const button = document.createElement("button"); button.type = "button"; button.className = "hud-roster-unit hud-cargo-passenger";
+          const health = document.createElement("div"); health.className = "hud-passenger-health"; health.append(document.createElement("span"));
+          button.append(canvas("hud-roster-art"), text("hud-roster-name"), health);
+          card = { button, passenger };
+          const liveCard = card; button.addEventListener("click", () => liveCard.passenger.activate());
+          this.passengers.set(key, card);
+        }
+        card.passenger = passenger;
+        card.button.dataset.passengerId = passenger.key; card.button.dataset.transportId = ship.key;
+        card.button.setAttribute("aria-label", passenger.actionLabel);
+        card.button.children[1]!.textContent = passenger.name;
+        const health = card.button.children[2] as HTMLElement;
+        health.title = `${Math.ceil(passenger.health.current)} / ${passenger.health.max}`;
+        (health.firstElementChild as HTMLElement).style.width = `${Math.max(0, Math.min(100, passenger.health.current / Math.max(1, passenger.health.max) * 100))}%`;
+        passenger.decorate(card.button); paint(card.button.children[0] as HTMLCanvasElement, passenger.art);
+        if (entry.grid.children[index] !== card.button) entry.grid.insertBefore(card.button, entry.grid.children[index] ?? null);
+      });
+    });
   }
 }
