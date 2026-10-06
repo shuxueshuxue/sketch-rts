@@ -1,3 +1,5 @@
+import { SHIP_WEAPONS, installedWeapons, shipNeedsRepair } from "../ship-equipment";
+import { canEquip, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
 import { shipPassengers } from "../ship-geometry";
 import { canBoard } from "../decks";
 import { abilityCooldown } from "../ability-cooldowns";
@@ -23,20 +25,20 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
   const ids="unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
-  if(["build","mine","repair","pickupItem","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
+  if(["build","mine","repair","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
   if (command.type === "aim") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
     if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) return commandError("Aim requires a finite point");
-    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(unitRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit");
+    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(weaponRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit");
   }
   if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") return missingUnitError(snapshot, owner, command.unitIds);
   if (command.type === "unloadPassenger") {
     const transport = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
     if (!transport) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
-    if (!shipPassengers(snapshot.units,transport).some(passenger => passenger.id === command.passengerId) && !transport.cargo?.some(passenger=>passenger.id===command.passengerId)) return commandError("Passenger is no longer aboard", true);
+    if (!shipPassengers(snapshot.units,transport).some(passenger => passenger.id === command.passengerId && passenger.owner === owner) && !transport.cargo?.some(passenger=>passenger.id===command.passengerId)) return commandError("Passenger is no longer aboard", true);
     return passengerLandingSpot(snapshot.map, transport, command.passengerId, snapshot.units) ? undefined : commandError("No clear landing nearby; move closer to shore or clear space for passengers", true);
   }
   if (command.type === "board") {
@@ -63,7 +65,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (missing) return missing;
     const ship = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && UNIT_DEFS[unit.kind].naval);
     if (!ship) return commandError(`Unknown ${owner} ship ${command.targetId}`, true);
-    if (ship.hp >= ship.maxHp) return commandError(`${ship.kind} is already fully repaired`, true);
+    if (!shipNeedsRepair(snapshot,ship)) return commandError(`${ship.kind} is already fully repaired`, true);
     return undefined;
   }
   if (command.type === "build") {
@@ -120,6 +122,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!canSupply(snapshot, owner, camp.hireKind)) return commandError(`Need more supply to hire ${camp.hireKind}`, true);
     return canSpendGold(snapshot, owner, camp.cost) ? undefined : commandError(`Need ${camp.cost} gold`, true);
   }
+  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);return canSpendGold(snapshot,owner,SHIP_WEAPONS[command.item].cost)?undefined:commandError(`Need ${SHIP_WEAPONS[command.item].cost} gold`,true);}
   if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item);
   if (command.type === "cast") return castError(snapshot, owner, command);
   if (command.type === "setAutocast") {
@@ -135,12 +138,14 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (missing) return missing;
     return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit.kind)) ? undefined : commandError("None of those units fights in melee");
   }
+  if(command.type === "transferItem"){const message=transferRefusal(snapshot,owner,command.itemId,command.destination);return message?commandError(message,true):undefined;}
+  if(command.type === "wieldItem"){const message=wieldRefusal(snapshot,owner,command.unitId,command.itemId,command.hand);return message?commandError(message,true):undefined;}
   if (command.type === "pickupItem") {
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
     if (!item) return commandError(`Unknown item ${command.itemId}`, true);
-    if (item.carrierId) return commandError(`${item.id} is already carried`, true);
-    return carriedItemCount(snapshot, command.unitId) < MAX_CARRIED_ITEMS ? undefined : commandError(`${command.unitId} carries ${MAX_CARRIED_ITEMS} items already`, true);
+    if (item.carrierId || item.shipId) return commandError(`${item.id} is already carried`, true);
+    const unit=snapshot.units.find(unit=>unit.id===command.unitId)!;return canEquip(unit) && freeItemSlot(snapshot,unit,item.kind) ? undefined : commandError(`${command.unitId} has no free equipment position`,true);
   }
   if (command.type === "dropItem" || command.type === "useItem") {
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
@@ -235,7 +240,9 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     if (!hasCurrentUnit(game, owner, command.unitId)) return undefined;
     return game.items.some((item) => item.id === command.itemId) ? command : undefined;
   }
-  if (command.type === "hire" || command.type === "buy") {
+  if(command.type === "transferItem")return game.items.some(item=>item.id===command.itemId) ? command : undefined;
+  if(command.type === "wieldItem")return hasCurrentUnit(game,owner,command.unitId) ? command : undefined;
+  if (command.type === "hire" || command.type === "buy" || command.type==="buyShipEquipment") {
     return command;
   }
   return command satisfies never;
@@ -298,6 +305,7 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
   const caster = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner);
   if (!caster) return commandError(`Unknown ${owner} caster ${command.unitId}`, true);
   if (!UNIT_DEFS[caster.kind].abilities.includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`);
+  if(command.ability==="incendiaryFlume" && caster.fittings && !installedWeapons(snapshot,caster).some(item=>item.kind==="flameProjector" && (item.durability ?? 1)>0))return commandError("An operational flame projector is required",true);
   if (abilityCooldown(caster, command.ability) > 0) return commandError(`${caster.kind} is on cooldown`, true);
   const behavior = ABILITY_DEFS[command.ability].behavior;
   if (behavior === "weapon") {

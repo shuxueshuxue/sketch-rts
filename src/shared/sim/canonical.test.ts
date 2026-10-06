@@ -42,11 +42,11 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Recorded on mac1 (node 26, arm64) under en-US, lt-LT and et-EE, and checked on the A100 (node 22, x64). The ladder
-    // map is laid out with det-math (its checksum recorded on mac1, again once its halls stood on whole cells).
-    expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("2e7bb724");
+    // Equipment version 1 adds real service weapons and equipment mass to fresh games.
+    // Map geometry still uses det-math; key/id ordering is independent of locale.
+    expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("44e8a625");
     const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
     // Balance changes and per-second movement rates change the spawned units' live stats.
-    expect(checksumGame(ladder)).toBe("a8dcb6ff");
+    expect(checksumGame(ladder)).toBe("7898f3a0");
   });
 });
