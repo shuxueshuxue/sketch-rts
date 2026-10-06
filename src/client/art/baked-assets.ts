@@ -2,16 +2,18 @@ import { createScratchCanvas } from "./scratch-canvas";
 
 type ImageSource = CanvasImageSource;
 const images=new Map<string,ImageSource>();
+let assetVersion=0;
+export function bakedAssetsVersion(){return assetVersion;}
 const requested=new Set<string>();
 const tinted=new Map<string,HTMLCanvasElement>();
 /** The recorder supplies native Canvas images; browsers load the same deployed assets. */
-export function installBakedImage(key:string,image:ImageSource){images.set(key,image);}
+export function installBakedImage(key:string,image:ImageSource){images.set(key,image);assetVersion++;}
 export function bakedImage(key:string):ImageSource|undefined {
   const known=images.get(key);if(known)return known;
   if(typeof Image==="undefined" || requested.has(key))return undefined;
   requested.add(key);
   const image=new Image();
-  image.onload=()=>images.set(key,image);
+  image.onload=()=>{images.set(key,image);assetVersion++;};
   image.onerror=()=>{ /* retain the request marker; the fallback remains available */ };
   const base=(import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL ?? "/";
   image.src=`${base}art/${key}.png`;

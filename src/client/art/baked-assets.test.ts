@@ -10,7 +10,7 @@ describe("deployed Blender art", () => {
       const image = await loadImage(readFileSync(`public/art/buildings/${kind}${suffix}.png`));
       expect([image.width,image.height]).toEqual([256,256]);
     }
-    for (const kind of SHIP_KINDS) for (const layer of ["base", "upper", "depth"]) {
+    for (const kind of SHIP_KINDS) for (const layer of ["base", "upper", "depth",...(["warship","bombardShip","fireShip"].includes(kind)?["weapon","weapon-depth"]:[])]) {
       const image = await loadImage(readFileSync(`public/art/ships/${kind}-${layer}.png`));
       expect([image.width,image.height]).toEqual([SHIP_CAMERA.frameSize*8,SHIP_CAMERA.frameSize*4]);
     }
@@ -25,7 +25,7 @@ describe("deployed Blender art", () => {
   });
   it("leaves transparent padding around every ship heading, including tall carrier sails", async () => {
     const n=SHIP_CAMERA.frameSize;
-    for(const kind of SHIP_KINDS) for(const layer of ["base","upper","depth"]) {
+    for(const kind of SHIP_KINDS) for(const layer of ["base","upper","depth",...(["warship","bombardShip","fireShip"].includes(kind)?["weapon","weapon-depth"]:[])]) {
       const image=await loadImage(readFileSync(`public/art/ships/${kind}-${layer}.png`));
       const canvas=createCanvas(n,n),ctx=canvas.getContext("2d");
       for(let direction=0;direction<SHIP_CAMERA.directions;direction++) {
