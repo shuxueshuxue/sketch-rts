@@ -17,8 +17,9 @@ export class ModelLibrary {
   private load(key:string,phase:ResourcePhase){
     const url=resources.url(`art/world3d/${key}.glb`);
     if(this.models.has(key)){void resources.bytes(url,key,phase);return Promise.resolve();}
+    const data=resources.bytes(url,key,phase);
     let pending=this.pending.get(key);if(!pending){pending=(async()=>{
-      const bytes=await resources.bytes(url,key,phase);const result=await new GLTFLoader().parseAsync(bytes,resources.url('art/world3d/'));
+      const bytes=await data;const result=await new GLTFLoader().parseAsync(bytes,resources.url('art/world3d/'));
       result.scene.updateMatrixWorld(true);result.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.castShadow=true;object.receiveShadow=true;}});
       this.models.set(key,result.scene);
     })().catch(error=>{this.pending.delete(key);throw error;});this.pending.set(key,pending);}return pending;

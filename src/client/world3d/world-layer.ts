@@ -63,7 +63,7 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.deckMotion.clear();this.facing=new CrewFacingTracker();}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();}
   private deckPosition(unit:Unit,now:number){
     const track=this.deckMotion.get(unit.id)!;const t=Math.max(0,Math.min(1,(now-track.at)*SIM_TICKS_PER_SECOND/1000));
     return{x:track.fromX+(track.x-track.fromX)*t,y:track.fromY+(track.y-track.fromY)*t};

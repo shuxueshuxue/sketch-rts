@@ -52,6 +52,13 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     frame.view={...frame.view,width:1100};layer.draw(frame);expect(gpu.sizes).toBe(2);
     expect(JSON.stringify(frame.snapshot)).toBe(original);layer.dispose();
   });
+  it('clears visual picking and deck projection when switching worlds before the next draw',async()=>{
+    const {frame,layer}=setup();await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(layer.positions.size).toBeGreaterThan(0);
+    layer.reset();expect(layer.positions.size).toBe(0);
+    expect(layer.pick({x:600,y:450})).toBeUndefined();expect(layer.plane({x:600,y:450},0)).toBeUndefined();
+    layer.dispose();
+  });
   it('prepares every land unit painting as a selectable colored cutout, including large beasts and siege weapons',async()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
     for(const kind of Object.keys(UNIT_DEFS) as (keyof typeof UNIT_DEFS)[])if(!isShipKind(kind))game.spawnUnit('player',kind,600,600);
