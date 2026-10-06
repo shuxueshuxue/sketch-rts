@@ -1,7 +1,8 @@
 import type { UnitModel } from '../../story/cast';
 import { polygon, line, ellipse, type Brush } from './kit';
 import type { UnitKind } from '../../shared/types';
-import type { UnitAnimationFrame } from '../unit-animation';
+import { unitMover } from '../../shared/catalog';
+import { IDLE_FRAME, type UnitAnimationFrame } from '../unit-animation';
 import { withUnitPose } from './pose';
 import { poseOf } from './pose';
 const ink = '#252f34', wood = '#77634c', metal = '#7d9298', ivory = '#d9d0b6';
@@ -94,6 +95,8 @@ export function paintWarfareUnit(b: Brush, kind: UnitKind, team: string, pose: U
     const id = MODEL_IDS[kind];
     if (!id)
         return false;
-    withUnitPose(b, pose, () => warfarePainter(id)(b, team));
+    // Sailing ships have no walking bounce; land siege engines keep their wheel motion.
+    const sailingPose = unitMover(kind) === 'sea' && pose.mode === 'walk' ? IDLE_FRAME : pose;
+    withUnitPose(b, sailingPose, () => warfarePainter(id)(b, team));
     return true;
 }
