@@ -280,6 +280,9 @@ def build_in_blender():
         links.new(emit.outputs[0], out.inputs[0])
 
         bpy.ops.wm.save_as_mainfile(filepath=str(build / (kind + ".blend")))
+        if os.environ.get("SKETCH_SHIP_MODELS_ONLY") == "1":
+            metadata["ships"][kind] = {**spec, "hull": hull, "deck": deck}
+            continue
         for direction in ((0, 4, 8, 12) if preview else range(settings["directions"])):
             rig.rotation_euler.z = direction * math.tau / settings["directions"]
             layers = ("base", "upper", "depth", "weapon", "weapon-depth") if weapon else ("base", "upper", "depth")

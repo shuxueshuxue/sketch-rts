@@ -1,4 +1,5 @@
 import { UNIT_DEFS } from "../shared/catalog";
+import { resources,type ResourcePhase } from './resources';
 import type { UnitKind } from "../shared/types";
 
 // @@@sound - The game's sounds, heard on the client only: the simulation never hears them, so a game plays the same with
@@ -167,7 +168,7 @@ export class Soundboard {
     const buffer = this.buffers.get(url);
     if (buffer) return this.playClip(event, sound, clip, buffer, place);
     const pack = this.pack, requestedAt = this.ctx.currentTime;
-    void this.loadClip(url).then(buffer => {
+    void this.loadClip(url,EVENT_GROUPS[event]==='ui'?'home':'match').then(buffer => {
       // Do not play a delayed battle or a previous pack's voice after settings change.
       if (buffer && this.pack === pack && this.ctx && this.ctx.currentTime - requestedAt < .35) this.playClip(event, sound, clip, buffer, place);
     });
@@ -213,24 +214,22 @@ export class Soundboard {
     for (const [group, node] of this.groups) node.gain.value = this.settings[group];
   }
 
-  // Warm common default clips; individual combat clips load on demand.
+  // Homepage gestures only warm interface clips; combat waits for a match.
   private loadPack() {
     if (!this.ctx) return;
-    const clips = Object.values(this.pack?.sounds ?? {}).flatMap(sound => sound.clip ? [sound.clip] : []);
-    for (const { url } of clips.slice(0, 8)) void this.loadClip(url);
+    for(const event of ['click','menu'] as const){const clip=this.pack?.sounds[event]?.clip;if(clip)void this.loadClip(clip.url,'home');}
   }
 
-  private loadClip(url: string): Promise<AudioBuffer | undefined> {
+  async prepareMatch(){if(!this.ctx)return;const clips=Object.entries(this.pack?.sounds??{}).filter(([event])=>EVENT_GROUPS[event as SoundEvent]==='effects').flatMap(([,sound])=>sound.clip?[sound.clip]:[]);await Promise.all(clips.slice(0,8).map(clip=>this.loadClip(clip.url,'match')));}
+
+  private loadClip(url: string,phase:ResourcePhase='match'): Promise<AudioBuffer | undefined> {
     const ctx = this.ctx;
     if (!ctx || this.failed.has(url)) return Promise.resolve(undefined);
     const buffer = this.buffers.get(url);
     if (buffer) return Promise.resolve(buffer);
     const pending = this.loading.get(url);
     if (pending) return pending;
-    const request = fetch(url).then(response => {
-      if (!response.ok) throw new Error(`Audio answered ${response.status}`);
-      return response.arrayBuffer();
-    }).then(data => ctx.decodeAudioData(data)).then(buffer => {
+    const request = resources.bytes(url,`audio/${url.split('/').slice(-2).join('/')}`,phase).then(data => ctx.decodeAudioData(data.slice(0))).then(buffer => {
       this.buffers.set(url, buffer); return buffer;
     }).catch(() => { this.failed.add(url); return undefined; }).finally(() => this.loading.delete(url));
     this.loading.set(url, request);

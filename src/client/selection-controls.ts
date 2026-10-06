@@ -22,8 +22,9 @@ export function selectInScreenBox(
   project: (point: Point) => Point,
   previous: SelectionState,
   additive: boolean,
+  unitPosition:(unit:Unit)=>Point=unit=>unitPointerPosition(snapshot.units,unit),
 ): SelectionState {
-  const units = snapshot.units.filter((unit) => unit.owner === owner && isProjectedInside(unitPointerPosition(snapshot.units,unit), rect, project)).map((unit) => unit.id);
+  const units = snapshot.units.filter((unit) => unit.owner === owner && isProjectedInside(unitPosition(unit), rect, project)).map((unit) => unit.id);
   if (units.length > 0) return applySelectionPick(previous, units, additive);
   const building = snapshot.buildings.find((candidate) => candidate.owner === owner && isProjectedInside(candidate, rect, project));
   return applySelectionPick(previous, building ? [building.id] : [], additive);

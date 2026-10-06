@@ -10,7 +10,7 @@ import { paintBuildingModel } from "./art/building-models";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { drawWorld, trackUnitFacing, type WorldLabels } from "./world-renderer";
+import { drawWorld, trackUnitFacing, type WorldLabels,type WorldFrame } from "./world-renderer";
 import { boardUnit, deckPlacement, projectDeckPoint, syncDecks } from '../shared/decks';
 import { localToWorld, shipProfile } from '../shared/ship-geometry';
 
@@ -323,8 +323,11 @@ export class MenuBackdrop {
     return this.scene;
   }
 
+  prepare(now:number){if(!this.run)this.begin(now);this.snapshot??=snapshotGame(this.run!.game);return this.snapshot;}
+  get architectureKinds(){return this.run?.props.map(prop=>prop.kind).filter(kind=>['statue','well','beacon','citadel'].includes(kind))??[];}
+
   /** Steps the scene to `now` and paints it, at most thirty times a second; the canvas keeps the last picture between. */
-  draw(ctx: CanvasRenderingContext2D, width: number, height: number, now: number, reducedMotion = false) {
+  draw(ctx: CanvasRenderingContext2D, width: number, height: number, now: number, reducedMotion = false,paint:(frame:WorldFrame)=>void=drawWorld) {
     if (now - this.lastPaint < FRAME_MS) return;
     this.lastPaint = now;
     if (!this.run) this.begin(now);
@@ -352,7 +355,7 @@ export class MenuBackdrop {
       y: clamp(run.focus.y - view.height * 0.5 + Math.cos(age * 0.04) * 30, 0, map.height - view.height),
     };
     ctx.save();
-    drawWorld({
+    paint({
       ctx,
       snapshot: this.snapshot,
       view: { ...camera, width, height, zoom },
