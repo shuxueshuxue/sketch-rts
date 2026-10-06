@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot } from "./rooms";
+import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot, winningResultSlots } from "./rooms";
 import { createRoomLifecycleHost } from "./room-lifecycle";
 import { parseSlotPatch } from "./room-schema";
 import type { LocalUserProfile } from "./types";
@@ -9,6 +9,19 @@ const host: LocalUserProfile = { id: "user-host", name: "Host" };
 const guest: LocalUserProfile = { id: "user-guest", name: "Guest" };
 
 describe("room model", () => {
+  it("resolves the winner by player id to the same names as the results table, including sparse seats and teams", () => {
+    const room = createRoom({ id: "result-names", host, humanCount: 1, aiCount: 3 });
+    const snapshot = snapshotGame(createGame("bareDuel"));
+    snapshot.match.winner = "enemy2";
+    const result = finishRoom(room, snapshot).result!;
+    expect(winningResultSlots(result).map(slot => slot.name)).toEqual(["AI 2"]);
+    expect(winningResultSlots({ ...result, winner: "player-4" }).map(slot => slot.name)).toEqual(["AI 3"]);
+    expect(winningResultSlots({ ...result, winner: "player" }).map(slot => slot.name)).toEqual([host.name]);
+    expect(winningResultSlots({ ...result, winner: null })).toEqual([]);
+    expect(winningResultSlots({ ...result, slots: result.slots.filter(slot => slot.playerId !== "enemy") }).map(slot => slot.name)).toEqual(["AI 2"]);
+    const teams = result.slots.map(slot => ({ ...slot, team: slot.playerId === "enemy2" ? "north" : slot.playerId === "player-4" ? "team-1" : "team-2" }));
+    expect(winningResultSlots({ ...result, slots: teams }).map(slot => slot.name)).toEqual(["AI 2", "AI 3"]);
+  });
   it("starts solo and LAN matches through the same slot setup contract", () => {
     let room = createRoom({ id: "room-1", host, slotCount: 4 });
     room = updateRoomSlot(room, "slot-2", { controller: "open", name: "Open", ready: false });

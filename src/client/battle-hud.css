@@ -46,6 +46,15 @@
 .hud-roster-art { width:48px; height:48px; display:block; }
 .hud-roster-name { width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center; font-size:9px; line-height:16px; }
 .hud-roster-count { position:absolute; top:2px; right:3px; padding:0 3px; border-radius:3px; background:#111b22e8; color:var(--battle-ink); font-size:10px; line-height:14px; }
+.hud-cargo[hidden] { display:none; }
+.hud-cargo { max-height:min(230px,35dvh); overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain; }
+.hud-cargo-ship { margin-top:6px; padding-top:6px; border-top:1px solid var(--battle-edge); }
+.hud-cargo-label { display:block; color:var(--battle-accent); font-size:10px; line-height:1.5; }
+.hud-cargo-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; }
+.hud-cargo-passenger { height:74px; }
+.hud-cargo-passenger:hover::after { content:'⤓'; position:absolute; top:2px; right:2px; color:var(--battle-accent); font-size:16px; }
+.hud-passenger-health { position:absolute; bottom:2px; left:6px; right:6px; height:3px; background:#0d161c; overflow:hidden; }
+.hud-passenger-health > span { display:block; height:100%; background:#a6ba80; }
 .hud-inspection { display:grid; grid-template-columns:42px minmax(0,1fr); align-items:center; gap:8px; border-top:1px solid var(--battle-edge); padding-top:5px; margin-top:5px; }
 .hud-inspection-art { width:42px; height:42px; }
 .hud-inspection-name,.hud-inspection-detail { display:block; font-size:11px; line-height:1.5; }

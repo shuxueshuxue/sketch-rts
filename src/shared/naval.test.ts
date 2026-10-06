@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
-import { commandValidationError } from "./sim/command-validation";
+import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
+import { applyCommandFrame } from "./sim/frame";
 import { isWalkable, type Terrain } from "./terrain";
 import type { ScenarioBuildingSeed, ScenarioUnitSeed } from "./types";
 
@@ -120,6 +121,63 @@ describe("ships", () => {
 });
 
 describe("transports", () => {
+  function loadedFerry(col = 9) {
+    const sim = game([
+      { id: "ferry", owner: "player", kind: "transport", ...at(col, 9) },
+      { id: "a", owner: "player", kind: "footman", ...at(5, 9) },
+      { id: "b", owner: "player", kind: "archer", ...at(5, 10) },
+    ]);
+    const ferry = unit(sim, "ferry")!;
+    ferry.cargo = sim.units.filter(candidate => candidate.id === "a" || candidate.id === "b");
+    sim.units = sim.units.filter(candidate => !ferry.cargo!.includes(candidate));
+    return { sim, ferry };
+  }
+
+  it("unloads only the clicked passenger, preserves the sailing order, and accepts consecutive clicks", () => {
+    const { sim, ferry } = loadedFerry();
+    const supply = sim.players.player!.supplyUsed;
+    ferry.order = { type: "move", ...at(15, 9) };
+    ferry.cargo![0]!.orderQueue = [{ type: "board", transportId: ferry.id }];
+    issuePlayerCommand(sim, "player", { type: "unloadPassenger", transportId: "ferry", passengerId: "a" });
+    expect(ferry.cargo?.map(passenger => passenger.id)).toEqual(["b"]);
+    expect(unit(sim, "a")!.order).toEqual({ type: "idle" });
+    expect(unit(sim, "a")!.orderQueue?.length ?? 0).toBe(0);
+    expect(isWalkable(sim.map, unit(sim, "a")!.x, unit(sim, "a")!.y)).toBe(true);
+    expect(ferry.order).toEqual({ type: "move", ...at(15, 9) });
+    issuePlayerCommand(sim, "player", { type: "unloadPassenger", transportId: "ferry", passengerId: "b" });
+    expect(ferry.cargo).toBeUndefined();
+    expect(unit(sim, "b")).toBeDefined();
+    expect(sim.players.player!.supplyUsed).toBe(supply);
+  });
+
+  it("rejects a portrait unload in deep water with a shore message, leaving passengers and orders untouched", () => {
+    const { sim, ferry } = loadedFerry(14);
+    const command = { type: "unloadPassenger" as const, transportId: "ferry", passengerId: "a" };
+    expect(commandValidationError(snapshotGame(sim), "player", command)).toMatch(/No land nearby/);
+    applyCommandFrame(sim, { roomId: "test", tick: sim.tick, sequence: 0, commands: [{ playerId: "player", command }] });
+    expect(ferry.cargo).toHaveLength(2);
+    expect(unit(sim, "a")).toBeUndefined();
+    expect(ferry.order.type).toBe("idle");
+  });
+
+  it("does not unload another owner's cargo or repeat a stale passenger click", () => {
+    const { sim, ferry } = loadedFerry();
+    const command = { type: "unloadPassenger" as const, transportId: "ferry", passengerId: "a" };
+    expect(commandValidationError(snapshotGame(sim), "enemy", command)).toMatch(/Unknown/);
+    expect(commandValidationError(snapshotGame(sim), "player", { ...command, passengerId: "missing" })).toMatch(/no longer aboard/);
+    issuePlayerCommand(sim, "player", command);
+    expect(narrowFrameCommandToLiveOperands(sim, "player", command)).toBeUndefined();
+    expect(ferry.cargo).toHaveLength(1);
+    expect(sim.units.filter(candidate => candidate.id === "a")).toHaveLength(1);
+  });
+
+  it("replays several portrait clicks in one network frame without replacing earlier unloads", () => {
+    const { sim, ferry } = loadedFerry();
+    applyCommandFrame(sim, { roomId: "test", tick: sim.tick, sequence: 0, commands: ["a", "a", "b"].map(passengerId => ({ playerId: "player", command: { type: "unloadPassenger", transportId: "ferry", passengerId } })) });
+    expect(ferry.cargo).toBeUndefined();
+    expect(sim.units.filter(candidate => candidate.id === "a" || candidate.id === "b")).toHaveLength(2);
+  });
+
   it("honors a larger campaign ship capacity through native boarding and supply accounting", () => {
     const sim = game([
       { id: "carrier", owner: "player", kind: "transport", ...at(11, 9) },
