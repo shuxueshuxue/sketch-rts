@@ -1,3 +1,5 @@
+import { shipPassengers } from "../ship-geometry";
+import { canBoard } from "../decks";
 import { abilityCooldown } from "../ability-cooldowns";
 import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
@@ -20,6 +22,8 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
 }
 
 export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
+  const ids="unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+  if(["build","mine","repair","pickupItem","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
   if (command.type === "aim") {
@@ -32,13 +36,16 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if (command.type === "unloadPassenger") {
     const transport = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
     if (!transport) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
-    if (!transport.cargo?.some(passenger => passenger.id === command.passengerId)) return commandError("Passenger is no longer aboard", true);
-    return passengerLandingSpot(snapshot.map, transport, command.passengerId) ? undefined : commandError("No land nearby to unload; move the transport closer to shore", true);
+    if (!shipPassengers(snapshot.units,transport).some(passenger => passenger.id === command.passengerId) && !transport.cargo?.some(passenger=>passenger.id===command.passengerId)) return commandError("Passenger is no longer aboard", true);
+    return passengerLandingSpot(snapshot.map, transport, command.passengerId, snapshot.units) ? undefined : commandError("No land nearby to unload; move the transport closer to shore", true);
   }
   if (command.type === "board") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    return snapshot.units.some((unit) => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0) ? undefined : commandError(`Unknown ${owner} transport ${command.transportId}`, true);
+    const ship = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
+    if (!ship) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
+    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && canBoard(ship, unit, snapshot.units))
+      ? undefined : commandError("No free deck space or payload capacity for these units", true);
   }
   if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, true));
   if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, true));
@@ -151,7 +158,8 @@ function commandError(message: string, transient = false): CommandLegalityError 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
   if (!game.players[owner]) return command;
   if (command.type === "unloadPassenger") {
-    return currentUnit(game, owner, command.transportId)?.cargo?.some(passenger => passenger.id === command.passengerId) ? command : undefined;
+    const ship=currentUnit(game,owner,command.transportId);
+    return ship && (shipPassengers(game.units,ship).some(passenger=>passenger.id===command.passengerId) || ship.cargo?.some(passenger=>passenger.id===command.passengerId)) ? command : undefined;
   }
   if (command.type === "move" || command.type === "attackMove" || command.type === "aim" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);

@@ -1,3 +1,4 @@
+import { restoreCargoDecks } from "../decks";
 import { describe, expect, it } from "vitest";
 import { resolveVariant } from "../catalog";
 import { createShop } from "../shop";
@@ -23,8 +24,14 @@ describe("game snapshot restoration", () => {
     source.units[1]!.cargo = [createUnit("passenger", "player", "archer", 1000, 1500)];
     shove(source.units[0]!, 1, 0, 100);
     source.variants = { "test/champion": resolveVariant({ base: "archer", speed: 80 }) };
+    restoreCargoDecks(source.units);
     const expected = snapshotGame(source);
     const older = structuredClone(expected);
+    const passenger = older.units.find(unit => unit.id === "passenger")!;
+    delete passenger.deck;
+    older.units = older.units.filter(unit => unit !== passenger);
+    older.units[1]!.cargo = [passenger];
+    delete older.units[1]!.sailing;
     delete older.rateUnits;
     const oldRates = (unit: Unit) => {
       unit.speed /= 20;

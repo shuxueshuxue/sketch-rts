@@ -7,7 +7,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // compared: the same game mostly hashes differently under each.
 // 3: persistent corpse records participate in deterministic state checks.
 // 4: movement and push velocities use distance per second.
-export const CHECKSUM_VERSION = 4;
+// 5: live deck crew, local deck orders and continuous hull poses.
+export const CHECKSUM_VERSION = 5;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
