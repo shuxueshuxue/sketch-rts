@@ -437,8 +437,9 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.setAttribute("aria-label", `${label} (${hotkey.toUpperCase()})`);
   applyTooltip(element, tooltip());
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
-  if (portrait) drawCommandPortrait(element, portrait);
-  else {
+  // Hidden match commands must not fetch their portraits during startup.
+  // updateHud paints a portrait when its command actually becomes visible.
+  if (!portrait) {
     const markup = commandIconMarkup(icon);
     if (markup) element.querySelector(".command-icon")!.innerHTML = markup;
   }
