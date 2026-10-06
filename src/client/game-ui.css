@@ -16,8 +16,9 @@
 :is(.resource-card,.game-settings,.equipment-panel) button:focus-visible { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
 .hud-subject-art { height:90px; object-fit:fill; }
 .command-icon { justify-items:center; }
-.command-portrait { width:100%; height:100%; object-fit:contain; }
-.hud-roster-art { width:min(48px,100%); height:48px; object-fit:contain; }
+.command-portrait { width:39px; height:39px; max-width:100%; object-fit:contain; }
+.hud-roster-art { width:min(48px,100%); height:auto; aspect-ratio:1; max-height:48px; object-fit:contain; }
+.control-deck .command-dock,.control-deck .item-dock { width:fit-content; max-width:100%; }
 .equipment-cargo { background:var(--game-leather); }
 .game-settings { width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; padding:18px; overflow:auto; font:13px/1.5 var(--game-text); }
 .game-settings::backdrop { background:#0c100e99; }

@@ -7,8 +7,8 @@ import './world-presentation.css';
 
 type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[]};
 
-/** Coordinates the three presentation layers. This module has no Three.js
- * dependency until a device creates WebGL2; networking/simulation stay separate. */
+/** Coordinates the three presentation layers. Model code loads with the scene,
+ * after bootstrap; networking and simulation stay separate. */
 export class WorldPresentation {
   private ground=document.createElement('canvas');
   private actors=document.createElement('canvas');
