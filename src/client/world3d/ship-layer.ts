@@ -72,7 +72,10 @@ export class Ship3DLayer {
       }
       for(const unit of snapshot.units.filter(unit=>unit.deck?.shipId===ship.id)){
         liveCrew.add(unit.id);let mesh=this.crew.get(unit.id);
-        if(!mesh){mesh=new THREE.Mesh(this.card,new THREE.MeshStandardMaterial({alphaTest:.4,side:THREE.DoubleSide,roughness:1,metalness:0}));mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.unitId=unit.id;this.crew.set(unit.id,mesh);this.scene.add(mesh);}
+        // The paintings already contain their shading. A camera-facing plane has
+        // no physical surface normal: lighting it makes colors depend on view yaw.
+        // Keep painted colors and physical depth, and cast the cutout onto the deck.
+        if(!mesh){mesh=new THREE.Mesh(this.card,new THREE.MeshBasicMaterial({alphaTest:.4,side:THREE.DoubleSide,toneMapped:false}));mesh.castShadow=true;mesh.userData.unitId=unit.id;this.crew.set(unit.id,mesh);this.scene.add(mesh);}
         const deck=this.deckPoint(unit.id,now),c=Math.cos(heading),s=Math.sin(heading);
         mesh.position.set(at.x+deck.x*c-deck.y*s,shipProfile(ship)!.deckHeight,-at.y-deck.x*s-deck.y*c);
         mesh.quaternion.copy(cardRotation);
@@ -83,7 +86,7 @@ export class Ship3DLayer {
         if(this.poses.get(unit.id)!==key){
           let texture=this.textures.get(key);
           if(!texture){const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const ctx=canvas.getContext('2d')!;ctx.translate(64,96);ctx.scale(1.5*facing,1.5);paintFigure(ctx,unit.kind,color,frame,facing);texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;this.textures.set(key,texture);}
-          const material=mesh.material as THREE.MeshStandardMaterial;material.map=texture;material.needsUpdate=true;this.poses.set(unit.id,key);
+          const material=mesh.material as THREE.MeshBasicMaterial;material.map=texture;material.needsUpdate=true;this.poses.set(unit.id,key);
         }
       }
     }
