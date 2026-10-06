@@ -37,7 +37,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const transport = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
     if (!transport) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
     if (!shipPassengers(snapshot.units,transport).some(passenger => passenger.id === command.passengerId) && !transport.cargo?.some(passenger=>passenger.id===command.passengerId)) return commandError("Passenger is no longer aboard", true);
-    return passengerLandingSpot(snapshot.map, transport, command.passengerId, snapshot.units) ? undefined : commandError("No land nearby to unload; move the transport closer to shore", true);
+    return passengerLandingSpot(snapshot.map, transport, command.passengerId, snapshot.units) ? undefined : commandError("No clear landing nearby; move closer to shore or clear space for passengers", true);
   }
   if (command.type === "board") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
