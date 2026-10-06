@@ -4,12 +4,13 @@ import { stepGame } from '../shared/sim';
 import { footprintCells } from '../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { MENU_SCENES } from './menu-scenes';
-import { hullContact } from '../shared/ship-geometry';
+import { hullContact, shipProfile } from '../shared/ship-geometry';
 
 describe('menu demonstration worlds', () => {
   it('turns the whole convoy on both return legs without hull pileups',()=>{
     const run=MENU_SCENES.find(scene=>scene.id==='fleet')!.create();
-    const ships=run.game.units.filter(unit=>unit.sailing),start=ships.map(unit=>unit.x),peaks=[...start];
+    const ships=run.game.units.filter(unit=>shipProfile(unit)),start=ships.map(unit=>unit.x),peaks=[...start];
+    expect(ships).toHaveLength(5);
     const returned=ships.map(()=>false);
     for(let tick=0;tick<120*SIM_TICKS_PER_SECOND;tick++){
       run.script(run.game,tick/SIM_TICKS_PER_SECOND);stepGame(run.game);
@@ -52,9 +53,22 @@ describe('menu demonstration worlds', () => {
     for(const scene of MENU_SCENES) {
       const run=scene.create(), terrain=run.game.map.terrain!;
       for(const unit of run.game.units) {
+        if(unit.deck){expect(run.game.units.some(ship=>ship.id===unit.deck!.shipId && shipProfile(ship))).toBe(true);continue;}
         const cell=terrain.cells[Math.floor(unit.y/terrain.cell)*terrain.cols+Math.floor(unit.x/terrain.cell)];
         expect(UNIT_DEFS[unit.kind].naval?['~',',']:['.',',']).toContain(cell);
       }
     }
   });
+  it('keeps guards on deck and lets only actual local patrol movement animate walking',()=>{
+    const run=MENU_SCENES.find(scene=>scene.id==='fleet')!.create();
+    const crew=run.game.units.filter(unit=>unit.deck),start=new Map(crew.map(unit=>[unit.id,{...unit.deck!}]));
+    expect(crew.length).toBeGreaterThanOrEqual(10);
+    const moving=new Set<string>();
+    for(let tick=0;tick<20*SIM_TICKS_PER_SECOND;tick++) {
+      run.script(run.game,tick/SIM_TICKS_PER_SECOND);stepGame(run.game);
+      for(const unit of crew){expect(unit.hp).toBeGreaterThan(0);expect(unit.deck?.shipId).toBe(start.get(unit.id)!.shipId);if(Math.hypot(unit.deck!.x-start.get(unit.id)!.x,unit.deck!.y-start.get(unit.id)!.y)>2)moving.add(unit.id);}
+    }
+    expect(moving.size).toBeGreaterThan(0);
+    expect(crew.filter(unit=>unit.kind!=='worker').every(unit=>!moving.has(unit.id))).toBe(true);
+  },15000);
 });

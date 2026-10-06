@@ -8,7 +8,7 @@ export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
 export const AIM_SPEED_MULTIPLIER = 2 / 3;
 
 export function aimingProfile(rules: UnitDef) {
-  if (rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
+  if (rules.naval || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
   return {
     speed: (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER,
     moveTolerance: rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE,
@@ -18,7 +18,9 @@ export function aimingProfile(rules: UnitDef) {
 /** Walking, crowd separation, shoves and unloading all invalidate the same displacement budget. */
 export function invalidateMovedAim(unit: Unit, rules: UnitDef) {
   if (!unit.aim) return;
-  const tolerance = aimingProfile(rules)?.moveTolerance ?? 0;
+  const profile = aimingProfile(rules);
+  if (!profile) { unit.aim = undefined; return; }
+  const tolerance = profile.moveTolerance;
   const displacement = unit.deck
     ? Math.hypot(unit.deck.x-(unit.aim.anchorDeckX ?? unit.deck.x),unit.deck.y-(unit.aim.anchorDeckY ?? unit.deck.y))
     : Math.hypot(unit.x-unit.aim.anchorX,unit.y-unit.aim.anchorY);
@@ -28,7 +30,7 @@ export function invalidateMovedAim(unit: Unit, rules: UnitDef) {
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
 export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number) {
   const profile = aimingProfile(rules);
-  if (!profile) return true;
+  if (!profile) { unit.aim = undefined; return true; }
   invalidateMovedAim(unit, rules);
   if (!unit.aim) {
     unit.aim = { x: unit.x, y: unit.y, anchorX: unit.x, anchorY: unit.y, tracking: true, updatedTick: tick - 1 };

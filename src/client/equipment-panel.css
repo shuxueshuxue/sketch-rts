@@ -71,7 +71,7 @@
 .equipment-stat small { color:#a7a18b; font-size:9px; }
 .equipment-stat strong { color:#e6d4a9; font:15px/1.2 var(--game-serif); }
 [data-equipment-access] { margin:0; color:#b8c29b; font-size:10px; align-self:center; }
-.equipment-hold { min-height:0; display:grid; grid-template-columns:repeat(var(--hold-columns),minmax(0,1fr)); grid-template-rows:repeat(var(--hold-rows),minmax(0,1fr)); gap:3px; }
+.equipment-hold { min-height:0; display:grid; grid-template-columns:repeat(var(--hold-columns),minmax(0,1fr)); grid-template-rows:repeat(var(--hold-rows),minmax(0,55px)); align-content:start; gap:3px; }
 .equipment-hold .equipment-cell > small { padding:2px 4px; font-size:8px; color:#aaa083; }
 .equipment-hold .equipment-item { position:absolute; inset:0; height:100%; padding:8px 0 0; }
 .equipment-hold .equipment-item canvas { width:46px; height:46px; max-height:85%; }
@@ -89,10 +89,8 @@
 .equipment-fittings { position:relative; min-height:0; height:100%; }
 .equipment-deck-plan { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
 .equipment-deck-plan svg { width:100%; height:100%; filter:drop-shadow(0 8px 5px #0009); }
-.equipment-fittings > .equipment-cell { position:absolute; transform:translate(-50%,-50%); width:64px; height:65px; z-index:1; }
 .equipment-fittings .equipment-item canvas { max-height:100%; }
 .equipment-fittings .equipment-item span { display:none; }
-.equipment-fittings [data-weapon-durability] { color:#9dab8a; font-size:8px; text-align:center; }
 [data-equipment-parts] { margin:0; font-size:10px; line-height:1.7; color:#b6b39b; align-self:center; }
 .equipment-empty-note { color:#a9a58d; font-size:12px; line-height:1.8; align-self:center; }
 .equipment-panel footer { grid-row:4; display:flex; flex-wrap:wrap; gap:5px 7px; align-content:center; align-items:center; min-width:0; border-top:2px ridge #86704e; padding:8px 4px 0; }
@@ -123,7 +121,7 @@
 
 /* Hull, fittings and crew share one projection without SVG letterboxing. */
 .equipment-deck-scene { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
-.equipment-deck-scene .equipment-cell { width:30px; height:34px; transform:translate(-50%,-50%); z-index:2; }
+.equipment-deck-scene .equipment-cell { position:absolute; width:30px; height:34px; transform:translate(-50%,-50%); z-index:2; }
 .equipment-deck-scene .equipment-cell > small { display:none; }
 .equipment-deck-scene .equipment-item { padding:0; }
 .equipment-deck-scene .equipment-item canvas { width:28px; height:28px; max-height:100%; }
@@ -134,6 +132,24 @@
 .equipment-crew[aria-pressed=true] { border-color:#f4d79b; box-shadow:0 0 0 2px #c9a45c60; }
 .equipment-crew:active { cursor:grabbing!important; }
 .equipment-crew.invalid { border-color:#d87862; }
+.equipment-crew-route { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:4; }
+.equipment-crew-route line { stroke:#edce8b; stroke-width:2; stroke-dasharray:5 3; }
+.equipment-crew-route path { fill:#edce8b; }
+.equipment-crew-route circle { fill:#d8bd7333; stroke:#edce8b; stroke-width:1.5; }
+.equipment-crew-route.invalid :is(line,circle) { stroke:#d87862; }
+.equipment-crew-route.invalid path { fill:#d87862; }
+.equipment-condition { position:absolute; bottom:2px; left:3px; right:3px; pointer-events:none; }
+.equipment-condition small { display:block; color:#d9c591; text-align:center; font:8px/11px var(--game-text); }
+.equipment-condition-meter { display:block; height:3px; background:#0d120d; box-shadow:0 0 0 1px #080a08; }
+.equipment-condition-meter i { display:block; height:100%; background:#9eaf79; }
+.equipment-item[data-condition=damaged] .equipment-condition-meter i { background:#d2a45c; }
+.equipment-item[data-condition=broken] canvas { filter:grayscale(1) brightness(.55); }
+.equipment-item[data-condition=broken]::after { content:'×'; position:absolute; right:3px; top:0; color:#f2a182; font:18px var(--game-serif); text-shadow:0 1px 3px #000; }
+.equipment-deck-scene .equipment-condition small { display:none; }
+.equipment-panel[data-compact=true] .equipment-hold .equipment-condition small { display:none; }
+.equipment-deck-scene .equipment-cell:has([data-condition=damaged]) { border-color:#ba9052; }
+.equipment-deck-scene .equipment-cell:has([data-condition=broken]) { border-color:#b96f58; }
+.equipment-panel footer [data-condition-summary] { margin-left:8px; color:#d2b078; }
 .equipment-panel[data-short=true] .equipment-carried { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:18px repeat(2,minmax(0,1fr)); }
 .equipment-panel[data-short=true] .equipment-carried h3 { grid-column:1 / -1; }
 .equipment-panel[data-short=true] .equipment-four-slots { grid-column:1 / -1; grid-row:2 / span 2; }
