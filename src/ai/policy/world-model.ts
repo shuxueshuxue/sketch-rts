@@ -12,7 +12,7 @@ type AvailableBuilderOptions = {
 export function availableBuilder(snapshot: GameSnapshot, owner: PlayerId, point: Point, options: AvailableBuilderOptions = {}) {
   if (units(snapshot, owner).some(unit => unit.order.type === "build")) return undefined;
   return units(snapshot, owner)
-    .filter((unit) => unit.kind === "worker")
+    .filter((unit) => unit.kind === "worker" && !unit.deck)
     .filter((unit) => !activeUnitClaim(snapshot, owner, unit, options))
     .filter((unit) => !isReservedBuilder(snapshot, owner, unit))
     .sort((a, b) => distance(a, point) - distance(b, point))[0];

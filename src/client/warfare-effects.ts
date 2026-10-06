@@ -1,9 +1,11 @@
 import type { WorldEffect } from "../shared/types";
+import { SHIP_CAMERA, SHIP_KINDS } from "../shared/ship-geometry";
+import { SIM_TICKS_PER_SECOND } from "../shared/time";
 type Point = {
     x: number;
     y: number;
 };
-const kinds = new Set<WorldEffect["type"]>(["shellFlight", "siegeBolt", "siegeImpact", "grapeshot", "burningGround"]);
+const kinds = new Set<WorldEffect["type"]>(["shellFlight", "siegeBolt", "siegeImpact", "grapeshot", "burningGround", "muzzleFlash"]);
 export function shellFlightFrame(from: Point, to: Point, progress: number) {
     const p = Math.max(0, Math.min(1, progress));
     const ground = { x: from.x + (to.x - from.x) * p, y: from.y + (to.y - from.y) * p };
@@ -12,13 +14,29 @@ export function shellFlightFrame(from: Point, to: Point, progress: number) {
 export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEffect, project: (p: Point) => Point, visible: (p: Point, pad: number) => boolean) {
     if (!kinds.has(effect.type))
         return false;
-    const at = project(effect), from = project({ x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y }), to = project({ x: effect.toX ?? effect.x, y: effect.toY ?? effect.y });
+    const at = project(effect), from = project({ x: effect.fromX ?? effect.x, y: (effect.fromY ?? effect.y)-(effect.fromHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) }), to = project({ x: effect.toX ?? effect.x, y: (effect.toY ?? effect.y)-(effect.toHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
     if (!visible(at, 150) && !visible(from, 150))
         return true;
     const life = effect.remaining / effect.duration, p = 1 - life;
     ctx.save();
     ctx.lineCap = "round";
-    if (effect.type === "shellFlight") {
+    if (effect.type === "muzzleFlash") {
+        const age=(effect.duration-effect.remaining)/SIM_TICKS_PER_SECOND;
+        const angle=Math.atan2(to.y-from.y,to.x-from.x);
+        ctx.translate(from.x,from.y);ctx.rotate(angle);
+        if(age<.16){
+            ctx.globalAlpha=Math.max(0,1-age/.16);
+            ctx.fillStyle="#d77d35b0";ctx.beginPath();ctx.ellipse(10,0,23,12,0,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle="#fff0b5";ctx.beginPath();ctx.moveTo(-2,-3);ctx.lineTo(18,-6);ctx.lineTo(30,0);ctx.lineTo(18,6);ctx.lineTo(-2,3);ctx.closePath();ctx.fill();
+        }
+        // A short local puff makes the shot legible without blanketing the deck.
+        ctx.globalAlpha=.55*life*Math.min(1,age/.05);
+        for(let i=0;i<4;i++){
+            ctx.fillStyle=i%2?"#c7c4b2":"#929b98";ctx.beginPath();
+            ctx.ellipse(7+i*5+age*16,(i%2?1:-1)*(3+age*8),4+age*(10+i),3+age*9,0,0,Math.PI*2);ctx.fill();
+        }
+    }
+    else if (effect.type === "shellFlight") {
         const frame = shellFlightFrame(from, to, p), previous = shellFlightFrame(from, to, Math.max(0, p - .07));
         ctx.fillStyle = "#19242b35";
         ctx.beginPath();
@@ -43,6 +61,11 @@ export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEf
         const head = { x: from.x + dx * p, y: from.y + dy * p };
         ctx.translate(head.x, head.y);
         ctx.rotate(Math.atan2(dy, dx));
+        if(effect.sourceKind && SHIP_KINDS.includes(effect.sourceKind as never)){
+            ctx.strokeStyle="#ded4bd88";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(-4,0);ctx.stroke();
+            ctx.fillStyle="#28343a";ctx.strokeStyle="#ede0b8";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+            ctx.restore();return true;
+        }
         ctx.strokeStyle = "#c6c1a5";
         ctx.lineWidth = 1.7;
         ctx.beginPath();

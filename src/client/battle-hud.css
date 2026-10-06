@@ -50,6 +50,7 @@
 .hud-cargo { max-height:min(230px,35dvh); overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain; }
 .hud-cargo-ship { margin-top:6px; padding-top:6px; border-top:1px solid var(--battle-edge); }
 .hud-cargo-label { display:block; color:var(--battle-accent); font-size:10px; line-height:1.5; }
+.hud-hull-health { margin:3px 0 5px; }
 .hud-cargo-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; }
 .hud-cargo-passenger { height:74px; }
 .hud-cargo-passenger:hover::after { content:'⤓'; position:absolute; top:2px; right:2px; color:var(--battle-accent); font-size:16px; }

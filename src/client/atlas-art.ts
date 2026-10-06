@@ -1,3 +1,7 @@
+import { drawBakedBuilding } from "./art/baked-buildings";
+import { bakedImage } from "./art/baked-assets";
+import { drawBakedShip, drawShipWeapon } from "./art/baked-ships";
+import { isShipKind,shipProfile } from "../shared/ship-geometry";
 import { unitMover } from "../shared/catalog";
 import { paintCorpse } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
@@ -6,7 +10,7 @@ import { creatureShadow } from "./art/painted-creatures";
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { UNIT_CARDS } from "./content/units";
-import type { BuildingKind, Obstacle, TerrainLandmark, UnitKind } from "../shared/types";
+import type { BuildingKind, Obstacle, TerrainLandmark, UnitKind, Unit } from "../shared/types";
 import type { Facing } from "./unit-facing";
 import { IDLE_FRAME, type UnitAnimationFrame } from "./unit-animation";
 import { withUnitPose } from "./art/pose";
@@ -63,6 +67,7 @@ function brushZoom(c: Brush) {
 }
 
 export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, point: Point, size: number, color: string) {
+  if(drawBakedBuilding(c,kind,point,size,color))return;
   sprite(c, `b:${kind}:${color}`, point, size / 64, (b) => {
     paintBuildingModel(b, kind, color);
   });
@@ -71,13 +76,13 @@ export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, 
 const sitePortraits = new Map<string, { canvas: HTMLCanvasElement; x: number; y: number; width: number; height: number }>();
 /** Fit the actual architecture to its visible bounds, including tall roofs and awnings. */
 export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteModelKind, size: number, color: string) {
-  const key = `${kind}:${color}`;
+  const key = `${kind}:${color}:${Boolean(bakedImage(`buildings/${kind}`))}`;
   let source = sitePortraits.get(key);
   if (!source) {
     const canvas = createScratchCanvas(256, 256);
     const brush = canvas.getContext("2d")!;
     brush.translate(128, 128); brush.scale(2, 2);
-    paintBuildingModel(brush, kind, color);
+    if(!drawBakedBuilding(brush,kind,{x:0,y:0},64,color))paintBuildingModel(brush, kind, color);
     const pixels = brush.getImageData(0, 0, 256, 256).data;
     let left = 256, top = 256, right = 0, bottom = 0;
     for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) if (pixels[(y * 256 + x) * 4 + 3]! > 8) {
@@ -94,6 +99,7 @@ export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteMod
 
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
+  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit;if(drawBakedShip(c,ship,point,"base",scale*.55)){drawBakedShip(c,ship,point,"upper",scale*.55);drawShipWeapon(c,{...ship,deckScale:scale*.55},point,[]);return;}}
   if (hasPaintedUnit(kind)) {
     sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
@@ -120,6 +126,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
  * space that a full-body thumbnail cannot. Mounted units and beasts keep their
  * silhouette. Coordinates and clipping stay local to the requested rectangle. */
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
+  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit,scale=size/(shipProfile(ship)!.length+20);if(drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"base",scale)){drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"upper",scale);drawShipWeapon(c,{...ship,deckScale:scale},{x:x+size*.5,y:y+size*.66},[]);return;}}
   const { bearing } = UNIT_CARDS[kind].art;
   const foot = bearing === "foot";
   const painted = hasPaintedUnit(kind);
@@ -398,11 +405,13 @@ export function obstacleArtTop(obstacle: Pick<Obstacle, "kind" | "radius" | "alo
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
+  if(drawBakedBuilding(c,"camp",point,64*size,"#8b7355"))return;
   sprite(c, "mercenary-camp", point, size, b => paintBuildingModel(b, "camp", "#8b7355"));
 }
 
 /** Neutral trading house: slate roof, linen awning, wares and hanging brass sign. */
 export function drawAtlasShop(c: Brush, point: Point, size = 1) {
+  if(drawBakedBuilding(c,"shop",point,64*size,"#8b7355"))return;
   sprite(c, "shop", point, size, b => paintBuildingModel(b, "shop", "#8b7355"));
 }
 

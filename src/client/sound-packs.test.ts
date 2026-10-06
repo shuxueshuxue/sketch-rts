@@ -35,6 +35,26 @@ describe("served sound packs", () => {
     error.mockRestore();
   });
 
+  it("adds voices and variants without changing the older core manifest", async () => {
+    const served = await servedSoundPacks("/", server({
+      "/audio-packs/served.json": { packs: ["war3"] },
+      "/audio-packs/war3/pack.json": { name: "War3", sounds: { click: { file: "click.ogg" } } },
+      "/audio-packs/war3/extras.json": { sounds: { order: { kinds: { warship: { file: "yes1.ogg", variants: ["yes2.ogg"] } } } } },
+    }));
+    expect(served.packs[0]!.sounds.order!.kinds.warship!.variants?.[0]?.url).toBe("/audio-packs/war3/yes2.ogg");
+    expect(served.packs[0]!.sounds.click!.clip?.file).toBe("click.ogg");
+  });
+
+  it("keeps the core pack available when an optional supplement is invalid", async () => {
+    const served = await servedSoundPacks("/", server({
+      "/audio-packs/served.json": { packs: ["war3"] },
+      "/audio-packs/war3/pack.json": { name: "War3", sounds: { click: { file: "click.ogg" } } },
+      "/audio-packs/war3/extras.json": { sounds: { misspelledEvent: { file: "other.ogg" } } },
+    }));
+    expect(served.packs.map(pack => pack.id)).toEqual(["war3"]);
+    expect(Object.keys(served.packs[0]!.sounds)).toEqual(["click"]);
+  });
+
   it("plays the server's default only while neither the build nor the player has named one", async () => {
     const pack = (id: string) => ({ id, name: id, sounds: {} });
     const plain = new Soundboard([]);

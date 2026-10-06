@@ -1,3 +1,4 @@
+import { bakedAssetsVersion } from "./art/baked-assets";
 import { healthBarColor } from "./health-bars";
 /** Presentation only: the match controller supplies identity, artwork and commands.
  * Keep nodes alive across simulation frames so focus, scroll and pointer presses survive. */
@@ -14,9 +15,10 @@ export type HudGroup = {
 export type HudPassenger = {
   key: string; name: string; actionLabel: string; art: HudArt;
   health: { current: number; max: number };
+  canUnload?: boolean;
   activate: () => void; decorate: (button: HTMLButtonElement) => void;
 };
-export type HudCargo = { key: string; label: string; passengers: HudPassenger[] };
+export type HudCargo = { key: string; label: string; health?: { current: number; max: number }; passengers: HudPassenger[] };
 
 function canvas(className: string) {
   const node = document.createElement("canvas");
@@ -29,9 +31,10 @@ function text(className: string) {
   const node = document.createElement("span"); node.className = className; return node;
 }
 function paint(node: HTMLCanvasElement, art: HudArt) {
-  if (node.dataset.artKey === art.key) return;
+  const key = `${art.key}:${bakedAssetsVersion()}`;
+  if (node.dataset.artKey === key) return;
   node.getContext("2d")!.clearRect(0, 0, node.width, node.height);
-  art.paint(node); node.dataset.artKey = art.key;
+  art.paint(node); node.dataset.artKey = key;
 }
 
 export class BattleHudSelection {
@@ -50,7 +53,7 @@ export class BattleHudSelection {
   private readonly inspectionDetail = text("hud-inspection-detail");
   private readonly empty = text("hud-empty");
   private readonly cargo = document.createElement("div");
-  private cargoShips = new Map<string, { section: HTMLDivElement; label: HTMLSpanElement; grid: HTMLDivElement }>();
+  private cargoShips = new Map<string, { section: HTMLDivElement; label: HTMLSpanElement; health: HTMLDivElement; grid: HTMLDivElement }>();
   private passengers = new Map<string, { button: HTMLButtonElement; passenger: HudPassenger }>();
   private groups = new Map<string, { button: HTMLButtonElement; group: HudGroup }>();
   private focusedKey: string | undefined;
@@ -144,10 +147,19 @@ export class BattleHudSelection {
       if (!entry) {
         const section = document.createElement("div"); section.className = "hud-cargo-ship";
         const label = text("hud-cargo-label");
+        const health = document.createElement("div");health.className="hud-health hud-hull-health";
+        health.append(document.createElement("span"),text("hud-health-text"));
         const grid = document.createElement("div"); grid.className = "hud-cargo-grid";
-        section.append(label, grid); entry = { section, label, grid }; this.cargoShips.set(ship.key, entry);
+        section.append(label, health, grid); entry = { section, label, health, grid }; this.cargoShips.set(ship.key, entry);
       }
       entry.label.textContent = ship.label;
+      entry.health.hidden=!ship.health;
+      if(ship.health){
+        const fill=entry.health.children[0] as HTMLElement;
+        fill.style.width=`${Math.max(0,Math.min(100,ship.health.current/Math.max(1,ship.health.max)*100))}%`;
+        fill.style.backgroundColor=healthBarColor(ship.health.current,ship.health.max);
+        entry.health.children[1]!.textContent=`${Math.ceil(ship.health.current)} / ${ship.health.max}`;
+      }
       if (this.cargo.children[shipIndex] !== entry.section) this.cargo.insertBefore(entry.section, this.cargo.children[shipIndex] ?? null);
       ship.passengers.forEach((passenger, index) => {
         const key = `${ship.key}:${passenger.key}`;
@@ -161,6 +173,7 @@ export class BattleHudSelection {
           this.passengers.set(key, card);
         }
         card.passenger = passenger;
+        card.button.disabled=passenger.canUnload===false;
         card.button.dataset.passengerId = passenger.key; card.button.dataset.transportId = ship.key;
         card.button.setAttribute("aria-label", passenger.actionLabel);
         card.button.children[1]!.textContent = passenger.name;

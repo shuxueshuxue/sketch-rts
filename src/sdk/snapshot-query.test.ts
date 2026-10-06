@@ -38,7 +38,7 @@ describe("SDK snapshot query", () => {
     expect(view.resources.nearestTo({ x: 500, y: 500 })?.id).toBe("v2-natural");
     expect(view.mercenaryCamps.nearestTo({ x: 500, y: 500 })?.id).toBe("north-mercs");
     expect(view.items.ground.map((item) => item.id)).toEqual(["ground-scroll"]);
-    expect(view.items.carried.map((item) => item.id)).toEqual(["carried-rod"]);
+    expect(view.items.carried.map((item) => item.id)).toEqual(["carried-rod", "issued-v2-worker", "issued-v2-footman"]);
     expect(query.isOpponent("v2", "enemy")).toBe(true);
     expect(query.isOpponent("v2", "ally")).toBe(false);
   });
@@ -82,9 +82,9 @@ describe("SDK snapshot query", () => {
     expect(query.targetById("v2-main")?.id).toBe("v2-main");
     expect(query.itemById("ground-scroll")?.id).toBe("ground-scroll");
     expect(query.targetById("ground-scroll")?.id).toBe("ground-scroll");
-    expect(query.items().map((item) => item.id).sort()).toEqual(["carried-rod", "ground-scroll"]);
+    expect(query.items().map((item) => item.id).sort()).toEqual(["carried-rod", "ground-scroll", "issued-ally-archer", "issued-enemy-lancer", "issued-enemy-worker", "issued-v2-footman", "issued-v2-worker"]);
     expect(query.groundItems().map((item) => item.id)).toEqual(["ground-scroll"]);
-    expect(query.carriedItemsFor("v2").map((item) => item.id)).toEqual(["carried-rod"]);
+    expect(query.carriedItemsFor("v2").map((item) => item.id)).toEqual(["carried-rod", "issued-v2-worker", "issued-v2-footman"]);
     expect(query.buildings().map((building) => building.id).sort()).toEqual(["ally-main", "enemy-main", "v2-barracks", "v2-farm", "v2-main"]);
     expect(query.resources().map((resource) => resource.id).sort()).toEqual(["empty-mine", "v2-natural"]);
     expect(query.activeResources().map((resource) => resource.id)).toEqual(["v2-natural"]);

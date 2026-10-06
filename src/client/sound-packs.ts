@@ -41,7 +41,18 @@ export async function servedSoundPacks(base: string, load: typeof fetch = fetch)
   const packs = await Promise.all(
     ids.map(async (id) => {
       try {
-        const manifest = await json(`${id}/pack.json`);
+        let manifest = await json(`${id}/pack.json`);
+        // Optional additions keep the core manifest readable by older clients.
+        // A broken supplement never makes an otherwise valid pack disappear.
+        let extras: unknown;
+        try { extras = await json(`${id}/extras.json`); } catch { /* old packs have none */ }
+        if (isRecord(manifest) && isRecord(manifest.sounds) && isRecord(extras) && isRecord(extras.sounds)) {
+          const merged = { ...manifest, sounds: { ...manifest.sounds, ...extras.sounds } };
+          try {
+            readSoundPack(id, merged, Object.fromEntries(namedFiles(merged).map(file => [file, file])));
+            manifest = merged;
+          } catch { /* preserve the core pack */ }
+        }
         const urls = Object.fromEntries(namedFiles(manifest).map((file) => [file, `${base}audio-packs/${id}/${encodeURI(file)}`]));
         return [readSoundPack(id, manifest, urls)];
       } catch (error) {
@@ -58,5 +69,5 @@ function namedFiles(manifest: unknown): string[] {
   const events = isRecord(manifest) && isRecord(manifest.sounds) ? Object.values(manifest.sounds).filter(isRecord) : [];
   return events
     .flatMap((entry) => [entry, ...(isRecord(entry.kinds) ? Object.values(entry.kinds).filter(isRecord) : [])])
-    .flatMap((entry) => (typeof entry.file === "string" ? [entry.file] : []));
+    .flatMap(entry => [...(typeof entry.file === "string" ? [entry.file] : []), ...(Array.isArray(entry.variants) ? entry.variants.filter((file): file is string => typeof file === "string") : [])]);
 }

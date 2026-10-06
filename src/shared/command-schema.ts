@@ -1,3 +1,4 @@
+import { ARMOR_SLOTS, CARRY_SLOTS } from "./equipment";
 import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
@@ -20,6 +21,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "train") return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   if (command.type === "research") return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
   if (command.type === "hire") return typeof command.campId === "string";
+  if(command.type==="buyShipEquipment")return typeof command.buildingId==="string" && ["shipCannon","shipMortar","flameProjector"].includes(command.item as string);
   if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string";
   if (command.type === "cast") {
     return (
@@ -35,6 +37,11 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "board") return isStringArray(command.unitIds) && typeof command.transportId === "string";
   if (command.type === "unload") return isStringArray(command.unitIds) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "unloadPassenger") return typeof command.transportId === "string" && typeof command.passengerId === "string";
+  if(command.type==="wieldItem")return typeof command.unitId==="string" && (command.itemId===undefined || typeof command.itemId==="string") && (command.hand==="right" || command.hand==="left");
+  if(command.type==="transferItem"){
+    const d=command.destination as Record<string,unknown>|undefined;
+    return typeof command.itemId==="string" && !!d && typeof d==="object" && (typeof d.unitId==="string" && [...ARMOR_SLOTS,...CARRY_SLOTS].includes(d.slot as never) || typeof d.shipId==="string" && (Number.isInteger(d.slot) && Number(d.slot)>=0 || typeof d.mountId==="string" && typeof d.installerId==="string"));
+  }
   if (command.type === "pickupItem") return typeof command.unitId === "string" && typeof command.itemId === "string";
   if (command.type === "dropItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
   if (command.type === "useItem") {

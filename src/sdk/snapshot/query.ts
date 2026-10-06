@@ -2,6 +2,8 @@ import type { Building, BuildingKind, GameSnapshot, MercenaryCamp, Owner, Player
 import { createRangeIndex } from "./range-index";
 
 export type SnapshotQueryOptions = {
+  /** Preset policies treat service weapons as equipment rather than treasure. */
+  excludeIssuedWeapons?: boolean;
   teams?: Partial<Record<PlayerId, string>>;
 };
 
@@ -80,6 +82,9 @@ export type SnapshotQuery = {
 export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQueryOptions = {}): SnapshotQuery {
   const teamFor = (owner: Owner) => (owner === "neutral" ? "neutral" : options.teams?.[owner] ?? owner);
   const isOpponent = (owner: PlayerId, other: Owner) => other !== "neutral" && teamFor(owner) !== teamFor(other);
+  const visibleItems=options.excludeIssuedWeapons ? snapshot.items.filter(item=>item.kind!=="issuedWeapon") : snapshot.items;
+  let ground:WorldItem[]|undefined;
+  const carriedByOwner=new Map<PlayerId,WorldItem[]>();
   let activePlayers: PlayerId[] | undefined;
   const unitsByOwner = new Map<PlayerId, Unit[]>();
   const combatUnitsByOwner = new Map<PlayerId, Unit[]>();
@@ -136,14 +141,16 @@ export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQue
       return snapshot.mercenaryCamps;
     },
     items() {
-      return snapshot.items;
+      return visibleItems;
     },
     groundItems() {
-      return snapshot.items.filter((item) => !item.carrierId);
+      ground ??= visibleItems.filter((item) => !item.carrierId && !item.shipId);
+      return ground.slice();
     },
     carriedItemsFor(owner) {
-      const ownUnitIds = new Set(this.unitsFor(owner).map((unit) => unit.id));
-      return snapshot.items.filter((item) => item.carrierId && ownUnitIds.has(item.carrierId));
+      let carried=carriedByOwner.get(owner);
+      if(!carried){const ownUnitIds = new Set(this.unitsFor(owner).map((unit) => unit.id));carried=visibleItems.filter((item) => item.carrierId && ownUnitIds.has(item.carrierId));carriedByOwner.set(owner,carried);}
+      return carried.slice();
     },
     buildings() {
       return snapshot.buildings;

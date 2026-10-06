@@ -11,7 +11,7 @@ import type { SoundEvent } from "./sound";
 export type SoundCue = { id: SoundEvent; x: number; y: number; kind?: UnitKind };
 
 // Who looses arrows: the bowmen and the defense tower. Casters' bolts, dragons' fire and ships' guns are not arrows.
-const ARCHERS = new Set<string>(["archer", "sparkArcher", "contractArcher", "thornSlinger", "murlocHunter", "defenseTower"]);
+const ARCHERS = new Set<string>(["archer", "sparkArcher", "contractArcher", "horseArcher", "thornSlinger", "murlocHunter", "defenseTower"]);
 
 export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: PlayerId): SoundCue[] {
   if (after.tick <= before.tick) return [];
@@ -21,16 +21,20 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     if (seen.has(effect.id) || !effect.sourceKind) continue;
     const at = { x: effect.x, y: effect.y };
     // A projectile effect carrying its shooter is the shot leaving; a hit carries whose weapon dealt it.
-    if (effect.type === "projectile" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
+    if (["board", "unload"].includes(effect.type)) { if (effect.owner === listener) cues.push({ id: effect.type as "board" | "unload", ...at, kind: effect.sourceKind as UnitKind }); }
+    else if (["heal", "summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
+    else if (effect.sourceKind in UNIT_DEFS && UNIT_DEFS[effect.sourceKind as UnitKind].naval && ["projectile", "grapeshot", "siegeBolt", "shellFlight"].includes(effect.type)) cues.push({ id: "shipShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y, kind: effect.sourceKind as UnitKind });
+    else if (effect.sourceKind in UNIT_DEFS && UNIT_DEFS[effect.sourceKind as UnitKind].naval && effect.type === "hit") cues.push({ id: "shipHit", ...at, kind: effect.sourceKind as UnitKind });
+    else if (effect.type === "projectile" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
     else if (effect.type === "hit" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowHit", ...at });
     else if (effect.type === "hit" && meleeStriker(effect.sourceKind)) cues.push({ id: "melee", ...at, kind: effect.sourceKind });
     else if (effect.type === "hit") cues.push({ id: "impact", ...at });
   }
-  // Soldiers aboard a transport are out of the field but not dead (see @@@transport): going aboard is no death.
+  // Old cargo snapshots also preserve living passenger IDs; live deck crew stay in units.
   const aboard = (snapshot: GameSnapshot) => snapshot.units.flatMap((unit) => unit.cargo ?? []).map((unit) => unit.id);
   const unitsAfter = new Set([...after.units.map((unit) => unit.id), ...aboard(after)]);
   // A ship goes down with its timbers breaking, as a building falls, not with a cry.
-  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: UNIT_DEFS[unit.kind].naval ? "buildingDown" : "death", x: unit.x, y: unit.y });
+  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: UNIT_DEFS[unit.kind].naval ? "shipSink" : "death", x: unit.x, y: unit.y, kind: unit.kind });
   const buildingsBefore = new Map(before.buildings.map((building) => [building.id, building]));
   const buildingsAfter = new Set(after.buildings.map((building) => building.id));
   for (const building of after.buildings) {

@@ -68,6 +68,7 @@ describe("sound cues", () => {
     expect(soundCues(start, shots, "player")).toEqual([
       { id: "arrowShot", x: 10, y: 20 },
       { id: "arrowShot", x: 30, y: 40 },
+      { id: "shipShot", x: 100, y: 200, kind: "warship" },
       { id: "arrowHit", x: 100, y: 200 },
       { id: "impact", x: 100, y: 200 },
       { id: "impact", x: 100, y: 200 },
@@ -86,7 +87,7 @@ describe("sound cues", () => {
     const sunk = structuredClone(afloat);
     sunk.tick += 1;
     sunk.units = sunk.units.filter((unit) => unit.id !== "ship");
-    expect(ids(afloat, sunk)).toEqual(["buildingDown"]);
+    expect(ids(afloat, sunk)).toEqual(["shipSink"]);
     const aboard = later((next) => {
       next.units = next.units.filter((unit) => unit.id !== first!.id);
       next.units.find((unit) => unit.id === second!.id)!.cargo = [structuredClone(first!)];

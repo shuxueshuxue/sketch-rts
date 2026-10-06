@@ -10,6 +10,14 @@ export function drawPaintedItem(b: Brush, kind: ItemKind, point: Point, size = 3
   const plane=(p:number[][],fill:string)=>polygon(b,p,fill,INK,.9);
   const edge=(p:number[][],fill=GOLD,width=1)=>line(b,p,fill,width);
   switch(kind) {
+    case 'shipCannon': case 'shipMortar': case 'flameProjector':
+      plane([[-15,5],[12,5],[15,11],[-13,11]],LEATHER);ellipse(b,-8,12,5,5,INK,GOLD);ellipse(b,8,12,5,5,INK,GOLD);plane([[-14,-7],[13,-9],[18,-6],[18,0],[13,3],[-14,3]],STEEL);ellipse(b,16,-3,4,6,INK,STEEL);edge([[-10,-5],[10,-7]],'#d0d4c6',2);break;
+    case 'leatherArmor':
+      plane([[-9,-16],[9,-16],[17,-6],[10,1],[10,16],[-10,16],[-10,1],[-17,-6]],LEATHER);edge([[-4,-14],[-4,14],[7,14]],GOLD);edge([[-11,-4],[11,-4]],'#c3aa84',2);break;
+    case 'roundShield':
+      ellipse(b,0,0,16,18,LEATHER,STEEL);ellipse(b,0,0,5,5,STEEL,INK);edge([[-13,-7],[13,-7]],GOLD);edge([[-14,7],[14,7]],GOLD);break;
+    case 'greatSword': case 'issuedWeapon':
+      plane([[-3,-19],[3,-19],[3,6],[0,10],[-3,6]],STEEL);edge([[-9,8],[9,8]],GOLD,3);edge([[0,9],[0,17]],LEATHER,4);ellipse(b,0,18,2,2,GOLD);break;
     case 'speedBoots':
       for(const [dx,dy] of [[-8,-3],[5,4]]) {
         b.save(); b.translate(dx!,dy!);

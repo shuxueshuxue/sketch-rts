@@ -54,6 +54,7 @@ npm run dev
 ## 文档
 
 - [开发指南（英文）](development.md)：部署、SDK、AI 工具、音效包和录制。
+- [物理海战与装备](physical-naval-and-equipment.zh.md)：甲板通行、舷炮射界、部件修理和人物船舱交换。
 - [AI 规格（英文）](ai-spec.md)：策略架构与行为。
 - [遭遇战修复记录](reviews/skirmish-naval-repair.zh.md)：截图、验证结果与已知边界。
 

@@ -1,7 +1,9 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { groundUnder, openStep } from "./terrain";
+import { hullStep } from "./ship-navigation";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 import { perTick } from "./time";
+import { bodyMass } from "./physical-body";
 
 // @@@push - A shove (a blow that knocks back, a lunge) gives a unit a velocity of its own beside its walk: pushX/pushY, in
 // distance per second. The unit slides off in a straight line and the ground slows it by PUSH_FRICTION per second (uniform
@@ -58,7 +60,7 @@ export function isStaggered(unit: Unit) {
 }
 
 export function unitMass(unit: Unit) {
-  return unit.radius * unit.radius;
+  return bodyMass(unit);
 }
 
 // Shoves the unit toward (dx, dy) with this strength (see @@@push); a zero direction shoves it east.
@@ -119,7 +121,7 @@ export function slide(unit: Unit, map: GameMap) {
     py = 0;
   }
   // A wall spends the part of the slide heading into it (see openStep).
-  const at = openStep(map, unit, { x, y }, mover);
+  const at = mover === "sea" ? hullStep(map,unit,{x,y}) : openStep(map, unit, { x, y }, mover);
   if (at.x !== x) px = 0;
   if (at.y !== y) py = 0;
   unit.x = at.x;

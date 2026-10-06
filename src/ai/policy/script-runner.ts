@@ -80,7 +80,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
       const unitIds = command.unitIds.filter(free);
       return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
     }
-    if (command.type === "pickupItem") return free(command.unitId) ? [command] : [];
+    if (command.type === "pickupItem" || command.type === "build") return free(command.unitId) ? [command] : [];
     if (command.type === "cast" && ABILITY_DEFS[command.ability].behavior === "charge") return free(command.unitId) ? [command] : [];
     return [command];
   });

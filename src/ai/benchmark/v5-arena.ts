@@ -70,7 +70,7 @@ export function captureArenaScenario(input: {
     buildings: snapshot.buildings
       .filter((building) => building.complete && owners.includes(building.owner))
       .map((building) => ({ id: building.id, owner: building.owner, kind: building.kind, x: building.x, y: building.y, hp: building.hp, maxHp: building.maxHp })),
-    items: snapshot.items.flatMap((item) => (item.carrierId && fighterIds.has(item.carrierId) ? [{ id: item.id, kind: item.kind, carrierId: item.carrierId }] : [])),
+    items: snapshot.items.flatMap((item) => (item.kind !== "issuedWeapon" && item.carrierId && fighterIds.has(item.carrierId) ? [{ id: item.id, kind: item.kind, carrierId: item.carrierId }] : [])),
   };
 }
 
