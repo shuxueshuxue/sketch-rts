@@ -12,7 +12,7 @@ export function shipDirection(ship:Unit) {
 }
 function frame(ctx:Brush,source:CanvasImageSource,direction:number,at:Point,scale=1) {
   const n=SHIP_CAMERA.frameSize,size=SHIP_CAMERA.worldSize*scale;
-  ctx.drawImage(source,direction%8*n,Math.floor(direction/8)*n,n,n,at.x-size/2,at.y-size/2,size,size);
+  ctx.drawImage(source,direction%8*n,Math.floor(direction/8)*n,n,n,at.x-size/2,at.y-size/2-SHIP_CAMERA.anchorY*scale,size,size);
 }
 export function drawBakedShip(ctx:Brush,ship:Unit,at:Point,layer:"base"|"upper",scale=shipScale(ship)) {
   const source=bakedImage(`ships/${ship.kind}-${layer}`);
@@ -41,13 +41,13 @@ export function drawShipOcclusion(ctx:Brush,ship:Unit,at:Point,crew:Unit) {
     masks.set(key,mask);
   }
   const size=SHIP_CAMERA.worldSize*scale;
-  ctx.drawImage(mask,at.x-size/2,at.y-size/2,size,size);
+  ctx.drawImage(mask,at.x-size/2,at.y-size/2-SHIP_CAMERA.anchorY*scale,size,size);
 }
 export function deckVisualHeight(ship:Unit){return (shipProfile(ship)?.deckHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt);}
 export function drawShipFlag(ctx:Brush,ship:Unit,at:Point,color:string) {
   const profile=shipProfile(ship);if(!profile)return;
   const mast=profile.obstacles.find(o=>o.type==="mast");if(!mast)return;
-  const world=localToWorld(ship,mast),x=at.x+world.x-ship.x,y=at.y+world.y-ship.y-(profile.deckHeight+(ship.kind==="cutter"?48:64)*shipScale(ship))*Math.tan(SHIP_CAMERA.tilt);
+  const world=localToWorld(ship,mast),x=at.x+world.x-ship.x,y=at.y+world.y-ship.y-(profile.deckHeight+profile.mastHeight)*Math.tan(SHIP_CAMERA.tilt);
   ctx.save();ctx.fillStyle=color;ctx.strokeStyle="#303536";ctx.lineWidth=.6;
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+10,y+2);ctx.lineTo(x+8,y+8);ctx.lineTo(x,y+6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
 }
