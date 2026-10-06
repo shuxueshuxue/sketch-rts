@@ -161,6 +161,11 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
+    if (effect.type === "boardingBlocked") {
+      ctx.strokeStyle = "#c37639"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(point.x-5,point.y-12); ctx.lineTo(point.x+5,point.y-2);
+      ctx.moveTo(point.x+5,point.y-12); ctx.lineTo(point.x-5,point.y-2); ctx.stroke(); ctx.restore(); continue;
+    }
     if (effect.type === "heal") {
       drawHealEffect(renderer, effect, point, life);
       continue;

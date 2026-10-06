@@ -1,3 +1,5 @@
+import { shipProfile, shipPassengers, isShipKind } from "../shared/ship-geometry";
+import { bodyMass } from "../shared/physical-body";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "../shared/unit-value";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "../shared/item-rules";
 import { BOOTS_SPEED, RING_REGEN_PER_SECOND, HEALING_SCROLL_RADIUS, HEALING_SCROLL_HEAL, IVORY_TOWER_REACH, SHOP_GOODS } from "../shared/shop";
@@ -44,7 +46,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
         i18n.locale === "zh" ? `准心速度：${Math.round(aimingProfile(stats)!.speed)} / 秒` : `Reticle speed: ${Math.round(aimingProfile(stats)!.speed)} / second`,
         i18n.locale === "zh" ? `瞄准位移容错：${aimingProfile(stats)!.moveTolerance}` : `Aim movement tolerance: ${aimingProfile(stats)!.moveTolerance}`,
       ] : []),
-      ...(stats.carries ? [i18n.locale === "zh" ? `运载人口：${stats.carries}` : `Cargo supply: ${stats.carries}`] : []),
+      ...(isShipKind(kind) ? [i18n.locale === "zh" ? "可登船作战；甲板空间与载重共同限制人数" : "Crew can fight aboard; deck space and payload limit boarding"] : []),
       ...(stats.weapon?.buildingMultiplier ? [i18n.locale === "zh" ? `对建筑伤害 ×${stats.weapon.buildingMultiplier}` : `Structure damage ×${stats.weapon.buildingMultiplier}`] : []),
       tooltipLine(i18n.locale, "train", formatSeconds(stats.trainTime)),
     ],
@@ -73,7 +75,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
-      ...cargoLines(kind, units, i18n.locale),
+      ...cargoLines(kind, units, snapshot, i18n.locale),
       ...unitRuleLines(rules, i18n.locale, representative.level, earnsStars),
       ...(units.length === 1 && earnsStars ? [
         i18n.locale === "zh" ? `星级 ${representative.level}；经验 ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}` : `Stars ${representative.level}; XP ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}`,
@@ -191,11 +193,11 @@ export function tooltipText(tooltip: GameplayTooltip) {
 }
 
 // Transports: the supply of passengers aboard against what they carry (see @@@transport).
-function cargoLines(kind: UnitKind, units: Unit[], locale: Locale) {
-  const carries = UNIT_DEFS[kind].carries;
-  if (!carries) return [];
-  const aboard = units.flatMap((unit) => unit.cargo ?? []).reduce((total, passenger) => total + UNIT_DEFS[passenger.kind].supplyUsed, 0);
-  return [tooltipLine(locale, "cargo", `${aboard}/${carries * units.length}`)];
+function cargoLines(kind: UnitKind, units: Unit[], snapshot:GameSnapshot, locale: Locale) {
+  if(!isShipKind(kind))return [];
+  const load=units.reduce((sum,ship)=>sum+shipPassengers(snapshot.units,ship).reduce((n,u)=>n+bodyMass(u),0),0);
+  const limit=units.reduce((sum,ship)=>sum+shipProfile(ship)!.loadCapacity,0);
+  return [locale==="zh" ? `甲板载重：${load}/${Math.round(limit)} kg` : `Deck payload: ${load}/${Math.round(limit)} kg`];
 }
 
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {

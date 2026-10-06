@@ -1,3 +1,5 @@
+import { shipPassengers } from "../shared/ship-geometry";
+import { deckLoad } from "../shared/decks";
 import "./styles.css";
 import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
@@ -1493,6 +1495,11 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
+    if (!["stop", "cast", "setAutocast", "setStance", "unloadPassenger"].includes(command.type)) {
+      const ids = "unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+      const unit = snapshot?.units.find(unit => unit.owner === localPlayerId && ids.includes(unit.id));
+      if (unit) soundboard.play("order", undefined, unit.kind);
+    }
     return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
@@ -1759,7 +1766,7 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
 }
 
 function loadedTransports() {
-  return selectedPlayerUnits().filter((unit) => carries(unit) > 0 && (unit.cargo?.length ?? 0) > 0);
+  return selectedPlayerUnits().filter((unit) => carries(unit) > 0 && shipPassengers(snapshot?.units ?? [],unit).length > 0);
 }
 
 function unloadButtonState(): CommandButtonState {
@@ -1797,9 +1804,9 @@ function issueUnloadAt(point: Point, queued = false) {
 function unloadPassenger(transportId: string, passengerId: string) {
   if (!syncBeforeCommandProjection() || !snapshot) return;
   const transport = selectedCargoTransports(snapshot, selectedIds, localPlayerId).find(unit => unit.id === transportId);
-  const passenger = transport?.cargo?.find(unit => unit.id === passengerId);
+  const passenger = transport && shipPassengers(snapshot.units,transport).find(unit=>unit.id===passengerId);
   if (!transport || !passenger) return;
-  if (!passengerLandingSpot(snapshot.map, transport, passengerId)) {
+  if (!passengerLandingSpot(snapshot.map, transport, passengerId, snapshot.units)) {
     showInvalidCommand(t("status.unloadNoLand"));
     return;
   }
@@ -2393,8 +2400,11 @@ function cycleFocusedSelection(direction: 1 | -1) {
   updateHud();
 }
 
+let voicedSelection: string | undefined;
 function updateHud() {
   if (!snapshot) return;
+  const voiceUnit = snapshot.units.find(unit => unit.id === focusedSelectionId && unit.owner === localPlayerId);
+  if (voiceUnit?.id !== voicedSelection) { voicedSelection = voiceUnit?.id; if (voiceUnit) soundboard.play("select", undefined, voiceUnit.kind); }
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
@@ -2477,8 +2487,8 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     };
   }), t("hud.nothingSelected"), selectedCargoTransports(snapshot!, selectedIds, localPlayerId).map(transport => ({
     key: transport.id,
-    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: (transport.cargo ?? []).reduce((sum, passenger) => sum + unitRules(snapshot!, passenger).supplyUsed, 0), capacity: carries(transport) }),
-    passengers: (transport.cargo ?? []).map(passenger => ({
+    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: deckLoad(snapshot!.units,transport), capacity: carries(transport) }),
+    passengers: shipPassengers(snapshot!.units,transport).map(passenger => ({
       key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
       art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.width, ownerInk(passenger.owner)) },
