@@ -1,4 +1,5 @@
 import { itemIndex } from "./item-index";
+import { strikePoint, type StrikeTarget } from "./combat-geometry";
 import { detCos, detSin } from "./det-math";
 import { type WeaponDef } from './catalog';
 import { SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Point } from './ship-geometry';
@@ -17,9 +18,9 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     weapon: WeaponDef;
     art: 'warship' | 'bombardShip' | 'fireShip';
 }> = {
-    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
-    shipMortar: { cost: 330, mass: 240, hp: 100, damage: 36, range: 576, cooldown: seconds(3.6), aimSpeed: 400, weapon: { delivery: 'shell', radius: 75, minRange: 180, buildingMultiplier: 2, navalMultiplier: 1.7, hullDamageShare: 1.5 }, art: 'bombardShip' },
-    flameProjector: { cost: 180, mass: 120, hp: 80, damage: 10, range: 144, cooldown: seconds(1.2), aimSpeed: 480, weapon: { delivery: 'cone', coneAngle: .85, buildingMultiplier: .7 }, art: 'fireShip' },
+    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { presentation:'cannon', delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
+    shipMortar: { cost: 330, mass: 240, hp: 100, damage: 36, range: 576, cooldown: seconds(3.6), aimSpeed: 400, weapon: { presentation:'mortar', delivery: 'shell', radius: 75, minRange: 180, buildingMultiplier: 2, navalMultiplier: 1.7, hullDamageShare: 1.5 }, art: 'bombardShip' },
+    flameProjector: { cost: 180, mass: 120, hp: 80, damage: 10, range: 144, cooldown: seconds(1.2), aimSpeed: 480, weapon: { presentation:'flame', delivery: 'cone', coneAngle: .85, buildingMultiplier: .7 }, art: 'fireShip' },
 };
 /** Bow guns traverse ±30°; broadside guns traverse ±35° around their own side. */
 export function shipMounts(ship: Unit) {
@@ -42,22 +43,22 @@ export function shipMounts(ship: Unit) {
             mount(`starboard${i}`, x, breadth, Math.PI / 2, 35 * Math.PI / 180, side),
         ])];
 }
-export function shipGunCanAim(ship: Unit, item: WorldItem, point: Point) {
+export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget) {
     const mount = shipMounts(ship).find(mount => mount.id === item.mountId);
     if (!mount)
         return false;
-    const pivot = localToWorld(ship, mount), angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
+    const pivot = localToWorld(ship, mount), point = strikePoint(pivot, target), angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
     return Math.abs(headingDifference((ship.sailing?.heading ?? 0) + mount.bearing, angle)) <= mount.halfArc + 1e-7;
 }
 /** An attack order chooses the broadside with the most working guns, then the shortest turn. */
-export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, point: Point) {
+export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, point: StrikeTarget) {
     const weapons = installedWeapons(snapshot, ship).filter(item => (item.durability ?? 1) > 0), heading = ship.sailing?.heading ?? 0, angle = Math.atan2(point.y - ship.y, point.x - ship.x);
     const mounts = shipMounts(ship).filter(mount => weapons.some(item => item.mountId === mount.id));
     let best = heading, score = -Infinity;
     for (const candidate of [heading, ...mounts.map(mount => angle - mount.bearing)]) {
         const pose = { ...ship, sailing: { ...ship.sailing!, heading: candidate } };
         const count = weapons.filter(item => {
-            const profile=SHIP_WEAPONS[item.kind as ShipEquipmentKind],pivot=mountedWeaponPose(pose,item)!.pivot,gap=Math.hypot(point.x-pivot.x,point.y-pivot.y);
+            const profile=SHIP_WEAPONS[item.kind as ShipEquipmentKind],pivot=mountedWeaponPose(pose,item)!.pivot,aim=strikePoint(pivot,point),gap=Math.hypot(aim.x-pivot.x,aim.y-pivot.y);
             return gap<=profile.range && gap>=(profile.weapon.minRange ?? 0) && shipGunCanAim(pose,item,point);
         }).length;
         const value = count * 10 - Math.abs(headingDifference(heading, candidate));

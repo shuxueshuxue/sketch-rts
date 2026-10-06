@@ -6,10 +6,11 @@ export type ShipKind = keyof typeof geometry.ships;
 export type Point = { x: number; y: number };
 export const SHIP_CAMERA = geometry.camera;
 export const SHIP_KINDS = Object.keys(geometry.ships) as ShipKind[];
+export const DEFAULT_SHIP_SCALE = 1.1;
 
 export function isShipKind(kind: UnitKind): kind is ShipKind { return kind in geometry.ships; }
 export function shipScale(ship: Unit) {
-  return ship.deckScale ?? (ship.cargoCapacity === undefined ? 1 : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
+  return ship.deckScale ?? (ship.cargoCapacity === undefined ? DEFAULT_SHIP_SCALE : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
 }
 type ShipProfile = ReturnType<typeof computeShipProfile>;
 const profiles=new WeakMap<Unit,{kind:ShipKind;scale:number;fittings:Unit['fittings'];profile:ShipProfile}>();

@@ -1,4 +1,7 @@
 import type { WeaponDef } from "./catalog";
+import { shipProfile, worldToLocal } from "./ship-geometry";
+import { polygonPlanes } from "./navigation-math";
+import type { Unit } from "./types";
 export type WeaponPoint = {
     x: number;
     y: number;
@@ -6,6 +9,21 @@ export type WeaponPoint = {
 };
 /** Projection along a shot and distance from its centerline; no map-specific geometry. */
 export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: WeaponPoint, width: number) {
+    if ("order" in target) {
+        const ship=target as Unit,profile=shipProfile(ship);
+        if(profile){
+            const a=worldToLocal(ship,from),b=worldToLocal(ship,to),dx=b.x-a.x,dy=b.y-a.y;
+            let enter=0,leave=1;
+            for(const p of polygonPlanes(profile.hull)){
+                const origin=a.x*p.x+a.y*p.y,step=dx*p.x+dy*p.y,padding=width*Math.hypot(p.x,p.y);
+                if(Math.abs(step)<1e-9){if(origin<p.min-padding || origin>p.max+padding)return undefined;continue;}
+                const lo=(p.min-padding-origin)/step,hi=(p.max+padding-origin)/step;
+                enter=Math.max(enter,Math.min(lo,hi));leave=Math.min(leave,Math.max(lo,hi));
+                if(enter>leave+1e-7)return undefined;
+            }
+            return enter*Math.hypot(dx,dy);
+        }
+    }
     const dx = to.x - from.x, dy = to.y - from.y;
     const length = Math.hypot(dx, dy);
     if (length === 0)

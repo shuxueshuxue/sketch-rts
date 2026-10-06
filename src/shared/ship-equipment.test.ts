@@ -9,10 +9,70 @@ import { localToWorld, shipProfile } from './ship-geometry';
 import { sailToward, turnShipToward } from './sailing';
 import { checksumGame } from './sim/checksum';
 import type { WorldItem } from './types';
+import { createBuilding } from './map';
 function match() { const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.items = []; game.buildings = []; game.scriptedVictory = true; delete game.map.terrain; game.players.player!.gold = 3000; return game; }
 function run(game: ReturnType<typeof match>, ticks: number) { for (let i = 0; i < ticks; i++)
     stepGame(game); }
 describe('physical ship equipment', () => {
+    it('revises an automatic naval engagement while preserving a player-chosen attack target',()=>{
+        for(const automatic of [false,true]){
+            const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1150,880),farm=createBuilding('farm','enemy','farm',1200,800,true);
+            ship.hp=ship.maxHp=10000;enemy.hp=enemy.maxHp=10000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};farm.hp=farm.maxHp=5000;game.buildings.push(farm);
+            issuePlayerCommand(game,'player',automatic?{type:'attackMove',unitIds:[ship.id],x:farm.x,y:farm.y}:{type:'attack',unitIds:[ship.id],targetId:farm.id});
+            run(game,seconds(5));
+            if(automatic){expect(enemy.hp).toBeLessThan(10000);expect(farm.hp).toBe(5000);}
+            else expect(farm.hp).toBeLessThan(5000);
+        }
+    });
+    it('turns a holding ship toward an approaching enemy without moving its guard position',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',900,1100);
+        enemy.hp=enemy.maxHp=2000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
+        run(game,seconds(12));expect(enemy.hp).toBeLessThan(2000);expect(ship.order.type).toBe('hold');
+        expect(ship.x).toBe(900);expect(ship.y).toBe(800);
+    });
+    it('keeps firing at the next reachable threat after its original ship target sinks',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1130,800),yard=createBuilding('next-yard','enemy','shipyard',1290,800,true);
+        enemy.hp=1;yard.hp=yard.maxHp=5000;game.buildings.push(yard);
+        issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});
+        run(game,seconds(20));expect(game.units.some(unit=>unit.id===enemy.id)).toBe(false);
+        expect(yard.hp).toBeLessThan(5000-SHIP_WEAPONS.shipCannon.damage*2);
+        expect(ship.shipParts!.rigging).toBe(shipPartMax(ship).rigging);
+    });
+    it('guards an idle player ship with the same aiming and target rules as combat orders',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1250,800);
+        enemy.hp=enemy.maxHp=2000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        stepGame(game);expect(enemy.hp).toBe(2000);expect(installedWeapons(game,ship)[0]!.aim?.tracking).toBe(true);
+        run(game,seconds(5));expect(enemy.hp).toBeLessThan(2000);
+        expect(ship.x).toBe(900);expect(ship.y).toBe(800);expect(ship.order.type).toBe('idle');
+    });
+    it('fires at the reachable building wall even when its center is beyond cannon range',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),yard=createBuilding('yard','enemy','shipyard',1290,800,true);
+        yard.hp=yard.maxHp=5000;game.buildings.push(yard);
+        issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:yard.id});
+        run(game,seconds(10));expect(yard.hp).toBeLessThan(5000);
+    });
+    it('intercepts an attacker without replacing an unloading task and resumes after the threat dies',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1100,800);
+        ship.hp=ship.maxHp=10000;enemy.hp=enemy.maxHp=10000;
+        enemy.order={type:'attack',targetId:ship.id};
+        issuePlayerCommand(game,'player',{type:'unload',unitIds:[ship.id],x:1500,y:800});
+        run(game,seconds(5));expect(enemy.hp).toBeLessThan(10000);expect(ship.order).toMatchObject({type:'unload',x:1500,y:800});
+        expect(ship.x).toBe(900);
+        game.units=game.units.filter(unit=>unit!==enemy);run(game,seconds(1));expect(ship.x).toBeGreaterThan(900);
+    });
+    it('keeps an explicit withdrawal moving instead of being trapped in automatic retaliation',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1100,800);
+        ship.sailing!.heading=Math.PI;
+        enemy.hp=enemy.maxHp=10000;enemy.order={type:'attack',targetId:ship.id};
+        issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],x:700,y:800,avoidCombat:true});
+        run(game,seconds(3));expect(ship.x).toBeLessThan(900);expect(enemy.hp).toBe(10000);
+    });
+    it('keeps a ship move to occupied water free of passenger deck coordinates',()=>{
+        const game=match(),a=game.spawnUnit('player','transport',900,800),b=game.spawnUnit('player','warship',1200,800);
+        issuePlayerCommand(game,'player',{type:'move',unitIds:[b.id],x:a.x,y:a.y});
+        expect(b.order).toEqual({type:'move',x:a.x,y:a.y});
+    });
     it('bounds turning per second, slows under cargo and rudder damage, and rotates crew with the hull', () => {
         const game = match(), ship = game.spawnUnit('player', 'transport', 900, 800), crew = game.spawnUnit('player', 'footman', 900, 800);
         boardUnit(ship, crew, game.units);
@@ -156,6 +216,7 @@ describe('physical ship equipment', () => {
         cannon.shipId = transport.id;
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: transport.id, mountId: 'bow', installerId: worker.id } })).toThrow(/Clear the deck/);
         const small = game.spawnUnit('player', 'cutter', 700, 660);
+        small.deckScale=1; // This fixture specifically tests an undersized four-cell hold.
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: small.id, slot: 1 } })).toThrow(/No room/);
     });
     it('gives a refitted transport a working independently aimed cannon with real muzzle effects', () => {
