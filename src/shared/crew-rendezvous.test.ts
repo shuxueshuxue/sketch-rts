@@ -29,6 +29,14 @@ describe('right-click crew rendezvous',()=>{
     if(owner==='player')expect(Math.hypot(target.x-before.x,target.y-before.y)).toBeGreaterThan(20);
     else expect({x:target.x,y:target.y}).toEqual(before);
   });
+  it('uses the same arrival geometry on an authored scene without a terrain grid',()=>{
+    const game=scene();delete game.map.terrain;
+    const source=game.spawnUnit('player','warship',900,900),target=game.spawnUnit('player','warship',1160,900),crew=game.spawnUnit('player','worker',900,900);
+    boardUnit(source,crew,game.units);syncDecks(game.units);
+    issuePlayerCommand(game,'player',{type:'board',unitIds:[crew.id],transportId:target.id});
+    for(let i=0;i<seconds(60);i++)stepGame(game);
+    expect(crew.deck?.shipId).toBe(target.id);
+  });
   it('cancels implicit approach when the player gives either participating ship a fresh order',()=>{
     for(const receiver of [false,true]){
       const game=scene(),source=game.spawnUnit('player','transport',700,800),target=game.spawnUnit('player','transport',1300,950),crew=game.spawnUnit('player','footman',700,800);

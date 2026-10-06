@@ -1,4 +1,6 @@
 import { archipelagoMap } from "./archipelago-map";
+import {estuaryMap} from './estuary-map';
+import {terrainSurfaces} from './map-dressing';
 import { campRoster, type CampHabitat, type CampTier } from "./camps";
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
@@ -155,13 +157,14 @@ const IDEAS: Record<MapIdea, IdeaSpec> = {
   bridgeStand: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512], walk: WALK_SHARE, layout: bridgeStand },
   deepJungle: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE, STANDARD_MAP_SIZE + 512], walk: [0.36, 0.44], masses: { forest: 0.8, rock: 0.05, water: 0.15 }, layout: deepJungle },
   northIsles: { kind: "ring", seats: duel, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: northIsles },
-  riverValley: { kind: "sides", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "river") },
+  riverValley: { kind: "sides", seats: count=>count===4 || count===8, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "river") },
   twoShores: { kind: "sides", seats: four, sizes: () => [STANDARD_MAP_SIZE + 1_024, STANDARD_MAP_SIZE + 1_536], walk: WALK_SHARE, layout: (field, players, teams, teamOrder) => sidesLayout(field, players, teams, teamOrder, "strait") },
 };
 const FALLBACK: Record<GeneratedLayoutKind, MapIdea> = { ring: "openRing", sides: "openSides" };
 
 export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[], teams: Record<PlayerId, string>): GeneratedMap {
   if (options.idea === "islandStarts") return archipelagoMap(options, players);
+  if (options.idea === 'riverValley' && players.length===8) return estuaryMap(options,players);
   const random = seededRandom(options.seed);
   const teamOrder = [...new Set(players.map((player) => teams[player] ?? player))];
   const teamSizes = teamOrder.map((team) => players.filter((player) => (teams[player] ?? player) === team).length);
@@ -179,6 +182,7 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
     if (!spec.layout(field, players, teams, teamOrder)) continue;
     const terrain = carveTerrain(field, plain);
     if (!terrain) continue;
+    terrain.surfaces=terrainSurfaces(terrain,options.seed);
     return assemble(kind, idea, field, players, terrain);
   }
   throw new Error(`No ${idea} map fits the seed ${options.seed} for ${players.length} players`);
@@ -1905,7 +1909,7 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
 // DECOR_PER_CELL of every map's open cells dressed by what lies round them (flowers, bushes and pebbles on open ground;
 // mushrooms, stumps and logs by the woods; pebbles and bones by rock; reeds on a shore; lilies out on the shallows), then a
 // campfire by every camp, a signpost by every shop, pillars round every hill and a wreck on every beach.
-const DECOR_PER_CELL = 1 / 220;
+const DECOR_PER_CELL = 1 / 155;
 function decorate(field: Field, terrain: Terrain): TerrainLandmark[] {
   const marks: TerrainLandmark[] = [];
   const add = (kind: TerrainLandmark["kind"], at: Point, size: number) =>

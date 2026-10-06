@@ -1,5 +1,6 @@
 import { createBuilding, createUnit } from "./map";
 import { detCos, detSin } from "./det-math";
+import {coastalDressing,terrainSurfaces} from './map-dressing';
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
 /** A terrain generator only. Naval policy reads connectivity and resources, never this layout's identity. */
@@ -13,14 +14,20 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     const center = { x: size / 2, y: size / 2 };
     const point = (angle: number, reach: number) => ({ x: center.x + detCos(angle) * reach, y: center.y + detSin(angle) * reach });
     const homes = players.map((owner, index) => ({ owner, at: point(rotation + index * Math.PI * 2 / players.length, size * .345), radius: size * .095 }));
-    const mainland = { at: center, radius: size * .155 };
-    const land = [mainland, ...homes];
+    const large=players.length>=6;
+    const mainland = { at: center, radius: size * (large ? .12 : .155) };
+    const satellites=large?players.map((_,i)=>({at:point(rotation+(i+.5)*Math.PI*2/players.length,size*.225),radius:size*.047})):[];
+    const land = [mainland, ...homes,...satellites];
     let cells = "";
     for (let row = 0; row < cols; row++)
         for (let col = 0; col < cols; col++) {
             const at = { x: col * cell + cell / 2, y: row * cell + cell / 2 };
             const gap = Math.min(...land.map(disk => Math.hypot(at.x - disk.at.x, at.y - disk.at.y) - disk.radius));
-            cells += gap <= -64 ? "." : gap <= 48 ? "," : "~";
+            const home=homes.find(home=>Math.hypot(at.x-home.at.x,at.y-home.at.y)<home.radius-120);
+            const outward=home && Math.hypot(at.x-center.x,at.y-center.y)>Math.hypot(home.at.x-center.x,home.at.y-center.y);
+            const patch=detSin(col/4+rotation)+detCos(row/5);
+            cells += gap <= -64 ? large && home && Math.hypot(at.x-home.at.x,at.y-home.at.y)>350 && outward && patch>1.05 ? 'T'
+                : large && gap<-150 && (!home || Math.hypot(at.x-home.at.x,at.y-home.at.y)>350) && patch<-1.65 ? '#' : '.' : gap <= 48 ? "," : "~";
         }
     const result: GeneratedMap = { kind: "ring", idea: "islandStarts", size, starts: {}, buildings: [], units: [], resources: [], mercenaryCamps: [], items: [], landmarks: [], terrain: { cell, cols, rows: cols, cells, palette: "coastal" }, camps: [], sites: [], obstacles: [] };
     for (const { owner, at } of homes) {
@@ -32,12 +39,30 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
         result.resources.push({ id: `gold-${owner}-main`, kind: "goldMine", ...mine, amount: 6000 });
     }
     // Shoreward resources permit several independent bridgeheads; the mainland has no scripted owner or capture event.
-    for (let index = 0; index < players.length * 2; index++) {
-        const at = point(rotation + index * Math.PI / players.length, size * .095);
+    for (let index = 0; index < players.length * (large?1:2); index++) {
+        const at = point(rotation + index * Math.PI * (large?2:1) / players.length, size * (large?.072:.095));
         result.resources.push({ id: `gold-mainland-${index}`, kind: "goldMine", ...at, amount: 9000 });
         result.units.push(createUnit(`guard-${index}`, "neutral", "ogreWarrior", at.x, at.y + 120));
         result.camps.push({ ...at, tier: "orange", habitat: "open" });
     }
     result.sites.push({ kind: "shop", ...center });
+    satellites.forEach((island,index)=>{
+        result.resources.push({id:`gold-satellite-${index}`,kind:'goldMine',...island.at,amount:7500});
+        result.units.push(createUnit(`satellite-guard-${index}`,'neutral','murlocPeon',island.at.x+85,island.at.y+110));
+        result.camps.push({...island.at,tier:'green',habitat:'water'});
+        result.landmarks.push({id:`satellite-wreck-${index}`,kind:'wreck',x:island.at.x+island.radius*.6,y:island.at.y,size:100,rotation});
+    });
+    // Camps, shops and mineral seams must remain usable through the wooded interior.
+    if(large){
+        const open=[...result.resources,...result.units.filter(unit=>unit.owner==='neutral'),...result.sites];
+        result.terrain.cells=[...result.terrain.cells].map((tile,index)=>{
+            if(tile!=='T'&&tile!=='#')return tile;
+            const at={x:(index%cols+.5)*cell,y:(Math.floor(index/cols)+.5)*cell};
+            return open.some(point=>Math.hypot(at.x-point.x,at.y-point.y)<240)?'.':tile;
+        }).join('');
+    }
+    result.terrain.surfaces=terrainSurfaces(result.terrain,options.seed);
+    result.landmarks.push(...coastalDressing(result.terrain,[...homes.map(home=>home.at),...result.resources],options.seed));
+    for(const mine of result.resources)result.landmarks.push({id:`scar-${mine.id}`,kind:'mineScar',x:mine.x,y:mine.y,size:160,rotation:0});
     return result;
 }

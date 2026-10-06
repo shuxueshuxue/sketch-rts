@@ -9,7 +9,7 @@ import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapon
 import { ITEM_DEFS, canEquip, dropRefusal, equipmentProtection, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
-import { combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
+import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
@@ -986,7 +986,9 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
   for(const ship of shipsIn(game.units)){
     if(ship.hp<=0 || isStaggered(ship) || isStunned(ship) || !shipProfile(ship) || "avoidCombat" in ship.order && ship.order.avoidCombat)continue;
     const order=ship.order;
-    const requested=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
+    const ordered=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
+    const explicit=order.type==='attack' && order.leashX===undefined;
+    const requested=ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined;
     let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,ship.attackRange) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
     if(!crossing.has(ship.id) && facingPoint && strikeGap(ship,facingPoint)<=ship.attackRange && (["attack","attackMove","idle","hold","aim"].includes(order.type))) {
@@ -1258,7 +1260,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.targetId) {
     const target = findTarget(game, order.targetId);
-    if (target && target.hp > 0 && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target, game.units)) {
+    if (target && target.hp > 0 && automaticTargetAllowed(game.units,unit.owner,target) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && canReach(game.map, unit, target, game.units)) {
       const chosen = automaticCombatTarget(game, unit, target);
       unit.order = { ...order, targetId: chosen.id };
       attackMoveTowardTarget(game, unit, chosen);
@@ -1319,6 +1321,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
   }
   // Only automatic orders reconsider living targets here. Explicit player attacks keep their target.
   if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
+    if(!automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
     target = automaticCombatTarget(game, unit, target);
     unit.order = { ...order, targetId: target.id };
   }
@@ -3143,6 +3146,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyEnemyUnit(game, owner, point, range + (game.shipReachPadding ?? shipReachPadding(game.units)), (candidate) => {
+    if(!automaticTargetAllowed(game.units,owner,candidate))return;
     if (shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
     if(accepts && !accepts(candidate))return;
     const candidateDistance = isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);

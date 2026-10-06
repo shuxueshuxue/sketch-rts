@@ -15,6 +15,8 @@ export type Terrain = {
   rows: number;
   cells: string;
   levels?: string;
+  /** g grass, d earth, s sand, r gravel; visual cover only. */
+  surfaces?: string;
   palette?: 'coastal';
 };
 
