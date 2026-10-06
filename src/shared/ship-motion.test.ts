@@ -16,6 +16,12 @@ describe('engine-owned ship motion',()=>{
     expect(advanceShip(ship,game.map,game.units,{surge:NaN})).toBe(false);
     expect(advanceShip(ship,game.map,game.units,{pivotLever:NaN})).toBe(false);
   });
+  it('enforces the lower astern speed even across repeated engine requests',()=>{
+    const game=scene(),ship=game.spawnUnit('player','transport',800,800),limits=shipMotionLimits(ship);
+    beginShipMotionFrame(game.units);
+    for(let i=0;i<8;i++)advanceShip(ship,game.map,game.units,{surge:-999});
+    expect(800-ship.x).toBeCloseTo(perTick(limits.reverseSpeed),6);expect(ship.y).toBe(800);
+  });
   for(const terrain of [false,true])it(`cannot strafe under changing movement commands, terrain=${terrain}`,()=>{
     const game=scene(terrain),ship=game.spawnUnit('player','transport',800,800);
     for(let tick=0;tick<seconds(12);tick++){

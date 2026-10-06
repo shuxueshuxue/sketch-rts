@@ -1,4 +1,4 @@
-import { deckLoad, deckPlacement } from "./decks";
+import { deckLoad, deckPlacement, deckPointFits } from "./decks";
 import { capsuleClearsBodies, capsuleClearsCircles, expandConvex } from './navigation-math';
 import { supportSurface } from './support-surface';
 import { bodyMass } from "./physical-body";
@@ -69,6 +69,11 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
           nodes.push(p);
       }
     }
+  // Eroded hull corners provide routes out of narrow aft boarding positions.
+  // Seam samples alone leave larger crew trapped between a cabin and railing.
+  for (const { hull } of surface)
+    for (const point of expandConvex(hull,-radius-1e-4))
+      if (fits(point)) nodes.push(point);
   for (const obstacle of obstacles)
     for (let i = 0; i < 12; i++) {
       const r = (obstacle.radius + passenger.radius + 3) / detCos(Math.PI / 12), angle = i * Math.PI / 6;
@@ -127,11 +132,12 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     const next = { x: passenger.x + dx / len * perTick(passenger.speed) * pace, y: passenger.y + dy / len * perTick(passenger.speed) * pace };
     target = hulls.find(ship => ship.hp > 0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship, next), 0, shipProfile(ship)!.hull));
   }
-  if (!source && !target || source && target?.id === source.id)
+  if (!source && !target)
     return false;
   if (!source && target && Math.hypot(passenger.x - target.x, passenger.y - target.y) > shipProfile(target)!.length / 2 + passenger.radius * 3)
     return false;
   const ships = connectedShips(source || target!, passenger, units);
+  if(source && target?.id===source.id && ships.length===1 && deckPointFits(source,passenger,worldToLocal(source,passenger),units,false))return false;
   if (target && !ships.includes(target))
     return false;
   const land = !source || !target;
@@ -140,7 +146,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
   const geometry = crossingGeometry(ships, passenger, map, land), { surface, floor, obstacles } = geometry;
   let destination: Point | undefined;
   if (target) {
-    if (deckLoad(units, target) + bodyMass(passenger) > shipProfile(target)!.loadCapacity || !deckPlacement(target, passenger, units))
+    if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckPlacement(target, passenger, units))
       return false;
     if (!source && !ships.some(ship => Math.hypot(passenger.x - ship.x, passenger.y - ship.y) < shipProfile(ship)!.length / 2 + passenger.radius * 3))
       return false;

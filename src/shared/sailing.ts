@@ -18,7 +18,7 @@ export function turnShipToward(ship:Unit,desired:number,map:GameMap,units:readon
 }
 
 /** Rates are distance/s, distance/s² and radians/s; loading affects propulsion and steering. */
-export function sailToward(ship:Unit,point:Point,map:GameMap,units:readonly Unit[],pace=1) {
+export function sailToward(ship:Unit,point:Point & {heading?:number},map:GameMap,units:readonly Unit[],pace=1) {
   const motion=ship.sailing??={heading:0,speed:0,load:0,balance:0};
   const maxParts=shipPartMax(ship);const propulsion=(ship.shipParts?.rigging ?? maxParts.rigging)/maxParts.rigging;
   if(propulsion<=0){motion.speed=0;return;}
@@ -30,7 +30,7 @@ export function sailToward(ship:Unit,point:Point,map:GameMap,units:readonly Unit
   if(map.terrain) {
     const movedGoal = motion.route && Math.hypot(motion.route.goalX-point.x,motion.route.goalY-point.y);
     if(!motion.route || movedGoal!>map.terrain.cell/2 || !motion.route.points.length && movedGoal!>1) {
-      const traffic=shipTraffic(ship,units),{points,partial}=planShipRoute(map,ship,shipContactGoal(ship,point,units) ?? point,traffic,traffic.hasTraffic?512:Infinity);
+      const traffic=shipTraffic(ship,units),{points,partial}=planShipRoute(map,ship,point.heading===undefined ? shipContactGoal(ship,point,units) ?? point : point,traffic,traffic.hasTraffic?512:Infinity);
       motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,startX:ship.x,startY:ship.y,startHeading:motion.heading};
     }
     while(motion.route.points.length && Math.hypot(ship.x-motion.route.points[0]!.x,ship.y-motion.route.points[0]!.y)<1e-7
@@ -50,7 +50,7 @@ export function sailToward(ship:Unit,point:Point,map:GameMap,units:readonly Unit
     aim=next;desired=next.heading;
   } else {
     aim=nearestShipPose(map,ship,point)??ship;
-    desired=Math.round(Math.atan2(aim.y-ship.y,aim.x-ship.x)*1e9)/1e9;
+    desired=Math.hypot(aim.x-ship.x,aim.y-ship.y)<1e-7 && point.heading!==undefined ? point.heading : Math.round(Math.atan2(aim.y-ship.y,aim.x-ship.x)*1e9)/1e9;
   }
   const difference=headingDifference(motion.heading,desired);
   const heading=motion.heading+Math.max(-turn,Math.min(turn,difference));
@@ -76,9 +76,9 @@ export function sailToward(ship:Unit,point:Point,map:GameMap,units:readonly Unit
   const dx=detour.x-ship.x,dy=detour.y-ship.y,gap=Math.hypot(dx,dy);
   if(gap===0){motion.speed=0;return;}
   const alignment=(dx*detCos(heading)+dy*detSin(heading))/gap;
-  const dockingPace=alignment>=0 ? 1 : .4;
+  const travelSpeed=alignment>=0 ? limits.speed : limits.reverseSpeed;
   if(map.terrain && Math.abs(dx*detSin(heading)-dy*detCos(heading))>1e-5){motion.speed=0;motion.route=undefined;return;}
-  const targetSpeed=limits.speed*pace*(map.terrain ? dockingPace : Math.max(.08,detCos(difference)));
+  const targetSpeed=travelSpeed*pace*(map.terrain ? 1 : Math.max(.08,detCos(difference)));
   motion.speed+=Math.max(-acceleration,Math.min(acceleration,targetSpeed-motion.speed));
   const step=Math.min(gap,perTick(motion.speed));
   if(!advanceShip(ship,map,units,{surge:step*(map.terrain && alignment<0?-1:1),spentYaw:Math.abs(heading-start.heading)})){motion.speed=0;motion.route=undefined;}
