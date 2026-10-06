@@ -5,6 +5,7 @@ import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
 import { configureWorldCamera,screenOnPlane } from './projection';
 import { flightPose } from './flight-pose';
 import { paintedHit } from './painted-hit';
+import { creatureShadow } from '../art/painted-creatures';
 import { paintFigure } from '../art/painted-units';
 import { UNIT_CARDS } from '../content/units';
 import { unitGlyphScale } from '../glyphs';
@@ -31,13 +32,14 @@ export class World3DLayer {
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
   private cards=new Map<string,{mesh:THREE.Mesh;texture:THREE.CanvasTexture;used:number}>();
-  private cardGeometry=new THREE.PlaneGeometry(128,128/TILT).translate(0,17/TILT,0);
+  private cardGeometry=new Map<number,THREE.PlaneGeometry>();
   private facing=new CrewFacingTracker();
   private deckMotion=new Map<string,{shipId:string;x:number;y:number;fromX:number;fromY:number;at:number}>();
   private snapshot:GameSnapshot|undefined;
   private lastTick=-1;
   private at=0;
   private frame=0;
+  private viewport='';
   private view:WorldFrame['view']|undefined;
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   private shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.24}));
@@ -69,7 +71,8 @@ export class World3DLayer {
   draw(frame:WorldFrame){
     this.frame++;this.snapshot=frame.snapshot;this.view=frame.view;
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setSize(frame.view.width,frame.view.height,false);
+    const viewport=`${frame.view.width}:${frame.view.height}:${Math.min(devicePixelRatio,2)}`;
+    if(viewport!==this.viewport){this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
     configureWorldCamera(this.camera,frame.view);
     const cx=frame.view.x+frame.view.width/(2*zoom),cy=frame.view.y+frame.view.height/(2*zoom),extent=Math.max(frame.view.width,frame.view.height)/zoom+400;
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
@@ -129,7 +132,7 @@ export class World3DLayer {
         const id=attackTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
-      const scale=unitGlyphScale(unit.radius),bodyY=at.y-height*TILT-17*scale;
+      const scale=unitGlyphScale(unit.radius),foot=creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale});
       if(!visible(at.x,bodyY))continue;
       const animation=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
@@ -142,7 +145,8 @@ export class World3DLayer {
         const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());
         const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data,alpha=new Uint8Array(canvas.width*canvas.height);for(let i=0;i<alpha.length;i++)alpha[i]=rgba[i*4+3]!;
         texture.userData.alpha={width:canvas.width,height:canvas.height,pixels:alpha};
-        card={mesh:new THREE.Mesh(this.cardGeometry,new THREE.MeshBasicMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,toneMapped:false})),texture,used:this.frame};this.cards.set(key,card);
+        let geometry=this.cardGeometry.get(foot);if(!geometry){geometry=new THREE.PlaneGeometry(128,128/TILT).translate(0,foot/TILT,0);this.cardGeometry.set(foot,geometry);}
+        card={mesh:new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,alphaTest:.4,side:THREE.DoubleSide,toneMapped:false})),texture,used:this.frame};this.cards.set(key,card);
       }card.used=this.frame;
       const transform=new THREE.Matrix4().compose(new THREE.Vector3(at.x,height,at.y),rotation,new THREE.Vector3(scale,scale,scale));
       this.batches.add(`unit:${key}`,card.mesh,transform,unit.id);
@@ -169,5 +173,5 @@ export class World3DLayer {
     }return undefined;
   }
   plane(point:{x:number;y:number},height:number){return this.view?screenOnPlane(this.camera,this.view,point,height):undefined;}
-  dispose(){this.batches.dispose();this.library.dispose();for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}this.cardGeometry.dispose();for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}this.renderer.dispose();}
+  dispose(){this.batches.dispose();this.library.dispose();for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}for(const geometry of this.cardGeometry.values())geometry.dispose();for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}this.renderer.dispose();}
 }

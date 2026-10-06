@@ -2,12 +2,12 @@ import {describe,it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
 import type {Scene} from 'three';
-const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined}));
+const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0}));
 vi.mock('three',async importOriginal=>{
   const actual=await importOriginal<typeof import('three')>();
   return{...actual,WebGLRenderer:class{
     shadowMap={enabled:false,type:0};capabilities={getMaxAnisotropy:()=>8};toneMapping=0;toneMappingExposure=1;
-    setClearColor(){}setPixelRatio(){}setSize(){}dispose(){}
+    setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
   }};
 });
@@ -15,7 +15,8 @@ import {World3DLayer} from './world-layer';
 import {projectWorld} from './projection';
 import {createShipWebglScene} from '../../recorder/scenes/ship-webgl';
 import {snapshotGame} from '../../shared/sim';
-import {shipProfile,localToWorld} from '../../shared/ship-geometry';
+import {UNIT_DEFS} from '../../shared/catalog';
+import {shipProfile,localToWorld,isShipKind} from '../../shared/ship-geometry';
 import {UnitFacingTracker} from '../unit-facing';
 import {UnitAnimationTracker} from '../unit-animation';
 import {UnitMotionSmoother} from '../unit-motion';
@@ -25,6 +26,7 @@ import {InstancedMesh,MeshBasicMaterial} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
+  gpu.sizes=gpu.ratios=0;
   vi.stubGlobal('devicePixelRatio',2);
   vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
   vi.stubGlobal('fetch',async(url:string)=>new Response(readFileSync(`public${url.split('?')[0]}`)));
@@ -46,7 +48,18 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(picked,'crew can be selected through its visible painted pixels').toBe(true);
     const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map);
     expect(cards.length).toBe(2);for(const object of cards){const material=(object as InstancedMesh).material as MeshBasicMaterial;expect(material.toneMapped).toBe(false);expect(material.alphaTest).toBe(.4);expect((material.map!.image as {width:number}).width).toBe(512);}
+    frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
+    frame.view={...frame.view,width:1100};layer.draw(frame);expect(gpu.sizes).toBe(2);
     expect(JSON.stringify(frame.snapshot)).toBe(original);layer.dispose();
+  });
+  it('prepares every land unit painting as a selectable colored cutout, including large beasts and siege weapons',async()=>{
+    const {game,frame,layer}=setup();game.units=[];game.buildings=[];
+    for(const kind of Object.keys(UNIT_DEFS) as (keyof typeof UNIT_DEFS)[])if(!isShipKind(kind))game.spawnUnit('player',kind,600,600);
+    frame.snapshot=snapshotGame(game);frame.view={...frame.view,zoom:.6};await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    expect(layer.positions.size).toBe(game.units.length);
+    for(const unit of game.units){const at=layer.positions.get(unit.id)!;expect(Number.isFinite(at.bodyY)).toBe(true);expect(at.topY).toBeLessThan(at.bodyY);}
+    const cards=gpu.scene!.children.filter(object=>object instanceof InstancedMesh && object.material instanceof MeshBasicMaterial && object.material.map) as InstancedMesh[];
+    expect(cards.reduce((sum,card)=>sum+card.count,0)).toBe(game.units.length);layer.dispose();
   });
   it('batches 2,000 matching troops into one actor mesh instead of allocating one GPU object per unit',async()=>{
     const {game,frame,layer}=setup();game.units=[];game.buildings=[];
