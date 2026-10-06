@@ -1,6 +1,13 @@
+import { commandIconMarkup } from "./command-icons";
+import { SHIP_WEAPONS } from "../shared/ship-equipment";
+import { EquipmentPanel } from "./equipment-panel";
+import { canEquip, ITEM_DEFS } from "../shared/equipment";
+import { shipPassengers, shipProfile } from "../shared/ship-geometry";
+import { deckLoad } from "../shared/decks";
 import "./styles.css";
 import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
+import "./game-chrome.css";
 import { BattleHudSelection, type HudIdentity } from "./battle-hud";
 import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
@@ -111,7 +118,7 @@ const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UN
 const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
 const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 // A shop's goods, in SHOP_GOODS order: a shop selected shows no other button.
-const SHOP_HOTKEYS = ["q", "w", "e", "r", "t"];
+const SHOP_HOTKEYS = ["q", "w", "e", "r", "t", "y", "u", "i", "o"];
 // Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
 // hides every other button, so X does not meet a hexer's curse.
 const STANCE_MENU_COMMAND = { icon: "⇄", hotkey: "z" } as const;
@@ -147,6 +154,8 @@ const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
+const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
+const equipmentButton=document.createElement("button");equipmentButton.type="button";equipmentButton.className="equipment-open";itemDock.parentElement!.append(equipmentButton);equipmentButton.addEventListener("click",()=>{keys.clear();equipmentPanel.show(inventoryCarriers());if(document.pointerLockElement===canvas)document.exitPointerLock();});
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
@@ -293,6 +302,7 @@ const commandButtons: CommandButton[] = [
       hotkey: command.hotkey.toUpperCase(),
     }))),
   ),
+  ...(["shipCannon","shipMortar","flameProjector"] as const).map((kind,index)=>createCommandButton(i18n.locale==="zh"?`制造${labelKind(kind)}`:`Produce ${labelKind(kind)}`,"●",["c","v","b"][index]!,()=>{const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);return {visible:Boolean(dock),enabled:Boolean(dock && (currentPlayerState()?.gold ?? 0)>=SHIP_WEAPONS[kind].cost)};},()=>{const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);if(dock)sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind});},()=>({...itemTooltip(kind,undefined,i18n),stats:[...itemTooltip(kind,undefined,i18n).stats,`${SHIP_WEAPONS[kind].cost} G`]}),{type:"item",kind})),
   ...SHOP_GOODS.map((good, index) =>
     createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), SHOP_HOTKEYS[index]!, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
       const tooltip = itemTooltip(good.kind, SHOP_HOTKEYS[index], i18n);
@@ -404,12 +414,8 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkey.toUpperCase()}</span>`;
   if (portrait) drawCommandPortrait(element, portrait);
   else {
-    const paths: Record<string, string> = {
-      "⌁": "M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4",
-      "⌘": "M12 33l13-19M17 7l7-3 12 8-5 8-8-5-7 1-4-5zM9 31l5 3-3 5-5-3z",
-      "⤓": "M6 27h30l-5 8H12zM21 4v19m-6-6l6 6 6-6M7 38l6 2 8-2 8 2 7-2",
-    };
-    if (paths[icon]) element.querySelector(".command-icon")!.innerHTML = `<svg class="command-symbol" viewBox="0 0 42 42" aria-hidden="true"><path d="${paths[icon]}"/></svg>`;
+    const markup = commandIconMarkup(icon);
+    if (markup) element.querySelector(".command-icon")!.innerHTML = markup;
   }
   const guardedRun = () => { const current = state(); if (!current.visible) return; if (!current.enabled) { showCommandUnavailable(current, label); return; } run(); };
   element.addEventListener("click", guardedRun);
@@ -1317,6 +1323,7 @@ function hasMouse() {
 }
 
 function syncPointerLockGate() {
+  if(equipmentPanel.isOpen()){hidePointerLockGate();return;}
   if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable || !hasMouse() })) {
     hidePointerLockGate();
     return;
@@ -1430,6 +1437,7 @@ function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEven
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  if(equipmentPanel.isOpen()){if(event.key==="Escape")equipmentPanel.close();event.preventDefault();return;}
   const key = event.key.toLowerCase();
   const chatIntent = chatKeyIntent(event, {
     hasActiveChat: Boolean(activeChat),
@@ -1493,6 +1501,11 @@ function onKeyDown(event: KeyboardEvent) {
 function sendCommand(command: GameCommand) {
   try {
     activeGameAdapter.sendCommand(command);
+    if (!["stop", "cast", "setAutocast", "setStance", "unloadPassenger"].includes(command.type)) {
+      const ids = "unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+      const unit = snapshot?.units.find(unit => unit.owner === localPlayerId && ids.includes(unit.id));
+      if (unit) soundboard.play("order", undefined, unit.kind);
+    }
     return true;
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
@@ -1759,7 +1772,7 @@ function issueRallyCommandAtWorld(world: Point, buildings: Building[]) {
 }
 
 function loadedTransports() {
-  return selectedPlayerUnits().filter((unit) => carries(unit) > 0 && (unit.cargo?.length ?? 0) > 0);
+  return selectedPlayerUnits().filter((unit) => carries(unit) > 0 && shipPassengers(snapshot?.units ?? [],unit).length > 0);
 }
 
 function unloadButtonState(): CommandButtonState {
@@ -1797,9 +1810,9 @@ function issueUnloadAt(point: Point, queued = false) {
 function unloadPassenger(transportId: string, passengerId: string) {
   if (!syncBeforeCommandProjection() || !snapshot) return;
   const transport = selectedCargoTransports(snapshot, selectedIds, localPlayerId).find(unit => unit.id === transportId);
-  const passenger = transport?.cargo?.find(unit => unit.id === passengerId);
+  const passenger = transport && shipPassengers(snapshot.units,transport).find(unit=>unit.id===passengerId);
   if (!transport || !passenger) return;
-  if (!passengerLandingSpot(snapshot.map, transport, passengerId)) {
+  if (!passengerLandingSpot(snapshot.map, transport, passengerId, snapshot.units)) {
     showInvalidCommand(t("status.unloadNoLand"));
     return;
   }
@@ -2335,6 +2348,7 @@ function pruneSelection() {
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
+  if(equipmentPanel.isOpen())return true;
   if (!snapshot) return false;
   const inventoryEntries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
@@ -2393,8 +2407,11 @@ function cycleFocusedSelection(direction: 1 | -1) {
   updateHud();
 }
 
+let voicedSelection: string | undefined;
 function updateHud() {
   if (!snapshot) return;
+  const voiceUnit = snapshot.units.find(unit => unit.id === focusedSelectionId && unit.owner === localPlayerId);
+  if (voiceUnit?.id !== voicedSelection) { voicedSelection = voiceUnit?.id; if (voiceUnit) soundboard.play("select", undefined, voiceUnit.kind); }
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
@@ -2477,8 +2494,10 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     };
   }), t("hud.nothingSelected"), selectedCargoTransports(snapshot!, selectedIds, localPlayerId).map(transport => ({
     key: transport.id,
-    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: (transport.cargo ?? []).reduce((sum, passenger) => sum + unitRules(snapshot!, passenger).supplyUsed, 0), capacity: carries(transport) }),
-    passengers: (transport.cargo ?? []).map(passenger => ({
+    health: { current: transport.hp, max: transport.maxHp },
+    label: t("hud.transportCargo", { name: labelKind(transport.kind), used: deckLoad(snapshot!.units,transport), capacity: carries(transport) }),
+    passengers: shipPassengers(snapshot!.units,transport).map(passenger => ({
+      canUnload: passenger.owner===localPlayerId,
       key: passenger.id, name: labelKind(passenger.kind), actionLabel: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }),
       health: { current: passenger.hp, max: passenger.maxHp },
       art: { key: `${passenger.kind}:${passenger.owner}`, paint: (canvas: HTMLCanvasElement) => drawAtlasUnitPortrait(requireCanvasContext(canvas), passenger.kind, 0, 0, canvas.width, ownerInk(passenger.owner)) },
@@ -2566,6 +2585,9 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
 }
 
 function renderItemDock() {
+  equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
+  const equipmentSelection=inventoryCarriers();equipmentButton.hidden=menuOpen || !equipmentSelection.some(unit=>canEquip(unit) || shipProfile(unit));equipmentButton.textContent=i18n.locale==="zh"?"装备 / 船舱":"Equipment / Hold";
+
   if (!snapshot || menuOpen) {
     itemDock.classList.add("hidden");
     itemDock.replaceChildren();
@@ -2615,7 +2637,7 @@ function useCarriedItem(itemId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
-  if (entry.item.kind === "flameCloak" || entry.item.kind === "speedBoots" || entry.item.kind === "regenRing") {
+  if (ITEM_DEFS[entry.item.kind].passive) {
     showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
     return;
   }
@@ -2935,6 +2957,7 @@ function toggleMinimapRelations() {
 function updateCamera() {
   if (menuOpen) return;
   const speed = keys.has("shift") ? 24 : 14;
+  if(equipmentPanel.isOpen())return;
   if (keys.has("arrowleft") || keys.has("a")) camera.x -= speed;
   if (keys.has("arrowright") || keys.has("d")) camera.x += speed;
   if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;

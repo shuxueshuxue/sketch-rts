@@ -19,7 +19,10 @@ export function aimingProfile(rules: UnitDef) {
 export function invalidateMovedAim(unit: Unit, rules: UnitDef) {
   if (!unit.aim) return;
   const tolerance = aimingProfile(rules)?.moveTolerance ?? 0;
-  if (Math.hypot(unit.x - unit.aim.anchorX, unit.y - unit.aim.anchorY) > tolerance) unit.aim = undefined;
+  const displacement = unit.deck
+    ? Math.hypot(unit.deck.x-(unit.aim.anchorDeckX ?? unit.deck.x),unit.deck.y-(unit.aim.anchorDeckY ?? unit.deck.y))
+    : Math.hypot(unit.x-unit.aim.anchorX,unit.y-unit.aim.anchorY);
+  if (displacement > tolerance) unit.aim = undefined;
 }
 
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
@@ -29,6 +32,7 @@ export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number) {
   invalidateMovedAim(unit, rules);
   if (!unit.aim) {
     unit.aim = { x: unit.x, y: unit.y, anchorX: unit.x, anchorY: unit.y, tracking: true, updatedTick: tick - 1 };
+    if(unit.deck){unit.aim.anchorDeckX=unit.deck.x;unit.aim.anchorDeckY=unit.deck.y;}
   }
   const aim = unit.aim;
   if (aim.updatedTick !== tick) {
@@ -54,5 +58,6 @@ export function markAimShot(unit: Unit) {
   if (!unit.aim) return;
   unit.aim.anchorX = unit.x;
   unit.aim.anchorY = unit.y;
+  if(unit.deck){unit.aim.anchorDeckX=unit.deck.x;unit.aim.anchorDeckY=unit.deck.y;}
   unit.aim.tracking = false;
 }

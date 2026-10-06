@@ -27,7 +27,7 @@ export function onOwnGround<T extends Point>(snapshot: GameSnapshot, owner: Play
 
 // The units that walk: the list itself where no ship is afloat.
 export function withoutShips(snapshot: GameSnapshot, units: Unit[]): Unit[] {
-  return shipsAfloat(snapshot) ? units.filter((unit) => unitMover(unit.kind) === "land") : units;
+  return shipsAfloat(snapshot) ? units.filter((unit) => unitMover(unit.kind) === "land" && !unit.deck) : units;
 }
 
 const afloat = new WeakMap<GameSnapshot, boolean>();

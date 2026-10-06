@@ -1,0 +1,80 @@
+@import './game-materials.css';
+
+/* Menus, battle controls and the armory use the same engraved, physical frame. */
+:root {
+  --panel:var(--game-paper);
+  --ink:#30291c;
+  --ink-soft:#655941;
+  --title:#493c26;
+  --btn:var(--game-grain),linear-gradient(#4b4633,#2b2b22);
+  --btn-hover:var(--game-grain),linear-gradient(#63553a,#3d3928);
+  --btn-edge:#61502f;
+  --btn-ink:#e6d1a0;
+  --primary:var(--game-grain),linear-gradient(#bc9b56,#80652f);
+  --primary-hover:linear-gradient(#d1b371,#99793c);
+  --primary-ink:#201c12;
+  --field:#ded2b3;
+  --field-edge:#968564;
+  --field-ink:#2b291f;
+  --inset:#665e3410;
+  --selected:linear-gradient(90deg,#86713935,#86713908);
+  --selected-mark:#736138;
+}
+.game-shell {
+  --battle-surface:var(--game-leather);
+  --battle-edge:#a58b524f;
+  --battle-ink:#e7dcbe;
+  --battle-muted:#b7b095;
+  --battle-accent:#d7b86f;
+}
+.menu-window:not(.main-menu[data-menu-view="home"] .menu-window),.pointer-lock-panel {
+  border:1px solid #a68b53; border-image:none; border-radius:1px; box-shadow:var(--game-frame),0 20px 80px #0009;
+  background:var(--game-paper);
+}
+.menu-title { letter-spacing:2px; font-weight:600; border-bottom-color:#78633e55; }
+.room-section-title { letter-spacing:1.5px; }
+.main-menu[data-menu-view="home"] .map-button {
+  border:1px solid #9a7d44; border-image:none; border-radius:1px;
+  background:var(--game-wood); box-shadow:var(--game-frame); color:#d9c18a;
+}
+.main-menu[data-menu-view="home"] .map-button:hover,
+.main-menu[data-menu-view="home"] .map-button:focus-visible { background:var(--game-grain),linear-gradient(110deg,#4b3f2a,#2a3022); border-color:#d5b678; }
+.main-menu[data-menu-view="home"] .map-button-name { font-size:20px; letter-spacing:.22em; }
+.map-button,.menu-actions button,.slot-actions button,.match-action { border-radius:1px; box-shadow:inset 0 1px #cdb57a55,inset 0 -2px #0005,0 2px 3px #0004; }
+.menu-window :is(input,select) { border-radius:1px; box-shadow:inset 0 1px 3px #58482540; }
+.scene-switch { border-radius:1px; background:var(--game-wood); box-shadow:var(--game-inset); }
+.control-deck { gap:0; align-items:stretch; }
+.selection-chip { border-radius:1px 0 0 1px; padding:12px; border:1px solid #a58c57; background:var(--game-leather); box-shadow:var(--game-frame); }
+.hud-actions { justify-content:flex-end; gap:0; }
+.command-dock,.item-dock { border-radius:1px; border:1px solid #a58c57; background:var(--game-wood); box-shadow:var(--game-frame); padding:8px; gap:5px; }
+.command-dock { position:relative; margin-bottom:7px; }
+.hud-subject { grid-template-columns:90px minmax(0,1fr); gap:10px; }
+.hud-subject-art { width:90px; height:104px; object-fit:contain; border:1px solid #95835260; background:radial-gradient(ellipse at 50% 70%,#837e4e45,#101912); box-shadow:var(--game-inset); }
+.hud-subject-name { font:600 16px/1.35 var(--game-serif); color:#e4c78d; }
+.hud-subject-caption { letter-spacing:.6px; color:#aaa185; }
+.hud-subject-detail { color:#b7b19a; }
+.hud-health { height:15px; border:1px solid #ad915950; border-radius:1px; box-shadow:inset 0 2px 3px #0008; background:#0d1710; }
+.hud-health > span:first-child { background-image:linear-gradient(#ffffff30,#00000030); }
+.hud-health-text { line-height:15px; font-size:9px; text-shadow:0 1px 2px #000; }
+.command-button,.item-button { border:1px solid #9b865143; border-radius:1px; background:linear-gradient(135deg,#3c4132,#1c241b); box-shadow:var(--game-inset); }
+.command-button:hover,.item-button:hover { border-color:#c9ae70; background:radial-gradient(ellipse,#696345,#343e2b); box-shadow:inset 0 1px #dbbf7940,0 0 8px #b09c5a30; }
+.command-button:active,.item-button:active { transform:translateY(1px); box-shadow:inset 0 2px 5px #000b; }
+.command-label { color:#c1b697; font-size:9px; bottom:3px; }
+.command-icon { color:#d3c191; filter:drop-shadow(0 2px 1px #0007); }
+.hotkey { background:#101710; border-radius:0; color:#c9b782; font:9px/12px var(--game-serif); }
+.hud-roster-unit { border-radius:1px; border:1px solid #9b865126; background:#10191050; }
+.hud-roster-unit.focused { background:linear-gradient(#9a895b30,#455030); box-shadow:inset 0 0 0 1px #c7ae6b70; }
+.hud-roster-count { border-radius:1px; background:#20281b; color:#e3ca90; }
+.hud-cargo-label { font-family:var(--game-serif); letter-spacing:.5px; }
+.hud-inspection { border-color:#a28a4f40; }
+.minimap-frame { border:4px solid #433b28; outline:1px solid #b79b61; border-radius:1px; box-shadow:inset 0 0 0 1px #10180e,var(--game-frame); }
+.minimap-tab { border:1px solid #a58c57; border-radius:1px; background:var(--game-wood); box-shadow:inset 0 1px #cab17a40; }
+.match-menu-button,.minimap-relations { border-radius:1px; border-color:#9b8551; background:var(--game-wood); box-shadow:inset 0 1px #cab17a40,0 3px 8px #0005; }
+.match-menu { border:1px solid #a58c57; border-radius:1px; background:var(--game-wood); box-shadow:var(--game-frame); }
+.status-line { border-radius:1px; border-color:#9a865357; background:var(--game-leather); box-shadow:0 3px 12px #0006; }
+.tooltip-layer { border:1px solid #a68d58; border-radius:1px; background:var(--game-wood); box-shadow:var(--game-frame); color:#ded4b8; }
+.tooltip-title { color:#e0c58d; font-family:var(--game-serif); }
+.tooltip-title span { border-radius:1px; }
+.tooltip-stats,.tooltip-notes { color:#bdb49b; }
+@media(max-width:650px) { .control-deck { gap:7px; } .hud-subject-art { width:72px; height:80px; } .hud-subject { grid-template-columns:72px minmax(0,1fr); } }
+@media(prefers-reduced-motion:reduce) { .equipment-item canvas { transition:none; } }

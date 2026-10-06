@@ -30,7 +30,7 @@ export class UnitMotionSmoother {
     const glides = new Map<string, Glide>();
     if (ticks > 0 && ticks <= MAX_GLIDE_TICKS) {
       for (const unit of snapshot.units) {
-        const dashing = unit.order.type === "charge" || unit.pushX !== undefined;
+        const dashing = unit.order.type === "charge" || unit.pushX !== undefined || Boolean(unit.deck) || Boolean(unit.sailing);
         const previous = this.glides.get(unit.id);
         if (!dashing && !previous?.dashing) continue;
         const from = previous ? glidePoint(previous, now) : (this.lastSeen.get(unit.id) ?? unit);

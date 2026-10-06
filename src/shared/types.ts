@@ -22,9 +22,11 @@ export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extend
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
 export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
-export type ItemKind = "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
+export type EquipmentSlot = "head" | "body" | "feet" | "carry0" | "carry1" | "carry2" | "carry3";
+export type ShipEquipmentKind = "shipCannon" | "shipMortar" | "flameProjector";
+export type ItemKind = ShipEquipmentKind | "issuedWeapon" | "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
 // What only a shop sells (see @@@shop); the guardian scroll it sells too, and camps drop.
-export type ShopItemKind = "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
+export type ShopItemKind = "leatherArmor" | "roundShield" | "greatSword" | "speedBoots" | "regenRing" | "healingScroll" | "ivoryTower";
 export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDurability" | "speedTraining" | "rangeTraining" | "leadership";
 
 export type UnitStatusEffect = {
@@ -40,7 +42,7 @@ export type UnitStatusEffect = {
 export type WorldEffect = {
   id: string;
   type:
-    | "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround"
+    | "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround" | "muzzleFlash"
     | "heal"
     | "summon"
     | "curse"
@@ -61,6 +63,7 @@ export type WorldEffect = {
     | "chainLightning"
     | "guardianField"
     | "experienceBurst"
+    | "board" | "unload" | "boardingBlocked"
     | "goldBounty"
     | "flameBurn"
     | "scorch"
@@ -76,6 +79,9 @@ export type WorldEffect = {
   duration: number;
   fromX?: number;
   fromY?: number;
+  /** Visual launch height; ballistic damage still uses the planar weapon rules. */
+  fromHeight?: number;
+  toHeight?: number;
   toX?: number;
   toY?: number;
   owner?: Owner;
@@ -88,12 +94,15 @@ export type WorldEffect = {
   sourceKind?: UnitKind | BuildingKind;
   /** The unit an effect follows (a charging rider's trail), or the unit or building a hit struck. Presentation only. */
   unitId?: string;
+  itemId?: string;
 };
 
 export type Projectile = {
   id: string;
   owner: Owner;
   attackerId: string;
+  /** Captured at launch, including the shooter's weapon if it dies before impact. */
+  hullDamageShare?: number;
   targetId: string;
   fromX: number;
   fromY: number;
@@ -111,9 +120,9 @@ export type Projectile = {
 export type UnitOrder =
   | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
-  | { type: "move"; x: number; y: number }
+  | { type: "move"; x: number; y: number; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
-  | { type: "attackMove"; x: number; y: number; targetId?: string }
+  | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
@@ -150,6 +159,8 @@ export type UnitAim = {
   anchorY: number;
   tracking: boolean;
   updatedTick: number;
+  anchorDeckX?: number;
+  anchorDeckY?: number;
 };
 
 export type Unit = {
@@ -172,6 +183,13 @@ export type Unit = {
   // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;
   aim?: UnitAim | undefined;
+  /** Hand references point into the four shared carried positions. */
+  hands?: { right?: string; left?: string };
+  gearMass?: number;
+  holdMass?: number;
+  shipParts?: { rigging:number; rudder:number };
+  fittings?: { id:string; x:number; y:number; radius:number; bearing:number; halfArc:number; accepts:ShipEquipmentKind[] }[];
+  bodyRadius?: number;
   /** Simulation-facing angle in radians while aiming or firing. */
   facing?: number | undefined;
   // Ticks until each ability still cooling down can be cast again, apart from the weapon (see ability-cooldowns).
@@ -185,10 +203,18 @@ export type Unit = {
   pushY?: number | undefined;
   // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
   arrivedAt?: { x: number; y: number } | undefined;
-  // A transport's passengers, out of the game while aboard (see @@@transport).
+  /** Old-format save data only; restored into ordinary units with deck coordinates. */
   cargo?: Unit[] | undefined;
-  /** Larger mission transports can carry a different population than their base hull. */
+  /** Old-format mission hull scale, expressed in the old cargo capacity. */
   cargoCapacity?: number;
+  /** Position on a moving ship, in its local physical coordinate system. */
+  deck?: { shipId: string; x: number; y: number } | undefined;
+  /** Continuous heading and rates; visuals select one of the baked directions. */
+  sailing?: { heading: number; speed: number; load: number; balance: number;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number }[]; end: { x: number; y: number } } | undefined;
+  } | undefined;
+  /** Physical scaling for unusually large campaign hulls. */
+  deckScale?: number;
   radius: number;
   carryingGold: number;
   kills: number;
@@ -280,6 +306,14 @@ export type WorldItem = {
   x: number;
   y: number;
   carrierId?: string;
+  slot?: EquipmentSlot;
+  weaponKind?: UnitKind;
+  shipId?: string;
+  holdSlot?: number;
+  mountId?: string;
+  durability?: number;
+  facing?: number;
+  aim?: UnitAim;
   cooldownRemaining: number;
 };
 
@@ -476,6 +510,7 @@ export type GameCommand =
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
+  | { type: "buyShipEquipment"; buildingId:string; item:ShipEquipmentKind }
   | { type: "buy"; shopId: string; item: ItemKind }
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
@@ -485,6 +520,8 @@ export type GameCommand =
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
+  | { type: "transferItem"; itemId: string; destination: { unitId: string; slot: EquipmentSlot } | { shipId: string; slot: number } | { shipId:string; mountId:string; installerId:string } }
+  | { type: "wieldItem"; unitId: string; itemId?: string; hand: "right" | "left" }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
 
 /** Persistent battlefield remains. Separate from live entities and transient effects. */
@@ -501,6 +538,8 @@ export type Corpse = {
 };
 
 export type GameSnapshot = {
+  /** Equipment migration is applied once; current saves restore byte-for-byte. */
+  equipmentVersion?: 1;
   /** Unmarked older snapshots store movement and push rates per tick at 20 Hz. */
   rateUnits?: "perSecond";
   tick: number;

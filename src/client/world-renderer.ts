@@ -1,3 +1,6 @@
+import { itemEquipped } from "../shared/equipment";
+import { drawBakedShip,shipDirection,drawShipOcclusion,deckVisualHeight,drawShipFlag,drawShipWeapon } from "./art/baked-ships";
+import { shipProfile,shipPassengers } from "../shared/ship-geometry";
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
@@ -173,8 +176,8 @@ export function drawWorld(frame: WorldFrame) {
   }
   trackUnitFacing(painter.facing,painter.snapshot);
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
-  const actors=[...snapshot.buildings,...snapshot.units].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
-  for(const actor of actors)if('order' in actor)drawUnits(painter,[actor]);else drawBuildings(painter,[actor]);
+  const actors=[...snapshot.buildings,...snapshot.units.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
+  for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
@@ -385,13 +388,25 @@ function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Poin
   ctx.restore();
 }
 
-function drawUnits(painter: Painter, units: Unit[]) {
+function drawShipGroup(painter:Painter,ship:Unit) {
+  const point=worldToScreen(painter,drawnPosition(painter,ship));
+  if(!drawBakedShip(painter.ctx,ship,point,"base")){drawUnits(painter,[ship]);for(const unit of shipPassengers(painter.snapshot.units,ship))drawUnits(painter,[unit]);return;}
+  drawBakedShip(painter.ctx,ship,point,"upper");
+  drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,undefined,painter.snapshot.items);
+  drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner));
+  for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y)){drawUnits(painter,[crew]);drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,crew,painter.snapshot.items);drawShipOcclusion(painter.ctx,ship,point,crew);}
+  drawUnits(painter,[ship],true);
+}
+
+function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
   const { ctx, now } = painter;
   const engaged = engagedEntityIds(painter.snapshot);
   for (const unit of units) {
     const shake = hitFeedbackOffset(painter.snapshot, unit);
     const at = drawnPosition(painter, unit);
-    const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y });
+    const ship=unit.deck ? painter.snapshot.units.find(ship=>ship.id===unit.deck!.shipId) : undefined;
+    const height=ship ? deckVisualHeight(ship)+18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1) : 0;
+    const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y-height });
     const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
     const selected = painter.selectedIds.has(unit.id);
@@ -409,8 +424,8 @@ function drawUnits(painter: Painter, units: Unit[]) {
       ctx.restore();
     }
     const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
-    if (model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
-    else drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now));
+    if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), painter.facing.facing(unit.id));
+    else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), painter.facing.facing(unit.id), painter.reducedMotion || (painter.still && unitMover(unit.kind) === "sea") ? undefined : painter.animation?.frame(unit, now));
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(point.x,point.y-65);ctx.lineTo(point.x+6,point.y-57);ctx.lineTo(point.x,point.y-49);ctx.lineTo(point.x-6,point.y-57);ctx.closePath();ctx.fill();ctx.stroke();
@@ -419,7 +434,7 @@ function drawUnits(painter: Painter, units: Unit[]) {
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    if (shouldShowHealthBar({ hp: unit.hp, maxHp: unit.maxHp, selected, hovered: painter.hoveredId === unit.id, engaged: engaged.has(unit.id), still: painter.still })) drawHp(ctx, point.x, point.y - Math.max(unit.radius * 1.8 + 6, 64 * scale + 6), unit.hp, unit.maxHp);
+    if (shouldShowHealthBar({ hp: unit.hp, maxHp: unit.maxHp, shipHull: Boolean(shipProfile(unit)), selected, hovered: painter.hoveredId === unit.id, engaged: engaged.has(unit.id), still: painter.still })) drawHp(ctx, point.x, point.y - Math.max(unit.radius * 1.8 + 6, 64 * scale + 6), unit.hp, unit.maxHp);
     if (selected && painter.controlGroups) {
       const digits = Object.entries(painter.controlGroups).filter(([, ids]) => ids.includes(unit.id)).map(([digit]) => digit).join("·");
       if (digits) {
@@ -434,11 +449,19 @@ function drawUnits(painter: Painter, units: Unit[]) {
 
 // Where a unit is drawn this frame: its snapshot spot, or on its glide when it charges (see unit-motion).
 function drawnPosition(painter: Painter, unit: Unit): Point {
+  if (unit.deck) {
+    const ship = painter.snapshot.units.find(ship => ship.id === unit.deck!.shipId);
+    if (ship) {
+      const parent = painter.motion ? painter.motion.position(ship, painter.now) : ship;
+      const heading = shipDirection(ship) * Math.PI * 2 / 32, c = Math.cos(heading), s = Math.sin(heading);
+      return { x: parent.x + unit.deck.x*c-unit.deck.y*s, y: parent.y + unit.deck.x*s+unit.deck.y*c };
+    }
+  }
   return painter.motion ? painter.motion.position(unit, painter.now) : unit;
 }
 
 function hasCarriedItem(snapshot: GameSnapshot, unit: Unit, kind: WorldItem["kind"]) {
-  return snapshot.items.some((item) => item.kind === kind && item.carrierId === unit.id);
+  return snapshot.items.some((item) => item.kind === kind && item.carrierId === unit.id && itemEquipped(snapshot,unit,item));
 }
 
 function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: number) {
@@ -467,7 +490,7 @@ function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: numbe
 
 function drawItems(painter: Painter, items: WorldItem[]) {
   for (const item of items) {
-    if (item.carrierId) continue;
+    if (item.carrierId || item.shipId) continue;
     const point = worldToScreen(painter, item);
     if (!nearScreen(painter, point, 42)) continue;
     drawItemGlyph(painter.ctx, item, point, painter.now, false);

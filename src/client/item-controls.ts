@@ -1,3 +1,4 @@
+import { ITEM_DEFS } from "../shared/equipment";
 import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../shared/types";
 
 export function itemHotkey(index: number) {
@@ -15,7 +16,7 @@ export function itemHotkeys(count: number, reservedDigits = new Set<number>()) {
 export function carriedItemsForSelection(snapshot: GameSnapshot, selectedUnits: Unit[]) {
   const selectedUnitIds = new Set(selectedUnits.map((unit) => unit.id));
   return snapshot.items
-    .filter((item) => item.carrierId && selectedUnitIds.has(item.carrierId))
+    .filter((item) => item.kind!=="issuedWeapon" && item.carrierId && selectedUnitIds.has(item.carrierId))
     .map((item) => ({ item, carrier: selectedUnits.find((unit) => unit.id === item.carrierId)! }));
 }
 
@@ -26,7 +27,7 @@ export function pickupItemCommand(selectedUnits: Unit[], item: WorldItem): Extra
 
 export function useItemCommand(snapshot: GameSnapshot, owner: PlayerId, item: WorldItem, carrier: Unit): GameCommand | undefined {
   if (item.cooldownRemaining > 0) return undefined;
-  if (item.kind === "flameCloak" || item.kind === "speedBoots" || item.kind === "regenRing") return undefined;
+  if (ITEM_DEFS[item.kind].passive) return undefined;
   if (item.kind === "experienceBook" || item.kind === "guardianScroll" || item.kind === "healingScroll") return { type: "useItem", unitId: carrier.id, itemId: item.id };
   const target = nearestEnemy(snapshot, owner, carrier, item.kind === "stormStaff" ? 320 : 280);
   if (!target) return undefined;

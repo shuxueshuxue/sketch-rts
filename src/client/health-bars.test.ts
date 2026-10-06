@@ -15,6 +15,12 @@ describe("health bar visibility", () => {
   it("distinguishes healthy, wounded and critical health", () => {
     expect(new Set([healthBarColor(100, 100), healthBarColor(50, 100), healthBarColor(25, 100)]).size).toBe(3);
   });
+  it("keeps selected, damaged and fighting hulls clear while retaining ordinary crew bars", () => {
+    for (const flag of ["selected", "hovered", "engaged"]) {
+      expect(shouldShowHealthBar({ hp: 20, maxHp: 180, shipHull: true, [flag]: true })).toBe(false);
+      expect(shouldShowHealthBar({ hp: 20, maxHp: 80, [flag]: true })).toBe(true);
+    }
+  });
   it("shows both sides of a close fight without marking a long march as combat", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.units = []; game.buildings = [];

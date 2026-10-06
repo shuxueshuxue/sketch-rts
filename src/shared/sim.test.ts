@@ -2046,7 +2046,7 @@ describe("sketch RTS simulation", () => {
 
   it("seeds normal neutral maps with real treasure carried by wildlings", () => {
     const game = createGame("verdantCrossroads", { aiPlayers: [] });
-    const carriedItems = game.items.filter((item) => item.carrierId);
+    const carriedItems = game.items.filter((item) => item.carrierId && item.kind !== "issuedWeapon");
 
     expect(carriedItems.length).toBeGreaterThanOrEqual(3);
     expect(carriedItems.map((item) => item.kind)).toEqual(expect.arrayContaining(["flameCloak", "lightningRod", "experienceBook", "breachCharge"]));

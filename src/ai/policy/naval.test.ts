@@ -1,12 +1,19 @@
+import { restoreCargoDecks, boardUnit } from "../../shared/decks";
 import { describe, expect, it } from "vitest";
 import { createUnit } from "../../shared/map";
-import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../../shared/sim";
+import { createGame, issuePlayerCommand, snapshotGame as rawSnapshotGame, stepGame } from "../../shared/sim";
 import { isShoreFootprint, isWalkable, sameGround, type Terrain } from "../../shared/terrain";
 import { createAiPolicyMemory } from "../memory";
 import { desiredExpansionMine } from "./expansion-model";
 import { navalUnitIds, navalWant, navalBudgetReserve, planNavalTactics } from "./naval";
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
+
+// Tests that model old cargo saves observe the same restored live crew as the runtime.
+function snapshotGame(game: ReturnType<typeof createGame>) {
+  restoreCargoDecks(game.units);
+  return rawSnapshotGame(game);
+}
 
 // A 30 by 20 grid: land in columns 0-8, shallows down column 9, the sea beyond, and in it an island (columns 20-24, rows
 // 7-12) ringed with shallows.
@@ -314,7 +321,10 @@ describe("the AI on the water", () => {
     const board = planNavalTactics(snapshotGame(game), "player", options).find((command) => command.type === "board");
     expect(board).toMatchObject({ type: "board", transportId: "ferry" });
     if (board?.type !== "board") throw new Error("no boarding");
-    expect(board.unitIds).toEqual(expect.arrayContaining(["f1","f2","f3"]));
+    expect(board.unitIds.some(id => ["f1","f2","f3"].includes(id))).toBe(true);
+    const reserved = game.units.map(unit => ({ ...unit }));
+    const ferry = reserved.find(unit => unit.id === "ferry")!;
+    for (const id of board.unitIds) expect(boardUnit(ferry, reserved.find(unit => unit.id === id)!, reserved)).toBe(true);
     expect(board.unitIds.filter(id=>id.startsWith("w"))).toHaveLength(1);
     // One stands on the island already: it goes for the hall, and is the naval script's to move.
     game.units.push(footman("landed", 21, 11));

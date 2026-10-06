@@ -32,7 +32,7 @@ export const COMMON_UNITS = {
   // Both races' ships (see @@@ships): a hull on the water, the owner's colour on the sail.
   transport: {
     name: { en: "Transport", zh: "运输船" },
-    description: { en: "Ship. Carries land units across the water and sets them ashore; those aboard go down with it. No weapon.", zh: "船。载陆军过水上岸；船沉了，船上的单位一起死。没有武器。" },
+    description: { en: "Open-deck ship with no built-in weapon. Crew can move, fight and cast aboard; footprint and payload limit embarkation. Unloads near shore; sinking loses its crew.", zh: "开放甲板运输船，无固定武器。乘员可在船上移动、战斗和施法；占地与载重共同限制人数。靠岸卸载，船沉时乘员一同损失。" },
     command: { icon: "⛴", hotkey: "t" },
     glyph: { silhouette: "transport-hull", marks: ["mast", "cargo", "flag"] },
     art: { tier: "advanced", bearing: "vessel", faction: "grove" },
@@ -40,7 +40,7 @@ export const COMMON_UNITS = {
   },
   warship: {
     name: { en: "Warship", zh: "战船" },
-    description: { en: "Ship. Shoots ships and anything on the shore within its range, about an archer's. A tower outranges it.", zh: "船。攻击射程内的船和岸上目标，射程与弓手相当；防御塔比它打得远。" },
+    description: { en: "Ship. Shoots ships and anything on the shore within its range, about an archer's. A tower outranges it. Limited deck space supports embarked ranged troops or a healer.", zh: "船。攻击射程内的船和岸上目标，射程与弓手相当；防御塔比它打得远。有限甲板可搭载射手或治疗者协同作战。" },
     command: { icon: "⚔", hotkey: "w" },
     glyph: { silhouette: "warship-hull", marks: ["mast", "cannon", "flag"] },
     art: { tier: "elite", bearing: "vessel", faction: "grove" },

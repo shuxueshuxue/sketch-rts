@@ -349,7 +349,7 @@ function visibleObjectives(snapshot: GameSnapshot, point: { x: number; y: number
   return [
     ...snapshot.resources.map((resource) => ({ id: resource.id, kind: "resource" as const, x: resource.x, y: resource.y, distance: distance(resource, point) })),
     ...snapshot.mercenaryCamps.map((camp) => ({ id: camp.id, kind: "mercenaryCamp" as const, x: camp.x, y: camp.y, distance: distance(camp, point) })),
-    ...snapshot.items.filter((item) => !item.carrierId).map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
+    ...snapshot.items.filter((item) => !item.carrierId && !item.shipId && item.kind !== "issuedWeapon").map((item) => ({ id: item.id, kind: "item" as const, x: item.x, y: item.y, distance: distance(item, point) })),
   ].sort((a, b) => a.distance - b.distance).slice(0, 12);
 }
 
@@ -370,7 +370,7 @@ function summarizeUnit(snapshot: GameSnapshot, unit: Unit): InteractivePlaytestU
     hp: unit.hp,
     maxHp: unit.maxHp,
     order: clone(unit.order),
-    carriedItems: snapshot.items.filter((item) => item.carrierId === unit.id).map((item) => ({ id: item.id, kind: item.kind, cooldownRemaining: item.cooldownRemaining })),
+    carriedItems: snapshot.items.filter((item) => item.carrierId === unit.id && item.kind !== "issuedWeapon").map((item) => ({ id: item.id, kind: item.kind, cooldownRemaining: item.cooldownRemaining })),
   };
 }
 

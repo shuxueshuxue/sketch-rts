@@ -19,12 +19,17 @@ class Construction {
     this.face([[a,bb,z],[aa,bb,z],[aa,bb,top],[a,bb,top]],color,[0,1,0],grain);
     this.face([[aa,q,z],[aa,bb,z],[aa,bb,top],[aa,q,top]],color,[1,0,0],grain);
     this.face([[a,q,top],[aa,q,top],[aa,bb,top],[a,bb,top]],color,[0,0,1],grain);
+    this.face([[a,q,z],[a,q,top],[aa,q,top],[aa,q,z]],color,[0,-1,0],grain);
+    this.face([[a,q,z],[a,bb,z],[a,bb,top],[a,q,top]],color,[-1,0,0],grain);
+    this.face([[a,q,z],[aa,q,z],[aa,bb,z],[a,bb,z]],color,[0,0,-1],0);
   }
   roof(x:number,y:number,z:number,w:number,d:number,h:number,color=SLATE){
     const a=x-w/2,aa=x+w/2,q=y-d/2,bb=y+d/2;
     this.face([[a,q,z],[aa,q,z],[aa,y,z+h],[a,y,z+h]],color,[0,-.75,.66]);
     this.face([[a,y,z+h],[aa,y,z+h],[aa,bb,z],[a,bb,z]],color,[0,.75,.66]);
     this.face([[aa,q,z],[aa,bb,z],[aa,y,z+h]],STONE,[1,0,0]);
+    this.face([[a,q,z],[a,y,z+h],[a,bb,z]],STONE,[-1,0,0]);
+    this.face([[a,q,z],[a,bb,z],[aa,bb,z],[aa,q,z]],color,[0,0,-1]);
     // Slate courses follow the actual roof plane, not screen-space stripes.
     for(let row=1;row<5;row++){
       const t=row/5,yy=y+(d/2)*t,zz=z+h*(1-t)+.18;
@@ -40,9 +45,10 @@ class Construction {
   drum(x:number,y:number,z:number,r:number,h:number,color:string,n=8,top=r){
     for(let i=0;i<n;i++){
       const a=i*Math.PI*2/n,q=(i+1)*Math.PI*2/n,mid=(a+q)/2;
-      if(Math.cos(mid)*.57+Math.sin(mid)*.82<0)continue;
+
       this.face([[x+Math.cos(a)*r,y+Math.sin(a)*r,z],[x+Math.cos(q)*r,y+Math.sin(q)*r,z],[x+Math.cos(q)*top,y+Math.sin(q)*top,z+h],[x+Math.cos(a)*top,y+Math.sin(a)*top,z+h]],color,[Math.cos(mid),Math.sin(mid),0]);
     }
+    this.face(Array.from({length:n},(_,i)=>[x+Math.cos(-i*2*Math.PI/n)*r,y+Math.sin(-i*2*Math.PI/n)*r,z] as V),color,[0,0,-1]);
     this.face(Array.from({length:n},(_,i)=>[x+Math.cos(i*2*Math.PI/n)*top,y+Math.sin(i*2*Math.PI/n)*top,z+h] as V),color,[0,0,1]);
   }
   cap(x:number,y:number,z:number,r:number,h:number,color=SLATE,n=8){
@@ -273,8 +279,11 @@ function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
   }
   return m;
 }
+export function buildingGeometry(kind:BuildingKind | SiteModelKind,team="#ff00ff"){return build(kind,team).faces;}
+
 export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,team:string){
   const m=build(kind,team);
+  m.faces=m.faces.filter(f=>f.normal[0]*.57+f.normal[1]*.82+f.normal[2]*.8>-.01);
   b.save();b.lineJoin='round';
   // Ground contact comes from the footprint, independent of the cast shadow.
   // An irregular soil edge and a tight dark rim anchor masonry into the terrain.
@@ -299,7 +308,7 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
     const p=f.p.map(project);
     // Soft daylight: the front faces receive sun and the sides retain cool
     // ambient fill. Geometry and texture density are unchanged.
-    const light=.8+Math.max(0,-f.normal[0]*.35+f.normal[1]*.45+f.normal[2]*.82)*.45;
+    const light=.66+Math.max(0,-f.normal[0]*.35+f.normal[1]*.45+f.normal[2]*.82)*.39;
     const fill=tint(f.color,light);
     polygon(b,p,fill,darker(f.color,.18),.38);
     // Narrow highlights on dressed edges; broad stone/wood faces remain matte.

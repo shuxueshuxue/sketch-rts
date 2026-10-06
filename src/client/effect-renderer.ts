@@ -1,6 +1,7 @@
 import { BUILDING_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import { drawWarfareEffect } from "./warfare-effects";
 import { seconds } from "../shared/time";
+import { SHIP_CAMERA } from "../shared/ship-geometry";
 import type { UnitKind, WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -96,8 +97,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
     }
 
     if (effect.type === "projectile" && hasEffectVector(effect)) {
-      const from = worldToScreen({ x: effect.fromX, y: effect.fromY });
-      const to = worldToScreen({ x: effect.toX, y: effect.toY });
+      const from = worldToScreen({ x: effect.fromX, y: effect.fromY-(effect.fromHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
+      const to = worldToScreen({ x: effect.toX, y: effect.toY-(effect.toHeight ?? 0)*Math.tan(SHIP_CAMERA.tilt) });
       if (!nearScreen(to, 90) && !nearScreen(from, 90)) continue;
       const progress = 1 - effect.remaining / effect.duration;
       const look = projectileLook(effect.sourceKind);
@@ -161,6 +162,11 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
+    if (effect.type === "boardingBlocked") {
+      ctx.strokeStyle = "#c37639"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(point.x-5,point.y-12); ctx.lineTo(point.x+5,point.y-2);
+      ctx.moveTo(point.x+5,point.y-12); ctx.lineTo(point.x-5,point.y-2); ctx.stroke(); ctx.restore(); continue;
+    }
     if (effect.type === "heal") {
       drawHealEffect(renderer, effect, point, life);
       continue;

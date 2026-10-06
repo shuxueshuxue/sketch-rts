@@ -1,10 +1,10 @@
 import type { GameSnapshot } from "../shared/types";
 
-export type HealthBarState = { hp: number; maxHp: number; selected?: boolean; hovered?: boolean; engaged?: boolean; constructing?: boolean; still?: boolean };
+export type HealthBarState = { hp: number; maxHp: number; selected?: boolean; hovered?: boolean; engaged?: boolean; constructing?: boolean; still?: boolean; shipHull?: boolean };
 
-// The same rule applies to all owners, ships, soldiers and structures.
+// Hull durability lives in the selection HUD; floating hull bars obscure decks and rigging.
 export function shouldShowHealthBar(state: HealthBarState) {
-  return !state.still && state.hp > 0 && state.maxHp > 0 && Boolean(
+  return !state.shipHull && !state.still && state.hp > 0 && state.maxHp > 0 && Boolean(
     state.selected || state.hovered || state.engaged || state.constructing || state.hp < state.maxHp,
   );
 }

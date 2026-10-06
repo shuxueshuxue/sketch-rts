@@ -390,7 +390,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const mine = activeResources(snapshot).find(resource => sameGroundAs(snapshot, duplicates[0]!, resource) && completeBuildings(snapshot, owner, "townHall").some(base => distance(base, resource) < BASE_LOCAL_MINE_RANGE));
     if (mine) return { type: "mine", unitIds: duplicates.filter(worker => sameGroundAs(snapshot, worker, mine)).map(worker => worker.id), resourceId: mine.id };
   }
-  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
+  const workers = units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
@@ -491,7 +491,7 @@ function planRepair(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPo
   if (!damagedTower) return undefined;
   const worker = nearestEntity(
     units(snapshot, owner)
-      .filter((unit) => unit.kind === "worker")
+      .filter((unit) => unit.kind === "worker" && !unit.deck)
       .filter((unit) => unit.order.type === "idle" || unit.order.type === "move" || unit.order.type === "mine"),
     damagedTower,
   );
@@ -1696,7 +1696,7 @@ function towerMercDistantRearmCamp(snapshot: GameSnapshot, owner: PlayerId, camp
   if (playerState(snapshot, owner).gold < camp.cost) return false;
   const opponents = opponentPlayerIds(snapshot, owner, options);
   if (opponents.length !== 1) return false;
-  const enemyWorkers = opponents.reduce((total, opponent) => total + units(snapshot, opponent).filter((unit) => unit.kind === "worker").length, 0);
+  const enemyWorkers = opponents.reduce((total, opponent) => total + units(snapshot, opponent).filter((unit) => unit.kind === "worker" && !unit.deck).length, 0);
   if (enemyWorkers > 0) return false;
   const remainingBuildings = enemyBuildings(snapshot, owner, options.teams);
   if (remainingBuildings.length === 0 || remainingBuildings.length > 4) return false;
@@ -1755,7 +1755,7 @@ function mercenaryRoleLimit(kind: MercenaryUnitKind, options?: PresetAiPolicyOpt
 
 function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const player = playerState(snapshot, owner);
-  const workerCount = units(snapshot, owner).filter((unit) => unit.kind === "worker").length;
+  const workerCount = units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck).length;
   const routineWantedWorkers = routineWorkerCount(snapshot, owner, options);
   const repairLaborWorkers = wantsOneBaseRepairLabor(snapshot, owner, options) ? 1 : 0;
   const cheapWorkerRecovery = needsCheapWorkerRecovery(snapshot, owner, options);
@@ -2324,7 +2324,7 @@ function routineWorkerCount(snapshot: GameSnapshot, owner: PlayerId, options: Pr
   // @@@mine-worker-saturation - A mine pays up to five workers; repair/build labor is a separate need, not extra mine income.
   if (isV5HybridPolicy(options) && opponentPlayerIds(snapshot, owner, options).length >= 2) {
     // @@@v5-1v2-labor - One base still needs non-mining labor for towers, repairs, and fast expansion conversion against two opponents.
-    if (v5OutnumberedOpening(snapshot, owner, options)) return Math.min(units(snapshot, owner).filter((unit) => unit.kind === "worker").length, bases * 5 + 3);
+    if (v5OutnumberedOpening(snapshot, owner, options)) return Math.min(units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck).length, bases * 5 + 3);
     return Math.min(16, bases * 5 + 3);
   }
   if (options.version === "v2") {
@@ -2339,7 +2339,7 @@ function wantsOneBaseRepairLabor(snapshot: GameSnapshot, owner: PlayerId, option
   if (!hasCoreProduction(snapshot, owner)) return false;
   const main = mainBase(snapshot, owner);
   // @@@one-base-labor - Five workers saturate one mine; a sixth worker is for building and tower repair, not extra income.
-  return !units(snapshot, owner).some((unit) => unit.kind === "worker" && unit.order.type !== "mine" && distance(unit, main) <= 700);
+  return !units(snapshot, owner).some((unit) => !unit.deck && unit.kind === "worker" && unit.order.type !== "mine" && distance(unit, main) <= 700);
 }
 
 function needsCheapWorkerRecovery(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
@@ -2415,7 +2415,7 @@ function towerBuilderSnipe(snapshot: GameSnapshot, owner: PlayerId, ownBuildings
   if (nearTowerSites.length === 0) return undefined;
   const builders = opponentPlayerIds(snapshot, owner, options)
     .flatMap((opponent) => units(snapshot, opponent))
-    .filter((unit) => unit.kind === "worker" && nearTowerSites.some((site) => site.owner === unit.owner && distance(unit, site) <= site.radius + 80));
+    .filter((unit) => !unit.deck && unit.kind === "worker" && nearTowerSites.some((site) => site.owner === unit.owner && distance(unit, site) <= site.radius + 80));
   for (const builder of builders) {
     const escorts = enemyCombatUnitsNear(snapshot, owner, builder, 420, options.teams);
     const hunters = nearestEntities(
@@ -2672,7 +2672,7 @@ function mainBaseNeedsObjectivePause(snapshot: GameSnapshot, owner: PlayerId, op
 
 function mainWorkerLineThreat(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
   const main = mainBase(snapshot, owner);
-  const workers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && distance(unit, main) <= 620);
+  const workers = units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && distance(unit, main) <= 620);
   if (workers.length === 0) return false;
   const enemies = enemyCombatUnitsNear(snapshot, owner, main, 720, options.teams);
   return enemies.some((enemy) => workers.some((worker) => distance(enemy, worker) <= 300));
@@ -2904,7 +2904,7 @@ function planTowerMercWorkerCloseout(snapshot: GameSnapshot, owner: PlayerId, op
   const target = targets.sort((a, b) => towerMercWorkerCloseoutScore(b, mainBase(snapshot, owner)) - towerMercWorkerCloseoutScore(a, mainBase(snapshot, owner)))[0];
   if (!target) return undefined;
   const workers = nearestEntities(
-    units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.hp >= unit.maxHp * 0.5),
+    units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && unit.hp >= unit.maxHp * 0.5),
     target,
   ).slice(0, 12);
   const requiredWorkers = target.attackDamage > 0 ? (targets.length > 3 ? 8 : 6) : 4;
@@ -2921,7 +2921,7 @@ function towerMercWorkerResidualCombatCloseout(snapshot: GameSnapshot, owner: Pl
   if (snapshot.tick < TOWER_MERC_WORKER_CLEANUP_TICK) return undefined;
   const enemyBuildingCount = enemyBuildings(snapshot, owner, options.teams).length;
   if (enemyBuildingCount > 4 && playerState(snapshot, owner).gold < 3_000) return undefined;
-  const healthyWorkers = units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.hp >= unit.maxHp * 0.65);
+  const healthyWorkers = units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && unit.hp >= unit.maxHp * 0.65);
   if (healthyWorkers.length < 6) return undefined;
   const workerCenter = averagePoint(healthyWorkers);
   const target = nearestEntities(
@@ -2960,7 +2960,7 @@ function towerMercProtectedResidualTowerBreak(snapshot: GameSnapshot, owner: Pla
     .sort((a, b) => a.hp - b.hp)[0];
   if (!target) return undefined;
   const workers = nearestEntities(
-    units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.hp >= unit.maxHp * 0.65),
+    units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && unit.hp >= unit.maxHp * 0.65),
     target,
   ).slice(0, 10);
   const requiredWorkers = target.hp <= target.maxHp * 0.35 ? 8 : 10;
@@ -3121,7 +3121,7 @@ function workerPressureTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers:
   const rememberedOwner = options.memory?.strategicPlan?.focusTargetOwner;
   const hasHarassClaim = options.memory ? Object.values(options.memory.unitClaims).some((claim) => claim.kind === "harass" && claim.expiresTick >= snapshot.tick) : false;
   if (hasHarassClaim && rememberedOwner && isOpponentOwner(snapshot, owner, rememberedOwner, options)) {
-    const rememberedWorker = nearestEntities(units(snapshot, rememberedOwner).filter((unit) => unit.kind === "worker"), center)[0];
+    const rememberedWorker = nearestEntities(units(snapshot, rememberedOwner).filter((unit) => unit.kind === "worker" && !unit.deck), center)[0];
     if (rememberedWorker) return rememberedWorker;
   }
 
@@ -3140,7 +3140,7 @@ function workerPressureTarget(snapshot: GameSnapshot, owner: PlayerId, soldiers:
     targetOwner = candidates[0].armyPower >= second.armyPower ? candidates[0].owner : second.owner;
   }
 
-  const preferredWorker = targetOwner ? nearestEntities(units(snapshot, targetOwner).filter((unit) => unit.kind === "worker"), center)[0] : undefined;
+  const preferredWorker = targetOwner ? nearestEntities(units(snapshot, targetOwner).filter((unit) => unit.kind === "worker" && !unit.deck), center)[0] : undefined;
   if (preferredWorker) return preferredWorker;
   return nearestEntities(enemyWorkerUnits(snapshot, owner, options.teams), center)[0];
 }
@@ -3205,7 +3205,7 @@ function planDesperateWorkerFight(snapshot: GameSnapshot, owner: PlayerId, optio
   if (isV5HybridPolicy(options) && configuredOpponentPlayerCount(snapshot, owner, options) >= 3 && !mainHallNeedsDesperateWorkerFight(snapshot, owner, main, closeCombat)) return undefined;
   if (options.version === "v2" && opponentPlayerIds(snapshot, owner, options).length >= 2 && !mainTower && closeCombat.length <= 2 && closeEnemies.length >= 2 && armyPower(closeEnemies) >= armyPower(closeCombat)) {
     const workers = units(snapshot, owner)
-      .filter((unit) => unit.kind === "worker" && distance(unit, main) <= 520)
+      .filter((unit) => !unit.deck && unit.kind === "worker" && distance(unit, main) <= 520)
       .slice(0, 3);
     const target = nearestEntity(closeEnemies, main);
     // @@@desperate-worker-fight - A towerless close 1v2 base hit needs a few workers in the fight before the hall is already dying.
@@ -3222,7 +3222,7 @@ function planWorkerDefense(snapshot: GameSnapshot, owner: PlayerId, options: Pre
   const ownCombat = combatUnits(snapshot, owner).filter((unit) => distance(unit, main) <= 680);
   if (armyPower(enemies) <= armyPower(ownCombat) * 1.15) return undefined;
   const workers = units(snapshot, owner)
-    .filter((unit) => unit.kind === "worker" && distance(unit, main) <= 520)
+    .filter((unit) => !unit.deck && unit.kind === "worker" && distance(unit, main) <= 520)
     .sort((a, b) => distance(a, main) - distance(b, main))
     .slice(0, 5);
   if (workers.length < 2) return undefined;
@@ -3659,7 +3659,7 @@ function closeoutWorkerCleanupTarget(snapshot: GameSnapshot, owner: PlayerId, mo
   const targetBuildings = buildings(snapshot, closeout.owner);
   if (targetBuildings.length > 2) return undefined;
   const center = averagePoint(movable);
-  const workers = units(snapshot, closeout.owner).filter((unit) => unit.kind === "worker");
+  const workers = units(snapshot, closeout.owner).filter((unit) => unit.kind === "worker" && !unit.deck);
   if (workers.length === 0 || workers.length > 2) return undefined;
   // @@@closeout-worker-cleanup - A won fight should not end with a stranded worker beside the last base because the army tunneled the final building first.
   return nearestEntities(workers, center).find((worker) => distance(worker, center) <= 900 && isEnemyOwner(snapshot, owner, worker.owner, options));
@@ -3737,7 +3737,7 @@ function selectFocusedOpponentOwner(snapshot: GameSnapshot, owner: PlayerId, opt
     .map((opponent) => {
       const base = nearestEntity(completeBuildings(snapshot, opponent, "townHall"), main);
       const opponentCombat = combatUnits(snapshot, opponent);
-      const opponentWorkers = units(snapshot, opponent).filter((unit) => unit.kind === "worker");
+      const opponentWorkers = units(snapshot, opponent).filter((unit) => unit.kind === "worker" && !unit.deck);
       const opponentBuildings = buildings(snapshot, opponent);
       const distanceScore = base ? distance(base, main) / 28 : 400;
       return {
@@ -4318,7 +4318,7 @@ function preferredAttackBuildings(candidates: Building[], preferredOwner: Player
 
 function crippledOpponentBuildingIsCleanable(snapshot: GameSnapshot, owner: PlayerId, building: Building, from: Point, soldiers: Unit[], options: PresetAiPolicyOptions) {
   if (soldiers.length < 5) return false;
-  const targetWorkers = units(snapshot, building.owner).filter((unit) => unit.kind === "worker").length;
+  const targetWorkers = units(snapshot, building.owner).filter((unit) => unit.kind === "worker" && !unit.deck).length;
   const targetCombat = combatUnits(snapshot, building.owner);
   if (targetWorkers > 0 || targetCombat.length > 1) return false;
   const soldierPower = armyPower(soldiers);
