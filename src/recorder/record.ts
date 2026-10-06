@@ -1,7 +1,4 @@
-import { installBakedImage } from "../client/art/baked-assets";
-import { readdir, readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { createCanvas, GlobalFonts, loadImage, type Canvas } from "@napi-rs/canvas";
+import { createCanvas, GlobalFonts, type Canvas } from "@napi-rs/canvas";
 import { createAiRuntime, createPresetAiRuntimeFramePlanner } from "../ai/runtime";
 import { setScratchCanvasFactory } from "../client/art/scratch-canvas";
 import { PAPER_BASE } from "../client/atlas-art";
@@ -85,7 +82,6 @@ export function installHeadlessCanvas() {
  */
 export async function recordScene(scene: RecordingScene, options: RecordOptions, sinks: FrameSink[]): Promise<RecordingSummary> {
   installHeadlessCanvas();
-  for(const directory of ["ships","buildings"]){const root=new URL(`../../public/art/${directory}/`,import.meta.url);for(const file of await readdir(root).catch(()=>[]))if(file.endsWith(".png") && !file.includes(".tmp."))installBakedImage(`${directory}/${file.slice(0,-4)}`,await loadImage(await readFile(fileURLToPath(new URL(file,root)))) as unknown as CanvasImageSource);}
   const story = scene.story?.();
   const game = story?.game ?? scene.createGame();
   const runtime = story
