@@ -47,7 +47,12 @@ export function projectDeckPoint(ship: Unit, passenger: Unit, preferred: Point, 
 }
 export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);
-  return Boolean(profile && !shipProfile(passenger) && ship.owner===passenger.owner && !passenger.deck && deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && deckPlacement(ship,passenger,units));
+  if(!profile || shipProfile(passenger))return false;
+  if(passenger.deck){
+    const source=units.find(unit=>unit.id===passenger.deck!.shipId),sourceProfile=source && shipProfile(source);
+    if(!sourceProfile || source!.id===ship.id || Math.abs(profile.deckHeight-sourceProfile.deckHeight)>passenger.radius*2)return false;
+  } else if(ship.owner!==passenger.owner)return false;
+  return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && !!deckPlacement(ship,passenger,units);
 }
 export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);

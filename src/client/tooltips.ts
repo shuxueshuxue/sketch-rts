@@ -108,7 +108,7 @@ function abilityStats(ability: AbilityKind, locale: Locale) {
     ...(def.rootTicks ? [localized(locale, `定身 ${formatSeconds(def.rootTicks)}`, `Root ${formatSeconds(def.rootTicks)}`)] : []),
     ...(def.burnTicks ? [tooltipLine(locale, "duration", formatSeconds(def.burnTicks))] : []),
   ];
-  if (def.behavior === "heal") return [tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
+  if (def.behavior === "heal") return [localized(locale, "治疗不修复船体", "Healing does not repair ships"), tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
   if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
   if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
   if (def.behavior === "stomp" || def.behavior === "bloodlust" || def.behavior === "web") return [tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.effectDuration)), cooldown];
@@ -587,7 +587,7 @@ function itemStats(kind: ItemKind, locale: Locale) {
     case "breachCharge": stats = [localized(locale, `建筑伤害 ${BREACH_CHARGE.damage}`, `${BREACH_CHARGE.damage} building damage`), range(BREACH_CHARGE.range), consumed]; break;
     case "speedBoots": stats = [tooltipLine(locale, "speedBonus", Math.round((BOOTS_SPEED - 1) * 100))]; break;
     case "regenRing": stats = [tooltipLine(locale, "currentRegen", `+${RING_REGEN_PER_SECOND}`)]; break;
-    case "healingScroll": stats = [tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
+    case "healingScroll": stats = [localized(locale, "治疗不修复船体", "Healing does not repair ships"), tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
     case "ivoryTower": stats = [range(IVORY_TOWER_REACH), localized(locale, `初始生命 ${IVORY_TOWER_HP_SHARE * 100}%`, `Starting HP ${IVORY_TOWER_HP_SHARE * 100}%`), consumed]; break;
   }
   if(isShipEquipment(kind)){const weapon=SHIP_WEAPONS[kind];stats.push(tooltipLine(locale,"attack",weapon.damage),range(weapon.range),tooltipLine(locale,"cooldown",formatSeconds(weapon.cooldown)),localized(locale,"占满 4 个携行位／4 个船舱格","Uses all 4 carrying positions / 4 hold cells"));}

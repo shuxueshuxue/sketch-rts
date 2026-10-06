@@ -90,7 +90,7 @@ it('treats an empty hostile deck as walkable ground while defenders remain attac
   boardUnit(own,crew,game.units);syncDecks(game.units);
   const snapshot=snapshotGame(game),point={x:enemy.x,y:enemy.y-deckVisualHeight(enemy)};
   expect(pointerTarget(snapshot,point)).toMatchObject({kind:'unit',unit:{id:enemy.id}});
-  expect(targetCommand(snapshot,'player',[crew],{kind:'unit',unit:enemy})).toBeUndefined();
+  expect(targetCommand(snapshot,'player',[crew],{kind:'unit',unit:enemy})).toMatchObject({type:'board',transportId:enemy.id,unitIds:[crew.id]});
   expect(deckMovePoint(game.units,[crew],point)).toEqual({x:enemy.x,y:enemy.y});
   const defender=game.spawnUnit('enemy','footman',enemy.x,enemy.y);boardUnit(enemy,defender,game.units);syncDecks(game.units);
   expect(targetCommand(snapshotGame(game),'player',[crew],{kind:'unit',unit:defender})).toMatchObject({type:'attack',targetId:defender.id});
