@@ -4,6 +4,7 @@ import { installedWeapons, mountedWeaponPose } from "../../shared/ship-equipment
 import type { Unit, WorldEffect, WorldItem } from "../../shared/types";
 import { bakedImage } from "./baked-assets";
 import { createScratchCanvas } from "./scratch-canvas";
+import { headingDifference } from '../../shared/ship-navigation';
 
 type Brush=CanvasRenderingContext2D;
 type Point={x:number;y:number};
@@ -13,24 +14,32 @@ export function shipDirection(ship:Unit) {
   return directionFrame(ship.sailing?.heading ?? 0);
 }
 function directionFrame(angle:number){return ((Math.round(angle/(Math.PI*2)*SHIP_CAMERA.directions)%SHIP_CAMERA.directions)+SHIP_CAMERA.directions)%SHIP_CAMERA.directions;}
-function frame(ctx:Brush,source:CanvasImageSource,direction:number,at:Point,scale=1) {
+/** Small yaw correction around the waterline between the 32 baked directions.
+ * This is a sprite approximation; physical hull/deck coordinates remain exact. */
+export function shipSpriteYaw(angle:number) {
+  const direction=directionFrame(angle);
+  return {direction,rotation:headingDifference(direction/SHIP_CAMERA.directions*Math.PI*2,angle)};
+}
+function frame(ctx:Brush,source:CanvasImageSource,direction:number,at:Point,scale=1,rotation=0) {
   const n=SHIP_CAMERA.frameSize,size=SHIP_CAMERA.worldSize*scale;
-  ctx.drawImage(source,direction%8*n,Math.floor(direction/8)*n,n,n,at.x-size/2,at.y-size/2-SHIP_CAMERA.anchorY*scale,size,size);
+  ctx.save();ctx.translate(at.x,at.y);ctx.rotate(rotation);
+  ctx.drawImage(source,direction%8*n,Math.floor(direction/8)*n,n,n,-size/2,-size/2-SHIP_CAMERA.anchorY*scale,size,size);ctx.restore();
 }
 export function drawBakedShip(ctx:Brush,ship:Unit,at:Point,layer:"base"|"upper",scale=shipScale(ship)) {
   const source=bakedImage(`ships/${ship.kind}-${layer}`);
   if(!source)return false;
-  frame(ctx,source,shipDirection(ship),at,scale);return true;
+  const yaw=shipSpriteYaw(ship.sailing?.heading ?? 0);
+  frame(ctx,source,yaw.direction,at,scale,yaw.rotation);return true;
 }
 /** A world-depth bake, rather than a blanket foreground overlay: rear railings
  * stay behind soldiers and front railings/masts cover only pixels in front. */
 export function drawShipOcclusion(ctx:Brush,ship:Unit,at:Point,crew:Unit) {
   const direction=shipDirection(ship),scale=shipScale(ship);
-  const heading=direction/SHIP_CAMERA.directions*Math.PI*2;
+  const heading=ship.sailing?.heading ?? 0;
   const threshold=Math.round((crew.deck!.x*Math.sin(heading)+crew.deck!.y*Math.cos(heading))/scale);
-  drawDepthMask(ctx,ship.kind,"upper","depth",direction,at,scale,threshold);
+  drawDepthMask(ctx,ship.kind,"upper","depth",direction,at,scale,threshold,shipSpriteYaw(heading).rotation);
 }
-function drawDepthMask(ctx:Brush,kind:string,layer:string,depthLayer:string,direction:number,at:Point,scale:number,threshold:number) {
+function drawDepthMask(ctx:Brush,kind:string,layer:string,depthLayer:string,direction:number,at:Point,scale:number,threshold:number,rotation=0) {
   const upper=bakedImage(`ships/${kind}-${layer}`),depth=bakedImage(`ships/${kind}-${depthLayer}`);
   if(!upper || !depth)return;
   const n=SHIP_CAMERA.frameSize,key=`${kind}:${layer}:${direction}:${threshold}`;
@@ -47,7 +56,8 @@ function drawDepthMask(ctx:Brush,kind:string,layer:string,depthLayer:string,dire
     masks.set(key,mask);
   }
   const size=SHIP_CAMERA.worldSize*scale;
-  ctx.drawImage(mask,at.x-size/2,at.y-size/2-SHIP_CAMERA.anchorY*scale,size,size);
+  ctx.save();ctx.translate(at.x,at.y);ctx.rotate(rotation);
+  ctx.drawImage(mask,-size/2,-size/2-SHIP_CAMERA.anchorY*scale,size,size);ctx.restore();
 }
 export function cannonRecoil(effects:readonly WorldEffect[],shipId:string,itemId?:string) {
   const shot=effects.find(effect=>effect.type==="muzzleFlash" && effect.unitId===shipId && (!itemId || effect.itemId===itemId));
@@ -63,17 +73,17 @@ export function drawShipWeapon(ctx:Brush,ship:Unit,at:Point,effects:readonly Wor
 }
 function drawGun(ctx:Brush,ship:Unit,at:Point,effects:readonly WorldEffect[],pose:NonNullable<ReturnType<typeof shipWeaponPose>>,art:string,crew?:Unit,item?:WorldItem){
   const source=bakedImage(`ships/${art}-weapon`);if(!source)return;
-  const scale=shipScale(ship),direction=directionFrame(pose.heading),heading=direction/SHIP_CAMERA.directions*Math.PI*2;
+  const scale=shipScale(ship),yaw=shipSpriteYaw(pose.heading),direction=yaw.direction,heading=pose.heading;
   const recoil=art==="fireShip"?0:cannonRecoil(effects,ship.id,item?.id)*scale;
   const pivot={x:at.x+pose.pivot.x-ship.x-Math.cos(heading)*recoil,y:at.y+pose.pivot.y-ship.y-pose.pivotHeight*Math.tan(SHIP_CAMERA.tilt)-Math.sin(heading)*recoil};
   ctx.save();if(item?.durability===0)ctx.globalAlpha*=.45;
   if(crew){
-    const hullHeading=shipDirection(ship)/SHIP_CAMERA.directions*Math.PI*2;
+    const hullHeading=ship.sailing?.heading ?? 0;
     const y=crew.deck!.x*Math.sin(hullHeading)+crew.deck!.y*Math.cos(hullHeading)-(pose.pivot.y-ship.y)+Math.sin(heading)*recoil;
-    drawDepthMask(ctx,art,"weapon","weapon-depth",direction,pivot,scale,Math.round(y/scale));
+    drawDepthMask(ctx,art,"weapon","weapon-depth",direction,pivot,scale,Math.round(y/scale),yaw.rotation);
   }else{
-    frame(ctx,source,direction,pivot,scale);
-    drawDepthMask(ctx,ship.kind,"upper","depth",shipDirection(ship),at,scale,Math.round((pose.pivot.y-ship.y)/scale));
+    frame(ctx,source,direction,pivot,scale,yaw.rotation);
+    drawDepthMask(ctx,ship.kind,"upper","depth",shipDirection(ship),at,scale,Math.round((pose.pivot.y-ship.y)/scale),shipSpriteYaw(ship.sailing?.heading ?? 0).rotation);
   }
   ctx.restore();
 }
