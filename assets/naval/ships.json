@@ -1,62 +1,77 @@
 {
   "camera": {
-    "tilt": 0.48,
-    "frameSize": 256,
-    "worldSize": 240,
-    "directions": 32
+    "tilt": 0.72,
+    "frameSize": 384,
+    "worldSize": 360,
+    "directions": 32,
+    "anchorY": 24
   },
   "ships": {
     "cutter": {
-      "length": 100,
-      "beam": 50,
-      "deckHeight": 8,
+      "length": 116,
+      "beam": 46,
+      "deckHeight": 18,
       "hullMass": 7000,
       "loadCapacity": 450,
       "acceleration": 72,
       "turnRate": 1.5,
       "obstacles": [
         {
-          "x": -15,
+          "x": -35,
           "y": 0,
           "radius": 6,
           "type": "mast"
+        },
+        {
+          "x": -39,
+          "y": 0,
+          "radius": 14,
+          "type": "cabin"
         }
       ],
       "weaponMount": [
         31,
         0,
         11
-      ]
+      ],
+      "mastHeight": 82
     },
     "transport": {
-      "length": 160,
-      "beam": 84,
-      "deckHeight": 10,
+      "length": 184,
+      "beam": 80,
+      "deckHeight": 26,
       "hullMass": 14000,
       "loadCapacity": 1800,
       "acceleration": 48,
       "turnRate": 1.05,
       "obstacles": [
         {
-          "x": -46,
+          "x": -50,
           "y": 0,
           "radius": 6,
           "type": "mast"
+        },
+        {
+          "x": -63,
+          "y": 0,
+          "radius": 23,
+          "type": "cabin"
         }
       ],
-      "weaponMount": null
+      "weaponMount": null,
+      "mastHeight": 96
     },
     "warship": {
-      "length": 138,
-      "beam": 78,
-      "deckHeight": 12,
+      "length": 170,
+      "beam": 72,
+      "deckHeight": 28,
       "hullMass": 23000,
       "loadCapacity": 850,
       "acceleration": 44,
       "turnRate": 0.9,
       "obstacles": [
         {
-          "x": -50,
+          "x": -45,
           "y": 0,
           "radius": 6,
           "type": "mast"
@@ -66,18 +81,25 @@
           "y": 0,
           "radius": 16,
           "type": "gun"
+        },
+        {
+          "x": -58,
+          "y": 0,
+          "radius": 23,
+          "type": "cabin"
         }
       ],
       "weaponMount": [
         40,
         0,
         19
-      ]
+      ],
+      "mastHeight": 96
     },
     "bombardShip": {
-      "length": 158,
-      "beam": 72,
-      "deckHeight": 13,
+      "length": 184,
+      "beam": 70,
+      "deckHeight": 30,
       "hullMass": 31000,
       "loadCapacity": 1300,
       "acceleration": 30,
@@ -94,25 +116,32 @@
           "y": 0,
           "radius": 23,
           "type": "mortar"
+        },
+        {
+          "x": -63,
+          "y": 0,
+          "radius": 23,
+          "type": "cabin"
         }
       ],
       "weaponMount": [
         24,
         0,
         28
-      ]
+      ],
+      "mastHeight": 96
     },
     "fireShip": {
-      "length": 136,
-      "beam": 64,
-      "deckHeight": 12,
+      "length": 158,
+      "beam": 60,
+      "deckHeight": 26,
       "hullMass": 19000,
       "loadCapacity": 700,
       "acceleration": 56,
       "turnRate": 1.1,
       "obstacles": [
         {
-          "x": -40,
+          "x": -41,
           "y": 0,
           "radius": 6,
           "type": "mast"
@@ -122,25 +151,32 @@
           "y": 0,
           "radius": 18,
           "type": "flame"
+        },
+        {
+          "x": -54,
+          "y": 0,
+          "radius": 23,
+          "type": "cabin"
         }
       ],
       "weaponMount": [
         47,
         0,
         18
-      ]
+      ],
+      "mastHeight": 96
     },
     "carrier": {
-      "length": 192,
-      "beam": 112,
-      "deckHeight": 14,
+      "length": 224,
+      "beam": 106,
+      "deckHeight": 32,
       "hullMass": 55000,
       "loadCapacity": 5200,
       "acceleration": 32,
       "turnRate": 0.7,
       "obstacles": [
         {
-          "x": -54,
+          "x": -60,
           "y": 0,
           "radius": 8,
           "type": "mast"
@@ -150,9 +186,16 @@
           "y": 0,
           "radius": 8,
           "type": "mast"
+        },
+        {
+          "x": -76,
+          "y": 0,
+          "radius": 26,
+          "type": "cabin"
         }
       ],
-      "weaponMount": null
+      "weaponMount": null,
+      "mastHeight": 106
     }
   }
 }
