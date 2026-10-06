@@ -61,6 +61,7 @@ export type WorldEffect = {
     | "chainLightning"
     | "guardianField"
     | "experienceBurst"
+    | "board" | "unload" | "boardingBlocked"
     | "goldBounty"
     | "flameBurn"
     | "scorch"
@@ -111,9 +112,9 @@ export type Projectile = {
 export type UnitOrder =
   | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
-  | { type: "move"; x: number; y: number }
+  | { type: "move"; x: number; y: number; deckPoint?: { x: number; y: number } }
   | { type: "follow"; targetId: string }
-  | { type: "attackMove"; x: number; y: number; targetId?: string }
+  | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number } }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
@@ -150,6 +151,8 @@ export type UnitAim = {
   anchorY: number;
   tracking: boolean;
   updatedTick: number;
+  anchorDeckX?: number;
+  anchorDeckY?: number;
 };
 
 export type Unit = {
@@ -185,10 +188,16 @@ export type Unit = {
   pushY?: number | undefined;
   // The point of the last walk (a move or an attack-move) the unit ended by coming there (see @@@group-arrival).
   arrivedAt?: { x: number; y: number } | undefined;
-  // A transport's passengers, out of the game while aboard (see @@@transport).
+  /** Old-format save data only; restored into ordinary units with deck coordinates. */
   cargo?: Unit[] | undefined;
-  /** Larger mission transports can carry a different population than their base hull. */
+  /** Old-format mission hull scale, expressed in the old cargo capacity. */
   cargoCapacity?: number;
+  /** Position on a moving ship, in its local physical coordinate system. */
+  deck?: { shipId: string; x: number; y: number } | undefined;
+  /** Continuous heading and rates; visuals select one of the baked directions. */
+  sailing?: { heading: number; speed: number; load: number; balance: number } | undefined;
+  /** Physical scaling for unusually large campaign hulls. */
+  deckScale?: number;
   radius: number;
   carryingGold: number;
   kills: number;

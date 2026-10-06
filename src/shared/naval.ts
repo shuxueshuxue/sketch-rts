@@ -1,7 +1,9 @@
-import { UNIT_DEFS, unitMover } from "./catalog";
+import { unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
 import type { Building, GameMap, Obstacle, Unit } from "./types";
+import { deckPlacement } from "./decks";
+import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
 // soldier strikes a ship that has come in to the shallows, where it can wade out to it, and not one out on deep water; an
@@ -11,7 +13,14 @@ import type { Building, GameMap, Obstacle, Unit } from "./types";
 // walk's matter, not the fight's); any other it reaches from where its ground comes nearest. Two land units were taken to
 // share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
 // and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
-export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle) {
+export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle, units: readonly Unit[] = []) {
+  if (attacker.deck) {
+    if ("deck" in target && target.deck?.shipId === attacker.deck.shipId) return true;
+    const ship = units.find(unit => unit.id === attacker.deck!.shipId);
+    const stand = ship && deckPlacement(ship, attacker, units, worldToLocal(ship,target), false);
+    const at = ship && stand ? localToWorld(ship,stand) : attacker;
+    return Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius) <= attacker.attackRange;
+  }
   if (!map.terrain) return true;
   const mover = unitMover(attacker.kind);
   if (isWalkable(map, target.x, target.y, mover) && sameGround(map, attacker, target, mover)) return true;
@@ -20,20 +29,19 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
   return Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius) <= attacker.attackRange;
 }
 
-// @@@transport - A transport (a unit whose kind carries) takes aboard the soldiers told to board it once they come
-// alongside, while their supply fits in what it carries, and sets them ashore, on the land nearest it, when it reaches the
-// water nearest the point it was told to unload at. Aboard they are out of the game (nobody sees, strikes or orders them)
-// but their owner can inspect and unload them from the cargo panel. They still count toward supply and drown with it.
+// @@@transport - Crew remain ordinary live units on a moving deck. Circles must fit
+// the exported deck and fittings, and their body mass must fit the ship's payload.
+// The owner can select, fight with and individually unload crew near a shore.
 export const BOARDING_GAP = 24;
 // A passenger steps ashore only on land this near the transport's side.
 export const LANDING_REACH = 72;
 
 export function carries(unit: Unit) {
-  return unit.cargoCapacity ?? UNIT_DEFS[unit.kind].carries ?? 0;
+  return shipProfile(unit)?.loadCapacity ?? 0;
 }
 
 export function alongside(unit: Unit, transport: Unit) {
-  return Math.hypot(unit.x - transport.x, unit.y - transport.y) <= unit.radius + transport.radius + BOARDING_GAP;
+  return distanceToHull(transport,unit)<=unit.radius+BOARDING_GAP;
 }
 
 /** One reachable shore for the whole boat, rather than chasing each passenger in turn. */
@@ -64,12 +72,14 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
 // the passengers spread round it; undefined when no land is near enough.
 export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, index: number, count: number) {
   const angle = (index / Math.max(1, count)) * Math.PI * 2;
-  const spot = walkableGoal(map, transport.x + detCos(angle) * transport.radius, transport.y + detSin(angle) * transport.radius, "land");
-  return Math.hypot(spot.x - transport.x, spot.y - transport.y) <= transport.radius + LANDING_REACH ? spot : undefined;
+  const profile=shipProfile(transport);
+  const edge=localToWorld(transport,{x:detCos(angle)*(profile?.length ?? transport.radius*2)/2,y:detSin(angle)*(profile?.beam ?? transport.radius*2)/2});
+  const spot = walkableGoal(map, edge.x,edge.y,"land");
+  return distanceToHull(transport,spot)<=LANDING_REACH ? spot : undefined;
 }
 
-export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, passengerId: string) {
-  const passengers = transport.cargo ?? [];
+export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, passengerId: string, units: readonly Unit[] = []) {
+  const passengers = transport.cargo ?? shipPassengers(units,transport);
   const index = passengers.findIndex(passenger => passenger.id === passengerId);
   return index < 0 ? undefined : landingSpot(map, transport, index, passengers.length);
 }

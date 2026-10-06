@@ -1,3 +1,5 @@
+import { shipPassengers } from "./ship-geometry";
+import { deckPointFits, deckLoad } from "./decks";
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
 import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
@@ -139,7 +141,7 @@ describe("transports", () => {
     ferry.order = { type: "move", ...at(15, 9) };
     ferry.cargo![0]!.orderQueue = [{ type: "board", transportId: ferry.id }];
     issuePlayerCommand(sim, "player", { type: "unloadPassenger", transportId: "ferry", passengerId: "a" });
-    expect(ferry.cargo?.map(passenger => passenger.id)).toEqual(["b"]);
+    expect(shipPassengers(sim.units, ferry).map(passenger => passenger.id)).toEqual(["b"]);
     expect(unit(sim, "a")!.order).toEqual({ type: "idle" });
     expect(unit(sim, "a")!.orderQueue?.length ?? 0).toBe(0);
     expect(isWalkable(sim.map, unit(sim, "a")!.x, unit(sim, "a")!.y)).toBe(true);
@@ -167,7 +169,7 @@ describe("transports", () => {
     expect(commandValidationError(snapshotGame(sim), "player", { ...command, passengerId: "missing" })).toMatch(/no longer aboard/);
     issuePlayerCommand(sim, "player", command);
     expect(narrowFrameCommandToLiveOperands(sim, "player", command)).toBeUndefined();
-    expect(ferry.cargo).toHaveLength(1);
+    expect(shipPassengers(sim.units, ferry)).toHaveLength(1);
     expect(sim.units.filter(candidate => candidate.id === "a")).toHaveLength(1);
   });
 
@@ -187,9 +189,9 @@ describe("transports", () => {
     const supply=sim.players.player!.supplyUsed;
     issuePlayerCommand(sim,"player",{type:"board",unitIds:sim.units.filter(u=>u.kind==="worker").map(u=>u.id),transportId:carrier.id});
     run(sim,500);
-    expect(carrier.cargo).toHaveLength(12);expect(sim.players.player!.supplyUsed).toBe(supply);
+    expect(shipPassengers(sim.units, carrier)).toHaveLength(12);expect(sim.players.player!.supplyUsed).toBe(supply);
   });
-  it("take aboard the soldiers told to board up to eight supply, and set them ashore on an island", () => {
+  it("boards as many physical bodies as fit and sets them ashore on an island", () => {
     const sim = game([
       { id: "transport", owner: "player", kind: "transport", ...at(11, 9) },
       { id: "w1", owner: "player", kind: "worker", ...at(5, 8) },
@@ -204,15 +206,21 @@ describe("transports", () => {
     issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2", "w3", "w4", "f1", "f2", "f3"], transportId: "transport" });
     run(sim, 400);
     const transport = unit(sim, "transport")!;
-    expect(transport.cargo!.map((passenger) => passenger.id).sort()).toEqual(["f1", "f2", "w1", "w2", "w3", "w4"]);
-    // The one that did not fit is told so: its order ends (and, idle by the enemy hall, it may turn on it).
-    expect(unit(sim, "f3")!.order.type).not.toBe("board");
-    expect(unit(sim, "w1")).toBeUndefined();
+    const crew = shipPassengers(sim.units, transport);
+    expect(crew.length).toBeGreaterThan(1);
+    expect(crew.length).toBeLessThan(7);
+    for (const passenger of crew) {
+      expect(unit(sim, passenger.id)).toBe(passenger);
+      expect(deckPointFits(transport, passenger, passenger.deck!, sim.units)).toBe(true);
+    }
+    expect(deckLoad(sim.units, transport)).toBeGreaterThan(0);
+    for (const passenger of sim.units.filter(unit => unit.id !== transport.id)) expect(passenger.order.type).not.toBe("board");
     expect(sim.players.player!.supplyUsed).toBe(supply);
     issuePlayerCommand(sim, "player", { type: "unload", unitIds: ["transport"], ...at(22, 9) });
     run(sim, 600);
     expect(transport.cargo).toBeUndefined();
-    for (const id of ["f1", "f2", "w1", "w2", "w3", "w4"]) {
+    expect(shipPassengers(sim.units, transport)).toHaveLength(0);
+    for (const id of crew.map(unit => unit.id)) {
       const landed = unit(sim, id)!;
       expect(landed.x).toBeGreaterThan(at(18, 0).x);
       expect(isWalkable(sim.map, landed.x, landed.y)).toBe(true);
@@ -228,7 +236,7 @@ describe("transports", () => {
     ]);
     issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2"], transportId: "transport" });
     run(sim, 200);
-    expect(unit(sim, "transport")!.cargo).toHaveLength(2);
+    expect(shipPassengers(sim.units, unit(sim, "transport")!)).toHaveLength(2);
     issuePlayerCommand(sim, "enemy", { type: "attack", unitIds: ["warship"], targetId: "transport" });
     run(sim, 400);
     expect(unit(sim, "transport")).toBeUndefined();
@@ -261,7 +269,7 @@ describe("stable shore rendezvous and ship repair", () => {
     ]);
     issuePlayerCommand(sim,"player",{type:"board",unitIds:["north","south","middle"],transportId:"ferry"});
     run(sim,1200);
-    expect(unit(sim,"ferry")!.cargo?.map(u=>u.id).sort()).toEqual(["middle","north","south"]);
+    expect(shipPassengers(sim.units, unit(sim,"ferry")!).map(u=>u.id).sort()).toEqual(["middle","north","south"]);
   });
 
   it("lets a worker pay to repair a vessel at the shore without a shipyard", () => {

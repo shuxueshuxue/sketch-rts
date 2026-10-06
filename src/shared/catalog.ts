@@ -50,8 +50,6 @@ export type UnitDef = {
   tier?: 2 | 3;
   // A ship (see @@@naval): it sails deep and shallow water and nothing else.
   naval?: true;
-  // A transport (see @@@transport): the supply of passengers it carries.
-  carries?: number;
   weapon?: WeaponDef;
   /** Weapon/proficiency reticle distance per second before the global multiplier; allowed displacement from the last shot. */
   aimSpeed?: number;
@@ -211,12 +209,12 @@ export const UNIT_RULES = {
   // each over its price: 86% of the archer's), so the default army stays the best buy and a tower holds the shore. The
   // transport is Warcraft II's too: half again the warship's health, three quarters of its price, no weapon; it carries
   // eight supply of passengers, who drown with it.
-  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, carries: 8 },
+  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true },
   warship: { trainedAt: "shipyard", hp: 180, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: 210, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: { delivery: "bolt", radius: 14, maxHits: 1, navalMultiplier: 1.4 } },
   cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true },
   bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: 450, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
   fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: 260, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, carries: 24, armor: "heavy", tier: 2 },
+  carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
   siegeRam: { trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { delivery: "ram", buildingMultiplier: 3.3 } },
   ballista: { trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
   catapult: { trainedAt: "workshop", race: "ember", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
