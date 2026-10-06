@@ -139,7 +139,7 @@ const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
 export const AUTO_ACQUIRE_RANGE = 230;
 // Projectile rates are distance per second; only flight duration is quantized to simulation ticks.
 const PROJECTILE_SPEED = 360; // Distance per second.
-const NEUTRAL_LEASH_RANGE = 520;
+const NEUTRAL_LEASH_RANGE = 650;
 // @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
 // A new long-range siege weapon must not expand every creep's pursuit radius.
 const NEUTRAL_DAMAGE_RESPONSE_RANGE = NEUTRAL_LEASH_RANGE;
@@ -971,6 +971,16 @@ function updateMercenaryCamps(game: Game) {
   }
 }
 
+/** Both ordinary shots and weapon skills use the fitting's own reticle. */
+function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:number},pose=mountedWeaponPose(ship,item)!) {
+  const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
+  const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:undefined,aim:item.aim};
+  const {naval:_hull,...weaponBase}=unitRules(game,ship);
+  const ready=aimAt(proxy,{...weaponBase,attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon},point,game.tick);
+  if(proxy.aim)item.aim=proxy.aim;else delete item.aim;
+  if(proxy.facing!==undefined)item.facing=proxy.facing;
+  return ready?proxy:undefined;
+}
 function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;heading:number}>){
   const crossing=new Set(game.units.filter(unit=>unit.order.type==="board" && unit.deck).flatMap(unit=>unit.order.type==="board"?[unit.deck!.shipId,unit.order.transportId]:[]));
   for(const ship of shipsIn(game.units)){
@@ -991,10 +1001,8 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const aimTarget=order.type==="aim" && !target ? order : target;
       const point=aimTarget && strikePoint(pose.pivot,aimTarget);
       if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>def.range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
-      const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:undefined,aim:item.aim};
-      const rules={...unitRules(game,ship),attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon};
-      const ready=aimAt(proxy,rules,point,game.tick);if(proxy.aim)item.aim=proxy.aim;else delete item.aim;if(proxy.facing!==undefined)item.facing=proxy.facing;
-      if(!ready || !target)continue;
+      const proxy=aimMountedWeapon(game,ship,item,point,pose);
+      if(!proxy || !target)continue;
       const multiplier=1+ship.level*VETERANCY_GAIN_PER_STAR;
       fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*multiplier*outgoingDamageMultiplier(game,ship)),def.weapon,def.range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!});
       markAimShot(proxy);item.cooldownRemaining=def.cooldown;if(item.mountId==="bow")ship.cooldown=def.cooldown;
@@ -1221,7 +1229,7 @@ function updateNeutralLeash(game: Game, unit: Unit) {
 }
 
 function updateHoldOrder(game: Game, unit: Unit) {
-  if(shipProfile(unit) && installedWeapons(game,unit).length)return;
+  if(shipProfile(unit))return;
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
@@ -1281,7 +1289,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
     moveToward(unit, target.x, target.y, game.map, game.units);
     return;
   }
-  if(shipProfile(unit) && installedWeapons(game,unit).length)return;
+  if(shipProfile(unit))return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1327,7 +1335,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
     moveToward(unit, target.x, target.y, game.map, game.units);
     return;
   }
-  if(shipProfile(unit) && installedWeapons(game,unit).length)return;
+  if(shipProfile(unit))return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1893,7 +1901,7 @@ function castAbility(
     const point = target ?? (isNumber(x) && isNumber(y) ? { x, y } : undefined);
     if (!point) throw new Error("Weapon skill requires a target point");
     if (def.weapon.minRange && distance(caster, point) < def.weapon.minRange) throw new Error("Target inside weapon minimum range");
-    if (queued || aimingProfile(unitRules(game, caster)) || distance(caster, point) > def.range + (target && !isUnit(target) ? target.radius : 0)) later({type:"cast",ability,...(target ? {targetId:target.id} : {x:point.x,y:point.y})},point);
+    if (queued || isShipKind(caster.kind) || aimingProfile(unitRules(game, caster)) || distance(caster, point) > def.range + (target && !isUnit(target) ? target.radius : 0)) later({type:"cast",ability,...(target ? {targetId:target.id} : {x:point.x,y:point.y})},point);
     else applyWeaponAbility(game,caster,ability,point,def,target?.id);
     return;
   }
@@ -1959,6 +1967,8 @@ function updateCastOrder(game: Game, unit: Unit) {
       if(!item)return end();
       if(!shipGunCanAim(unit,item,at)){const mount=shipMounts(unit).find(mount=>mount.id===item.mountId)!;turnShipToward(unit,Math.atan2(at.y-unit.y,at.x-unit.x)-mount.bearing,game.map,game.units);return;}
       item.facing=Math.atan2(at.y-mountedWeaponPose(unit,item)!.pivot.y,at.x-mountedWeaponPose(unit,item)!.pivot.x);
+      const proxy=aimMountedWeapon(game,unit,item,at);if(!proxy)return;
+      applyWeaponAbility(game,unit,order.ability,at,def,target?.id);markAimShot(proxy);end();return;
     }
     if (!aimAt(unit, weaponRules(game, unit), at, game.tick)) return;
     applyWeaponAbility(game,unit,order.ability,at,def,target?.id);

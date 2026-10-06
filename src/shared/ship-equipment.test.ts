@@ -14,6 +14,24 @@ function match() { const game = createGame('bareDuel', { aiPlayers: [] }); game.
 function run(game: ReturnType<typeof match>, ticks: number) { for (let i = 0; i < ticks; i++)
     stepGame(game); }
 describe('physical ship equipment', () => {
+    it('keeps the hull free of reticles while each working mounted cannon aims and fires',()=>{
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1270,800);
+        enemy.hp=enemy.maxHp=10000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        const cannon=installedWeapons(game,ship)[0]!;
+        issuePlayerCommand(game,'player',{type:'aim',unitIds:[ship.id],x:1100,y:800});
+        expect(ship.order.type).not.toBe('aim');
+        issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
+        run(game,seconds(.4));expect(ship.aim).toBeUndefined();expect(cannon.aim?.tracking).toBe(true);expect(enemy.hp).toBe(10000);
+        run(game,seconds(5));expect(ship.aim).toBeUndefined();expect(enemy.hp).toBeLessThan(10000);
+    });
+    it('never fires an intrinsic ranged attack from an unarmed hull',()=>{
+        for(const kind of ['warship','transport','cutter'] as const){
+            const game=match(),ship=game.spawnUnit('player',kind,900,800),enemy=game.spawnUnit('enemy','transport',1120,800);
+            game.items=[];ship.fittings=[];enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+            issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
+            run(game,seconds(5));expect(ship.aim).toBeUndefined();expect(game.projectiles).toHaveLength(0);expect(enemy.hp).toBe(enemy.maxHp);
+        }
+    });
     it('revises an automatic naval engagement while preserving a player-chosen attack target',()=>{
         for(const automatic of [false,true]){
             const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1150,880),farm=createBuilding('farm','enemy','farm',1200,800,true);

@@ -102,8 +102,7 @@ export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
             const profile = SHIP_WEAPONS[weapon.kind as keyof typeof SHIP_WEAPONS];
             return { ...base, attackDamage: profile.damage, attackRange: profile.range, attackCooldown: profile.cooldown, weapon: profile.weapon, aimSpeed: profile.aimSpeed };
         }
-        if (unit.kind !== 'cutter')
-            return { ...base, attackDamage: 0, attackRange: 0 };
+        return { ...base, attackDamage: 0, attackRange: 0 };
     }
     if (!unit.hands || !canEquip(unit))
         return base;

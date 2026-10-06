@@ -66,7 +66,9 @@ describe("native engineering weapons", () => {
     it("keeps shell flight, burn damage and source attribution deterministic after saving and the shooter's death", () => {
         const game = battle([{ id: "gun", owner: "p1", kind: "fireShip", x: 1030, y: 1000 }, { id: "foe", owner: "p2", kind: "footman", x: 1250, y: 1000 }]);
         issuePlayerCommand(game, "p1", { type: "cast", unitId: "gun", ability: "incendiaryFlume", x: 1250, y: 1000 });
-        run(game, Math.ceil(220 / aimingProfile(UNIT_DEFS.fireShip)!.speed * SIM_TICKS_PER_SECOND));
+        for(let tick=0;tick<30 && !game.projectiles.length;tick++)stepGame(game);
+        expect(get(game,'gun').aim).toBeUndefined();
+        expect(game.items.find(item=>item.shipId==='gun' && item.kind==='flameProjector')?.aim).toBeDefined();
         expect(game.projectiles).toHaveLength(1);
         removeUnit(game, "gun");
         const restored = createGame("bareDuel");
