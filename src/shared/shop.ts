@@ -1,6 +1,8 @@
 import { canEquip, freeItemSlot } from "./equipment";
 import { unitMover } from "./catalog";
 import { seconds } from "./time";
+import { PURCHASE_REACH, purchasePlacement } from "./purchase";
+import { distanceToHull, shipProfile } from "./ship-geometry";
 import type { GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "./types";
 
 // @@@shop-goods - What a shop sells, at the owner's prices (10-01): each a little worse for its gold than what it stands in
@@ -27,7 +29,7 @@ export const IVORY_TOWER_REACH = 200;
 
 export const SHOP_RADIUS = 40;
 // A unit buys standing this near the shop's edge.
-export const SHOP_REACH = 120;
+export const SHOP_REACH = PURCHASE_REACH;
 // @@@carried-items - What one unit carries at most, a worker as much as a knight (the owner: 「别看不起人民群众！」): it
 // buys, picks up and is handed nothing more.
 export const MAX_CARRIED_ITEMS = 4;
@@ -42,9 +44,9 @@ export function carriedItemCount(snapshot: Pick<GameSnapshot, "items">, unitId: 
   return count;
 }
 
-// Whether the unit stands near enough the shop to buy there; a ship never does (it carries nothing).
+// A recipient is in reach by its physical body, including a ship's whole hull.
 export function standsAtShop(unit: Unit, shop: Shop) {
-  return unitMover(unit.kind) === "land" && Math.hypot(unit.x - shop.x, unit.y - shop.y) <= shop.radius + unit.radius + SHOP_REACH;
+  return unit.hp>0 && (shipProfile(unit) ? distanceToHull(unit,shop)<=shop.radius+SHOP_REACH : unitMover(unit.kind) === "land" && Math.hypot(unit.x - shop.x, unit.y - shop.y) <= shop.radius + unit.radius + SHOP_REACH);
 }
 
 // Who takes what the owner buys: its unit standing at the shop with room for one more, nearest the shop; when none has
@@ -64,12 +66,13 @@ export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner
 }
 
 // Why the owner may not buy the good at the shop now (transient when only waiting fixes it), or undefined.
-export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "players">, owner: PlayerId, shopId: string, kind: ItemKind): { message: string; transient: boolean } | undefined {
+export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "players" | "items">, owner: PlayerId, shopId: string, kind: ItemKind, recipientId?:string): { message: string; transient: boolean } | undefined {
   const shop = snapshot.shops?.find((candidate) => candidate.id === shopId);
   if (!shop) return { message: `Unknown shop ${shopId}`, transient: false };
   const good = shop.goods.find((candidate) => candidate.kind === kind);
   if (!good) return { message: `${shop.id} sells no ${kind}`, transient: false };
   if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true };
+  if(recipientId!==undefined){const result=purchasePlacement(snapshot,owner,shop,kind,recipientId);if("refusal" in result)return {message:result.refusal,transient:true};}
   if (!snapshot.units.some((unit) => unit.owner === owner && standsAtShop(unit, shop))) return { message: `${shop.id} needs a unit of yours beside it`, transient: true };
   if ((snapshot.players[owner]?.gold ?? 0) < good.cost) return { message: `Need ${good.cost} gold`, transient: true };
   return undefined;
