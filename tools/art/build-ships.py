@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Build editable Blender ships, geometry and 32-direction layered atlases.
-
-Run with Python + Pillow; set BLENDER_BIN or pass --blender. Blender 4+ only
-performs offline work. The game consumes the exported PNGs and geometry JSON.
-"""
+"""Build editable Blender ships and their physical geometry for the GLB exporter."""
 import argparse
 import hashlib
 import json
@@ -16,7 +12,6 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "assets/naval/ships.json"
 BUILD = ROOT / ".art-build/ships"
-OUTPUT = ROOT / "public/art/ships"
 
 
 def outline(length, beam, margin=0):
@@ -32,9 +27,8 @@ def build_in_blender():
     from mathutils import Vector
     config = json.loads(SOURCE.read_text())
     settings = config["camera"]
-    preview = os.environ.get("SKETCH_SHIP_PREVIEW") == "1"
     selected = os.environ.get("SKETCH_SHIP_KINDS", "").split(",")
-    build = ROOT / ".art-build/ship-redesign-preview" if preview else BUILD
+    build = BUILD
     build.mkdir(parents=True, exist_ok=True)
     metadata = {"sourceSha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
                 "camera": settings, "ships": {}}
@@ -52,8 +46,6 @@ def build_in_blender():
 
     for kind, spec in config["ships"].items():
         if selected != [""] and kind not in selected:
-            continue
-        if preview and kind not in ("transport", "warship"):
             continue
         bpy.ops.wm.read_factory_settings(use_empty=True)
         base, upper, weapon = [], [], []
@@ -230,128 +222,23 @@ def build_in_blender():
             obj.location -= pivot
             obj.parent = weapon_rig
 
-        scene = bpy.context.scene
-        scene.render.engine = "CYCLES"
-        scene.cycles.device = "CPU"
-        scene.cycles.samples = 12
-        scene.cycles.use_denoising = False
-        scene.render.threads_mode = "FIXED"
-        scene.render.threads = 4
-        scene.render.resolution_x = scene.render.resolution_y = settings["frameSize"]
-        scene.render.resolution_percentage = 100
-        scene.render.film_transparent = True
-        scene.render.image_settings.file_format = "PNG"
-        scene.render.image_settings.color_mode = "RGBA"
-        scene.view_settings.view_transform = "Standard"
-        scene.view_settings.look = "Medium High Contrast"
-        scene.view_settings.exposure = -.2
-        scene.world = bpy.data.worlds.new("overcast sky")
-        scene.world.use_nodes = True
-        scene.world.node_tree.nodes["Background"].inputs[0].default_value = (.45, .48, .52, 1)
-        scene.world.node_tree.nodes["Background"].inputs[1].default_value = .7
-        bpy.ops.object.light_add(type="AREA", location=(-80, -100, 180))
-        light = bpy.context.object
-        light.data.energy = 190000
-        light.data.shape = "DISK"
-        light.data.size = 130
-        light.rotation_euler = (-light.location).to_track_quat('-Z', 'Y').to_euler()
-        bpy.ops.object.camera_add(location=(0, 220*math.sin(settings["tilt"]), 220*math.cos(settings["tilt"])))
-        camera = bpy.context.object
-        camera.rotation_euler = (-camera.location).to_track_quat('-Z', 'Y').to_euler()
-        camera.data.type = "ORTHO"
-        camera.data.ortho_scale = settings["worldSize"]
-        scene.camera = camera
-
-        depth = bpy.data.materials.new("world depth")
-        depth.use_nodes = True
-        nodes, links = depth.node_tree.nodes, depth.node_tree.links
-        nodes.clear()
-        geom = nodes.new("ShaderNodeNewGeometry")
-        split = nodes.new("ShaderNodeSeparateXYZ")
-        links.new(geom.outputs["Position"], split.inputs[0])
-        scale = nodes.new("ShaderNodeMath")
-        scale.operation = "MULTIPLY_ADD"
-        links.new(split.outputs["Y"], scale.inputs[0])
-        scale.inputs[1].default_value = 1/256
-        scale.inputs[2].default_value = .5
-        emit = nodes.new("ShaderNodeEmission")
-        links.new(scale.outputs[0], emit.inputs["Color"])
-        out = nodes.new("ShaderNodeOutputMaterial")
-        links.new(emit.outputs[0], out.inputs[0])
-
         bpy.ops.wm.save_as_mainfile(filepath=str(build / (kind + ".blend")))
-        if os.environ.get("SKETCH_SHIP_MODELS_ONLY") == "1":
-            metadata["ships"][kind] = {**spec, "hull": hull, "deck": deck}
-            continue
-        for direction in ((0, 4, 8, 12) if preview else range(settings["directions"])):
-            rig.rotation_euler.z = direction * math.tau / settings["directions"]
-            layers = ("base", "upper", "depth", "weapon", "weapon-depth") if weapon else ("base", "upper", "depth")
-            for layer in layers:
-                weapon_layer = layer.startswith("weapon")
-                depth_layer = layer.endswith("depth")
-                rig.rotation_euler.z = 0 if weapon_layer else direction * math.tau / settings["directions"]
-                weapon_rig.location = (0, 0, 0) if weapon_layer else pivot
-                weapon_rig.rotation_euler.z = direction * math.tau / settings["directions"] if weapon_layer else 0
-                for obj in base:
-                    obj.hide_render = layer != "base"
-                for obj in upper:
-                    obj.hide_render = layer not in ("upper", "depth")
-                for obj in weapon:
-                    obj.hide_render = not weapon_layer
-                scene.view_layers[0].material_override = depth if depth_layer else None
-                scene.view_settings.view_transform = "Raw" if depth_layer else "Standard"
-                scene.view_settings.look = "None" if depth_layer else "Medium High Contrast"
-                scene.view_settings.exposure = 0 if depth_layer else -.2
-                scene.render.dither_intensity = 0
-                scene.render.filepath = str(build / f"{kind}-{layer}-{direction:02}.png")
-                bpy.ops.render.render(write_still=True)
         metadata["ships"][kind] = {**spec, "hull": hull, "deck": deck}
-        print("SHIP_BAKED", kind, flush=True)
-    if preview:
-        return
+        print("SHIP_MODEL", kind, flush=True)
     target = ROOT / "src/shared/generated/ship-geometry.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(metadata, indent=2) + "\n")
 
 
 def main():
-    from PIL import Image, ImageOps
-    from io import BytesIO
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--blender", default=os.environ.get("BLENDER_BIN", "blender"))
-    parser.add_argument("--pack-only", action="store_true")
-    parser.add_argument("--kinds", nargs="+", help="Render only these ship kinds")
-    parser.add_argument("--preview", action="store_true", help="Render transport and warship in four directions without changing deployed atlases")
+    parser.add_argument("--kinds", nargs="+", help="Build only these ship kinds")
     args = parser.parse_args()
-    if not args.pack_only:
-        subprocess.run([args.blender, "--background", "--factory-startup", "--python-exit-code", "1",
-                        "--python", str(Path(__file__).resolve())], check=True,
-                       env={**os.environ, "SKETCH_SHIP_PREVIEW": "1" if args.preview else "0", "SKETCH_SHIP_KINDS": ",".join(args.kinds or [])})
-    if args.preview:
-        return
-    config = json.loads(SOURCE.read_text())
-    frame = config["camera"]["frameSize"]
-    # Undo the orthographic camera's ground foreshortening. Physical deck x/y
-    # therefore matches gameplay x/y at every heading; height still rises on screen.
-    cos = math.cos(config["camera"]["tilt"])
-    OUTPUT.mkdir(parents=True, exist_ok=True)
-    for kind in config["ships"]:
-        if args.kinds and kind not in args.kinds:
-            continue
-        layers = ("base", "upper", "depth", "weapon", "weapon-depth") if config["ships"][kind]["weaponPivot"] else ("base", "upper", "depth")
-        for layer in layers:
-            atlas = Image.new("RGBA", (frame*8, frame*4))
-            for direction in range(config["camera"]["directions"]):
-                image = ImageOps.mirror(Image.open(BUILD / f"{kind}-{layer}-{direction:02}.png"))
-                stretched = image.resize((frame, round(frame/cos)), Image.Resampling.NEAREST if layer.endswith("depth") else Image.Resampling.LANCZOS)
-                # Reserve more space above the waterline for tall sails. The client
-                # uses the same anchor, so this padding never shifts the physical deck.
-                top = (stretched.height-frame)//2 - round(config["camera"].get("anchorY", 0)/config["camera"]["worldSize"]*frame)
-                image = stretched.crop((0, top, frame, top+frame))
-                atlas.paste(image, (direction%8*frame, direction//8*frame))
-            target=OUTPUT / f"{kind}-{layer}.png"
-            buffer=BytesIO();atlas.save(buffer, format="PNG", optimize=True);target.write_bytes(buffer.getvalue())
-    print("Ship atlases exported to", OUTPUT)
+    subprocess.run([args.blender, "--background", "--factory-startup", "--python-exit-code", "1",
+                    "--python", str(Path(__file__).resolve())], check=True,
+                   env={**os.environ, "SKETCH_SHIP_KINDS": ",".join(args.kinds or [])})
+    print("Ship models and physical geometry exported; run export-world-gltf.py for GLBs")
 
 
 if __name__ == "__main__":
