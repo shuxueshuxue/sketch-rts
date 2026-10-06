@@ -1,3 +1,5 @@
+import { shipPartMax } from './ship-handling';
+export { shipPartMax } from './ship-handling';
 import { itemIndex } from "./item-index";
 import { strikePoint, type StrikeTarget } from "./combat-geometry";
 import { detCos, detSin } from "./det-math";
@@ -50,30 +52,42 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
     const pivot = localToWorld(ship, mount), point = strikePoint(pivot, target), angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
     return Math.abs(headingDifference((ship.sailing?.heading ?? 0) + mount.bearing, angle)) <= mount.halfArc + 1e-7;
 }
-/** An attack order chooses the broadside with the most working guns, then the shortest turn. */
+/** Bring a working gun into its arc with the least hull rotation. A gun
+ * already able to fire never gives up its shot just to align a larger battery. */
 export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit, point: StrikeTarget) {
-    const weapons = installedWeapons(snapshot, ship).filter(item => (item.durability ?? 1) > 0), heading = ship.sailing?.heading ?? 0, angle = Math.atan2(point.y - ship.y, point.x - ship.x);
-    const mounts = shipMounts(ship).filter(mount => weapons.some(item => item.mountId === mount.id));
-    let best = heading, score = -Infinity;
-    for (const candidate of [heading, ...mounts.map(mount => angle - mount.bearing)]) {
-        const pose = { ...ship, sailing: { ...ship.sailing!, heading: candidate } };
-        const count = weapons.filter(item => {
-            const profile=SHIP_WEAPONS[item.kind as ShipEquipmentKind],pivot=mountedWeaponPose(pose,item)!.pivot,aim=strikePoint(pivot,point),gap=Math.hypot(aim.x-pivot.x,aim.y-pivot.y);
-            return gap<=profile.range && gap>=(profile.weapon.minRange ?? 0) && shipGunCanAim(pose,item,point);
-        }).length;
-        const value = count * 10 - Math.abs(headingDifference(heading, candidate));
-        if (value > score) {
-            score = value;
-            best = candidate;
+    const weapons=installedWeapons(snapshot,ship).filter(item=>(item.durability ?? 1)>0);
+    const heading=ship.sailing?.heading ?? 0;
+    const mounts=new Map(shipMounts(ship).map(mount=>[mount.id,mount]));
+    const canFire=(candidate:number,item:WorldItem)=>{
+        const mount=mounts.get(item.mountId!)!;if(!mount)return false;
+        const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
+        const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
+        const target=strikePoint(pivot,point),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
+        return gap<=def.range+1e-7 && gap>=(def.weapon.minRange ?? 0)
+          && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=mount.halfArc+1e-7;
+    };
+    const currentCount=weapons.filter(item=>canFire(heading,item)).length;
+    const nearbyBattery=Math.PI/18;
+    const candidates=currentCount?[{heading,turn:0,count:currentCount}]:[];
+    for(const item of weapons){
+        const mount=mounts.get(item.mountId!)!;
+        const center=Math.atan2(point.y-ship.y,point.x-ship.x)-mount.bearing;
+        for(const offset of [0,-mount.halfArc/2,mount.halfArc/2]){
+            const turn=headingDifference(heading,center+offset);
+            if(!canFire(heading+turn,item))continue;
+            let outside=0,inside=1;
+            for(let i=0;i<24;i++){const mid=(outside+inside)/2;if(canFire(heading+turn*mid,item))inside=mid;else outside=mid;}
+            const candidate=heading+turn*inside,amount=Math.abs(turn*inside),count=weapons.filter(gun=>canFire(candidate,gun)).length;
+            candidates.push({heading:candidate,turn:amount,count});
         }
     }
-    return best;
+    const nearest=Math.min(...candidates.map(candidate=>candidate.turn));
+    return candidates.filter(candidate=>candidate.turn<=nearest+nearbyBattery).sort((a,b)=>b.count-a.count||a.turn-b.turn)[0]?.heading ?? heading;
 }
 export function isShipEquipment(kind: WorldItem['kind']): kind is ShipEquipmentKind { return kind in SHIP_WEAPONS; }
 export function installedWeapons(snapshot: {
     items: readonly WorldItem[];
 }, ship: Unit) { return (itemIndex(snapshot.items).byShip.get(ship.id) ?? []).filter(item => item.mountId && isShipEquipment(item.kind)); }
-export function shipPartMax(ship: Unit) { const p = shipProfile(ship)!; return { rigging: Math.round(p.length * .55), rudder: Math.round(p.beam * .8) }; }
 export function initializeShipEquipment(snapshot: GameSnapshot) {
     for (const ship of snapshot.units) {
         if (!SHIP_KINDS.includes(ship.kind as never))

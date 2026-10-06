@@ -124,7 +124,7 @@ export type Projectile = {
 export type UnitOrder =
   | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
-  | { type: "move"; x: number; y: number; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
+  | { type: "move"; x: number; y: number; heading?: number; rendezvousFor?: string; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
@@ -137,7 +137,7 @@ export type UnitOrder =
   // Walk into weapon range, then prepare a reticle at a point and engage enemies entering range.
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
-  | { type: "board"; transportId: string; berth?: { x: number; y: number } }
+  | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number } }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }

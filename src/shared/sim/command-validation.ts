@@ -1,3 +1,4 @@
+import { canReceiveHealing } from '../healing';
 import { SHIP_WEAPONS, installedWeapons, shipNeedsRepair } from "../ship-equipment";
 import { canEquip, dropRefusal, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
 import { shipPassengers } from "../ship-geometry";
@@ -45,7 +46,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if (command.type === "board") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    const ship = snapshot.units.find(unit => unit.id === command.transportId && unit.owner === owner && carries(unit) > 0);
+    const ship = snapshot.units.find(unit => unit.id === command.transportId && unit.hp>0 && carries(unit) > 0);
     if (!ship) return commandError(`Unknown ${owner} transport ${command.transportId}`, true);
     return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && canBoard(ship, unit, snapshot.units))
       ? undefined : commandError("No free deck space or payload capacity for these units", true);
@@ -174,7 +175,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   }
   if (command.type === "board") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
-    return unitIds.length > 0 && hasCurrentUnit(game, owner, command.transportId) ? { ...command, unitIds } : undefined;
+    return unitIds.length > 0 && game.units.some(unit=>unit.id===command.transportId && unit.hp>0 && carries(unit)>0) ? { ...command, unitIds } : undefined;
   }
   if (command.type === "attack") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
@@ -321,6 +322,8 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     return undefined;
   }
   if (behavior === "heal") {
+    const target = snapshot.units.find(unit => unit.id === command.targetId);
+    if (target && !canReceiveHealing(target)) return commandError("Healing cannot repair ships");
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
       : commandError("Heal requires an allied unit target");

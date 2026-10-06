@@ -1,3 +1,4 @@
+import { canReceiveHealing } from '../../shared/healing';
 import { abilityCooldown } from "../../shared/ability-cooldowns";
 import { canReach } from "../../shared/naval";
 import { isEnemyOwner } from "./ownership";
@@ -76,7 +77,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
 }
 
 function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  return isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner);
+  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(canReceiveHealing);
 }
 
 function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions) {
@@ -108,7 +109,7 @@ function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def
 // enemyNear: whether some enemy combat unit is within 620 of a point (not every one beyond it).
 function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, enemyNear: (point: Point) => boolean, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version !== "v2" || activeUnitClaim(snapshot, owner, caster, options)) return undefined;
-  const wounded = units(snapshot, owner).filter((unit) => unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
+  const wounded = units(snapshot, owner).filter((unit) => canReceiveHealing(unit) && unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
   const groups = wounded
     .map((anchor) => wounded.filter((unit) => distance(unit, anchor) <= 260))
     .filter((group) => group.length >= 2)

@@ -102,8 +102,11 @@ export function targetCommand(
   const relation = relationTo(snapshot, owner, thing.owner);
   // The deck is walkable ground regardless of its owner. Clicking a defender
   // still attacks that person; explicit attack commands still strike the hull.
-  if(target.kind==='unit' && isShipKind(target.unit.kind) && selected.length && selected.every(unit=>!UNIT_DEFS[unit.kind].naval)
-    && (relation==='enemy' || relation==='creep' || selected.some(unit=>unit.deck)))return undefined;
+  if(target.kind==='unit' && isShipKind(target.unit.kind) && selected.length && selected.every(unit=>!UNIT_DEFS[unit.kind].naval)){
+    const crew=selected.filter(unit=>unit.deck && unit.deck.shipId!==target.unit.id);
+    if(crew.length)return {type:'board',unitIds:ids(crew),transportId:target.unit.id,queued};
+    if(relation==='enemy' || relation==='creep' || selected.some(unit=>unit.deck))return undefined;
+  }
   if (relation === "enemy" || relation === "creep") return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
   if (target.kind === "building") {
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;

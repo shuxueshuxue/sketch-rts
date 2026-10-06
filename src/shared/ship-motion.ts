@@ -1,34 +1,23 @@
 import { detCos, detSin } from './det-math';
-import { shipPartMax } from './ship-equipment';
+import { shipMotionLimits } from './ship-handling';
+export { shipMotionLimits } from './ship-handling';
 import { localToWorld, shipPassengers, shipProfile } from './ship-geometry';
 import { hullPassageClear } from './ship-navigation';
 import { shipTraffic } from './ship-avoidance';
 import { perTick } from './time';
 import type { GameMap, Unit } from './types';
-type MotionBudget = { yaw: number; distance: number };
+type MotionBudget = { yaw: number; distance: number; astern: number };
 type ShipControls = { surge?: number; yaw?: number; pivotLever?: number; spentYaw?: number };
 const budgets = new WeakMap<Unit, MotionBudget>();
 
 /** One budget for propulsion, aiming turns and impulses in the whole step. */
 export function beginShipMotionFrame(units: readonly Unit[]) {
-  for (const unit of units) if (shipProfile(unit)) budgets.set(unit, { yaw: 0, distance: 0 });
+  for (const unit of units) if (shipProfile(unit)) budgets.set(unit, { yaw: 0, distance: 0, astern: 0 });
 }
 
 /** Navigation supplies controls, never a world-space displacement. The keel
  * admits surge and yaw only. A bow/stern pivot couples translation to yaw;
  * it cannot produce lateral travel without turning. Rates are per second. */
-export function shipMotionLimits(ship: Unit) {
-  const profile = shipProfile(ship)!, motion = ship.sailing!, parts = shipPartMax(ship);
-  const load = motion.load / profile.loadCapacity;
-  const propulsion = (ship.shipParts?.rigging ?? parts.rigging) / parts.rigging;
-  const steering = (ship.shipParts?.rudder ?? parts.rudder) / parts.rudder;
-  return {
-    speed: ship.speed * Math.sqrt(Math.max(0, propulsion)) / (1 + .2 * load),
-    acceleration: profile.acceleration / (1 + .4 * load),
-    turnRate: profile.turnRate * steering / (1 + .35 * load + .25 * motion.balance),
-  };
-}
-
 export function advanceShip(ship: Unit, map: GameMap, units: readonly Unit[], controls: ShipControls) {
   const profile = shipProfile(ship)!;
   const motion = ship.sailing ??= { heading: 0, speed: 0, load: 0, balance: 0 };
@@ -42,7 +31,7 @@ export function advanceShip(ship: Unit, map: GameMap, units: readonly Unit[], co
   const yawBound = lever ? Math.min(bound, travel / Math.abs(lever)) : bound;
   const yaw = Math.max(-yawBound, Math.min(yawBound, requestedYaw));
   const surgeBound = Math.max(0, travel - Math.abs(lever * yaw));
-  const surge = Math.max(-surgeBound, Math.min(surgeBound, requestedSurge));
+  const surge = Math.max(-Math.min(surgeBound, Math.max(0,perTick(limits.reverseSpeed)-(budget?.astern ?? 0))), Math.min(surgeBound, requestedSurge));
 
   const from = { x: ship.x, y: ship.y, heading: motion.heading };
   const heading = from.heading + yaw, c = detCos(heading), s = detSin(heading);
@@ -67,6 +56,7 @@ export function advanceShip(ship: Unit, map: GameMap, units: readonly Unit[], co
   if (budget) {
     budget.yaw += Math.abs(yaw);
     budget.distance += Math.abs(surge) + Math.abs(lever * yaw);
+    if(surge<0)budget.astern-=surge;
   }
   for (const passenger of shipPassengers(units, ship)) Object.assign(passenger, localToWorld(ship, passenger.deck!));
   return true;

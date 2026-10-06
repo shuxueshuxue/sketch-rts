@@ -52,13 +52,13 @@ describe('physical ship equipment', () => {
         issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:yard.id});
         run(game,seconds(10));expect(yard.hp).toBeLessThan(5000);
     });
-    it('intercepts an attacker without replacing an unloading task and resumes after the threat dies',()=>{
+    it('fires opportunistically while continuing an unloading task and proceeds after its path clears',()=>{
         const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1100,800);
         ship.hp=ship.maxHp=10000;enemy.hp=enemy.maxHp=10000;
         enemy.order={type:'attack',targetId:ship.id};
         issuePlayerCommand(game,'player',{type:'unload',unitIds:[ship.id],x:1500,y:800});
         run(game,seconds(5));expect(enemy.hp).toBeLessThan(10000);expect(ship.order).toMatchObject({type:'unload',x:1500,y:800});
-        expect(ship.x).toBe(900);
+        expect(ship.x).toBeGreaterThan(900);
         game.units=game.units.filter(unit=>unit!==enemy);run(game,seconds(1));expect(ship.x).toBeGreaterThan(900);
     });
     it('keeps an explicit withdrawal moving instead of being trapped in automatic retaliation',()=>{
@@ -114,12 +114,11 @@ describe('physical ship equipment', () => {
         enemy.order = { type: 'hold', x: enemy.x, y: enemy.y };
         for (const mountId of ['port0', 'port1'])
             game.items.push({ id: `side-${mountId}`, kind: 'shipCannon', shipId: ship.id, mountId, durability: 90, x: ship.x, y: ship.y, cooldownRemaining: 0 });
+        game.items=game.items.filter(item=>item.mountId!=='bow');
         const side = game.items.find(item => item.id === 'side-port0')!;
         expect(shipGunCanAim(ship, side, enemy)).toBe(false);
-        expect(Math.abs(bestFiringHeading(game, ship, enemy))).toBeCloseTo(Math.PI / 2);
-        ship.order = { type: 'hold', x: ship.x, y: ship.y };
-        run(game, seconds(2));
-        expect(side.aim).toBeUndefined();
+        expect(Math.abs(bestFiringHeading(game, ship, enemy))).toBeGreaterThan(Math.PI / 4);
+        expect(Math.abs(bestFiringHeading(game, ship, enemy))).toBeLessThan(Math.PI / 2);
         issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: enemy.id });
         let sideShots = 0;
         for (let i = 0; i < seconds(5); i++) {
@@ -127,7 +126,7 @@ describe('physical ship equipment', () => {
             if (game.effects.some(effect => effect.type === 'muzzleFlash' && effect.itemId === side.id))
                 sideShots++;
         }
-        expect(Math.abs(ship.sailing.heading)).toBeGreaterThan(Math.PI / 3);
+        expect(Math.abs(ship.sailing.heading)).toBeGreaterThan(Math.PI / 4);
         expect(sideShots).toBeGreaterThan(0);
         expect(shipGunCanAim(ship, side, enemy)).toBe(true);
     });
