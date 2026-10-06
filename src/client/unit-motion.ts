@@ -1,7 +1,8 @@
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, Unit } from "../shared/types";
+import { headingDifference } from '../shared/ship-navigation';
 
-type Point = { x: number; y: number };
+type Point = { x: number; y: number; heading?:number };
 
 type Glide = { from: Point; to: Point; start: number; span: number; dashing: boolean };
 
@@ -34,22 +35,28 @@ export class UnitMotionSmoother {
         const previous = this.glides.get(unit.id);
         if (!dashing && !previous?.dashing) continue;
         const from = previous ? glidePoint(previous, now) : (this.lastSeen.get(unit.id) ?? unit);
-        glides.set(unit.id, { from: { x: from.x, y: from.y }, to: { x: unit.x, y: unit.y }, start: now, span: ticks * this.tickMs, dashing });
+        glides.set(unit.id, { from: { ...from }, to: { x: unit.x, y: unit.y,...(unit.sailing?{heading:unit.sailing.heading}:{}) }, start: now, span: ticks * this.tickMs, dashing });
       }
     }
     this.glides = glides;
-    this.lastSeen = new Map(snapshot.units.map((unit) => [unit.id, { x: unit.x, y: unit.y }]));
+    this.lastSeen = new Map(snapshot.units.map((unit) => [unit.id, { x: unit.x, y: unit.y,...(unit.sailing?{heading:unit.sailing.heading}:{}) }]));
     this.lastTick = snapshot.tick;
   }
 
   /** Where to draw the unit at `now`. */
   position(unit: Pick<Unit, "id" | "x" | "y">, now: number): Point {
     const glide = this.glides.get(unit.id);
-    return glide ? glidePoint(glide, now) : { x: unit.x, y: unit.y };
+    const point=glide ? glidePoint(glide, now) : unit;
+    return{x:point.x,y:point.y};
+  }
+  heading(unit:Pick<Unit,'id'|'sailing'>,now:number) {
+    const glide=this.glides.get(unit.id);
+    return (glide ? glidePoint(glide,now).heading : undefined) ?? unit.sailing?.heading ?? 0;
   }
 }
 
 function glidePoint(glide: Glide, now: number): Point {
   const t = glide.span > 0 ? Math.max(0, Math.min(1, (now - glide.start) / glide.span)) : 1;
-  return { x: glide.from.x + (glide.to.x - glide.from.x) * t, y: glide.from.y + (glide.to.y - glide.from.y) * t };
+  return { x: glide.from.x + (glide.to.x - glide.from.x) * t, y: glide.from.y + (glide.to.y - glide.from.y) * t,
+    ...(glide.from.heading!==undefined && glide.to.heading!==undefined?{heading:glide.from.heading+headingDifference(glide.from.heading,glide.to.heading)*t}:{}) };
 }

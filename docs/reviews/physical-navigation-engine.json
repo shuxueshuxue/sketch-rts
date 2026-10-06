@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-06",
+  "map": "brokenSea",
+  "aiVersions": [
+    "v5",
+    "v7",
+    "v8"
+  ],
+  "runtime": "product CommandFrameRuntime, compressed Node bundle",
+  "includesRendering": false,
+  "initializedMs": 22.522503,
+  "firstStepMs": 70.251941,
+  "active": {
+    "peakMs": 112.193299999999,
+    "worstStep": 10606,
+    "p99Ms": 19.287019000000328,
+    "averageMs": 1.329129628534914,
+    "over50ms": 19
+  },
+  "simulatedSeconds": 900,
+  "units": 67,
+  "ships": 12,
+  "buildings": 35,
+  "checksum": "13de3d2b"
+}

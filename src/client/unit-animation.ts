@@ -11,6 +11,7 @@ const CAST_MS = 500;
 
 type Track = {
   x: number; y: number; cooldown: number;
+  deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   phase: number; speed: number; moving: boolean;
   action?: { mode: "attack" | "cast"; tick: number };
@@ -32,7 +33,9 @@ export class UnitAnimationTracker {
     const next = new Map<string, Track>();
     for (const unit of snapshot.units) {
       const previous = continuous ? this.tracks.get(unit.id) : undefined;
-      const distance = previous ? Math.hypot(unit.x - previous.x, unit.y - previous.y) : 0;
+      const distance = !previous ? 0 : unit.deck || previous.deck
+        ? unit.deck?.shipId===previous.deck?.shipId ? Math.hypot(unit.deck!.x-previous.deck!.x,unit.deck!.y-previous.deck!.y) : 0
+        : Math.hypot(unit.x - previous.x, unit.y - previous.y);
       // Teleports and forced slides are not walking. Charge still has a gallop.
       const moving = Boolean(previous && distance / gap > 0.25 && distance / gap < 32 && unit.pushX === undefined);
       const phase = (previous?.phase ?? phaseFor(unit.id)) + (moving ? distance / 28 : 0);
@@ -49,6 +52,7 @@ export class UnitAnimationTracker {
         abilities: { ...unit.abilityCooldowns }, phase: phase % 1,
         speed: moving ? distance / gap / 28 : 0,
         moving: moving && !unit.effects.some((effect) => effect.type === "stun"),
+        ...(unit.deck ? {deck:{...unit.deck}} : {}),
         ...(action ? { action } : {}),
       };
       next.set(unit.id, track);

@@ -1,5 +1,6 @@
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
+import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, rebuildShipFittings, repairShipParts, shipNeedsRepair, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
@@ -22,9 +23,11 @@ import { boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks,
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksTouch } from "./connected-decks";
 import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
-import { shipsIn, isShipKind, circleInPolygon, distanceToHull, hullContact, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal } from "./ship-geometry";
+import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal } from "./ship-geometry";
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
-import { headingDifference, hullStep, nearestShipPose } from "./ship-navigation";
+import { beginShipMotionFrame } from './ship-motion';
+import { shipTraffic } from './ship-avoidance';
+import { headingDifference, nearestShipPose } from "./ship-navigation";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
@@ -195,8 +198,10 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
       const at = walkableGoal(this.map, x, y, unitMover(kind));
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
       if(shipProfile(unit)) {
-        const pose=nearestShipPose(this.map,unit,at);
-        if(pose){Object.assign(unit,{x:pose.x,y:pose.y});unit.sailing={heading:pose.heading,speed:0,load:0,balance:0};}
+        const traffic=shipTraffic(unit,this.units,Infinity);
+        const pose=nearestShipPose(this.map,unit,at,unit,pose=>traffic(pose,pose));
+        if(!pose)throw new Error('No clear water berth for this ship');
+        Object.assign(unit,{x:pose.x,y:pose.y});unit.sailing={heading:pose.heading,speed:0,load:0,balance:0};
       }
       this.nextId += 1;
       applyUnitUpgrades(this, unit);
@@ -216,6 +221,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   initializeShipEquipment(game);
   normalizeEquipment(game,true);
   refreshEquipmentMass(game);
+  keepShipsOnWater(game.map,game.units);
   updateSupplyState(game);
   return game;
 }
@@ -603,7 +609,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 export function stepGame(game: Game) {
   if (game.match.winner) return;
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
-  keepShipsOnWater(game.map,game.units);
   syncDecks(game.units);
   game.tick += 1;
   syncBuildingBodies(game);
@@ -631,6 +636,7 @@ export function stepGame(game: Game) {
   updateDockRepairs(game);
   updateTowerAttacks(game);
   const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
+  beginShipMotionFrame(game.units);
   const ferry = updateUnits(game);
   updateMountedWeapons(game,starts);
   if (ferry) ferryUnits(game, ferry);
@@ -644,6 +650,7 @@ export function stepGame(game: Game) {
   for (const unit of game.units) if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
   removeExpiredUnits(game);
   removeDead(game);
+  if(settleGroundItems(game.items,game.units,game.map))refreshEquipmentMass(game);
   updateShipOwnership(game);
   syncBuildingBodies(game);
   updateVictory(game);
@@ -694,7 +701,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       if (unit.fittings) copy.fittings = unit.fittings.map(fitting => ({ ...fitting, accepts: [...fitting.accepts] }));
       if (unit.sailing) {
         copy.sailing = { ...unit.sailing };
-        if (unit.sailing.route) copy.sailing.route = { ...unit.sailing.route, end: { ...unit.sailing.route.end }, points: unit.sailing.route.points.map(point => ({ ...point })) };
+        if (unit.sailing.route) copy.sailing.route = { ...unit.sailing.route, end: { ...unit.sailing.route.end }, points: unit.sailing.route.points.map(point => ({ ...point,...(point.pivot?{pivot:{...point.pivot}}:{}) })) };
       }
       if (unit.abilityCooldowns) copy.abilityCooldowns = { ...unit.abilityCooldowns };
       if (unit.autocast) copy.autocast = { ...unit.autocast };
@@ -712,7 +719,7 @@ export function snapshotGame(game: Game): GameSnapshot {
     resources: game.resources.map((resource) => ({ ...resource })),
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
     ...(game.shops ? { shops: game.shops.map((shop) => ({ ...shop, goods: shop.goods.map((good) => ({ ...good })) })) } : {}),
-    items: game.items.map(item => item.aim ? { ...item, aim: { ...item.aim } } : { ...item }),
+    items: game.items.map(item => ({...item,...(item.aim?{aim:{...item.aim}}:{}),...(item.deck?{deck:{...item.deck}}:{})})),
     projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
     effects: game.effects.map((effect) => ({ ...effect })),
     ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse })) } : {}),
@@ -766,6 +773,9 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
     refreshEquipmentMass(game);
   }
   game.nextId = nextId;
+  normalizeEquipment(game);
+  keepShipsOnWater(game.map,game.units);
+  syncDecks(game.units);
   invalidateGameRuntimeCaches(game);
 }
 
@@ -835,7 +845,10 @@ function updateTraining(game: Game) {
     if (!job) continue;
     job.remaining = Math.max(0,job.remaining-1);
     if (job.remaining > 0) continue;
-    if(unitMover(job.unitKind)==="sea" && !nearestShipPose(game.map,createUnit("launch",building.owner,job.unitKind,building.x,building.y),walkableGoal(game.map,building.x,building.y,"sea")))continue;
+    if(unitMover(job.unitKind)==="sea"){
+      const launch=createUnit('launch',building.owner,job.unitKind,building.x,building.y),traffic=shipTraffic(launch,game.units,Infinity);
+      if(!nearestShipPose(game.map,launch,walkableGoal(game.map,building.x,building.y,'sea'),launch,pose=>traffic(pose,pose)))continue;
+    }
     building.queue.shift();
     const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
     // A ship is launched from the shipyard's own water, the nearest to it (see @@@shore-footprint).
@@ -1760,6 +1773,7 @@ function attachItemToUnit(game: Game, item: WorldItem, unit: Unit) {
   const slot=freeItemSlot(game,unit,item.kind);if(!slot)return;
   item.slot=slot;
   item.carrierId = unit.id;
+  delete item.deck;
   invalidateItemIndex(game.items);
   item.x = unit.x;
   item.y = unit.y;
@@ -1780,6 +1794,7 @@ function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x
   invalidateItemIndex(game.items);
   item.x = clamp(x, 0, game.map.width);
   item.y = clamp(y, 0, game.map.height);
+  settleGroundItems(game.items,game.units,game.map);
   if (isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
   refreshEquipmentMass(game);
 }
@@ -3403,7 +3418,7 @@ function keepUnitsOutOfBuildings(game: Game) {
 
 function slideUnits(game: Game) {
   for (const unit of game.units) if (unit.pushX !== undefined) {
-    if(!unit.deck){slide(unit,game.map);continue;}
+    if(!unit.deck){slide(unit,game.map,game.units);continue;}
     const point={x:unit.x+perTick(unit.pushX),y:unit.y+perTick(unit.pushY??0)};
     const at=deckSeparationPoint(game,unit,point);
     Object.assign(unit,{x:at.x,y:at.y});
@@ -3415,16 +3430,8 @@ function slideUnits(game: Game) {
 function separateUnits(game: Game) {
   const cellSize = 80;
   const buckets = new Map<number, { x: number; y: number; units: Unit[] }>();
-  const ships=game.units.filter(unit=>shipProfile(unit));
-  for(let i=0;i<ships.length;i++)for(let j=i+1;j<ships.length;j++){
-    const a=ships[i]!,b=ships[j]!;if(distance(a,b)>(shipProfile(a)!.length+shipProfile(b)!.length)/2)continue;
-    const contact=hullContact(a,b);if(!contact)continue;
-    const mass=bodyMass(a)+bodyMass(b);
-    const aa=hullStep(game.map,a,{x:a.x-contact.x*contact.overlap*bodyMass(b)/mass,y:a.y-contact.y*contact.overlap*bodyMass(b)/mass});
-    const bb=hullStep(game.map,b,{x:b.x+contact.x*contact.overlap*bodyMass(a)/mass,y:b.y+contact.y*contact.overlap*bodyMass(a)/mass});
-    Object.assign(a,aa);Object.assign(b,bb);
-    if(a.pushX!==undefined || b.pushX!==undefined)pushContact(a,b,contact.x,contact.y);
-  }
+  // Hull contact is constrained by advanceShip's swept collision check.
+  // Land separation must never relocate a ship sideways after navigation.
   for (const unit of game.units) {
     if(shipProfile(unit))continue;
     const x = Math.floor(unit.x / cellSize);

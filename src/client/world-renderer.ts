@@ -1,6 +1,6 @@
 import { itemEquipped } from "../shared/equipment";
-import { drawBakedShip,shipDirection,drawShipOcclusion,deckVisualHeight,drawShipFlag,drawShipWeapon } from "./art/baked-ships";
-import { shipProfile,shipPassengers } from "../shared/ship-geometry";
+import { drawBakedShip,drawShipOcclusion,deckVisualHeight,drawShipFlag,drawShipWeapon } from "./art/baked-ships";
+import { localToWorld,shipProfile,shipPassengers } from "../shared/ship-geometry";
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
@@ -390,10 +390,12 @@ function drawBuildingRally(ctx: Brush, building: Building, from: Point, to: Poin
 
 function drawShipGroup(painter:Painter,ship:Unit) {
   const point=worldToScreen(painter,drawnPosition(painter,ship));
-  if(!drawBakedShip(painter.ctx,ship,point,"base")){drawUnits(painter,[ship]);for(const unit of shipPassengers(painter.snapshot.units,ship))drawUnits(painter,[unit]);return;}
+  if(painter.motion && ship.sailing)ship={...ship,sailing:{...ship.sailing,heading:painter.motion.heading(ship,painter.now)}};
+  if(!drawBakedShip(painter.ctx,ship,point,"base")){drawUnits(painter,[ship]);drawItems(painter,painter.snapshot.items,ship);for(const unit of shipPassengers(painter.snapshot.units,ship))drawUnits(painter,[unit]);return;}
   drawBakedShip(painter.ctx,ship,point,"upper");
   drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,undefined,painter.snapshot.items);
   drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner));
+  drawItems(painter,painter.snapshot.items,ship);
   for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y)){drawUnits(painter,[crew]);drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,crew,painter.snapshot.items);drawShipOcclusion(painter.ctx,ship,point,crew);}
   drawUnits(painter,[ship],true);
 }
@@ -453,7 +455,7 @@ function drawnPosition(painter: Painter, unit: Unit): Point {
     const ship = painter.snapshot.units.find(ship => ship.id === unit.deck!.shipId);
     if (ship) {
       const parent = painter.motion ? painter.motion.position(ship, painter.now) : ship;
-      const heading = shipDirection(ship) * Math.PI * 2 / 32, c = Math.cos(heading), s = Math.sin(heading);
+      const heading = painter.motion?.heading(ship,painter.now) ?? ship.sailing?.heading ?? 0, c = Math.cos(heading), s = Math.sin(heading);
       return { x: parent.x + unit.deck.x*c-unit.deck.y*s, y: parent.y + unit.deck.x*s+unit.deck.y*c };
     }
   }
@@ -488,10 +490,13 @@ function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: numbe
   ctx.restore();
 }
 
-function drawItems(painter: Painter, items: WorldItem[]) {
+function drawItems(painter: Painter, items: WorldItem[], ship?: Unit) {
   for (const item of items) {
     if (item.carrierId || item.shipId) continue;
-    const point = worldToScreen(painter, item);
+    if(ship ? item.deck?.shipId!==ship.id : item.deck)continue;
+    const position=ship && item.deck ? localToWorld({...ship,...drawnPosition(painter,ship)},item.deck) : item;
+    const point = worldToScreen(painter, position);
+    if(ship)point.y-=deckVisualHeight(ship);
     if (!nearScreen(painter, point, 42)) continue;
     drawItemGlyph(painter.ctx, item, point, painter.now, false);
   }

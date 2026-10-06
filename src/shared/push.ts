@@ -1,6 +1,7 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { groundUnder, openStep } from "./terrain";
-import { hullStep } from "./ship-navigation";
+import { advanceShip } from "./ship-motion";
+import { detCos, detSin } from "./det-math";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 import { perTick } from "./time";
 import { bodyMass } from "./physical-body";
@@ -96,7 +97,7 @@ export function lungeStrength(striker: Unit, shoved: number) {
 // ground's: a shallow or a bog brakes a slide harder (see groundUnder), so a charge or a shove through one stops short.
 export const MAX_SLIDE_STEP = 24;
 
-export function slide(unit: Unit, map: GameMap) {
+export function slide(unit: Unit, map: GameMap, units:readonly Unit[] = []) {
   const vx = unit.pushX;
   const vy = unit.pushY;
   if (vx === undefined || vy === undefined) return;
@@ -108,6 +109,14 @@ export function slide(unit: Unit, map: GameMap) {
   const capped = perTick(speed - slowing / 2) > MAX_SLIDE_STEP;
   const step = last ? (speed * speed) / (2 * friction) : capped ? MAX_SLIDE_STEP : perTick(speed - slowing / 2);
   const kept = last ? 0 : capped ? Math.sqrt(speed * speed - 2 * friction * MAX_SLIDE_STEP) / speed : (speed - slowing) / speed;
+  if(mover==='sea'){
+    const heading=unit.sailing?.heading ?? 0,c=detCos(heading),s=detSin(heading);
+    const along=vx*c+vy*s;
+    const moved=advanceShip(unit,map,units,{surge:speed?along/speed*step:0});
+    if(!moved || kept===0 || Math.abs(along)<1e-7){unit.pushX=undefined;unit.pushY=undefined;}
+    else{unit.pushX=along*kept*c;unit.pushY=along*kept*s;}
+    return;
+  }
   let px = vx * kept;
   let py = vy * kept;
   let x = speed === 0 ? unit.x : unit.x + (vx / speed) * step;
@@ -121,7 +130,7 @@ export function slide(unit: Unit, map: GameMap) {
     py = 0;
   }
   // A wall spends the part of the slide heading into it (see openStep).
-  const at = mover === "sea" ? hullStep(map,unit,{x,y}) : openStep(map, unit, { x, y }, mover);
+  const at = openStep(map, unit, { x, y }, mover);
   if (at.x !== x) px = 0;
   if (at.y !== y) py = 0;
   unit.x = at.x;

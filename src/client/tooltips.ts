@@ -390,9 +390,9 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
 
 const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
   en: {
-    shipCannon:{title:"Deck Cannon",body:"A tradable naval weapon. Hauling it takes all four carrying positions; installed guns fire automatically.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
-    shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
-    flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
+    shipCannon:{title:"Deck Cannon",body:"A tradable naval weapon. Hauling it takes all four carrying positions; installed guns fire automatically.",stats:[],requirements:["Needs a compatible ship fitting."]},
+    shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],requirements:["Needs a compatible ship fitting."]},
+    flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible ship fitting."]},
     issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[],requirements:[]},
     leatherArmor:{title:"Leather Armor",body:"Reduces incoming damage while worn on the body.",stats:[],requirements:[]},
     roundShield:{title:"Round Shield",body:"Reduces incoming damage while held. Cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},

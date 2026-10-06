@@ -161,11 +161,11 @@ function footholdWant(snapshot: GameSnapshot, owner: PlayerId): NavalWant | unde
 // The water's next step for navalWant: a shipyard (or the coast tower it waits on), a ship, an island's hall.
 function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, assault: AssaultPlan | undefined, plan: IslandPlan | undefined, water: Point, halls: Building[]): NavalWant | undefined {
     if (plan && !islandHallOf(snapshot, owner, plan) && !snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 300)) {
-        const builder = units(snapshot, owner).find(unit => unit.kind === "worker" && sameGround(snapshot.map, unit, plan.mine));
+        const builder = units(snapshot, owner).find(unit => unit.kind === "worker" && !unit.deck && unit.order.type !== 'build' && sameGround(snapshot.map, unit, plan.mine));
         const site = builder && hallSite(snapshot, plan.mine);
         if (builder && site)
             return { id: "naval:islandHall", cost: BUILDING_DEFS.townHall.cost, issue: used => {
-                    if (used.size || units(snapshot, owner).some(unit => unit.order.type === "build"))
+                    if (used.has(builder.id) || builder.order.type === 'build')
                         return undefined;
                     used.add(builder.id);
                     return { type: "build", unitId: builder.id, buildingKind: "townHall", ...site };
@@ -282,8 +282,6 @@ function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
 }
 // The shared library's economy script: the water's next want, when the gold is there.
 export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand | undefined {
-    if (units(snapshot, owner).some(unit => unit.order.type === "build"))
-        return undefined;
     const want = navalWant(snapshot, owner, options);
     const reserve = want && navalReservePurchase(want.id) ? navalBudgetReserve(snapshot, owner, options) : 0;
     return want && playerState(snapshot, owner).gold + reserve >= want.cost ? want.issue(new Set()) : undefined;
@@ -407,7 +405,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
 export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
     const claimed = new Set<string>();
     const outfit = outfitting(snapshot,owner,options);
-    if (outfit) { claimed.add(outfit.workerId); claimed.add(outfit.shipId); }
+    if (outfit) { if(outfit.workerId)claimed.add(outfit.workerId); claimed.add(outfit.shipId); }
     if (groundWholes(snapshot.map) <= 1 && !shipsAfloat(snapshot))
         return claimed;
     const home = buildings(snapshot, owner).find(building => building.kind === "townHall");
@@ -435,7 +433,8 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         const evacuation = evacuationRoute(snapshot, owner, options, boat, halls);
         const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < 320));
         const dryWorkers = own.filter(unit => unit.kind === "worker" && unit.order.type === "idle"
-            && !rich.some(mine => sameGround(map, mine, unit)));
+            && !rich.some(mine => sameGround(map, mine, unit))
+            && !(playerState(snapshot,owner).gold >= BUILDING_DEFS.townHall.cost && snapshot.resources.some(mine=>mine.amount>0 && sameGround(map,mine,unit))));
         const relocation = dryWorkers.flatMap(worker => rich.map(mine => ({ worker, mine, from: coastOnWater(snapshot, worker, boat), to: coastOnWater(snapshot, mine, boat) })))
             .filter(route => route.from && route.to && !sameGround(map, route.worker, route.mine))
             .sort((a, b) => distance(a.worker, boat) - distance(b.worker, boat))[0];
@@ -743,7 +742,7 @@ function hallSite(snapshot: GameSnapshot, mine: Point): Point | undefined {
 // game on the same terrain object took the first one's plans).
 const PLAN_RETRY = seconds(20);
 type Outfit = NonNullable<NavalPlanMemory['outfit']>;
-/** Purchased guns enter the hold directly; installation still needs a nearby worker. */
+/** Purchased guns enter the hold and install directly; a worker is only needed to collect loose equipment. */
 function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Outfit | undefined {
     const memory = navalMemory(options), own = units(snapshot,owner);
     const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
@@ -753,11 +752,11 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     if (job) {
         const ship = own.find(unit => unit.id === job!.shipId), worker = own.find(unit => unit.id === job!.workerId);
         const filled = ship && snapshot.items.some(item => item.shipId === ship.id && item.mountId === job!.mountId);
-        if (!ship || !worker || dangerous(ship) || filled) { delete memory.outfit; job = undefined; }
+        if (!ship || job.workerId && !worker || dangerous(ship) || filled) { delete memory.outfit; job = undefined; }
         else {
             const progress=job.progress;
-            if(!progress || distance(ship,progress)>16 || Math.hypot(worker.x-progress.workerX,worker.y-progress.workerY)>16 || progress.itemId!==job.itemId)
-                job.progress={tick:snapshot.tick,x:ship.x,y:ship.y,workerX:worker.x,workerY:worker.y,...(job.itemId?{itemId:job.itemId}:{})};
+            if(!progress || distance(ship,progress)>16 || worker && Math.hypot(worker.x-progress.workerX,worker.y-progress.workerY)>16 || progress.itemId!==job.itemId)
+                job.progress={tick:snapshot.tick,x:ship.x,y:ship.y,workerX:worker?.x ?? ship.x,workerY:worker?.y ?? ship.y,...(job.itemId?{itemId:job.itemId}:{})};
             else if(snapshot.tick-progress.tick>seconds(30)){
                 delete memory.outfit;memory.outfitRetryUntil=snapshot.tick+seconds(20);return;
             }
@@ -776,14 +775,14 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
             if (!mount) continue;
             const kind = mount.accepts.includes('shipCannon') ? 'shipCannon' : 'shipMortar';
             const worker = own.filter(unit => unit.kind === 'worker' && canEquip(unit) && !unit.deck && unit.order.type !== 'build' && distance(unit,dock) < 550 && !itemsFor(snapshot,unit).length).sort((a,b)=>distance(a,dock)-distance(b,dock))[0];
-            const available = snapshot.items.some(item => item.kind === kind && (item.shipId === ship.id && !item.mountId || !item.carrierId && !item.shipId && distance(item,dock) < 300));
-            if (!worker || !available && playerState(snapshot,owner).gold < SHIP_WEAPONS[kind].cost + navalBudgetReserve(snapshot,owner,options) + 400) continue;
-            job = memory.outfit = {shipId:ship.id,workerId:worker.id,mountId:mount.id,kind}; break;
+            const available = snapshot.items.some(item => item.kind === kind && (item.shipId === ship.id && !item.mountId || worker && !item.carrierId && !item.shipId && distance(item,dock) < 300));
+            if (!available && playerState(snapshot,owner).gold < SHIP_WEAPONS[kind].cost + navalBudgetReserve(snapshot,owner,options) + 400) continue;
+            job = memory.outfit = {shipId:ship.id,...(worker?{workerId:worker.id}:{}),mountId:mount.id,kind}; break;
         }
     }
     if (job) {
-        const item = snapshot.items.find(item => item.id === job!.itemId && (item.carrierId === job!.workerId || item.shipId === job!.shipId || !item.carrierId && !item.shipId))
-            ?? snapshot.items.find(item => item.kind === job!.kind && !item.mountId && (item.carrierId === job!.workerId || item.shipId === job!.shipId || !item.carrierId && !item.shipId && distance(item,dock)<300));
+        const item = snapshot.items.find(item => item.id === job!.itemId && (job!.workerId && item.carrierId === job!.workerId || item.shipId === job!.shipId || job!.workerId && !item.carrierId && !item.shipId))
+            ?? snapshot.items.find(item => item.kind === job!.kind && !item.mountId && (job!.workerId && item.carrierId === job!.workerId || item.shipId === job!.shipId || job!.workerId && !item.carrierId && !item.shipId && distance(item,dock)<300));
         if (item) job.itemId = item.id; else delete job.itemId;
         if (!item && playerState(snapshot,owner).gold < SHIP_WEAPONS[job.kind].cost + navalBudgetReserve(snapshot,owner,options) + 400) { delete memory.outfit; return; }
     }
@@ -792,27 +791,26 @@ function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
 function outfitCommands(snapshot: GameSnapshot, owner: PlayerId, job: Outfit): GameCommand[] {
     const worker = snapshot.units.find(unit=>unit.id===job.workerId)!, ship = snapshot.units.find(unit=>unit.id===job.shipId)!;
     const dock = buildings(snapshot,owner).find(building=>building.kind==='shipyard' && building.complete)!;
-    const commands: GameCommand[] = [], berth = boardingBerth(snapshot.map,worker,ship);
-    if (berth && distance(ship,berth)>8) { if (needsMove(ship,berth)) commands.push({type:'move',unitIds:[ship.id],...berth}); }
-    else if (ship.order.type!=='idle') commands.push({type:'stop',unitIds:[ship.id]});
+    const commands: GameCommand[] = [];
     const item = snapshot.items.find(item=>item.id===job.itemId);
-    if (!item) return commands;
+    if (!item) {
+        if(!('placement' in purchasePlacement(snapshot,owner,dock,job.kind,ship.id)) && needsMove(ship,dock))commands.push({type:'move',unitIds:[ship.id],x:dock.x,y:dock.y});
+        return commands;
+    }
     if (!item.carrierId && !item.shipId) {
-        if (freeItemSlot(snapshot,worker,item.kind) && (worker.order.type !== 'pickupItem' || worker.order.itemId !== item.id)) commands.push({type:'pickupItem',unitId:worker.id,itemId:item.id});
+        if(worker && freeItemSlot(snapshot,worker,item.kind) && (worker.order.type !== 'pickupItem' || worker.order.itemId !== item.id))commands.push({type:'pickupItem',unitId:worker.id,itemId:item.id});
         return commands;
     }
-    const destination = {shipId:ship.id,mountId:job.mountId,installerId:worker.id};
-    if (canExchange(snapshot,worker,ship)) {
-        const blocked = snapshot.units.filter(unit=>unit.deck?.shipId===ship.id && Math.hypot(unit.deck.x-shipMounts(ship).find(m=>m.id===job.mountId)!.x,unit.deck.y-shipMounts(ship).find(m=>m.id===job.mountId)!.y)<unit.radius+shipMounts(ship).find(m=>m.id===job.mountId)!.radius+1);
-        for (const crew of blocked.filter(unit=>unit.owner===owner)) {
-            const spot = deckPlacement(ship,crew,snapshot.units,{x:-shipProfile(ship)!.length*.25,y:0});
-            if (spot) commands.push({type:'move',unitIds:[crew.id],...localToWorld(ship,spot)});
+    const destination = {shipId:ship.id,mountId:job.mountId};
+    if(item.shipId===ship.id || worker && canExchange(snapshot,worker,ship)) {
+        const mount=shipMounts(ship).find(m=>m.id===job.mountId)!;
+        const blocked=snapshot.units.filter(unit=>unit.deck?.shipId===ship.id && Math.hypot(unit.deck.x-mount.x,unit.deck.y-mount.y)<unit.radius+mount.radius+1);
+        for(const crew of blocked.filter(unit=>unit.owner===owner)) {
+            const spot=deckPlacement(ship,crew,snapshot.units,{x:-shipProfile(ship)!.length*.25,y:0});
+            if(spot)commands.push({type:'move',unitIds:[crew.id],...localToWorld(ship,spot)});
         }
-        if (!blocked.length && !transferRefusal(snapshot,owner,item.id,destination)) commands.push({type:'transferItem',itemId:item.id,destination});
-    } else {
-        if(worker.order.type!=='board' || worker.order.transportId!==ship.id)commands.push({type:'board',unitIds:[worker.id],transportId:ship.id});
-        return commands;
-    }
+        if(!blocked.length && !transferRefusal(snapshot,owner,item.id,destination))commands.push({type:'transferItem',itemId:item.id,destination});
+    } else if(worker && (worker.order.type!=='board' || worker.order.transportId!==ship.id))commands.push({type:'board',unitIds:[worker.id],transportId:ship.id});
     return commands;
 }
 function navalMemory(options: AiPolicyContext) {

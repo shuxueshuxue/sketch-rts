@@ -1,4 +1,4 @@
-import { bakedAssetsVersion } from "./art/baked-assets";
+import { paintPortrait } from './portrait-cache';
 import { healthBarColor } from "./health-bars";
 /** Presentation only: the match controller supplies identity, artwork and commands.
  * Keep nodes alive across simulation frames so focus, scroll and pointer presses survive. */
@@ -31,10 +31,7 @@ function text(className: string) {
   const node = document.createElement("span"); node.className = className; return node;
 }
 function paint(node: HTMLCanvasElement, art: HudArt) {
-  const key = `${art.key}:${bakedAssetsVersion()}`;
-  if (node.dataset.artKey === key) return;
-  node.getContext("2d")!.clearRect(0, 0, node.width, node.height);
-  art.paint(node); node.dataset.artKey = key;
+  paintPortrait(node,art.key,art.paint);
 }
 
 export class BattleHudSelection {

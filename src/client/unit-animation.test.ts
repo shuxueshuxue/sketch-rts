@@ -11,6 +11,17 @@ const soldier = (overrides: Partial<Unit> = {}): Unit => ({
 const snap = (tick: number, ...units: Unit[]) => ({ tick, units });
 
 describe("unit pose history", () => {
+  it("keeps carried crew idle while their ship translates and turns, but animates real deck walking",()=>{
+    const tracker=new UnitAnimationTracker(),unit=soldier({deck:{shipId:'boat',x:18,y:-5}});
+    tracker.update(snap(1,unit),0);
+    unit.x+=3;unit.y+=2;tracker.update(snap(2,unit),50);
+    expect(tracker.frame(unit,75)).toEqual(IDLE_FRAME);
+    unit.x+=2;unit.y-=1;tracker.update(snap(3,unit),100);
+    expect(tracker.frame(unit,125)).toEqual(IDLE_FRAME);
+    unit.deck!.x+=2;tracker.update(snap(4,unit),150);
+    expect(tracker.frame(unit,175).mode).toBe('walk');
+  });
+
   it("animates observed movement, not blocked move/attack orders", () => {
     const tracker = new UnitAnimationTracker();
     const unit = soldier({ order: { type: "attack", targetId: "foe" } });
