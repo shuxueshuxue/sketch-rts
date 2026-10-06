@@ -55,7 +55,7 @@ export function cannonRecoil(effects:readonly WorldEffect[],shipId:string,itemId
   const age=(shot.duration-shot.remaining)/SIM_TICKS_PER_SECOND;
   return 4*Math.max(0,age<.08?age/.08:1-(age-.08)/.38);
 }
-/** Only the barrel recoils. Hulls, sails and passengers keep their physical position. */
+/** The gun and its carriage recoil. Hulls, sails and crew retain their physical position. */
 export function drawShipWeapon(ctx:Brush,ship:Unit,at:Point,effects:readonly WorldEffect[],crew?:Unit,items?:readonly WorldItem[]) {
   const profile=shipProfile(ship);if(!profile)return;
   if(items){for(const item of installedWeapons({items},ship)){const pose=mountedWeaponPose(ship,item);if(pose)drawGun(ctx,ship,at,effects,pose,pose.art,crew,item);}}

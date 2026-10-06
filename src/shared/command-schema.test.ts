@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { isCommandEnvelope, isGameCommand } from "./command-schema";
 
 describe("shared command payload schema", () => {
+  it('accepts an explicit withdrawal and rejects malformed reaction flags',()=>{
+    for(const type of ['move','unload']){
+      expect(isGameCommand({type,unitIds:['ship'],x:10,y:20,avoidCombat:true})).toBe(true);
+      expect(isGameCommand({type,unitIds:['ship'],x:10,y:20,avoidCombat:'false'})).toBe(false);
+    }
+  });
   it("accepts typed game commands used by REST and WebSocket ingress", () => {
     expect(isGameCommand({ type: "move", unitIds: ["worker"], x: 10, y: 20 })).toBe(true);
     expect(isGameCommand({ type: "unloadPassenger", transportId: "ferry", passengerId: "worker" })).toBe(true);

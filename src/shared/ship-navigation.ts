@@ -5,7 +5,7 @@ import type { GameMap, Unit } from "./types";
 import { convexHull, expandConvex, polygonPlanes, polygonTouchesCell } from './navigation-math';
 import preparedMasks from './generated/ship-navigation-masks.json';
 import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
-import { shipScale } from './ship-geometry';
+import { shipScale, DEFAULT_SHIP_SCALE } from './ship-geometry';
 export type ShipPose = Point & {
   heading: number;
 };
@@ -112,7 +112,7 @@ export function hullStep(map: SeaMap, ship: Unit, point: Point): Point {
   return { x: from.x + (to.x - from.x) * low, y: from.y + (to.y - from.y) * low };
 }
 /** Only creation / old authored placements relocate: normal sailing always follows a swept, continuous passage. */
-export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin: Point = ship): ShipPose | undefined {
+export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin: Point = ship, accepts:(pose:ShipPose)=>boolean=()=>true): ShipPose | undefined {
   const preferred = ship.sailing?.heading ?? 0;
   const seaStart = isWalkable(map, seaOrigin.x, seaOrigin.y, "sea") ? seaOrigin : walkableGoal(map, seaOrigin.x, seaOrigin.y, "sea");
   const headings = [preferred, ...Array.from({ length: DIRECTIONS }, (_, i) => i * ANGLE)];
@@ -120,10 +120,10 @@ export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin
     const hull = outline(shipProfile(ship)!.hull, { x: 0, y: 0, heading: preferred });
     const x = Math.max(-Math.min(...hull.map(p => p.x)), Math.min(map.width - Math.max(...hull.map(p => p.x)), point.x));
     const y = Math.max(-Math.min(...hull.map(p => p.y)), Math.min(map.height - Math.max(...hull.map(p => p.y)), point.y));
-    return hullFits(map, ship, { x, y, heading: preferred }) ? { x, y, heading: preferred } : undefined;
+    return hullFits(map, ship, { x, y, heading: preferred }) && accepts({x,y,heading:preferred}) ? { x, y, heading: preferred } : undefined;
   }
   for (const heading of headings)
-    if (hullFits(map, ship, { ...point, heading }) && sameGround(map, seaStart, point, "sea"))
+    if (hullFits(map, ship, { ...point, heading }) && accepts({...point,heading}) && sameGround(map, seaStart, point, "sea"))
       return { ...point, heading };
   const t = map.terrain, col = Math.max(0, Math.min(t.cols - 1, Math.floor(point.x / t.cell))), row = Math.max(0, Math.min(t.rows - 1, Math.floor(point.y / t.cell)));
   for (let ring = 0; ring <= Math.max(t.cols, t.rows); ring++) {
@@ -137,7 +137,7 @@ export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin
           continue;
         for (const heading of headings) {
           const value = Math.hypot(at.x - point.x, at.y - point.y) + Math.abs(headingDifference(preferred, heading)) * .001;
-          if (value < score && hullFits(map, ship, { ...at, heading })) {
+          if (value < score && hullFits(map, ship, { ...at, heading }) && accepts({...at,heading})) {
             best = { ...at, heading };
             score = value;
           }
@@ -186,7 +186,7 @@ function gridFor(map: SeaMap, ship: Unit) {
     const stride = 1;
     const cell = t.cell * stride, cols = Math.ceil(map.width / cell), rows = Math.ceil(map.height / cell);
     const size = cols * rows * DIRECTIONS;
-    const masks = t.cell === 32 && shipScale(ship) === 1 ? preparedMasks[ship.kind as keyof typeof preparedMasks] as OccupancyMask[][] : buildNavigationMasks(shipProfile(ship)!.hull, t.cell);
+    const masks = t.cell === 32 && shipScale(ship) === DEFAULT_SHIP_SCALE ? preparedMasks[ship.kind as keyof typeof preparedMasks] as OccupancyMask[][] : buildNavigationMasks(shipProfile(ship)!.hull, t.cell);
     grid = { cells: t.cells, cell, cols, rows, masks, fits: new Int8Array(size), turns: new Int8Array(size * 2), moves: new Int8Array(size * 4) };
     if (group.size >= 32)
       group.delete(group.keys().next().value!);
@@ -255,27 +255,35 @@ class Frontier {
   }
 }
 /** Heading-aware water routing. A long, narrow hull can pass a channel that it cannot turn inside. */
-export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
+export function shipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true): ShipPose[] {
+  return planShipRoute(map,ship,goal,trafficClear).points;
+}
+/** A deterministic expansion budget bounds temporary traffic searches. Partial
+ * routes remain journeys, never arrivals at the requested destination. */
+export function planShipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity): {points:ShipPose[];partial:boolean} {
   const t = map.terrain;
   if (!t)
-    return [{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }];
+    return {points:[{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }],partial:false};
   const grid = gridFor(map, ship), size = grid.fits.length;
   const lattice = grid;
+  const trafficFits=new Int8Array(size);
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
   const fits = (id: number) => {
     if (!grid.fits[id])
       grid.fits[id] = maskFits(map, grid, id, grid.masks[id % DIRECTIONS]![0]!) ? 1 : -1;
-    return grid.fits[id] === 1;
+    if(grid.fits[id]!==1)return false;
+    if(!trafficFits[id]){const at=pose(id);trafficFits[id]=trafficClear(at,at)?1:-1;}
+    return trafficFits[id]===1;
   };
-  const target = nearestShipPose(map, ship, goal);
+  const target = nearestShipPose(map, ship, goal,ship,pose=>trafficClear(pose,pose));
   if (!target)
-    return [];
+    return {points:[],partial:false};
   const length = shipProfile(ship)!.length;
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
   const desired = Math.round(Math.atan2(target.y - ship.y, target.x - ship.x) * 1e9) / 1e9;
   const turned = { ...start, heading: desired }, direct = { x: target.x, y: target.y, heading: desired };
-  if (hullPassageClear(map, ship, start, turned) && hullPassageClear(map, ship, turned, direct))
-    return [direct];
+  if (hullPassageClear(map, ship, start, turned) && hullPassageClear(map, ship, turned, direct) && trafficClear(start,turned) && trafficClear(turned,direct))
+    return {points:[direct],partial:false};
   const workspace = searchWorkspace(size), { costs, parents: previous, stamps, generation } = workspace, frontier = new Frontier();
   const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
   const setCost = (id: number, value: number, parent: number) => { stamps[id] = generation; costs[id] = value; previous[id] = parent; };
@@ -288,25 +296,26 @@ export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
         if (!fits(id))
           continue;
         if (!startTurns[h])
-          startTurns[h] = hullPassageClear(map, ship, start, { ...start, heading: p.heading }) ? 1 : -1;
-        if (startTurns[h] !== 1 || !hullPassageClear(map, ship, { ...start, heading: p.heading }, p))
+          startTurns[h] = hullPassageClear(map, ship, start, { ...start, heading: p.heading }) && trafficClear(start,{...start,heading:p.heading}) ? 1 : -1;
+        if (startTurns[h] !== 1 || !hullPassageClear(map, ship, { ...start, heading: p.heading }, p) || !trafficClear({...start,heading:p.heading},p))
           continue;
         const g = Math.hypot(p.x - ship.x, p.y - ship.y) + Math.abs(headingDifference(start.heading, p.heading)) * length / 2;
         setCost(id, g, -1);
         frontier.push({ id, cost: g, score: g + Math.hypot(p.x - target.x, p.y - target.y) });
       }
-  let best = -1, bestGap = Infinity;
+  let best = -1, bestGap = Infinity,visited=0,partial=false;
   while (frontier.items.length) {
     const next = frontier.pop();
     if (next.cost !== cost(next.id))
       continue;
     const id = next.id, p = pose(id), h = id % DIRECTIONS, cell = Math.floor(id / DIRECTIONS), x = cell % lattice.cols, y = Math.floor(cell / lattice.cols);
+    if(++visited>budget){best=id;partial=true;break;}
     const gap = Math.hypot(p.x - target.x, p.y - target.y);
     if (gap < bestGap || (gap === bestGap && cost(id) < (best < 0 ? Infinity : cost(best)))) {
       best = id;
       bestGap = gap;
     }
-    if (gap <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: p.heading }) && hullPassageClear(map, ship, p, { ...target, heading: p.heading })) {
+    if (gap <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: p.heading }) && hullPassageClear(map, ship, p, { ...target, heading: p.heading }) && trafficClear(p,{...target,heading:p.heading})) {
       best = id;
       break;
     }
@@ -316,7 +325,7 @@ export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
         return;
       if (!slot[index])
         slot[index] = maskFits(map, grid, id, mask) ? 1 : -1;
-      if (slot[index] !== 1)
+      if (slot[index] !== 1 || !trafficClear(p,pose(to)))
         return;
       setCost(to, value, id);
       const at = pose(to);
@@ -332,7 +341,7 @@ export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
     }
   }
   if (best < 0)
-    return [];
+    return {points:[],partial:false};
   const path: ShipPose[] = [];
   for (let at = best; at >= 0; at = previous[at]!)
     path.push(pose(at));
@@ -341,7 +350,7 @@ export function shipRoute(map: SeaMap, ship: Unit, goal: Point): ShipPose[] {
   if (Math.abs(headingDifference(start.heading, first.heading)) > 1e-7)
     path.unshift({ ...start, heading: first.heading });
   const end = path[path.length - 1]!;
-  if (Math.hypot(end.x - target.x, end.y - target.y) <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: end.heading }) && hullPassageClear(map, ship, end, { ...target, heading: end.heading }))
+  if (Math.hypot(end.x - target.x, end.y - target.y) <= lattice.cell * 1.5 && hullFits(map, ship, { ...target, heading: end.heading }) && hullPassageClear(map, ship, end, { ...target, heading: end.heading }) && trafficClear(end,{...target,heading:end.heading}))
     path.push({ ...target, heading: end.heading });
-  return path;
+  return {points:path,partial};
 }

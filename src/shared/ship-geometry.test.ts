@@ -35,7 +35,7 @@ describe("shared ship model geometry", () => {
   it("derives variant mass and mission capacity from their physical scale", () => {
     const soldier = createUnit("soldier", "player", "footman", 0, 0);
     expect(bodyMass({ ...soldier, radius: soldier.radius*2 })).toBe(bodyMass(soldier)*8);
-    const ship = createUnit("hull", "player", "carrier", 0, 0);
+    const ship = {...createUnit("hull", "player", "carrier", 0, 0),deckScale:1};
     const scaled = shipProfile({ ...ship, deckScale: 2 })!;
     expect(scaled.loadCapacity).toBe(shipProfile(ship)!.loadCapacity*4);
     expect(scaled.hullMass).toBe(shipProfile(ship)!.hullMass*8);

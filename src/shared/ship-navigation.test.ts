@@ -3,8 +3,8 @@ import { boardUnit } from "./decks";
 import { createUnit } from "./map";
 import { landingSpot } from "./naval";
 import { shove, slide } from "./push";
-import { hullFits, hullPassageClear, hullStep, nearestShipPose, shipRoute } from "./ship-navigation";
-import { distanceToHull, hullContact, shipPassengers } from "./ship-geometry";
+import { hullFits, hullPassageClear, hullStep, nearestShipPose, shipRoute, planShipRoute } from "./ship-navigation";
+import { distanceToHull, hullContact, shipPassengers, shipProfile } from "./ship-geometry";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { setBuildingBodies } from "./terrain";
@@ -29,6 +29,16 @@ const ship = (kind: "transport" | "carrier", col: number, row: number) => create
 const pose = (unit: Unit, heading = unit.sailing?.heading ?? 0) => ({ x: unit.x, y: unit.y, heading });
 
 describe("full hull water navigation", () => {
+  it('continues a budgeted route past its intermediate endpoint and preserves it through a save',()=>{
+    const g=game(island()),boat=g.spawnUnit('player','transport',at(6,10).x,at(6,10).y),goal=at(22,10);
+    issuePlayerCommand(g,'player',{type:'move',unitIds:[boat.id],...goal,avoidCombat:true});
+    const first=planShipRoute(g.map,boat,goal,()=>true,1);expect(first.partial).toBe(true);
+    boat.sailing!.route={goalX:goal.x,goalY:goal.y,...first,end:first.points.at(-1)!,trafficKey:'',startX:boat.x,startY:boat.y,startHeading:boat.sailing!.heading};
+    const restored=game(island());restoreSnapshotIntoGame(restored,snapshotGame(g),g.nextId);
+    for(let tick=0;tick<seconds(80);tick++){stepGame(g);stepGame(restored);}
+    expect(Math.hypot(boat.x-goal.x,boat.y-goal.y)).toBeLessThan(5);
+    expect(boat.order.type).toBe('idle');expect(checksumGame(g)).toBe(checksumGame(restored));
+  });
   it("detects an obstructing cell crossed by an edge even when no hull vertex is in it", () => {
     const water = map((x, y) => x === 12 && y === 9 ? "." : "~");
     const boat = ship("transport", 12, 10);
@@ -87,7 +97,7 @@ describe("full hull water navigation", () => {
   });
   it("can maneuver away from a parallel berth before turning seaward", () => {
     const g = game(map(x => x < 10 ? "." : "~")), vessel = g.spawnUnit("player", "transport", at(11, 10).x, at(11, 10).y);
-    vessel.x = 10 * 32 + 42; vessel.sailing!.heading = Math.PI / 2;
+    vessel.x = 10 * 32 + shipProfile(vessel)!.beam/2+2; vessel.sailing!.heading = Math.PI / 2;
     expect(hullFits(g.map, vessel)).toBe(true);
     issuePlayerCommand(g, "player", { type: "move", unitIds: [vessel.id], ...at(20, 10) });
     for (let i = 0; i < seconds(30); i++) { stepGame(g); expect(hullFits(g.map, vessel)).toBe(true); }

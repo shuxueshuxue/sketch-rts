@@ -48,7 +48,7 @@ export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEf
         ctx.moveTo(previous.head.x, previous.head.y);
         ctx.lineTo(frame.head.x, frame.head.y);
         ctx.stroke();
-        ctx.fillStyle = "#525751";
+        ctx.fillStyle = effect.attackKind === "fire" ? "#d77e37" : "#525751";
         ctx.strokeStyle = "#d0c6a4";
         ctx.lineWidth = .8;
         ctx.beginPath();
@@ -61,7 +61,7 @@ export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEf
         const head = { x: from.x + dx * p, y: from.y + dy * p };
         ctx.translate(head.x, head.y);
         ctx.rotate(Math.atan2(dy, dx));
-        if(effect.sourceKind && SHIP_KINDS.includes(effect.sourceKind as never)){
+        if(effect.attackKind === "cannon" || !effect.attackKind && effect.sourceKind && SHIP_KINDS.includes(effect.sourceKind as never)){
             ctx.strokeStyle="#ded4bd88";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(-4,0);ctx.stroke();
             ctx.fillStyle="#28343a";ctx.strokeStyle="#ede0b8";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();
             ctx.restore();return true;
@@ -87,7 +87,7 @@ export function drawWarfareEffect(ctx: CanvasRenderingContext2D, effect: WorldEf
         ctx.stroke();
     }
     else if (effect.type === "grapeshot") {
-        const dx = to.x - from.x, dy = to.y - from.y, len = Math.hypot(dx, dy) || 1, angle = Math.atan2(dy, dx), fire = effect.sourceKind === "fireShip";
+        const dx = to.x - from.x, dy = to.y - from.y, len = Math.hypot(dx, dy) || 1, angle = Math.atan2(dy, dx), fire = effect.attackKind === "flame" || !effect.attackKind && effect.sourceKind === "fireShip";
         ctx.translate(from.x, from.y);
         ctx.rotate(angle);
         ctx.globalAlpha = life * .8;

@@ -14,6 +14,15 @@ const effect = (id: string, type: WorldEffect["type"], extra: Partial<WorldEffec
 const ids = (before: GameSnapshot, after: GameSnapshot) => soundCues(before, after, "player").map((cue) => cue.id);
 
 describe("sound cues", () => {
+  it('uses the launched weapon identity even when the hull or its fittings differ',()=>{
+    const shots=later(next=>next.effects.push(
+      effect('swapped','siegeBolt',{sourceKind:'fireShip',attackKind:'cannon',fromX:10,fromY:20}),
+      effect('flame','grapeshot',{sourceKind:'warship',attackKind:'flame'}),
+      effect('stone','projectile',{sourceKind:'bombardShip',attackKind:'stone'}),
+      effect('magic','projectile',{sourceKind:'priest',attackKind:'magic'}),
+      effect('landed','hit',{sourceKind:'fireShip',attackKind:'cannon',unitId:'target'})));
+    expect(soundCues(start,shots,'player').map(cue=>cue.id)).toEqual(['cannonShot','flameShot','stoneShot','spellShot','shipHit']);
+  });
   it("hears a melee blow by its striker's kind, once, and no spell or swipe", () => {
     const struck = later((next) =>
       next.effects.push(

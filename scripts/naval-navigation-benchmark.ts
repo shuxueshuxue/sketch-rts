@@ -12,7 +12,7 @@ const game=createGame("brokenSea",{players,aiPlayers,teams:Object.fromEntries(pl
 const initializedMs=performance.now()-createdAt;
 const runtime=new CommandFrameRuntime({game,roomId:"navigation-benchmark",rejectionLabel:"navigation-benchmark",aiPlanner:createPresetAiRuntimeFramePlanner(game,createAiRuntime(aiPlayers,{versions:{"ai-v5":"v5","ai-v7":"v7","ai-v8":"v8"}}))});
 const samples:number[]=[];let firstStepMs=0,worstStep=0,peakMs=0;
-for(let i=0;i<seconds(15*60)&&!game.match.winner;i++){
+for(let i=0;i<seconds(Number(process.argv[2] ?? 15*60))&&!game.match.winner;i++){
   const start=performance.now();runtime.tick([]);const ms=performance.now()-start;
   if(i===0)firstStepMs=ms;
   else {samples.push(ms);if(ms>peakMs){peakMs=ms;worstStep=game.tick;}}

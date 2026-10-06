@@ -1,3 +1,4 @@
+import type { AttackKind } from "../shared/attack-presentation";
 import { UNIT_DEFS } from "../shared/catalog";
 import { RANGED_ATTACK_RANGE_THRESHOLD } from "../shared/sim";
 import type { GameSnapshot, PlayerId, UnitKind, WorldEffect } from "../shared/types";
@@ -13,6 +14,8 @@ export type SoundCue = { id: SoundEvent; x: number; y: number; kind?: UnitKind }
 // Who looses arrows: the bowmen and the defense tower. Casters' bolts, dragons' fire and ships' guns are not arrows.
 const ARCHERS = new Set<string>(["archer", "sparkArcher", "contractArcher", "horseArcher", "thornSlinger", "murlocHunter", "defenseTower"]);
 
+const SHOT_SOUNDS: Partial<Record<AttackKind, SoundEvent>> = { arrow:"arrowShot", spear:"arrowShot", stone:"stoneShot", magic:"spellShot", fire:"flameShot", bolt:"boltShot", cannon:"cannonShot", mortar:"mortarShot", flame:"flameShot", grapeshot:"grapeshotShot" };
+
 export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: PlayerId): SoundCue[] {
   if (after.tick <= before.tick) return [];
   const cues: SoundCue[] = [];
@@ -23,6 +26,13 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     // A projectile effect carrying its shooter is the shot leaving; a hit carries whose weapon dealt it.
     if (["board", "unload"].includes(effect.type)) { if (effect.owner === listener) cues.push({ id: effect.type as "board" | "unload", ...at, kind: effect.sourceKind as UnitKind }); }
     else if (["heal", "summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
+    else if (effect.attackKind && ["projectile","siegeBolt","shellFlight","grapeshot"].includes(effect.type)) {
+      const id=SHOT_SOUNDS[effect.attackKind];if(id)cues.push({id,x:effect.fromX ?? effect.x,y:effect.fromY ?? effect.y});
+    }
+    else if (effect.attackKind && effect.type==="hit") {
+      const id=effect.attackKind==="melee" ? "melee" : effect.attackKind==="arrow" || effect.attackKind==="spear" || effect.attackKind==="bolt" ? "arrowHit" : effect.attackKind==="cannon" || effect.attackKind==="mortar" || effect.attackKind==="grapeshot" ? "shipHit" : "impact";
+      cues.push({id,...at,...(effect.attackKind==="melee" ? {kind:effect.sourceKind as UnitKind} : {})});
+    }
     else if (effect.sourceKind in UNIT_DEFS && UNIT_DEFS[effect.sourceKind as UnitKind].naval && ["projectile", "grapeshot", "siegeBolt", "shellFlight"].includes(effect.type)) cues.push({ id: "shipShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y, kind: effect.sourceKind as UnitKind });
     else if (effect.sourceKind in UNIT_DEFS && UNIT_DEFS[effect.sourceKind as UnitKind].naval && effect.type === "hit") cues.push({ id: "shipHit", ...at, kind: effect.sourceKind as UnitKind });
     else if (effect.type === "projectile" && ARCHERS.has(effect.sourceKind)) cues.push({ id: "arrowShot", x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
