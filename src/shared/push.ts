@@ -1,5 +1,6 @@
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { groundUnder, openStep } from "./terrain";
+import { hullStep } from "./ship-navigation";
 import type { GameMap, MeleeStance, Unit, UnitKind } from "./types";
 import { perTick } from "./time";
 import { bodyMass } from "./physical-body";
@@ -120,7 +121,7 @@ export function slide(unit: Unit, map: GameMap) {
     py = 0;
   }
   // A wall spends the part of the slide heading into it (see openStep).
-  const at = openStep(map, unit, { x, y }, mover);
+  const at = mover === "sea" ? hullStep(map,unit,{x,y}) : openStep(map, unit, { x, y }, mover);
   if (at.x !== x) px = 0;
   if (at.y !== y) py = 0;
   unit.x = at.x;

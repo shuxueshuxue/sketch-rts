@@ -4,6 +4,7 @@ import { isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } f
 import type { Building, GameMap, Obstacle, Unit } from "./types";
 import { deckPlacement } from "./decks";
 import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
+import { nearestShipPose } from "./ship-navigation";
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
 // soldier strikes a ship that has come in to the shallows, where it can wade out to it, and not one out on deep water; an
@@ -19,14 +20,14 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
     const ship = units.find(unit => unit.id === attacker.deck!.shipId);
     const stand = ship && deckPlacement(ship, attacker, units, worldToLocal(ship,target), false);
     const at = ship && stand ? localToWorld(ship,stand) : attacker;
-    return Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius) <= attacker.attackRange;
+    return ("order" in target && shipProfile(target)?distanceToHull(target,at):Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius)) <= attacker.attackRange;
   }
   if (!map.terrain) return true;
   const mover = unitMover(attacker.kind);
   if (isWalkable(map, target.x, target.y, mover) && sameGround(map, attacker, target, mover)) return true;
   // A building is reached at its wall (see @@@building-reach), a unit at its center.
   const stand = walkDestination(map, attacker, walkableGoal(map, target.x, target.y, mover), mover);
-  return Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius) <= attacker.attackRange;
+  return ("order" in target && shipProfile(target)?distanceToHull(target,stand):Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius)) <= attacker.attackRange;
 }
 
 // @@@transport - Crew remain ordinary live units on a moving deck. Circles must fit
@@ -59,27 +60,46 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
   }
   for (const point of candidates.sort((a,b) => a.score-b.score)) {
     const land = walkDestination(map, passenger, point);
-    const sea = walkDestination(map, transport, point, "sea");
-    if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && Math.hypot(sea.x-point.x, sea.y-point.y) < 1)
-      return { x: point.x, y: point.y };
+    const sea = nearestShipPose(map,transport,point);
+    if(!sea)continue;
+    const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
+    if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP)return {x:sea.x,y:sea.y};
   }
   const land = walkDestination(map, passenger, walkableGoal(map, transport.x, transport.y));
-  const sea = walkDestination(map, transport, walkableGoal(map, land.x, land.y, "sea"), "sea");
-  return Math.hypot(land.x-sea.x, land.y-sea.y) <= passenger.radius+transport.radius+BOARDING_GAP ? sea : undefined;
+  const sea = nearestShipPose(map,transport,walkableGoal(map,land.x,land.y,"sea"));
+  if(!sea)return undefined;
+  const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
+  return distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP ? {x:sea.x,y:sea.y} : undefined;
 }
 
 // Where the transport's passenger number `index` of `count` steps ashore: the land nearest a point on the transport's side,
 // the passengers spread round it; undefined when no land is near enough.
-export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, index: number, count: number) {
+export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, index: number, count: number, units:readonly Unit[]=[], passenger?:Unit) {
   const angle = (index / Math.max(1, count)) * Math.PI * 2;
   const profile=shipProfile(transport);
-  const edge=localToWorld(transport,{x:detCos(angle)*(profile?.length ?? transport.radius*2)/2,y:detSin(angle)*(profile?.beam ?? transport.radius*2)/2});
-  const spot = walkableGoal(map, edge.x,edge.y,"land");
-  return distanceToHull(transport,spot)<=LANDING_REACH ? spot : undefined;
+  const radius=passenger?.radius??12;
+  const edge=localToWorld(transport,{x:detCos(angle)*((profile?.length ?? transport.radius*2)/2+radius+2),y:detSin(angle)*((profile?.beam ?? transport.radius*2)/2+radius+2)});
+  const shore=transport.order.type==="unload"?walkableGoal(map,transport.order.x,transport.order.y):undefined;
+  const preferred=shore??edge;
+  const clear=(p:{x:number;y:number})=>p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height
+    && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))
+    && distanceToHull(transport,p)>=radius+1 && distanceToHull(transport,p)<=LANDING_REACH
+    && !units.some(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land"&&Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  const nearest=walkableGoal(map,preferred.x,preferred.y);
+  if(clear(nearest))return nearest;
+  const span=(profile?.length??transport.radius*2)/2+LANDING_REACH;
+  const step=map.terrain?map.terrain.cell/4:Math.max(8,radius);
+  let best:{x:number;y:number}|undefined,score=Infinity;
+  for(let y=Math.max(step/2,Math.floor((transport.y-span)/step)*step+step/2);y<Math.min(map.height,transport.y+span);y+=step)
+    for(let x=Math.max(step/2,Math.floor((transport.x-span)/step)*step+step/2);x<Math.min(map.width,transport.x+span);x+=step) {
+      const p={x,y},value=Math.hypot(x-preferred.x,y-preferred.y);
+      if(value<score && clear(p)){best=p;score=value;}
+    }
+  return best;
 }
 
 export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, passengerId: string, units: readonly Unit[] = []) {
   const passengers = transport.cargo ?? shipPassengers(units,transport);
   const index = passengers.findIndex(passenger => passenger.id === passengerId);
-  return index < 0 ? undefined : landingSpot(map, transport, index, passengers.length);
+  return index < 0 ? undefined : landingSpot(map, transport, index, passengers.length,units,passengers[index]);
 }

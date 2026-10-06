@@ -14,8 +14,9 @@ import { alongside, boardingBerth, canReach, carries, landingSpot } from "./nava
 import { detCos, detSin } from "./det-math";
 import { boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks } from "./decks";
 import { bodyMass } from "./physical-body";
-import { circleInPolygon, hullContact, localToWorld, shipPassengers, shipProfile, worldToLocal } from "./ship-geometry";
-import { sailToward } from "./sailing";
+import { circleInPolygon, distanceToHull, hullContact, localToWorld, shipPassengers, shipProfile, worldToLocal } from "./ship-geometry";
+import { keepShipsOnWater, sailToward } from "./sailing";
+import { hullStep, nearestShipPose } from "./ship-navigation";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
@@ -46,6 +47,7 @@ export type Game = GameSnapshot & {
   teams: Record<PlayerId, string>;
   unitSpatial?: SpatialIndex<Unit>;
   unitSpatialByTeam?: Map<string, SpatialIndex<Unit>>;
+  shipReachPadding?: number;
   buildingSpatial?: SpatialIndex<Building>;
   buildingSpatialByTeam?: Map<string, SpatialIndex<Building>>;
   buildingSpatialCount?: number;
@@ -177,6 +179,10 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
       // on the nearest water.
       const at = walkableGoal(this.map, x, y, unitMover(kind));
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
+      if(shipProfile(unit)) {
+        const pose=nearestShipPose(this.map,unit,at);
+        if(pose){Object.assign(unit,{x:pose.x,y:pose.y});unit.sailing={heading:pose.heading,speed:0,load:0,balance:0};}
+      }
       this.nextId += 1;
       applyUnitUpgrades(this, unit);
       this.units.push(unit);
@@ -554,6 +560,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 export function stepGame(game: Game) {
   if (game.match.winner) return;
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
+  keepShipsOnWater(game.map,game.units);
   syncDecks(game.units);
   game.tick += 1;
   syncBuildingBodies(game);
@@ -568,6 +575,7 @@ export function stepGame(game: Game) {
   if (game.shops) restockShops(game.shops);
   game.unitSpatial = createSpatialIndex(game.units, 320);
   game.unitSpatialByTeam = createTeamSpatialIndexes(game, game.units, 230);
+  game.shipReachPadding = shipReachPadding(game.units);
   if (!game.buildingSpatial || game.buildingSpatialCount !== game.buildings.length) {
     game.buildingSpatial = createSpatialIndex(game.buildings, 420);
     game.buildingSpatialByTeam = createTeamSpatialIndexes(game, game.buildings, 260);
@@ -632,7 +640,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       ...unit,
       ...(unit.aim ? { aim: { ...unit.aim } } : {}),
       ...(unit.deck ? { deck: { ...unit.deck } } : {}),
-      ...(unit.sailing ? { sailing: { ...unit.sailing } } : {}),
+      ...(unit.sailing ? { sailing: { ...unit.sailing, ...(unit.sailing.route ? {route:{...unit.sailing.route,end:{...unit.sailing.route.end},points:unit.sailing.route.points.map(p=>({...p}))}} : {}) } } : {}),
       ...(unit.abilityCooldowns ? { abilityCooldowns: { ...unit.abilityCooldowns } } : {}),
       ...(unit.autocast ? { autocast: { ...unit.autocast } } : {}),
       order: { ...unit.order },
@@ -707,6 +715,7 @@ function migrateSnapshotRates(game: Game): void {
 function invalidateGameRuntimeCaches(game: Game): void {
   delete game.unitSpatial;
   delete game.unitSpatialByTeam;
+  delete game.shipReachPadding;
   delete game.buildingSpatial;
   delete game.buildingSpatialByTeam;
   delete game.buildingSpatialCount;
@@ -752,8 +761,9 @@ function updateTraining(game: Game) {
     if (!building.complete || building.queue.length === 0) continue;
     const job = building.queue[0];
     if (!job) continue;
-    job.remaining -= 1;
+    job.remaining = Math.max(0,job.remaining-1);
     if (job.remaining > 0) continue;
+    if(unitMover(job.unitKind)==="sea" && !nearestShipPose(game.map,createUnit("launch",building.owner,job.unitKind,building.x,building.y),walkableGoal(game.map,building.x,building.y,"sea")))continue;
     building.queue.shift();
     const angle = ((game.nextId * 47) % 360) * (Math.PI / 180);
     // A ship is launched from the shipyard's own water, the nearest to it (see @@@shore-footprint).
@@ -1242,7 +1252,7 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
   const crew=shipPassengers(game.units,ship);
   crew.forEach((passenger,index)=>{
     if(passengerId!==undefined && passenger.id!==passengerId)return;
-    const spot=landingSpot(game.map,ship,index,crew.length);
+    const spot=landingSpot(game.map,ship,index,crew.length,game.units,passenger);
     if(!spot)return;
     passenger.deck=undefined;
     passenger.aim=undefined;
@@ -2751,9 +2761,10 @@ function workGap(unit: Unit, building: Building) {
   return Math.hypot(Math.max(0, Math.abs(unit.x - building.x) - half), Math.max(0, Math.abs(unit.y - building.y) - half));
 }
 
-// @@@building-reach - A building is reached at its edge, a unit at its center (see building-body): a footman's 48 reaches a
+// @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a
 // town hall's wall, 48 from a center 66 away. While units could walk into a building they struck it from inside.
 function targetGap(from: { x: number; y: number }, target: Unit | Building | Obstacle) {
+  if(isUnit(target) && shipProfile(target))return distanceToHull(target,from);
   return isUnit(target) ? distance(from, target) : Math.max(0, distance(from, target) - target.radius);
 }
 
@@ -2761,8 +2772,8 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
-  forEachNearbyEnemyUnit(game, owner, point, range, (candidate) => {
-    const candidateDistance = distanceSquared(point, candidate);
+  forEachNearbyEnemyUnit(game, owner, point, range + (game.shipReachPadding ?? shipReachPadding(game.units)), (candidate) => {
+    const candidateDistance = targetGap(point, candidate) ** 2;
     if (candidateDistance > limit) return;
     if (attacker && !automaticCandidateReachable(game, attacker, candidate)) return;
     const score = targetPriorityScore(game, owner, candidate, candidateDistance, attacker);
@@ -2784,6 +2795,15 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   return best;
 }
 
+function shipReachPadding(units: readonly Unit[]) {
+  let padding = 0;
+  for (const unit of units) {
+    const profile = shipProfile(unit);
+    if (profile) padding = Math.max(padding, ...profile.hull.map(p => Math.hypot(p.x, p.y)));
+  }
+  return padding;
+}
+
 function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building): boolean {
   if (!canReach(game.map, unit, candidate, game.units)) return false;
   if (unit.owner !== "neutral") return true;
@@ -2800,7 +2820,8 @@ function targetPriorityScore(game: Game, owner: Owner, target: Unit | Building, 
 
 function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building | Obstacle) {
   let pendingDamage = 0;
-  for (const projectile of projectilesAt(game, target.id)) if (projectile.owner === attackerOwner) pendingDamage += projectile.damage;
+  // Physical bolts and shells can miss or hit intervening crew. Only tracking shots guarantee their target's damage.
+  for (const projectile of projectilesAt(game, target.id)) if (projectile.owner === attackerOwner && !projectile.weapon) pendingDamage += projectile.damage;
   return target.hp - pendingDamage;
 }
 
@@ -3014,6 +3035,12 @@ const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.ra
 function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
   const map = game.map;
   if(unit.deck){const ship=game.units.find(ship=>ship.id===unit.deck!.shipId);if(!ship)return true;const local=deckPlacement(ship,unit,game.units,worldToLocal(ship,deckGoal(unit,ship,goal)),false);return !local || distance(unit,localToWorld(ship,local))<within || restsAgainstArrivedFriend(game,unit,goal,localToWorld(ship,local));}
+  if(shipProfile(unit)) {
+    const route=unit.sailing?.route;
+    if(map.terrain && route && route.goalX===goal.x && route.goalY===goal.y)return route.points.length===0 && distance(unit,route.end)<within;
+    const end=nearestShipPose(map,unit,goal);
+    return !end || distance(unit,end)<within;
+  }
   if (!map.terrain) return distance(unit, goal) < within || restsAgainstArrivedFriend(game, unit, goal, goal);
   const mover = unitMover(unit.kind);
   const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
@@ -3097,8 +3124,8 @@ function separateUnits(game: Game) {
     const a=ships[i]!,b=ships[j]!;if(distance(a,b)>(shipProfile(a)!.length+shipProfile(b)!.length)/2)continue;
     const contact=hullContact(a,b);if(!contact)continue;
     const mass=bodyMass(a)+bodyMass(b);
-    const aa=openStep(game.map,a,{x:a.x-contact.x*contact.overlap*bodyMass(b)/mass,y:a.y-contact.y*contact.overlap*bodyMass(b)/mass},"sea");
-    const bb=openStep(game.map,b,{x:b.x+contact.x*contact.overlap*bodyMass(a)/mass,y:b.y+contact.y*contact.overlap*bodyMass(a)/mass},"sea");
+    const aa=hullStep(game.map,a,{x:a.x-contact.x*contact.overlap*bodyMass(b)/mass,y:a.y-contact.y*contact.overlap*bodyMass(b)/mass});
+    const bb=hullStep(game.map,b,{x:b.x+contact.x*contact.overlap*bodyMass(a)/mass,y:b.y+contact.y*contact.overlap*bodyMass(a)/mass});
     Object.assign(a,aa);Object.assign(b,bb);
     if(a.pushX!==undefined || b.pushX!==undefined)pushContact(a,b,contact.x,contact.y);
   }

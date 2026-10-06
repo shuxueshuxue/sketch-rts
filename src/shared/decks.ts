@@ -14,12 +14,12 @@ export function deckPointFits(ship: Unit, passenger: Unit, point: Point, units: 
   return !occupied || !shipPassengers(units,ship).some(other=>other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1);
 }
 /** Find actual free ground on a deck; neither supply nor a fixed slot count is consulted. */
-export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true) {
+export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true, spacing=4) {
   const profile=shipProfile(ship);
   if(!profile)return undefined;
   if(deckPointFits(ship,passenger,preferred,units,occupied))return preferred;
   let best:Point|undefined, score=Infinity;
-  for(let y=-profile.beam/2;y<=profile.beam/2;y+=4) for(let x=-profile.length/2;x<=profile.length/2;x+=4) {
+  for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
     const point={x,y}, value=(x-preferred.x)**2+(y-preferred.y)**2;
     if(value<score && deckPointFits(ship,passenger,point,units,occupied)){best=point;score=value;}
   }
@@ -32,7 +32,8 @@ export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
 export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);
   if(!profile || passenger.deck || deckLoad(units,ship)+bodyMass(passenger)>profile.loadCapacity)return false;
-  const point=deckPlacement(ship,passenger,units);
+  // Enter along the aft port edge, preserving the open center for later passengers.
+  const point=deckPlacement(ship,passenger,units,{x:-profile.length/2,y:-profile.beam/2},true,2);
   if(!point)return false;
   passenger.deck={shipId:ship.id,...point};
   passenger.aim=undefined;

@@ -195,7 +195,9 @@ export type Unit = {
   /** Position on a moving ship, in its local physical coordinate system. */
   deck?: { shipId: string; x: number; y: number } | undefined;
   /** Continuous heading and rates; visuals select one of the baked directions. */
-  sailing?: { heading: number; speed: number; load: number; balance: number } | undefined;
+  sailing?: { heading: number; speed: number; load: number; balance: number;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number }[]; end: { x: number; y: number } } | undefined;
+  } | undefined;
   /** Physical scaling for unusually large campaign hulls. */
   deckScale?: number;
   radius: number;

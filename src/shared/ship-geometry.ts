@@ -14,7 +14,7 @@ export function shipScale(ship: Unit) {
 export function shipProfile(ship: Unit) {
   if (!isShipKind(ship.kind)) return undefined;
   const raw = geometry.ships[ship.kind], scale = shipScale(ship);
-  return { ...raw, length: raw.length*scale, beam: raw.beam*scale, deckHeight: raw.deckHeight*scale,
+  return { ...raw, length: raw.length*scale, beam: raw.beam*scale, deckHeight: raw.deckHeight*scale, mastHeight: raw.mastHeight*scale,
     hullMass: raw.hullMass*scale**3, loadCapacity: raw.loadCapacity*scale**2,
     hull: raw.hull.map(([x,y]) => ({ x:x!*scale, y:y!*scale })),
     deck: raw.deck.map(([x,y]) => ({ x:x!*scale, y:y!*scale })),
@@ -63,10 +63,10 @@ export function hullContact(a: Unit, b: Unit) {
     const p=polygon[i]!, q=polygon[(i+1)%polygon.length]!, length=Math.hypot(q.x-p.x,q.y-p.y);
     const axis={x:-(q.y-p.y)/length,y:(q.x-p.x)/length};
     const av=ap.map(p=>p.x*axis.x+p.y*axis.y), bv=bp.map(p=>p.x*axis.x+p.y*axis.y);
-    const depth=Math.min(Math.max(...av),Math.max(...bv))-Math.max(Math.min(...av),Math.min(...bv));
+    const forward=Math.max(...av)-Math.min(...bv),backward=Math.max(...bv)-Math.min(...av);
+    const depth=Math.min(forward,backward);
     if (depth<=0) return undefined;
-    if (depth<overlap) { overlap=depth;normal=axis; }
+    if (depth<overlap) { overlap=depth;normal=forward<=backward?axis:{x:-axis.x,y:-axis.y}; }
   }
-  if((b.x-a.x)*normal.x+(b.y-a.y)*normal.y<0) normal={x:-normal.x,y:-normal.y};
   return { ...normal, overlap };
 }
