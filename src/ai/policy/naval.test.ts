@@ -9,6 +9,9 @@ import { navalUnitIds, navalWant, navalBudgetReserve, planNavalTactics } from ".
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
 import { installedWeapons } from '../../shared/ship-equipment';
+import { createAiRuntime, createPresetAiRuntimeFramePlanner } from '../runtime';
+import { CommandFrameRuntime } from '../../shared/sim/command-frame-runtime';
+import { seconds } from '../../shared/time';
 
 // Tests that model old cargo saves observe the same restored live crew as the runtime.
 function snapshotGame(game: ReturnType<typeof createGame>) {
@@ -65,6 +68,26 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
 }
 
 describe('shared dock outfitting', () => {
+  for(const version of ['v5','v7','v8'] as const)it(`${version} completes a real island colony and puts its settlers to work`,()=>{
+    const terrain=coast();terrain.cells=Array.from({length:terrain.rows},(_,row)=>Array.from({length:terrain.cols},(_,col)=>
+      col<=8 || col>=20 && col<=27 && row>=5 && row<=14 ? '.' : col===9 || col>=19 && col<=28 && row>=4 && row<=15 ? ',' : '~').join('')).join('');
+    const game=islandGame(terrain);game.scriptedVictory=true;
+    game.players.player!.gold=3000;
+    game.buildings.push({...game.buildings[0]!,id:'colony-yard',kind:'shipyard',x:275,y:336,radius:44,complete:true});
+    game.spawnUnit('player','transport',400,336);
+    const ai=createAiRuntime(['player'],{version});
+    const runtime=new CommandFrameRuntime({game,roomId:'colony-test',rejectionLabel:'colony-test',aiPlanner:createPresetAiRuntimeFramePlanner(game,ai)});
+    let arrived=false,mined=false,colony=false;
+    const mine=game.resources.find(m=>m.id==='island')!;
+    for(let tick=0;tick<seconds(240) && !(mined&&colony);tick++){
+      runtime.tick();
+      arrived ||= game.units.some(u=>u.kind==='worker' && !u.deck && sameGround(game.map,u,mine));
+      mined ||= game.units.some(u=>u.kind==='worker' && u.order.type==='mine' && u.order.resourceId===mine.id && u.carryingGold>0);
+      colony ||= game.buildings.some(b=>b.kind==='townHall' && b.complete && sameGround(game.map,b,mine));
+    }
+    const diagnostic=JSON.stringify({naval:ai.memories.player?.naval,gold:game.players.player!.gold,units:game.units.map(u=>({id:u.id,kind:u.kind,x:u.x,y:u.y,deck:u.deck,order:u.order})),buildings:game.buildings.map(b=>({kind:b.kind,x:b.x,y:b.y,complete:b.complete}))});
+    expect(arrived,diagnostic).toBe(true);expect(colony,diagnostic).toBe(true);expect(mined,diagnostic).toBe(true);
+  },20000);
   for (const version of ['v5','v7','v8'] as const) it(`${version} buys directly into the hold and installs with a nearby worker`, () => {
     const game = islandGame(); game.scriptedVictory = true; game.players.player!.gold = 3000;
     const dock = {...game.buildings[0]!,id:'outfit-yard',kind:'shipyard' as const,x:275,y:336,radius:44,complete:true}; game.buildings.push(dock);
@@ -145,8 +168,8 @@ describe("the AI on the water", () => {
     game.units.push(boat, guard, attacker);
     game.buildings.push({ ...game.buildings[0]!, id: "coastal-farm", owner: "enemy", kind: "farm", ...at(8, 9) });
     const commands = planNavalTactics(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() });
-    expect(commands).toContainEqual({ type: "attack", unitIds: ["escort"], targetId: "raider" });
-    for (const command of commands.filter(command => command.type === "attack")) issuePlayerCommand(game, "player", command);
+    expect(commands).toContainEqual({ type: "attackMove", unitIds: ["escort"], x:attacker.x, y:attacker.y });
+    for (const command of commands.filter(command => command.type === "attackMove")) issuePlayerCommand(game, "player", command);
     for (let tick = 0; tick < 80; tick++) stepGame(game);
     expect(game.units.find(unit => unit.id === "raider")?.hp ?? 0).toBeLessThan(attacker.maxHp);
   });
@@ -183,7 +206,7 @@ describe("the AI on the water", () => {
     game.units.push(boat);
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     options.memory.naval = { ferries: { ferry: { purpose: "assault", targetId: "destroyed-hall", from: at(9, 9), to: at(19, 9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
-    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9) });
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9), avoidCombat:true });
     expect(options.memory.naval.ferries!.ferry!.phase).toBe("return");
     for (const command of planNavalTactics(snapshotGame(game), "player", options)) issuePlayerCommand(game, "player", command);
     for (let tick = 0; tick < 500; tick++) stepGame(game);
@@ -203,7 +226,7 @@ describe("the AI on the water", () => {
     game.units.push(boat);
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     options.memory.naval = { ferries: { ferry: { purpose: "assault", targetId: "enemy-hall", from: at(9, 9), to: at(19, 9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
-    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9) });
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "unload", unitIds: ["ferry"], ...at(9, 9), avoidCombat:true });
     expect(options.memory.naval.ferries!.ferry!.phase).toBe("return");
   });
 
@@ -384,7 +407,7 @@ describe("the AI on the water", () => {
     game.buildings.push({ ...game.buildings.find((building) => building.id === "hall-a")!, id: "yard", kind: "shipyard", x: command.x, y: command.y, radius: 44 });
     expect(navalWant(snapshotGame(game), "player", options)?.id).toBe("naval:warship");
     game.units.push({ ...game.units.find((unit) => unit.id === "w1")!, id: "ship", kind: "warship", ...at(12, 9), order: { type: "idle" }, hp: 180, maxHp: 180, attackRange: 390 });
-    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attack", unitIds: ["ship"], targetId: "we" });
+    expect(planNavalTactics(snapshotGame(game), "player", options)).toContainEqual({ type: "attackMove", unitIds: ["ship"], ...at(21, 10) });
   });
 
   it("raises no shipyard on water an enemy's warship sails, where the ship would sink the site, but under a tower of its own", () => {
