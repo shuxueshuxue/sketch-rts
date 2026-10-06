@@ -20,6 +20,7 @@ game.map.width = 1800;
 game.map.height = 1400;
 game.players.player!.gold = 3000;
 const ship = game.spawnUnit('player', 'transport', 900, 750), unit = game.spawnUnit('player', 'footman', 900, 750);
+const archer = game.spawnUnit('player','archer',500,700);
 boardUnit(ship, unit, game.units);
 unit.deck = { shipId: ship.id, ...deckPlacement(ship, unit, game.units, { x: -8, y: 18 })! };
 syncDecks(game.units);
@@ -62,7 +63,7 @@ catch (error) {
         feedback.classList.add('invalid');
     }
 } });
-for (const [label, action] of [['打开装备', () => panel.show([unit, ship])], ['紧凑窗口', () => { const compact = !!panel.root.style.width; panel.root.style.width = compact ? '' : 'min(390px,calc(100vw - 28px))'; panel.root.style.height = compact ? '' : 'min(560px,calc(100dvh - 28px))'; }], ['重新开始', () => location.reload()]] as const) {
+for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['紧凑窗口', () => { const compact = !!panel.root.style.width; panel.root.style.width = compact ? '' : 'min(390px,calc(100vw - 28px))'; panel.root.style.height = compact ? '' : 'min(560px,calc(100dvh - 28px))'; }], ['重新开始', () => location.reload()]] as const) {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = label;
