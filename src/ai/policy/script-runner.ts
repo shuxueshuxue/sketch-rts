@@ -6,6 +6,7 @@ import type { AiCommandEntry, AiPolicyContext, AiScript, PresetAiPolicyOptions }
 import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { navalBudgetReserve } from "./naval";
 import { shopErrandCost } from "./v9/shop";
+import { SHIP_WEAPONS } from "../../shared/ship-equipment";
 
 export type ScriptRunnerOptions = {
   commandConflictBypassScriptIds?: ReadonlySet<string>;
@@ -62,6 +63,7 @@ function purchaseCost(snapshot: GameSnapshot, owner: PlayerId, command: GameComm
   if (command.type === "research") return UPGRADE_DEFS[command.upgradeKind].levels[snapshot.players[owner]!.upgrades[command.upgradeKind] ?? 0]?.cost ?? 0;
   if (command.type === "hire") return snapshot.mercenaryCamps.find(camp => camp.id === command.campId)?.cost ?? 0;
   if (command.type === "buy") return snapshot.shops?.find(shop => shop.id === command.shopId)?.goods.find(good => good.kind === command.item)?.cost ?? 0;
+  if (command.type === "buyShipEquipment") return SHIP_WEAPONS[command.item].cost;
   return 0;
 }
 

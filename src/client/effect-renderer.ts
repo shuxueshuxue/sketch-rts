@@ -190,6 +190,14 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
+    if(effect.type==="itemReceived"){
+      ctx.save();ctx.globalAlpha=life;ctx.strokeStyle="#ebce7e";ctx.fillStyle="#6b502b";ctx.lineWidth=2;
+      const y=point.y-28-(1-life)*20;
+      ctx.beginPath();ctx.ellipse(point.x,point.y,18+(1-life)*20,9+(1-life)*10,0,0,Math.PI*2);ctx.stroke();
+      ctx.fillRect(point.x-8,y-6,16,12);ctx.strokeRect(point.x-8,y-6,16,12);
+      ctx.beginPath();ctx.moveTo(point.x-8,y-1);ctx.lineTo(point.x+8,y-1);ctx.stroke();ctx.restore();continue;
+    }
+
     if (effect.type === "curse") {
       drawCurseEffect(ctx, point, life);
       continue;

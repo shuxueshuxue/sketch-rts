@@ -3,13 +3,14 @@ import { bodyMass } from "./physical-body";
 import { shipsIn, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { perTick } from "./time";
 import type { Unit } from "./types";
+import { capsuleClearsCircles, diskInConvex } from './navigation-math';
 
 export function deckLoad(units: readonly Unit[], ship: Unit) {
   return (ship.holdMass ?? 0)+shipPassengers(units,ship).reduce((sum,unit)=>sum+bodyMass(unit),0);
 }
 export function deckPointFits(ship: Unit, passenger: Unit, point: Point, units: readonly Unit[], occupied=true) {
   const profile=shipProfile(ship);
-  if(!profile || !circleInPolygon(point,passenger.radius+1,profile.deck))return false;
+  if(!profile || !diskInConvex(point,passenger.radius+1,profile.deck))return false;
   if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1))return false;
   return !occupied || !shipPassengers(units,ship).some(other=>other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1);
 }
@@ -58,9 +59,9 @@ export function syncDecks(units: readonly Unit[]) {
 }
 
 function clearPath(ship: Unit, passenger: Unit, a:Point, b:Point, units:readonly Unit[]) {
-  const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/4));
-  for(let i=1;i<=steps;i++)if(!deckPointFits(ship,passenger,{x:a.x+(b.x-a.x)*i/steps,y:a.y+(b.y-a.y)*i/steps},units,false))return false;
-  return true;
+  const profile=shipProfile(ship)!;
+  return diskInConvex(a,passenger.radius+1,profile.deck) && diskInConvex(b,passenger.radius+1,profile.deck)
+    && capsuleClearsCircles(a,b,passenger.radius+1,profile.obstacles);
 }
 /** Small visibility graph around fixed deck fittings; moving crew are physical bodies. */
 function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[]) {
@@ -80,8 +81,8 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[])
     if(current===1){let next=1;while(previous[next]!>0)next=previous[next]!;return nodes[next]!;}
     seen.add(current);
     for(let i=0;i<nodes.length;i++) {
-      if(seen.has(i)||!clearPath(ship,passenger,nodes[current]!,nodes[i]!,units))continue;
       const candidate=cost[current]!+Math.hypot(nodes[i]!.x-nodes[current]!.x,nodes[i]!.y-nodes[current]!.y);
+      if(seen.has(i)||candidate>=cost[i]!||!clearPath(ship,passenger,nodes[current]!,nodes[i]!,units))continue;
       if(candidate<cost[i]!){cost[i]=candidate;previous[i]=current;}
     }
   }

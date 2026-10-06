@@ -4,8 +4,24 @@ import { stepGame } from '../shared/sim';
 import { footprintCells } from '../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { MENU_SCENES } from './menu-scenes';
+import { hullContact } from '../shared/ship-geometry';
 
 describe('menu demonstration worlds', () => {
+  it('turns the whole convoy on both return legs without hull pileups',()=>{
+    const run=MENU_SCENES.find(scene=>scene.id==='fleet')!.create();
+    const ships=run.game.units.filter(unit=>unit.sailing),start=ships.map(unit=>unit.x),peaks=[...start];
+    const returned=ships.map(()=>false);
+    for(let tick=0;tick<120*SIM_TICKS_PER_SECOND;tick++){
+      run.script(run.game,tick/SIM_TICKS_PER_SECOND);stepGame(run.game);
+      for(let i=0;i<ships.length;i++){
+        peaks[i]=Math.max(peaks[i]!,ships[i]!.x);
+        if(peaks[i]!-ships[i]!.x>100)returned[i]=true;
+        for(let j=i+1;j<ships.length;j++)expect(hullContact(ships[i]!,ships[j]!)).toBeUndefined();
+      }
+    }
+    expect(returned).toEqual(ships.map(()=>true));
+    for(let i=0;i<ships.length;i++)expect(peaks[i]!-start[i]!).toBeGreaterThan(150);
+  },15000);
   it('keeps capital riders outside tower footprints using real movement', () => {
     const run=MENU_SCENES[0]!.create(), cell=run.game.map.terrain!.cell;
     const towers=run.game.buildings.filter(b=>b.kind==='defenseTower').map(b=>footprintCells(cell,b.x,b.y,b.radius));

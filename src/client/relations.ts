@@ -1,6 +1,9 @@
 import { shipNeedsRepair } from "../shared/ship-equipment";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
+import { deckVisualHeight } from "./art/baked-ships";
+import { unitGlyphScale } from "./glyphs";
+import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
 
@@ -32,8 +35,23 @@ const near = (a: Point, b: Point, reach: number) => Math.hypot(a.x - b.x, a.y - 
 const UNIT_REACH = 34;
 const buildingReach = (building: Building) => (building.kind === "townHall" ? 58 : 46);
 
+/** Match the rendered feet on a raised deck, rather than the hidden hull plane. */
+export function unitPointerPosition(units: readonly Unit[], unit: Unit, modeled = false): Point {
+  const ship = unit.deck && units.find(candidate => candidate.id === unit.deck!.shipId);
+  return { x: unit.x, y: unit.y - (ship ? deckVisualHeight(ship) + 18 * unitGlyphScale(unit.radius) * (modeled && !unit.variant ? .8 : 1) : 0) };
+}
+
+export function deckMovePoint(units: readonly Unit[], selected: readonly Unit[], point: Point): Point {
+  const shipId = selected[0]?.deck?.shipId;
+  if (!shipId || !selected.every(unit => unit.deck?.shipId === shipId)) return point;
+  const ship = units.find(unit => unit.id === shipId), profile = ship && shipProfile(ship);
+  if (!ship || !profile) return point;
+  const deckPoint = { x: point.x, y: point.y + deckVisualHeight(ship) };
+  return circleInPolygon(worldToLocal(ship, deckPoint), 0, profile.deck) ? deckPoint : point;
+}
+
 export function unitAt(units: readonly Unit[], world: Point, predicate: (unit: Unit) => boolean) {
-  return units.find(unit => predicate(unit) && !isShipKind(unit.kind) && near(unit, world, UNIT_REACH)) ?? units.find(unit => predicate(unit) && isShipKind(unit.kind) && distanceToHull(unit, world) < 8);
+  return units.filter(unit => predicate(unit) && !isShipKind(unit.kind) && near(unitPointerPosition(units, unit), world, UNIT_REACH)).sort((a,b) => Math.hypot(unitPointerPosition(units,a).x-world.x,unitPointerPosition(units,a).y-world.y)-Math.hypot(unitPointerPosition(units,b).x-world.x,unitPointerPosition(units,b).y-world.y))[0] ?? units.find(unit => predicate(unit) && isShipKind(unit.kind) && distanceToHull(unit, world) < 8);
 }
 
 export function buildingAt(buildings: readonly Building[], world: Point, predicate: (building: Building) => boolean) {
@@ -60,7 +78,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
   };
   for (const item of snapshot.items) if (!item.carrierId && !item.shipId) consider(item, 34, { kind: "item", item });
   for (const resource of snapshot.resources) consider(resource, 84, { kind: "resource", resource });
-  for (const unit of snapshot.units) if (!isShipKind(unit.kind)) consider(unit, UNIT_REACH, { kind: "unit", unit });
+  for (const unit of snapshot.units) if (!isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit), UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && distanceToHull(unit, world) < 8) consider(unit, Infinity, { kind: "unit", unit });
   for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });
   for (const obstacle of snapshot.obstacles ?? []) consider(obstacle, obstacle.radius + 8, { kind: "obstacle", obstacle });
@@ -90,6 +108,7 @@ export function targetCommand(
     return damaged && workers.length > 0 ? { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued } : undefined;
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
+  if (isShipKind(target.unit.kind) && selected.length && selected.every(unit => unit.deck?.shipId === target.unit.id)) return undefined;
   if (UNIT_DEFS[target.unit.kind].naval && shipNeedsRepair({items:snapshot.items ?? []},target.unit) && workers.length)
     return { type: "repairShip", unitIds: ids(workers), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval && !unit.deck);

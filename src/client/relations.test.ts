@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
-import { hasAlly, pointerTarget, relationTo, targetCommand } from "./relations";
+import { deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, unitPointerPosition } from "./relations";
+import { boardUnit, syncDecks } from '../shared/decks';
+import { deckVisualHeight } from './art/baked-ships';
 import type { GameSnapshot, Unit } from "../shared/types";
 
 // The player and "enemy" on one team, "enemy2" on the other.
@@ -11,6 +13,18 @@ function alliedGame() {
   const foe = game.spawnUnit("enemy2", "footman", 1000, 600);
   return { game, own, ally, foe };
 }
+
+it('selects raised crew before the hull and moves them across their own damaged deck', () => {
+  const game = createGame('bareDuel',{aiPlayers:[]}); game.units=[]; delete game.map.terrain;
+  const ship = game.spawnUnit('player','transport',800,800), worker=game.spawnUnit('player','worker',800,800);
+  expect(boardUnit(ship,worker,game.units)).toBe(true); syncDecks(game.units); ship.hp-=20;
+  const point=unitPointerPosition(game.units,worker), snapshot=snapshotGame(game);
+  expect(unitAt(game.units,point,()=>true)?.id).toBe(worker.id);
+  expect(pointerTarget(snapshot,point)).toMatchObject({kind:'unit',unit:{id:worker.id}});
+  expect(targetCommand(snapshot,'player',[worker],{kind:'unit',unit:ship})).toBeUndefined();
+  const floor={x:ship.x-15,y:ship.y-deckVisualHeight(ship)};
+  expect(deckMovePoint(game.units,[worker],floor)).toEqual({x:ship.x-15,y:ship.y});
+});
 
 // What a right-click there orders the player's selection (see @@@pointer-target and @@@context-target); none is a move.
 function rightClick(snapshot: GameSnapshot, selected: Unit[], at: { x: number; y: number }, queued = false) {

@@ -1,6 +1,7 @@
 import { invalidateItemIndex } from "./item-index";
+import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, rebuildShipFittings, repairShipParts, shipNeedsRepair, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
-import { ITEM_DEFS, canEquip, equipmentProtection, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { ITEM_DEFS, canEquip, dropRefusal, equipmentProtection, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
@@ -519,7 +520,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "buy") {
-    buyGood(game, owner, command.shopId, command.item);
+    buyGood(game, owner, command.shopId, command.item, command.recipientId);
     return;
   }
 
@@ -557,8 +558,11 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if(command.type==="buyShipEquipment"){
     const dock=game.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.kind==="shipyard" && building.complete);if(!dock)throw new Error("A completed shipyard is required");
+    const delivery=command.recipientId!==undefined ? purchasePlacement(game,owner,dock,command.item,command.recipientId) : undefined;
+    if(delivery && "refusal" in delivery)throw new Error(delivery.refusal);
     const def=SHIP_WEAPONS[command.item];spendGold(game,owner,def.cost);const at=walkableGoal(game.map,dock.x,dock.y+dock.radius+36,"land");
-    game.items.push({id:`ship-item-${game.nextId++}`,kind:command.item,x:at.x,y:at.y,durability:def.hp,cooldownRemaining:0});addEffect(game,"summon",at.x,at.y,seconds(.8));return;
+    const item:WorldItem={id:`ship-item-${game.nextId++}`,kind:command.item,x:at.x,y:at.y,durability:def.hp,cooldownRemaining:0};game.items.push(item);
+    if(delivery && "placement" in delivery)deliverPurchase(game,item,delivery.placement);else addEffect(game,"summon",at.x,at.y,seconds(.8));return;
   }
   if (command.type === "transferItem") {
     const refusal=transferRefusal(game,owner,command.itemId,command.destination);if(refusal)throw new Error(refusal);
@@ -1665,21 +1669,37 @@ function hireMercenary(game: Game, owner: PlayerId, campId: string) {
 
 // The good comes from the shop's stock to the owner's unit standing by it nearest it with room (see @@@carried-items), or
 // to the ground at the shop's door when none has room.
-function buyGood(game: Game, owner: PlayerId, shopId: string, kind: WorldItem["kind"]) {
-  const refusal = buyRefusal(game, owner, shopId, kind);
+function buyGood(game: Game, owner: PlayerId, shopId: string, kind: WorldItem["kind"], recipientId?:string) {
+  const refusal = buyRefusal(game, owner, shopId, kind, recipientId);
   if (refusal) throw new Error(refusal.message);
   const shop = game.shops!.find((candidate) => candidate.id === shopId)!;
   const good = shop.goods.find((candidate) => candidate.kind === kind)!;
+  const delivery=recipientId!==undefined ? purchasePlacement(game,owner,shop,kind,recipientId) : undefined;
+  if(delivery && "refusal" in delivery)throw new Error(delivery.refusal);
   spendGold(game, owner, good.cost);
   good.stock -= 1;
   if (good.restockRemaining <= 0) good.restockRemaining = good.restock;
   const item: WorldItem = { id: `item-${owner}-${kind}-${game.nextId}`, kind, x: shop.x, y: shop.y + shop.radius + 16, cooldownRemaining: 0 };
   game.nextId += 1;
   game.items.push(item);
-  const buyer = shopBuyer(game, owner, shop,kind);
-  if (buyer) attachItemToUnit(game, item, buyer);
-  addEffect(game, "summon", shop.x, shop.y, 24);
+  if(delivery && "placement" in delivery)deliverPurchase(game,item,delivery.placement);
+  else {
+    // Replay compatibility for commands recorded before explicit recipients.
+    const buyer = shopBuyer(game, owner, shop,kind);
+    if (buyer) attachItemToUnit(game, item, buyer);
+    addEffect(game, "summon", shop.x, shop.y, 24);
+  }
   return item;
+}
+
+function deliverPurchase(game:Game,item:WorldItem,placement:PurchasePlacement){
+  const recipient=game.units.find(unit=>unit.id===("unitId" in placement ? placement.unitId : placement.shipId))!;
+  if("unitId" in placement){item.carrierId=recipient.id;item.slot=placement.slot;}
+  else {item.shipId=recipient.id;item.holdSlot=placement.slot;}
+  item.x=recipient.x;item.y=recipient.y;
+  invalidateItemIndex(game.items);
+  applyDerivedUnitStats(game,recipient);refreshEquipmentMass(game);
+  addEffect(game,"itemReceived",recipient.x,recipient.y,seconds(.8));
 }
 
 function hasFriendlyUnitAtMercenaryCamp(game: Game, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
@@ -1732,8 +1752,12 @@ function attachItemToUnit(game: Game, item: WorldItem, unit: Unit) {
 function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x: number, y: number) {
   const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
   if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
-  const item = carriedItem(game, unit, itemId);
-  delete item.carrierId;delete item.slot;removeFromHands(unit,item.id);
+  const refusal = dropRefusal(game, owner, unitId, itemId);
+  if (refusal) throw new Error(refusal);
+  const item = game.items.find(item => item.id === itemId)!;
+  const ship = game.units.find(ship => ship.id === item.shipId);
+  delete item.carrierId;delete item.slot;delete item.shipId;delete item.holdSlot;delete item.mountId;removeFromHands(unit,item.id);
+  if (ship) rebuildShipFittings(game, ship);
   invalidateItemIndex(game.items);
   item.x = clamp(x, 0, game.map.width);
   item.y = clamp(y, 0, game.map.height);
@@ -2851,7 +2875,7 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   const base = nonStarUnitStats(game, unit);
   const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_GAIN_PER_STAR;
   const heavy=itemsFor(game,unit).some(item=>ITEM_DEFS[item.kind].span===4);
-  unit.bodyRadius=unitRules(game,unit).radius;unit.radius=heavy?Math.max(22,unit.bodyRadius):unit.bodyRadius;
+  unit.bodyRadius=unitRules(game,unit).radius;unit.radius=unit.bodyRadius;
   unit.attackDamage = Math.round(base.attackDamage * multiplier);
   unit.maxHp = Math.round(base.maxHp * multiplier);
   unit.speed = base.speed*(heavy?.45:1);

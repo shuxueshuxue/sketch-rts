@@ -1,4 +1,5 @@
 import type { Building, GameSnapshot, PlayerId, Unit } from "../shared/types";
+import { unitPointerPosition } from './relations';
 
 export type SelectionState = {
   selectedIds: Set<string>;
@@ -22,7 +23,7 @@ export function selectInScreenBox(
   previous: SelectionState,
   additive: boolean,
 ): SelectionState {
-  const units = snapshot.units.filter((unit) => unit.owner === owner && isProjectedInside(unit, rect, project)).map((unit) => unit.id);
+  const units = snapshot.units.filter((unit) => unit.owner === owner && isProjectedInside(unitPointerPosition(snapshot.units,unit), rect, project)).map((unit) => unit.id);
   if (units.length > 0) return applySelectionPick(previous, units, additive);
   const building = snapshot.buildings.find((candidate) => candidate.owner === owner && isProjectedInside(candidate, rect, project));
   return applySelectionPick(previous, building ? [building.id] : [], additive);
@@ -58,7 +59,7 @@ export function selectNearbySameKindUnits(
   return applySelectionPick(previous, pickedIds, additive);
 }
 
-function isProjectedInside(entity: Unit | Building, rect: ScreenRect, project: (point: Point) => Point) {
+function isProjectedInside(entity: Point, rect: ScreenRect, project: (point: Point) => Point) {
   const screen = project(entity);
   return screen.x >= rect.left && screen.x <= rect.right && screen.y >= rect.top && screen.y <= rect.bottom;
 }
