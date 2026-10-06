@@ -14,7 +14,7 @@
       "hullMass": 7000,
       "loadCapacity": 450,
       "acceleration": 72,
-      "turnRate": 1.5,
+      "turnRate": 0.628318531,
       "obstacles": [
         {
           "x": -35,
@@ -34,7 +34,8 @@
         0,
         11
       ],
-      "mastHeight": 82
+      "mastHeight": 82,
+      "weaponPivot": null
     },
     "transport": {
       "length": 184,
@@ -43,7 +44,7 @@
       "hullMass": 14000,
       "loadCapacity": 1800,
       "acceleration": 48,
-      "turnRate": 1.05,
+      "turnRate": 0.383972435,
       "obstacles": [
         {
           "x": -50,
@@ -59,7 +60,8 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 96
+      "mastHeight": 96,
+      "weaponPivot": null
     },
     "warship": {
       "length": 170,
@@ -68,7 +70,7 @@
       "hullMass": 23000,
       "loadCapacity": 850,
       "acceleration": 44,
-      "turnRate": 0.9,
+      "turnRate": 0.314159265,
       "obstacles": [
         {
           "x": -45,
@@ -90,11 +92,16 @@
         }
       ],
       "weaponMount": [
-        40,
+        60,
         0,
-        19
+        35
       ],
-      "mastHeight": 96
+      "mastHeight": 96,
+      "weaponPivot": [
+        34,
+        0,
+        28
+      ]
     },
     "bombardShip": {
       "length": 184,
@@ -103,7 +110,7 @@
       "hullMass": 31000,
       "loadCapacity": 1300,
       "acceleration": 30,
-      "turnRate": 0.65,
+      "turnRate": 0.226892803,
       "obstacles": [
         {
           "x": -50,
@@ -125,11 +132,16 @@
         }
       ],
       "weaponMount": [
-        24,
+        38,
         0,
-        28
+        54
       ],
-      "mastHeight": 96
+      "mastHeight": 96,
+      "weaponPivot": [
+        30,
+        0,
+        30
+      ]
     },
     "fireShip": {
       "length": 158,
@@ -138,7 +150,7 @@
       "hullMass": 19000,
       "loadCapacity": 700,
       "acceleration": 56,
-      "turnRate": 1.1,
+      "turnRate": 0.453785606,
       "obstacles": [
         {
           "x": -41,
@@ -160,11 +172,16 @@
         }
       ],
       "weaponMount": [
-        47,
+        67,
         0,
-        18
+        32
       ],
-      "mastHeight": 96
+      "mastHeight": 96,
+      "weaponPivot": [
+        25,
+        0,
+        26
+      ]
     },
     "carrier": {
       "length": 224,
@@ -173,7 +190,7 @@
       "hullMass": 55000,
       "loadCapacity": 5200,
       "acceleration": 32,
-      "turnRate": 0.7,
+      "turnRate": 0.20943951,
       "obstacles": [
         {
           "x": -60,
@@ -195,7 +212,8 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 106
+      "mastHeight": 106,
+      "weaponPivot": null
     }
   }
 }
