@@ -1,3 +1,4 @@
+import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
 import { commandIconMarkup } from "./command-icons";
 import { WorldPresentation } from './world-presentation';
 import { resources,resourceText } from './resources';
@@ -14,6 +15,7 @@ import "./styles.css";
 import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
 import "./game-chrome.css";
+import "./game-ui.css";
 import { BattleHudSelection, type HudIdentity } from "./battle-hud";
 import { drawAtlasBuilding, drawAtlasBuildingPortrait, drawAtlasUnitPortrait } from "./atlas-art";
 import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } from "./build-placement-controls";
@@ -46,7 +48,7 @@ import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMi
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
-import { NO_SOUND_PACK, Soundboard } from "./sound";
+import { Soundboard } from "./sound";
 import { soundCues, type SoundCue } from "./sound-cues";
 import { servedSoundPacks, SOUND_PACKS } from "./sound-packs";
 import {
@@ -381,7 +383,7 @@ labelSceneSwitch();
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
 minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
-const resourceAction=document.createElement('button');resourceAction.className='match-action';resourceAction.textContent=resourceText('资源载入记录','Resource loading report');resourceAction.onclick=()=>resourcePanel().open();matchMenu.append(resourceAction);
+const settingsAction=document.createElement('button');settingsAction.className='match-action';settingsAction.textContent=t('home.settings');settingsAction.onclick=()=>{matchMenu.classList.add('hidden');openMatchSettings(soundboard,i18n);};matchMenu.append(settingsAction);
 forfeitButton.addEventListener("click", () => {
   matchMenu.classList.add("hidden");
   void forfeitCurrentMatch();
@@ -480,10 +482,11 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   const color=ownerInk(localPlayerId);
   paintPortrait(icon,`${portrait.type}:${portrait.kind}:${color}`,()=>{
     const brush = requireCanvasContext(icon);
-    const center = { x: 48, y: 48 };
-    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, 96, color);
-    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, 76);
-    else drawAtlasBuildingPortrait(brush, portrait.kind, 96, color);
+    const size=icon.clientWidth||icon.width;
+    const center = { x: size/2, y: size/2 };
+    if (portrait.type === "unit") drawAtlasUnitPortrait(brush, portrait.kind, 0, 0, size, color);
+    else if (portrait.type === "item") drawPaintedItem(brush, portrait.kind, center, size*.8);
+    else drawAtlasBuildingPortrait(brush, portrait.kind, size, color);
   });
 }
 
@@ -703,7 +706,6 @@ function renderMainMenu() {
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
-    menuButton(resourceText('资源载入记录','Resource loading report'),'', 'data-open-resources',()=>resourcePanel().open()),
   );
 }
 
@@ -820,35 +822,14 @@ function renderProfileMenu() {
   form.innerHTML = `
     <label>${escapeHtml(t("profile.displayName"))}<input name="name" value="${escapeHtml(localUser.name)}" /></label>
     <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
-    <fieldset class="sound-settings" data-sound-settings>
-      <legend>${escapeHtml(t("settings.sound"))}</legend>
-      <label>${escapeHtml(t("settings.soundPack"))}<select data-sound-pack>${[{ id: NO_SOUND_PACK, name: t("settings.soundPackNone") }, ...soundboard.packs]
-        .map((pack) => `<option value="${escapeHtml(pack.id)}" ${pack.id === (soundboard.pack?.id ?? NO_SOUND_PACK) ? "selected" : ""}>${escapeHtml(pack.name)}</option>`)
-        .join("")}</select></label>
-      <label>${escapeHtml(t("settings.effects"))}<input type="range" min="0" max="100" data-volume="effects" value="${Math.round(soundboard.settings.effects * 100)}" /></label>
-      <label>${escapeHtml(t("settings.interface"))}<input type="range" min="0" max="100" data-volume="ui" value="${Math.round(soundboard.settings.ui * 100)}" /></label>
-      <label class="checkbox-row"><input type="checkbox" data-mute ${soundboard.settings.muted ? "checked" : ""} /> ${escapeHtml(t("settings.mute"))}</label>
-    </fieldset>
+    ${soundSettingsMarkup(soundboard,i18n)}
     <div class="menu-actions">
       <button type="submit">${escapeHtml(t("common.save"))}</button>
       <button type="button" data-regenerate-user>${escapeHtml(t("profile.regenerate"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
     </div>
   `;
-  // A volume takes effect as it moves, with a sound of its group to hear it by.
-  form.querySelectorAll<HTMLInputElement>("[data-volume]").forEach((input) => {
-    input.addEventListener("input", () => {
-      const group = input.dataset.volume === "ui" ? "ui" : "effects";
-      soundboard.update({ [group]: Number(input.value) / 100 });
-      soundboard.play(group === "ui" ? "click" : "melee");
-    });
-  });
-  form.querySelector<HTMLSelectElement>("[data-sound-pack]")?.addEventListener("change", (event) => {
-    soundboard.update({ pack: (event.currentTarget as HTMLSelectElement).value });
-  });
-  form.querySelector<HTMLInputElement>("[data-mute]")?.addEventListener("change", (event) => {
-    soundboard.update({ muted: (event.currentTarget as HTMLInputElement).checked });
-  });
+  bindSoundSettings(form,soundboard);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData(form);

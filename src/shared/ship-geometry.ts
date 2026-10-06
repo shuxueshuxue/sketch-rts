@@ -38,7 +38,7 @@ export function shipsIn(units:readonly Unit[]){
   const cached=shipLists.get(units);if(cached?.length===units.length)return cached.ships;
   const ships=units.filter(unit=>isShipKind(unit.kind));shipLists.set(units,{length:units.length,ships});return ships;
 }
-/** The baked gun traverses around this deck mount independently of the sailing hull. */
+/** The mounted gun traverses around this deck mount independently of the sailing hull. */
 export function shipWeaponPose(ship: Unit) {
   const profile = shipProfile(ship), mount = profile?.weaponMount;
   if (!mount) return undefined;

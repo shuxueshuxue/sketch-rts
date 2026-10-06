@@ -1,13 +1,16 @@
+import {WorldPresentation} from '../../client/world-presentation';
 /** Review harness exercising the same equipment dialog, commands and simulation as a match. */
 import '../../client/styles.css';
 import '../../client/battle-hud.css';
 import '../../client/game-chrome.css';
+import '../../client/game-ui.css';
 import { UnitFacingTracker } from '../../client/unit-facing';
 import { EquipmentPanel } from '../../client/equipment-panel';
+import {BattleHudSelection} from '../../client/battle-hud';
+import {drawAtlasUnitPortrait} from '../../client/atlas-art';
 import { createI18n } from '../../client/i18n';
-import { installBakedImage } from '../../client/art/baked-assets';
 import { drawWorld, worldLabelsFor } from '../../client/world-renderer';
-import { SHIP_KINDS } from '../../shared/ship-geometry';
+import { shipPassengers } from '../../shared/ship-geometry';
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { boardUnit, deckPlacement, syncDecks } from '../../shared/decks';
 import { shipItemMass } from '../../shared/equipment';
@@ -54,7 +57,7 @@ heading.style.cssText = 'position:fixed;top:15px;left:20px;color:#b5beac;font:12
 heading.textContent = 'Sketch RTS · 装备与船舱交互试玩';
 document.body.append(heading);
 const toolbar = document.createElement('div');
-toolbar.style.cssText = 'position:fixed;bottom:12px;left:20px;display:flex;gap:6px;flex-wrap:wrap;color:#b5beac;font:12px system-ui;align-items:center;z-index:90';
+toolbar.style.cssText = 'position:fixed;top:42px;left:20px;display:flex;gap:6px;flex-wrap:wrap;color:#b5beac;font:12px system-ui;align-items:center;z-index:90';
 document.body.append(toolbar);
 const panel = new EquipmentPanel(() => i18n, command => { try {
     issuePlayerCommand(game, 'player', command);
@@ -67,7 +70,17 @@ catch (error) {
         feedback.classList.add('invalid');
     }
 } });
-for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['喷火舰',()=>panel.show([fireShip])],['快艇',()=>panel.show([cutter])],['大型战舰',()=>panel.show([carrier])],
+let portraitShip=ship;
+const showShip=(vessel:typeof ship)=>{portraitShip=vessel;panel.show([vessel]);};
+const hudFrame=document.createElement('div');hudFrame.className='game-shell';hudFrame.style.cssText='position:fixed;inset:0;pointer-events:none;background:transparent';
+const hudDeck=document.createElement('div');hudDeck.className='control-deck';hudDeck.style.pointerEvents='auto';
+const hudCard=document.createElement('div');hudCard.className='selection-chip';hudDeck.append(hudCard);hudFrame.append(hudDeck);document.body.append(hudFrame);
+const hud=new BattleHudSelection(hudCard,'船员');
+function updatePortraits(){
+  const art=(kind:typeof ship.kind)=>({key:kind,paint:(target:HTMLCanvasElement)=>drawAtlasUnitPortrait(target.getContext('2d')!,kind,0,0,target.clientWidth,'#819b82')});
+  hud.render({key:portraitShip.id,name:i18n.label(portraitShip.kind),caption:'己方船只',detail:'甲板布阵 · 船舱装备',art:art(portraitShip.kind),health:{current:portraitShip.hp,max:portraitShip.maxHp}},[],'',[{key:portraitShip.id,label:'船员',passengers:shipPassengers(game.units,portraitShip).map(crew=>({key:crew.id,name:i18n.label(crew.kind),actionLabel:`卸载 ${i18n.label(crew.kind)}`,art:art(crew.kind),health:{current:crew.hp,max:crew.maxHp},activate:()=>{try{issuePlayerCommand(game,'player',{type:'unloadPassenger',transportId:portraitShip.id,passengerId:crew.id});}catch(error){note.textContent=String(error);}},decorate:()=>{}}))}]);
+}
+for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => showShip(ship)], ['喷火舰',()=>showShip(fireShip)],['快艇',()=>showShip(cutter)],['大型战舰',()=>showShip(carrier)],['检查船头像',()=>panel.close()],
     ...[['宽屏',undefined,undefined],['窄屏',390,560],['横屏',760,420],['小窗',350,360]].map(([label,width,height])=>[label as string,()=>{panel.root.style.width=width?`${width}px`:'';panel.root.style.height=height?`${height}px`:'';}] as const),
     ['重新开始', () => location.reload()]] as const) {
     const button = document.createElement('button');
@@ -80,8 +93,8 @@ for (const [label, action] of [['人物装备', () => panel.show([archer])], ['�
 const note = document.createElement('span');
 note.textContent = '拖拽 / 双击转移 · 火炮占四格 · 不影响线上对局';
 toolbar.append(note);
-void Promise.all(SHIP_KINDS.flatMap(kind => ['base', 'upper', 'depth', ...(['warship', 'bombardShip', 'fireShip'].includes(kind) ? ['weapon', 'weapon-depth'] : [])].map(layer => new Promise<void>(resolve => { const image = new Image(); image.onload = () => { installBakedImage(`ships/${kind}-${layer}`, image); resolve(); }; image.onerror = () => resolve(); image.src = `/sketch-rts/art/ships/${kind}-${layer}.png`; }))));
+const presentation=new WorldPresentation(canvas);void presentation.prepare(snapshotGame(game),'match');
 panel.update(snapshotGame(game), 'player');
 panel.show([unit, ship]);
-function tick() { stepGame(game); const snapshot = snapshotGame(game); panel.update(snapshot, 'player'); const context = canvas.getContext('2d')!; context.clearRect(0, 0, canvas.width, canvas.height); drawWorld({ ctx: context, snapshot, view: { x: 300, y: 300, width: canvas.width, height: canvas.height, zoom: 1 }, facing: new UnitFacingTracker(), selectedIds: new Set([unit.id, ship.id]), viewer: 'player', now: performance.now(), labels: worldLabelsFor(i18n) }); }
+function tick() { stepGame(game); const snapshot = snapshotGame(game); panel.update(snapshot, 'player'); updatePortraits(); const context = canvas.getContext('2d')!; context.clearRect(0, 0, canvas.width, canvas.height); presentation.draw({ ctx: context, snapshot, view: { x: 300, y: 300, width: canvas.width, height: canvas.height, zoom: 1 }, facing: new UnitFacingTracker(), selectedIds: new Set([unit.id, ship.id]), viewer: 'player', now: performance.now(), labels: worldLabelsFor(i18n) }); }
 setInterval(tick, 50);

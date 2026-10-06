@@ -2,10 +2,10 @@
 
 /* Menus, battle controls and the armory use the same engraved, physical frame. */
 :root {
-  --panel:var(--game-paper);
-  --ink:#30291c;
-  --ink-soft:#655941;
-  --title:#493c26;
+  --panel:var(--game-leather);
+  --ink:var(--game-ink);
+  --ink-soft:var(--game-muted);
+  --title:var(--game-title);
   --btn:var(--game-grain),linear-gradient(#4b4633,#2b2b22);
   --btn-hover:var(--game-grain),linear-gradient(#63553a,#3d3928);
   --btn-edge:#61502f;
@@ -29,7 +29,7 @@
 }
 .menu-window:not(.main-menu[data-menu-view="home"] .menu-window),.pointer-lock-panel {
   border:1px solid #a68b53; border-image:none; border-radius:1px; box-shadow:var(--game-frame),0 20px 80px #0009;
-  background:var(--game-paper);
+  background:var(--game-leather);
 }
 .menu-title { letter-spacing:2px; font-weight:600; border-bottom-color:#78633e55; }
 .room-section-title { letter-spacing:1.5px; }

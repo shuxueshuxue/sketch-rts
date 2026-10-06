@@ -45,8 +45,7 @@
     "build:server-bundle": "node --import tsx scripts/build-server-bundle.ts",
     "build:production": "npm run build && npm run build:server-bundle",
     "build:server": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=server vite build",
-    "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build",
-    "preview:ship-3d": "node --import tsx scripts/build-ship-webgl-preview.ts"
+    "build:static": "tsc --noEmit && VITE_SKETCH_RTS_DEPLOYMENT=static vite build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",

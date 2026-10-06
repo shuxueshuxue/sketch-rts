@@ -6,6 +6,7 @@ import { resourceManifest,writeResourceManifest } from './tools/resource-manifes
 
 const deploymentMode = parseDeploymentMode(process.env.VITE_SKETCH_RTS_DEPLOYMENT);
 const publicBasePath = publicBasePathFromEnv(process.env);
+let resourceOutput=resolve(__dirname,'dist');
 const buildInput =
   deploymentMode === "static"
     ? { game: resolve(__dirname, "index.html") }
@@ -17,8 +18,9 @@ const buildInput =
 export default defineConfig({
   plugins:[{
     name:'resource-sizes',
+    configResolved(config){resourceOutput=resolve(config.root,config.build.outDir);},
     configureServer(server){server.middlewares.use(async(req,res,next)=>{if(!req.url?.split('?')[0]?.endsWith('/resource-manifest.json')){next();return;}try{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(await resourceManifest(resolve(__dirname,'public'))));}catch(error){next(error);}});},
-    async closeBundle(){await writeResourceManifest(resolve(__dirname,'dist'));},
+    async closeBundle(){await writeResourceManifest(resourceOutput);},
   }],
   base: publicBasePath,
   server: {
