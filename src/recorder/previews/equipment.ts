@@ -32,7 +32,7 @@ for (const kind of ['greatSword', 'roundShield', 'healingScroll', 'regenRing', '
 }
 issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: 'preview-roundShield', hand: 'left' });
 for (const [kind, holdSlot] of [['shipCannon', 0], ['flameProjector', 4], ['lightningRod', 8], ['experienceBook', 9], ['guardianScroll', 10]] as const)
-    game.items.push({ id: `stored-${kind}`, kind, shipId: ship.id, holdSlot, x: ship.x, y: ship.y, durability: kind === 'shipCannon' ? 90 : kind === 'flameProjector' ? 80 : undefined, cooldownRemaining: 0 } as WorldItem);
+    game.items.push({ id: `stored-${kind}`, kind, shipId: ship.id, holdSlot, x: ship.x, y: ship.y, durability: kind === 'shipCannon' ? 27 : kind === 'flameProjector' ? 0 : undefined, cooldownRemaining: 0 } as WorldItem);
 const cutter = game.spawnUnit('player', 'cutter', 1080, 750), carrier = game.spawnUnit('player', 'carrier', 1150, 1050);
 const fireShip=game.spawnUnit('player','fireShip',750,1050);
 cutter.order = { type: 'hold', x: cutter.x, y: cutter.y };
@@ -65,7 +65,7 @@ catch (error) {
         feedback.classList.add('invalid');
     }
 } });
-for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['喷火舰',()=>panel.show([fireShip])],
+for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['喷火舰',()=>panel.show([fireShip])],['快艇',()=>panel.show([cutter])],['大型战舰',()=>panel.show([carrier])],
     ...[['宽屏',undefined,undefined],['窄屏',390,560],['横屏',760,420],['小窗',350,360]].map(([label,width,height])=>[label as string,()=>{panel.root.style.width=width?`${width}px`:'';panel.root.style.height=height?`${height}px`:'';}] as const),
     ['重新开始', () => location.reload()]] as const) {
     const button = document.createElement('button');
@@ -78,7 +78,7 @@ for (const [label, action] of [['人物装备', () => panel.show([archer])], ['�
 const note = document.createElement('span');
 note.textContent = '拖拽 / 双击转移 · 火炮占四格 · 不影响线上对局';
 toolbar.append(note);
-void Promise.all(SHIP_KINDS.flatMap(kind => ['base', 'upper', 'depth', ...(['warship', 'bombardShip', 'fireShip'].includes(kind) ? ['weapon', 'weapon-depth'] : [])].map(layer => new Promise<void>(resolve => { const image = new Image(); image.onload = () => { installBakedImage(`ships/${kind}-${layer}`, image); resolve(); }; image.onerror = () => resolve(); image.src = `./preview-art/${kind}-${layer}.png`; }))));
+void Promise.all(SHIP_KINDS.flatMap(kind => ['base', 'upper', 'depth', ...(['warship', 'bombardShip', 'fireShip'].includes(kind) ? ['weapon', 'weapon-depth'] : [])].map(layer => new Promise<void>(resolve => { const image = new Image(); image.onload = () => { installBakedImage(`ships/${kind}-${layer}`, image); resolve(); }; image.onerror = () => resolve(); image.src = `/sketch-rts/art/ships/${kind}-${layer}.png`; }))));
 panel.update(snapshotGame(game), 'player');
 panel.show([unit, ship]);
 function tick() { stepGame(game); const snapshot = snapshotGame(game); panel.update(snapshot, 'player'); const context = canvas.getContext('2d')!; context.clearRect(0, 0, canvas.width, canvas.height); drawWorld({ ctx: context, snapshot, view: { x: 300, y: 300, width: canvas.width, height: canvas.height, zoom: 1 }, facing: new UnitFacingTracker(), selectedIds: new Set([unit.id, ship.id]), viewer: 'player', now: performance.now(), labels: worldLabelsFor(i18n) }); }
