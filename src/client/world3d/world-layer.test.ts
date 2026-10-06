@@ -29,7 +29,7 @@ function setup(){
   gpu.sizes=gpu.ratios=0;
   vi.stubGlobal('devicePixelRatio',2);
   vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
-  vi.stubGlobal('fetch',async(url:string)=>new Response(readFileSync(`public${url.split('?')[0]}`)));
+  vi.stubGlobal('fetch',async(url:string)=>new Response(readFileSync(`public/art/world3d/${url.split('/art/world3d/')[1]!.split('?')[0]}`)));
   setScratchCanvasFactory((w,h)=>createCanvas(w,h) as unknown as HTMLCanvasElement);
   const {game,ship}=createShipWebglScene();
   const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{mercenaryStock:()=>'',unitKind:()=>''}};
