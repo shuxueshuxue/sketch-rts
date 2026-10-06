@@ -1,3 +1,4 @@
+import { shipNeedsRepair } from "../shared/ship-equipment";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
 import { areEnemyOwners } from "../shared/sim/command-validation";
@@ -57,7 +58,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
     const gap = Math.hypot(at.x - world.x, at.y - world.y);
     if (gap < reach && (!nearest || gap < nearest.gap)) nearest = { target, gap };
   };
-  for (const item of snapshot.items) if (!item.carrierId) consider(item, 34, { kind: "item", item });
+  for (const item of snapshot.items) if (!item.carrierId && !item.shipId) consider(item, 34, { kind: "item", item });
   for (const resource of snapshot.resources) consider(resource, 84, { kind: "resource", resource });
   for (const unit of snapshot.units) if (!isShipKind(unit.kind)) consider(unit, UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && distanceToHull(unit, world) < 8) consider(unit, Infinity, { kind: "unit", unit });
@@ -71,7 +72,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 // @@@transport); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
 export function targetCommand(
-  snapshot: Pick<GameSnapshot, "teams">,
+  snapshot: Pick<GameSnapshot, "teams"> & Partial<Pick<GameSnapshot,"items">>,
   owner: PlayerId,
   selected: readonly Unit[],
   target: Exclude<PointerTarget, { kind: "item" }>,
@@ -89,7 +90,7 @@ export function targetCommand(
     return damaged && workers.length > 0 ? { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued } : undefined;
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
-  if (UNIT_DEFS[target.unit.kind].naval && target.unit.hp < target.unit.maxHp && workers.length)
+  if (UNIT_DEFS[target.unit.kind].naval && shipNeedsRepair({items:snapshot.items ?? []},target.unit) && workers.length)
     return { type: "repairShip", unitIds: ids(workers), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval && !unit.deck);
   return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;

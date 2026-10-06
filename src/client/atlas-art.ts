@@ -1,6 +1,6 @@
 import { drawBakedBuilding } from "./art/baked-buildings";
 import { bakedImage } from "./art/baked-assets";
-import { drawBakedShip } from "./art/baked-ships";
+import { drawBakedShip, drawShipWeapon } from "./art/baked-ships";
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
 import { unitMover } from "../shared/catalog";
 import { paintCorpse } from "./art/corpses";
@@ -99,7 +99,7 @@ export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteMod
 
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
-  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit;if(drawBakedShip(c,ship,point,"base",scale*.55)){drawBakedShip(c,ship,point,"upper",scale*.55);return;}}
+  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit;if(drawBakedShip(c,ship,point,"base",scale*.55)){drawBakedShip(c,ship,point,"upper",scale*.55);drawShipWeapon(c,{...ship,deckScale:scale*.55},point,[]);return;}}
   if (hasPaintedUnit(kind)) {
     sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
@@ -126,7 +126,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
  * space that a full-body thumbnail cannot. Mounted units and beasts keep their
  * silhouette. Coordinates and clipping stay local to the requested rectangle. */
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
-  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit,scale=size/(shipProfile(ship)!.length+20);if(drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"base",scale)){drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"upper",scale);return;}}
+  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit,scale=size/(shipProfile(ship)!.length+20);if(drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"base",scale)){drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"upper",scale);drawShipWeapon(c,{...ship,deckScale:scale},{x:x+size*.5,y:y+size*.66},[]);return;}}
   const { bearing } = UNIT_CARDS[kind].art;
   const foot = bearing === "foot";
   const painted = hasPaintedUnit(kind);

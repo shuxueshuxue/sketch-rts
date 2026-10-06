@@ -1,3 +1,5 @@
+import { SHIP_WEAPONS,isShipEquipment,shipMounts } from "../shared/ship-equipment";
+import { ITEM_DEFS } from "../shared/equipment";
 import { shipProfile, shipPassengers, isShipKind } from "../shared/ship-geometry";
 import { bodyMass } from "../shared/physical-body";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "../shared/unit-value";
@@ -195,9 +197,10 @@ export function tooltipText(tooltip: GameplayTooltip) {
 // Transports: the supply of passengers aboard against what they carry (see @@@transport).
 function cargoLines(kind: UnitKind, units: Unit[], snapshot:GameSnapshot, locale: Locale) {
   if(!isShipKind(kind))return [];
-  const load=units.reduce((sum,ship)=>sum+shipPassengers(snapshot.units,ship).reduce((n,u)=>n+bodyMass(u),0),0);
+  const load=units.reduce((sum,ship)=>sum+shipPassengers(snapshot.units,ship).reduce((n,u)=>n+bodyMass(u),0)+(ship.holdMass ?? 0),0);
   const limit=units.reduce((sum,ship)=>sum+shipProfile(ship)!.loadCapacity,0);
-  return [locale==="zh" ? `甲板载重：${load}/${Math.round(limit)} kg` : `Deck payload: ${load}/${Math.round(limit)} kg`];
+  const profile=shipProfile(units[0]!)!,mounts=shipMounts(units[0]!);
+  return [locale==="zh" ? `总载重：${Math.round(load)}/${Math.round(limit)} kg` : `Payload: ${Math.round(load)}/${Math.round(limit)} kg`,localized(locale,`空载转向 ${Math.round(profile.turnRate*180/Math.PI)}°/秒；载重和船舵损伤会降低转向`,`${Math.round(profile.turnRate*180/Math.PI)}°/s unloaded; cargo and rudder damage slow turning`),localized(locale,`船首 1 个炮位，舷侧 ${mounts.length-1} 个；船首射界 ±30°，舷侧 ±35°`,`1 bow fitting, ${mounts.length-1} broadside fittings; bow ±30°, broadside ±35°`)];
 }
 
 function tooltipLine(locale: Locale, key: keyof typeof TEXT.en.stats, value: number | string) {
@@ -387,6 +390,14 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
 
 const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
   en: {
+    shipCannon:{title:"Deck Cannon",body:"A tradable naval weapon. Hauling it takes all four carrying positions; installed guns fire automatically.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
+    shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
+    flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
+    issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[],requirements:[]},
+    leatherArmor:{title:"Leather Armor",body:"Reduces incoming damage while worn on the body.",stats:[],requirements:[]},
+    legGuards:{title:"Leg Guards",body:"Reduces incoming damage while worn on the legs.",stats:[],requirements:[]},
+    roundShield:{title:"Round Shield",body:"Reduces incoming damage while held. Cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},
+    greatSword:{title:"Greatsword",body:"A melee weapon occupying both hands. Your other weapons stay in their carrying positions.",stats:[],requirements:[]},
     lightningRod: {
       title: "Lightning Rod",
       body: "Strikes an enemy unit, then jumps to nearby enemies with reduced damage.",
@@ -401,7 +412,7 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
     flameCloak: {
       title: "Flame Cloak",
-      body: "Passive aura that burns nearby enemies while carried.",
+      body: "Passive aura that burns nearby enemies while worn.",
       stats: [],
       requirements: ["Passive item. No manual use."],
     },
@@ -425,13 +436,13 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
     speedBoots: {
       title: "Boots of Speed",
-      body: "Its carrier moves faster. A second pair adds nothing.",
+      body: "Moves its wearer faster while worn on the feet.",
       stats: [],
       requirements: ["Passive item. No manual use."],
     },
     regenRing: {
-      title: "Ring of Regeneration",
-      body: "Its carrier heals over time. A second ring adds nothing.",
+      title: "Regeneration Circlet",
+      body: "Heals its wearer over time while worn on the head.",
       stats: [],
       requirements: ["Passive item. No manual use."],
     },
@@ -449,6 +460,14 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
   },
   zh: {
+    shipCannon:{title:"甲板火炮",body:"可以流通的船用武器；搬运占满四个携行位，安装到炮位后自动开火。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
+    shipMortar:{title:"舰载臼炮",body:"重型船用攻城武器；转装到兼容船只后保留爆炸效果和最小射程。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
+    flameProjector:{title:"喷火装置",body:"近距离船用武器；搬运和换装保留耐久与射击冷却。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
+    issuedWeapon:{title:"制式武器",body:"单位训练时配发的武器。可以收起或转交，同样占用四个携行位之一。",stats:[],requirements:[]},
+    leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的伤害。",stats:[],requirements:[]},
+    legGuards:{title:"护腿",body:"穿在腿部位置时减少受到的伤害。",stats:[],requirements:[]},
+    roundShield:{title:"圆盾",body:"拿在手中时减少受到的伤害；不能和双手武器同时持用。",stats:[],requirements:[]},
+    greatSword:{title:"双手剑",body:"占用双手的近战武器；其它武器仍保留在各自的携行位。",stats:[],requirements:[]},
     lightningRod: {
       title: "闪电权杖",
       body: "打击一个敌方单位，然后以较低伤害跳向附近敌人。",
@@ -492,8 +511,8 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
       requirements: ["被动物品，无法手动使用。"],
     },
     regenRing: {
-      title: "回复戒指",
-      body: "携带者持续回血。带两枚不叠加。",
+      title: "回春头环",
+      body: "穿在头部位置时持续恢复生命。收进携行位或船舱后停止生效。",
       stats: [],
       requirements: ["被动物品，无法手动使用。"],
     },
@@ -540,6 +559,8 @@ function unitDescription(kind: UnitKind, i18n: I18n) {
 
 function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, earnsStars = true) {
   const lines: string[] = [];
+  if(def.naval)lines.push(localized(locale,"攻击舰船优先打可攻击的乘员；命中乘员也会按武器破坏船体。空闲农民会花费金币自动修船。","Ship attacks prioritize reachable crew; hits also damage the hull according to the weapon. Idle workers automatically repair their ship using gold."));
+  if(def.passengerDamageMultiplier)lines.push(localized(locale,`乘员攻击伤害 ${def.passengerDamageMultiplier*100}%`,`Passenger attack damage ${def.passengerDamageMultiplier*100}%`));
   if (def.armor === "heavy") lines.push(localized(locale, `重甲：远程伤害 ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%，防御塔伤害 ${HEAVY_ARMOR_DAMAGE.tower * 100}%`, `Heavy armor: ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% ranged damage, ${HEAVY_ARMOR_DAMAGE.tower * 100}% tower damage`));
   if (def.casterSlayer) lines.push(localized(locale, `对法师／召唤物伤害 ×${def.casterSlayer}`, `Caster/summon damage ×${def.casterSlayer}`));
   if (def.regenPerSecond) lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
@@ -558,7 +579,7 @@ function itemStats(kind: ItemKind, locale: Locale) {
   const range = (n: number) => tooltipLine(locale, "range", n);
   const radius = (n: number) => localized(locale, `半径 ${n}`, `Radius ${n}`);
   const consumed = localized(locale, "使用后消耗", "Consumed on use");
-  let stats: string[];
+  let stats: string[] = [];
   switch (kind) {
     case "lightningRod": stats = [localized(locale, `初始伤害 ${LIGHTNING_ROD.damage}`, `${LIGHTNING_ROD.damage} initial damage`), localized(locale, `最多命中 ${LIGHTNING_ROD.hits} 个目标`, `Up to ${LIGHTNING_ROD.hits} targets`), range(LIGHTNING_ROD.range), localized(locale, `弹跳范围 ${LIGHTNING_ROD.bounceRange}`, `Bounce range ${LIGHTNING_ROD.bounceRange}`), tooltipLine(locale, "cooldown", formatSeconds(LIGHTNING_ROD.cooldown))]; break;
     case "stormStaff": stats = [localized(locale, `落点伤害 ${STORM_STAFF.impactDamage}`, `${STORM_STAFF.impactDamage} impact damage`), localized(locale, `每 ${formatSeconds(STORM_STAFF.pulseEvery)} 造成 ${STORM_STAFF.pulseDamage} 伤害`, `${STORM_STAFF.pulseDamage} damage every ${formatSeconds(STORM_STAFF.pulseEvery)}`), radius(STORM_STAFF.radius), range(STORM_STAFF.range), tooltipLine(locale, "duration", formatSeconds(STORM_STAFF.duration)), tooltipLine(locale, "cooldown", formatSeconds(STORM_STAFF.cooldown))]; break;
@@ -571,6 +592,13 @@ function itemStats(kind: ItemKind, locale: Locale) {
     case "healingScroll": stats = [tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
     case "ivoryTower": stats = [range(IVORY_TOWER_REACH), localized(locale, `初始生命 ${IVORY_TOWER_HP_SHARE * 100}%`, `Starting HP ${IVORY_TOWER_HP_SHARE * 100}%`), consumed]; break;
   }
+  if(isShipEquipment(kind)){const weapon=SHIP_WEAPONS[kind];stats.push(tooltipLine(locale,"attack",weapon.damage),range(weapon.range),tooltipLine(locale,"cooldown",formatSeconds(weapon.cooldown)),localized(locale,"占满 4 个携行位／4 个船舱格","Uses all 4 carrying positions / 4 hold cells"));}
+  const equipment=ITEM_DEFS[kind];
+  const positions={head:["头部","Head"],body:["身体","Body"],legs:["腿部","Legs"],feet:["脚部","Feet"]} as const;
+  stats.push(equipment.slot ? localized(locale,`${positions[equipment.slot as keyof typeof positions]?.[0]}穿戴位；也可收在携行位`,`${positions[equipment.slot as keyof typeof positions]?.[1]} equipment; can also be stowed`) : equipment.span===4 ? localized(locale,"搬运时不能持用其它物品","Cannot hold other items while hauling") : localized(locale,`${equipment.hands===2?"双手":"单手"}物品 · 占 1 个携行位`,`${equipment.hands===2?"Two-handed":"One-handed"} · 1 carrying position`));
+  if(equipment.protection)stats.push(localized(locale,`减伤 ${equipment.protection*100}%`,`${equipment.protection*100}% damage reduction`));
+  if(equipment.weapon)stats.push(localized(locale,`攻击 ${equipment.weapon.damage} · 射程 ${equipment.weapon.range}`,`Attack ${equipment.weapon.damage} · Range ${equipment.weapon.range}`));
+  stats.push(localized(locale,`重量 ${equipment.mass} kg`,`${equipment.mass} kg`));
   const good = SHOP_GOODS.find(good => good.kind === kind);
   if (good) stats.push(tooltipLine(locale, "cost", good.cost), localized(locale, `补货 ${formatSeconds(good.restock)}`, `Restock ${formatSeconds(good.restock)}`));
   return stats;

@@ -1,4 +1,5 @@
-import { drawBakedShip,shipDirection,drawShipOcclusion,deckVisualHeight,drawShipFlag } from "./art/baked-ships";
+import { itemEquipped } from "../shared/equipment";
+import { drawBakedShip,shipDirection,drawShipOcclusion,deckVisualHeight,drawShipFlag,drawShipWeapon } from "./art/baked-ships";
 import { shipProfile,shipPassengers } from "../shared/ship-geometry";
 import { engagedEntityIds, healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
@@ -391,8 +392,9 @@ function drawShipGroup(painter:Painter,ship:Unit) {
   const point=worldToScreen(painter,drawnPosition(painter,ship));
   if(!drawBakedShip(painter.ctx,ship,point,"base")){drawUnits(painter,[ship]);for(const unit of shipPassengers(painter.snapshot.units,ship))drawUnits(painter,[unit]);return;}
   drawBakedShip(painter.ctx,ship,point,"upper");
+  drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,undefined,painter.snapshot.items);
   drawShipFlag(painter.ctx,ship,point,ownerInk(ship.owner));
-  for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y)){drawUnits(painter,[crew]);drawShipOcclusion(painter.ctx,ship,point,crew);}
+  for(const crew of shipPassengers(painter.snapshot.units,ship).sort((a,b)=>a.y-b.y)){drawUnits(painter,[crew]);drawShipWeapon(painter.ctx,ship,point,painter.snapshot.effects,crew,painter.snapshot.items);drawShipOcclusion(painter.ctx,ship,point,crew);}
   drawUnits(painter,[ship],true);
 }
 
@@ -432,7 +434,7 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
     if (scorch) drawScorchedUnitFlames(ctx, point, unit.radius, now, scorch.remaining);
     if (unit.kind === "worker" && unit.carryingGold > 0) drawCarriedGold(ctx, point.x, point.y);
     if (unit.level > 0) drawLevelStar(ctx, point.x + unit.radius + 5, point.y - unit.radius - 5, unit.level);
-    if (shouldShowHealthBar({ hp: unit.hp, maxHp: unit.maxHp, selected, hovered: painter.hoveredId === unit.id, engaged: engaged.has(unit.id), still: painter.still })) drawHp(ctx, point.x, point.y - Math.max(unit.radius * 1.8 + 6, 64 * scale + 6), unit.hp, unit.maxHp);
+    if (shouldShowHealthBar({ hp: unit.hp, maxHp: unit.maxHp, shipHull: Boolean(shipProfile(unit)), selected, hovered: painter.hoveredId === unit.id, engaged: engaged.has(unit.id), still: painter.still })) drawHp(ctx, point.x, point.y - Math.max(unit.radius * 1.8 + 6, 64 * scale + 6), unit.hp, unit.maxHp);
     if (selected && painter.controlGroups) {
       const digits = Object.entries(painter.controlGroups).filter(([, ids]) => ids.includes(unit.id)).map(([digit]) => digit).join("·");
       if (digits) {
@@ -459,7 +461,7 @@ function drawnPosition(painter: Painter, unit: Unit): Point {
 }
 
 function hasCarriedItem(snapshot: GameSnapshot, unit: Unit, kind: WorldItem["kind"]) {
-  return snapshot.items.some((item) => item.kind === kind && item.carrierId === unit.id);
+  return snapshot.items.some((item) => item.kind === kind && item.carrierId === unit.id && itemEquipped(snapshot,unit,item));
 }
 
 function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: number) {
@@ -488,7 +490,7 @@ function drawFlameCloakAura(ctx: Brush, point: Point, now: number, radius: numbe
 
 function drawItems(painter: Painter, items: WorldItem[]) {
   for (const item of items) {
-    if (item.carrierId) continue;
+    if (item.carrierId || item.shipId) continue;
     const point = worldToScreen(painter, item);
     if (!nearScreen(painter, point, 42)) continue;
     drawItemGlyph(painter.ctx, item, point, painter.now, false);
