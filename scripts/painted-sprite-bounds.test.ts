@@ -7,6 +7,7 @@ import { UNIT_CARDS } from '../src/client/content/units';
 import { BUILDING_CARDS } from '../src/client/content/buildings';
 import type { UnitKind,BuildingKind } from '../src/shared/types';
 import type { UnitAnimationFrame } from '../src/client/unit-animation';
+import { unitMover } from '../src/shared/catalog';
 function assertFits(paint:(b:CanvasRenderingContext2D)=>void,label:string){
   const c=createCanvas(128,128),b=c.getContext('2d');b.translate(64,64);
   paint(b as unknown as CanvasRenderingContext2D);
@@ -20,6 +21,19 @@ function assertFits(paint:(b:CanvasRenderingContext2D)=>void,label:string){
   expect(edge,label+' is not clipped by atlas').toBe(0);
 }
 describe('painted atlas bounds',()=>{
+  it('keeps every ship steady across sailing frames while land siege wheels still turn',()=>{
+    const render=(kind:UnitKind,pose:UnitAnimationFrame)=>{
+      const c=createCanvas(128,128),b=c.getContext('2d');b.translate(64,64);
+      paintFigure(b as unknown as CanvasRenderingContext2D,kind,'#476f69',pose,1);
+      return c.toBuffer('image/png');
+    };
+    for(const kind of Object.keys(UNIT_CARDS) as UnitKind[]){
+      if(unitMover(kind)!=='sea')continue;
+      const idle=render(kind,{mode:'idle',frame:0});
+      for(let frame=0;frame<8;frame++)expect(render(kind,{mode:'walk',frame}),`${kind}/${frame}`).toEqual(idle);
+    }
+    expect(render('siegeRam',{mode:'walk',frame:1})).not.toEqual(render('siegeRam',{mode:'idle',frame:0}));
+  });
   it('fits a visible corpse or wreck for every unit kind',()=>{
     for(const kind of Object.keys(UNIT_CARDS) as UnitKind[])assertFits(b=>paintCorpse(b,kind),kind+' corpse');
   });
