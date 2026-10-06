@@ -48,6 +48,8 @@ async function start() {
   button('停止',()=>command({type:'stop',unitIds:[selected]}));
   const pauseButton=button('暂停',()=>{paused=!paused;pauseButton.textContent=paused?'继续':'暂停';});
   const compare=button(renderer?'2D 对照':'需要 WebGL2',()=>{view=view==='3d'?'2d':'3d';compare.textContent=view==='3d'?'2D 对照':'返回 3D';gpuCanvas.hidden=view!=='3d';flat.hidden=view!=='2d';if(view==='2d')loadFlatArt();renderTimes.length=frameTimes.length=simTimes.length=0;});compare.disabled=!renderer;
+  let viewAngle=0;
+  const orbit=button('转动视角',()=>{if(view!=='3d')return;viewAngle+=Math.PI/4;camera.position.set(900+Math.sin(viewAngle)*640,640,-790+Math.cos(viewAngle)*640);camera.lookAt(900,15,-790);});orbit.disabled=!renderer;
   if(!renderer)status.textContent='浏览器未启用 WebGL2 · 当前为 2D 对照';
   button('性能',()=>{perf=!perf;statistics.hidden=!perf;});button('重置',()=>location.reload());
   const names={warship:'战船',worker:'农民',footman:'步兵',archer:'弓箭手'};
