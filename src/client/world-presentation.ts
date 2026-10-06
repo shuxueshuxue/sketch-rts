@@ -1,9 +1,6 @@
 import { drawWorld,type WorldFrame } from './world-renderer';
 import { resources,resourceText,type ResourcePhase } from './resources';
 import { resourcePanel } from './resource-panel';
-import { loadBakedImage } from './art/baked-assets';
-import { BUILDING_DEFS } from '../shared/catalog';
-import { SHIP_KINDS,shipProfile } from '../shared/ship-geometry';
 import type { GameSnapshot } from '../shared/types';
 import type { World3DLayer } from './world3d/world-layer';
 import './world-presentation.css';
@@ -39,7 +36,6 @@ export class WorldPresentation {
     if(revision!==this.revision)return;
     if(this.layer && !this.contextLost && !this.failed){
       await resources.warm('renderer',phase);
-      if(phase==='match')await Promise.all([...SHIP_KINDS.map(kind=>`portraits/${kind}`),...Object.keys(BUILDING_DEFS).flatMap(kind=>[`buildings/${kind}`,`buildings/${kind}-team`])].map(key=>loadBakedImage(key,phase)));
       if(revision!==this.revision)return;
       resourcePanel().preparing(resourceText('读取并准备三维模型','Loading and preparing 3D models'));
       await this.layer.prepare(snapshot,phase,sites);
@@ -94,10 +90,11 @@ export class WorldPresentation {
     }
   }
   private async prepareFallback(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){
-    const ships=phase==='match'?SHIP_KINDS:snapshot.units.filter(unit=>shipProfile(unit)).map(unit=>unit.kind);
-    const buildings=phase==='match'?Object.keys(BUILDING_DEFS):[...snapshot.buildings.map(building=>building.kind),...sites];
-    const keys=[...new Set([...ships.flatMap(kind=>['base','upper','depth',...(shipProfile({kind} as never)?.weaponPivot?['weapon','weapon-depth']:[])].map(layer=>`ships/${kind}-${layer}`)),...buildings.flatMap(kind=>[`buildings/${kind}`,`buildings/${kind}-team`]),...(phase==='match'||snapshot.shops?.length?['buildings/shop','buildings/shop-team']:[]),...(phase==='match'||snapshot.mercenaryCamps.length?['buildings/camp','buildings/camp-team']:[])])];
-    await Promise.all(keys.map(key=>loadBakedImage(key,phase)));
+    await resources.warm('renderer',phase);
+    const {worldModels,matchModelKeys,snapshotModelKeys}=await import('./world3d/model-library');
+    const {activateModelPortraits}=await import('./world3d/model-portraits');
+    await worldModels.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);
+    activateModelPortraits();
   }
   draw(frame:WorldFrame,phase:ResourcePhase=this.current?.phase??'home'){
     resources.phase=phase;

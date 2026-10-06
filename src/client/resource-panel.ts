@@ -25,7 +25,7 @@ export class ResourcePanel {
     this.progress.max=1;this.progress.setAttribute('aria-label',resourceText('资源读取进度','Bytes loaded'));
     this.summary.className='resource-summary';this.summary.setAttribute('aria-live','polite');this.stage.className='resource-stage';
     for(const phase of ['startup','home','match'] as const){const button=document.createElement('button');button.textContent=names[phase];button.onclick=()=>{this.selected=phase;this.update();};button.dataset.phase=phase;this.tabs.append(button);}
-    const label=document.createElement('summary');label.textContent=resourceText('查看资源大小与耗时','Resource sizes and timings');this.details.append(label,this.rows);this.rows.className='resource-rows';
+    const label=document.createElement('summary');label.textContent=resourceText('查看资源大小与耗时','Resource sizes and timings');this.details.append(label,this.rows);this.rows.className='resource-rows';this.details.ontoggle=()=>this.update();
     this.retry.textContent=resourceText('重试','Retry');this.retry.hidden=true;this.retry.onclick=()=>this.again?.();
     card.append(this.close,this.title,this.tabs,this.progress,this.summary,this.stage,this.details,this.retry);document.body.append(this.root);
     resources.subscribe(()=>{if(this.queued)return;this.queued=true;requestAnimationFrame(()=>{this.queued=false;this.update();});});
@@ -45,11 +45,13 @@ export class ResourcePanel {
   }
   preparing(text:string){this.stage.textContent=text;}
   private update(){
+    if(this.root.hidden)return;
     const state=resources.summary(this.selected);this.title.textContent=this.pending?`${resourceText('载入','Loading ')}${names[this.selected]}`:resourceText('资源记录','Resource report');
     if(state.unknown || state.total===0&&state.entries.length>0)this.progress.removeAttribute('value');else this.progress.value=state.total?Math.min(1,state.loaded/state.total):0;
     this.summary.textContent=state.entries.length?`${resourceSize(state.loaded)} / ${state.unknown?resourceText('总大小待确认','total pending'):resourceSize(state.total)} · ${state.ready}/${state.entries.length} ${resourceText('项','files')}${state.reused?` · ${resourceText('复用','reused')} ${resourceSize(state.reused)}`:''}${state.failed?` · ${state.failed} ${resourceText('项失败','failed')}`:''}`:resourceText('尚未进入此载入阶段','This phase has not started');
     if(!this.pending)this.stage.textContent=`${names[this.selected]}${this.renderer?` · ${this.renderer}`:''} · ${resourceText('读取大小包含浏览器缓存；网络压缩大小可能不同','Read size includes browser cache; compressed network size may differ')}`;
     for(const button of this.tabs.querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.phase===this.selected));
+    if(!this.details.open){this.rows.replaceChildren();return;}
     const fragment=document.createDocumentFragment();
     for(const entry of [...state.entries].sort((a,b)=>(b.expected??b.loaded)-(a.expected??a.loaded))){
       const row=document.createElement('div');row.className='resource-row';

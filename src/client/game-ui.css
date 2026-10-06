@@ -1,0 +1,37 @@
+@import './game-materials.css';
+/* Shared controls and surfaces. Screen-specific files own layout only. */
+:root {
+  --font-ui:var(--game-text); --font-body:var(--game-text); --font-display:var(--game-serif);
+  --panel:var(--game-leather); --ink:var(--game-ink); --ink-soft:var(--game-muted); --title:var(--game-title);
+  --accent:var(--game-brass-lit); --btn:var(--game-button); --btn-hover:var(--game-button-hover);
+  --btn-edge:var(--game-brass); --btn-ink:var(--game-ink);
+  --field:var(--game-field); --field-edge:var(--game-edge); --field-ink:var(--game-ink);
+  --inset:#10171066; --inset-edge:var(--game-edge); --inset-ink:var(--game-ink); --inset-ink-soft:var(--game-muted);
+}
+.game-shell { --battle-surface:var(--game-leather); --battle-edge:var(--game-edge); --battle-ink:var(--game-ink); --battle-muted:var(--game-muted); --battle-accent:var(--game-brass-lit); }
+.menu-window:not(.main-menu[data-menu-view=home] .menu-window),.pointer-lock-panel,.game-settings,.resource-card { background:var(--game-leather); color:var(--game-ink); border:1px solid var(--game-brass); border-radius:1px; box-shadow:var(--game-frame); }
+.resource-card h2,.game-settings h2,.equipment-panel h2 { color:var(--game-title); font-family:var(--game-serif); }
+:is(.resource-card,.game-settings) button,.equipment-close,.equipment-context button,.equipment-pages button,.equipment-action,.equipment-pane-tabs button { background:var(--game-button); border:1px solid var(--game-brass); border-radius:1px; color:var(--game-ink); box-shadow:var(--game-inset); font-family:var(--game-text); cursor:pointer; }
+:is(.resource-card,.game-settings) button:hover,.equipment-panel button:hover { background:var(--game-button-hover); border-color:var(--game-brass-lit); color:var(--game-title); }
+:is(.resource-card,.game-settings,.equipment-panel) button:focus-visible { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
+.hud-subject-art { height:90px; object-fit:fill; }
+.command-icon { justify-items:center; }
+.command-portrait { width:100%; height:100%; object-fit:contain; }
+.hud-roster-art { width:min(48px,100%); height:48px; object-fit:contain; }
+.equipment-cargo { background:var(--game-leather); }
+.game-settings { width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; padding:18px; overflow:auto; font:13px/1.5 var(--game-text); }
+.game-settings::backdrop { background:#0c100e99; }
+.game-settings header { display:flex; gap:12px; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--game-edge); }
+.game-settings h2 { flex:1; margin:0 0 10px; font-size:18px; }
+.game-settings header button { width:30px; height:30px; margin-bottom:10px; font-size:22px; padding:0; }
+.game-settings label { display:grid; gap:8px; }
+.game-settings select { min-width:0; width:100%; color:var(--game-ink); background:var(--game-field); border:1px solid var(--game-edge); padding:6px; }
+.sound-settings { color:var(--game-ink); border-color:var(--game-edge); }
+.sound-settings input[type=range] { min-width:0; width:100%; accent-color:var(--game-brass-lit); }
+.settings-diagnostics { margin-top:3px; border-top:1px solid var(--game-edge); padding-top:8px; color:var(--game-muted); font:11px/1.6 var(--game-text); }
+.settings-diagnostics summary { cursor:pointer; }
+.settings-resource-link { margin-top:7px; padding:5px 9px; font:11px var(--game-text); color:var(--game-muted); border:1px solid var(--game-edge); background:var(--game-field); }
+.settings-resource-link:hover { color:var(--game-ink); }
+.resource-screen { font-family:var(--game-text); }
+.resource-stage { color:var(--game-muted); }
+@media(max-width:650px) { .hud-subject-art { width:72px; height:72px; } }

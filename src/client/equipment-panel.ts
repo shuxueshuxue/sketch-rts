@@ -1,4 +1,5 @@
-import { bakedAssetsVersion } from "./art/baked-assets";
+import { modelArtRevision } from "./model-portraits";
+import {paintPortrait} from './portrait-cache';
 import { formatMass } from "./format-mass";
 import { isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
 import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, exchangeRecipient, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
@@ -10,7 +11,7 @@ import { weaponCondition } from './weapon-condition';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
-import { drawAtlasUnit, drawAtlasUnitPortrait } from './atlas-art';
+import { drawAtlasUnitFigure, drawAtlasUnitPortrait } from './atlas-art';
 import './equipment-panel.css';
 type I18n = ReturnType<typeof createI18n>;
 const labelKind = (kind: Parameters<I18n['label']>[0], i18n: I18n) => i18n.label(kind);
@@ -355,7 +356,7 @@ export class EquipmentPanel {
         const capacity = holdColumns * holdRows, total = ship ? shipHoldSlots(ship) : 0;
         const pageCount = Math.max(1, Math.ceil(total / capacity));
         this.holdPage = Math.min(this.holdPage, pageCount - 1);
-        const key = JSON.stringify([narrow, short, holdRows, this.holdPage, this.activePane, bakedAssetsVersion(), this.i18n().locale, this.unitId, this.shipId,
+        const key = JSON.stringify([narrow, short, holdRows, this.holdPage, this.activePane, modelArtRevision(), this.i18n().locale, this.unitId, this.shipId,
             characters.map(unit => unit.id), ship && shipPassengers(snapshot.units,ship).map(crew=>[crew.id,crew.owner]), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
         if (key === this.fingerprint || this.dragging || this.crewDrag) { this.updateValues(unit, ship); return; }
         this.fingerprint = key;
@@ -391,7 +392,7 @@ export class EquipmentPanel {
             const carriedItems = itemsFor(snapshot, unit);
             for (const slot of ARMOR_SLOTS) outfit.append(this.cell(this.text(...SLOT_LABELS[slot]), carriedItems.find(item => itemSlot(snapshot, unit, item) === slot), { unitId: unit.id, slot }));
             const figure = document.createElement('canvas'); figure.width = 240; figure.height = 360; figure.className = 'equipment-figure';
-            drawAtlasUnit(figure.getContext('2d')!, unit.kind, {x:120,y:245}, 3.5, '#819b82'); positions.append(figure);
+            positions.append(figure);
             const heavy = carriedItems.find(item => ITEM_DEFS[item.kind].span === 4);
             if (heavy) {
                 const cell = this.cell(this.text('携行 1–4 · 搬运', 'Arms 1–4 · Hauling'), heavy, { unitId: unit.id, slot: 'carry0' });
@@ -526,6 +527,8 @@ export class EquipmentPanel {
         parent.append(context);
     }
     private updateValues(unit: Unit | undefined, ship: Unit | undefined) {
+        const figure=this.root.querySelector<HTMLCanvasElement>('.equipment-figure');
+        if(figure && unit)paintPortrait(figure,`figure:${unit.kind}`,canvas=>drawAtlasUnitFigure(canvas.getContext('2d')!,unit.kind,canvas.clientWidth||canvas.width,canvas.clientHeight||canvas.height,'#819b82'));
         const scene=this.root.querySelector<HTMLElement>('.equipment-deck-scene');
         if(scene && ship){
             const frame=scene.parentElement!,width=Math.min(frame.clientWidth,frame.clientHeight*200/340);

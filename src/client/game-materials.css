@@ -8,6 +8,14 @@
   --game-paper: var(--game-grain), radial-gradient(ellipse at 35% 25%, #d7c9a7, #b4a485);
   --game-brass: #a98c52;
   --game-brass-lit: #d7bc7c;
+  --game-ink: #ded4b8;
+  --game-muted: #b7b095;
+  --game-title: #e4c88c;
+  --game-error: #e5a18c;
+  --game-edge: #a58b5259;
+  --game-field: #161e17;
+  --game-button: var(--game-grain),linear-gradient(#514735,#29291f);
+  --game-button-hover: var(--game-grain),linear-gradient(#63553a,#3d3928);
   --game-frame: inset 0 1px #d9c29850, inset 0 -2px #0009, 0 0 0 1px #100e0b, 0 0 0 3px #6d5636, 0 0 0 4px #17130f, 0 8px 24px #0007;
   --game-inset: inset 0 2px 6px #0008, inset 0 0 0 1px #0005, 0 1px #c1aa7428;
 }

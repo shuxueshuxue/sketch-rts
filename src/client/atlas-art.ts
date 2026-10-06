@@ -1,6 +1,5 @@
-import { drawBakedBuilding } from "./art/baked-buildings";
-import { bakedImage } from "./art/baked-assets";
-import { drawBakedShip, drawShipWeapon } from "./art/baked-ships";
+import { drawModelPortrait } from './model-portraits';
+import { drawFittedPortrait } from './art/portrait-fit';
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
 import { unitMover } from "../shared/catalog";
 import { paintCorpse } from "./art/corpses";
@@ -67,39 +66,19 @@ function brushZoom(c: Brush) {
 }
 
 export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, point: Point, size: number, color: string) {
-  if(drawBakedBuilding(c,kind,point,size,color))return;
   sprite(c, `b:${kind}:${color}`, point, size / 64, (b) => {
     paintBuildingModel(b, kind, color);
   });
 }
 
-const sitePortraits = new Map<string, { canvas: HTMLCanvasElement; x: number; y: number; width: number; height: number }>();
-/** Fit the actual architecture to its visible bounds, including tall roofs and awnings. */
+/** Architecture portraits use the same current model as the world. */
 export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteModelKind, size: number, color: string) {
-  const key = `${kind}:${color}:${Boolean(bakedImage(`buildings/${kind}`))}`;
-  let source = sitePortraits.get(key);
-  if (!source) {
-    const canvas = createScratchCanvas(256, 256);
-    const brush = canvas.getContext("2d")!;
-    brush.translate(128, 128); brush.scale(2, 2);
-    if(!drawBakedBuilding(brush,kind,{x:0,y:0},64,color))paintBuildingModel(brush, kind, color);
-    const pixels = brush.getImageData(0, 0, 256, 256).data;
-    let left = 256, top = 256, right = 0, bottom = 0;
-    for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) if (pixels[(y * 256 + x) * 4 + 3]! > 8) {
-      left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
-    }
-    source = { canvas, x:left, y:top, width:right-left+1, height:bottom-top+1 };
-    if (sitePortraits.size >= 128) sitePortraits.delete(sitePortraits.keys().next().value!);
-    sitePortraits.set(key, source);
-  }
-  const scale = size * .92 / Math.max(source.width, source.height);
-  const width = source.width * scale, height = source.height * scale;
-  c.drawImage(source.canvas, source.x, source.y, source.width, source.height, (size-width)/2, (size-height)/2, width, height);
+  if(drawModelPortrait(c,`buildings/${kind}`,0,0,size,color))return;
+  drawFittedPortrait(c,`building:${kind}:${color}`,b=>paintBuildingModel(b,kind,color),0,0,size,size);
 }
 
 /** Unit models face right; facing -1 draws the mirror image, facing left. */
 export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME) {
-  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit;if(drawBakedShip(c,ship,point,"base",scale*.55)){drawBakedShip(c,ship,point,"upper",scale*.55);drawShipWeapon(c,{...ship,deckScale:scale*.55},point,[]);return;}}
   if (hasPaintedUnit(kind)) {
     sprite(c, `painted:${kind}:${color}:${facing}:${pose.mode}:${pose.frame}`, point, scale, (b) => {
       const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
@@ -122,27 +101,14 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
   }, facing === -1);
 }
 
-/** A close portrait shares the actual model, but gives faces and equipment the
- * space that a full-body thumbnail cannot. Mounted units and beasts keep their
- * silhouette. Coordinates and clipping stay local to the requested rectangle. */
+/** One measured portrait source serves selection, training, queues and crew. */
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
-  if(isShipKind(kind)){
-    const portrait=bakedImage(`portraits/${kind}`);
-    if(portrait){c.drawImage(portrait,x,y,size,size);return;}
-    c.save();c.beginPath();c.rect(x,y,size,size);c.clip();c.translate(x+size*.5,y+size*.5);c.scale(size/128,size/128);UNIT_CARDS[kind].paint(c,color);c.restore();return;
-  }
-  const { bearing } = UNIT_CARDS[kind].art;
-  const foot = bearing === "foot";
-  const painted = hasPaintedUnit(kind);
-  // Busts use head/shoulder space; cavalry retains enough mount to read its role.
-  const extent = foot ? (painted ? 40 : 48) : bearing === "mounted" ? 86 : kind === "redDragon" ? 112 : 94;
-  const scale = size / extent;
-  c.save();
-  c.beginPath(); c.rect(x, y, size, size); c.clip();
-  const anchorY = foot ? (painted ? 49 : 36) * scale : (bearing === "mounted" ? 61 : 60) * scale;
-  drawAtlasUnit(c, kind, { x: x + size * .5, y: y + anchorY }, scale, color);
-
-  c.restore();
+  if(isShipKind(kind) && drawModelPortrait(c,`ships/${kind}`,x,y,size,color))return;
+  const bust=UNIT_CARDS[kind].art.bearing==='foot';
+  drawFittedPortrait(c,`portrait:${kind}:${color}`,b=>{if(!paintFigure(b,kind,color,IDLE_FRAME,1))UNIT_CARDS[kind].paint(b,color);},x,y,size,size,bust);
+}
+export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:number,color:string){
+  drawFittedPortrait(c,`figure:${kind}:${color}`,b=>{if(!paintFigure(b,kind,color,IDLE_FRAME,1))UNIT_CARDS[kind].paint(b,color);},0,0,width,height);
 }
 
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
@@ -409,13 +375,11 @@ export function obstacleArtTop(obstacle: Pick<Obstacle, "kind" | "radius" | "alo
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
-  if(drawBakedBuilding(c,"camp",point,64*size,"#8b7355"))return;
   sprite(c, "mercenary-camp", point, size, b => paintBuildingModel(b, "camp", "#8b7355"));
 }
 
 /** Neutral trading house: slate roof, linen awning, wares and hanging brass sign. */
 export function drawAtlasShop(c: Brush, point: Point, size = 1) {
-  if(drawBakedBuilding(c,"shop",point,64*size,"#8b7355"))return;
   sprite(c, "shop", point, size, b => paintBuildingModel(b, "shop", "#8b7355"));
 }
 
