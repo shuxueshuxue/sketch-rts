@@ -23,6 +23,12 @@ describe("selection controls", () => {
     expect(result.focusedSelectionId).toBe("worker-1");
   });
 
+  it("box-selects a crew member at its elevated visible body instead of its ground coordinate", () => {
+    const snapshot=snapshotWith({units:[unit("crew",100,180),unit("land",100,180)]});
+    const result=selectInScreenBox(snapshot,"player",rect(70,70,130,110),point=>point,emptySelection(),false,unit=>unit.id==="crew"?{x:100,y:90}:unit);
+    expect([...result.selectedIds]).toEqual(["crew"]);
+  });
+
   it("box-selects only one building when no units are inside the rectangle", () => {
     const snapshot = snapshotWith({
       buildings: [building("townhall-1", 100, 100, "townHall"), building("barracks-1", 140, 100)],

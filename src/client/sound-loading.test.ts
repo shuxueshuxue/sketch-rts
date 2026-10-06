@@ -26,7 +26,7 @@ describe("on-demand audio", () => {
     board.unlock();
     expect(request).not.toHaveBeenCalled();
     board.play("melee", undefined, "footman"); board.play("melee", undefined, "footman");
-    expect(request).toHaveBeenCalledTimes(1);
+    await vi.waitFor(()=>expect(request).toHaveBeenCalledTimes(1));
     answer(new Response(new Uint8Array([1,2,3])));
     await vi.waitFor(() => expect(starts).toHaveBeenCalledTimes(2));
     expect(context.decodeAudioData).toHaveBeenCalledTimes(1);

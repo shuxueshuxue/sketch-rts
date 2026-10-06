@@ -126,7 +126,11 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
  * space that a full-body thumbnail cannot. Mounted units and beasts keep their
  * silhouette. Coordinates and clipping stay local to the requested rectangle. */
 export function drawAtlasUnitPortrait(c: Brush, kind: UnitKind, x: number, y: number, size: number, color: string) {
-  if(isShipKind(kind)){const ship={kind,x:0,y:0} as Unit,scale=size/(shipProfile(ship)!.length+20);if(drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"base",scale)){drawBakedShip(c,ship,{x:x+size*.5,y:y+size*.66},"upper",scale);drawShipWeapon(c,{...ship,deckScale:scale},{x:x+size*.5,y:y+size*.66},[]);return;}}
+  if(isShipKind(kind)){
+    const portrait=bakedImage(`portraits/${kind}`);
+    if(portrait){c.drawImage(portrait,x,y,size,size);return;}
+    c.save();c.beginPath();c.rect(x,y,size,size);c.clip();c.translate(x+size*.5,y+size*.5);c.scale(size/128,size/128);UNIT_CARDS[kind].paint(c,color);c.restore();return;
+  }
   const { bearing } = UNIT_CARDS[kind].art;
   const foot = bearing === "foot";
   const painted = hasPaintedUnit(kind);

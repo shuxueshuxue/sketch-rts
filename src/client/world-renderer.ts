@@ -23,7 +23,7 @@ import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../shared/catalog";
-import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem } from "../shared/types";
+import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem,WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -54,6 +54,11 @@ export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels
 }
 
 export type WorldFrame = {
+  /** Terrain and annotations flank the shared GPU depth layer. Recorder/fallback
+   * callers omit this and retain the complete Canvas renderer. */
+  pass?: 'ground' | 'overlay';
+  actorPositions?: ReadonlyMap<string,{x:number;y:number;bodyY:number;topY:number}>;
+  physicalEffects?: ReadonlySet<WorldEffect['type']>;
   /** Optional per-match pose history. Omit for static diagrams and portraits. */
   animation?: UnitAnimationTracker;
   reducedMotion?: boolean;
@@ -86,6 +91,7 @@ export type WorldFrame = {
 };
 
 type Painter = {
+  actorPositions: WorldFrame['actorPositions'];
   animation: UnitAnimationTracker | undefined;
   reducedMotion: boolean;
   ctx: Brush;
@@ -112,6 +118,7 @@ const NO_SELECTION: ReadonlySet<string> = new Set();
 export function drawWorld(frame: WorldFrame) {
   const zoom = frame.view.zoom ?? 1;
   const painter: Painter = {
+    actorPositions: frame.actorPositions,
     animation: frame.animation,
     reducedMotion: frame.reducedMotion ?? false,
     ctx: frame.ctx,
@@ -137,6 +144,7 @@ export function drawWorld(frame: WorldFrame) {
   painter.animation?.update(snapshot, painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
+  if(frame.pass!=='overlay'){
   if (snapshot.map.terrain) {
     // A map with terrain is its own ground (see @@@terrain-art): the paper under it, no map id's linework.
     drawAtlasGround(ctx, painter.width, painter.height, painter.camera);
@@ -145,10 +153,10 @@ export function drawWorld(frame: WorldFrame) {
     drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
   }
   drawLandmarks(painter, snapshot.map.landmarks);
-  if (frame.story && frame.props) drawStoryProps(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
+  if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>!frame.actorPositions?.has(`prop:${prop.id}`))}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);
-  drawMercenaryCamps(painter, snapshot.mercenaryCamps);
-  if (snapshot.shops) drawShops(painter, snapshot.shops);
+  drawMercenaryCamps(painter, snapshot.mercenaryCamps,false,frame.pass==='ground');
+  if (snapshot.shops) drawShops(painter, snapshot.shops,false,frame.pass==='ground');
   drawObstacles(painter, snapshot.obstacles ?? []);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
@@ -161,6 +169,9 @@ export function drawWorld(frame: WorldFrame) {
     let hash=0;for(const ch of corpse.id)hash=(Math.imul(hash,31)+ch.charCodeAt(0))>>>0;
     drawAtlasCorpse(ctx,corpse.kind,point,unitGlyphScale(corpse.radius),hash%6);ctx.restore();
   }
+  }
+  if(frame.pass==='ground'){ctx.restore();return;}
+  if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
   if (!painter.still && frame.viewer) for (const worker of snapshot.units) {
     if (worker.owner !== frame.viewer || worker.order.type !== "build") continue;
@@ -177,13 +188,14 @@ export function drawWorld(frame: WorldFrame) {
   trackUnitFacing(painter.facing,painter.snapshot);
   // Sort feet, so a soldier behind a tall building is actually occluded by it.
   const actors=[...snapshot.buildings,...snapshot.units.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
-  for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+  if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,snapshot.units,true);}
+  else for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
   const unitsById = new Map(snapshot.units.map((unit) => [unit.id, unit]));
   renderWorldEffects({
     ctx,
-    effects: snapshot.effects,
+    effects: snapshot.effects.filter(effect=>!frame.physicalEffects?.has(effect.type)),
     worldToScreen: (point) => worldToScreen(painter, point),
     nearScreen: (point, pad) => nearScreen(painter, point, pad),
     unitPosition: (id) => {
@@ -277,13 +289,14 @@ function drawResources(painter: Painter, resources: ResourceNode[]) {
   }
 }
 
-function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[]) {
+function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly=false,groundOnly=false) {
   const { ctx } = painter;
   for (const camp of camps) {
     const point = worldToScreen(painter, camp);
     if (!nearScreen(painter, point, 110)) continue;
-    if (painter.selectedCampId === camp.id) drawSelectionHalo(ctx, point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#96774a");
-    drawAtlasCamp(ctx, point);
+    if (!groundOnly && painter.selectedCampId === camp.id) drawSelectionHalo(ctx, point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#96774a");
+    if(!overlayOnly && !painter.actorPositions?.has(camp.id))drawAtlasCamp(ctx, point);
+    if(groundOnly)continue;
     ctx.font = "11px ui-monospace, monospace";
     ctx.fillStyle = "#796644";
     ctx.textAlign = "center";
@@ -304,17 +317,17 @@ function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
   }
 }
 
-function drawShops(painter: Painter, shops: Shop[]) {
+function drawShops(painter: Painter, shops: Shop[],overlayOnly=false,groundOnly=false) {
   const { ctx } = painter;
   for (const shop of shops) {
     const point = worldToScreen(painter, shop);
     if (!nearScreen(painter, point, 110)) continue;
-    if (painter.selectedCampId === shop.id) drawSelectionHalo(ctx, point.x, point.y + shop.radius * 0.56, shop.radius * 1.1, shop.radius * 0.34, "#96774a");
-    drawAtlasShop(ctx, point);
+    if (!groundOnly && painter.selectedCampId === shop.id) drawSelectionHalo(ctx, point.x, point.y + shop.radius * 0.56, shop.radius * 1.1, shop.radius * 0.34, "#96774a");
+    if(!overlayOnly && !painter.actorPositions?.has(shop.id))drawAtlasShop(ctx, point);
   }
 }
 
-function drawBuildings(painter: Painter, buildings: Building[]) {
+function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false) {
   const { ctx } = painter;
   const engaged = engagedEntityIds(painter.snapshot);
   for (const building of buildings) {
@@ -340,10 +353,10 @@ function drawBuildings(painter: Painter, buildings: Building[]) {
     else if (selected || painter.hoveredId === building.id) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ring);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
-    drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
+    if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint);
-    if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
+    if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
     if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
     if (building.complete && building.queue[0]) {
       drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building.queue[0].remaining, building.queue[0].unitKind, building.queue.length);
@@ -405,9 +418,10 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
   const engaged = engagedEntityIds(painter.snapshot);
   for (const unit of units) {
     const shake = hitFeedbackOffset(painter.snapshot, unit);
-    const at = drawnPosition(painter, unit);
+    const anchor=painter.actorPositions?.get(unit.id);
+    const at = anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter, unit);
     const ship=unit.deck ? painter.snapshot.units.find(ship=>ship.id===unit.deck!.shipId) : undefined;
-    const height=ship ? deckVisualHeight(ship)+18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1) : 0;
+    const height=anchor?0:ship ? deckVisualHeight(ship)+18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1) : 0;
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y-height });
     const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
