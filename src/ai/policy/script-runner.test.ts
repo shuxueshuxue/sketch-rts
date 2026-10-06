@@ -6,6 +6,21 @@ import { runAiCommandEntriesFromScripts } from "./script-runner";
 import type { AiScript } from "./types";
 
 describe("AI script runner", () => {
+  it("deducts an earlier economy purchase before a later script decides what it can afford", () => {
+    const game = sketchScene("one-purchase-budget").map("bareDuel").replaceDefaults()
+      .player("v2", { race: "grove" }).player("v1", { race: "ember" })
+      .playerState("v2", { gold: UNIT_DEFS.worker.cost + UNIT_DEFS.archer.cost - 1 })
+      .townHall("v2", 500, 500, { id: "hall" }).townHall("v1", 3_400, 3_400)
+      .building("v2", "archeryRange", 700, 500, { id: "range" }).build().createGame();
+    const scripts: AiScript[] = [
+      { id: "economy", phase: "economy", run: () => ({ type: "train", buildingId: "hall", unitKind: "worker" }) },
+      { id: "training", phase: "economy", run: snapshot => snapshot.players.v2!.gold >= UNIT_DEFS.archer.cost ? { type: "train", buildingId: "range", unitKind: "archer" } : undefined },
+    ];
+    const entries = runAiCommandEntriesFromScripts(snapshotGame(game), "v2", scripts);
+    expect(entries).toHaveLength(1);
+    for (const entry of entries) expect(() => issuePlayerCommand(game, "v2", entry.command)).not.toThrow();
+  });
+
   it("preserves an earlier transport assignment when a later army module claims the same passenger", () => {
     const game = sketchScene("claim-priority").map("bareDuel").replaceDefaults()
       .player("v2", { race: "grove" }).player("v1", { race: "ember" })

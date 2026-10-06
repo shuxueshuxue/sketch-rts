@@ -97,6 +97,46 @@ function lakeGame(pond = false, tower = false) {
 }
 
 describe("the AI on the water", () => {
+  it("has an escort protect a loaded ferry instead of chasing a coastal economic target", () => {
+    const game = islandGame();
+    const boat = createUnit("ferry", "player", "transport", at(13, 9).x, at(13, 9).y);
+    boat.cargo = [createUnit("passenger", "player", "footman", 0, 0)];
+    const guard = createUnit("escort", "player", "warship", at(12, 9).x, at(12, 9).y);
+    const attacker = createUnit("raider", "enemy", "cutter", at(15, 9).x, at(15, 9).y);
+    attacker.order = { type: "attack", targetId: boat.id };
+    game.units.push(boat, guard, attacker);
+    game.buildings.push({ ...game.buildings[0]!, id: "coastal-farm", owner: "enemy", kind: "farm", ...at(8, 9) });
+    const commands = planNavalTactics(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() });
+    expect(commands).toContainEqual({ type: "attack", unitIds: ["escort"], targetId: "raider" });
+    for (const command of commands.filter(command => command.type === "attack")) issuePlayerCommand(game, "player", command);
+    for (let tick = 0; tick < 80; tick++) stepGame(game);
+    expect(game.units.find(unit => unit.id === "raider")?.hp ?? 0).toBeLessThan(attacker.maxHp);
+  });
+
+  it("sends a loading convoy's escort ahead to cover the landing instead of waiting on the boat", () => {
+    const game = islandGame();
+    const boat = createUnit("ferry", "player", "transport", at(9, 9).x, at(9, 9).y);
+    boat.cargo = [createUnit("passenger", "player", "footman", 0, 0)];
+    const guard = createUnit("escort", "player", "warship", at(10, 9).x, at(10, 9).y);
+    game.units.push(boat, guard);
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    options.memory.naval = { ferries: { ferry: { purpose: "settle", targetId: "island", from: at(9, 9), to: at(19, 9), phase: "loading", crewIds: [], sinceTick: 0 } } };
+    const command = planNavalTactics(snapshotGame(game), "player", options).find(command => command.type === "move" && command.unitIds.includes("escort"));
+    expect(command?.type).toBe("move");
+    if (command?.type !== "move") throw new Error("escort did not advance");
+    expect(command.x).toBeGreaterThan(boat.x + 200);
+  });
+
+  it("releases overseas savings when its local base needs defending", () => {
+    const game = islandGame();
+    game.resources.find(mine => mine.id === "main")!.amount = 50;
+    game.resources.find(mine => mine.id === "natural")!.amount = 50;
+    const options = { version: "v8" as const, memory: createAiPolicyMemory() };
+    expect(navalBudgetReserve(snapshotGame(game), "player", options)).toBeGreaterThan(0);
+    game.units.push(createUnit("intruder", "enemy", "footman", at(6, 3).x, at(6, 3).y));
+    expect(navalBudgetReserve(snapshotGame(game), "player", options)).toBe(0);
+  });
+
   it("brings passengers home when an assault target disappears instead of leaving a loaded boat idle", () => {
     const game = islandGame();
     game.scriptedVictory = true;

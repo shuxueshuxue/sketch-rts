@@ -11,6 +11,7 @@ import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
+import { engagementTargets } from "./engagements";
 import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, combatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
@@ -67,6 +68,9 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
     const home = halls[0];
     if (!home || !units(snapshot, owner).some(unit => unit.kind === "worker"))
         return 0;
+    // Defense and restoring the supply line take precedence over saving for a future overseas colony.
+    if (snapshot.units.some(unit => unit.kind !== "worker" && unit.attackDamage > 0 && isOpponentOwner(snapshot, owner, unit.owner, options)
+        && halls.some(hall => sameGround(snapshot.map, hall, unit) && distance(hall, unit) < 700))) return 0;
     const remote = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
         && !halls.some(hall => distance(hall, mine) < 320));
     if (!remote.length)
@@ -276,6 +280,15 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const commands: GameCommand[] = [];
     const harbor = buildings(snapshot, owner).find(building => building.kind === "shipyard");
     const foes = [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
+    const convoy = own.filter(unit => carries(unit) > 0 && unit.cargo?.length);
+    const escortShips = own.filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && unit.kind !== "bombardShip");
+    const escorts = new Map<string, Unit>();
+    // Assign each gun to the least protected nearby loaded ferry instead of sending the whole fleet after a coastal farm.
+    for (const ship of escortShips) {
+        const boat = [...convoy].filter(boat => sameGround(snapshot.map, ship, boat, "sea") && distance(ship, boat) < 1800)
+            .sort((a,b) => [...escorts.values()].filter(boat => boat.id === a.id).length - [...escorts.values()].filter(boat => boat.id === b.id).length || distance(ship,a)-distance(ship,b))[0];
+        if (boat) escorts.set(ship.id, boat);
+    }
     for (const ship of own.filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0)) {
         const local = foes.filter(target => canReach(snapshot.map, ship, target) && distance(ship, target) < Math.max(900, ship.attackRange + 150));
         const danger = local.filter(target => "order" in target && target.attackDamage > 0);
@@ -288,11 +301,16 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         // Ordinary guns avoid tower coverage; bombard vessels counter the coast from outside it.
         const targets = local.filter(target => ship.kind === "bombardShip" || !covered(target, enemyTowers(snapshot, owner, options)))
             .sort((a, b) => (ship.kind === "bombardShip" ? Number("order" in a) - Number("order" in b) : Number(!("order" in a)) - Number(!("order" in b))) || distance(a, ship) - distance(b, ship));
-        const target = nearestOf(danger.filter(target => "order" in target && unitMover(target.kind) === "sea"), ship) ?? targets[0];
+        const boat = escorts.get(ship.id);
+        const mission = boat ? navalMemory(options).ferries?.[boat.id] : undefined;
+        // While loading, clear and cover the landing coast. At sea, accompany the boat. On return, cover its retreat.
+        const station = boat ? mission?.phase === "loading" ? offshore(snapshot, mission.to, foes.find(target => target.id === mission.targetId) ?? mission.to) : boat
+            : plan ? offshore(snapshot, plan.landing, plan.mine) : assault ? offshore(snapshot, assault.landing, assault.target) : home;
+        const attackers = boat ? danger.filter(target => "order" in target && (distance(target, boat) < target.attackRange + 160 || target.order.type === "attack" && target.order.targetId === boat.id)) : [];
+        const target = nearestOf(attackers, boat ?? ship) ?? nearestOf(danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!boat || distance(target,boat)<700 || station && distance(target,station)<700)), ship) ?? (!boat || station && distance(ship,station)<250 ? targets.filter(target=>!boat || station && distance(target,station)<450)[0] : undefined);
         if (target && (ship.order.type !== "attack" || ship.order.targetId !== target.id))
             commands.push({ type: "attack", unitIds: [ship.id], targetId: target.id });
         else if (!target) {
-            const station = plan ? offshore(snapshot, plan.landing, plan.mine) : assault ? offshore(snapshot, assault.landing, assault.target) : home;
             if (station && distance(ship, station) > 200 && needsMove(ship, station))
                 commands.push({ type: "move", unitIds: [ship.id], ...station });
         }
@@ -301,6 +319,11 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const home = buildings(snapshot, owner).find(building => building.kind === "townHall");
     const expedition = own.filter(unit => unitMover(unit.kind) === "land" && unit.kind !== "worker" && home && !sameGround(snapshot.map, unit, home) && unit.order.type !== "board");
     const handled = new Set<string>();
+    const interventions = engagementTargets(snapshot, owner, options);
+    for (const troop of expedition) {
+        const target = interventions.get(troop.id);
+        if (target && (troop.order.type !== "attack" || troop.order.targetId !== target.id)) commands.push({ type:"attack",unitIds:[troop.id],targetId:target.id });
+    }
     for (const anchor of expedition) {
         if (handled.has(anchor.id)) continue;
         const troops = expedition.filter(unit => sameGround(snapshot.map, unit, anchor));

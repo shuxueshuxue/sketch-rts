@@ -1,5 +1,7 @@
 import { MAX_UPGRADE_LEVEL, XP_STAR_THRESHOLDS } from "../../shared/catalog";
-import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS } from "../../shared/shop";
+import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH } from "../../shared/shop";
+import { isBuildPlacementClear } from "../../shared/build-placement";
+import { legalBuildPointNear } from "./build-layout";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
 import { resolveAiCommandIntent } from "./commands";
 import { carriedItemsFor, combatUnits, enemyBuildingsNear, groundItems, hostileUnitsNear, items, units } from "./snapshot";
@@ -42,7 +44,17 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
       .reduce((total, unit) => total + Math.min(HEALING_SCROLL_HEAL, unit.maxHp - unit.hp), 0);
     return missing >= HEALING_SCROLL_HEAL * 4 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
   }
-  if (item.kind === "speedBoots" || item.kind === "regenRing" || item.kind === "ivoryTower") return undefined;
+  if (item.kind === "speedBoots" || item.kind === "regenRing") return undefined;
+  if (item.kind === "ivoryTower") {
+    const enemies = hostileUnitsNear(snapshot, owner, carrier, 650, options.teams).filter(unit => unit.kind !== "worker");
+    const allies = combatUnits(snapshot, owner).filter(unit => distance(unit, carrier) < 300);
+    if (enemies.length < 3 || allies.length < 4 || snapshot.buildings.some(building => building.kind === "defenseTower" && distance(building, carrier) < 250)) return undefined;
+    const enemy = nearestEntity(enemies, carrier)!;
+    const gap = Math.max(1, distance(carrier, enemy));
+    const point = legalBuildPointNear(snapshot, "defenseTower", { x: carrier.x + (carrier.x - enemy.x) * 100 / gap, y: carrier.y + (carrier.y - enemy.y) * 100 / gap });
+    if (distance(carrier, point) > IVORY_TOWER_REACH || !isBuildPlacementClear(snapshot, "defenseTower", point)) return undefined;
+    return resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, ...point }, options);
+  }
   if (item.kind === "breachCharge") {
     const target = breachChargeTarget(snapshot, owner, carrier, options);
     return target ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id, targetId: target.id }, options) : undefined;

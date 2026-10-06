@@ -1,3 +1,4 @@
+import { engagementTargets } from "./engagements";
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from "../../shared/catalog";
 import { canReach } from "../../shared/naval";
 import { sameGround } from "../../shared/terrain";
@@ -14,7 +15,14 @@ export function planBattlefieldCommands(snapshot: GameSnapshot, owner: PlayerId,
   const towers = snapshot.buildings.filter((building) => isOpponentOwner(snapshot, owner, building.owner, options) && building.complete && building.attackDamage > 0);
   const proxyBuilders = new Set(enemies.filter((unit) => unit.kind === "worker" && unit.order.type === "build" && unit.order.buildingKind === "defenseTower" && snapshot.buildings.some((hall) => hall.owner === owner && hall.kind === "townHall" && distance(hall, unit.order as { x: number; y: number }) < 850)).map((unit) => unit.id));
   const commands: GameCommand[] = [];
+  const interventions = engagementTargets(snapshot, owner, options);
+  for (const [fighterId, target] of interventions) {
+    const fighter = own.find(unit => unit.id === fighterId);
+    if (!fighter) continue;
+    if (fighter.order.type !== "attack" || fighter.order.targetId !== target.id) commands.push({ type: "attack", unitIds: [fighterId], targetId: target.id });
+  }
   for (const fighter of own.filter((unit) => unit.attackRange <= 100 && unit.attackDamage > 0 && unit.hp >= unit.maxHp * 0.4)) {
+    if (interventions.has(fighter.id)) continue;
     if (["board", "cast", "charge", "move"].includes(fighter.order.type)) continue;
     const mobile = fighter.speed >= 70;
     const general = options.memory.v6?.general;
@@ -43,4 +51,9 @@ export function planBattlefieldCommands(snapshot: GameSnapshot, owner: PlayerId,
     if (UNIT_DEFS[unit.kind].abilities.some((ability) => ["heal", "summon", "curse"].includes(ABILITY_DEFS[ability].behavior))) return 4;
     return unit.attackRange > 100 ? 2 : 1;
   }
+}
+
+export function battlefieldUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
+  const land = new Set(snapshot.units.filter(unit => unit.owner === owner && unitMover(unit.kind) === "land").map(unit => unit.id));
+  return new Set([...engagementTargets(snapshot, owner, options).keys()].filter(id => land.has(id)));
 }

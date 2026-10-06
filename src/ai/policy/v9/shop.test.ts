@@ -3,7 +3,7 @@ import { createShop } from "../../../shared/shop";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../../../shared/sim";
 import type { ScenarioUnitSeed } from "../../../shared/types";
 import { createAiPolicyMemory } from "../../memory";
-import { planV9Shopping } from "./shop";
+import { planArmyShopping } from "./shop";
 
 // V9 ("v9") at home with an army and gold, a shop 600 off; its enemy far away.
 function shopGame(extra: ScenarioUnitSeed[] = []) {
@@ -29,7 +29,7 @@ describe("V9 at a shop (see @@@v9-shop)", () => {
   it("sends one fighter to a safe shop in a lull and buys it a guardian scroll there", () => {
     const game = shopGame();
     const options = V9();
-    const [move] = planV9Shopping(snapshotGame(game), "v9", options);
+    const [move] = planArmyShopping(snapshotGame(game), "v9", options);
     expect(move).toMatchObject({ type: "move", x: 1_400, y: 1_100 });
     if (move?.type !== "move") throw new Error("no errand");
     const shopper = move.unitIds[0]!;
@@ -39,7 +39,7 @@ describe("V9 at a shop (see @@@v9-shop)", () => {
     for (let tick = 0; tick < 600 && !bought; tick += 1) {
       stepGame(game);
       if (tick % 15 !== 0) continue;
-      for (const command of planV9Shopping(snapshotGame(game), "v9", options)) {
+      for (const command of planArmyShopping(snapshotGame(game), "v9", options)) {
         if (command.type === "buy") bought = true;
         issuePlayerCommand(game, "v9", command);
       }
@@ -48,9 +48,17 @@ describe("V9 at a shop (see @@@v9-shop)", () => {
     expect(game.players.v9!.gold).toBe(1_000 - 200);
   });
 
-  it("is V9's alone, and shuns a shop an enemy army stands by", () => {
-    expect(planV9Shopping(snapshotGame(shopGame()), "v9", { ...V9(), requestedVersion: "v8" as never })).toEqual([]);
+  it.each(["v5", "v7", "v8"] as const)("shares safe shopping with %s and cancels an errand when danger approaches", version => {
+    const game = shopGame();
+    const options = { ...V9(), requestedVersion: version };
+    expect(planArmyShopping(snapshotGame(game), "v9", options)[0]?.type).toBe("move");
+    game.spawnUnit("rival", "footman", 1_400, 1_150);
+    expect(planArmyShopping(snapshotGame(game), "v9", options)).toEqual([]);
+    expect(options.memory.v6?.shop).toBeUndefined();
+  });
+
+  it("shuns a shop an enemy army stands by", () => {
     const guarded = shopGame(Array.from({ length: 4 }, (_, index) => ({ id: `r${index}`, owner: "rival", kind: "footman", x: 1_500 + index * 30, y: 1_200 })));
-    expect(planV9Shopping(snapshotGame(guarded), "v9", V9())).toEqual([]);
+    expect(planArmyShopping(snapshotGame(guarded), "v9", V9())).toEqual([]);
   });
 });
