@@ -24,7 +24,8 @@ const MUD_DARK = "#b79e74";
 const DECK = "#c7a472";
 const DECK_INK = "#916e44";
 
-type Cache = { chunks: Map<string, HTMLCanvasElement>; minimap?: HTMLCanvasElement };
+type Cache = { chunks: Map<string, HTMLCanvasElement>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement };
+const SURFACE_COLORS:Record<string,string>={g:'#7c94674a',d:'#af936445',s:'#d3bd8f60',r:'#87958650'};
 const caches = new WeakMap<Terrain, Cache>();
 
 function cacheFor(terrain: Terrain): Cache {
@@ -119,6 +120,16 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     if(jitter(col,row,301)<.16){const px=x+(jitter(col,row,302)-.5)*size*.7,py=y+(jitter(col,row,303)-.5)*size*.7;line(b,[[px-4,py],[px-2,py-5],[px,py],[px+3,py-7],[px+4,py]],'#66775866',.8);}
   });
 
+  if(terrain.surfaces){
+    const cache=cacheFor(terrain);
+    if(!cache.surfaces){
+      const cover=createScratchCanvas(terrain.cols,terrain.rows),brush=cover.getContext('2d')!;
+      [...terrain.surfaces].forEach((kind,index)=>{const color=SURFACE_COLORS[kind];if(color){brush.fillStyle=color;brush.fillRect(index%terrain.cols,Math.floor(index/terrain.cols),1,1);}});
+      cache.surfaces=cover;
+    }
+    b.imageSmoothingEnabled=true;
+    b.drawImage(cache.surfaces,0,0,terrain.cols*size,terrain.rows*size);
+  }
   // Plateaus: a lighter ground flecked with grass, the ramp paved, and steps where the ramp meets the plateau.
   cells((col, row, x, y) => {
     if (!walkable(col, row) || levelAt(col, row) === "0") return;

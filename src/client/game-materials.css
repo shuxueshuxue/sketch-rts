@@ -1,21 +1,22 @@
-/* Shared physical surfaces: quiet grain, worn brass and recessed leather. */
+/* Field equipment: dark iron frames, restrained pewter edges and recessed slots.
+ * A screen owns geometry; these tokens own the common game material. */
 :root {
   --game-serif: "Cinzel", "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
   --game-text: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   --game-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 .75 0 0 0 0 .65 0 0 0 0 .45 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
-  --game-wood: var(--game-grain), repeating-linear-gradient(2deg, #ffffff02 0 1px, #00000003 1px 4px), linear-gradient(110deg, #382c23, #211b17 45%, #30261e);
-  --game-leather: var(--game-grain), radial-gradient(ellipse at 50% 0, #3a4039, #1b211e 75%);
-  --game-paper: var(--game-grain), radial-gradient(ellipse at 35% 25%, #d7c9a7, #b4a485);
-  --game-brass: #a98c52;
-  --game-brass-lit: #d7bc7c;
-  --game-ink: #ded4b8;
-  --game-muted: #b7b095;
-  --game-title: #e4c88c;
+  --game-wood: var(--game-grain),linear-gradient(115deg,#303532,#1b211f 60%,#262c28);
+  --game-leather: var(--game-grain),linear-gradient(160deg,#262e29,#171e1b);
+  --game-paper: var(--game-grain),linear-gradient(120deg,#dbd0b5,#b9ac90);
+  --game-brass: #7c8576;
+  --game-brass-lit: #d1bc85;
+  --game-ink: #ece8dc;
+  --game-muted: #acb1a3;
+  --game-title: #e0d3af;
   --game-error: #e5a18c;
-  --game-edge: #a58b5259;
-  --game-field: #161e17;
-  --game-button: var(--game-grain),linear-gradient(#514735,#29291f);
-  --game-button-hover: var(--game-grain),linear-gradient(#63553a,#3d3928);
-  --game-frame: inset 0 1px #d9c29850, inset 0 -2px #0009, 0 0 0 1px #100e0b, 0 0 0 3px #6d5636, 0 0 0 4px #17130f, 0 8px 24px #0007;
-  --game-inset: inset 0 2px 6px #0008, inset 0 0 0 1px #0005, 0 1px #c1aa7428;
+  --game-edge: #929a7d55;
+  --game-field: #111916;
+  --game-button: linear-gradient(#394239,#242d27);
+  --game-button-hover: linear-gradient(#505644,#333c2f);
+  --game-frame: inset 0 1px #d5d6b640,inset 0 -2px #0009,0 0 0 1px #101510,0 0 0 3px #555e50,0 0 0 4px #111611,0 12px 32px #0008;
+  --game-inset: inset 0 1px #c2c9ac25,inset 0 -2px #0008,0 1px #0008;
 }

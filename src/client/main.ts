@@ -383,7 +383,7 @@ labelSceneSwitch();
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
 minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
-const settingsAction=document.createElement('button');settingsAction.className='match-action';settingsAction.textContent=t('home.settings');settingsAction.onclick=()=>{matchMenu.classList.add('hidden');openMatchSettings(soundboard,i18n);};matchMenu.append(settingsAction);
+const settingsAction=document.createElement('button');settingsAction.className='match-action';settingsAction.textContent=t('home.settings');settingsAction.onclick=()=>{matchMenu.classList.add('hidden');pointerLockArmed=true;hidePointerLockGate();if(document.pointerLockElement===canvas)document.exitPointerLock();openMatchSettings(soundboard,i18n);};matchMenu.append(settingsAction);
 forfeitButton.addEventListener("click", () => {
   matchMenu.classList.add("hidden");
   void forfeitCurrentMatch();
@@ -1318,10 +1318,7 @@ function openSelectedEquipment() {
   keys.clear();selectionStart=selectionEnd=undefined;draggingMinimapViewport=false;
   commandMode=undefined;openPalette=undefined;
   equipmentPanel.show(focusedPlayerUnits());
-  // Arm the next battlefield click before this intentional unlock. Closing an
-  // in-game panel returns directly to play; it is not a browser Escape pause.
-  if(equipmentPanel.isOpen()){pointerLockArmed=true;hidePointerLockGate();}
-  if(document.pointerLockElement===canvas)document.exitPointerLock();
+  if(equipmentPanel.isOpen())hidePointerLockGate();
 }
 
 function syncDebugView() {
@@ -1426,6 +1423,7 @@ function syncPointerLockState() {
     return;
   }
   virtualMouse = undefined;
+  if(equipmentPanel.isOpen())pointerLockArmed=true;
   syncPointerLockGate();
 }
 
@@ -1625,6 +1623,13 @@ function onMouseDown(event: MouseEvent) {
   }
   const point = inputPoint(event);
   lastMouse = point;
+  if(equipmentPanel.isOpen()){
+    if(document.pointerLockElement===canvas && event.button===0){
+      if(document.elementFromPoint(point.x,point.y)?.closest('select,input,textarea')){pointerLockArmed=true;document.exitPointerLock();}
+      else equipmentPanel.virtualPointer('pointerdown',point,event.buttons,event);
+    }
+    return;
+  }
   // @@@virtual-pointer-ui - Pointer-lock mouse events target the canvas; UI follows the drawn virtual cursor.
   if (event.button === 0 && document.pointerLockElement === canvas) {
     const target = virtualClickableTargetAt(point);
@@ -1655,6 +1660,7 @@ function onMouseMove(event: MouseEvent) {
   suppressCanvasMouseDefault(event);
   const previousMouse = lastMouse;
   const point = inputPoint(event);
+  if(equipmentPanel.isOpen()){lastMouse=point;if(document.pointerLockElement===canvas)equipmentPanel.virtualPointer('pointermove',point,event.buttons,event);return;}
   if (event.buttons === 4 && previousMouse && document.pointerLockElement !== canvas) {
     camera.x -= point.x - previousMouse.x;
     camera.y -= point.y - previousMouse.y;
@@ -1674,6 +1680,7 @@ function onMouseUp(event: MouseEvent) {
     return;
   }
   const point = inputPoint(event);
+  if(equipmentPanel.isOpen()){if(document.pointerLockElement===canvas && event.button===0)equipmentPanel.virtualPointer('pointerup',point,event.buttons,event);return;}
   draggingMinimapViewport = false;
   if (event.button === 0 && document.pointerLockElement === canvas) {
     const target = virtualClickableTargetAt(point);

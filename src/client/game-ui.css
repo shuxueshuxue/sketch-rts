@@ -35,4 +35,23 @@
 .settings-resource-link:hover { color:var(--game-ink); }
 .resource-screen { font-family:var(--game-text); }
 .resource-stage { color:var(--game-muted); }
+/* The battle controls are a single instrument tray, rather than separate cards. */
+.control-deck { gap:0; padding:5px; background:var(--game-wood); border:1px solid var(--game-brass); box-shadow:var(--game-frame); }
+.control-deck .selection-chip { border:0; border-right:1px solid var(--game-edge); border-radius:0; background:transparent; box-shadow:none; padding:5px 9px 5px 3px; }
+.control-deck .hud-actions { padding-left:7px; gap:4px; align-self:start; }
+.control-deck :is(.command-dock,.item-dock) { padding:2px; gap:3px; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.control-deck :is(.command-button,.item-button) { border:1px solid #69745b80; border-radius:0; background:var(--game-button); box-shadow:var(--game-inset); }
+.control-deck :is(.command-button,.item-button):hover { border-color:var(--game-brass-lit); background:var(--game-button-hover); }
+.control-deck .hud-subject-art { background:radial-gradient(ellipse at 50% 65%,#8a997c35,transparent 72%); }
+.control-deck .hud-subject-name { color:var(--game-title); font-family:var(--game-serif); font-weight:500; }
+.control-deck .hud-health { height:14px; border-radius:0; border:1px solid #0009; background:#101913; }
+.control-deck .hud-health > span:first-child { background:linear-gradient(#9cad78,#5c714d); border-right-color:#c4d6a9; }
+.control-deck .hud-health-text { line-height:14px; color:#fff; text-shadow:0 1px #000; }
+.control-deck .hud-roster-unit { border-radius:0; }
+.control-deck .hotkey { background:transparent; color:#ece8dc; font-weight:400; text-shadow:0 1px 2px #000,1px 0 2px #000; top:auto; bottom:1px; right:2px; }
+:is(.minimap-frame,.minimap-tab,.match-menu-button,.minimap-relations,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-leather); border-color:var(--game-brass); }
+.minimap-frame { box-shadow:var(--game-frame); }
+.match-menu,.tooltip-layer { box-shadow:var(--game-frame); }
+.match-menu .match-action { border-radius:0; background:var(--game-button); border-color:var(--game-edge); }
+@media(max-width:650px) { .control-deck .selection-chip { border-right:0; border-bottom:1px solid var(--game-edge); } .control-deck .hud-actions { padding:4px 0 0; } }
 @media(max-width:650px) { .hud-subject-art { width:72px; height:72px; } }
