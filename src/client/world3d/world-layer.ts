@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { ModelLibrary,matchModelKeys,snapshotModelKeys } from './model-library';
+import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
+import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
 import { configureWorldCamera,screenOnPlane } from './projection';
@@ -27,7 +28,7 @@ export class World3DLayer {
   readonly positions=new Map<string,ActorPosition>();
   readonly camera=new THREE.OrthographicCamera();
   private scene=new THREE.Scene();
-  private library=new ModelLibrary();
+  private library=worldModels;
   private batches=new ActorBatches(this.scene);
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
@@ -61,7 +62,7 @@ export class World3DLayer {
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
     return new World3DLayer(renderer);
   }
-  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);}
+  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
   reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();}
   private deckPosition(unit:Unit,now:number){
