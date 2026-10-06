@@ -88,14 +88,14 @@ describe('shared dock outfitting', () => {
     const diagnostic=JSON.stringify({naval:ai.memories.player?.naval,gold:game.players.player!.gold,units:game.units.map(u=>({id:u.id,kind:u.kind,x:u.x,y:u.y,deck:u.deck,order:u.order})),buildings:game.buildings.map(b=>({kind:b.kind,x:b.x,y:b.y,complete:b.complete}))});
     expect(arrived,diagnostic).toBe(true);expect(colony,diagnostic).toBe(true);expect(mined,diagnostic).toBe(true);
   },20000);
-  for (const version of ['v5','v7','v8'] as const) it(`${version} buys directly into the hold and installs with a nearby worker`, () => {
+  for (const version of ['v5','v7','v8'] as const) it(`${version} buys directly into the hold and installs without needing a crew member`, () => {
     const game = islandGame(); game.scriptedVictory = true; game.players.player!.gold = 3000;
     const dock = {...game.buildings[0]!,id:'outfit-yard',kind:'shipyard' as const,x:275,y:336,radius:44,complete:true}; game.buildings.push(dock);
     const ship = game.spawnUnit('player','transport',400,336);
-    const worker = game.spawnUnit('player','worker',240,336);
+    game.units=game.units.filter(unit=>unit.kind!=='worker');
     for (let i=0;i<6;i++) game.spawnUnit('player','footman',130,100+i*40);
     const options = {version,memory:createAiPolicyMemory()};
-    expect(navalUnitIds(snapshotGame(game),'player',options).has(worker.id)).toBe(true);
+    expect(navalUnitIds(snapshotGame(game),'player',options).has(ship.id)).toBe(true);
     const want = navalWant(snapshotGame(game),'player',options);
     expect(want?.id).toBe('naval:gun');
     const purchase = want!.issue(new Set())!;
@@ -107,13 +107,13 @@ describe('shared dock outfitting', () => {
     let hauled = false;
     for (let tick=0;tick<1500 && !installedWeapons(game,ship).length;tick++) {
       for (const command of planNavalTactics(snapshotGame(game),'player',options)) issuePlayerCommand(game,'player',command);
-      if (gun.carrierId===worker.id) hauled=true;
+      if (gun.carrierId) hauled=true;
       stepGame(game);
     }
     expect(hauled).toBe(false);
     expect(installedWeapons(game,ship).map(item=>item.id)).toEqual([gun.id]);
     expect(game.items.filter(item=>item.kind==='shipCannon')).toHaveLength(1);
-    expect(worker.hp).toBeGreaterThan(0);
+    expect(game.units.some(unit=>unit.kind==='worker')).toBe(false);
   });
 });
 
@@ -440,8 +440,8 @@ describe("the AI on the water", () => {
     for (const mine of game.resources) if (mine.id !== "island") mine.amount = 0;
     game.buildings.push({ ...game.buildings[0]!, id: "rich-hall", ...at(23, 11) });
     for (const worker of game.units) worker.order = { type: "idle" };
-    const boat = createUnit("ferry", "player", "transport", at(10, 9).x, at(10, 9).y);
-    game.units.push(boat);
+    const boat = game.spawnUnit("player", "transport", at(10, 9).x, at(10, 9).y);
+    boat.id="ferry";
     const options = { version: "v8" as const, memory: createAiPolicyMemory(), teams: game.teams };
     let boarded = false;
     for (let tick = 0; tick < 1600; tick++) {
