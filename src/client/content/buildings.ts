@@ -61,7 +61,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   archeryRange: {
     name: { en: "Archery Range", zh: "靶场" },
-    description: { en: "Ranged production building that trains archers.", zh: "远程生产建筑，用于训练弓箭手。" },
+    description: { en: "Grove ranged production for a protected firing line.", zh: "林地远程生产建筑，为有前排保护的射击阵线提供兵力。" },
     command: { icon: "⌁", hotkey: "r" },
     glyph: { frame: "archery-range", marks: ["target", "bowRack", "banner"] },
     paint(b, team) {
@@ -75,7 +75,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   stables: {
     name: { en: "Stables", zh: "马厩" },
-    description: { en: "Mounted unit production building for fast raiders and heavy knights.", zh: "骑乘单位生产建筑，用于高速掠袭者和重骑士。" },
+    description: { en: "Mounted troops for mobile harassment, skirmishing and heavy cavalry assaults.", zh: "骑乘部队的生产建筑，支持机动骚扰、骑射和重骑突击。" },
     command: { icon: "⌂", hotkey: "s" },
     glyph: { frame: "stables-gate", marks: ["horseshoe", "rail", "door"] },
     paint(b, team) {
@@ -88,7 +88,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   sanctum: {
     name: { en: "Sanctum", zh: "圣所" },
-    description: { en: "Caster production building for priests, summoners, and witches.", zh: "施法者生产建筑，用于牧师、召唤师和女巫。" },
+    description: { en: "Grove spellcaster production for healing, summons and curses.", zh: "林地施法者生产建筑，提供治疗、召唤和诅咒支援。" },
     command: { icon: "✣", hotkey: "c" },
     glyph: { frame: "sanctum-dome", marks: ["moonRune", "sparkRune", "banner"] },
     paint(b, team) {
@@ -101,7 +101,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   workshop: {
     name: { en: "Workshop", zh: "工坊" },
-    description: { en: "Heavy unit production building that trains golems.", zh: "重型单位生产建筑，用于训练魔像。" },
+    description: { en: "Heavy military workshop. Its roster depends on your faction.", zh: "重型军事工坊，生产的兵种随阵营而异。" },
     command: { icon: "⚙", hotkey: "o" },
     glyph: { frame: "workshop-gear", marks: ["cog", "hammer", "door"] },
     paint(b, team) {
@@ -136,7 +136,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   emberForge: {
     name: { en: "Ember Forge", zh: "余烬熔炉" },
-    description: { en: "Ember military building that trains ravagers and cinder runners.", zh: "余烬军事建筑，用于训练劫掠者和奔袭者。" },
+    description: { en: "Ember front-line production for holding ground, assault and pursuit.", zh: "灰烬前排生产建筑，支持坚守、强攻和追击。" },
     command: { icon: "▰", hotkey: "b" },
     glyph: { frame: "ember-forge", marks: ["crossedBlades", "sparkRune", "hammer"] },
     paint(b, team) {
@@ -165,7 +165,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   ashenHall: {
     name: { en: "Ashen Hall", zh: "灰烬战殿" },
-    description: { en: "Ember heavy unit hall that trains ash chieftains and cinder revenants.", zh: "余烬重型单位殿堂，用于训练灰烬酋长和余烬复生者。" },
+    description: { en: "Ember elite production for hunting casters and sustained front-line fighting.", zh: "灰烬精英生产建筑，支持猎杀法师和持久的前排战斗。" },
     command: { icon: "♨", hotkey: "a" },
     glyph: { frame: "ashen-hall", marks: ["crossedBlades", "sparkRune", "banner"] },
     paint(b, team) {
@@ -196,7 +196,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   shipyard: {
     name: { en: "Shipyard", zh: "船坞" },
-    description: { en: "Builds ships on the coast. Repairs nearby ships outside combat for 1 gold and 3 health per second.", zh: "在海岸建造船只。附近未进攻的船只每秒消耗 1 金修复 3 点生命。" },
+    description: { en: "Naval production and repair on the coast. Ships receive paid repairs nearby when not attacking.", zh: "海岸舰队生产和维修建筑；附近未进攻的船只可付费修复。" },
     command: { icon: "⚓", hotkey: "y" },
     glyph: { frame: "shipyard-dock", marks: ["anchor", "waves", "banner"] },
     paint(b, team) {

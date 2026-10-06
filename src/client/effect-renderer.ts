@@ -199,6 +199,11 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
+    if (effect.type === "goldBounty") {
+      drawGoldBountyEffect(ctx, point, life, effect.amount ?? 0);
+      continue;
+    }
+
     if (effect.type === "experienceBurst") {
       drawExperienceBurstEffect(ctx, point, life);
       continue;
@@ -1064,4 +1069,25 @@ function hasEffectVector(effect: WorldEffect): effect is WorldEffect & Required<
     typeof effect.toX === "number" &&
     typeof effect.toY === "number"
   );
+}
+
+// Deterministic coin arcs and a rising receipt, timed by normalized lifetime.
+export function drawGoldBountyEffect(ctx: CanvasRenderingContext2D, point: Point, life: number, amount: number) {
+  const elapsed = 1 - Math.max(0, Math.min(1, life));
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, life * 3);
+  ctx.lineWidth = 1.5;
+  for (let index = 0; index < 5; index++) {
+    const spread = (index - 2) * 12 * elapsed;
+    const lift = Math.sin(elapsed * Math.PI) * (19 + (index % 2) * 9);
+    ctx.beginPath();
+    ctx.ellipse(point.x + spread, point.y - 8 - lift, 3.5, 4.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#f3cf59"; ctx.strokeStyle = "#8c651d"; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(point.x + spread, point.y - 10 - lift); ctx.lineTo(point.x + spread, point.y - 6 - lift); ctx.stroke();
+  }
+  ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+  ctx.lineWidth = 3; ctx.strokeStyle = "#382f21"; ctx.fillStyle = "#ffe18a";
+  const textY = point.y - 32 - elapsed * 25;
+  ctx.strokeText(`+${amount}`, point.x, textY); ctx.fillText(`+${amount}`, point.x, textY);
+  ctx.restore();
 }

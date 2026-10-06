@@ -1,4 +1,5 @@
-import { MAX_UPGRADE_LEVEL, XP_STAR_THRESHOLDS } from "../../shared/catalog";
+import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
+import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
 import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH } from "../../shared/shop";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { legalBuildPointNear } from "./build-layout";
@@ -120,9 +121,9 @@ function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOp
 
 function experienceBookCarrierScore(unit: Unit, durable: number) {
   if (unit.level >= MAX_UPGRADE_LEVEL) return -10_000 + unit.attackDamage * 0.1;
-  const nextThreshold = XP_STAR_THRESHOLDS[unit.level] ?? Number.POSITIVE_INFINITY;
+  const nextThreshold = xpStarThresholds(UNIT_DEFS[unit.kind])[unit.level] ?? Number.POSITIVE_INFINITY;
   const xpNeeded = Math.max(0, nextThreshold - unit.xp);
-  const bookXp = 160;
+  const bookXp = EXPERIENCE_BOOK_XP;
   const willLevel = xpNeeded <= bookXp ? 1 : 0;
   // @@@veteran-book-feed - An experience book that can push an existing veteran over the next star is core-army investment, not generic stat optimization.
   const veteranCarry = willLevel * unit.level * 28;

@@ -11,8 +11,9 @@ import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
 // The whole duel's CPU, AI and sim together. With spells on their own cooldowns a duel on a map with camps ran 32k ticks
-// (18k before) at the same 0.15-0.19 ms a tick on a loaded runner; the budget keeps the old headroom over that length.
-const AI_DUEL_CPU_BUDGET_MS = 8_000;
+// (18k before). Stronger veterans and higher camp bounties now keep larger armies alive; the three-way case measures
+// about 9.4 CPU seconds locally. Retain a bounded 12-second budget while keeping winner/army/economy checks intact.
+const AI_DUEL_CPU_BUDGET_MS = 12_000;
 const FREE_FOR_ALL_TICKS = 42_000;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
@@ -227,7 +228,7 @@ describe("sketch RTS simulation", () => {
       .player("player", { team: "north", race: "grove" })
       .player("enemy", { team: "south", race: "ember" })
       .townHall("player", 500, 500)
-      .unit("player", "golem", 700, 700, { id: "veteran-golem", xp: 260 })
+      .unit("player", "golem", 700, 700, { id: "veteran-golem", xp: 598 })
       .unit("player", "footman", 740, 700, { id: "rookie-footman" })
       .unit("player", "contractArcher", 780, 700, { id: "merc-veteran" })
       .townHall("enemy", 3300, 3300)
@@ -1139,20 +1140,20 @@ describe("sketch RTS simulation", () => {
     expect(finisher.xp).toBe(UNIT_DEFS.worker.xpReward + UNIT_DEFS.ancientStag.xpReward);
     expect(finisher.level).toBe(1);
     expect(game.effects.map((effect) => effect.type as string)).not.toContain("levelUp");
-    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.25));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.25));
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 1 / 3)));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 1 / 3)));
 
-    killWith(game, finisher, "stonebackBrute");
+    killWith(game, finisher, "ancientStag");
     expect(finisher.level).toBe(2);
-    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.5));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.5));
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 2 / 3)));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 2 / 3)));
 
     for (let i = 0; i < 6; i += 1) killWith(game, finisher, "ancientStag");
 
     expect(finisher.kills).toBe(9);
     expect(finisher.level).toBe(3);
-    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 1.75));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 1.75));
+    expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 2));
+    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 2));
     expect(nearbyAlly.xp).toBe(0);
     expect(nearbyAlly.level).toBe(0);
   });
@@ -1170,13 +1171,13 @@ describe("sketch RTS simulation", () => {
         stepMany(game, UPGRADE_DEFS[upgradeKind].levels[level]!.researchTime + 1);
       }
     }
-    for (let i = 0; i < 4; i += 1) killWith(game, knight, "ancientStag", "neutral");
+    for (let i = 0; i < 9; i += 1) killWith(game, knight, "ancientStag", "neutral");
 
     const techAttack = UNIT_DEFS.knight.attackDamage * UPGRADE_DEFS.weaponTraining.levels[2]!.attackMultiplier!;
     const techHp = UNIT_DEFS.knight.hp * UPGRADE_DEFS.reinforcedPlating.levels[2]!.maxHpMultiplier!;
     expect(knight.level).toBe(3);
-    expect(knight.attackDamage).toBe(Math.round(techAttack * 1.75));
-    expect(knight.maxHp).toBe(Math.round(techHp * 1.75));
+    expect(knight.attackDamage).toBe(Math.round(techAttack * 2));
+    expect(knight.maxHp).toBe(Math.round(techHp * 2));
   });
 
   it("experience books level the consuming unit through the same veterancy scaling", () => {
@@ -1191,9 +1192,9 @@ describe("sketch RTS simulation", () => {
 
     issueCommand(game, { type: "useItem", unitId: carrier.id, itemId: "book-same-scaling" });
 
-    expect(carrier.level).toBe(2);
-    expect(carrier.maxHp).toBe(Math.round(UNIT_DEFS.mercenary.hp * 1.5));
-    expect(carrier.attackDamage).toBe(Math.round(UNIT_DEFS.mercenary.attackDamage * 1.5));
+    expect(carrier.level).toBe(1);
+    expect(carrier.maxHp).toBe(Math.round(UNIT_DEFS.mercenary.hp * (1 + 1 / 3)));
+    expect(carrier.attackDamage).toBe(Math.round(UNIT_DEFS.mercenary.attackDamage * (1 + 1 / 3)));
     expect(game.items.some((item) => item.id === "book-same-scaling")).toBe(false);
   });
 
@@ -1208,7 +1209,7 @@ describe("sketch RTS simulation", () => {
     killWith(game, finisher, "ancientStag", "neutral");
 
     expect(wildlingKinds.every((kind) => (UNIT_DEFS[kind].goldBounty ?? 0) > 0)).toBe(true);
-    expect(game.players.player.gold).toBe(105);
+    expect(game.players.player.gold).toBe(150);
     expect(UNIT_DEFS.ancientStag.goldBounty).toBeGreaterThan(UNIT_DEFS.mossGnawer.goldBounty ?? 0);
   });
 
@@ -1552,7 +1553,7 @@ describe("sketch RTS simulation", () => {
     expect(hired.level).toBe(0);
     killWith(game, hired, "worker");
     expect(hired.level).toBe(0);
-    for (let i = 0; i < 4; i += 1) killWith(game, hired, "ancientStag");
+    for (let i = 0; i < 6; i += 1) killWith(game, hired, "ancientStag");
 
     expect(hired.level).toBe(3);
     expect(hired.attackDamage).toBeGreaterThan(UNIT_DEFS.contractArcher.attackDamage);

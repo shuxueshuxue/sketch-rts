@@ -43,7 +43,7 @@ describe("gameplay tooltips", () => {
   it("describes the charge with its window, blow and cooldown from the catalog, in both languages", () => {
     expect(abilityTooltip("charge", "r")).toMatchObject({
       title: "Charge",
-      body: expect.stringContaining("twice"),
+      body: expect.stringContaining("powerful"),
       stats: [`Strikes for x${CHARGE.damageMultiplier} its attack`, `Range ${CHARGE.minRange}-${CHARGE.range}`, `Cooldown ${CHARGE_COOLDOWN_SECONDS}s`],
       requirements: ["Raider or knight must be ready.", `Target an enemy unit at least ${CHARGE.minRange} away; a farther one is ridden up to first.`],
       hotkey: "R",
@@ -73,7 +73,7 @@ describe("gameplay tooltips", () => {
     expect(itemTooltip("lightningRod", "1")).toMatchObject({
       title: "Lightning Rod",
       body: expect.stringContaining("enemy"),
-      stats: expect.arrayContaining(["84 initial damage", "3 jumps", "Range 280", "Cooldown 18.0s"]),
+      stats: expect.arrayContaining(["84 initial damage", "Up to 3 targets", "Range 280", "Cooldown 18.0s"]),
       requirements: ["Needs a visible enemy unit in range."],
       hotkey: "1",
     });
@@ -218,3 +218,25 @@ function unit(kind: Unit["kind"], overrides: Partial<Unit>): Unit {
     ...overrides,
   };
 }
+
+describe("rule-generated current descriptions", () => {
+  it("shows the exact faction roster, including mounted archers and split engineering", () => {
+    expect(tooltipText(buildingTooltip("stables"))).toContain("Horse Archer");
+    const grove = tooltipText(buildingTooltip("workshop", undefined, createI18n("en"), "grove"));
+    const ember = tooltipText(buildingTooltip("workshop", undefined, createI18n("en"), "ember"));
+    expect(grove).toContain("Golem"); expect(grove).toContain("Ballista"); expect(grove).not.toContain("Catapult");
+    expect(ember).toContain("Catapult"); expect(ember).toContain("Organ Gun"); expect(ember).not.toContain("Golem");
+    expect(tooltipText(buildingTooltip("emberForge", undefined, createI18n("zh")))).toContain("灰烬守卫");
+  });
+  it("explains cost-specific veterancy and target-specific tower damage in both locales", () => {
+    for (const locale of ["en", "zh"] as const) {
+      const i18n = createI18n(locale);
+      expect(tooltipText(unitTooltip("knight", undefined, i18n))).toContain("114 / 247 / 494");
+      expect(tooltipText(unitTooltip("knight", undefined, i18n))).toContain("33.3%");
+      expect(tooltipText(buildingTooltip("defenseTower", undefined, i18n))).toContain("50%");
+      expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).toContain("1.2s");
+      expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).not.toContain("tick");
+      expect(tooltipText(itemTooltip("guardianScroll", undefined, i18n))).not.toContain("45.0s");
+    }
+  });
+});

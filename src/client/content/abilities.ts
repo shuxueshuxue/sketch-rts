@@ -5,7 +5,7 @@ import type { AbilityCard } from "./cards";
 // share a hotkey: a selection can show all of them at once.
 export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
   pinningBolt: { name:{en:"Pinning Bolt",zh:"钉射"},description:{en:"A piercing bolt that briefly roots units it hits.",zh:"沿直线射出穿透弩矢，命中的单位短暂定身；侧向移动可以躲避。"},command:{icon:"⤳",hotkey:"b"}},
-  incendiaryFlume: { name:{en:"Burning Oil",zh:"燃油弹"},description:{en:"Lob oil that burns its fixed impact area for four seconds.",zh:"抛射燃油弹，落点持续燃烧四秒，影响区域内敌军。"},command:{icon:"♨",hotkey:"f"}},
+  incendiaryFlume: { name:{en:"Burning Oil",zh:"燃油弹"},description:{en:"Lob oil that burns its fixed impact area over time.",zh:"抛射燃油弹，落点持续燃烧，影响区域内敌军。"},command:{icon:"♨",hotkey:"f"}},
   heal: {
     name: { en: "Heal", zh: "治疗" },
     description: { en: "Restores health to an allied unit in range.", zh: "为射程内的友方单位恢复生命。" },
@@ -19,34 +19,34 @@ export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
   curse: {
     name: { en: "Curse", zh: "诅咒" },
     description: {
-      en: "Weakens an enemy unit so its attacks deal less damage. A summoned unit also takes 100 damage.",
-      zh: "削弱敌方单位，使其攻击造成更少伤害。召唤物还会受到 100 点伤害。",
+      en: "Weakens an enemy unit so its attacks deal less damage. A summoned unit also takes direct damage.",
+      zh: "削弱敌方单位，使其攻击造成更少伤害。召唤物还会受到直接伤害。",
     },
     command: { icon: "☾", hotkey: "c" },
   },
   emberMend: {
     name: { en: "Ember Mend", zh: "余烬疗愈" },
-    description: { en: "Quickly restores health to an allied unit at shorter range.", zh: "以较短射程快速治疗友方单位。" },
+    description: { en: "Restores health to a wounded allied unit.", zh: "为受伤友方单位恢复生命。" },
     command: { icon: "+", hotkey: "m" },
   },
   cinderSoul: {
     name: { en: "Cinder Soul", zh: "余火魂灵" },
-    description: { en: "Creates a shorter-lived spirit at a nearby ground point.", zh: "在附近地面目标点召唤一个持续时间较短的灵体。" },
+    description: { en: "Creates a temporary spirit at a nearby ground point.", zh: "在附近地面目标点召唤一个临时灵体。" },
     command: { icon: "◎", hotkey: "o" },
   },
   ashCurse: {
     name: { en: "Ash Curse", zh: "灰烬诅咒" },
     description: {
-      en: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty. A summoned unit also takes 100 damage.",
-      zh: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。召唤物还会受到 100 点伤害。",
+      en: "Weakens an enemy unit, and burns scorched targets down to a harsher damage penalty. A summoned unit also takes direct damage.",
+      zh: "削弱敌方单位；若目标已被灼烧，则进一步压低其伤害。召唤物还会受到直接伤害。",
     },
     command: { icon: "☾", hotkey: "x" },
   },
   charge: {
     name: { en: "Charge", zh: "冲锋" },
     description: {
-      en: "Gallops at an enemy unit from a distance and strikes it for twice a normal blow.",
-      zh: "从远处策马冲向一个敌方单位，造成两倍普通攻击的伤害。",
+      en: "Gallops at an enemy unit from a distance and strikes it with a powerful blow.",
+      zh: "从远处策马冲向一个敌方单位，造成强化的冲击伤害。",
     },
     command: { icon: "↠", hotkey: "r" },
   },

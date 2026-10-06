@@ -32,7 +32,7 @@ export const COMMON_UNITS = {
   // Both races' ships (see @@@ships): a hull on the water, the owner's colour on the sail.
   transport: {
     name: { en: "Transport", zh: "运输船" },
-    description: { en: "Ship. Carries 8 supply of land units across the water and sets them ashore; those aboard go down with it. No weapon.", zh: "船。载 8 人口的陆军过水上岸；船沉了，船上的单位一起死。没有武器。" },
+    description: { en: "Ship. Carries land units across the water and sets them ashore; those aboard go down with it. No weapon.", zh: "船。载陆军过水上岸；船沉了，船上的单位一起死。没有武器。" },
     command: { icon: "⛴", hotkey: "t" },
     glyph: { silhouette: "transport-hull", marks: ["mast", "cargo", "flag"] },
     art: { tier: "advanced", bearing: "vessel", faction: "grove" },
