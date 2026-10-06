@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId } from "./hud-model";
+import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, selectedCargoTransports } from "./hud-model";
 import type { Building, GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 const player: PlayerState = {
@@ -11,6 +11,15 @@ const player: PlayerState = {
 };
 
 describe("hud selection model", () => {
+  it("shows every selected own transport's cargo, including campaign capacity, without exposing enemy cargo", () => {
+    const ferry = { ...unit("ferry", "transport"), cargo: [unit("aboard", "archer")] };
+    const carrier = { ...unit("carrier", "carrier"), cargo: [unit("aboard-2", "footman")] };
+    const campaign = { ...unit("campaign", "warship"), cargoCapacity: 30, cargo: [unit("aboard-3", "worker")] };
+    const enemy = { ...unit("enemy-ferry", "transport", "enemy"), cargo: [unit("enemy-cargo", "archer", "enemy")] };
+    const snapshot = snapshotWith({ units: [ferry, carrier, campaign, enemy, unit("unselected", "transport"), unit("soldier", "footman")] });
+    expect(selectedCargoTransports(snapshot, new Set(["ferry", "carrier", "campaign", "enemy-ferry", "soldier"]), "player")).toEqual([ferry, carrier, campaign]);
+    expect(selectedCargoTransports(snapshot, new Set(["enemy-ferry"]), "player")).toEqual([]);
+  });
   it("groups selected units by model and marks the current focus group", () => {
     const snapshot = snapshotWith({
       units: [

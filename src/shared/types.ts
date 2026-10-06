@@ -479,6 +479,7 @@ export type GameCommand =
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }
   | { type: "unload"; unitIds: string[]; x: number; y: number; queued?: boolean }
+  | { type: "unloadPassenger"; transportId: string; passengerId: string }
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
