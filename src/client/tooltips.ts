@@ -395,7 +395,6 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible fitting and a crew member nearby."]},
     issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[],requirements:[]},
     leatherArmor:{title:"Leather Armor",body:"Reduces incoming damage while worn on the body.",stats:[],requirements:[]},
-    legGuards:{title:"Leg Guards",body:"Reduces incoming damage while worn on the legs.",stats:[],requirements:[]},
     roundShield:{title:"Round Shield",body:"Reduces incoming damage while held. Cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},
     greatSword:{title:"Greatsword",body:"A melee weapon occupying both hands. Your other weapons stay in their carrying positions.",stats:[],requirements:[]},
     lightningRod: {
@@ -465,7 +464,6 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     flameProjector:{title:"喷火装置",body:"近距离船用武器；搬运和换装保留耐久与射击冷却。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
     issuedWeapon:{title:"制式武器",body:"单位训练时配发的武器。可以收起或转交，同样占用四个携行位之一。",stats:[],requirements:[]},
     leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的伤害。",stats:[],requirements:[]},
-    legGuards:{title:"护腿",body:"穿在腿部位置时减少受到的伤害。",stats:[],requirements:[]},
     roundShield:{title:"圆盾",body:"拿在手中时减少受到的伤害；不能和双手武器同时持用。",stats:[],requirements:[]},
     greatSword:{title:"双手剑",body:"占用双手的近战武器；其它武器仍保留在各自的携行位。",stats:[],requirements:[]},
     lightningRod: {
