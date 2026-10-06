@@ -22,6 +22,7 @@ game.players.player!.gold = 3000;
 const ship = game.spawnUnit('player', 'transport', 900, 750), unit = game.spawnUnit('player', 'footman', 900, 750);
 const archer = game.spawnUnit('player','archer',500,700);
 boardUnit(ship, unit, game.units);
+for(const [kind,x,y] of [['worker',-45,-15],['archer',25,18]] as const){const crew=game.spawnUnit('player',kind,900,750);boardUnit(ship,crew,game.units);const at=deckPlacement(ship,crew,game.units,{x,y});if(at)crew.deck={shipId:ship.id,...at};}
 unit.deck = { shipId: ship.id, ...deckPlacement(ship, unit, game.units, { x: -8, y: 18 })! };
 syncDecks(game.units);
 for (const kind of ['greatSword', 'roundShield', 'healingScroll', 'regenRing', 'leatherArmor', 'speedBoots'] as ItemKind[]) {
@@ -33,6 +34,7 @@ issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId:
 for (const [kind, holdSlot] of [['shipCannon', 0], ['flameProjector', 4], ['lightningRod', 8], ['experienceBook', 9], ['guardianScroll', 10]] as const)
     game.items.push({ id: `stored-${kind}`, kind, shipId: ship.id, holdSlot, x: ship.x, y: ship.y, durability: kind === 'shipCannon' ? 90 : kind === 'flameProjector' ? 80 : undefined, cooldownRemaining: 0 } as WorldItem);
 const cutter = game.spawnUnit('player', 'cutter', 1080, 750), carrier = game.spawnUnit('player', 'carrier', 1150, 1050);
+const fireShip=game.spawnUnit('player','fireShip',750,1050);
 cutter.order = { type: 'hold', x: cutter.x, y: cutter.y };
 carrier.order = { type: 'hold', x: carrier.x, y: carrier.y };
 ship.holdMass = shipItemMass(game, ship);
@@ -50,7 +52,7 @@ heading.style.cssText = 'position:fixed;top:15px;left:20px;color:#b5beac;font:12
 heading.textContent = 'Sketch RTS · 装备与船舱交互试玩';
 document.body.append(heading);
 const toolbar = document.createElement('div');
-toolbar.style.cssText = 'position:fixed;bottom:12px;left:20px;display:flex;gap:12px;color:#b5beac;font:12px system-ui;align-items:center';
+toolbar.style.cssText = 'position:fixed;bottom:12px;left:20px;display:flex;gap:6px;flex-wrap:wrap;color:#b5beac;font:12px system-ui;align-items:center;z-index:90';
 document.body.append(toolbar);
 const panel = new EquipmentPanel(() => i18n, command => { try {
     issuePlayerCommand(game, 'player', command);
@@ -63,7 +65,9 @@ catch (error) {
         feedback.classList.add('invalid');
     }
 } });
-for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['紧凑窗口', () => { const compact = !!panel.root.style.width; panel.root.style.width = compact ? '' : 'min(390px,calc(100vw - 28px))'; panel.root.style.height = compact ? '' : 'min(560px,calc(100dvh - 28px))'; }], ['重新开始', () => location.reload()]] as const) {
+for (const [label, action] of [['人物装备', () => panel.show([archer])], ['船舱与炮位', () => panel.show([ship])], ['喷火舰',()=>panel.show([fireShip])],
+    ...[['宽屏',undefined,undefined],['窄屏',390,560],['横屏',760,420],['小窗',350,360]].map(([label,width,height])=>[label as string,()=>{panel.root.style.width=width?`${width}px`:'';panel.root.style.height=height?`${height}px`:'';}] as const),
+    ['重新开始', () => location.reload()]] as const) {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = label;
