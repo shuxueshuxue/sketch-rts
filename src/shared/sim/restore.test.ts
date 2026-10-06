@@ -70,9 +70,9 @@ describe("game snapshot restoration", () => {
     });
 
     const target = createGame("bareDuel", { aiPlayers: [] });
-    target.unitSpatial = { cellSize: 1, buckets: new Map() };
+    target.unitSpatial = { cellSize: 1, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
     target.unitSpatialByTeam = new Map();
-    target.buildingSpatial = { cellSize: 1, buckets: new Map() };
+    target.buildingSpatial = { cellSize: 1, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
     target.buildingSpatialByTeam = new Map();
     target.buildingSpatialCount = 1;
     target.entityById = new Map();
