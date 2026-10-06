@@ -11,6 +11,15 @@ const unit = (x: number, order: UnitOrder, id = "rider") => ({ id, x, y: 100, or
 const snap = (tick: number, ...units: Unit[]) => ({ tick, units });
 
 describe("unit motion smoother", () => {
+  it('interpolates yaw across angle wrap and stops at the received pose',()=>{
+    const motion=new UnitMotionSmoother(TICK_MS),ship={...unit(100,idle),sailing:{heading:Math.PI-.02,speed:0,load:0,balance:0}};
+    motion.update(snap(1,ship),0);const next={...ship,sailing:{...ship.sailing,heading:-Math.PI+.02}};
+    motion.update(snap(2,next),50);
+    expect(motion.heading(next,75)).toBeCloseTo(Math.PI,8);
+    expect(motion.heading(next,100)).toBeCloseTo(Math.PI+.02,8);
+    expect(motion.heading(next,400)).toBeCloseTo(Math.PI+.02,8);
+    expect(next.sailing.heading).toBe(-Math.PI+.02);
+  });
   it("draws a unit that is not charging where the snapshot puts it", () => {
     const motion = new UnitMotionSmoother(TICK_MS);
     motion.update(snap(1, unit(100, idle)), 0);

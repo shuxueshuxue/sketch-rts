@@ -1,9 +1,10 @@
 import { bakedAssetsVersion } from "./art/baked-assets";
 import { formatMass } from "./format-mass";
 import { SHIP_WEAPONS, isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
-import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
+import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, exchangeRecipient, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
 import { localToWorld, shipPassengers, shipProfile } from '../shared/ship-geometry';
-import { deckPointFits } from '../shared/decks';
+import { dropItemCommand } from './item-controls';
+import { projectDeckPoint } from '../shared/decks';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
@@ -31,9 +32,9 @@ const FEEDBACK: Record<string, [
     'A heavy weapon needs all four carrying positions': ['搬运火炮需要先腾空四个携行位', 'Clear all four carrying positions to haul this weapon'],
     'This weapon does not fit this ship position': ['这类武器不能安装在这个炮位', 'This weapon is incompatible with this fitting'],
     'This fitting is occupied': ['炮位已占用，请先拆下原武器', 'Fitting occupied; remove its weapon first'],
-    'A crew member must be nearby to install or remove weapons': ['安装或拆卸需要附近的己方人员', 'A crew member must be nearby to install or remove weapons'],
     'Clear the deck around this fitting first': ['这个炮位被士兵挡住，请先让开甲板空间', 'Soldiers are blocking the fitting; clear the deck first'],
     'Move closer before exchanging items': ['距离不足，请让人物靠近船只或登船', 'Move closer to the ship or board it first'],
+    'Ship weapons can only fire from a ship fitting': ['船用武器只能安装在船只炮位上使用，人物只能搬运', 'Ship weapons need a ship fitting; characters can only haul them'],
     'This item does not fit that equipment position': ['物品不能穿在这个位置', 'This item does not fit that position'],
     'That position is occupied; move its item first': ['位置已被占用，请先收起原物品', 'Position occupied; stow its item first'],
     'That hold position is occupied': ['这个船舱格已经有物品', 'Hold position occupied'],
@@ -129,8 +130,10 @@ export class EquipmentPanel {
         this.command({ type: 'wieldItem', unitId: this.unitId, ...(itemId ? { itemId } : {}), hand });
     }
     private quickTransfer(item: WorldItem) {
-        const unit = this.snapshot!.units.find(unit => unit.id === this.unitId), ship = this.snapshot!.units.find(unit => unit.id === this.shipId);
+        const ship = this.snapshot!.units.find(unit => unit.id === this.shipId);
+        const unit = item.shipId && ship ? exchangeRecipient(this.snapshot!,this.owner,ship,item.kind,this.unitId) : this.snapshot!.units.find(unit => unit.id === this.unitId);
         if (item.shipId && unit) {
+            this.unitId=unit.id;
             const slot = freeItemSlot(this.snapshot!, unit, item.kind);
             if (!slot) {
                 this.feedback(this.text('人物没有兼容的空位', 'No compatible equipment position is free'));
@@ -139,10 +142,7 @@ export class EquipmentPanel {
             this.transfer(item, { unitId: unit.id, slot });
         }
         else if (ship) {
-            if (unit && !canExchange(this.snapshot!, unit, ship)) {
-                this.feedback('Move closer before exchanging items');
-                return;
-            }
+            if(item.shipId===ship.id){this.feedback(this.text('附近没有能接收该物品的人物空位','No nearby character has room for this item'));return;}
             const slot = Array.from({ length: shipHoldSlots(ship) }, (_, i) => i).find(slot => !transferRefusal(this.snapshot!, this.owner, item.id, { shipId: ship.id, slot }));
             if (slot === undefined) {
                 this.feedback('No room in the hold');
@@ -221,7 +221,7 @@ export class EquipmentPanel {
         this.root.dataset.itemSelected='true';
         for (const button of this.root.querySelectorAll<HTMLElement>('.equipment-item'))
             button.classList.toggle('chosen', button.dataset.itemId === item.id);
-        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${def.mass} kg${itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`; actions.append(description); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.unitId && this.shipId) {
+        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${formatMass(def.mass)} kg${isShipEquipment(item.kind) ? this.text(' · 搬运占四格 · 安装后使用', ' · Four carrying slots · Fire from a fitting') : itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`; actions.append(description); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.shipId) {
             const ship = this.snapshot!.units.find(unit => unit.id === this.shipId)!;
             if (item.mountId)
                 this.action(actions, this.text('拆到船舱', 'Stow in hold'), () => this.stowFitting(item));
@@ -237,7 +237,7 @@ export class EquipmentPanel {
                     select.append(option);
                 }
                 actions.append(select);
-                this.action(actions, this.text('安装', 'Install'), () => this.transfer(item, { shipId: ship.id, mountId: select.value, installerId: this.unitId! }));
+                this.action(actions, this.text('安装', 'Install'), () => this.transfer(item, { shipId: ship.id, mountId: select.value }));
             }
         } if (item.carrierId === this.unitId) {
             if (!def.slot && !isShipEquipment(item.kind)) {
@@ -255,10 +255,10 @@ export class EquipmentPanel {
                 else
                     this.command({ type: 'useItem', unitId: unit.id, itemId: item.id }); });
         }
-        const carrier = this.snapshot!.units.find(unit => unit.id === this.unitId);
+        const carrier = this.snapshot!.units.find(unit => unit.id === (item.carrierId ?? item.shipId));
         if (carrier && (item.carrierId === carrier.id || item.shipId === this.shipId))
             this.action(actions, this.text('丢弃', 'Drop'), () => {
-                this.command({type:'dropItem', unitId:carrier.id, itemId:item.id, x:carrier.x + carrier.radius + 18, y:carrier.y + 8});
+                this.command(dropItemCommand(item,carrier,this.snapshot!.units));
                 this.selectedItem = undefined;
             });
     }
@@ -269,11 +269,8 @@ export class EquipmentPanel {
         this.dragging = undefined;
     }
     private stowFitting(item: WorldItem) {
-        const snapshot = this.snapshot!, unit = snapshot.units.find(unit => unit.id === this.unitId), ship = snapshot.units.find(unit => unit.id === item.shipId);
-        if (!unit || !ship || !canExchange(snapshot, unit, ship)) {
-            this.feedback('A crew member must be nearby to install or remove weapons');
-            return;
-        }
+        const snapshot = this.snapshot!, ship = snapshot.units.find(unit => unit.id === item.shipId);
+        if(!ship)return;
         const slot = Array.from({ length: shipHoldSlots(ship) }, (_, i) => i).find(slot => !transferRefusal(snapshot, this.owner, item.id, { shipId: ship.id, slot }));
         if (slot === undefined) {
             this.feedback('No room in the hold');
@@ -391,7 +388,7 @@ export class EquipmentPanel {
                 const value = document.createElement('strong'); value.dataset.stat = key; stat.append(caption, value); stats.append(stat);
             }
             character.append(stats);
-        } else this.emptyNote(character, this.text('附近没有己方船员。让人物登船或靠近后可搬运、安装与拆卸。', 'No crew nearby. Bring someone aboard or alongside to haul, install or remove items.'));
+        } else this.emptyNote(character, this.text('附近没有己方人物。船舱整理与炮位配置可以直接操作。', 'No friendly character nearby. Hold and fitting actions remain available.'));
         const cargo = document.createElement('section'); cargo.className = 'equipment-cargo'; if (ship) columns.append(cargo);
         this.selector(cargo, this.text('船舱', 'Cargo hold'), ship ? [ship] : [], this.shipId, () => {});
         const access = document.createElement('p'); access.dataset.equipmentAccess = ''; cargo.append(access);
@@ -434,7 +431,7 @@ export class EquipmentPanel {
             plan.innerHTML = `<svg viewBox="0 0 200 340" aria-hidden="true"><defs><pattern id="deck-planks" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#493b29"/><path d="M0 0V12 M1 0V12" stroke="#89704b" stroke-width="1"/></pattern></defs><polygon points="${points(profile.hull)}" fill="#28251e" stroke="#a08754" stroke-width="4"/><polygon points="${points(profile.deck)}" fill="url(#deck-planks)" stroke="#645237" stroke-width="2"/>${obstacles}</svg>`; scene.append(plan);
             for (const mount of shipMounts(ship)) {
                 const item = snapshot.items.find(item => item.shipId === ship.id && item.mountId === mount.id);
-                const cell = this.cell(this.shortMountLabel(mount.id), item, { shipId: ship.id, mountId: mount.id, installerId: unit?.id ?? '' }); cell.dataset.mountId = mount.id;
+                const cell = this.cell(this.shortMountLabel(mount.id), item, { shipId: ship.id, mountId: mount.id }); cell.dataset.mountId = mount.id;
                 cell.classList.add(mount.id === 'bow' || mount.id === 'aft' ? 'equipment-mount-center' : mount.id.startsWith('port') ? 'equipment-mount-port' : 'equipment-mount-starboard');
                 cell.style.left = `${50 + mount.y*scale/2}%`;
                 cell.style.top = `${50 - mount.x*scale/3.4}%`;
@@ -448,13 +445,14 @@ export class EquipmentPanel {
                 const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
                 drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');token.append(portrait);
                 const position=(event:PointerEvent)=>{const box=scene.getBoundingClientRect();return {x:(170-(event.clientY-box.top)/box.height*340)/scale,y:((event.clientX-box.left)/box.width*200-100)/scale};};
-                let origin:{x:number;y:number}|undefined;
-                token.addEventListener('pointerdown',event=>{if(crew.owner!==this.owner || event.button!==0)return;origin={x:event.clientX,y:event.clientY};this.crewDrag=crew.id;token.setPointerCapture(event.pointerId);event.preventDefault();});
-                token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id)return;const point=position(event);token.style.left=`${50+point.y*scale/2}%`;token.style.top=`${50-point.x*scale/3.4}%`;token.classList.toggle('invalid',!deckPointFits(ship,crew,point,this.snapshot!.units));});
+                let origin:{x:number;y:number}|undefined, offset={x:0,y:0};
+                const destination=(event:PointerEvent)=>{const latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id),raw=position(event);return latestShip && latestCrew ? projectDeckPoint(latestShip,latestCrew,{x:raw.x+offset.x,y:raw.y+offset.y},this.snapshot!.units) : undefined;};
+                token.addEventListener('pointerdown',event=>{if(crew.owner!==this.owner || event.button!==0)return;origin={x:event.clientX,y:event.clientY};const raw=position(event);const latest=this.snapshot!.units.find(unit=>unit.id===crew.id)!;offset={x:latest.deck!.x-raw.x,y:latest.deck!.y-raw.y};this.crewDrag=crew.id;token.setPointerCapture(event.pointerId);event.preventDefault();});
+                token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id)return;const point=destination(event);if(!point)return;token.style.left=`${50+point.y*scale/2}%`;token.style.top=`${50-point.x*scale/3.4}%`;token.classList.remove('invalid');});
                 token.addEventListener('pointerup',event=>{if(this.crewDrag!==crew.id)return;this.crewDrag=undefined;const moved=origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>4;origin=undefined;
                     if(!moved){if(crew.owner===this.owner){this.unitId=crew.id;this.render();}return;}
-                    const point=position(event),latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id);
-                    if(latestShip && latestCrew?.deck?.shipId===latestShip.id && deckPointFits(latestShip,latestCrew,point,this.snapshot!.units))this.command({type:'move',unitIds:[crew.id],...localToWorld(latestShip,point)});
+                    const point=destination(event),latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id);
+                    if(point && latestShip && latestCrew?.deck?.shipId===latestShip.id)this.command({type:'move',unitIds:[crew.id],...localToWorld(latestShip,point)});
                     else this.feedback(this.text('这里没有足够的甲板空间','Not enough clear deck space here'));
                     this.updateValues(unit,ship);
                 });
@@ -512,7 +510,7 @@ export class EquipmentPanel {
         }
         const access = this.root.querySelector<HTMLElement>('[data-equipment-access]');
         if (access) {
-            const ready = unit && ship && canExchange(this.snapshot!, unit, ship);
+            const ready = ship && (!unit || canExchange(this.snapshot!, unit, ship));
             access.textContent = ready ? this.text('交换通路畅通', 'Ready to exchange') : this.text('让人物靠近船只或登船后交换', 'Move the character closer or board to exchange');
             access.classList.toggle('invalid', !ready);
         }
