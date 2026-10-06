@@ -201,10 +201,37 @@ export function shoreSpots(map: Pick<GameMap, "terrain">, radius: number): reado
   const known = (sea.shores ??= new Map()).get(radius);
   if (known) return known;
   const spots: Point[] = [];
-  if (wholesOf(sea).deep.some((cells) => cells >= OPEN_WATER)) {
+  const { labels, deep } = wholesOf(sea);
+  if (deep.some((cells) => cells >= OPEN_WATER)) {
+    // A shipyard footprint is a rectangular grid query. Three summed-area
+    // fields replace a nested footprint scan at every cell in the whole map.
+    const land = runtime(terrain, "land"), width = terrain.cols + 1;
+    const dry = new Uint32Array(width * (terrain.rows + 1));
+    const wet = new Uint32Array(dry.length), blocked = new Uint32Array(dry.length);
+    for (let row = 0; row < terrain.rows; row++) {
+      let d = 0, w = 0, b = 0;
+      for (let col = 0; col < terrain.cols; col++) {
+        const cell = row * terrain.cols + col, at = (row + 1) * (terrain.cols + 2) + col + 1;
+        d += land.walk[at] === 1 ? 1 : 0;
+        w += sea.walk[at] === 1 && deep[labels[at]!]! >= OPEN_WATER ? 1 : 0;
+        b += (land.walk[at] !== 1 && sea.walk[at] !== 1) || terrain.levels?.[cell] === "2" ? 1 : 0;
+        const out = (row + 1) * width + col + 1;
+        dry[out] = dry[out - width]! + d;
+        wet[out] = wet[out - width]! + w;
+        blocked[out] = blocked[out - width]! + b;
+      }
+    }
+    const half = footprintHalf(radius, terrain.cell);
+    const first = Math.ceil((terrain.cell / 2 - half) / terrain.cell - .5);
+    const last = Math.ceil((terrain.cell / 2 + half) / terrain.cell - .5) - 1;
+    const total = (field: Uint32Array, left: number, top: number, right: number, bottom: number) =>
+      field[bottom * width + right]! - field[top * width + right]! - field[bottom * width + left]! + field[top * width + left]!;
     for (let index = 0; index < terrain.cols * terrain.rows; index += 1) {
-      const spot = cellCenter(terrain, index);
-      if (isShoreFootprint(map, spot.x, spot.y, radius)) spots.push(spot);
+      const col = index % terrain.cols, row = Math.floor(index / terrain.cols);
+      const left = col + first, top = row + first, right = col + last + 1, bottom = row + last + 1;
+      if (left < 0 || top < 0 || right > terrain.cols || bottom > terrain.rows) continue;
+      if (!total(blocked, left, top, right, bottom) && total(dry, left, top, right, bottom) && total(wet, left, top, right, bottom))
+        spots.push(cellCenter(terrain, index));
     }
   }
   sea.shores.set(radius, spots);
@@ -997,8 +1024,11 @@ export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Poin
 // round bodies (see @@@building-body). Ships keep the sea's own routing: no building stands in deep water.
 type Body = { x: number; y: number; radius: number };
 // `previous`: the cells as they were before the last change, kept to tell which squares that change reached.
-type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array };
+type Overlay = { terrain: Terrain; state: TerrainRuntime; previous: Uint8Array; revision:number };
 const overlays = new WeakMap<object, Overlay>();
+let nextGroundRevision=1;
+/** Identity of the current building obstruction field, for geometry-only caches. */
+export function groundRevision(map:object){return overlays.get(map)?.revision ?? 0;}
 
 export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonly Body[]) {
   const terrain = map.terrain;
@@ -1011,7 +1041,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
   let overlay = overlays.get(map);
   if (!overlay || overlay.terrain !== terrain) {
     const fresh = createRuntime(terrain, "land");
-    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length) };
+    overlay = { terrain, state: fresh, previous: new Uint8Array(fresh.walk.length), revision:nextGroundRevision++ };
     overlays.set(map, overlay);
   }
   const state = overlay.state;
@@ -1032,6 +1062,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
     dirty.add(Math.floor(row / SECTOR) * Math.ceil(terrain.cols / SECTOR) + Math.floor(col / SECTOR));
   }
   if (dirty.size === 0) return;
+  overlay.revision=nextGroundRevision++;
   state.clearance.fill(0);
   fillClearance(state);
   state.nearest.clear();

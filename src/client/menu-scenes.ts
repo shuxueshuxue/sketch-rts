@@ -213,7 +213,7 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
     p.prop("campfire", cx + 330, cy + 170, 1, "lit");
   } else {
     p.building(CROWN, "shipyard", cx + 320, cy + 280);
-    for (let i = 0; i < 5; i++) actor(CROWN, i % 2 ? "transport" : "warship", -430 + i * 160, -180 + i % 2 * 165, 280, 0, 80, i * .07);
+    for (let i = 0; i < 5; i++) actor(CROWN, i % 2 ? "transport" : "warship", -650 + i * 290, -190 + i % 2 * 220, 280, 0, 30);
     p.prop("beacon", cx + 510, cy + 300, 1.6, "lit");
   }
   const game = stage(width, height, terrain, [[CROWN, "grove"], [GROVE, "grove"], [EMBERS, "ember"]], p);
@@ -244,7 +244,14 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
         }
         // Reverse destinations at low frequency; the real pathfinder routes
         // around buildings and troops. Never repair a route by teleportation.
-        if (g.tick === 1 || g.tick % (SIM_TICKS_PER_SECOND * 3) === 0 && unit.order.type === "idle") {
+        if (kind === 'fleet') {
+          // A convoy turns as one. Individual endpoint tests made blocked rear
+          // ships keep sailing into the ships already on their return leg.
+          if (g.tick === 1 || g.tick % (SIM_TICKS_PER_SECOND * track.period) === 0) {
+            const outward = Math.floor(g.tick / (SIM_TICKS_PER_SECOND * track.period)) % 2 === 0;
+            issuePlayerCommand(g,unit.owner,{type:'move',unitIds:[unit.id],x:track.x+(outward?track.dx:0),y:track.y+(outward?track.dy:0)});
+          }
+        } else if (g.tick === 1 || g.tick % (SIM_TICKS_PER_SECOND * 3) === 0 && unit.order.type === "idle") {
           const atEnd = Math.hypot(unit.x-track.x-track.dx,unit.y-track.y-track.dy) < 40;
           issuePlayerCommand(g,unit.owner,{type:"move",unitIds:[unit.id],x:track.x+(atEnd?0:track.dx),y:track.y+(atEnd?0:track.dy)});
         }

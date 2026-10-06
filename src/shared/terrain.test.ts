@@ -137,6 +137,23 @@ function harbor(): Terrain {
 const at = (col: number, row: number) => ({ x: col * 32 + 16, y: row * 32 + 16 });
 
 describe("the sea", () => {
+  it("keeps cached shoreline candidates identical to individual footprint checks", () => {
+    const cols = 30, rows = 24;
+    const terrain: Terrain = {cell:32, cols, rows, cells:"", levels:""};
+    for (let row=0;row<rows;row++) for (let col=0;col<cols;col++) {
+      terrain.cells += col<14 ? (row===8 && col>8 ? "T" : ".") : col===14 ? "," : (col===22 && row>15 ? "#" : "~");
+      terrain.levels += col===13 && row<5 ? "2" : "0";
+    }
+    const water=map(terrain);
+    for (const radius of [16,32,44,56,80]) {
+      const expected:{x:number;y:number}[]=[];
+      for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+        const point={x:(col+.5)*32,y:(row+.5)*32};
+        if(isShoreFootprint(water,point.x,point.y,radius))expected.push(point);
+      }
+      expect(shoreSpots(water,radius)).toEqual(expected);
+    }
+  });
   it("is the ships', the land the soldiers', and the shallows both's", () => {
     const sea = map(harbor());
     for (const [col, row, ship, soldier] of [[12, 2, true, false], [5, 5, false, true], [3, 3, true, true], [2, 15, true, false], [14, 9, false, true], [9, 12, false, false]] as const) {

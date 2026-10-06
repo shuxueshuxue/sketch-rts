@@ -10,6 +10,33 @@ import type { ItemKind, WorldItem } from './types';
 function match() { const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.items = []; game.buildings = []; game.scriptedVictory = true; delete game.map.terrain; game.players.player!.gold = 3000; return game; }
 function give(game: ReturnType<typeof match>, unitId: string, kind: ItemKind) { const unit = game.units.find(unit => unit.id === unitId)!; const item: WorldItem = { id: `test-${kind}-${game.items.length}`, kind, x: unit.x, y: unit.y, cooldownRemaining: 0 }; game.items.push(item); issuePlayerCommand(game, 'player', { type: 'pickupItem', unitId, itemId: item.id }); return item; }
 describe('equipment and holds', () => {
+    it('drops carried, stored and mounted items without destroying them, and rejects remote removal', () => {
+        const game=match(), unit=game.spawnUnit('player','worker',700,700), ship=game.spawnUnit('player','warship',760,700);
+        const sword=give(game,unit.id,'greatSword');
+        issuePlayerCommand(game,'player',{type:'dropItem',unitId:unit.id,itemId:sword.id,x:710,y:710});
+        expect(sword.carrierId).toBeUndefined(); expect(game.items.includes(sword)).toBe(true);
+        const gun=game.items.find(item=>item.shipId===ship.id && item.mountId)!;
+        const original=gun.id;
+        issuePlayerCommand(game,'player',{type:'dropItem',unitId:unit.id,itemId:gun.id,x:710,y:710});
+        expect(gun.mountId).toBeUndefined(); expect(gun.shipId).toBeUndefined(); expect(gun.id).toBe(original);
+        expect(ship.fittings).toEqual([]);
+        const stored:WorldItem={id:'stored-book',kind:'experienceBook',shipId:ship.id,holdSlot:0,x:ship.x,y:ship.y,cooldownRemaining:0};game.items.push(stored);
+        unit.x=1300;
+        expect(()=>issuePlayerCommand(game,'player',{type:'dropItem',unitId:unit.id,itemId:stored.id,x:unit.x,y:unit.y})).toThrow(/nearby/);
+        unit.x=700;
+        issuePlayerCommand(game,'player',{type:'dropItem',unitId:unit.id,itemId:stored.id,x:710,y:710});
+        expect(stored.shipId).toBeUndefined();expect(stored.holdSlot).toBeUndefined();
+    });
+    it('spawns with empty carrying positions and retains innate attacks when nothing is wielded', () => {
+        const game = match();
+        for (const kind of ['worker','footman','archer','priest'] as const) {
+            const unit = game.spawnUnit('player', kind, 700, 700);
+            expect(itemsFor(game,unit)).toEqual([]);
+            expect(unit.hands).toEqual({});
+            expect(unit.attackDamage).toBe(UNIT_DEFS[kind].attackDamage);
+            expect(unit.attackRange).toBe(UNIT_DEFS[kind].attackRange);
+        }
+    });
     it('uses four shared weapon positions, with armor in its own compatible positions', () => {
         const game = match(), unit = game.spawnUnit('player', 'footman', 700, 700), boots = give(game, unit.id, 'speedBoots'), cloak = give(game, unit.id, 'flameCloak');
         expect(boots.slot).toBe('feet');
@@ -17,6 +44,7 @@ describe('equipment and holds', () => {
         give(game, unit.id, 'greatSword');
         give(game, unit.id, 'roundShield');
         give(game, unit.id, 'guardianScroll');
+        give(game, unit.id, 'experienceBook');
         expect(itemsFor(game, unit).filter(item => CARRY_SLOTS.includes(item.slot as never))).toHaveLength(4);
         expect(freeItemSlot(game, unit, 'experienceBook')).toBeUndefined();
         expect(freeItemSlot(game, unit, 'regenRing')).toBe('head');
@@ -24,13 +52,13 @@ describe('equipment and holds', () => {
     });
     it('stows a shield when wielding a two-handed sword without duplicating carrying positions', () => {
         const game = match(), unit = game.spawnUnit('player', 'archer', 700, 700), sword = give(game, unit.id, 'greatSword'), shield = give(game, unit.id, 'roundShield');
-        // The standard bow itself needs both hands.
-        expect(() => issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: shield.id, hand: 'left' })).toThrow(/two-handed/);
+        issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: shield.id, hand: 'left' });
         issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: sword.id, hand: 'right' });
         expect(unit.attackRange).toBe(ITEM_DEFS.greatSword.weapon!.range);
         expect(unit.attackDamage).toBe(22);
         expect(unit.hands?.left).toBeUndefined();
-        expect(itemsFor(game, unit)).toHaveLength(3);
+        expect(itemsFor(game, unit)).toHaveLength(2);
+        expect(() => issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: shield.id, hand: 'left' })).toThrow(/two-handed/);
         issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, hand: 'right' });
         issuePlayerCommand(game, 'player', { type: 'wieldItem', unitId: unit.id, itemId: shield.id, hand: 'left' });
         expect(unit.hands?.left).toBe(shield.id);
@@ -62,7 +90,8 @@ describe('equipment and holds', () => {
     it('rejects remote transfers and another player’s equipment', () => {
         const game = match(), ship = game.spawnUnit('player', 'transport', 1500, 1500), unit = game.spawnUnit('player', 'worker', 700, 700), enemy = game.spawnUnit('enemy', 'footman', 700, 700), boots = give(game, unit.id, 'speedBoots');
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: boots.id, destination: { shipId: ship.id, slot: 0 } })).toThrow(/closer/);
-        expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: game.items.find(item => item.carrierId === enemy.id)!.id, destination: { unitId: unit.id, slot: 'carry1' } })).toThrow(/own equipment/);
+        const enemyBoots = {id:'enemy-boots', kind:'speedBoots' as const, carrierId:enemy.id, slot:'feet' as const, x:enemy.x, y:enemy.y, cooldownRemaining:0}; game.items.push(enemyBoots);
+        expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: enemyBoots.id, destination: { unitId: unit.id, slot: 'carry1' } })).toThrow(/own equipment/);
     });
     it('keeps active hands and holds isolated from saved snapshots and replays deterministically', () => {
         const game = match(), unit = game.spawnUnit('player', 'footman', 700, 700), ship = game.spawnUnit('player', 'transport', 750, 700), shield = give(game, unit.id, 'roundShield');
@@ -91,7 +120,7 @@ describe('equipment and holds', () => {
         expect(game.items.filter(item => item.id.startsWith('old-'))).toHaveLength(6);
         expect(itemsFor(game, unit)).toHaveLength(4);
         expect(new Set(itemsFor(game, unit).map(item => itemSlot(game, unit, item))).size).toBe(4);
-        expect(game.units.find(current => current.id === unit.id)!.hands?.right).toBe(`issued-${unit.id}`);
+        expect(game.units.find(current => current.id === unit.id)!.hands?.right).toBeUndefined();
     });
     it('reads a carried consumable and returns to the previous weapon', () => {
         const game = match(), unit = game.spawnUnit('player', 'footman', 700, 700), book = give(game, unit.id, 'experienceBook'), hands = { ...unit.hands };

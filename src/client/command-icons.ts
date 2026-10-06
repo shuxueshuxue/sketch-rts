@@ -1,5 +1,6 @@
 /** Engraved command glyphs, independent of the operating system's emoji font. */
 const COMMAND_PATHS: Record<string, string> = {
+    '▣': 'M8 12h26v24H8zM14 12V7h14v5M8 21h26M18 19h6v6h-6z',
     '⌁': 'M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4',
     '⚔': 'M10 6l20 20m2-18L12 28M7 5l7 2-5 5zm28 0l-7 2 5 5zM7 30l6 6m16-6l6 6M10 33l-4 4m26-4l4 4',
     '⌘': 'M12 33l13-19M17 7l7-3 12 8-5 8-8-5-7 1-4-5zM9 31l5 3-3 5-5-3z',

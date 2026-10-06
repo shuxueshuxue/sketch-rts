@@ -45,11 +45,16 @@ export class LocalGameAdapter implements GameAdapter {
   updateToRenderTime(): boolean {
     const tickMs = this.options.tickMs ?? 50;
     const current = this.now();
+    // A throttled/background tab is a pause, not a debt of thousands of ticks
+    // to run synchronously before the mouse and the next paint can respond.
+    this.lastUpdate = Math.max(this.lastUpdate, current - tickMs * 4);
+    const started = performance.now();
     let changed = false;
     while (current - this.lastUpdate >= tickMs && !this.game.match.winner) {
       this.applyAndStep([]);
       this.lastUpdate += tickMs;
       changed = true;
+      if (performance.now() - started >= 8) break;
     }
     return changed;
   }

@@ -5,6 +5,19 @@ import { createGame } from "../../shared/sim";
 import { LocalGameAdapter } from "./local-adapter";
 
 describe("local game adapter", () => {
+  it('resumes a background tab without repaying minutes of simulation in one render', () => {
+    let now = 0;
+    const game = createGame('bareDuel', {aiPlayers:[]});
+    const adapter = new LocalGameAdapter(game,'player',{now:()=>now});
+    now = 10 * 60 * 1000;
+    expect(adapter.updateToRenderTime()).toBe(true);
+    expect(game.tick).toBeGreaterThan(0);
+    expect(game.tick).toBeLessThanOrEqual(4);
+    const resumed = game.tick;
+    now += 50;
+    adapter.updateToRenderTime();
+    expect(game.tick - resumed).toBeLessThanOrEqual(4);
+  });
   it("applies local commands through command frames before stepping simulation", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");

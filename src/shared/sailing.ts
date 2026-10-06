@@ -30,7 +30,8 @@ export function sailToward(ship:Unit,point:Point,map:GameMap,units:readonly Unit
   const start={x:ship.x,y:ship.y,heading:motion.heading};
   let aim:Point,desired:number;
   if(map.terrain) {
-    if(!motion.route || motion.route.goalX!==point.x || motion.route.goalY!==point.y) {
+    const movedGoal = motion.route && Math.hypot(motion.route.goalX-point.x,motion.route.goalY-point.y);
+    if(!motion.route || movedGoal!>map.terrain.cell/2 || !motion.route.points.length && movedGoal!>1) {
       const points=shipRoute(map,ship,point);
       motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y}};
     }

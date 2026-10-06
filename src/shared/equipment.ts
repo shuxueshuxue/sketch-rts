@@ -108,7 +108,7 @@ export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
     if (!unit.hands || !canEquip(unit))
         return base;
     const item = activeItem(snapshot, unit, 'right');
-    if (unit.hands.right && !item)
+    if (!item || !ITEM_DEFS[item.kind].weapon && item.kind !== 'issuedWeapon')
         return base;
     if (item?.kind === 'issuedWeapon' && item.weaponKind === unit.kind) {
         defaultKits.set(unit, { items: snapshot.items, item });
@@ -120,7 +120,7 @@ export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
         return { ...body, attackDamage: profile.attackDamage, attackRange: profile.attackRange, attackCooldown: profile.attackCooldown, ...(profile.weapon ? { weapon: profile.weapon } : {}), ...(profile.aimSpeed ? { aimSpeed: profile.aimSpeed } : {}), ...(profile.aimMoveTolerance ? { aimMoveTolerance: profile.aimMoveTolerance } : {}) };
     }
     const selected = item && ITEM_DEFS[item.kind].weapon;
-    return { ...body, attackDamage: selected?.damage ?? 3, attackRange: selected?.range ?? 36, attackCooldown: selected?.cooldown ?? seconds(1.2) };
+    return selected ? { ...body, attackDamage: selected.damage, attackRange: selected.range, attackCooldown: selected.cooldown } : base;
 }
 export function shipHoldSlots(ship: Unit) { const profile = shipProfile(ship); return profile ? Math.max(4, Math.floor(profile.loadCapacity / 100)) : 0; }
 export function shipItemMass(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { return (itemIndex(snapshot.items).byShip.get(ship.id) ?? []).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0); }
@@ -198,6 +198,15 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
             return 'The ship cannot carry more weight';
     }
 }
+export function dropRefusal(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, unitId: string, itemId: string): string | undefined {
+    const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);
+    const item = snapshot.items.find(item => item.id === itemId);
+    if (!unit || !canEquip(unit) || !item) return 'Item or carrier is no longer available';
+    if (item.carrierId === unit.id) return;
+    const ship = snapshot.units.find(ship => ship.id === item.shipId && ship.owner === owner && ship.hp > 0);
+    if (!ship) return 'You can only move your own equipment';
+    if (!canExchange(snapshot, unit, ship)) return 'A crew member must be nearby to install or remove weapons';
+}
 export function removeFromHands(unit: Unit, itemId: string) {
     if (!unit.hands)
         return;
@@ -224,9 +233,15 @@ export function wieldRefusal(snapshot: GameSnapshot, owner: PlayerId, unitId: st
 }
 /** Assign old carried items to real positions, preserving overflow as world drops. */
 export function normalizeEquipment(snapshot: GameSnapshot, issue = false) {
+    // Native attacks belong to the unit. Older generated kits must not occupy
+    // its carrying positions or become free tradable equipment on migration.
+    const generated = new Set(snapshot.items.filter(item => item.kind === 'issuedWeapon' && item.id.startsWith('issued-')).map(item => item.id));
+    snapshot.items = snapshot.items.filter(item => !generated.has(item.id));
     for (const unit of snapshot.units) {
         if (!canEquip(unit))
             continue;
+        for (const id of generated) removeFromHands(unit, id);
+        if (issue) unit.hands ??= {};
         const occupied = new Set<EquipmentSlot>();
         for (const item of snapshot.items.filter(item => item.carrierId === unit.id)) {
             const worn = ITEM_DEFS[item.kind].slot;
@@ -246,25 +261,5 @@ export function normalizeEquipment(snapshot: GameSnapshot, issue = false) {
             }
         }
         invalidateItemIndex(snapshot.items);
-        if (issue && unit.owner !== 'neutral' && !unit.hands && !itemsFor(snapshot, unit).some(item => ITEM_DEFS[item.kind].span === 4)) {
-            let slot = CARRY_SLOTS.find(slot => !occupied.has(slot));
-            if (!slot) {
-                const overflow = itemsFor(snapshot, unit).find(item => item.slot === 'carry3');
-                if (overflow) {
-                    delete overflow.carrierId;
-                    delete overflow.slot;
-                    overflow.x = unit.x;
-                    overflow.y = unit.y;
-                    slot = 'carry3';
-                }
-            }
-            if (slot) {
-                const item: WorldItem = { id: `issued-${unit.id}`, kind: 'issuedWeapon', weaponKind: unit.kind, x: unit.x, y: unit.y, carrierId: unit.id, slot, cooldownRemaining: 0 };
-                snapshot.items.push(item);
-                unit.hands = { right: item.id };
-            }
-            else
-                unit.hands = {};
-        }
     }
 }

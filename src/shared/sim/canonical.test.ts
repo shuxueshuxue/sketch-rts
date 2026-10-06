@@ -42,11 +42,11 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Equipment version 1 adds real service weapons and equipment mass to fresh games.
+    // Fresh units have innate attacks and empty equipment positions.
     // Map geometry still uses det-math; key/id ordering is independent of locale.
-    expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("44e8a625");
+    expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("b3a1487c");
     const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
     // Balance changes and per-second movement rates change the spawned units' live stats.
-    expect(checksumGame(ladder)).toBe("7898f3a0");
+    expect(checksumGame(ladder)).toBe("f7839496");
   });
 });

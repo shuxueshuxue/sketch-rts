@@ -5,7 +5,7 @@ import { shipPassengers, shipProfile } from '../shared/ship-geometry';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
-import { drawAtlasUnitPortrait } from './atlas-art';
+import { drawAtlasUnit, drawAtlasUnitPortrait } from './atlas-art';
 import './equipment-panel.css';
 type I18n = ReturnType<typeof createI18n>;
 const labelKind = (kind: Parameters<I18n['label']>[0], i18n: I18n) => i18n.label(kind);
@@ -48,6 +48,8 @@ export class EquipmentPanel {
     private owner: PlayerId = 'player';
     private unitId: string | undefined;
     private shipId: string | undefined;
+    private contextIds: string[] = [];
+    private shipContext = false;
     private fingerprint = '';
     private dragging: string | undefined;
     private pointerDrag: { id: string; x: number; y: number; active: boolean; ghost?: HTMLElement; target?: HTMLElement | undefined } | undefined;
@@ -81,9 +83,12 @@ export class EquipmentPanel {
             return;
         const own = selected.filter(unit => unit.owner === this.owner), ship = own.find(unit => shipProfile(unit));
         const unit = own.find(canEquip) ?? (ship && shipPassengers(this.snapshot.units, ship).find(unit => unit.owner === this.owner && canEquip(unit)));
+        this.contextIds = own.filter(canEquip).map(unit => unit.id);
+        this.shipContext = !!ship;
         this.unitId = unit?.id;
         this.shipId = ship?.id ?? unit?.deck?.shipId ?? this.snapshot.units.find(candidate => candidate.owner === this.owner && shipProfile(candidate) && unit && canExchange(this.snapshot!, unit, candidate))?.id;
         this.open = true;
+        this.activePane = ship ? 'hold' : 'character';
         this.selectedItem = undefined;
         this.holdPage = 0;
         this.root.hidden = false;
@@ -246,6 +251,12 @@ export class EquipmentPanel {
                 else
                     this.command({ type: 'useItem', unitId: unit.id, itemId: item.id }); });
         }
+        const carrier = this.snapshot!.units.find(unit => unit.id === this.unitId);
+        if (carrier && (item.carrierId === carrier.id || item.shipId === this.shipId))
+            this.action(actions, this.text('丢弃', 'Drop'), () => {
+                this.command({type:'dropItem', unitId:carrier.id, itemId:item.id, x:carrier.x + carrier.radius + 18, y:carrier.y + 8});
+                this.selectedItem = undefined;
+            });
     }
     private clearPointerDrag() {
         this.pointerDrag?.ghost?.remove();
@@ -304,9 +315,13 @@ export class EquipmentPanel {
         const snapshot = this.snapshot;
         if (!snapshot || !this.open) return;
         const own = snapshot.units.filter(unit => unit.owner === this.owner && unit.hp > 0);
+        const contextShip = own.find(unit => unit.id === this.shipId);
+        const characters = own.filter(unit => canEquip(unit) && (this.shipContext ? contextShip && canExchange(snapshot, unit, contextShip) : this.contextIds.includes(unit.id)));
+        if (this.shipContext && !characters.some(unit => unit.id === this.unitId)) this.unitId = characters[0]?.id;
         const unit = own.find(unit => unit.id === this.unitId), ship = own.find(unit => unit.id === this.shipId && shipProfile(unit));
         if (!unit && !ship) { this.close(); return; }
-        const narrow = this.root.clientWidth < 900, short = this.root.clientHeight < 500;
+        this.root.dataset.mode = ship ? 'ship' : 'character';
+        const narrow = !!ship && this.root.clientWidth < 900, short = this.root.clientHeight < 500;
         const holdColumns = narrow ? 4 : 8;
         // Whole rows are paged, so a numbered position never changes identity.
         const holdRows = Math.max(1, Math.floor((this.root.clientHeight - (narrow ? 294 : 254)) / 55));
@@ -314,7 +329,7 @@ export class EquipmentPanel {
         const pageCount = Math.max(1, Math.ceil(total / capacity));
         this.holdPage = Math.min(this.holdPage, pageCount - 1);
         const key = JSON.stringify([narrow, short, holdRows, this.holdPage, this.activePane, bakedAssetsVersion(), this.i18n().locale, this.unitId, this.shipId,
-            own.map(unit => unit.id), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
+            characters.map(unit => unit.id), snapshot.items.filter(item => unit && item.carrierId === unit.id || ship && item.shipId === ship.id).map(item => [item.id, item.slot, item.holdSlot, item.mountId]), unit?.hands]);
         if (key === this.fingerprint || this.dragging) { this.updateValues(unit, ship); return; }
         this.fingerprint = key;
         this.root.dataset.pane = this.activePane;
@@ -323,7 +338,7 @@ export class EquipmentPanel {
         this.root.replaceChildren();
         const header = document.createElement('header');
         const crest = document.createElement('span'); crest.className = 'equipment-crest'; crest.setAttribute('aria-hidden', 'true'); crest.textContent = '⚔';
-        const title = document.createElement('div'); title.innerHTML = `<small>${this.text('舰队军械库', 'FLEET ARMORY')}</small><h2>${this.text('装备与船舱', 'Equipment & hold')}</h2>`;
+        const title = document.createElement('div'); title.innerHTML = `<small>${this.text('军械', 'EQUIPMENT')}</small><h2>${ship ? labelKind(ship.kind, this.i18n()) + this.text(' · 船舱与炮位', ' · Hold & fittings') : labelKind(unit!.kind, this.i18n()) + this.text(' · 装备', ' · Equipment')}</h2>`;
         const close = document.createElement('button'); close.type = 'button'; close.className = 'equipment-close'; close.textContent = '×';
         close.setAttribute('aria-label', this.text('关闭', 'Close')); close.addEventListener('click', () => this.close());
         header.append(crest, title, close); this.root.append(header);
@@ -335,7 +350,7 @@ export class EquipmentPanel {
         this.root.append(tabs);
         const columns = document.createElement('div'); columns.className = 'equipment-columns'; this.root.append(columns);
         const character = document.createElement('section'); character.className = 'equipment-character'; columns.append(character);
-        this.selector(character, this.text('人物', 'Character'), own.filter(canEquip), this.unitId, id => { this.unitId = id; this.render(); });
+        this.selector(character, this.shipContext ? this.text('船员', 'Crew') : this.text('人物', 'Character'), characters, this.unitId, id => { this.unitId = id; this.render(); });
         if (unit) {
             const positions = document.createElement('div'); positions.className = 'equipment-positions'; character.append(positions);
             const outfit = document.createElement('div'); outfit.className = 'equipment-outfit';
@@ -345,6 +360,8 @@ export class EquipmentPanel {
             }
             const carriedItems = itemsFor(snapshot, unit);
             for (const slot of ARMOR_SLOTS) outfit.append(this.cell(this.text(...SLOT_LABELS[slot]), carriedItems.find(item => itemSlot(snapshot, unit, item) === slot), { unitId: unit.id, slot }));
+            const figure = document.createElement('canvas'); figure.width = 240; figure.height = 360; figure.className = 'equipment-figure';
+            drawAtlasUnit(figure.getContext('2d')!, unit.kind, {x:120,y:245}, 3.5, '#819b82'); positions.append(figure);
             const heavy = carriedItems.find(item => ITEM_DEFS[item.kind].span === 4);
             if (heavy) {
                 const cell = this.cell(this.text('携行 1–4 · 搬运', 'Arms 1–4 · Hauling'), heavy, { unitId: unit.id, slot: 'carry0' });
@@ -370,9 +387,9 @@ export class EquipmentPanel {
                 const value = document.createElement('strong'); value.dataset.stat = key; stat.append(caption, value); stats.append(stat);
             }
             character.append(stats);
-        } else this.emptyNote(character, this.text('暂无己方人物，用上方箭头选择。', 'Choose a friendly character with the arrows above.'));
-        const cargo = document.createElement('section'); cargo.className = 'equipment-cargo'; columns.append(cargo);
-        this.selector(cargo, this.text('船舱', 'Cargo hold'), own.filter(unit => shipProfile(unit)), this.shipId, id => { this.shipId = id; this.holdPage = 0; this.render(); });
+        } else this.emptyNote(character, this.text('附近没有己方船员。让人物登船或靠近后可搬运、安装与拆卸。', 'No crew nearby. Bring someone aboard or alongside to haul, install or remove items.'));
+        const cargo = document.createElement('section'); cargo.className = 'equipment-cargo'; if (ship) columns.append(cargo);
+        this.selector(cargo, this.text('船舱', 'Cargo hold'), ship ? [ship] : [], this.shipId, () => {});
         const access = document.createElement('p'); access.dataset.equipmentAccess = ''; cargo.append(access);
         if (ship) {
             const grid = document.createElement('div'); grid.className = 'equipment-hold'; grid.style.setProperty('--hold-columns', String(holdColumns));
@@ -400,16 +417,22 @@ export class EquipmentPanel {
             const text = document.createElement('p'); text.dataset.equipmentLoad = ''; const meter = document.createElement('span'); meter.className = 'equipment-load-meter'; meter.append(document.createElement('i'));
             load.append(text, meter); cargo.append(load);
         } else { this.emptyNote(cargo, this.text('暂无己方船只，人物仍可穿戴或切换武器。', 'No friendly ship. You can still equip the character.')); }
-        const vessel = document.createElement('section'); vessel.className = 'equipment-vessel'; columns.append(vessel);
+        const vessel = document.createElement('section'); vessel.className = 'equipment-vessel'; if (ship) columns.append(vessel);
         const shipTitle = document.createElement('h3'); shipTitle.className = 'equipment-section-title'; shipTitle.textContent = this.text('船体装备', 'SHIP FITTINGS'); vessel.append(shipTitle);
         if (ship) {
-            const portrait = document.createElement('canvas'); portrait.width = 240; portrait.height = 168; portrait.className = 'equipment-ship-art';
-            drawAtlasUnitPortrait(portrait.getContext('2d')!, ship.kind, 24, -20, 200, '#8f9d7e'); vessel.append(portrait);
             const fittings = document.createElement('div'); fittings.className = 'equipment-fittings'; fittings.style.setProperty('--fitting-rows', String(Math.ceil(shipMounts(ship).length / 2))); vessel.append(fittings);
+            const profile = shipProfile(ship)!;
+            const plan = document.createElement('div'); plan.className = 'equipment-deck-plan';
+            const scale=Math.min(148/profile.beam,251.6/profile.length);
+            const points=(polygon:typeof profile.hull)=>polygon.map(p=>`${100+p.y*scale},${170-p.x*scale}`).join(' ');
+            const obstacles=profile.obstacles.filter(o=>o.type!=='weapon').map(o=>`<circle cx="${100+o.y*scale}" cy="${170-o.x*scale}" r="${o.radius*scale}" fill="#27241b" stroke="#907b51" stroke-width="2"/>`).join('');
+            plan.innerHTML = `<svg viewBox="0 0 200 340" aria-hidden="true"><defs><pattern id="deck-planks" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#493b29"/><path d="M0 0V12 M1 0V12" stroke="#89704b" stroke-width="1"/></pattern></defs><polygon points="${points(profile.hull)}" fill="#28251e" stroke="#a08754" stroke-width="4"/><polygon points="${points(profile.deck)}" fill="url(#deck-planks)" stroke="#645237" stroke-width="2"/>${obstacles}</svg>`; fittings.append(plan);
             for (const mount of shipMounts(ship)) {
                 const item = snapshot.items.find(item => item.shipId === ship.id && item.mountId === mount.id);
                 const cell = this.cell(this.shortMountLabel(mount.id), item, { shipId: ship.id, mountId: mount.id, installerId: unit?.id ?? '' }); cell.dataset.mountId = mount.id;
                 cell.classList.add(mount.id === 'bow' || mount.id === 'aft' ? 'equipment-mount-center' : mount.id.startsWith('port') ? 'equipment-mount-port' : 'equipment-mount-starboard');
+                cell.style.left = `${50 + mount.y*scale/2}%`;
+                cell.style.top = `${50 - mount.x*scale/3.4}%`;
                 cell.title = `${mount.accepts.map(kind => labelKind(kind, this.i18n())).join(' / ')} · ${this.text('射界', 'Firing arc')} ±${Math.round(mount.halfArc * 180 / Math.PI)}°`;
                 if (item) { const hp = document.createElement('small'); hp.dataset.weaponDurability = item.id; cell.append(hp); } fittings.append(cell);
             }
@@ -436,7 +459,7 @@ export class EquipmentPanel {
         const name = document.createElement('div'), caption = document.createElement('small'), title = document.createElement('strong');
         caption.textContent = label; title.textContent = current ? `${labelKind(current.kind, this.i18n())} · ${String(index + 1).padStart(2, '0')}` : this.text('未选择', 'Not selected');
         name.append(caption, title); context.append(name);
-        for (const [delta, symbol, zh, en] of [[-1, '‹', '上一个', 'Previous'], [1, '›', '下一个', 'Next']] as const) {
+        for (const [delta, symbol, zh, en] of (units.length > 1 ? [[-1, '‹', '上一个', 'Previous'], [1, '›', '下一个', 'Next']] : []) as [number,string,string,string][]) {
             const button = document.createElement('button'); button.type = 'button'; button.textContent = symbol;
             button.setAttribute('aria-label', `${this.text(zh, en)}${label}`); button.disabled = units.length === 0 || (units.length === 1 && !!current);
             button.addEventListener('click', () => change(units[(index + delta + units.length) % units.length]!.id)); context.append(button);

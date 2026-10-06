@@ -117,7 +117,8 @@ describe('physical ship equipment', () => {
         }
     });
     it('hauls the very same cannon using all four carrying positions and installs it on a transport', () => {
-        const game = match(), source = game.spawnUnit('player', 'warship', 800, 800), target = game.spawnUnit('player', 'transport', 900, 800), worker = game.spawnUnit('player', 'worker', 850, 750), cannon = installedWeapons(game, source)[0]!, weapon = game.items.find(item => item.carrierId === worker.id)!;
+        const game = match(), source = game.spawnUnit('player', 'warship', 800, 800), target = game.spawnUnit('player', 'transport', 900, 800), worker = game.spawnUnit('player', 'worker', 850, 750), cannon = installedWeapons(game, source)[0]!;
+        const weapon: WorldItem = {id:'carried-tool',kind:'greatSword',carrierId:worker.id,slot:'carry0',x:worker.x,y:worker.y,cooldownRemaining:0}; game.items.push(weapon);
         cannon.cooldownRemaining = 17;
         cannon.durability = 45;
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { unitId: worker.id, slot: 'carry0' } })).toThrow(/all four/);
@@ -125,7 +126,7 @@ describe('physical ship equipment', () => {
         issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { unitId: worker.id, slot: 'carry0' } });
         expect(worker.gearMass).toBe(160);
         expect(worker.speed).toBeLessThan(30);
-        expect(worker.radius).toBeGreaterThan(worker.bodyRadius!);
+        expect(worker.radius).toBe(worker.bodyRadius);
         expect(cannon.mountId).toBeUndefined();
         expect(source.attackDamage).toBe(0);
         issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: target.id, mountId: 'bow', installerId: worker.id } });

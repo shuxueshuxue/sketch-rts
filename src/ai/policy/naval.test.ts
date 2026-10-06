@@ -8,6 +8,7 @@ import { desiredExpansionMine } from "./expansion-model";
 import { navalUnitIds, navalWant, navalBudgetReserve, planNavalTactics } from "./naval";
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
+import { installedWeapons } from '../../shared/ship-equipment';
 
 // Tests that model old cargo saves observe the same restored live crew as the runtime.
 function snapshotGame(game: ReturnType<typeof createGame>) {
@@ -62,6 +63,36 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
   for(let i=3;i<=6;i++)game.units.push({...createUnit(`w${i}`,"player","worker",at(3,4+i).x,at(3,4+i).y),order:{type:"mine",resourceId:"main",phase:"toMine",timer:0}});
   return game;
 }
+
+describe('shared dock outfitting', () => {
+  for (const version of ['v5','v7','v8'] as const) it(`${version} buys directly into the hold and installs with a nearby worker`, () => {
+    const game = islandGame(); game.scriptedVictory = true; game.players.player!.gold = 3000;
+    const dock = {...game.buildings[0]!,id:'outfit-yard',kind:'shipyard' as const,x:275,y:336,radius:44,complete:true}; game.buildings.push(dock);
+    const ship = game.spawnUnit('player','transport',400,336);
+    const worker = game.spawnUnit('player','worker',240,336);
+    for (let i=0;i<6;i++) game.spawnUnit('player','footman',130,100+i*40);
+    const options = {version,memory:createAiPolicyMemory()};
+    expect(navalUnitIds(snapshotGame(game),'player',options).has(worker.id)).toBe(true);
+    const want = navalWant(snapshotGame(game),'player',options);
+    expect(want?.id).toBe('naval:gun');
+    const purchase = want!.issue(new Set())!;
+    expect(purchase.type).toBe('buyShipEquipment');
+    expect(purchase).toMatchObject({recipientId:ship.id});
+    issuePlayerCommand(game,'player',purchase);
+    const gun = game.items.find(item=>item.kind==='shipCannon')!;
+    expect(gun).toMatchObject({shipId:ship.id,holdSlot:0});
+    let hauled = false;
+    for (let tick=0;tick<1500 && !installedWeapons(game,ship).length;tick++) {
+      for (const command of planNavalTactics(snapshotGame(game),'player',options)) issuePlayerCommand(game,'player',command);
+      if (gun.carrierId===worker.id) hauled=true;
+      stepGame(game);
+    }
+    expect(hauled).toBe(false);
+    expect(installedWeapons(game,ship).map(item=>item.id)).toEqual([gun.id]);
+    expect(game.items.filter(item=>item.kind==='shipCannon')).toHaveLength(1);
+    expect(worker.hp).toBeGreaterThan(0);
+  });
+});
 
 // A 30 by 20 grid of land with water in columns 10-19, rows 2-17 (a lake, or with `pond` a pond of four cells there): the
 // land is one whole round it. The player holds two halls west of it, the enemy a hall east of it with a worker by it.

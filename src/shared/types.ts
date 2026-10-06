@@ -63,6 +63,7 @@ export type WorldEffect = {
     | "chainLightning"
     | "guardianField"
     | "experienceBurst"
+    | "itemReceived"
     | "board" | "unload" | "boardingBlocked"
     | "goldBounty"
     | "flameBurn"
@@ -510,8 +511,8 @@ export type GameCommand =
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
-  | { type: "buyShipEquipment"; buildingId:string; item:ShipEquipmentKind }
-  | { type: "buy"; shopId: string; item: ItemKind }
+  | { type: "buyShipEquipment"; buildingId:string; item:ShipEquipmentKind; recipientId?:string }
+  | { type: "buy"; shopId: string; item: ItemKind; recipientId?:string }
   | { type: "setAutocast"; unitIds: string[]; ability: AbilityKind; enabled: boolean }
   | { type: "setStance"; unitIds: string[]; stance: MeleeStance }
   | { type: "board"; unitIds: string[]; transportId: string; queued?: boolean }

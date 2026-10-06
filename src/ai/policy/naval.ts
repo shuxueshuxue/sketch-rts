@@ -1,10 +1,15 @@
-import { shipPassengers } from "../../shared/ship-geometry";
+import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
+import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts } from "../../shared/ship-equipment";
+import { canEquip, canExchange, freeItemSlot, itemsFor, transferRefusal } from "../../shared/equipment";
+import { deckPlacement } from "../../shared/decks";
+import type { NavalPlanMemory } from "../memory";
 import { bodyMass } from "../../shared/physical-body";
 import { boardUnit } from "../../shared/decks";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
 import { canReach, carries } from "../../shared/naval";
-import { groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
+import { purchasePlacement } from "../../shared/purchase";
+import { footprintHalf, groundWholes, isWalkable, sameGround, shoreSpots, walkableGoal, walkingDistance } from "../../shared/terrain";
 import { seconds } from "../../shared/time";
 import type { Building, GameCommand, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import { legalBuildPointNear } from "./build-layout";
@@ -90,6 +95,11 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
 }
 export const navalReservePurchase = (id: string) => id === "naval:islandHall" || id === "naval:transport" || id === "naval:shipyard";
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
+    const outfit = outfitting(snapshot, owner, options);
+    if (outfit && !outfit.itemId && playerState(snapshot, owner).gold >= SHIP_WEAPONS[outfit.kind].cost + navalBudgetReserve(snapshot, owner, options) + 400) {
+        const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
+        if (dock && "placement" in purchasePlacement(snapshot,owner,dock,outfit.kind,outfit.shipId)) return {id:'naval:gun',cost:SHIP_WEAPONS[outfit.kind].cost,issue:()=>({type:'buyShipEquipment',buildingId:dock.id,item:outfit.kind,recipientId:outfit.shipId})};
+    }
     const foothold = footholdWant(snapshot, owner);
     if (foothold)
         return { ...foothold, closeout: true };
@@ -283,6 +293,8 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const plan = islandPlan(snapshot, owner, options);
     const assault = assaultPlan(snapshot, owner, options);
     const commands: GameCommand[] = [];
+    const outfit = outfitting(snapshot, owner, options);
+    if (outfit) commands.push(...outfitCommands(snapshot, owner, outfit));
     const harbor = buildings(snapshot, owner).find(building => building.kind === "shipyard");
     const foes = [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
     const convoy = own.filter(unit => ferryCapacity(unit) > 0 && shipPassengers(snapshot.units,unit).length);
@@ -295,7 +307,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         if (boat) escorts.set(ship.id, boat);
     }
     const assigned = new Set<string>();
-    for (const ship of own.filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0)) {
+    for (const ship of own.filter(unit => unitMover(unit.kind) === "sea" && unit.attackDamage > 0 && unit.id !== outfit?.shipId)) {
         const waiting = own.filter(unit => unit.order.type === "board" && unit.order.transportId === ship.id);
         const aboard = shipPassengers(snapshot.units, ship);
         const safe = !foes.some(foe => foe.attackDamage > 0 && distance(foe, ship) < 600);
@@ -369,7 +381,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         const ready = troops.filter(unit=>unit.order.type!=="cast" && unit.order.type!=="attack" && (unit.order.type!=="attackMove" || distance(unit.order,target)>80));
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
-    for (const transport of own.filter(unit => ferryCapacity(unit) > 0))
+    for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId))
         commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault));
     for (const worker of own.filter(unit => unit.deck && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
@@ -380,6 +392,8 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
 }
 export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
     const claimed = new Set<string>();
+    const outfit = outfitting(snapshot,owner,options);
+    if (outfit) { claimed.add(outfit.workerId); claimed.add(outfit.shipId); }
     if (groundWholes(snapshot.map) <= 1 && !shipsAfloat(snapshot))
         return claimed;
     const home = buildings(snapshot, owner).find(building => building.kind === "townHall");
@@ -704,6 +718,78 @@ function hallSite(snapshot: GameSnapshot, mine: Point): Point | undefined {
 // have: kept by the terrain beside it, a replay from a save took other naval commands than the game had, and a second
 // game on the same terrain object took the first one's plans).
 const PLAN_RETRY = seconds(20);
+type Outfit = NonNullable<NavalPlanMemory['outfit']>;
+/** Purchased guns enter the hold directly; installation still needs a nearby worker. */
+function outfitting(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Outfit | undefined {
+    const memory = navalMemory(options), own = units(snapshot,owner);
+    const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
+    if (!dock) { delete memory.outfit; return; }
+    const dangerous = (ship: Unit) => snapshot.units.some(unit => isEnemyOwner(snapshot,owner,unit.owner,options) && unit.attackDamage > 0 && distance(unit,ship) < 650);
+    let job = memory.outfit;
+    if (job) {
+        const ship = own.find(unit => unit.id === job!.shipId), worker = own.find(unit => unit.id === job!.workerId);
+        const filled = ship && snapshot.items.some(item => item.shipId === ship.id && item.mountId === job!.mountId);
+        if (!ship || !worker || dangerous(ship) || filled) { delete memory.outfit; job = undefined; }
+    }
+    if (!job) {
+        // Outfitting is a surplus dock errand. Never interrupt an opening army
+        // or an active landing to buy another gun.
+        if (own.filter(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land').length < 6) return;
+        const candidates = own.filter(ship => shipProfile(ship) && distance(ship,dock) < 450 && ship.hp >= ship.maxHp*.65 && !dangerous(ship) && !shipPassengers(snapshot.units,ship).length
+            && !memory.ferries?.[ship.id]
+            && installedWeapons(snapshot,ship).length < (ship.kind === 'carrier' ? 3 : ship.kind === 'transport' || ship.kind === 'cutter' ? 1 : 2));
+        for (const ship of candidates) {
+            const mount = shipMounts(ship).find(mount => !snapshot.items.some(item => item.shipId === ship.id && item.mountId === mount.id) && (mount.accepts.includes('shipCannon') || mount.accepts.includes('shipMortar')));
+            if (!mount) continue;
+            const kind = mount.accepts.includes('shipCannon') ? 'shipCannon' : 'shipMortar';
+            const worker = own.filter(unit => unit.kind === 'worker' && canEquip(unit) && !unit.deck && unit.order.type !== 'build' && distance(unit,dock) < 550 && !itemsFor(snapshot,unit).length).sort((a,b)=>distance(a,dock)-distance(b,dock))[0];
+            const available = snapshot.items.some(item => item.kind === kind && (item.shipId === ship.id && !item.mountId || !item.carrierId && !item.shipId && distance(item,dock) < 300));
+            if (!worker || !available && playerState(snapshot,owner).gold < SHIP_WEAPONS[kind].cost + navalBudgetReserve(snapshot,owner,options) + 400) continue;
+            job = memory.outfit = {shipId:ship.id,workerId:worker.id,mountId:mount.id,kind}; break;
+        }
+    }
+    if (job) {
+        const item = snapshot.items.find(item => item.id === job!.itemId && (item.carrierId === job!.workerId || item.shipId === job!.shipId || !item.carrierId && !item.shipId))
+            ?? snapshot.items.find(item => item.kind === job!.kind && !item.mountId && (item.carrierId === job!.workerId || item.shipId === job!.shipId || !item.carrierId && !item.shipId && distance(item,dock)<300));
+        if (item) job.itemId = item.id; else delete job.itemId;
+        if (!item && playerState(snapshot,owner).gold < SHIP_WEAPONS[job.kind].cost + navalBudgetReserve(snapshot,owner,options) + 400) { delete memory.outfit; return; }
+    }
+    return job;
+}
+function outfitCommands(snapshot: GameSnapshot, owner: PlayerId, job: Outfit): GameCommand[] {
+    const worker = snapshot.units.find(unit=>unit.id===job.workerId)!, ship = snapshot.units.find(unit=>unit.id===job.shipId)!;
+    const dock = buildings(snapshot,owner).find(building=>building.kind==='shipyard' && building.complete)!;
+    const commands: GameCommand[] = [], berth = walkableGoal(snapshot.map,dock.x,dock.y,'sea');
+    if (distance(ship,berth)>40) { if (needsMove(ship,berth)) commands.push({type:'move',unitIds:[ship.id],...berth}); }
+    else if (ship.order.type!=='idle') commands.push({type:'stop',unitIds:[ship.id]});
+    const item = snapshot.items.find(item=>item.id===job.itemId);
+    if (!item) return commands;
+    if (!item.carrierId && !item.shipId) {
+        if (freeItemSlot(snapshot,worker,item.kind) && (worker.order.type !== 'pickupItem' || worker.order.itemId !== item.id)) commands.push({type:'pickupItem',unitId:worker.id,itemId:item.id});
+        return commands;
+    }
+    const destination = {shipId:ship.id,mountId:job.mountId,installerId:worker.id};
+    if (canExchange(snapshot,worker,ship)) {
+        const blocked = snapshot.units.filter(unit=>unit.deck?.shipId===ship.id && Math.hypot(unit.deck.x-shipMounts(ship).find(m=>m.id===job.mountId)!.x,unit.deck.y-shipMounts(ship).find(m=>m.id===job.mountId)!.y)<unit.radius+shipMounts(ship).find(m=>m.id===job.mountId)!.radius+1);
+        for (const crew of blocked.filter(unit=>unit.owner===owner)) {
+            const spot = deckPlacement(ship,crew,snapshot.units,{x:-shipProfile(ship)!.length*.25,y:0});
+            if (spot) commands.push({type:'move',unitIds:[crew.id],...localToWorld(ship,spot)});
+        }
+        if (!blocked.length && !transferRefusal(snapshot,owner,item.id,destination)) commands.push({type:'transferItem',itemId:item.id,destination});
+    } else {
+        const profile=shipProfile(ship)!, reach=profile.length/2+100, cell=snapshot.map.terrain?.cell ?? 32;
+        const spots:Point[]=[];
+        for (let dx=-reach;dx<=reach;dx+=cell/2) for (let dy=-reach;dy<=reach;dy+=cell/2) {
+            const point={x:ship.x+dx,y:ship.y+dy};
+            if (![point,{x:point.x-worker.radius,y:point.y},{x:point.x+worker.radius,y:point.y},{x:point.x,y:point.y-worker.radius},{x:point.x,y:point.y+worker.radius}].every(p=>isWalkable(snapshot.map,p.x,p.y,'land'))) continue;
+            if (snapshot.buildings.some(building=>Math.hypot(Math.max(0,Math.abs(point.x-building.x)-footprintHalf(building.radius,cell)),Math.max(0,Math.abs(point.y-building.y)-footprintHalf(building.radius,cell)))<worker.radius+2)) continue;
+            if (canExchange(snapshot,{...worker,...point},ship)) spots.push(point);
+        }
+        const point=spots.sort((a,b)=>distance(worker,a)-distance(worker,b))[0];
+        if (point && needsMove(worker,point)) commands.push({type:'move',unitIds:[worker.id],...point});
+    }
+    return commands;
+}
 function navalMemory(options: AiPolicyContext) {
     return (options.memory.naval ??= {});
 }
@@ -909,18 +995,19 @@ function shoreSpot(snapshot: GameSnapshot, owner: PlayerId, water: Point, option
     // only while they reach every gun that reaches it: a warship 121 off a shore the owner's tower covered, out of that
     // tower's reach, sank the 21 sites placed there one after another (the 1v3 bench's v5-extra-13 ladder-57 at fbd8f95).
     const reaches = (ship: Unit, spot: Point) => distance(ship, spot) <= ship.attackRange + BUILDING_DEFS.shipyard.radius + GUN_MARGIN;
-    const spots = shoreSpots(map, BUILDING_DEFS.shipyard.radius)
-        .map((spot) => ({ spot, gap: gapOf(spot, ours) }))
-        .filter((entry) => entry.gap >= HALL_BERTH && entry.gap < gapOf(entry.spot, theirs) && !covered(entry.spot, enemy, BUILDING_DEFS.shipyard.radius))
-        .filter((entry) => despiteGuns || (covered(entry.spot, towers) && !guns.some((ship) => reaches(ship, entry.spot) && !covered(ship, towers))) || (!held && !guns.some((ship) => reaches(ship, entry.spot))))
-        .sort((a, b) => a.gap - b.gap);
-    for (const { spot } of spots) {
+    let best:Point|undefined,bestGap=Infinity;
+    for (const spot of shoreSpots(map, BUILDING_DEFS.shipyard.radius)) {
+        const gap=gapOf(spot,ours);
+        // Once a valid berth is known, farther candidates cannot win. Keep
+        // row-order ties identical to the former stable sort.
+        if(gap<HALL_BERTH || gap>=bestGap || gap>=gapOf(spot,theirs) || covered(spot,enemy,BUILDING_DEFS.shipyard.radius))continue;
+        if(!despiteGuns && !((covered(spot,towers)&&!guns.some(ship=>reaches(ship,spot)&&!covered(ship,towers))) || (!held&&!guns.some(ship=>reaches(ship,spot)))))continue;
         if (!halls.some(hall => sameGround(map, spot, hall)) || !isBuildPlacementClear(snapshot, "shipyard", spot))
             continue;
         if (sameGround(map, walkableGoal(map, spot.x, spot.y, "sea"), water, "sea"))
-            return spot;
+            {best=spot;bestGap=gap;}
     }
-    return undefined;
+    return best;
 }
 function enemyShipsNear(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Unit[] {
     if (!shipsAfloat(snapshot))

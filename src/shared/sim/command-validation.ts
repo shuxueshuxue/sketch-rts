@@ -1,5 +1,5 @@
 import { SHIP_WEAPONS, installedWeapons, shipNeedsRepair } from "../ship-equipment";
-import { canEquip, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
+import { canEquip, dropRefusal, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
 import { shipPassengers } from "../ship-geometry";
 import { canBoard } from "../decks";
 import { abilityCooldown } from "../ability-cooldowns";
@@ -13,6 +13,7 @@ import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
 import type { Game } from "../sim";
 import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, UnitKind } from "../types";
 import { ownUnitLookup } from "../unit-lookup";
+import { purchasePlacement } from "../purchase";
 
 export type CommandLegalityError = {
   message: string;
@@ -122,8 +123,8 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!canSupply(snapshot, owner, camp.hireKind)) return commandError(`Need more supply to hire ${camp.hireKind}`, true);
     return canSpendGold(snapshot, owner, camp.cost) ? undefined : commandError(`Need ${camp.cost} gold`, true);
   }
-  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);return canSpendGold(snapshot,owner,SHIP_WEAPONS[command.item].cost)?undefined:commandError(`Need ${SHIP_WEAPONS[command.item].cost} gold`,true);}
-  if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item);
+  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return commandError(delivery.refusal,true);}return canSpendGold(snapshot,owner,SHIP_WEAPONS[command.item].cost)?undefined:commandError(`Need ${SHIP_WEAPONS[command.item].cost} gold`,true);}
+  if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item, command.recipientId);
   if (command.type === "cast") return castError(snapshot, owner, command);
   if (command.type === "setAutocast") {
     if (!canAutocast(command.ability)) return commandError(`${command.ability} cannot be autocast`);
@@ -148,6 +149,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const unit=snapshot.units.find(unit=>unit.id===command.unitId)!;return canEquip(unit) && freeItemSlot(snapshot,unit,item.kind) ? undefined : commandError(`${command.unitId} has no free equipment position`,true);
   }
   if (command.type === "dropItem" || command.type === "useItem") {
+    if (command.type === "dropItem") { const message = dropRefusal(snapshot, owner, command.unitId, command.itemId); return message ? commandError(message, true) : undefined; }
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
     if (!item) return commandError(`Unknown item ${command.itemId}`, true);
