@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { snapshotGame } from "../../shared/sim";
+import { createGame,snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { createAiPolicyMemory } from "../memory";
 import { planAbilityCommands, planFocusFireCommand } from "./spell-tactics";
 
 describe("AI spell and focus tactics", () => {
+  for(const version of ['v5','v7','v8'] as const)it(`${version} neither heals nor regroups toward damaged hulls`,()=>{
+    const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.buildings=[];game.resources=[];delete game.map.terrain;
+    game.spawnUnit('player','priest',600,600);const ship=game.spawnUnit('player','transport',700,600);ship.hp=10;
+    expect(planAbilityCommands(snapshotGame(game),'player',{version})).toEqual([]);
+    ship.x=1050;expect(planAbilityCommands(snapshotGame(game),'player',{version})).toEqual([]);
+  });
   it("casts heal on a nearby wounded allied unit", () => {
     const game = sketchScene("spell-tactics-heal")
       .map("bareDuel")
