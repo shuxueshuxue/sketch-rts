@@ -21,6 +21,8 @@ game.map.height = 1400;
 game.players.player!.gold = 3000;
 const ship = game.spawnUnit('player', 'transport', 900, 750), unit = game.spawnUnit('player', 'footman', 900, 750);
 const archer = game.spawnUnit('player','archer',500,700);
+game.items.push({ id: 'archer-boots', kind: 'speedBoots', x: archer.x, y: archer.y, cooldownRemaining: 0 });
+issuePlayerCommand(game,'player',{type:'pickupItem',unitId:archer.id,itemId:'archer-boots'});
 boardUnit(ship, unit, game.units);
 for(const [kind,x,y] of [['worker',-45,-15],['archer',25,18]] as const){const crew=game.spawnUnit('player',kind,900,750);boardUnit(ship,crew,game.units);const at=deckPlacement(ship,crew,game.units,{x,y});if(at)crew.deck={shipId:ship.id,...at};}
 unit.deck = { shipId: ship.id, ...deckPlacement(ship, unit, game.units, { x: -8, y: 18 })! };
