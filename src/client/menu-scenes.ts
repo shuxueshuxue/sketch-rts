@@ -11,6 +11,8 @@ import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
 import { drawWorld, trackUnitFacing, type WorldLabels } from "./world-renderer";
+import { boardUnit, deckPlacement, projectDeckPoint, syncDecks } from '../shared/decks';
+import { localToWorld, shipProfile } from '../shared/ship-geometry';
 
 // @@@menu-scenes - Composed small worlds running the same collision, pathfinding
 // and combat as a match. Scripts issue orders; only simulation moves actors.
@@ -217,6 +219,20 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
     p.prop("beacon", cx + 510, cy + 300, 1.6, "lit");
   }
   const game = stage(width, height, terrain, [[CROWN, "grove"], [GROVE, "grove"], [EMBERS, "ember"]], p);
+  const deckPatrols: { shipId: string; crewId: string; phase: number }[] = [];
+  if(kind==='fleet') {
+    for(const [index,ship] of game.units.filter(unit=>shipProfile(unit)).entries()) {
+      const profile=shipProfile(ship)!;
+      for(const [unitKind,x,y] of [['footman',-.22,.23],['archer',.15,.22],['worker',-.12,-.22]] as const) {
+        const crew=game.spawnUnit(ship.owner,unitKind,ship.x,ship.y);
+        if(!boardUnit(ship,crew,game.units)){game.units=game.units.filter(unit=>unit.id!==crew.id);continue;}
+        const point=deckPlacement(ship,crew,game.units,{x:x*profile.length,y:y*profile.beam});
+        if(point)crew.deck={shipId:ship.id,...point};
+        if(unitKind==='worker' && index%2===0)deckPatrols.push({shipId:ship.id,crewId:crew.id,phase:index});
+      }
+    }
+    syncDecks(game.units);
+  }
   if (kind === "capital") {
     game.map.landmarks.push({id:"avenue",kind:"road",x:cx,y:cy+85,size:860,rotation:Math.PI/2}, {id:"cross-street",kind:"road",x:cx-50,y:cy+110,size:860,rotation:0});
   } else if (kind === "woods") {
@@ -229,6 +245,15 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
     embers: fires, glows: fires,
     air: { dusk: kind === "woods" ? .22 : .1, mist: "211, 204, 185", mistAlpha: .12, rays: "248, 222, 171", rayAngle: -.45, motes: kind === "fleet" ? "glints" : "embers" },
     script(g) {
+      // Only local deck orders animate the patrol; the hull carries idle guards.
+      for(const patrol of deckPatrols) {
+        if((g.tick+patrol.phase*SIM_TICKS_PER_SECOND)%(SIM_TICKS_PER_SECOND*8)!==1)continue;
+        const ship=g.units.find(unit=>unit.id===patrol.shipId),crew=g.units.find(unit=>unit.id===patrol.crewId);
+        if(!ship || crew?.deck?.shipId!==ship.id || !['idle','hold'].includes(crew.order.type))continue;
+        const profile=shipProfile(ship)!,outward=Math.floor((g.tick+patrol.phase*SIM_TICKS_PER_SECOND)/(SIM_TICKS_PER_SECOND*8))%2===0;
+        const point=projectDeckPoint(ship,crew,{x:(outward?.12:-.15)*profile.length,y:-.22*profile.beam},g.units);
+        if(point)issuePlayerCommand(g,crew.owner,{type:'move',unitIds:[crew.id],...localToWorld(ship,point)});
+      }
       for (const track of tracks) {
         const unit = g.units.find(unit => unit.id === track.id);
         if (!unit) continue;

@@ -194,6 +194,12 @@ export function tooltipText(tooltip: GameplayTooltip) {
   return [tooltip.title, tooltip.body, ...tooltip.stats, ...tooltip.requirements, ...(tooltip.notes ?? [])].filter(Boolean).join("\n");
 }
 
+/** A live command refusal may already be supplied by its purchase tooltip. */
+export function withTooltipRequirement(tooltip: GameplayTooltip, reason: string | undefined): GameplayTooltip {
+  if (!reason) return tooltip;
+  return { ...tooltip, requirements: [...new Set([reason, ...tooltip.requirements].map(line => line.trim()).filter(Boolean))] };
+}
+
 // Transports: the supply of passengers aboard against what they carry (see @@@transport).
 function cargoLines(kind: UnitKind, units: Unit[], snapshot:GameSnapshot, locale: Locale) {
   if(!isShipKind(kind))return [];

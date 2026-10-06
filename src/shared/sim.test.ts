@@ -328,6 +328,20 @@ describe("sketch RTS simulation", () => {
     expect(Math.hypot(brute!.x - 900, brute!.y - 1000)).toBeLessThan(40);
     expect(worker!.hp).toBe(worker!.maxHp);
   });
+  it('lets camp defenders pursue to 650 units, including the new outer quarter, and return beyond it',()=>{
+    for(const gap of [610,670]) {
+      const game=sketchScene('extended-camp-leash').map('bareDuel').replaceDefaults()
+        .unit('neutral','stonebackBrute',1000,1000,{id:'defender',order:{type:'attack',targetId:'hunter'}})
+        .unit('player','archer',1000+gap,1000,{id:'hunter'})
+        .build().createGame();
+      game.scriptedVictory=true;
+      game.units.find(unit=>unit.id==='hunter')!.cooldown=99999;
+      const defender=game.units.find(unit=>unit.id==='defender')!;
+      stepGame(game);
+      expect(defender.order.type).toBe(gap<650?'attack':'idle');
+      if(gap<650)expect(defender.x).toBeGreaterThan(1000);else expect(defender.x).toBe(1000);
+    }
+  });
 
   it("keeps neutral camp homes at their initialized map coordinates", () => {
     const game = createGame("verdantCrossroads", { aiPlayers: [] });

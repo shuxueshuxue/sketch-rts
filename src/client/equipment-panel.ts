@@ -1,10 +1,12 @@
 import { bakedAssetsVersion } from "./art/baked-assets";
 import { formatMass } from "./format-mass";
-import { SHIP_WEAPONS, isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
+import { isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
 import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, exchangeRecipient, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
 import { localToWorld, shipPassengers, shipProfile } from '../shared/ship-geometry';
 import { dropItemCommand } from './item-controls';
 import { projectDeckPoint } from '../shared/decks';
+import { deckPlanProjection } from './deck-plan-projection';
+import { weaponCondition } from './weapon-condition';
 import type { EquipmentSlot, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from '../shared/types';
 import { createI18n } from './i18n';
 import { drawPaintedItem } from './art/items';
@@ -56,6 +58,7 @@ export class EquipmentPanel {
     private fingerprint = '';
     private dragging: string | undefined;
     private crewDrag: string | undefined;
+    private crewRoute: { crewId: string; shipId: string; arrow: SVGSVGElement; point: { x: number; y: number }; valid: boolean } | undefined;
     private pointerDrag: { id: string; x: number; y: number; active: boolean; ghost?: HTMLElement; target?: HTMLElement | undefined } | undefined;
     private dropTargets = new WeakMap<HTMLElement, { destination: ItemDestination | undefined; hand: 'right' | 'left' | undefined }>();
     private suppressClickUntil = 0;
@@ -76,7 +79,7 @@ export class EquipmentPanel {
         new ResizeObserver(() => { if (this.open) this.render(); }).observe(this.root);
     }
     isOpen() { return this.open; }
-    close() { this.open = false; this.root.hidden = true; this.clearPointerDrag(); this.crewDrag=undefined; }
+    close() { this.open = false; this.root.hidden = true; this.clearPointerDrag(); this.clearCrewDrag(); }
     update(snapshot: GameSnapshot | undefined, owner: PlayerId) { this.snapshot = snapshot; this.owner = owner; if (!snapshot) {
         this.close();
         return;
@@ -85,6 +88,7 @@ export class EquipmentPanel {
     show(selected: Unit[]) {
         if (!this.snapshot)
             return;
+        this.clearCrewDrag(); this.clearPointerDrag();
         const own = selected.filter(unit => unit.owner === this.owner), ship = own.find(unit => shipProfile(unit));
         const unit = own.find(canEquip) ?? (ship && shipPassengers(this.snapshot.units, ship).find(unit => unit.owner === this.owner && canEquip(unit)));
         this.contextIds = own.filter(canEquip).map(unit => unit.id);
@@ -171,6 +175,12 @@ export class EquipmentPanel {
         const name = document.createElement('span');
         name.textContent = this.name(item);
         button.append(name);
+        if (weaponCondition(item)) {
+            const condition = document.createElement('div'); condition.className = 'equipment-condition';
+            const label = document.createElement('small'); label.dataset.conditionLabel = '';
+            const meter = document.createElement('div'); meter.className = 'equipment-condition-meter'; meter.setAttribute('role', 'progressbar'); meter.append(document.createElement('i'));
+            condition.append(label, meter); button.append(condition);
+        }
         button.addEventListener('pointerdown', event => {
             if (event.button !== 0) return;
             button.setPointerCapture(event.pointerId);
@@ -221,7 +231,9 @@ export class EquipmentPanel {
         this.root.dataset.itemSelected='true';
         for (const button of this.root.querySelectorAll<HTMLElement>('.equipment-item'))
             button.classList.toggle('chosen', button.dataset.itemId === item.id);
-        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${formatMass(def.mass)} kg${isShipEquipment(item.kind) ? this.text(' · 搬运占四格 · 安装后使用', ' · Four carrying slots · Fire from a fitting') : itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`; actions.append(description); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.shipId) {
+        const actions = this.root.querySelector<HTMLElement>('[data-equipment-actions]')!; actions.replaceChildren(); const description = document.createElement('p'); const def = ITEM_DEFS[item.kind]; description.textContent = `${this.name(item)} · ${formatMass(def.mass)} kg${isShipEquipment(item.kind) ? this.text(' · 搬运占四格 · 安装后使用', ' · Four carrying slots · Fire from a fitting') : itemHands(item) === 2 ? this.text(' · 双手', ' · Two-handed') : ''}`;
+        if (weaponCondition(item)) { const condition = document.createElement('span'); condition.dataset.conditionSummary = item.id; description.append(condition); }
+        actions.append(description); this.updateWeaponConditions(); this.action(actions, this.text('转移 ⇄', 'Transfer ⇄'), () => this.quickTransfer(item)); if (isShipEquipment(item.kind) && this.shipId) {
             const ship = this.snapshot!.units.find(unit => unit.id === this.shipId)!;
             if (item.mountId)
                 this.action(actions, this.text('拆到船舱', 'Stow in hold'), () => this.stowFitting(item));
@@ -268,6 +280,7 @@ export class EquipmentPanel {
         this.pointerDrag = undefined;
         this.dragging = undefined;
     }
+    private clearCrewDrag() { this.crewDrag = undefined; this.crewRoute?.arrow.remove(); this.crewRoute = undefined; }
     private stowFitting(item: WorldItem) {
         const snapshot = this.snapshot!, ship = snapshot.units.find(unit => unit.id === item.shipId);
         if(!ship)return;
@@ -425,18 +438,17 @@ export class EquipmentPanel {
             const profile = shipProfile(ship)!;
             const scene = document.createElement('div'); scene.className = 'equipment-deck-scene'; fittings.append(scene);
             const plan = document.createElement('div'); plan.className = 'equipment-deck-plan';
-            const scale=Math.min(148/profile.beam,251.6/profile.length);
-            const points=(polygon:typeof profile.hull)=>polygon.map(p=>`${100+p.y*scale},${170-p.x*scale}`).join(' ');
-            const obstacles=profile.obstacles.filter(o=>o.type!=='weapon').map(o=>`<circle cx="${100+o.y*scale}" cy="${170-o.x*scale}" r="${o.radius*scale}" fill="#27241b" stroke="#907b51" stroke-width="2"/>`).join('');
+            const projection=deckPlanProjection(ship), scale=projection.scale;
+            const points=(polygon:typeof profile.hull)=>polygon.map(p=>{const at=projection.project(p);return `${at.x},${at.y}`;}).join(' ');
+            const obstacles=profile.obstacles.filter(o=>o.type!=='weapon').map(o=>{const at=projection.project(o);return `<circle cx="${at.x}" cy="${at.y}" r="${o.radius*scale}" fill="#27241b" stroke="#907b51" stroke-width="2"/>`;}).join('');
             plan.innerHTML = `<svg viewBox="0 0 200 340" aria-hidden="true"><defs><pattern id="deck-planks" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#493b29"/><path d="M0 0V12 M1 0V12" stroke="#89704b" stroke-width="1"/></pattern></defs><polygon points="${points(profile.hull)}" fill="#28251e" stroke="#a08754" stroke-width="4"/><polygon points="${points(profile.deck)}" fill="url(#deck-planks)" stroke="#645237" stroke-width="2"/>${obstacles}</svg>`; scene.append(plan);
             for (const mount of shipMounts(ship)) {
                 const item = snapshot.items.find(item => item.shipId === ship.id && item.mountId === mount.id);
                 const cell = this.cell(this.shortMountLabel(mount.id), item, { shipId: ship.id, mountId: mount.id }); cell.dataset.mountId = mount.id;
                 cell.classList.add(mount.id === 'bow' || mount.id === 'aft' ? 'equipment-mount-center' : mount.id.startsWith('port') ? 'equipment-mount-port' : 'equipment-mount-starboard');
-                cell.style.left = `${50 + mount.y*scale/2}%`;
-                cell.style.top = `${50 - mount.x*scale/3.4}%`;
+                const at=projection.percent(mount); cell.style.left = `${at.x}%`; cell.style.top = `${at.y}%`;
                 cell.title = `${mount.accepts.map(kind => labelKind(kind, this.i18n())).join(' / ')} · ${this.text('射界', 'Firing arc')} ±${Math.round(mount.halfArc * 180 / Math.PI)}°`;
-                if (item) { const hp = document.createElement('small'); hp.dataset.weaponDurability = item.id; cell.append(hp); } scene.append(cell);
+                scene.append(cell);
             }
             for (const crew of shipPassengers(snapshot.units,ship)) {
                 const token = document.createElement('button'); token.type='button'; token.className='equipment-crew'; token.dataset.crewId=crew.id;
@@ -444,19 +456,27 @@ export class EquipmentPanel {
                 token.setAttribute('aria-pressed',String(crew.id===this.unitId));
                 const portrait=document.createElement('canvas');portrait.width=portrait.height=48;
                 drawAtlasUnitPortrait(portrait.getContext('2d')!,crew.kind,0,0,48,'#a5b394');token.append(portrait);
-                const position=(event:PointerEvent)=>{const box=scene.getBoundingClientRect();return {x:(170-(event.clientY-box.top)/box.height*340)/scale,y:((event.clientX-box.left)/box.width*200-100)/scale};};
+                const position=(event:PointerEvent)=>{const box=scene.getBoundingClientRect();return projection.unproject({x:(event.clientX-box.left)/box.width*projection.width,y:(event.clientY-box.top)/box.height*projection.height});};
                 let origin:{x:number;y:number}|undefined, offset={x:0,y:0};
                 const destination=(event:PointerEvent)=>{const latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id),raw=position(event);return latestShip && latestCrew ? projectDeckPoint(latestShip,latestCrew,{x:raw.x+offset.x,y:raw.y+offset.y},this.snapshot!.units) : undefined;};
-                token.addEventListener('pointerdown',event=>{if(crew.owner!==this.owner || event.button!==0)return;origin={x:event.clientX,y:event.clientY};const raw=position(event);const latest=this.snapshot!.units.find(unit=>unit.id===crew.id)!;offset={x:latest.deck!.x-raw.x,y:latest.deck!.y-raw.y};this.crewDrag=crew.id;token.setPointerCapture(event.pointerId);event.preventDefault();});
-                token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id)return;const point=destination(event);if(!point)return;token.style.left=`${50+point.y*scale/2}%`;token.style.top=`${50-point.x*scale/3.4}%`;token.classList.remove('invalid');});
-                token.addEventListener('pointerup',event=>{if(this.crewDrag!==crew.id)return;this.crewDrag=undefined;const moved=origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>4;origin=undefined;
+                token.addEventListener('pointerdown',event=>{if(crew.owner!==this.owner || event.button!==0)return;
+                    const latest=this.snapshot!.units.find(unit=>unit.id===crew.id);if(!latest?.deck)return;
+                    this.clearCrewDrag();origin={x:event.clientX,y:event.clientY};const raw=position(event);offset={x:latest.deck.x-raw.x,y:latest.deck.y-raw.y};this.crewDrag=crew.id;
+                    const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('viewBox',`0 0 ${projection.width} ${projection.height}`);arrow.setAttribute('class','equipment-crew-route');arrow.setAttribute('aria-hidden','true');arrow.style.display='none';arrow.innerHTML='<line/><path/><circle/>';scene.append(arrow);
+                    this.crewRoute={crewId:crew.id,shipId:ship.id,arrow,point:{x:latest.deck.x,y:latest.deck.y},valid:true};
+                    token.setPointerCapture(event.pointerId);event.preventDefault();});
+                token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id || !this.crewRoute)return;
+                    if(!origin || Math.hypot(event.clientX-origin.x,event.clientY-origin.y)<=4)return;
+                    const point=destination(event);this.crewRoute.point=point??position(event);this.crewRoute.valid=!!point;this.crewRoute.arrow.style.display='';this.updateCrewRoute();});
+                token.addEventListener('pointerup',event=>{if(this.crewDrag!==crew.id)return;const moved=origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>4;origin=undefined;this.clearCrewDrag();
                     if(!moved){if(crew.owner===this.owner){this.unitId=crew.id;this.render();}return;}
                     const point=destination(event),latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id);
                     if(point && latestShip && latestCrew?.deck?.shipId===latestShip.id)this.command({type:'move',unitIds:[crew.id],...localToWorld(latestShip,point)});
                     else this.feedback(this.text('这里没有足够的甲板空间','Not enough clear deck space here'));
                     this.updateValues(unit,ship);
                 });
-                token.addEventListener('pointercancel',()=>{this.crewDrag=undefined;this.updateValues(unit,ship);});scene.append(token);
+                token.addEventListener('pointercancel',()=>{this.clearCrewDrag();this.updateValues(unit,ship);});
+                token.addEventListener('lostpointercapture',()=>{if(this.crewDrag===crew.id){this.clearCrewDrag();this.updateValues(unit,ship);}});scene.append(token);
             }
             const parts = document.createElement('p'); parts.dataset.equipmentParts = ''; vessel.append(parts);
         } else this.emptyNote(vessel, this.text('选择船只后查看炮位、船帆与船舵。', 'Select a ship to view fittings, rigging and rudder.'));
@@ -493,14 +513,15 @@ export class EquipmentPanel {
         if(scene && ship){
             const frame=scene.parentElement!,width=Math.min(frame.clientWidth,frame.clientHeight*200/340);
             scene.style.width=`${width}px`;scene.style.height=`${width*340/200}px`;
-            const p=shipProfile(ship)!,scale=Math.min(148/p.beam,251.6/p.length);
+            const projection=deckPlanProjection(ship),scale=projection.scale;
             for(const token of scene.querySelectorAll<HTMLElement>('[data-crew-id]')){
                 const crew=this.snapshot!.units.find(unit=>unit.id===token.dataset.crewId);
-                if(!crew?.deck || this.crewDrag===crew.id)continue;
-                token.style.left=`${50+crew.deck.y*scale/2}%`;token.style.top=`${50-crew.deck.x*scale/3.4}%`;
+                if(crew?.deck?.shipId!==ship.id)continue;
+                const at=projection.percent(crew.deck);token.style.left=`${at.x}%`;token.style.top=`${at.y}%`;
                 token.style.width=token.style.height=`${Math.max(18,crew.radius*2*scale*width/200)}px`;
                 token.classList.remove('invalid');
             }
+            this.updateCrewRoute();
         }
         const stats = this.root.querySelector<HTMLElement>('[data-equipment-stats]');
         if (stats && unit) {
@@ -518,12 +539,8 @@ export class EquipmentPanel {
         if (parts && ship) {
             const max = shipPartMax(ship);
             parts.textContent = `${this.text('船帆', 'Rigging')} ${Math.ceil(ship.shipParts?.rigging ?? max.rigging)} / ${max.rigging} · ${this.text('船舵', 'Rudder')} ${Math.ceil(ship.shipParts?.rudder ?? max.rudder)} / ${max.rudder}`;
-            for (const item of this.snapshot!.items.filter(item => item.shipId === ship.id && item.mountId)) {
-                const node = this.root.querySelector<HTMLElement>(`[data-weapon-durability="${item.id}"]`);
-                if (node)
-                    node.textContent = `${this.text('耐久', 'Durability')} ${Math.ceil(item.durability ?? SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].hp)} / ${SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].hp}`;
-            }
         }
+        this.updateWeaponConditions();
         const load = this.root.querySelector<HTMLElement>('[data-equipment-load]');
         if (load && ship) {
             const fill = this.root.querySelector<HTMLElement>('.equipment-load-meter > i');
@@ -531,5 +548,33 @@ export class EquipmentPanel {
                 fill.style.width = `${Math.min(100, (ship.sailing?.load ?? 0) / shipProfile(ship)!.loadCapacity * 100)}%`;
             load.textContent = `${this.text('船上装备', 'Equipment aboard')} ${formatMass(shipItemMass(this.snapshot!, ship))} kg · ${this.text('总载重', 'Payload')} ${formatMass(ship.sailing?.load ?? 0)} / ${formatMass(shipProfile(ship)!.loadCapacity)} kg`;
         }
+    }
+    private conditionText(item: WorldItem) {
+        const condition=weaponCondition(item);if(!condition)return '';
+        const state=condition.state==='broken'?this.text('损坏 · 无法射击','Broken · Cannot fire'):condition.state==='damaged'?this.text('受损','Damaged'):this.text('完好','Ready');
+        return `${state} · ${this.text('耐久','Durability')} ${Math.ceil(condition.hp)} / ${condition.max}`;
+    }
+    private updateWeaponConditions() {
+        if(!this.snapshot)return;const items=new Map(this.snapshot.items.map(item=>[item.id,item]));
+        for(const button of this.root.querySelectorAll<HTMLElement>('.equipment-item[data-item-id]')) {
+            const item=items.get(button.dataset.itemId!),condition=item&&weaponCondition(item);if(!item||!condition)continue;
+            button.dataset.condition=condition.state;button.title=`${this.name(item)} · ${this.conditionText(item)}`;button.setAttribute('aria-label',button.title);
+            const meter=button.querySelector<HTMLElement>('.equipment-condition-meter')!;
+            meter.setAttribute('aria-label',this.text('武器耐久','Weapon durability'));meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax',String(condition.max));meter.setAttribute('aria-valuenow',String(condition.hp));
+            meter.querySelector<HTMLElement>('i')!.style.width=`${condition.ratio*100}%`;
+            button.querySelector<HTMLElement>('[data-condition-label]')!.textContent=condition.state==='broken'?this.text('损坏','Broken'):`${Math.ceil(condition.hp)} / ${condition.max}`;
+        }
+        for(const node of this.root.querySelectorAll<HTMLElement>('[data-condition-summary]')){const item=items.get(node.dataset.conditionSummary!);node.textContent=item?this.conditionText(item):'';}
+    }
+    private updateCrewRoute() {
+        const route=this.crewRoute;if(!route)return;
+        const ship=this.snapshot?.units.find(unit=>unit.id===route.shipId),crew=this.snapshot?.units.find(unit=>unit.id===route.crewId);
+        if(!ship || crew?.deck?.shipId!==ship.id){this.clearCrewDrag();return;}
+        const projection=deckPlanProjection(ship),from=projection.project(crew.deck),to=projection.project(route.point),angle=Math.atan2(to.y-from.y,to.x-from.x);
+        const line=route.arrow.querySelector('line')!;for(const [name,value] of Object.entries({x1:from.x,y1:from.y,x2:to.x,y2:to.y}))line.setAttribute(name,String(value));
+        const head=8,side=4,c=Math.cos(angle),s=Math.sin(angle);
+        route.arrow.querySelector('path')!.setAttribute('d',`M${to.x},${to.y} L${to.x-head*c+side*s},${to.y-head*s-side*c} L${to.x-head*c-side*s},${to.y-head*s+side*c} Z`);
+        const circle=route.arrow.querySelector('circle')!;circle.setAttribute('cx',String(to.x));circle.setAttribute('cy',String(to.y));circle.setAttribute('r',String(crew.radius*projection.scale));
+        route.arrow.classList.toggle('invalid',!route.valid);
     }
 }
