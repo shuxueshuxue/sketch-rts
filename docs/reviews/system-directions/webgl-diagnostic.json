@@ -1,0 +1,85 @@
+{
+  "scope": "Actual production WorldPresentation, real GLB and shaders, Canvas ground/overlay, frozen snapshots. Short diagnostic run includes presentation CPU submission and RAF pacing; excludes simulation, AI, networking and HUD. SwiftShader is a software renderer, not hardware GPU performance or a game FPS benchmark.",
+  "viewport": {
+    "width": 640,
+    "height": 400
+  },
+  "stats": [
+    {
+      "scenario": "land-200",
+      "units": 200,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "actualWebGL2": true,
+      "samples": 20,
+      "submitP50Ms": 4.5,
+      "submitP95Ms": 11.899999999906868,
+      "rafP50Ms": 283.2999999999993,
+      "rafP95Ms": 550,
+      "drawCalls": 9,
+      "triangles": 802,
+      "opaquePixels": 37830,
+      "picking": []
+    },
+    {
+      "scenario": "land-1000",
+      "units": 1000,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "actualWebGL2": true,
+      "samples": 20,
+      "submitP50Ms": 7.2999999998137355,
+      "submitP95Ms": 21.5,
+      "rafP50Ms": 1200,
+      "rafP95Ms": 2049.7999999999993,
+      "drawCalls": 9,
+      "triangles": 4002,
+      "opaquePixels": 148245,
+      "picking": []
+    },
+    {
+      "scenario": "naval-6",
+      "units": 30,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "actualWebGL2": true,
+      "samples": 20,
+      "submitP50Ms": 10.100000000093132,
+      "submitP95Ms": 59.39999999990687,
+      "rafP50Ms": 933.2999999999956,
+      "rafP95Ms": 1566.5999999999985,
+      "drawCalls": 110,
+      "triangles": 75514,
+      "opaquePixels": 256000,
+      "picking": [
+        {
+          "shipId": "unit-player-transport-1000",
+          "hitId": "unit-player-footman-1003",
+          "deckInverseError": 1.3642420526593924e-12
+        },
+        {
+          "shipId": "unit-player-warship-1005",
+          "hitId": "unit-player-footman-1008",
+          "deckInverseError": 4.547473508864641e-13
+        },
+        {
+          "shipId": "unit-player-cutter-1010",
+          "hitId": "unit-player-footman-1013",
+          "deckInverseError": 4.547473508864641e-13
+        },
+        {
+          "shipId": "unit-player-bombardShip-1015",
+          "hitId": "unit-player-footman-1018",
+          "deckInverseError": 4.547473508864641e-13
+        },
+        {
+          "shipId": "unit-player-fireShip-1020",
+          "hitId": "unit-player-footman-1023",
+          "deckInverseError": 9.094947017729282e-13
+        },
+        {
+          "shipId": "unit-player-carrier-1025",
+          "hitId": "unit-player-footman-1028",
+          "deckInverseError": 4.547473508864641e-13
+        }
+      ]
+    }
+  ]
+}

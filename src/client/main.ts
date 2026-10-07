@@ -802,7 +802,11 @@ function renderCreateGameMenu() {
     ${selectedMapMarkup()}
     <div class="create-options">
       <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <label class="checkbox-row"><input name="privateRoom" type="checkbox" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+      <fieldset class="game-mode-switch">
+        <legend>${escapeHtml(t("roomCreate.mode.label"))}</legend>
+        <label><input name="gameMode" type="radio" value="singlePlayer" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /><span>${escapeHtml(t("roomCreate.mode.singlePlayer"))}</span></label>
+        <label><input name="gameMode" type="radio" value="multiplayer" ${pendingRoomConfiguration.visibility === "public" ? "checked" : ""} /><span>${escapeHtml(t("roomCreate.mode.multiplayer"))}</span></label>
+      </fieldset>
     </div>
     </aside>
     <section class="room-slot-pane create-slot-pane">
@@ -816,7 +820,7 @@ function renderCreateGameMenu() {
 `);
   const syncDraft = () => {
     pendingRoomConfiguration.name = form.querySelector<HTMLInputElement>("[name=name]")!.value;
-    pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=privateRoom]")!.checked ? "private" : "public";
+    pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=gameMode]:checked")!.value === "singlePlayer" ? "private" : "public";
     setRoomRoute({ screen: "create", configuration: pendingRoomConfiguration }, true);
   };
   const renderSeats = () => {
@@ -829,7 +833,8 @@ function renderCreateGameMenu() {
       renderSeats();
     })));
   };
-  for (const selector of ["[name=name]", "[name=privateRoom]"]) form.querySelector(selector)!.addEventListener("input", syncDraft);
+  form.querySelector("[name=name]")!.addEventListener("input", syncDraft);
+  form.querySelectorAll("[name=gameMode]").forEach(input => input.addEventListener("change", syncDraft));
   renderSeats();
   form.addEventListener("submit", event => {
     event.preventDefault();
@@ -2784,11 +2789,14 @@ function renderItemDock() {
   equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
 
   if (!snapshot || menuOpen) {
+    hudActions.removeAttribute("data-has-items");
     itemDock.hidden = true;
     itemDock.replaceChildren();
     return;
   }
-  const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
+  const inventory = carriedItemsForSelection(snapshot, focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).units).slice(0, 6);
+  hudActions.toggleAttribute("data-has-items", inventory.length > 0 && !selectedCampId);
+  const entries = isUnitCommandPage(commandCardContext()) ? inventory : [];
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
   itemDock.hidden = entries.length === 0;
   const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
