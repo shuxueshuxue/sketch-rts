@@ -1,6 +1,7 @@
 import { createBuilding, createUnit } from "./map";
+import { fractalNoise, seedHash } from "./environment/noise";
 import { detSin, detCos } from "./det-math";
-import { coastalDressing, terrainSurfaces } from "./map-dressing";
+import { ecologicalDressing, prepareEcology } from "./map-dressing";
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
 /** A large, mirrored river layout: three broad fords connect both banks while
@@ -53,6 +54,7 @@ export function estuaryMap(
         );
       return Math.hypot(at.x - a.x - dx * t, at.y - a.y - dy * t) < 120;
     });
+  const seed = seedHash(options.seed);
   let cells = "";
   for (let row = 0; row < cols; row++)
     for (let col = 0; col < cols; col++) {
@@ -67,7 +69,7 @@ export function estuaryMap(
         ) ||
         nearRoad(at) ||
         Math.hypot(at.x - middle, at.y - middle) < 260;
-      const patch = detSin(col / 8) + detCos(row / 7);
+      const patch = fractalNoise(seed, Math.abs(p.x - middle), p.y, 900, 50);
       cells +=
         gap < 135
           ? ford
@@ -77,11 +79,11 @@ export function estuaryMap(
             ? ","
             : protectedGround
               ? "."
-              : patch > 1.1
+              : patch > .65
                 ? "T"
-                : patch < -1.55
+                : patch < .25
                   ? "#"
-                  : patch < -0.9
+                  : gap < 370 && patch < .45
                     ? "m"
                     : ".";
     }
@@ -164,9 +166,9 @@ export function estuaryMap(
     }
   });
   result.sites.push({ kind: "shop", x: middle, y: middle });
-  result.terrain.surfaces = terrainSurfaces(result.terrain, options.seed);
+  prepareEcology(result.terrain, options.seed, project(middle, size));
   result.landmarks.push(
-    ...coastalDressing(result.terrain, anchors, options.seed),
+    ...ecologicalDressing(result.terrain, anchors, options.seed),
   );
   for (const mine of result.resources)
     result.landmarks.push({

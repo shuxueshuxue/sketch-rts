@@ -1,87 +1,36 @@
-import { detCos, detSin } from "./det-math";
-import type { Terrain } from "./terrain";
-import type { TerrainLandmark } from "./types";
-const seedOf = (seed: string) =>
-  [...seed].reduce(
-    (n, c) => Math.imul(n ^ c.charCodeAt(0), 16777619) >>> 0,
-    2166136261,
-  );
-/** Visual ground cover is independent of movement, construction and pathfinding. */
-export function terrainSurfaces(terrain: Terrain, seed: string) {
-  const salt = seedOf(seed);
-  return [...terrain.cells]
-    .map((cell, index) => {
-      if (cell !== ".") return " ";
-      const col = index % terrain.cols,
-        row = Math.floor(index / terrain.cols);
-      const near = (char: string) =>
-        [
-          [1, 0],
-          [-1, 0],
-          [0, 1],
-          [0, -1],
-        ].some(([dx, dy]) => {
-          const x = col + dx!,
-            y = row + dy!;
-          return (
-            x >= 0 &&
-            y >= 0 &&
-            x < terrain.cols &&
-            y < terrain.rows &&
-            terrain.cells[y * terrain.cols + x] === char
-          );
-        });
-      if (near(",")) return "s";
-      if (near("#")) return "r";
-      const wave =
-        detSin((col + (salt % 91)) / 11) +
-        detCos((row + (salt % 53)) / 9) +
-        detSin((col + row) / 17) * 0.7;
-      return wave > 1.1 ? "g" : wave < -0.9 ? "d" : " ";
-    })
-    .join("");
+import type { Terrain } from './terrain';
+import type { TerrainLandmark } from './types';
+import { environmentField, sampleEnvironment } from './environment/fields';
+import { suitability, VEGETATION_NICHES } from './environment/ecology';
+import { coordinateRandom, spatialNoise } from './environment/noise';
+
+/** One recipe feeds the ground renderer, vegetation placement and creep habitat scoring. */
+export function prepareEcology(terrain: Terrain, seed: string, seaOutlet?: { x: number; y: number }): void {
+  terrain.ecology = { version: 1, seed, ...(seaOutlet ? { seaOutlet } : {}) };
 }
-export function coastalDressing(
-  terrain: Terrain,
-  protectedPoints: readonly { x: number; y: number }[],
-  seed: string,
-): TerrainLandmark[] {
-  const marks: TerrainLandmark[] = [],
-    salt = seedOf(seed);
-  for (let row = 2; row < terrain.rows - 2; row += 4)
-    for (let col = 2; col < terrain.cols - 2; col += 4) {
-      const value =
-        Math.imul((row * terrain.cols + col) ^ salt, 2246822519) >>> 0;
-      if (value % 11 > 1) continue;
-      const x = (col + 0.5) * terrain.cell,
-        y = (row + 0.5) * terrain.cell;
-      if (protectedPoints.some((p) => Math.hypot(p.x - x, p.y - y) < 220))
-        continue;
-      const cell = terrain.cells[row * terrain.cols + col];
-      if (![".", ",", "m"].includes(cell!)) continue;
-      const nearby = [-1, 1, -terrain.cols, terrain.cols].map(
-        (d) => terrain.cells[row * terrain.cols + col + d],
-      );
-      const kind: TerrainLandmark["kind"] =
-        cell === ","
-          ? "reeds"
-          : cell === "m"
-            ? "lilies"
-            : nearby.includes("T")
-              ? "mushrooms"
-              : nearby.includes("#")
-                ? "pebbles"
-                : (["flowers", "bush", "stump", "pebbles"] as const)[
-                    value % 4
-                  ]!;
-      marks.push({
-        id: `coastal-decor-${marks.length}`,
-        kind,
-        x,
-        y,
-        size: 44 + (value % 34),
-        rotation: (value % 628) / 100,
-      });
-    }
+
+/** Jittered, separated candidates with shared low-frequency patch density.
+ * Species compete for each candidate through habitat suitability, not independent random stamps.
+ * Scenery never changes collision, resource access or path costs. */
+export function ecologicalDressing(terrain: Terrain, protectedPoints: readonly { x: number; y: number }[], seed: string): TerrainLandmark[] {
+  if (!terrain.ecology) terrain.ecology = { version: 1, seed };
+  const field = environmentField(terrain), spacing = 112, marks: TerrainLandmark[] = [];
+  const width = terrain.cols * terrain.cell, height = terrain.rows * terrain.cell;
+  for (let row = 0; row * spacing < height; row++) for (let col = 0; col * spacing < width; col++) {
+    const random = (channel: number) => coordinateRandom(field.seed, col, row, channel);
+    const x = Math.round((col + .5 + (random(60) - .5) * .4) * spacing);
+    const y = Math.round((row + .5 + (random(61) - .5) * .4) * spacing);
+    if (x < 48 || y < 48 || x > width - 48 || y > height - 48 || protectedPoints.some(p => (p.x - x) ** 2 + (p.y - y) ** 2 < 190 ** 2)) continue;
+    const cell = terrain.cells[Math.floor(y / terrain.cell) * terrain.cols + Math.floor(x / terrain.cell)]!;
+    const environment = sampleEnvironment(field, x, y);
+    const candidates = VEGETATION_NICHES.map(profile => ({ profile, weight: profile.cells.includes(cell) ? suitability(environment, profile.niche) * profile.density : 0 }));
+    const total = candidates.reduce((sum, candidate) => sum + candidate.weight, 0);
+    const cluster = spatialNoise(field.seed, x, y, 560, 80);
+    if (random(62) > Math.min(.5, total * .35) * (.25 + cluster * 1.1)) continue;
+    let choice = random(63) * total;
+    const chosen = candidates.find(candidate => { choice -= candidate.weight; return choice < 0; });
+    if (!chosen) continue;
+    marks.push({ id: `eco-decor-${row}-${col}`, kind: chosen.profile.kind, x: Math.round(x), y: Math.round(y), size: Math.round(34 + random(64) * 22), rotation: Math.round(random(65) * 628) / 100 });
+  }
   return marks;
 }

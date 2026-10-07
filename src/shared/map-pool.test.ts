@@ -9,24 +9,25 @@ import {isWalkable,sameGround} from './terrain';
 
 // @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items, shops and
 // obstacles. A change to the generator that moves anything on a pool map fails here; if the change is meant, the map is
-// redrawn on purpose: give it a new name or take the new hash knowingly. Elderwood, ringwater and twoShores were redrawn so
+// redrawn on purpose: give it a new name or take the new hash knowingly.
+// 10-07: organic island coastlines and continuous-environment creep habitats replace periodic stamps. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'41d17c77736cf15f',
-  grandEstuary:'db641d7853948cbe',
-  brokenSea: "39c43479ca06a312",
+  sapphireArchipelago:'bd306a68cbddba85',
+  grandEstuary:'0d8a733a13e50c19',
+  brokenSea: "2ed92f728bf63cd8",
   templeSpring: "89d478ee42c291c3",
-  turtleLake: "185a1f243b2bb342",
+  turtleLake: "5920a191d1d390cc",
   elderwood: "ea14bcd697fe7b7c",
-  ringwater: "b136207233416a3c",
+  ringwater: "32fe3385b31203fa",
   loneMarket: "e778910b1bf958d7",
-  reedwater: "424d25fef7423cae",
+  reedwater: "23b9e61967d71b4a",
   veiledHill: "1c6569d2777f6fba",
   greystonePass: "209985390ac9c00f",
   pineshade: "d21c2f7ceec5ee79",
   gullIsland: "193134cf3c39b45b",
   stillwater: "13f65932d0a0c499",
-  twoShores: "767122ed94c74e7e",
+  twoShores: "019b284ad98ce304",
 };
 
 const host = { id: "host", name: "Host" };
@@ -86,7 +87,8 @@ describe("map pool", () => {
 it('opens every resource and camp on the six/eight player maps, with useful distinct theaters',()=>{
  for(const id of ['sapphireArchipelago','grandEstuary'] as const){
   const map=MAP_POOL.find(map=>map.id===id)!,{players,teams}=seatsOf(map),game=createGame(id,{players,teams,aiPlayers:[]});
-  expect(game.map.terrain!.surfaces).toHaveLength(game.map.terrain!.cells.length);
+  expect(game.map.terrain!.ecology).toMatchObject({version:1,seed:map.layout.seed});
+  expect(game.map.terrain!.surfaces).toBeUndefined();
   for(const point of [...game.resources,...game.units,...game.buildings])expect(isWalkable(game.map,point.x,point.y),`${id}: ${point.id}`).toBe(true);
   const homes=game.buildings.filter(building=>building.kind==='townHall');
   if(id==='grandEstuary')for(const home of homes)expect(sameGround(game.map,homes[0]!,home)).toBe(true);
