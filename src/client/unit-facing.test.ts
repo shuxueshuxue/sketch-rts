@@ -58,6 +58,15 @@ describe("unit facing", () => {
     expect(tracker.facing("rider")).toBe(-1);
   });
 
+  it("faces a construction site or the ship it is repairing", () => {
+    const tracker = new UnitFacingTracker();
+    for (const order of [{type:'repair', buildingId:'target'}, {type:'repairShip', targetId:'target'}] as UnitOrder[]) {
+      const worker = {id:'worker', x:400, y:100, order} as Unit;
+      tracker.update([worker], id => id === 'target' ? {x:100,y:100} : undefined);
+      expect(tracker.facing(worker.id)).toBe(-1);
+    }
+  });
+
   it("remembers facing per unit between frames and forgets units that are gone", () => {
     const tracker = new UnitFacingTracker();
     const unit = (id: string, x: number) => ({ id, x, y: 0, order: idle }) as Unit;

@@ -30,6 +30,11 @@ export function attackTargetId(order: UnitOrder) {
   return order.type === "attack" || order.type === "attackMove" || order.type === "charge" ? order.targetId : undefined;
 }
 
+/** Construction and repair face their physical target just like an attack. */
+export function interactionTargetId(order: UnitOrder) {
+  return order.type === 'repair' ? order.buildingId : order.type === 'repairShip' ? order.targetId : attackTargetId(order);
+}
+
 /** Remembers each unit's facing between frames; units that are gone are forgotten. */
 export class UnitFacingTracker {
   private states = new Map<string, FacingState>();
@@ -37,7 +42,7 @@ export class UnitFacingTracker {
   update(units: readonly Unit[], locate: (id: string) => Point | undefined) {
     const next = new Map<string, FacingState>();
     for (const unit of units) {
-      const targetId = attackTargetId(unit.order);
+      const targetId = interactionTargetId(unit.order);
       const aiming = unit.aim && (unit.order.type === "attack" || unit.order.type === "attackMove" || unit.order.type === "hold" || unit.order.type === "aim" || unit.order.type === "cast");
       next.set(unit.id, nextFacing(this.states.get(unit.id), unit, aiming ? unit.aim : targetId ? locate(targetId) : undefined));
     }
