@@ -15,11 +15,12 @@
 .scene-switch { border-radius:1px; background:var(--game-wood); box-shadow:var(--game-inset); }
 /* Bound both tracks before wrapping commands beside the portrait. */
 .control-deck,.control-deck * { box-sizing:border-box; }
-.control-deck > .hud-actions { width:100%; min-width:0; }
-.control-deck .command-dock,.control-deck .item-dock { width:100%; max-width:100%; }
+.control-deck { width:fit-content; grid-template-columns:232px minmax(0,max-content); }
+.control-deck > .hud-actions { width:auto; min-width:0; }
+.control-deck .command-dock,.control-deck .item-dock { width:fit-content; max-width:100%; }
 @media (max-width:900px) {
-  .control-deck { grid-template-columns:212px minmax(0,1fr); }
+  .control-deck { grid-template-columns:212px minmax(0,max-content); }
 }
 @media (max-width:650px) {
-  .control-deck { grid-template-columns:minmax(0,1fr); width:calc(100vw - 210px); }
+  .control-deck { grid-template-columns:minmax(0,1fr); }
 }

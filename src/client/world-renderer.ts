@@ -7,7 +7,8 @@ import type { SiteModelKind } from "./art/building-models";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
 import { drawScorchedUnitFlames, renderWorldEffects } from "./effect-renderer";
-import { drawFootprint, footprintSquare } from "./footprint-view";
+import { footprintSquare } from "./footprint-view";
+import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
 import { drawLevelStar } from "./level-star";
@@ -294,7 +295,7 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
   for (const camp of camps) {
     const point = worldToScreen(painter, camp);
     if (!nearScreen(painter, point, 110)) continue;
-    if (!groundOnly && painter.selectedCampId === camp.id) drawSelectionHalo(ctx, point.x, point.y + camp.radius * 0.56, camp.radius * 0.95, camp.radius * 0.3, "#96774a");
+    if (!groundOnly && (painter.selectedCampId === camp.id || painter.hoveredId === camp.id)) drawFoundationBoundary(painter,camp,"#96774a",painter.selectedCampId === camp.id);
     if(!overlayOnly && !painter.actorPositions?.has(camp.id))drawAtlasCamp(ctx, point);
     if(groundOnly)continue;
     ctx.font = "11px ui-monospace, monospace";
@@ -322,7 +323,7 @@ function drawShops(painter: Painter, shops: Shop[],overlayOnly=false,groundOnly=
   for (const shop of shops) {
     const point = worldToScreen(painter, shop);
     if (!nearScreen(painter, point, 110)) continue;
-    if (!groundOnly && painter.selectedCampId === shop.id) drawSelectionHalo(ctx, point.x, point.y + shop.radius * 0.56, shop.radius * 1.1, shop.radius * 0.34, "#96774a");
+    if (!groundOnly && (painter.selectedCampId === shop.id || painter.hoveredId === shop.id)) drawFoundationBoundary(painter,shop,"#96774a",painter.selectedCampId === shop.id);
     if(!overlayOnly && !painter.actorPositions?.has(shop.id))drawAtlasShop(ctx, point);
   }
 }
@@ -345,12 +346,7 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
     ctx.lineWidth = selected ? 4 : 2;
     const size = buildingGlyphSize(building.kind);
-    // Selected, a building shows the cells it takes (see @@@building-footprint); on a map without a grid, or under the
-    // pointer, a halo.
-    const ring = ringInk(painter, building.owner);
-    const square = selected ? footprintSquare(painter.snapshot, building, building.radius) : undefined;
-    if (square) drawFootprint(ctx, square, painter.camera, () => ring);
-    else if (selected || painter.hoveredId === building.id) drawSelectionHalo(ctx, point.x, point.y + size / 2 - 3, size * 0.66, size * 0.22, ring);
+    if (selected || painter.hoveredId === building.id) drawFoundationBoundary(painter,building,ringInk(painter,building.owner),selected);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
     if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner));
@@ -433,7 +429,16 @@ function drawUnits(painter: Painter, units: Unit[], overlayOnly=false) {
       ctx.strokeStyle = ringInk(painter, unit.owner);
       ctx.lineWidth = selected ? 3 : 2;
       ctx.beginPath();
-      ctx.ellipse(point.x, point.y + unit.radius * 0.72, unit.radius + 5, (unit.radius + 5) * 0.45, 0, 0, Math.PI * 2);
+      const profile=shipProfile(unit);
+      if(profile){
+        const heading=painter.motion?.heading(unit,now) ?? unit.sailing?.heading ?? unit.facing ?? 0;
+        const hull={...unit,x:at.x,y:at.y,sailing:{heading,speed:0,load:0,balance:0}};
+        profile.hull.forEach((vertex,index)=>{const p=worldToScreen(painter,localToWorld(hull,vertex));if(index===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+        ctx.closePath();
+      } else {
+        const feet=point.y+(creatureShadow(unit.kind)?.y??17)*scale;
+        ctx.ellipse(point.x, feet, (unit.bodyRadius??unit.radius)+3, ((unit.bodyRadius??unit.radius)+3)*.55, 0, 0, Math.PI * 2);
+      }
       ctx.stroke();
       ctx.restore();
     }
@@ -519,14 +524,15 @@ function ringInk(painter: Painter, owner: Owner) {
   return painter.viewer ? RELATION_INK[relationTo(painter.snapshot, painter.viewer, owner)] : ownerInk(owner);
 }
 
-function drawSelectionHalo(ctx: Brush, x: number, y: number, rx: number, ry: number, color: string) {
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
+function drawFoundationBoundary(painter:Painter,body:{x:number;y:number;radius:number},color:string,selected:boolean){
+  const {ctx}=painter,square=footprintSquare(painter.snapshot,body,body.radius),point=worldToScreen(painter,body);
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=selected?2.5:1.5;
+  if(square){
+    const x=square.left*square.cell-painter.camera.x,y=square.top*square.cell-painter.camera.y;
+    const w=(square.right-square.left+1)*square.cell,h=(square.bottom-square.top+1)*square.cell;
+    ctx.strokeRect(x+1,y+1,w-2,h-2);
+    if(selected){ctx.globalAlpha=.06;ctx.fillStyle=color;ctx.fillRect(x+1,y+1,w-2,h-2);}
+  } else {ctx.beginPath();ctx.ellipse(point.x,point.y,body.radius+3,(body.radius+3)*.55,0,0,Math.PI*2);ctx.stroke();}
   ctx.restore();
 }
 

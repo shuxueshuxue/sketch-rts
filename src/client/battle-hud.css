@@ -210,3 +210,7 @@
   .hud-roster { max-height:74px; }
   .command-button { flex-basis:42px; width:42px; height:50px; }
 }
+
+/* Hidden action groups must release their layout space, including empty selections. */
+.control-deck[hidden], .hud-actions[hidden], .command-dock[hidden], .item-dock[hidden] { display:none !important; }
+.control-deck:has(> .hud-actions[hidden]) { grid-template-columns:minmax(0,232px); width:232px; }

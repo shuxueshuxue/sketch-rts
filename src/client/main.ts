@@ -1,3 +1,5 @@
+import { creatureShadow } from "./art/painted-creatures";
+import { unitGlyphScale } from "./glyphs";
 import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
 import { menuPageMarkup } from "./menu-page";
 import { commandIconMarkup } from "./command-icons";
@@ -9,9 +11,9 @@ import { SHIP_WEAPONS } from "../shared/ship-equipment";
 import { EquipmentPanel } from "./equipment-panel";
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
-import { shipPassengers, shipProfile } from "../shared/ship-geometry";
+import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
 import { deckLoad } from "../shared/decks";
-import { purchasePlacement, type PurchaseSeller } from "../shared/purchase";
+import { purchasePlacement, findPurchaseRecipient, purchaseRecipientInRange, type PurchaseSeller } from "../shared/purchase";
 import "./styles.css";
 import { aimingProfile } from "../shared/aiming";
 import "./battle-hud.css";
@@ -164,6 +166,7 @@ const controlDeck = requireElement<HTMLDivElement>(".control-deck");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
+const hudActions = requireElement<HTMLDivElement>(".hud-actions");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
 const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
@@ -2306,18 +2309,15 @@ function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
 }
 
 function purchaseSeller(){return selectedShop() ?? focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);}
-function purchaseRecipient(seller:PurchaseSeller&{id:string},kind:WorldItem['kind']='experienceBook'){
+function purchaseRecipient(seller:PurchaseSeller&{id:string}){
   if(!snapshot)return;
-  const chosen=purchaseRecipients.get(seller.id);
-  if(chosen)return snapshot.units.find(unit=>unit.id===chosen && unit.owner===localPlayerId && unit.hp>0);
-  const dock="kind" in seller && seller.kind==="shipyard";
-  const candidates=snapshot.units.filter(unit=>unit.owner===localPlayerId && unit.hp>0 && (canEquip(unit)||shipProfile(unit)) && "placement" in purchasePlacement(snapshot!,localPlayerId,seller,kind,unit.id));
-  candidates.sort((a,b)=>(dock ? Number(Boolean(shipProfile(b)))-Number(Boolean(shipProfile(a))) : 0) || distance(a,seller)-distance(b,seller));
-  const recipient=candidates[0];if(recipient)purchaseRecipients.set(seller.id,recipient.id);
+  const recipient=findPurchaseRecipient(snapshot,localPlayerId,seller,purchaseRecipients.get(seller.id),"kind" in seller && seller.kind==="shipyard");
+  if(recipient)purchaseRecipients.set(seller.id,recipient.id);
+  else purchaseRecipients.delete(seller.id);
   return recipient;
 }
 function purchaseRecipientCaption(){
-  const seller=purchaseSeller(),recipient=seller&&purchaseRecipient(seller,"kind" in seller ? "shipCannon" : "experienceBook");
+  const seller=purchaseSeller(),recipient=seller&&purchaseRecipient(seller);
   return recipient ? `${i18n.locale==="zh"?"接收":"To"}：${labelKind(recipient.kind)}` : i18n.locale==="zh"?"指定接收者":"Choose recipient";
 }
 function purchaseFeedback(reason:string){
@@ -2334,7 +2334,7 @@ function purchaseFeedback(reason:string){
 }
 function purchaseProblem(kind:WorldItem['kind']){
   const seller=purchaseSeller();if(!seller || !snapshot)return;
-  const recipient=purchaseRecipient(seller,kind);
+  const recipient=purchaseRecipient(seller);
   if(!recipient)return purchaseFeedback("Choose a living unit or ship of yours");
   const result=purchasePlacement(snapshot,localPlayerId,seller,kind,recipient.id);
   return "refusal" in result ? purchaseFeedback(result.refusal) : undefined;
@@ -2351,8 +2351,7 @@ function choosePurchaseRecipientAt(point:Point){
   const seller=snapshot.shops?.find(s=>s.id===sellerId) ?? snapshot.buildings.find(s=>s.id===sellerId);
   const recipient=hitUnit(screenToWorld(point),unit=>unit.owner===localPlayerId && unit.hp>0 && Boolean(canEquip(unit)||shipProfile(unit)));
   if(!seller || !recipient){showInvalidCommand(purchaseFeedback("Choose a living unit or ship of yours"));return;}
-  const check=purchasePlacement(snapshot,localPlayerId,seller,"experienceBook",recipient.id);
-  if("refusal" in check && check.refusal==="Move the recipient closer to the seller"){showInvalidCommand(purchaseFeedback(check.refusal));return;}
+  if(!purchaseRecipientInRange(recipient,seller)){showInvalidCommand(purchaseFeedback("Move the recipient closer to the seller"));return;}
   purchaseRecipients.set(seller.id,recipient.id);purchaseRecipientFlash={id:recipient.id,until:performance.now()+900};
   commandMode=undefined;statusLabel.textContent=purchaseRecipientCaption();updateHud();
 }
@@ -2368,16 +2367,26 @@ function buyDockGood(kind:keyof typeof SHIP_WEAPONS){
   const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);
   if(!dock)return;
   const state=dockGoodButtonState(kind);if(!state.enabled){showCommandUnavailable(state,purchaseProblem(kind)??"");return;}
-  const recipient=purchaseRecipient(dock,kind);if(!recipient)return;
+  const recipient=purchaseRecipient(dock);if(!recipient)return;
   sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind,recipientId:recipient.id});
   statusLabel.textContent=t("status.itemBought",{item:labelKind(kind)});
 }
 function drawPurchaseRecipientFlash(){
-  const flash=purchaseRecipientFlash;if(!flash || !snapshot || performance.now()>flash.until)return;
-  const unit=snapshot.units.find(unit=>unit.id===flash.id);if(!unit)return;
-  const point=worldToScreen(unit),alpha=(flash.until-performance.now())/900;
-  ctx.save();ctx.strokeStyle=`rgba(245,210,115,${alpha})`;ctx.lineWidth=2;
-  ctx.beginPath();ctx.ellipse(point.x,point.y,(unit.radius+8)*worldZoom,(unit.radius+8)*worldZoom*.6,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+  const seller=purchaseSeller(),unit=seller&&purchaseRecipient(seller);
+  if(!unit || !snapshot)return;
+  const at=worldPresentation.position(unit.id),profile=shipProfile(unit),point=worldToScreen(at ? {x:at.x,y:profile?at.y:at.bodyY+(creatureShadow(unit.kind)?.y??17)*unitGlyphScale(unit.radius)} : unitPointerPosition(snapshot.units,unit));
+  const flash=purchaseRecipientFlash, pulse=flash?.id===unit.id ? Math.max(0,(flash.until-performance.now())/900) : 0;
+  ctx.save();ctx.strokeStyle="#e5bc58";ctx.lineWidth=2+pulse;
+  ctx.beginPath();
+  if(profile){
+    const hull={...unit,x:at?.x??unit.x,y:at?.y??unit.y,sailing:{heading:unitMotion.heading(unit,performance.now()),speed:0,load:0,balance:0}};
+    profile.hull.forEach((vertex,index)=>{const p=worldToScreen(localToWorld(hull,vertex));if(index===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.closePath();
+  }else ctx.ellipse(point.x,point.y,(unit.radius+7)*worldZoom,(unit.radius+7)*worldZoom*.55,0,0,Math.PI*2);
+  ctx.stroke();
+  ctx.fillStyle="#e5bc58";ctx.strokeStyle="#443321";ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(point.x,point.y-24*worldZoom,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#443321";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("↓",point.x,point.y-24*worldZoom);
+  ctx.restore();
 }
 
 function buyGood(kind: WorldItem["kind"]) {
@@ -2389,7 +2398,7 @@ function buyGood(kind: WorldItem["kind"]) {
     showCommandUnavailable(state, t("status.buyNeedsUnitAtShop"));
     return;
   }
-  const recipient=purchaseRecipient(shop,kind);if(!recipient)return;
+  const recipient=purchaseRecipient(shop);if(!recipient)return;
   sendCommand({ type: "buy", shopId: shop.id, item: kind,recipientId:recipient.id });
   inspectedShopItem = kind;
   selectedIds = new Set();
@@ -2650,9 +2659,10 @@ function updateHud() {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
   }
-  commandDock.classList.toggle("hidden", visibleCount === 0);
+  commandDock.hidden = visibleCount === 0;
   renderItemDock();
-  controlDeck.hidden = selectionLabel.hidden && visibleCount === 0 && itemDock.classList.contains("hidden");
+  hudActions.hidden = commandDock.hidden && itemDock.hidden;
+  controlDeck.hidden = selectionLabel.hidden && hudActions.hidden;
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
@@ -2772,13 +2782,13 @@ function renderItemDock() {
   equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
 
   if (!snapshot || menuOpen) {
-    itemDock.classList.add("hidden");
+    itemDock.hidden = true;
     itemDock.replaceChildren();
     return;
   }
   const entries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
   const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
-  itemDock.classList.toggle("hidden", entries.length === 0);
+  itemDock.hidden = entries.length === 0;
   const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
   entries.forEach(({ item, carrier }, index) => {
     const hotkey = hotkeys[index] ?? "";
@@ -3125,7 +3135,10 @@ function matchViewer() {
 function hoveredTarget() {
   if (!lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
   const target = snapshot ? visualPointerTarget(screenToWorld(lastMouse)) : undefined;
-  return target?.kind === "unit" ? target.unit : target?.kind === "building" ? target.building : undefined;
+  if(target?.kind === "unit")return target.unit;
+  if(target?.kind === "building")return target.building;
+  const world=screenToWorld(lastMouse),site=hitMercenaryCamp(world)??hitShop(world);
+  return site ? {...site,owner:"neutral" as const} : undefined;
 }
 
 function minimapRelationsOn() {
