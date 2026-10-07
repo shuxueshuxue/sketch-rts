@@ -870,7 +870,7 @@ describe("sketch RTS simulation", () => {
       const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
       game.players.player.gold = 1000;
       const x = worker.x + 160;
-      const y = worker.y;
+      const y = worker.y + 160;
       issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x, y });
       stepUntil(game, 1000, () => game.buildings.some(b => b.owner === "player" && b.kind === "farm" && !b.complete));
       const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
@@ -921,7 +921,7 @@ describe("sketch RTS simulation", () => {
 
     expect(() => issueCommand(game, { type: "train", buildingId: townHall.id, unitKind: "worker" })).toThrow(/supply/i);
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 130, y: townHall.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x - 130, y: townHall.y });
     stepMany(game, 220);
 
     expect(game.players.player.supplyCap).toBeGreaterThan(game.players.player.supplyUsed);
@@ -935,7 +935,7 @@ describe("sketch RTS simulation", () => {
 
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x + 130, y: townHall.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x - 130, y: townHall.y });
     stepMany(game, 260);
     const tower = game.buildings.find((building) => building.owner === "player" && building.kind === "defenseTower")!;
     const target = game.spawnUnit("enemy", "raider", tower.x + 120, tower.y);
@@ -1234,7 +1234,7 @@ describe("sketch RTS simulation", () => {
 
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x + 130, y: townHall.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "defenseTower", x: townHall.x - 130, y: townHall.y });
     stepMany(game, 260);
     const tower = game.buildings.find((building) => building.owner === "player" && building.kind === "defenseTower")!;
     const target = game.spawnUnit("enemy", "raider", tower.x + 120, tower.y);
@@ -1679,7 +1679,7 @@ describe("sketch RTS simulation", () => {
     expect(tower.hp).toBe(50 + tower.maxHp - baseTowerHp);
 
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x + 90, y: townHall.y });
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "farm", x: townHall.x - 90, y: townHall.y });
     stepUntil(game, 1000, () => game.buildings.some(b => b.owner === "player" && b.kind === "farm" && !b.complete));
       const farm = game.buildings.find((building) => building.owner === "player" && building.kind === "farm" && !building.complete)!;
     stepMany(game, BUILDING_DEFS.farm.buildTime + 80);
@@ -2122,7 +2122,7 @@ describe("sketch RTS simulation", () => {
 
   it("pushes enemy AI toward an attack after building an army", () => {
     const game = createGame();
-    const runtime = createAiRuntime(["enemy"]);
+    const runtime = createAiRuntime(["enemy"], {version:"v7"});
     stepUntil(game, 3_600, () => game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker").length >= 3, runtime);
 
     const enemySoldiers = game.units.filter((unit) => unit.owner === "enemy" && unit.kind !== "worker");
@@ -2134,7 +2134,7 @@ describe("sketch RTS simulation", () => {
 
   it("only sends AI attack waves into the enemy base after the enemy army and economy collapse", () => {
     const game = createGame();
-    const runtime = createAiRuntime(["enemy"]);
+    const runtime = createAiRuntime(["enemy"], {version:"v7"});
     const playerTownHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
     let baseCloseout: { playerArmyAndMiners: number; enemyCombatNearBase: number } | undefined;
 
@@ -2160,7 +2160,7 @@ describe("sketch RTS simulation", () => {
 
   it("does not spam unfinished supply buildings while one farm is already pending", () => {
     const game = createGame();
-    const runtime = createAiRuntime(["enemy"]);
+    const runtime = createAiRuntime(["enemy"], {version:"v7"});
     stepMany(game, 2800, runtime);
 
     const enemyFarms = game.buildings.filter((building) => building.owner === "enemy" && building.kind === "farm");
@@ -2278,13 +2278,13 @@ describe("sketch RTS simulation", () => {
     expect(totalNonBaseBuildingsDestroyed).toBeGreaterThan(0);
   });
 
-  it("runs a fast 1v2 allied-AI match without allied target acquisition", () => {
+  it("runs a fast V7 1v2 allied-AI match without allied target acquisition", () => {
     const game = createGame("verdantCrossroads", {
       players: ["player", "enemy", "enemy2"],
       aiPlayers: ["player", "enemy", "enemy2"],
       teams: { player: "north", enemy: "south", enemy2: "south" },
     });
-    const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
+    const runtime = createAiRuntime(["player", "enemy", "enemy2"], { version: "v7" });
     const started = process.cpuUsage();
     const enemyBase = game.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall")!;
     const enemy2Base = game.buildings.find((building) => building.owner === "enemy2" && building.kind === "townHall")!;

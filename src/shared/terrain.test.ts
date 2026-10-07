@@ -252,3 +252,15 @@ describe("the sea", () => {
     expect(sim.buildings.find((building) => building.kind === "shipyard")?.complete).toBe(true);
   });
 });
+
+describe("dry building foundations", () => {
+  it("rejects normal foundations that include any shallows, while keeping shoreline docks", () => {
+    const terrain=harbor(),water=map(terrain);
+    const shallow=at(3,3);
+    expect(isWalkable(water,shallow.x,shallow.y)).toBe(true);
+    expect(isFootprintBuildable(water,shallow.x,shallow.y,16)).toBe(false);
+    expect(isFootprintBuildable(water,shallow.x,shallow.y+32,32)).toBe(false);
+    expect(isFootprintBuildable(water,at(5,6).x,at(5,6).y,32)).toBe(true);
+    expect(isShoreFootprint(water,10*32,6*32,44)).toBe(true);
+  });
+});

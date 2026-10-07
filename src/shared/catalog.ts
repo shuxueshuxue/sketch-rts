@@ -56,6 +56,8 @@ export type UnitDef = {
   tier?: 2 | 3;
   // A ship (see @@@naval): it sails deep and shallow water and nothing else.
   naval?: true;
+  /** A hull's own attack, independent of installed and removable ship weapons. */
+  intrinsicAttack?: true;
   /** Ship passives applied to live passengers, removed immediately on unloading. */
   passengerDamageMultiplier?: number;
   weapon?: WeaponDef;
@@ -215,7 +217,7 @@ export const UNIT_RULES = {
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
   transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
   warship: { trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true },
+  cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
   bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
   fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
   carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },

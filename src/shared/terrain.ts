@@ -157,7 +157,7 @@ export function cellCenter(terrain: Terrain, index: number): Point {
   return { x: (col + 0.5) * terrain.cell, y: (row + 0.5) * terrain.cell };
 }
 
-// Whether a building of the given radius may stand at the point: every cell of its footprint is walkable and none is
+// Whether an ordinary foundation may stand here: every footprint cell is dry, walkable and none is
 // a ramp (a map without terrain has nothing to refuse). @@@ramp-unbuildable - A ramp is a main's one way out, as on a
 // Warcraft III map, where ramps take no building: once buildings are bodies (see @@@building-body) a tower or a farm on
 // it would shut its owner in.
@@ -165,7 +165,7 @@ export function isFootprintBuildable(map: Pick<GameMap, "terrain">, x: number, y
   const terrain = map.terrain;
   if (!terrain) return true;
   const state = runtime(terrain, "land");
-  return everyFootprintCell(terrain, x, y, radius, (at, cell) => state.walk[at] === 1 && terrain.levels?.[cell] !== "2");
+  return everyFootprintCell(terrain, x, y, radius, (at, cell) => state.walk[at] === 1 && terrain.cells[cell] !== "," && terrain.levels?.[cell] !== "2");
 }
 
 // @@@shore-footprint - Whether a shipyard of the given radius may stand at the point, on the shore: at least one cell of
