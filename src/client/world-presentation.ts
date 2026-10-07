@@ -4,12 +4,14 @@ import { resourcePanel } from './resource-panel';
 import type { GameSnapshot } from '../shared/types';
 import type { World3DLayer } from './world3d/world-layer';
 import './world-presentation.css';
+import { ShipWakeTracker } from './ship-wakes';
 
 type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[]};
 
 /** Coordinates the three presentation layers. Model code loads with the scene,
  * after bootstrap; networking and simulation stay separate. */
 export class WorldPresentation {
+  private wakes=new ShipWakeTracker();
   private ground=document.createElement('canvas');
   private actors=document.createElement('canvas');
   private stack=document.createElement('div');
@@ -97,6 +99,7 @@ export class WorldPresentation {
     activateModelPortraits();
   }
   draw(frame:WorldFrame,phase:ResourcePhase=this.current?.phase??'home'){
+    frame={...frame,wakes:this.wakes};
     resources.phase=phase;
     const changed=this.current?.phase!==phase;
     this.current={snapshot:frame.snapshot,phase,sites:Object.values(frame.buildingModels??{})};
