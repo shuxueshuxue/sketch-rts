@@ -24,6 +24,13 @@ const figures: Partial<Record<UnitKind, Figure>> = {
 export const hasPaintedUnit = (kind: UnitKind) => hasWarfareUnit(kind) || !!figures[kind] || hasPaintedCreature(kind);
 const INK='#292b29', STEEL='#8d9897', EDGE='#d0cbbc', SHADE='#525e60';
 const SKIN='#ba9575', HIDE='#665342', BOOT='#373631', LINEN='#c9bda0';
+// Lift, wind up, strike, follow through, recover, ready. The tool remains in
+// the worker's hand; only the upper body moves during a work stroke.
+const WORK_POSES: {lean:number;wrist:XY;tool:number}[] = [
+  {lean:.025,wrist:[10,-24],tool:-.35}, {lean:-.025,wrist:[10,-29],tool:-.7},
+  {lean:.1,wrist:[18,-14],tool:.9}, {lean:.14,wrist:[19,-10],tool:1.2},
+  {lean:.09,wrist:[14,-16],tool:.45}, {lean:.035,wrist:[11,-20],tool:-.1},
+];
 function poly(b:Brush,p:number[][],fill:string,edge=INK,w=.55){
   polygon(b,p,fill,edge,w);
   if(fill==='transparent')return;
@@ -139,6 +146,8 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
   // Action starts on damage/cooldown event: impact first, then recoil, recovery and ready.
   const impact=pose.mode==='attack'?([1,.65,.15,-.28,-.15,0][pose.frame]??0):0;
   const cast=pose.mode==='cast'?([.5,1,.8,.45,.2,0][pose.frame]??0):0;
+  const working=f.role==='worker' && pose.mode==='work';
+  const workPose=working?WORK_POSES[pose.frame]:undefined;
   const robe=['priest','mage','witch'].includes(f.role);
   const armor=!!f.armor;
   const cloth=f.role==='witch'?'#5d5061':f.role==='priest'?(f.ember?'#a78265':LINEN):darker(team,.13);
@@ -149,13 +158,14 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
     leg(b,[3,-4],[5+stride*2,5],[6+stride*5,16-Math.max(0,-stride)*2.2],armor,facing===1);
   }
   b.translate(impact*(f.mounted?.65:2),bob);
+  b.rotate(workPose?.lean??0); // Torso leans into the stroke while both feet stay planted.
   const flutter=stride*1.4+impact*2;
   if(robe||f.elite||f.role==='bow'){
     poly(b,[[-7,-25],[4,-25],[1,0],[-6+flutter,11],[-14+flutter,10],[-11,-7]],darker(cloth,.3));
     line(b,[[-8,-21],[-10,6],[-6+flutter,9]],lighter(cloth,.08),1);
   }
-  const wrist:XY=[12+impact*7,-12-impact*5-cast*12];
-  if(f.role!=='pike')arm(b,[5,-23],[10,-17],wrist,cloth,armor,false);
+  const wrist:XY=workPose?.wrist??[12+impact*7,-12-impact*5-cast*12];
+  if(f.role!=='pike')arm(b,[5,-23],working?[7,-22]:[10,-17],wrist,cloth,armor,false);
   // Neck joins the jaw to the collar, including under the worker hat.
   poly(b,[[-2.2,-31],[2,-31],[2.5,-26],[-2.5,-26]],SKIN);
   // Pelvis, fitted torso and separate shoulder planes, rather than a trapezoid dress.
@@ -235,8 +245,8 @@ export function paintFigure(b:Brush,kind:UnitKind,team:string,pose:UnitAnimation
     else if(f.elite)shield(b,-9,-9,team,true,facing);
     else arm(b,[-5,-23],[-3,-15],[grip[0]-9*Math.cos(angle),grip[1]-9*Math.sin(angle)],cloth,armor,true);
   }else if(f.role==='worker'){
-    arm(b,[-5,-23],[0,-16],[8,-13],cloth,false,true);
-    b.save();b.translate(...wrist);b.rotate(impact*1.1+.24);
+    arm(b,[-5,-23],[0,-16],working?[10,-12]:[8,-13],cloth,false,true);
+    b.save();b.translate(...wrist);b.rotate(workPose?.tool??impact*1.1+.24);
     seg(b,[0,7],[0,-22],1.9,'#9a8058',true);
     poly(b,[[-9,-18],[-4,-23],[3,-23],[10,-18],[3,-20],[-3,-20]],STEEL);b.restore();
     poly(b,[[-6,-9],[-1,-9],[-1,-3],[-7,-2]],HIDE);
