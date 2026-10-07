@@ -20,6 +20,7 @@ import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
+import type { ShipWakeTracker } from './ship-wakes';
 import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "./story-renderer";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
@@ -62,6 +63,7 @@ export type WorldFrame = {
   physicalEffects?: ReadonlySet<WorldEffect['type']>;
   /** Optional per-match pose history. Omit for static diagrams and portraits. */
   animation?: UnitAnimationTracker;
+  wakes?: ShipWakeTracker;
   reducedMotion?: boolean;
   ctx: Brush;
   snapshot: GameSnapshot;
@@ -143,6 +145,7 @@ export function drawWorld(frame: WorldFrame) {
   const { ctx, snapshot } = painter;
   painter.motion?.update(snapshot, painter.now);
   painter.animation?.update(snapshot, painter.now);
+  if(!frame.reducedMotion && frame.pass!=='overlay')frame.wakes?.update(snapshot,painter.now);
   ctx.save();
   ctx.scale(zoom, zoom);
   if(frame.pass!=='overlay'){
@@ -154,6 +157,7 @@ export function drawWorld(frame: WorldFrame) {
   } else {
     drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
   }
+  if(!frame.reducedMotion)frame.wakes?.draw(ctx,snapshot.units,{...painter.camera,width:painter.width,height:painter.height},painter.now,painter.motion);
   drawLandmarks(painter, snapshot.map.landmarks);
   if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>!frame.actorPositions?.has(`prop:${prop.id}`))}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);

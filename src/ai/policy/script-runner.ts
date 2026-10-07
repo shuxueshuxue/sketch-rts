@@ -31,7 +31,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   let spent = 0;
   const budgetAfter = (reserve: number) => ({ ...economySnapshot, players: { ...economySnapshot.players, [owner]: { ...economySnapshot.players[owner]!, gold: Math.max(0, economySnapshot.players[owner]!.gold - spent) - reserve } } });
   for (const script of economyScripts) {
-    const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" ? shopReserve : navalReserve + shopReserve;
+    const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
     const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
     if (scriptCommands.length > 0) {

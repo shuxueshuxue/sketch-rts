@@ -4,6 +4,7 @@ import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geo
 import {combatCapability} from '../../shared/combat-capabilities';
 import {navalServices} from './naval-services';
 import {fleetStations} from './fleet-formation';
+import { clearTransferLanes } from './transfer-lanes';
 import { convoyCanCarry } from './convoy-load';
 import { nearestShipPose } from "../../shared/ship-navigation";
 import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts, shipNeedsRepair } from "../../shared/ship-equipment";
@@ -101,7 +102,9 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
     return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
         + (approachingDepletion && !units(snapshot, owner).some(unit => ferryCapacity(unit) > 0) ? UNIT_DEFS.transport.cost : 0);
 }
-export const navalReservePurchase = (id: string) => id === "naval:islandHall" || id === "naval:transport" || id === "naval:shipyard";
+// The transport, population prerequisite and hall can use their own reserved
+// funds; unrelated purchases preserve the colony budget.
+export const navalReservePurchase = (id: string) => ["naval:islandHall", "naval:transport", "naval:shipyard", "naval:population"].includes(id);
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
     const outfit = outfitting(snapshot, owner, options);
     if (outfit && !outfit.itemId && playerState(snapshot, owner).gold >= SHIP_WEAPONS[outfit.kind].cost + navalBudgetReserve(snapshot, owner, options) + OUTFIT_RESERVE) {
@@ -251,8 +254,21 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
                         : warships >= 2 && !fleet.some(unit => unit.kind === "cutter") ? "cutter"
                             : advanced && assault && !fleet.some(unit => unit.kind === "carrier") && fleet.filter(unit => unitMover(unit.kind) === "land" && unit.kind !== "worker").length > 10 ? "carrier"
                                 : undefined;
-    if (ship && yard.complete && yard.queue.length === 0 && canSupply(snapshot, owner, ship)) {
-        return { id: `naval:${ship}`, cost: UNIT_DEFS[ship].cost, issue: () => ({ type: "train", buildingId: yard.id, unitKind: ship }) };
+    if (ship && yard.complete && yard.queue.length === 0) {
+        if (canSupply(snapshot, owner, ship))
+            return { id: `naval:${ship}`, cost: UNIT_DEFS[ship].cost, issue: () => ({ type: "train", buildingId: yard.id, unitKind: ship }) };
+        // Naval production owns its supply prerequisite too. A full land army
+        // otherwise leaves the reserved expedition budget permanently unused.
+        const farmPending = buildings(snapshot, owner).some(building => building.kind === "farm" && !building.complete)
+            || units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "farm");
+        const builder = units(snapshot, owner).find(unit => unit.kind === "worker" && !unit.deck && (unit.order.type === "mine" || unit.order.type === "idle") && sameGround(snapshot.map, unit, halls[0]!));
+        const site = builder && legalBuildPointNear(snapshot, "farm", { x: halls[0]!.x + 170, y: halls[0]!.y - 130 });
+        if (!farmPending && builder && site && isBuildPlacementClear(snapshot, "farm", site))
+            return { id: "naval:population", cost: BUILDING_DEFS.farm.cost, issue: used => {
+                if (used.has(builder.id)) return undefined;
+                used.add(builder.id);
+                return { type: "build", unitId: builder.id, buildingKind: "farm", ...site };
+            } };
     }
     if (!plan || islandHallOf(snapshot, owner, plan))
         return undefined;
@@ -292,7 +308,7 @@ function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
 // The shared library's economy script: the water's next want, when the gold is there.
 export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand | undefined {
     const want = navalWant(snapshot, owner, options);
-    const reserve = want && navalReservePurchase(want.id) ? navalBudgetReserve(snapshot, owner, options) : 0;
+    const reserve = want && !navalReservePurchase(want.id) ? navalBudgetReserve(snapshot, owner, options) : 0;
     return want && playerState(snapshot, owner).gold - reserve >= want.cost ? want.issue(new Set()) : undefined;
 }
 /** Fleet combat and ferry ownership are independent of the map generator. */
@@ -302,7 +318,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const assault = assaultPlan(snapshot, owner, options);
     const outfit = outfitting(snapshot, owner, options);
     const services=navalServices(snapshot,owner,options);
-    const commands: GameCommand[] = [...services.commands];
+    const commands: GameCommand[] = [...clearTransferLanes(snapshot,owner),...services.commands];
     if (outfit && !services.reserved.has(outfit.shipId)) commands.push(...outfitCommands(snapshot, owner, outfit));
     const harbor = buildings(snapshot, owner).find(building => building.kind === "shipyard");
     const foes = [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
@@ -419,6 +435,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
 export function navalUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): ReadonlySet<string> {
     const outfit = outfitting(snapshot,owner,options);
     const claimed = new Set<string>(navalServices(snapshot,owner,options).reserved);
+    for(const command of clearTransferLanes(snapshot,owner))if('unitIds' in command)for(const id of command.unitIds)claimed.add(id);
     if (outfit) { if(outfit.workerId)claimed.add(outfit.workerId); claimed.add(outfit.shipId); }
     if (groundWholes(snapshot.map) <= 1 && !shipsAfloat(snapshot))
         return claimed;
@@ -477,7 +494,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
         if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,phase:'return',crew:aboardIds};
-        return cancelFerry(snapshot,boat,mission);
+        return cancelFerry(snapshot,boat,mission,options);
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.
     if (mission.phase === "return") {
@@ -493,18 +510,18 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         if (held) {
             // Settlers are not an invasion force. Re-evaluate a real assault
             // after returning the workers, rather than landing them at a hall.
-            return cancelFerry(snapshot,boat,mission);
+            return cancelFerry(snapshot,boat,mission,options);
         }
     }
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
         if (!mine || mine.amount <= 0 || !island || buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) < 320)) {
-            return cancelFerry(snapshot, boat, mission);
+            return cancelFerry(snapshot, boat, mission, options);
         }
     }
     const target = mission.purpose === "assault" || mission.purpose === "evacuate" ? snapshot.buildings.find(building => building.id === mission!.targetId) : snapshot.resources.find(resource => resource.id === mission!.targetId);
     if (!target) {
-        return cancelFerry(snapshot, boat, mission);
+        return cancelFerry(snapshot, boat, mission, options);
     }
     const commands: GameCommand[] = [];
     if (mission.phase === "sailing") {
@@ -513,7 +530,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             mission.crewIds = [];
             return commands;
         }
-        if ((mission.purpose === "assault" || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission);
+        if ((mission.purpose === "assault" || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) return cancelFerry(snapshot, boat, mission, options);
         if (boat.order.type !== "unload")
             commands.push({ type: "unload", unitIds: [boat.id], ...mission.to });
         return commands;
@@ -580,7 +597,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (outgunned(snapshot, owner, options, mission.to))
         return commands;
     if ((mission.purpose === "settle" || mission.purpose === "assault") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) {
-        if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission);
+        if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission, options);
         return commands;
     }
     if (boarding.length && cargo.length && snapshot.tick - mission.progress!.tick > seconds(20) && (mission.purpose !== "settle" || hasWorkers) && (mission.purpose === "rebase" || hasSoldiers || !guardsRemain)) {
@@ -597,10 +614,17 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 function unitStrengthForFerry(unit: Unit) { return strengthOf([unit]); }
 
-function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string]): GameCommand[] {
+function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string], options: AiPolicyContext): GameCommand[] {
     const boarding = snapshot.units.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     mission.phase = "return";
     mission.crewIds = [];
+    const memory = navalMemory(options);
+    // A failed expedition re-evaluates available mines after returning instead
+    // of retrying the same guarded shore forever. An expedition already sailing
+    // retains its objective; this cannot reroute a live convoy mid-crossing.
+    if (mission.purpose === "settle" && memory.island?.plan?.mineId === mission.targetId
+        && !Object.entries(memory.ferries ?? {}).some(([id, other]) => id !== boat.id && other.targetId === mission.targetId && other.phase === "sailing"))
+        delete memory.island;
     return [
         ...(boarding.length ? [{ type: "stop" as const, unitIds: boarding.map(unit => unit.id) }] : []),
         ...(shipPassengers(snapshot.units,boat).length ? [{ type: "unload" as const, unitIds: [boat.id], ...mission.from, avoidCombat:true }] : []),
