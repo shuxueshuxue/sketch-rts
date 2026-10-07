@@ -118,7 +118,7 @@ export class ShipWakeTracker {
       const p=motion?.position(ship,now)??ship,heading=motion?.heading(ship,now)??ship.sailing?.heading??0,power=Math.min(1,track.speed/85);
       b.save();b.translate(p.x,p.y);b.rotate(heading);
       b.globalAlpha=power;
-      b.drawImage(bowPatch(),profile.length*.12,-profile.beam*.55,profile.length*.36,profile.beam*1.1);
+      b.drawImage(bowPatch(),-profile.length*.1,-profile.beam*.8,profile.length*.65,profile.beam*1.6);
       b.restore();
     }
     if(this.terrain){
