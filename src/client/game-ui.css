@@ -1,3 +1,4 @@
+@import './menu-page.css';
 @import './match-menu.css';
 @import './game-materials.css';
 /* Shared controls and surfaces. Screen-specific files own layout only. */
