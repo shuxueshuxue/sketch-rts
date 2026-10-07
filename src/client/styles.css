@@ -110,6 +110,12 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
+/* Fields keep their focus stroke inside the frame, including in scrollable lists. */
+input:not([type="checkbox"]):not([type="range"]):focus-visible,
+select:focus-visible {
+  outline-offset: -2px;
+}
+
 input[type="checkbox"],
 input[type="range"] {
   accent-color: #8a6420;
