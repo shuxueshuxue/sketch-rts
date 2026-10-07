@@ -483,6 +483,71 @@ describe("the AI on the water", () => {
     expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(560);
   });
 
+  it('leaves deck repair engineers on their warships instead of dispatching empty miner ferries', () => {
+    const game=islandGame();
+    for(const mine of game.resources)if(mine.id!=='island')mine.amount=0;
+    game.buildings.push({...game.buildings[0]!,id:'rich-hall',...at(23,11)});
+    const worker=game.units[0]!;
+    game.units=[worker];worker.order={type:'idle'};
+    const warship=game.spawnUnit('player','warship',at(13,9).x,at(13,9).y);
+    expect(boardUnit(warship,worker,game.units)).toBe(true);
+    const boat=game.spawnUnit('player','transport',at(12,13).x,at(12,13).y);
+    const options={version:'v8' as const,memory:createAiPolicyMemory()};
+    planNavalTactics(snapshotGame(game),'player',options);
+    expect(options.memory.naval?.ferries?.[boat.id]).toBeUndefined();
+    expect(worker.deck?.shipId).toBe(warship.id);
+  });
+
+  it('does not relocate idle workers to a fully staffed mine', () => {
+    const game=islandGame();
+    for(const mine of game.resources)if(mine.id!=='island')mine.amount=0;
+    game.buildings.push({...game.buildings[0]!,id:'rich-hall',...at(23,11)});
+    for(const worker of game.units)worker.order={type:'idle'};
+    for(let i=0;i<5;i++)game.units.push({...createUnit(`miner-${i}`,'player','worker',at(22,9).x,at(22,9).y),order:{type:'mine',resourceId:'island',phase:'toMine',timer:0}});
+    const boat=game.spawnUnit('player','transport',at(12,13).x,at(12,13).y);
+    const options={version:'v7' as const,memory:createAiPolicyMemory()};
+    planNavalTactics(snapshotGame(game),'player',options);
+    expect(options.memory.naval?.ferries?.[boat.id]).toBeUndefined();
+  });
+
+  it('launches an effective partial colony load before a stalled boarder triggers cancellation', () => {
+    const game=islandGame();game.tick=seconds(21);
+    const boat=game.spawnUnit('player','transport',at(10,9).x,at(10,9).y);
+    const worker=game.units[0]!,waiting=game.units[1]!;
+    expect(boardUnit(boat,worker,game.units)).toBe(true);
+    waiting.order={type:'board',transportId:boat.id};
+    const memory=createAiPolicyMemory();
+    memory.naval={ferries:{[boat.id]:{purpose:'settle',targetId:'island',from:{x:boat.x,y:boat.y},to:at(19,9),phase:'loading',crewIds:[worker.id,waiting.id],sinceTick:0,
+      progress:{tick:0,x:boat.x,y:boat.y,phase:'loading',crew:worker.id}}}};
+    const commands=planNavalTactics(snapshotGame(game),'player',{version:'v5',memory});
+    expect(commands).toContainEqual({type:'stop',unitIds:[waiting.id]});
+    expect(commands).toContainEqual({type:'unload',unitIds:[boat.id],...at(19,9)});
+    expect(memory.naval.ferries![boat.id]!.phase).toBe('sailing');
+  });
+
+  it('loads colony engineers before infantry can occupy their deck space',()=>{
+    const game=islandGame(),boat=game.spawnUnit('player','transport',at(10,9).x,at(10,9).y);
+    for(let i=0;i<6;i++)game.spawnUnit('player','footman',at(6,8+i).x,at(6,8+i).y);
+    const options={version:'v7' as const,memory:createAiPolicyMemory()};
+    const first=planNavalTactics(snapshotGame(game),'player',options).find(command=>command.type==='board'&&command.transportId===boat.id);
+    expect(first?.type).toBe('board');
+    if(first?.type!=='board')throw new Error('No engineers dispatched');
+    expect(first.unitIds).toHaveLength(2);
+    for(const id of first.unitIds){const worker=game.units.find(unit=>unit.id===id)!;expect(worker.kind).toBe('worker');expect(boardUnit(boat,worker,game.units)).toBe(true);}
+    const second=planNavalTactics(snapshotGame(game),'player',options).find(command=>command.type==='board'&&command.transportId===boat.id);
+    expect(second?.type).toBe('board');
+    if(second?.type==='board')expect(second.unitIds.every(id=>game.units.find(unit=>unit.id===id)!.kind==='footman')).toBe(true);
+  });
+
+  it('releases an empty returning ferry where it is rather than sending it to an obsolete coast', () => {
+    const game=islandGame(),boat=game.spawnUnit('player','transport',at(27,16).x,at(27,16).y);
+    const memory=createAiPolicyMemory();
+    memory.naval={ferries:{[boat.id]:{purpose:'rebase',targetId:'natural',from:at(9,9),to:at(19,9),phase:'return',crewIds:[],sinceTick:0}}};
+    const commands=planNavalTactics(snapshotGame(game),'player',{version:'v7',memory});
+    expect(memory.naval.ferries![boat.id]).toBeUndefined();
+    expect(commands.some(command=>command.type==='move'&&command.unitIds.includes(boat.id))).toBe(false);
+  });
+
 });
 
 
