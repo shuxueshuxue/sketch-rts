@@ -1,3 +1,4 @@
+@import './match-menu.css';
 @import './game-materials.css';
 /* Shared controls and surfaces. Screen-specific files own layout only. */
 :root {
@@ -64,26 +65,3 @@
 .match-menu .match-action { color:var(--game-button-ink); border-radius:0; background:var(--game-button); border-color:var(--game-edge); }
 @media(max-width:650px) { .control-deck .selection-chip { border-right:0; border-bottom:1px solid var(--game-edge); } .control-deck .hud-actions { padding:4px 0 0; } }
 @media(max-width:650px) { .hud-subject-art { width:72px; height:72px; } }
-
-
-/* The map, its preview and the portable settings are three independent columns. */
-.play-browser .create-game-form { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
-.create-game-layout { display:grid; grid-template-columns:minmax(170px,.6fr) minmax(220px,1fr) minmax(350px,1.15fr); gap:16px; min-height:0; min-width:0; }
-.create-game-layout .map-detail { display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0; gap:12px; }
-.create-game-layout .map-preview-frame { box-sizing:border-box; width:100%; min-width:0; min-height:0; flex:0 1 auto; aspect-ratio:1; }
-.create-game-layout .map-preview { width:100%; height:auto; aspect-ratio:1; }
-.create-game-layout .map-info { min-width:0; padding:12px; }
-.create-settings { display:flex; flex-direction:column; gap:12px; min-width:0; min-height:0; }
-.create-settings .create-slot-pane { min-width:0; min-height:0; flex:0 1 auto; display:flex; flex-direction:column; padding:12px; gap:8px; }
-.create-settings .slot-list { overflow:auto; min-height:0; }
-.create-settings .slot-row { flex-wrap:wrap; gap:5px; padding:7px 0; }
-.create-settings .slot-index { flex-basis:16px; }
-.create-settings .slot-name { flex:1 0 45px; }
-.create-settings .slot-row select { min-width:76px; width:auto; padding:4px; font-size:12px; }
-@media(max-width:1000px) {
- .create-game-layout { grid-template-columns:minmax(150px,.7fr) minmax(220px,1fr); }
- .create-settings { grid-column:1 / -1; }
- .play-browser .create-game-form { height:auto; grid-template-rows:auto auto; }
- .create-game-layout .map-detail { max-width:400px; }
- .create-settings .slot-list { overflow:visible; }
-}

@@ -2,7 +2,7 @@ import { MAP_POOL, poolMap, type PoolMapId } from "../shared/map-pool";
 import { createRoom, roomConfiguration, type RoomConfiguration } from "../shared/rooms";
 import { parseCreateRoomRequest } from "../shared/room-schema";
 
-export type RoomRoute = { screen: "home" | "profile" | "rooms" } | { screen: "create"; configuration?: RoomConfiguration } | { screen: "room"; roomId: string };
+export type RoomRoute = { screen: "home" | "profile" | "rooms" } | { screen: "maps" | "create"; configuration?: RoomConfiguration } | { screen: "room"; roomId: string };
 const previewHost = { id: "preview", name: "Preview" };
 
 export function defaultRoomConfiguration(mapId: PoolMapId = MAP_POOL[0].id): RoomConfiguration {
@@ -14,9 +14,10 @@ export function defaultRoomConfiguration(mapId: PoolMapId = MAP_POOL[0].id): Roo
 export function formatRoomRoute(route: RoomRoute): string {
   const query = new URLSearchParams();
   if (route.screen === "room") query.set("room", route.roomId);
-  else if (route.screen === "create") {
+  else if (route.screen === "maps" || route.screen === "create") {
     const config = route.configuration ?? defaultRoomConfiguration();
     query.set("map", config.mapId);
+    if (route.screen === "maps") query.set("view", "maps");
     query.set("seed", config.layoutSeed);
     if (config.name) query.set("name", config.name);
     query.set("visibility", config.visibility);
@@ -44,7 +45,7 @@ export function parseRoomRoute(search: string): RoomRoute {
       humanCount: seats.filter(seat => seat.controller !== "ai").length,
       aiCount: seats.filter(seat => seat.controller === "ai").length, seatSetup: seats });
     if (!input || seats.length !== map.players) return { screen: "home" };
-    return { screen: "create", configuration: roomConfiguration(createRoom({ ...input, id: "preview" })) };
+    return { screen: query.get("view") === "maps" ? "maps" : "create", configuration: roomConfiguration(createRoom({ ...input, id: "preview" })) };
   }
   const view = query.get("view");
   return { screen: view === "profile" || view === "rooms" ? view : "home" };

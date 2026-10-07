@@ -97,7 +97,7 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "home" | "profile" | "rooms" | "create" | "setup" | "results";
+type MenuView = "maps" | "home" | "profile" | "rooms" | "create" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -630,10 +630,10 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = 
   menuOpen = true;
   releasePointerLockForMenu();
   shell.classList.add("menu-open"); mainMenu.classList.remove("hidden");
-  if (route.screen === "create") {
+  if (route.screen === "maps" || route.screen === "create") {
     pendingRoomConfiguration = route.configuration ?? pendingRoomConfiguration;
     chosenMapId = pendingRoomConfiguration.mapId as PoolMapId;
-    route = { screen: "create", configuration: pendingRoomConfiguration };
+    route = { screen: route.screen, configuration: pendingRoomConfiguration };
   }
   menuView = route.screen;
   setRoomRoute(route, replace);
@@ -679,7 +679,6 @@ function setRoomRoute(route: RoomRoute, replace = false) {
 }
 
 function renderMainMenu() {
-  mainMenu.classList.remove("play-browser");
   // Another screen opens at its top: a window that scrolls (a narrow, tall one) kept the last screen's place.
   if (mainMenu.dataset.menuView !== menuView) menuWindow.scrollTop = 0;
   mainMenu.dataset.menuView = menuView;
@@ -707,6 +706,10 @@ function renderMainMenu() {
     void renderRoomBrowser();
     return;
   }
+  if (menuView === "maps") {
+    renderMapSelectionMenu();
+    return;
+  }
   if (menuView === "create") {
     renderCreateGameMenu();
     return;
@@ -718,7 +721,7 @@ function renderMainMenu() {
   menuStatus.textContent = "";
   mapList.replaceChildren(
     menuButton(t("home.play"), "", "data-open-create", () => {
-      openMenuRoute({ screen: "create" });
+      openMenuRoute({ screen: "maps" });
     }),
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
@@ -729,66 +732,82 @@ function renderMainMenu() {
   );
 }
 
-// The create screen (see @@@map-chooser).
-function renderCreateGameMenu() {
-  mainMenu.dataset.menuView = "create";
-  mainMenu.classList.add("play-browser");
-  menuTitle.textContent = t("home.play");
+// Map selection and match settings are separate screens, with independent URL/history states.
+function renderMapSelectionMenu() {
+  menuTitle.textContent = t("roomCreate.chooseMap");
   menuStatus.textContent = "";
-  const form = document.createElement("form");
-  form.className = "create-game-form";
-  form.dataset.createGameForm = "true";
-  form.innerHTML = `
-    <div class="create-game-layout">
+  const panel = document.createElement("div");
+  panel.className = "map-select";
+  panel.innerHTML = `
+    <div class="map-chooser">
       <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
         <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
         <div class="map-entries" data-map-entries></div>
       </section>
       ${mapDetailMarkup()}
-      <section class="create-settings">
-        <label class="create-name">${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-        <label class="checkbox-row"><input name="privateRoom" type="checkbox" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /> ${escapeHtml(t("roomCreate.private.label"))}</label>
-        <label class="create-seed">${escapeHtml(t("roomCreate.seed"))}<input name="seed" maxlength="128" value="${escapeHtml(pendingRoomConfiguration.layoutSeed)}" required /></label>
-        <section class="room-slot-pane create-slot-pane">
-          <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
-          <div class="slot-list" data-draft-seats></div>
-        </section>
-      </section>
     </div>
     <div class="menu-actions">
-      <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
+      <button type="button" data-map-next>${escapeHtml(t("roomCreate.configure"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
-    </div>
-  `;
-  const entries = form.querySelector<HTMLDivElement>("[data-map-entries]")!;
+    </div>`;
   const renderMaps = () => {
-    entries.replaceChildren(
-      ...MAP_POOL.map((map) => {
-        const entry = document.createElement("button");
-        entry.type = "button";
-        entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
-        entry.dataset.mapId = map.id;
-        entry.textContent = mapEntryLabel(map.id);
-        entry.addEventListener("click", () => {
-          chosenMapId = map.id;
-          pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: pendingRoomConfiguration.visibility };
-          form.querySelector<HTMLInputElement>("[name=seed]")!.value = pendingRoomConfiguration.layoutSeed;
-          renderMaps();
-          syncDraft();
-        });
-        return entry;
-      }),
-    );
-    const humanCount = pendingRoomConfiguration.seatSetup.filter(seat => seat.controller !== "ai").length;
-    const preview = createRoom({ id: "preview", host: localUser, ...pendingRoomConfiguration, humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
-    showMapDetail(form, chosenMapId, roomPreviewSeats(preview), pendingRoomConfiguration.layoutSeed);
-    form.querySelector("[data-draft-seats]")!.replaceChildren(...preview.slots.map((slot, index) => slotRow(slot, index, false, patch => {
-      const seat = pendingRoomConfiguration.seatSetup[index]!;
-      pendingRoomConfiguration.seatSetup[index] = { ...seat, ...patch } as typeof seat;
-      syncDraft();
-      renderMaps();
-    })));
+    panel.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
+      const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
+        if (chosenMapId !== map.id) pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: pendingRoomConfiguration.visibility };
+        chosenMapId = map.id;
+        setRoomRoute({ screen: "maps", configuration: pendingRoomConfiguration }, true);
+        renderMaps();
+      }, map.id);
+      entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
+      entry.setAttribute("aria-pressed", String(map.id === chosenMapId));
+      return entry;
+    }));
+    showMapDetail(panel, chosenMapId, previewSeatsForRoom(draftRoom()), pendingRoomConfiguration.layoutSeed);
   };
+  renderMaps();
+  panel.querySelector("[data-map-next]")!.addEventListener("click", () => openMenuRoute({ screen: "create", configuration: pendingRoomConfiguration }));
+  panel.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
+  mapList.replaceChildren(panel);
+}
+
+function draftRoom() {
+  const humanCount = pendingRoomConfiguration.seatSetup.filter(seat => seat.controller !== "ai").length;
+  return createRoom({ id: "preview", host: localUser, ...pendingRoomConfiguration, humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
+}
+
+function selectedMapMarkup() {
+  return `<div class="selected-map-summary">
+    <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="256" height="256"></canvas></div>
+    <div><strong data-map-name></strong><div data-map-summary></div></div>
+  </div>`;
+}
+
+function previewSeatsForRoom(room: RoomState) {
+  const seats = roomPreviewSeats(room), pool = poolMap(room.mapId);
+  return !pool || poolSeatsFit(pool, seats.map(seat => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) }));
+}
+
+function renderCreateGameMenu() {
+  menuTitle.textContent = t("roomCreate.configure");
+  menuStatus.textContent = "";
+  const form = document.createElement("form");
+  form.className = "create-game-form";
+  form.dataset.createGameForm = "true";
+  form.innerHTML = `
+    ${selectedMapMarkup()}
+    <div class="create-options">
+      <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
+      <label>${escapeHtml(t("roomCreate.seed"))}<input name="seed" maxlength="128" value="${escapeHtml(pendingRoomConfiguration.layoutSeed)}" required /></label>
+      <label class="checkbox-row"><input name="privateRoom" type="checkbox" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /> ${escapeHtml(t("roomCreate.private.label"))}</label>
+    </div>
+    <section class="room-slot-pane create-slot-pane">
+      <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
+      <div class="slot-list" data-draft-seats></div>
+    </section>
+    <div class="menu-actions">
+      <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
+      <button type="button" data-choose-map>${escapeHtml(t("roomCreate.backMaps"))}</button>
+    </div>`;
   const syncDraft = () => {
     pendingRoomConfiguration.name = form.querySelector<HTMLInputElement>("[name=name]")!.value;
     pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=privateRoom]")!.checked ? "private" : "public";
@@ -796,22 +815,28 @@ function renderCreateGameMenu() {
     if (seed.trim()) pendingRoomConfiguration.layoutSeed = seed;
     setRoomRoute({ screen: "create", configuration: pendingRoomConfiguration }, true);
   };
-  for (const selector of ["[name=name]", "[name=privateRoom]", "[name=seed]"]) {
-    form.querySelector(selector)!.addEventListener("input", syncDraft);
-  }
-  form.querySelector("[name=seed]")!.addEventListener("change", renderMaps);
-  renderMaps();
-  form.addEventListener("submit", (event) => {
+  const renderSeats = () => {
+    const preview = draftRoom();
+    showMapDetail(form, chosenMapId, previewSeatsForRoom(preview), pendingRoomConfiguration.layoutSeed);
+    form.querySelector("[data-draft-seats]")!.replaceChildren(...preview.slots.map((slot, index) => slotRow(slot, index, false, patch => {
+      const seat = pendingRoomConfiguration.seatSetup[index]!;
+      pendingRoomConfiguration.seatSetup[index] = { ...seat, ...patch } as typeof seat;
+      syncDraft();
+      renderSeats();
+    })));
+  };
+  for (const selector of ["[name=name]", "[name=privateRoom]", "[name=seed]"]) form.querySelector(selector)!.addEventListener("input", syncDraft);
+  form.querySelector("[name=seed]")!.addEventListener("change", renderSeats);
+  renderSeats();
+  form.addEventListener("submit", event => {
     event.preventDefault();
-    const data = new FormData(form);
-    const name = String(data.get("name") ?? "").trim() || t("roomCreate.defaultName", { name: localUser.name });
     syncDraft();
     const humanCount = pendingRoomConfiguration.seatSetup.filter(seat => seat.controller !== "ai").length;
-    void createConfiguredRoom({ ...pendingRoomConfiguration, name, humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
+    void createConfiguredRoom({ ...pendingRoomConfiguration,
+      name: pendingRoomConfiguration.name.trim() || t("roomCreate.defaultName", { name: localUser.name }),
+      humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
   });
-  form.querySelector("[data-back-home]")?.addEventListener("click", () => {
-    openMenuRoute({ screen: "home" });
-  });
+  form.querySelector("[data-choose-map]")!.addEventListener("click", () => openMenuRoute({ screen: "maps", configuration: pendingRoomConfiguration }));
   mapList.replaceChildren(form);
 }
 
@@ -837,7 +862,10 @@ function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[], lay
   const { facts } = preview;
   const layout = poolMap(mapId)?.layout;
   root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
-  root.querySelector("[data-map-facts]")!.innerHTML = [
+  const summary = root.querySelector("[data-map-summary]");
+  if (summary) summary.textContent = `${t("map.fact.playersValue", { players: facts.players })} · ${facts.size} × ${facts.size}`;
+  const factList = root.querySelector("[data-map-facts]");
+  if (factList) factList.innerHTML = [
     [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
     ...(layout?.idea ? [[t("map.fact.layout"), t(`map.idea.${layout.idea}`)]] : []),
     [t("map.fact.size"), `${facts.size} × ${facts.size}`],
@@ -915,7 +943,7 @@ async function renderRoomBrowser() {
   const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
   actions.replaceChildren(
     menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
-      openMenuRoute({ screen: "create" });
+      openMenuRoute({ screen: "maps" });
     }),
     menuButton(t("common.back"), "", "data-back-home", () => {
       openMenuRoute({ screen: "home" });
@@ -944,7 +972,7 @@ function renderRoomSetup() {
   if (setupAction === "empty") {
     menuStatus.textContent = t("roomSetup.empty");
     mapList.replaceChildren(menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
-      openMenuRoute({ screen: "create" });
+      openMenuRoute({ screen: "maps" });
     }));
     return;
   }
@@ -963,6 +991,7 @@ function renderRoomSetup() {
   setup.className = "room-setup";
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = `
+    ${selectedMapMarkup()}
     <div class="room-setup-layout">
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
@@ -975,10 +1004,7 @@ function renderRoomSetup() {
         </div>
         <div class="slot-list"></div>
       </section>
-      <section class="room-map-pane" aria-label="${escapeHtml(t("roomSetup.maps"))}">
-        <div class="room-section-title">${escapeHtml(t("roomSetup.maps"))}</div>
-        ${mapDetailMarkup()}
-      </section>
+
     </div>
     <div class="menu-actions">
       <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
@@ -988,10 +1014,7 @@ function renderRoomSetup() {
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
-  // Teams that split a sides map unevenly cannot start on it; meanwhile it shows with the seats a new room gets.
-  const seats = roomPreviewSeats(room);
-  const pool = poolMap(room.mapId);
-  showMapDetail(setup, room.mapId, !pool || poolSeatsFit(pool, seats.map((seat) => seat.team)) ? seats : roomPreviewSeats(createRoom({ id: "preview", host: localUser, mapId: room.mapId, ...poolSeatCounts(room.mapId) })), room.layoutSeed);
+  showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
   slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(slot, index, local)));
