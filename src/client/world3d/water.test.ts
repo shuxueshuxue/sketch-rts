@@ -13,13 +13,18 @@ describe('GPU water lifecycle and rendering budget', () => {
     const texture = water.mesh.material.uniforms.shore!.value as DataTexture;
     expect(texture.image.width).toBe(20); expect(texture.image.height).toBe(20);
     const dispose = vi.spyOn(texture, 'dispose');
+    const bed = water.mesh.material.uniforms.seabed!.value as DataTexture;
+    const disposeBed = vi.spyOn(bed, 'dispose');
     for (let i = 0; i < 120; i++) { water.prepare(terrain); water.update(i * 16); }
     expect(dispose).not.toHaveBeenCalled();
+    expect(disposeBed).not.toHaveBeenCalled();
+    expect(water.mesh.material.uniforms.seabed!.value).toBe(bed);
     expect(water.mesh.material.uniforms.shore!.value).toBe(texture);
     expect(water.mesh.material.uniforms.seconds!.value).toBeCloseTo(1.904);
     water.update(2000, true); expect(water.mesh.material.uniforms.seconds!.value).toBe(0);
     water.prepare({ ...terrain, cells: '.'.repeat(400) });
     expect(dispose).toHaveBeenCalledOnce(); expect(water.mesh.visible).toBe(false);
+    expect(disposeBed).toHaveBeenCalledOnce();
     water.dispose(); expect(scene.children).toHaveLength(0);
   });
   it('encodes navigation kinds without ever adding a selectable entity or a reflection render callback', () => {
