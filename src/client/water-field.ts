@@ -2,7 +2,7 @@ import type { Terrain } from '../shared/terrain';
 import { environmentField } from '../shared/environment/fields';
 import { spatialNoise } from '../shared/environment/noise';
 
-export type WaterField = { depth: Float32Array; wet: Uint8Array; hasWater: boolean };
+export type WaterField = { depth: Float32Array; coverage: Float32Array; wet: Uint8Array; hasWater: boolean };
 const fields = new WeakMap<Terrain, WaterField>();
 
 /** A presentation-only shore distance. Built in O(cells), shared by Canvas and GPU;
@@ -11,7 +11,7 @@ export function waterField(terrain: Terrain): WaterField {
   const cached = fields.get(terrain);
   if (cached) return cached;
   const { cols, rows, cells } = terrain, count = cols * rows;
-  const wet = new Uint8Array(count), depth = new Float32Array(count);
+  const wet = new Uint8Array(count), depth = new Float32Array(count), coverage = new Float32Array(count);
   let hasWater = false;
   for (let i = 0; i < count; i++) {
     wet[i] = cells[i] === '~' || cells[i] === ',' ? 1 : 0;
@@ -33,13 +33,24 @@ export function waterField(terrain: Terrain): WaterField {
     return distance;
   };
   const shore = distances(i => !wet[i]), shallows = distances(i => cells[i] === ',');
-  const deepen = (distance: number) => { const t = Math.min(1, distance / 36); return t * t * (3 - 2 * t); };
+  const deepen = (distance: number) => { const t = Math.min(1, distance / 24); return t * t * (3 - 2 * t); };
   for (let i = 0; i < count; i++) {
     // Shallows seed a gently descending shelf, rather than a constant colour
     // next to an unrelated deep-water colour. Both distances remain continuous.
-    depth[i] = wet[i] ? Math.min(deepen(shore[i]!), .08 + .92 * deepen(shallows[i]!)) : 0;
+    depth[i] = wet[i] ? Math.min(deepen(shore[i]!), .16 + .84 * deepen(shallows[i]!)) : 0;
   }
-  const field = { wet, depth, hasWater };
+  // One continuous coast for the bed and both surface renderers. Clamp at the
+  // world boundary: a sea touching the edge must not grow a rectangular beach.
+  const weights = [1, 2, 1];
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    let sum = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const col = Math.max(0, Math.min(cols - 1, x + dx)), row = Math.max(0, Math.min(rows - 1, y + dy));
+      sum += wet[row * cols + col]! * weights[dx + 1]! * weights[dy + 1]!;
+    }
+    coverage[y * cols + x] = sum / 16;
+  }
+  const field = { wet, depth, coverage, hasWater };
   fields.set(terrain, field);
   return field;
 }
@@ -48,7 +59,7 @@ type WaterCover = { width: number; height: number; pixels: Uint8Array };
 const covers = new WeakMap<Terrain, WaterCover>();
 
 /** Static submerged terrain + depth-dependent absorption. Both renderers use
- * these pixels: sand ridges, rocky shelves and seabed relief do not drift with
+ * these pixels: sand, rocky shelves and seabed relief do not drift with
  * surface waves. Bounded at 1024² and generated once per immutable map. */
 export function waterCoverPixels(terrain: Terrain): WaterCover {
   const old = covers.get(terrain);
@@ -57,7 +68,7 @@ export function waterCoverPixels(terrain: Terrain): WaterCover {
   const width = Math.max(1, Math.ceil(terrain.cols * scale)), height = Math.max(1, Math.ceil(terrain.rows * scale));
   const pixels = new Uint8Array(width * height * 4), field = waterField(terrain);
   const environment = environmentField(terrain), { rockiness } = environment.layers;
-  const sand = [209, 192, 148], stoneColour = [125, 133, 124], absorption = [6, 4, 3];
+  const sand = [183, 178, 148], stoneColour = [140, 149, 141], absorption = [6, 4, 3];
   const sample = (layer: Float32Array, x: number, y: number) => {
     const px = Math.max(0, Math.min(terrain.cols - 1, x / terrain.cell - .5));
     const py = Math.max(0, Math.min(terrain.rows - 1, y / terrain.cell - .5));
@@ -71,21 +82,27 @@ export function waterCoverPixels(terrain: Terrain): WaterCover {
     const depth = sample(field.depth, x, y), rock = sample(rockiness, x, y);
     const relief = spatialNoise(environment.seed, x, y, 180, 71);
     const stone = spatialNoise(environment.seed, x, y, 28, 72);
-    const ridge = Math.sin(y * .17 + relief * 16 + Math.sin(x * .025) * 3);
-    const rocky = Math.min(1, rock * .85 + Math.max(0, relief - .65) * 1.4);
-    const shade = .87 + relief * .17 + (stone - .5) * rocky * .3 + ridge * (1 - rocky) * .08;
+    const rocky = Math.min(1, rock * .85);
+    const shade = .97 + (relief - .5) * .07 + (stone - .5) * (.03 + rocky * .06);
     const i = (row * width + col) * 4;
     for (let channel = 0; channel < 3; channel++) {
       const bed = (sand[channel]! * (1 - rocky) + stoneColour[channel]! * rocky) * shade;
       const transmission = Math.exp(-depth * absorption[channel]!);
       pixels[i + channel] = Math.round(bed * transmission + WATER_DEEP[channel]! * (1 - transmission));
     }
-    pixels[i + 3] = 255;
+    pixels[i + 3] = Math.round(waterCoverage(sample(field.coverage, x, y)) * 255);
   }
   const cover = { width, height, pixels }; covers.set(terrain, cover); return cover;
 }
 
-export const WATER_DEEP = [30, 76, 95] as const;
+export const WATER_DEEP = [57, 102, 113] as const;
+export const WATER_SHORE_FADE = [.25, .75] as const;
+export const WATER_DEPTH_FADE = [.045, .22] as const;
+const smooth = (low: number, high: number, value: number) => {
+  const t = Math.max(0, Math.min(1, (value - low) / (high - low))); return t * t * (3 - 2 * t);
+};
+export const waterCoverage = (coverage: number) => smooth(...WATER_SHORE_FADE, coverage);
+export const waterLightStrength = (coverage: number, depth: number) => waterCoverage(coverage) * smooth(...WATER_DEPTH_FADE, depth);
 
 /** Periodic analytical height gradients, rather than random sparkle dots. The
  * integer wave vectors make the texture seamless in both directions.
@@ -100,15 +117,12 @@ export function waterSlope(u: number, v: number, seconds: number): { x: number; 
   return { x, y };
 }
 export const WATER_WAVES = [
-  [2, 1, .065, .65, 0],
-  [3, -2, .028, 1.05, 1.7],
-  [7, 2, .012, 1.65, 3.1],
-  [11, -3, .006, 2.1, .8],
-  [5, 3, .009, 1.3, 2.4],
-  [13, 4, .004, 2.4, 4.2],
-  [17, -5, .0025, 2.8, 1.1],
-  [23, 7, .0014, 3.2, 5.7],
-  [29, -9, .001, 3.6, 3.8],
+  [5, 2, .015, .65, 0],
+  [7, -3, .008, 1.05, 1.7],
+  [11, 2, .004, 1.65, 3.1],
+  [13, -4, .0025, 2.1, .8],
+  [17, 5, .0015, 2.4, 4.2],
+  [23, -7, .0008, 2.8, 1.1],
 ] as const;
 
 let normals: Uint8Array | undefined;
