@@ -34,7 +34,7 @@
         0,
         11
       ],
-      "mastHeight": 82,
+      "mastHeight": 78,
       "weaponPivot": null
     },
     "transport": {
@@ -60,7 +60,7 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 96,
+      "mastHeight": 64,
       "weaponPivot": null
     },
     "warship": {
@@ -96,7 +96,7 @@
         0,
         35
       ],
-      "mastHeight": 96,
+      "mastHeight": 102,
       "weaponPivot": [
         34,
         0,
@@ -136,7 +136,7 @@
         0,
         54
       ],
-      "mastHeight": 96,
+      "mastHeight": 58,
       "weaponPivot": [
         30,
         0,
@@ -176,7 +176,7 @@
         0,
         32
       ],
-      "mastHeight": 96,
+      "mastHeight": 44,
       "weaponPivot": [
         25,
         0,
@@ -199,7 +199,7 @@
           "type": "mast"
         },
         {
-          "x": 49,
+          "x": 26,
           "y": 0,
           "radius": 8,
           "type": "mast"
@@ -212,7 +212,7 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 106,
+      "mastHeight": 128,
       "weaponPivot": null
     }
   }
