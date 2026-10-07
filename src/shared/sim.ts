@@ -847,7 +847,7 @@ function updateConstruction(game: Game) {
     // owner, 10-02).
     const builders = game.units.filter((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id && workGap(unit, building) <= WORK_REACH);
     if (builders.length === 0) continue;
-    for (const builder of builders) addWorkerHammerEffect(game, builder, building);
+    for (const builder of builders) emitWorkerWork(game, builder, building);
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
     // same share of the health it started without.
     const before = building.buildProgress;
@@ -1451,7 +1451,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
     return;
   }
   if (alongside(unit, transport)) return;
-  const goal = transport.order.type === "idle" ? unit.order.berth ?? transport : transport;
+  const goal = transport.order.type === "idle" ? unit.order.berth?.shore ?? unit.order.berth ?? transport : transport;
   moveToward(unit, goal.x, goal.y, game.map, game.units);
 }
 
@@ -1466,7 +1466,9 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry) {
     if(!boat || !isUnit(boat) || boat.order.type!=="idle")continue;
     approached.add(boat.id);
     const berth=passenger.order.berth ?? boardingBerth(game.map,passenger,boat);
-    if(berth && !alongside(passenger,boat))moveToward(boat,berth.x,berth.y,game.map,game.units);
+    // The berth is a hull pose, not just a center. Discarding its heading can
+    // leave the bow offshore even after the boat reaches the correct point.
+    if(berth && !alongside(passenger,boat))sailToward(boat,berth,game.map,game.units);
   }
   for(const passenger of boarding) {
     if(passenger.order.type!=="board" || passenger.deck)continue;
@@ -1593,7 +1595,7 @@ function repairShipTick(game: Game, worker: Unit, ship: Unit) {
   if (worker.cooldown > 0) return;
   const player = playerState(game, worker.owner);
   if (player.gold < 1) return;
-  addWorkerHammerEffect(game, worker, ship);
+  emitWorkerWork(game, worker, ship);
   const fullCost = Math.max(1, Math.round(UNIT_DEFS[ship.kind].cost * REPAIR_FULL_COST_FRACTION));
   const healed = Math.max(1, ship.maxHp / fullCost);
   spendGold(game, worker.owner, 1);
@@ -1601,8 +1603,9 @@ function repairShipTick(game: Game, worker: Unit, ship: Unit) {
   worker.cooldown = seconds(healed / REPAIR_HP_PER_SECOND);
 }
 
-function addWorkerHammerEffect(game: Game, worker: Unit, target: Unit | Building) {
+function emitWorkerWork(game: Game, worker: Unit, target: Unit | Building) {
   if (game.effects.some(effect => effect.type === "repair" && effect.unitId === worker.id)) return;
+  // Actual work drives unit poses and sound, never a floating tool icon.
   // Presentation IDs must not advance the entity counter or change army ordering.
   game.effects.push({ id: `work-${worker.id}-${game.tick}`, type: "repair", x:worker.x, y:worker.y,
     duration:seconds(0.65), remaining:seconds(0.65), unitId:worker.id, fromX:target.x, fromY:target.y });
@@ -1618,7 +1621,7 @@ function repairBuildingTick(game: Game, unit: Unit, building: Building) {
   spendGold(game, owner, 1);
   building.hp = Math.min(building.maxHp, building.hp + hpPerGold);
   unit.cooldown = seconds(hpPerGold / REPAIR_HP_PER_SECOND);
-  addWorkerHammerEffect(game, unit, building);
+  emitWorkerWork(game, unit, building);
   addRepairHammerEffect(game, building);
   return true;
 }

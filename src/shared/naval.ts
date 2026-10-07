@@ -15,7 +15,7 @@ import { decksTouch, shipShorePoints } from "./connected-decks";
 // walk's matter, not the fight's); any other it reaches from where its ground comes nearest. Two land units were taken to
 // share their ground, and on the islands they do not: three riders sought a snapper 118 to 152 off across a deep channel
 // and pressed against each other on the shore for minutes, each walk ending at the same spot (pool-elderwood-4).
-export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle, units: readonly Unit[] = []) {
+export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, attacker: Unit, target: Unit | Building | Obstacle, units: readonly Unit[] = [], attackRange = attacker.attackRange) {
   const targetDeck="order" in target && target.deck && units.find(ship=>ship.id===target.deck!.shipId);
   if (attacker.deck) {
     if ("deck" in target && target.deck?.shipId === attacker.deck.shipId) return true;
@@ -24,7 +24,7 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
     if(ship && !targetDeck && shipShorePoints(ship,map).some(point=>sameGround(map,point,target,"land")))return true;
     const stand = ship && deckPlacement(ship, attacker, units, worldToLocal(ship,target), false);
     const at = ship && stand ? localToWorld(ship,stand) : attacker;
-    return ("order" in target && shipProfile(target)?distanceToHull(target,at):Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius)) <= attacker.attackRange;
+    return ("order" in target && shipProfile(target)?distanceToHull(target,at):Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius)) <= attackRange;
   }
   if (!map.terrain) return true;
   if(targetDeck && unitMover(attacker.kind)==="land" && shipShorePoints(targetDeck,map).some(point=>sameGround(map,attacker,point,"land")))return true;
@@ -32,7 +32,7 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
   if (isWalkable(map, target.x, target.y, mover) && sameGround(map, attacker, target, mover)) return true;
   // A building is reached at its wall (see @@@building-reach), a unit at its center.
   const stand = walkDestination(map, attacker, walkableGoal(map, target.x, target.y, mover), mover);
-  return ("order" in target && shipProfile(target)?distanceToHull(target,stand):Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius)) <= attacker.attackRange;
+  return ("order" in target && shipProfile(target)?distanceToHull(target,stand):Math.hypot(stand.x - target.x, stand.y - target.y) - ("order" in target ? 0 : target.radius)) <= attackRange;
 }
 
 // @@@transport - Crew remain ordinary live units on a moving deck. Circles must fit
@@ -68,13 +68,13 @@ export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
     const sea = nearestShipPose(map,transport,point);
     if(!sea)continue;
     const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
-    if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP)return {x:sea.x,y:sea.y};
+    if (Math.hypot(land.x-point.x, land.y-point.y) < 1 && distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP)return {x:sea.x,y:sea.y,heading:sea.heading,shore:land};
   }
   const land = walkDestination(map, passenger, walkableGoal(map, transport.x, transport.y));
   const sea = nearestShipPose(map,transport,walkableGoal(map,land.x,land.y,"sea"));
   if(!sea)return undefined;
   const dock={...transport,x:sea.x,y:sea.y,sailing:{heading:sea.heading,speed:0,load:0,balance:0}};
-  return distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP ? {x:sea.x,y:sea.y} : undefined;
+  return distanceToHull(dock,land)<=passenger.radius+BOARDING_GAP ? {x:sea.x,y:sea.y,heading:sea.heading,shore:land} : undefined;
 }
 
 // Where the transport's passenger number `index` of `count` steps ashore: the land nearest a point on the transport's side,
