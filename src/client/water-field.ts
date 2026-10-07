@@ -73,7 +73,7 @@ export function waterCoverPixels(terrain: Terrain): WaterCover {
     const stone = spatialNoise(environment.seed, x, y, 28, 72);
     const ridge = Math.sin(y * .17 + relief * 16 + Math.sin(x * .025) * 3);
     const rocky = Math.min(1, rock * .85 + Math.max(0, relief - .65) * 1.4);
-    const shade = .87 + relief * .17 + (stone - .5) * rocky * .3 + ridge * (1 - rocky) * .035;
+    const shade = .87 + relief * .17 + (stone - .5) * rocky * .3 + ridge * (1 - rocky) * .08;
     const i = (row * width + col) * 4;
     for (let channel = 0; channel < 3; channel++) {
       const bed = (sand[channel]! * (1 - rocky) + stoneColour[channel]! * rocky) * shade;

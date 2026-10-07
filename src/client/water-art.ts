@@ -27,11 +27,11 @@ function rippleTile() {
   const ctx = ripple.getContext('2d')!, pixels = ctx.createImageData(TILE, TILE);
   for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
     const slope = waterSlope(x / TILE, y / TILE, 0);
-    const light = Math.min(1, Math.max(0, .92 - slope.x * .55 - slope.y * .8) / Math.sqrt(1 + slope.x * slope.x + slope.y * slope.y));
-    const specular = Math.pow(Math.max(0, light), 30);
+    const light = Math.min(1, Math.max(0, .258 * slope.x + .833 - .489 * slope.y) / Math.sqrt(1 + slope.x * slope.x + slope.y * slope.y));
+    const specular = Math.pow(light, 48);
     const i = (y * TILE + x) * 4;
     pixels.data[i] = 200; pixels.data[i + 1] = 225; pixels.data[i + 2] = 214;
-    pixels.data[i + 3] = Math.round(Math.min(.07, specular * .05 + Math.max(0, slope.y) * .025) * 255);
+    pixels.data[i + 3] = Math.round(specular * .075 * 255);
   }
   ctx.putImageData(pixels, 0, 0);
   return ripple;
