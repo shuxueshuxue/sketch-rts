@@ -30,7 +30,14 @@
 .selected-map-summary strong { color:var(--title); font:22px/1.25 var(--font-display); overflow-wrap:anywhere; }
 .selected-map-summary [data-map-summary] { color:var(--ink-soft); font-size:12px; margin-top:6px; }
 .create-options { display:grid; gap:16px; padding-top:16px; border-top:1px solid var(--rule); }
-.create-options input:not([type=checkbox]) { box-sizing:border-box; width:100%; min-width:0; height:34px; }
+.create-options input[type=text],.create-options input:not([type]) { box-sizing:border-box; width:100%; min-width:0; height:34px; }
+.game-mode-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; min-width:0; margin:0; padding:0; border:0; }
+.game-mode-switch legend { padding:0 0 6px; }
+.game-mode-switch label { position:relative; min-width:0; cursor:pointer; }
+.game-mode-switch input { position:absolute; width:1px; height:1px; opacity:0; }
+.game-mode-switch span { display:grid; place-items:center; min-height:34px; padding:0 8px; border:1px solid var(--game-edge); background:var(--game-field); color:var(--game-muted); white-space:nowrap; }
+.game-mode-switch input:checked + span { background:var(--game-button); color:var(--game-button-ink); border-color:var(--game-brass); box-shadow:var(--game-inset); }
+.game-mode-switch input:focus-visible + span { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
 .match-dossier .map-detail { display:grid; grid-template-rows:minmax(0,1fr) auto; min-height:0; gap:16px; }
 .match-dossier .map-info { padding:0; border:0; background:none; box-shadow:none; gap:16px; }
 .match-dossier .map-info-name { font-size:22px; }
@@ -75,7 +82,6 @@
  .match-dossier .map-preview-frame { width:100%; }
  .selected-map-summary strong { font-size:17px; }
  .create-options { grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; align-items:end; padding:0; border:0; }
- .create-options .checkbox-row { min-height:34px; }
  .room-setup .match-dossier { grid-template-columns:minmax(0,1fr); }
  .match-dossier .map-detail { display:flex; align-items:center; gap:14px; }
  .match-dossier .map-info { gap:0; }

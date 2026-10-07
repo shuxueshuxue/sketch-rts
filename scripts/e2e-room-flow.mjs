@@ -144,7 +144,7 @@ async page => {
   must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.actionsBelow, "rooms browser should show the room list with its actions below: " + JSON.stringify(roomBrowserLayoutProof));
   await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  must((await page.locator("[data-create-game-form] input[name='privateRoom']").isChecked()) === true, "new rooms should default to private/local shape");
+  must((await page.locator("[data-create-game-form] input[name='gameMode'][value='singlePlayer']").isChecked()) === true, "new games should default to single-player");
   await page.locator("[data-map-entries] [data-map-id='pineshade']").click();
   must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "map chooser did not show the chosen pool map");
   await page.locator("[data-submit-create-game]").click();
@@ -177,7 +177,7 @@ async page => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return { visibility: room.visibility, mapId: room.mapId, slots: room.slots.length };
   }, roomSetupId);
-  must(privateRoomProof.visibility === "private", "private checkbox did not create a private room: " + JSON.stringify(privateRoomProof));
+  must(privateRoomProof.visibility === "private", "single-player switch did not create a local room: " + JSON.stringify(privateRoomProof));
   must(privateRoomProof.mapId === "pineshade" && privateRoomProof.slots === 2, "create form did not create a room on the chosen pool map with its seats: " + JSON.stringify(privateRoomProof));
   const privateLobbyProof = await page.evaluate(async (roomId) => {
     const profile = JSON.parse(localStorage.getItem("sketch-rts-user"));
@@ -411,7 +411,7 @@ async page => {
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   await page.locator("[data-create-room]").click();
   await page.waitForSelector("[data-create-game-form]", { timeout: 5000 });
-  await page.locator("[data-create-game-form] input[name='privateRoom']").uncheck();
+  await page.locator("[data-create-game-form] .game-mode-switch label").filter({ has: page.locator("input[value='multiplayer']") }).click();
   await page.locator("[data-map-entries] [data-map-id='twoShores']").click();
   await page.locator("[data-submit-create-game]").click();
   await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
