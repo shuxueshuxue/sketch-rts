@@ -778,8 +778,8 @@ function draftRoom() {
 
 function selectedMapMarkup() {
   return `<div class="selected-map-summary">
-    <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="256" height="256"></canvas></div>
-    <div><strong data-map-name></strong><div data-map-summary></div></div>
+    <div class="selected-map-caption"><strong data-map-name></strong><div data-map-summary></div></div>
+    <div class="map-preview-space"><div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="256" height="256"></canvas></div></div>
   </div>`;
 }
 
@@ -799,7 +799,6 @@ function renderCreateGameMenu() {
     ${selectedMapMarkup()}
     <div class="create-options">
       <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
-      <label>${escapeHtml(t("roomCreate.seed"))}<input name="seed" maxlength="128" value="${escapeHtml(pendingRoomConfiguration.layoutSeed)}" required /></label>
       <label class="checkbox-row"><input name="privateRoom" type="checkbox" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /> ${escapeHtml(t("roomCreate.private.label"))}</label>
     </div>
     </aside>
@@ -815,8 +814,6 @@ function renderCreateGameMenu() {
   const syncDraft = () => {
     pendingRoomConfiguration.name = form.querySelector<HTMLInputElement>("[name=name]")!.value;
     pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=privateRoom]")!.checked ? "private" : "public";
-    const seed = form.querySelector<HTMLInputElement>("[name=seed]")!.value;
-    if (seed.trim()) pendingRoomConfiguration.layoutSeed = seed;
     setRoomRoute({ screen: "create", configuration: pendingRoomConfiguration }, true);
   };
   const renderSeats = () => {
@@ -829,8 +826,7 @@ function renderCreateGameMenu() {
       renderSeats();
     })));
   };
-  for (const selector of ["[name=name]", "[name=privateRoom]", "[name=seed]"]) form.querySelector(selector)!.addEventListener("input", syncDraft);
-  form.querySelector("[name=seed]")!.addEventListener("change", renderSeats);
+  for (const selector of ["[name=name]", "[name=privateRoom]"]) form.querySelector(selector)!.addEventListener("input", syncDraft);
   renderSeats();
   form.addEventListener("submit", event => {
     event.preventDefault();
@@ -852,7 +848,7 @@ function poolSeatCounts(mapId: MapId) {
 function mapDetailMarkup() {
   return `
     <section class="map-detail">
-      <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div>
+      <div class="map-preview-space"><div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div></div>
       <div class="map-info">
         <div class="map-info-name" data-map-name></div>
         <dl class="map-facts" data-map-facts></dl>
