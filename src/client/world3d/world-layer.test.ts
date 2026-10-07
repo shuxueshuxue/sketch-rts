@@ -13,6 +13,8 @@ vi.mock('three',async importOriginal=>{
 });
 import {World3DLayer} from './world-layer';
 import {projectWorld} from './projection';
+import {createRoom,roomToGameSetup} from '../../shared/rooms';
+import {createGame} from '../../shared/sim';
 import {createShipWebglScene} from '../../recorder/scenes/ship-webgl';
 import {snapshotGame} from '../../shared/sim';
 import {UNIT_DEFS} from '../../shared/catalog';
@@ -22,7 +24,7 @@ import {UnitAnimationTracker} from '../unit-animation';
 import {UnitMotionSmoother} from '../unit-motion';
 import {setScratchCanvasFactory} from '../art/scratch-canvas';
 import type {WorldFrame} from '../world-renderer';
-import {InstancedMesh,MeshBasicMaterial} from 'three';
+import {InstancedMesh,MeshBasicMaterial,Mesh,DataTexture,ShaderMaterial} from 'three';
 
 afterEach(()=>vi.unstubAllGlobals());
 function setup(){
@@ -36,6 +38,33 @@ function setup(){
   return{game,ship,frame,layer:World3DLayer.create({} as HTMLCanvasElement,{} as WebGL2RenderingContext)};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
+  it('binds water to the rendered match rather than the smaller home snapshot used for preloading', async () => {
+    const {frame,layer}=setup();
+    const home=frame.snapshot;
+    const {options}=roomToGameSetup(createRoom({id:'water-lifecycle',host:{id:'host',name:'Host'},mapId:'sapphireArchipelago',humanCount:1,aiCount:5}));
+    const match=snapshotGame(createGame('sapphireArchipelago',{...options,aiPlayers:[]}));
+    frame.snapshot={...match,units:[],buildings:[],effects:[],mercenaryCamps:[],shops:[]};
+    await layer.prepare(home,'match'); // Production resource preload uses the home snapshot.
+    layer.draw(frame);
+    const water=gpu.scene!.getObjectByName('WaterSurface') as Mesh<never,ShaderMaterial>;
+    const terrain=match.map.terrain!;
+    expect(terrain.cols*terrain.cell).toBeGreaterThan(home.map.width);
+    expect(water.scale.x).toBe(terrain.cols*terrain.cell);
+    expect(water.scale.z).toBe(terrain.rows*terrain.cell);
+    const texture=water.material.uniforms.shore!.value as DataTexture;
+    expect(texture.image.width).toBe(terrain.cols);
+    expect(texture.image.height).toBe(terrain.rows);
+    const disposal=vi.spyOn(texture,'dispose');
+    layer.draw({...frame,now:16,view:{...frame.view,x:0,y:0}});
+    expect(water.material.uniforms.shore!.value).toBe(texture);
+    await layer.prepare(home,'home'); // An asynchronous preload must not replace the active ocean.
+    layer.draw({...frame,now:32});
+    expect(water.material.uniforms.shore!.value).toBe(texture);
+    expect(disposal).not.toHaveBeenCalled();
+    layer.reset();layer.draw({...frame,snapshot:{...frame.snapshot,map:{...match.map,terrain:{cols:4,rows:4,cell:32,cells:'.'.repeat(16)}}}});
+    expect(disposal).toHaveBeenCalledOnce();expect(water.visible).toBe(false);
+    layer.dispose();
+  });
   it('reveals only the selected ship sails, including selection through its crew',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
     const crew=game.units.find(unit=>unit.deck?.shipId===ship.id)!;
