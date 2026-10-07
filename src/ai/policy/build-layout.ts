@@ -1,3 +1,4 @@
+import { miningHallSite } from "../../shared/mining-site";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { isWalkable } from "../../shared/terrain";
@@ -228,6 +229,13 @@ export function defensiveRallyPoint(snapshot: GameSnapshot, owner: PlayerId): Po
 }
 
 export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, preferred: Point): Point {
+  if (kind === "townHall") {
+    const mine = nearestEntity(snapshot.resources.filter(resource => resource.amount > 0), preferred);
+    if (mine && distance(mine, preferred) <= 320) {
+      const site = miningHallSite(snapshot, mine, preferred);
+      if (site) return site;
+    }
+  }
   if (roomyPlacement(snapshot, kind, preferred)) return preferred;
   // @@@placement-candidates - AI layout should avoid illegal foundations before the sim has to reject the command.
   const offsets = [72, 104, 140, 180, 230, 290, 360, 440, 520, 640, 800, 1_000].flatMap((radius) =>

@@ -1,3 +1,4 @@
+import { miningHallSite } from "../../shared/mining-site";
 import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import {combatCapability} from '../../shared/combat-capabilities';
 import {navalServices} from './naval-services';
@@ -736,15 +737,7 @@ function islandHallOf(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan)
     return buildings(snapshot, owner).find((building) => building.kind === "townHall" && distance(building, plan.mine) <= 320);
 }
 function hallSite(snapshot: GameSnapshot, mine: Point): Point | undefined {
-    for (let reach = 140; reach <= 220; reach += 20) {
-        for (let spoke = 0; spoke < 16; spoke += 1) {
-            const angle = (spoke / 16) * Math.PI * 2;
-            const at = { x: Math.round(mine.x + Math.cos(angle) * reach), y: Math.round(mine.y + Math.sin(angle) * reach) };
-            if (sameGround(snapshot.map, at, mine) && isBuildPlacementClear(snapshot, "townHall", at))
-                return at;
-        }
-    }
-    return undefined;
+    return miningHallSite(snapshot,mine);
 }
 // The plans below are found once per owner, and looked for again every PLAN_RETRY: an island's while none is found (its
 // shore may have been built over, or its halls may since stand by another water), the enemy's door always (its buildings

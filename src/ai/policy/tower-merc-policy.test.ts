@@ -881,7 +881,7 @@ describe("V4-TR tower mercenary policy", () => {
 
     expect(townHall).toMatchObject({ type: "build", unitId: "builder", buildingKind: "townHall" });
     if (!townHall || townHall.type !== "build") throw new Error("missing townHall command");
-    expect(Math.hypot(townHall.x - 1_410, townHall.y - 590)).toBeLessThan(160);
+    expect(Math.hypot(townHall.x - 1_410, townHall.y - 590)).toBeLessThan(260);
     expect(Math.hypot(townHall.x - 1_010, townHall.y - 590)).toBeGreaterThan(220);
   });
 });

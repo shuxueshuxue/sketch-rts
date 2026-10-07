@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
@@ -394,7 +395,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
-  const oversaturatedWorkers = workers.filter((unit) => unit.order.type === "mine" && (assignmentCounts.get(unit.order.resourceId) ?? 0) > 5);
+  const oversaturatedWorkers = workers.filter((unit) => unit.order.type === "mine" && !unit.mineSlot && (assignmentCounts.get(unit.order.resourceId) ?? 0) > GOLD_MINE_RULES.workstations);
   const bases = completeBuildings(snapshot, owner, "townHall");
   const assignableWorkers = [...idleWorkers, ...oversaturatedWorkers];
   // @@@v9-no-feed - V9 sends no workers to the hall nearest its intrusion: with eight workers on the main mine and four on
@@ -417,12 +418,12 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const mine = localActiveMineForBase(snapshot, base);
     if (!mine) continue;
     const assigned = assignmentCounts.get(mine.id) ?? 0;
-    if (assigned >= 5) continue;
+    if (assigned >= GOLD_MINE_RULES.workstations) continue;
     const candidates = nearestEntities(
       assignableWorkers.filter((worker) => (worker.order.type !== "mine" || worker.order.resourceId !== mine.id) && sameGroundAs(snapshot, worker, mine)),
       base,
     );
-    const selected = candidates.slice(0, 5 - assigned);
+    const selected = candidates.slice(0, GOLD_MINE_RULES.workstations - assigned);
     if (selected.length > 0) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: selected.map((worker) => worker.id), resourceId: mine.id }, options);
   }
 
@@ -3274,7 +3275,7 @@ function saturatedMineWorkerIds(snapshot: GameSnapshot, owner: PlayerId, options
     const mine = aiSnapshotQuery(snapshot).resourceById(resourceId);
     if (!mine) continue;
     // @@@mine-saturation-preserve - A mine only pays up to five workers; keep those miners working instead of evacuating the income base.
-    for (const worker of nearestEntities(miners, mine).slice(0, 5)) preserved.add(worker.id);
+    for (const worker of nearestEntities(miners, mine).slice(0, GOLD_MINE_RULES.workstations)) preserved.add(worker.id);
   }
   return preserved;
 }
