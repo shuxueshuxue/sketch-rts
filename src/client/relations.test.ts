@@ -95,3 +95,12 @@ it('treats an empty hostile deck as walkable ground while defenders remain attac
   const defender=game.spawnUnit('enemy','footman',enemy.x,enemy.y);boardUnit(enemy,defender,game.units);syncDecks(game.units);
   expect(targetCommand(snapshotGame(game),'player',[crew],{kind:'unit',unit:defender})).toMatchObject({type:'attack',targetId:defender.id});
 });
+
+describe("gold mine click boundaries", () => {
+  it("leaves bare ground beside the mine available for movement", () => {
+    const game=createGame("bareDuel");game.units=[];game.buildings=[];game.items=[];game.obstacles=[];
+    const mine=game.resources[0]!;
+    expect(pointerTarget(snapshotGame(game),mine)?.kind).toBe("resource");
+    for(const dx of [-83,-55,55,83])expect(pointerTarget(snapshotGame(game),{x:mine.x+dx,y:mine.y})).toBeUndefined();
+  });
+});

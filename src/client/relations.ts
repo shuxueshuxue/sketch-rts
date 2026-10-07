@@ -1,4 +1,5 @@
 import { shipNeedsRepair } from "../shared/ship-equipment";
+import { GOLD_MINE_RULES } from "../shared/mining";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
 import { deckVisualHeight } from "./art/canvas-ships";
@@ -63,11 +64,8 @@ export type PointerTarget =
   | { kind: "building"; building: Building }
   | { kind: "obstacle"; obstacle: Obstacle };
 
-// @@@pointer-target - What the pointer is on, as in Warcraft III: of everything whose reach takes the pointer in (an item
-// or a unit 34 from its middle, a building its body, a mine 84, rocks or a gate their body and 8), the one whose middle is
-// nearest. A unit at a mine's foot is the unit while the pointer is on it, the mine while the pointer is on the mine.
-// Right-clicks and rally points (see @@@context-target), the hover ring and the attack cursor all go by it. A mine's
-// reach took a worker's right-click on any unit beside it as an order to mine.
+// @@@pointer-target - Choose the nearest visible body under the pointer. Resource reach is its actual body,
+// so ground beside a mine stays a move target and nearby workers remain individually selectable.
 export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources" | "units" | "buildings" | "obstacles">, world: Point): PointerTarget | undefined {
   let nearest: { target: PointerTarget; gap: number } | undefined;
   const consider = (at: Point, reach: number, target: PointerTarget) => {
@@ -75,7 +73,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
     if (gap < reach && (!nearest || gap < nearest.gap)) nearest = { target, gap };
   };
   for (const item of snapshot.items) if (!item.carrierId && !item.shipId) {const ship=item.deck && snapshot.units.find(ship=>ship.id===item.deck!.shipId);consider({x:item.x,y:item.y-(ship?deckVisualHeight(ship):0)}, 34, { kind: "item", item });}
-  for (const resource of snapshot.resources) consider(resource, 84, { kind: "resource", resource });
+  for (const resource of snapshot.resources) consider(resource, GOLD_MINE_RULES.radius, { kind: "resource", resource });
   for (const unit of snapshot.units) if (!isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit), UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && (distanceToHull(unit, world) < 8 || distanceToHull(unit,{x:world.x,y:world.y+deckVisualHeight(unit)}) < 8)) consider(unit, Infinity, { kind: "unit", unit });
   for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });

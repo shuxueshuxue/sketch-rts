@@ -1,3 +1,4 @@
+import { miningHallSite } from "../../shared/mining-site";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../shared/types";
 import { ownUnitLookup } from "../../shared/unit-lookup";
@@ -44,7 +45,9 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   if (intent.type === "repairShip") return { type: "repairShip", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), targetId: intent.targetId };
   if (intent.type === "expand") {
     const resource = expansionResource(snapshot, owner, intent.resourceId);
-    return { type: "build", unitId: intent.unitId ?? nearestWorkerId(snapshot, owner, resource), buildingKind: "townHall", x: resource.x, y: resource.y };
+    const site=miningHallSite(snapshot,resource);
+    if(!site)throw new Error(`No legal town hall site near ${resource.id}`);
+    return { type: "build", unitId: intent.unitId ?? nearestWorkerId(snapshot, owner, site), buildingKind: "townHall", ...site };
   }
   if (intent.type === "creepCamp") {
     const point = creepCampPoint(snapshot, owner, intent.campId, options);

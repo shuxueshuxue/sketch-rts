@@ -2,7 +2,7 @@ import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
 import { shipPassengers, shipProfile } from "../../shared/ship-geometry";
 import { shipNeedsRepair } from "../../shared/ship-equipment";
-import { sameGround } from "../../shared/terrain";
+import { sameGround, walkableGoal } from "../../shared/terrain";
 import type {
   GameCommand,
   GameSnapshot,
@@ -145,10 +145,12 @@ export function navalServices(
       building.kind === "shipyard" &&
       building.complete,
   );
+  const harborGround = dock && walkableGoal(snapshot.map, dock.x, dock.y, "land");
   const workers = own.filter(
     (crew) =>
       crew.kind === "worker" &&
       !crew.deck &&
+      Boolean(harborGround && sameGround(snapshot.map, crew, harborGround)) &&
       ["idle", "mine"].includes(crew.order.type),
   );
   if (dock && ships.length >= 2 && workers.length >= 7) {
@@ -170,6 +172,7 @@ export function navalServices(
         .filter(
           (worker) =>
             !result.reserved.has(worker.id) &&
+            !worker.mineSlot &&
             distance(worker, dock) < 650 &&
             canBoard(ship, worker, snapshot.units),
         )

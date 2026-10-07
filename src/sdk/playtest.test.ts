@@ -1,3 +1,5 @@
+import { isBuildPlacementClear } from "../shared/build-placement";
+import { snapshotGame } from "../shared/sim";
 import { describe, expect, it } from "vitest";
 import {
   applyInteractivePlaytestCommand,
@@ -257,12 +259,16 @@ describe("interactive playtest SDK", () => {
     });
 
     applyInteractivePlaytestCommand(session, { type: "expand", resourceId: "gold-natural" });
-    expect(session.game.units.find(unit => unit.id === "v2-worker")?.order).toMatchObject({ type: "build", buildingKind: "townHall", x: 760, y: 760 });
+    const order=session.game.units.find(unit=>unit.id==="v2-worker")!.order;
+    expect(order).toMatchObject({type:"build",buildingKind:"townHall"});
+    if(order.type!=="build")throw new Error("missing expansion order");
+    expect(isBuildPlacementClear(snapshotGame(session.game),"townHall",order)).toBe(true);
+    expect(Math.hypot(order.x-760,order.y-760)).toBeLessThan(260);
     expect(session.game.buildings).toHaveLength(2);
     stepInteractivePlaytestSession(session, 200);
     expect(session.game.buildings.find((building) => building.owner === "v2" && building.kind === "townHall" && building.id !== "v2-main")).toMatchObject({
-      x: 760,
-      y: 760,
+      x: order.x,
+      y: order.y,
       complete: false,
     });
 

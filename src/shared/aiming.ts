@@ -8,7 +8,7 @@ export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
 export const AIM_SPEED_MULTIPLIER = 2 / 3;
 
 export function aimingProfile(rules: UnitDef) {
-  if (rules.naval || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
+  if (rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD) return undefined;
   return {
     speed: (rules.aimSpeed ?? (rules.weapon?.delivery === "shell" ? 400 : 480)) * AIM_SPEED_MULTIPLIER,
     moveTolerance: rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE,

@@ -57,13 +57,13 @@ Hosted mode serves the game and owns the shared room control plane:
 
 The hosted path is the right target for LAN play, public multiplayer, SDK-controlled matches, and benchmark dashboards.
 
-Hosted room pages use hash routing inside the browser, for example:
+Hosted room pages use query parameters in the browser URL, for example:
 
 ```text
-https://example.com/sketch-rts/#room=room-id
+https://example.com/sketch-rts/?room=room-id
 ```
 
-That keeps deployment simple under subpaths such as `/sketch-rts/`: the server only needs to serve the app and API under the mounted base path, while the browser keeps enough room identity to refresh or rejoin without a separate route table.
+The configuration URL also encodes the selected map and seat settings before a room exists. The room URL identifies the created room. Both refresh under the mounted base path; sharing uses the address bar directly.
 
 ## SDK
 
@@ -169,7 +169,7 @@ The benchmark path is deliberately close to the real SDK/runtime path. It should
 
 ## Available Opponents
 
-Room setup offers V5 (a shooter-based hybrid policy), V7 (race-aware play) and V8 (melee, healing and cavalry). V9 is an experimental 1v3 benchmark opponent; earlier versions remain available in the benchmark tools. Historical win rates do not describe current balance.
+Room setup offers V5, V7 and V8, with different production and combat priorities and shared physical naval services. Choose a faction to select an AI version explicitly; a random faction uses a random compatible policy. V9 is an experimental 1v3 benchmark opponent; earlier versions remain available in the benchmark tools. Historical win rates do not describe current balance.
 
 For the V9 gauntlet and native naval self-play:
 
@@ -191,7 +191,7 @@ TypeScript reports a missing card, and `src/client/content/cards.test.ts` checks
 
 ## Sound packs
 
-The game is silent until a sound pack is chosen in **Settings → Sound pack**. A pack is a folder `audio-packs/<id>/` with a `pack.json` and the files it names:
+The build or hosted manifest can select a default sound pack. Players choose a different pack, volume or silence in **Settings → Sound pack**. A pack is a folder `audio-packs/<id>/` with a `pack.json` and the files it names:
 
 ```json
 {
@@ -204,16 +204,16 @@ The game is silent until a sound pack is chosen in **Settings → Sound pack**. 
 }
 ```
 
-The events are `melee`, `arrowShot`, `arrowHit`, `death`, `construction` (a building placed), `built`, `buildingDown` and `click`; an event a pack leaves out is silent. An event plays one recording, or one per unit kind of whoever caused it (`kinds`). `volume` 1 is as recorded, `pitch` is how far each play may stray (0.08 is 8%), and `max` is how many plays of the event may sound at once.
+Events and their types are defined in [`src/client/sound.ts`](../src/client/sound.ts). Menu navigation and button clicks are separate events. Combat sounds follow the actual attack presentation: arrows, cannon, mortar, bolts, flame, stone and magic do not share a generic cannon recording. Use one recording per interface operation; selection and order character voices are suppressed.
 
-There are two ways for a game to find packs:
+A pack can provide a single recording or recordings by source unit `kinds`. `volume` scales the recording, `pitch` permits pitch variation, and `max` caps simultaneous playback. Missing events remain silent.
 
 - **Built in:** packs under `audio-packs/` are found when the game is built or served. The repository carries only `audio-packs/cc0`; git ignores every other folder there. `VITE_SOUND_PACK=<id>` picks the pack played until the player chooses one.
 - **Served:** the client also reads `audio-packs/served.json` next to the page — `{"packs": ["<id>"], "default": "<id>"}` — and loads the listed packs from the folders beside it. The repository's file lists none; a server puts its own folder at that path to offer packs without a new build, and withdraws one by removing it from the list.
 
 ## Recording clips
 
-`npm run record` films a scene in Node, with no browser: it runs the match on the game's command-frame runtime and draws every frame with the client's own world renderer.
+`npm run record` films a scene in Node, with no browser: it runs the match on the game's command-frame runtime and draws every frame with the Canvas world renderer. It does not capture the WebGL model layer. Capture the browser on a WebGL2-capable device for full in-game 3D footage.
 
 ```bash
 npm run record -- --list
@@ -222,3 +222,11 @@ npm run record -- --scene cavalry-flank --follow 'owner=north,kind=raider|knight
 ```
 
 A scene module exports a `RecordingScene` ([`src/recorder/scene.ts`](../src/recorder/scene.ts)); the built-in scenes in [`src/recorder/scenes/`](../src/recorder/scenes/) are worked examples. `npm run record -- --help` lists every option.
+
+README battle footage can be reproduced with:
+
+```bash
+node --import tsx src/recorder/cli.ts --scene infantry-clash --from 3 --seconds 9 --fps 12 --size 960x540 --out clip.mp4 --out clip.gif --gif-size 768x432
+```
+
+Gold mines reserve five workstations across the gather-and-return cycle. Rates are defined in `src/shared/mining.ts` in seconds; a depleted mine still delivers its final carried batch. Building clearance and pointer reach use the same resource body radius. Ordinary building foundations require dry ground; shipyards use the separate shoreline rule.

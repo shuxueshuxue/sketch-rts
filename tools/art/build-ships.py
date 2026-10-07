@@ -143,7 +143,7 @@ def build_in_blender():
                 h = spec["mastHeight"]
                 cylinder("mast footing", (x, y, z+1.4), r, 2.8, iron, upper)
                 cylinder("mast", (x, y, z+h/2), 2.2, h, edge, upper)
-                if kind in ("cutter", "fireShip"):
+                if kind in ("cutter", "fireShip", "bombardShip"):
                     # An aft-raked lateen rig, deliberately distinct from the
                     # square-rigged fighting ships; the foredeck stays visible.
                     spar("lateen yard", (x-20, -beam*.35, z+h*.92),
@@ -151,6 +151,11 @@ def build_in_blender():
                     mesh("lateen sail", [(x-19,-beam*.34,z+h*.90),
                          (x+39,beam*.39,z+h*.31),(x+18,-beam*.22,z+h*.24)],
                          [(0,1,2)],canvas,upper)
+                elif kind == "transport":
+                    # A broad, low lug sail over the aft cargo quarter. No tall fighting rig.
+                    spar("lug yard", (x-17,-beam*.43,z+h*.90), (x+13,beam*.43,z+h*.79),1.3,edge,upper)
+                    mesh("cargo lug sail",[(x-17,-beam*.42,z+h*.88),(x+13,beam*.42,z+h*.77),
+                         (x+20,beam*.35,z+h*.28),(x-5,-beam*.32,z+h*.30)],[(0,1,2,3)],canvas,upper)
                 else:
                     cylinder("lower yard", (x, y, z+h*.68), 1.2, beam*1.10, edge, upper, (math.pi/2, 0, 0))
                     # A curved sail gives a readable silhouette from every direction.
@@ -184,9 +189,15 @@ def build_in_blender():
                 for side in (-1, 1):
                     spar("mast shroud", (x, y, z+h*.72), (x-12, y+side*beam*.40, z+8), .45, dark, upper)
                     spar("sail sheet", (x, y+side*beam*.46, z+h*.22), (x+25, side*beam*.35, z+8), .45, dark, upper)
-                spar("forestay", (x, 0, z+h*.96), (length*.61, 0, z+21), .5, dark, upper)
-                # Broad cloth, rigging and a sterncastle remain readable at gameplay scale.
-                mesh("forward staysail", [(x+3, 0, z+h*.78), (length*.57, 0, z+24), (x+24, 0, z+24)], [(0, 1, 2)], canvas, upper)
+                if kind in ("cutter", "warship", "carrier"):
+                    spar("forestay", (x, 0, z+h*.96), (length*.61, 0, z+21), .5, dark, upper)
+                # Bow artillery requires open sky as well as clearance at the mast footing.
+                if kind == "cutter":
+                    mesh("light jib", [(x+3,0,z+h*.78),(length*.57,0,z+24),(x+24,0,z+24)],[(0,1,2)],canvas,upper)
+                if kind == "carrier":
+                    cylinder("lookout platform",(x,0,z+h*.72),9,2,wood,upper)
+                    for side in (-1,1):
+                        spar("lookout rail",(x-7,side*6,z+h*.72+6),(x+7,side*6,z+h*.72+6),.7,edge,upper)
             elif obstacle["type"] == "cabin":
                 height = {"cutter": 9, "fireShip": 12, "transport": 17, "bombardShip": 15, "warship": 22, "carrier": 30}[kind]
                 box("sterncastle", (x, y, z+height/2), (r*1.5, r*1.35, height), wood, upper)
@@ -216,10 +227,18 @@ def build_in_blender():
                     spar("fuel feed", (x+14,yy,z+9), (x+22,0,z+6), 1.6, brass, weapon)
                 cylinder("flame nozzle", (x+26, 0, z+6), 4, 32, iron, weapon, (0, math.pi/2, 0))
                 cylinder("projector mouth", (x+42,0,z+6), 5, 3, brass, weapon, (0, math.pi/2, 0))
+        if kind == "cutter":
+            for side in (-1,1):
+                for x in (-12,4):
+                    spar("lashed spare oar",(x-14,side*beam*.36,z+9),(x+14,side*beam*.38,z+10),.7,edge,upper)
+        if kind == "fireShip":
+            box("heat shield",(length*.17,0,z+.6),(length*.37,beam*.53,1.2),iron,base)
+            for side in (-1,1):
+                box("copper waterline plating",(-length*.10,side*beam*.43,z*.55),(length*.55,2,z*.45),brass,base)
         if kind == "transport":
-            box("flush cargo hatch", (length*.03, 0, z+.4), (length*.22, beam*.44, .8), dark, base)
+            box("flush cargo hatch", (length*.03, 0, z+.4), (length*.37, beam*.50, .8), dark, base)
             for offset in (-beam*.15, 0, beam*.15):
-                box("hatch grating", (length*.03, offset, z+1), (length*.21, .6, .5), edge, base)
+                box("hatch grating", (length*.03, offset, z+1), (length*.36, .6, .5), edge, base)
         if kind in ("warship", "carrier"):
             for side in (-1, 1):
                 for x in (-length*.23, 0, length*.22):

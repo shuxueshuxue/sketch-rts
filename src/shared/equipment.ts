@@ -96,7 +96,7 @@ export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
     const base = unitRules(snapshot, unit), kit = defaultKits.get(unit);
     if (kit && kit.items === snapshot.items && kit.item.id === unit.hands?.right && kit.item.carrierId === unit.id && kit.item.kind === 'issuedWeapon' && kit.item.weaponKind === unit.kind)
         return base;
-    if (SHIP_KINDS.includes(unit.kind as never) && unit.fittings) {
+    if (SHIP_KINDS.includes(unit.kind as never) && unit.fittings && !base.intrinsicAttack) {
         const weapon = (itemIndex(snapshot.items).byShip.get(unit.id) ?? []).filter(item => item.mountId && isShipEquipment(item.kind) && (item.durability ?? 1) > 0).sort((a, b) => SHIP_WEAPONS[b.kind as keyof typeof SHIP_WEAPONS].range - SHIP_WEAPONS[a.kind as keyof typeof SHIP_WEAPONS].range)[0];
         if (weapon) {
             const profile = SHIP_WEAPONS[weapon.kind as keyof typeof SHIP_WEAPONS];

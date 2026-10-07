@@ -221,6 +221,8 @@ export type Unit = {
   deckScale?: number;
   radius: number;
   carryingGold: number;
+  /** Reserved gold-mine workstation, released when the haul order ends. */
+  mineSlot?: string;
   kills: number;
   xp: number;
   level: number;
