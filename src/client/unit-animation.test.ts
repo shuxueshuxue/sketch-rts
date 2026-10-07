@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { IDLE_FRAME, UnitAnimationTracker } from "./unit-animation";
-import type { Unit } from "../shared/types";
+import type { Unit, WorldEffect } from "../shared/types";
 
 const soldier = (overrides: Partial<Unit> = {}): Unit => ({
   id: "soldier", owner: "player", kind: "footman", x: 100, y: 100,
@@ -9,6 +9,10 @@ const soldier = (overrides: Partial<Unit> = {}): Unit => ({
   kills: 0, xp: 0, level: 0, effects: [], order: { type: "idle" }, ...overrides,
 });
 const snap = (tick: number, ...units: Unit[]) => ({ tick, units });
+const work = (worker: Unit, remaining = 13): WorldEffect => ({
+  id: 'stroke', type: 'repair', unitId: worker.id, x: worker.x, y: worker.y,
+  duration: 13, remaining,
+});
 
 describe("unit pose history", () => {
   it("keeps carried crew idle while their ship translates and turns, but animates real deck walking",()=>{
@@ -69,6 +73,34 @@ describe("unit pose history", () => {
     tracker.update(snap(1, { ...worker, cooldown: 12 }, { ...knight, abilityCooldowns: { charge: 100 } }), 50);
     expect(tracker.frame(worker, 60)).toEqual(IDLE_FRAME);
     expect(tracker.frame(knight, 60)).toEqual(IDLE_FRAME);
+  });
+
+  it("plays a real work stroke, preserves its age and freezes with the simulation", () => {
+    const tracker = new UnitAnimationTracker();
+    const worker = soldier({ kind: 'worker', order: {type:'repair', buildingId:'hall'} });
+    tracker.update({...snap(10, worker), effects:[work(worker)]}, 0);
+    expect(tracker.frame(worker, 0)).toEqual({mode:'work', frame:0});
+    tracker.update({...snap(16, worker), effects:[work(worker, 7)]}, 300);
+    expect(tracker.frame(worker, 300)).toEqual({mode:'work', frame:2});
+    expect(tracker.frame(worker, 350)).toEqual(tracker.frame(worker, 10_000));
+    tracker.update({...snap(24, worker), effects:[]}, 700);
+    expect(tracker.frame(worker, 700)).toEqual(IDLE_FRAME);
+  });
+
+  it("animates an idle deck engineer repairing, but cancels work on walking or stun", () => {
+    const tracker = new UnitAnimationTracker();
+    const worker = soldier({ kind:'worker', deck:{shipId:'boat',x:0,y:0} });
+    tracker.update({...snap(1, worker), effects:[work(worker)]}, 0);
+    expect(tracker.frame(worker, 0).mode).toBe('work');
+    const carried = {...worker, x:110, y:110};
+    tracker.update({...snap(2, carried), effects:[work(carried, 12)]}, 50);
+    expect(tracker.frame(carried, 50).mode).toBe('work');
+    const walking = {...carried, deck:{shipId:'boat',x:3,y:0}};
+    tracker.update({...snap(3, walking), effects:[work(walking, 11)]}, 100);
+    expect(tracker.frame(walking, 100).mode).toBe('walk');
+    const stunned = {...walking, effects:[{type:'stun' as const,remaining:4}]};
+    tracker.update({...snap(4, stunned), effects:[work(stunned, 10)]}, 150);
+    expect(tracker.frame(stunned, 150)).toEqual(IDLE_FRAME);
   });
 
   it("freezes on stalled snapshots and derives poses independently of wall-clock origin", () => {

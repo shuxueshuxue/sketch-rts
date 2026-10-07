@@ -13,7 +13,7 @@ import { UNIT_CARDS } from '../content/units';
 import { unitGlyphScale } from '../glyphs';
 import { footprintSquare } from '../footprint-view';
 import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
-import { attackTargetId } from '../unit-facing';
+import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import { shipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -139,7 +139,7 @@ export class World3DLayer {
       if(ship){
         liveCrew.add(unit.id);const parent=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0;
         const deck=this.deckPosition(unit,now),c=Math.cos(heading),s=Math.sin(heading);at={x:parent.x+deck.x*c-deck.y*s,y:parent.y+deck.x*s+deck.y*c};height=shipProfile(ship)!.deckHeight;
-        const id=attackTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
+        const id=interactionTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
       const scale=unitGlyphScale(unit.radius),foot=creatureShadow(unit.kind)?.y??17,bodyY=at.y-height*TILT-foot*scale;
