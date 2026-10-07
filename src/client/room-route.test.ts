@@ -25,6 +25,15 @@ describe("address-bar routes", () => {
     const route = parseRoomRoute("?map=grandEstuary");
     expect(route).toEqual({ screen: "create", configuration: defaultRoomConfiguration("grandEstuary") });
   });
+  it("keeps map selection and setup as distinct history entries with the same configuration", () => {
+    const configuration = defaultRoomConfiguration("grandEstuary");
+    configuration.seatSetup[1] = { controller: "ai", race: "ember", team: "team-2", aiVersion: "v7" };
+    const selection = formatRoomRoute({ screen: "maps", configuration });
+    const setup = formatRoomRoute({ screen: "create", configuration });
+    expect(selection).not.toEqual(setup);
+    expect(parseRoomRoute(selection)).toEqual({ screen: "maps", configuration });
+    expect(parseRoomRoute(setup)).toEqual({ screen: "create", configuration });
+  });
   it("rejects invalid or oversized setups without a partial configuration", () => {
     for (const search of ["?map=missing", "?map=stillwater&seats=ai:ffa:grove:v8", "?map=stillwater&seed=", "?map=stillwater&visibility=bad", "?map=stillwater&seats=human:ffa:unknown:"]) {
       expect(parseRoomRoute(search)).toEqual({ screen: "home" });
