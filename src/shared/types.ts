@@ -611,6 +611,7 @@ export type RoomState = {
   hostUserId: string;
   visibility: RoomVisibility;
   mapId: MapId;
+  layoutSeed?: string;
   status: RoomStatus;
   autoTick: boolean;
   slots: RoomSlot[];

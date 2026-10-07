@@ -5,6 +5,8 @@ import { MAP_IDS } from "./map-ids";
 import { MAP_POOL, type PoolMap, type PoolMapId } from "./map-pool";
 import { createRoom, roomToGameSetup } from "./rooms";
 import { createGame } from "./sim";
+import { TIER_LEVELS, campLevel } from "./camps";
+import type { CreepFamilyUnitKind } from "./types";
 import {isWalkable,sameGround} from './terrain';
 
 // @@@map-pool - Every pool map's whole layout, hashed: its ground, starts, mines, camps, posts, items, shops and
@@ -13,9 +15,9 @@ import {isWalkable,sameGround} from './terrain';
 // 10-07: organic island coastlines and continuous-environment creep habitats replace periodic stamps. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'bd306a68cbddba85',
-  grandEstuary:'0d8a733a13e50c19',
-  brokenSea: "2ed92f728bf63cd8",
+  sapphireArchipelago:'7cf37331bd5cf793',
+  grandEstuary:'781b77fc04022cd4',
+  brokenSea: "6a412a2672b1b290",
   templeSpring: "89d478ee42c291c3",
   turtleLake: "5920a191d1d390cc",
   elderwood: "ea14bcd697fe7b7c",
@@ -106,6 +108,34 @@ it('keeps named shores and requested diplomacy when alliances are uneven or free
       expect(game.map.terrain?.cells).toBe(baseline.map.terrain?.cells);
       expect(game.teams).toEqual(custom);
       expect(game.buildings.filter(b=>b.kind==='townHall')).toHaveLength(map.players);
+    }
+  }
+});
+
+
+it('guards expansion gold with complete tiered camps, equally strong for every starting seat', () => {
+  for (const id of ['sapphireArchipelago', 'grandEstuary'] as const) {
+    const map = MAP_POOL.find(map => map.id === id)!, { players, teams } = seatsOf(map);
+    for (const seed of [map.layout.seed, 'expansion-camps-alternate']) {
+      const drawn = generateMap({ ...map.layout, seed }, players, teams);
+      const neutral = drawn.units.filter(unit => unit.owner === 'neutral');
+      for (const camp of drawn.camps) {
+        const members = neutral.filter(unit => Math.hypot(unit.x - camp.x, unit.y - camp.y) < 100);
+        expect(members.length).toBeGreaterThanOrEqual(2);
+        const power = campLevel(members.map(unit => unit.kind as CreepFamilyUnitKind));
+        expect(power).toBeGreaterThanOrEqual(TIER_LEVELS[camp.tier].min);
+        expect(power).toBeLessThanOrEqual(TIER_LEVELS[camp.tier].max);
+        expect(drawn.resources.some(mine => Math.hypot(mine.x - camp.x, mine.y - camp.y) < 250)).toBe(true);
+      }
+      for (const mine of drawn.resources) {
+        if (mine.id.endsWith('-main')) {
+          expect(neutral.every(unit => Math.hypot(unit.x - mine.x, unit.y - mine.y) > 500)).toBe(true);
+        } else expect(drawn.camps.some(camp => Math.hypot(camp.x - mine.x, camp.y - mine.y) < 250)).toBe(true);
+      }
+      for (const tier of ['orange', 'red'] as const) {
+        const rosters = drawn.camps.filter(camp => camp.tier === tier).map(camp => neutral.filter(unit => Math.hypot(unit.x - camp.x, unit.y - camp.y) < 100).map(unit => unit.kind));
+        expect(rosters.every(roster => JSON.stringify(roster) === JSON.stringify(rosters[0]))).toBe(true);
+      }
     }
   }
 });

@@ -1,5 +1,6 @@
 import { createBuilding, createUnit } from "./map";
-import { fractalNoise } from "./environment/noise";
+import { fractalNoise, coordinateRandom } from "./environment/noise";
+import { campRoster, campMembers } from "./camps";
 import { detCos, detSin } from "./det-math";
 import {ecologicalDressing,prepareEcology} from './map-dressing';
 import type { GeneratedMap } from "./generated-map";
@@ -41,17 +42,23 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
         result.resources.push({ id: `gold-${owner}-main`, kind: "goldMine", ...mine, amount: 6000 });
     }
     // Shoreward resources permit several independent bridgeheads; the mainland has no scripted owner or capture event.
+    const used = new Set<string>();
+    const mainlandTier = large ? "red" : "orange";
+    const mainlandRoster = campRoster(() => coordinateRandom(seed, 0, 0, 20), mainlandTier, "open", used).kinds;
+    const satelliteRoster = campRoster(() => coordinateRandom(seed, 0, 0, 21), "orange", "water", used).kinds;
     for (let index = 0; index < players.length * (large?1:2); index++) {
         const at = point(rotation + index * Math.PI * (large?2:1) / players.length, size * (large?.072:.095));
         result.resources.push({ id: `gold-mainland-${index}`, kind: "goldMine", ...at, amount: 9000 });
-        result.units.push(createUnit(`guard-${index}`, "neutral", "ogreWarrior", at.x, at.y + 120));
-        result.camps.push({ ...at, tier: "orange", habitat: "open" });
+        const center = { x: at.x, y: at.y + 120 };
+        result.units.push(...campMembers(mainlandRoster, center).map((member, i) => createUnit(`guard-${index}-${i}`, "neutral", member.kind, member.x, member.y)));
+        result.camps.push({ ...center, tier: mainlandTier, habitat: "open" });
     }
     result.sites.push({ kind: "shop", ...center });
     satellites.forEach((island,index)=>{
         result.resources.push({id:`gold-satellite-${index}`,kind:'goldMine',...island.at,amount:7500});
-        result.units.push(createUnit(`satellite-guard-${index}`,'neutral','murlocPeon',island.at.x+85,island.at.y+110));
-        result.camps.push({...island.at,tier:'green',habitat:'water'});
+        const center = { x: island.at.x + 85, y: island.at.y + 110 };
+        result.units.push(...campMembers(satelliteRoster, center).map((member, i) => createUnit(`satellite-guard-${index}-${i}`, 'neutral', member.kind, member.x, member.y)));
+        result.camps.push({...center,tier:'orange',habitat:'water'});
         result.landmarks.push({id:`satellite-wreck-${index}`,kind:'wreck',x:island.at.x+island.radius*.6,y:island.at.y,size:100,rotation});
     });
     // Camps, shops and mineral seams must remain usable through the wooded interior.

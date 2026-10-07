@@ -1,5 +1,6 @@
 import { createBuilding, createUnit } from "./map";
-import { fractalNoise, seedHash } from "./environment/noise";
+import { fractalNoise, seedHash, coordinateRandom } from "./environment/noise";
+import { campRoster, campMembers } from "./camps";
 import { detSin, detCos } from "./det-math";
 import { ecologicalDressing, prepareEcology } from "./map-dressing";
 import type { GeneratedMap } from "./generated-map";
@@ -55,6 +56,9 @@ export function estuaryMap(
       return Math.hypot(at.x - a.x - dx * t, at.y - a.y - dy * t) < 120;
     });
   const seed = seedHash(options.seed);
+  const used = new Set<string>();
+  const naturalRoster = campRoster(() => coordinateRandom(seed, 0, 0, 20), "orange", "open", used).kinds;
+  const frontierRoster = campRoster(() => coordinateRandom(seed, 0, 0, 21), "red", "hill", used).kinds;
   let cells = "";
   for (let row = 0; row < cols; row++)
     for (let col = 0; col < cols; col++) {
@@ -149,19 +153,12 @@ export function estuaryMap(
         ...at,
         amount: rank === 1 ? 7500 : 9500,
       });
-      result.units.push(
-        createUnit(
-          `guard-${index}-${rank}`,
-          "neutral",
-          rank === 1 ? "murlocPeon" : "ogreWarrior",
-          at.x + 85,
-          at.y + 90,
-        ),
-      );
+      const center = project(home.x + home.side * (offset! + 85), home.y + dy! + 90);
+      result.units.push(...campMembers(rank === 1 ? naturalRoster : frontierRoster, center).map((member, i) => createUnit(`guard-${index}-${rank}-${i}`, "neutral", member.kind, member.x, member.y)));
       result.camps.push({
-        ...at,
-        tier: rank === 1 ? "green" : "orange",
-        habitat: "open",
+        ...center,
+        tier: rank === 1 ? "orange" : "red",
+        habitat: rank === 1 ? "open" : "hill",
       });
     }
   });
