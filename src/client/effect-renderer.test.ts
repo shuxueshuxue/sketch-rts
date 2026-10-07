@@ -1,25 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, hasSpell } from "../shared/catalog";
 import type { UnitKind, WorldEffect } from "../shared/types";
-import { arrowFrame, chargeImpactFrame, chargeTrailFrame, hammerEffectFrame, launchPoint, projectileLook, renderWorldEffects, spellOrbPalette } from "./effect-renderer";
+import { arrowFrame, chargeImpactFrame, chargeTrailFrame, launchPoint, projectileLook, renderWorldEffects, spellOrbPalette } from "./effect-renderer";
 
-describe("hammer effect frames", () => {
-  it("describes build and repair as the same animated hammer action with different site colors", () => {
-    const build = hammerEffectFrame("build", 1, 60);
-    const repair = hammerEffectFrame("repair", 1, 60);
-    const later = hammerEffectFrame("repair", 0.5, 52);
-    const oldClockwiseAngle = 0.64 + ((Math.sin(60 * 0.76) + 1) / 2) * 0.82;
-
-    expect(build.handle.from).not.toEqual(build.handle.to);
-    expect(build.head.from).not.toEqual(build.head.to);
-    expect(build.impact.x).toBeGreaterThan(build.handle.from.x);
-    expect(repair.siteStroke).not.toBe(build.siteStroke);
-    expect(later.angle).not.toBe(repair.angle);
-    expect(repair.angle).toBeCloseTo(oldClockwiseAngle - Math.PI / 2);
-    expect(later.handle.from).toEqual(repair.handle.from);
-    expect(later.handle.to).not.toEqual(repair.handle.to);
-    expect(later.impact).not.toEqual(repair.impact);
-  });
+it('leaves actual construction and repair strokes to the worker pose without drawing a floating tool',()=>{
+  const ctx=new Proxy({}, {get:()=>{throw new Error('A work pulse must not draw an overlay');}}) as CanvasRenderingContext2D;
+  const effects:WorldEffect[]=['repair','build'].map(type=>({id:type,type:type as 'repair'|'build',unitId:'worker',sourceKind:'worker',x:100,y:100,fromX:140,fromY:100,duration:13,remaining:10}));
+  expect(()=>renderWorldEffects({ctx,effects,worldToScreen:point=>point,nearScreen:()=>true})).not.toThrow();
 });
 
 describe("projectile looks", () => {

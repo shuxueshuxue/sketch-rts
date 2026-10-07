@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from "../../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap, unitMover } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, TrainableUnitKind, Unit } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 import { activeUnitClaim } from "./claims";
@@ -111,7 +111,9 @@ export function mineAssignmentCounts(workers: Unit[]) {
 }
 
 export function isCoreProductionBuilding(building: Building) {
-  return building.kind !== "townHall" && building.kind !== "farm" && building.kind !== "defenseTower" && building.kind !== "moonWell" && building.kind !== "emberShrine";
+  // Land economy gates need a real land-army producer. A dock cannot
+  // supply the first soldiers, even though it is not a farm or a tower.
+  return BUILDING_DEFS[building.kind].trains.some(kind => kind !== 'worker' && unitMover(kind) === 'land');
 }
 
 export function hasCoreProduction(snapshot: GameSnapshot, owner: PlayerId) {

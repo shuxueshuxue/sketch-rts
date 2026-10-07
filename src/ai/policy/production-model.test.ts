@@ -1,9 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
+import { hasCoreProduction } from './world-model';
 import { duplicateCoreProductionReserveKind, productionBuildingNeedKind, shouldFinishCoreArmyBeforeMoreProduction } from "./production-model";
 
 describe("AI production model", () => {
+  it('builds its first land producer after a dock instead of waiting for nonexistent soldiers', () => {
+    for(const kind of ['shipyard'] as const){
+      const scene=sketchScene(`production-domain-${kind}`).map('bareDuel').replaceDefaults()
+        .player('v2',{team:'north'}).player('a',{team:'south'}).player('b',{team:'south'})
+        .townHall('v2',500,500).building('v2',kind,620,620)
+        .townHall('a',3300,3300).townHall('b',3300,3800);
+      for(let i=0;i<5;i++)scene.worker('v2',520+i*10,540);
+      const game=scene.build().createGame(),snapshot=snapshotGame(game),options={version:'v2' as const,teams:game.teams};
+      expect(hasCoreProduction(snapshot,'v2')).toBe(false);
+      expect(productionBuildingNeedKind(snapshot,'v2',options)).toBe('barracks');
+      expect(shouldFinishCoreArmyBeforeMoreProduction(snapshot,'v2',options)).toBe(false);
+    }
+  });
+
   it("names the next missing production building from the playbook", () => {
     const game = sketchScene("production-model-missing-chain")
       .map("bareDuel")

@@ -3,6 +3,8 @@ import { UNIT_DEFS } from "./catalog";
 import { shipPassengers } from "./ship-geometry";
 import { deckPointFits, deckLoad } from "./decks";
 import { hullFits } from "./ship-navigation";
+import { boardingBerth, BOARDING_GAP } from './naval';
+import { distanceToHull } from './ship-geometry';
 import { keepShipsOnWater } from "./sailing";
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
@@ -268,6 +270,21 @@ describe("transports", () => {
 
 
 describe("stable shore rendezvous and ship repair", () => {
+  it('preserves both sides of the boarding rendezvous and the hull orientation that makes it reachable',()=>{
+    const sim=game([{id:'worker',owner:'player',kind:'worker',...at(7,10)},{id:'boat',owner:'player',kind:'transport',...at(15,10)}]);
+    const worker=unit(sim,'worker')!,boat=unit(sim,'boat')!;
+    const berth=boardingBerth(sim.map,worker,boat)!;
+    expect(berth).toBeDefined();expect(Number.isFinite(berth.heading)).toBe(true);
+    if(berth.heading===undefined || !berth.shore)throw new Error('A terrain berth must include its hull heading and reachable shore');
+    const pose={...boat,x:berth.x,y:berth.y,sailing:{heading:berth.heading,speed:0,load:0,balance:0}};
+    expect(hullFits(sim.map,pose)).toBe(true);
+    expect(isWalkable(sim.map,berth.shore.x,berth.shore.y)).toBe(true);
+    expect(distanceToHull(pose,berth.shore)).toBeLessThanOrEqual(worker.radius+BOARDING_GAP);
+    issuePlayerCommand(sim,'player',{type:'board',unitIds:[worker.id],transportId:boat.id});
+    expect(worker.order).toMatchObject({type:'board',berth});
+    run(sim,1200);
+    expect(worker.deck?.shipId).toBe(boat.id);
+  });
   it("boards workers approaching opposite ends of the coast without chasing them alternately", () => {
     const sim = game([
       { id:"north", owner:"player", kind:"worker", ...at(7,2) },

@@ -1,7 +1,7 @@
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, Unit } from "../shared/types";
 
-export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast"; frame: number };
+export type UnitAnimationFrame = { mode: "idle" | "walk" | "attack" | "cast" | "work"; frame: number };
 export const IDLE_FRAME: UnitAnimationFrame = Object.freeze({ mode: "idle", frame: 0 });
 const TICK_MS = 1000 / SIM_TICKS_PER_SECOND;
 const WALK_FRAMES = 8;
@@ -14,7 +14,7 @@ type Track = {
   deck?: NonNullable<Unit['deck']>;
   abilities: NonNullable<Unit["abilityCooldowns"]>;
   phase: number; speed: number; moving: boolean;
-  action?: { mode: "attack" | "cast"; tick: number };
+  action?: { mode: "attack" | "cast" | "work"; tick: number; durationMs?: number };
 };
 
 /** Presentation only: observed displacement drives feet; a cooldown *increase*
@@ -26,10 +26,13 @@ export class UnitAnimationTracker {
   private tick: number | undefined;
   private receivedAt = 0;
 
-  update(snapshot: Pick<GameSnapshot, "tick" | "units">, now: number) {
+  update(snapshot: Pick<GameSnapshot, "tick" | "units"> & Partial<Pick<GameSnapshot, "effects">>, now: number) {
     if (snapshot.tick === this.tick) return;
     const gap = this.tick === undefined ? 0 : snapshot.tick - this.tick;
     const continuous = gap > 0 && gap <= 10;
+    // A work pulse is emitted only when construction or repair actually occurs.
+    // Orders alone cannot animate an approaching or blocked builder.
+    const work = new Map((snapshot.effects ?? []).filter(effect => effect.type === "repair" && effect.unitId && effect.remaining > 0).map(effect => [effect.unitId!, effect]));
     const next = new Map<string, Track>();
     for (const unit of snapshot.units) {
       const previous = continuous ? this.tracks.get(unit.id) : undefined;
@@ -46,6 +49,9 @@ export class UnitAnimationTracker {
           ability !== "charge" && ticks! > (previous.abilities[ability as keyof Track["abilities"]] ?? 0));
         if (cast) action = { mode: "cast", tick: snapshot.tick };
       }
+      const pulse = unit.kind === "worker" && !moving ? work.get(unit.id) : undefined;
+      if (pulse) action = { mode: "work", tick: snapshot.tick - pulse.duration + pulse.remaining, durationMs: pulse.duration * TICK_MS };
+      else if (moving && action?.mode === "work") action = undefined;
       if (unit.effects.some((effect) => effect.type === "stun")) action = undefined;
       const track: Track = {
         x: unit.x, y: unit.y, cooldown: unit.cooldown,
@@ -67,7 +73,7 @@ export class UnitAnimationTracker {
     if (!track || this.tick === undefined) return IDLE_FRAME;
     const fraction = Math.max(0, Math.min(1, (now - this.receivedAt) / TICK_MS));
     if (track.action) {
-      const duration = track.action.mode === "cast" ? CAST_MS : ATTACK_MS;
+      const duration = track.action.durationMs ?? (track.action.mode === "cast" ? CAST_MS : ATTACK_MS);
       const progress = ((this.tick - track.action.tick + fraction) * TICK_MS) / duration;
       if (progress >= 0 && progress < 1) return { mode: track.action.mode, frame: Math.min(ACTION_FRAMES - 1, Math.floor(progress * ACTION_FRAMES)) };
     }
