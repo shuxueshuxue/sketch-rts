@@ -2736,11 +2736,12 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
     title: label,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
-  button.style.setProperty("--research-progress", `${progress.status === "researching" ? Math.max(6, percent) : percent}%`);
+  button.style.setProperty("--research-progress", `${percent}%`);
   button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(progress.icon)}</span>
-    <span class="research-progress-text">${progress.status === "researching" ? percent : "Q"}</span>
+    <span class="command-label">${escapeHtml(labelKind(progress.upgradeKind))}</span>
+    <span class="research-progress-text">${progress.status === "researching" ? `${percent}%` : escapeHtml(t("hud.productionQueueBadge"))}</span>
   `;
   return button;
 }
@@ -2767,14 +2768,15 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
     title: `${label} · ${t("hud.cancelTraining")}`,
     stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
   });
-  button.style.setProperty("--research-progress", `${progress.status === "training" ? Math.max(6, percent) : percent}%`);
+  button.style.setProperty("--research-progress", `${percent}%`);
   if (!previous) button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
-    <span class="research-progress-text">${progress.status === "training" ? percent : "Q"}</span>
+    <span class="command-label">${escapeHtml(labelKind(progress.unitKind))}</span>
+    <span class="research-progress-text"></span>
   `;
   drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
-  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? String(percent) : "Q";
+  button.querySelector(".research-progress-text")!.textContent = progress.status === "training" ? `${percent}%` : t("hud.productionQueueBadge");
   return button;
 }
 

@@ -13,14 +13,3 @@
 .map-button,.menu-actions button,.slot-actions button,.match-action { border-radius:1px; box-shadow:inset 0 1px #cdb57a55,inset 0 -2px #0005,0 2px 3px #0004; }
 .menu-window :is(input,select) { border-radius:1px; box-shadow:inset 0 1px 3px #58482540; }
 .scene-switch { border-radius:1px; background:var(--game-wood); box-shadow:var(--game-inset); }
-/* Bound both tracks before wrapping commands beside the portrait. */
-.control-deck,.control-deck * { box-sizing:border-box; }
-.control-deck { width:fit-content; grid-template-columns:232px minmax(0,max-content); }
-.control-deck > .hud-actions { width:auto; min-width:0; }
-.control-deck .command-dock,.control-deck .item-dock { width:fit-content; max-width:100%; }
-@media (max-width:900px) {
-  .control-deck { grid-template-columns:212px minmax(0,max-content); }
-}
-@media (max-width:650px) {
-  .control-deck { grid-template-columns:minmax(0,1fr); }
-}
