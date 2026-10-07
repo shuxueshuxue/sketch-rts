@@ -78,3 +78,18 @@ describe("shared room setup schema", () => {
     expect(MAP_SCENARIOS.map((scenario) => scenario.id).sort()).toEqual([...MAP_IDS].sort());
   });
 });
+
+
+it('validates portable seat settings and strips live identities before creation', () => {
+  const input = { id: 'shared', host: { id: 'host', name: 'Host' }, humanCount: 1, aiCount: 1, layoutSeed: 'world',
+    seatSetup: [
+      { controller: 'human', team: 'ffa', race: 'grove', userId: 'somebody', ready: false },
+      { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v8', userId: 'injected' },
+    ] };
+  const room = assertCreateRoomInput(input);
+  expect(room.layoutSeed).toBe('world');
+  expect(room.seatSetup).toEqual([{ controller: 'human', team: 'ffa', race: 'grove' }, { controller: 'ai', team: 'ffa', race: 'ember', aiVersion: 'v8' }]);
+  for (const patch of [{ layoutSeed: '' }, { seatSetup: input.seatSetup.slice(0, 1) }, { humanCount: 2, aiCount: 0 }, { seatSetup: [{ ...input.seatSetup[0], controller: 'ai' }, input.seatSetup[1]] }]) {
+    expect(() => assertCreateRoomInput({ ...input, ...patch })).toThrow('Malformed room create input');
+  }
+});

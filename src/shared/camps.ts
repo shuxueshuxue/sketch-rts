@@ -1,5 +1,6 @@
 import { UNIT_DEFS } from "./catalog";
 import type { CreepFamilyUnitKind } from "./types";
+import { detCos, detSin } from "./det-math";
 
 // @@@camp-templates - What stands in a creep camp, as on a Warcraft III map: the generator says where a camp is, how hard
 // (its tier) and on what ground (its habitat); campRoster draws which creeps from the templates below. A habitat has its
@@ -59,6 +60,14 @@ export const CAMP_TEMPLATES: readonly CampTemplate[] = [
 
 export function campLevel(kinds: readonly CreepFamilyUnitKind[]) {
   return kinds.reduce((total, kind) => total + (UNIT_DEFS[kind].creepFoodPower ?? 0), 0);
+}
+
+/** A compact, non-overlapping formation; the camp's centre is its actual guard position. */
+export function campMembers(kinds: readonly CreepFamilyUnitKind[], center: { x: number; y: number }) {
+  return kinds.map((kind, index) => {
+    const angle = index * Math.PI * 2 / kinds.length;
+    return { kind, x: center.x + detCos(angle) * 55, y: center.y + detSin(angle) * 55 };
+  });
 }
 
 // The creeps of a camp of the tier on the habitat, drawn from the templates no other camp of the map has taken (`used`,

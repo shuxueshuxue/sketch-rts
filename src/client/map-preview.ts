@@ -2,6 +2,7 @@ import { createMapPresentation } from "../shared/presentation";
 import { createGame, snapshotGame } from "../shared/sim";
 import type { GameSnapshot, MapId, PlayerId } from "../shared/types";
 import { drawMinimapMap, drawStartMarks } from "./minimap-art";
+import { poolMap } from "../shared/map-pool";
 
 // @@@map-preview - The lobby's picture of a map, as Warcraft III's custom game screen shows one: the game the room would
 // start on it (the same seats and teams; a pool map draws its own layout, see @@@map-pool), drawn the way the minimap
@@ -14,12 +15,13 @@ export type MapFacts = { size: number; players: number; mines: number; camps: nu
 const cache = new Map<string, MapPreview>();
 const CACHE_SIZE = 24;
 
-export function mapPreview(mapId: MapId, seats: PreviewSeat[]): MapPreview {
-  const key = `${mapId}|${seats.map((seat) => `${seat.playerId}:${seat.team}`).join(",")}`;
+export function mapPreview(mapId: MapId, seats: PreviewSeat[], layoutSeed?: string): MapPreview {
+  const key = `${mapId}|${layoutSeed ?? ""}|${seats.map((seat) => `${seat.playerId}:${seat.team}`).join(",")}`;
   const kept = cache.get(key);
   if (kept) return kept;
   const players = seats.map((seat) => seat.playerId);
-  const snapshot = snapshotGame(createGame(mapId, { players, aiPlayers: [], teams: Object.fromEntries(seats.map((seat) => [seat.playerId, seat.team])) }));
+  const snapshot = snapshotGame(createGame(mapId, { players, aiPlayers: [], teams: Object.fromEntries(seats.map((seat) => [seat.playerId, seat.team])),
+    ...(layoutSeed ? { layout: { ...poolMap(mapId)?.layout, seed: layoutSeed } } : {}) }));
   const marks = createMapPresentation(snapshot);
   const preview = {
     snapshot,
