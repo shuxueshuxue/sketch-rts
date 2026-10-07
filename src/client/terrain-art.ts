@@ -3,6 +3,8 @@ import { createScratchCanvas } from "./art/scratch-canvas";
 import { drawAtlasTree } from "./atlas-art";
 import { terrainCover, paintGroundTextures } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
+import { waterCover, paintWaterRipples } from './water-art';
+import { waterField } from './water-field';
 
 // @@@terrain-art - The ground a unit cannot cross or crosses slowly (see @@@terrain), painted in the atlas's ink over its
 // paper: forest as tree crowns packed on a dark floor, rock as inked stones with a shaded face where a plateau drops away,
@@ -24,7 +26,9 @@ const MUD_DARK = "#b79e74";
 const DECK = "#c7a472";
 const DECK_INK = "#916e44";
 
-type Cache = { chunks: Map<string, HTMLCanvasElement>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement };
+type TerrainChunk = { ground: HTMLCanvasElement; water?: HTMLCanvasElement; ripples?: HTMLCanvasElement; waterPhase?: number };
+type Cache = { chunks: Map<string, TerrainChunk>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement;
+  waterView?: { canvas:HTMLCanvasElement; x:number; y:number; width:number; height:number; phase:number } };
 const SURFACE_COLORS:Record<string,string>={g:'#7c94674a',d:'#af936445',s:'#d3bd8f60',r:'#87958650'};
 const caches = new WeakMap<Terrain, Cache>();
 
@@ -38,11 +42,23 @@ function cacheFor(terrain: Terrain): Cache {
 }
 
 /** Lays the terrain's chunks in view under everything else; `camera` is the world point at the view's top-left. */
-export function drawTerrain(c: Brush, terrain: Terrain, camera: Point, width: number, height: number) {
+export function drawTerrain(c: Brush, terrain: Terrain, camera: Point, width: number, height: number, waterSeconds?: number) {
   const cache = cacheFor(terrain);
   const density = Math.max(1, Math.min(2, Math.ceil(brushZoom(c) - 0.05)));
   const worldWidth = terrain.cols * terrain.cell;
   const worldHeight = terrain.rows * terrain.cell;
+  const phase = waterSeconds === undefined ? undefined : Math.floor(waterSeconds * 12);
+  let waterView = cache.waterView;
+  const reuseWater = phase !== undefined && waterView && waterView.phase === phase && waterView.width === width && waterView.height === height && waterView.x === camera.x && waterView.y === camera.y;
+  let waterBrush: CanvasRenderingContext2D | undefined;
+  if (phase !== undefined && !reuseWater && waterField(terrain).hasWater) {
+    const scale = Math.min(1, Math.sqrt(1_000_000 / (width * height)));
+    const canvas = waterView?.canvas ?? createScratchCanvas(Math.ceil(width * scale), Math.ceil(height * scale));
+    if (canvas.width !== Math.ceil(width * scale) || canvas.height !== Math.ceil(height * scale)) { canvas.width = Math.ceil(width * scale); canvas.height = Math.ceil(height * scale); }
+    waterBrush = canvas.getContext('2d')!;
+    waterBrush.setTransform(1, 0, 0, 1, 0, 0); waterBrush.clearRect(0, 0, canvas.width, canvas.height); waterBrush.scale(scale, scale);
+    waterView = cache.waterView = { canvas, ...camera, width, height, phase };
+  }
   const first = { x: Math.max(0, Math.floor(camera.x / CHUNK)), y: Math.max(0, Math.floor(camera.y / CHUNK)) };
   const last = { x: Math.min(Math.ceil(worldWidth / CHUNK) - 1, Math.floor((camera.x + width) / CHUNK)), y: Math.min(Math.ceil(worldHeight / CHUNK) - 1, Math.floor((camera.y + height) / CHUNK)) };
   for (let cy = first.y; cy <= last.y; cy += 1) {
@@ -56,10 +72,24 @@ export function drawTerrain(c: Brush, terrain: Terrain, camera: Point, width: nu
         if (cache.chunks.size >= MAX_CHUNKS) cache.chunks.delete(cache.chunks.keys().next().value!);
       }
       cache.chunks.set(key, chunk);
-      c.drawImage(chunk, cx * CHUNK - camera.x, cy * CHUNK - camera.y, CHUNK, CHUNK);
+      c.drawImage(chunk.ground, cx * CHUNK - camera.x, cy * CHUNK - camera.y, CHUNK, CHUNK);
+      const mask = chunk.water;
+      if (mask && phase !== undefined && waterBrush) {
+        chunk.ripples ??= createScratchCanvas(CHUNK / 2, CHUNK / 2);
+        if (phase !== chunk.waterPhase) {
+          const ctx = chunk.ripples.getContext('2d')!;
+          ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, CHUNK / 2, CHUNK / 2);
+          ctx.scale(.5, .5); paintWaterRipples(ctx, cx * CHUNK, cy * CHUNK, CHUNK, phase / 12);
+          ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-in'; ctx.drawImage(mask, 0, 0);
+          ctx.globalCompositeOperation = 'source-over'; chunk.waterPhase = phase;
+        }
+        waterBrush.drawImage(chunk.ripples, cx * CHUNK - camera.x, cy * CHUNK - camera.y, CHUNK, CHUNK);
+      }
     }
   }
+  if (phase !== undefined && waterView) c.drawImage(waterView.canvas, 0, 0, width, height);
 }
+
 
 /** The terrain at one pixel a cell, for the minimap: walkable ground left clear, the rest in its colour. */
 export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
@@ -88,8 +118,9 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
   return canvas;
 }
 
-function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): HTMLCanvasElement {
+function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): TerrainChunk {
   const canvas = createScratchCanvas(CHUNK * density, CHUNK * density);
+  let waterMask: HTMLCanvasElement | undefined;
   const b = canvas.getContext("2d")!;
   b.scale(density, density);
   b.translate(-cx * CHUNK, -cy * CHUNK);
@@ -153,23 +184,35 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   // Marching-squares coast contours connect cell centres. The simulation grid
   // remains unchanged; diagonal shore segments avoid a staircase silhouette.
   const contours:number[][][]=[[],[[0,4,7]],[[1,5,4]],[[0,1,5,7]],[[2,6,5]],[[0,4,7],[2,6,5]],[[1,2,6,4]],[[0,1,2,6,7]],[[3,7,6]],[[0,4,6,3]],[[1,5,4],[3,7,6]],[[0,1,5,6,3]],[[2,3,7,5]],[[0,4,5,2,3]],[[4,1,2,3,7]],[[0,1,2,3]]];
-  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string,shore:boolean)=>{
+  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string | (() => void),shore:boolean)=>{
+    const shapes: { shape:number[]; points:number[][]; mask:number }[] = [];
     for(let row=low.row-1;row<=high.row;row++)for(let col=low.col-1;col<=high.col;col++){
       const mask=(inside(col,row)?1:0)|(inside(col+1,row)?2:0)|(inside(col+1,row+1)?4:0)|(inside(col,row+1)?8:0);
       if(!mask)continue;const x=(col+.5)*size,y=(row+.5)*size;
       const points=[[x,y],[x+size,y],[x+size,y+size],[x,y+size],[x+size*.5,y],[x+size,y+size*.5],[x+size*.5,y+size],[x,y+size*.5]];
-      for(const shape of contours[mask]!){polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
-        if(shore&&mask!==15){const edge=shape.filter(i=>i>=4).map(i=>points[i]!);if(edge.length===2){line(b,edge,'#d5c69d38',10);line(b,edge,'#e8dfbd80',1.1);}}
+      for(const shape of contours[mask]!){ shapes.push({shape, points, mask}); }
+    }
+    if (typeof color === 'function') {
+      b.save(); b.beginPath();
+      const maskCanvas = createScratchCanvas(CHUNK / 2, CHUNK / 2), maskBrush = maskCanvas.getContext('2d')!;
+      maskBrush.scale(.5, .5); maskBrush.translate(-cx * CHUNK, -cy * CHUNK);
+      for (const {shape, points} of shapes) {
+        const first = points[shape[0]!]!; b.moveTo(first[0]!, first[1]!);
+        for (const index of shape.slice(1)) b.lineTo(points[index]![0]!, points[index]![1]!);
+        b.closePath(); polygon(maskBrush, shape.map(i => points[i]!), '#fff', 'transparent', 0);
       }
+      b.clip(); color(); b.restore();
+      if (shapes.length) waterMask = maskCanvas;
+    }
+    for (const {shape, points, mask} of shapes) {
+      if (typeof color === 'string') polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
+        if(shore&&mask!==15){const edge=shape.filter(i=>i>=4).map(i=>points[i]!);if(edge.length===2){line(b,edge,'#d5c69d38',10);line(b,edge,'#e8dfbd80',1.1);}}
     }
   };
-  contourLayer(wet,'#8eaaa5',true);
-  contourLayer((col,row)=>kindAt(col,row)==='~','#486773',false);
-  cells((col,row,x,y)=>{
-    if(!wet(col,row)||jitter(col,row,3)>.18)return;
-    const px=x+(jitter(col,row,7)-.5)*size*.5,py=y+(jitter(col,row,8)-.5)*size*.5;
-    line(b,[[px-9,py],[px,py-1],[px+8,py]],'#c4d7d33d',.7);
-  });
+  if (waterField(terrain).hasWater) contourLayer(wet, () => {
+    b.imageSmoothingEnabled = true;
+    b.drawImage(waterCover(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
+  }, true);
 
   // Marshes form connected contours; individual cells must not leave circular stamps.
   contourLayer((col, row) => kindAt(col, row) === 'm', MUD, false);
@@ -244,7 +287,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     const ty = y + (jitter(col, row, 22) - 0.5) * size * 0.45 + size * 0.35;
     drawAtlasTree(b, tx, ty, 0.72 + jitter(col, row, 23) * 0.25, col + row);
   });
-  return canvas;
+  return { ground: canvas, ...(waterMask ? { water: waterMask } : {}) };
 }
 
 function brushZoom(c: Brush) {
