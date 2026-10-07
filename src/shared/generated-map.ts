@@ -1,6 +1,7 @@
 import { archipelagoMap } from "./archipelago-map";
 import {estuaryMap} from './estuary-map';
-import {terrainSurfaces} from './map-dressing';
+import {ecologicalDressing,prepareEcology} from './map-dressing';
+import {ecologicalHabitat} from './environment/ecology';
 import { campRoster, type CampHabitat, type CampTier } from "./camps";
 import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
@@ -182,7 +183,7 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
     if (!spec.layout(field, players, teams, teamOrder)) continue;
     const terrain = carveTerrain(field, plain);
     if (!terrain) continue;
-    terrain.surfaces=terrainSurfaces(terrain,options.seed);
+    prepareEcology(terrain,options.seed);
     return assemble(kind, idea, field, players, terrain);
   }
   throw new Error(`No ${idea} map fits the seed ${options.seed} for ${players.length} players`);
@@ -1905,33 +1906,12 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
   return { kind, idea, size: field.size, starts, buildings, units, resources, mercenaryCamps, items, landmarks: [...landmarks, ...decorate(field, terrain)], terrain, camps, sites, obstacles };
 }
 
-// @@@generated-decor - What a map is dressed in, for the eye only (no unit is stopped by it, see TerrainLandmark): about
-// DECOR_PER_CELL of every map's open cells dressed by what lies round them (flowers, bushes and pebbles on open ground;
-// mushrooms, stumps and logs by the woods; pebbles and bones by rock; reeds on a shore; lilies out on the shallows), then a
-// campfire by every camp, a signpost by every shop, pillars round every hill and a wreck on every beach.
-const DECOR_PER_CELL = 1 / 155;
+// Natural scenery shares the environment recipe. Human traces remain tied to actual camps and sites.
 function decorate(field: Field, terrain: Terrain): TerrainLandmark[] {
-  const marks: TerrainLandmark[] = [];
+  const protectedPoints = [...field.camps.map(camp => camp.at), ...field.sites.map(site => site.at), ...field.mines, ...field.bases];
+  const marks: TerrainLandmark[] = ecologicalDressing(terrain, protectedPoints, terrain.ecology!.seed);
   const add = (kind: TerrainLandmark["kind"], at: Point, size: number) =>
-    marks.push({ id: `gen-decor-${marks.length + 1}`, kind, ...clampPoint(at, field.size), size: Math.round(size), rotation: Math.round(field.between(0, Math.PI * 2) * 100) / 100 });
-  const charAt = (at: Point) => {
-    const index = cellIndexAt(terrain, at.x, at.y);
-    return index < 0 ? "" : terrain.cells[index]!;
-  };
-  const near = (at: Point, chars: string) => [0, 1, 2, 3, 4, 5, 6, 7].some((spoke) => chars.includes(charAt(step(at, heading((spoke / 8) * Math.PI * 2), 70))));
-  const open = [...terrain.cells].filter((char) => char === "." || char === ",").length;
-  const wanted = Math.round(open * DECOR_PER_CELL);
-  let placed = 0;
-  for (let attempt = 0; attempt < wanted * 6 && placed < wanted; attempt += 1) {
-    const at = { x: field.between(64, field.size - 64), y: field.between(64, field.size - 64) };
-    const here = charAt(at);
-    let kind: TerrainLandmark["kind"] | undefined;
-    if (here === ",") kind = near(at, ".") ? "reeds" : "lilies";
-    else if (here === ".") kind = near(at, "T") ? pick(field.random, ["mushrooms", "stump", "log"] as const) : near(at, "#") ? pick(field.random, ["pebbles", "bones"] as const) : near(at, "~,") ? "reeds" : pick(field.random, ["flowers", "flowers", "bush", "pebbles", "stump"] as const);
-    if (!kind) continue;
-    add(kind, at, field.between(50, 90));
-    placed += 1;
-  }
+    marks.push({ id: `gen-trace-${marks.length + 1}`, kind, ...clampPoint(at, field.size), size: Math.round(size), rotation: Math.round(field.between(0, Math.PI * 2) * 100) / 100 });
   for (const camp of field.camps) add("campfire", step(camp.at, heading(field.between(0, Math.PI * 2)), 95), 64);
   for (const site of field.sites) add("signpost", step(site.at, heading(field.between(0, Math.PI * 2)), 80), 70);
   // A hill has a plateau entry for every ramp: its pillars once.
@@ -1943,29 +1923,9 @@ function decorate(field: Field, terrain: Terrain): TerrainLandmark[] {
   return marks;
 }
 
-// What lies round a camp (within six cells): water where any of it is wet, a hill where it stands on a plateau or by rock,
-// a forest where a quarter of it is trees, open ground otherwise.
+// Vegetation and creep families evaluate the same continuous environment.
 function habitatAt(terrain: Terrain, at: Point): CampHabitat {
-  const col = Math.floor(at.x / terrain.cell);
-  const row = Math.floor(at.y / terrain.cell);
-  let wet = 0;
-  let rock = 0;
-  let trees = 0;
-  let all = 0;
-  for (let r = row - 6; r <= row + 6; r += 1) {
-    for (let c = col - 6; c <= col + 6; c += 1) {
-      if (c < 0 || r < 0 || c >= terrain.cols || r >= terrain.rows || (c - col) ** 2 + (r - row) ** 2 > 36) continue;
-      const char = terrain.cells[r * terrain.cols + c];
-      all += 1;
-      if (char === "~" || char === ",") wet += 1;
-      if (char === "#") rock += 1;
-      if (char === "T") trees += 1;
-    }
-  }
-  if (wet > 0) return "water";
-  if (terrain.levels?.[row * terrain.cols + col] === "1" || rock > all * 0.1) return "hill";
-  if (trees > all * 0.25) return "forest";
-  return "open";
+  return ecologicalHabitat(terrain, at.x, at.y);
 }
 
 // A plateau's shape: a core round the start and three lobes (one toward the ramp, two drawn), every part within `plateau`

@@ -27,6 +27,11 @@ export function gifSink(path: string, options: { fps: number; width?: number; he
         const palette = quantize(rgba, 256);
         gif.writeFrame(applyPalette(rgba, palette), width, height, { palette, delay });
       } else {
+        // A wholly static frame needs only a transparent pixel, not another full image and palette.
+        if (rgba.every((value, index) => value === previous![index])) {
+          gif.writeFrame(new Uint8Array([0]), 1, 1, { palette: [[0, 0, 0], [0, 0, 0]], delay, transparent: true, transparentIndex: 0, dispose: 1 });
+          return;
+        }
         // One palette slot stays free for "unchanged".
         const palette = quantize(rgba, 255);
         const index = applyPalette(rgba, palette);

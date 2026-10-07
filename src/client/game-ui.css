@@ -2,24 +2,24 @@
 /* Shared controls and surfaces. Screen-specific files own layout only. */
 :root {
   --font-ui:var(--game-text); --font-body:var(--game-text); --font-display:var(--game-serif);
-  --panel:var(--game-leather); --ink:var(--game-ink); --ink-soft:var(--game-muted); --title:var(--game-title);
+  --panel:var(--game-surface); --ink:var(--game-ink); --ink-soft:var(--game-muted); --title:var(--game-title);
   --accent:var(--game-brass-lit); --btn:var(--game-button); --btn-hover:var(--game-button-hover);
-  --btn-edge:var(--game-brass); --btn-ink:var(--game-ink);
+  --btn-edge:var(--game-brass); --btn-ink:var(--game-button-ink);
   --field:var(--game-field); --field-edge:var(--game-edge); --field-ink:var(--game-ink);
-  --inset:#10171066; --inset-edge:var(--game-edge); --inset-ink:var(--game-ink); --inset-ink-soft:var(--game-muted);
+  --inset:#fff6dd55; --inset-edge:var(--game-edge); --inset-ink:var(--game-ink); --inset-ink-soft:var(--game-muted);
 }
-.game-shell { --battle-surface:var(--game-leather); --battle-edge:var(--game-edge); --battle-ink:var(--game-ink); --battle-muted:var(--game-muted); --battle-accent:var(--game-brass-lit); }
-.menu-window:not(.main-menu[data-menu-view=home] .menu-window),.pointer-lock-panel,.game-settings,.resource-card { background:var(--game-leather); color:var(--game-ink); border:1px solid var(--game-brass); border-radius:1px; box-shadow:var(--game-frame); }
+.game-shell { --battle-surface:var(--game-surface); --battle-edge:var(--game-edge); --battle-ink:var(--game-ink); --battle-muted:var(--game-muted); --battle-accent:var(--game-brass-lit); }
+.menu-window:not(.main-menu[data-menu-view=home] .menu-window),.pointer-lock-panel,.game-settings,.resource-card { background:var(--game-paper); color:var(--game-ink); border:8px solid transparent; border-image:var(--frame-walnut) 16 / 8px stretch; border-radius:0; box-shadow:var(--game-frame); }
 .resource-card h2,.game-settings h2,.equipment-panel h2 { color:var(--game-title); font-family:var(--game-serif); }
-:is(.resource-card,.game-settings) button,.equipment-close,.equipment-context button,.equipment-pages button,.equipment-action,.equipment-pane-tabs button { background:var(--game-button); border:1px solid var(--game-brass); border-radius:1px; color:var(--game-ink); box-shadow:var(--game-inset); font-family:var(--game-text); cursor:pointer; }
-:is(.resource-card,.game-settings) button:hover,.equipment-panel button:hover { background:var(--game-button-hover); border-color:var(--game-brass-lit); color:var(--game-title); }
+:is(.resource-card,.game-settings) button,.equipment-close,.equipment-context button,.equipment-pages button,.equipment-action,.equipment-pane-tabs button { background:var(--game-button); border:1px solid var(--game-brass); border-radius:1px; color:var(--game-button-ink); box-shadow:var(--game-inset); font-family:var(--game-text); cursor:pointer; }
+:is(.resource-card,.game-settings) button:hover,.equipment-panel button:hover { background:var(--game-button-hover); border-color:var(--game-brass-lit); color:var(--game-button-ink); }
 :is(.resource-card,.game-settings,.equipment-panel) button:focus-visible { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
 .hud-subject-art { height:90px; object-fit:fill; }
 .command-icon { justify-items:center; }
 .command-portrait { width:39px; height:39px; max-width:100%; object-fit:contain; }
 .hud-roster-art { width:min(48px,100%); height:auto; aspect-ratio:1; max-height:48px; object-fit:contain; }
 .control-deck .command-dock,.control-deck .item-dock { width:fit-content; max-width:100%; }
-.equipment-cargo { background:var(--game-leather); }
+.equipment-cargo { background:var(--game-surface); }
 .game-settings { width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; padding:18px; overflow:auto; font:13px/1.5 var(--game-text); }
 .game-settings::backdrop { background:#0c100e99; }
 .game-settings header { display:flex; gap:12px; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--game-edge); }
@@ -35,12 +35,13 @@
 .settings-resource-link:hover { color:var(--game-ink); }
 .resource-screen { font-family:var(--game-text); }
 .resource-stage { color:var(--game-muted); }
-/* The battle controls are a single instrument tray, rather than separate cards. */
-.control-deck { gap:0; padding:5px; background:var(--game-wood); border:1px solid var(--game-brass); box-shadow:var(--game-frame); }
+/* A compact campaign tray, with a paper interior inside its walnut frame. */
+.control-deck { gap:0; padding:5px; background:var(--game-paper); border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
+.control-deck[hidden] { display:none; }
 .control-deck .selection-chip { border:0; border-right:1px solid var(--game-edge); border-radius:0; background:transparent; box-shadow:none; padding:5px 9px 5px 3px; }
 .control-deck .hud-actions { padding-left:7px; gap:4px; align-self:start; }
 .control-deck :is(.command-dock,.item-dock) { padding:2px; gap:3px; border:0; border-radius:0; background:transparent; box-shadow:none; }
-.control-deck :is(.command-button,.item-button) { border:1px solid #69745b80; border-radius:0; background:var(--game-button); box-shadow:var(--game-inset); }
+.control-deck :is(.command-button,.item-button) { border:1px solid #69421f; color:var(--game-button-ink); border-radius:0; background:var(--game-button); box-shadow:var(--game-inset); }
 .control-deck :is(.command-button,.item-button):hover { border-color:var(--game-brass-lit); background:var(--game-button-hover); }
 .control-deck .hud-subject-art { background:radial-gradient(ellipse at 50% 65%,#8a997c35,transparent 72%); }
 .control-deck .hud-subject-name { color:var(--game-title); font-family:var(--game-serif); font-weight:500; }
@@ -49,9 +50,9 @@
 .control-deck .hud-health-text { line-height:14px; color:#fff; text-shadow:0 1px #000; }
 .control-deck .hud-roster-unit { border-radius:0; }
 .control-deck .hotkey { background:transparent; color:#ece8dc; font-weight:400; text-shadow:0 1px 2px #000,1px 0 2px #000; top:auto; bottom:1px; right:2px; }
-:is(.minimap-frame,.minimap-tab,.match-menu-button,.minimap-relations,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-leather); border-color:var(--game-brass); }
-.minimap-frame { box-shadow:var(--game-frame); }
-.match-menu,.tooltip-layer { box-shadow:var(--game-frame); }
-.match-menu .match-action { border-radius:0; background:var(--game-button); border-color:var(--game-edge); }
+:is(.minimap-tab,.match-menu-button,.minimap-relations,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-surface); border-color:var(--game-brass); }
+.minimap-frame { background:none; border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
+.match-menu,.tooltip-layer { border:6px solid transparent; border-image:var(--frame-walnut) 16 / 6px stretch; box-shadow:var(--game-frame); color:var(--game-ink); }
+.match-menu .match-action { color:var(--game-button-ink); border-radius:0; background:var(--game-button); border-color:var(--game-edge); }
 @media(max-width:650px) { .control-deck .selection-chip { border-right:0; border-bottom:1px solid var(--game-edge); } .control-deck .hud-actions { padding:4px 0 0; } }
 @media(max-width:650px) { .hud-subject-art { width:72px; height:72px; } }

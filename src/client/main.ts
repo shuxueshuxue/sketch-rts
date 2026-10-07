@@ -158,6 +158,7 @@ const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const chatMessages = requireElement<HTMLDivElement>("[data-chat-messages]");
 const chatForm = requireElement<HTMLFormElement>("[data-chat-form]");
 const chatInput = requireElement<HTMLInputElement>("[data-chat-input]");
+const controlDeck = requireElement<HTMLDivElement>(".control-deck");
 const selectionLabel = requireElement<HTMLDivElement>("[data-selection]");
 const mapReadout = requireElement<HTMLDivElement>("[data-map-readout]");
 const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
@@ -2578,6 +2579,7 @@ function updateHud() {
   }
   commandDock.classList.toggle("hidden", visibleCount === 0);
   renderItemDock();
+  controlDeck.hidden = selectionLabel.hidden && visibleCount === 0 && itemDock.classList.contains("hidden");
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {

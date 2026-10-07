@@ -1,6 +1,7 @@
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { drawAtlasTree } from "./atlas-art";
+import { terrainCover, paintGroundTextures } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
 
 // @@@terrain-art - The ground a unit cannot cross or crosses slowly (see @@@terrain), painted in the atlas's ink over its
@@ -12,14 +13,13 @@ import type { Terrain } from "../shared/terrain";
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
 const FOREST_FLOOR = "#6e805b";
-const FOREST_EDGE = "#849372";
 const ROCK = "#bfc0ac";
 const ROCK_INK = "#989f89";
 const CLIFF_FACE = "#a0a58f";
 const WATER = "#91b5b7";
 const PLATEAU = "#e4ddc2";
 const RAMP = "#d0c4a4";
-const MUD = "#ceb88f";
+const MUD = "#958d6b";
 const MUD_DARK = "#b79e74";
 const DECK = "#c7a472";
 const DECK_INK = "#916e44";
@@ -67,6 +67,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
   if (cache.minimap) return cache.minimap;
   const canvas = createScratchCanvas(terrain.cols, terrain.rows);
   const b = canvas.getContext("2d")!;
+  if (terrain.ecology) b.drawImage(terrainCover(terrain), 0, 0);
   for (let row = 0; row < terrain.rows; row += 1) {
     let start = 0;
     for (let col = 1; col <= terrain.cols; col += 1) {
@@ -75,7 +76,7 @@ export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
       const level = terrain.levels?.[row * terrain.cols + start];
       const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
       if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : level === "1" ? "#e4ddc2" : terrain.palette==='coastal'?'#a5ab91':undefined;
+      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : !terrain.ecology && level === "1" ? "#e4ddc2" : terrain.ecology ? undefined : terrain.palette==='coastal'?'#a5ab91':undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);
@@ -110,30 +111,26 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const cells = (visit: (col: number, row: number, x: number, y: number) => void) => {
     for (let row = low.row; row <= high.row; row += 1) for (let col = low.col; col <= high.col; col += 1) visit(col, row, (col + 0.5) * size, (row + 0.5) * size);
   };
-  if(terrain.palette==='coastal')cells((col,row,x,y)=>{
-    if(kindAt(col,row)!=='.')return;
-    b.fillStyle='#a5a891';b.fillRect(col*size,row*size,size+1,size+1);
-    for(let i=0;i<12;i++){
-      const px=x+(jitter(col,row,200+i)-.5)*size,py=y+(jitter(col,row,240+i)-.5)*size;
-      line(b,[[px,py],[px+3+jitter(col,row,260+i)*5,py-1]],i%3?'#68766320':'#e6dfbd2a',.8);
+  if (terrain.ecology) {
+    const cache = cacheFor(terrain);
+    cache.surfaces ??= terrainCover(terrain);
+    b.imageSmoothingEnabled = true;
+    b.drawImage(cache.surfaces, 0, 0, terrain.cols * size, terrain.rows * size);
+    paintGroundTextures(b, terrain, low, high);
+  } else if (terrain.surfaces) {
+    const cache = cacheFor(terrain);
+    if (!cache.surfaces) {
+      const cover = createScratchCanvas(terrain.cols, terrain.rows), brush = cover.getContext('2d')!;
+      [...terrain.surfaces].forEach((kind, index) => { const colour = SURFACE_COLORS[kind]; if (colour) { brush.fillStyle = colour; brush.fillRect(index % terrain.cols, Math.floor(index / terrain.cols), 1, 1); } });
+      cache.surfaces = cover;
     }
-    if(jitter(col,row,301)<.16){const px=x+(jitter(col,row,302)-.5)*size*.7,py=y+(jitter(col,row,303)-.5)*size*.7;line(b,[[px-4,py],[px-2,py-5],[px,py],[px+3,py-7],[px+4,py]],'#66775866',.8);}
-  });
-
-  if(terrain.surfaces){
-    const cache=cacheFor(terrain);
-    if(!cache.surfaces){
-      const cover=createScratchCanvas(terrain.cols,terrain.rows),brush=cover.getContext('2d')!;
-      [...terrain.surfaces].forEach((kind,index)=>{const color=SURFACE_COLORS[kind];if(color){brush.fillStyle=color;brush.fillRect(index%terrain.cols,Math.floor(index/terrain.cols),1,1);}});
-      cache.surfaces=cover;
-    }
-    b.imageSmoothingEnabled=true;
-    b.drawImage(cache.surfaces,0,0,terrain.cols*size,terrain.rows*size);
+    b.imageSmoothingEnabled = true;
+    b.drawImage(cache.surfaces, 0, 0, terrain.cols * size, terrain.rows * size);
   }
   // Plateaus: a lighter ground flecked with grass, the ramp paved, and steps where the ramp meets the plateau.
   cells((col, row, x, y) => {
     if (!walkable(col, row) || levelAt(col, row) === "0") return;
-    b.fillStyle = levelAt(col, row) === "2" ? RAMP : PLATEAU;
+    b.fillStyle = terrain.ecology ? (levelAt(col, row) === "2" ? "#c5bda443" : "#f7e8bc12") : levelAt(col, row) === "2" ? RAMP : PLATEAU;
     b.fillRect(col * size - 1, row * size - 1, size + 2, size + 2);
     for(let i=0;i<7;i++) {
       const px=x+(jitter(col,row,110+i)-.5)*size, py=y+(jitter(col,row,130+i)-.5)*size;
@@ -156,7 +153,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   // Marching-squares coast contours connect cell centres. The simulation grid
   // remains unchanged; diagonal shore segments avoid a staircase silhouette.
   const contours:number[][][]=[[],[[0,4,7]],[[1,5,4]],[[0,1,5,7]],[[2,6,5]],[[0,4,7],[2,6,5]],[[1,2,6,4]],[[0,1,2,6,7]],[[3,7,6]],[[0,4,6,3]],[[1,5,4],[3,7,6]],[[0,1,5,6,3]],[[2,3,7,5]],[[0,4,5,2,3]],[[4,1,2,3,7]],[[0,1,2,3]]];
-  const waterLayer=(inside:(col:number,row:number)=>boolean,color:string,shore:boolean)=>{
+  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string,shore:boolean)=>{
     for(let row=low.row-1;row<=high.row;row++)for(let col=low.col-1;col<=high.col;col++){
       const mask=(inside(col,row)?1:0)|(inside(col+1,row)?2:0)|(inside(col+1,row+1)?4:0)|(inside(col,row+1)?8:0);
       if(!mask)continue;const x=(col+.5)*size,y=(row+.5)*size;
@@ -166,19 +163,16 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
       }
     }
   };
-  waterLayer(wet,'#8eaaa5',true);
-  waterLayer((col,row)=>kindAt(col,row)==='~','#486773',false);
+  contourLayer(wet,'#8eaaa5',true);
+  contourLayer((col,row)=>kindAt(col,row)==='~','#486773',false);
   cells((col,row,x,y)=>{
     if(!wet(col,row)||jitter(col,row,3)>.18)return;
     const px=x+(jitter(col,row,7)-.5)*size*.5,py=y+(jitter(col,row,8)-.5)*size*.5;
     line(b,[[px-9,py],[px,py-1],[px+8,py]],'#c4d7d33d',.7);
   });
 
-  // Mud: a brown wash, flecked darker, its edge soft.
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "m") return;
-    ellipse(b, x, y, size * 0.85, size * 0.85, MUD);
-  });
+  // Marshes form connected contours; individual cells must not leave circular stamps.
+  contourLayer((col, row) => kindAt(col, row) === 'm', MUD, false);
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "m") return;
     for (let fleck = 0; fleck < 3; fleck += 1) {
@@ -241,15 +235,8 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     }
   });
 
-  // Forest: a dark floor under the trees so it reads as one mass, then the trees back to front.
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "T") return;
-    polygon(b, [[x-size*.62,y-size*.4],[x-size*.35,y-size*.63],[x+size*.6,y-size*.47],[x+size*.66,y+size*.4],[x+size*.2,y+size*.6],[x-size*.6,y+size*.48]],FOREST_EDGE,"transparent",0);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "T") return;
-    ellipse(b,x,y,size*.61,size*.47,FOREST_FLOOR);
-  });
+  // Connected woodland floor, with a forest edge rather than overlapping circular stamps.
+  contourLayer((col, row) => kindAt(col, row) === 'T', FOREST_FLOOR, false);
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "T") return;
     // Deep inside a forest one tree a cell; at its edge the trees stand a little apart.
