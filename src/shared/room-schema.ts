@@ -1,7 +1,7 @@
 import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
 import { isMapId, isMapIdea } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
-import { ROOM_AI_VERSIONS, type CreateRoomInput, type SlotPatch } from "./rooms";
+import { ROOM_AI_VERSIONS, ROOM_TEAMS, type CreateRoomInput, type SlotPatch, type RoomSeatSetup } from "./rooms";
 import type { BuildingKind, GameSetupOptions, GeneratedLayoutOptions, ItemKind, LocalUserProfile, MapId, PlayerId, RaceId, RoomAiVersion, RoomVisibility, ScenarioOverride, SlotController, UnitKind } from "./types";
 
 const ITEM_KINDS = ["flameCloak", "lightningRod", "stormStaff", "guardianScroll", "experienceBook", "breachCharge", "speedBoots", "regenRing", "healingScroll", "ivoryTower"] satisfies ItemKind[];
@@ -44,6 +44,24 @@ export function parseCreateRoomRequest(value: unknown): CreateRoomRequest | unde
   if (value.visibility !== undefined) {
     if (!isRoomVisibility(value.visibility)) return undefined;
     input.visibility = value.visibility;
+  }
+  if (value.layoutSeed !== undefined) {
+    if (typeof value.layoutSeed !== "string" || !value.layoutSeed.trim() || value.layoutSeed.length > 128) return undefined;
+    input.layoutSeed = value.layoutSeed;
+  }
+  if (value.seatSetup !== undefined) {
+    const counts = resolveRoomSlotCounts(input)!;
+    if (!Array.isArray(value.seatSetup) || value.seatSetup.length !== counts.slotCount) return undefined;
+    const seats: RoomSeatSetup[] = [];
+    for (const [index, valueSeat] of value.seatSetup.entries()) {
+      const seat = parseSlotPatch(valueSeat);
+      if (!seat || !seat.race || !seat.team || !(ROOM_TEAMS as readonly string[]).includes(seat.team)
+        || (index === 0 ? seat.controller !== "human" : seat.controller !== "ai" && seat.controller !== "open")) return undefined;
+      seats.push({ controller: seat.controller!, team: seat.team, race: seat.race,
+        ...(seat.controller === "ai" ? { aiVersion: seat.aiVersion ?? "random" } : {}) });
+    }
+    if (seats.filter(seat => seat.controller !== "ai").length !== counts.humanCount) return undefined;
+    input.seatSetup = seats;
   }
   return input;
 }

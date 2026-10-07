@@ -44,7 +44,22 @@ export type CreateRoomInput = {
   humanCount?: number;
   aiCount?: number;
   visibility?: RoomVisibility;
+  layoutSeed?: string;
+  seatSetup?: RoomSeatSetup[];
 };
+
+// Shareable match settings contain no user identity, readiness or live room state.
+export type RoomSeatSetup = Pick<RoomSlot, "controller" | "team" | "race" | "aiVersion">;
+export type RoomConfiguration = { mapId: MapId; name: string; visibility: RoomVisibility; layoutSeed: string; seatSetup: RoomSeatSetup[] };
+
+export function roomConfiguration(room: RoomState): RoomConfiguration {
+  return { mapId: room.mapId, name: room.name, visibility: room.visibility,
+    layoutSeed: room.layoutSeed ?? poolMap(room.mapId)?.layout.seed ?? room.id,
+    seatSetup: room.slots.map(({ controller, team, race, aiVersion }, index) => ({
+      controller: index === 0 ? "human" : controller === "human" ? "open" : controller,
+      team, race, ...(aiVersion ? { aiVersion } : {}),
+    })) };
+}
 
 export type GrandStressRoomOptions = {
   humanCount?: number;
@@ -57,20 +72,24 @@ export type SlotPatch = Partial<Pick<RoomSlot, "controller" | "team" | "race" | 
 
 export function createRoom(input: CreateRoomInput): RoomState {
   const { humanCount, aiCount, slotCount } = assertRoomSlotCounts(input);
+  let aiIndex = 0;
   const slots = Array.from({ length: slotCount }, (_, index): RoomSlot => {
     const playerId = defaultPlayerId(index);
     const isHost = index === 0;
     const isHumanSeat = index < humanCount;
+    const setup = input.seatSetup?.[index];
+    const controller = isHost ? "human" : setup?.controller ?? (isHumanSeat ? "open" : "ai");
     return normalizeSlot({
       id: `slot-${index + 1}`,
       playerId,
-      controller: isHost ? "human" : isHumanSeat ? "open" : "ai",
+      controller,
       ...(isHost ? { userId: input.host.id } : {}),
-      name: isHost ? input.host.name : isHumanSeat ? "Open" : `AI ${index - humanCount + 1}`,
+      name: isHost ? input.host.name : controller === "ai" ? `AI ${++aiIndex}` : "Open",
       team: defaultTeam(index, input.mapId ?? DEFAULT_ROOM_MAP_ID),
       // A computer seat starts on a race and a computer player drawn when the match starts (see @@@random-seats).
       race: isHumanSeat ? (index % 2 === 0 ? "grove" : "ember") : "random",
       ...(isHumanSeat ? {} : { aiVersion: "random" as const }),
+      ...setup,
       ready: isHost,
     });
   });
@@ -82,6 +101,7 @@ export function createRoom(input: CreateRoomInput): RoomState {
     mapId: input.mapId ?? DEFAULT_ROOM_MAP_ID,
     status: "open",
     autoTick: true,
+    ...(input.layoutSeed ? { layoutSeed: input.layoutSeed } : {}),
     slots,
   };
 }
@@ -180,7 +200,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
   if (!canStartRoom(room)) throw new Error("Room is not ready to start");
   const playerSlots = resolvedRoomSlots(room);
   // A room on the ladder map plays the layout its own id seeds.
-  const layoutSeed = room.mapId === LADDER_MAP_ID ? room.id : undefined;
+  const layoutSeed = room.layoutSeed ?? (room.mapId === LADDER_MAP_ID ? room.id : undefined);
   return {
     mapId: room.mapId,
     playerSlots,
@@ -190,7 +210,7 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
       aiVersions: Object.fromEntries(playerSlots.flatMap((slot) => (slot.aiVersion ? [[slot.playerId, slot.aiVersion]] : []))),
       teams: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, seatTeam(slot)])),
       races: Object.fromEntries(playerSlots.map((slot) => [slot.playerId, slot.race])),
-      ...(layoutSeed ? { layout: { seed: layoutSeed } } : {}),
+      ...(layoutSeed ? { layout: { ...poolMap(room.mapId)?.layout, seed: layoutSeed } } : {}),
     },
   };
 }
@@ -224,7 +244,7 @@ export type ResolvedRoomSlot = Omit<RoomSlot, "race" | "aiVersion"> & { race: Ra
 // same seats, and the game, its replay and its result hold what was drawn, never "random". A rematch is a new room, so
 // it draws anew.
 export function resolvedRoomSlots(room: RoomState): ResolvedRoomSlot[] {
-  const draw = <T>(key: string, choices: readonly T[]) => choices[Number.parseInt(fnv1a(`${room.id}:${key}`), 16) % choices.length]!;
+  const draw = <T>(key: string, choices: readonly T[]) => choices[Number.parseInt(fnv1a(`${room.layoutSeed ?? room.id}:${key}`), 16) % choices.length]!;
   return activeRoomSlots(room).map(({ aiVersion, ...slot }) => {
     const race = slot.race === "random" ? draw(`${slot.id}:race`, RACE_IDS) : slot.race;
     if (slot.controller !== "ai") return { ...slot, race };

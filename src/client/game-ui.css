@@ -36,6 +36,7 @@
 .resource-screen { font-family:var(--game-text); }
 .resource-stage { color:var(--game-muted); }
 /* A compact campaign tray, with a paper interior inside its walnut frame. */
+.game-shell { --battle-surface:var(--game-surface); --battle-edge:var(--game-edge); --battle-ink:var(--game-ink); --battle-muted:var(--game-muted); --battle-accent:var(--game-title); }
 .control-deck { gap:0; padding:5px; background:var(--game-paper); border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
 .control-deck[hidden] { display:none; }
 .control-deck .selection-chip { border:0; border-right:1px solid var(--game-edge); border-radius:0; background:transparent; box-shadow:none; padding:5px 9px 5px 3px; }
@@ -49,10 +50,40 @@
 .control-deck .hud-health > span:first-child { background:linear-gradient(#9cad78,#5c714d); border-right-color:#c4d6a9; }
 .control-deck .hud-health-text { line-height:14px; color:#fff; text-shadow:0 1px #000; }
 .control-deck .hud-roster-unit { border-radius:0; }
-.control-deck .hotkey { background:transparent; color:#ece8dc; font-weight:400; text-shadow:0 1px 2px #000,1px 0 2px #000; top:auto; bottom:1px; right:2px; }
+.control-deck .command-label { font:10px/13px var(--game-text); }
+.control-deck .hotkey { top:2px; bottom:auto; right:2px; z-index:2; padding:0 2px; background:#392213d9; color:var(--game-button-ink); font:500 10px/13px var(--game-text); text-shadow:0 1px #24140d; pointer-events:none; }
 :is(.minimap-tab,.match-menu-button,.minimap-relations,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-surface); border-color:var(--game-brass); }
 .minimap-frame { background:none; border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
 .match-menu,.tooltip-layer { border:6px solid transparent; border-image:var(--frame-walnut) 16 / 6px stretch; box-shadow:var(--game-frame); color:var(--game-ink); }
+.tooltip-layer { max-width:min(320px,calc(100vw - 24px)); font:12px/1.55 var(--game-text); }
+.tooltip-title { color:var(--game-title); font:600 14px/1.4 var(--game-text); }
+.tooltip-title span { flex:none; color:var(--game-ink); border-color:var(--game-edge); border-radius:0; font:500 11px/16px var(--game-text); }
+.tooltip-body,.tooltip-stats { color:var(--game-ink); }
+.tooltip-notes { color:var(--game-muted); }
+.tooltip-requirements,.status-line .error { color:var(--game-error); }
 .match-menu .match-action { color:var(--game-button-ink); border-radius:0; background:var(--game-button); border-color:var(--game-edge); }
 @media(max-width:650px) { .control-deck .selection-chip { border-right:0; border-bottom:1px solid var(--game-edge); } .control-deck .hud-actions { padding:4px 0 0; } }
 @media(max-width:650px) { .hud-subject-art { width:72px; height:72px; } }
+
+
+/* The map, its preview and the portable settings are three independent columns. */
+.play-browser .create-game-form { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+.create-game-layout { display:grid; grid-template-columns:minmax(170px,.6fr) minmax(220px,1fr) minmax(350px,1.15fr); gap:16px; min-height:0; min-width:0; }
+.create-game-layout .map-detail { display:flex; flex-direction:column; align-items:stretch; min-width:0; min-height:0; gap:12px; }
+.create-game-layout .map-preview-frame { box-sizing:border-box; width:100%; min-width:0; min-height:0; flex:0 1 auto; aspect-ratio:1; }
+.create-game-layout .map-preview { width:100%; height:auto; aspect-ratio:1; }
+.create-game-layout .map-info { min-width:0; padding:12px; }
+.create-settings { display:flex; flex-direction:column; gap:12px; min-width:0; min-height:0; }
+.create-settings .create-slot-pane { min-width:0; min-height:0; flex:0 1 auto; display:flex; flex-direction:column; padding:12px; gap:8px; }
+.create-settings .slot-list { overflow:auto; min-height:0; }
+.create-settings .slot-row { flex-wrap:wrap; gap:5px; padding:7px 0; }
+.create-settings .slot-index { flex-basis:16px; }
+.create-settings .slot-name { flex:1 0 45px; }
+.create-settings .slot-row select { min-width:76px; width:auto; padding:4px; font-size:12px; }
+@media(max-width:1000px) {
+ .create-game-layout { grid-template-columns:minmax(150px,.7fr) minmax(220px,1fr); }
+ .create-settings { grid-column:1 / -1; }
+ .play-browser .create-game-form { height:auto; grid-template-rows:auto auto; }
+ .create-game-layout .map-detail { max-width:400px; }
+ .create-settings .slot-list { overflow:visible; }
+}
