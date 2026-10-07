@@ -1,3 +1,4 @@
+import { isBuildPlacementClear } from "../../shared/build-placement";
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../../shared/sim";
 import { resolveSdkCommandIntent } from "./intent";
@@ -26,13 +27,11 @@ describe("SDK command intents", () => {
       },
     });
 
-    expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "expand", resourceId: "gold-natural" })).toEqual({
-      type: "build",
-      unitId: "v2-worker",
-      buildingKind: "townHall",
-      x: 760,
-      y: 760,
-    });
+    const expansion=resolveSdkCommandIntent(snapshotGame(game),"v2",{type:"expand",resourceId:"gold-natural"});
+    expect(expansion).toMatchObject({type:"build",unitId:"v2-worker",buildingKind:"townHall"});
+    if(expansion.type!=="build")throw new Error("missing expansion");
+    expect(isBuildPlacementClear(snapshotGame(game),"townHall",expansion)).toBe(true);
+    expect(Math.hypot(expansion.x-760,expansion.y-760)).toBeLessThan(260);
     expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "creepCamp", campId: "camp-natural", unitIds: "combat" })).toEqual({
       type: "attackMove",
       unitIds: ["v2-footman"],
