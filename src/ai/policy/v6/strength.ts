@@ -1,7 +1,8 @@
 import { VETERANCY_GAIN_PER_STAR } from "../../../shared/unit-value";
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../../shared/catalog";
-import type { Building, Unit } from "../../../shared/types";
+import type { Building, GameSnapshot, Unit } from "../../../shared/types";
+import { combatCapability } from "../../../shared/combat-capabilities";
 
 // @@@v6-strength - One strength currency for every V6 decision (attack, retreat, defend, creep, raid): a unit is worth its
 // price in hundreds of gold, scaled by the health it has left and its veterancy stars. Creeps and spirits have no price, so
@@ -22,6 +23,13 @@ export function combatRating(unit: Unit) {
   if (unit.kind === "worker") return 0;
   const base = CASTER_STRENGTH[unit.kind] ?? Math.sqrt(unit.maxHp * (unit.attackDamage / Math.max(1, unit.attackCooldown / SIM_TICKS_PER_SECOND))) / FOOTMAN_RATING;
   return base * Math.max(0.1, unit.hp / Math.max(1, unit.maxHp)) * (UNIT_DEFS[unit.kind].threat ?? 1);
+}
+
+/** The same rating with the currently working weapon, including ship batteries
+ * and equipment. A bare hull and a broken cannon contribute no fire support. */
+export function effectiveCombatRating(snapshot: GameSnapshot, unit: Unit) {
+  const weapon = combatCapability(snapshot, unit);
+  return combatRating({ ...unit, attackDamage: weapon.dps, attackCooldown: SIM_TICKS_PER_SECOND });
 }
 
 // A tower by the same hit points times damage rating as a fighter (about one footman for a defense tower).
