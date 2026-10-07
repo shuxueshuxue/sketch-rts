@@ -1,69 +1,92 @@
-/* These screens have a fixed header/footer and one scrollable list. Map selection never contains seat settings. */
-.main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) { padding:12px; }
-.main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-window {
-  box-sizing:border-box; width:min(820px,calc(100vw - 24px)); height:min(820px,calc(100dvh - 24px));
-  max-height:none; overflow:hidden; padding:16px 20px; gap:8px; grid-template-rows:auto auto minmax(0,1fr);
-}
-.main-menu[data-menu-view="maps"] .menu-window { width:min(1120px,calc(100vw - 24px)); }
-.main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-title { grid-row:1; padding:0 0 5px; font-size:24px; }
-.main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-status { grid-row:2; min-height:0; overflow-wrap:anywhere; }
-.main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .map-list { grid-row:3; min-width:0; min-height:0; overflow:hidden; }
-.map-select,.create-game-form,.room-setup { height:100%; min-height:0; min-width:0; display:grid; gap:12px; }
-.map-select { grid-template-rows:minmax(0,1fr) auto; }
-.create-game-form { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr) auto; }
-.room-setup { grid-template-rows:auto minmax(0,1fr) auto; }
-.map-select .map-chooser { display:grid; grid-template-columns:minmax(180px,.55fr) minmax(0,1fr); min-height:0; gap:18px; }
-.map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; padding:12px; gap:8px; }
+/* Map selection and the match lobby use the common menu page, with their own content layouts. */
+.main-menu[data-menu-view="maps"] .menu-window { width:min(1160px,calc(100vw - 32px)); }
+.map-select .map-chooser { display:grid; grid-template-columns:minmax(180px,.55fr) minmax(0,1fr); min-height:0; gap:24px; }
+.map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; padding:14px; gap:10px; }
 .map-entries { display:grid; align-content:start; min-height:0; overflow-y:auto; overflow-x:hidden; gap:2px; }
 .map-entry { position:relative; border:0; background:transparent; color:var(--inset-ink); padding:8px 10px 8px 16px; text-align:left; min-width:0; }
 .map-entry .map-button-name { font:13px/1.3 var(--font-body); letter-spacing:0; }
-.map-entry:hover { background:var(--selected); }
-.map-entry.selected { background:var(--selected); font-weight:700; }
+.map-entry:hover,.map-entry.selected { background:var(--selected); }
+.map-entry.selected { font-weight:700; }
 .map-entry.selected::before { content:""; position:absolute; left:4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left:5px solid var(--selected-mark); }
 .map-select .map-detail { display:grid; grid-template-columns:minmax(0,1fr) minmax(140px,.5fr); align-items:center; min-height:0; min-width:0; gap:16px; }
 .map-preview-frame { box-sizing:border-box; min-width:0; line-height:0; border-width:8px; border-image-width:8px; background:#1a0e05; box-shadow:0 4px 12px #0005; aspect-ratio:1; }
-.map-select .map-preview-frame { width:min(100%,calc(100dvh - 180px)); margin:auto; }
+.map-select .map-preview-frame { width:min(100%,calc(100dvh - 210px)); margin:auto; }
 .map-preview { display:block; width:100%; height:auto; aspect-ratio:1; }
 .map-info { min-width:0; display:grid; align-content:start; padding:12px; gap:10px; }
 .map-info-name { font:20px/1.3 var(--font-display); overflow-wrap:anywhere; }
 .map-facts { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; margin:0; font-size:12px; }
 .map-facts dt { color:var(--ink-soft); }
 .map-facts dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
-.selected-map-summary { display:flex; min-width:0; align-items:center; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--inset-edge); }
-.selected-map-summary .map-preview-frame { width:64px; flex:0 0 64px; border-width:5px; border-image-width:5px; }
-.selected-map-summary strong { color:var(--title); font:18px/1.3 var(--font-display); }
-.selected-map-summary [data-map-summary] { color:var(--ink-soft); font-size:12px; margin-top:4px; }
-.create-options { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px 14px; align-items:end; }
-.create-options input:not([type=checkbox]) { box-sizing:border-box; width:100%; min-width:0; }
-.create-options .checkbox-row { grid-column:1 / -1; }
+/* A map dossier on the left; the roster owns the full height on the right. */
+:is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:240px minmax(0,1fr); gap:26px; }
+.match-dossier { display:grid; align-content:start; min-width:0; min-height:0; gap:22px; overflow-y:auto; padding:2px 16px 8px 0; border-right:1px solid var(--rule); }
+.selected-map-summary { display:grid; min-width:0; gap:16px; padding-bottom:18px; border-bottom:1px solid var(--rule); }
+.selected-map-summary .map-preview-frame { width:100%; }
+.selected-map-summary strong { color:var(--title); font:22px/1.25 var(--font-display); }
+.selected-map-summary [data-map-summary] { color:var(--ink-soft); font-size:12px; margin-top:6px; }
+.create-options { display:grid; gap:16px; }
+.create-options input:not([type=checkbox]) { box-sizing:border-box; width:100%; min-width:0; height:34px; }
+.match-dossier .map-detail { display:grid; gap:16px; }
+.match-dossier .map-info { padding:0; border:0; background:none; box-shadow:none; gap:16px; }
+.match-dossier .map-info-name { font-size:22px; }
 .room-setup-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; }
-:is(.create-game-form,.room-setup) .room-slot-pane { display:grid; grid-template-rows:auto minmax(0,1fr); gap:10px; min-height:0; min-width:0; padding:12px; }
-:is(.create-game-form,.room-setup) .slot-list { overflow-y:auto; overflow-x:hidden; min-height:0; }
-:is(.create-game-form,.room-setup) .slot-row { display:grid; grid-template-columns:22px minmax(68px,1fr) 88px 88px 88px 76px 62px; gap:6px; min-width:0; padding:8px 0; align-items:center; }
-.create-game-form .slot-row { grid-template-columns:22px minmax(68px,1fr) 88px 88px 88px 76px; }
+:is(.create-game-form,.room-setup) .room-slot-pane {
+  --seat-tracks:24px minmax(90px,1fr) 84px 96px 104px 92px;
+  display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:14px; min-height:0; min-width:0;
+  padding:18px; border:1px solid var(--inset-edge); border-radius:0;
+  background:linear-gradient(110deg,#fff8df38,#c1a77c10); box-shadow:inset 0 1px #fff8e480;
+}
+.room-setup .room-slot-pane { --seat-tracks:24px minmax(90px,1fr) 78px 86px 94px 88px 46px; }
+:is(.create-game-form,.room-setup) .room-section-title { color:var(--title); font-size:16px; letter-spacing:1px; }
+.slot-columns,:is(.create-game-form,.room-setup) .slot-row { display:grid; grid-template-columns:var(--seat-tracks); gap:8px; align-items:center; }
+.slot-columns { overflow-y:hidden; scrollbar-gutter:stable; padding:0 0 10px; border-bottom:1px solid var(--rule); font:12px/1.4 var(--font-body); color:var(--ink-soft); }
+:is(.create-game-form,.room-setup) .slot-list { overflow-y:auto; overflow-x:hidden; min-height:0; scrollbar-gutter:stable; grid-auto-rows:max-content; gap:0; }
+:is(.create-game-form,.room-setup) .slot-row { min-width:0; min-height:44px; padding:8px 0; box-sizing:border-box; border-bottom:1px solid var(--inset-edge); }
 .slot-row > .slot-index { grid-column:1; }
-.slot-row > .slot-name { grid-column:2; }
+.slot-row > .slot-name { grid-column:2; font-size:14px; }
 .slot-row > :is(.slot-controller-badge,[data-slot-controller]) { grid-column:3; }
 .slot-row > [data-slot-team] { grid-column:4; }
 .slot-row > [data-slot-race] { grid-column:5; }
 .slot-row > [data-slot-ai] { grid-column:6; }
 .slot-row > .slot-ready { grid-column:7; }
-:is(.create-game-form,.room-setup) .slot-row select { box-sizing:border-box; width:100%; min-width:0; padding:4px; font-size:12px; }
-:is(.create-game-form,.room-setup) .menu-actions { min-width:0; flex-wrap:wrap; gap:8px; padding-top:2px; }
+:is(.create-game-form,.room-setup) .slot-row select { box-sizing:border-box; width:100%; min-width:0; min-height:30px; padding:4px 6px; font-size:12px; }
+:is(.create-game-form,.room-setup) .slot-controller-badge { min-height:30px; border:0; background:none; box-shadow:none; color:var(--ink-soft); padding:0; }
 @media(max-width:1100px) {
  .map-select .map-detail { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:10px; }
- .map-select .map-preview-frame { width:min(100%,calc(100dvh - 340px),400px); }
+ .map-select .map-preview-frame { width:min(100%,calc(100dvh - 360px),400px); }
  .map-select .map-facts { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto; }
  .map-select .map-info-name { font-size:18px; }
+ :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:200px minmax(0,1fr); gap:18px; }
+ :is(.create-game-form,.room-setup) .room-slot-pane { padding:12px; }
+ .room-setup .room-slot-pane { --seat-tracks:22px minmax(70px,1fr) 70px 80px 88px 82px 42px; }
+}
+@media(max-width:960px) {
+ :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:14px; }
+ .match-dossier { display:grid; grid-template-columns:160px minmax(0,1fr); gap:18px; border-right:0; border-bottom:1px solid var(--rule); padding:0 0 12px; overflow:visible; }
+ .selected-map-summary { display:flex; align-items:center; gap:12px; padding:0; border:0; grid-column:1; }
+ .selected-map-summary .map-preview-frame { width:60px; flex:0 0 60px; }
+ .selected-map-summary strong { font-size:17px; }
+ .create-options { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px 14px; align-items:end; }
+ .create-options .checkbox-row { grid-column:1 / -1; }
+ .room-setup .match-dossier { grid-template-columns:minmax(0,1fr); }
+ .match-dossier .map-detail { display:flex; align-items:center; gap:14px; }
+ .match-dossier .map-preview-frame { width:60px; flex:0 0 60px; }
+ .match-dossier .map-info { gap:0; }
+ .match-dossier .map-facts { display:none; }
+ .match-dossier .map-info-name { font-size:18px; }
+ .slot-row > .slot-name { font-size:13px; }
 }
 @media(max-width:720px) {
- .main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-window { padding:12px; }
  .map-select .map-chooser { grid-template-columns:minmax(130px,.55fr) minmax(0,1fr); gap:10px; }
  .map-browser,.map-info { padding:8px; }
  .map-select .map-facts { grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; font-size:11px; }
  .map-entry { padding-right:3px; }
  .map-entry .map-button-name { font-size:12px; }
- :is(.create-game-form,.room-setup) .slot-row { grid-template-columns:22px repeat(4,minmax(0,1fr)); gap:5px; }
+ .create-game-form .match-dossier { grid-template-columns:140px minmax(0,1fr); gap:12px; }
+ .selected-map-summary { grid-column:auto; }
+ :is(.create-game-form,.room-setup) .room-slot-pane { grid-template-rows:auto minmax(0,1fr); gap:8px; padding:10px; }
+ .slot-columns { display:none; }
+ :is(.create-game-form,.room-setup) .slot-row { grid-template-columns:22px repeat(4,minmax(0,1fr)); grid-template-rows:30px 30px; min-height:77px; padding:6px 0; gap:5px; }
  .slot-row > .slot-index { grid-column:1; grid-row:1 / 3; }
  .slot-row > .slot-name { grid-column:2 / 5; grid-row:1; }
  .slot-row > :is(.slot-controller-badge,[data-slot-controller]) { grid-column:5; grid-row:1; }
@@ -73,17 +96,21 @@
  .slot-row > .slot-ready { grid-column:5; grid-row:2; }
 }
 @media(max-height:600px) {
- .main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-window { padding:8px 12px; gap:4px; }
- .main-menu:is([data-menu-view="maps"],[data-menu-view="create"],[data-menu-view="setup"]) .menu-title { font-size:20px; }
- .map-select,.create-game-form,.room-setup { gap:8px; }
- .selected-map-summary .map-preview-frame { width:48px; flex-basis:48px; }
- .selected-map-summary { padding-bottom:6px; }
- .create-options { gap:6px 10px; }
+ .map-select .map-preview-frame { width:min(100%,max(80px,calc(100dvh - 350px))); }
+ .match-dossier { gap:12px; }
+ .selected-map-summary { gap:10px; padding-bottom:10px; }
+ .create-options { gap:8px; }
+ :is(.create-game-form,.room-setup) > .menu-page-body { gap:10px; }
+ :is(.create-game-form,.room-setup) .room-slot-pane { gap:8px; padding:10px; }
+}
+@media(max-width:500px) {
+ .create-game-form .match-dossier { grid-template-columns:minmax(0,1fr); gap:10px; }
 }
 @media(max-width:420px) {
  .map-select .map-chooser { grid-template-columns:120px minmax(0,1fr); }
  .map-select .map-info-name { font-size:14px; }
  .map-select .map-facts { font-size:10px; }
  .map-select .map-info { padding:5px; }
+ .selected-map-summary .map-preview-frame { width:48px; flex-basis:48px; }
  .create-options { grid-template-columns:minmax(0,1fr); }
 }
