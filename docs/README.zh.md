@@ -70,6 +70,7 @@ npm run dev
 - [开发指南（英文）](development.md)：架构、部署、SDK、AI 工具、音效包和录制。
 - [物理海战与装备](physical-naval-and-equipment.zh.md)：甲板、接舷、火炮射界、修理和物品交换。
 - [世界渲染](rendering/world3d.zh.md)：实时模型、人物卡片、资源载入和回退渲染。
+- [系统方向与战斗面板验证](reviews/system-directions-and-hud.zh.md)：航海与 RTS 参考、架构验收指标和实际 WebGL2 检查。
 - [AI 规格（英文）](ai-spec.md)：策略架构与行为。
 
 船体 GIF 渲染当前 Blender 模型；战斗 GIF 使用 Node Canvas 录制器运行当前共用模拟，配置 GIF 来自线上浏览器界面。录制方式见开发指南。
