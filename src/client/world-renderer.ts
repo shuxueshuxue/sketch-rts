@@ -15,7 +15,6 @@ import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
 import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
-import { drawShipWake } from './water-wakes';
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
@@ -174,12 +173,6 @@ export function drawWorld(frame: WorldFrame) {
   }
   }
   if(frame.pass==='ground'){ctx.restore();return;}
-  for (const ship of snapshot.units) {
-    if (!ship.sailing || ship.sailing.speed < 4 || !shipProfile(ship)) continue;
-    const at = drawnPosition(painter, ship), point = worldToScreen(painter, at);
-    if (!nearScreen(painter, point, ship.radius * 6)) continue;
-    drawShipWake(ctx, ship, point, painter.motion?.heading(ship, painter.now) ?? ship.sailing.heading, painter.reducedMotion ? 0 : painter.now / 1000);
-  }
   if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
   if (!painter.still && frame.viewer) for (const worker of snapshot.units) {

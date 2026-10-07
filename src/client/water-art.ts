@@ -1,23 +1,20 @@
 import { createScratchCanvas } from './art/scratch-canvas';
-import { waterField, waterDepthColour, waterSlope } from './water-field';
+import { waterCoverPixels, waterSlope } from './water-field';
 import type { Terrain } from '../shared/terrain';
 
 const covers = new WeakMap<Terrain, HTMLCanvasElement>();
 let ripple: HTMLCanvasElement | undefined;
 const TILE = 256;
 
-/** Baked once into the existing terrain chunks. The depth field is smoothly
- * magnified, then clipped by the terrain's own coast contours. */
+/** Shared seabed/absorption pixels, baked once into the existing terrain chunks
+ * and clipped by their coast contours. Surface lighting stays in its own cache. */
 export function waterCover(terrain: Terrain): HTMLCanvasElement {
   const old = covers.get(terrain);
   if (old) return old;
-  const canvas = createScratchCanvas(terrain.cols, terrain.rows), ctx = canvas.getContext('2d')!;
-  const image = ctx.createImageData(terrain.cols, terrain.rows), field = waterField(terrain);
-  for (let i = 0; i < field.depth.length; i++) {
-    const rgb = waterDepthColour(field.depth[i]!);
-    for (let c = 0; c < 3; c++) image.data[i * 4 + c] = rgb[c]!;
-    image.data[i * 4 + 3] = 255;
-  }
+  const cover = waterCoverPixels(terrain);
+  const canvas = createScratchCanvas(cover.width, cover.height), ctx = canvas.getContext('2d')!;
+  const image = ctx.createImageData(cover.width, cover.height);
+  image.data.set(cover.pixels);
   ctx.putImageData(image, 0, 0); covers.set(terrain, canvas);
   return canvas;
 }
@@ -30,11 +27,11 @@ function rippleTile() {
   const ctx = ripple.getContext('2d')!, pixels = ctx.createImageData(TILE, TILE);
   for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
     const slope = waterSlope(x / TILE, y / TILE, 0);
-    const light = Math.max(0, .92 - slope.x * .55 - slope.y * .8) / Math.sqrt(1 + slope.x * slope.x + slope.y * slope.y);
+    const light = Math.min(1, Math.max(0, .92 - slope.x * .55 - slope.y * .8) / Math.sqrt(1 + slope.x * slope.x + slope.y * slope.y));
     const specular = Math.pow(Math.max(0, light), 30);
     const i = (y * TILE + x) * 4;
     pixels.data[i] = 200; pixels.data[i + 1] = 225; pixels.data[i + 2] = 214;
-    pixels.data[i + 3] = Math.round(Math.min(.35, specular * .3 + Math.max(0, slope.y) * .12) * 255);
+    pixels.data[i + 3] = Math.round(Math.min(.07, specular * .05 + Math.max(0, slope.y) * .025) * 255);
   }
   ctx.putImageData(pixels, 0, 0);
   return ripple;
