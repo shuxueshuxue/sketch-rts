@@ -394,12 +394,6 @@ export function drawAtlasGround(c: Brush, width: number, height: number, camera:
     b.fillStyle = PAPER_BASE; b.fillRect(0, 0, 512, 512);
     let seed = 19027;
     const random = () => { seed = Math.imul(seed, 1664525) + 1013904223 | 0; return (seed >>> 0) / 4294967296; };
-    for (let i = 0; i < 18; i++) {
-      const x = random() * 512, y = random() * 512, r = 45 + random() * 110;
-      const wash = b.createRadialGradient(x, y, 0, x, y, r);
-      wash.addColorStop(0, "#8d9b6310"); wash.addColorStop(1, "#8d9b6300");
-      b.fillStyle = wash; b.fillRect(0, 0, 512, 512);
-    }
     for (let i = 0; i < 7000; i++) { b.fillStyle = i % 2 ? "#7f8b6805" : "#fff8e720"; b.fillRect(random() * 512, random() * 512, 1, 1); }
     for (let i = 0; i < 42; i++) {
       const x = 8 + random() * 496, y = 8 + random() * 496;
