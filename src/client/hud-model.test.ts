@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, resolveFocusedSelectionId, selectedCargoTransports } from "./hud-model";
+import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, inventoryUnitsForCommandCard, isUnitCommandPage, resolveFocusedSelectionId, selectedCargoTransports } from "./hud-model";
 import type { Building, GameSnapshot, PlayerState, Unit } from "../shared/types";
 
 const player: PlayerState = {
@@ -11,6 +11,19 @@ const player: PlayerState = {
 };
 
 describe("hud selection model", () => {
+  it("keeps inventory on the focused own unit card and restores it only after leaving a submenu or site", () => {
+    const snapshot = snapshotWith({ units: [unit("worker-1", "worker"), unit("buyer", "archer"), unit("enemy-1", "worker", "enemy")] });
+    const main = { paletteOpen: false, targeting: false, siteSelected: false };
+    const inventory = (context: typeof main, focusedId = "worker-1") => inventoryUnitsForCommandCard(snapshot, focusedId, "player", context).map(unit => unit.id);
+    expect(inventory(main)).toEqual(["worker-1"]);
+    for (const context of [{ ...main, paletteOpen: true }, { ...main, siteSelected: true }, { ...main, targeting: true }]) {
+      expect(isUnitCommandPage(context)).toBe(false);
+      expect(inventory(context)).toEqual([]);
+    }
+    expect(inventory(main, "enemy-1")).toEqual([]);
+    expect(inventory(main, "buyer")).toEqual(["buyer"]);
+  });
+
   it("shows every selected own transport's cargo, including campaign capacity, without exposing enemy cargo", () => {
     const ferry = { ...unit("ferry", "transport"), cargo: [unit("aboard", "archer")] };
     const carrier = { ...unit("carrier", "carrier"), cargo: [unit("aboard-2", "footman")] };

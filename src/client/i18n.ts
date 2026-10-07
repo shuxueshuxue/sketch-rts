@@ -9,6 +9,8 @@ type TranslationValues = Record<string, number | string>;
 
 const EN_TRANSLATIONS = {
   "common.back": "Back",
+  "command.back.body": "Return to the selected unit's main command page.",
+  "hud.otherPlayer": "Player",
   "common.cancel": "Cancel",
   "common.continue": "Continue",
   "common.home": "Home",
@@ -66,6 +68,7 @@ const EN_TRANSLATIONS = {
   "roomCard.activeSlots": "{count} active",
   "roomCreate.defaultName": "{name}'s Room",
   "roomCreate.map.label": "Map",
+  "roomCreate.seed": "World seed",
   "roomCreate.name.label": "Room name",
   "roomCreate.private.label": "Private room",
   "roomCreate.submit": "Create Room",
@@ -289,6 +292,8 @@ export type TranslationKey = keyof typeof EN_TRANSLATIONS;
 
 const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
   "common.back": "返回",
+  "command.back.body": "返回当前单位的主指令页。",
+  "hud.otherPlayer": "玩家",
   "common.cancel": "取消",
   "common.continue": "继续",
   "common.home": "主页",
@@ -346,6 +351,7 @@ const ZH_TRANSLATIONS: Record<TranslationKey, string> = {
   "roomCard.activeSlots": "{count} 活动",
   "roomCreate.defaultName": "{name}的房间",
   "roomCreate.map.label": "地图",
+  "roomCreate.seed": "世界种子",
   "roomCreate.name.label": "房间名",
   "roomCreate.private.label": "私人房间",
   "roomCreate.submit": "创建房间",

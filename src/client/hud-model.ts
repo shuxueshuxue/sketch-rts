@@ -1,6 +1,17 @@
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit, UnitKind } from "../shared/types";
 import { carries } from "../shared/naval";
 
+export type CommandCardContext = { paletteOpen: boolean; targeting: boolean; siteSelected: boolean };
+
+/** Unit equipment and inventory belong to the main unit card, never a site's purchase recipient. */
+export function isUnitCommandPage(context: CommandCardContext) {
+  return !context.paletteOpen && !context.targeting && !context.siteSelected;
+}
+
+export function inventoryUnitsForCommandCard(snapshot: GameSnapshot, focusedId: string | undefined, owner: PlayerId, context: CommandCardContext): Unit[] {
+  return isUnitCommandPage(context) ? focusedSelectionEntities(snapshot, focusedId, owner).units : [];
+}
+
 export function selectedCargoTransports(snapshot: GameSnapshot, selectedIds: Set<string>, owner: PlayerId) {
   return snapshot.units.filter(unit => selectedIds.has(unit.id) && unit.owner === owner && carries(unit) > 0);
 }
