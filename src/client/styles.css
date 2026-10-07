@@ -599,10 +599,8 @@ input[type="range"] {
 /* Insets: the lists and notes sunk into a panel. */
 .map-browser,
 .map-info,
-.room-browser-actions,
 .room-browser-list,
 .room-slot-pane,
-.room-map-pane,
 .results-panel .result-list,
 .room-list-note {
   border: 1px solid var(--inset-edge);
@@ -610,61 +608,6 @@ input[type="range"] {
   background: var(--inset);
   color: var(--inset-ink);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
-}
-
-/* The room browser: the rooms, then the way out and the way to a new room, as the other screens end.
-   @@@steady-rooms - Its window is one size however many rooms there are and while they load: a share of the screen's
-   height within bounds, the list taking what the title and the buttons leave and scrolling inside it, with room kept
-   for its scrollbar whether or not there is one. The window took the size of what it held: the home screen's buttons
-   until the rooms came, then as many rooms as there were. */
-.main-menu[data-menu-view="rooms"] .menu-window {
-  width: min(900px, calc(100vw - 56px));
-  height: min(max(320px, 76dvh), 720px, calc(100dvh - 56px));
-  grid-template-rows: auto auto minmax(0, 1fr);
-}
-
-.room-browser {
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
-}
-
-.room-browser-list {
-  display: grid;
-  align-content: start;
-  grid-auto-rows: max-content;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  padding: 12px;
-}
-
-.room-browser-actions {
-  order: 2;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.room-browser-actions .map-button {
-  min-width: 140px;
-  align-items: center;
-  padding: 7px 16px;
-}
-
-.room-browser-actions .map-button:first-child {
-  border-color: var(--primary-edge);
-  background: var(--primary);
-  color: var(--primary-ink);
-}
-
-.room-browser-actions .map-button-name {
-  font-size: 13px;
 }
 
 .room-browser-list .map-button {

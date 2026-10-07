@@ -1,4 +1,5 @@
 import {soundSettingsMarkup,bindSoundSettings,openMatchSettings} from './sound-settings';
+import { menuPageMarkup } from "./menu-page";
 import { commandIconMarkup } from "./command-icons";
 import { WorldPresentation } from './world-presentation';
 import { resources,resourceText } from './resources';
@@ -737,8 +738,8 @@ function renderMapSelectionMenu() {
   menuTitle.textContent = t("roomCreate.chooseMap");
   menuStatus.textContent = "";
   const panel = document.createElement("div");
-  panel.className = "map-select";
-  panel.innerHTML = `
+  panel.className = "map-select menu-page";
+  panel.innerHTML = menuPageMarkup(`
     <div class="map-chooser">
       <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
         <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
@@ -746,10 +747,10 @@ function renderMapSelectionMenu() {
       </section>
       ${mapDetailMarkup()}
     </div>
-    <div class="menu-actions">
+`, `
       <button type="button" data-map-next>${escapeHtml(t("roomCreate.configure"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
-    </div>`;
+`);
   const renderMaps = () => {
     panel.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
       const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
@@ -791,23 +792,26 @@ function renderCreateGameMenu() {
   menuTitle.textContent = t("roomCreate.configure");
   menuStatus.textContent = "";
   const form = document.createElement("form");
-  form.className = "create-game-form";
+  form.className = "create-game-form menu-page";
   form.dataset.createGameForm = "true";
-  form.innerHTML = `
+  form.innerHTML = menuPageMarkup(`
+    <aside class="match-dossier">
     ${selectedMapMarkup()}
     <div class="create-options">
       <label>${escapeHtml(t("roomCreate.name.label"))}<input name="name" value="${escapeHtml(pendingRoomConfiguration.name)}" placeholder="${escapeHtml(t("roomCreate.defaultName", { name: localUser.name }))}" /></label>
       <label>${escapeHtml(t("roomCreate.seed"))}<input name="seed" maxlength="128" value="${escapeHtml(pendingRoomConfiguration.layoutSeed)}" required /></label>
       <label class="checkbox-row"><input name="privateRoom" type="checkbox" ${pendingRoomConfiguration.visibility === "private" ? "checked" : ""} /> ${escapeHtml(t("roomCreate.private.label"))}</label>
     </div>
+    </aside>
     <section class="room-slot-pane create-slot-pane">
       <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
+      ${slotColumnsMarkup()}
       <div class="slot-list" data-draft-seats></div>
     </section>
-    <div class="menu-actions">
+`, `
       <button type="submit" data-submit-create-game>${escapeHtml(t("roomCreate.submit"))}</button>
       <button type="button" data-choose-map>${escapeHtml(t("roomCreate.backMaps"))}</button>
-    </div>`;
+`);
   const syncDraft = () => {
     pendingRoomConfiguration.name = form.querySelector<HTMLInputElement>("[name=name]")!.value;
     pendingRoomConfiguration.visibility = form.querySelector<HTMLInputElement>("[name=privateRoom]")!.checked ? "private" : "public";
@@ -894,18 +898,17 @@ function roomPreviewSeats(room: RoomState): PreviewSeat[] {
 function renderProfileMenu() {
   menuStatus.textContent = "";
   const form = document.createElement("form");
-  form.className = "profile-form";
+  form.className = "profile-form menu-page";
   form.dataset.profileForm = "true";
-  form.innerHTML = `
+  form.innerHTML = menuPageMarkup(`
     <label>${escapeHtml(t("profile.displayName"))}<input name="name" value="${escapeHtml(localUser.name)}" /></label>
     <div class="profile-id">${escapeHtml(t("profile.userId", { id: localUser.id }))}</div>
     ${soundSettingsMarkup(soundboard,i18n)}
-    <div class="menu-actions">
+`, `
       <button type="submit">${escapeHtml(t("common.save"))}</button>
       <button type="button" data-regenerate-user>${escapeHtml(t("profile.regenerate"))}</button>
       <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
-    </div>
-  `;
+`);
   bindSoundSettings(form,soundboard);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -930,29 +933,26 @@ function renderProfileMenu() {
   mapList.replaceChildren(form);
 }
 
-// The browser is laid out at once, its list saying the rooms are loading, and they fill it when they come (see
-// @@@steady-rooms).
+// The footer stays mounted while only the room list changes between loading, empty and populated states.
 async function renderRoomBrowser() {
   menuStatus.textContent = "";
   const browser = document.createElement("div");
-  browser.className = "room-browser";
-  browser.innerHTML = `
-    <div class="room-browser-actions"></div>
-    <div class="room-browser-list" data-room-browser-list></div>
-  `;
-  const actions = browser.querySelector<HTMLDivElement>(".room-browser-actions")!;
-  actions.replaceChildren(
-    menuButton(t("roomBrowser.create.title"), "", "data-create-room", () => {
-      openMenuRoute({ screen: "maps" });
-    }),
-    menuButton(t("common.back"), "", "data-back-home", () => {
-      openMenuRoute({ screen: "home" });
-    }),
-  );
+  browser.className = "room-browser menu-page";
+  browser.innerHTML = menuPageMarkup(`<div class="room-browser-list" data-room-browser-list></div>`, `
+    <button type="button" data-create-room>${escapeHtml(t("roomBrowser.create.title"))}</button>
+    <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>`);
+  browser.querySelector("[data-create-room]")!.addEventListener("click", () => openMenuRoute({ screen: "maps" }));
+  browser.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
   list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
   mapList.replaceChildren(browser);
-  const rooms = await deploymentRuntime.listRooms(localUser.id);
+  let rooms: RoomState[];
+  try {
+    rooms = await deploymentRuntime.listRooms(localUser.id);
+  } catch {
+    if (browser.isConnected) list.replaceChildren(roomListNote(t("roomBrowser.failed"), "error"));
+    return;
+  }
   // Left, or laid out again, while they loaded.
   if (!browser.isConnected) return;
   const visibleRooms = roomBrowserEntries(rooms, localUser.id);
@@ -988,10 +988,10 @@ function renderRoomSetup() {
   const room = currentRoom!;
   menuStatus.textContent = t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) });
   const setup = document.createElement("div");
-  setup.className = "room-setup";
+  setup.className = "room-setup menu-page";
   setup.dataset.roomSetup = room.id;
-  setup.innerHTML = `
-    ${selectedMapMarkup()}
+  setup.innerHTML = menuPageMarkup(`
+    <aside class="match-dossier">${mapDetailMarkup()}</aside>
     <div class="room-setup-layout">
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
@@ -1002,15 +1002,15 @@ function renderRoomSetup() {
             <button type="button" class="danger-button" data-close-room ${room.hostUserId === localUser.id ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
           </div>
         </div>
+        ${slotColumnsMarkup(true)}
         <div class="slot-list"></div>
       </section>
 
     </div>
-    <div class="menu-actions">
+`, `
       <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
       <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>
-    </div>
-  `;
+`);
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
   startButton.disabled = !canStartRoom(room);
   startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
@@ -1054,19 +1054,18 @@ function renderResultsMenu() {
     `;
   });
   const panel = document.createElement("div");
-  panel.className = "results-panel";
+  panel.className = "results-panel menu-page";
   panel.dataset.resultsScreen = currentRoom.id;
-  panel.innerHTML = `
+  panel.innerHTML = menuPageMarkup(`
     <div class="result-winner" data-result-winner>${escapeHtml(t("results.winner", { winner: winners.map(slot => slot.name).join("、") || result.winner || t("results.draw") }))}</div>
     <div class="result-head">
       <span>${escapeHtml(t("results.player"))}</span><span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span><span>${escapeHtml(t("results.race"))}</span><span>${escapeHtml(t("results.killsLosses"))}</span><span>${escapeHtml(t("results.gold"))}</span><span>${escapeHtml(t("results.buildings"))}</span>
     </div>
     <div class="result-list">${rows.join("")}</div>
-    <div class="menu-actions">
+`, `
       <button type="button" data-rematch>${escapeHtml(t("results.rematch"))}</button>
       <button type="button" data-return-home>${escapeHtml(t("common.home"))}</button>
-    </div>
-  `;
+`);
   const completedRoom = currentRoom;
   panel.querySelector("[data-rematch]")?.addEventListener("click", () => void createReplayRoom(completedRoom));
   panel.querySelector("[data-return-home]")?.addEventListener("click", returnHome);
@@ -1121,6 +1120,15 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
   button.innerHTML = `<span class="map-button-name">${escapeHtml(label)}</span>${note ? `<span class="map-button-note">${escapeHtml(note)}</span>` : ""}`;
   button.addEventListener("click", onClick);
   return button;
+}
+
+function slotColumnsMarkup(ready = false) {
+  return `<div class="slot-columns" aria-hidden="true">
+    <span></span><span>${escapeHtml(t("results.player"))}</span>
+    <span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span>
+    <span>${escapeHtml(t("results.race"))}</span><span>AI</span>
+    ${ready ? `<span>${escapeHtml(t("roomSetup.slotReady"))}</span>` : ""}
+  </div>`;
 }
 
 function slotRow(slot: RoomState["slots"][number], index: number, local: boolean, onPatch?: (patch: Record<string, unknown>) => void) {
@@ -1209,7 +1217,7 @@ function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = 
   return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
 }
 
-function roomListNote(text: string, state: "loading" | "empty") {
+function roomListNote(text: string, state: "loading" | "empty" | "error") {
   const note = document.createElement("div");
   note.className = "room-list-note";
   note.dataset.roomList = state;
