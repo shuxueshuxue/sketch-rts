@@ -5,6 +5,8 @@ import { SHIP_HULL_COST, SHIP_WEAPONS, bestFiringHeading, shipGunCanAim, damageS
 import { UNIT_DEFS } from './catalog';
 import { SIM_TICKS_PER_SECOND, seconds } from './time';
 import { ITEM_DEFS } from './equipment';
+import { weaponRules } from './equipment';
+import { combatCapability } from './combat-capabilities';
 import { localToWorld, shipProfile } from './ship-geometry';
 import { sailToward, turnShipToward } from './sailing';
 import { checksumGame } from './sim/checksum';
@@ -25,12 +27,37 @@ describe('physical ship equipment', () => {
         run(game,seconds(5));expect(ship.aim).toBeUndefined();expect(enemy.hp).toBeLessThan(10000);
     });
     it('never fires an intrinsic ranged attack from an unarmed hull',()=>{
-        for(const kind of ['warship','transport','cutter'] as const){
+        for(const kind of ['warship','transport','bombardShip','fireShip','carrier'] as const){
             const game=match(),ship=game.spawnUnit('player',kind,900,800),enemy=game.spawnUnit('enemy','transport',1120,800);
             game.items=[];ship.fittings=[];enemy.order={type:'hold',x:enemy.x,y:enemy.y};
             issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
             run(game,seconds(5));expect(ship.aim).toBeUndefined();expect(game.projectiles).toHaveLength(0);expect(enemy.hp).toBe(enemy.maxHp);
         }
+    });
+    it.each(['attack','attackMove','hold','idle'] as const)('fires the cutter’s own arrows with empty fittings under %s orders',mode=>{
+        const game=match(),ship=game.spawnUnit('player','cutter',900,800),enemy=game.spawnUnit('enemy','transport',1120,800);
+        enemy.hp=enemy.maxHp=2000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        if(mode==='attack')issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});
+        else if(mode==='attackMove')issuePlayerCommand(game,'player',{type:'attackMove',unitIds:[ship.id],x:1500,y:800});
+        else if(mode==='hold')issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
+        expect(ship.fittings).toEqual([]);expect(combatCapability(game,ship).armed).toBe(true);
+        const arrows=new Set<string>();
+        for(let i=0;i<seconds(5);i++){stepGame(game);for(const shot of game.projectiles)if(shot.attackerId===ship.id&&shot.attackKind==='arrow')arrows.add(shot.id);}
+        expect(arrows.size).toBeGreaterThanOrEqual(3);expect(enemy.hp).toBeLessThan(2000);expect(ship.aim).toBeDefined();
+    });
+    it('keeps cutter arrows and a fitted cannon independently armed, aimed and cooled down',()=>{
+        const game=match(),ship=game.spawnUnit('player','cutter',900,800),enemy=game.spawnUnit('enemy','transport',1120,800);
+        enemy.hp=enemy.maxHp=5000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        const cannon:WorldItem={id:'cutter-gun',kind:'shipCannon',shipId:ship.id,mountId:'bow',x:ship.x,y:ship.y,durability:90,cooldownRemaining:0};
+        game.items.push(cannon);ship.fittings=[{...shipMounts(ship)[0]!,id:cannon.id}];
+        issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});
+        const shots={arrow:new Set<string>(),cannon:new Set<string>()};
+        for(let i=0;i<seconds(6);i++){stepGame(game);for(const shot of game.projectiles)if(shot.attackerId===ship.id&&(shot.attackKind==='arrow'||shot.attackKind==='cannon'))shots[shot.attackKind].add(shot.id);}
+        expect(shots.arrow.size).toBeGreaterThanOrEqual(4);expect(shots.cannon.size).toBeGreaterThanOrEqual(2);
+        expect(ship.aim).toBeDefined();expect(cannon.aim).toBeDefined();expect(ship.aim).not.toBe(cannon.aim);
+        expect(weaponRules(game,ship).attackDamage).toBe(UNIT_DEFS.cutter.attackDamage);
+        cannon.durability=0;expect(combatCapability(game,ship).armed).toBe(true);expect(combatCapability(game,ship).range).toBe(UNIT_DEFS.cutter.attackRange);
+        restoreSnapshotIntoGame(game,snapshotGame(game),game.nextId);expect(combatCapability(game,game.units.find(unit=>unit.id===ship.id)!).armed).toBe(true);
     });
     it('revises an automatic naval engagement while preserving a player-chosen attack target',()=>{
         for(const automatic of [false,true]){

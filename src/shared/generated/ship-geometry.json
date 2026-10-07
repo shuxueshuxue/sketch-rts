@@ -1,5 +1,5 @@
 {
-  "sourceSha256": "9434d4bf81e79c4258b0c1669310eebea3aef73b24b0fcf05cb7986885e10a6b",
+  "sourceSha256": "67babbd780f0b6e458ac25765054f36051694c12f0ceafda5044ef3675ac5a47",
   "camera": {
     "tilt": 0.72,
     "frameSize": 384,
@@ -35,7 +35,7 @@
         0,
         11
       ],
-      "mastHeight": 82,
+      "mastHeight": 78,
       "weaponPivot": null,
       "hull": [
         [
@@ -169,7 +169,7 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 96,
+      "mastHeight": 64,
       "weaponPivot": null,
       "hull": [
         [
@@ -313,7 +313,7 @@
         0,
         35
       ],
-      "mastHeight": 96,
+      "mastHeight": 102,
       "weaponPivot": [
         34,
         0,
@@ -461,7 +461,7 @@
         0,
         54
       ],
-      "mastHeight": 96,
+      "mastHeight": 58,
       "weaponPivot": [
         30,
         0,
@@ -609,7 +609,7 @@
         0,
         32
       ],
-      "mastHeight": 96,
+      "mastHeight": 44,
       "weaponPivot": [
         25,
         0,
@@ -740,7 +740,7 @@
           "type": "mast"
         },
         {
-          "x": 49,
+          "x": 26,
           "y": 0,
           "radius": 8,
           "type": "mast"
@@ -753,7 +753,7 @@
         }
       ],
       "weaponMount": null,
-      "mastHeight": 106,
+      "mastHeight": 128,
       "weaponPivot": null,
       "hull": [
         [

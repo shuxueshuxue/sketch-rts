@@ -5,7 +5,7 @@ import { commandValidationError } from "./sim/command-validation";
 import { shipHoldSlots, ITEM_DEFS } from "./equipment";
 import { shipProfile } from "./ship-geometry";
 import { bodyMass } from "./physical-body";
-import { purchasePlacement } from "./purchase";
+import { purchasePlacement, findPurchaseRecipient } from "./purchase";
 import type { GameCommand } from "./types";
 function fixture() {
   const game = createGame("bareDuel", { players: ["player", "enemy"] });
@@ -69,5 +69,28 @@ describe("explicit purchase recipients", () => {
     expect(purchasePlacement(game, "player", dock, "shipCannon", ship.id)).toEqual({ refusal: "The ship cannot carry more weight" });
     expect(() => issuePlayerCommand(game, "player", { type: "buyShipEquipment", buildingId: dock.id, item: "shipCannon", recipientId: ship.id })).toThrow(/weight/);
     expect(game.players.player!.gold).toBe(3000);
+  });
+});
+
+describe("purchase recipient resolution", () => {
+  it("preserves a manual recipient and replaces out-of-range, dead or captured recipients", () => {
+    const {game,shop,worker,ship}=fixture();
+    expect(findPurchaseRecipient(game,"player",shop,worker.id)?.id).toBe(worker.id);
+    worker.x=2000;
+    expect(findPurchaseRecipient(game,"player",shop,worker.id)?.id).toBe(ship.id);
+    worker.x=600;worker.hp=0;
+    expect(findPurchaseRecipient(game,"player",shop,worker.id)?.id).toBe(ship.id);
+    worker.hp=100;worker.owner="enemy";
+    expect(findPurchaseRecipient(game,"player",shop,worker.id)?.id).toBe(ship.id);
+    ship.x=2000;
+    expect(findPurchaseRecipient(game,"player",shop,worker.id)).toBeUndefined();
+  });
+  it("prefers dockside ships but keeps a full explicitly chosen hold for clear purchase feedback", () => {
+    const {game,dock,worker,ship}=fixture();
+    expect(findPurchaseRecipient(game,"player",dock,undefined,true)?.id).toBe(ship.id);
+    expect(findPurchaseRecipient(game,"player",dock,worker.id,true)?.id).toBe(worker.id);
+    for(let i=0;i<shipHoldSlots(ship);i++)game.items.push({id:`full-${i}`,kind:"experienceBook",shipId:ship.id,holdSlot:i,x:ship.x,y:ship.y,cooldownRemaining:0});
+    expect(findPurchaseRecipient(game,"player",dock,ship.id,true)?.id).toBe(ship.id);
+    expect(purchasePlacement(game,"player",dock,"shipCannon",ship.id)).toHaveProperty("refusal");
   });
 });

@@ -1,4 +1,5 @@
 import { cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
+import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
@@ -55,6 +56,7 @@ import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, Gam
 export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
+  miningFrame?: MiningFrame;
   deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number }>;
   nextId: number;
   activePlayers: PlayerId[];
@@ -120,9 +122,9 @@ type SpatialIndex<T extends SpatialEntity> = {
 
 const MINE_RANGE = 44;
 const TOWN_HALL_DROP_RANGE = 74;
-const GOLD_PER_TRIP = 10;
-const GATHER_DURATION = seconds(5);
-const GOLD_MINE_ENTRY_COOLDOWN = seconds(1.6);
+const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
+const GATHER_DURATION = seconds(GOLD_MINE_RULES.gatherSeconds);
+const GOLD_MINE_ENTRY_COOLDOWN = seconds(GOLD_MINE_RULES.entrySeconds);
 const LOW_UPKEEP_GOLD_RATE = 0.7;
 const HIGH_UPKEEP_GOLD_RATE = 0.4;
 
@@ -446,7 +448,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     const resource = game.resources.find((candidate) => candidate.id === command.resourceId);
     if (!resource) throw new Error(`Unknown resource ${command.resourceId}`);
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
-      assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: "toMine", timer: 0 }, command.queued);
+      assignUnitOrder(unit, { type: "mine", resourceId: command.resourceId, phase: unit.carryingGold > 0 ? "return" : "toMine", timer: 0 }, command.queued);
     }
     addEffect(game, command.queued ? "queuedMine" : "mine", resource.x, resource.y, command.queued ? 44 : 30);
     return;
@@ -630,6 +632,7 @@ export function stepGame(game: Game) {
   updateTraining(game);
   updateResearch(game);
   updateResources(game);
+  game.miningFrame = prepareMiningFrame(game);
   updateMercenaryCamps(game);
   if (game.shops) restockShops(game.shops);
   game.unitSpatial = createSpatialIndex(game.units, 320);
@@ -986,6 +989,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
   for(const ship of shipsIn(game.units)){
     if(ship.hp<=0 || isStaggered(ship) || isStunned(ship) || !shipProfile(ship) || "avoidCombat" in ship.order && ship.order.avoidCombat)continue;
     const order=ship.order;
+    const intrinsic=unitRules(game,ship).intrinsicAttack;
     const ordered=(order.type==="attack" || order.type==="attackMove") && order.targetId ? findStrikeTarget(game,order.targetId) : undefined;
     const explicit=order.type==='attack' && order.leashX===undefined;
     const requested=ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined;
@@ -996,7 +1000,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       turnShipToward(ship,bestFiringHeading(game,ship,facingPoint),game.map,game.units,Math.abs(headingDifference(starts.get(ship.id)!.heading,ship.sailing!.heading)));
     }
     for(const item of installedWeapons(game,ship)){
-      if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && ship.cooldown>0)continue;
+      if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && !intrinsic && ship.cooldown>0)continue;
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
       let target=requested && areEnemyOwners(game,ship.owner,requested.owner) ? requested : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,def.range,ship,candidate=>shipGunCanAim(ship,item,candidate) && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0));
       if(target && !isObstacle(target))target=navalCombatTarget(game,ship,target);
@@ -1007,7 +1011,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       if(!proxy || !target)continue;
       const multiplier=1+ship.level*VETERANCY_GAIN_PER_STAR;
       fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*multiplier*outgoingDamageMultiplier(game,ship)),def.weapon,def.range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!});
-      markAimShot(proxy);item.cooldownRemaining=def.cooldown;if(item.mountId==="bow")ship.cooldown=def.cooldown;
+      markAimShot(proxy);item.cooldownRemaining=def.cooldown;if(item.mountId==="bow" && !intrinsic)ship.cooldown=def.cooldown;
     }
   }
 }
@@ -1231,7 +1235,7 @@ function updateNeutralLeash(game: Game, unit: Unit) {
 }
 
 function updateHoldOrder(game: Game, unit: Unit) {
-  if(shipProfile(unit))return;
+  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
@@ -1291,7 +1295,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
     moveToward(unit, target.x, target.y, game.map, game.units);
     return;
   }
-  if(shipProfile(unit))return;
+  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1338,7 +1342,7 @@ function updateAttackOrder(game: Game, unit: Unit) {
     moveToward(unit, target.x, target.y, game.map, game.units);
     return;
   }
-  if(shipProfile(unit))return;
+  if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
@@ -1349,19 +1353,26 @@ function updateAttackOrder(game: Game, unit: Unit) {
 function updateMineOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "mine") return;
   const order = unit.order;
-  const resource = game.resources.find((candidate) => candidate.id === order.resourceId);
-  if (!resource || resource.amount <= 0) {
+  const resource = game.miningFrame!.resources.get(order.resourceId);
+  if ((!resource || resource.amount <= 0) && order.phase !== "return") {
     unit.order = { type: "idle" };
     return;
   }
 
   if (order.phase === "toMine") {
-    if (distance(unit, resource) > MINE_RANGE) {
-      moveToward(unit, resource.x, resource.y, game.map, game.units);
+    if (distance(unit, resource!) > MINE_RANGE) {
+      moveToward(unit, resource!.x, resource!.y, game.map, game.units);
       return;
     }
-    if ((resource.harvestCooldownRemaining ?? 0) > 0) return;
-    resource.harvestCooldownRemaining = GOLD_MINE_ENTRY_COOLDOWN;
+    const occupied = game.miningFrame!.occupied;
+    if (!unit.mineSlot) {
+      const count = occupied.get(order.resourceId) ?? 0;
+      if (count >= GOLD_MINE_RULES.workstations) return;
+      unit.mineSlot = order.resourceId;
+      occupied.set(order.resourceId, count + 1);
+    }
+    if ((resource!.harvestCooldownRemaining ?? 0) > 0) return;
+    resource!.harvestCooldownRemaining = GOLD_MINE_ENTRY_COOLDOWN;
     unit.order = { ...order, phase: "gather", timer: GATHER_DURATION };
     return;
   }
@@ -1369,8 +1380,8 @@ function updateMineOrder(game: Game, unit: Unit) {
   if (order.phase === "gather") {
     order.timer -= 1;
     if (order.timer > 0) return;
-    const mined = Math.min(GOLD_PER_TRIP, resource.amount);
-    resource.amount -= mined;
+    const mined = Math.min(GOLD_PER_TRIP, resource!.amount);
+    resource!.amount -= mined;
     unit.carryingGold = mined;
     unit.order = { ...order, phase: "return", timer: 0 };
     return;
@@ -1390,7 +1401,7 @@ function updateMineOrder(game: Game, unit: Unit) {
     player.gold += upkeepGoldIncome(unit.carryingGold, player.supplyUsed);
   }
   unit.carryingGold = 0;
-  unit.order = { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 };
+  unit.order = resource && resource.amount > 0 ? { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 } : { type: "idle" };
 }
 
 // A soldier told to board walks to its transport (see @@@transport); it goes aboard in ferryUnits. An idle transport
@@ -2627,7 +2638,7 @@ function impactWeapon(game:Game,projectile:Projectile){
 
 function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
   if (!isObstacle(target)) target=navalCombatTarget(game,attacker,target);
-  if(isUnit(attacker) && shipProfile(attacker) && installedWeapons(game,attacker).length)return;
+  if(isUnit(attacker) && shipProfile(attacker) && !unitRules(game,attacker).intrinsicAttack)return;
   const weapon = isUnit(attacker) ? weaponRules(game, attacker).weapon : undefined;
   if (weapon) {
     if (weapon.minRange && distance(attacker, target) < weapon.minRange) return;
@@ -3091,7 +3102,7 @@ function completeBuildings(game: Game, owner: PlayerId, kind: Building["kind"]) 
 
 function nearestCompleteTownHall(game: Game, owner: Unit["owner"], x: number, y: number) {
   if (!isPlayerId(owner)) return undefined;
-  return completeBuildings(game, owner, "townHall").filter(building => sameGround(game.map, { x, y }, building)).reduce<Building | undefined>((best, building) => {
+  return (game.miningFrame?.townHalls.get(owner) ?? completeBuildings(game, owner, "townHall")).filter(building => sameGround(game.map, { x, y }, building)).reduce<Building | undefined>((best, building) => {
     if (!best) return building;
     return distance({ x, y }, building) < distance({ x, y }, best) ? building : best;
   }, undefined);
@@ -3499,7 +3510,8 @@ function separateUnits(game: Game) {
   // Hull contact is constrained by advanceShip's swept collision check.
   // Land separation must never relocate a ship sideways after navigation.
   for (const unit of game.units) {
-    if(shipProfile(unit))continue;
+    // Mining workers already pass through every body; exclude them once rather than testing every nearby pair.
+    if (isShipKind(unit.kind) || minerGhost(game, unit)) continue;
     const x = Math.floor(unit.x / cellSize);
     const y = Math.floor(unit.y / cellSize);
     const key = numericBucketKey(x, y);
@@ -3546,14 +3558,13 @@ function minerGhost(game: Game, unit: Unit) {
 // and the workers wading its shallows jammed each other for minutes, every walk ending where it began (six of the pool's
 // games at ddec752 and 7fbb5d1, on the way to an island's hall site and out of a landing).
 function separateUnitPair(game: Game, a: Unit, b: Unit) {
-  if (minerGhost(game, a) || minerGhost(game, b)) return;
-  if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
-  if (unitMover(a.kind) !== unitMover(b.kind)) return;
   const minDistance = a.radius + b.radius;
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const distanceSq = dx * dx + dy * dy;
   if (distanceSq >= minDistance * minDistance) return;
+  if(a.deck || b.deck){if(!a.deck || !b.deck || a.deck.shipId!==b.deck.shipId)return;}
+  if (unitMover(a.kind) !== unitMover(b.kind)) return;
   const length = Math.hypot(dx, dy);
   const nx = length === 0 ? 1 : dx / length;
   const ny = length === 0 ? 0 : dy / length;

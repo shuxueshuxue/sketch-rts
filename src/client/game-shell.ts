@@ -37,8 +37,8 @@ export function gameShellMarkup(i18n: I18n) {
     <div class="control-deck" hidden>
       <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
       <div class="hud-actions">
-        <div class="command-dock hidden" data-command-dock></div>
-        <div class="item-dock hidden" data-item-dock></div>
+        <div class="command-dock" data-command-dock hidden></div>
+        <div class="item-dock" data-item-dock hidden></div>
       </div>
     </div>
     <div class="tooltip-layer hidden" data-tooltip-layer role="tooltip"></div>

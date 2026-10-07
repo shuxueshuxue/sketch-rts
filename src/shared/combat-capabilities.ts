@@ -21,6 +21,11 @@ export function combatCapability(
   // Saves without a fittings record retain their saved weapon stats until
   // the common restore path materializes the equipment. An empty record is
   // explicitly unarmed and must never fall back to the hull catalog.
+  const intrinsic = {
+    damage: shipProfile(unit) ? rules.attackDamage : unit.attackDamage,
+    range: shipProfile(unit) ? rules.attackRange : unit.attackRange,
+    cooldown: rules.attackCooldown,
+  };
   const weapons =
     shipProfile(unit) && unit.fittings
       ? installedWeapons(snapshot, unit)
@@ -33,13 +38,8 @@ export function combatCapability(
               cooldown: def.cooldown,
             };
           })
-      : [
-          {
-            damage: shipProfile(unit) ? rules.attackDamage : unit.attackDamage,
-            range: shipProfile(unit) ? rules.attackRange : unit.attackRange,
-            cooldown: rules.attackCooldown,
-          },
-        ];
+      : [intrinsic];
+  if (shipProfile(unit) && unit.fittings && rules.intrinsicAttack) weapons.push(intrinsic);
   return {
     armed: weapons.some((weapon) => weapon.damage > 0),
     range: Math.max(0, ...weapons.map((weapon) => weapon.range)),

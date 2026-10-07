@@ -1,7 +1,7 @@
 import { canEquip, freeItemSlot, ITEM_DEFS, shipHoldSlots, shipItemMass } from "./equipment";
 import { bodyMass } from "./physical-body";
 import { distanceToHull, shipProfile } from "./ship-geometry";
-import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId } from "./types";
+import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit } from "./types";
 export const PURCHASE_REACH = 120;
 export type PurchaseSeller = {
   x: number;
@@ -20,14 +20,33 @@ type Result = {
 } | {
   refusal: string;
 };
+
+export function purchaseRecipientInRange(unit: Unit, seller: PurchaseSeller): boolean {
+  const gap = shipProfile(unit) ? distanceToHull(unit, seller) : Math.hypot(unit.x - seller.x, unit.y - seller.y) - unit.radius;
+  return gap <= seller.radius + PURCHASE_REACH;
+}
+
+/** Keep an explicit choice while valid; otherwise select a nearby recipient independently of the current goods. */
+export function findPurchaseRecipient(snapshot: Pick<GameSnapshot, "units">, owner: PlayerId, seller: PurchaseSeller, preferredId?: string, preferShips = false): Unit | undefined {
+  const eligible = (unit: Unit) => unit.owner === owner && unit.hp > 0 && Boolean(canEquip(unit) || shipProfile(unit)) && purchaseRecipientInRange(unit, seller);
+  const chosen = snapshot.units.find(unit => unit.id === preferredId && eligible(unit));
+  if (chosen) return chosen;
+  let best: Unit | undefined;
+  let score = Infinity;
+  for (const unit of snapshot.units) {
+    if (!eligible(unit)) continue;
+    const candidate = Math.hypot(unit.x - seller.x, unit.y - seller.y) + (preferShips && !shipProfile(unit) ? 100000 : 0);
+    if (candidate < score) { best = unit; score = candidate; }
+  }
+  return best;
+}
 /** Validate delivery before money, stock or item identity changes. */
 export function purchasePlacement(snapshot: Pick<GameSnapshot, "units" | "items">, owner: PlayerId, seller: PurchaseSeller, kind: ItemKind, recipientId: string): Result {
   const recipient = snapshot.units.find(unit => unit.id === recipientId && unit.hp > 0 && unit.owner === owner);
   if (!recipient)
     return { refusal: "Choose a living unit or ship of yours" };
   const profile = shipProfile(recipient);
-  const gap = profile ? distanceToHull(recipient, seller) : Math.hypot(recipient.x - seller.x, recipient.y - seller.y) - recipient.radius;
-  if (gap > seller.radius + PURCHASE_REACH)
+  if (!purchaseRecipientInRange(recipient, seller))
     return { refusal: "Move the recipient closer to the seller" };
   const ship = profile ? recipient : snapshot.units.find(unit => unit.id === recipient.deck?.shipId);
   if (ship && shipProfile(ship)) {
