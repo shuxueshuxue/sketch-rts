@@ -3,7 +3,7 @@ import { createScratchCanvas } from "./art/scratch-canvas";
 import { drawAtlasTree } from "./atlas-art";
 import { terrainCover, paintGroundTextures } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
-import { waterCover, paintWaterRipples } from './water-art';
+import { waterCover, waterLightMask, paintWaterRipples } from './water-art';
 import { waterField } from './water-field';
 
 // @@@terrain-art - The ground a unit cannot cross or crosses slowly (see @@@terrain), painted in the atlas's ink over its
@@ -129,7 +129,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const margin = 3;
   const low = { col: Math.max(0, Math.floor((cx * CHUNK) / size) - margin), row: Math.max(0, Math.floor((cy * CHUNK) / size) - margin) };
   const high = { col: Math.min(terrain.cols - 1, Math.floor(((cx + 1) * CHUNK) / size) + margin), row: Math.min(terrain.rows - 1, Math.floor(((cy + 1) * CHUNK) / size) + margin) };
-  const kindAt = (col: number, row: number) => (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? "T" : terrain.cells[row * terrain.cols + col]!);
+  const kindAt = (col: number, row: number) => terrain.cells[Math.max(0, Math.min(terrain.rows - 1, row)) * terrain.cols + Math.max(0, Math.min(terrain.cols - 1, col))]!;
   const levelAt = (col: number, row: number) => (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? "0" : terrain.levels?.[row * terrain.cols + col] ?? "0");
   const walkable = (col: number, row: number) => {
     const kind = kindAt(col, row);
@@ -181,41 +181,29 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     }
   });
 
-  // Marching-squares coast contours connect cell centres. The simulation grid
-  // remains unchanged; diagonal shore segments avoid a staircase silhouette.
+  // The bed, bank transition and animated surface share a world-sized field.
+  // Chunk boundaries and world edges never introduce their own shore outline.
+  if (waterField(terrain).hasWater) {
+    b.imageSmoothingEnabled = true;
+    b.drawImage(waterCover(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
+    waterMask = createScratchCanvas(CHUNK / 2, CHUNK / 2);
+    const mask = waterMask.getContext('2d')!;
+    mask.scale(.5, .5); mask.translate(-cx * CHUNK, -cy * CHUNK);
+    mask.drawImage(waterLightMask(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
+  }
+
+  // Connected contours remain useful for dry ground materials.
   const contours:number[][][]=[[],[[0,4,7]],[[1,5,4]],[[0,1,5,7]],[[2,6,5]],[[0,4,7],[2,6,5]],[[1,2,6,4]],[[0,1,2,6,7]],[[3,7,6]],[[0,4,6,3]],[[1,5,4],[3,7,6]],[[0,1,5,6,3]],[[2,3,7,5]],[[0,4,5,2,3]],[[4,1,2,3,7]],[[0,1,2,3]]];
-  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string | (() => void),shore:boolean)=>{
-    const shapes: { shape:number[]; points:number[][]; mask:number }[] = [];
+  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string)=>{
     for(let row=low.row-1;row<=high.row;row++)for(let col=low.col-1;col<=high.col;col++){
       const mask=(inside(col,row)?1:0)|(inside(col+1,row)?2:0)|(inside(col+1,row+1)?4:0)|(inside(col,row+1)?8:0);
       if(!mask)continue;const x=(col+.5)*size,y=(row+.5)*size;
       const points=[[x,y],[x+size,y],[x+size,y+size],[x,y+size],[x+size*.5,y],[x+size,y+size*.5],[x+size*.5,y+size],[x,y+size*.5]];
-      for(const shape of contours[mask]!){ shapes.push({shape, points, mask}); }
-    }
-    if (typeof color === 'function') {
-      b.save(); b.beginPath();
-      const maskCanvas = createScratchCanvas(CHUNK / 2, CHUNK / 2), maskBrush = maskCanvas.getContext('2d')!;
-      maskBrush.scale(.5, .5); maskBrush.translate(-cx * CHUNK, -cy * CHUNK);
-      for (const {shape, points} of shapes) {
-        const first = points[shape[0]!]!; b.moveTo(first[0]!, first[1]!);
-        for (const index of shape.slice(1)) b.lineTo(points[index]![0]!, points[index]![1]!);
-        b.closePath(); polygon(maskBrush, shape.map(i => points[i]!), '#fff', 'transparent', 0);
-      }
-      b.clip(); color(); b.restore();
-      if (shapes.length) waterMask = maskCanvas;
-    }
-    for (const {shape, points, mask} of shapes) {
-      if (typeof color === 'string') polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
-        if(shore&&mask!==15){const edge=shape.filter(i=>i>=4).map(i=>points[i]!);if(edge.length===2){line(b,edge,'#d5c69d38',10);line(b,edge,'#e8dfbd80',1.1);}}
+      for(const shape of contours[mask]!)polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
     }
   };
-  if (waterField(terrain).hasWater) contourLayer(wet, () => {
-    b.imageSmoothingEnabled = true;
-    b.drawImage(waterCover(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
-  }, true);
-
   // Marshes form connected contours; individual cells must not leave circular stamps.
-  contourLayer((col, row) => kindAt(col, row) === 'm', MUD, false);
+  contourLayer((col, row) => kindAt(col, row) === 'm', MUD);
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "m") return;
     for (let fleck = 0; fleck < 3; fleck += 1) {
@@ -279,7 +267,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   });
 
   // Connected woodland floor, with a forest edge rather than overlapping circular stamps.
-  contourLayer((col, row) => kindAt(col, row) === 'T', FOREST_FLOOR, false);
+  contourLayer((col, row) => kindAt(col, row) === 'T', FOREST_FLOOR);
   cells((col, row, x, y) => {
     if (kindAt(col, row) !== "T") return;
     // Deep inside a forest one tree a cell; at its edge the trees stand a little apart.

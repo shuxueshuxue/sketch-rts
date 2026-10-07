@@ -64,7 +64,7 @@ export class World3DLayer {
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
     return new World3DLayer(renderer);
   }
-  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){this.water.prepare(snapshot.map.terrain);await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);activateModelPortraits();}
+  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
   reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();}
   private deckPosition(unit:Unit,now:number){
@@ -77,6 +77,9 @@ export class World3DLayer {
     const viewport=`${frame.view.width}:${frame.view.height}:${Math.min(devicePixelRatio,2)}`;
     if(viewport!==this.viewport){this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
     configureWorldCamera(this.camera,frame.view);
+    // Preloading match models may use the home snapshot. Only the frame being
+    // rendered is allowed to bind scene terrain, including after a map change.
+    this.water.prepare(snapshot.map.terrain);
     this.water.update(now,frame.reducedMotion);
     const cx=frame.view.x+frame.view.width/(2*zoom),cy=frame.view.y+frame.view.height/(2*zoom),extent=Math.max(frame.view.width,frame.view.height)/zoom+400;
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
