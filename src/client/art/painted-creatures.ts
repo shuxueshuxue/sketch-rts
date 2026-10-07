@@ -50,7 +50,10 @@ export function paintCreature(b: Brush, kind: UnitKind, team: string, pose: Unit
   const def=creatures[kind]; if(!def) return false;
   const {shape,color,crown}=def;
   const walk=pose.mode==='walk'?Math.sin(pose.frame/8*Math.PI*2):0;
-  const strike=pose.mode==='attack'||pose.mode==='cast'?Math.sin(pose.frame/5*Math.PI):0;
+  // Damage starts the action: impact first, then recoil and recovery. Every
+  // creature anatomy consumes this same six-frame action, including biters.
+  const strike=pose.mode==='attack'?[1,.82,.48,.1,-.12,0][pose.frame]??0:
+    pose.mode==='cast'?Math.sin((pose.frame+1)/7*Math.PI):0;
   const size = def.size ?? 1;
   b.save();
   if (shape === 'ogre') b.translate(0, 18 - 23 * size);
@@ -69,14 +72,14 @@ export function paintCreature(b: Brush, kind: UnitKind, team: string, pose: Unit
     if(crown) for(const x of [-21,14]) { ellipse(b,x,5,6,4,'#414645'); limb(b,[[x,5],[x+9,-1]],'#7c8380',3); }
   } else if(shape==='spider') {
     for(const side of [-1,1]) for(let i=0;i<4;i++) {
-      const phase=walk*(i%2?1:-1)*3;
-      limb(b,[[side*6,-5+i*4],[side*(20+i*2),-16+i*9+phase],[side*(31+i*2),16+i*.3]],darker(color,.18),1.5);
+      const phase=walk*(i%2?1:-1)*3, thrust=i<2?strike*(2-i)*4:0;
+      limb(b,[[side*6,-5+i*4],[side*(20+i*2)+thrust,-16+i*9+phase],[side*(31+i*2)+thrust,16+i*.3-strike*(i<2?7:0)]],darker(color,.18),1.5);
     }
     ellipse(b,-8,-7,16,12,darker(color,.25),ink);
     plane(b,[[-23,-8],[-12,-20],[0,-17],[6,-7],[-8,2]],color);
-    ellipse(b,9,0,9,8,color,ink);
-    for(const y of [-3,1]) ellipse(b,15,y,1.1,1,'#c6b892');
-    limb(b,[[15,5],[21,7],[20,12]],'#b6ac92',1.6);
+    ellipse(b,9+strike*4,0,9,8,color,ink);
+    for(const y of [-3,1]) ellipse(b,15+strike*4,y,1.1,1,'#c6b892');
+    for(const side of [-1,1]) limb(b,[[15+strike*4,3+side*2],[23+strike*7,5+side*3],[22+strike*8,9+side*(2-strike*2)]],'#b6ac92',1.6);
     if(crown) line(b,[[-16,-13],[-8,-10],[-13,-6]],'#bba98a',1.5);
   } else if(shape==='stone'||shape==='wood'||shape==='ogre') {
     for(const side of [-1,1]) {
@@ -114,14 +117,14 @@ export function paintCreature(b: Brush, kind: UnitKind, team: string, pose: Unit
     plane(b,[[22,-33-strike*7],[25,-43-strike*7],[28,-33-strike*7]],'#b3b9b3');
     if(crown) plane(b,[[-7,-33],[-8,-46],[3,-36],[10,-43],[9,-29]],'#a69f81');
   } else if(shape==='spirit') {
-    for(let i=3;i>0;i--) ellipse(b,0,-11,i*6,i*10,`rgba(185,198,188,${.07+i*.015})`);
-    plane(b,[[-4,-35],[7,-34],[11,-20],[6,-5],[13,13],[0,7],[-8,17],[-5,-5],[-12,-17]],'#b6bfb0aa');
-    line(b,[[-2,-29],[3,-29]],'#f4e8c9',1);
+    for(let i=3;i>0;i--) ellipse(b,strike*5,-11,i*(6+strike*2),i*10,`rgba(185,198,188,${.07+i*.015+strike*.06})`);
+    plane(b,[[-4+strike*4,-35],[7+strike*4,-34],[11+strike*12,-20],[6+strike*8,-5],[13,13],[0,7],[-8,17],[-5,-5],[-12,-17]],'#b6bfb0aa');
+    line(b,[[-2+strike*4,-29],[3+strike*4,-29]],'#f4e8c9',1+strike);
   } else {
     const dragon=shape==='dragon', stag=shape==='stag', turtle=shape==='turtle';
     for(const side of [-1,1]) for(const x of [-17,16]) {
-      const stride=walk*side*(x<0?-1:1)*5+side*2.5;
-      limb(b,[[x,0],[x+stride,10],[x+stride+4,18]],darker(color,side===1?.08:.27),turtle?4:3);
+      const stride=walk*side*(x<0?-1:1)*5+side*2.5, brace=strike*(x<0?-3:5);
+      limb(b,[[x,0],[x+stride+brace,10],[x+stride+4,18]],darker(color,side===1?.08:.27),turtle?4:3);
     }
     plane(b,[[-28,-8],[-17,-18],[12,-18],[26,-7],[15,6],[-18,6]],color);
     plane(b,[[-24,-4],[3,-2],[23,-8],[15,6],[-18,6]],darker(color,.2));
@@ -129,14 +132,21 @@ export function paintCreature(b: Brush, kind: UnitKind, team: string, pose: Unit
       plane(b,[[-27,-7],[-15,-25],[8,-27],[23,-14],[17,0],[-14,4]],'#686953');
       for(let i=0;i<4;i++) line(b,[[-17+i*9,-19],[-14+i*8,-7],[-18+i*9,2]],'#a6a58b',.8);
     }
-    const neck=stag?-27:dragon?-20:-13;
+    // Feet and shell stay planted while the neck reaches and the jaws snap.
+    const neck=(stag?-27:dragon?-20:-13)+strike*(stag?11:turtle?-2:3);
+    b.save(); b.translate(strike*(turtle?12:stag?8:7),0);
     plane(b,[[15,-8],[19,neck],[28,neck-5],[35,neck+1],[39,neck+5],[26,neck+10],[23,2]],color);
-    ellipse(b,30,neck+1,1,1,'#d3c49a');
-    limb(b,[[-25,-4],[-36,-1],[-45,dragon?-12:6]],color,dragon?4:2);
-    if(stag) for(const side of [-1,1]) {
-      limb(b,[[24,neck-3],[24+side*8,-41],[25+side*14,-48]],'#b9b09a',1.5);
-      limb(b,[[24+side*8,-41],[22+side*3,-48]],'#b9b09a',1.1);
+    if(!stag) {
+      plane(b,[[29,neck+5],[39+strike*3,neck+5],[35+strike*3,neck+8+strike*4],[27,neck+9+strike*3]],darker(color,.18));
+      line(b,[[30,neck+5],[39+strike*3,neck+5]],'#292d29',.9);
     }
+    ellipse(b,30,neck+1,1,1,'#d3c49a');
+    if(stag) for(const side of [-1,1]) {
+      limb(b,[[24,neck-3],[24+side*8,neck-14],[25+side*14,neck-21]],'#b9b09a',1.5);
+      limb(b,[[24+side*8,neck-14],[22+side*3,neck-21]],'#b9b09a',1.1);
+    }
+    b.restore();
+    limb(b,[[-25,-4],[-36,-1],[-45,dragon?-12:6]],color,dragon?4:2);
     if(dragon) {
       const lift=walk*4+strike*6;
       for(const side of [-1,1]) {
