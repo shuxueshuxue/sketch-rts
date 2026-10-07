@@ -46,7 +46,7 @@ describe("canonical game state", () => {
     // Map geometry still uses det-math; key/id ordering is independent of locale.
     expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("b3a1487c");
     const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
-    // The seeded map now includes deterministic ground cover and denser scenery.
-    expect(checksumGame(ladder)).toBe("7e515585");
+    // The seeded map now carries an environment recipe and habitat-scored scenery.
+    expect(checksumGame(ladder)).toBe("0200194d");
   });
 });

@@ -1,6 +1,7 @@
 import { createBuilding, createUnit } from "./map";
+import { fractalNoise } from "./environment/noise";
 import { detCos, detSin } from "./det-math";
-import {coastalDressing,terrainSurfaces} from './map-dressing';
+import {ecologicalDressing,prepareEcology} from './map-dressing';
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
 /** A terrain generator only. Naval policy reads connectivity and resources, never this layout's identity. */
@@ -22,12 +23,13 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     for (let row = 0; row < cols; row++)
         for (let col = 0; col < cols; col++) {
             const at = { x: col * cell + cell / 2, y: row * cell + cell / 2 };
-            const gap = Math.min(...land.map(disk => Math.hypot(at.x - disk.at.x, at.y - disk.at.y) - disk.radius));
+            const gap = Math.min(...land.map(disk => Math.hypot(at.x - disk.at.x, at.y - disk.at.y) - disk.radius
+                - (fractalNoise(seed, at.x, at.y, 520, 90) - .5) * disk.radius * .3));
             const home=homes.find(home=>Math.hypot(at.x-home.at.x,at.y-home.at.y)<home.radius-120);
             const outward=home && Math.hypot(at.x-center.x,at.y-center.y)>Math.hypot(home.at.x-center.x,home.at.y-center.y);
-            const patch=detSin(col/4+rotation)+detCos(row/5);
-            cells += gap <= -64 ? large && home && Math.hypot(at.x-home.at.x,at.y-home.at.y)>350 && outward && patch>1.05 ? 'T'
-                : large && gap<-150 && (!home || Math.hypot(at.x-home.at.x,at.y-home.at.y)>350) && patch<-1.65 ? '#' : '.' : gap <= 48 ? "," : "~";
+            const patch=fractalNoise(seed,at.x,at.y,700,50);
+            cells += gap <= -64 ? large && home && Math.hypot(at.x-home.at.x,at.y-home.at.y)>350 && outward && patch>.65 ? 'T'
+                : large && gap<-150 && (!home || Math.hypot(at.x-home.at.x,at.y-home.at.y)>350) && patch<.27 ? '#' : '.' : gap <= 48 ? "," : "~";
         }
     const result: GeneratedMap = { kind: "ring", idea: "islandStarts", size, starts: {}, buildings: [], units: [], resources: [], mercenaryCamps: [], items: [], landmarks: [], terrain: { cell, cols, rows: cols, cells, palette: "coastal" }, camps: [], sites: [], obstacles: [] };
     for (const { owner, at } of homes) {
@@ -61,8 +63,8 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
             return open.some(point=>Math.hypot(at.x-point.x,at.y-point.y)<240)?'.':tile;
         }).join('');
     }
-    result.terrain.surfaces=terrainSurfaces(result.terrain,options.seed);
-    result.landmarks.push(...coastalDressing(result.terrain,[...homes.map(home=>home.at),...result.resources],options.seed));
+    prepareEcology(result.terrain,options.seed);
+    result.landmarks.push(...ecologicalDressing(result.terrain,[...homes.map(home=>home.at),...result.resources],options.seed));
     for(const mine of result.resources)result.landmarks.push({id:`scar-${mine.id}`,kind:'mineScar',x:mine.x,y:mine.y,size:160,rotation:0});
     return result;
 }

@@ -1,22 +1,34 @@
-/* Field equipment: dark iron frames, restrained pewter edges and recessed slots.
- * A screen owns geometry; these tokens own the common game material. */
+/* Walnut frames and parchment interiors: one material palette for every screen. */
 :root {
-  --game-serif: "Cinzel", "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
-  --game-text: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --game-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 .75 0 0 0 0 .65 0 0 0 0 .45 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
-  --game-wood: var(--game-grain),linear-gradient(115deg,#303532,#1b211f 60%,#262c28);
-  --game-leather: var(--game-grain),linear-gradient(160deg,#262e29,#171e1b);
-  --game-paper: var(--game-grain),linear-gradient(120deg,#dbd0b5,#b9ac90);
-  --game-brass: #7c8576;
-  --game-brass-lit: #d1bc85;
-  --game-ink: #ece8dc;
-  --game-muted: #acb1a3;
-  --game-title: #e0d3af;
-  --game-error: #e5a18c;
-  --game-edge: #929a7d55;
-  --game-field: #111916;
-  --game-button: linear-gradient(#394239,#242d27);
-  --game-button-hover: linear-gradient(#505644,#333c2f);
-  --game-frame: inset 0 1px #d5d6b640,inset 0 -2px #0009,0 0 0 1px #101510,0 0 0 3px #555e50,0 0 0 4px #111611,0 12px 32px #0008;
-  --game-inset: inset 0 1px #c2c9ac25,inset 0 -2px #0008,0 1px #0008;
+  --game-serif:"Cinzel","Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;
+  --game-text:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  /* Surfaces: speckle and stains for paper, streaks for wood. */
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .16 0 0 0 0 .06 0 0 0 .16 -.04'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='c' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .12 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='600' height='600' filter='url(%23c)'/%3E%3C/svg%3E");
+  --tex-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='w' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005 .11' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .02 0 0 0 0 0 0 0 0 1.5 -.6'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23w)'/%3E%3C/svg%3E");
+  --parchment: radial-gradient(ellipse at 35% 20%, #f5edda 0%, #e8dcc0 65%, #d9c7a0 100%);
+  --walnut: var(--tex-wood), linear-gradient(180deg, #3f2716 0%, #2a180b 100%);
+
+  /* The frame: walnut with a gold inlay and brass nails. */
+  --frame-walnut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cdefs%3E%3CradialGradient id='n' cx='.38' cy='.34' r='.66'%3E%3Cstop offset='0' stop-color='%23fff0b8'/%3E%3Cstop offset='.5' stop-color='%23b8903f'/%3E%3Cstop offset='1' stop-color='%23402a0c'/%3E%3C/radialGradient%3E%3Cfilter id='g' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.04 .45' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .05 0 0 0 0 .01 0 0 0 1 -.35'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='48' height='48' fill='%231a0e05'/%3E%3Cpath d='M1 1H47L32 16H16Z' fill='%237d5434'/%3E%3Cpath d='M1 1L16 16V32L1 47Z' fill='%236a4428'/%3E%3Cpath d='M47 1V47L32 32V16Z' fill='%234a2c15'/%3E%3Cpath d='M1 47L16 32H32L47 47Z' fill='%233d230f'/%3E%3Crect x='1' y='1' width='46' height='46' filter='url(%23g)'/%3E%3Crect x='11.5' y='11.5' width='25' height='25' fill='none' stroke='%23d1ad5f'/%3E%3Crect x='15' y='15' width='18' height='18' fill='none' stroke='%231a0e05' stroke-width='2'/%3E%3Ccircle cx='6.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='6.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='6.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3Ccircle cx='41.5' cy='41.5' r='2.8' fill='url(%23n)'/%3E%3C/svg%3E");
+
+
+  --game-grain:var(--tex-grain);
+  --game-wood:var(--walnut);
+  --game-paper:var(--tex-grain),var(--tex-cloud),var(--parchment);
+  --game-surface:var(--game-paper);
+  --game-brass:#81603a;
+  --game-brass-lit:#ae8134;
+  --game-ink:#352619;
+  --game-muted:#786146;
+  --game-title:#572f1b;
+  --game-error:#a13925;
+  --game-edge:#87674255;
+  --game-field:#f7efd9;
+  --game-button:var(--tex-wood),linear-gradient(#825b37,#57351e);
+  --game-button-hover:var(--tex-wood),linear-gradient(#986c42,#694125);
+  --game-button-ink:#f6e6bd;
+  --game-slot:var(--tex-grain),linear-gradient(140deg,#d2bd91,#e8d7af);
+  --game-frame:inset 0 1px #fff2cc70,inset 0 -1px #67432366,0 3px 14px #29180766;
+  --game-inset:inset 0 1px #f9e5b640,inset 0 -2px #26140766,0 1px #26140766;
 }

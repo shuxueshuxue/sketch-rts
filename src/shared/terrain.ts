@@ -18,6 +18,8 @@ export type Terrain = {
   /** g grass, d earth, s sand, r gravel; visual cover only. */
   surfaces?: string;
   palette?: 'coastal';
+  /** Reproducible environment recipe. Runtime float fields stay out of savegames/network snapshots. */
+  ecology?: { version: 1; seed: string; seaOutlet?: { x: number; y: number } };
 };
 
 export type TerrainCellKind = "ground" | "shallow" | "mud" | "bridge" | "forest" | "rock" | "water";
