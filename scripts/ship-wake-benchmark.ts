@@ -18,8 +18,8 @@ for(const ships of [8,32,64]){
   }
   const canvas=createCanvas(1600,1000),ctx=canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
   const view={x:0,y:0,width:1600,height:1000};
-  wakes.draw(ctx,game.units,view,6000);
+  wakes.draw(ctx,view,6000);
   const start=performance.now();
-  for(let i=0;i<30;i++)wakes.draw(ctx,game.units,view,6000+i*10);
+  for(let i=0;i<30;i++)wakes.draw(ctx,view,6000+i*10);
   console.log(JSON.stringify({ships,samples:wakes.sampleCount,msPerDraw:(performance.now()-start)/30}));
 }

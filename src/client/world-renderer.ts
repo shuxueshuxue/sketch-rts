@@ -157,7 +157,7 @@ export function drawWorld(frame: WorldFrame) {
   } else {
     drawPaperMap(ctx, snapshot.map.id, painter.camera, painter.width, painter.height);
   }
-  if(!frame.reducedMotion)frame.wakes?.draw(ctx,snapshot.units,{...painter.camera,width:painter.width,height:painter.height},painter.now,painter.motion);
+  if(!frame.reducedMotion)frame.wakes?.draw(ctx,{...painter.camera,width:painter.width,height:painter.height},painter.now);
   drawLandmarks(painter, snapshot.map.landmarks);
   if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>!frame.actorPositions?.has(`prop:${prop.id}`))}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);

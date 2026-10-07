@@ -1,27 +1,35 @@
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { shipProfile } from '../shared/ship-geometry';
-import type { GameSnapshot, Unit } from '../shared/types';
+import type { GameSnapshot } from '../shared/types';
 import type { Terrain } from '../shared/terrain';
 import { createScratchCanvas } from './art/scratch-canvas';
 import { waterCoverage, waterField } from './water-field';
-import type { UnitMotionSmoother } from './unit-motion';
 
 type Point = { x:number; y:number };
-type Trail = Point & { heading:number; beam:number; length:number; speed:number; at:number; seed:number; serial:number };
-type Track = Point & { tick:number; emitted:number; speed:number; serial:number };
-const LIFE = 5.4, INTERVAL = .16;
+type Trail = Point & { shipId:string; heading:number; beam:number; length:number; speed:number; at:number; seed:number; serial:number };
+type Track = Point & { tick:number; emitted:number; serial:number };
+const LIFE = 5.4, BOW_LIFE = 1.4, INTERVAL = .16;
 const masks = new WeakMap<Terrain, HTMLCanvasElement>();
 const patches:HTMLCanvasElement[]=[];
-let bow:HTMLCanvasElement|undefined;
-function bowPatch(){
-  if(bow)return bow;
-  bow=createScratchCanvas(64,96);const b=bow.getContext('2d')!;
+const bows:HTMLCanvasElement[]=[];
+function bowPatch(variant:number){
+  if(bows[variant])return bows[variant]!;
+  const canvas=createScratchCanvas(64,64),b=canvas.getContext('2d')!;
+  // Two loose pockets of disturbed water, with no continuous white crest.
+  // The uneven grains remain soft when the viewport buffer scales them down.
   for(const side of [-1,1]){
-    b.beginPath();b.moveTo(61,48+side*2);b.quadraticCurveTo(36,48+side*37,3,48+side*43);
-    b.lineWidth=8;b.strokeStyle='#9dcdb21c';b.stroke();
-    b.lineWidth=3.5;b.strokeStyle='#e1eedab0';b.stroke();
+    const wash=b.createRadialGradient(22,32+side*13,0,22,32+side*13,16);
+    wash.addColorStop(0,'#b5d7c82e');wash.addColorStop(1,'#b5d7c800');
+    b.fillStyle=wash;b.fillRect(0,0,64,64);
+    for(let i=0;i<25;i++){
+      const t=((i*13+variant*7+(side+1)*5)%29)/29;
+      const jitter=Math.sin(i*9.7+variant*3.1+side*2.3);
+      const x=6+t*51,y=32+side*(18*(1-t)**.75+2)+jitter*6;
+      b.beginPath();b.ellipse(x,y,1.1+(i%4)*.35,.65+(i%3)*.2,jitter*.7,0,Math.PI*2);
+      b.fillStyle=i%3===0?'#dce9d979':'#bddece47';b.fill();
+    }
   }
-  return bow;
+  bows[variant]=canvas;return canvas;
 }
 /** Small reusable foam/ripple stamps. No gradients or pixel synthesis in the
  * frame loop, even in the software renderer. Broken crests avoid hairline trails. */
@@ -81,17 +89,17 @@ export class ShipWakeTracker {
       const emitted=old?.emitted??now/1000;
       if(speed>4 && now/1000-emitted>=INTERVAL){
         let seed=0;for(const ch of ship.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
-        this.trails.push({x:ship.x,y:ship.y,heading:ship.sailing?.heading??0,beam:profile.beam,length:profile.length,speed,at:now/1000,seed,serial:old?.serial??0});
+        this.trails.push({shipId:ship.id,x:ship.x,y:ship.y,heading:ship.sailing?.heading??0,beam:profile.beam,length:profile.length,speed,at:now/1000,seed,serial:old?.serial??0});
       }
       const emits=speed>4&&now/1000-emitted>=INTERVAL;
-      this.tracks.set(ship.id,{x:ship.x,y:ship.y,tick:snapshot.tick,speed,emitted:emits?now/1000:emitted,serial:(old?.serial??0)+Number(emits)});
+      this.tracks.set(ship.id,{x:ship.x,y:ship.y,tick:snapshot.tick,emitted:emits?now/1000:emitted,serial:(old?.serial??0)+Number(emits)});
     }
     for(const id of this.tracks.keys())if(!alive.has(id))this.tracks.delete(id);
     this.tick=snapshot.tick;
   }
   get sampleCount(){return this.trails.length;}
 
-  draw(ctx:CanvasRenderingContext2D,ships:readonly Unit[],view:Point&{width:number;height:number},now:number,motion?:UnitMotionSmoother) {
+  draw(ctx:CanvasRenderingContext2D,view:Point&{width:number;height:number},now:number) {
     const visible=this.trails.filter(p=>p.x>view.x-350&&p.x<view.x+view.width+350&&p.y>view.y-350&&p.y<view.y+view.height+350);
     if(!visible.length)return;
     // A single viewport-sized reusable buffer gives exact shared coast clipping.
@@ -100,25 +108,30 @@ export class ShipWakeTracker {
     if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
     const b=canvas.getContext('2d')!;b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,width,height);b.scale(scale,scale);b.translate(-view.x,-view.y);
     const stride=Math.max(3,Math.ceil(visible.length/320));
+    const bowStride=Math.max(1,Math.ceil(visible.filter(sample=>now/1000-sample.at<BOW_LIFE).length/160));
     for(const sample of visible){
       // History is fine-grained for turns, but overlapping foam needs only
       // every third sample. Detail scales with occupied screen area.
-      if(sample.serial%stride!==0)continue;
       const age=now/1000-sample.at, fade=(1-age/LIFE)**2, power=Math.min(1,sample.speed/95);
+      const stern=sample.serial%stride===0;
+      // Keep the newest disturbance visible even in a large fleet. Thinning
+      // the short bow history like the stern would put it behind a moving hull.
+      const bow=age<BOW_LIFE&&(sample.serial%bowStride===0||sample.serial===(this.tracks.get(sample.shipId)?.serial??0)-1);
+      if(!stern&&!bow)continue;
       b.save();b.translate(sample.x,sample.y);b.rotate(sample.heading);
-      const spread=age*(12+sample.speed*.12), aft=-sample.length*.4-age*7;
-      const w=sample.beam*.8+spread*.4,h=sample.beam+spread*2;
-      b.globalAlpha=fade*power*.36;
-      b.drawImage(wakePatch((sample.seed+sample.serial)%3),aft-w/2,-h/2,w,h);
-      b.restore();
-    }
-    for(const ship of ships){
-      const track=this.tracks.get(ship.id),profile=track&&shipProfile(ship);if(!track||!profile||track.speed<4)continue;
-      if(ship.x<view.x-200||ship.x>view.x+view.width+200||ship.y<view.y-200||ship.y>view.y+view.height+200)continue;
-      const p=motion?.position(ship,now)??ship,heading=motion?.heading(ship,now)??ship.sailing?.heading??0,power=Math.min(1,track.speed/85);
-      b.save();b.translate(p.x,p.y);b.rotate(heading);
-      b.globalAlpha=power;
-      b.drawImage(bowPatch(),-profile.length*.1,-profile.beam*.8,profile.length*.65,profile.beam*1.6);
+      if(stern){
+        const spread=age*(12+sample.speed*.12), aft=-sample.length*.4-age*7;
+        const w=sample.beam*.8+spread*.4,h=sample.beam+spread*2;
+        b.globalAlpha=fade*power*.36;
+        b.drawImage(wakePatch((sample.seed+sample.serial)%3),aft-w/2,-h/2,w,h);
+      }
+      // Bow disturbances use the same world-space history as the stern wake.
+      // Stopping only ends emission; existing foam spreads and fades in seconds.
+      if(bow){
+        const bowWidth=sample.length*.2+age*7,bowHeight=sample.beam*(.72+age*.4);
+        b.globalAlpha=(1-age/BOW_LIFE)**2*power*.6;
+        b.drawImage(bowPatch((sample.seed+sample.serial)%3),sample.length*.4-age*5,-bowHeight/2,bowWidth,bowHeight);
+      }
       b.restore();
     }
     if(this.terrain){
