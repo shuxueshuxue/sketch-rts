@@ -12,6 +12,8 @@ import { installedWeapons } from '../../shared/ship-equipment';
 import { createAiRuntime, createPresetAiRuntimeFramePlanner } from '../runtime';
 import { CommandFrameRuntime } from '../../shared/sim/command-frame-runtime';
 import { seconds } from '../../shared/time';
+import { runAiCommandEntriesFromScripts } from './script-runner';
+import { planNavalEconomy } from './naval';
 
 // Tests that model old cargo saves observe the same restored live crew as the runtime.
 function snapshotGame(game: ReturnType<typeof createGame>) {
@@ -68,6 +70,46 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
 }
 
 describe('shared dock outfitting', () => {
+  it('reconsiders its cached mine after an expedition stalls and returns', () => {
+    const game = islandGame();
+    const boat = game.spawnUnit('player', 'transport', at(12, 9).x, at(12, 9).y);
+    const worker = game.units[0]!;
+    expect(boardUnit(boat, worker, game.units)).toBe(true);
+    const memory = createAiPolicyMemory();
+    memory.naval = {
+      island: { tick: 0, plan: { mineId: 'island', landing: at(19, 9) } },
+      ferries: { [boat.id]: { purpose: 'settle', targetId: 'island', from: at(9, 9), to: at(19, 9), phase: 'loading', crewIds: [], sinceTick: 0,
+        progress: { tick: 0, x: boat.x, y: boat.y, phase: 'loading', crew: worker.id } } }
+    };
+    game.tick = seconds(41);
+    const commands = planNavalTactics(snapshotGame(game), 'player', { version: 'v8', memory });
+    expect(memory.naval.ferries![boat.id]!.phase).toBe('return');
+    expect(commands.some(command => command.type === 'unload')).toBe(true);
+    expect(memory.naval.island).toBeUndefined();
+  });
+
+  it('requests the population prerequisite when a full land army blocks its ferry', () => {
+    const game = islandGame();
+    game.buildings.push({ ...game.buildings[0]!, id: 'yard', kind: 'shipyard', x: 275, y: 336, radius: 44 });
+    game.players.player.supplyCap = 8;
+    game.spawnUnit('player', 'footman', 140, 200);
+    const want = navalWant(snapshotGame(game), 'player', { version: 'v5', memory: createAiPolicyMemory() });
+    expect(want?.id).toBe('naval:population');
+    expect(want?.issue(new Set())).toMatchObject({ type: 'build', buildingKind: 'farm' });
+  });
+
+  it('lets naval purchases spend their earmarked ferry budget after depletion', () => {
+    const game = islandGame();
+    for (const mine of game.resources) if (mine.id !== 'island') mine.amount = 0;
+    game.players.player.gold = 610;
+    game.buildings.push({ ...game.buildings[0]!, id: 'yard', kind: 'shipyard', x: 275, y: 336, radius: 44 });
+    const options = { version: 'v5' as const, memory: createAiPolicyMemory() };
+    const snapshot = snapshotGame(game);
+    expect(navalBudgetReserve(snapshot, 'player', options)).toBeGreaterThan(0);
+    const commands = runAiCommandEntriesFromScripts(snapshot, 'player', [{ id: 'navalEconomy', phase: 'economy', run: planNavalEconomy }], options);
+    expect(commands).toContainEqual({ scriptId: 'navalEconomy', command: { type: 'train', buildingId: 'yard', unitKind: 'transport' } });
+  });
+
   for(const version of ['v5','v7','v8'] as const)it(`${version} adds a working broadside battery to an important crewed warship`,()=>{
     const game=islandGame();game.scriptedVictory=true;game.players.player!.gold=3000;
     game.buildings.push({...game.buildings[0]!,id:'battery-yard',kind:'shipyard',x:275,y:336,radius:44,complete:true});
