@@ -12,8 +12,8 @@ export type BootstrapMatch = BenchmarkMatchInput<AiGameAgent> & { subject: Boots
 
 export function bootstrapMatches(seed: string, maps: readonly MapId[] = MAP_POOL.map(map => map.id), maxTicks = 48000, unseen = false): BootstrapMatch[] {
   return maps.flatMap(mapId => BOOTSTRAP_VERSIONS.flatMap(subject => BOOTSTRAP_OPPONENTS.flatMap(opponents => (['grove','ember'] as const).flatMap(race => ([0,1] as const).map(side => {
-    const agents: Record<string, AiGameAgent> = {p0:{version:subject, race, controller:'external-agent', team:'a'}};
-    opponents.forEach((version, index) => {agents[`p${index+1}`]={version,race:index % 2 === 0 ? (race === 'grove' ? 'ember' : 'grove') : race,controller:'external-agent',team:'b'};});
+    const agents: Record<string, AiGameAgent> = {p0:{version:subject, versionLabel:subject, race, controller:'external-agent', team:'a'}};
+    opponents.forEach((version, index) => {agents[`p${index+1}`]={version,versionLabel:version,race:index % 2 === 0 ? (race === 'grove' ? 'ember' : 'grove') : race,controller:'external-agent',team:'b'};});
     return {name:`${mapId}/${subject}/${opponents.join('+')}/${race}/${side}`,mapId,subject,side,seed,unseen,agents,maxTicks,thinkInterval:15};
   })))));
 }

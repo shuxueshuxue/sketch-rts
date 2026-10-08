@@ -18,7 +18,10 @@ const matches = bootstrapMatches(values.seed,values.maps?.split(',') as MapId[]|
   .filter(match=>values.opponents===undefined || values.opponents.split(',').includes(Object.values(match.agents).slice(1).map(agent=>agent.version).join('+')))
   .filter(match=>values.side===undefined || match.side===Number(values.side))
   .filter(match=>values.race===undefined || match.agents.p0!.race===values.race);
-if(values.baseline)for(const match of matches)match.agents.p0!.policyVersion=BOOTSTRAP_PARENTS[match.subject];
+if(values.baseline)for(const match of matches){
+  match.agents.p0!.policyVersion=BOOTSTRAP_PARENTS[match.subject];
+  match.agents.p0!.versionLabel=BOOTSTRAP_PARENTS[match.subject];
+}
 console.log(JSON.stringify({name:'bootstrap_1',baseline:values.baseline===true,games:matches.length,seed:values.seed,unseen:values.unseen===true,maps:[...new Set(matches.map(match=>match.mapId))]}));
 if (!values['dry-run']) {
   mkdirSync(dirname(values.out),{recursive:true});

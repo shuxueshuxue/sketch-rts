@@ -3,6 +3,7 @@ name: bootstrap_1
 on:
   push:
     branches: [bootstrap_1]
+    paths: [docs/engineering/bootstrap_1/acceptance-request.json]
 
 permissions:
   contents: read
@@ -22,16 +23,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
-      - run: npx vitest run src/ai/bootstrap_1/benchmark.test.ts src/ai/bootstrap_1/repair.test.ts src/ai/policy/training-choice.test.ts
+      - run: npx vitest run src/ai/bootstrap_1 src/sdk/benchmark.test.ts src/ai/policy/training-choice.test.ts
       - run: node --import tsx scripts/bootstrap_1-freeze.ts
   matrix:
     needs: frozen
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        mode: [baseline, candidate]
         map: [sapphireArchipelago, grandEstuary, brokenSea, templeSpring, turtleLake, elderwood, ringwater, loneMarket, reedwater, veiledHill, greystonePass, pineshade, gullIsland, stillwater, twoShores]
         subject: [v9_archer, v9_summoner, v9_knight]
     steps:
@@ -42,12 +42,12 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Play every rival group, race and side
-        run: node --import tsx scripts/bootstrap_1.ts --maps '${{ matrix.map }}' --subjects '${{ matrix.subject }}' ${{ matrix.mode == 'baseline' && '--baseline' || '' }} --out .playtest/bootstrap_1/report.json
+        run: node --import tsx scripts/bootstrap_1.ts --maps '${{ matrix.map }}' --subjects '${{ matrix.subject }}' --out .playtest/bootstrap_1/report.json
       - name: Save complete match evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bootstrap_1-${{ matrix.mode }}-${{ matrix.map }}-${{ matrix.subject }}
+          name: bootstrap_1-candidate-${{ matrix.map }}-${{ matrix.subject }}
           path: .playtest/bootstrap_1/
           include-hidden-files: true
           retention-days: 14

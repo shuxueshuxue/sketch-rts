@@ -31,8 +31,14 @@ node --import tsx scripts/bootstrap_1.ts --unseen --seed <held-out-seed> --out .
 
 定位一类对局可使用 `--maps`、`--subjects`、`--opponents`、`--race`、`--side`。每局完成立即保存完整报告；最终报告保留每局胜者、经济、伤亡与实际部队组成。元数据记录实际控制器和策略版本，以及 AI、SDK、模拟代码的 SHA-256，避免将未提交试验混作同一候选。任何一局未胜，运行退出码为 1。
 
-`bootstrap_1` 分支上的 Actions 按模式、地图与家族分成 90 项任务执行两组完整矩阵。冻结控制组在基线改变时重新测量；之后候选迭代可以复用同一引擎下完成的控制组。先验证冻结，再运行对局，失败任务仍保存证据。尚未达到验收时不合并或部署为完成版本。
+日常迭代以手操观察、复盘与局部模拟为主，不随开发提交启动完整矩阵。`bootstrap_1-inspect.ts` 默认只推进五分钟，保存实际购买命令和每三十秒的独立状态，`--ticks` 可进一步缩短；`--frames` 输出真实模拟状态供画面观察。观察记录不计作完整胜负验收。
+
+```bash
+node --import tsx scripts/bootstrap_1-inspect.ts --map grandEstuary --subject v9_archer --opponents v8 --race grove --side 1 --ticks 3600 --frames --out /tmp/bootstrap_1-opening.json
+```
+
+完整矩阵只在明确请求验收时运行：提交 `docs/engineering/bootstrap_1/acceptance-request.json` 的改动触发 Actions，按地图与家族执行 45 项候选任务。冻结控制组已在同一引擎下完成，后续验收复用；只有公共引擎或获批基线发生变化才重测控制组。先验证冻结，再运行对局，失败任务仍保存证据。尚未达到验收时不合并或部署为完成版本。
 
 ## 当前状态
 
-工作进行中。采矿规则已合并，正在重新冻结和测量控制组。新策略尚未达标；完整测量和已否决方案见 `development.zh.md`。未达标前保持草稿 PR，不合并或部署为完成版本。
+工作进行中。当前引擎的冻结控制组全部 1620 局完成，无缺失；记录见 `baseline-engine-58cac10.csv`。提交 `7d31b5c` 的候选完成 1618 局，602 胜、743 负、273 超时，另有 2 局因任务超时缺失；逐格记录见 `candidate-7d31b5c-engine-58cac10.csv`。候选仍未达标，最终 holdout 种子仍未使用。完整测量和已否决方案见 `development.zh.md`；PR #192 保持草稿。

@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_KINDS, isHealingBuildingKind } from "../../shared/catalog";
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import type { CreateGameOptions, Game } from "../../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import type { Building, BuildingKind, GameCommand, GameSnapshot, ItemKind, MapId, Owner, PlayerId, RaceId, Unit, UpgradeKind, UpgradeLevels } from "../../shared/types";
@@ -653,7 +654,7 @@ function miningBaseCount(snapshot: GameSnapshot, owner: PlayerId) {
   const minedResourceIds = new Set(snapshot.units.filter((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine").map((unit) => (unit.order.type === "mine" ? unit.order.resourceId : "")));
   return snapshot.buildings
     .filter((building) => building.owner === owner && building.kind === "townHall" && building.complete)
-    .filter((townHall) => snapshot.resources.some((resource) => minedResourceIds.has(resource.id) && distance(townHall, resource) <= 280)).length;
+    .filter((townHall) => snapshot.resources.some((resource) => minedResourceIds.has(resource.id) && distance(townHall, resource) <= GOLD_MINE_RULES.baseRange)).length;
 }
 
 function firstTownHall(game: Game, owner: PlayerId) {
