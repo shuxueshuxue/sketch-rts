@@ -44,7 +44,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
   if (isBootstrapVersion(version)) {
-    return planBootstrapCommands(snapshot, owner, version, { ...policyOptions, policyMode, disabledBehaviors, memory }).map(entry => ({playerId:owner, ...(request.source !== undefined ? {source:request.source} : {}), scriptId:entry.scriptId, command:entry.command}));
+    return planBootstrapCommands(snapshot, owner, version, { ...policyOptions, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map(entry => ({playerId:owner, ...(request.source !== undefined ? {source:request.source} : {}), scriptId:entry.scriptId, command:entry.command}));
   }
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.
   if (version === "v2-prod") {
