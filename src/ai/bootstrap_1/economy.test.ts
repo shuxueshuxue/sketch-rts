@@ -30,6 +30,27 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each([false, true])('spends on a summoner or an advance tower according to a real incoming attack (%s)', incoming => {
+    let scene = sketchScene('mining-hall-attack-intent').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' }).playerState('us', { gold: 180 })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 4000).townHall('foe', 2800, 500)
+      .building('us', 'barracks', 700, 850).building('us', 'sanctum', 900, 850).farms('us', 6, 400, 1500);
+    for (let index = 0; index < 6; index++) scene = scene.worker('us', 500 + index * 30, 650);
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', 'footman', 600 + index * 35, 500);
+    for (let index = 0; index < 8; index++) scene = scene.unit('foe', 'archer', 1800 + index * 30, 500);
+    const game = scene.build().createGame();
+    if (incoming) issuePlayerCommand(game, 'foe', { type: 'attackMove', unitIds: game.units.filter(unit => unit.owner === 'foe').map(unit => unit.id), x: 500, y: 500 });
+    const memory = createAiPolicyMemory(); memory.v6 = { phase: 1 };
+    const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+    const control = planV6Economy(snapshotGame(game), 'us', options);
+    expect(control.some(command => command.type === 'build' && command.buildingKind === 'defenseTower')).toBe(true);
+    for (const command of planBootstrapEconomy(snapshotGame(game), 'us', options)) issuePlayerCommand(game, 'us', command);
+    for (let tick = 0; tick < 250; tick++) stepGame(game);
+    expect(game.buildings.filter(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete)).toHaveLength(incoming ? 1 : 0);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner')).toHaveLength(incoming ? 0 : 1);
+    expect(game.match.stats.goldSpent.us).toBe(incoming ? BUILDING_DEFS.defenseTower.cost : UNIT_DEFS.summoner.cost);
+  });
+
   it('builds a covered third mining hall with ordinary funds instead of buying population for idle producers', () => {
     const control = expansionScene(8, 6, 400), candidate = expansionScene(8, 6, 400);
     const before = snapshotGame(candidate);
