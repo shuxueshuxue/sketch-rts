@@ -7,6 +7,7 @@ import { averagePoint, distance } from '../policy/spatial';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readV6Intel, type V6Intel } from '../policy/v6/intel';
 import { planV6Army } from '../policy/v6/general';
+import { planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
@@ -79,6 +80,14 @@ export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  return planV6Army(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
+}
+
+export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  return planV6CloseoutArmy(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
+}
+
+function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Intel {
   const intel = readV6Intel(snapshot, owner, options), guard = detachment(snapshot, owner, options);
   const crew = new Set(guard?.crew.map(unit => unit.id));
   const army = intel.army.filter(unit => !crew.has(unit.id));
@@ -88,5 +97,5 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   const main: V6Intel = { ...world, army, power: strengthOf(army) };
   if (army.length) main.armyCenter = averagePoint(army);
   if (intrusion && !covered) main.intrusion = intrusion;
-  return planV6Army(snapshot, owner, options, main);
+  return main;
 }
