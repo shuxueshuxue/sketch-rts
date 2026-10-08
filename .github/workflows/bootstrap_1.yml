@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: bootstrap_1-${{ github.ref }}
+  group: bootstrap_1-candidate-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
-      - run: npx vitest run src/ai/bootstrap_1/benchmark.test.ts src/ai/policy/training-choice.test.ts
+      - run: npx vitest run src/ai/bootstrap_1/benchmark.test.ts src/ai/bootstrap_1/repair.test.ts src/ai/policy/training-choice.test.ts
       - run: node --import tsx scripts/bootstrap_1-freeze.ts
   matrix:
     needs: frozen
@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [baseline, candidate]
+        mode: [candidate]
         map: [sapphireArchipelago, grandEstuary, brokenSea, templeSpring, turtleLake, elderwood, ringwater, loneMarket, reedwater, veiledHill, greystonePass, pineshade, gullIsland, stillwater, twoShores]
         subject: [v9_archer, v9_summoner, v9_knight]
     steps:

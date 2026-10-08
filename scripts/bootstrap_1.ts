@@ -1,4 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { BOOTSTRAP_PARENTS } from '../src/ai/bootstrap_1/policy';
 import { dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
@@ -16,12 +18,14 @@ const matches = bootstrapMatches(values.seed,values.maps?.split(',') as MapId[]|
   .filter(match=>values.opponents===undefined || values.opponents.split(',').includes(Object.values(match.agents).slice(1).map(agent=>agent.version).join('+')))
   .filter(match=>values.side===undefined || match.side===Number(values.side))
   .filter(match=>values.race===undefined || match.agents.p0!.race===values.race);
-if(values.baseline)for(const match of matches)match.agents.p0!.policyVersion=match.subject==='v9_archer'?'v5':match.subject==='v9_summoner'?'v7':'v8';
+if(values.baseline)for(const match of matches)match.agents.p0!.policyVersion=BOOTSTRAP_PARENTS[match.subject];
 console.log(JSON.stringify({name:'bootstrap_1',baseline:values.baseline===true,games:matches.length,seed:values.seed,unseen:values.unseen===true,maps:[...new Set(matches.map(match=>match.mapId))]}));
 if (!values['dry-run']) {
   mkdirSync(dirname(values.out),{recursive:true});
   mkdirSync(values.out+'.matches',{recursive:true});
-  writeFileSync(values.out+'.metadata.json',JSON.stringify({name:'bootstrap_1',commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),dirty:execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).length>0,seed:values.seed,baseline:values.baseline===true,unseen:values.unseen===true,matches:matches.map(({name})=>name)},null,2)+'\n');
+  const sources = execFileSync('git', ['ls-files', '-co', '--exclude-standard', 'src/ai', 'src/sdk', 'src/shared', 'scripts/bootstrap_1.ts'], {encoding:'utf8'}).trim().split('\n').filter(path => path.endsWith('.ts') && !path.endsWith('.test.ts'));
+  const sourceHashes = Object.fromEntries(sources.map(path => [path, createHash('sha256').update(readFileSync(path)).digest('hex')]));
+  writeFileSync(values.out+'.metadata.json',JSON.stringify({name:'bootstrap_1',commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,dirty:execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).length>0,seed:values.seed,baseline:values.baseline===true,unseen:values.unseen===true,matches:matches.map(({name})=>name),agents:Object.fromEntries(matches.map(match=>[match.name,match.agents]))},null,2)+'\n');
   let completed=0;
   const report = await runBenchmarkParallel({name:'bootstrap_1',evaluations:[{name:'full-matrix',tag:'melee',matches}]},{
     workerModule:new URL('../src/ai/bootstrap_1/worker.ts',import.meta.url).href,workers:Number(values.workers),
