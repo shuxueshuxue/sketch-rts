@@ -84,4 +84,38 @@ describe('bootstrap_1 production budget', () => {
     expect(game.buildings.flatMap(building => building.queue)).toHaveLength(1);
     expect(game.players.us!.gold).toBe(280 - UPGRADE_DEFS.weaponTraining.levels[0]!.cost - UNIT_DEFS.archer.cost);
   });
+
+  it('recruits another summoner instead of researching weapons that do not strengthen its spirits', () => {
+    let scene = sketchScene('spirit-host-investment').replaceDefaults()
+      .player('us', { race: 'ember' }).player('foe', { race: 'grove' }).playerState('us', { gold: 180 })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 4000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 4000).townHall('foe', 2800, 2800)
+      .building('us', 'emberForge', 500, 850)
+      .building('us', 'cinderSpire', 700, 850).building('us', 'cinderSpire', 900, 850)
+      .building('us', 'defenseTower', 1450, 700)
+      .farms('us', 5, 400, 1300);
+    for (let index = 0; index < 11; index++) scene = scene.worker('us', 500 + index * 35, 650);
+    for (let index = 0; index < 10; index++) scene = scene.unit('us', 'pyreCaller', 1500 + index * 35, 1000, { id: `caller-${index}` });
+    const control = scene.build().createGame(), candidate = scene.build().createGame();
+    for (const [index, game] of [control, candidate].entries()) {
+      const memory = createAiPolicyMemory(); memory.v6 = { phase: 2 };
+      const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+      if (index === 0) options.armyWants = [...options.armyWants!, { upgrade: 'weaponTraining', level: 3, priority: 59 }];
+      const commands = planBootstrapEconomy(snapshotGame(game), 'us', options);
+      for (const command of commands) issuePlayerCommand(game, 'us', command);
+      for (let tick = 0; tick < 700; tick++) stepGame(game);
+      const caster = game.units.find(unit => unit.id === 'caller-0')!;
+      issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability: 'cinderSoul', x: caster.x + 54, y: caster.y + 28 });
+    }
+    expect(control.players.us!.upgrades.weaponTraining).toBe(1);
+    expect(candidate.players.us!.upgrades.weaponTraining).toBe(0);
+    expect(control.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller')).toHaveLength(10);
+    expect(candidate.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller')).toHaveLength(11);
+    for (const game of [control, candidate]) {
+      const spirit = game.units.find(unit => unit.owner === 'us' && unit.kind === 'spirit')!;
+      expect(spirit.attackDamage).toBe(UNIT_DEFS.spirit.attackDamage);
+      expect(spirit.maxHp).toBe(UNIT_DEFS.spirit.hp);
+    }
+    expect(candidate.players.us!.gold).toBe(180 - UNIT_DEFS.pyreCaller.cost);
+  });
 });
