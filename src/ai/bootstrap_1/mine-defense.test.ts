@@ -30,6 +30,66 @@ function twoFronts(raiders = 4, guard: 'lancer' | 'knight' = 'lancer') {
 }
 
 describe('bootstrap_1 independent mine defense', () => {
+  it.each(['grove', 'ember'] as const)('lets the %s host use real summons for the near raid without recalling the distant attack', race => {
+    const kind = race === 'grove' ? 'summoner' : 'pyreCaller', ability = race === 'grove' ? 'summon' : 'cinderSoul';
+    let scene = sketchScene('summoned-mine-guard').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('fa', { race: 'grove', team: 'b' }).player('fb', { race: 'grove', team: 'b' })
+      .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })
+      .goldMine('natural', 1888, 1600, 4000).townHall('fa', 3500, 3000, { id: 'attack-hall' }).townHall('fb', 3500, 800)
+      .farms('us', 8, 400, 2200);
+    for (let i = 0; i < 5; i++) scene = scene.worker('us', 1650 + i * 35, 1700, { id: `miner-${i}` });
+    for (let i = 0; i < 6; i++) scene = scene.unit('us', kind, 1650 + i * 35, 1720, { id: `home-caster-${i}` })
+      .unit('us', kind, 2650 + i * 35, 2800, { id: `away-caster-${i}` });
+    for (let i = 0; i < 3; i++) scene = scene.unit('fb', 'footman', 1560 + i * 35, 1120,
+      { id: `raider-${i}`, order: { type: 'attackMove', x: 1600, y: 1600 } });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    issuePlayerCommand(game, 'us', { type: 'mine', unitIds: game.units.filter(unit => unit.kind === 'worker').map(unit => unit.id), resourceId: 'natural' });
+    for (const caster of game.units.filter(unit => unit.owner === 'us' && unit.kind === kind)) {
+      issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability,
+        x: caster.x + 54, y: caster.id.startsWith('home') ? caster.y - 210 : caster.y + 28 });
+    }
+    stepGame(game);
+    const strikers = game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit' && unit.y > 2500);
+    issuePlayerCommand(game, 'us', { type: 'attackMove', unitIds: strikers.map(unit => unit.id), x: 3500, y: 3000 });
+    memory.v6 = { phase: 3, general: { mode: 'attack', targetHallId: 'attack-hall', target: { x: 3500, y: 3000 },
+      group: game.units.filter(unit => unit.owner === 'us' && unit.y > 2500).map(unit => unit.id), groupStart: 8 } };
+    const options = () => bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams, policyMode: 'combat' });
+    const claimed = mineDefense.claimsUnits!(snapshotGame(game), 'us', options());
+    expect(claimed.size).toBeGreaterThanOrEqual(3);
+    expect(game.units.filter(unit => claimed.has(unit.id)).every(unit => unit.kind === 'spirit')).toBe(true);
+    for (let tick = 0; tick < 1400 && !game.match.winner; tick++) {
+      if (tick % 15 === 0) for (const { command } of runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
+        [mineDefense, AI_SCRIPT_LIBRARY.abilities, AI_SCRIPT_LIBRARY.v6Backline, { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral }], options())) {
+        issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(game.units.filter(unit => unit.id.startsWith('miner'))).toHaveLength(5);
+    expect(game.units.filter(unit => unit.id.startsWith('raider'))).toHaveLength(0);
+    expect(game.buildings.find(building => building.id === 'mine-hall')!.hp).toBe(900);
+    expect(game.buildings.some(building => building.id === 'attack-hall')).toBe(false);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+
+  it('does not assign spirits whose normal lifetime expires before they can reach the hall', () => {
+    let scene = sketchScene('expiring-mine-guard').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .townHall('us', 400, 1000).townHall('us', 1600, 1600).townHall('foe', 3500, 3000).farms('us', 8, 400, 2200);
+    for (let i = 0; i < 12; i++) scene = scene.unit('us', 'summoner', 1700 + i * 35, 1850, { id: `caster-${i}` });
+    for (let i = 0; i < 3; i++) scene = scene.unit('foe', 'footman', 1560 + i * 35, 1120);
+    const game = scene.build().createGame();
+    issuePlayerCommand(game, 'us', { type: 'setAutocast', unitIds: game.units.filter(unit => unit.owner === 'us').map(unit => unit.id), ability: 'summon', enabled: false });
+    for (const caster of game.units.filter(unit => unit.owner === 'us')) issuePlayerCommand(game, 'us',
+      { type: 'cast', unitId: caster.id, ability: 'summon', x: caster.x + 54, y: caster.y + 28 });
+    stepGame(game);
+    issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us').map(unit => unit.id) });
+    issuePlayerCommand(game, 'foe', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'foe').map(unit => unit.id) });
+    for (let tick = 0; tick < 1160; tick++) stepGame(game);
+    expect(game.units.filter(unit => unit.kind === 'spirit').length).toBeGreaterThanOrEqual(6);
+    const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_summoner', { memory: createAiPolicyMemory(), teams: game.teams });
+    expect(mineDefense.claimsUnits!(snapshot, 'us', options).size).toBe(0);
+  });
+
   it('defends the miners while the distant main army completes its attack', () => {
     const { game, context } = twoFronts(4, 'knight');
     issuePlayerCommand(game, 'us', { type: 'setAutocast', unitIds: game.units.filter(unit => unit.kind === 'knight').map(unit => unit.id), ability: 'charge', enabled: false });

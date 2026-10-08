@@ -1,6 +1,7 @@
 import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { sameGround } from '../../shared/terrain';
+import { sameGround, walkingDistance } from '../../shared/terrain';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { isBacklineKind } from '../policy/v6/backline';
@@ -23,10 +24,11 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
   })).filter(raid => raid.attackers.length > 0)
     .sort((a, b) => Number(b.attackers.some(unit => aimedAt(unit, b.hall))) - Number(a.attackers.some(unit => aimedAt(unit, a.hall)))
       || strengthOf(b.attackers) - strengthOf(a.attackers));
-  const pool = intel.army.filter(unit => !unit.deck && !unit.expiresTick && unit.hp >= unit.maxHp * .6
+  const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
-    const nearby = pool.filter(unit => sameGround(snapshot.map, unit, hall) && distance(unit, hall) < 1300)
+    const nearby = pool.filter(unit => sameGround(snapshot.map, unit, hall) && distance(unit, hall) < 1300
+      && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + SIM_TICKS_PER_SECOND * walkingDistance(snapshot.map, unit, hall)! / unit.speed))
       .sort((a, b) => distance(a, hall) - distance(b, hall));
     const fighters = nearby.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
     const crew = fighters.filter(unit => unit.attackRange <= 80).slice(0, 2);
