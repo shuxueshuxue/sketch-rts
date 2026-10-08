@@ -489,7 +489,15 @@ export type GameMap = {
   height: number;
   landmarks: TerrainLandmark[];
   /** True wind blowing toward this world-XY angle (radians), in world distance per second. */
-  wind?: { direction: number; speed: number };
+  wind?: {
+    direction: number;
+    speed: number;
+    /** Last scheduled field change; absent before the first change or in an older save. */
+    changedAtTick?: number;
+    /** Previous field, for client-only transition animation. */
+    fromDirection?: number;
+    fromSpeed?: number;
+  };
   // Ground a unit cannot cross (see @@@terrain); a map without it is open everywhere.
   terrain?: Terrain;
 };

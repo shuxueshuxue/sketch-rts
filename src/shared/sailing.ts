@@ -7,7 +7,8 @@ import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
 import { advanceShip, shipMotionLimits } from './ship-motion';
 import { followShipRoute } from './ship-guidance';
-import { coursePerformance, getWind } from './ship-wind';
+import { coursePerformance } from './ship-wind';
+import { windAt } from './wind-field';
 
 // Authored scenes without a terrain grid use the same swept water routes as
 // generated maps. A direct steering shortcut could wedge two touching hulls
@@ -30,7 +31,7 @@ export function turnShipToward(ship:Unit,desired:number,map:GameMap,units:readon
   const limit=Math.max(0,perTick(shipMotionLimits(ship).turnRate)-spentTurn);
   const difference=headingDifference(motion.heading,desired),heading=motion.heading+Math.max(-limit,Math.min(limit,difference));
   const before={x:ship.x,y:ship.y,heading:motion.heading};
-  if(motion.sail && Math.abs(difference)>1e-7)motion.sail.mode=getWind(map).speed>0?'maneuver':'calm-assist';
+  if(motion.sail && Math.abs(difference)>1e-7)motion.sail.mode=windAt(map,ship).speed>0?'maneuver':'calm-assist';
   if(!advanceShip(ship,map,units,{yaw:heading-before.heading,spentYaw:spentTurn}))return false;
   return Math.abs(difference)<=limit+1e-7;
 }
@@ -41,7 +42,7 @@ export function sailToward(ship:Unit,point:Point & {heading?:number},map:GameMap
   const motion=ship.sailing??={heading:0,speed:0,load:0,balance:0};
   const maxParts=shipPartMax(ship);const propulsion=(ship.shipParts?.rigging ?? maxParts.rigging)/maxParts.rigging;
   if(propulsion<=0){motion.speed=0;return;}
-  const limits=shipMotionLimits(ship),wind=getWind(map);
+  const limits=shipMotionLimits(ship),wind=windAt(map,ship);
   const turn=perTick(limits.turnRate);
   const acceleration=perTick(limits.acceleration);
   const start={x:ship.x,y:ship.y,heading:motion.heading};

@@ -1,5 +1,6 @@
 import { shipMotionLimits } from './ship-handling';
-import { coursePerformance, getWind } from './ship-wind';
+import { coursePerformance } from './ship-wind';
+import { windAt } from './wind-field';
 import { detCos, detSin } from "./det-math";
 import { shipProfile, type Point } from "./ship-geometry";
 import { CELL_GROUND, isWalkable, sameGround, walkableGoal } from "./terrain";
@@ -319,7 +320,7 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
   const performance=coursePerformance(ship,map,Math.atan2(dy,dx),{assumeTrimmed:true});
   if(gap<length || performance.calm || performance.trueWindAngle>=performance.beatAngle
     || !performance.noGo && performance.targetSpeed>=performance.auxiliarySpeed || performance.maxForwardSpeed<=0)return;
-  const wind=getWind(map),angles=[wind.from+performance.beatAngle,wind.from-performance.beatAngle];
+  const wind=windAt(map,ship),angles=[wind.from+performance.beatAngle,wind.from-performance.beatAngle];
   const directions=angles.map(heading=>({x:detCos(heading),y:detSin(heading)}));
   const cross=(a:Point,b:Point)=>a.x*b.y-a.y*b.x;
   for(const distance of [...new Set([Math.min(gap,length*2.5),Math.min(gap,length*1.5),Math.min(gap,length)])]){

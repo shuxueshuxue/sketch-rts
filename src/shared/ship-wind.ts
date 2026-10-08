@@ -2,13 +2,13 @@ import { detCos, detSin } from './det-math';
 import { shipMotionLimits } from './ship-handling';
 import { perTick } from './time';
 import type { GameMap, Unit, UnitKind } from './types';
+import { DEFAULT_WIND, windAt } from './wind-field';
+export { DEFAULT_WIND, getWind, windAt } from './wind-field';
 
 export type SailRig = 'lateen' | 'lug' | 'square';
 export type SailMode = 'sail' | 'tacking' | 'maneuver' | 'calm-assist' | 'idle';
 export type SailState = { angle: number; billow: number; set: number; mode: SailMode };
 
-/** World-space air velocity points toward direction; it is never sampled randomly. */
-export const DEFAULT_WIND = { direction: Math.PI / 4, speed: 80 } as const;
 export const SAIL_RULES = {
   trimRate: Math.PI / 3,
   setRate: .8,
@@ -23,14 +23,6 @@ const clamp = (value: number, low: number, high: number) => Math.max(low, Math.m
 const angleDifference = (from: number, to: number) => ((to - from + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 // Match the navigation planner's quantized atan2 boundary across JS platforms.
 const angleOf = (x: number, y: number) => Math.round(Math.atan2(y, x) * 1e9) / 1e9;
-
-export function getWind(map: Pick<GameMap, 'wind'>) {
-  const source = map.wind ?? DEFAULT_WIND;
-  const direction = angleDifference(0, Number.isFinite(source.direction) ? source.direction : DEFAULT_WIND.direction);
-  const speed = Number.isFinite(source.speed) ? Math.max(0, source.speed) : DEFAULT_WIND.speed;
-  return { direction, speed, x: speed * detCos(direction), y: speed * detSin(direction),
-    from: angleDifference(0, direction + Math.PI), key: `${direction}:${speed}` };
-}
 
 export function sailRig(kind: UnitKind): SailRig {
   return kind === 'transport' ? 'lug' : kind === 'warship' || kind === 'carrier' ? 'square' : 'lateen';
@@ -65,7 +57,7 @@ function bestBeatAngle(rig: SailRig): number {
 const BEAT_ANGLES = { lateen: bestBeatAngle('lateen'), lug: bestBeatAngle('lug'), square: bestBeatAngle('square') };
 
 function windAngles(ship: Unit, map: Pick<GameMap, 'wind'>, heading: number) {
-  const wind = getWind(map), motion = ship.sailing;
+  const wind = windAt(map, ship), motion = ship.sailing;
   const x = wind.x - (motion?.velocityX ?? 0), y = wind.y - (motion?.velocityY ?? 0);
   const apparentSpeed = Math.hypot(x, y);
   const apparentWindAngle = apparentSpeed > 1e-7 ? angleDifference(heading, angleOf(-x, -y)) : 0;
@@ -113,7 +105,7 @@ export function updateAutoTrim(ship: Unit, map: Pick<GameMap, 'wind'>, mode?: Sa
   const motion = ship.sailing ??= { heading: 0, speed: 0, load: 0, balance: 0 };
   const sail = motion.sail ??= { angle: 0, billow: 0, set: 0, mode: mode ?? 'sail' };
   sail.mode = mode ?? sail.mode;
-  const performance = coursePerformance(ship, map), wind = getWind(map);
+  const performance = coursePerformance(ship, map), wind = windAt(map, ship);
   const auxiliary = sail.mode === 'maneuver' || sail.mode === 'calm-assist';
   const furled = sail.mode === 'idle' || performance.maxForwardSpeed <= 0;
   const targetSet = furled ? 0 : auxiliary ? .15 : performance.noGo ? .35 : 1;

@@ -12,7 +12,8 @@ import { EquipmentPanel } from "./equipment-panel";
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
-import { DEFAULT_WIND, getWind } from '../shared/ship-wind';
+import { DEFAULT_WIND, windAt, WIND_CHANGE_INTERVAL_TICKS } from '../shared/wind-field';
+import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { deckLoad } from "../shared/decks";
 import { purchasePlacement, findPurchaseRecipient, purchaseRecipientInRange, type PurchaseSeller } from "../shared/purchase";
 import "./styles.css";
@@ -48,7 +49,8 @@ import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities
 import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
-import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
+import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap, windProbePoint } from "./minimap";
+import { WindMapDisplay, projectWindDirection } from './minimap-wind';
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
@@ -161,8 +163,6 @@ const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
 const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
 const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
-const windReadout = requireElement<HTMLSpanElement>('[data-wind]');
-const windArrow = requireElement<HTMLSpanElement>('[data-wind-arrow]');
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const chatMessages = requireElement<HTMLDivElement>("[data-chat-messages]");
 const chatForm = requireElement<HTMLFormElement>("[data-chat-form]");
@@ -186,6 +186,8 @@ const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
 const minimapTab = requireElement<HTMLDivElement>("[data-minimap-tab]");
 const matchMenuButton = requireElement<HTMLButtonElement>("[data-match-menu-button]");
 const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-relations]");
+const minimapWindButton = requireElement<HTMLButtonElement>('[data-minimap-wind]');
+const minimapWindArrow = requireElement<SVGElement>('[data-minimap-wind-arrow]');
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
@@ -209,6 +211,10 @@ let spectatingRoom = false;
 // The minimap in friend-or-foe colours (see @@@minimap-relations): as the player sets it this match, or, until they do,
 // on when they have an ally.
 let minimapRelations: boolean | undefined;
+let minimapWind = false;
+let windProbe: Point | undefined;
+let windTooltipKey = '';
+const windMapDisplay = new WindMapDisplay();
 let activeGameAdapter: GameAdapter;
 let activeChat: MatchChat | undefined;
 let activeChatUnsubscribe: (() => void) | undefined;
@@ -231,6 +237,7 @@ let camera = { x: 560, y: 560 };
 let worldZoom = 1;
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
+let shownTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
 let pointerLockFieldClickOnError = false;
@@ -406,6 +413,7 @@ labelSceneSwitch();
 // The match's menu (≡ in the top right): the map being played, concede, and back to the game.
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
 minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
+minimapWindButton.addEventListener('click', toggleMinimapWind);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
 const settingsAction=document.createElement('button');settingsAction.className='match-action';settingsAction.textContent=t('home.settings');settingsAction.onclick=()=>{matchMenu.classList.add('hidden');pointerLockArmed=true;hidePointerLockGate();if(document.pointerLockElement===canvas)document.exitPointerLock();openMatchSettings(soundboard,i18n);};matchMenu.append(settingsAction);
 forfeitButton.addEventListener("click", () => {
@@ -709,6 +717,7 @@ function tooltipTarget(target: EventTarget | null) {
 }
 
 function renderTooltip(target: HTMLElement) {
+  shownTooltipTarget = target;
   const stats = splitTooltipList(target.dataset.tooltipStats);
   const requirements = splitTooltipList(target.dataset.tooltipRequirements);
   const notes = splitTooltipList(target.dataset.tooltipNotes);
@@ -1410,6 +1419,11 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
   purchaseRecipients.clear();
   purchaseRecipientFlash=undefined;
   minimapRelations = undefined;
+  minimapWind = false;
+  windProbe = undefined;
+  windTooltipKey = '';
+  windMapDisplay.reset();
+  minimapWindButton.setAttribute('aria-pressed', 'false');
   activeGameAdapter = adapter;
   activeChat = chat;
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
@@ -1668,6 +1682,7 @@ function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEven
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  if ((event.target === minimapWindButton || event.target === minimapRelationsButton) && ['Enter', ' ', 'Tab'].includes(event.key)) return;
   if(equipmentPanel.isOpen()){if(event.key==="Escape")equipmentPanel.close();event.preventDefault();return;}
   const key = event.key.toLowerCase();
   const chatIntent = chatKeyIntent(event, {
@@ -1694,6 +1709,11 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.altKey && event.code === "KeyA") {
     event.preventDefault();
     toggleMinimapRelations();
+    return;
+  }
+  if (event.altKey && event.code === 'KeyW') {
+    event.preventDefault();
+    toggleMinimapWind();
     return;
   }
   if (key === "escape" && commandMode) {
@@ -2750,7 +2770,6 @@ function updateHud() {
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
-  updateWindReadout();
   mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
@@ -2868,26 +2887,34 @@ function sailingStatus(unit: Unit): string {
   return '';
 }
 
-function updateWindReadout() {
-  if (!snapshot) return;
-  // Only owned or selected ships reveal this readout; hidden opponents cannot make it appear.
-  windReadout.hidden = !snapshot.units.some(unit => shipProfile(unit) && (unit.owner === localPlayerId || selectedIds.has(unit.id)));
-  if (windReadout.hidden) return;
-  const wind = getWind(snapshot.map), ratio = wind.speed / DEFAULT_WIND.speed;
-  const strength = ratio <= 1e-7 ? 0 : ratio < .4 ? 1 : ratio < 1.2 ? 2 : 3;
+function updateWindIndicator(rect: ScreenRect, now: number) {
+  if (!snapshot || !windProbe) return;
+  const wind = windAt(snapshot.map, windProbe), ratio = wind.speed / DEFAULT_WIND.speed;
+  const display = windMapDisplay.sample(windProbe, now);
+  minimapWindArrow.style.transform = `rotate(${projectWindDirection(display.direction, snapshot.map, rect)}rad)`;
+  minimapWindButton.dataset.calm = String(display.speed <= 1e-7);
+  const pulse = String(windMapDisplay.pulse(now));
+  minimapWindButton.style.setProperty('--wind-pulse', pulse);
+  minimapFrame.style.setProperty('--wind-pulse', pulse);
+  const strength = ratio <= 1e-7 ? 0 : ratio < .75 ? 1 : ratio < 1.2 ? 2 : 3;
   const zh = i18n.locale === 'zh';
   const level = (zh ? ['无风', '微风', '中风', '强风'] : ['Calm', 'Light wind', 'Moderate wind', 'Strong wind'])[strength]!;
   const compass = (Math.round(wind.direction / (Math.PI / 4)) + 8) % 8;
   const direction = (zh ? ['东', '东南', '南', '西南', '西', '西北', '北', '东北'] : ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])[compass]!;
   const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
-  windArrow.style.transform = `rotate(${wind.direction}rad)`;
-  windReadout.dataset.strength = String(strength);
-  windReadout.setAttribute('aria-label', label);
-  applyTooltip(windReadout, {
-    title: label,
-    body: zh ? '船员自动调帆；开阔水域迎风换舷，靠泊或无风时低速辅助操纵。' : 'Crew trim sails automatically, tack upwind in open water, and use slow assistance for docking or calm conditions.',
-    stats: [], requirements: [],
+  const remaining = Math.ceil((WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS) / SIM_TICKS_PER_SECOND);
+  const countdown = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+  const key = `${label}:${countdown}:${minimapWind}`;
+  if (windTooltipKey === key) return;
+  windTooltipKey = key;
+  minimapWindButton.setAttribute('aria-label', `${t('hud.minimapWind')} · ${label}`);
+  applyTooltip(minimapWindButton, {
+    title: `${zh ? '光标处' : 'At cursor'}：${label}`,
+    hotkey: 'Alt+W',
+    body: zh ? `点击${minimapWind ? '收起' : '显示'}风向图。当前全图同风。` : `Click to ${minimapWind ? 'hide' : 'show'} the wind map. Wind is currently uniform across the map.`,
+    stats: [zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`], requirements: [],
   });
+  if (!tooltipLayer.classList.contains('hidden') && shownTooltipTarget === minimapWindButton) renderTooltip(minimapWindButton);
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -3311,10 +3338,18 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
+  const now = performance.now();
+  windMapDisplay.setReducedMotion(reducedUnitMotion.matches);
+  windMapDisplay.update(snapshot, now);
+  const pointer = lastMouse && document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+  windProbe = windProbePoint(pointer, { minimap: rect, world: snapshot.map, camera,
+    viewport: { width: canvas.clientWidth, height: canvas.clientHeight }, zoom: worldZoom }, windProbe);
+  updateWindIndicator(rect, now);
   const relations = minimapRelationsOn();
   if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
   const viewer = matchViewer();
-  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined);
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined,
+    minimapWind ? () => windMapDisplay.draw(ctx, rect, now) : undefined);
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
@@ -3345,6 +3380,12 @@ function toggleMinimapRelations() {
   if (!matchViewer()) return;
   minimapRelations = !minimapRelationsOn();
   statusLabel.textContent = t(minimapRelations ? "status.minimapRelationsOn" : "status.minimapRelationsOff");
+}
+
+function toggleMinimapWind() {
+  if (!snapshot || menuOpen) return;
+  minimapWind = !minimapWind;
+  minimapWindButton.setAttribute('aria-pressed', String(minimapWind));
 }
 
 function updateCamera() {
@@ -3392,6 +3433,7 @@ function resizeCanvas() {
   minimapTab.style.width = `${mini.width}px`;
   // The friend-or-foe button stands at the frame's top left, outside it (see .minimap-relations).
   minimapRelationsButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
+  minimapWindButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
 }
 
 function mousePoint(event: MouseEvent): Point {

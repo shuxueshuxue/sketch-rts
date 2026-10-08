@@ -40,6 +40,7 @@ import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shi
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { beginShipMotionFrame } from './ship-motion';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
+import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, nearestShipPose } from "./ship-navigation";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
@@ -651,6 +652,7 @@ export function stepGame(game: Game) {
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
   syncDecks(game.units);
   game.tick += 1;
+  updateWindField(game.map, game.tick);
   // Auras and their spatial query start from this tick's actual positions, including after restore.
   game.unitSpatial = createSpatialIndex(game.units, 320);
   refreshVeteranFrame(game);

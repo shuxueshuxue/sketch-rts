@@ -13,7 +13,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 8: fixed veteran skill offers, learned skills and shared damage-reduction effects.
 // 9: unit classes, skill target filters and general mechanical repair orders.
 // 10: true wind, sail trim, signed hull velocity and wind-aware routes.
-export const CHECKSUM_VERSION = 10;
+// 11: deterministic eight-minute wind changes and serialized weather events.
+export const CHECKSUM_VERSION = 11;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
