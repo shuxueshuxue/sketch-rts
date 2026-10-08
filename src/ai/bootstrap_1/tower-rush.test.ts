@@ -47,6 +47,33 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it.each(['grove', 'ember'] as const)('spreads the %s host under real catapult fire instead of packing every caster at one post', race => {
+    function underFire(spread: boolean) {
+      let scene = sketchScene('tower-host-shell-spacing').replaceDefaults()
+        .player('us', { race, team: 'a' }).player('foe', { race: 'ember', team: 'b' })
+        .townHall('us', 400, 400).townHall('foe', 2300, 1000, { id: 'target-hall' })
+        .farms('us', 5, 400, 2200).tower('us', 1500, 1000)
+        .unit('foe', 'catapult', 2050, 1000, { id: 'gun' });
+      for (let i = 0; i < 6; i++) scene = scene.unit('us', race === 'grove' ? 'summoner' : 'pyreCaller',
+        1300 + i % 2 * 25, 970 + Math.floor(i / 2) * 30, { id: `caster-${i}` });
+      const game = scene.build().createGame(), memory = createAiPolicyMemory();
+      memory.jobs.push({ id: summonerTowerRush.id, kind: 'target-hall', createdTick: 0, updatedTick: 0 });
+      issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us').map(unit => unit.id) });
+      issuePlayerCommand(game, 'foe', { type: 'attack', unitIds: ['gun'], targetId: 'caster-0' });
+      for (let tick = 0; tick < 300; tick++) {
+        if (spread && tick % 15 === 0) {
+          const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+          for (const command of summonerTowerRush.run(snapshotGame(game), 'us', options) as GameCommand[]) issuePlayerCommand(game, 'us', command);
+        }
+        stepGame(game);
+      }
+      return { hp: game.units.filter(unit => unit.owner === 'us').reduce((sum, unit) => sum + unit.hp, 0), game };
+    }
+    const packed = underFire(false), spread = underFire(true);
+    expect(spread.hp).toBeGreaterThan(packed.hp * 1.5);
+    expect(spread.game.units.filter(unit => unit.owner === 'us').length).toBeGreaterThanOrEqual(4);
+    expect(spread.game.match.stats.goldSpent.us).toBe(0);
+  });
   it('waits when committing the mine guard would be necessary to cover the assault’s actual opposition', () => {
     const { game, context } = battlefield(0, 0, 4);
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);

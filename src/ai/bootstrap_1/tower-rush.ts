@@ -145,7 +145,20 @@ export const summonerTowerRush: AiScript = {
     const gap = distance(plan.advance, plan.hall);
     const post = { x: plan.advance.x + (plan.advance.x - plan.hall.x) * SCREEN / gap,
       y: plan.advance.y + (plan.advance.y - plan.hall.y) * SCREEN / gap };
-    for (const caster of plan.casters) if (distance(caster, post) > 70) commands.push({ type: 'move', unitIds: [caster.id], ...post });
+    const splash = Math.max(0, ...snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
+      && UNIT_DEFS[unit.kind].weapon?.delivery === 'shell' && distance(unit, post) <= unit.attackRange + BUILDING_DEFS.defenseTower.attackRange)
+      .map(unit => UNIT_DEFS[unit.kind].weapon!.radius!));
+    const columns = Math.ceil(Math.sqrt(plan.casters.length));
+    const forward = { x: (plan.hall.x - post.x) / (gap + SCREEN), y: (plan.hall.y - post.y) / (gap + SCREEN) };
+    for (const [index, caster] of plan.casters.entries()) {
+      const spacing = splash > 0 ? splash + caster.radius * 2 : 0;
+      const lateral = (index % columns - (columns - 1) / 2) * spacing;
+      const rear = Math.floor(index / columns) * spacing;
+      const point = { x: post.x - forward.y * lateral - forward.x * rear,
+        y: post.y + forward.x * lateral - forward.y * rear };
+      if (distance(caster, point) > 70) commands.push({ type: 'move', unitIds: [caster.id], ...point });
+      else if (splash > 0 && caster.order.type !== 'hold') commands.push({ type: 'holdPosition', unitIds: [caster.id] });
+    }
     for (const soldier of plan.fighters) {
       if (soldier.order.type !== 'attackMove' || distance(soldier.order, plan.advance) > 70) {
         commands.push({ type: 'attackMove', unitIds: [soldier.id], ...plan.advance });
