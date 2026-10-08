@@ -2,6 +2,7 @@ import { createBuilding, createUnit } from "./map";
 import { fractalNoise, coordinateRandom } from "./environment/noise";
 import { campRoster, campMembers } from "./camps";
 import { detCos, detSin } from "./det-math";
+import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
 import {ecologicalDressing,prepareEcology} from './map-dressing';
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
@@ -34,7 +35,7 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
         }
     const result: GeneratedMap = { kind: "ring", idea: "islandStarts", size, starts: {}, buildings: [], units: [], resources: [], mercenaryCamps: [], items: [], landmarks: [], terrain: { cell, cols, rows: cols, cells, palette: "coastal" }, camps: [], sites: [], obstacles: [] };
     for (const { owner, at } of homes) {
-        const mine = { x: at.x + 165, y: at.y };
+        const mine = initialMiningPoint({terrain: result.terrain}, at, {x: at.x + GOLD_MINE_RULES.mainDistance, y: at.y});
         result.starts[owner] = { baseX: at.x, baseY: at.y, mineX: mine.x, mineY: mine.y };
         result.buildings.push(createBuilding(`building-${owner}-townhall`, owner, "townHall", at.x, at.y, true));
         for (let i = 0; i < 3; i++)

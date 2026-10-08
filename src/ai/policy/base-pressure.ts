@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import type { Building, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { opponentPlayerIds } from "./ownership";
@@ -47,7 +48,7 @@ function fragileMiningExpansions(snapshot: GameSnapshot, owner: PlayerId) {
   return completeBuildings(snapshot, owner, "townHall").filter((base) => {
     if (base.id === (main as Partial<Building>).id) return false;
     const mine = nearestResource(activeResources(snapshot), base);
-    if (!mine || distance(mine, base) > 260) return false;
+    if (!mine || distance(mine, base) > GOLD_MINE_RULES.baseRange) return false;
     const miners = units(snapshot, owner).filter((unit) => unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === mine.id);
     const hasTower = buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && building.complete && distance(building, base) <= 430);
     return miners.length < 3 || !hasTower;

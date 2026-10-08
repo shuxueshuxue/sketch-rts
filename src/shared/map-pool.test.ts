@@ -14,22 +14,24 @@ import {isWalkable,sameGround} from './terrain';
 // redrawn on purpose: give it a new name or take the new hash knowingly.
 // 10-07: organic island coastlines and continuous-environment creep habitats replace periodic stamps. Elderwood, ringwater and twoShores were redrawn so
 // on 10-02: their islands' water widened (ISLAND_WATER 200 to 320, see generated-water), two deep cells to four or more.
+// 10-08: main mines preserve a 288-unit haul after hall snapping; new halls require 280 units.
+// Island and hill mine sites now leave room for that ordinary construction rule.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'7cf37331bd5cf793',
-  grandEstuary:'781b77fc04022cd4',
-  brokenSea: "6a412a2672b1b290",
-  templeSpring: "89d478ee42c291c3",
-  turtleLake: "5920a191d1d390cc",
-  elderwood: "ea14bcd697fe7b7c",
-  ringwater: "32fe3385b31203fa",
-  loneMarket: "e778910b1bf958d7",
-  reedwater: "23b9e61967d71b4a",
-  veiledHill: "1c6569d2777f6fba",
-  greystonePass: "209985390ac9c00f",
-  pineshade: "d21c2f7ceec5ee79",
-  gullIsland: "193134cf3c39b45b",
-  stillwater: "13f65932d0a0c499",
-  twoShores: "019b284ad98ce304",
+  sapphireArchipelago:'588e067235aba4c3',
+  grandEstuary:'b7df7106eb1ec398',
+  brokenSea: "4905eb4f1d15b68d",
+  templeSpring: "b700123d0a5893a4",
+  turtleLake: "b56718014121ee4e",
+  elderwood: "3cac543bddf4e1c9",
+  ringwater: "17705d6a48173c4e",
+  loneMarket: "470216b8afeb6d81",
+  reedwater: "b060dd837b1b70b3",
+  veiledHill: "9081c1158081f81d",
+  greystonePass: "7586e9b861260ff7",
+  pineshade: "304b90ad639a507c",
+  gullIsland: "e87c67ce4616a399",
+  stillwater: "7c4aa16203706976",
+  twoShores: "a8c696fbba006d1c",
 };
 
 const host = { id: "host", name: "Host" };

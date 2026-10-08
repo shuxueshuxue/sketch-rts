@@ -20,11 +20,11 @@ export function miningHallSite(snapshot: Pick<GameSnapshot, "map" | "buildings" 
   if (!points) {
     points = [];
     const center = snapToFootprint(snapshot.map, radius, mine);
-    const steps = Math.ceil(260 / cell);
+    const steps = Math.ceil(300 / cell);
     for (let row = -steps; row <= steps; row++) {
       for (let col = -steps; col <= steps; col++) {
         const point = { x: center.x + col * cell, y: center.y + row * cell };
-        if (Math.hypot(point.x - mine.x, point.y - mine.y) > 260) continue;
+        if (Math.hypot(point.x - mine.x, point.y - mine.y) > 300) continue;
         if (point.x - radius < 0 || point.y - radius < 0 || point.x + radius > snapshot.map.width || point.y + radius > snapshot.map.height) continue;
         if (!isFootprintBuildable(snapshot.map, point.x, point.y, radius)) continue;
         if (resourceBlocksPlacement(snapshot.map, "townHall", point, mine)) continue;
