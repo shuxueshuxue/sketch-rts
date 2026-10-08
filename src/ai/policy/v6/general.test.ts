@@ -566,7 +566,7 @@ describe("v8 general", () => {
         .building("v7", "barracks", 650, 1_350, { id: "v7-barracks" })
         .townHall("v7", 1_600, 2_600, { id: "v7-rising", complete: false, hp: 600 })
         .townHall("v5", 500, 2_700, { id: "v5-hall" });
-      for (let index = 0; index < 5; index += 1) scene = scene.unit("v8", "emberRavager", 3_000 + index * 30, 1_900, { id: `v8-ravager-${index}` });
+      for (let index = 0; index < 5; index += 1) scene = scene.unit("v8", "emberRavager", 1_600 + index * 30, 2_400, { id: `v8-ravager-${index}` });
       // Six footmen, either standing guard 250 from the rising hall or 1000 away; eight archers at V5's main, 1100 away.
       for (let index = 0; index < 6; index += 1) scene = scene.unit("v7", "footman", 1_600 - guardsAt + index * 30, 2_400, { id: `v7-footman-${index}` });
       for (let index = 0; index < 8; index += 1) scene = scene.unit("v5", "archer", 500 + (index % 4) * 30, 2_900 + Math.floor(index / 4) * 30, { id: `v5-archer-${index}` });
@@ -578,8 +578,7 @@ describe("v8 general", () => {
     };
     const open = planWith(1_000);
     expect(open.general).toMatchObject({ mode: "attack", targetHallId: "v7-rising", quick: true });
-    // The strikers walk: a fight on the way is time the hall's owner uses.
-    expect(open.commands.some((command) => command.type === "move")).toBe(true);
+    expect(open.commands.some((command) => command.type === "attack" && command.targetId === "v7-rising")).toBe(true);
     // Six footmen 250 from the hall reach it long before five ravagers bring down 600 hit points.
     expect(planWith(0).general?.quick).toBeUndefined();
   });
@@ -596,7 +595,7 @@ describe("v8 general", () => {
       .building("v7", "barracks", 650, 1_350, { id: "v7-barracks" })
       .townHall("v7", 1_600, 2_600, { id: "v7-rising", complete: false, hp: 600 })
       .townHall("v5", 500, 2_700, { id: "v5-hall" });
-    for (let index = 0; index < 5; index += 1) scene = scene.unit("v8", "lancer", 3_000 + index * 30, 1_900, { id: `v8-lancer-${index}` });
+    for (let index = 0; index < 5; index += 1) scene = scene.unit("v8", "lancer", 1_600 + index * 30, 2_400, { id: `v8-lancer-${index}` });
     for (let index = 0; index < 6; index += 1) scene = scene.unit("v7", "footman", 600 + index * 30, 2_400, { id: `v7-footman-${index}` });
     const game = scene.build().createGame();
     const memory = createAiPolicyMemory();
