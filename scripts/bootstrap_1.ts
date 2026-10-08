@@ -33,5 +33,5 @@ if (!values['dry-run']) {
   const rows = report.evaluations[0]!.matches.map(match=>({name:match.name,winner:match.result.winner,tick:match.result.tick,timeout:match.result.timeout}));
   writeFileSync(values.out,JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({wins:rows.filter(row=>row.winner==='p0').length,games:rows.length,elapsedMs:report.elapsedMs,rows},null,2));
-  process.exitCode=rows.some(row=>row.winner!=='p0') ? 1 : 0;
+  process.exitCode=!values.baseline && rows.some(row=>row.winner!=='p0') ? 1 : 0;
 }
