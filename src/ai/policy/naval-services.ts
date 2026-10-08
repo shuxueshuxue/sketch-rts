@@ -47,12 +47,16 @@ export function navalServices(
       (foe) =>
         combatCapability(snapshot, foe).armed && distance(foe, point) < range,
     );
+  const awaitBoarding = (target: Unit) => {
+    // Shore boarding sails an idle hull to its berth; holding it strands the engineer.
+    if (target.owner === owner && target.order.type !== 'idle')
+      result.commands.push({ type: "stop", unitIds: [target.id] });
+  };
   const transfer = (crew: Unit, target: Unit) => {
     result.reserved.add(crew.id);
     result.reserved.add(target.id);
     if (crew.deck) result.reserved.add(crew.deck.shipId);
-    if (target.owner === owner && !["idle", "hold"].includes(target.order.type))
-      result.commands.push({ type: "stop", unitIds: [target.id] });
+    awaitBoarding(target);
     result.commands.push({
       type: "board",
       unitIds: [crew.id],
@@ -67,6 +71,8 @@ export function navalServices(
       result.reserved.add(crew.id);
       if (crew.deck) result.reserved.add(crew.deck.shipId);
       result.reserved.add(crew.order.transportId);
+      const target = ships.find(ship => crew.order.type === 'board' && ship.id === crew.order.transportId);
+      if (target) awaitBoarding(target);
     }
   if ((snapshot.players[owner]?.gold ?? 0) > 30)
     for (const ship of [...ships].sort(
