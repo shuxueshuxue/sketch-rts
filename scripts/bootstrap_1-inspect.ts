@@ -1,11 +1,12 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { bootstrapGame, bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runAiGameLoop } from '../src/ai/game-runner';
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../src/ai/planner-context';
-import type { BootstrapAiVersion, MapId } from '../src/shared/types';
-import { snapshotGame } from '../src/shared/sim';
-import { rankV6Goals } from '../src/ai/policy/v6/economy';
+import type { BootstrapAiVersion, MapId, PlayerId } from '../src/shared/types';
+import { restoreSnapshotIntoGame, snapshotGame } from '../src/shared/sim';
+import type { AiPolicyMemory } from '../src/ai/policy';
+import { rankBootstrapGoals } from '../src/ai/bootstrap_1/economy';
 import { bootstrapPolicyContext } from '../src/ai/bootstrap_1/policy';
 const { values } = parseArgs({ options: {
   map: { type: 'string', default: 'pineshade' },
@@ -16,6 +17,7 @@ const { values } = parseArgs({ options: {
   ticks: { type: 'string', default: '6000' },
   'sample-ticks': { type: 'string', default: '600' },
   frames: { type: 'boolean' },
+  resume: { type: 'string' },
   out: { type: 'string', default: '/tmp/bootstrap_1-trace.json' },
 } });
 const subject = values.subject as BootstrapAiVersion;
@@ -27,6 +29,14 @@ const rows: unknown[] = [];
 const purchases: unknown[] = [];
 if (values.frames) mkdirSync(values.out + '.frames', { recursive: true });
 const memories = createAiMemoryProvider();
+const game = bootstrapGame(match);
+if (values.resume) {
+  const previous: { rows: { tick: number; players: Record<PlayerId, { policy: AiPolicyMemory }> }[] } = JSON.parse(readFileSync(values.resume, 'utf8'));
+  const row = previous.rows.at(-1)!;
+  const frame = JSON.parse(readFileSync(`${values.resume}.frames/${row.tick}.json`, 'utf8'));
+  restoreSnapshotIntoGame(game, frame.snapshot, frame.nextId);
+  for (const [owner, player] of Object.entries(row.players)) memories.set!(owner, player.policy);
+}
 const commandPlanner: Parameters<typeof runAiGameLoop>[0]['commandPlanner'] = ({ snapshot, owner, agent, source, teams }) => {
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: owner, version: agent.version, source }, { teams, memoryProvider: memories });
   if (owner === 'p0') for (const entry of entries) {
@@ -36,7 +46,7 @@ const commandPlanner: Parameters<typeof runAiGameLoop>[0]['commandPlanner'] = ({
   }
   return entries;
 };
-const result = runAiGameLoop({ ...match, game: bootstrapGame(match), commandPlanner }, { onStep: ({ game }) => {
+const result = runAiGameLoop({ ...match, game, commandPlanner }, { onStep: ({ game }) => {
   if (game.tick % sampleTicks !== 0) return;
   const snapshot = snapshotGame(game);
   if (values.frames) writeFileSync(`${values.out}.frames/${game.tick}.json`, JSON.stringify({ snapshot, nextId: game.nextId }) + '\n');
@@ -57,7 +67,7 @@ const result = runAiGameLoop({ ...match, game: bootstrapGame(match), commandPlan
     }])),
   };
   const context = bootstrapPolicyContext(snapshot, 'p0', subject, { teams: game.teams, memory: structuredClone(memories.get('p0')!) });
-  const goals = rankV6Goals(snapshot, 'p0', context).map(({ id, priority, cost }) => ({ id, priority, cost }));
+  const goals = rankBootstrapGoals(snapshot, 'p0', context).map(({ id, priority, cost }) => ({ id, priority, cost }));
   rows.push(structuredClone({ ...row, goals }));
   console.log(JSON.stringify({ tick: game.tick, players: Object.fromEntries(Object.entries(row.players).map(([owner, player]) => [owner, {
     gold: player.gold, supply: player.supply, cap: player.cap, bases: player.bases.length,

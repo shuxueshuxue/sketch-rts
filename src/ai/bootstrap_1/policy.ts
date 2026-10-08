@@ -9,6 +9,8 @@ import { ARCHER_DOCTRINES } from './archer-doctrine';
 import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
+import { bootstrapEconomy } from './economy';
+import { shellEvasion } from './shell-evasion';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -29,6 +31,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const grove = snapshot.players[owner]!.race === 'grove';
   const wants: V6Want[] = [
+    { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
     { building: grove ? 'barracks' : 'emberForge', count: 2, priority: 57 },
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
@@ -41,10 +44,10 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   const stack = family.flatMap(script => {
-    if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, script];
+    if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [script, battleRepair] : [script];
+    return script === AI_SCRIPT_LIBRARY.naval ? [script, battleRepair, shellEvasion] : [script];
   });
   return planAiCommandEntriesFromScripts(snapshot, owner, stack, bootstrapPolicyContext(snapshot, owner, version, options));
 }

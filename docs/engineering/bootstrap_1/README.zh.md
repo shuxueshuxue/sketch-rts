@@ -31,7 +31,7 @@ node --import tsx scripts/bootstrap_1.ts --unseen --seed <held-out-seed> --out .
 
 定位一类对局可使用 `--maps`、`--subjects`、`--opponents`、`--race`、`--side`。每局完成立即保存完整报告；最终报告保留每局胜者、经济、伤亡与实际部队组成。元数据记录实际控制器和策略版本，以及 AI、SDK、模拟代码的 SHA-256，避免将未提交试验混作同一候选。任何一局未胜，运行退出码为 1。
 
-日常迭代以手操观察、复盘与局部模拟为主，不随开发提交启动完整矩阵。`bootstrap_1-inspect.ts` 默认只推进五分钟，保存实际购买命令和每三十秒的独立状态，`--ticks` 可进一步缩短；`--frames` 输出真实模拟状态供画面观察。观察记录不计作完整胜负验收。
+日常迭代以手操观察、复盘与局部模拟为主，不随开发提交启动完整矩阵。`bootstrap_1-inspect.ts` 默认只推进五分钟，保存实际购买命令和每三十秒的独立状态，`--ticks` 可进一步缩短；`--frames` 输出真实模拟状态供画面观察。`--resume <上一段观察.json>` 同时恢复保存的世界和策略记忆，继续观察下一段；与原段使用相同的地图、家族、对手、种族和方向参数，并为新段指定不同的 `--out`。观察记录不计作完整胜负验收。
 
 ```bash
 node --import tsx scripts/bootstrap_1-inspect.ts --map grandEstuary --subject v9_archer --opponents v8 --race grove --side 1 --ticks 3600 --frames --out /tmp/bootstrap_1-opening.json
