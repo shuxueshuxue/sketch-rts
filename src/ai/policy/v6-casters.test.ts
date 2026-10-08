@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { snapshotGame } from "../../shared/sim";
+import { issuePlayerCommand, snapshotGame, stepGame } from "../../shared/sim";
+import { isWalkable, sameGround } from "../../shared/terrain";
 import { sketchScene } from "../../sdk/scene";
 import { planAbilityCommands } from "./spell-tactics";
 
@@ -19,6 +20,31 @@ function scene(name: string) {
 }
 
 describe("v6 casters", () => {
+  it.each(['grove', 'ember'] as const)('places a %s summon on reachable land when the direction of battle crosses water', race => {
+    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const game = sketchScene('summon-shore').map('grandEstuary').replaceDefaults()
+      .player('v6', { race, team: 'north' }).player('foe', { race: 'ember', team: 'south' })
+      .player('a1', { team: 'north' }).player('b1', { team: 'south' })
+      .player('a2', { team: 'north' }).player('b2', { team: 'south' })
+      .player('a3', { team: 'north' }).player('b3', { team: 'south' })
+      .townHall('v6', 1392, 1264).townHall('foe', 3184, 1264)
+      .unit('v6', kind, 1461, 1498, { id: 'caster' }).unit('foe', 'ashWarden', 1814, 1737)
+      .build().createGame();
+    const snapshot = snapshotGame(game), caster = snapshot.units.find(unit => unit.id === 'caster')!;
+    const direction = { x: caster.x + 240 * 353 / Math.hypot(353, 239), y: caster.y + 240 * 239 / Math.hypot(353, 239) };
+    expect(isWalkable(snapshot.map, direction.x, direction.y)).toBe(false);
+    const command = planAbilityCommands(snapshot, 'v6', { ...V6, teams: game.teams })
+      .find(command => command.type === 'cast' && command.unitId === caster.id)!;
+    expect(command.type).toBe('cast');
+    if (command.type !== 'cast' || command.x === undefined || command.y === undefined) throw new Error('Expected a point spell');
+    expect(isWalkable(snapshot.map, command.x, command.y)).toBe(true);
+    expect(sameGround(snapshot.map, caster, command as { x: number; y: number })).toBe(true);
+    expect(Math.hypot(command.x - caster.x, command.y - caster.y)).toBeLessThanOrEqual(240);
+    issuePlayerCommand(game, 'v6', command);
+    stepGame(game);
+    expect(game.units.filter(unit => unit.owner === 'v6' && unit.kind === 'spirit')).toHaveLength(1);
+    expect(game.units.find(unit => unit.id === 'caster')!.abilityCooldowns![race === 'grove' ? 'summon' : 'cinderSoul']).toBeGreaterThan(0);
+  });
   it("keeps summoning whenever the spell is ready, with a spirit already up and no enemy near", () => {
     const game = scene("v6-standing-spirits").unit("v6", "summoner", 900, 900, { id: "summoner" }).unit("v6", "spirit", 940, 910).build().createGame();
     const snapshot = snapshotGame(game);
