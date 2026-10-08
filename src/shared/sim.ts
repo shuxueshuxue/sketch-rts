@@ -120,8 +120,8 @@ type SpatialIndex<T extends SpatialEntity> = {
   bottom: number;
 };
 
-const MINE_RANGE = 44;
-const TOWN_HALL_DROP_RANGE = 74;
+const MINE_RANGE = GOLD_MINE_RULES.entryRange;
+const TOWN_HALL_DROP_RANGE = GOLD_MINE_RULES.dropRange;
 const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
 const GATHER_DURATION = seconds(GOLD_MINE_RULES.gatherSeconds);
 const GOLD_MINE_ENTRY_COOLDOWN = seconds(GOLD_MINE_RULES.entrySeconds);
@@ -1364,14 +1364,10 @@ function updateMineOrder(game: Game, unit: Unit) {
       moveToward(unit, resource!.x, resource!.y, game.map, game.units);
       return;
     }
-    const occupied = game.miningFrame!.occupied;
-    if (!unit.mineSlot) {
-      const count = occupied.get(order.resourceId) ?? 0;
-      if (count >= GOLD_MINE_RULES.workstations) return;
-      unit.mineSlot = order.resourceId;
-      occupied.set(order.resourceId, count + 1);
-    }
+    order.timer += 1;
     if ((resource!.harvestCooldownRemaining ?? 0) > 0) return;
+    if (game.miningFrame!.nextWorker.get(order.resourceId) !== unit.id) return;
+    unit.mineSlot = order.resourceId;
     resource!.harvestCooldownRemaining = GOLD_MINE_ENTRY_COOLDOWN;
     unit.order = { ...order, phase: "gather", timer: GATHER_DURATION };
     return;
@@ -3514,7 +3510,7 @@ function separateUnits(game: Game) {
   // Land separation must never relocate a ship sideways after navigation.
   for (const unit of game.units) {
     // Mining workers already pass through every body; exclude them once rather than testing every nearby pair.
-    if (isShipKind(unit.kind) || minerGhost(game, unit)) continue;
+    if (isShipKind(unit.kind) || minerGhost(unit)) continue;
     const x = Math.floor(unit.x / cellSize);
     const y = Math.floor(unit.y / cellSize);
     const key = numericBucketKey(x, y);
@@ -3549,11 +3545,11 @@ function separateUnitBuckets(game: Game, aUnits: Unit[], bUnits: Unit[]) {
   }
 }
 
-// @@@miner-ghost - A worker on a mining run passes through other units, as in Warcraft III and StarCraft, on a map whose
-// buildings are bodies (see @@@building-body): with a tower or a farm by the lane, ten workers going to and fro jammed in
+// @@@miner-ghost - A worker on a mining run passes through other units, as in Warcraft III and StarCraft:
+// with a tower or a farm by the lane, ten workers going to and fro jammed in
 // the gap and stood there for minutes. It still walks round buildings.
-function minerGhost(game: Game, unit: Unit) {
-  return unit.kind === "worker" && unit.order.type === "mine" && game.map.terrain !== undefined;
+function minerGhost(unit: Unit) {
+  return unit.kind === "worker" && unit.order.type === "mine";
 }
 
 // @@@ship-layer - A ship and a land unit do not shove each other: they move on different layers, as Warcraft III's boats

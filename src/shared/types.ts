@@ -128,6 +128,7 @@ export type UnitOrder =
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
+  // Mining timer counts waiting ticks at the entrance, then remaining ticks while gathering.
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
   | { type: "repairShip"; targetId: string }
@@ -221,7 +222,7 @@ export type Unit = {
   deckScale?: number;
   radius: number;
   carryingGold: number;
-  /** Reserved gold-mine workstation, released when the haul order ends. */
+  /** Active gold-mine assignment, released when its order ends. */
   mineSlot?: string;
   kills: number;
   xp: number;

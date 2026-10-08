@@ -31,11 +31,11 @@ export function buildingPlacementBlocker(snapshot: PlacementSnapshot, kind: Buil
 export function resourceBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }, resource: { x: number; y: number }) {
   const radius = BUILDING_DEFS[kind].radius;
   const at = map ? snapToFootprint(map, radius, point) : point;
+  if (kind === "townHall" && distance(at, resource) < GOLD_MINE_RULES.townHallDistance) return true;
   const half = map?.terrain ? footprintHalf(radius, map.terrain.cell) : radius;
-  const gap = kind === "townHall" ? GOLD_MINE_RULES.townHallGap : BUILDING_PLACEMENT_GAP;
   const dx = Math.max(0, Math.abs(resource.x - at.x) - half);
   const dy = Math.max(0, Math.abs(resource.y - at.y) - half);
-  return Math.hypot(dx, dy) < GOLD_MINE_RULES.radius + gap;
+  return Math.hypot(dx, dy) < GOLD_MINE_RULES.radius + BUILDING_PLACEMENT_GAP;
 }
 
 // A building stands on dry ground only (see @@@terrain): no part of it in a forest, on rock, in water or on a

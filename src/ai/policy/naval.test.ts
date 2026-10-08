@@ -128,8 +128,10 @@ describe('shared dock outfitting', () => {
     expect(crew.deck?.shipId).toBe(ship.id);
   });
   for(const version of ['v5','v7','v8'] as const)it(`${version} completes a real island colony and puts its settlers to work`,()=>{
-    const terrain=coast();terrain.cells=Array.from({length:terrain.rows},(_,row)=>Array.from({length:terrain.cols},(_,col)=>
-      col<=8 || col>=20 && col<=27 && row>=5 && row<=14 ? '.' : col===9 || col>=19 && col<=28 && row>=4 && row<=15 ? ',' : '~').join('')).join('');
+    // The island fits a hall outside the ordinary 280-unit hauling distance.
+    const terrain=coast();terrain.cols=36;
+    terrain.cells=Array.from({length:terrain.rows},(_,row)=>Array.from({length:terrain.cols},(_,col)=>
+      col<=8 || col>=20 && col<=33 && row>=5 && row<=14 ? '.' : col===9 || col>=19 && col<=34 && row>=4 && row<=15 ? ',' : '~').join('')).join('');
     const game=islandGame(terrain);game.scriptedVictory=true;
     game.players.player!.gold=3000;
     game.buildings.push({...game.buildings[0]!,id:'colony-yard',kind:'shipyard',x:275,y:336,radius:44,complete:true});
@@ -595,7 +597,10 @@ describe("the AI on the water", () => {
 
 describe("naval strategic choices", () => {
   it("develops an unclaimed reachable mainland mine before buying an overseas expedition", () => {
-    const sim=islandGame();
+    const terrain=coast();
+    terrain.cells=Array.from({length:terrain.rows},(_,row)=>Array.from({length:terrain.cols},(_,col)=>
+      col<=10 ? '.' : col===11 ? ',' : terrain.cells[row*terrain.cols+col]).join('')).join('');
+    const sim=islandGame(terrain);
     sim.buildings=sim.buildings.filter(b=>b.id!=="hall-b");
     sim.players.player!.supplyUsed=25;
     const want = navalWant(snapshotGame(sim),"player",{version:"v7",memory:createAiPolicyMemory()});

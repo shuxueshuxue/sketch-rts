@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { createSnapshotQuery } from "../../sdk/snapshot-query";
 import type { AiPolicyMemory, AiPolicyUnitClaim } from "../memory";
@@ -274,7 +275,7 @@ function expansionClaimStillNeedsArmy(query: ReturnType<typeof createSnapshotQue
   const resource = query.resourceById(claim.targetId);
   if (!resource) return false;
   // @@@expansion-claim-complete - Once the town hall exists at the claimed mine, army ownership of the clearing task is done.
-  return !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= 260);
+  return !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= GOLD_MINE_RULES.baseRange);
 }
 
 function pruneStrategicExpansionClaim(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, memory: AiPolicyMemory) {
@@ -282,7 +283,7 @@ function pruneStrategicExpansionClaim(query: ReturnType<typeof createSnapshotQue
   if (!plan?.expansionClaimTargetId) return;
   const resource = query.resourceById(plan.expansionClaimTargetId);
   const expired = plan.expansionClaimTick !== undefined && plan.expansionClaimTick + OBJECTIVE_CLAIM_TTL_TICKS < query.snapshot.tick;
-  if (resource && !expired && !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= 260)) return;
+  if (resource && !expired && !query.buildings().some((building) => building.owner === owner && building.kind === "townHall" && distance(building, resource) <= GOLD_MINE_RULES.baseRange)) return;
   delete plan.expansionClaimTargetId;
   delete plan.expansionClaimTick;
 }

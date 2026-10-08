@@ -2,6 +2,7 @@ import { BUILDING_DEFS, UNIT_DEFS, constructionStartHp } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { seconds } from "./time";
 import { MAP_POOL } from "./map-pool";
+import { GOLD_MINE_RULES } from "./mining";
 import type { Building, BuildingKind, GameMap, MapId, MercenaryCamp, MercenaryUnitKind, Owner, PlayerId, ResourceNode, TrainableUnitKind, Unit, UnitKind, WorldItem } from "./types";
 
 export { LADDER_MAP_ID, LADDER_SLOT_IDS } from "./map-ids";
@@ -419,9 +420,9 @@ function startPositionFor(
   teams?: Partial<Record<PlayerId, string>>,
 ) {
   if (mapSize === STANDARD_MAP_SIZE) {
-    if (players.length === 2 && owner === "player") return { baseX: scale(900), baseY: scale(900), mineX: scale(1180), mineY: scale(920) };
-    if (players.length === 2 && owner === "enemy") return { baseX: scale(7240), baseY: scale(7240), mineX: scale(7000), mineY: scale(7140) };
-    if (owner === "enemy2") return { baseX: mapSize - 480, baseY: 480, mineX: mapSize - 590, mineY: 460 };
+    if (players.length === 2 && owner === "player") return { baseX: scale(900), baseY: scale(900), mineX: scale(900) + GOLD_MINE_RULES.mainDistance, mineY: scale(900) };
+    if (players.length === 2 && owner === "enemy") return { baseX: scale(7240), baseY: scale(7240), mineX: scale(7240) - GOLD_MINE_RULES.mainDistance, mineY: scale(7240) };
+    if (owner === "enemy2") return { baseX: mapSize - 480, baseY: 480, mineX: mapSize - 480 - GOLD_MINE_RULES.mainDistance, mineY: 480 };
   }
 
   const sideStart = sideStartFor(owner, index, total, players, teams);
@@ -431,8 +432,8 @@ function startPositionFor(
   const lane = (sideIndex + 1) / (sideCount + 1);
   const x = side === 0 ? mapSize * 0.12 : mapSize * 0.88;
   const y = mapSize * (0.08 + lane * 0.84);
-  const mineX = side === 0 ? x + 210 : x - 210;
-  return { baseX: x, baseY: y, mineX, mineY: y + (sideIndex % 2 === 0 ? -90 : 90) };
+  const mineX = side === 0 ? x + GOLD_MINE_RULES.mainDistance : x - GOLD_MINE_RULES.mainDistance;
+  return { baseX: x, baseY: y, mineX, mineY: y };
 }
 
 function sideStartFor(owner: PlayerId, index: number, total: number, players: PlayerId[], teams?: Partial<Record<PlayerId, string>>) {
