@@ -7,6 +7,7 @@ import { parseArgs } from 'node:util';
 import { bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runBenchmarkParallel } from '../src/sdk/benchmark/parallel';
 import type { MapId } from '../src/shared/types';
+import { frozenPolicyManifest } from './bootstrap_1-planner';
 
 const {values} = parseArgs({options:{
   maps:{type:'string'}, subjects:{type:'string'}, opponents:{type:'string'},side:{type:'string'},race:{type:'string'},
@@ -26,9 +27,9 @@ console.log(JSON.stringify({name:'bootstrap_1',baseline:values.baseline===true,g
 if (!values['dry-run']) {
   mkdirSync(dirname(values.out),{recursive:true});
   mkdirSync(values.out+'.matches',{recursive:true});
-  const sources = execFileSync('git', ['ls-files', '-co', '--exclude-standard', 'src/ai', 'src/sdk', 'src/shared', 'scripts/bootstrap_1.ts'], {encoding:'utf8'}).trim().split('\n').filter(path => path.endsWith('.ts') && !path.endsWith('.test.ts'));
+  const sources = execFileSync('git', ['ls-files', '-co', '--exclude-standard', 'src/ai', 'src/sdk', 'src/shared', 'scripts/bootstrap_1.ts', 'scripts/bootstrap_1-planner.ts'], {encoding:'utf8'}).trim().split('\n').filter(path => path.endsWith('.ts') && !path.endsWith('.test.ts'));
   const sourceHashes = Object.fromEntries(sources.map(path => [path, createHash('sha256').update(readFileSync(path)).digest('hex')]));
-  writeFileSync(values.out+'.metadata.json',JSON.stringify({name:'bootstrap_1',commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,dirty:execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).length>0,seed:values.seed,baseline:values.baseline===true,unseen:values.unseen===true,matches:matches.map(({name})=>name),agents:Object.fromEntries(matches.map(match=>[match.name,match.agents]))},null,2)+'\n');
+  writeFileSync(values.out+'.metadata.json',JSON.stringify({name:'bootstrap_1',commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),frozenPolicyRevision:frozenPolicyManifest.revision,sourceHashes,dirty:execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).length>0,seed:values.seed,baseline:values.baseline===true,unseen:values.unseen===true,matches:matches.map(({name})=>name),agents:Object.fromEntries(matches.map(match=>[match.name,match.agents]))},null,2)+'\n');
   let completed=0;
   const report = await runBenchmarkParallel({name:'bootstrap_1',evaluations:[{name:'full-matrix',tag:'melee',matches}]},{
     workerModule:new URL('../src/ai/bootstrap_1/worker.ts',import.meta.url).href,workers:Number(values.workers),

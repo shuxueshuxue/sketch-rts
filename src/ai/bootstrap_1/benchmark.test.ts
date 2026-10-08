@@ -7,6 +7,8 @@ import { resourceBlocksPlacement, terrainBlocksPlacement } from '../../shared/bu
 import { requiredSupplyCap } from '../../shared/catalog';
 import { bootstrapGame, bootstrapMatches, BOOTSTRAP_OPPONENTS } from './benchmark';
 import { BOOTSTRAP_DOCTRINES } from './policy';
+import { join } from 'node:path';
+import { frozenPolicyRoot } from '../../../scripts/bootstrap_1-planner';
 
 describe('bootstrap_1 acceptance matrix',()=>{
   it('plays every subject against all nine groups on every named map, as both races and both sides',()=>{
@@ -45,6 +47,7 @@ describe('bootstrap_1 acceptance matrix',()=>{
   });
   it('keeps frozen policy dependencies byte-identical',()=>{
     const manifest=JSON.parse(readFileSync('docs/engineering/bootstrap_1/frozen-policy.json','utf8')) as {files:Record<string,string>};
-    for(const [path,hash]of Object.entries(manifest.files))expect(createHash('sha256').update(readFileSync(path)).digest('hex'),path).toBe(hash);
+    const root = frozenPolicyRoot();
+    for(const [path,hash]of Object.entries(manifest.files))expect(createHash('sha256').update(readFileSync(join(root, path))).digest('hex'),path).toBe(hash);
   });
 });

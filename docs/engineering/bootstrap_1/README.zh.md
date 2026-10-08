@@ -14,9 +14,11 @@
 
 初始基线为 `1518a8529cd85c31e46864e18dc8f26dbd1693ed`；用户批准修正 workshop 的种族选择错误后，冻结于 `983fbb376101e98633432dabdbffca9680f68b38`（PR #193、#194）。之后用户要求实际运输采矿、基地与矿的最小距离，以及相应 AI 调整；PR #195 将公共规则更新于 `58cac102b5bc04578e76533a89df18c27efe3082`，此次重新冻结并重测控制组和候选组。
 
-`frozen-policy.json` 保存共享策略依赖的 SHA-256 与获批修正记录；`frozen-traces.json` 保存当前引擎下旧三版、两种族的完整命令流及最终状态摘要。旧引擎的六组摘要留存在 `frozen-traces-engine-983fbb3.json`，其完整 1620 局控制组记录在 `baseline-engine-983fbb3.csv`；这些结果不能与新引擎的候选组混作胜负对照。
+`frozen-policy.json` 保存共享策略依赖的 SHA-256 与获批修正记录；`frozen-traces.json` 保存 `58cac10` 引擎下旧三版、两种族的完整命令流及最终状态摘要。更早引擎的六组摘要留存在 `frozen-traces-engine-983fbb3.json`，其完整 1620 局控制组记录在 `baseline-engine-983fbb3.csv`；不同引擎的结果不能混作胜负对照。
 
-采矿修正统一基地所属矿的识别范围，并按实际人数迁移富余工人，保留原矿五人。兵种选择与战术表未改变，具体文件与前后 SHA-256 见 `approvedCorrections`。此后四个集成文件只加入新策略注入或版本注册；旧版本不传入新策略表。每次候选验证必须保持当前引擎下六组旧版轨迹及最终状态完全一致。
+采矿修正统一基地所属矿的识别范围，并按实际人数迁移富余工人，保留原矿五人。兵种选择与战术表未改变，具体文件与前后 SHA-256 见 `approvedCorrections`。
+
+上游 PR #197 于 `dce756f903aeb3e89485267f47d631d107c2d449` 引入老兵技能、统一伤害和机械单位规则，也修改了公共 AI。验收对手仍冻结于 `58cac10`：`bootstrap_1-planner.ts` 从该提交导出原始源码，在临时目录编译一次并执行历史策略；当前生产 AI 继续接收上游修改。控制组和候选组都由当前 SDK 和模拟引擎推进，只更换旧版本的命令规划器。策略依赖检查针对这份固定源码，历史轨迹检查也在其原始引擎上执行；当前引擎的胜负须另行验收，不能要求两个规则不同的引擎产生相同状态摘要。
 
 ## 运行
 
@@ -29,7 +31,7 @@ node --import tsx scripts/bootstrap_1.ts --out .playtest/bootstrap_1/full.json
 node --import tsx scripts/bootstrap_1.ts --unseen --seed <held-out-seed> --out .playtest/bootstrap_1/unseen.json
 ```
 
-定位一类对局可使用 `--maps`、`--subjects`、`--opponents`、`--race`、`--side`。每局完成立即保存完整报告；最终报告保留每局胜者、经济、伤亡与实际部队组成。元数据记录实际控制器和策略版本，以及 AI、SDK、模拟代码的 SHA-256，避免将未提交试验混作同一候选。任何一局未胜，运行退出码为 1。
+定位一类对局可使用 `--maps`、`--subjects`、`--opponents`、`--race`、`--side`。每局完成立即保存完整报告；最终报告保留每局胜者、经济、伤亡与实际部队组成。元数据记录当前提交、固定旧策略提交、实际控制器和策略版本，以及 AI、SDK、模拟代码的 SHA-256，避免将未提交试验混作同一候选。候选任何一局未胜，运行退出码为 1。运行需要仓库中存在固定旧提交，Actions 因此检出完整 Git 历史。
 
 日常迭代以手操观察、复盘与局部模拟为主，不随开发提交启动完整矩阵。`bootstrap_1-inspect.ts` 默认只推进五分钟，保存实际购买命令和每三十秒的独立状态，`--ticks` 可进一步缩短；`--frames` 输出真实模拟状态供画面观察。`--resume <上一段观察.json>` 同时恢复保存的世界和策略记忆，继续观察下一段；与原段使用相同的地图、家族、对手、种族和方向参数，并为新段指定不同的 `--out`。观察记录不计作完整胜负验收。
 
@@ -37,8 +39,8 @@ node --import tsx scripts/bootstrap_1.ts --unseen --seed <held-out-seed> --out .
 node --import tsx scripts/bootstrap_1-inspect.ts --map grandEstuary --subject v9_archer --opponents v8 --race grove --side 1 --ticks 3600 --frames --out /tmp/bootstrap_1-opening.json
 ```
 
-完整矩阵只在明确请求验收时运行：提交 `docs/engineering/bootstrap_1/acceptance-request.json` 的改动触发 Actions，按地图与家族执行 45 项候选任务。冻结控制组已在同一引擎下完成，后续验收复用；只有公共引擎或获批基线发生变化才重测控制组。先验证冻结，再运行对局，失败任务仍保存证据。尚未达到验收时不合并或部署为完成版本。
+完整矩阵只在明确请求验收时运行：提交 `docs/engineering/bootstrap_1/acceptance-request.json` 的改动触发 Actions。PR #197 改变公共引擎，下一次验收按地图、家族和控制／候选角色执行 90 项任务，重新获得同一引擎的两组证据；该引擎控制组完成后，同引擎的日常候选迭代可复用控制证据。先验证冻结，再运行对局，失败任务仍保存证据。尚未达到验收时不合并或部署为完成版本。
 
 ## 当前状态
 
-工作进行中。当前引擎的冻结控制组全部 1620 局完成，无缺失；记录见 `baseline-engine-58cac10.csv`。提交 `7d31b5c` 的候选完成 1618 局，602 胜、743 负、273 超时，另有 2 局因任务超时缺失；逐格记录见 `candidate-7d31b5c-engine-58cac10.csv`。候选仍未达标，最终 holdout 种子仍未使用。完整测量和已否决方案见 `development.zh.md`；PR #192 保持草稿。
+工作进行中。`58cac10` 引擎的冻结控制组全部 1620 局完成，无缺失；记录见 `baseline-engine-58cac10.csv`。同引擎、提交 `7d31b5c` 的候选完成 1618 局，602 胜、743 负、273 超时，另有 2 局因任务超时缺失；逐格记录见 `candidate-7d31b5c-engine-58cac10.csv`。PR #197 引擎尚未重跑完整矩阵；这些旧成绩不能作为当前候选成绩。候选仍未达标，最终 holdout 种子仍未使用。完整测量和已否决方案见 `development.zh.md`；PR #192 保持草稿。

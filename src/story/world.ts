@@ -1,5 +1,6 @@
 import { createSquadMemory, planSquad, type SquadIntent, type SquadOptions, type SquadReport } from "../ai/squad/squad";
 import { createBuilding } from "../shared/map";
+import { canReceiveHealing } from "../shared/healing";
 import { resolveVariant, type UnitVariantDef, type VariantRules } from "../shared/catalog";
 import { addWorldEffect, issuePlayerCommand, refreshUnitStats, removeUnit, spawnVariantUnit, strikeUnit, type Game } from "../shared/sim";
 import type { Building, BuildingKind, GameCommand, Owner, PlayerId, Unit, UnitKind, UnitOrder, WorldEffect } from "../shared/types";
@@ -198,7 +199,7 @@ export class World {
 
   heal(who: Who, amount: number, options: { effect?: boolean } = {}) {
     const unit = this.unit(who);
-    if (!unit) return;
+    if (!unit || !canReceiveHealing(unit, this.game)) return;
     unit.hp = Math.min(unit.maxHp, unit.hp + amount);
     if (options.effect ?? true) this.effect("heal", unit, seconds(1.6));
   }

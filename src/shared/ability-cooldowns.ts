@@ -1,4 +1,4 @@
-import { UNIT_DEFS } from "./catalog";
+import { unitAbilities } from "./unit-abilities";
 import type { AbilityKind, Unit } from "./types";
 
 // @@@ability-cooldowns - As in Warcraft III, every ability keeps its own cooldown, apart from the weapon's: a caster casts
@@ -11,8 +11,8 @@ export function abilityCooldown(unit: Pick<Unit, "abilityCooldowns">, ability: A
 }
 
 // Whether the unit can cast any of its abilities now.
-export function canCast(unit: Pick<Unit, "kind" | "abilityCooldowns">): boolean {
-  return UNIT_DEFS[unit.kind].abilities.some((ability) => abilityCooldown(unit, ability) <= 0);
+export function canCast(unit: Pick<Unit, "kind" | "abilityCooldowns" | "veteranSkill">): boolean {
+  return unitAbilities(unit).some((ability) => abilityCooldown(unit, ability) <= 0);
 }
 
 export function withAbilityCooldown(unit: Pick<Unit, "abilityCooldowns">, ability: AbilityKind, ticks: number): NonNullable<Unit["abilityCooldowns"]> {

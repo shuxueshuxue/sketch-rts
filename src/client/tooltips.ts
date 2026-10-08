@@ -3,6 +3,10 @@ import { ITEM_DEFS } from "../shared/equipment";
 import { shipProfile, shipPassengers, isShipKind } from "../shared/ship-geometry";
 import { bodyMass } from "../shared/physical-body";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "../shared/unit-value";
+import { VETERAN_SKILLS, type VeteranSkillId } from "../shared/veteran-skills";
+import { attackDamageProfile, type DamageProfile } from "../shared/damage-types";
+import { unitAttackDamageProfile } from "../shared/damage";
+import { unitClassOf, type UnitClass } from "../shared/unit-targeting";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "../shared/item-rules";
 import { BOOTS_SPEED, RING_REGEN_PER_SECOND, HEALING_SCROLL_RADIUS, HEALING_SCROLL_HEAL, IVORY_TOWER_REACH, SHOP_GOODS } from "../shared/shop";
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
@@ -40,6 +44,7 @@ export function unitTooltip(kind: TrainableUnitKind, hotkey?: string, i18n: I18n
       tooltipLine(i18n.locale, "supply", stats.supplyUsed),
       tooltipLine(i18n.locale, "hp", stats.hp),
       tooltipLine(i18n.locale, "attack", stats.attackDamage),
+      damageProfileLabel(attackDamageProfile(kind, stats.weapon), i18n.locale),
       tooltipLine(i18n.locale, "speed", stats.speed),
       tooltipLine(i18n.locale, "cooldown", formatSeconds(stats.attackCooldown)),
       ...unitRuleLines(stats, i18n.locale),
@@ -74,14 +79,16 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
     stats: [
       tooltipLine(i18n.locale, "currentHp", `${formatStatNumber(totalHp)}/${formatStatNumber(totalMaxHp)}`),
       tooltipLine(i18n.locale, "attack", statRange(units.map((unit) => unit.attackDamage))),
+      ...new Set(units.map(unit => damageProfileLabel(unitAttackDamageProfile(snapshot, unit), i18n.locale))),
       tooltipLine(i18n.locale, "range", statRange(units.map((unit) => unit.attackRange))),
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
       ...cargoLines(kind, units, snapshot, i18n.locale),
-      ...unitRuleLines(rules, i18n.locale, representative.level, earnsStars),
+      ...unitRuleLines(rules, i18n.locale, representative.level, earnsStars, unitClassOf(representative, snapshot)),
       ...(units.length === 1 && earnsStars ? [
         i18n.locale === "zh" ? `星级 ${representative.level}；经验 ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}` : `Stars ${representative.level}; XP ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}`,
       ] : []),
+      ...(units.length === 1 && representative.veteranSkill ? [VETERAN_SKILLS[representative.veteranSkill].name[i18n.locale], VETERAN_SKILLS[representative.veteranSkill].description[i18n.locale]] : []),
     ],
     requirements: [],
   };
@@ -91,6 +98,11 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
 // units, when the player can switch it.
 export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n = DEFAULT_I18N, autocast?: AutocastSwitch): GameplayTooltip {
   const text = TEXT[i18n.locale];
+  const definition = ABILITY_DEFS[ability];
+  if (definition.behavior === "veteran") {
+    const tooltip = veteranSkillTooltip(definition.skill, i18n, hotkey);
+    return { ...tooltip, ...(autocast ? { notes: [...(tooltip.notes ?? []), text.autocast[autocast], text.autocast.toggle] } : {}) };
+  }
   return {
     title: labelKind(ability, i18n),
     body: ABILITY_CARDS[ability].description[i18n.locale],
@@ -101,14 +113,46 @@ export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n
   };
 }
 
+export function veteranSkillTooltip(skill: VeteranSkillId, i18n: I18n = DEFAULT_I18N, hotkey?: string): GameplayTooltip {
+  const definition = VETERAN_SKILLS[skill];
+  const active = definition.effect.type === "active";
+  const protection = "modifiers" in definition.effect && definition.effect.modifiers.damageReduction;
+  return {
+    title: definition.name[i18n.locale],
+    body: definition.description[i18n.locale],
+    stats: [localized(i18n.locale, definition.pool === "common" ? "通用技能" : "兵种特有技能", definition.pool === "common" ? "Common skill" : "Specialist skill"),
+      ...(protection ? [localized(i18n.locale, "防护同时适用于物理和魔法伤害", "Protection applies to both physical and magic damage")] : [])],
+    requirements: [],
+    notes: [localized(i18n.locale, active ? "主动技能：以自身为中心施放；支持自动施法。" : "被动技能：学习后自动生效。", active ? "Active skill: casts around the soldier; supports autocast." : "Passive skill: takes effect automatically after learning.")],
+    hotkey: formatHotkey(hotkey),
+  };
+}
+
+export function damageProfileLabel(profile: DamageProfile, locale: Locale) {
+  const school = localized(locale, profile.school === "physical" ? "物理" : "魔法", profile.school === "physical" ? "Physical" : "Magic");
+  const deliveries = { melee: ["近战", "Melee"], ranged: ["远程", "Ranged"], effect: ["效果", "Effect"] } as const;
+  const subtypes = { cut: ["斩击", "Cutting"], pierce: ["穿刺", "Piercing"], blunt: ["钝击", "Blunt"],
+    fire: ["火焰", "Fire"], poison: ["毒素", "Poison"], lightning: ["闪电", "Lightning"], arcane: ["奥术", "Arcane"] } as const;
+  const detail = profile.school === "physical" ? profile.physicalType : profile.element;
+  const delivery = deliveries[profile.delivery];
+  const subtype = detail ? subtypes[detail] : undefined;
+  const labels = [school, localized(locale, delivery[0], delivery[1]), ...(subtype ? [localized(locale, subtype[0], subtype[1])] : [])];
+  return `${localized(locale, "伤害", "Damage")}: ${labels.join(" · ")}`;
+}
+
+export function unitClassLabel(classification: UnitClass, locale: Locale) {
+  return localized(locale, classification === "mechanical" ? "机械" : "非机械", classification === "mechanical" ? "Mechanical" : "Non-mechanical");
+}
+
 function abilityStats(ability: AbilityKind, locale: Locale) {
   const def = ABILITY_DEFS[ability];
   const cooldown = tooltipLine(locale, "cooldown", formatSeconds(def.cooldown));
+  if (def.behavior === "veteran") return [cooldown];
   if (def.behavior === "weapon") return [tooltipLine(locale,"attack",def.damage),tooltipLine(locale,"range",`${def.weapon.minRange??0}-${def.range}`),cooldown,
     ...(def.rootTicks ? [localized(locale, `定身 ${formatSeconds(def.rootTicks)}`, `Root ${formatSeconds(def.rootTicks)}`)] : []),
     ...(def.burnTicks ? [tooltipLine(locale, "duration", formatSeconds(def.burnTicks))] : []),
   ];
-  if (def.behavior === "heal") return [localized(locale, "治疗不修复船体", "Healing does not repair ships"), tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
+  if (def.behavior === "heal") return [localized(locale, "仅治疗非机械友军；对机械单位无效", "Heals only non-mechanical allies; has no effect on mechanical units"), tooltipLine(locale, "restoresHp", def.healAmount), tooltipLine(locale, "range", def.range), cooldown];
   if (def.behavior === "summon") return [TEXT[locale].stats.summonsSpirit, tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.summonDuration)), cooldown];
   if (def.behavior === "charge") return [tooltipLine(locale, "chargeDamage", def.damageMultiplier), tooltipLine(locale, "range", `${def.minRange}-${def.range}`), cooldown];
   if (def.behavior === "stomp" || def.behavior === "bloodlust" || def.behavior === "web") return [tooltipLine(locale, "range", def.range), tooltipLine(locale, "duration", formatSeconds(def.effectDuration)), cooldown];
@@ -302,7 +346,7 @@ const TEXT = {
       abilities: "Abilities: {abilities}.",
       affectsBuildings: "Affects buildings.",
       affectsCombatUnits: "Affects combat units.",
-      affectsStarredUnits: "Affects starred units.",
+      affectsStarredUnits: "Affects non-mechanical starred units.",
       provides: "Provides: {production}.",
       researchAt: "Research at {building}.",
       tierAdvanced: "Advanced unit: needs a supply cap of {cap}.",
@@ -349,7 +393,7 @@ const TEXT = {
       abilities: "技能：{abilities}。",
       affectsBuildings: "影响建筑。",
       affectsCombatUnits: "影响作战单位。",
-      affectsStarredUnits: "影响有星单位。",
+      affectsStarredUnits: "影响非机械有星单位。",
       provides: "提供：{production}。",
       researchAt: "在{building}研究。",
       tierAdvanced: "进阶兵种：人口上限需达到 {cap}。",
@@ -367,6 +411,9 @@ const TEXT = {
 // What a spell's button needs besides a ready caster ({min} and {max}: a charge's window, filled from the catalog).
 const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
   en: {
+    veteranRally: ["Learned at three stars; affects nearby allies."],
+    veteranHealingWave: ["Learned at three stars; affects nearby injured non-mechanical allies."],
+    veteranInnerFire: ["Learned at three stars; affects nearby allies."],
     pinningBolt:["Target an enemy unit or structure."], incendiaryFlume:["Target a point."],
     heal: ["Priest or field medic must be ready."],
     summon: ["Summoner must be ready.", "Target a point; a far one is walked to first."],
@@ -380,6 +427,9 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     web: ["Cast by a spider queen on its own."],
   },
   zh: {
+    veteranRally: ["三星学习后可用；影响身边友军。"],
+    veteranHealingWave: ["三星学习后可用；影响身边受伤的非机械友军。"],
+    veteranInnerFire: ["三星学习后可用；影响身边友军。"],
     pinningBolt:["目标必须是敌方单位或建筑。"], incendiaryFlume:["选择燃油弹落点。"],
     heal: ["牧师或战地医师必须准备就绪。"],
     summon: ["召唤师必须准备就绪。", "目标是一个点位，远了会先走过去。"],
@@ -400,8 +450,8 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],requirements:["Needs a compatible ship fitting."]},
     flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible ship fitting."]},
     issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[],requirements:[]},
-    leatherArmor:{title:"Leather Armor",body:"Reduces incoming damage while worn on the body.",stats:[],requirements:[]},
-    roundShield:{title:"Round Shield",body:"Reduces incoming damage while held. Cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},
+    leatherArmor:{title:"Leather Armor",body:"Reduces incoming physical damage while worn on the body. Does not reduce magic damage.",stats:[],requirements:[]},
+    roundShield:{title:"Round Shield",body:"Reduces incoming physical damage while held. Does not reduce magic damage; cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},
     greatSword:{title:"Greatsword",body:"A melee weapon occupying both hands. Your other weapons stay in their carrying positions.",stats:[],requirements:[]},
     lightningRod: {
       title: "Lightning Rod",
@@ -423,7 +473,7 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
     guardianScroll: {
       title: "Guardian Scroll",
-      body: "Protects nearby allied units from incoming attack damage for a short time.",
+      body: "Makes nearby allied units immune to incoming damage for a short time.",
       stats: [],
       requirements: ["Carrier must not be neutral."],
     },
@@ -447,13 +497,13 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
     regenRing: {
       title: "Regeneration Circlet",
-      body: "Heals its wearer over time while worn on the head.",
+      body: "Heals a non-mechanical wearer over time while worn on the head. Has no effect on mechanical units.",
       stats: [],
       requirements: ["Passive item. No manual use."],
     },
     healingScroll: {
       title: "Scroll of Healing",
-      body: "Consumed to heal every allied unit near the reader at once.",
+      body: "Consumed to heal nearby non-mechanical allied units at once. Has no effect on mechanical units.",
       stats: [],
       requirements: ["Carrier must not be neutral."],
     },
@@ -469,8 +519,8 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     shipMortar:{title:"舰载臼炮",body:"重型船用攻城武器；转装到兼容船只后保留爆炸效果和最小射程。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
     flameProjector:{title:"喷火装置",body:"近距离船用武器；搬运和换装保留耐久与射击冷却。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
     issuedWeapon:{title:"制式武器",body:"单位训练时配发的武器。可以收起或转交，同样占用四个携行位之一。",stats:[],requirements:[]},
-    leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的伤害。",stats:[],requirements:[]},
-    roundShield:{title:"圆盾",body:"拿在手中时减少受到的伤害；不能和双手武器同时持用。",stats:[],requirements:[]},
+    leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的物理伤害，不减免魔法伤害。",stats:[],requirements:[]},
+    roundShield:{title:"圆盾",body:"拿在手中时减少受到的物理伤害，不减免魔法伤害；不能和双手武器同时持用。",stats:[],requirements:[]},
     greatSword:{title:"双手剑",body:"占用双手的近战武器；其它武器仍保留在各自的携行位。",stats:[],requirements:[]},
     lightningRod: {
       title: "闪电权杖",
@@ -516,13 +566,13 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
     },
     regenRing: {
       title: "回春头环",
-      body: "穿在头部位置时持续恢复生命。收进携行位或船舱后停止生效。",
+      body: "穿在头部位置时为非机械单位持续恢复生命，对机械单位无效。收进携行位或船舱后停止生效。",
       stats: [],
       requirements: ["被动物品，无法手动使用。"],
     },
     healingScroll: {
       title: "治疗卷轴",
-      body: "消耗后，使用者身边所有友军立即回血。",
+      body: "消耗后，使用者身边的非机械友军立即回血，对机械单位无效。",
       stats: [],
       requirements: ["携带者不能是中立单位。"],
     },
@@ -542,7 +592,7 @@ const UPGRADE_DESCRIPTIONS: Record<Locale, Record<UpgradeKind, string>> = {
     buildingDurability: "Improves maximum health for owned buildings.",
     speedTraining: "Improves movement speed for ordinary combat units.",
     rangeTraining: "Improves attack range for ordinary combat units, excluding towers.",
-    leadership: "Lets veteran owned units regenerate health based on their star level.",
+    leadership: "Lets non-mechanical veteran owned units regenerate health based on their star level. Mechanical units require repairs.",
   },
   zh: {
     weaponTraining: "提升普通作战单位的攻击伤害。",
@@ -550,7 +600,7 @@ const UPGRADE_DESCRIPTIONS: Record<Locale, Record<UpgradeKind, string>> = {
     buildingDurability: "提升己方建筑的最大生命。",
     speedTraining: "提升普通作战单位的移动速度。",
     rangeTraining: "提升普通作战单位的攻击射程，不影响防御塔。",
-    leadership: "让己方有星级单位按星级持续回复生命。",
+    leadership: "让己方非机械有星级单位按星级持续回复生命；机械单位需要维修。",
   },
 };
 
@@ -561,13 +611,14 @@ function unitDescription(kind: UnitKind, i18n: I18n) {
   return localized(i18n.locale, UNIT_DEFS[kind].creepFoodPower ? "中立营地守卫；受攻击会呼叫附近同伴，追击受营地范围限制。" : "雇佣兵提供即时支援；临时召唤物会在持续时间结束后消失。", UNIT_DEFS[kind].creepFoodPower ? "Neutral camp guardian. Calls nearby allies when attacked and remains within its camp leash." : "Hired troops provide immediate support; temporary summons expire after their duration.");
 }
 
-function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, earnsStars = true) {
-  const lines: string[] = [];
+function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, earnsStars = true, classification = def.unitClass) {
+  const lines: string[] = [localized(locale, `单位类型：${unitClassLabel(classification, locale)}`, `Unit class: ${unitClassLabel(classification, locale)}`)];
+  if (classification === "mechanical") lines.push(localized(locale, "可由工人维修；治疗和生命回复对其无效。", "Workers can repair this unit; healing and health regeneration have no effect."));
   if(def.naval)lines.push(localized(locale,"攻击舰船优先打可攻击的乘员；命中乘员也会按武器破坏船体。空闲农民会花费金币自动修船。","Ship attacks prioritize reachable crew; hits also damage the hull according to the weapon. Idle workers automatically repair their ship using gold."));
   if(def.passengerDamageMultiplier)lines.push(localized(locale,`乘员攻击伤害 ${def.passengerDamageMultiplier*100}%`,`Passenger attack damage ${def.passengerDamageMultiplier*100}%`));
-  if (def.armor === "heavy") lines.push(localized(locale, `重甲：远程伤害 ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%，防御塔伤害 ${HEAVY_ARMOR_DAMAGE.tower * 100}%`, `Heavy armor: ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% ranged damage, ${HEAVY_ARMOR_DAMAGE.tower * 100}% tower damage`));
+  if (def.armor === "heavy") lines.push(localized(locale, `重甲：受到远程普攻／攻城伤害 ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%（含魔法普攻）、防御塔伤害 ${HEAVY_ARMOR_DAMAGE.tower * 100}%；不减免主动法术或道具伤害`, `Heavy armor: take ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% ranged attack / siege damage (including magic attacks), ${HEAVY_ARMOR_DAMAGE.tower * 100}% tower damage; does not reduce active spell or item damage`));
   if (def.casterSlayer) lines.push(localized(locale, `对法师／召唤物伤害 ×${def.casterSlayer}`, `Caster/summon damage ×${def.casterSlayer}`));
-  if (def.regenPerSecond) lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
+  if (def.regenPerSecond && classification !== "mechanical") lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
   if (def.slowOnHit) lines.push(localized(locale, `命中减速至 ${SLOW_PACE * 100}%，持续 ${formatSeconds(SLOW_TICKS)}`, `Hit slows to ${SLOW_PACE * 100}% for ${formatSeconds(SLOW_TICKS)}`));
   if (def.poisonOnHit) lines.push(localized(locale, `中毒 ${POISON_DAMAGE} 伤害/秒，持续 ${formatSeconds(POISON_TICKS)}`, `Poison ${POISON_DAMAGE} damage/s for ${formatSeconds(POISON_TICKS)}`));
   if (def.splash) lines.push(localized(locale, `溅射 ${SPLASH_SHARE * 100}% 伤害，半径 ${SPLASH_RADIUS}`, `Splash ${SPLASH_SHARE * 100}% damage, radius ${SPLASH_RADIUS}`));
@@ -575,7 +626,7 @@ function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 
   if (def.weapon?.burst) lines.push(localized(locale, `每轮 ${def.weapon.burst} 发`, `${def.weapon.burst} shots per volley`));
   if (def.goldBounty) lines.push(localized(locale, `击败奖励 ${def.goldBounty} 金`, `Defeat bounty ${def.goldBounty} gold`));
   if (def.xpReward > 0) lines.push(localized(locale, `击杀经验 ${killXpReward(def, level)}`, `Kill reward ${killXpReward(def, level)} XP`));
-  if (earnsStars && def.cost > 0) lines.push(localized(locale, `1/2/3 星累计经验 ${xpStarThresholds(def).join(" / ")}；每星攻击和生命 +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}%`, `1/2/3-star XP ${xpStarThresholds(def).join(" / ")}; each star +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}% attack and HP`));
+  if (earnsStars && def.cost > 0) lines.push(localized(locale, `1/2/3 星累计经验 ${xpStarThresholds(def).join(" / ")}；每星最大生命 +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}%；三星可从三个候选中学习一个技能`, `1/2/3-star XP ${xpStarThresholds(def).join(" / ")}; each star +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}% maximum HP; at three stars choose one of three skills`));
   return lines;
 }
 
@@ -593,14 +644,14 @@ function itemStats(kind: ItemKind, locale: Locale) {
     case "breachCharge": stats = [localized(locale, `建筑伤害 ${BREACH_CHARGE.damage}`, `${BREACH_CHARGE.damage} building damage`), range(BREACH_CHARGE.range), consumed]; break;
     case "speedBoots": stats = [tooltipLine(locale, "speedBonus", Math.round((BOOTS_SPEED - 1) * 100))]; break;
     case "regenRing": stats = [tooltipLine(locale, "currentRegen", `+${RING_REGEN_PER_SECOND}`)]; break;
-    case "healingScroll": stats = [localized(locale, "治疗不修复船体", "Healing does not repair ships"), tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
+    case "healingScroll": stats = [localized(locale, "仅治疗非机械友军", "Heals only non-mechanical allies"), tooltipLine(locale, "restoresHp", HEALING_SCROLL_HEAL), radius(HEALING_SCROLL_RADIUS), consumed]; break;
     case "ivoryTower": stats = [range(IVORY_TOWER_REACH), localized(locale, `初始生命 ${IVORY_TOWER_HP_SHARE * 100}%`, `Starting HP ${IVORY_TOWER_HP_SHARE * 100}%`), consumed]; break;
   }
   if(isShipEquipment(kind)){const weapon=SHIP_WEAPONS[kind];stats.push(tooltipLine(locale,"attack",weapon.damage),range(weapon.range),tooltipLine(locale,"cooldown",formatSeconds(weapon.cooldown)),localized(locale,"占满 4 个携行位／4 个船舱格","Uses all 4 carrying positions / 4 hold cells"));}
   const equipment=ITEM_DEFS[kind];
   const positions={head:["头部","Head"],body:["身体","Body"],legs:["腿部","Legs"],feet:["脚部","Feet"]} as const;
   stats.push(equipment.slot ? localized(locale,`${positions[equipment.slot as keyof typeof positions]?.[0]}穿戴位；也可收在携行位`,`${positions[equipment.slot as keyof typeof positions]?.[1]} equipment; can also be stowed`) : equipment.span===4 ? localized(locale,"搬运时不能持用其它物品","Cannot hold other items while hauling") : localized(locale,`${equipment.hands===2?"双手":"单手"}物品 · 占 1 个携行位`,`${equipment.hands===2?"Two-handed":"One-handed"} · 1 carrying position`));
-  if(equipment.protection)stats.push(localized(locale,`减伤 ${equipment.protection*100}%`,`${equipment.protection*100}% damage reduction`));
+  if(equipment.protection)stats.push(localized(locale,`物理减伤 ${equipment.protection*100}%`,`${equipment.protection*100}% physical damage reduction`));
   if(equipment.weapon)stats.push(localized(locale,`攻击 ${equipment.weapon.damage} · 射程 ${equipment.weapon.range}`,`Attack ${equipment.weapon.damage} · Range ${equipment.weapon.range}`));
   stats.push(localized(locale,`重量 ${equipment.mass} kg`,`${equipment.mass} kg`));
   const good = SHOP_GOODS.find(good => good.kind === kind);

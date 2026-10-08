@@ -1,4 +1,5 @@
 import type { Unit } from "../../shared/types";
+import { canReceiveHealing } from "../../shared/healing";
 import { ensure, scope, spawn, type Operation } from "../../story/kernel";
 import { wait } from "../../story/ops";
 import { definePower, type Power } from "../../story/powers";
@@ -90,7 +91,7 @@ export const wardensRally = (level: Level): Power<Unit[]> =>
     name: { zh: "守望号令", en: "Warden's rally" },
     cooldown: seconds(26),
     aim(caster, world) {
-      const hurt = world.alliesOf(caster, 280).filter((ally) => ally.hp < ally.maxHp * 0.6);
+      const hurt = world.alliesOf(caster, 280).filter((ally) => canReceiveHealing(ally, world.game) && ally.hp < ally.maxHp * 0.6);
       return hurt.length >= 2 ? [caster, ...world.alliesOf(caster, 280)] : undefined;
     },
     *cast(caster, allies, world) {
@@ -186,7 +187,7 @@ export const mendingRain = (level: Level): Power<Point> =>
     name: { zh: "愈合之雨", en: "Mending rain" },
     cooldown: seconds(24),
     aim(caster, world) {
-      const hurt = [caster, ...world.alliesOf(caster, 260)].filter((ally) => ally.hp < ally.maxHp * 0.75);
+      const hurt = [caster, ...world.alliesOf(caster, 260)].filter((ally) => canReceiveHealing(ally, world.game) && ally.hp < ally.maxHp * 0.75);
       return hurt.length >= 3 ? centerOf(hurt) : undefined;
     },
     *cast(caster, at, world) {

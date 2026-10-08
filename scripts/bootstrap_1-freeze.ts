@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { deepStrictEqual } from 'node:assert';
-import { runAiGameLoop } from '../src/ai/game-runner';
-import { checksumGame } from '../src/shared/sim/checksum';
+import { frozenPolicyModules, frozenPolicyManifest } from './bootstrap_1-planner';
+
+const { runAiGameLoop, checksumGame } = await frozenPolicyModules();
 
 const versions = ['v5', 'v7', 'v8'] as const;
 const results = versions.flatMap((version, index) => (['grove', 'ember'] as const).map(race => {
@@ -21,4 +22,4 @@ const results = versions.flatMap((version, index) => (['grove', 'ember'] as cons
   return result;
 }));
 deepStrictEqual(results,JSON.parse(readFileSync('docs/engineering/bootstrap_1/frozen-traces.json','utf8')));
-console.log('Frozen v5/v7/v8 command streams and final simulation digests unchanged.');
+console.log(`Frozen v5/v7/v8 command streams and simulation digests unchanged on their original engine ${frozenPolicyManifest.revision}.`);

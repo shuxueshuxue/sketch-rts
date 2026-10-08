@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import type { GameCommand } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
-import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../planner-context';
+import { createAiMemoryProvider } from '../planner-context';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
@@ -10,6 +10,7 @@ import { planAbilityCommands } from '../policy/spell-tactics';
 import { bootstrapEconomy } from './economy';
 import { bootstrapPolicyContext } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
+import { createBootstrapCommandPlanner } from '../../../scripts/bootstrap_1-planner';
 
 function battlefield(miningRaid = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
@@ -140,32 +141,39 @@ describe('bootstrap_1 summoner tower rush', () => {
       && unit.order.type === 'mine' && unit.order.resourceId === resourceId)).toHaveLength(5);
   });
 
-  it('keeps a real host advancing while recruits arrive, despite the older backline and general orders', () => {
+  it('keeps a real host advancing while recruits arrive, despite the older backline and general orders', async () => {
     const { game, context, memory } = battlefield();
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
     issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit').map(unit => unit.id) });
     for (let tick = 0; tick < 800; tick++) stepGame(game);
     const memories = createAiMemoryProvider();
+    const opponents = await createBootstrapCommandPlanner(memories);
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
     for (const owner of ['fa', 'fb']) issuePlayerCommand(game, owner, { type: 'attackMove', unitIds: game.units.filter(unit => unit.owner === owner).map(unit => unit.id), x: 1150, y: 620 });
     const forward: string[] = [];
-    for (let tick = 0; tick < 1600; tick++) {
+    let advanced = false;
+    for (let tick = 0; tick < 1600 && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
-        for (const owner of ['fa', 'fb']) for (const entry of planAiOwnerCommandEntries(snapshotGame(game),
-          { playerId: owner, version: 'v5', policyMode: 'combat' }, { teams: game.teams, memoryProvider: memories })) issuePlayerCommand(game, owner, entry.command);
+        for (const owner of ['fa', 'fb']) for (const entry of opponents({ game, snapshot: snapshotGame(game), owner,
+          agent: { version: 'v5', policyMode: 'combat', controller: 'external-agent', team: 'b' }, source: 'external-agent',
+          plannerOrigin: 'local-command-planner', teams: game.teams })) issuePlayerCommand(game, owner, entry.command);
         for (const entry of runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
           [bootstrapEconomy, towerRushAbilities, summonerTowerRush, AI_SCRIPT_LIBRARY.v6Backline, AI_SCRIPT_LIBRARY.v6General], context())) {
           if (entry.command.type === 'build' && entry.command.buildingKind === 'defenseTower' && entry.command.x > 1200) forward.push(entry.command.unitId);
           issuePlayerCommand(game, 'us', entry.command);
         }
+        if (memory.jobs.some(job => job.id === summonerTowerRush.id) && game.buildings.some(building => building.kind === 'townHall'
+          && (building.owner === 'fa' || building.owner === 'fb'))) advanced = true;
       }
       stepGame(game);
     }
-    expect(memory.jobs.some(job => job.id === summonerTowerRush.id)).toBe(true);
+    expect(advanced).toBe(true);
+    expect(game.match.winner).toBe('us');
+    expect(game.buildings.filter(building => building.owner === 'fa' || building.owner === 'fb')).toHaveLength(0);
     expect(forward.length).toBeGreaterThanOrEqual(2);
     expect(forward.every(id => id === 'builder' || id === 'helper')).toBe(true);
     expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'pyreCaller').length).toBeGreaterThanOrEqual(6);
     expect(game.units.filter(unit => unit.owner === 'fa' || unit.owner === 'fb')).toHaveLength(0);
     expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.x > 1200 && building.complete)).toBe(true);
-  });
+  }, 15000);
 });

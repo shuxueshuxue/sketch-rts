@@ -2,6 +2,9 @@ import type { BUILDING_RULES, UNIT_RULES, VariantRules, WeaponDef } from "./cata
 import type { AttackKind } from "./attack-presentation";
 import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
+import type { VeteranActiveSkillId, VeteranSkillId } from "./veteran-skills";
+import type { DamageFilter, DamageProfile } from "./damage-types";
+export type { VeteranSkillId } from "./veteran-skills";
 
 export type PlayerId = string;
 export type Owner = PlayerId | "neutral";
@@ -22,7 +25,7 @@ export type MercenaryUnitKind = "mercenary" | "contractArcher" | "fieldMedic";
 export type TrainableUnitKind = { [K in UnitKind]: (typeof UNIT_RULES)[K] extends { trainedAt: string } ? K : never }[UnitKind];
 export type BuildingKind = keyof typeof BUILDING_RULES;
 export type ResourceKind = "goldMine";
-export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web";
+export type AbilityKind = "pinningBolt" | "incendiaryFlume" | "heal" | "summon" | "curse" | "emberMend" | "cinderSoul" | "ashCurse" | "charge" | "stomp" | "bloodlust" | "web" | VeteranActiveSkillId;
 export type EquipmentSlot = "head" | "body" | "feet" | "carry0" | "carry1" | "carry2" | "carry3";
 export type ShipEquipmentKind = "shipCannon" | "shipMortar" | "flameProjector";
 export type ItemKind = ShipEquipmentKind | "issuedWeapon" | "flameCloak" | "lightningRod" | "stormStaff" | "guardianScroll" | "experienceBook" | "breachCharge" | ShopItemKind;
@@ -33,11 +36,16 @@ export type UpgradeKind = "weaponTraining" | "reinforcedPlating" | "buildingDura
 export type UnitStatusEffect = {
   // @@@creep-status - slow (a murloc's net), stun (a golem's stomp), root (a spider queen's web), poison (a venom spider's
   // bite), bloodlust (an ogre mage's): see sim updateUnitStatusEffects and statusPace.
-  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust";
+  type: "curse" | "guardian" | "scorch" | "slow" | "stun" | "root" | "poison" | "bloodlust" | "protection" | "veteranBuff";
   remaining: number;
   damageMultiplier?: number;
+  damageReduction?: number;
+  damageFilter?: DamageFilter;
+  protectionGroup?: "ward";
+  attackSpeedMultiplier?: number;
   // Who poisoned the unit, credited with what the poison does.
   sourceId?: string;
+  sourceOwner?: Owner;
 };
 
 export type WorldEffect = {
@@ -88,6 +96,7 @@ export type WorldEffect = {
   toY?: number;
   owner?: Owner;
   damage?: number;
+  damageProfile?: DamageProfile;
   amount?: number;
   radius?: number;
   tickEvery?: number;
@@ -112,6 +121,10 @@ export type Projectile = {
   toX: number;
   toY: number;
   damage: number;
+  /** Captured when fired; armor is evaluated once against this profile at impact. */
+  damageProfile?: DamageProfile;
+  /** Old saves have ordinary shots whose armor was already settled at launch. */
+  armorAlreadyApplied?: boolean;
   remaining: number;
   duration: number;
   weapon?: WeaponDef;
@@ -131,6 +144,7 @@ export type UnitOrder =
   // Mining timer counts waiting ticks at the entrance, then remaining ticks while gathering.
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
+  | { type: "repairUnit"; targetId: string }
   | { type: "repairShip"; targetId: string }
   | { type: "pickupItem"; itemId: string }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
@@ -180,6 +194,8 @@ export type Unit = {
   homeY?: number;
   hp: number;
   maxHp: number;
+  /** Explicit invulnerability; ordinary armor and wards use damage reduction. */
+  invulnerable?: boolean;
   /** Movement distance per second. */
   speed: number;
   attackDamage: number;
@@ -227,6 +243,9 @@ export type Unit = {
   kills: number;
   xp: number;
   level: number;
+  /** Drawn once on reaching three stars; learning never rerolls these offers. */
+  veteranSkillChoices?: VeteranSkillId[];
+  veteranSkill?: VeteranSkillId;
   expiresTick?: number | undefined;
   effects: UnitStatusEffect[];
   order: UnitOrder;
@@ -504,6 +523,7 @@ export type TerrainLandmark = {
 };
 
 export type GameCommand =
+  | { type: "learnVeteranSkill"; unitId: string; skill: VeteranSkillId }
   | { type: "cancelTraining"; buildingId: string; jobId: string }
   | { type: "move"; unitIds: string[]; x: number; y: number; avoidCombat?: boolean; queued?: boolean }
   | { type: "attackMove"; unitIds: string[]; x: number; y: number; queued?: boolean }
@@ -514,6 +534,7 @@ export type GameCommand =
   | { type: "aim"; unitIds: string[]; x: number; y: number; queued?: boolean }
   | { type: "mine"; unitIds: string[]; resourceId: string; queued?: boolean }
   | { type: "repair"; unitIds: string[]; buildingId: string; queued?: boolean }
+  | { type: "repairUnit"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "repairShip"; unitIds: string[]; targetId: string; queued?: boolean }
   | { type: "build"; unitId: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }

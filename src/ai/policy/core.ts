@@ -1,11 +1,13 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import { isBootstrapVersion, planBootstrapCommands } from "../bootstrap_1/policy";
 import { createAiPolicyMemory } from "../memory";
+import { planMechanicalRepair } from "./mechanical-repair";
 import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
 import { battlefieldUnitIds, planBattlefieldCommands } from "./battlefield";
 import { BUILDING_DEFS, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, UNIT_DEFS, UPGRADE_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
 import { walkableGoal } from "../../shared/terrain";
 import type { Building, GameCommand, GameSnapshot, MercenaryCamp, MercenaryUnitKind, PlayerId, ResourceNode, Unit, UnitKind, UpgradeKind } from "../../shared/types";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
@@ -152,6 +154,7 @@ export const AI_SCRIPT_LIBRARY = {
   constructionRecovery: { id: "constructionRecovery", phase: "economy", run: planConstructionRecovery },
   emergencyDefense: { id: "emergencyDefense", phase: "economy", run: planEmergencyDefense },
   repair: { id: "repair", phase: "economy", run: planRepair },
+  mechanicalRepair: { id: "mechanicalRepair", phase: "economy", run: planMechanicalRepair },
   supply: { id: "supply", phase: "economy", run: planSupply },
   defense: { id: "defense", phase: "economy", run: planDefense },
   expansion: { id: "expansion", phase: "economy", run: planExpansion },
@@ -192,6 +195,7 @@ export const AI_SCRIPT_LIBRARY = {
 
 // @@@bot-script-stack - Room AI slots and SDK-controlled human slots import this exact preset.
 export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
+  AI_SCRIPT_LIBRARY.mechanicalRepair,
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
@@ -219,6 +223,7 @@ export const SKETCH_RTS_PRESET_AI_STACK: AiScript[] = [
 ];
 
 export const V5_HYBRID_AI_STACK: AiScript[] = [
+  AI_SCRIPT_LIBRARY.mechanicalRepair,
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
@@ -258,6 +263,7 @@ export const V5_HYBRID_AI_STACK: AiScript[] = [
 // goes. From the shared library it keeps only the housekeeping (mining, finishing construction) and the micro (items,
 // spells, wounded pull-back, focus fire, tower breaking, worker defense).
 export const V6_AI_STACK: AiScript[] = [
+  AI_SCRIPT_LIBRARY.mechanicalRepair,
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.v6Economy,
@@ -304,6 +310,7 @@ export const V8_AI_STACK: AiScript[] = [
 export const V9_AI_STACK: AiScript[] = [...V8_AI_STACK];
 
 export const V4_TR_TOWER_MERC_AI_STACK: AiScript[] = [
+  AI_SCRIPT_LIBRARY.mechanicalRepair,
   AI_SCRIPT_LIBRARY.economy,
   AI_SCRIPT_LIBRARY.constructionRecovery,
   AI_SCRIPT_LIBRARY.emergencyDefense,
@@ -1054,7 +1061,7 @@ function nextV5LateUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options:
   if (!isV5HybridPolicy(options)) return undefined;
   const army = combatUnits(snapshot, owner);
   const player = playerState(snapshot, owner);
-  const veteranStars = army.reduce((sum, unit) => sum + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)), 0);
+  const veteranStars = army.filter((unit) => canReceiveHealing(unit, snapshot)).reduce((sum, unit) => sum + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)), 0);
   if (activeMiningBaseCount(snapshot, owner) < 2 && player.gold < 1_200 && veteranStars < 4) return undefined;
   if (v5LateUpgradeResearchable(snapshot, owner, "leadership")) {
     const level = upgradeLevel(snapshot, owner, "leadership");
@@ -1353,24 +1360,25 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
   const main = mainBase(snapshot, owner);
   const wellsNearMain = healingBuildings(snapshot, owner).filter((building) => distance(building, main) < 520).length;
   const ownCombat = combatUnits(snapshot, owner);
-  const desiredWells = isTowerMercPolicy(options) ? (ownCombat.length > 0 ? 1 : 0) : completeBuildings(snapshot, owner, "townHall").length >= 2 && ownCombat.length >= 8 ? 2 : 1;
+  const healableCombat = ownCombat.filter((unit) => canReceiveHealing(unit, snapshot));
+  const desiredWells = isTowerMercPolicy(options) ? (healableCombat.length > 0 ? 1 : 0) : completeBuildings(snapshot, owner, "townHall").length >= 2 && healableCombat.length >= 8 ? 2 : 1;
   const uncoveredRecovery = options.version === "v2" && hasUncoveredSettledWoundedRecovery(snapshot, owner, main);
   if (wellsNearMain >= desiredWells && !uncoveredRecovery) return undefined;
 
-  const woundedDefenders = ownCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
+  const woundedDefenders = healableCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const firstWellBeforeExpansionBank = shouldBuildFirstHealingWellBeforeExpansionBank(snapshot, owner, woundedDefenders, options);
   const firstWellBeforeCatchUpExpansion = shouldBuildFirstHealingWellBeforeCatchUpExpansion(snapshot, owner, woundedDefenders, options);
   const firstWellBeforeSecondTower = shouldBuildFirstHealingWellBeforeSecondTower(snapshot, owner, woundedDefenders, options);
   if (!isTowerMercPolicy(options) && shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot, owner, woundedDefenders, pressured, firstWellBeforeExpansionBank, options)) return undefined;
   const wantsWell = isTowerMercPolicy(options)
-    ? woundedDefenders.length > 0 || (pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86))
+    ? woundedDefenders.length > 0 || (pressured && healableCombat.some((unit) => unit.hp < unit.maxHp * 0.86))
     : uncoveredRecovery ||
       firstWellBeforeExpansionBank ||
       firstWellBeforeCatchUpExpansion ||
       firstWellBeforeSecondTower ||
       woundedDefenders.length >= 2 ||
-      (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
+      (options.version === "v2" && pressured && healableCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
   if (
@@ -1406,7 +1414,7 @@ function criticalWoundedFirstHealingWellBeatsDistantMainGuard(snapshot: GameSnap
   if (completeHealingBuildings(snapshot, owner).length > 0) return false;
   if (enemyCombatUnitsNear(snapshot, owner, main, 1_200, options.teams).length > 0) return false;
   // @@@distant-main-guard-bank - The 1850 main-guard reserve can see a future tower need before the tower script can spend; critical idle defenders need the first heal source now.
-  return combatUnits(snapshot, owner).filter((unit) => unit.hp < unit.maxHp * 0.36 && distance(unit, main) <= 720).length >= 2;
+  return combatUnits(snapshot, owner).filter((unit) => canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp * 0.36 && distance(unit, main) <= 720).length >= 2;
 }
 
 function shouldDelayRoutineFirstHealingWellUntilNaturalClear(snapshot: GameSnapshot, owner: PlayerId, woundedDefenders: Unit[], pressured: boolean, firstWellBeforeExpansionBank: boolean, options: PresetAiPolicyOptions) {
@@ -1482,6 +1490,7 @@ function hasUncoveredSettledWoundedRecovery(snapshot: GameSnapshot, owner: Playe
   const healingRange = BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange;
   const uncovered = combatUnits(snapshot, owner).filter(
     (unit) =>
+      canReceiveHealing(unit, snapshot) &&
       unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
       distance(unit, main) <= 760 &&
       (unit.order.type === "idle" || unit.order.type === "move") &&
@@ -1734,7 +1743,7 @@ function mercenaryCampScore(camp: MercenaryCamp, snapshot: GameSnapshot, owner: 
   const army = combatUnits(snapshot, owner);
   const anchor = army.length > 0 ? averagePoint(army) : mainBase(snapshot, owner);
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
-  const wounded = units(snapshot, owner).some((unit) => unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72);
+  const wounded = units(snapshot, owner).some((unit) => canReceiveHealing(unit, snapshot) && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72);
   const outnumbered = armyPower(enemies) > armyPower(army) * 1.2;
   const hasCombatMercenary = units(snapshot, owner).some((unit) => unit.kind === "mercenary" || unit.kind === "contractArcher");
   const firstCombatBonus = hasCombatMercenary ? 0 : camp.hireKind === "fieldMedic" ? -70 : 72;
@@ -2519,6 +2528,7 @@ function recallWoundedClearedExpansionClaim(snapshot: GameSnapshot, owner: Playe
   if (wells.length === 0) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const wounded = combatUnits(snapshot, owner)
+    .filter((unit) => canReceiveHealing(unit, snapshot))
     .filter((unit) => {
       const claim = activeUnitClaim(snapshot, owner, unit, options);
       return claim?.kind === "expansion" && claim.targetId === mine.id;
@@ -2592,7 +2602,7 @@ function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, poin
   if (guards.length === 0) return false;
   const averageHpRatio = units.reduce((total, unit) => total + unit.hp / unit.maxHp, 0) / units.length;
   const main = mainBase(snapshot, owner);
-  const hasHealingAtHome = completeHealingBuildings(snapshot, owner).some((building) => distance(building, main) <= BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange);
+  const hasHealingAtHome = units.some((unit) => canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp) && completeHealingBuildings(snapshot, owner).some((building) => distance(building, main) <= BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange);
   if (earlyWoundedCreepTempoNeedsRecovery(snapshot, owner, units, averageHpRatio, hasHealingAtHome, options)) return true;
   // @@@no-well-creep-recovery - Without a healing well, moderate creep wounds do not recover at home; only break the claim when the squad is actually near donation range.
   return averageHpRatio <= (hasHealingAtHome ? 0.68 : 0.6);
@@ -3051,7 +3061,7 @@ function v5GroveMaturePressureNeedsRecoveryDetachment(snapshot: GameSnapshot, ow
 }
 
 function woundedFarFromHealing(snapshot: GameSnapshot, owner: PlayerId, unit: Unit) {
-  if (unit.hp >= unit.maxHp * 0.62) return false;
+  if (!canReceiveHealing(unit, snapshot) || unit.hp >= unit.maxHp * 0.62) return false;
   const wells = completeHealingBuildings(snapshot, owner);
   if (wells.length === 0) return false;
   const healingRange = BUILDING_DEFS[healingBuildingKind(snapshot, owner)].attackRange;

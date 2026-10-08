@@ -2,7 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { bootstrapGame, bootstrapMatches } from '../src/ai/bootstrap_1/benchmark';
 import { runAiGameLoop } from '../src/ai/game-runner';
-import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../src/ai/planner-context';
+import { createAiMemoryProvider } from '../src/ai/planner-context';
+import { createBootstrapCommandPlanner } from './bootstrap_1-planner';
 import type { BootstrapAiVersion, MapId, PlayerId } from '../src/shared/types';
 import { restoreSnapshotIntoGame, snapshotGame } from '../src/shared/sim';
 import type { AiPolicyMemory } from '../src/ai/policy';
@@ -37,8 +38,10 @@ if (values.resume) {
   restoreSnapshotIntoGame(game, frame.snapshot, frame.nextId);
   for (const [owner, player] of Object.entries(row.players)) memories.set!(owner, player.policy);
 }
-const commandPlanner: Parameters<typeof runAiGameLoop>[0]['commandPlanner'] = ({ snapshot, owner, agent, source, teams }) => {
-  const entries = planAiOwnerCommandEntries(snapshot, { playerId: owner, version: agent.version, source }, { teams, memoryProvider: memories });
+const planner = await createBootstrapCommandPlanner(memories);
+const commandPlanner: Parameters<typeof runAiGameLoop>[0]['commandPlanner'] = context => {
+  const entries = planner(context);
+  const { snapshot, owner } = context;
   if (owner === 'p0') for (const entry of entries) {
     if (['build', 'train', 'research', 'hire', 'buy'].includes(entry.command.type)) {
       purchases.push({ tick: snapshot.tick, script: entry.scriptId, command: entry.command });

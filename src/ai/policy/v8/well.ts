@@ -1,4 +1,5 @@
 import { ABILITY_DEFS, UNIT_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../../shared/catalog";
+import { canReceiveHealing } from "../../../shared/healing";
 import type { BuildingKind, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { buildings, units } from "../snapshot";
 import { averagePoint, distance, type Point } from "../spatial";
@@ -34,6 +35,6 @@ export function v8WantsWell(snapshot: GameSnapshot, owner: PlayerId): BuildingKi
   if (!race || buildings(snapshot, owner).some((building) => isHealingBuildingKind(building.kind))) return undefined;
   const own = units(snapshot, owner);
   if (own.some(isHealer)) return undefined;
-  const wounds = own.filter((unit) => unit.kind !== "worker" && unit.attackDamage > 0 && unit.expiresTick === undefined).reduce((total, unit) => total + unit.maxHp - unit.hp, 0);
+  const wounds = own.filter((unit) => canReceiveHealing(unit, snapshot) && unit.kind !== "worker" && unit.attackDamage > 0 && unit.expiresTick === undefined).reduce((total, unit) => total + unit.maxHp - unit.hp, 0);
   return wounds >= V8_WELL_WOUNDS ? healingBuildingKindForRace(race) : undefined;
 }

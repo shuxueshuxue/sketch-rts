@@ -8,6 +8,7 @@ import { SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Po
 import { headingDifference } from "./ship-navigation";
 import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
+import { veteranWeaponRange } from './veteran-stats';
 export const SHIP_HULL_COST = { cutter: 120, transport: 160, warship: 170, bombardShip: 240, fireShip: 190, carrier: 280 } as const;
 export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     cost: number;
@@ -63,7 +64,7 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'>, ship: U
         const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
         const target=strikePoint(pivot,point),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
-        return gap<=def.range+1e-7 && gap>=(def.weapon.minRange ?? 0)
+        return gap<=veteranWeaponRange(ship,def.range)+1e-7 && gap>=(def.weapon.minRange ?? 0)
           && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=mount.halfArc+1e-7;
     };
     const currentCount=weapons.filter(item=>canFire(heading,item)).length;

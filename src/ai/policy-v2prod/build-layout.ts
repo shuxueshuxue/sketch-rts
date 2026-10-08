@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { detCos, detSin } from "../../shared/det-math";
 import type { Building, BuildingKind, GameSnapshot, PlayerId, Unit } from "../../shared/types";
@@ -88,6 +89,7 @@ function woundedRecoveryUnits(snapshot: GameSnapshot, owner: PlayerId, base: Poi
   return snapshot.units.filter(
     (unit) =>
       unit.owner === owner &&
+      canReceiveHealing(unit, snapshot) &&
       unit.kind !== "worker" &&
       unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
       distance(unit, base) <= 760 &&
