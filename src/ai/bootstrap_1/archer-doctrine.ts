@@ -20,7 +20,7 @@ function archerDoctrine(race: RaceId): V6Strategy {
         wants: [
           { unit: shooter, count: 4, priority: 66 },
           { unit: screen, count: 4, priority: 65 },
-          { bases: 2, priority: 64 },
+          { bases: 2, priority: 76 },
           { unit: shooter, count: 12, priority: 60 },
         ],
         advanceShare: 0.75, advanceBases: 2, advanceSupply: 42,

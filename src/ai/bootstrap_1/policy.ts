@@ -25,14 +25,16 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
   v9_knight: V8_STRATEGIES.map(strategy => ({ ...strategy, phases: v7Phases(strategy) })),
 };
 
-function supportWants(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Want[] {
+function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   if (army.length < 10) return [];
   const foes = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options));
   const grove = snapshot.players[owner]!.race === 'grove';
+  const producer = grove ? (version === 'v9_summoner' ? 'sanctum' : 'stables')
+    : (version === 'v9_knight' ? 'emberForge' : 'cinderSpire');
   const wants: V6Want[] = [
     { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
-    { building: grove ? 'barracks' : 'emberForge', count: 2, priority: 57 },
+    { building: producer, count: 2, priority: 57 },
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
   ];
@@ -55,6 +57,6 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   return {
     ...options, version: 'v2', requestedVersion: version === 'v9_summoner' ? 'v7' : 'v9',
-    doctrines: BOOTSTRAP_DOCTRINES[version], armyWants: supportWants(snapshot, owner, options),
+    doctrines: BOOTSTRAP_DOCTRINES[version], armyWants: supportWants(snapshot, owner, version, options),
   };
 }
