@@ -60,12 +60,12 @@ describe('wind-aware ship voyages',()=>{
   it('chooses the clear tack side beside a coast and around another hull',()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',1000,800),goal={x:1600,y:800,heading:0};
     game.map.terrain!.cells=Array.from({length:7500},(_,i)=>Math.floor(i/100)>=23?'.':'~').join('');
-    const coast=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units))!;
+    const coast=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
     expect(coast).toHaveLength(2);expect(coast[0]!.y).toBeLessThan(ship.y);
     game.map.terrain!.cells='~'.repeat(7500);
-    const preferred=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units))!;
+    const preferred=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
     game.spawnUnit('enemy','cutter',preferred[0]!.x,preferred[0]!.y);
-    const clear=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units))!;
+    const clear=shipTackRoute(game.map,ship,goal,shipTraffic(ship,game.units,Infinity))!;
     expect((clear[0]!.y-ship.y)*(preferred[0]!.y-ship.y)).toBeLessThan(0);
   });
   it('uses bounded assistance in a calm and for an explicit upwind berth',()=>{

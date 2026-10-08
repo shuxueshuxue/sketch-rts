@@ -13,6 +13,7 @@ export type ShipPose = Point & {
   heading: number;
   pivot?: Point;
   tack?: boolean;
+  exact?: boolean;
 };
 /** Rotation around a fixed bow/stern contact point, used for a real departure
  * maneuver rather than translating a hull sideways without turning it. */
@@ -293,7 +294,10 @@ function keelCandidates(ship:Unit,from:ShipPose,goal:Point & {heading?:number}):
   if(gap<1e-7)return [goal.heading===undefined || Math.abs(headingDifference(from.heading,goal.heading))<1e-7?[]:[{...goal,heading:goal.heading}]];
   const direction=Math.atan2(goal.y-from.y,goal.x-from.x);
   // Astern is a short maneuver, not an alternative cruise direction.
-  const headings=gap<=shipProfile(ship)!.length/2?[direction,direction+Math.PI]:[direction];
+  const length=shipProfile(ship)!.length;
+  const alignedBerth=goal.heading!==undefined && Math.abs(headingDifference(from.heading,goal.heading))<Math.PI/8
+    && (goal.x-from.x)*detCos(from.heading)+(goal.y-from.y)*detSin(from.heading)<0;
+  const headings=gap<=(alignedBerth?length:length/2)?[direction,direction+Math.PI]:[direction];
   return headings.map(heading=>{
     const turned={x:from.x,y:from.y,heading},end={x:goal.x,y:goal.y,heading};
     const points=Math.abs(headingDifference(from.heading,heading))<1e-7?[end]:[turned,end];
@@ -311,10 +315,9 @@ function keelConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point & {heading?
   return keelCandidates(ship,from,goal).sort((a,b)=>routeTime(map,ship,from,a)-routeTime(map,ship,from,b))
     .find(points=>connectorClear(map,ship,from,points,traffic));
 }
-/** Two close-hauled legs return to the safe reference leg after a bounded
- * upwind advance. Both choices include the full turning sweeps, so an apex
- * cannot be selected merely because its center lies in water. */
-export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+/** A passage plan beats to the destination's layline, not back to the direct
+ * track every few hull lengths. Shorter pairs are only coastal fallbacks. */
+export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,preferredHeading?:number):ShipPose[]|undefined {
   const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
   const dx=goal.x-start.x,dy=goal.y-start.y,gap=Math.hypot(dx,dy),length=shipProfile(ship)!.length;
   const performance=coursePerformance(ship,map,Math.atan2(dy,dx),{assumeTrimmed:true});
@@ -323,24 +326,33 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
   const wind=windAt(map,ship),angles=[wind.from+performance.beatAngle,wind.from-performance.beatAngle];
   const directions=angles.map(heading=>({x:detCos(heading),y:detSin(heading)}));
   const cross=(a:Point,b:Point)=>a.x*b.y-a.y*b.x;
-  for(const distance of [...new Set([Math.min(gap,length*2.5),Math.min(gap,length*1.5),Math.min(gap,length)])]){
+  // Hold the tack already closest to the bow when both sides have sea room.
+  // Trim/surge fluctuations must not repeatedly change this strategic choice.
+  const preferred=preferredHeading ?? start.heading;
+  const sides=[0,1].sort((a,b)=>Math.abs(headingDifference(preferred,angles[a]!))-Math.abs(headingDifference(preferred,angles[b]!)));
+  const distances=[gap];
+  for(let distance=gap/2;distance>=length;distance/=2)distances.push(distance);
+  if(distances.at(-1)!>length+1e-7)distances.push(length);
+  // A newly plotted voyage prefers a complete pair. A moving-target update
+  // keeps the committed tack, shortening it near a coast before changing side.
+  const choices=preferredHeading===undefined
+    ? distances.flatMap(distance=>sides.map(side=>({distance,side})))
+    : sides.flatMap(side=>distances.map(distance=>({distance,side})));
+  for(const {distance,side} of choices){
     const delta={x:dx*distance/gap,y:dy*distance/gap},end={x:start.x+delta.x,y:start.y+delta.y};
-    let best:ShipPose[]|undefined,bestCost=Infinity;
-    for(const side of [0,1]){
-      const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
-      const first=cross(delta,b)/det,second=cross(a,delta)/det;
-      if(first<=1e-7 || second<=1e-7)continue;
-      const apex={x:start.x+a.x*first,y:start.y+a.y*first,heading:angles[side]!,tack:true};
-      const finish={...end,heading:angles[other]!,tack:true};
-      const proof=[{...start,heading:apex.heading},apex,{...apex,heading:finish.heading},finish,{...finish,heading:goal.heading}];
-      if(!connectorClear(map,ship,start,proof,traffic))continue;
-      const cost=routeTime(map,ship,start,proof);
-      if(cost<bestCost-1e-7){bestCost=cost;best=[apex,finish];}
-    }
-    if(best)return best;
+    const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
+    const first=cross(delta,b)/det,second=cross(a,delta)/det;
+    if(first<=1e-7 || second<=1e-7)continue;
+    const apex={x:start.x+a.x*first,y:start.y+a.y*first,heading:angles[side]!,tack:true};
+    const finish={...end,heading:angles[other]!,tack:true};
+    // The last leg continues through its end: no artificial rotation back
+    // onto the direct upwind bearing, especially at the destination itself.
+    const proof=[{...start,heading:apex.heading},apex,{...apex,heading:finish.heading},finish];
+    if(!connectorClear(map,ship,start,proof,traffic))continue;
+    return [apex,finish];
   }
 }
-function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean,latticeEscape=false):ShipPose[]|undefined {
   const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0},length=shipProfile(ship)!.length;
   const desired=Math.atan2(goal.y-start.y,goal.x-start.x);
   const differences=[headingDifference(start.heading,desired),headingDifference(start.heading,desired+Math.PI)];
@@ -353,11 +365,23 @@ function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:Sh
   }
   // In a channel too narrow to turn, travel along the current keel to an
   // opening. Backing out remains possible without inventing lateral thrust.
+  let escape:ShipPose|undefined;
   for(const direction of [1,-1])for(let distance=map.terrain!.cell;distance<=length*4;distance+=map.terrain!.cell){
     const end={x:start.x+direction*distance*detCos(start.heading),y:start.y+direction*distance*detSin(start.heading),heading:start.heading};
     if(!hullPassageClear(map,ship,start,end) || !traffic(start,end))break;
     if(keelConnector(map,ship,end,goal,traffic))return[end];
+    if(latticeEscape && !escape){
+      const cell=map.terrain!.cell,col=Math.floor(end.x/cell),row=Math.floor(end.y/cell);
+      for(let y=row-1;y<=row+1 && !escape;y++)for(let x=col-1;x<=col+1 && !escape;x++)for(let h=0;h<DIRECTIONS;h++){
+        const entrance={x:(x+.5)*cell,y:(y+.5)*cell,heading:h*ANGLE};
+        if(hullFits(map,ship,entrance) && keelConnector(map,ship,end,entrance,traffic)){escape=end;break;}
+      }
+    }
   }
+  // Backing away from a crossing hull need only recover a valid lattice
+  // entrance. The coast may still require a detour after that entrance;
+  // insisting on a direct goal connector would leave a reversible jam stuck.
+  if(escape)return[{...escape,exact:true}];
 }
 /** A berth can be reached with a turning arc even when a straight final leg
  * would point its bow through the coast. Stage in open water, then swing the
@@ -391,9 +415,117 @@ function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipP
 export function shipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true): ShipPose[] {
   return planShipRoute(map,ship,goal,trafficClear).points;
 }
+/** Nominal cruising radius. A shorter, low-speed arc may use the hull-length
+ * floor; the controller still respects the existing speed and rudder limits. */
+export function voyageTurnRadius(ship:Unit):number {
+  const limits=shipMotionLimits(ship),length=shipProfile(ship)!.length;
+  return Math.max(length*.65,limits.turnRate>1e-7?limits.speed/limits.turnRate:0);
+}
+const positiveAngle=(angle:number)=>((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+function voyageLength(from:Point,points:readonly Point[]):number {
+  let distance=0,previous=from;
+  for(const point of points){distance+=Math.hypot(point.x-previous.x,point.y-previous.y);previous=point;}
+  return distance;
+}
+function voyageCorridorClear(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[],traffic:(a:ShipPose,b:ShipPose)=>boolean):boolean {
+  if(!connectorClear(map,ship,from,points,traffic))return false;
+  // A reference curve needs sea room for a tracking controller to ease the
+  // helm before each sample. A zero-margin arc grazing a coast belongs to the
+  // exact maneuver executor even when its centerline sweep alone would fit.
+  const margin=shipProfile(ship)!.length*.1;
+  for(const side of [-1,1]){
+    const offset=(point:ShipPose):ShipPose=>({...point,x:point.x-side*margin*detSin(point.heading),y:point.y+side*margin*detCos(point.heading)});
+    if(!connectorClear(map,ship,offset(from),points.map(offset),traffic))return false;
+  }
+  return true;
+}
+/** Forward circle followed by its tangent to a free-heading destination.
+ * Each small reference segment is swept with its changing hull orientation;
+ * no zero-distance rotation is hidden in an open-water voyage. */
+function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+  const dx=goal.x-from.x,dy=goal.y-from.y,gap=Math.hypot(dx,dy);
+  if(gap<1e-7)return [];
+  const direction=Math.atan2(dy,dx),error=headingDifference(from.heading,direction);
+  if(Math.abs(error)<1e-7){const direct=[{...goal,heading:from.heading}];return connectorClear(map,ship,from,direct,traffic)?direct:undefined;}
+  if(shipMotionLimits(ship).turnRate<=1e-7)return;
+  const minimum=shipProfile(ship)!.length*.65,nominal=voyageTurnRadius(ship);
+  const radii=[...new Set([nominal,Math.max(minimum,nominal*.7),minimum])];
+  for(const radius of radii){
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const side of [error<0?-1:1,error<0?1:-1]){
+      const center={x:from.x-side*radius*detSin(from.heading),y:from.y+side*radius*detCos(from.heading)};
+      const gx=goal.x-center.x,gy=goal.y-center.y,distance=Math.hypot(gx,gy);
+      if(distance<radius+1e-7)continue;
+      const radial=Math.atan2(gy,gx)-side*Math.acos(Math.min(1,radius/distance));
+      const heading=radial+side*Math.PI/2,turn=positiveAngle(side*headingDifference(from.heading,heading));
+      // A near-full circle is a berthing maneuver; it is not a useful route to
+      // a nearby point and would look like orbiting a moving target.
+      if(turn>Math.PI*1.5)continue;
+      const count=Math.max(1,Math.ceil(turn/(Math.PI/18))),points:ShipPose[]=[];
+      for(let i=1;i<=count;i++){
+        const angle=from.heading+side*turn*i/count;
+        points.push({x:center.x+side*radius*detSin(angle),y:center.y-side*radius*detCos(angle),heading:angle});
+      }
+      const tangent=points.at(-1)!;
+      if(Math.hypot(goal.x-tangent.x,goal.y-tangent.y)>1e-7)points.push({...goal,heading:tangent.heading});
+      else points[points.length-1]={...goal,heading:tangent.heading};
+      const cost=voyageLength(from,points);
+      if(cost>=bestCost-1e-7 || !voyageCorridorClear(map,ship,from,points,traffic))continue;
+      best=points;bestCost=cost;
+    }
+    // Keep normal cruising room where possible. Only tighten the turn when
+    // both sides of that circle are obstructed, and let guidance slow down.
+    if(best)return best;
+  }
+}
+function simplifyVoyageReference(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[],traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[] {
+  let previous=from;
+  for(const point of points){
+    if(point.pivot || (point.x-previous.x)*detCos(point.heading)+(point.y-previous.y)*detSin(point.heading)<-1e-5)
+      return points.map(point=>({...point,exact:true}));
+    previous=point;
+  }
+  // Keep the endpoints of straight lattice runs and both poses of each
+  // required turn. If no swept forward replacement fits, the exact maneuver
+  // remains available unchanged to the coast/berth executor.
+  const corners=points.filter((point,i)=>{
+    const a=points[i-1] ?? from,b=points[i+1];
+    return !b || Math.abs(headingDifference(a.heading,point.heading))>1e-7
+      || Math.abs(headingDifference(point.heading,b.heading))>1e-7
+      || Math.hypot(point.x-a.x,point.y-a.y)<1e-7 || Math.hypot(b.x-point.x,b.y-point.y)<1e-7;
+  });
+  const result:ShipPose[]=[];let cursor=from;
+  for(let i=0;i<corners.length;){
+    let connection:ShipPose[]|undefined,end=i;
+    for(let j=corners.length-1;j>=i;j--){
+      if(Math.hypot(corners[j]!.x-cursor.x,corners[j]!.y-cursor.y)<shipProfile(ship)!.length*.5)continue;
+      const candidate=forwardConnector(map,ship,cursor,corners[j]!,traffic);
+      if(!candidate || voyageLength(cursor,candidate)>voyageLength(cursor,corners.slice(i,j+1))*1.1)continue;
+      const following=corners[j+1];
+      if(following && !connectorClear(map,ship,candidate.at(-1)!,[following],traffic))continue;
+      connection=candidate;end=j;break;
+    }
+    if(connection){result.push(...connection);cursor=connection.at(-1)!;i=end+1;}
+    else {cursor=corners[i++]!;result.push({...cursor,exact:true});}
+  }
+  return result;
+}
+/** Cruise planning is separate from exact docking. Start with a continuous
+ * forward curve; use the heading lattice only as a safe coastal reference. */
+export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean=()=>true,budget=Infinity):{points:ShipPose[];partial:boolean} {
+  const from={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
+  if(goal.heading!==undefined || Math.hypot(goal.x-from.x,goal.y-from.y)<=shipProfile(ship)!.length*.5)
+    return planShipRoute(map,ship,goal,trafficClear,budget);
+  const direct=forwardConnector(map,ship,from,goal,trafficClear);
+  if(direct)return{points:direct,partial:false};
+  const reference=planShipRoute(map,ship,goal,trafficClear,budget);
+  return{points:simplifyVoyageReference(map,ship,from,reference.points,trafficClear),partial:reference.partial};
+}
 /** A deterministic expansion budget bounds temporary traffic searches. Partial
  * routes remain journeys, never arrivals at the requested destination. */
 export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = ()=>true, budget=Infinity): {points:ShipPose[];partial:boolean} {
+  const originalTraffic=trafficClear;let trafficBlocked=false;
+  trafficClear=(from,to)=>{const clear=originalTraffic(from,to);trafficBlocked ||= !clear;return clear;};
   const t = map.terrain;
   if (!t)
     return {points:[{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }],partial:false};
@@ -414,19 +546,22 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     return trafficFits[id]===1;
   };
   const requested=goal.heading===undefined?undefined:{x:goal.x,y:goal.y,heading:goal.heading};
-  const target = requested && hullFits(map,ship,requested) && trafficClear(requested,requested) ? requested : nearestShipPose(map, ship, goal,ship,pose=>trafficClear(pose,pose));
+  const terrainTarget=requested && hullFits(map,ship,requested) ? requested : nearestShipPose(map,ship,goal);
+  const target=terrainTarget && trafficClear(terrainTarget,terrainTarget) ? terrainTarget : nearestShipPose(map,ship,goal,ship,pose=>trafficClear(pose,pose));
+  const deferred=!!terrainTarget && (!target || Math.hypot(target.x-terrainTarget.x,target.y-terrainTarget.y)>1e-7
+    || goal.heading!==undefined && Math.abs(headingDifference(target.heading,terrainTarget.heading))>1e-7);
   if (!target)
-    return {points:[],partial:false};
+    return {points:[],partial:deferred};
   const length = shipProfile(ship)!.length;
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
   const destination=requested?target:{x:target.x,y:target.y};
   const direct=keelConnector(map,ship,start,destination,trafficClear);
   // The executor already turns before thrust. Keeping a zero-distance turn
   // waypoint here would stop propulsion on every moving-target replan.
-  if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7 || direct.length===1),partial:false};
+  if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7 || direct.length===1),partial:deferred};
   const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
   const arrival=arrive(start);
-  if(arrival)return {points:arrival,partial:false};
+  if(arrival)return {points:arrival,partial:deferred};
   const direction=Math.atan2(target.y-start.y,target.x-start.x);
   if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
     const departure=departureRoute(map,ship,target,trafficClear);
@@ -458,7 +593,7 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
         setCost(id,g,-1);prefixes.set(id,prefix);
         frontier.push({ id, cost: g, score: g + Math.hypot(p.x - target.x, p.y - target.y)/cruise });
       }
-  if(!frontier.items.length){const departure=departureRoute(map,ship,target,trafficClear);return{points:departure ?? [],partial:!!departure};}
+  if(!frontier.items.length){const departure=departureRoute(map,ship,target,trafficClear,true);return{points:departure ?? [],partial:!!departure || deferred || trafficBlocked};}
   let best = -1, bestGap = Infinity,visited=0,partial=false,terminal:ShipPose[]|undefined;
   while (frontier.items.length) {
     const next = frontier.pop();
@@ -507,5 +642,12 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
   const prefix=prefixes.get(rootId) ?? [root];
   path.splice(0,1,...prefix);
   if(terminal)path.push(...terminal);
-  return {points:path,partial};
+  if(!terminal && trafficBlocked && !partial){
+    // Exhausting a temporarily occupied corridor is not arrival. Compare the
+    // terrain-only endpoint so a genuinely unreachable island/pond still
+    // retains its ordinary nearest-reachable completion semantics.
+    const unobstructed=planShipRoute(map,ship,goal),end=path.at(-1) ?? start,possible=unobstructed.points.at(-1) ?? start;
+    partial=unobstructed.partial || Math.hypot(end.x-possible.x,end.y-possible.y)>1e-7;
+  }
+  return {points:path,partial:partial || deferred};
 }

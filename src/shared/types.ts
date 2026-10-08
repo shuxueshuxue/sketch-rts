@@ -236,7 +236,13 @@ export type Unit = {
     velocityX?: number;
     velocityY?: number;
     sail?: { angle: number; billow: number; set: number; mode: 'sail' | 'tacking' | 'maneuver' | 'calm-assist' | 'idle' };
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number } | undefined;
+    /** The helm retains its turn rate across ticks and target updates. */
+    yawRate?: number;
+    pursuit?: { targetId: string; phase: 'approach' | 'engage'; moving: boolean };
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
+      intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number;
+      avoidSide?: number; avoidTicks?: number; avoidHeading?: number; avoidBaseHeading?: number; avoidTargetId?: string; tackHeading?: number;
+    } | undefined;
   } | undefined;
   /** Physical scaling for unusually large campaign hulls. */
   deckScale?: number;
