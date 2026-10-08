@@ -1,32 +1,50 @@
-import type { Building, GameSnapshot, Owner, ResourceNode } from "./types";
+import { BUILDING_DEFS } from "./catalog";
+import { snapToFootprint } from "./terrain";
+import type { Building, GameMap, GameSnapshot, Owner, ResourceNode } from "./types";
 
-/** Resource bodies, workstations and rates belong to the economy, not to click handlers or AI versions. */
+/** Resource bodies, worker budgeting and rates belong to the economy. */
 export const GOLD_MINE_RULES = {
   radius: 42,
-  workstations: 5,
+  entryRange: 44,
+  dropRange: 74,
+  workstations: 5, // Standard worker budget; admission timing determines actual saturation.
   goldPerTrip: 10,
-  gatherSeconds: 5,
-  entrySeconds: 1.6,
-  townHallGap: 48,
+  gatherSeconds: 0.8,
+  entrySeconds: 1.5,
+  townHallDistance: 280,
+  mainDistance: 288,
+  baseRange: 320,
 } as const;
+
+/** Translate the initial mine by its hall's footprint-snapping offset, preserving the haul distance. */
+export function initialMiningPoint(map: Pick<GameMap, "terrain">, base: {x: number; y: number}, mine: {x: number; y: number}) {
+  const at = snapToFootprint(map, BUILDING_DEFS.townHall.radius, base);
+  return { x: mine.x + at.x - base.x, y: mine.y + at.y - base.y };
+}
 
 export type MiningFrame = {
   resources: Map<string, ResourceNode>;
-  occupied: Map<string, number>;
+  nextWorker: Map<string, string>;
   townHalls: Map<Owner, Building[]>;
 };
 
-/** Rebuild derived indexes once per step. A workstation covers the whole haul cycle. */
+/** Rebuild derived indexes and release mining assignments whose orders ended. */
 export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "units" | "buildings">): MiningFrame {
   const resources = new Map(snapshot.resources.map(resource => [resource.id, resource]));
-  const occupied = new Map<string, number>();
+  const waiting = new Map<string, { id: string; timer: number }>();
   for (const unit of snapshot.units) {
+    if (unit.hp > 0 && unit.kind === "worker" && unit.order.type === "mine" && unit.order.phase === "toMine") {
+      const mine = resources.get(unit.order.resourceId);
+      if (mine && Math.hypot(unit.x - mine.x, unit.y - mine.y) <= GOLD_MINE_RULES.entryRange) {
+        const first = waiting.get(mine.id);
+        if (!first || unit.order.timer > first.timer || unit.order.timer === first.timer && unit.id < first.id) waiting.set(mine.id, { id: unit.id, timer: unit.order.timer });
+      }
+    }
     if (!unit.mineSlot) continue;
     if (unit.hp <= 0 || unit.kind !== "worker" || unit.order.type !== "mine" || unit.order.resourceId !== unit.mineSlot || !resources.has(unit.mineSlot)) {
       delete unit.mineSlot;
       continue;
     }
-    occupied.set(unit.mineSlot, (occupied.get(unit.mineSlot) ?? 0) + 1);
   }
   const townHalls = new Map<Owner, Building[]>();
   for (const building of snapshot.buildings) {
@@ -35,5 +53,5 @@ export function prepareMiningFrame(snapshot: Pick<GameSnapshot, "resources" | "u
     own.push(building);
     townHalls.set(building.owner, own);
   }
-  return { resources, occupied, townHalls };
+  return { resources, nextWorker: new Map([...waiting].map(([mine, unit]) => [mine, unit.id])), townHalls };
 }

@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
@@ -50,7 +51,7 @@ export function desiredForwardExpansionMine(snapshot: GameSnapshot, owner: Playe
 // list made per hall, and tested its distance: the same as asking whether any is that near.)
 export function activeMiningBaseCount(snapshot: GameSnapshot, owner: PlayerId) {
   const mines = activeResources(snapshot);
-  return completeBuildings(snapshot, owner, "townHall").filter((townHall) => mines.some((mine) => distance(mine, townHall) < 260)).length;
+  return completeBuildings(snapshot, owner, "townHall").filter((townHall) => mines.some((mine) => distance(mine, townHall) < GOLD_MINE_RULES.baseRange)).length;
 }
 
 export function expansionBaseTarget(options: PresetAiPolicyOptions) {

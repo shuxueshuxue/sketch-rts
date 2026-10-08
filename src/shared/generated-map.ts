@@ -7,8 +7,10 @@ import { BUILDING_DEFS, UNIT_DEFS } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { createBuilding, createUnit, STANDARD_MAP_SIZE } from "./map";
 import { createObstacle, OBSTACLE_DEFS } from "./obstacle";
-import { cellIndexAt, footprintCells, footprintHalf, isShoreFootprint, walkableGoal, type Terrain } from "./terrain";
+import { cellIndexAt, footprintCells, footprintHalf, isFootprintBuildable, isShoreFootprint, snapToFootprint, walkableGoal, type Terrain } from "./terrain";
 import { seconds } from "./time";
+import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
+import { resourceBlocksPlacement } from "./build-placement";
 import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
 // @@@generated-map - A seeded ladder map for a game of any size, drawn fresh for every seed on one of a dozen ideas, the
@@ -108,7 +110,7 @@ const MASS_RADIUS = [110, 280] as const;
 // @@@terrain-movers). A draw is kept only if every beach takes a shipyard on water of OPEN_WATER deep cells or more, and
 // every island's mine is reached from such a shipyard's water.
 const SEA_WOBBLE = 0.12;
-const ISLAND_RADIUS = 300;
+const ISLAND_RADIUS = GOLD_MINE_RULES.townHallDistance + 80;
 const ISLAND_WATER = 320;
 const BEACH_RADIUS = 190;
 const OPEN_WATER = 64;
@@ -364,7 +366,7 @@ class Field {
   // degrees either way where that crowds another camp (every copy turned alike); a guard that fits nowhere is left out.
   addGuardedMines(mines: Point[], color: CampTier, awayFrom: (mine: Point, index: number) => Point, item?: ItemKind) {
     this.mines.push(...mines);
-    // A hall stands within about 120 of its mine on any side the AI picks (see expansionOffset): the ground stays open.
+    // Keep the mine open; the surrounding clearing also holds its hauling base.
     for (const at of mines) this.reserved.push({ at, radius: 230 });
     for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
       const guards = mines.map((mine, index) => roundPoint(step(mine, rotate(unit(sub(awayFrom(mine, index), mine)), turn), GUARD_OFFSET)));
@@ -557,7 +559,7 @@ function ringStarts(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   const base = roundPoint(polar(radius, firstAngle));
   const inward = heading(firstAngle + Math.PI);
   const mineSide = field.random() < 0.5 ? -1 : 1;
-  const mine = roundPoint(step(base, rotate(inward, mineSide * field.between(1.05, 1.65)), 230));
+  const mine = roundPoint(step(base, rotate(inward, mineSide * field.between(1.05, 1.65)), GOLD_MINE_RULES.mainDistance));
   field.copies(base).forEach((start, slot) => {
     field.bases.push(start);
     if (ordered[slot]) field.starts.set(ordered[slot]!, { base: start, mine: field.copies(mine)[slot]! });
@@ -855,7 +857,7 @@ function hiddenHill(field: Field, players: PlayerId[], teams: Record<PlayerId, s
   ]) field.blocks.push(block.map(roundPoint));
   const naturalArea = standardMain(field, ring.base, { x: 0, y: 1 }, ring.plateau, [0, 0.5]);
   if (!naturalArea) return false;
-  const hill = SIZE * field.between(0.06, 0.07);
+  const hill = Math.max(SIZE * field.between(0.06, 0.07), GOLD_MINE_RULES.townHallDistance + 96);
   const feet = field.addHill(middle, hill, [{ x: 0, y: field.center }, { x: SIZE, y: field.center }]);
   field.rings.push({ at: middle, inner: hill + 40, outer: hill + field.between(170, 230) });
   // Its back ways: a narrow ramp up the hill's back from either forest, the way on through the forest down to the open
@@ -1005,7 +1007,8 @@ function sidesLayout(field: Field, players: PlayerId[], teams: Record<PlayerId, 
   for (let index = 0; index < perSide; index += 1) {
     const y = SIZE * (0.1 + ((index + 0.5) / perSide) * 0.8);
     const base = place({ x: margin, y });
-    const mine = place({ x: margin - 150, y: y + (index % 2 === 0 ? -170 : 170) });
+    const mineOffset = GOLD_MINE_RULES.mainDistance / Math.hypot(150, 170);
+    const mine = place({ x: margin - 150 * mineOffset, y: y + (index % 2 === 0 ? -170 : 170) * mineOffset });
     own.push({ base, area: base });
     for (const [side, team] of members.entries()) {
       const player = team[index]!;
@@ -1179,9 +1182,9 @@ function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
   if (!required.every((point) => grid.walkableAt(point))) return undefined;
   if (!grid.obstaclesFit(field.bases[0]!)) return undefined;
   if (!field.bases.every((base) => grid.roomAround(base, 450) >= 0.55)) return undefined;
-  if (!field.mines.every((mine) => grid.hallFits(mine))) return undefined;
-  if (grid.islandWalked(field.bases[0]!)) return undefined;
   const terrain = grid.terrain();
+  if (!field.mines.every((mine) => grid.hallFits(mine, terrain))) return undefined;
+  if (grid.islandWalked(field.bases[0]!)) return undefined;
   if (!harbours(field, terrain)) return undefined;
   return terrain;
 }
@@ -1799,16 +1802,21 @@ class Grid {
     return all === 0 ? 0 : open / all;
   }
 
-  // Whether a hall fits somewhere beside the mine (within 170 of it, its whole footprint open and off every ramp, see
+  // Whether a hall fits outside the mine's hauling lane, its whole footprint open and off every ramp, see
   // @@@ramp-unbuildable).
-  hallFits(mine: Point) {
-    for (const reach of [110, 140, 170]) {
+  hallFits(mine: Point, terrain: Terrain) {
+    const map = { terrain };
+    for (const reach of [GOLD_MINE_RULES.townHallDistance, 300]) {
       for (let spoke = 0; spoke < 16; spoke += 1) {
-        const at = step(mine, heading((spoke / 16) * Math.PI * 2), reach);
+        const at = snapToFootprint(map, BUILDING_DEFS.townHall.radius, step(mine, heading((spoke / 16) * Math.PI * 2), reach));
+        if (resourceBlocksPlacement(map, "townHall", at, mine)) continue;
+        if (Math.hypot(at.x - mine.x, at.y - mine.y) > 300 || !isFootprintBuildable(map, at.x, at.y, BUILDING_DEFS.townHall.radius)) continue;
+        const footprint = footprintCells(TERRAIN_CELL, at.x, at.y, BUILDING_DEFS.townHall.radius);
         let clear = true;
-        this.around(at, 56, (index) => {
-          if (!this.open[index] || this.ramp[index]) clear = false;
-        });
+        for (let row = footprint.top; row <= footprint.bottom; row++) for (let col = footprint.left; col <= footprint.right; col++) {
+          const index = row * this.cells + col;
+          if (this.shut[index]) clear = false;
+        }
         if (clear) return true;
       }
     }
@@ -1847,7 +1855,7 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
     const start = field.starts.get(player);
     if (!start) throw new Error(`No start for ${player}`);
     const base = clampPoint(start.base, field.size);
-    const mine = clampPoint(start.mine, field.size);
+    const mine = initialMiningPoint({terrain}, base, clampPoint(start.mine, field.size));
     starts[player] = { baseX: base.x, baseY: base.y, mineX: mine.x, mineY: mine.y };
     buildings.push(createBuilding(`building-${player}-townhall`, player, "townHall", base.x, base.y, true));
     units.push(

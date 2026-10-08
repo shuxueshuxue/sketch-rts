@@ -98,11 +98,11 @@ describe("generated maps", () => {
 
   it("gives four players a main mine and a natural each and more mines to contest, the same from every start of a ring", () => {
     for (const idea of ["fountainRing", "turtleIsle", "twistedPaths", "outerSea"] as const) {
-      const { map, halls, expansions } = layout(`ring-${idea}`, idea);
+      const { map, halls, expansions, ground } = layout(`ring-${idea}`, idea);
       expect(expansions.length).toBeGreaterThanOrEqual(8);
       for (const hall of halls) {
         const main = map.resources.find((mine) => mine.id === `gold-${hall.player}-main`)!;
-        expect(gap(main, hall)).toBeLessThan(300);
+        expect(gap(main, snapToFootprint(ground, BUILDING_DEFS.townHall.radius, hall))).toBeLessThan(300);
         for (const mine of expansions) expect(gap(mine, hall)).toBeGreaterThan(500);
       }
       // Every start sees the same map: its nearest expansions lie at the same distances.
