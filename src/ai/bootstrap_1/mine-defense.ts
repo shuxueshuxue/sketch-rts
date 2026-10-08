@@ -7,6 +7,7 @@ import { isBacklineKind } from '../policy/v6/backline';
 import { readV6Intel, type V6Intel } from '../policy/v6/intel';
 import { planV6Army } from '../policy/v6/general';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
+import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 
 type Detachment = { hall: Building; attackers: Unit[]; crew: Unit[] };
@@ -52,18 +53,22 @@ export const mineDefense: AiScript = {
   run(snapshot, owner, options): GameCommand[] {
     const guard = detachment(snapshot, owner, options);
     if (!guard) return [];
+    const crewIds = new Set(guard.crew.map(unit => unit.id));
+    const charges = planV8Charge(snapshot, owner, options).filter(command => command.type === 'cast' && crewIds.has(command.unitId));
+    const charging = new Set(charges.flatMap(command => command.type === 'cast' ? [command.unitId] : []));
     const threat = averagePoint(guard.attackers), gap = distance(threat, guard.hall);
     const post = { x: guard.hall.x + (threat.x - guard.hall.x) * Math.min(1, 200 / gap),
       y: guard.hall.y + (threat.y - guard.hall.y) * Math.min(1, 200 / gap) };
     const moving = guard.crew.filter(unit => {
+      if (charging.has(unit.id)) return false;
       const order = unit.order;
       if (order.type === 'attackMove' && distance(order, post) < 80) return false;
       if (order.type === 'idle' && distance(unit, post) < 80) return false;
       if (order.type === 'attack' && snapshot.units.some(target => target.id === order.targetId && distance(target, post) < 450)) return false;
       return true;
     });
-    return moving.length ? [resolveAiCommandIntent(snapshot, owner,
-      { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [];
+    return [...charges, ...(moving.length ? [resolveAiCommandIntent(snapshot, owner,
+      { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [])];
   },
 };
 

@@ -8,7 +8,7 @@ import { bootstrapPolicyContext } from './policy';
 import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { readV6Intel } from '../policy/v6/intel';
 
-function twoFronts(raiders = 4) {
+function twoFronts(raiders = 4, guard: 'lancer' | 'knight' = 'lancer') {
   let scene = sketchScene('independent-mine-defense').replaceDefaults()
     .player('us', { team: 'a', race: 'grove' }).player('fa', { team: 'b', race: 'grove' }).player('fb', { team: 'b', race: 'grove' })
     .townHall('us', 400, 1000).townHall('us', 1600, 1600, { id: 'mine-hall' })
@@ -16,7 +16,7 @@ function twoFronts(raiders = 4) {
     .townHall('fa', 3500, 3000, { id: 'attack-hall' }).townHall('fb', 3500, 800)
     .farms('us', 8, 400, 2200);
   for (let i = 0; i < 5; i++) scene = scene.worker('us', 1650 + i * 35, 1700, { id: `miner-${i}` });
-  for (let i = 0; i < 2; i++) scene = scene.unit('us', 'lancer', 1750 + i * 50, 1800, { id: `guard-melee-${i}` });
+  for (let i = 0; i < 2; i++) scene = scene.unit('us', guard, 1750 + i * 50, 1800, { id: `guard-melee-${i}` });
   for (let i = 0; i < 3; i++) scene = scene.unit('us', 'horseArcher', 1650 + i * 50, 1850, { id: `guard-ranged-${i}` });
   for (let i = 0; i < 10; i++) scene = scene.unit('us', 'horseArcher', 2650 + i % 3 * 40, 2800 + Math.floor(i / 3) * 40,
     { id: `striker-${i}`, order: { type: 'attackMove', x: 3500, y: 3000 } });
@@ -31,16 +31,22 @@ function twoFronts(raiders = 4) {
 
 describe('bootstrap_1 independent mine defense', () => {
   it('defends the miners while the distant main army completes its attack', () => {
-    const { game, context } = twoFronts();
+    const { game, context } = twoFronts(4, 'knight');
+    issuePlayerCommand(game, 'us', { type: 'setAutocast', unitIds: game.units.filter(unit => unit.kind === 'knight').map(unit => unit.id), ability: 'charge', enabled: false });
+    let guardCharged = false;
     for (let tick = 0; tick < 1200 && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
         const snapshot = snapshotGame(game);
         for (const { command } of runAiCommandEntriesFromScripts(snapshot, 'us',
-          [mineDefense, { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral }], context())) issuePlayerCommand(game, 'us', command);
+          [mineDefense, { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral }], context())) {
+          if (command.type === 'cast' && command.ability === 'charge') guardCharged = true;
+          issuePlayerCommand(game, 'us', command);
+        }
       }
       stepGame(game);
     }
     expect(game.buildings.find(building => building.id === 'mine-hall')!.hp).toBeGreaterThan(700);
+    expect(guardCharged).toBe(true);
     expect(game.units.filter(unit => unit.kind === 'worker')).toHaveLength(5);
     expect(game.units.filter(unit => unit.id.startsWith('raider'))).toHaveLength(0);
     expect(game.buildings.some(building => building.id === 'attack-hall')).toBe(false);
