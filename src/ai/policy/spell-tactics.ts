@@ -2,6 +2,7 @@ import { canReceiveHealing } from '../../shared/healing';
 import { matchesUnitTarget, type UnitTargetFilter } from "../../shared/unit-targeting";
 import { abilityCooldown } from "../../shared/ability-cooldowns";
 import { canReach } from "../../shared/naval";
+import { isWalkable, sameGround } from "../../shared/terrain";
 import { isEnemyOwner } from "./ownership";
 import { canCast } from "../../shared/ability-cooldowns";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
@@ -63,8 +64,10 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       const holding = isV6Policy(options) && options.memory?.v6?.general?.stage === "gather" && options.memory.v6.general.mode === "attack" && !nearestEnemyUnit(snapshot, owner, caster, 400, options);
       if (!holding && (isV6Policy(options) || (target && !hasSpirit))) {
         const point = isV6Policy(options) ? v6SummonPoint(snapshot, owner, caster, def.plannerRange, options) : { x: caster.x + 54, y: caster.y + 28 };
-        commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: point.x, y: point.y }, options));
-        continue;
+        if (point) {
+          commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: summonAbility, x: point.x, y: point.y }, options));
+          continue;
+        }
       }
     }
     const curseAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "curse");
@@ -333,9 +336,15 @@ function v6SummonPoint(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, re
   const spirits = units(snapshot, owner).filter((unit) => unit.kind === "spirit" && distance(unit, caster) <= 700);
   const toward = nearestEnemyUnit(snapshot, owner, caster, 900, options) ?? (spirits.length > 0 ? averagePoint(spirits) : undefined);
   const gap = toward ? distance(caster, toward) : 0;
-  if (!toward || gap < 1) return { x: caster.x + 54, y: caster.y + 28 };
-  const length = Math.min(reach, gap);
-  return { x: caster.x + ((toward.x - caster.x) / gap) * length, y: caster.y + ((toward.y - caster.y) / gap) * length };
+  const point = toward && gap >= 1
+    ? { x: caster.x + ((toward.x - caster.x) / gap) * Math.min(reach, gap), y: caster.y + ((toward.y - caster.y) / gap) * Math.min(reach, gap) }
+    : { x: caster.x + 54, y: caster.y + 28 };
+  // Place the spirit on the caster's ground, as far toward the fight as the spell permits.
+  // A point over water consumes no cooldown and used to be retried until the caster moved.
+  return Array.from({ length: 13 }, (_, index) => ({
+    x: caster.x + (point.x - caster.x) * (12 - index) / 12,
+    y: caster.y + (point.y - caster.y) * (12 - index) / 12,
+  })).find(at => caster.deck || isWalkable(snapshot.map, at.x, at.y) && sameGround(snapshot.map, caster, at));
 }
 
 function damagePerSecond(unit: Unit) {
