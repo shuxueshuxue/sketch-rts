@@ -10,7 +10,7 @@
 
 - 船壳增加截面与平滑法线，使用深浅木色分出水线和干舷，舷侧腰线贴合船体。
 - 甲板采用沿船长铺设的木板，错开端接缝，以小幅色差表现板材；行走表面高度不变。
-- 三角帆、货船斜桁帆和横帆都有鼓风曲面、分片缝线及包边；保留不同船型原有帆装布局。
+- 三角帆、货船斜桁帆和横帆都有鼓风曲面、分片缝线及包边；按船型区分纵向拉丁帆、standing lug 与横帆，并修正帆角和索具连接，详见[帆装修正](sail-rigging.zh.md)。
 - 加入桅杆绑扎、侧支索绳梯、艉楼窗框与栏杆支撑，炮口有内膛和口沿。
 - 修正方块未应用缩放就倒角导致细长构件变形的问题。所有帆布材质仍使用 `unbleached sail` 前缀，选中船或甲板船员时可以透明显示。
 
@@ -18,16 +18,16 @@
 
 ## 资源与验证
 
-六个 GLB 总大小从 2.14 MiB 增至 2.86 MiB，新增 740 KiB。这是外观细化的资源开销；没有新增图片纹理或运行时模型依赖。
+六个 GLB 总大小从 2.14 MiB 增至 3.32 MiB，新增约 1.18 MiB。这是外观细化的资源开销；没有新增图片纹理或运行时模型依赖。
 
 | 船型 | 原三角面 | 新三角面 | 新 GLB 大小 |
 | --- | ---: | ---: | ---: |
-| `bombardShip` | 5869 | 6460 | 416 KiB |
-| `carrier` | 7820 | 11375 | 714 KiB |
-| `cutter` | 5174 | 6604 | 420 KiB |
-| `fireShip` | 5913 | 6544 | 422 KiB |
-| `transport` | 5834 | 6808 | 437 KiB |
-| `warship` | 6464 | 8105 | 518 KiB |
+| `bombardShip` | 5869 | 7096 | 454 KiB |
+| `carrier` | 7820 | 14487 | 902 KiB |
+| `cutter` | 5174 | 7882 | 497 KiB |
+| `fireShip` | 5913 | 7180 | 461 KiB |
+| `transport` | 5834 | 7444 | 475 KiB |
+| `warship` | 6464 | 9577 | 608 KiB |
 
 - 11 个测试文件、26 项模型／甲板／船体／投影测试通过，包括炮位转动与后坐安全距离、船员移动和真实开炮，以及头像和帆布透明显示。
 - 检查六个 GLB 的顶点、法线和三角面：没有非有限值、退化面或绕序与法线方向不一致的三角形。
@@ -43,4 +43,4 @@ SKETCH_MODEL_ONLY=cutter,transport,warship,bombardShip,fireShip,carrier \
   blender --background --factory-startup --python-exit-code 1 --python tools/art/export-world-gltf.py
 ```
 
-帆面生成集中在 `tools/art/ship_sails.py`；导出器沿用当前材质与组件分组。
+帆面生成集中在 `tools/art/ship_sails.py`，各帆型及索具连接集中在 `tools/art/ship_rigging.py`；导出器沿用当前材质与组件分组。

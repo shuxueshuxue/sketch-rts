@@ -26,7 +26,7 @@ def build_in_blender():
     import bpy
     from mathutils import Vector
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from ship_sails import build_quad_sail, build_triangle_sail
+    from ship_rigging import build_running_rig
     config = json.loads(SOURCE.read_text())
     settings = config["camera"]
     selected = os.environ.get("SKETCH_SHIP_KINDS", "").split(",")
@@ -195,48 +195,34 @@ def build_in_blender():
                 cylinder("mast", (x, y, z+h/2), 2.2, h, edge, upper)
                 for height in (5, 9, h*.66):
                     cylinder("mast binding", (x, y, z+height), 2.35, .7, rope, upper)
-                if kind in ("cutter", "fireShip", "bombardShip"):
-                    # An aft-raked lateen rig, deliberately distinct from the
-                    # square-rigged fighting ships; the foredeck stays visible.
-                    spar("lateen yard", (x-20, -beam*.35, z+h*.92),
-                         (x+40, beam*.4, z+h*.30), 1.2, edge, upper)
-                    build_triangle_sail("lateen sail", [(x-19,-beam*.34,z+h*.90),
-                         (x+39,beam*.39,z+h*.31),(x+18,-beam*.22,z+h*.24)],
-                         beam*.12, cloth, rope, mesh, spar, upper)
-                elif kind == "transport":
-                    # A low, full cargo lug leaves the forward working deck open.
-                    spar("lug yard", (x-17,-beam*.43,z+h*.90), (x+13,beam*.43,z+h*.79),1.3,edge,upper)
-                    build_quad_sail("cargo lug sail", [(x-5,-beam*.32,z+h*.30),
-                         (x+20,beam*.35,z+h*.28),(x+13,beam*.42,z+h*.77),
-                         (x-17,-beam*.42,z+h*.88)], beam*.12, cloth, rope, mesh, spar, upper)
-                else:
-                    cylinder("lower yard", (x, y, z+h*.68), 1.2, beam*1.10, edge, upper, (math.pi/2, 0, 0))
-                    build_quad_sail("canvas sail", [(x,y-beam*.46,z+h*.22),
-                         (x,y+beam*.46,z+h*.22),(x,y+beam*.54,z+h*.67),
-                         (x,y-beam*.54,z+h*.67)], beam*.20, cloth, rope, mesh, spar, upper)
-                    cylinder("topsail yard", (x, y, z+h*.98), .9, beam*.73, edge, upper, (math.pi/2, 0, 0))
-                    build_quad_sail("square topsail", [(x,y-beam*.32,z+h*.74),
-                         (x,y+beam*.32,z+h*.74),(x,y+beam*.36,z+h*.97),
-                         (x,y-beam*.36,z+h*.97)], beam*.09, cloth, rope, mesh, spar, upper,
-                         panels=6, rows=4)
+                next_mast = min((part for part in spec["obstacles"] if part["type"] == "mast" and part["x"] > x),
+                                key=lambda part: part["x"], default=None)
+                build_running_rig(kind, (x, y, z), length, beam, h,
+                                  cloth, rope, edge, mesh, spar, upper,
+                                  stay_to=(next_mast["x"], next_mast["y"], z+h) if next_mast else None)
                 for side in (-1, 1):
-                    peak = Vector((x, y, z+h*.72))
-                    feet = [Vector((x-dx, y+side*beam*.40, z+8)) for dx in (5, 18)]
+                    fore_aft = kind in ("cutter", "fireShip", "bombardShip", "transport")
+                    peak = Vector((x, y, z+h*(.98 if fore_aft else .72)))
+                    # Lead the leeward shrouds ahead of a fore-and-aft sail;
+                    # aft chainplates would put these stays through its belly.
+                    forward = side == 1 and fore_aft
+                    feet = [Vector((x+(dx if forward else -dx), y+side*beam*.40, z+8)) for dx in ((12, 24) if forward else (5, 18))]
                     for foot in feet:
                         spar("mast shroud", peak, foot, .38, dark, upper)
                         cylinder("shroud deadeye", foot, 1, 1.2, wood, upper, (math.pi/2, 0, 0))
+                        spar("shroud chainplate", (foot.x,foot.y,z+1), foot, .6, iron, upper)
                     for rung in range(1, 7):
                         t = rung/10
                         spar("shroud ratline", feet[0].lerp(peak, t), feet[1].lerp(peak, t), .18, rope, upper)
-                    spar("sail sheet", (x, y+side*beam*.46, z+h*.22), (x+25, side*beam*.35, z+8), .45, dark, upper)
-                if kind in ("cutter", "warship", "carrier"):
-                    spar("forestay", (x, 0, z+h*.96), (length*.61, 0, z+21), .5, dark, upper)
-                # Bow artillery requires open sky as well as clearance at the mast footing.
-                if kind == "cutter":
-                    build_triangle_sail("light jib", [(x+3,0,z+h*.78),(length*.57,0,z+24),
-                         (x+24,0,z+24)], 3.5, cloth, rope, mesh, spar, upper, panels=4)
                 if kind == "carrier":
-                    cylinder("lookout platform",(x,0,z+h*.72),9,2,wood,upper)
+                    # Offset rope hole keeps the vertical halyard falls clear
+                    # of the solid platform, rather than drawing through it.
+                    platform_z=z+h*.72
+                    vertices=[(x+radius*math.cos(i*math.tau/16), offset+radius*math.sin(i*math.tau/16), platform_z+height)
+                              for radius,offset,height in ((9,0,-1),(9,0,1),(1.15,4,1),(1.15,4,-1)) for i in range(16)]
+                    faces=[(row*16+i,row*16+(i+1)%16,((row+1)%4)*16+(i+1)%16,((row+1)%4)*16+i)
+                           for row in range(4) for i in range(16)]
+                    mesh("lookout platform with rope hole",vertices,faces,wood,upper)
                     for side in (-1,1):
                         spar("lookout rail",(x-7,side*6,z+h*.72+6),(x+7,side*6,z+h*.72+6),.7,edge,upper)
             elif obstacle["type"] == "cabin":
