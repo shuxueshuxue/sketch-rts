@@ -394,7 +394,13 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
-  const oversaturatedWorkers = workers.filter((unit) => unit.order.type === "mine" && !unit.mineSlot && (assignmentCounts.get(unit.order.resourceId) ?? 0) > GOLD_MINE_RULES.workstations);
+  const remaining = new Map(assignmentCounts);
+  const oversaturatedWorkers = workers.filter((unit) => {
+    if (unit.order.type !== "mine") return false;
+    const count = remaining.get(unit.order.resourceId)!;
+    remaining.set(unit.order.resourceId, count - 1);
+    return count > GOLD_MINE_RULES.workstations;
+  });
   const bases = completeBuildings(snapshot, owner, "townHall");
   const assignableWorkers = [...idleWorkers, ...oversaturatedWorkers];
   // @@@v9-no-feed - V9 sends no workers to the hall nearest its intrusion: with eight workers on the main mine and four on
