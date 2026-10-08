@@ -1,4 +1,6 @@
 import { shipMotionLimits } from './ship-handling';
+import { coursePerformance } from './ship-wind';
+import { windAt } from './wind-field';
 import { detCos, detSin } from "./det-math";
 import { shipProfile, type Point } from "./ship-geometry";
 import { CELL_GROUND, isWalkable, sameGround, walkableGoal } from "./terrain";
@@ -10,6 +12,7 @@ import { shipScale, DEFAULT_SHIP_SCALE } from './ship-geometry';
 export type ShipPose = Point & {
   heading: number;
   pivot?: Point;
+  tack?: boolean;
 };
 /** Rotation around a fixed bow/stern contact point, used for a real departure
  * maneuver rather than translating a hull sideways without turning it. */
@@ -18,7 +21,7 @@ export function shipPoseAt(from: ShipPose, to: ShipPose, fraction: number): Ship
   if(to.pivot){const lever=(from.x-to.pivot.x)*detCos(from.heading)+(from.y-to.pivot.y)*detSin(from.heading);return{x:to.pivot.x+lever*detCos(heading),y:to.pivot.y+lever*detSin(heading),heading};}
   return{x:from.x+(to.x-from.x)*fraction,y:from.y+(to.y-from.y)*fraction,heading};
 }
-type SeaMap = Pick<GameMap, "terrain" | "width" | "height">;
+type SeaMap = Pick<GameMap, "terrain" | "width" | "height" | "wind">;
 const waterFields = new WeakMap<object, {
   cells: string;
   cols: number;
@@ -273,12 +276,13 @@ class Frontier {
 }
 /** Straight travel is forward or astern along the keel. All connectors obey
  * the same constraint as route edges; grid alignment is never a side-slip. */
-function routeTime(ship:Unit,from:ShipPose,points:readonly ShipPose[]) {
+function routeTime(map:SeaMap,ship:Unit,from:ShipPose,points:readonly ShipPose[]) {
   const limits=shipMotionLimits(ship);let time=0,previous=from;
   for(const point of points){
     const yaw=Math.abs(headingDifference(previous.heading,point.heading));
     const dx=point.x-previous.x,dy=point.y-previous.y;
-    const speed=dx*detCos(point.heading)+dy*detSin(point.heading)<-1e-7?limits.reverseSpeed:limits.speed;
+    const performance=coursePerformance(ship,map,point.heading,{assumeTrimmed:true});
+    const speed=dx*detCos(point.heading)+dy*detSin(point.heading)<-1e-7?Math.min(limits.reverseSpeed,performance.auxiliarySpeed):Math.max(performance.targetSpeed,performance.auxiliarySpeed);
     time+=yaw/Math.max(1e-6,limits.turnRate)+Math.hypot(dx,dy)/Math.max(1e-6,speed);
     previous=point;
   }
@@ -304,8 +308,37 @@ function connectorClear(map:SeaMap,ship:Unit,from:ShipPose,points:ShipPose[],tra
   });
 }
 function keelConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point & {heading?:number},traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
-  return keelCandidates(ship,from,goal).sort((a,b)=>routeTime(ship,from,a)-routeTime(ship,from,b))
+  return keelCandidates(ship,from,goal).sort((a,b)=>routeTime(map,ship,from,a)-routeTime(map,ship,from,b))
     .find(points=>connectorClear(map,ship,from,points,traffic));
+}
+/** Two close-hauled legs return to the safe reference leg after a bounded
+ * upwind advance. Both choices include the full turning sweeps, so an apex
+ * cannot be selected merely because its center lies in water. */
+export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
+  const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
+  const dx=goal.x-start.x,dy=goal.y-start.y,gap=Math.hypot(dx,dy),length=shipProfile(ship)!.length;
+  const performance=coursePerformance(ship,map,Math.atan2(dy,dx),{assumeTrimmed:true});
+  if(gap<length || performance.calm || performance.trueWindAngle>=performance.beatAngle
+    || !performance.noGo && performance.targetSpeed>=performance.auxiliarySpeed || performance.maxForwardSpeed<=0)return;
+  const wind=windAt(map,ship),angles=[wind.from+performance.beatAngle,wind.from-performance.beatAngle];
+  const directions=angles.map(heading=>({x:detCos(heading),y:detSin(heading)}));
+  const cross=(a:Point,b:Point)=>a.x*b.y-a.y*b.x;
+  for(const distance of [...new Set([Math.min(gap,length*2.5),Math.min(gap,length*1.5),Math.min(gap,length)])]){
+    const delta={x:dx*distance/gap,y:dy*distance/gap},end={x:start.x+delta.x,y:start.y+delta.y};
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const side of [0,1]){
+      const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
+      const first=cross(delta,b)/det,second=cross(a,delta)/det;
+      if(first<=1e-7 || second<=1e-7)continue;
+      const apex={x:start.x+a.x*first,y:start.y+a.y*first,heading:angles[side]!,tack:true};
+      const finish={...end,heading:angles[other]!,tack:true};
+      const proof=[{...start,heading:apex.heading},apex,{...apex,heading:finish.heading},finish,{...finish,heading:goal.heading}];
+      if(!connectorClear(map,ship,start,proof,traffic))continue;
+      const cost=routeTime(map,ship,start,proof);
+      if(cost<bestCost-1e-7){bestCost=cost;best=[apex,finish];}
+    }
+    if(best)return best;
+  }
 }
 function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:ShipPose)=>boolean):ShipPose[]|undefined {
   const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0},length=shipProfile(ship)!.length;
@@ -347,7 +380,7 @@ function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipP
       const connection=keelConnector(map,ship,from,stage,traffic);if(!connection)continue;
       const last=connection.at(-1) ?? from;
       if(!hullPassageClear(map,ship,last,stage) || !traffic(last,stage))continue;
-      const cost=routeTime(ship,from,[...connection,...(Math.abs(headingDifference(last.heading,stage.heading))>1e-7?[stage]:[]),end]);
+      const cost=routeTime(map,ship,from,[...connection,...(Math.abs(headingDifference(last.heading,stage.heading))>1e-7?[stage]:[]),end]);
       if(cost>=bestCost)continue;
       bestCost=cost;best=[...connection,...(Math.abs(headingDifference(last.heading,stage.heading))>1e-7?[stage]:[]),end];
     }
@@ -365,7 +398,11 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
   if (!t)
     return {points:[{ ...goal, heading: Math.round(Math.atan2(goal.y - ship.y, goal.x - ship.x) * 1e9) / 1e9 }],partial:false};
   const grid = gridFor(map, ship), size = grid.fits.length;
-  const limits=shipMotionLimits(ship),cruise=Math.max(1e-6,limits.speed),turnSpeed=Math.max(1e-6,limits.turnRate);
+  const limits=shipMotionLimits(ship),cruise=Math.max(1e-6,coursePerformance(ship,map,0,{assumeTrimmed:true}).maxForwardSpeed),turnSpeed=Math.max(1e-6,limits.turnRate);
+  const courseSpeeds=Array.from({length:DIRECTIONS},(_,h)=>{
+    const performance=coursePerformance(ship,map,h*ANGLE,{assumeTrimmed:true});
+    return {forward:Math.max(performance.targetSpeed,performance.auxiliarySpeed),reverse:Math.min(limits.reverseSpeed,performance.auxiliarySpeed)};
+  });
   const lattice = grid;
   const trafficFits=new Int8Array(size);
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
@@ -414,7 +451,7 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
         for(const entrance of entrances.get(cell)!){
           const end=entrance.at(-1) ?? start;
           if(!hullPassageClear(map,ship,end,p) || !trafficClear(end,p))continue;
-          const points=[...entrance,...(Math.abs(headingDifference(end.heading,p.heading))>1e-7?[p]:[])],time=routeTime(ship,start,points);
+          const points=[...entrance,...(Math.abs(headingDifference(end.heading,p.heading))>1e-7?[p]:[])],time=routeTime(map,ship,start,points);
           if(time<g){g=time;prefix=points;}
         }
         if(!prefix)continue;
@@ -456,7 +493,7 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     for (const maneuver of [0,2]) {
       const [dx, dy] = STEPS[(h + maneuver * 2) % DIRECTIONS]!, nx = x + dx, ny = y + dy;
       if (nx >= 0 && ny >= 0 && nx < lattice.cols && ny < lattice.rows)
-        visit((ny * lattice.cols + nx) * DIRECTIONS + h, lattice.cell * (dx && dy ? Math.SQRT2 : 1) / Math.max(1e-6,maneuver===2?limits.reverseSpeed:limits.speed), grid.moves, id * 4 + maneuver, grid.masks[h]![maneuver + 3]!);
+        visit((ny * lattice.cols + nx) * DIRECTIONS + h, lattice.cell * (dx && dy ? Math.SQRT2 : 1) / Math.max(1e-6,maneuver===2?courseSpeeds[h]!.reverse:courseSpeeds[h]!.forward), grid.moves, id * 4 + maneuver, grid.masks[h]![maneuver + 3]!);
     }
   }
   if (best < 0)

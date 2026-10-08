@@ -19,10 +19,10 @@ describe("gameplay tooltips", () => {
     for (const locale of ["zh", "en"] as const) {
       const i18n = createI18n(locale);
       const mechanical = unitSelectionTooltip("golem", [golem], snapshot, i18n);
-      expect(mechanical.stats).toContain(locale === "zh" ? "单位类型：机械" : "Unit class: Mechanical");
+      expect(mechanical.stats).toContain(locale === "zh" ? "机械 · 工人维修；治疗和生命回复无效" : "Mechanical · worker repairs; no healing or regeneration");
       expect(mechanical.stats.join(" ")).not.toContain(locale === "zh" ? "回复 +12" : "Regen +12");
-      expect(unitSelectionTooltip("footman", [passenger], snapshot, i18n).stats).toContain(locale === "zh" ? "单位类型：非机械" : "Unit class: Non-mechanical");
-      expect(unitTooltip("ballista", undefined, i18n).stats).toContain(locale === "zh" ? "单位类型：机械" : "Unit class: Mechanical");
+      expect(unitSelectionTooltip("footman", [passenger], snapshot, i18n).stats).toContain(locale === "zh" ? "非机械" : "Non-mechanical");
+      expect(unitTooltip("ballista", undefined, i18n).stats).toContain(locale === "zh" ? "机械 · 工人维修；治疗和生命回复无效" : "Mechanical · worker repairs; no healing or regeneration");
       expect(tooltipText(abilityTooltip("heal", undefined, i18n))).toContain(locale === "zh" ? "对机械单位无效" : "no effect on mechanical units");
       for (const item of ["healingScroll", "regenRing"] as const) expect(tooltipText(itemTooltip(item, undefined, i18n))).toContain(locale === "zh" ? "对机械单位无效" : "no effect on mechanical units");
       for (const building of ["moonWell", "emberShrine"] as const) expect(tooltipText(buildingTooltip(building, undefined, i18n))).toContain(locale === "zh" ? "非机械友军" : "non-mechanical allies");
@@ -30,7 +30,7 @@ describe("gameplay tooltips", () => {
     snapshot.variants = { automaton: resolveVariant({ base: "footman", unitClass: "mechanical", regenPerSecond: 10 }) };
     const automaton = { ...passenger, variant: "automaton" };
     const text = tooltipText(unitSelectionTooltip("footman", [automaton], snapshot));
-    expect(text).toContain("Unit class: Mechanical");
+    expect(text).toContain("Mechanical · worker repairs");
     expect(text).not.toContain("Innate regeneration");
     expect(text).not.toContain("Regen +");
   });
@@ -70,14 +70,14 @@ describe("gameplay tooltips", () => {
       title: "Heal",
       body: expect.stringContaining("allied"),
       stats: expect.arrayContaining(["Restores 55 HP", "Range 240", `Cooldown ${HEAL_COOLDOWN_SECONDS}s`]),
-      requirements: ["Priest or field medic must be ready."],
+      requirements: [],
       hotkey: "H",
     });
     expect(abilityTooltip("curse", "c").stats).toEqual(expect.arrayContaining(["Enemy damage x0.4", "100 damage to summoned units", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
     expect(abilityTooltip("emberMend", "m")).toMatchObject({
       title: "Ember Mend",
       stats: expect.arrayContaining(["Restores 55 HP", "Range 240", `Cooldown ${HEAL_COOLDOWN_SECONDS}s`]),
-      requirements: ["Ember acolyte must be ready."],
+      requirements: [],
       hotkey: "M",
     });
     expect(abilityTooltip("ashCurse", "x").stats).toEqual(expect.arrayContaining(["Enemy damage x0.45", "Scorched enemy damage x0.3", "Range 280", "Duration 18.0s", "Cooldown 7.5s"]));
@@ -89,23 +89,23 @@ describe("gameplay tooltips", () => {
       title: "Charge",
       body: expect.stringContaining("powerful"),
       stats: [`Strikes for x${CHARGE.damageMultiplier} its attack`, `Range ${CHARGE.minRange}-${CHARGE.range}`, `Cooldown ${CHARGE_COOLDOWN_SECONDS}s`],
-      requirements: ["Raider or knight must be ready.", `Target an enemy unit at least ${CHARGE.minRange} away; a farther one is ridden up to first.`],
+      requirements: [`Target an enemy unit at least ${CHARGE.minRange} away; a farther one is ridden up to first.`],
       hotkey: "R",
     });
     expect(abilityTooltip("charge", "r", createI18n("zh"))).toMatchObject({
       title: "冲锋",
       stats: [`伤害为普攻 x${CHARGE.damageMultiplier}`, `射程 ${CHARGE.minRange}-${CHARGE.range}`, `冷却 ${CHARGE_COOLDOWN_SECONDS}s`],
-      requirements: ["掠袭者或骑士必须准备就绪。", `目标是至少 ${CHARGE.minRange} 外的敌方单位，更远的会先骑过去再冲。`],
+      requirements: [`目标是至少 ${CHARGE.minRange} 外的敌方单位，更远的会先骑过去再冲。`],
     });
   });
 
   it("tells how a spell's autocast stands and that a right-click switches it, only when asked", () => {
     expect(abilityTooltip("charge", "r").notes).toBeUndefined();
-    expect(abilityTooltip("charge", "r", undefined, "on").notes).toEqual(["Autocast: on", "Right-click: autocast on/off"]);
-    expect(abilityTooltip("heal", "h", undefined, "off").notes).toEqual(["Autocast: off", "Right-click: autocast on/off"]);
-    expect(abilityTooltip("curse", "c", undefined, "mixed").notes).toEqual(["Autocast: on for some", "Right-click: autocast on/off"]);
-    expect(abilityTooltip("charge", "r", createI18n("zh"), "on").notes).toEqual(["自动施法：开", "右键：开/关自动施法"]);
-    expect(tooltipText(abilityTooltip("charge", "r", undefined, "off"))).toContain("Right-click: autocast on/off");
+    expect(abilityTooltip("charge", "r", undefined, "on").notes).toEqual(["Autocast: on · Right-click to toggle"]);
+    expect(abilityTooltip("heal", "h", undefined, "off").notes).toEqual(["Autocast: off · Right-click to toggle"]);
+    expect(abilityTooltip("curse", "c", undefined, "mixed").notes).toEqual(["Autocast: on for some · Right-click to toggle"]);
+    expect(abilityTooltip("charge", "r", createI18n("zh"), "on").notes).toEqual(["自动施法：开 · 右键切换"]);
+    expect(tooltipText(abilityTooltip("charge", "r", undefined, "off"))).toContain("Right-click to toggle");
   });
 
   it("names a rider's charge on its training tooltip (a missing label once broke the whole command card)", () => {
@@ -189,7 +189,7 @@ describe("gameplay tooltips", () => {
     expect(abilityTooltip("heal", "h", zh)).toMatchObject({
       title: "治疗",
       stats: expect.arrayContaining(["恢复 55 生命", "射程 240", `冷却 ${HEAL_COOLDOWN_SECONDS}s`]),
-      requirements: ["牧师或战地医师必须准备就绪。"],
+      requirements: [],
     });
     expect(itemTooltip("lightningRod", "1", zh).requirements).toEqual(["需要射程内可见的敌方单位。"]);
     expect(upgradeTooltip("buildingDurability", "d", 0, zh).requirements).toEqual(["在城镇大厅研究。", "影响建筑。"]);
@@ -277,6 +277,11 @@ describe("rule-generated current descriptions", () => {
       const i18n = createI18n(locale);
       expect(tooltipText(unitTooltip("knight", undefined, i18n))).toContain("114 / 247 / 494");
       expect(tooltipText(unitTooltip("knight", undefined, i18n))).toContain("33.3%");
+      const selected = unitSelectionTooltip("knight", [unit("knight", { level: 1, xp: 150 })], snapshotWithPlayerUpgrades({}), i18n);
+      expect(tooltipText(selected)).toContain("150/247");
+      expect(tooltipText(selected)).not.toContain("114 / 247 / 494");
+      expect(tooltipText(selected)).not.toContain("33.3%");
+      expect(tooltipText(selected)).toContain(locale === "zh" ? "主动法术／道具不减伤" : "no reduction to active spells/items");
       expect(tooltipText(buildingTooltip("defenseTower", undefined, i18n))).toContain("50%");
       expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).toContain("1.2s");
       expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).not.toContain("tick");

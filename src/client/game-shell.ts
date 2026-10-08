@@ -34,6 +34,7 @@ export function gameShellMarkup(i18n: I18n) {
     </div>
     <div class="minimap-frame" data-minimap-frame aria-hidden="true"></div>
     <button type="button" class="minimap-relations" data-minimap-relations aria-pressed="false" aria-label="${escapeHtml(t("hud.minimapRelations"))}" title="${escapeHtml(t("hud.minimapRelations"))}"><span aria-hidden="true"></span></button>
+    <button type="button" class="minimap-wind" data-minimap-wind aria-pressed="false" aria-label="${escapeHtml(t("hud.minimapWind"))}"><svg class="minimap-wind-arrow" data-minimap-wind-arrow viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12H20M14 6L20 12L14 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div class="control-deck" hidden>
       <div class="selection-chip" data-selection>${escapeHtml(t("hud.nothingSelected"))}</div>
       <div class="hud-actions">

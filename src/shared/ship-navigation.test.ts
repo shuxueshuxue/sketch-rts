@@ -29,12 +29,13 @@ const ship = (kind: "transport" | "carrier", col: number, row: number) => create
 const pose = (unit: Unit, heading = unit.sailing?.heading ?? 0) => ({ x: unit.x, y: unit.y, heading });
 
 describe("full hull water navigation", () => {
-  it('continues a budgeted route past its intermediate endpoint and preserves it through a save',()=>{
+  it('continues a saved budgeted route without cruise state past its intermediate endpoint',()=>{
     const g=game(island()),boat=g.spawnUnit('player','transport',at(6,10).x,at(6,10).y),goal=at(22,10);
     issuePlayerCommand(g,'player',{type:'move',unitIds:[boat.id],...goal,avoidCombat:true});
     const first=planShipRoute(g.map,boat,goal,()=>true,1);expect(first.partial).toBe(true);
     boat.sailing!.route={goalX:goal.x,goalY:goal.y,...first,end:first.points.at(-1)!,trafficKey:'',startX:boat.x,startY:boat.y,startHeading:boat.sailing!.heading};
     const restored=game(island());restoreSnapshotIntoGame(restored,snapshotGame(g),g.nextId);
+    expect(restored.units[0]!.sailing!.route!.cruise).toBeUndefined();
     for(let tick=0;tick<seconds(80);tick++){stepGame(g);stepGame(restored);}
     expect(Math.hypot(boat.x-goal.x,boat.y-goal.y)).toBeLessThan(5);
     expect(boat.order.type).toBe('idle');expect(checksumGame(g)).toBe(checksumGame(restored));

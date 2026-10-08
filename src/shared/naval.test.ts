@@ -214,7 +214,7 @@ describe("transports", () => {
     ]);
     const supply = sim.players.player!.supplyUsed;
     issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2", "w3", "w4", "f1", "f2", "f3"], transportId: "transport" });
-    run(sim, 400);
+    run(sim, 800); // Low-speed berth assistance precedes boarding.
     const transport = unit(sim, "transport")!;
     const crew = shipPassengers(sim.units, transport);
     expect(crew.length).toBeGreaterThan(1);
@@ -227,7 +227,7 @@ describe("transports", () => {
     for (const passenger of sim.units.filter(unit => unit.id !== transport.id)) expect(passenger.order.type).not.toBe("board");
     expect(sim.players.player!.supplyUsed).toBe(supply);
     issuePlayerCommand(sim, "player", { type: "unload", unitIds: ["transport"], ...at(22, 9) });
-    run(sim, 600);
+    run(sim, 1200); // Unloading includes the bounded auxiliary approach.
     expect(transport.cargo).toBeUndefined();
     expect(shipPassengers(sim.units, transport)).toHaveLength(0);
     for (const id of crew.map(unit => unit.id)) {
@@ -262,7 +262,7 @@ describe("transports", () => {
     ]);
     issuePlayerCommand(sim, "player", { type: "attackMove", unitIds: ["transport"], ...at(16, 4) });
     expect(unit(sim, "transport")!.order.type).toBe("move");
-    run(sim, 400); // Includes a bounded turn and a physical departure from the parallel berth.
+    run(sim, 1000); // Includes a bounded turn and low-speed departure from the parallel berth.
     expect(["idle", "move"]).toContain(unit(sim, "transport")!.order.type);
     expect(Math.hypot(unit(sim, "transport")!.x - at(16, 4).x, unit(sim, "transport")!.y - at(16, 4).y)).toBeLessThan(5);
   });

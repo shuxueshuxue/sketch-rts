@@ -12,7 +12,7 @@ type Point = { x: number; y: number };
 // buildings and units. The match's minimap and the lobby's map preview (see @@@map-preview) draw the same picture.
 // @@@minimap-relations - Given the player looking on, the players' buildings and units are in friend-or-foe colours (see
 // @@@relation-ink): own green, allies yellow, enemies red; the creeps keep theirs.
-export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot), viewer?: PlayerId) {
+export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, marks: MapPresentationMark[] = createMapPresentation(snapshot), viewer?: PlayerId, terrainOverlay?: () => void) {
   const ink = (owner: Owner | undefined) => (viewer && owner && owner !== "neutral" ? RELATION_INK[relationTo(snapshot, viewer, owner)] : ownerInk(owner));
   ctx.fillStyle = "#dedcc0";
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
@@ -22,6 +22,7 @@ export function drawMinimapMap(ctx: Brush, snapshot: GameSnapshot, rect: Rect, m
     ctx.imageSmoothingEnabled = true;
   }
   // Marks grow with the picture: the minimap's are a few pixels, a preview twice its size draws them a little larger.
+  terrainOverlay?.();
   const scale = Math.max(1, Math.min(2, rect.width / 220));
   for (const mark of marks) {
     const point = projectWorldToRect(mark, snapshot.map, rect);

@@ -19,7 +19,8 @@ describe('right-click crew rendezvous',()=>{
     expect(narrowFrameCommandToLiveOperands(game,'player',command)).toEqual(command);
     issuePlayerCommand(game,'player',command);
     const before={x:target.x,y:target.y};let transferred=0;
-    for(let i=0;i<seconds(60)&&transferred<crew.length;i++){
+    // The friendly receiver also has to turn and berth using low-speed maneuver assistance.
+    for(let i=0;i<seconds(owner==='player'?100:60)&&transferred<crew.length;i++){
       stepGame(game);for(const ship of [source,target])expect(hullFits(game.map,ship)).toBe(true);
       expect(hullContact(source,target)?.overlap ?? 0).toBeLessThan(.1);
       for(const unit of crew){expect(unit.hp).toBeGreaterThan(0);expect(unit.deck).toBeDefined();}
@@ -67,7 +68,8 @@ describe('right-click crew rendezvous',()=>{
     boardUnit(source,crew,game.units);issuePlayerCommand(game,'player',{type:'board',unitIds:[crew.id],transportId:target.id});
     for(let i=0;i<seconds(2);i++)stepGame(game);
     const restored=scene();restoreSnapshotIntoGame(restored,snapshotGame(game),game.nextId);
-    for(let i=0;i<seconds(45);i++){stepGame(game);stepGame(restored);}
+    // Both ships finish their exact, low-speed berth approach after restoring.
+    for(let i=0;i<seconds(70);i++){stepGame(game);stepGame(restored);}
     expect(checksumGame(game)).toBe(checksumGame(restored));expect(crew.deck?.shipId).toBe(target.id);
   });
 });

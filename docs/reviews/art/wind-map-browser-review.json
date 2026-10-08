@@ -1,0 +1,259 @@
+{
+  "runtime": "Chromium, SwiftShader, production client build and current authoritative server; viewport 1440x1000",
+  "scenario": "bareDuel fixture with a transport and a worker. Normal game wind was not patched. API fast-forward occurred before the browser joined; normal WebSocket ticks crossed 9600 after joining.",
+  "controls": [
+    {
+      "locale": "zh-CN",
+      "initial": {
+        "pressed": "false",
+        "label": "风向图（Alt+W） · 中风 · 吹向东南",
+        "rotation": "rotate(0.785398rad)"
+      },
+      "keyboard": [
+        "click",
+        "Alt+W",
+        "Enter",
+        "Space",
+        "Shift+Tab",
+        "relations Space",
+        "Tab"
+      ],
+      "tooltip": "光标处：中风 · 吹向东南\nAlt+W\n点击显示风向图。当前全图同风。\n下次换风 7:57",
+      "tooltipBounds": {
+        "x": 1181.90625,
+        "y": 864,
+        "width": 248.09375,
+        "height": 101.1875,
+        "top": 864,
+        "right": 1430,
+        "bottom": 965.1875,
+        "left": 1181.90625
+      },
+      "smallViewports": [
+        {
+          "width": 1024,
+          "height": 768,
+          "button": {
+            "x": 821,
+            "y": 633,
+            "width": 28,
+            "height": 28,
+            "top": 633,
+            "right": 849,
+            "bottom": 661,
+            "left": 821
+          },
+          "tooltip": {
+            "x": 765.90625,
+            "y": 656.8125,
+            "width": 248.09375,
+            "height": 101.1875,
+            "top": 656.8125,
+            "right": 1014,
+            "bottom": 758,
+            "left": 765.90625
+          }
+        },
+        {
+          "width": 900,
+          "height": 700,
+          "button": {
+            "x": 710,
+            "y": 578,
+            "width": 28,
+            "height": 28,
+            "top": 578,
+            "right": 738,
+            "bottom": 606,
+            "left": 710
+          },
+          "tooltip": {
+            "x": 641.90625,
+            "y": 588.8125,
+            "width": 248.09375,
+            "height": 101.1875,
+            "top": 588.8125,
+            "right": 890,
+            "bottom": 690,
+            "left": 641.90625
+          }
+        }
+      ],
+      "minimapDragSelected": [
+        "wind-ship",
+        "wind-worker"
+      ],
+      "minimapRightClickCommands": [
+        {
+          "type": "move",
+          "unitIds": [
+            "wind-ship",
+            "wind-worker"
+          ],
+          "x": 2100,
+          "y": 2100,
+          "queued": false,
+          "avoidCombat": true
+        }
+      ],
+      "focusedWindButtonDidNotReplaceUnitTooltip": true,
+      "errors": [],
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "locale": "en-US",
+      "initial": {
+        "pressed": "false",
+        "label": "Wind map (Alt+W) · Moderate wind · toward SE",
+        "rotation": "rotate(0.785398rad)"
+      },
+      "keyboard": [
+        "click",
+        "Alt+W",
+        "Enter",
+        "Space",
+        "Shift+Tab",
+        "relations Space",
+        "Tab"
+      ],
+      "tooltip": "At cursor：Moderate wind · toward SE\nAlt+W\nClick to show the wind map. Wind is currently uniform across the map.\nWind changes in 7:58",
+      "tooltipBounds": {
+        "x": 1074,
+        "y": 864,
+        "width": 356,
+        "height": 119.78125,
+        "top": 864,
+        "right": 1430,
+        "bottom": 983.78125,
+        "left": 1074
+      },
+      "smallViewports": [
+        {
+          "width": 1024,
+          "height": 768,
+          "button": {
+            "x": 821,
+            "y": 633,
+            "width": 28,
+            "height": 28,
+            "top": 633,
+            "right": 849,
+            "bottom": 661,
+            "left": 821
+          },
+          "tooltip": {
+            "x": 658,
+            "y": 638.21875,
+            "width": 356,
+            "height": 119.78125,
+            "top": 638.21875,
+            "right": 1014,
+            "bottom": 758,
+            "left": 658
+          }
+        },
+        {
+          "width": 900,
+          "height": 700,
+          "button": {
+            "x": 710,
+            "y": 578,
+            "width": 28,
+            "height": 28,
+            "top": 578,
+            "right": 738,
+            "bottom": 606,
+            "left": 710
+          },
+          "tooltip": {
+            "x": 534,
+            "y": 570.21875,
+            "width": 356,
+            "height": 119.78125,
+            "top": 570.21875,
+            "right": 890,
+            "bottom": 690,
+            "left": 534
+          }
+        }
+      ],
+      "minimapDragSelected": [
+        "wind-ship",
+        "wind-worker"
+      ],
+      "minimapRightClickCommands": [
+        {
+          "type": "move",
+          "unitIds": [
+            "wind-ship",
+            "wind-worker"
+          ],
+          "x": 2100,
+          "y": 2100,
+          "queued": false,
+          "avoidCombat": true
+        }
+      ],
+      "focusedWindButtonDidNotReplaceUnitTooltip": true,
+      "errors": [],
+      "consoleErrors": [],
+      "failedRequests": []
+    }
+  ],
+  "boundaries": [
+    {
+      "reducedMotion": "no-preference",
+      "initialTick": 9499,
+      "finalTick": 9676,
+      "windBefore": {
+        "direction": 0.7853981633974483,
+        "speed": 80
+      },
+      "windAfter": {
+        "direction": 2.7488935718910685,
+        "speed": 80,
+        "changedAtTick": 9600,
+        "fromDirection": 0.7853981633974492,
+        "fromSpeed": 80
+      },
+      "activeFrameCount": 16,
+      "activeRotationCount": 11,
+      "settledPulse": 0,
+      "firstNotifiedTick": 9605,
+      "errors": [],
+      "consoleErrors": [],
+      "failedRequests": []
+    },
+    {
+      "reducedMotion": "reduce",
+      "initialTick": 9235,
+      "finalTick": 9671,
+      "windBefore": {
+        "direction": 0.7853981633974483,
+        "speed": 80
+      },
+      "windAfter": {
+        "direction": 2.7488935718910685,
+        "speed": 80,
+        "changedAtTick": 9600,
+        "fromDirection": 0.7853981633974492,
+        "fromSpeed": 80
+      },
+      "activeFrameCount": 18,
+      "activeRotationCount": 1,
+      "settledPulse": 0,
+      "firstNotifiedTick": 9601,
+      "errors": [],
+      "consoleErrors": [],
+      "failedRequests": []
+    }
+  ],
+  "screenshots": [
+    "wind-map-zh.png",
+    "wind-map-en.png",
+    "wind-map-controls.png",
+    "wind-map-change-motion.png",
+    "wind-map-change-reduced.png"
+  ]
+}
