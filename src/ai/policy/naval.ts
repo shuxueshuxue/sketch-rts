@@ -866,12 +866,14 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         return undefined;
     if (localExpansionAvailable(snapshot, owner, options)) return undefined;
     const ownedHalls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
+    const memory = navalMemory(options);
+    const settling = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return");
     const localGold = snapshot.resources.filter(mine => mine.amount > 0 && ownedHalls.some(hall => sameGround(map, hall, mine) && distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((n, mine) => n + mine.amount, 0);
-    if (ownedHalls.length < 2 && localGold > 1800 && playerState(snapshot, owner).supplyUsed < 20) return undefined;
+    // Population gates a new expedition; casualties do not cancel a colony already loading or sailing.
+    if (!settling && ownedHalls.length < 2 && localGold > 1800 && playerState(snapshot, owner).supplyUsed < 20) return undefined;
     const income = units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < GOLD_MINE_RULES.baseRange)));
     if (!income && playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost)
         return undefined;
-    const memory = navalMemory(options);
     let known = memory.island;
     const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (known?.plan) {
