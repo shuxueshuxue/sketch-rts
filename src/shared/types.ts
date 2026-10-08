@@ -354,7 +354,8 @@ export type OwnerNumberMap = Record<Owner, number> & {
   neutral: number;
 };
 
-export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9";
+export type BootstrapAiVersion = "v9_archer" | "v9_summoner" | "v9_knight";
+export type AiScriptVersion = "v1" | "v2" | "v2-prod" | "v3" | "v3-grove" | "v3-ember" | "v4-tr" | "v5" | "v6" | "v7" | "v8" | "v9" | BootstrapAiVersion;
 
 // A seeded layout generated for the game instead of the map id's own (see @@@generated-map).
 export type GeneratedLayoutKind = "ring" | "sides";

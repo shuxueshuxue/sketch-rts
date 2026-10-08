@@ -2,6 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
+import { isBootstrapVersion, planBootstrapCommands } from "./bootstrap_1/policy";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -42,6 +43,9 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
+  if (isBootstrapVersion(version)) {
+    return planBootstrapCommands(snapshot, owner, version, { ...policyOptions, policyMode, disabledBehaviors, memory }).map(entry => ({playerId:owner, ...(request.source !== undefined ? {source:request.source} : {}), scriptId:entry.scriptId, command:entry.command}));
+  }
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.
   if (version === "v2-prod") {
     if (request.scripts || request.scriptIds) throw new Error("v2-prod frozen planner does not accept live script overrides");
@@ -89,7 +93,7 @@ function scriptsForRequest(request: AiOwnerPlannerRequest, version: AiScriptVers
 }
 
 function liveScriptsForVersion(version: AiScriptVersion): AiScript[] | undefined {
-  if (version === "v2-prod") return undefined;
+  if (version === "v2-prod" || isBootstrapVersion(version)) return undefined;
   return AI_SCRIPT_VERSIONS[version];
 }
 

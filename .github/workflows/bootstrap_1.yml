@@ -1,0 +1,52 @@
+name: bootstrap_1
+
+on:
+  push:
+    branches: [bootstrap_1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bootstrap_1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frozen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx vitest run src/ai/bootstrap_1/benchmark.test.ts
+      - run: node --import tsx scripts/bootstrap_1-freeze.ts
+  matrix:
+    needs: frozen
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        map: [sapphireArchipelago, grandEstuary, brokenSea, templeSpring, turtleLake, elderwood, ringwater, loneMarket, reedwater, veiledHill, greystonePass, pineshade, gullIsland, stillwater, twoShores]
+        subject: [v9_archer, v9_summoner, v9_knight]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Play every rival group, race and side
+        run: node --import tsx scripts/bootstrap_1.ts --maps '${{ matrix.map }}' --subjects '${{ matrix.subject }}' --out .playtest/bootstrap_1/report.json
+      - name: Save complete match evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap_1-${{ matrix.map }}-${{ matrix.subject }}
+          path: .playtest/bootstrap_1/
+          include-hidden-files: true
+          retention-days: 14

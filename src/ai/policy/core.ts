@@ -1,4 +1,6 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
+import { isBootstrapVersion, planBootstrapCommands } from "../bootstrap_1/policy";
+import { createAiPolicyMemory } from "../memory";
 import { engineeringWant } from "./engineering";
 import { planCombatReadiness, readinessUnitIds } from "./combat-readiness";
 import { planAllySupport, supportUnitIds } from "./ally-support";
@@ -336,13 +338,14 @@ export const AI_SCRIPT_VERSIONS = {
   v7: V7_AI_STACK,
   v8: V8_AI_STACK,
   v9: V9_AI_STACK,
-} satisfies Record<Exclude<AiScriptVersion, "v2-prod">, AiScript[]>;
+} satisfies Record<Exclude<AiScriptVersion, "v2-prod" | import("../../shared/types").BootstrapAiVersion>, AiScript[]>;
 
 export function planPresetAiCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): GameCommand[] {
   return planPresetAiCommandEntries(snapshot, owner, options).map((entry) => entry.command);
 }
 
 export function planPresetAiCommandEntries(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions = {}): AiCommandEntry[] {
+  if (options.version && isBootstrapVersion(options.version)) return planBootstrapCommands(snapshot, owner, options.version, { ...options, memory: options.memory ?? createAiPolicyMemory() });
   const version = livePresetPolicyVersion(options.version ?? "v1");
   return planAiCommandEntriesFromScripts(snapshot, owner, AI_SCRIPT_VERSIONS[version], { ...options, version: livePolicyBehaviorVersion(version), requestedVersion: version });
 }
@@ -367,7 +370,7 @@ function groupAttackMoveMinimum(scriptId: string, command: Extract<GameCommand, 
   return 1;
 }
 
-function livePresetPolicyVersion(version: AiScriptVersion): Exclude<AiScriptVersion, "v2-prod"> {
+function livePresetPolicyVersion(version: Exclude<AiScriptVersion, import("../../shared/types").BootstrapAiVersion>): Exclude<AiScriptVersion, "v2-prod" | import("../../shared/types").BootstrapAiVersion> {
   if (version === "v2-prod") throw new Error("v2-prod frozen baseline must be planned through planner context");
   return version;
 }
