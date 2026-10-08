@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: bootstrap_1-candidate-${{ github.ref }}
+  group: bootstrap_1-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [candidate]
+        mode: [baseline, candidate]
         map: [sapphireArchipelago, grandEstuary, brokenSea, templeSpring, turtleLake, elderwood, ringwater, loneMarket, reedwater, veiledHill, greystonePass, pineshade, gullIsland, stillwater, twoShores]
         subject: [v9_archer, v9_summoner, v9_knight]
     steps:

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { MAP_POOL } from '../../shared/map-pool';
 import { createGame } from '../../shared/sim';
-import { terrainBlocksPlacement } from '../../shared/build-placement';
+import { resourceBlocksPlacement, terrainBlocksPlacement } from '../../shared/build-placement';
 import { requiredSupplyCap } from '../../shared/catalog';
 import { bootstrapGame, bootstrapMatches, BOOTSTRAP_OPPONENTS } from './benchmark';
 import { BOOTSTRAP_DOCTRINES } from './policy';
@@ -28,6 +28,7 @@ describe('bootstrap_1 acceptance matrix',()=>{
         const halls=game.buildings.filter(building=>building.owner===owner);
         expect(halls).toHaveLength(1);
         expect(terrainBlocksPlacement(game.map,'townHall',halls[0]!)).toBe(false);
+        expect(game.resources.some(resource=>resourceBlocksPlacement(game.map,'townHall',halls[0]!,resource))).toBe(false);
         expect(game.units.filter(unit=>unit.owner===owner&&unit.kind==='worker')).toHaveLength(3);
         expect(game.players[owner]!.gold).toBe(500);
       }
