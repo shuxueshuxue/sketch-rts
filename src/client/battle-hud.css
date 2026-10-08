@@ -14,19 +14,19 @@
   --hud-button-gap:3px;
   --hud-dock-padding:5px;
   --hud-dock-frame:7px;
-  --hud-dock-width:calc(6 * var(--hud-button-width) + 5 * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame));
+  --hud-dock-width:calc(8 * var(--hud-button-width) + 7 * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame));
   --hud-command-height:calc(2 * var(--hud-button-height) + var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame));
   --hud-item-rows:1;
   position:absolute; left:16px; bottom:16px;
   display:grid; grid-template-columns:var(--hud-card-width) minmax(0,max-content); align-items:end;
-  gap:6px 10px; width:fit-content; max-width:min(605px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
+  gap:6px 10px; width:fit-content; max-width:min(715px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
   color:var(--battle-ink); font-family:var(--font-ui); font-variant-numeric:tabular-nums;
 }
 .control-deck,.control-deck * { box-sizing:border-box; }
 .control-deck > div { box-sizing:border-box; min-width:0; }
-.hud-actions { grid-column:2; grid-row:1; display:flex; flex-direction:column-reverse; align-items:flex-start; align-self:end; gap:6px; width:var(--hud-dock-width); max-width:100%; min-height:0; }
+.hud-actions { grid-column:2; grid-row:1; display:grid; grid-template-rows:max-content minmax(var(--hud-command-height),max-content); align-content:end; align-self:end; justify-items:start; gap:0; width:var(--hud-dock-width); max-width:100%; }
 /* A unit keeps its inventory space when a subpage temporarily hides its items. */
-.hud-actions[data-has-items] { min-height:calc(var(--hud-command-height) + var(--hud-item-rows) * 42px + (var(--hud-item-rows) - 1) * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame) + 6px); }
+.hud-actions[data-has-items] { gap:6px; min-height:calc(var(--hud-command-height) + var(--hud-item-rows) * 42px + (var(--hud-item-rows) - 1) * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame) + 6px); }
 .selection-chip {
   grid-column:1; grid-row:1; padding:8px;
   background:var(--battle-surface); border:var(--hud-dock-frame) solid var(--battle-edge); border-radius:8px;
@@ -73,18 +73,18 @@
 .hud-inspection-name,.hud-inspection-detail { display:block; font-size:11px; line-height:1.5; }
 .hud-inspection-detail { color:var(--battle-muted); font-size:10px; }
 .command-dock,.item-dock {
-  /* Bounded palettes wrap at six columns; inventory groups shrink to their content. */
+  /* Palettes wrap at eight columns and shrink to their visible content. */
   display:flex; flex-wrap:wrap; align-content:flex-end; gap:var(--hud-button-gap); justify-self:start;
   width:fit-content; max-width:min(var(--hud-dock-width),100%); padding:var(--hud-dock-padding);
   background:var(--battle-surface); border:var(--hud-dock-frame) solid var(--battle-edge); border-radius:8px;
   box-shadow:0 4px 18px #0c161a38; overflow-x:hidden; overflow-y:auto;
 }
 .command-dock {
-  /* Keep the main page and its palettes in the same two-row space. Items grow above it. */
-  width:var(--hud-dock-width);
-  height:var(--hud-command-height);
-  max-height:min(250px,45dvh); flex-shrink:0; align-content:safe flex-end;
+  /* Reserve room in the transparent layout, while the visible frame grows up from the bottom. */
+  grid-row:2; align-self:end; flex-wrap:wrap-reverse;
+  max-height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
+.item-dock { grid-row:1; }
 .command-button,.item-button {
   position:relative; flex:0 0 var(--hud-button-width); width:var(--hud-button-width); height:var(--hud-button-height); padding:0;
   border:1px solid transparent; border-radius:5px; background:#d3e1e608;
@@ -220,7 +220,6 @@
   .control-deck { --hud-button-width:46px; --hud-button-height:50px; grid-template-columns:minmax(0,1fr); min-width:min(calc(var(--hud-card-width) + 24px),calc(100vw - 210px)); max-width:min(calc(var(--hud-dock-width) + 24px),calc(100vw - 210px)); left:8px; bottom:8px; }
   .selection-chip { grid-row:1; width:100%; }
   .hud-actions { grid-column:1; grid-row:2; }
-  .command-dock { max-height:min(230px,45dvh); }
   .hud-subject { grid-template-columns:72px minmax(0,1fr); min-height:72px; }
   .hud-subject-art { width:72px; height:72px; }
   .hud-roster { max-height:74px; }
