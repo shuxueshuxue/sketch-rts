@@ -1,0 +1,81 @@
+{
+  "method": "Compiled and minified Node ESM bundle of actual shared simulation; fixed production brokenSea terrain and prepared navigation masks; 20 transport ships on distinct eastbound voyages; 2.5s warmup, then 10s pre-change; tick set to 9599 for next step; 10s post-change. Three timing trials run sequentially without geometry audit. Separate identical trajectory audited every tick.",
+  "map": {
+    "id": "brokenSea",
+    "width": 6144,
+    "height": 6144,
+    "seed": "pool-brokenSea-1"
+  },
+  "ships": 20,
+  "activeRoutesAtChange": 20,
+  "boundaryMs": [
+    22.44801199999995,
+    28.67259399999989,
+    20.262454000000048
+  ],
+  "before10s": [
+    {
+      "count": 200,
+      "averageMs": 1.8612347849999977,
+      "p99Ms": 5.768413999999893,
+      "maxMs": 11.290715999999975,
+      "over50ms": 0,
+      "totalRouteChanges": 14
+    },
+    {
+      "count": 200,
+      "averageMs": 1.9617205049999984,
+      "p99Ms": 4.552989999999909,
+      "maxMs": 11.591090000000008,
+      "over50ms": 0,
+      "totalRouteChanges": 14
+    },
+    {
+      "count": 200,
+      "averageMs": 1.7633728749999913,
+      "p99Ms": 5.2143069999999625,
+      "maxMs": 11.16405599999996,
+      "over50ms": 0,
+      "totalRouteChanges": 14
+    }
+  ],
+  "after10s": [
+    {
+      "count": 200,
+      "averageMs": 1.3403476750000016,
+      "p99Ms": 2.6813949999999522,
+      "maxMs": 2.8588340000000017,
+      "over50ms": 0,
+      "totalRouteChanges": 0
+    },
+    {
+      "count": 200,
+      "averageMs": 1.4347123500000032,
+      "p99Ms": 2.7577909999999974,
+      "maxMs": 5.150921999999923,
+      "over50ms": 0,
+      "totalRouteChanges": 0
+    },
+    {
+      "count": 200,
+      "averageMs": 1.2408080299999973,
+      "p99Ms": 1.9454560000000356,
+      "maxMs": 2.1459579999999505,
+      "over50ms": 0,
+      "totalRouteChanges": 0
+    }
+  ],
+  "routeChangesAtBoundary": [
+    20,
+    20,
+    20
+  ],
+  "safety": {
+    "hullOutsideWater": 0,
+    "coastSweepFailures": 0,
+    "overlapDetections": 0,
+    "checkedTicks": 401,
+    "examples": []
+  },
+  "limits": "Controlled navigation scenario without AI planning, combat, passengers or renderer. This is not a crowded fleet/large battle guarantee; timings measured on this workspace machine. Preliminary unbundled tsx audit run had one unrelated-to-route-change 90.52ms late outlier; all compiled measurements remained below 50ms."
+}

@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
+import { minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap, windProbePoint } from "./minimap";
 
 describe("minimap input mapping", () => {
   const rect = { x: 100, y: 200, width: 200, height: 200 };
+
+  it('samples the cursor in world coordinates across the battlefield, minimap and UI', () => {
+    const view = { minimap: rect, world: { width: 4000, height: 3000 }, camera: { x: 900, y: 600 }, viewport: { width: 1200, height: 800 }, zoom: 2 };
+    expect(windProbePoint({ x: 600, y: 300 }, view)).toEqual({ x: 1200, y: 750 });
+    const atMinimap = windProbePoint({ x: 150, y: 250 }, view);
+    expect(atMinimap).toEqual({ x: 1000, y: 750 });
+    expect(windProbePoint(undefined, view, atMinimap)).toBe(atMinimap);
+    expect(windProbePoint(undefined, view)).toEqual({ x: 1200, y: 800 });
+    expect(windProbePoint({ x: 10000, y: 10000 }, view)).toEqual({ x: 4000, y: 3000 });
+  });
 
   it("starts camera dragging from any left click inside the minimap", () => {
     const viewport = { x: 120, y: 220, width: 40, height: 40 };

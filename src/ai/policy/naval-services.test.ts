@@ -9,6 +9,8 @@ import { boardUnit, syncDecks } from "../../shared/decks";
 import { seconds } from "../../shared/time";
 import { combatCapability } from "../../shared/combat-capabilities";
 import { installedWeapons } from "../../shared/ship-equipment";
+import { hullContact } from "../../shared/ship-geometry";
+import { hullFits } from "../../shared/ship-navigation";
 import { createAiPolicyMemory } from "../memory";
 import { navalServices } from "./naval-services";
 import { fleetStations } from "./fleet-formation";
@@ -49,7 +51,13 @@ describe("physical naval service tasks", () => {
       );
       for (const command of service.commands)
         issuePlayerCommand(game, "player", command);
-      for (let tick = 0; tick < seconds(35); tick++) stepGame(game);
+      // The final approach uses low-speed maneuver assistance before the worker crosses.
+      for (let tick = 0; tick < seconds(60) && target.hp <= before; tick++) {
+        stepGame(game);
+        expect(hullFits(game.map, source)).toBe(true);
+        expect(hullFits(game.map, target)).toBe(true);
+        expect(hullContact(source, target)?.overlap ?? 0).toBeLessThan(.1);
+      }
       expect(worker.deck?.shipId).toBe(target.id);
       expect(target.hp).toBeGreaterThan(before);
     });
