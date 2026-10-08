@@ -12,6 +12,7 @@ import { installedWeapons } from "../../shared/ship-equipment";
 import { createAiPolicyMemory } from "../memory";
 import { navalServices } from "./naval-services";
 import { fleetStations } from "./fleet-formation";
+import { createBuilding } from '../../shared/map';
 
 function sea() {
   const game = createGame("bareDuel", { aiPlayers: [] });
@@ -78,6 +79,26 @@ describe("physical naval service tasks", () => {
       expect(crew.deck?.shipId).toBe(prize.id);
     });
   }
+  it.each(['new', 'ongoing'] as const)('brings a held ship alongside its %s shore boarding task', task => {
+    const game = sea();
+    game.map.terrain!.cells = Array.from({ length: 100 }, () => '.'.repeat(25) + ',' + '~'.repeat(74)).join('');
+    game.buildings.push(createBuilding('dock', 'player', 'shipyard', 1000, 600, true));
+    const ship = game.spawnUnit('player', 'warship', 1250, 900);
+    game.spawnUnit('player', 'warship', 1800, 1500);
+    const workers = Array.from({ length: 7 }, (_, i) => game.spawnUnit('player', 'worker', 900, 750 + i * 40));
+    const engineer = workers[4]!;
+    ship.order = { type: 'hold', x: ship.x, y: ship.y };
+    if (task === 'ongoing') {
+      issuePlayerCommand(game, 'player', { type: 'board', unitIds: [engineer.id], transportId: ship.id });
+      for (let tick = 0; tick < seconds(5); tick++) stepGame(game);
+      expect(engineer.deck).toBeUndefined();
+      expect(ship.order.type).toBe('hold');
+    }
+    const services = navalServices(snapshotGame(game), 'player', { version: 'v8', memory: createAiPolicyMemory() });
+    for (const command of services.commands) issuePlayerCommand(game, 'player', command);
+    for (let tick = 0; tick < seconds(25); tick++) stepGame(game);
+    expect(engineer.deck?.shipId).toBe(ship.id);
+  });
   it("honors an explicit player attack on a hull being boarded", () => {
     const game = sea(),
       ship = game.spawnUnit("player", "warship", 900, 900),

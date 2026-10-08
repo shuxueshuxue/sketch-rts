@@ -70,6 +70,31 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
 }
 
 describe('shared dock outfitting', () => {
+  it('keeps an embarked colony sailing when casualties have lowered population below the opening gate', () => {
+    const game = islandGame();
+    game.buildings = game.buildings.filter(building => building.id !== 'hall-b');
+    game.resources = game.resources.filter(mine => mine.id !== 'natural');
+    game.buildings.push({ ...game.buildings[0]!, id: 'foe-hall', owner: 'enemy', ...at(5, 12) });
+    const boat = game.spawnUnit('player', 'transport', at(12, 9).x, at(12, 9).y);
+    expect(boardUnit(boat, game.units[0]!, game.units)).toBe(true);
+    stepGame(game);
+    const memory = createAiPolicyMemory();
+    memory.naval = {
+      island: { tick: game.tick, plan: { mineId: 'island', landing: at(19, 9) } },
+      ferries: { [boat.id]: { purpose: 'settle', targetId: 'island', from: at(9, 9), to: at(19, 9), phase: 'sailing',
+        crewIds: [], sinceTick: game.tick } },
+    };
+    const snapshot = snapshotGame(game);
+    expect(snapshot.players.player!.supplyUsed).toBeLessThan(20);
+    const commands = planNavalTactics(snapshot, 'player', { version: 'v8', memory });
+    expect(memory.naval.ferries![boat.id]!.phase).toBe('sailing');
+    expect(commands).toContainEqual({ type: 'unload', unitIds: [boat.id], ...at(19, 9) });
+    for (const command of commands) issuePlayerCommand(game, 'player', command);
+    const before = boat.x;
+    for (let tick = 0; tick < 40; tick++) stepGame(game);
+    expect(boat.x).toBeGreaterThan(before);
+  }, 15000);
+
   it('reconsiders its cached mine after an expedition stalls and returns', () => {
     const game = islandGame();
     const boat = game.spawnUnit('player', 'transport', at(12, 9).x, at(12, 9).y);
