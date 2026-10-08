@@ -11,8 +11,9 @@ import { bootstrapEconomy } from './economy';
 import { bootstrapPolicyContext } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 import { createBootstrapCommandPlanner } from '../../../scripts/bootstrap_1-planner';
+import { mineGuardUnitIds } from './mine-defense';
 
-function battlefield(miningRaid = 0) {
+function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
     .player('us', { race: 'ember', team: 'a' }).player('fa', { race: 'grove', team: 'b' }).player('fb', { race: 'grove', team: 'b' })
     .playerState('us', { gold: 450 }).townHall('us', 400, 620).goldMine('main', 688, 620, 4000)
@@ -26,6 +27,9 @@ function battlefield(miningRaid = 0) {
     .worker('us', 950 + index * 35, 2000, { id: `natural-worker-${index}` });
   for (let index = 0; index < 6; index++) scene = scene.unit('us', 'pyreCaller', 1140 - Math.floor(index / 3) * 40,
     550 + index % 3 * 50, { id: `caller-${index}` });
+  for (let index = 0; index < support; index++) scene = scene.unit('us', 'ashHexer', 1100, 700 + index * 40, { id: `support-${index}` });
+  for (let index = 0; index < mineCrew; index++) scene = scene.unit('us', 'ashWarden', 620 + index * 35, 750, { id: `mine-guard-${index}` });
+  if (mineCrew > 0) scene = scene.tower('us', 600, 650);
   for (const [side, owner] of ['fa', 'fb'].entries()) {
     for (let index = 0; index < 4; index++) scene = scene.unit(owner, 'archer', 1770 + side * 50, 470 + index * 70);
     for (let index = 0; index < 3; index++) scene = scene.unit(owner, 'footman', 1630 + side * 60, 510 + index * 70);
@@ -43,6 +47,45 @@ function battlefield(miningRaid = 0) {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it('waits when committing the mine guard would be necessary to cover the assault’s actual opposition', () => {
+    const { game, context } = battlefield(0, 0, 4);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit').map(unit => unit.id) });
+    for (let tick = 0; tick < 800; tick++) stepGame(game);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    for (let index = 0; index < 3; index++) game.spawnUnit('fb', 'footman', 380 + index * 30, 990);
+    const snapshot = snapshotGame(game), guards = mineGuardUnitIds(snapshot, 'us', context());
+    expect(guards.size).toBe(3);
+    expect(towerRushGoal(snapshot, 'us', context())).toBeUndefined();
+    // Without the mine raid these three are available and the normal priced advance can start.
+    game.units = game.units.filter(unit => !(unit.owner === 'fb' && unit.kind === 'footman' && unit.y === 990));
+    expect(towerRushGoal(snapshotGame(game), 'us', context())).toBeDefined();
+  });
+  it('keeps support casters under the backline commander during the tower host’s advance', () => {
+    const { game, context, memory } = battlefield(0, 2);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit').map(unit => unit.id) });
+    for (let tick = 0; tick < 800; tick++) stepGame(game);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    const goal = towerRushGoal(snapshotGame(game), 'us', context())!;
+    issuePlayerCommand(game, 'us', goal.issue(new Set())!);
+    const postOrders: string[] = [];
+    for (let tick = 0; tick < 300; tick++) {
+      if (tick % 15 === 0) for (const entry of runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
+        [towerRushAbilities, summonerTowerRush, AI_SCRIPT_LIBRARY.v6Backline, AI_SCRIPT_LIBRARY.v6General], context())) {
+        const command = entry.command;
+        if ('unitIds' in command && command.unitIds.some(id => id.startsWith('support-'))) {
+          expect(entry.scriptId).not.toBe(summonerTowerRush.id);
+          if (entry.scriptId === 'v6Backline') postOrders.push(...command.unitIds);
+        }
+        issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(memory.jobs.some(job => job.id === summonerTowerRush.id)).toBe(true);
+    expect(new Set(postOrders)).toEqual(new Set(['support-0', 'support-1']));
+    expect(game.units.filter(unit => unit.id.startsWith('support-'))).toHaveLength(2);
+  });
   it.each([1, 3])('compares %i real mining attackers with local defenders before releasing the assault', attackers => {
     const { game, context, memory } = battlefield(attackers);
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);

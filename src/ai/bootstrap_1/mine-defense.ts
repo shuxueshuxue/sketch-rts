@@ -49,7 +49,7 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
 
 export const mineDefense: AiScript = {
   id: 'mineDefense', phase: 'tactics',
-  claimsUnits: (snapshot, owner, options) => new Set(detachment(snapshot, owner, options)?.crew.map(unit => unit.id)),
+  claimsUnits: mineGuardUnitIds,
   run(snapshot, owner, options): GameCommand[] {
     const guard = detachment(snapshot, owner, options);
     if (!guard) return [];
@@ -71,6 +71,10 @@ export const mineDefense: AiScript = {
       { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [])];
   },
 };
+
+export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return new Set(detachment(snapshot, owner, options)?.crew.map(unit => unit.id));
+}
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const intel = readV6Intel(snapshot, owner, options), guard = detachment(snapshot, owner, options);

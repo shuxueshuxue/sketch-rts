@@ -10,6 +10,8 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import type { rankV6Goals } from '../policy/v6/economy';
 import { combatRating, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planAbilityCommands } from '../policy/spell-tactics';
+import { isBacklineKind } from '../policy/v6/backline';
+import { mineGuardUnitIds } from './mine-defense';
 
 const JOB = 'summonerTowerRush';
 const HELPER = 'summonerTowerRushHelper';
@@ -17,7 +19,7 @@ const SCREEN = 110;
 
 type Rush = {
   hall: Building;
-  army: Unit[];
+  fighters: Unit[];
   casters: Unit[];
   site: Point;
   advance: Point;
@@ -78,7 +80,8 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const halls = enemyHalls.filter(building => sameGround(snapshot.map, center, building) && distance(center, building) <= 1600);
   const target = halls.find(hall => job?.kind === hall.id) ?? [...halls].sort((a, b) => distance(center, a) - distance(center, b))[0];
   if (!target) { endRush(options); return undefined; }
-  const army = own.filter(unit => distance(unit, center) <= 800);
+  const guards = mineGuardUnitIds(snapshot, owner, options);
+  const army = own.filter(unit => !guards.has(unit.id) && distance(unit, center) <= 800);
   const opposition = combatPower(foes.filter(unit => distance(unit, center) <= 1100 || distance(unit, target) <= 1100))
     + snapshot.buildings.filter(building => building.complete && building.attackDamage > 0
       && isOpponentOwner(snapshot, owner, building.owner, options) && distance(building, target) <= 800).length * TOWER_STRENGTH;
@@ -124,14 +127,15 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
     if (helperJob && builders[0]) { helperJob.kind = builders[0].id; helperJob.updatedTick = snapshot.tick; }
     else if (builders[0]) options.memory.jobs.push({ id: HELPER, kind: builders[0].id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
   } else options.memory.jobs = options.memory.jobs.filter(job => job.id !== HELPER);
-  return { hall: target, army, casters, site, advance, builders, rising, pending: pending !== undefined, press };
+  const fighters = army.filter(unit => !isBacklineKind(unit) && !UNIT_DEFS[unit.kind].weapon);
+  return { hall: target, fighters, casters, site, advance, builders, rising, pending: pending !== undefined, press };
 }
 
 export const summonerTowerRush: AiScript = {
   id: JOB, phase: 'tactics',
   claimsUnits(snapshot, owner, options) {
     const plan = rush(snapshot, owner, options);
-    return new Set(plan ? [...plan.casters.map(unit => unit.id), ...plan.army.filter(unit => !UNIT_DEFS[unit.kind].weapon).map(unit => unit.id),
+    return new Set(plan ? [...plan.casters.map(unit => unit.id), ...plan.fighters.map(unit => unit.id),
       ...(plan.rising || plan.pending ? plan.builders.slice(0, 1).map(worker => worker.id) : [])] : []);
   },
   run(snapshot, owner, options) {
@@ -142,7 +146,7 @@ export const summonerTowerRush: AiScript = {
     const post = { x: plan.advance.x + (plan.advance.x - plan.hall.x) * SCREEN / gap,
       y: plan.advance.y + (plan.advance.y - plan.hall.y) * SCREEN / gap };
     for (const caster of plan.casters) if (distance(caster, post) > 70) commands.push({ type: 'move', unitIds: [caster.id], ...post });
-    for (const soldier of plan.army.filter(unit => !plan.casters.includes(unit) && !UNIT_DEFS[unit.kind].weapon)) {
+    for (const soldier of plan.fighters) {
       if (soldier.order.type !== 'attackMove' || distance(soldier.order, plan.advance) > 70) {
         commands.push({ type: 'attackMove', unitIds: [soldier.id], ...plan.advance });
       }
