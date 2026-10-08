@@ -37,12 +37,11 @@
     "src/ai/policy/spell-tactics.ts": "f1f45e0ec1eef59efbebfc52dcd76e6b4ee0e55d0cebd77246802a29ec54650e",
     "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
     "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
-    "src/ai/policy/training-choice.ts": "893bc31bb7d638b514b3dda4c86a12cdb1fba07861422470a6abe3ac23050168",
+    "src/ai/policy/training-choice.ts": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
     "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
     "src/ai/policy/v6/backline.ts": "f5145498df749370d13c9bd64caf9a30f4767069ac9c5a96321a0fa618d382be",
     "src/ai/policy/v6/closeout.ts": "0937ce8a696c4cc5882667996e7f79598edd221b31c73f3d69411b3f97e08589",
     "src/ai/policy/v6/doctrine.ts": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
-    "src/ai/policy/v6/economy.ts": "aad7a690594c675650ff3ae6f2e94b1eb358d65efeb059c0f42c4935d55fa6e2",
     "src/ai/policy/v6/general.ts": "fa534a8a63385178baac864a62951955e81471a4b112fe375bc7ef13cec783f4",
     "src/ai/policy/v6/intel.ts": "dbaaee2cc9d1e6cfdd8a2ba587eb3b38edb005c1de5d9a6f7744156b6e491565",
     "src/ai/policy/v6/memory.ts": "774bd308b80e2df4172851bf515118ba64e209823c37b3a9356a7de5f25c7005",
@@ -65,7 +64,16 @@
   "integrationFiles": [
     "src/ai/policy/core.ts",
     "src/ai/policy/types.ts",
-    "src/ai/policy/v6/select.ts"
+    "src/ai/policy/v6/select.ts",
+    "src/ai/policy/v6/economy.ts"
   ],
-  "integrationRule": "Only new doctrine injection and version registration; old-version command and simulation digests must remain identical."
+  "integrationRule": "Only new doctrine injection and version registration; old-version command and simulation digests must remain identical.",
+  "approvedCorrections": [
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "before": "893bc31bb7d638b514b3dda4c86a12cdb1fba07861422470a6abe3ac23050168",
+      "after": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
+      "reason": "User approved correcting Ember workshop golem selection to catapult, then refreezing; all other historical choices remain unchanged."
+    }
+  ]
 }
