@@ -25,7 +25,7 @@ import { buildPlacementCommand, type BuildPlacement, type PlacementRefusal } fro
 import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footprint-view";
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, type ChargeWindow } from "./charge-targeting";
-import { castCommandForSelection, readyAbilityCasters } from "./ability-targeting";
+import { abilityUnitTargetMatches, castCommandForSelection, preferredAbilityCaster, readyAbilityCasters } from "./ability-targeting";
 import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
 import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
@@ -71,7 +71,11 @@ import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
+import { abilityTooltip, buildingTooltip, damageProfileLabel, formatTooltipDataset, itemTooltip, unitClassLabel, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
+import { unitAttackDamageProfile } from "../shared/damage";
+import { unitClassOf } from "../shared/unit-targeting";
+import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
+import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { playerDisplayName } from "./player-name";
@@ -245,7 +249,9 @@ let pendingRoomConfiguration = defaultRoomConfiguration(chosenMapId);
 let routeRequest = 0;
 let commandMode: CommandMode | undefined;
 // The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
-let openPalette: "build" | "stance" | undefined;
+let openPalette: "build" | "stance" | "veteran" | undefined;
+// Hide a submitted choice until its command frame lands; do not offer the same soldier twice in a group.
+const pendingVeteranChoices = new Map<string, number>();
 let pointerLockGateKind: "guide" | "required" = "guide";
 const keys = new Set<string>();
 const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.meta.env), {
@@ -261,6 +267,12 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
 const baseGameAdapter = deploymentRuntime.initialAdapter();
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
+  createVeteranLearnButton(),
+  ...[0, 1, 2].map(createVeteranChoiceButton),
+  createVeteranPassiveButton(),
+  createCommandButton(i18n.locale === "zh" ? "下位老兵" : "Next veteran", "⇄", "n",
+    () => booleanCommandState(!commandMode && (openPalette === "veteran" || !openPalette && !selectedCampId) && Boolean(nextVeteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
+    focusNextVeteranStudent, () => ({ title: i18n.locale === "zh" ? "下位待学习老兵" : "Next veteran awaiting a skill", body: i18n.locale === "zh" ? "在当前选中的同兵种单位中，切换到下一名尚未学习技能的三星老兵。" : "Focus the next selected soldier of this type who has reached three stars and has not learned a skill.", stats: [], requirements: [], hotkey: "N" })),
   createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(canEquip)),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
   createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit)))),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
   createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
@@ -439,6 +451,121 @@ export async function initializeVisuals(){await prepareHome();await openRouteFro
 async function ensureMatchResources(){
   if(!matchAssets){visualsReady=false;matchAssets=resourcePanel().run('match',resourceText('读取遭遇战模型与作战资源','Loading skirmish models and combat resources'),async()=>{await worldPresentation.prepare(menuBackdrop.prepare(performance.now()),'match');await soundboard.prepareMatch();}).catch(error=>{matchAssets=undefined;throw error;}).finally(()=>{visualsReady=true;});}
   await matchAssets;
+}
+
+function pendingVeteranIds() {
+  return new Set(pendingVeteranChoices.keys());
+}
+
+function focusedVeteranStudent() {
+  const unit = focusedPlayerUnits()[0];
+  return unit && canLearnVeteranSkill(unit) && !pendingVeteranChoices.has(unit.id) ? unit : undefined;
+}
+
+function veteranUnitCaption(unit: Unit) {
+  const peers = veteranPeers(selectedPlayerUnits(), unit.id);
+  const ordinal = peers.length > 1 ? ` ${peers.findIndex(peer => peer.id === unit.id) + 1}/${peers.length}` : "";
+  return `${labelKind(unit.kind)}${ordinal} · ${"★".repeat(Math.min(3, unit.level))}`;
+}
+
+function createVeteranLearnButton() {
+  const button = createCommandButton(i18n.locale === "zh" ? "学习技能" : "Learn skill", "+", "p",
+    () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
+    openVeteranPalette, () => {
+      const student = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+      return { title: i18n.locale === "zh" ? "三星老兵：学习技能" : "Three-star veteran: learn a skill",
+        body: i18n.locale === "zh" ? "从这名老兵的三个固定候选技能中选择一个。关闭面板会保留候选，学习后不能重选。" : "Choose one of this soldier's three fixed skills. Closing keeps these choices; learning is permanent.",
+        stats: student ? [veteranUnitCaption(student)] : [], requirements: [], hotkey: "P" };
+    });
+  button.element.dataset.veteranLearn = "true";
+  return button;
+}
+
+function veteranChoiceTooltip(index: number): GameplayTooltip {
+  const unit = focusedVeteranStudent();
+  const skill = unit?.veteranSkillChoices?.[index];
+  if (!skill || !unit) return { title: i18n.locale === "zh" ? "候选技能" : "Skill choice", body: "", stats: [], requirements: [] };
+  const tooltip = veteranSkillTooltip(skill, i18n, ["q", "w", "e"][index]);
+  return { ...tooltip, stats: [veteranUnitCaption(unit), ...tooltip.stats],
+    requirements: [i18n.locale === "zh" ? "只为这名老兵学习；选择后不能更换。" : "Learn for this soldier only. This choice is permanent."] };
+}
+
+function createVeteranChoiceButton(index: number) {
+  const button = createCommandButton(i18n.locale === "zh" ? "候选技能" : "Skill choice", "★", ["q", "w", "e"][index]!,
+    () => booleanCommandState(!commandMode && openPalette === "veteran" && Boolean(focusedVeteranStudent()?.veteranSkillChoices?.[index])),
+    () => learnVeteranChoice(index), () => veteranChoiceTooltip(index));
+  button.element.dataset.veteranChoice = String(index);
+  return button;
+}
+
+function createVeteranPassiveButton() {
+  const button = createCommandButton(i18n.locale === "zh" ? "老兵技能" : "Veteran skill", "★", "",
+    () => {
+      const skill = focusedPlayerUnits()[0]?.veteranSkill;
+      return booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(skill && VETERAN_SKILLS[skill].effect.type !== "active"));
+    }, () => {
+      const skill = focusedPlayerUnits()[0]?.veteranSkill;
+      if (skill) statusLabel.textContent = VETERAN_SKILLS[skill].description[i18n.locale];
+    }, () => {
+      const skill = focusedPlayerUnits()[0]?.veteranSkill;
+      return skill ? veteranSkillTooltip(skill, i18n) : { title: "", body: "", stats: [], requirements: [] };
+    });
+  button.element.dataset.veteranPassive = "true";
+  return button;
+}
+
+function openVeteranPalette() {
+  if (!syncBeforeCommandProjection()) return;
+  const unit = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+  if (!unit) return;
+  focusedSelectionId = unit.id;
+  openPalette = "veteran";
+  statusLabel.textContent = `${veteranUnitCaption(unit)} · ${i18n.locale === "zh" ? "选择一个技能（Q / W / E）；Esc 返回" : "Choose one skill (Q / W / E); Esc to return"}`;
+  updateHud();
+}
+
+function focusNextVeteranStudent() {
+  if (!syncBeforeCommandProjection()) return;
+  const next = nextVeteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
+  if (!next) return;
+  focusedSelectionId = next.id;
+  statusLabel.textContent = veteranUnitCaption(next);
+  updateHud();
+}
+
+function learnVeteranChoice(index: number) {
+  // Capture what the player clicked before an input-time snapshot refresh can change the focus.
+  const before = focusedVeteranStudent();
+  const skill = before?.veteranSkillChoices?.[index];
+  if (!before || !skill || !syncBeforeCommandProjection()) return;
+  const unit = selectedPlayerUnits().find(candidate => candidate.id === before.id);
+  const command = learnVeteranSkillCommand(unit, skill);
+  if (!command || !sendCommand(command)) return;
+  pendingVeteranChoices.set(before.id, snapshot!.tick);
+  const next = nextVeteranStudent(selectedPlayerUnits(), before.id, pendingVeteranIds());
+  focusedSelectionId = next?.id ?? before.id;
+  openPalette = next ? "veteran" : undefined;
+  statusLabel.textContent = `${veteranUnitCaption(before)} · ${VETERAN_SKILLS[skill].name[i18n.locale]}${next ? ` · ${i18n.locale === "zh" ? "下一位：" : "Next: "}${veteranUnitCaption(next)}` : ""}`;
+  updateHud();
+}
+
+function renderVeteranCommand(button: CommandButton) {
+  const index = button.element.dataset.veteranChoice;
+  const skill = index !== undefined ? focusedVeteranStudent()?.veteranSkillChoices?.[Number(index)]
+    : button.element.dataset.veteranPassive ? focusedPlayerUnits()[0]?.veteranSkill : undefined;
+  if (!skill) return;
+  const definition = VETERAN_SKILLS[skill];
+  const label = definition.name[i18n.locale];
+  button.element.querySelector(".command-label")!.textContent = label;
+  button.element.dataset.commandLabel = label;
+  button.element.setAttribute("aria-label", `${label}${button.hotkey ? ` (${button.hotkey.toUpperCase()})` : ""}`);
+  if (button.element.dataset.veteranSkill !== skill) {
+    button.element.dataset.veteranSkill = skill;
+    const icon = button.element.querySelector(".command-icon")!;
+    const markup = commandIconMarkup(definition.icon);
+    if (markup) icon.innerHTML = markup;
+    else icon.textContent = definition.icon;
+  }
 }
 
 function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
@@ -1855,7 +1982,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
 function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
   if (command.type === "mine") return t("status.mineOrdered");
   if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
-  if (command.type === "repairShip" && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
+  if ((command.type === "repairUnit" || command.type === "repairShip") && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
   if (command.type === "board") return t("status.boardOrdered");
   if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
   if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
@@ -2073,15 +2200,20 @@ function beginBuildPlacement(buildingKind: BuildingKind) {
 }
 
 function beginSpellTargeting(ability: AbilityKind) {
+  if (!syncBeforeCommandProjection()) return;
   const state = abilityButtonState(ability);
   if (!state.enabled) {
     showCommandUnavailable(state, t("status.spellNeedsCaster", { ability: labelKind(ability) }));
     return;
   }
-  const ready = readyAbilityCasters(selectedPlayerUnits(), ability, activeGameAdapter.pendingCasts?.());
-  const caster = ready.find(unit => unit.id === focusedSelectionId) ?? ready[0];
+  const caster = preferredAbilityCaster(selectedPlayerUnits(), ability, focusedSelectionId, activeGameAdapter.pendingCasts?.());
   if (!caster) {
     showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
+    return;
+  }
+  if (ABILITY_DEFS[ability].behavior === "veteran") {
+    if (sendCommand({ type: "cast", unitId: caster.id, ability })) statusLabel.textContent = `${veteranUnitCaption(caster)} · ${labelKind(ability)}`;
+    updateHud();
     return;
   }
   commandMode = { type: "spell", targeting: { casterId: caster.id, ability } };
@@ -2152,9 +2284,9 @@ function issueSpellAt(point: Point, queued = false) {
   const def = ABILITY_DEFS[ability];
   const pointTarget = def.behavior === "summon" || (def.behavior === "weapon" && def.target === "point");
   const target = pointTarget ? undefined : def.behavior === "weapon"
-    ? (hitUnit(world, unit => ["enemy", "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)))
+    ? (hitUnit(world, unit => abilityUnitTargetMatches(snapshot!, ability, unit) && ["enemy", "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)))
       ?? buildingAt(snapshot.buildings, world, building => relationTo(snapshot!, localPlayerId, building.owner) === "enemy"))
-    : hitUnit(world, unit => [def.behavior === "heal" ? "own" : "enemy", def.behavior === "heal" ? "ally" : "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
+    : hitUnit(world, unit => abilityUnitTargetMatches(snapshot!, ability, unit) && [def.behavior === "heal" ? "own" : "enemy", def.behavior === "heal" ? "ally" : "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
   if (!pointTarget && !target) {
     showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
     return;
@@ -2267,7 +2399,9 @@ function closePalette(message?: string) {
 }
 
 function closeCommandPalette() {
-  closePalette(t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
+  closePalette(openPalette === "veteran"
+    ? i18n.locale === "zh" ? "已返回单位指令；候选技能已保留。" : "Returned to unit commands; skill choices are kept."
+    : t(openPalette === "build" ? "status.buildMenuClosed" : "status.stanceMenuClosed"));
 }
 
 function train(unitKind: TrainableUnitKind) {
@@ -2543,6 +2677,7 @@ function pruneSelection() {
   }
   if (openPalette === "build" && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) openPalette = undefined;
   if (openPalette === "stance" && stanceFighters(focusedPlayerUnits()).length === 0) openPalette = undefined;
+  if (openPalette === "veteran" && !focusedVeteranStudent()) openPalette = undefined;
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
@@ -2607,6 +2742,10 @@ function cycleFocusedSelection(direction: 1 | -1) {
 
 function updateHud() {
   if (!snapshot) return;
+  for (const [id, tick] of pendingVeteranChoices) {
+    const unit = snapshot.units.find(candidate => candidate.id === id);
+    if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
+  }
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
@@ -2614,6 +2753,10 @@ function updateHud() {
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
+  if (!groups.length || selectedShop()) {
+    const subject = selectionLabel.querySelector<HTMLElement>(".hud-subject");
+    if (subject) delete subject.dataset.tooltipTitle;
+  }
   if (selectedShop()) {
     const shop = selectedShop()!;
     const buyer = purchaseRecipient(shop);
@@ -2639,6 +2782,7 @@ function updateHud() {
   let visibleCount = 0;
   for (const button of commandButtons) {
     const state = button.state();
+    if (state.visible) renderVeteranCommand(button);
     if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
     if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     button.element.hidden = !state.visible;
@@ -2672,14 +2816,20 @@ function updateHud() {
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
   const focused = groups.find(group => group.focused) ?? groups[0]!;
-  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === focused.ids[0]);
+  const identityId = focused.ids.includes(focusedSelectionId ?? "") ? focusedSelectionId : focused.ids[0];
+  const entity = snapshot && [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === identityId);
   const total = groups.reduce((sum, group) => sum + group.count, 0);
   const owner = entity?.owner ?? localPlayerId;
   const identity: HudIdentity = {
-    key:focused.id,
-    name:labelAnyKind(focused.kind),
+    key:entity?.id ?? focused.id,
+    name:labelAnyKind(focused.kind) + (focused.count > 1 ? ` ${focused.ids.indexOf(entity?.id ?? focused.ids[0]!) + 1}/${focused.count}` : ""),
     caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
-    detail:entity && "attackDamage" in entity ? t("hud.attackValue", { damage:entity.attackDamage }) : t("hud.structure"),
+    detail:entity && "order" in entity ? [t("hud.attackValue", { damage:entity.attackDamage }),
+      unitClassLabel(unitClassOf(entity, snapshot!), i18n.locale),
+      damageProfileLabel(unitAttackDamageProfile(snapshot!, entity), i18n.locale),
+      entity.level > 0 ? "★".repeat(Math.min(3, entity.level)) : "",
+      entity.veteranSkill ? VETERAN_SKILLS[entity.veteranSkill].name[i18n.locale] : canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习技能 +" : "Skill available +" : "",
+    ].filter(Boolean).join(" · ") : t("hud.structure"),
     art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
   };
@@ -2704,6 +2854,10 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
       decorate: (button: HTMLButtonElement) => applyTooltip(button, { ...unitSelectionTooltip(passenger.kind, [passenger], snapshot!, i18n), title: t("hud.unloadPassenger", { name: labelKind(passenger.kind) }), requirements: [t("hud.unloadPassengerHint")] }),
     })),
   })));
+  const subject = selectionLabel.querySelector<HTMLElement>(".hud-subject");
+  if (subject && entity) applyTooltip(subject, "order" in entity
+    ? unitSelectionTooltip(entity.kind, [entity], snapshot!, i18n)
+    : buildingTooltip(entity.kind, undefined, i18n, snapshot?.players[entity.owner]?.race));
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -2989,8 +3143,9 @@ function drawSpellPreview() {
     return;
   }
   const behavior = ABILITY_DEFS[ability].behavior;
-  const color = behavior === "weapon" ? "#c6ae7b" : behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
-  const fill = behavior === "weapon" ? "rgba(198,174,123,0.08)" : behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
+  const invalidHealTarget = behavior === "heal" && snapshot && !hitUnit(screenToWorld(point), unit => abilityUnitTargetMatches(snapshot!, ability, unit) && ["own", "ally"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
+  const color = invalidHealTarget ? "#a85644" : behavior === "weapon" ? "#c6ae7b" : behavior === "heal" ? "#5d8b4c" : behavior === "summon" ? "#5f578f" : "#7f3a70";
+  const fill = invalidHealTarget ? "rgba(168, 86, 68, 0.08)" : behavior === "weapon" ? "rgba(198,174,123,0.08)" : behavior === "heal" ? "rgba(93, 139, 76, 0.08)" : behavior === "summon" ? "rgba(95, 87, 143, 0.08)" : "rgba(127, 58, 112, 0.08)";
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = fill;
@@ -3032,7 +3187,7 @@ const CHARGE_PREVIEW_INK = { band: "rgba(212, 180, 119, 0.12)", ring: "#b9861b",
 function drawChargePreview(point: Point, ability: AbilityKind, reach: ChargeWindow, preferredId: string) {
   const riders = readyAbilityCasters(selectedPlayerUnits(), ability, activeGameAdapter.pendingCasts?.());
   const world = screenToWorld(point);
-  const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
+  const target = hitUnit(world, (unit) => abilityUnitTargetMatches(snapshot!, ability, unit) && ["enemy", "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
   const rider = target ? chargeRiderFor(riders, target, reach, preferredId) : undefined;
   const lead = rider ?? riders.reduce<Unit | undefined>((best, candidate) => (!best || distance(candidate, world) < distance(best, world) ? candidate : best), undefined);
   ctx.save();

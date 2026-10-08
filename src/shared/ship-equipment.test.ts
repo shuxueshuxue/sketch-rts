@@ -175,6 +175,30 @@ describe('physical ship equipment', () => {
         expect(sideShots).toBeGreaterThan(0);
         expect(shipGunCanAim(ship, side, enemy)).toBe(true);
     });
+    it('plans a turn for a target inside veteran cannon range but outside the untrained battery range', () => {
+        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800);
+        const bow = shipMounts(ship).find(mount => mount.id === 'bow')!;
+        const target = { x: ship.x + bow.x + SHIP_WEAPONS.shipCannon.range * 1.05, y: ship.y };
+        ship.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+        expect(bestFiringHeading(game, ship, target)).toBe(Math.PI / 2);
+        ship.veteranSkill = 'veteranSiegeDrill';
+        const heading = bestFiringHeading(game, ship, target);
+        expect(Math.abs(heading)).toBeLessThan(Math.PI / 2);
+        ship.sailing.heading = heading;
+        const pivot = localToWorld(ship, bow);
+        expect(Math.hypot(target.x - pivot.x, target.y - pivot.y)).toBeGreaterThan(SHIP_WEAPONS.shipCannon.range);
+        expect(Math.hypot(target.x - pivot.x, target.y - pivot.y)).toBeLessThanOrEqual(SHIP_WEAPONS.shipCannon.range * 1.1 + 1e-7);
+        expect(shipGunCanAim(ship, installedWeapons(game, ship)[0]!, target)).toBe(true);
+    });
+    it('keeps veteran mortars subject to their original minimum range while planning turns', () => {
+        const game = match(), ship = game.spawnUnit('player', 'bombardShip', 900, 800);
+        ship.veteranSkill = 'veteranSiegeDrill';
+        ship.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+        const bow = shipMounts(ship).find(mount => mount.id === 'bow')!;
+        const centerDistance = SHIP_WEAPONS.shipMortar.weapon.minRange! - Math.hypot(bow.x, bow.y) - 1;
+        // This point remains inside minimum range under every possible hull rotation.
+        expect(bestFiringHeading(game, ship, { x: ship.x + centerDistance, y: ship.y })).toBe(Math.PI / 2);
+    });
     it('uses a close-range side gun instead of retreating because its bow mortar is inside minimum range',()=>{
         const game=match(),ship=game.spawnUnit('player','bombardShip',900,800),enemy=game.spawnUnit('enemy','footman',1010,800);
         enemy.hp=enemy.maxHp=1000;enemy.cooldown=9999;enemy.order={type:'hold',x:enemy.x,y:enemy.y};

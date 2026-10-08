@@ -2,6 +2,7 @@ import { abilityCooldown } from "../../../shared/ability-cooldowns";
 import { autocastEnabled } from "../../../shared/autocast";
 import { ABILITY_DEFS, hasSpell, UNIT_DEFS } from "../../../shared/catalog";
 import { canReach } from "../../../shared/naval";
+import { matchesUnitTarget } from "../../../shared/unit-targeting";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { enemyBuildings, enemyUnits, units } from "../snapshot";
 import { distance } from "../spatial";
@@ -42,7 +43,7 @@ export function planV8Charge(snapshot: GameSnapshot, owner: PlayerId, options: A
   if (auto.length > 0) commands.push({ type: "setAutocast", unitIds: auto.map((rider) => rider.id), ability: "charge", enabled: false });
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.kind === "defenseTower" && building.complete);
   const fighting = snapshot.units.filter((unit) => unit.owner === "neutral" && unit.hp > 0 && (unit.order.type === "attack" || (unit.order.type === "attackMove" && unit.order.targetId !== undefined)));
-  const foes = [...enemyUnits(snapshot, owner, options.teams), ...fighting].filter((unit) => unit.hp > 0 && unit.expiresTick === undefined);
+  const foes = [...enemyUnits(snapshot, owner, options.teams), ...fighting].filter((unit) => unit.hp > 0 && unit.expiresTick === undefined && matchesUnitTarget(unit, def.targets, snapshot));
   const taken = new Set(riders.flatMap((rider) => (rider.order.type === "charge" ? [rider.order.targetId] : [])));
   for (const rider of riders) {
     if (rider.order.type === "charge" || rider.order.type === "move" || abilityCooldown(rider, "charge") > 0) continue;

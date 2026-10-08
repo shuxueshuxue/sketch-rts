@@ -33,6 +33,37 @@ function rightClick(snapshot: GameSnapshot, selected: Unit[], at: { x: number; y
 }
 
 describe("right-click orders", () => {
+  it.each(["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun"] as const)("orders only workers to repair an own damaged %s", kind => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const worker = game.spawnUnit("player", "worker", 900, 900);
+    const soldier = game.spawnUnit("player", "footman", 930, 900);
+    const mechanical = game.spawnUnit("player", kind, 1000, 900);
+    mechanical.hp -= 30;
+    const snapshot = snapshotGame(game);
+    expect(targetCommand(snapshot, "player", [worker, soldier], { kind: "unit", unit: mechanical }, true)).toEqual({
+      type: "repairUnit", unitIds: [worker.id], targetId: mechanical.id, queued: true,
+    });
+    expect(targetCommand(snapshot, "player", [soldier], { kind: "unit", unit: mechanical })).toBeUndefined();
+    mechanical.hp = mechanical.maxHp;
+    expect(targetCommand(snapshotGame(game), "player", [worker], { kind: "unit", unit: mechanical })).toBeUndefined();
+    soldier.hp -= 30;
+    expect(targetCommand(snapshotGame(game), "player", [worker], { kind: "unit", unit: soldier })).toBeUndefined();
+  });
+
+  it("repairs a damaged own hull from shore, boards a healthy hull and preserves movement on its own deck", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = []; delete game.map.terrain;
+    const ship = game.spawnUnit("player", "transport", 900, 900);
+    const worker = game.spawnUnit("player", "worker", 1000, 900);
+    ship.hp -= 30;
+    expect(targetCommand(snapshotGame(game), "player", [worker], { kind: "unit", unit: ship })).toMatchObject({ type: "repairUnit", targetId: ship.id, unitIds: [worker.id] });
+    ship.hp = ship.maxHp;
+    expect(targetCommand(snapshotGame(game), "player", [worker], { kind: "unit", unit: ship })).toMatchObject({ type: "board", transportId: ship.id, unitIds: [worker.id] });
+    expect(boardUnit(ship, worker, game.units)).toBe(true);
+    ship.hp -= 30;
+    expect(targetCommand(snapshotGame(game), "player", [worker], { kind: "unit", unit: ship })).toBeUndefined();
+  });
+
   it("follows an ally's unit and attacks an enemy's, as in Warcraft III; an own unit is a move", () => {
     const { game, own, ally, foe } = alliedGame();
     const snapshot = snapshotGame(game);

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, TIER_SUPPLY_CAP } from "../shared/catalog";
 import { createBuilding } from "../shared/map";
+import { GOLD_MINE_RULES } from "../shared/mining";
+import { isBuildPlacementClear } from "../shared/build-placement";
 import { runAiGame, runAiGameLoop } from "./game-runner";
 import { createAiRuntime } from "./runtime";
 import { runPresetAiRuntimeForTest } from "./runtime-test-helpers";
@@ -10533,7 +10535,11 @@ describe("SDK preset AI policy", () => {
     const command = planAiCommandsFromScripts(snapshotGame(game), "v2", [AI_SCRIPT_LIBRARY.economicCatchUp, AI_SCRIPT_LIBRARY.productionBuilding], { version: "v2", teams: game.teams, telemetry }).find((candidate) => candidate.type === "build");
 
     expect(command).toMatchObject({ type: "build", buildingKind: "townHall" });
-    expect(command?.type === "build" ? command.x : 0).toBeCloseTo(1950, -2);
+    if (!command || command.type !== "build") throw new Error("missing third-base command");
+    const thirdMine = game.resources.find(resource => resource.id === "v2-third-mine")!;
+    expect(distance(command, thirdMine)).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
+    expect(distance(command, thirdMine)).toBeLessThan(GOLD_MINE_RULES.baseRange);
+    expect(isBuildPlacementClear(snapshotGame(game), "townHall", command)).toBe(true);
     expect(telemetry.behaviors.economicCatchUp.catchUpExpansions).toBe(1);
   });
 
@@ -13362,7 +13368,11 @@ describe("SDK preset AI policy", () => {
     );
 
     expect(enabled).toMatchObject({ type: "build", buildingKind: "townHall" });
-    expect(enabled?.type === "build" ? enabled.x : 0).toBeCloseTo(1960, -2);
+    if (!enabled || enabled.type !== "build") throw new Error("missing catch-up expansion command");
+    const thirdMine = game.resources.find(resource => resource.id === "v2-third-mine")!;
+    expect(distance(enabled, thirdMine)).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
+    expect(distance(enabled, thirdMine)).toBeLessThan(GOLD_MINE_RULES.baseRange);
+    expect(isBuildPlacementClear(snapshotGame(game), "townHall", enabled)).toBe(true);
     expect(disabled).toBeUndefined();
     expect(telemetry.behaviors.economicCatchUp.catchUpExpansions).toBe(1);
   });
@@ -13563,7 +13573,7 @@ function ownedMiningBases(game: ReturnType<typeof createGame>, owner: string) {
   return game.buildings
     .filter((building) => building.owner === owner && building.kind === "townHall" && building.complete)
     .flatMap((townHall) => {
-      const mine = game.resources.find((resource) => resource.amount > 0 && distance(resource, townHall) < 260);
+      const mine = game.resources.find((resource) => resource.amount > 0 && distance(resource, townHall) < GOLD_MINE_RULES.baseRange);
       if (!mine) return [];
       const miners = game.units.filter((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === mine.id);
       return miners.length > 0 ? [{ townHallId: townHall.id, mineId: mine.id, miners: miners.length }] : [];

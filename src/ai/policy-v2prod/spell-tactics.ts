@@ -1,11 +1,13 @@
 import { canCast } from "../../shared/ability-cooldowns";
-import { UNIT_DEFS } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
+import { matchesUnitTarget } from "../../shared/unit-targeting";
+import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
 import { activeUnitClaim } from "./claims";
-import { enemyCombatUnits, units } from "./snapshot";
-import { averagePoint, distance } from "./spatial";
+import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
+import { averagePoint, distance, nearestEntity } from "./spatial";
 import { nearestEnemyUnit } from "./threats";
 import type { PresetAiPolicyOptions } from "./types";
 
@@ -14,7 +16,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   for (const caster of units(snapshot, owner).filter(canCast)) {
     const abilities = UNIT_DEFS[caster.kind].abilities;
     if (abilities.includes("heal")) {
-      const target = units(snapshot, owner).find((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);
+      const target = units(snapshot, owner).find((unit) => canReceiveHealing(unit, snapshot) && matchesUnitTarget(unit, ABILITY_DEFS.heal.targets, snapshot) && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);
       if (target) {
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "heal", targetId: target.id }, options));
         continue;
@@ -29,7 +31,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
       }
     }
     if (abilities.includes("curse")) {
-      const target = nearestEnemyUnit(snapshot, owner, caster, 260, options);
+      const target = nearestEntity([...enemyUnitsNear(snapshot, owner, caster, 260, options.teams), ...neutralUnitsNear(snapshot, caster, 260)].filter(unit => matchesUnitTarget(unit, ABILITY_DEFS.curse.targets, snapshot)), caster);
       if (target && !target.effects.some((effect) => effect.type === "curse")) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: "curse", targetId: target.id }, options));
     }
   }

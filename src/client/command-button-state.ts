@@ -1,6 +1,7 @@
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { autocastEnabled, canAutocast } from "../shared/autocast";
 import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
+import { unitAbilities } from "../shared/unit-abilities";
 import { canTakeStance } from "../shared/push";
 import type { AbilityKind, MeleeStance, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
 import { readyAbilityCasters, type CastCommand } from "./ability-targeting";
@@ -33,8 +34,8 @@ export function booleanCommandState(enabled: boolean): CommandButtonState {
 
 // Focus controls which buttons appear; availability, cooldown and autocast read every applicable selected unit.
 export function abilityCommandState(units: readonly Unit[], ability: AbilityKind, selected: readonly Unit[] = units, pending: readonly CastCommand[] = []): CommandButtonState {
-  if (!units.some(unit => UNIT_DEFS[unit.kind].abilities.includes(ability))) return HIDDEN_COMMAND_STATE;
-  const casters = selected.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability));
+  if (!units.some(unit => unitAbilities(unit).includes(ability))) return HIDDEN_COMMAND_STATE;
+  const casters = selected.filter((unit) => unitAbilities(unit).includes(ability));
   const autocast = autocastSwitch(selected, ability);
   const withAutocast = (state: CommandButtonState): CommandButtonState => (autocast ? { ...state, autocast } : state);
   if (readyAbilityCasters(casters, ability, pending).length) return withAutocast(ENABLED_COMMAND_STATE);
@@ -59,7 +60,7 @@ export function autocastToggle(units: readonly Unit[], ability: AbilityKind): { 
 }
 
 function autocastCasters(units: readonly Unit[], ability: AbilityKind) {
-  return canAutocast(ability) ? units.filter((unit) => UNIT_DEFS[unit.kind].abilities.includes(ability)) : [];
+  return canAutocast(ability) ? units.filter((unit) => unitAbilities(unit).includes(ability)) : [];
 }
 
 // @@@stance-buttons - The melee stances fold into one button on the card, shown whenever a focused unit can take a stance;

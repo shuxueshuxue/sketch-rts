@@ -4,6 +4,17 @@ import { TIER_SUPPLY_CAP } from "../shared/catalog";
 import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
 
 describe("command button state", () => {
+  it("shows learned veteran abilities only on their owner's card and toggles only trained selected casters", () => {
+    const student = { ...unit("priest", undefined), id: "student" };
+    const learned = { ...unit("priest", { veteranHealingWave: 24 }), id: "learned", veteranSkill: "veteranHealingWave" as const };
+    const ready = { ...learned, id: "ready", abilityCooldowns: undefined, autocast: { veteranHealingWave: false } };
+    const selected = [student, learned, ready];
+    expect(abilityCommandState([student], "veteranHealingWave", selected).visible).toBe(false);
+    expect(abilityCommandState([learned], "veteranHealingWave", selected)).toMatchObject({ visible: true, enabled: true, autocast: "mixed" });
+    expect(autocastToggle(selected, "veteranHealingWave")).toEqual({ unitIds: ["learned", "ready"], enabled: true });
+    expect(abilityCommandState([learned], "veteranHealingWave", [learned])).toMatchObject({ enabled: false, cooldownTicks: 24 });
+  });
+
   it("greys a unit whose tier is locked, with the supply cap it waits for, and hides one the player cannot train", () => {
     const [advanced, elite] = [TIER_SUPPLY_CAP[2], TIER_SUPPLY_CAP[3]];
     const early = playerState({ gold: 500, supplyUsed: 8, supplyCap: advanced - 1 });

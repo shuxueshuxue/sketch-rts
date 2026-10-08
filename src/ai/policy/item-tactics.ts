@@ -1,4 +1,5 @@
 import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
+import { canReceiveHealing } from "../../shared/healing";
 import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
 import { HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH } from "../../shared/shop";
 import { isBuildPlacementClear } from "../../shared/build-placement";
@@ -41,6 +42,7 @@ function itemUseCommand(snapshot: GameSnapshot, owner: PlayerId, carrier: Unit, 
   // A healing scroll is read when the hurt friends round its carrier lack at least what it heals four of them for.
   if (item.kind === "healingScroll") {
     const missing = units(snapshot, owner)
+      .filter((unit) => canReceiveHealing(unit, snapshot))
       .filter((unit) => distance(unit, carrier) <= HEALING_SCROLL_RADIUS)
       .reduce((total, unit) => total + Math.min(HEALING_SCROLL_HEAL, unit.maxHp - unit.hp), 0);
     return missing >= HEALING_SCROLL_HEAL * 4 ? resolveAiCommandIntent(snapshot, owner, { type: "useItem", unitId: carrier.id, itemId: item.id }, options) : undefined;
@@ -98,6 +100,7 @@ function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldIte
   const occupiedCarrierIds = new Set(items(snapshot).flatMap((candidate) => (candidate.carrierId ? [candidate.carrierId] : [])));
   return units(snapshot, owner)
     .filter((unit) => unit.kind !== "worker")
+    .filter((unit) => item.kind !== "regenRing" || canReceiveHealing(unit, snapshot))
     .filter((unit) => !occupiedCarrierIds.has(unit.id))
     .filter((unit) => !assignedPickupCarrierIds.has(unit.id))
     .filter((unit) => distance(unit, item) <= 72)

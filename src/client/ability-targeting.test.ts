@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ABILITY_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, UNIT_DEFS, resolveVariant } from "../shared/catalog";
 import { createUnit } from "../shared/map";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
 import type { AbilityKind, UnitKind } from "../shared/types";
-import { castCommandForSelection, readyAbilityCasters, type CastCommand } from "./ability-targeting";
+import { abilityUnitTargetMatches, castCommandForSelection, preferredAbilityCaster, readyAbilityCasters, type CastCommand } from "./ability-targeting";
 import { abilityCommandState } from "./command-button-state";
 
 function field(kind: UnitKind) {
@@ -15,6 +15,66 @@ function field(kind: UnitKind) {
 }
 
 describe("selected unit spell casting", () => {
+  it("keeps healing pointer eligibility aligned with cast validation for constructs, siege units and passengers", () => {
+    const game = field("priest"), casters = [...game.units];
+    for (const kind of ["golem", "rubbleGolem", "rockGolem", "graniteGolem", "ballista", "catapult", "organGun", "siegeRam", "transport"] as const) {
+      const mechanical = createUnit(`target-${kind}`, "ally", kind, 1100, 1000);
+      mechanical.hp = 1;
+      game.units.push(mechanical);
+      const snapshot = snapshotGame(game);
+      expect(abilityUnitTargetMatches(snapshot, "heal", mechanical), kind).toBe(false);
+      expect(castCommandForSelection(snapshot, "us", casters, "heal", { targetId: mechanical.id }), kind).toBeUndefined();
+    }
+    const passenger = createUnit("passenger", "ally", "footman", 1100, 1000);
+    passenger.hp = 1;
+    passenger.deck = { shipId: "target-transport", x: 0, y: 0 };
+    game.units.push(passenger);
+    expect(abilityUnitTargetMatches(snapshotGame(game), "heal", passenger)).toBe(true);
+    expect(castCommandForSelection(snapshotGame(game), "us", casters, "heal", { targetId: passenger.id })?.targetId).toBe(passenger.id);
+    const construct = game.units.find(unit => unit.kind === "golem")!;
+    construct.deck = { shipId: "target-transport", x: 20, y: 0 };
+    expect(abilityUnitTargetMatches(snapshotGame(game), "heal", construct)).toBe(false);
+  });
+
+  it("uses a campaign variant's explicit unit class in pointer and command targeting", () => {
+    const game = field("priest"), casters = [...game.units];
+    const target = createUnit("clockwork", "ally", "footman", 1100, 1000);
+    target.variant = "clockwork"; target.hp = 1;
+    game.variants = { clockwork: resolveVariant({ base: "footman", unitClass: "mechanical" }) };
+    game.units.push(target);
+    expect(abilityUnitTargetMatches(snapshotGame(game), "heal", target)).toBe(false);
+    expect(castCommandForSelection(snapshotGame(game), "us", casters, "heal", { targetId: target.id })).toBeUndefined();
+  });
+
+  it.each([["priest", "heal"], ["footman", "veteranRally"]] as const)("disables dead or stunned %s casters and accepts an expired stun for %s", (kind, ability) => {
+    const game = field(kind), casters = [...game.units];
+    if (ability === "veteranRally") for (const caster of casters) caster.veteranSkill = ability;
+    casters[0]!.hp = 0;
+    casters[1]!.effects = [{ type: "stun", remaining: 12 }];
+    casters[2]!.effects = [{ type: "stun", remaining: 0 }];
+    expect(readyAbilityCasters(casters, ability).map(caster => caster.id)).toEqual([casters[2]!.id]);
+    expect(abilityCommandState([casters[0]!], ability)).toMatchObject({ visible: true, enabled: false });
+    expect(abilityCommandState([casters[1]!], ability)).toMatchObject({ visible: true, enabled: false });
+    expect(abilityCommandState([casters[2]!], ability)).toMatchObject({ visible: true, enabled: true });
+  });
+
+  it("casts a selected ready veteran when the focused veteran is stunned, then disables the card until another can cast", () => {
+    const game = field("footman"), casters = [...game.units], focused = casters[0]!;
+    for (const caster of casters) caster.veteranSkill = "veteranRally";
+    focused.effects = [{ type: "stun", remaining: 10 }];
+    casters[2]!.hp = 0;
+    expect(abilityCommandState([focused], "veteranRally", casters)).toMatchObject({ visible: true, enabled: true });
+    const actual = preferredAbilityCaster(casters, "veteranRally", focused.id)!;
+    expect(actual.id).toBe(casters[1]!.id);
+    issuePlayerCommand(game, "us", { type: "cast", unitId: actual.id, ability: "veteranRally" });
+    expect(actual.abilityCooldowns?.veteranRally).toBeGreaterThan(0);
+    expect(focused.abilityCooldowns?.veteranRally).toBeUndefined();
+    expect(abilityCommandState([focused], "veteranRally", casters)).toMatchObject({ visible: true, enabled: false });
+    expect(preferredAbilityCaster(casters, "veteranRally", focused.id)).toBeUndefined();
+    focused.effects[0]!.remaining = 0;
+    expect(preferredAbilityCaster(casters, "veteranRally", focused.id)?.id).toBe(focused.id);
+  });
+
   it("lets three selected priests heal on three clicks without changing the focused priest", () => {
     const game = field("priest"), casters = [...game.units], focused = [casters[0]!];
     const patient = createUnit("patient", "ally", "knight", 1_100, 1_000);

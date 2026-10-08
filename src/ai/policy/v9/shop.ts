@@ -1,4 +1,5 @@
 import { seconds } from "../../../shared/time";
+import { canReceiveHealing } from "../../../shared/healing";
 import { isOpponentOwner } from "../ownership";
 import { unitMover } from "../../../shared/catalog";
 import { MAX_CARRIED_ITEMS, SHOP_REACH as BUY_REACH, carriedItemCount, shopBuyer, standsAtShop } from "../../../shared/shop";
@@ -96,12 +97,13 @@ function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const carried = (kind: ItemKind) => snapshot.items.filter((item) => item.kind === kind && army.some((unit) => unit.id === item.carrierId));
   const free = army.filter((unit) => carriedItemCount(snapshot, unit.id) < MAX_CARRIED_ITEMS);
   const nearest = (list: Unit[]) => list.sort((a, b) => distance(a, shop) - distance(b, shop))[0];
-  const health = army.reduce((total, unit) => total + unit.hp, 0) / army.reduce((total, unit) => total + unit.maxHp, 0);
+  const healable = army.filter((unit) => canReceiveHealing(unit, snapshot));
+  const health = healable.reduce((total, unit) => total + unit.hp, 0) / Math.max(1, healable.reduce((total, unit) => total + unit.maxHp, 0));
   if (carried("guardianScroll").length === 0 && stocked("guardianScroll") && army.length >= 6) {
     const unit = nearest(free);
     if (unit) return { shop, kind: "guardianScroll", unit };
   }
-  if (health < WORN && carried("healingScroll").length === 0 && stocked("healingScroll") && army.length >= 6) {
+  if (health < WORN && carried("healingScroll").length === 0 && stocked("healingScroll") && healable.length >= 6) {
     const unit = nearest(free.filter((candidate) => candidate.attackRange <= 100));
     if (unit) return { shop, kind: "healingScroll", unit };
   }
@@ -111,7 +113,7 @@ function nextPurchase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
       if (unit) return { shop, kind: "speedBoots", unit };
     }
     if (!carried("regenRing").length && stocked("regenRing")) {
-      const unit = nearest(free.filter(unit => unit.level > 0 && unit.hp < unit.maxHp * .85));
+      const unit = nearest(free.filter(unit => canReceiveHealing(unit, snapshot) && unit.level > 0 && unit.hp < unit.maxHp * .85));
       if (unit) return { shop, kind: "regenRing", unit };
     }
     if (!carried("ivoryTower").length && stocked("ivoryTower") && towers.length > 0) {

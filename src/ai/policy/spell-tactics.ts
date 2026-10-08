@@ -1,4 +1,5 @@
 import { canReceiveHealing } from '../../shared/healing';
+import { matchesUnitTarget, type UnitTargetFilter } from "../../shared/unit-targeting";
 import { abilityCooldown } from "../../shared/ability-cooldowns";
 import { canReach } from "../../shared/naval";
 import { isEnemyOwner } from "./ownership";
@@ -28,7 +29,7 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     for (const ability of abilities) {
       const def=ABILITY_DEFS[ability];
       if(def.behavior!=="weapon" || abilityCooldown(caster,ability)>0)continue;
-      const targets=[...snapshot.units,...snapshot.buildings].filter(target=>isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0));
+      const targets=[...snapshot.units,...snapshot.buildings].filter(target=>(!("order" in target) || matchesUnitTarget(target,def.targets,snapshot))&&isEnemyOwner(snapshot,owner,target.owner,options)&&distance(caster,target)<=def.range+target.radius && distance(caster,target)>=(def.weapon.minRange??0));
       const target=targets.sort((a,b)=> {
         const score=(target:typeof a)=>targets.filter(other=>distance(other,target)<(def.weapon.radius??80)).length + (!("order" in target)?(def.weapon.buildingMultiplier??1)*2:target.attackDamage/15);
         return score(b)-score(a)||distance(caster,a)-distance(caster,b);
@@ -38,12 +39,12 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
     const healAbility = abilities.find((ability) => ABILITY_DEFS[ability].behavior === "heal");
     if (healAbility) {
       const def = ABILITY_DEFS[healAbility];
-      const target = (isV8Policy(options) && def.behavior === "heal" ? v8HealTarget(snapshot, owner, caster, def, options) : undefined) ?? healTarget(snapshot, owner, caster, def.plannerRange, options);
+      const target = (isV8Policy(options) && def.behavior === "heal" ? v8HealTarget(snapshot, owner, caster, def, options) : undefined) ?? healTarget(snapshot, owner, caster, def.plannerRange, options, def.targets);
       if (target) {
         commands.push(resolveAiCommandIntent(snapshot, owner, { type: "cast", unitId: caster.id, ability: healAbility, targetId: target.id }, options));
         continue;
       }
-      const regroup = healerRegroupCommand(snapshot, owner, caster, def.plannerRange, regroupPointHasEnemy, options);
+      const regroup = healerRegroupCommand(snapshot, owner, caster, def.plannerRange, regroupPointHasEnemy, options, def.targets);
       if (regroup) {
         commands.push(regroup);
         continue;
@@ -76,12 +77,12 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   return commands;
 }
 
-function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
-  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(canReceiveHealing);
+function healingAllies(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, targets?: UnitTargetFilter) {
+  return (isV5HybridPolicy(options) ? snapshot.units.filter((unit) => !isEnemyOwner(snapshot, owner, unit.owner, options)) : units(snapshot, owner)).filter(unit => canReceiveHealing(unit, snapshot) && matchesUnitTarget(unit, targets, snapshot));
 }
 
-function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions) {
-  return healingAllies(snapshot, owner, options)
+function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, options: PresetAiPolicyOptions, targets?: UnitTargetFilter) {
+  return healingAllies(snapshot, owner, options, targets)
     .filter((unit) => unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= healRange)
     .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || b.maxHp - b.hp - (a.maxHp - a.hp) || distance(a, caster) - distance(b, caster))[0];
 }
@@ -92,10 +93,10 @@ function healTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healR
 // most health, so a three-star veteran and a rookie that both stand at half health were one to them. Workers only get the
 // shared rule's heal, when no soldier wants one. Over nudged replays V8 won 6301 of 8000 tune games against 6270, 6267 of
 // 8000 on 40 unseen seeds against 6240, and 1582 of 2000 on the final seeds against 1559.
-function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: { plannerRange: number; healAmount: number }, options: PresetAiPolicyOptions) {
+function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: { plannerRange: number; healAmount: number; targets?: UnitTargetFilter }, options: PresetAiPolicyOptions) {
   let best: Unit | undefined;
   let bestPriority = 0;
-  for (const unit of healingAllies(snapshot, owner, options)) {
+  for (const unit of healingAllies(snapshot, owner, options, def.targets)) {
     if (unit.kind === "worker" || unit.maxHp - unit.hp < def.healAmount / 2 || distance(unit, caster) > def.plannerRange) continue;
     const priority = unitStrength({ ...unit, hp: unit.maxHp }) * (1 - unit.hp / unit.maxHp);
     if (priority > bestPriority) {
@@ -107,9 +108,9 @@ function v8HealTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def
 }
 
 // enemyNear: whether some enemy combat unit is within 620 of a point (not every one beyond it).
-function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, enemyNear: (point: Point) => boolean, options: PresetAiPolicyOptions): GameCommand | undefined {
+function healerRegroupCommand(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, healRange: number, enemyNear: (point: Point) => boolean, options: PresetAiPolicyOptions, targets?: UnitTargetFilter): GameCommand | undefined {
   if (options.version !== "v2" || activeUnitClaim(snapshot, owner, caster, options)) return undefined;
-  const wounded = units(snapshot, owner).filter((unit) => canReceiveHealing(unit) && unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
+  const wounded = units(snapshot, owner).filter((unit) => canReceiveHealing(unit, snapshot) && matchesUnitTarget(unit, targets, snapshot) && unit.id !== caster.id && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) > healRange && distance(unit, caster) <= 1400);
   const groups = wounded
     .map((anchor) => wounded.filter((unit) => distance(unit, anchor) <= 260))
     .filter((group) => group.length >= 2)
@@ -128,7 +129,7 @@ function healerRegroupOrderCanMove(caster: Unit, target: { x: number; y: number 
 }
 
 function curseTarget(snapshot: GameSnapshot, owner: PlayerId, caster: Unit, def: Extract<(typeof ABILITY_DEFS)[keyof typeof ABILITY_DEFS], { behavior: "curse" }>, options: PresetAiPolicyOptions) {
-  const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => !target.effects.some((effect) => effect.type === def.statusType));
+  const candidates = [...enemyUnitsNear(snapshot, owner, caster, def.plannerRange, options.teams), ...neutralUnitsNear(snapshot, caster, def.plannerRange)].filter((target) => matchesUnitTarget(target, def.targets, snapshot) && !target.effects.some((effect) => effect.type === def.statusType));
   // @@@v7-curse-summoned - The witch's curse also deals 100 damage to a summoned unit, which kills an 85 hp spirit outright:
   // one spirit less for the rest of its minute beats taking 60% off a soldier's damage for 18s.
   const summoned = def.summonedDamage && isV7Policy(options) ? candidates.filter((target) => target.expiresTick !== undefined).sort((a, b) => distance(a, caster) - distance(b, caster))[0] : undefined;

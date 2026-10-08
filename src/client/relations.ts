@@ -1,4 +1,4 @@
-import { shipNeedsRepair } from "../shared/ship-equipment";
+import { unitNeedsRepair } from "../shared/unit-repair";
 import { GOLD_MINE_RULES } from "../shared/mining";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
@@ -82,11 +82,11 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 }
 
 // @@@context-target - What a right-click on what the pointer is on (see @@@pointer-target) orders the selected units, as
-// in Warcraft III: workers mine a mine and repair an own damaged building; soldiers board an own transport (see
+// in Warcraft III: workers mine a mine and repair own damaged buildings or mechanical units; soldiers board an own transport (see
 // @@@transport); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
 export function targetCommand(
-  snapshot: Pick<GameSnapshot, "teams"> & Partial<Pick<GameSnapshot,"items">>,
+  snapshot: Pick<GameSnapshot, "teams"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
   owner: PlayerId,
   selected: readonly Unit[],
   target: Exclude<PointerTarget, { kind: "item" }>,
@@ -112,8 +112,8 @@ export function targetCommand(
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
   if (isShipKind(target.unit.kind) && selected.length && selected.every(unit => unit.deck?.shipId === target.unit.id)) return undefined;
-  if (UNIT_DEFS[target.unit.kind].naval && shipNeedsRepair({items:snapshot.items ?? []},target.unit) && workers.length)
-    return { type: "repairShip", unitIds: ids(workers), targetId: target.unit.id, queued };
+  if (unitNeedsRepair({ ...snapshot, items: snapshot.items ?? [] }, target.unit) && workers.length)
+    return { type: "repairUnit", unitIds: ids(workers), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval && !unit.deck);
   return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;
 }

@@ -58,9 +58,9 @@ describe("unit facing", () => {
     expect(tracker.facing("rider")).toBe(-1);
   });
 
-  it("faces a construction site or the ship it is repairing", () => {
+  it("faces a construction site, mechanical unit or older ship repair target", () => {
     const tracker = new UnitFacingTracker();
-    for (const order of [{type:'repair', buildingId:'target'}, {type:'repairShip', targetId:'target'}] as UnitOrder[]) {
+    for (const order of [{type:'repair', buildingId:'target'}, {type:'repairUnit', targetId:'target'}, {type:'repairShip', targetId:'target'}] as UnitOrder[]) {
       const worker = {id:'worker', x:400, y:100, order} as Unit;
       tracker.update([worker], id => id === 'target' ? {x:100,y:100} : undefined);
       expect(tracker.facing(worker.id)).toBe(-1);

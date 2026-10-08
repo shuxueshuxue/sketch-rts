@@ -1,4 +1,5 @@
 import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
+import { canReceiveHealing } from "../../shared/healing";
 import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../../shared/types";
 import { resolveAiCommandIntent } from "./commands";
@@ -75,6 +76,7 @@ function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldIte
   const occupiedCarrierIds = new Set(items(snapshot).flatMap((candidate) => (candidate.carrierId ? [candidate.carrierId] : [])));
   return units(snapshot, owner)
     .filter((unit) => unit.kind !== "worker")
+    .filter((unit) => item.kind !== "regenRing" || canReceiveHealing(unit, snapshot))
     .filter((unit) => !occupiedCarrierIds.has(unit.id))
     .filter((unit) => distance(unit, item) <= 72)
     .sort((a, b) => itemCarrierScore(b, item, options) - itemCarrierScore(a, item, options))[0];
