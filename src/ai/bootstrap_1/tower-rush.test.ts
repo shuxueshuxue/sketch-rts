@@ -11,7 +11,7 @@ import { bootstrapEconomy } from './economy';
 import { bootstrapPolicyContext } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 
-function battlefield() {
+function battlefield(miningRaid = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
     .player('us', { race: 'ember', team: 'a' }).player('fa', { race: 'grove', team: 'b' }).player('fb', { race: 'grove', team: 'b' })
     .playerState('us', { gold: 450 }).townHall('us', 400, 620).goldMine('main', 688, 620, 4000)
@@ -29,6 +29,7 @@ function battlefield() {
     for (let index = 0; index < 4; index++) scene = scene.unit(owner, 'archer', 1770 + side * 50, 470 + index * 70);
     for (let index = 0; index < 3; index++) scene = scene.unit(owner, 'footman', 1630 + side * 60, 510 + index * 70);
   }
+  for (let index = 0; index < miningRaid; index++) scene = scene.unit('fb', 'footman', 1250 + index * 35, 2500, { id: `mining-raid-${index}` });
   const game = scene.build().createGame();
   issuePlayerCommand(game, 'us', { type: 'mine', unitIds: game.units.filter(unit => unit.id.startsWith('main-worker-')).map(unit => unit.id), resourceId: 'main' });
   issuePlayerCommand(game, 'us', { type: 'mine', unitIds: game.units.filter(unit => unit.id.startsWith('natural-worker-')).map(unit => unit.id), resourceId: 'natural' });
@@ -41,6 +42,39 @@ function battlefield() {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it.each([1, 3])('compares %i real mining attackers with local defenders before releasing the assault', attackers => {
+    const { game, context, memory } = battlefield(attackers);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit').map(unit => unit.id) });
+    for (let tick = 0; tick < 800; tick++) stepGame(game);
+    for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
+    const goal = towerRushGoal(snapshotGame(game), 'us', context())!;
+    expect(goal).toBeDefined();
+    issuePlayerCommand(game, 'us', goal.issue(new Set())!);
+    issuePlayerCommand(game, 'fb', { type: 'attackMove', unitIds: game.units.filter(unit => unit.id.startsWith('mining-raid-')).map(unit => unit.id), x: 1188, y: 2000 });
+    const defenders = new Set<string>();
+    let released = false;
+    for (let tick = 0; tick < 400; tick++) {
+      if (tick % 15 === 0) {
+        const entries = runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
+          [towerRushAbilities, summonerTowerRush, AI_SCRIPT_LIBRARY.v6Backline, AI_SCRIPT_LIBRARY.v6General], context());
+        if (!memory.jobs.some(job => job.id === summonerTowerRush.id)) {
+          released = true;
+          for (const entry of entries) if (entry.scriptId === 'v6General' && (entry.command.type === 'move' || entry.command.type === 'attackMove')) {
+            for (const id of entry.command.unitIds) defenders.add(id);
+          }
+        }
+        for (const entry of entries) issuePlayerCommand(game, 'us', entry.command);
+      }
+      stepGame(game);
+    }
+    expect(released).toBe(attackers === 3);
+    if (attackers === 3) {
+      expect(defenders.size).toBeGreaterThanOrEqual(4);
+      expect(memory.v6!.general!.mode).toBe('defend');
+    } else expect(defenders.size).toBe(0);
+  });
+
   it.each(['grove', 'ember'] as const)('continues a %s tower advance through clear ground to an ordinary enemy hall', race => {
     const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
     let scene = sketchScene('tower-advance-spacing').replaceDefaults()

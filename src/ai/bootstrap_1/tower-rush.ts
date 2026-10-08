@@ -55,6 +55,18 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const casters = own.filter(unit => UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'summon'));
   const job = options.memory.jobs.find(job => job.id === JOB);
   if (casters.length < 4) { endRush(options); return undefined; }
+  const foes = snapshot.units.filter(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options));
+  const miningHalls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall'
+    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, building) <= GOLD_MINE_RULES.baseRange));
+  const exposedMine = miningHalls.some(hall => {
+    const attackers = foes.filter(unit => distance(unit, hall) <= GOLD_MINE_RULES.baseRange + unit.attackRange);
+    const defenders = own.filter(unit => distance(unit, hall) <= GOLD_MINE_RULES.baseRange + unit.attackRange);
+    const cover = snapshot.buildings.filter(building => building.owner === owner && building.complete && building.attackDamage > 0
+      && attackers.some(attacker => distance(attacker, building) <= building.attackRange)).length * TOWER_STRENGTH;
+    return combatPower(attackers) > combatPower(defenders) + cover;
+  });
+  // A construction assault yields its army when the mine's actual defenders are outmatched.
+  if (exposedMine) { endRush(options); return undefined; }
   const enemyHalls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options));
   const current = enemyHalls.find(hall => job?.kind === hall.id);
   const anchor = [...casters].sort((a, b) => current ? distance(a, current) - distance(b, current)
@@ -63,7 +75,6 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   if (host.length < 4) { endRush(options); return undefined; }
   // Fresh recruits travel to the host; they must not pull its center back to the production buildings.
   const center = averagePoint(host);
-  const foes = snapshot.units.filter(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options));
   const halls = enemyHalls.filter(building => sameGround(snapshot.map, center, building) && distance(center, building) <= 1600);
   const target = halls.find(hall => job?.kind === hall.id) ?? [...halls].sort((a, b) => distance(center, a) - distance(center, b))[0];
   if (!target) { endRush(options); return undefined; }
