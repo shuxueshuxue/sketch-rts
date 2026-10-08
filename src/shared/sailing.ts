@@ -6,6 +6,7 @@ import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShi
 import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
 import { advanceShip, shipMotionLimits } from './ship-motion';
+import { followShipRoute } from './ship-guidance';
 
 // Authored scenes without a terrain grid use the same swept water routes as
 // generated maps. A direct steering shortcut could wedge two touching hulls
@@ -42,16 +43,36 @@ export function sailToward(ship:Unit,point:Point & {heading?:number},map:GameMap
   const acceleration=perTick(limits.acceleration);
   const start={x:ship.x,y:ship.y,heading:motion.heading};
   let aim:Point,desired:number;
+  const replan=(allowCruise=true)=>{
+    const traffic=shipTraffic(ship,units),contact=point.heading===undefined ? shipContactGoal(ship,point,units) : undefined;
+    const {points,partial}=planShipRoute(map,ship,contact ?? point,traffic,traffic.hasTraffic?512:Infinity);
+    motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,startX:ship.x,startY:ship.y,startHeading:motion.heading,
+      ...(point.heading===undefined && !contact ? {cruise:allowCruise} : {})};
+  };
   {
     const movedGoal = motion.route && Math.hypot(motion.route.goalX-point.x,motion.route.goalY-point.y);
     if(!motion.route || movedGoal!>map.terrain!.cell/2 || !motion.route.points.length && movedGoal!>1) {
-      const traffic=shipTraffic(ship,units),{points,partial}=planShipRoute(map,ship,point.heading===undefined ? shipContactGoal(ship,point,units) ?? point : point,traffic,traffic.hasTraffic?512:Infinity);
-      motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,startX:ship.x,startY:ship.y,startHeading:motion.heading};
+      replan();
     }
-    while(motion.route.points.length && Math.hypot(ship.x-motion.route.points[0]!.x,ship.y-motion.route.points[0]!.y)<1e-7
-      && Math.abs(headingDifference(motion.heading,motion.route.points[0]!.heading))<1e-7)motion.route.points.shift();
-    const next=motion.route.points[0];
-    if(!next){motion.speed=0;if(motion.route.trafficKey!==shipTrafficKey(ship,units) || motion.route.partial && (Math.hypot(ship.x-motion.route.startX!,ship.y-motion.route.startY!)>1 || Math.abs(headingDifference(motion.route.startHeading!,motion.heading))>.001))motion.route=undefined;return;}
+    const route=motion.route!;
+    while(route.points.length && Math.hypot(ship.x-route.points[0]!.x,ship.y-route.points[0]!.y)<1e-7
+      && Math.abs(headingDifference(motion.heading,route.points[0]!.heading))<1e-7){
+      const passed=route.points.shift()!;route.legX=passed.x;route.legY=passed.y;
+      if(route.cruise===false)route.cruise=true;
+    }
+    if(route.cruise && route.points.length){
+      const cruise=followShipRoute(ship,map,units,pace);
+      if(cruise===true)return;
+      // An existing reverse/pivot route is already exact and validated. Only
+      // a blocked cruise sweep needs a new route from its actual pose.
+      if(cruise==='maneuver')route.cruise=false;
+      else replan(false);
+      // A completed safe leg can retry cruise after a temporary obstruction.
+      motion.speed=0;
+    }
+    const active=motion.route!;
+    const next=active.points[0];
+    if(!next){motion.speed=0;if(active.trafficKey!==shipTrafficKey(ship,units) || active.partial && (Math.hypot(ship.x-active.startX!,ship.y-active.startY!)>1 || Math.abs(headingDifference(active.startHeading!,motion.heading))>.001))motion.route=undefined;return;}
     if(next.pivot){
       const difference=headingDifference(start.heading,next.heading),lever=Math.hypot(ship.x-next.pivot.x,ship.y-next.pivot.y);
       const targetSpeed=Math.min(ship.speed*pace*.5,lever*turn*SIM_TICKS_PER_SECOND);
