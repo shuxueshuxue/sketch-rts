@@ -57,7 +57,7 @@ function preferredTrainingChoice(snapshot: GameSnapshot, owner: PlayerId, buildi
     }
     return sanctumUnits[0] ?? "priest";
   }
-  if (building.kind === "workshop") return race === "grove" ? "golem" : "catapult";
+  if (building.kind === "workshop") return race === "grove" ? (tierUnlocked(snapshot, owner, "golem") ? "golem" : "ballista") : "catapult";
   return undefined;
 }
 

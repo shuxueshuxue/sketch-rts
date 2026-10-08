@@ -16,6 +16,19 @@ describe("AI training choice", () => {
     expect(game.buildings.find(building => building.id === 'workshop')!.queue[0]!.unitKind).toBe(kind);
   });
 
+  it.each(['grove', 'ember'] as const)("trains the %s workshop's tier-two unit before tier three opens", race => {
+    const game = sketchScene('workshop-tier-two-' + race).map('bareDuel').replaceDefaults()
+      .player('v5', { race }).playerState('v5', { gold: 1000 })
+      .townHall('v5', 500, 500).building('v5', 'workshop', 750, 620, { id: 'workshop' })
+      .farmsPastTiers('v5', 150, 150).build().createGame();
+    game.players.v5!.supplyCap = 50;
+    const snapshot = snapshotGame(game);
+    const chosen = trainingChoice(snapshot, 'v5', snapshot.buildings.find(building => building.id === 'workshop')!, { version: 'v2', requestedVersion: 'v5' });
+    expect(chosen).toBe(race === 'grove' ? 'ballista' : 'catapult');
+    issuePlayerCommand(game, 'v5', { type: 'train', buildingId: 'workshop', unitKind: chosen! });
+    expect(game.buildings.find(building => building.id === 'workshop')!.queue[0]!.unitKind).toBe(chosen);
+  });
+
   it("opens barracks production with footmen before mixing lancers", () => {
     const game = sketchScene("training-choice-footmen-first")
       .map("bareDuel")
