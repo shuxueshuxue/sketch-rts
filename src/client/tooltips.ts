@@ -84,7 +84,7 @@ export function unitSelectionTooltip(kind: UnitKind, units: Unit[], snapshot: Ga
       tooltipLine(i18n.locale, "speed", statRange(units.map((unit) => unit.speed))),
       ...(maxRegen > 0 ? [tooltipLine(i18n.locale, "currentRegen", `+${formatStatNumber(maxRegen)}`)] : []),
       ...cargoLines(kind, units, snapshot, i18n.locale),
-      ...unitRuleLines(rules, i18n.locale, representative.level, earnsStars, unitClassOf(representative, snapshot)),
+      ...unitRuleLines(rules, i18n.locale, representative.level, false, unitClassOf(representative, snapshot)),
       ...(units.length === 1 && earnsStars ? [
         i18n.locale === "zh" ? `星级 ${representative.level}；经验 ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}` : `Stars ${representative.level}; XP ${representative.xp}/${xpStarThresholds(unitRules(snapshot, representative))[representative.level] ?? "MAX"}`,
       ] : []),
@@ -101,14 +101,14 @@ export function abilityTooltip(ability: AbilityKind, hotkey?: string, i18n: I18n
   const definition = ABILITY_DEFS[ability];
   if (definition.behavior === "veteran") {
     const tooltip = veteranSkillTooltip(definition.skill, i18n, hotkey);
-    return { ...tooltip, ...(autocast ? { notes: [...(tooltip.notes ?? []), text.autocast[autocast], text.autocast.toggle] } : {}) };
+    return { ...tooltip, ...(autocast ? { notes: [...(tooltip.notes ?? []), `${text.autocast[autocast]} · ${text.autocast.toggle}`] } : {}) };
   }
   return {
     title: labelKind(ability, i18n),
     body: ABILITY_CARDS[ability].description[i18n.locale],
     stats: abilityStats(ability, i18n.locale),
     requirements: ABILITY_REQUIREMENTS[i18n.locale][ability].map((line) => fillAbilityNumbers(line, ability)),
-    ...(autocast ? { notes: [text.autocast[autocast], text.autocast.toggle] } : {}),
+    ...(autocast ? { notes: [`${text.autocast[autocast]} · ${text.autocast.toggle}`] } : {}),
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -120,10 +120,9 @@ export function veteranSkillTooltip(skill: VeteranSkillId, i18n: I18n = DEFAULT_
   return {
     title: definition.name[i18n.locale],
     body: definition.description[i18n.locale],
-    stats: [localized(i18n.locale, definition.pool === "common" ? "通用技能" : "兵种特有技能", definition.pool === "common" ? "Common skill" : "Specialist skill"),
-      ...(protection ? [localized(i18n.locale, "防护同时适用于物理和魔法伤害", "Protection applies to both physical and magic damage")] : [])],
+    stats: protection ? [localized(i18n.locale, "防护同时适用于物理和魔法伤害", "Protection applies to both physical and magic damage")] : [],
     requirements: [],
-    notes: [localized(i18n.locale, active ? "主动技能：以自身为中心施放；支持自动施法。" : "被动技能：学习后自动生效。", active ? "Active skill: casts around the soldier; supports autocast." : "Passive skill: takes effect automatically after learning.")],
+    ...(active ? { notes: [localized(i18n.locale, "以自身为中心施放", "Centered on this soldier")] } : {}),
     hotkey: formatHotkey(hotkey),
   };
 }
@@ -356,7 +355,7 @@ const TEXT = {
       on: "Autocast: on",
       off: "Autocast: off",
       mixed: "Autocast: on for some",
-      toggle: "Right-click: autocast on/off",
+      toggle: "Right-click to toggle",
     },
   },
   zh: {
@@ -403,7 +402,7 @@ const TEXT = {
       on: "自动施法：开",
       off: "自动施法：关",
       mixed: "自动施法：部分开启",
-      toggle: "右键：开/关自动施法",
+      toggle: "右键切换",
     },
   },
 } as const;
@@ -415,13 +414,13 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     veteranHealingWave: ["Learned at three stars; affects nearby injured non-mechanical allies."],
     veteranInnerFire: ["Learned at three stars; affects nearby allies."],
     pinningBolt:["Target an enemy unit or structure."], incendiaryFlume:["Target a point."],
-    heal: ["Priest or field medic must be ready."],
-    summon: ["Summoner must be ready.", "Target a point; a far one is walked to first."],
-    curse: ["Witch must be ready.", "Target an enemy unit."],
-    emberMend: ["Ember acolyte must be ready."],
-    cinderSoul: ["Pyre caller must be ready.", "Target a point; a far one is walked to first."],
-    ashCurse: ["Ash hexer must be ready.", "Target an enemy unit."],
-    charge: ["Raider or knight must be ready.", "Target an enemy unit at least {min} away; a farther one is ridden up to first."],
+    heal: [],
+    summon: ["Target a point; a far one is walked to first."],
+    curse: ["Target an enemy unit."],
+    emberMend: [],
+    cinderSoul: ["Target a point; a far one is walked to first."],
+    ashCurse: ["Target an enemy unit."],
+    charge: ["Target an enemy unit at least {min} away; a farther one is ridden up to first."],
     stomp: ["Cast by a granite golem on its own."],
     bloodlust: ["Cast by an ogre mage on its own."],
     web: ["Cast by a spider queen on its own."],
@@ -431,13 +430,13 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
     veteranHealingWave: ["三星学习后可用；影响身边受伤的非机械友军。"],
     veteranInnerFire: ["三星学习后可用；影响身边友军。"],
     pinningBolt:["目标必须是敌方单位或建筑。"], incendiaryFlume:["选择燃油弹落点。"],
-    heal: ["牧师或战地医师必须准备就绪。"],
-    summon: ["召唤师必须准备就绪。", "目标是一个点位，远了会先走过去。"],
-    curse: ["女巫必须准备就绪。", "目标必须是敌方单位。"],
-    emberMend: ["余烬侍僧必须准备就绪。"],
-    cinderSoul: ["烬火召唤者必须准备就绪。", "目标是一个点位，远了会先走过去。"],
-    ashCurse: ["灰烬巫师必须准备就绪。", "目标必须是敌方单位。"],
-    charge: ["掠袭者或骑士必须准备就绪。", "目标是至少 {min} 外的敌方单位，更远的会先骑过去再冲。"],
+    heal: [],
+    summon: ["目标是一个点位，远了会先走过去。"],
+    curse: ["目标必须是敌方单位。"],
+    emberMend: [],
+    cinderSoul: ["目标是一个点位，远了会先走过去。"],
+    ashCurse: ["目标必须是敌方单位。"],
+    charge: ["目标是至少 {min} 外的敌方单位，更远的会先骑过去再冲。"],
     stomp: ["花岗岩魔像自己施放。"],
     bloodlust: ["食人魔法师自己施放。"],
     web: ["蛛后自己施放。"],
@@ -611,22 +610,23 @@ function unitDescription(kind: UnitKind, i18n: I18n) {
   return localized(i18n.locale, UNIT_DEFS[kind].creepFoodPower ? "中立营地守卫；受攻击会呼叫附近同伴，追击受营地范围限制。" : "雇佣兵提供即时支援；临时召唤物会在持续时间结束后消失。", UNIT_DEFS[kind].creepFoodPower ? "Neutral camp guardian. Calls nearby allies when attacked and remains within its camp leash." : "Hired troops provide immediate support; temporary summons expire after their duration.");
 }
 
-function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, earnsStars = true, classification = def.unitClass) {
-  const lines: string[] = [localized(locale, `单位类型：${unitClassLabel(classification, locale)}`, `Unit class: ${unitClassLabel(classification, locale)}`)];
-  if (classification === "mechanical") lines.push(localized(locale, "可由工人维修；治疗和生命回复对其无效。", "Workers can repair this unit; healing and health regeneration have no effect."));
+function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, showStarProgression = true, classification = def.unitClass) {
+  const lines: string[] = [classification === "mechanical"
+    ? localized(locale, "机械 · 工人维修；治疗和生命回复无效", "Mechanical · worker repairs; no healing or regeneration")
+    : unitClassLabel(classification, locale)];
   if(def.naval)lines.push(localized(locale,"攻击舰船优先打可攻击的乘员；命中乘员也会按武器破坏船体。空闲农民会花费金币自动修船。","Ship attacks prioritize reachable crew; hits also damage the hull according to the weapon. Idle workers automatically repair their ship using gold."));
   if(def.passengerDamageMultiplier)lines.push(localized(locale,`乘员攻击伤害 ${def.passengerDamageMultiplier*100}%`,`Passenger attack damage ${def.passengerDamageMultiplier*100}%`));
-  if (def.armor === "heavy") lines.push(localized(locale, `重甲：受到远程普攻／攻城伤害 ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%（含魔法普攻）、防御塔伤害 ${HEAVY_ARMOR_DAMAGE.tower * 100}%；不减免主动法术或道具伤害`, `Heavy armor: take ${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% ranged attack / siege damage (including magic attacks), ${HEAVY_ARMOR_DAMAGE.tower * 100}% tower damage; does not reduce active spell or item damage`));
+  if (def.armor === "heavy") lines.push(localized(locale, `重甲 · 远程／攻城普攻 ×${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}%（含魔法），塔 ×${HEAVY_ARMOR_DAMAGE.tower * 100}%；主动法术／道具不减伤`, `Heavy armor · ranged/siege attacks ×${HEAVY_ARMOR_DAMAGE.rangedUnit * 100}% (including magic), towers ×${HEAVY_ARMOR_DAMAGE.tower * 100}%; no reduction to active spells/items`));
   if (def.casterSlayer) lines.push(localized(locale, `对法师／召唤物伤害 ×${def.casterSlayer}`, `Caster/summon damage ×${def.casterSlayer}`));
   if (def.regenPerSecond && classification !== "mechanical") lines.push(localized(locale, `天生回复 ${def.regenPerSecond} 生命/秒`, `Innate regeneration ${def.regenPerSecond} HP/s`));
   if (def.slowOnHit) lines.push(localized(locale, `命中减速至 ${SLOW_PACE * 100}%，持续 ${formatSeconds(SLOW_TICKS)}`, `Hit slows to ${SLOW_PACE * 100}% for ${formatSeconds(SLOW_TICKS)}`));
   if (def.poisonOnHit) lines.push(localized(locale, `中毒 ${POISON_DAMAGE} 伤害/秒，持续 ${formatSeconds(POISON_TICKS)}`, `Poison ${POISON_DAMAGE} damage/s for ${formatSeconds(POISON_TICKS)}`));
   if (def.splash) lines.push(localized(locale, `溅射 ${SPLASH_SHARE * 100}% 伤害，半径 ${SPLASH_RADIUS}`, `Splash ${SPLASH_SHARE * 100}% damage, radius ${SPLASH_RADIUS}`));
-  if (def.weapon?.maxHits) lines.push(localized(locale, `穿透最多 ${def.weapon.maxHits} 个目标`, `Pierces up to ${def.weapon.maxHits} targets`));
+  if (def.weapon?.maxHits && def.weapon.maxHits > 1) lines.push(localized(locale, `穿透最多 ${def.weapon.maxHits} 个目标`, `Pierces up to ${def.weapon.maxHits} targets`));
   if (def.weapon?.burst) lines.push(localized(locale, `每轮 ${def.weapon.burst} 发`, `${def.weapon.burst} shots per volley`));
   if (def.goldBounty) lines.push(localized(locale, `击败奖励 ${def.goldBounty} 金`, `Defeat bounty ${def.goldBounty} gold`));
   if (def.xpReward > 0) lines.push(localized(locale, `击杀经验 ${killXpReward(def, level)}`, `Kill reward ${killXpReward(def, level)} XP`));
-  if (earnsStars && def.cost > 0) lines.push(localized(locale, `1/2/3 星累计经验 ${xpStarThresholds(def).join(" / ")}；每星最大生命 +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}%；三星可从三个候选中学习一个技能`, `1/2/3-star XP ${xpStarThresholds(def).join(" / ")}; each star +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}% maximum HP; at three stars choose one of three skills`));
+  if (showStarProgression && def.cost > 0) lines.push(localized(locale, `1/2/3 星累计经验 ${xpStarThresholds(def).join(" / ")}；每星最大生命 +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}%；三星可从三个候选中学习一个技能`, `1/2/3-star XP ${xpStarThresholds(def).join(" / ")}; each star +${(VETERANCY_GAIN_PER_STAR * 100).toFixed(1)}% maximum HP; at three stars choose one of three skills`));
   return lines;
 }
 

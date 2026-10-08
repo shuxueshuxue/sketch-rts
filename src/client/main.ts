@@ -71,9 +71,7 @@ import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { abilityTooltip, buildingTooltip, damageProfileLabel, formatTooltipDataset, itemTooltip, unitClassLabel, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
-import { unitAttackDamageProfile } from "../shared/damage";
-import { unitClassOf } from "../shared/unit-targeting";
+import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
 import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
@@ -473,8 +471,8 @@ function createVeteranLearnButton() {
     () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
     openVeteranPalette, () => {
       const student = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
-      return { title: i18n.locale === "zh" ? "三星老兵：学习技能" : "Three-star veteran: learn a skill",
-        body: i18n.locale === "zh" ? "从这名老兵的三个固定候选技能中选择一个。关闭面板会保留候选，学习后不能重选。" : "Choose one of this soldier's three fixed skills. Closing keeps these choices; learning is permanent.",
+      return { title: i18n.locale === "zh" ? "学习技能" : "Learn a skill",
+        body: i18n.locale === "zh" ? "为这名老兵选择一个技能，学习后不能更换。" : "Choose one permanent skill for this soldier.",
         stats: student ? [veteranUnitCaption(student)] : [], requirements: [], hotkey: "P" };
     });
   button.element.dataset.veteranLearn = "true";
@@ -2823,13 +2821,11 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   const identity: HudIdentity = {
     key:entity?.id ?? focused.id,
     name:labelAnyKind(focused.kind) + (focused.count > 1 ? ` ${focused.ids.indexOf(entity?.id ?? focused.ids[0]!) + 1}/${focused.count}` : ""),
-    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
-    detail:entity && "order" in entity ? [t("hud.attackValue", { damage:entity.attackDamage }),
-      unitClassLabel(unitClassOf(entity, snapshot!), i18n.locale),
-      damageProfileLabel(unitAttackDamageProfile(snapshot!, entity), i18n.locale),
+    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? "" : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
+    detail:entity && "order" in entity ? [entity.attackDamage > 0 ? t("hud.attackValue", { damage:entity.attackDamage }) : "",
       entity.level > 0 ? "★".repeat(Math.min(3, entity.level)) : "",
-      entity.veteranSkill ? VETERAN_SKILLS[entity.veteranSkill].name[i18n.locale] : canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习技能 +" : "Skill available +" : "",
-    ].filter(Boolean).join(" · ") : t("hud.structure"),
+      owner === localPlayerId && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
+    ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
   };
