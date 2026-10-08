@@ -65,6 +65,28 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(disposal).toHaveBeenCalledOnce();expect(water.visible).toBe(false);
     layer.dispose();
   });
+  it('renders independent native sail morphs and moving rigging from real ship snapshots',async()=>{
+    const {game,ship,frame,layer}=setup();
+    const other=game.spawnUnit('player','warship',620,850);
+    ship.sailing!.sail={angle:-.4,billow:-.7,set:.5,mode:'sail'};
+    other.sailing!.sail={angle:.6,billow:.8,set:1,mode:'sail'};
+    frame.snapshot=snapshotGame(game);await layer.prepare(frame.snapshot,'home');layer.draw(frame);
+    const sails=gpu.scene!.children.filter(object=>object instanceof InstancedMesh&&object.visible&&object.morphTexture) as InstancedMesh[];
+    expect(sails.length,'production GLBs contain native cloth morphs').toBeGreaterThan(0);
+    const sample=sails.find(mesh=>mesh.userData.ids.includes(ship.id)&&mesh.userData.ids.includes(other.id))!;
+    const probe=new Mesh(sample.geometry,sample.material),first=sample.userData.ids.indexOf(ship.id),second=sample.userData.ids.indexOf(other.id);
+    sample.getMorphAt(first,probe);expect(probe.morphTargetInfluences![0]).toBeCloseTo(0);expect(probe.morphTargetInfluences![1]).toBeCloseTo(.35);expect(probe.morphTargetInfluences![2]).toBeCloseTo(.5);
+    sample.getMorphAt(second,probe);expect(probe.morphTargetInfluences![0]).toBeCloseTo(.8);expect(probe.morphTargetInfluences![1]).toBeCloseTo(0);expect(probe.morphTargetInfluences![2]).toBeCloseTo(0);
+    const ropes=()=>gpu.scene!.children.filter(object=>object instanceof InstancedMesh&&object.visible&&object.name.startsWith('RigRope:')) as InstancedMesh[];
+    expect(ropes().length).toBeGreaterThan(0);const ropeMatrices=ropes().flatMap(mesh=>Array.from(mesh.instanceMatrix.array));
+    const positions=Array.from(sample.geometry.getAttribute('position').array);
+    game.tick++;ship.sailing!.sail={angle:.5,billow:.7,set:1,mode:'tacking'};frame.snapshot=snapshotGame(game);const snapshot=JSON.stringify(frame.snapshot);
+    frame.now=50;layer.draw(frame);frame.now=75;layer.draw(frame);
+    sample.getMorphAt(first,probe);expect(probe.morphTargetInfluences![0]).toBeCloseTo(0);expect(probe.morphTargetInfluences![1]).toBeCloseTo(0);expect(probe.morphTargetInfluences![2]).toBeCloseTo(.25);
+    expect(ropes().flatMap(mesh=>Array.from(mesh.instanceMatrix.array))).not.toEqual(ropeMatrices);
+    expect(Array.from(sample.geometry.getAttribute('position').array)).toEqual(positions);expect(JSON.stringify(frame.snapshot)).toBe(snapshot);
+    layer.dispose();
+  });
   it('reveals only the selected ship sails, including selection through its crew',async()=>{
     const {game,ship,frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
     const crew=game.units.find(unit=>unit.deck?.shipId===ship.id)!;

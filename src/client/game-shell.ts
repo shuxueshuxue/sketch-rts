@@ -18,6 +18,7 @@ export function gameShellMarkup(i18n: I18n) {
     <div class="minimap-tab" data-minimap-tab>
       <div class="resource-readout" title="${escapeHtml(t("shell.gold"))}"><span class="readout-icon" aria-hidden="true"></span><span data-gold>?</span></div>
       <div class="supply-readout" title="${escapeHtml(t("shell.supply"))}"><span class="readout-icon" aria-hidden="true"></span><span data-supply>?</span></div>
+      <span class="wind-readout" data-wind hidden tabindex="0" role="img"><span class="wind-arrow" data-wind-arrow aria-hidden="true">➜</span><span class="wind-strength" aria-hidden="true"><i></i><i></i><i></i></span></span>
     </div>
     <button type="button" class="match-menu-button" data-match-menu-button aria-label="${escapeHtml(t("shell.menu"))}" title="${escapeHtml(t("shell.menu"))}"><span aria-hidden="true"></span></button>
     <div class="match-menu hidden" data-match-menu role="dialog" aria-label="${escapeHtml(t("shell.menu"))}">

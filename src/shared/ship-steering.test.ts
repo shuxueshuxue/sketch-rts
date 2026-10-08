@@ -9,6 +9,9 @@ describe('predictable ship steering',()=>{
   for(const degrees of [-175,-120,-90,-45,45,90,120,175,180])it(`takes the short initial turn and follows a forward curve to a ${degrees} degree destination`,()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',1200,1000),angle=degrees*Math.PI/180;
     const goal={x:1200+450*Math.cos(angle),y:1000+450*Math.sin(angle)};
+    // This is a steering regression on a sailable course; upwind voyages
+    // deliberately tack and are covered separately in ship-tacking.test.ts.
+    game.map.wind={direction:angle,speed:80};
     ship.sailing!.heading=0;
     issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],...goal});
     let totalYaw=0,astern=0,travel=0,movingTurns=0;

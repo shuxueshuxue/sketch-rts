@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
+import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
 import { CrewFacingTracker,uprightCrewRotation } from './crew-pose';
 import { configureWorldCamera,screenOnPlane } from './projection';
 import { flightPose } from './flight-pose';
@@ -37,6 +38,9 @@ export class World3DLayer {
   private cards=new Map<string,{mesh:THREE.Mesh;texture:THREE.CanvasTexture;used:number}>();
   private cardGeometry=new Map<number,THREE.PlaneGeometry>();
   private facing=new CrewFacingTracker();
+  private sailMotion=new SailPoseTracker();
+  private rigModels=new Map<string,ShipRigModel|undefined>();
+  private rigPoses=new Map<string,{model:ShipRigModel;pose:ShipRigPose;worldRopes:THREE.Matrix4[]}>();
   private deckMotion=new Map<string,{shipId:string;x:number;y:number;fromX:number;fromY:number;at:number}>();
   private snapshot:GameSnapshot|undefined;
   private lastTick=-1;
@@ -60,13 +64,13 @@ export class World3DLayer {
   }
   static create(canvas:HTMLCanvasElement,context:WebGL2RenderingContext){
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
-    renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
     return new World3DLayer(renderer);
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.view=undefined;this.positions.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();}
   private deckPosition(unit:Unit,now:number){
     const track=this.deckMotion.get(unit.id)!;const t=Math.max(0,Math.min(1,(now-track.at)*SIM_TICKS_PER_SECOND/1000));
     return{x:track.fromX+(track.x-track.fromX)*t,y:track.fromY+(track.y-track.fromY)*t};
@@ -85,7 +89,7 @@ export class World3DLayer {
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
-    frame.animation?.update(snapshot,now);frame.motion?.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
+    frame.animation?.update(snapshot,now);frame.motion?.update(snapshot,now);this.sailMotion.update(snapshot,now);trackUnitFacing(frame.facing,snapshot);
     if(snapshot.tick!==this.lastTick){
       this.facing.update(snapshot);const continuous=snapshot.tick===this.lastTick+1;
       for(const unit of snapshot.units)if(unit.deck){const old=this.deckMotion.get(unit.id),start=continuous&&old?.shipId===unit.deck.shipId?this.deckPosition(unit,now):unit.deck;
@@ -119,7 +123,21 @@ export class World3DLayer {
       this.positions.set(ship.id,{x:at.x,y:at.y,bodyY:at.y,topY:at.y-(profile.deckHeight+profile.mastHeight)*TILT});
       if(!visible(at.x,at.y,profile.length*scale+profile.mastHeight))continue;
       const reveal=revealedShips.has(ship.id);
-      const hull=this.template(`ships/${ship.kind}`,'Hull');if(hull)this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,pose(at.x,at.y,0,heading,scale),ship.id,undefined,false,reveal);
+      const hull=this.template(`ships/${ship.kind}`,'Hull');
+      if(hull){
+        const key=`ships/${ship.kind}`,transform=pose(at.x,at.y,0,heading,scale);
+        if(!this.rigModels.has(key))this.rigModels.set(key,shipRigModel(hull));
+        const rig=this.rigModels.get(key);
+        let display=this.rigPoses.get(ship.id);
+        if(rig&&display?.model!==rig){display={model:rig,pose:rig.createPose(),worldRopes:rig.ropes.map(()=>new THREE.Matrix4())};this.rigPoses.set(ship.id,display);}
+        const animation=display?.pose.update(this.sailMotion.pose(ship,now));
+        this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,transform,ship.id,undefined,false,reveal,animation);
+        if(display)for(let i=0;i<display.pose.ropes.length;i++){
+          const rope=display.pose.ropes[i]!;if(!rope.visible)continue;
+          const matrix=display.worldRopes[i]!.multiplyMatrices(transform,rope.matrix);
+          this.batches.add(`rig-rope:${ship.kind}:${rope.material}:${Boolean(reveal)}`,rope.template,matrix,ship.id,undefined,false,reveal);
+        }
+      }
       const mast=profile.obstacles.find(obstacle=>obstacle.type==='mast');
       if(mast){const mastAt=localToWorld({...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}},mast);this.batches.add(`flag:${ship.owner}`,this.flag,new THREE.Matrix4().compose(new THREE.Vector3(mastAt.x,profile.deckHeight+profile.mastHeight,mastAt.y),rotation,new THREE.Vector3(scale,scale,scale)),ship.id,ownerInk(ship.owner));}
       const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
@@ -131,6 +149,7 @@ export class World3DLayer {
         this.batches.add(`gun:${weapon.art}:${item.durability===0}`,gun,pose(weapon.pivot.x-Math.cos(weapon.heading)*back,weapon.pivot.y-Math.sin(weapon.heading)*back,weapon.pivotHeight,weapon.heading,scale),ship.id,undefined,item.durability===0);
       }
     }
+    for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
     for(const unit of snapshot.units){
       if(ships.has(unit.id))continue;
@@ -178,10 +197,13 @@ export class World3DLayer {
   pick(point:{x:number;y:number}){if(!this.view)return undefined;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(point.x/this.view.width*2-1,1-point.y/this.view.height*2),this.camera);
     for(const hit of ray.intersectObjects(this.batches.objects(),false)){
       const material=(hit.object as THREE.Mesh).material;const first=Array.isArray(material)?material[hit.face?.materialIndex??0]:material;
+      // A selected ship exposes the deck for crew commands. Its translucent
+      // cloth must not intercept the visible crew behind the deformed sail.
+      if(first?.name.startsWith('unbleached sail')&&first.transparent&&first.opacity<.5)continue;
       if(!paintedHit((first as THREE.MeshBasicMaterial)?.map??undefined,hit.uv))continue;
       const id=hit.object.userData.ids?.[hit.instanceId??0] as string|undefined;if(id && this.positions.has(id))return{id,height:hit.point.y};
     }return undefined;
   }
   plane(point:{x:number;y:number},height:number){return this.view?screenOnPlane(this.camera,this.view,point,height):undefined;}
-  dispose(){this.water.dispose();this.batches.dispose();this.library.dispose();for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}for(const geometry of this.cardGeometry.values())geometry.dispose();for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}this.renderer.dispose();}
+  dispose(){this.water.dispose();this.batches.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();this.rigPoses.clear();this.library.dispose();for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}for(const geometry of this.cardGeometry.values())geometry.dispose();for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}this.renderer.dispose();}
 }

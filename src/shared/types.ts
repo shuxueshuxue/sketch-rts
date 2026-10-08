@@ -232,7 +232,11 @@ export type Unit = {
   deck?: { shipId: string; x: number; y: number } | undefined;
   /** Continuous heading and rates, shared by physical motion and real-time rendering. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number} }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number } | undefined;
+    /** Actual signed world velocity, used to calculate apparent wind on the next tick. */
+    velocityX?: number;
+    velocityY?: number;
+    sail?: { angle: number; billow: number; set: number; mode: 'sail' | 'tacking' | 'maneuver' | 'calm-assist' | 'idle' };
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number } | undefined;
   } | undefined;
   /** Physical scaling for unusually large campaign hulls. */
   deckScale?: number;
@@ -484,6 +488,8 @@ export type GameMap = {
   width: number;
   height: number;
   landmarks: TerrainLandmark[];
+  /** True wind blowing toward this world-XY angle (radians), in world distance per second. */
+  wind?: { direction: number; speed: number };
   // Ground a unit cannot cross (see @@@terrain); a map without it is open everywhere.
   terrain?: Terrain;
 };

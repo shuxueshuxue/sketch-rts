@@ -39,6 +39,7 @@ import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
 import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal } from "./ship-geometry";
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { beginShipMotionFrame } from './ship-motion';
+import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, nearestShipPose } from "./ship-navigation";
 import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
@@ -59,7 +60,7 @@ import {
 import { generateMap, TERRAIN_CELL } from "./generated-map";
 import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_REACH, MAX_CARRIED_ITEMS, RING_REGEN_PER_SECOND, buyRefusal, carriedItemCount, createShop, restockShops, shopBuyer } from "./shop";
 import { poolMap } from "./map-pool";
-import { perTick, seconds } from "./time";
+import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
@@ -230,6 +231,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
     },
   } satisfies Game;
 
+  game.map.wind = { ...DEFAULT_WIND };
   if (options.scenario) applyScenarioOverride(game, options.scenario);
   // Every building stands on whole cells (see @@@building-footprint), a hall the map lays or a scenario seeds as one a
   // worker lays: laid 10 off its cells' middle, a start hall had the cells beside one of its sides 77 from it, past where
@@ -679,6 +681,10 @@ export function stepGame(game: Game) {
   updateTowerAttacks(game);
   const starts = new Map(shipsIn(game.units).map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }]));
   beginShipMotionFrame(game.units);
+  for (const ship of shipsIn(game.units)) {
+    const idle = ship.order.type === 'idle' || ship.order.type === 'hold';
+    updateAutoTrim(ship, game.map, idle ? 'idle' : ship.sailing?.sail?.mode === 'idle' ? 'sail' : undefined);
+  }
   prepareCrewRendezvous(game.map,game.units);
   const ferry = updateUnits(game);
   updateMountedWeapons(game,starts);
@@ -690,6 +696,12 @@ export function stepGame(game: Game) {
   separateUnits(game);
   syncDecks(game.units);
   if (game.map.terrain) keepUnitsOutOfBuildings(game);
+  for (const ship of shipsIn(game.units)) {
+    const start = starts.get(ship.id);
+    if (!ship.sailing) continue;
+    ship.sailing.velocityX = start ? (ship.x - start.x) * SIM_TICKS_PER_SECOND : 0;
+    ship.sailing.velocityY = start ? (ship.y - start.y) * SIM_TICKS_PER_SECOND : 0;
+  }
   for (const unit of game.units) if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
   removeExpiredUnits(game);
   removeDead(game);
@@ -743,7 +755,7 @@ export function snapshotGame(game: Game): GameSnapshot {
         unitsKilledByNeutral: { ...game.match.stats.unitsKilledByNeutral },
       },
     },
-    map: game.map,
+    map: { ...game.map, ...(game.map.wind ? { wind: { ...game.map.wind } } : {}) },
     teams: { ...game.teams },
     players: Object.fromEntries(Object.entries(game.players).map(([owner, player]) => [owner, { ...player, upgrades: { ...player.upgrades } }])) as PlayerStateMap,
     units: game.units.map((unit) => {
@@ -757,6 +769,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       if (unit.fittings) copy.fittings = unit.fittings.map(fitting => ({ ...fitting, accepts: [...fitting.accepts] }));
       if (unit.sailing) {
         copy.sailing = { ...unit.sailing };
+        if (unit.sailing.sail) copy.sailing.sail = { ...unit.sailing.sail };
         if (unit.sailing.route) copy.sailing.route = { ...unit.sailing.route, end: { ...unit.sailing.route.end }, points: unit.sailing.route.points.map(point => ({ ...point,...(point.pivot?{pivot:{...point.pivot}}:{}) })) };
       }
       if (unit.abilityCooldowns) copy.abilityCooldowns = { ...unit.abilityCooldowns };

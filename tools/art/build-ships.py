@@ -51,6 +51,8 @@ def build_in_blender():
             continue
         bpy.ops.wm.read_factory_settings(use_empty=True)
         base, upper, weapon = [], [], []
+        ship_rig = {"version": 1, "space": "blender-z-up", "defaults": {"angle": 0, "billow": 1, "set": 1},
+                    "frames": [], "sails": [], "rigidParts": []}
         wood = material("weathered oak", (.23, .115, .06))
         hull_shades = [wood, material("sun-worn oak", (.28, .15, .078)),
                        material("lower hull oak", (.17, .082, .042))]
@@ -197,16 +199,21 @@ def build_in_blender():
                     cylinder("mast binding", (x, y, z+height), 2.35, .7, rope, upper)
                 next_mast = min((part for part in spec["obstacles"] if part["type"] == "mast" and part["x"] > x),
                                 key=lambda part: part["x"], default=None)
-                build_running_rig(kind, (x, y, z), length, beam, h,
-                                  cloth, rope, edge, mesh, spar, upper,
-                                  stay_to=(next_mast["x"], next_mast["y"], z+h) if next_mast else None)
+                rig_id = "mast" + str(sum(1 for frame in ship_rig["frames"] if frame["id"].startswith("mast") and "jib" not in frame["id"]))
+                authored_rig = build_running_rig(kind, (x, y, z), length, beam, h,
+                                                cloth, rope, edge, mesh, spar, upper,
+                                                stay_to=(next_mast["x"], next_mast["y"], z+h) if next_mast else None,
+                                                dynamic=True, rig_id=rig_id)
+                for key in ("frames", "sails", "rigidParts"):
+                    ship_rig[key].extend(authored_rig[key])
                 for side in (-1, 1):
                     fore_aft = kind in ("cutter", "fireShip", "bombardShip", "transport")
                     peak = Vector((x, y, z+h*(.98 if fore_aft else .72)))
-                    # Lead the leeward shrouds ahead of a fore-and-aft sail;
-                    # aft chainplates would put these stays through its belly.
-                    forward = side == 1 and fore_aft
-                    feet = [Vector((x+(dx if forward else -dx), y+side*beam*.40, z+8)) for dx in ((12, 24) if forward else (5, 18))]
+                    # Both tacks need the same clear swept volume. Fore-and-aft
+                    # sails have forward chainplates; square rigs stay aft of
+                    # every plane in the permitted 50-degree brace range.
+                    feet = [Vector((x+dx, y+side*beam*.40, z+8)) for dx in (48, 60)] if fore_aft else [
+                        Vector((x-beam*dx, y+side*beam*.25, z+8)) for dx in (.32, .40)]
                     for foot in feet:
                         spar("mast shroud", peak, foot, .38, dark, upper)
                         cylinder("shroud deadeye", foot, 1, 1.2, wood, upper, (math.pi/2, 0, 0))
@@ -219,7 +226,7 @@ def build_in_blender():
                     # of the solid platform, rather than drawing through it.
                     platform_z=z+h*.72
                     vertices=[(x+radius*math.cos(i*math.tau/16), offset+radius*math.sin(i*math.tau/16), platform_z+height)
-                              for radius,offset,height in ((9,0,-1),(9,0,1),(1.15,4,1),(1.15,4,-1)) for i in range(16)]
+                              for radius,offset,height in ((9,0,-1),(9,0,1),(3.2,0,1),(3.2,0,-1)) for i in range(16)]
                     faces=[(row*16+i,row*16+(i+1)%16,((row+1)%4)*16+(i+1)%16,((row+1)%4)*16+i)
                            for row in range(4) for i in range(16)]
                     mesh("lookout platform with rope hole",vertices,faces,wood,upper)
@@ -288,6 +295,7 @@ def build_in_blender():
         fittings = base + upper
         rig = bpy.data.objects.new("ship origin", None)
         bpy.context.collection.objects.link(rig)
+        rig["shipRig"] = json.dumps(ship_rig, separators=(",", ":"), allow_nan=False)
         for obj in fittings:
             obj.parent = rig
         weapon_rig = bpy.data.objects.new("traversing weapon", None)
@@ -303,8 +311,12 @@ def build_in_blender():
         metadata["ships"][kind] = {**spec, "hull": hull, "deck": deck}
         print("SHIP_MODEL", kind, flush=True)
     target = ROOT / "src/shared/generated/ship-geometry.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(metadata, indent=2) + "\n")
+    # Animation-only rebuilds leave the shared physical contract untouched.
+    # Actual edits to ships.json can still regenerate it through this builder.
+    encoded = json.dumps(metadata, indent=2) + "\n"
+    if not target.exists() or target.read_text() != encoded:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(encoded)
 
 
 def main():
@@ -315,7 +327,7 @@ def main():
     subprocess.run([args.blender, "--background", "--factory-startup", "--python-exit-code", "1",
                     "--python", str(Path(__file__).resolve())], check=True,
                    env={**os.environ, "SKETCH_SHIP_KINDS": ",".join(args.kinds or [])})
-    print("Ship models and physical geometry exported; run export-world-gltf.py for GLBs")
+    print("Ship models built and physical geometry verified; run export-world-gltf.py for GLBs")
 
 
 if __name__ == "__main__":

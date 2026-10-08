@@ -4,6 +4,7 @@ import { shipProfile } from './ship-geometry';
 import { shipMotionLimits } from './ship-handling';
 import { advanceShip } from './ship-motion';
 import { headingDifference, hullPassageClear, type ShipPose } from './ship-navigation';
+import { coursePerformance } from './ship-wind';
 import { perTick, SIM_TICKS_PER_SECOND } from './time';
 import type { GameMap, Unit } from './types';
 
@@ -29,17 +30,19 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     const next = points[0]!, dx = next.x - origin.x, dy = next.y - origin.y, length = Math.hypot(dx, dy);
     const along = length ? ((ship.x - origin.x) * dx + (ship.y - origin.y) * dy) / length : 0;
     const cross = length ? Math.abs((ship.x - origin.x) * dy - (ship.y - origin.y) * dx) / length : 0;
-    const following = points.find(point => Math.hypot(point.x - next.x, point.y - next.y) > 1e-7);
+    const following = next.tack ? undefined : points.find(point => Math.hypot(point.x - next.x, point.y - next.y) > 1e-7);
     let beyondCorner = false;
     if (following && Math.hypot(ship.x - next.x, ship.y - next.y) < lookahead * 1.5) {
       const fx = following.x - next.x, fy = following.y - next.y, squared = fx * fx + fy * fy;
       const t = Math.max(0, Math.min(1, ((ship.x - next.x) * fx + (ship.y - next.y) * fy) / squared));
       beyondCorner = t > 0 && Math.hypot(ship.x - next.x - fx * t, ship.y - next.y - fy * t) < cross;
     }
-    if (length > 1e-7 && Math.hypot(ship.x - next.x, ship.y - next.y) > Math.min(8, lookahead * .15)
+    const gap=Math.hypot(ship.x-next.x,ship.y-next.y);
+    if(next.tack && gap>2)break;
+    if (!next.tack && length > 1e-7 && gap > Math.min(8, lookahead * .15)
       && !(along >= length && cross < lookahead) && !beyondCorner) break;
     origin = points.shift()!;
-    route.legX = origin.x; route.legY = origin.y;
+    route.legX = origin.x; route.legY = origin.y; route.windTried=false;
   }
   const last = points.at(-1);
   if (!last) return true;
@@ -57,11 +60,23 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
       break;
     }
     remaining -= gap; carrot = next;
+    if(next.tack)break;
   }
   const cx = carrot.x - ship.x, cy = carrot.y - ship.y, distance = Math.hypot(cx, cy);
   if (distance < 1e-7) return false;
   const error = headingDifference(motion.heading, Math.atan2(cy, cx));
   const turn = perTick(limits.turnRate), acceleration = perTick(limits.acceleration);
+  const desired=coursePerformance(ship,map,Math.atan2(cy,cx),{assumeTrimmed:true});
+  const current=coursePerformance(ship,map,undefined,{assumeTrimmed:true});
+  // The polar approaches zero smoothly outside its strict no-go boundary.
+  // Keep steering authority through that weak band too; otherwise a short
+  // approach can asymptotically stop with both surge and pursuit yaw at zero.
+  const crossingWind=!current.calm && current.trueWindAngle<current.beatAngle
+    && current.targetSpeed<current.auxiliarySpeed && Math.abs(error)>1e-4;
+  const mode=current.calm?'calm-assist':first.tack || crossingWind?'tacking':desired.targetSpeed<desired.auxiliarySpeed?'maneuver':'sail';
+  if(motion.sail)motion.sail.mode=mode;
+  const performance=coursePerformance(ship,map);
+  const drive=mode==='maneuver' || mode==='calm-assist' || crossingWind ? performance.auxiliarySpeed : performance.targetSpeed;
   // Pure pursuit has zero curvature for a target exactly astern. Recover the
   // shortest heading first, then resume a forward curve before fully aligned.
   if (Math.abs(error) > Math.PI * .48) {
@@ -70,15 +85,18 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   }
   const lateral = -cx * detSin(motion.heading) + cy * detCos(motion.heading);
   const curvature = Math.abs(lateral) < 1e-7 ? 0 : 2 * lateral / (distance * distance);
-  const targetSpeed = Math.min(limits.speed * pace,
-    curvature ? limits.turnRate / Math.abs(curvature) : Infinity,
-    Math.sqrt(2 * limits.acceleration * endGap));
-  // Curvature is a hard steering limit; acceleration controls the usual ramp.
-  const speed = Math.min(targetSpeed, motion.speed + acceleration);
-  let surge = perTick(speed), yaw = surge * curvature;
+  const targetSpeed = drive*pace;
+  const coastSpeed=motion.speed+Math.max(-acceleration,Math.min(acceleration,targetSpeed-motion.speed));
+  // Wind changes ramp the surge down; geometric turning and arrival limits
+  // remain hard bounds. A tack still has rudder authority while crossing the
+  // no-go sector, rather than locking yaw to zero sail propulsion.
+  const stoppingGap=first.tack?Math.hypot(first.x-ship.x,first.y-ship.y):endGap;
+  const speed = Math.min(coastSpeed,curvature ? limits.turnRate/Math.abs(curvature) : Infinity,
+    Math.sqrt(2*limits.acceleration*stoppingGap));
+  let surge = perTick(speed), yaw = crossingWind ? Math.max(-turn,Math.min(turn,error)) : surge * curvature;
   // Finish on the goal when it is within one forward step and the yaw budget.
-  if (points.length === 1 && endGap <= surge && Math.abs(error) <= turn) {
-    surge = endGap; yaw = error;
+  if ((points.length === 1 || first.tack) && stoppingGap <= surge && Math.abs(error) <= turn) {
+    surge = stoppingGap; yaw = error;
   }
   const start = { x: ship.x, y: ship.y, heading: motion.heading };
   const traffic = shipTraffic(ship, units);

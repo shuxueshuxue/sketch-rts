@@ -12,6 +12,7 @@ import { EquipmentPanel } from "./equipment-panel";
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
+import { DEFAULT_WIND, getWind } from '../shared/ship-wind';
 import { deckLoad } from "../shared/decks";
 import { purchasePlacement, findPurchaseRecipient, purchaseRecipientInRange, type PurchaseSeller } from "../shared/purchase";
 import "./styles.css";
@@ -160,6 +161,8 @@ const menuStatus = requireElement<HTMLDivElement>("[data-menu-status]");
 const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
 const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
+const windReadout = requireElement<HTMLSpanElement>('[data-wind]');
+const windArrow = requireElement<HTMLSpanElement>('[data-wind-arrow]');
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
 const chatMessages = requireElement<HTMLDivElement>("[data-chat-messages]");
 const chatForm = requireElement<HTMLFormElement>("[data-chat-form]");
@@ -2747,6 +2750,7 @@ function updateHud() {
   const player = currentPlayerState();
   goldLabel.textContent = String(player?.gold ?? "?");
   supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
+  updateWindReadout();
   mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
@@ -2825,6 +2829,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     detail:entity && "order" in entity ? [entity.attackDamage > 0 ? t("hud.attackValue", { damage:entity.attackDamage }) : "",
       entity.level > 0 ? "★".repeat(Math.min(3, entity.level)) : "",
       owner === localPlayerId && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
+      sailingStatus(entity),
     ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
@@ -2854,6 +2859,35 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   if (subject && entity) applyTooltip(subject, "order" in entity
     ? unitSelectionTooltip(entity.kind, [entity], snapshot!, i18n)
     : buildingTooltip(entity.kind, undefined, i18n, snapshot?.players[entity.owner]?.race));
+}
+
+function sailingStatus(unit: Unit): string {
+  const mode = unit.sailing?.sail?.mode;
+  if (mode === 'tacking') return i18n.locale === 'zh' ? '迎风换舷' : 'Tacking';
+  if (mode === 'maneuver' || mode === 'calm-assist') return i18n.locale === 'zh' ? '辅助操纵' : 'Maneuvering';
+  return '';
+}
+
+function updateWindReadout() {
+  if (!snapshot) return;
+  // Only owned or selected ships reveal this readout; hidden opponents cannot make it appear.
+  windReadout.hidden = !snapshot.units.some(unit => shipProfile(unit) && (unit.owner === localPlayerId || selectedIds.has(unit.id)));
+  if (windReadout.hidden) return;
+  const wind = getWind(snapshot.map), ratio = wind.speed / DEFAULT_WIND.speed;
+  const strength = ratio <= 1e-7 ? 0 : ratio < .4 ? 1 : ratio < 1.2 ? 2 : 3;
+  const zh = i18n.locale === 'zh';
+  const level = (zh ? ['无风', '微风', '中风', '强风'] : ['Calm', 'Light wind', 'Moderate wind', 'Strong wind'])[strength]!;
+  const compass = (Math.round(wind.direction / (Math.PI / 4)) + 8) % 8;
+  const direction = (zh ? ['东', '东南', '南', '西南', '西', '西北', '北', '东北'] : ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])[compass]!;
+  const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
+  windArrow.style.transform = `rotate(${wind.direction}rad)`;
+  windReadout.dataset.strength = String(strength);
+  windReadout.setAttribute('aria-label', label);
+  applyTooltip(windReadout, {
+    title: label,
+    body: zh ? '船员自动调帆；开阔水域迎风换舷，靠泊或无风时低速辅助操纵。' : 'Crew trim sails automatically, tack upwind in open water, and use slow assistance for docking or calm conditions.',
+    stats: [], requirements: [],
+  });
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {

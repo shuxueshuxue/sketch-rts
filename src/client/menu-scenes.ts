@@ -221,6 +221,9 @@ function directedScene(kind: "capital" | "woods" | "fleet"): Run {
   const game = stage(width, height, terrain, [[CROWN, "grove"], [GROVE, "grove"], [EMBERS, "ember"]], p);
   const deckPatrols: { shipId: string; crewId: string; phase: number }[] = [];
   if(kind==='fleet') {
+    // This convoy sails both ways along a confined channel in a steady beam
+    // wind. Its timed return legs do not request open-water upwind tacks.
+    game.map.wind={direction:Math.PI/2,speed:80};
     for(const [index,ship] of game.units.filter(unit=>shipProfile(unit)).entries()) {
       const profile=shipProfile(ship)!;
       for(const [unitKind,x,y] of [['footman',-.22,.23],['archer',.15,.22],['worker',-.12,-.22]] as const) {
