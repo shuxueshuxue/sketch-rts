@@ -92,7 +92,7 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   if (!press && (!job || (!tower && !rising && !pending))) { endRush(options); return undefined; }
   const support = !press && tower ? tower : rising ?? (pending?.order.type === 'build' ? pending.order : tower);
   // The front waits for its builder. A completed tower then covers the next short advance.
-  const reach = support === tower && tower ? tower.attackRange * (press ? .6 : .2) : SCREEN;
+  const reach = support === tower && tower ? (press ? tower.attackRange - SCREEN : tower.attackRange * .2) : SCREEN;
   const supportGap = support ? distance(support, target) : 0;
   const step = Math.min(reach, supportGap - SCREEN);
   const advance = support ? { x: support.x + (target.x - support.x) * step / supportGap,

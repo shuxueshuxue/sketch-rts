@@ -23,7 +23,14 @@ export function isBootstrapVersion(version: string): version is BootstrapAiVersi
 export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
   v9_archer: ARCHER_DOCTRINES,
   v9_summoner: V6_STRATEGIES.map(strategy => ({ ...strategy, phases: v7Phases(strategy) })),
-  v9_knight: V8_STRATEGIES.map(strategy => ({ ...strategy, phases: v7Phases(strategy) })),
+  v9_knight: V8_STRATEGIES.map(strategy => ({
+    ...strategy,
+    phases: v7Phases(strategy).map(phase => ({
+      ...phase,
+      wants: phase.wants.map(want => 'building' in want && want.building === 'emberForge'
+        ? { ...want, building: UNIT_DEFS.ashChieftain.trainedAt! } : want),
+    })),
+  })),
 };
 
 function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {

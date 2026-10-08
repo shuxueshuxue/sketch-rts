@@ -30,6 +30,67 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each(['grove', 'ember'] as const)('adds the %s heavy unit factory and trains through both real queues', race => {
+    const grove = race === 'grove';
+    const heavy = grove ? 'knight' : 'ashChieftain';
+    const producer = UNIT_DEFS[heavy].trainedAt!;
+    const basic = grove ? 'raider' : 'emberRavager';
+    const healer = grove ? 'priest' : 'emberAcolyte';
+    const hexer = grove ? 'witch' : 'ashHexer';
+    const lab = grove ? 'barracks' : 'emberForge';
+    let scene = sketchScene('heavy-production-chain').replaceDefaults()
+      .player('us', { race }).player('foe', { race: 'grove' }).playerState('us', { gold: 2000 })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 4000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 4000).townHall('foe', 2800, 2800)
+      .building('us', producer, 500, 850).building('us', lab, 700, 850)
+      .building('us', 'defenseTower', 1450, 700)
+      .building('us', UNIT_DEFS[healer].trainedAt!, 900, 850).farms('us', 10, 400, 1600);
+    for (let index = 0; index < 11; index++) scene = scene.worker('us', 500 + index * 30, 650);
+    for (let index = 0; index < (grove ? 8 : 10); index++) scene = scene.unit('us', basic, 1400 + index * 30, 1000);
+    for (let index = 0; index < 3; index++) scene = scene.unit('us', healer, 1400 + index * 40, 1150).unit('us', hexer, 1400 + index * 40, 1250);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 2 };
+    for (let pass = 0; pass < 2; pass++) {
+      const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_knight', { memory });
+      for (const command of planBootstrapEconomy(snapshotGame(game), 'us', options)) issuePlayerCommand(game, 'us', command);
+      for (let tick = 0; tick < 800; tick++) stepGame(game);
+    }
+    expect(game.buildings.filter(building => building.owner === 'us' && building.kind === producer && building.complete)).toHaveLength(2);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).length).toBeGreaterThanOrEqual(3);
+    if (!grove) expect(game.buildings.filter(building => building.owner === 'us' && building.kind === 'emberForge')).toHaveLength(1);
+  });
+
+  it.each([
+    { gold: 190, factory: 0, research: 0 },
+    { gold: 365, factory: 1, research: 0 },
+    { gold: 455, factory: 0, research: 1 },
+  ])('leaves a normal recruitment wave funded before adding another factory ($gold gold)', ({ gold, factory, research }) => {
+    let scene = sketchScene('factory-before-first-knight').replaceDefaults()
+      .player('us', { race: 'grove' }).player('foe', { race: 'grove' }).playerState('us', { gold })
+      .townHall('us', 500, 500).townHall('foe', 2800, 2800)
+      .building('us', 'stables', 700, 850).building('us', 'barracks', 900, 850).farms('us', 10, 400, 1500);
+    for (let index = 0; index < 6; index++) scene = scene.worker('us', 500 + index * 30, 650);
+    for (let index = 0; index < 5; index++) scene = scene.unit('us', 'lancer', 700 + index * 40, 500);
+    const control = scene.build().createGame(), candidate = scene.build().createGame();
+    const options = () => ({
+      version: 'v2' as const, requestedVersion: 'v9' as const, memory: createAiPolicyMemory(), armyWants: [],
+      doctrines: [{ id: 'recruiting-and-capacity', race: 'grove' as const, weight: 1, standIn: 'lancer' as const, raids: [], phases: [{
+        advanceShare: 1, advanceSupply: 1000, wants: [
+          { upgrade: 'weaponTraining' as const, level: research, priority: 90 },
+          { building: 'stables' as const, count: 2, priority: 80 },
+          { unit: 'knight' as const, count: 6, priority: 74 },
+        ],
+      }] }],
+    });
+    for (const command of planV6Economy(snapshotGame(control), 'us', options())) issuePlayerCommand(control, 'us', command);
+    for (const command of planBootstrapEconomy(snapshotGame(candidate), 'us', options())) issuePlayerCommand(candidate, 'us', command);
+    for (let tick = 0; tick < 800; tick++) { stepGame(control); stepGame(candidate); }
+    expect(candidate.units.filter(unit => unit.owner === 'us' && unit.kind === 'knight')).toHaveLength(1);
+    expect(candidate.buildings.filter(building => building.owner === 'us' && building.kind === 'stables' && building.complete)).toHaveLength(1 + factory);
+    expect(candidate.match.stats.goldSpent.us).toBe(UNIT_DEFS.knight.cost + factory * BUILDING_DEFS.stables.cost + research * UPGRADE_DEFS.weaponTraining.levels[0]!.cost);
+    expect(control.units.filter(unit => unit.owner === 'us' && unit.kind === 'knight')).toHaveLength(gold === 365 ? 1 : 0);
+  });
+
   it.each([false, true])('spends on a summoner or an advance tower according to a real incoming attack (%s)', incoming => {
     let scene = sketchScene('mining-hall-attack-intent').replaceDefaults()
       .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' }).playerState('us', { gold: 180 })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
+import type { GameCommand } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../planner-context';
 import { createAiPolicyMemory } from '../memory';
@@ -40,6 +41,40 @@ function battlefield() {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it.each(['grove', 'ember'] as const)('continues a %s tower advance through clear ground to an ordinary enemy hall', race => {
+    const kind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    let scene = sketchScene('tower-advance-spacing').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' }).playerState('us', { gold: 750 })
+      .townHall('us', 400, 900).townHall('foe', 2500, 700).farms('us', 8, 400, 1900)
+      .worker('us', 1050, 800, { id: 'builder' });
+    for (let index = 0; index < 6; index++) scene = scene.unit('us', kind, 1050 - index % 2 * 35,
+      600 + Math.floor(index / 2) * 50);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 2 };
+    const sites: { x: number; y: number }[] = [];
+    for (let tick = 0; tick < 2400 && !game.match.winner; tick++) {
+      if (tick % 15 === 0) {
+        const context = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+        for (const command of towerRushAbilities.run(snapshotGame(game), 'us', context) as GameCommand[]) issuePlayerCommand(game, 'us', command);
+        const goal = towerRushGoal(snapshotGame(game), 'us', context);
+        if (goal && game.players.us!.gold >= goal.cost) {
+          const command = goal.issue(new Set())!;
+          if (command.type !== 'build') throw new Error('Expected a construction command');
+          if (sites.length > 0) expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower'
+            && building.complete && Math.hypot(command.x - building.x, command.y - building.y) <= building.attackRange)).toBe(true);
+          sites.push(command);
+          issuePlayerCommand(game, 'us', command);
+        }
+        for (const command of summonerTowerRush.run(snapshotGame(game), 'us', context) as GameCommand[]) issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(sites.length).toBeGreaterThanOrEqual(4);
+    expect(game.match.winner).toBe('us');
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === kind)).toHaveLength(6);
+    expect(game.match.stats.goldSpent.us).toBe(sites.length * 125);
+  });
+
   it('lets two normal summon waves cover priced construction and keeps each mine crew working', () => {
     const { game, context } = battlefield();
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
