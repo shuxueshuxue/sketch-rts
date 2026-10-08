@@ -63,7 +63,7 @@ describe('bootstrap_1 production budget', () => {
       .player('us', { race: 'grove' }).player('foe', { race: 'grove' }).playerState('us', { gold: 280 })
       .townHall('us', 500, 500).goldMine('main', 788, 500, 4000).townHall('foe', 2600, 2600)
       .building('us', 'barracks', 400, 850).building('us', 'barracks', 650, 850)
-      .building('us', 'archery', 900, 850).farms('us', 5, 400, 1300);
+      .building('us', 'archeryRange', 900, 850).farms('us', 5, 400, 1300);
     for (let index = 0; index < 6; index++) scene = scene.worker('us', 500 + index * 40, 650);
     for (let index = 0; index < 8; index++) scene = scene.unit('us', 'archer', 1100 + index * 40, 800);
     const game = scene.build().createGame();
