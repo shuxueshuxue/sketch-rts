@@ -104,7 +104,11 @@ describe("physical naval service tasks", () => {
     }
     const services = navalServices(snapshotGame(game), 'player', { version: 'v8', memory: createAiPolicyMemory() });
     for (const command of services.commands) issuePlayerCommand(game, 'player', command);
-    for (let tick = 0; tick < seconds(25); tick++) stepGame(game);
+    // Sailing to the shore in the current wind takes longer than the former motor approach.
+    for (let tick = 0; tick < seconds(40) && !engineer.deck; tick++) {
+      stepGame(game);
+      expect(hullFits(game.map, ship)).toBe(true);
+    }
     expect(engineer.deck?.shipId).toBe(ship.id);
   });
   it("honors an explicit player attack on a hull being boarded", () => {
