@@ -1,9 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { snapshotGame } from "../../shared/sim";
+import { issuePlayerCommand, snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { soldierChoice, trainingChoice } from "./training-choice";
 
 describe("AI training choice", () => {
+  it.each([['grove', 'golem'], ['ember', 'catapult']] as const)("trains the %s workshop's own faction unit", (race, kind) => {
+    const game = sketchScene('workshop-' + race).map('bareDuel').replaceDefaults()
+      .player('v5', { race }).playerState('v5', { gold: 1000 })
+      .townHall('v5', 500, 500).building('v5', 'workshop', 750, 620, { id: 'workshop' })
+      .farmsPastTiers('v5', 150, 150).build().createGame();
+    const snapshot = snapshotGame(game);
+    const chosen = trainingChoice(snapshot, 'v5', snapshot.buildings.find(building => building.id === 'workshop')!, { version: 'v2', requestedVersion: 'v5' });
+    expect(chosen).toBe(kind);
+    issuePlayerCommand(game, 'v5', { type: 'train', buildingId: 'workshop', unitKind: chosen! });
+    expect(game.buildings.find(building => building.id === 'workshop')!.queue[0]!.unitKind).toBe(kind);
+  });
+
   it("opens barracks production with footmen before mixing lancers", () => {
     const game = sketchScene("training-choice-footmen-first")
       .map("bareDuel")
