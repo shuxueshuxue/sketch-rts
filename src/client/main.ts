@@ -12,6 +12,8 @@ import { EquipmentPanel } from "./equipment-panel";
 import { formatMass } from "./format-mass";
 import { canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
+import { DEFAULT_WIND, windAt, WIND_CHANGE_INTERVAL_TICKS } from '../shared/wind-field';
+import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { deckLoad } from "../shared/decks";
 import { purchasePlacement, findPurchaseRecipient, purchaseRecipientInRange, type PurchaseSeller } from "../shared/purchase";
 import "./styles.css";
@@ -47,7 +49,8 @@ import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities
 import { createBrowserI18n, type LabelKey } from "./i18n";
 import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
-import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap } from "./minimap";
+import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap, windProbePoint } from "./minimap";
+import { WindMapDisplay, projectWindDirection } from './minimap-wind';
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
 import { drawMinimapMap } from "./minimap-art";
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
@@ -71,9 +74,7 @@ import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { abilityTooltip, buildingTooltip, damageProfileLabel, formatTooltipDataset, itemTooltip, unitClassLabel, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
-import { unitAttackDamageProfile } from "../shared/damage";
-import { unitClassOf } from "../shared/unit-targeting";
+import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
 import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, type TrainingProgressButton } from "./training-queue";
@@ -185,6 +186,8 @@ const minimapFrame = requireElement<HTMLDivElement>("[data-minimap-frame]");
 const minimapTab = requireElement<HTMLDivElement>("[data-minimap-tab]");
 const matchMenuButton = requireElement<HTMLButtonElement>("[data-match-menu-button]");
 const minimapRelationsButton = requireElement<HTMLButtonElement>("[data-minimap-relations]");
+const minimapWindButton = requireElement<HTMLButtonElement>('[data-minimap-wind]');
+const minimapWindArrow = requireElement<SVGElement>('[data-minimap-wind-arrow]');
 const matchMenu = requireElement<HTMLDivElement>("[data-match-menu]");
 const matchMenuClose = requireElement<HTMLButtonElement>("[data-match-menu-close]");
 const ctx = requireCanvasContext(canvas);
@@ -208,6 +211,10 @@ let spectatingRoom = false;
 // The minimap in friend-or-foe colours (see @@@minimap-relations): as the player sets it this match, or, until they do,
 // on when they have an ally.
 let minimapRelations: boolean | undefined;
+let minimapWind = false;
+let windProbe: Point | undefined;
+let windTooltipKey = '';
+const windMapDisplay = new WindMapDisplay();
 let activeGameAdapter: GameAdapter;
 let activeChat: MatchChat | undefined;
 let activeChatUnsubscribe: (() => void) | undefined;
@@ -230,6 +237,7 @@ let camera = { x: 560, y: 560 };
 let worldZoom = 1;
 let virtualMouse: Point | undefined;
 let virtualTooltipTarget: HTMLElement | undefined;
+let shownTooltipTarget: HTMLElement | undefined;
 let virtualUiMouseDownTarget: HTMLElement | undefined;
 let pointerLockArmed = false;
 let pointerLockFieldClickOnError = false;
@@ -405,6 +413,7 @@ labelSceneSwitch();
 // The match's menu (≡ in the top right): the map being played, concede, and back to the game.
 matchMenuButton.addEventListener("click", () => matchMenu.classList.toggle("hidden"));
 minimapRelationsButton.addEventListener("click", toggleMinimapRelations);
+minimapWindButton.addEventListener('click', toggleMinimapWind);
 matchMenuClose.addEventListener("click", () => matchMenu.classList.add("hidden"));
 const settingsAction=document.createElement('button');settingsAction.className='match-action';settingsAction.textContent=t('home.settings');settingsAction.onclick=()=>{matchMenu.classList.add('hidden');pointerLockArmed=true;hidePointerLockGate();if(document.pointerLockElement===canvas)document.exitPointerLock();openMatchSettings(soundboard,i18n);};matchMenu.append(settingsAction);
 forfeitButton.addEventListener("click", () => {
@@ -473,8 +482,8 @@ function createVeteranLearnButton() {
     () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds()))),
     openVeteranPalette, () => {
       const student = veteranStudent(selectedPlayerUnits(), focusedSelectionId, pendingVeteranIds());
-      return { title: i18n.locale === "zh" ? "三星老兵：学习技能" : "Three-star veteran: learn a skill",
-        body: i18n.locale === "zh" ? "从这名老兵的三个固定候选技能中选择一个。关闭面板会保留候选，学习后不能重选。" : "Choose one of this soldier's three fixed skills. Closing keeps these choices; learning is permanent.",
+      return { title: i18n.locale === "zh" ? "学习技能" : "Learn a skill",
+        body: i18n.locale === "zh" ? "为这名老兵选择一个技能，学习后不能更换。" : "Choose one permanent skill for this soldier.",
         stats: student ? [veteranUnitCaption(student)] : [], requirements: [], hotkey: "P" };
     });
   button.element.dataset.veteranLearn = "true";
@@ -708,6 +717,7 @@ function tooltipTarget(target: EventTarget | null) {
 }
 
 function renderTooltip(target: HTMLElement) {
+  shownTooltipTarget = target;
   const stats = splitTooltipList(target.dataset.tooltipStats);
   const requirements = splitTooltipList(target.dataset.tooltipRequirements);
   const notes = splitTooltipList(target.dataset.tooltipNotes);
@@ -1409,6 +1419,11 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
   purchaseRecipients.clear();
   purchaseRecipientFlash=undefined;
   minimapRelations = undefined;
+  minimapWind = false;
+  windProbe = undefined;
+  windTooltipKey = '';
+  windMapDisplay.reset();
+  minimapWindButton.setAttribute('aria-pressed', 'false');
   activeGameAdapter = adapter;
   activeChat = chat;
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
@@ -1667,6 +1682,7 @@ function suppressPointerLockDocumentMouseDefault(event: MouseEvent | PointerEven
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  if ((event.target === minimapWindButton || event.target === minimapRelationsButton) && ['Enter', ' ', 'Tab'].includes(event.key)) return;
   if(equipmentPanel.isOpen()){if(event.key==="Escape")equipmentPanel.close();event.preventDefault();return;}
   const key = event.key.toLowerCase();
   const chatIntent = chatKeyIntent(event, {
@@ -1693,6 +1709,11 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.altKey && event.code === "KeyA") {
     event.preventDefault();
     toggleMinimapRelations();
+    return;
+  }
+  if (event.altKey && event.code === 'KeyW') {
+    event.preventDefault();
+    toggleMinimapWind();
     return;
   }
   if (key === "escape" && commandMode) {
@@ -2823,13 +2844,12 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   const identity: HudIdentity = {
     key:entity?.id ?? focused.id,
     name:labelAnyKind(focused.kind) + (focused.count > 1 ? ` ${focused.ids.indexOf(entity?.id ?? focused.ids[0]!) + 1}/${focused.count}` : ""),
-    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? t("hud.yourUnit") : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
-    detail:entity && "order" in entity ? [t("hud.attackValue", { damage:entity.attackDamage }),
-      unitClassLabel(unitClassOf(entity, snapshot!), i18n.locale),
-      damageProfileLabel(unitAttackDamageProfile(snapshot!, entity), i18n.locale),
+    caption: total > 1 ? t("hud.selectedCount", { count:total }) : owner === localPlayerId ? "" : owner === "neutral" ? t("hud.neutral") : playerDisplayName(owner, currentRoom?.slots ?? [], t("hud.otherPlayer")),
+    detail:entity && "order" in entity ? [entity.attackDamage > 0 ? t("hud.attackValue", { damage:entity.attackDamage }) : "",
       entity.level > 0 ? "★".repeat(Math.min(3, entity.level)) : "",
-      entity.veteranSkill ? VETERAN_SKILLS[entity.veteranSkill].name[i18n.locale] : canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习技能 +" : "Skill available +" : "",
-    ].filter(Boolean).join(" · ") : t("hud.structure"),
+      owner === localPlayerId && canLearnVeteranSkill(entity) ? i18n.locale === "zh" ? "可学习 +" : "Skill ready +" : "",
+      sailingStatus(entity),
+    ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${owner}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
   };
@@ -2858,6 +2878,43 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
   if (subject && entity) applyTooltip(subject, "order" in entity
     ? unitSelectionTooltip(entity.kind, [entity], snapshot!, i18n)
     : buildingTooltip(entity.kind, undefined, i18n, snapshot?.players[entity.owner]?.race));
+}
+
+function sailingStatus(unit: Unit): string {
+  const mode = unit.sailing?.sail?.mode;
+  if (mode === 'tacking') return i18n.locale === 'zh' ? '迎风换舷' : 'Tacking';
+  if (mode === 'maneuver' || mode === 'calm-assist') return i18n.locale === 'zh' ? '辅助操纵' : 'Maneuvering';
+  return '';
+}
+
+function updateWindIndicator(rect: ScreenRect, now: number) {
+  if (!snapshot || !windProbe) return;
+  const wind = windAt(snapshot.map, windProbe), ratio = wind.speed / DEFAULT_WIND.speed;
+  const display = windMapDisplay.sample(windProbe, now);
+  minimapWindArrow.style.transform = `rotate(${projectWindDirection(display.direction, snapshot.map, rect)}rad)`;
+  minimapWindButton.dataset.calm = String(display.speed <= 1e-7);
+  const pulse = String(windMapDisplay.pulse(now));
+  minimapWindButton.style.setProperty('--wind-pulse', pulse);
+  minimapFrame.style.setProperty('--wind-pulse', pulse);
+  const strength = ratio <= 1e-7 ? 0 : ratio < .75 ? 1 : ratio < 1.2 ? 2 : 3;
+  const zh = i18n.locale === 'zh';
+  const level = (zh ? ['无风', '微风', '中风', '强风'] : ['Calm', 'Light wind', 'Moderate wind', 'Strong wind'])[strength]!;
+  const compass = (Math.round(wind.direction / (Math.PI / 4)) + 8) % 8;
+  const direction = (zh ? ['东', '东南', '南', '西南', '西', '西北', '北', '东北'] : ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])[compass]!;
+  const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
+  const remaining = Math.ceil((WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS) / SIM_TICKS_PER_SECOND);
+  const countdown = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+  const key = `${label}:${countdown}:${minimapWind}`;
+  if (windTooltipKey === key) return;
+  windTooltipKey = key;
+  minimapWindButton.setAttribute('aria-label', `${t('hud.minimapWind')} · ${label}`);
+  applyTooltip(minimapWindButton, {
+    title: `${zh ? '光标处' : 'At cursor'}：${label}`,
+    hotkey: 'Alt+W',
+    body: zh ? `点击${minimapWind ? '收起' : '显示'}风向图。当前全图同风。` : `Click to ${minimapWind ? 'hide' : 'show'} the wind map. Wind is currently uniform across the map.`,
+    stats: [zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`], requirements: [],
+  });
+  if (!tooltipLayer.classList.contains('hidden') && shownTooltipTarget === minimapWindButton) renderTooltip(minimapWindButton);
 }
 
 function selectionGroupTooltip(group: SelectionGroup): GameplayTooltip {
@@ -3281,10 +3338,18 @@ function drawSelectionBox() {
 function drawMinimap(marks: MapPresentationMark[]) {
   if (!snapshot) return;
   const rect = minimapRect();
+  const now = performance.now();
+  windMapDisplay.setReducedMotion(reducedUnitMotion.matches);
+  windMapDisplay.update(snapshot, now);
+  const pointer = lastMouse && document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+  windProbe = windProbePoint(pointer, { minimap: rect, world: snapshot.map, camera,
+    viewport: { width: canvas.clientWidth, height: canvas.clientHeight }, zoom: worldZoom }, windProbe);
+  updateWindIndicator(rect, now);
   const relations = minimapRelationsOn();
   if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
   const viewer = matchViewer();
-  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined);
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined,
+    minimapWind ? () => windMapDisplay.draw(ctx, rect, now) : undefined);
   ctx.strokeStyle = "#243126";
   ctx.lineWidth = 1;
   const viewport = minimapViewportRect(rect);
@@ -3315,6 +3380,12 @@ function toggleMinimapRelations() {
   if (!matchViewer()) return;
   minimapRelations = !minimapRelationsOn();
   statusLabel.textContent = t(minimapRelations ? "status.minimapRelationsOn" : "status.minimapRelationsOff");
+}
+
+function toggleMinimapWind() {
+  if (!snapshot || menuOpen) return;
+  minimapWind = !minimapWind;
+  minimapWindButton.setAttribute('aria-pressed', String(minimapWind));
 }
 
 function updateCamera() {
@@ -3362,6 +3433,7 @@ function resizeCanvas() {
   minimapTab.style.width = `${mini.width}px`;
   // The friend-or-foe button stands at the frame's top left, outside it (see .minimap-relations).
   minimapRelationsButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
+  minimapWindButton.style.transform = `translate(${mini.x}px, ${mini.y}px)`;
 }
 
 function mousePoint(event: MouseEvent): Point {
