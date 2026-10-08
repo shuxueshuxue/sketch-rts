@@ -5,6 +5,7 @@ import { BUILDING_DEFS } from '../../shared/catalog';
 import { SHIP_KINDS,isShipKind } from '../../shared/ship-geometry';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import type { GameSnapshot } from '../../shared/types';
+import { attachShipRigParts } from './sail-rig';
 
 export const SITE_MODELS=['citadel','shop','camp','well','statue','beacon','fort-lance','fort-flame','fort-mortar','fort-ward','fort-wall'];
 export const matchModelKeys=[...SHIP_KINDS.map(kind=>`ships/${kind}`),...new Set([...Object.keys(BUILDING_DEFS),...SITE_MODELS])].map(kind=>kind.startsWith('ships/')?kind:`buildings/${kind}`);
@@ -20,7 +21,7 @@ export class ModelLibrary {
     const data=resources.bytes(url,key,phase);
     let pending=this.pending.get(key);if(!pending){pending=(async()=>{
       const bytes=await data;const result=await new GLTFLoader().parseAsync(bytes,resources.url('art/world3d/'));
-      result.scene.updateMatrixWorld(true);result.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.castShadow=true;object.receiveShadow=true;}});
+      attachShipRigParts(result.scene);result.scene.updateMatrixWorld(true);result.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.castShadow=true;object.receiveShadow=true;}});
       this.models.set(key,result.scene);
     })().catch(error=>{this.pending.delete(key);throw error;});this.pending.set(key,pending);}return pending;
   }

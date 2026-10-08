@@ -50,7 +50,7 @@
 .control-deck .hud-roster-unit { border-radius:0; }
 .control-deck .command-label { font:11px/14px var(--game-text); text-shadow:0 1px #24140d; }
 .control-deck .hotkey { top:2px; bottom:auto; right:2px; z-index:2; min-width:14px; padding:0 2px; background:#302014f2; color:#fff3d1; font:600 11px/14px var(--game-text); text-shadow:0 1px #000; pointer-events:none; }
-:is(.minimap-tab,.match-menu-button,.minimap-relations,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-surface); border-color:var(--game-brass); }
+:is(.minimap-tab,.match-menu-button,.minimap-relations,.minimap-wind,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-surface); border-color:var(--game-brass); }
 .minimap-frame { background:none; border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
 .match-menu,.tooltip-layer { border:6px solid transparent; border-image:var(--frame-walnut) 16 / 6px stretch; box-shadow:var(--game-frame); color:var(--game-ink); }
 .tooltip-layer { max-width:min(320px,calc(100vw - 24px)); font:12px/1.55 var(--game-text); }
