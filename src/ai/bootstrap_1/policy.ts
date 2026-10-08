@@ -10,6 +10,7 @@ import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
+import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
@@ -59,11 +60,12 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
 export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.flatMap(script => {
+    if (script === AI_SCRIPT_LIBRARY.v6General) return [{ ...script, run: planBootstrapGeneral }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.abilities) return [towerRushAbilities, summonerTowerRush];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [script, miningAssignments, battleRepair, shellEvasion] : [script];
+    return script === AI_SCRIPT_LIBRARY.naval ? [script, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
   });
 }
 

@@ -1,0 +1,81 @@
+import { UNIT_DEFS } from '../../shared/catalog';
+import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
+import { sameGround } from '../../shared/terrain';
+import { resolveAiCommandIntent } from '../policy/commands';
+import { averagePoint, distance } from '../policy/spatial';
+import { isBacklineKind } from '../policy/v6/backline';
+import { readV6Intel, type V6Intel } from '../policy/v6/intel';
+import { planV6Army } from '../policy/v6/general';
+import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
+import type { AiPolicyContext, AiScript } from '../policy/types';
+
+type Detachment = { hall: Building; attackers: Unit[]; crew: Unit[] };
+
+function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Detachment | undefined {
+  const intel = readV6Intel(snapshot, owner, options);
+  const foes = intel.enemies.flatMap(enemy => enemy.army);
+  const aimedAt = (unit: Unit, hall: Building) => unit.order.type === 'attack' && unit.order.targetId === hall.id
+    || unit.order.type === 'attackMove' && distance(unit.order, hall) <= hall.radius + 80;
+  const raids = intel.ownHalls.map(hall => ({ hall,
+    attackers: foes.filter(unit => sameGround(snapshot.map, unit, hall)
+      && (distance(unit, hall) < 650 || aimedAt(unit, hall) && distance(unit, hall) < 1800)),
+  })).filter(raid => raid.attackers.length > 0)
+    .sort((a, b) => Number(b.attackers.some(unit => aimedAt(unit, b.hall))) - Number(a.attackers.some(unit => aimedAt(unit, a.hall)))
+      || strengthOf(b.attackers) - strengthOf(a.attackers));
+  const pool = intel.army.filter(unit => !unit.deck && !unit.expiresTick && unit.hp >= unit.maxHp * .6
+    && !['board', 'cast', 'charge'].includes(unit.order.type));
+  for (const { hall, attackers } of raids) {
+    const nearby = pool.filter(unit => sameGround(snapshot.map, unit, hall) && distance(unit, hall) < 1300)
+      .sort((a, b) => distance(a, hall) - distance(b, hall));
+    const fighters = nearby.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+    const crew = fighters.filter(unit => unit.attackRange <= 80).slice(0, 2);
+    if (attackers.some(unit => unit.expiresTick !== undefined)) {
+      const dispeller = nearby.find(unit => UNIT_DEFS[unit.kind].abilities.includes('curse'));
+      if (dispeller) crew.push(dispeller);
+    }
+    const cover = intel.ownTowers.filter(tower => attackers.some(unit => distance(tower, unit) <= tower.attackRange))
+      .reduce((power, tower) => power + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
+    for (const fighter of fighters) {
+      if (crew.length >= 3 && strengthOf(crew) + cover >= strengthOf(attackers) * 1.25) break;
+      if (!crew.includes(fighter)) crew.push(fighter);
+    }
+    // A detachment must cover its raid and leave a larger army for the other front.
+    if (crew.length < 3 || strengthOf(crew) + cover < strengthOf(attackers) * 1.25
+      || strengthOf(crew) > intel.power * .55) continue;
+    return { hall, attackers, crew };
+  }
+}
+
+export const mineDefense: AiScript = {
+  id: 'mineDefense', phase: 'tactics',
+  claimsUnits: (snapshot, owner, options) => new Set(detachment(snapshot, owner, options)?.crew.map(unit => unit.id)),
+  run(snapshot, owner, options): GameCommand[] {
+    const guard = detachment(snapshot, owner, options);
+    if (!guard) return [];
+    const threat = averagePoint(guard.attackers), gap = distance(threat, guard.hall);
+    const post = { x: guard.hall.x + (threat.x - guard.hall.x) * Math.min(1, 200 / gap),
+      y: guard.hall.y + (threat.y - guard.hall.y) * Math.min(1, 200 / gap) };
+    const moving = guard.crew.filter(unit => {
+      const order = unit.order;
+      if (order.type === 'attackMove' && distance(order, post) < 80) return false;
+      if (order.type === 'idle' && distance(unit, post) < 80) return false;
+      if (order.type === 'attack' && snapshot.units.some(target => target.id === order.targetId && distance(target, post) < 450)) return false;
+      return true;
+    });
+    return moving.length ? [resolveAiCommandIntent(snapshot, owner,
+      { type: 'attackMove', unitIds: moving.map(unit => unit.id), ...post }, options)] : [];
+  },
+};
+
+export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  const intel = readV6Intel(snapshot, owner, options), guard = detachment(snapshot, owner, options);
+  const crew = new Set(guard?.crew.map(unit => unit.id));
+  const army = intel.army.filter(unit => !crew.has(unit.id));
+  const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
+    && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
+  const { armyCenter, intrusion, ...world } = intel;
+  const main: V6Intel = { ...world, army, power: strengthOf(army) };
+  if (army.length) main.armyCenter = averagePoint(army);
+  if (intrusion && !covered) main.intrusion = intrusion;
+  return planV6Army(snapshot, owner, options, main);
+}

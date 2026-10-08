@@ -126,8 +126,11 @@ type Mode = NonNullable<V6PolicyMemory["general"]>["mode"];
 
 export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
+  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options));
+}
+
+export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
   const memory = v6Memory(options);
-  const intel = readV6Intel(snapshot, owner, options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? []), ...(options.memory.support?.unitIds ?? []), ...Object.values(options.memory.naval?.ferries ?? {}).flatMap((ferry) => ferry.crewIds)]);
   const available = intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
