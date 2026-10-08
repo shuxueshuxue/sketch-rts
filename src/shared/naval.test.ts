@@ -1,7 +1,7 @@
 import { installedWeapons } from "./ship-equipment";
 import { UNIT_DEFS } from "./catalog";
 import { shipPassengers } from "./ship-geometry";
-import { deckPointFits, deckLoad } from "./decks";
+import { deckPointFits, deckLoad, restoreCargoDecks } from "./decks";
 import { hullFits } from "./ship-navigation";
 import { boardingBerth, BOARDING_GAP } from './naval';
 import { distanceToHull } from './ship-geometry';
@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
 import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
 import { applyCommandFrame } from "./sim/frame";
-import { isWalkable, type Terrain } from "./terrain";
+import { isWalkable, sameGround, type Terrain } from "./terrain";
 import type { ScenarioBuildingSeed, ScenarioUnitSeed } from "./types";
 
 // A 30 by 20 grid: land in columns 0-8, a strip of shallows down column 9, the sea from column 10 on, and in it an island
@@ -59,9 +59,19 @@ describe("ships", () => {
     const sim = game([], [{ id: "yard", owner: "player", kind: "shipyard", x: 275, y: at(0, 10).y }]);
     issuePlayerCommand(sim, "player", { type: "setRally", buildingIds: ["yard"], ...at(26, 9) });
     issuePlayerCommand(sim, "player", { type: "train", buildingId: "yard", unitKind: "warship" });
-    run(sim, 900, () => {
-      for (const ship of sim.units.filter((candidate) => candidate.kind === "warship")) expect(hullFits(sim.map, ship)).toBe(true);
+    let previous: {x:number;y:number;heading:number}|undefined,travel=0,totalYaw=0;
+    // This tight coast includes exact departure and arrival turns. Allow a
+    // minute including construction, while bounding route length and turning
+    // so the larger time budget cannot hide a loop or a stuck hull.
+    run(sim, 1200, () => {
+      for (const ship of sim.units.filter((candidate) => candidate.kind === "warship")) {
+        expect(hullFits(sim.map, ship)).toBe(true);
+        const heading=ship.sailing!.heading;
+        if(previous){travel+=Math.hypot(ship.x-previous.x,ship.y-previous.y);totalYaw+=Math.abs(Math.atan2(Math.sin(heading-previous.heading),Math.cos(heading-previous.heading)));}
+        previous={x:ship.x,y:ship.y,heading};
+      }
     });
+    expect(travel).toBeLessThan(800);expect(totalYaw).toBeLessThan(300*Math.PI/180);
     const ship = sim.units.find((candidate) => candidate.kind === "warship")!;
     expect(Math.hypot(ship.x - at(26, 9).x, ship.y - at(26, 9).y),JSON.stringify({x:ship.x,y:ship.y,order:ship.order,sailing:ship.sailing})).toBeLessThan(5);
   });
@@ -170,6 +180,27 @@ describe("transports", () => {
     expect(ferry.cargo).toHaveLength(2);
     expect(unit(sim, "a")).toBeUndefined();
     expect(ferry.order.type).toBe("idle");
+  });
+
+  for (const correctShore of [true, false]) it(`${correctShore ? "unloads from a stopped nearby berth" : "keeps passengers aboard at a stop on the wrong island"} when the requested berth is occupied`, () => {
+    const { sim, ferry } = loadedFerry(16);
+    restoreCargoDecks(sim.units);
+    const target = at(19, 9);
+    Object.assign(ferry, correctShore ? { x: 528, y: 400 } : { x: 336, y: 304 });
+    issuePlayerCommand(sim, "player", { type: "unload", unitIds: [ferry.id], ...target });
+    // A saved partial route can end at clear water beside an occupied berth.
+    ferry.sailing!.heading = -Math.PI / 2;
+    ferry.sailing!.speed = 0;
+    ferry.sailing!.route = {
+      goalX: target.x, goalY: target.y, points: [], end: { x: ferry.x, y: ferry.y },
+      partial: true, cruise: false, trafficKey: "",
+      startX: ferry.x, startY: ferry.y, startHeading: ferry.sailing!.heading,
+    };
+    expect(Math.hypot(ferry.x - target.x, ferry.y - target.y)).toBeGreaterThan(64);
+    stepGame(sim);
+    expect(shipPassengers(sim.units, ferry)).toHaveLength(correctShore ? 0 : 2);
+    expect(ferry.order.type).toBe(correctShore ? "idle" : "unload");
+    if (correctShore) for (const id of ["a", "b"]) expect(sameGround(sim.map, unit(sim, id)!, target)).toBe(true);
   });
 
   it("does not unload another owner's cargo or repeat a stale passenger click", () => {

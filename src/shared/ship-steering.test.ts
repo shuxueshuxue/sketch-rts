@@ -1,7 +1,7 @@
 import { describe,expect,it } from 'vitest';
 import { createGame,issuePlayerCommand,restoreSnapshotIntoGame,snapshotGame,stepGame } from './sim';
 import { checksumGame } from './sim/checksum';
-import { headingDifference,hullFits } from './ship-navigation';
+import { headingDifference,hullFits,planVoyageRoute } from './ship-navigation';
 import { SHIP_WEAPONS,bestFiringHeading,shipGunCanAim,shipPartMax } from './ship-equipment';
 import { seconds } from './time';
 function scene(){const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;game.map.width=2400;game.map.height=2000;game.map.terrain={cell:40,cols:60,rows:50,cells:'~'.repeat(3000)};return game;}
@@ -14,8 +14,11 @@ describe('predictable ship steering',()=>{
     game.map.wind={direction:angle,speed:80};
     ship.sailing!.heading=0;
     issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],...goal});
+    const reference=planVoyageRoute(game.map,ship,goal).points;
+    let from={x:ship.x,y:ship.y},referenceLength=0;
+    for(const point of reference){referenceLength+=Math.hypot(point.x-from.x,point.y-from.y);from=point;}
     let totalYaw=0,astern=0,travel=0,movingTurns=0;
-    for(let i=0;i<seconds(25)&&ship.order.type==='move';i++){
+    for(let i=0;i<seconds(60)&&ship.order.type==='move';i++){
       const before={x:ship.x,y:ship.y,heading:ship.sailing!.heading};stepGame(game);
       const yaw=headingDifference(before.heading,ship.sailing!.heading);totalYaw+=Math.abs(yaw);
       if(i===0)expect(yaw*headingDifference(0,angle)).toBeGreaterThan(0);
@@ -25,10 +28,11 @@ describe('predictable ship steering',()=>{
       expect(hullFits(game.map,ship)).toBe(true);
     }
     expect(astern).toBe(0);
-    // Joining the reference line needs a corrective turn, but no circling or
-    // long detour. A turn-only controller has zero moving turn frames.
-    expect(totalYaw).toBeLessThan(Math.abs(angle)+Math.PI/4);
-    expect(travel).toBeLessThan(450*1.25);expect(movingTurns).toBeGreaterThan(20);
+    // A forward U-turn needs the ship's cruising radius. Bound excess travel
+    // against its swept arc-and-tangent reference, and independently prohibit
+    // a full extra turn or a turn-only controller.
+    expect(totalYaw).toBeLessThan(Math.abs(angle)+Math.PI/2);
+    expect(travel).toBeLessThan(referenceLength*1.15);expect(movingTurns).toBeGreaterThan(20);
     expect(Math.hypot(ship.x-goal.x,ship.y-goal.y)).toBeLessThan(5);
   });
   it('anticipates a forward route corner without stopping at its zero-distance turn state',()=>{

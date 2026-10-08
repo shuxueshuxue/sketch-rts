@@ -1,10 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { createRoom } from "./rooms";
 import { assertSaveGameInput, createSaveGameRecord, parseSaveGameInput, restoreGameFromSave } from "./savegame";
+import { hullFits, planShipRoute } from "./ship-navigation";
 import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { createGame, issuePlayerCommand, refreshUnitStats, stepGame } from "./sim";
 
 describe("savegame runtime sync metadata", () => {
+  it("replans an older coastal voyage without changing its order or physical pose", () => {
+    const game=createGame("bareDuel",{aiPlayers:[]});
+    game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;
+    game.map={...game.map,width:960,height:768,terrain:{cols:30,rows:24,cell:32,cells:Array.from({length:720},(_,i)=>{
+      const x=i%30,y=Math.floor(i/30);return x===0||y===0||x===29||y===23||(x>=12&&x<=15&&y>=5&&y<=13)?'.':'~';
+    }).join('')}};
+    const ship=game.spawnUnit('player','transport',176,336),goal={x:784,y:336};
+    issuePlayerCommand(game,'player',{type:'move',unitIds:[ship.id],...goal});
+    const planned=planShipRoute(game.map,ship,goal);
+    ship.sailing!.route={goalX:goal.x,goalY:goal.y,...planned,end:goal,cruise:true,startX:ship.x,startY:ship.y,startHeading:0};
+    const room={...createRoom({id:'old-voyage',host:{id:'host',name:'Host'},mapId:'bareDuel'}),status:'inMatch' as const};
+    const save=createSaveGameRecord(game,room,{id:'old-voyage'});save.runtime.checksumVersion=11;
+    const original=JSON.stringify(save),restored=restoreGameFromSave(save),boat=restored.units.find(unit=>unit.id===ship.id)!;
+    expect(boat).toMatchObject({x:ship.x,y:ship.y,order:ship.order,sailing:{heading:ship.sailing!.heading,speed:ship.sailing!.speed}});
+    expect(boat.sailing!.route).toBeUndefined();expect(JSON.stringify(save)).toBe(original);
+    for(let tick=0;tick<1000 && boat.order.type==='move';tick++){stepGame(restored);expect(hullFits(restored.map,boat)).toBe(true);}
+    expect(boat.order.type).toBe('idle');expect(Math.hypot(boat.x-goal.x,boat.y-goal.y)).toBeLessThan(1);
+  });
+
   it.each([false, true])("repairs only incompatible mechanical skill offers from a version-eight save (learned=%s)", learned => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const mechanical = game.spawnUnit("player", "golem", 900, 900);
