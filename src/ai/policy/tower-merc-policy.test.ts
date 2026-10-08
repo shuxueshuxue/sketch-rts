@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS } from "../../shared/catalog";
+import { GOLD_MINE_RULES } from "../../shared/mining";
+import { isBuildPlacementClear } from "../../shared/build-placement";
 import { snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
 import { AI_SCRIPT_LIBRARY, planAiCommandEntriesFromScripts, planPresetAiCommandEntries } from "./core";
@@ -881,7 +883,12 @@ describe("V4-TR tower mercenary policy", () => {
 
     expect(townHall).toMatchObject({ type: "build", unitId: "builder", buildingKind: "townHall" });
     if (!townHall || townHall.type !== "build") throw new Error("missing townHall command");
-    expect(Math.hypot(townHall.x - 1_410, townHall.y - 590)).toBeLessThan(260);
-    expect(Math.hypot(townHall.x - 1_010, townHall.y - 590)).toBeGreaterThan(220);
+    const clearedMine = game.resources.find(resource => resource.id === "cleared-far")!;
+    const guardedMine = game.resources.find(resource => resource.id === "guarded-near")!;
+    const clearedDistance = Math.hypot(townHall.x - clearedMine.x, townHall.y - clearedMine.y);
+    expect(clearedDistance).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
+    expect(clearedDistance).toBeLessThan(GOLD_MINE_RULES.baseRange);
+    expect(clearedDistance).toBeLessThan(Math.hypot(townHall.x - guardedMine.x, townHall.y - guardedMine.y));
+    expect(isBuildPlacementClear(snapshotGame(game), "townHall", townHall)).toBe(true);
   });
 });

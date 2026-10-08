@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
 import type { Building, GameSnapshot, PlayerId, TrainableUnitKind } from "../../shared/types";
 import { isOpponentOwner } from "./ownership";
 import { distance } from "./spatial";
@@ -127,7 +128,7 @@ export function shouldPrioritizeWoundedPriestTraining(snapshot: GameSnapshot, ow
   if (options.version !== "v2") return false;
   const healers = units(snapshot, owner).filter((unit) => unit.kind === "priest" || unit.kind === "emberAcolyte" || unit.kind === "fieldMedic").length;
   if (healers >= 2) return false;
-  return combatUnits(snapshot, owner).filter((unit) => unit.kind !== "priest" && unit.kind !== "fieldMedic" && unit.hp < unit.maxHp * 0.62).length >= 3;
+  return combatUnits(snapshot, owner).filter((unit) => canReceiveHealing(unit, snapshot) && unit.kind !== "priest" && unit.kind !== "fieldMedic" && unit.hp < unit.maxHp * 0.62).length >= 3;
 }
 
 function v2LateCasterTarget(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {

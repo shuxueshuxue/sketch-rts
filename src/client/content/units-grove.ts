@@ -136,7 +136,7 @@ export const GROVE_UNITS = {
   },
   priest: {
     name: { en: "Priest", zh: "牧师" },
-    description: { en: "Support caster with a targeted heal for wounded allies.", zh: "支援施法者，可以对受伤友军进行定点治疗。" },
+    description: { en: "Support caster with a targeted heal for wounded non-mechanical allies.", zh: "支援施法者，可以对受伤的非机械友军进行定点治疗。" },
     command: { icon: "+", hotkey: "p" },
     glyph: { silhouette: "priest-medallion", marks: ["halo", "cross", "satchel"] },
     art: { tier: "advanced", bearing: "foot", faction: "grove" },

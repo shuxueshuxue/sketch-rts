@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
-import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, withTooltipRequirement } from "./tooltips";
-import { ABILITY_DEFS } from "../shared/catalog";
+import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement } from "./tooltips";
+import { ABILITY_DEFS, resolveVariant } from "../shared/catalog";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
 
@@ -12,6 +12,41 @@ if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
 const CHARGE_COOLDOWN_SECONDS = (CHARGE.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
+  it("labels mechanical units and passengers independently and excludes mechanical regeneration claims", () => {
+    const snapshot = snapshotWithPlayerUpgrades({ leadership: 3 });
+    const golem = unit("golem", { level: 3, deck: { shipId: "transport", x: 0, y: 0 } });
+    const passenger = unit("footman", { deck: { shipId: "transport", x: 20, y: 0 } });
+    for (const locale of ["zh", "en"] as const) {
+      const i18n = createI18n(locale);
+      const mechanical = unitSelectionTooltip("golem", [golem], snapshot, i18n);
+      expect(mechanical.stats).toContain(locale === "zh" ? "单位类型：机械" : "Unit class: Mechanical");
+      expect(mechanical.stats.join(" ")).not.toContain(locale === "zh" ? "回复 +12" : "Regen +12");
+      expect(unitSelectionTooltip("footman", [passenger], snapshot, i18n).stats).toContain(locale === "zh" ? "单位类型：非机械" : "Unit class: Non-mechanical");
+      expect(unitTooltip("ballista", undefined, i18n).stats).toContain(locale === "zh" ? "单位类型：机械" : "Unit class: Mechanical");
+      expect(tooltipText(abilityTooltip("heal", undefined, i18n))).toContain(locale === "zh" ? "对机械单位无效" : "no effect on mechanical units");
+      for (const item of ["healingScroll", "regenRing"] as const) expect(tooltipText(itemTooltip(item, undefined, i18n))).toContain(locale === "zh" ? "对机械单位无效" : "no effect on mechanical units");
+      for (const building of ["moonWell", "emberShrine"] as const) expect(tooltipText(buildingTooltip(building, undefined, i18n))).toContain(locale === "zh" ? "非机械友军" : "non-mechanical allies");
+    }
+    snapshot.variants = { automaton: resolveVariant({ base: "footman", unitClass: "mechanical", regenPerSecond: 10 }) };
+    const automaton = { ...passenger, variant: "automaton" };
+    const text = tooltipText(unitSelectionTooltip("footman", [automaton], snapshot));
+    expect(text).toContain("Unit class: Mechanical");
+    expect(text).not.toContain("Innate regeneration");
+    expect(text).not.toContain("Regen +");
+  });
+
+  it("shows the wielded weapon's damage type and distinguishes physical armor from universal veteran protection", () => {
+    const snapshot = snapshotWithPlayerUpgrades({});
+    const priest = unit("priest", {});
+    expect(tooltipText(unitSelectionTooltip("priest", [priest], snapshot))).toContain("Magic · Ranged");
+    const armed = { ...priest, hands: { right: "sword", left: "sword" } };
+    snapshot.items = [{ id: "sword", kind: "greatSword", carrierId: armed.id, slot: "carry0", x: 0, y: 0, cooldownRemaining: 0 }];
+    expect(tooltipText(unitSelectionTooltip("priest", [armed], snapshot))).toContain("Physical · Melee · Cutting");
+    expect(tooltipText(itemTooltip("leatherArmor"))).toContain("physical damage reduction");
+    expect(tooltipText(itemTooltip("roundShield", undefined, createI18n("zh")))).toContain("不减免魔法伤害");
+    expect(tooltipText(veteranSkillTooltip("veteranInnerFire"))).toContain("both physical and magic");
+  });
+
   it('shows a live purchase refusal once even when the purchase tooltip already includes it', () => {
     for(const reason of ['接收者距离过远，请先靠近商店或船坞。','金币不足','Move the recipient closer to the seller']) {
       const base={...itemTooltip('shipCannon'),requirements:[reason,'Delivered to the recipient.']};
@@ -116,21 +151,21 @@ describe("gameplay tooltips", () => {
     expect(upgradeTooltip("rangeTraining", "r", 2).stats).toEqual(expect.arrayContaining(["+35% unit range"]));
     expect(upgradeTooltip("leadership", "l", 2)).toMatchObject({
       stats: expect.arrayContaining(["+3/7/12 HP/s at 1/2/3 stars"]),
-      requirements: expect.arrayContaining(["Affects starred units."]),
+      requirements: expect.arrayContaining(["Affects non-mechanical starred units."]),
     });
   });
 
   it("describes selected units with live combat stats and leadership regeneration", () => {
     const snapshot = snapshotWithPlayerUpgrades({ leadership: 3 });
-    const veteran = unit("golem", { hp: 100, maxHp: 300, attackDamage: 50, attackRange: 48, speed: 44, level: 3 });
+    const veteran = unit("knight", { hp: 100, maxHp: 300, attackDamage: 50, attackRange: 48, speed: 44, level: 3 });
 
-    expect(unitSelectionTooltip("golem", [veteran], snapshot)).toMatchObject({
-      title: "Golem",
+    expect(unitSelectionTooltip("knight", [veteran], snapshot)).toMatchObject({
+      title: "Knight",
       stats: expect.arrayContaining(["HP 100/300", "Attack 50", "Range 48", "Speed 44/s", "Regen +12 HP/s"]),
     });
 
     const zh = createI18n("zh");
-    expect(unitSelectionTooltip("golem", [veteran], snapshot, zh).stats).toEqual(expect.arrayContaining(["回复 +12 生命/秒"]));
+    expect(unitSelectionTooltip("knight", [veteran], snapshot, zh).stats).toEqual(expect.arrayContaining(["回复 +12 生命/秒"]));
   });
 
   it("describes buildings without relying on self-label text", () => {
@@ -160,7 +195,7 @@ describe("gameplay tooltips", () => {
     expect(upgradeTooltip("buildingDurability", "d", 0, zh).requirements).toEqual(["在城镇大厅研究。", "影响建筑。"]);
     expect(upgradeTooltip("leadership", "l", 2, zh)).toMatchObject({
       stats: expect.arrayContaining(["1/2/3 星 +3/7/12 生命/秒"]),
-      requirements: expect.arrayContaining(["影响有星单位。"]),
+      requirements: expect.arrayContaining(["影响非机械有星单位。"]),
     });
     expect(buildingTooltip("barracks", "b", zh).requirements[0]).toContain("提供：步兵");
     expect(buildingTooltip("barracks", "b", zh).requirements[0]).toContain("武器训练");

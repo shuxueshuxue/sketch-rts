@@ -75,6 +75,17 @@ describe("unit pose history", () => {
     expect(tracker.frame(knight, 60)).toEqual(IDLE_FRAME);
   });
 
+  it.each(["repairUnit", "repairShip"] as const)("shows %s as work only when a repair pulse occurs", type => {
+    const tracker = new UnitAnimationTracker();
+    const worker = soldier({ kind: "worker", order: { type, targetId: "machine" } });
+    tracker.update(snap(0, worker), 0);
+    const repairing = { ...worker, cooldown: 12 };
+    tracker.update(snap(1, repairing), 50);
+    expect(tracker.frame(repairing, 60)).toEqual(IDLE_FRAME);
+    tracker.update({ ...snap(2, repairing), effects: [work(repairing)] }, 100);
+    expect(tracker.frame(repairing, 110).mode).toBe("work");
+  });
+
   it("plays a real work stroke, preserves its age and freezes with the simulation", () => {
     const tracker = new UnitAnimationTracker();
     const worker = soldier({ kind: 'worker', order: {type:'repair', buildingId:'hall'} });

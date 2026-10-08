@@ -1,4 +1,5 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
+import { canReceiveHealing } from "../../shared/healing";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId } from "../../shared/types";
 import { armyPower } from "./combat-math";
@@ -61,7 +62,7 @@ export function shouldReserveForHealingWell(snapshot: GameSnapshot, owner: Playe
   if (buildings(snapshot, owner).some((building) => isHealingBuildingKind(building.kind) && distance(building, main) < 520)) return false;
   if (buildings(snapshot, owner).some((building) => building.kind === healingKind && !building.complete)) return false;
   if (!healingWellPressure(snapshot, owner, main, options)) return false;
-  return combatUnits(snapshot, owner).some((unit) => unit.hp < unit.maxHp * 0.86 && distance(unit, main) <= 720);
+  return combatUnits(snapshot, owner).some((unit) => canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp * 0.86 && distance(unit, main) <= 720);
 }
 
 export function hasReachedHealingWellLimit(snapshot: GameSnapshot, owner: PlayerId) {

@@ -2,6 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
+import { planVeteranSkillCommands } from "./veteran-skills";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -42,21 +43,33 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
+  const withVeteranSkills = (entries: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] => {
+    const alreadyChosen = new Set(entries.flatMap(entry => entry.command.type === "learnVeteranSkill" ? [entry.command.unitId] : []));
+    return [
+      ...planVeteranSkillCommands(snapshot, owner).filter(command => !alreadyChosen.has(command.unitId)).map(command => ({
+        playerId: owner,
+        ...(request.source !== undefined ? { source: request.source } : {}),
+        scriptId: "veteranSkills",
+        command,
+      })),
+      ...entries,
+    ];
+  };
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.
   if (version === "v2-prod") {
     if (request.scripts || request.scriptIds) throw new Error("v2-prod frozen planner does not accept live script overrides");
-    return planV2ProdAiCommandEntries(snapshot, owner, { ...policyOptions, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
+    return withVeteranSkills(planV2ProdAiCommandEntries(snapshot, owner, { ...policyOptions, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map((entry) => ({
       playerId: owner,
       ...(request.source !== undefined ? { source: request.source } : {}),
       scriptId: entry.scriptId,
       command: entry.command,
-    }));
+    })));
   }
 
   const effectiveVersion = effectivePolicyVersion(version);
   const scripts = scriptsForRequest(request, version);
 
-  return planAiCommandEntriesFromScripts(snapshot, owner, scripts, {
+  return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, {
     ...policyOptions,
     version: effectiveVersion,
     requestedVersion: version,
@@ -68,7 +81,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
     ...(request.source !== undefined ? { source: request.source } : {}),
     scriptId: entry.scriptId,
     command: entry.command,
-  }));
+  })));
 }
 
 function memoryForOwner(owner: PlayerId, memoryProvider: AiMemoryProvider | undefined) {

@@ -1,4 +1,5 @@
 import { UNIT_DEFS } from "../../shared/catalog";
+import { unitAbilities } from "../../shared/unit-abilities";
 import { autocastEnabled, canAutocast } from "../../shared/autocast";
 import type { AbilityKind, Building, GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { averagePoint, distance, type Point } from "../policy/spatial";
@@ -211,7 +212,7 @@ function skillSwitches(squad: readonly Unit[], options: SquadOptions): GameComma
   if (options.skills === "leave") return [];
   const off = new Map<AbilityKind, string[]>();
   for (const unit of squad) {
-    for (const ability of UNIT_DEFS[unit.kind].abilities) {
+    for (const ability of unitAbilities(unit)) {
       if (!canAutocast(ability) || autocastEnabled(unit, ability)) continue;
       off.set(ability, [...(off.get(ability) ?? []), unit.id]);
     }

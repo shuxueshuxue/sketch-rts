@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
@@ -74,6 +75,7 @@ function shouldLetDeadEconomyCloseoutContinue(snapshot: GameSnapshot, owner: Pla
 function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
   if (options.version !== "v2") return [];
   return ownCombat
+    .filter((unit) => canReceiveHealing(unit, snapshot))
     .filter((unit) => unit.hp < unit.maxHp * 0.36)
     .filter((unit) => unit.order.type === "idle" || unit.order.type === "attackMove")
     .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 420))

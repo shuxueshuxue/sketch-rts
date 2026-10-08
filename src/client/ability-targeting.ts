@@ -1,5 +1,8 @@
 import { abilityCooldown } from "../shared/ability-cooldowns";
-import { ABILITY_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS } from "../shared/catalog";
+import { isStunned, unitAbilities } from "../shared/unit-abilities";
+import { matchesUnitTarget } from "../shared/unit-targeting";
+import { canReceiveHealing } from "../shared/healing";
 import { checkCommandLegality } from "../shared/sim/command-validation";
 import type { AbilityKind, GameCommand, GameSnapshot, PlayerId, Unit } from "../shared/types";
 import { chargeRiderFor, chargeWindow } from "./charge-targeting";
@@ -7,13 +10,26 @@ import { chargeRiderFor, chargeWindow } from "./charge-targeting";
 export type CastCommand = Extract<GameCommand, { type: "cast" }>;
 type SpellTarget = { targetId: string } | { x: number; y: number };
 
+/** The pointer preview and click share the simulation's unit-class eligibility; allegiance is checked by the caller. */
+export function abilityUnitTargetMatches(snapshot: Pick<GameSnapshot, "variants">, ability: AbilityKind, target: Unit) {
+  const definition = ABILITY_DEFS[ability];
+  return target.hp > 0 && matchesUnitTarget(target, definition.targets, snapshot)
+    && (definition.behavior !== "heal" || canReceiveHealing(target, snapshot));
+}
+
 // A cast walking to its target, queued on shift, or awaiting its network frame already owns this caster's next spell.
 export function readyAbilityCasters(units: readonly Unit[], ability: AbilityKind, pending: readonly CastCommand[] = []) {
-  return units.filter(unit => UNIT_DEFS[unit.kind].abilities.includes(ability)
+  return units.filter(unit => unit.hp > 0 && !isStunned(unit) && unitAbilities(unit).includes(ability)
     && abilityCooldown(unit, ability) <= 0
     && !(unit.order.type === "cast" && unit.order.ability === ability)
     && !unit.orderQueue?.some(order => order.type === "cast" && order.ability === ability)
     && !pending.some(command => command.unitId === unit.id && command.ability === ability));
+}
+
+/** Keep the focused soldier when ready; a disabled focus must not block a ready selected ally. */
+export function preferredAbilityCaster(units: readonly Unit[], ability: AbilityKind, preferredId?: string, pending: readonly CastCommand[] = []): Unit | undefined {
+  const ready = readyAbilityCasters(units, ability, pending);
+  return ready.find(unit => unit.id === preferredId) ?? ready[0];
 }
 
 // One click casts once. Re-evaluate the whole selection at the target click, including cooldown and target changes.

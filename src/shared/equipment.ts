@@ -4,6 +4,7 @@ import { bodyMass } from "./physical-body";
 import { UNIT_DEFS, unitRules, type UnitDef } from './catalog';
 import { SHIP_KINDS, shipProfile, distanceToHull } from './ship-geometry';
 import { seconds } from './time';
+import { reductionForGroup } from './damage-reduction';
 import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit, WorldItem } from './types';
 export const CARRY_SLOTS = ['carry0', 'carry1', 'carry2', 'carry3'] as const;
 export const ARMOR_SLOTS = ['head', 'body', 'feet'] as const;
@@ -82,17 +83,17 @@ export function itemEquipped(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit, 
         || !unit.hands && !item.slot && !ITEM_DEFS[item.kind].passive);
 }
 export function equipmentProtection(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit) {
-    let protection = 0;
+    const protection: number[] = [];
     for (const item of itemsFor(snapshot, unit))
         if (ITEM_DEFS[item.kind].protection && itemEquipped(snapshot, unit, item))
-            protection += ITEM_DEFS[item.kind].protection!;
-    return Math.min(.3, protection);
+            protection.push(ITEM_DEFS[item.kind].protection!);
+    return reductionForGroup('equipment', protection);
 }
 const defaultKits = new WeakMap<Unit, {
     items: WorldItem[];
     item: WorldItem;
 }>();
-export function weaponRules(snapshot: GameSnapshot, unit: Unit): UnitDef {
+export function weaponRules(snapshot: Pick<GameSnapshot, 'items' | 'variants'>, unit: Unit): UnitDef {
     const base = unitRules(snapshot, unit), kit = defaultKits.get(unit);
     if (kit && kit.items === snapshot.items && kit.item.id === unit.hands?.right && kit.item.carrierId === unit.id && kit.item.kind === 'issuedWeapon' && kit.item.weaponKind === unit.kind)
         return base;

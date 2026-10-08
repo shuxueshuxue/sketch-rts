@@ -11,6 +11,7 @@ import {
   shouldReserveForHealingWell,
 } from "./base-defense-model";
 import { defensiveRallyPoint, healingWellPointFor, legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "./build-layout";
+import { canReceiveHealing } from "../../shared/healing";
 import { activeUnitClaim } from "./claims";
 import { resolveAiCommandIntent } from "./commands";
 import { armyPower } from "./combat-math";
@@ -631,15 +632,16 @@ function planHealingWell(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 
   const main = mainBase(snapshot, owner);
   const wellsNearMain = buildings(snapshot, owner).filter((building) => building.kind === "moonWell" && distance(building, main) < 520).length;
-  const desiredWells = completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).length >= 8 ? 2 : 1;
+  const desiredWells = completeBuildings(snapshot, owner, "townHall").length >= 2 && combatUnits(snapshot, owner).filter((unit) => canReceiveHealing(unit, snapshot)).length >= 8 ? 2 : 1;
   const uncoveredRecovery = options.version === "v2" && hasUncoveredSettledWoundedRecovery(snapshot, owner, main);
   if (wellsNearMain >= desiredWells && !uncoveredRecovery) return undefined;
 
   const ownCombat = combatUnits(snapshot, owner);
-  const woundedDefenders = ownCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
+  const healableCombat = ownCombat.filter((unit) => canReceiveHealing(unit, snapshot));
+  const woundedDefenders = healableCombat.filter((unit) => unit.hp < unit.maxHp * 0.72 && distance(unit, main) <= 720);
   const pressured = healingWellPressure(snapshot, owner, main, options);
   const firstWellBeforeExpansionBank = shouldBuildFirstHealingWellBeforeExpansionBank(snapshot, owner, woundedDefenders, options);
-  const wantsWell = uncoveredRecovery || firstWellBeforeExpansionBank || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && ownCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
+  const wantsWell = uncoveredRecovery || firstWellBeforeExpansionBank || woundedDefenders.length >= 2 || (options.version === "v2" && pressured && healableCombat.some((unit) => unit.hp < unit.maxHp * 0.86));
   if (!wantsWell) return undefined;
   if (shouldRebuildCombatBeforeHealingWell(snapshot, owner, ownCombat, options)) return undefined;
   if (needsMainGuardTower(snapshot, owner, options) && player.gold < BUILDING_DEFS.defenseTower.cost + BUILDING_DEFS.moonWell.cost) return undefined;
@@ -676,6 +678,7 @@ function hasUncoveredSettledWoundedRecovery(snapshot: GameSnapshot, owner: Playe
   if (wells.length === 0) return false;
   const uncovered = combatUnits(snapshot, owner).filter(
     (unit) =>
+      canReceiveHealing(unit, snapshot) &&
       unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
       distance(unit, main) <= 760 &&
       (unit.order.type === "idle" || unit.order.type === "move") &&
@@ -829,7 +832,7 @@ function mercenaryCampScore(camp: MercenaryCamp, snapshot: GameSnapshot, owner: 
   const army = combatUnits(snapshot, owner);
   const anchor = army.length > 0 ? averagePoint(army) : mainBase(snapshot, owner);
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
-  const wounded = units(snapshot, owner).some((unit) => unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72);
+  const wounded = units(snapshot, owner).some((unit) => canReceiveHealing(unit, snapshot) && unit.kind !== "worker" && unit.hp < unit.maxHp * 0.72);
   const outnumbered = armyPower(enemies) > armyPower(army) * 1.2;
   const hasCombatMercenary = units(snapshot, owner).some((unit) => unit.kind === "mercenary" || unit.kind === "contractArcher");
   const firstCombatBonus = hasCombatMercenary ? 0 : camp.hireKind === "fieldMedic" ? -70 : 72;
@@ -1196,6 +1199,7 @@ function recallWoundedClearedExpansionClaim(snapshot: GameSnapshot, owner: Playe
   if (wells.length === 0) return undefined;
   const enemies = enemyCombatUnits(snapshot, owner, options.teams);
   const wounded = combatUnits(snapshot, owner)
+    .filter((unit) => canReceiveHealing(unit, snapshot))
     .filter((unit) => {
       const claim = activeUnitClaim(snapshot, owner, unit, options);
       return claim?.kind === "expansion" && claim.targetId === mine.id;
@@ -1269,7 +1273,7 @@ function neutralClaimNeedsRecovery(snapshot: GameSnapshot, owner: PlayerId, poin
   if (guards.length === 0) return false;
   const averageHpRatio = units.reduce((total, unit) => total + unit.hp / unit.maxHp, 0) / units.length;
   const main = mainBase(snapshot, owner);
-  const hasHealingAtHome = buildings(snapshot, owner).some((building) => building.kind === "moonWell" && building.complete && distance(building, main) <= BUILDING_DEFS.moonWell.attackRange);
+  const hasHealingAtHome = units.some((unit) => canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp) && buildings(snapshot, owner).some((building) => building.kind === "moonWell" && building.complete && distance(building, main) <= BUILDING_DEFS.moonWell.attackRange);
   // @@@no-well-creep-recovery - Without a healing well, moderate creep wounds do not recover at home; only break the claim when the squad is actually near donation range.
   return averageHpRatio <= (hasHealingAtHome ? 0.68 : 0.6);
 }
