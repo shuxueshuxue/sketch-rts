@@ -12,7 +12,7 @@
 
 ## 冻结
 
-基线提交为 `1518a8529cd85c31e46864e18dc8f26dbd1693ed`。`frozen-policy.json` 保存共享策略依赖的 SHA-256；`frozen-traces.json` 保存旧三版在两种族下的完整命令流摘要和模拟状态摘要。
+初始基线为 `1518a8529cd85c31e46864e18dc8f26dbd1693ed`；修正唯一获批旧版错误后，重新冻结在 `160114c22cc99efb0b34ff92396895aea4fe33a0`（PR #193，已部署）。`frozen-policy.json` 保存共享策略依赖的 SHA-256；`frozen-traces.json` 保存旧三版在两种族下的完整命令流摘要和模拟状态摘要。
 
 用户已批准仅修正 `training-choice.ts` 中 Ember workshop 将 `golem` 改为 `catapult` 的兵种选择错误，并重新冻结；修正前后 SHA-256 见 `approvedCorrections`。除这一点之外，旧版不改经济、部队和战术算法。四个集成文件只加入新的策略表、支援目标注入或版本注册；旧版本不传入新策略表。每次验证必须保持六组旧版轨迹和最终状态完全一致。
 

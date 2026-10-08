@@ -1,6 +1,6 @@
 {
   "name": "bootstrap_1",
-  "revision": "1518a8529cd85c31e46864e18dc8f26dbd1693ed",
+  "revision": "160114c22cc99efb0b34ff92396895aea4fe33a0",
   "versions": [
     "v5",
     "v7",
@@ -75,5 +75,6 @@
       "after": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
       "reason": "User approved correcting Ember workshop golem selection to catapult, then refreezing; all other historical choices remain unchanged."
     }
-  ]
+  ],
+  "initialRevision": "1518a8529cd85c31e46864e18dc8f26dbd1693ed"
 }

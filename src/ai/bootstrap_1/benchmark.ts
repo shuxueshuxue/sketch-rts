@@ -58,7 +58,8 @@ function addTeammateStart(game: Game) {
     && (()=>{
       const at=walkableGoal(game.map,point.x+mine.x-hall.x,point.y+mine.y-hall.y);
       return Math.hypot(at.x-hall.x,at.y-hall.y)>mainDistance+50
-        && Math.hypot(at.x-point.x,at.y-point.y)>=mainDistance-10
+        && Math.abs(Math.hypot(at.x-point.x,at.y-point.y)-mainDistance)<=10
+        && sameGround(game.map,point,at)
         && game.resources.every(resource=>Math.hypot(resource.x-at.x,resource.y-at.y)>100);
     })())!;
   const mineAt = walkableGoal(game.map,point.x+(mine.x-hall.x),point.y+(mine.y-hall.y));

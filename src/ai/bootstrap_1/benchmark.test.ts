@@ -33,6 +33,10 @@ describe('bootstrap_1 acceptance matrix',()=>{
       }
       const mains=game.buildings.map(hall=>[...game.resources].sort((a,b)=>Math.hypot(a.x-hall.x,a.y-hall.y)-Math.hypot(b.x-hall.x,b.y-hall.y))[0]!.id);
       expect(new Set(mains).size).toBe(game.buildings.length);
+      if(pool.players===2){
+        const mainDistance=(owner:string)=>{const hall=game.buildings.find(building=>building.owner===owner)!;return Math.min(...game.resources.map(mine=>Math.hypot(mine.x-hall.x,mine.y-hall.y)));};
+        expect(Math.abs(mainDistance('p1')-mainDistance('p2'))).toBeLessThanOrEqual(10);
+      }
     }
   });
   it('uses unlocked opening units rather than recursively requesting a locked substitute',()=>{
