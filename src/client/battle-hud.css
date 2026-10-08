@@ -91,6 +91,9 @@
   color:var(--battle-ink); text-align:center; cursor:pointer;
 }
 .command-button:hover,.item-button:hover { background:#d3e1e617; border-color:#d1b78266; }
+.command-button[data-veteran-learn] { border-color:var(--battle-accent); }
+.command-button[data-veteran-learn] .command-icon { color:var(--battle-accent); font-size:30px; }
+.command-button[data-veteran-choice] { border-color:#d1b78266; }
 .command-icon,.item-icon { display:grid; place-items:center; height:39px; color:#d9d2ba; font:22px/1 sans-serif; }
 .command-portrait { display:block; width:38px; height:38px; background:transparent; }
 .command-symbol { width:29px; height:29px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }

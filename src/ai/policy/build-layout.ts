@@ -1,6 +1,7 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import { miningHallSite } from "../../shared/mining-site";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
+import { canReceiveHealing } from "../../shared/healing";
 import { isBuildPlacementClear } from "../../shared/build-placement";
 import { isWalkable } from "../../shared/terrain";
 import { detCos, detSin } from "../../shared/det-math";
@@ -215,6 +216,7 @@ function woundedRecoveryUnits(snapshot: GameSnapshot, owner: PlayerId, base: Poi
   return snapshot.units.filter(
     (unit) =>
       unit.owner === owner &&
+      canReceiveHealing(unit, snapshot) &&
       unit.kind !== "worker" &&
       unit.hp / Math.max(1, unit.maxHp) <= 0.5 &&
       distance(unit, base) <= 760 &&

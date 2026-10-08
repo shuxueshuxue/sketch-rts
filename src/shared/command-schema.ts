@@ -3,6 +3,7 @@ import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
 import { isMeleeStance } from "./push";
+import { isVeteranSkillId } from "./veteran-skills";
 
 export function isGameCommand(value: unknown): value is GameCommand {
   if (!value || typeof value !== "object") return false;
@@ -14,7 +15,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "stop" || command.type === "holdPosition") return isStringArray(command.unitIds);
   if (command.type === "mine") return isStringArray(command.unitIds) && typeof command.resourceId === "string";
   if (command.type === "repair") return isStringArray(command.unitIds) && typeof command.buildingId === "string";
-  if (command.type === "repairShip") return isStringArray(command.unitIds) && typeof command.targetId === "string";
+  if (command.type === "repairShip" || command.type === "repairUnit") return isStringArray(command.unitIds) && typeof command.targetId === "string";
   if (command.type === "build") return typeof command.unitId === "string" && isBuildableBuilding(command.buildingKind) && isNumber(command.x) && isNumber(command.y);
   if (command.type === "setRally") return isStringArray(command.buildingIds) && isNumber(command.x) && isNumber(command.y) && (command.target === undefined || isRallyTarget(command.target));
   if (command.type === "cancelTraining") return typeof command.buildingId === "string" && typeof command.jobId === "string";
@@ -23,6 +24,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "hire") return typeof command.campId === "string";
   if(command.type==="buyShipEquipment")return typeof command.buildingId==="string" && ["shipCannon","shipMortar","flameProjector"].includes(command.item as string) && (command.recipientId===undefined || typeof command.recipientId==="string");
   if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string" && (command.recipientId===undefined || typeof command.recipientId==="string");
+  if (command.type === "learnVeteranSkill") return typeof command.unitId === "string" && isVeteranSkillId(command.skill);
   if (command.type === "cast") {
     return (
       typeof command.unitId === "string" &&

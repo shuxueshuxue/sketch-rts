@@ -83,6 +83,16 @@ describe("squad", () => {
     expect(planSquad(snapshotGame(game), "player", [priest.id], { kind: "hold", at: { x: 500, y: 500 } }, createSquadMemory(), { skills: "leave" }).commands.some((command) => command.type === "setAutocast")).toBe(false);
   });
 
+  it("switches on learned veteran skills while honoring a caller's explicit switch ownership", () => {
+    const game = field();
+    const footman = game.spawnUnit("player", "footman", 500, 500);
+    footman.veteranSkill = "veteranRally";
+    issuePlayerCommand(game, "player", { type: "setAutocast", unitIds: [footman.id], ability: "veteranRally", enabled: false });
+    const intent = { kind: "hold" as const, at: { x: 500, y: 500 } };
+    expect(planSquad(snapshotGame(game), "player", [footman.id], intent, createSquadMemory()).commands).toContainEqual({ type: "setAutocast", unitIds: [footman.id], ability: "veteranRally", enabled: true });
+    expect(planSquad(snapshotGame(game), "player", [footman.id], intent, createSquadMemory(), { skills: "leave" }).commands.some(command => command.type === "setAutocast")).toBe(false);
+  });
+
   it("walks its patrol route in a loop and keeps by the unit it escorts", () => {
     const game = field();
     const guards = [0, 1].map((index) => game.spawnUnit("player", "footman", 500, 500 + index * 30));

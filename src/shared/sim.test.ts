@@ -5,6 +5,7 @@ import { AI_SCRIPT_LIBRARY } from "../ai/policy";
 import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
+import { GOLD_MINE_RULES } from "./mining";
 import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame } from "./sim";
 import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
@@ -221,7 +222,7 @@ describe("sketch RTS simulation", () => {
     expect(futureRaider.attackRange).toBe(Math.round(UNIT_DEFS.raider.attackRange * 1.15));
   });
 
-  it("heals starred owned units with leadership including mercenaries without healing rookies", () => {
+  it("heals starred non-mechanical mercenaries with leadership while excluding mechanical bodies and rookies", () => {
     const game = sketchScene("leadership-regeneration")
       .map("bareDuel")
       .replaceDefaults()
@@ -243,14 +244,14 @@ describe("sketch RTS simulation", () => {
     mercenary.level = 3;
     mercenary.hp = 50;
 
-    expect(leadershipRegenPerSecond(game, veteran)).toBe(12);
+    expect(leadershipRegenPerSecond(game, veteran)).toBe(0);
     expect(leadershipRegenPerSecond(game, rookie)).toBe(0);
     expect(leadershipRegenPerSecond(game, mercenary)).toBe(12);
 
     stepMany(game, 20);
 
     expect(veteran.level).toBe(3);
-    expect(veteran.hp).toBeCloseTo(112, 5);
+    expect(veteran.hp).toBe(100);
     expect(rookie.hp).toBe(50);
     expect(mercenary.hp).toBeCloseTo(62, 5);
     expect(game.effects.some((effect) => effect.type === "heal")).toBe(false);
@@ -707,7 +708,8 @@ describe("sketch RTS simulation", () => {
     const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
     game.players.player.gold = 1000;
 
-    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: townHall.x + 260, y: townHall.y + 80 });
+    // The main mine now lies east of the hall at the shared hauling distance; build south of that lane.
+    issueCommand(game, { type: "build", unitId: worker.id, buildingKind: "barracks", x: townHall.x + 100, y: townHall.y + 230 });
     expect(game.match.stats.goldSpent.player).toBe(0);
     stepMany(game, 360);
     expect(game.match.stats.goldSpent.player).toBe(BUILDING_DEFS.barracks.cost);
@@ -1155,24 +1157,33 @@ describe("sketch RTS simulation", () => {
     expect(finisher.level).toBe(1);
     expect(game.effects.map((effect) => effect.type as string)).not.toContain("levelUp");
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 1 / 3)));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 1 / 3)));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toBeUndefined();
 
     killWith(game, finisher, "ancientStag");
     expect(finisher.level).toBe(2);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * (1 + 2 / 3)));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * (1 + 2 / 3)));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toBeUndefined();
 
-    for (let i = 0; i < 6; i += 1) killWith(game, finisher, "ancientStag");
+    // Once the third star's offer exists, later kills retain it.
+    for (let i = 0; i < 4; i += 1) killWith(game, finisher, "ancientStag");
+    expect(finisher.level).toBe(3);
+    expect(finisher.veteranSkillChoices).toHaveLength(3);
+    expect(new Set(finisher.veteranSkillChoices).size).toBe(3);
+    const offered = [...finisher.veteranSkillChoices!];
+    for (let i = 0; i < 2; i += 1) killWith(game, finisher, "ancientStag");
 
     expect(finisher.kills).toBe(9);
     expect(finisher.level).toBe(3);
     expect(finisher.maxHp).toBe(Math.round(UNIT_DEFS.footman.hp * 2));
-    expect(finisher.attackDamage).toBe(Math.round(UNIT_DEFS.footman.attackDamage * 2));
+    expect(finisher.attackDamage).toBe(UNIT_DEFS.footman.attackDamage);
+    expect(finisher.veteranSkillChoices).toEqual(offered);
     expect(nearbyAlly.xp).toBe(0);
     expect(nearbyAlly.level).toBe(0);
   });
 
-  it("applies veterancy after tech bonuses with a linear non-compounding multiplier", () => {
+  it("applies veterancy only to health after tech bonuses with a linear non-compounding multiplier", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 5_000;
     const barracks = createBuilding("building-player-veterancy-tech-barracks", "player", "barracks", 760, 680, true);
@@ -1190,7 +1201,7 @@ describe("sketch RTS simulation", () => {
     const techAttack = UNIT_DEFS.knight.attackDamage * UPGRADE_DEFS.weaponTraining.levels[2]!.attackMultiplier!;
     const techHp = UNIT_DEFS.knight.hp * UPGRADE_DEFS.reinforcedPlating.levels[2]!.maxHpMultiplier!;
     expect(knight.level).toBe(3);
-    expect(knight.attackDamage).toBe(Math.round(techAttack * 2));
+    expect(knight.attackDamage).toBe(Math.round(techAttack));
     expect(knight.maxHp).toBe(Math.round(techHp * 2));
   });
 
@@ -1208,7 +1219,7 @@ describe("sketch RTS simulation", () => {
 
     expect(carrier.level).toBe(1);
     expect(carrier.maxHp).toBe(Math.round(UNIT_DEFS.mercenary.hp * (1 + 1 / 3)));
-    expect(carrier.attackDamage).toBe(Math.round(UNIT_DEFS.mercenary.attackDamage * (1 + 1 / 3)));
+    expect(carrier.attackDamage).toBe(UNIT_DEFS.mercenary.attackDamage);
     expect(game.items.some((item) => item.id === "book-same-scaling")).toBe(false);
   });
 
@@ -1570,7 +1581,9 @@ describe("sketch RTS simulation", () => {
     for (let i = 0; i < 6; i += 1) killWith(game, hired, "ancientStag");
 
     expect(hired.level).toBe(3);
-    expect(hired.attackDamage).toBeGreaterThan(UNIT_DEFS.contractArcher.attackDamage);
+    expect(hired.attackDamage).toBe(UNIT_DEFS.contractArcher.attackDamage);
+    expect(hired.maxHp).toBe(UNIT_DEFS.contractArcher.hp * 2);
+    expect(hired.veteranSkillChoices).toHaveLength(3);
   });
 
   it("requires a friendly unit at a mercenary camp before hiring", () => {
@@ -2184,7 +2197,7 @@ describe("sketch RTS simulation", () => {
     for (const owner of ["player", "enemy"] as PlayerId[]) {
       const townHalls = game.buildings.filter((building) => building.owner === owner && building.kind === "townHall" && building.complete);
       const expansionTownHall = townHalls.find((townHall) => distanceToClosestMainMine(game, townHall) > 650);
-      const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < 260) : undefined;
+      const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < GOLD_MINE_RULES.baseRange) : undefined;
       const miners = expansionMine
         ? game.units.filter((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === expansionMine.id)
         : [];
@@ -2192,6 +2205,7 @@ describe("sketch RTS simulation", () => {
       expect(townHalls.length).toBeGreaterThanOrEqual(2);
       expect(expansionTownHall).toBeDefined();
       expect(expansionMine).toBeDefined();
+      expect(distance(expansionMine!, expansionTownHall!)).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
       expect(miners.length).toBeGreaterThan(0);
     }
   });
@@ -2412,7 +2426,7 @@ describe("sketch RTS simulation", () => {
 function ownersHaveMiningExpansions(game: ReturnType<typeof createGame>, owners: PlayerId[]) {
   return owners.every((owner) => {
     const expansionTownHall = game.buildings.find((building) => building.owner === owner && building.kind === "townHall" && building.complete && distanceToClosestMainMine(game, building) > 650);
-    const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < 260) : undefined;
+    const expansionMine = expansionTownHall ? game.resources.find((resource) => distance(resource, expansionTownHall) < GOLD_MINE_RULES.baseRange) : undefined;
     return Boolean(expansionMine && game.units.some((unit) => unit.owner === owner && unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === expansionMine.id));
   });
 }

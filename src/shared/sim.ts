@@ -1,13 +1,14 @@
 import { cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
+import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
-import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, rebuildShipFittings, repairShipParts, shipNeedsRepair, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
-import { ITEM_DEFS, canEquip, dropRefusal, equipmentProtection, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { SHIP_WEAPONS, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading } from "./ship-equipment";
+import { ITEM_DEFS, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
@@ -15,8 +16,17 @@ import { boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
 import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
-import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, HEAVY_ARMOR_DAMAGE, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, HIGH_UPKEEP_SUPPLY, LOW_UPKEEP_SUPPLY, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_HIRE_RANGE, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
 import { abilityCooldown, tickedAbilityCooldowns, withAbilityCooldown } from "./ability-cooldowns";
+import { isStunned, unitAbilities } from "./unit-abilities";
+import { matchesUnitTarget } from "./unit-targeting";
+import { rollVeteranSkillChoices } from "./veteran-skills";
+import { unitClassOf } from "./unit-targeting";
+import { veteranWeaponRange } from "./veteran-stats";
+import { buildVeteranFrame, castVeteranAbility, temporaryAttackSpeedMultiplier, type VeteranAutocastFrame, type VeteranUnitModifiers } from "./veteran-runtime";
+import { checkCommandLegality } from "./sim/command-validation";
+import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
+import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
 import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination } from "./terrain";
@@ -31,7 +41,7 @@ import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { beginShipMotionFrame } from './ship-motion';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, nearestShipPose } from "./ship-navigation";
-import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, SHOCK_DAMAGE_TAKEN, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
   createInitialBuildings,
@@ -56,8 +66,11 @@ import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, Gam
 export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
+  /** Derived at tick boundaries; never serialized or used as a source of permanent stats. */
+  veteranFrame?: Map<string, VeteranUnitModifiers>;
+  veteranAutocastFrame?: VeteranAutocastFrame;
   miningFrame?: MiningFrame;
-  deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number }>;
+  deckDamageBatch?: Map<string, { ship: Unit; direct: number; collateral: number; source?: Unit | Building; impact?:{x:number;y:number}; blastRadius?:number; profile?:DamageProfile }>;
   nextId: number;
   activePlayers: PlayerId[];
   teams: Record<PlayerId, string>;
@@ -377,6 +390,14 @@ export function issueCommand(game: Game, command: GameCommand) {
 
 export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   if (!game.players[owner]) throw new Error(`Unknown player ${owner}`);
+  if (command.type === "learnVeteranSkill") {
+    const error = checkCommandLegality(game, owner, command);
+    if (error) throw new Error(error.message);
+    const unit = game.units.find(unit => unit.id === command.unitId)!;
+    unit.veteranSkill = command.skill;
+    refreshVeteranFrame(game);
+    return;
+  }
   if("unitIds" in command && !("queued" in command && command.queued) && ["move","attackMove","stop","holdPosition","unload","follow","aim","attack"].includes(command.type)){
     const ships=new Set(unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship)).map(ship=>ship.id));
     if(ships.size)cancelCrewRendezvous(game.units,ships);
@@ -465,12 +486,13 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     addRepairHammerEffect(game, building, command.queued);
     return;
   }
-  if (command.type === "repairShip") {
-    const ship = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner && unitMover(candidate.kind) === "sea");
-    if (!ship) throw new Error(`Unknown ${owner} ship ${command.targetId}`);
-    if (!shipNeedsRepair(game,ship)) throw new Error(`${ship.kind} is already fully repaired`);
+  if (command.type === "repairUnit" || command.type === "repairShip") {
+    const target = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner
+      && (command.type !== "repairShip" || unitMover(candidate.kind) === "sea"));
+    if (!target) throw new Error(`Unknown ${owner} repair target ${command.targetId}`);
+    if (!unitNeedsRepair(game, target)) throw new Error(`${target.kind} cannot be repaired or is already fully repaired`);
     for (const worker of unitsByIds(game, command.unitIds, owner).filter(unit => unit.kind === "worker"))
-      assignUnitOrder(worker, { type: "repairShip", targetId: ship.id }, command.queued);
+      assignUnitOrder(worker, { type: "repairUnit", targetId: target.id }, command.queued);
     return;
   }
 
@@ -508,14 +530,16 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "cast") {
+    const unitCount = game.units.length;
     castAbility(game, owner, command.unitId, command.ability, command.targetId, command.x, command.y, command.queued);
+    if (game.units.length !== unitCount) refreshVeteranFrameAfterCommandSpawn(game);
     return;
   }
 
   if (command.type === "setAutocast") {
     if (!canAutocast(command.ability)) throw new Error(`${command.ability} cannot be autocast`);
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (!UNIT_DEFS[unit.kind].abilities.includes(command.ability)) continue;
+      if (!unitAbilities(unit).includes(command.ability)) continue;
       const autocast = withAutocast(unit, command.ability, command.enabled);
       if (autocast) unit.autocast = autocast;
       else unit.autocast = undefined;
@@ -532,6 +556,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "hire") {
     hireMercenary(game, owner, command.campId);
+    refreshVeteranFrameAfterCommandSpawn(game);
     return;
   }
 
@@ -624,6 +649,9 @@ export function stepGame(game: Game) {
   if(game.units.some(unit=>unit.cargo))restoreCargoDecks(game.units);
   syncDecks(game.units);
   game.tick += 1;
+  // Auras and their spatial query start from this tick's actual positions, including after restore.
+  game.unitSpatial = createSpatialIndex(game.units, 320);
+  refreshVeteranFrame(game);
   syncBuildingBodies(game);
   updateWorldEffects(game);
   updateProjectiles(game);
@@ -668,6 +696,9 @@ export function stepGame(game: Game) {
   if(settleGroundItems(game.items,game.units,game.map))refreshEquipmentMass(game);
   updateShipOwnership(game);
   syncBuildingBodies(game);
+  // Snapshots and restored games observe the same aura boundary after movement, deaths and captures.
+  game.unitSpatial = createSpatialIndex(game.units, 320);
+  refreshVeteranFrame(game);
   updateVictory(game);
 }
 
@@ -730,6 +761,10 @@ export function snapshotGame(game: Game): GameSnapshot {
       }
       if (unit.abilityCooldowns) copy.abilityCooldowns = { ...unit.abilityCooldowns };
       if (unit.autocast) copy.autocast = { ...unit.autocast };
+      if (unit.veteranSkillChoices) copy.veteranSkillChoices = [...unit.veteranSkillChoices];
+      copy.effects = unit.effects.map(effect => ({ ...effect, ...(effect.damageFilter ? {
+        damageFilter: Object.fromEntries(Object.entries(effect.damageFilter).map(([key, value]) => [key, Array.isArray(value) ? [...value] : value])),
+      } : {}) }));
       return copy;
     }),
     buildings: game.buildings.map((building) => {
@@ -745,8 +780,11 @@ export function snapshotGame(game: Game): GameSnapshot {
     mercenaryCamps: game.mercenaryCamps.map((camp) => ({ ...camp })),
     ...(game.shops ? { shops: game.shops.map((shop) => ({ ...shop, goods: shop.goods.map((good) => ({ ...good })) })) } : {}),
     items: game.items.map(item => ({...item,...(item.aim?{aim:{...item.aim}}:{}),...(item.deck?{deck:{...item.deck}}:{})})),
-    projectiles: game.projectiles.map((projectile) => ({ ...projectile })),
-    effects: game.effects.map((effect) => ({ ...effect })),
+    projectiles: game.projectiles.map(projectile => ({ ...projectile,
+      ...(projectile.damageProfile ? { damageProfile: { ...projectile.damageProfile } } : {}),
+      ...(projectile.weapon ? { weapon: { ...projectile.weapon, ...(projectile.weapon.damageProfile ? { damageProfile: { ...projectile.weapon.damageProfile } } : {}) } } : {}),
+    })),
+    effects: game.effects.map(effect => ({ ...effect, ...(effect.damageProfile ? { damageProfile: { ...effect.damageProfile } } : {}) })),
     ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse })) } : {}),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
@@ -802,6 +840,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   keepShipsOnWater(game.map,game.units);
   syncDecks(game.units);
   invalidateGameRuntimeCaches(game);
+  refreshVeteranFrame(game);
 }
 
 /** Old saves used 20 Hz rates, including passengers and campaign rule overrides. */
@@ -820,6 +859,8 @@ function migrateSnapshotRates(game: Game): void {
 }
 
 function invalidateGameRuntimeCaches(game: Game): void {
+  delete game.veteranFrame;
+  delete game.veteranAutocastFrame;
   delete game.unitSpatial;
   delete game.unitSpatialByTeam;
   delete game.shipReachPadding;
@@ -924,7 +965,7 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
   let target: Unit | undefined;
   let targetScore = 0;
   forEachNearbyUnit(game, building, building.attackRange, (unit) => {
-    if (!canReceiveHealing(unit) || unit.owner !== building.owner || unit.kind === "worker" || unit.hp >= unit.maxHp || distance(unit, building) > building.attackRange) return;
+    if (!canReceiveHealing(unit, game) || unit.owner !== building.owner || unit.kind === "worker" || unit.hp >= unit.maxHp || distance(unit, building) > building.attackRange) return;
     const score = (unit.maxHp - unit.hp) * 2 + (1 - unit.hp / Math.max(1, unit.maxHp)) * 80;
     if (score <= targetScore) return;
     target = unit;
@@ -936,7 +977,7 @@ function mostWoundedSoldierNear(game: Game, building: Building) {
 function updateDockRepairs(game: Game) {
   if (game.tick % seconds(1)) return;
   for (const ship of game.units) {
-    if (unitMover(ship.kind)!=="sea" || !shipNeedsRepair(game,ship) || !isPlayerId(ship.owner) || ship.order.type==="attack" || ship.order.type==="attackMove") continue;
+    if (!shipProfile(ship) || !unitNeedsRepair(game,ship) || !isPlayerId(ship.owner) || ship.order.type==="attack" || ship.order.type==="attackMove") continue;
     const dock=game.buildings.find(building=>building.owner===ship.owner && building.kind==="shipyard" && building.complete && distance(ship,building)<DOCK_REPAIR.range);
     if (!dock || playerState(game,ship.owner).gold<DOCK_REPAIR.goldPerSecond)continue;
     spendGold(game,ship.owner,DOCK_REPAIR.goldPerSecond);repairShipParts(game,ship,DOCK_REPAIR.hpPerSecond);
@@ -945,6 +986,7 @@ function updateDockRepairs(game: Game) {
 
 function updateRegeneration(game: Game) {
   for (const unit of game.units) {
+    if (unit.hp <= 0) continue;
     const regenPerSecond = unitRegenPerSecond(game, unit);
     if (regenPerSecond <= 0 || unit.hp >= unit.maxHp) continue;
     unit.hp = Math.min(unit.maxHp, unit.hp + regenPerSecond / 20);
@@ -953,13 +995,46 @@ function updateRegeneration(game: Game) {
 
 // A unit's own regeneration (the cinder revenant's) plus what leadership gives its veterans.
 export function unitRegenPerSecond(game: GameSnapshot, unit: Unit) {
-  return canReceiveHealing(unit) ? (unitRules(game, unit).regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit) : 0;
+  const veterans = "nextId" in game ? (game as Game).veteranFrame : buildVeteranFrame(game);
+  return canReceiveHealing(unit, game) ? (unitRules(game, unit).regenPerSecond ?? 0) + leadershipRegenPerSecond(game, unit) + (veterans?.get(unit.id)?.regenPerSecond ?? 0) : 0;
+}
+
+function veteranNearby(game: Game) {
+  return (x: number, y: number, radius: number) => {
+    const units: Unit[] = [];
+    forEachNearbyUnit(game, { x, y }, radius, unit => units.push(unit));
+    return units;
+  };
+}
+function refreshVeteranFrameAfterCommandSpawn(game: Game) {
+  // SDK commands may be saved before the next tick. Include new units at their final spawn positions.
+  game.unitSpatial = createSpatialIndex(game.units, 320);
+  refreshVeteranFrame(game);
+}
+function refreshVeteranFrame(game: Game) {
+  const previous = game.veteranFrame;
+  game.veteranFrame = buildVeteranFrame(game, veteranNearby(game));
+  for (const unit of game.units) {
+    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
+      const hp = unit.hp;
+      applyDerivedUnitStats(game, unit);
+      // Aura projection changes derived combat stats, never health (including fractions below one).
+      unit.hp = Math.min(hp, unit.maxHp);
+    }
+  }
+}
+function veteranAimSpeed(game: Game, unit: Unit) {
+  return game.veteranFrame?.get(unit.id)?.aimSpeedMultiplier ?? 1;
+}
+function applyVeteranAbility(game: Game, caster: Unit, ability: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "veteran" }>, automatic: boolean) {
+  return castVeteranAbility(game, caster, ability.skill, automatic,
+    (type, x, y, duration, options) => addEffect(game, type, x, y, duration, options), veteranNearby(game), game.veteranAutocastFrame);
 }
 
 export { unitRules };
 
 export function leadershipRegenPerSecond(game: GameSnapshot, unit: Unit) {
-  if (!canReceiveHealing(unit) || !isPlayerId(unit.owner) || unit.level <= 0) return 0;
+  if (!canReceiveHealing(unit, game) || !isPlayerId(unit.owner) || unit.level <= 0) return 0;
   const upgrade = UPGRADE_DEFS.leadership;
   const ownerState = game.players[unit.owner];
   if (!ownerState) throw new Error(`Missing player state for ${unit.owner}`);
@@ -979,7 +1054,7 @@ function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:n
   const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
   const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:undefined,aim:item.aim};
   const {naval:_hull,...weaponBase}=unitRules(game,ship);
-  const ready=aimAt(proxy,{...weaponBase,attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon},point,game.tick);
+  const ready=aimAt(proxy,{...weaponBase,attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon},point,game.tick,veteranAimSpeed(game,ship));
   if(proxy.aim)item.aim=proxy.aim;else delete item.aim;
   if(proxy.facing!==undefined)item.facing=proxy.facing;
   return ready?proxy:undefined;
@@ -1002,16 +1077,16 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
     for(const item of installedWeapons(game,ship)){
       if((item.durability ?? 1)<=0 || item.cooldownRemaining>0 || item.mountId==="bow" && !intrinsic && ship.cooldown>0)continue;
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
-      let target=requested && areEnemyOwners(game,ship.owner,requested.owner) ? requested : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,def.range,ship,candidate=>shipGunCanAim(ship,item,candidate) && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0));
+      const range=veteranWeaponRange(ship,def.range);
+      let target=requested && areEnemyOwners(game,ship.owner,requested.owner) ? requested : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,range,ship,candidate=>shipGunCanAim(ship,item,candidate) && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0));
       if(target && !isObstacle(target))target=navalCombatTarget(game,ship,target);
       const aimTarget=order.type==="aim" && !target ? order : target;
       const point=aimTarget && strikePoint(pose.pivot,aimTarget);
-      if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>def.range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
+      if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
       const proxy=aimMountedWeapon(game,ship,item,point,pose);
       if(!proxy || !target)continue;
-      const multiplier=1+ship.level*VETERANCY_GAIN_PER_STAR;
-      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*multiplier*outgoingDamageMultiplier(game,ship)),def.weapon,def.range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!});
-      markAimShot(proxy);item.cooldownRemaining=def.cooldown;if(item.mountId==="bow" && !intrinsic)ship.cooldown=def.cooldown;
+      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:mountedWeaponPose(ship,item)!});
+      markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }
   }
 }
@@ -1031,7 +1106,7 @@ function updateItems(game: Game) {
     item.x = carrier.x;
     item.y = carrier.y;
     if (item.kind === "flameCloak" && itemEquipped(game,carrier,item)) applyFlameCloak(game, carrier, item);
-    if (canReceiveHealing(carrier) && item.kind === "regenRing" && itemEquipped(game,carrier,item) && carrier.hp < carrier.maxHp && !ringed?.has(carrier.id)) {
+    if (canReceiveHealing(carrier, game) && item.kind === "regenRing" && itemEquipped(game,carrier,item) && carrier.hp < carrier.maxHp && !ringed?.has(carrier.id)) {
       carrier.hp = Math.min(carrier.maxHp, carrier.hp + perTick(RING_REGEN_PER_SECOND));
       (ringed ??= new Set()).add(carrier.id);
     }
@@ -1050,6 +1125,7 @@ function updateResources(game: Game) {
 type Ferry = { boarding: Unit[]; unloading: Unit[] };
 
 function updateUnits(game: Game): Ferry | undefined {
+  game.veteranAutocastFrame = {};
   let ferry: Ferry | undefined;
   const vessels=shipsIn(game.units);
   const ordered=vessels.length ? [...vessels,...game.units.filter(unit=>!isShipKind(unit.kind))] : game.units.slice();
@@ -1115,8 +1191,8 @@ function updateUnits(game: Game): Ferry | undefined {
       updateRepairOrder(game, unit);
       continue;
     }
-    if (unit.order.type === "repairShip") {
-      updateShipRepairOrder(game, unit);
+    if (unit.order.type === "repairUnit" || unit.order.type === "repairShip") {
+      updateUnitRepairOrder(game, unit);
       continue;
     }
     if (unit.order.type === "pickupItem") {
@@ -1239,10 +1315,10 @@ function updateHoldOrder(game: Game, unit: Unit) {
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = nearestEnemyTarget(game, unit, unit.attackRange);
   if (!target) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
-  unit.cooldown = attackCooldownOf(unit);
+  unit.cooldown = attackCooldownOf(game, unit);
 }
 
 function updateAimOrder(game: Game, unit: Unit) {
@@ -1256,7 +1332,7 @@ function updateAimOrder(game: Game, unit: Unit) {
   }
   if (backOutOfDeadZone(game, unit, point)) { unit.aim = undefined; return; }
   if (nearestEnemyTarget(game, unit, unit.attackRange)) updateHoldOrder(game, unit);
-  else aimAt(unit, weaponRules(game, unit), point, game.tick);
+  else aimAt(unit, weaponRules(game, unit), point, game.tick, veteranAimSpeed(game, unit));
 }
 
 function updateAttackMoveOrder(game: Game, unit: Unit) {
@@ -1297,10 +1373,10 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building)
   }
   if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
-  unit.cooldown = attackCooldownOf(unit);
+  unit.cooldown = attackCooldownOf(game, unit);
 }
 
 function updateAttackOrder(game: Game, unit: Unit) {
@@ -1344,10 +1420,10 @@ function updateAttackOrder(game: Game, unit: Unit) {
   }
   if(shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick)) return;
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
   markAimShot(unit);
-  unit.cooldown = attackCooldownOf(unit);
+  unit.cooldown = attackCooldownOf(game, unit);
 }
 
 function updateMineOrder(game: Game, unit: Unit) {
@@ -1566,36 +1642,45 @@ function updateAutoRepair(game: Game, unit: Unit) {
   return repairBuildingTick(game, unit, building);
 }
 
-function updateShipRepairOrder(game: Game, worker: Unit) {
-  if (worker.order.type !== "repairShip" || !isPlayerId(worker.owner)) return;
+function updateUnitRepairOrder(game: Game, worker: Unit) {
+  if (worker.order.type !== "repairUnit" && worker.order.type !== "repairShip") return;
+  if (worker.kind !== "worker" || !isPlayerId(worker.owner)) { worker.order = { type: "idle" }; return; }
   const targetId = worker.order.targetId;
-  const ship = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner && unitMover(unit.kind) === "sea");
-  if (!ship || ship.hp <= 0 || !shipNeedsRepair(game,ship)) { worker.order = { type: "idle" }; return; }
-  if (worker.deck?.shipId !== ship.id && (worker.deck || distance(worker, ship) > worker.radius + ship.radius + WORK_REACH)) {
-    moveToward(worker, ship.x, ship.y, game.map, game.units);
+  const target = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner
+    && (worker.order.type !== "repairShip" || unitMover(unit.kind) === "sea"));
+  if (!target || !unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
+  const ship = Boolean(shipProfile(target));
+  const sameWorkSurface = ship ? worker.deck?.shipId === target.id : worker.deck?.shipId === target.deck?.shipId;
+  const withinReach = distance(worker, target) <= worker.radius + target.radius + WORK_REACH;
+  // Crew can work anywhere on their own hull; separate ground/deck units must
+  // share a surface and stand within working reach.
+  const canWorkHere = ship ? sameWorkSurface || !worker.deck && withinReach : sameWorkSurface && withinReach;
+  if (!canWorkHere) {
+    moveToward(worker, target.x, target.y, game.map, game.units);
     return;
   }
-  repairShipTick(game, worker, ship);
+  repairUnitTick(game, worker, target);
+  if (!unitNeedsRepair(game, target)) worker.order = { type: "idle" };
 }
 
 function autoRepairDeckShip(game: Game, worker: Unit) {
   if (worker.kind !== "worker" || !worker.deck || !isPlayerId(worker.owner) || worker.orderQueue?.length || !["idle", "hold"].includes(worker.order.type)) return false;
   const ship=game.units.find(unit=>unit.id===worker.deck!.shipId && unit.owner===worker.owner && unit.hp>0);
-  if (!ship || !shipNeedsRepair(game,ship) || playerState(game,worker.owner).gold<1) return false;
-  repairShipTick(game,worker,ship);
+  if (!ship || !shipProfile(ship) || !unitNeedsRepair(game,ship) || playerState(game,worker.owner).gold<1) return false;
+  repairUnitTick(game,worker,ship);
   return true;
 }
 
-function repairShipTick(game: Game, worker: Unit, ship: Unit) {
-  if (!isPlayerId(worker.owner)) return;
+function repairUnitTick(game: Game, worker: Unit, target: Unit) {
+  if (worker.kind !== "worker" || !isPlayerId(worker.owner) || target.owner !== worker.owner || !unitNeedsRepair(game, target)) return;
   if (worker.cooldown > 0) return;
   const player = playerState(game, worker.owner);
   if (player.gold < 1) return;
-  emitWorkerWork(game, worker, ship);
-  const fullCost = Math.max(1, Math.round(UNIT_DEFS[ship.kind].cost * REPAIR_FULL_COST_FRACTION));
-  const healed = Math.max(1, ship.maxHp / fullCost);
+  emitWorkerWork(game, worker, target);
+  const healed = unitRepairHpPerGold(game, target);
   spendGold(game, worker.owner, 1);
-  repairShipParts(game,ship,healed);
+  if (shipProfile(target)) repairShipParts(game,target,healed);
+  else target.hp = Math.min(target.maxHp, target.hp + healed);
   worker.cooldown = seconds(healed / REPAIR_HP_PER_SECOND);
 }
 
@@ -1898,10 +1983,20 @@ function castAbility(
   queued = false,
 ) {
   const caster = game.units.find((unit) => unit.id === unitId && unit.owner === owner);
-  if (!caster) throw new Error(`Unknown ${owner} caster ${unitId}`);
-  if (!UNIT_DEFS[caster.kind].abilities.includes(ability)) throw new Error(`${caster.kind} cannot cast ${ability}`);
+  if (!caster || caster.hp <= 0) throw new Error(`Unknown ${owner} caster ${unitId}`);
+  if (isStunned(caster)) throw new Error(`${caster.kind} is stunned`);
+  if (!unitAbilities(caster).includes(ability)) throw new Error(`${caster.kind} cannot cast ${ability}`);
   if (abilityCooldown(caster, ability) > 0) throw new Error(`${caster.kind} is on cooldown`);
   const def = ABILITY_DEFS[ability];
+  if (def.behavior === "veteran") {
+    if (queued) assignUnitOrder(caster, { type: "cast", ability }, true);
+    else applyVeteranAbility(game, caster, def, false);
+    return;
+  }
+  const typedTarget = targetId ? findStrikeTarget(game, targetId) : undefined;
+  if (typedTarget && isUnit(typedTarget) && !matchesUnitTarget(typedTarget, def.targets, game)) {
+    throw new Error(def.behavior === "heal" ? "Healing cannot restore mechanical units" : "Ability cannot target this unit class");
+  }
   // Out of reach, or after the orders before it (shift), the caster walks to cast (see @@@cast-order).
   const later = (order: Extract<UnitOrder, { type: "cast" }>, at: { x: number; y: number }) => {
     assignUnitOrder(caster, order, queued);
@@ -1921,7 +2016,7 @@ function castAbility(
   if (def.behavior === "heal") {
     const target = targetId ? game.units.find((unit) => unit.id === targetId && !areEnemyOwners(game, unit.owner, owner)) : undefined;
     if (!target) throw new Error("Heal requires an allied unit target");
-    if (!canReceiveHealing(target)) throw new Error("Healing cannot repair ships");
+    if (!canReceiveHealing(target, game)) throw new Error("Healing cannot restore mechanical units");
     if (queued || distance(caster, target) > def.range) later({ type: "cast", ability, targetId: target.id }, target);
     else applyHeal(game, caster, ability, target, def);
     return;
@@ -1962,8 +2057,13 @@ function updateCastOrder(game: Game, unit: Unit) {
   };
   // Saves can contain a cast for an ability removed from the catalog.
   if (!def) return end();
+  if (def.behavior === "veteran") {
+    if (unitAbilities(unit).includes(order.ability) && abilityCooldown(unit, order.ability) <= 0) applyVeteranAbility(game, unit, def, false);
+    return end();
+  }
   if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end();
-  if (def.behavior === "heal" && target && (!isUnit(target) || !canReceiveHealing(target))) return end();
+  if (target && isUnit(target) && !matchesUnitTarget(target, def.targets, game)) return end();
+  if (def.behavior === "heal" && target && (!isUnit(target) || !canReceiveHealing(target, game))) return end();
   const at = target ?? (isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined);
   if (!at) return end();
   if (def.behavior === "weapon" && def.weapon.minRange && distance(unit, at)<def.weapon.minRange) return end();
@@ -1983,7 +2083,7 @@ function updateCastOrder(game: Game, unit: Unit) {
       const proxy=aimMountedWeapon(game,unit,item,at);if(!proxy)return;
       applyWeaponAbility(game,unit,order.ability,at,def,target?.id);markAimShot(proxy);end();return;
     }
-    if (!aimAt(unit, weaponRules(game, unit), at, game.tick)) return;
+    if (!aimAt(unit, weaponRules(game, unit), at, game.tick, veteranAimSpeed(game, unit))) return;
     applyWeaponAbility(game,unit,order.ability,at,def,target?.id);
     markAimShot(unit);
   }
@@ -1999,7 +2099,7 @@ function updateCastOrder(game: Game, unit: Unit) {
 }
 
 function applyHeal(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "heal" }>) {
-  if (!canReceiveHealing(target) || distance(caster, target) > def.range) return;
+  if (!matchesUnitTarget(target, def.targets, game) || !canReceiveHealing(target, game) || distance(caster, target) > def.range) return;
   target.hp = Math.min(target.maxHp, target.hp + def.healAmount);
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
   addEffect(game, def.effectType, target.x, target.y, 36, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
@@ -2010,25 +2110,26 @@ function syncSummonLoad(game: Game, ship: Unit, probe: Unit) {
 }
 
 function applySummon(game: Game, caster: Unit, ability: AbilityKind, x: number, y: number, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "summon" }>) {
-  if (distance(caster, { x, y }) > def.range) return;
+  if (distance(caster, { x, y }) > def.range) return false;
   const ship = game.units.find(ship => {
     const profile = shipProfile(ship);
     return profile && ship.owner === caster.owner && circleInPolygon(worldToLocal(ship, { x, y }), 0, profile.deck);
   });
-  if (!ship && !isWalkable(game.map, x, y)) return;
+  if (!ship && !isWalkable(game.map, x, y)) return false;
   const probe = ship && createUnit("summon-probe", caster.owner, def.summonKind, x, y);
   const point = ship && probe && deckPlacement(ship, probe, game.units, worldToLocal(ship, { x, y }));
-  if (ship && (!point || syncSummonLoad(game, ship, probe!))) return;
+  if (ship && (!point || syncSummonLoad(game, ship, probe!))) return false;
   const spirit = game.spawnUnit(caster.owner, def.summonKind, x, y);
   if (ship && point) { spirit.deck = { shipId: ship.id, ...point }; Object.assign(spirit, localToWorld(ship, point)); }
   spirit.expiresTick = game.tick + def.summonDuration;
   spirit.order = { type: "idle" };
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
   addEffect(game, def.effectType, spirit.x, spirit.y, 50, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
+  return true;
 }
 
 function applyCurse(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "curse" }>) {
-  if (distance(caster, target) > def.range) return;
+  if (!matchesUnitTarget(target, def.targets, game) || distance(caster, target) > def.range) return;
   const damageMultiplier = target.effects.some((effect) => effect.type === "scorch")
     ? (def.scorchedDamageMultiplier ?? def.damageMultiplier)
     : def.damageMultiplier;
@@ -2036,7 +2137,7 @@ function applyCurse(game: Game, caster: Unit, ability: AbilityKind, target: Unit
   target.effects.push({ type: def.statusType, remaining: def.effectDuration, ...(damageMultiplier !== 0.4 ? { damageMultiplier } : {}) });
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
   addEffect(game, def.effectType, target.x, target.y, 46, { sourceKind: caster.kind, unitId: caster.id, owner: caster.owner });
-  if (def.summonedDamage && target.expiresTick !== undefined) applyDamage(game, caster, target, def.summonedDamage);
+  if (def.summonedDamage && target.expiresTick !== undefined) applyDamage(game, caster, target, def.summonedDamage, undefined, undefined, 0, DAMAGE_PROFILES.ARCANE);
 }
 
 type ChargeDef = Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "charge" }>;
@@ -2056,6 +2157,7 @@ function inChargeWindow(caster: Unit, target: Unit, def: ChargeDef) {
 }
 
 function startCharge(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: ChargeDef, commanded: boolean) {
+  if (!matchesUnitTarget(target, def.targets, game)) return;
   const current = caster.order.type === "charge" ? caster.order.resume : caster.order;
   // Charged from a standstill on its own, the rider keeps an idle unit's leash back to where it stood.
   const resume: SettledUnitOrder =
@@ -2122,10 +2224,12 @@ const CHARGE_IMPACT_TICKS = 12;
 
 function autocastStep(game: Game, unit: Unit) {
   if (game.tick % AUTOCAST_EVERY_TICKS !== 0 || !AUTOCAST_ORDERS.has(unit.order.type)) return;
-  for (const ability of UNIT_DEFS[unit.kind].abilities) {
+  for (const ability of unitAbilities(unit)) {
     if (abilityCooldown(unit, ability) > 0 || !autocastEnabled(unit, ability)) continue;
     const def = ABILITY_DEFS[ability];
-    if (def.behavior === "heal") {
+    if (def.behavior === "veteran") {
+      if (applyVeteranAbility(game, unit, def, true)) return;
+    } else if (def.behavior === "heal") {
       const target = autocastHealTarget(game, unit, def);
       if (target) return applyHeal(game, unit, ability, target, def);
     } else if (def.behavior === "curse") {
@@ -2133,7 +2237,7 @@ function autocastStep(game: Game, unit: Unit) {
       if (target) return applyCurse(game, unit, ability, target, def);
     } else if (def.behavior === "summon") {
       const point = autocastSummonPoint(game, unit, def);
-      if (point) return applySummon(game, unit, ability, point.x, point.y, def);
+      if (point && applySummon(game, unit, ability, point.x, point.y, def)) return;
     } else if (def.behavior === "stomp") {
       if (applyStomp(game, unit, ability, def)) return;
     } else if (def.behavior === "bloodlust") {
@@ -2151,7 +2255,7 @@ function autocastStep(game: Game, unit: Unit) {
 function applyStomp(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "stomp" }>) {
   const struck: Unit[] = [];
   forEachNearbyUnit(game, caster, def.range, (candidate) => {
-    if (distance(caster, candidate) <= def.range && isAutocastFoe(game, caster, candidate)) struck.push(candidate);
+    if (matchesUnitTarget(candidate, def.targets, game) && distance(caster, candidate) <= def.range && isAutocastFoe(game, caster, candidate)) struck.push(candidate);
   });
   if (struck.length === 0) return false;
   for (const unit of struck) setStatus(unit, { type: "stun", remaining: def.effectDuration });
@@ -2163,7 +2267,7 @@ function applyStomp(game: Game, caster: Unit, ability: AbilityKind, def: Extract
 function applyBloodlust(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "bloodlust" }>) {
   let best: Unit | undefined;
   forEachNearbyUnit(game, caster, def.range, (candidate) => {
-    if (distance(caster, candidate) > def.range || candidate.hp <= 0 || candidate.owner !== caster.owner || !isEngaged(candidate)) return;
+    if (!matchesUnitTarget(candidate, def.targets, game) || distance(caster, candidate) > def.range || candidate.hp <= 0 || candidate.owner !== caster.owner || !isEngaged(candidate)) return;
     if (candidate.effects.some((effect) => effect.type === "bloodlust")) return;
     if (!best || candidate.attackDamage > best.attackDamage) best = candidate;
   });
@@ -2177,7 +2281,7 @@ function applyBloodlust(game: Game, caster: Unit, ability: AbilityKind, def: Ext
 function applyWeb(game: Game, caster: Unit, ability: AbilityKind, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "web" }>) {
   let best: Unit | undefined;
   forEachNearbyUnit(game, caster, def.range, (candidate) => {
-    if (distance(caster, candidate) > def.range || !isAutocastFoe(game, caster, candidate) || candidate.effects.some((effect) => effect.type === "root")) return;
+    if (!matchesUnitTarget(candidate, def.targets, game) || distance(caster, candidate) > def.range || !isAutocastFoe(game, caster, candidate) || candidate.effects.some((effect) => effect.type === "root")) return;
     if (!best || distance(caster, candidate) < distance(caster, best)) best = candidate;
   });
   if (!best) return false;
@@ -2193,10 +2297,6 @@ function setStatus(unit: Unit, status: UnitStatusEffect) {
   unit.effects.push(status);
 }
 
-function isStunned(unit: Unit) {
-  return unit.effects.length > 0 && unit.effects.some((effect) => effect.type === "stun");
-}
-
 // The share of its pace a unit keeps under its statuses: none rooted or stunned, a net's share slowed.
 function statusPace(unit: Unit) {
   if (unit.effects.length === 0) return 1;
@@ -2209,9 +2309,9 @@ function statusPace(unit: Unit) {
 }
 
 // The ticks between a unit's blows: bloodlust's quicker.
-function attackCooldownOf(unit: Unit) {
-  if (unit.effects.length === 0 || !unit.effects.some((effect) => effect.type === "bloodlust")) return unit.attackCooldown;
-  return Math.max(1, Math.round(unit.attackCooldown / (ABILITY_DEFS.bloodlust as Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "bloodlust" }>).attackSpeed));
+function attackCooldownOf(game: Game, unit: Unit, baseCooldown = unit.attackCooldown) {
+  const speed = (game.veteranFrame?.get(unit.id)?.attackSpeedMultiplier ?? 1) * temporaryAttackSpeedMultiplier(unit);
+  return speed === 1 ? baseCooldown : Math.max(1, Math.round(baseCooldown / speed));
 }
 
 // Fighting: attacking, charging, or attack-moving onto a target.
@@ -2228,7 +2328,7 @@ function autocastHealTarget(game: Game, caster: Unit, def: Extract<(typeof ABILI
   let best: Unit | undefined;
   let bestMissing = def.healAmount / 2;
   forEachNearbyUnit(game, caster, def.range, (candidate) => {
-    if (!canReceiveHealing(candidate) || candidate.hp <= 0 || areEnemyOwners(game, caster.owner, candidate.owner) || distance(caster, candidate) > def.range) return;
+    if (!matchesUnitTarget(candidate, def.targets, game) || !canReceiveHealing(candidate, game) || candidate.hp <= 0 || areEnemyOwners(game, caster.owner, candidate.owner) || distance(caster, candidate) > def.range) return;
     const missing = candidate.maxHp - candidate.hp;
     if (missing < bestMissing || (missing === bestMissing && best)) return;
     best = candidate;
@@ -2243,7 +2343,7 @@ function autocastCurseTarget(game: Game, caster: Unit, def: Extract<(typeof ABIL
   let best: Unit | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   forEachNearbyUnit(game, caster, def.range, (candidate) => {
-    if (!isAutocastFoe(game, caster, candidate) || distance(caster, candidate) > def.range) return;
+    if (!matchesUnitTarget(candidate, def.targets, game) || !isAutocastFoe(game, caster, candidate) || distance(caster, candidate) > def.range) return;
     if (!casterFights && !isEngaged(candidate)) return;
     if (candidate.effects.some((effect) => effect.type === def.statusType)) return;
     const score = (def.summonedDamage && candidate.expiresTick !== undefined ? 2_000 : 0) + (candidate.id === own ? 1_000 : 0) - distance(caster, candidate);
@@ -2276,14 +2376,14 @@ function autocastChargeTarget(game: Game, rider: Unit, def: ChargeDef) {
   const own = order.type === "attack" || order.type === "attackMove" ? order.targetId : undefined;
   if (own) {
     const target = findTarget(game, own);
-    return target && isUnit(target) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) && canReach(game.map, rider, target, game.units) ? target : undefined;
+    return target && isUnit(target) && matchesUnitTarget(target, def.targets, game) && isAutocastFoe(game, rider, target) && inChargeWindow(rider, target, def) && canReach(game.map, rider, target, game.units) ? target : undefined;
   }
   if (order.type !== "idle" && order.type !== "attackMove") return undefined;
   let charged: Set<string> | undefined;
   let free: Unit | undefined;
   let any: Unit | undefined;
   forEachNearbyUnit(game, rider, def.range, (candidate) => {
-    if (!isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def) || !canReach(game.map, rider, candidate, game.units)) return;
+    if (!matchesUnitTarget(candidate, def.targets, game) || !isAutocastFoe(game, rider, candidate) || !inChargeWindow(rider, candidate, def) || !canReach(game.map, rider, candidate, game.units)) return;
     // Most riders are out of charge range: only scan existing charges when a candidate exists.
     charged ??= new Set(game.units.flatMap((unit) => (unit.owner === rider.owner && unit.order.type === "charge" ? [unit.order.targetId] : [])));
     if (!any || distance(rider, candidate) < distance(rider, any)) any = candidate;
@@ -2353,7 +2453,7 @@ function activateItem(
     if (carrier.owner === "neutral") return;
     const target = targetId ? game.buildings.find((building) => building.id === targetId && areEnemyOwners(game, carrier.owner, building.owner)) : undefined;
     if (!target || distance(carrier, target) > BREACH_CHARGE.range) return;
-    applyAttackDamage(game, carrier, target, BREACH_CHARGE.damage, BREACH_CHARGE.range);
+    applyAttackDamage(game, carrier, target, BREACH_CHARGE.damage, BREACH_CHARGE.range, ITEM_DAMAGE_PROFILES.breachCharge);
     consumeItem(game, item);
     return;
   }
@@ -2368,7 +2468,7 @@ function activateItem(
   if (item.kind === "healingScroll") {
     if (carrier.owner === "neutral") return;
     forEachNearbyUnit(game, carrier, HEALING_SCROLL_RADIUS, (unit) => {
-      if (!canReceiveHealing(unit) || distance(unit, carrier) > HEALING_SCROLL_RADIUS || areEnemyOwners(game, carrier.owner, unit.owner)) return;
+      if (!canReceiveHealing(unit, game) || distance(unit, carrier) > HEALING_SCROLL_RADIUS || areEnemyOwners(game, carrier.owner, unit.owner)) return;
       unit.hp = Math.min(unit.maxHp, unit.hp + HEALING_SCROLL_HEAL);
     });
     addEffect(game, "heal", carrier.x, carrier.y, 30, { radius: HEALING_SCROLL_RADIUS });
@@ -2405,7 +2505,7 @@ function applyChainLightning(game: Game, carrier: Unit, item: WorldItem, firstTa
   let damage = LIGHTNING_ROD.damage;
   for (let bounce = 0; bounce < LIGHTNING_ROD.hits; bounce += 1) {
     struck.add(current.id);
-    applyAttackDamage(game, carrier, current, damage*outgoingDamageMultiplier(game,carrier), 240);
+    applyAttackDamage(game, carrier, current, damage*outgoingDamageMultiplier(game,carrier), 240, ITEM_DAMAGE_PROFILES.lightningRod);
     addEffect(game, "chainLightning", current.x, current.y, 28, { fromX: carrier.x, fromY: carrier.y, toX: current.x, toY: current.y });
     const next = nearestChainTarget(game, carrier, current, struck, LIGHTNING_ROD.bounceRange);
     if (!next) break;
@@ -2432,9 +2532,9 @@ function nearestChainTarget(game: Game, carrier: Unit, from: Unit, struck: Set<s
 function applyStormStaff(game: Game, carrier: Unit, item: WorldItem, x: number, y: number) {
   forEachNearbyUnit(game, { x, y }, STORM_STAFF.radius, (target) => {
     if (distance(target, { x, y }) > STORM_STAFF.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage*outgoingDamageMultiplier(game,carrier), STORM_STAFF.range);
+    applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage*outgoingDamageMultiplier(game,carrier), STORM_STAFF.range, ITEM_DAMAGE_PROFILES.stormStaff);
   });
-  addEffect(game, "storm", x, y, STORM_STAFF.duration, { owner: carrier.owner, damage: STORM_STAFF.pulseDamage*outgoingDamageMultiplier(game,carrier), radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
+  addEffect(game, "storm", x, y, STORM_STAFF.duration, { owner: carrier.owner, unitId: carrier.id, damage: STORM_STAFF.pulseDamage*outgoingDamageMultiplier(game,carrier), damageProfile: { ...ITEM_DAMAGE_PROFILES.stormStaff }, radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
   item.cooldownRemaining = STORM_STAFF.cooldown;
 }
 
@@ -2443,7 +2543,7 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   let burned = false;
   forEachNearbyUnit(game, carrier, FLAME_CLOAK.radius, (target) => {
     if (distance(target, carrier) > FLAME_CLOAK.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), 70);
+    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), 70, ITEM_DAMAGE_PROFILES.flameCloak);
     addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
@@ -2465,7 +2565,7 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
     const source = effect.unitId ? findTarget(game,effect.unitId) : undefined;
     const attacker = source ?? scriptSource({id:effect.unitId ?? effect.id,owner:effect.owner,x:effect.x,y:effect.y});
     for (const target of [...game.units,...game.buildings]) if (target.hp>0 && areEnemyOwners(game,effect.owner,target.owner) && distance(effect,target)<=effect.radius+target.radius) {
-      const taken=applyDamage(game,attacker,target,effect.damage);if(taken!==undefined)addHitEffect(game,target,taken,source);
+      const taken=applyDamage(game,attacker,target,effect.damage,undefined,undefined,0,effect.damageProfile ?? DAMAGE_PROFILES.BURNING);if(taken!==undefined)addHitEffect(game,target,taken,source);
     }
     return;
   }
@@ -2473,7 +2573,7 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
   if (effect.remaining !== effect.duration && effect.remaining % effect.tickEvery !== 0) return;
   forEachNearbyUnit(game, effect, effect.radius, (target) => {
     if (distance(target, effect) > effect.radius! || !areEnemyOwners(game, effect.owner!, target.owner)) return;
-    applyAttackDamage(game, { owner: effect.owner!, x: effect.x, y: effect.y } as Building, target, effect.damage!, 260);
+    applyAttackDamage(game, scriptSource({ id: effect.unitId ?? effect.id, owner: effect.owner!, x: effect.x, y: effect.y }), target, effect.damage!, 260, effect.damageProfile ?? DAMAGE_PROFILES.STORM);
   });
 }
 
@@ -2498,7 +2598,7 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const liveShooter = findTarget(game, projectile.attackerId);
   const shooter = liveShooter?.owner===projectile.owner ? liveShooter : undefined;
   const attacker = shooter ?? projectileAttacker(projectile);
-  const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage), projectile.hullDamageShare);
+  const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage), projectile.hullDamageShare, undefined, 0, projectile.damageProfile ?? attackDamageProfile(projectile.sourceKind ?? "defenseTower"), projectile.armorAlreadyApplied);
   if (taken === undefined) return;
   applyAttackStatusEffects(game, attacker, target);
   addHitEffect(game, target, taken, shooter, projectile.attackKind);
@@ -2532,13 +2632,15 @@ function projectileAttacker(projectile: Projectile): Building {
 function updateUnitStatusEffects(game: Game) {
   for (const unit of game.units) {
     if (unit.effects.length === 0) continue;
+    // Every status observes the same instant. A poison tick must not see a
+    // one-tick ward differently just because that ward was inserted later.
+    for (const effect of unit.effects) effect.remaining -= 1;
     for (const effect of unit.effects) {
-      effect.remaining -= 1;
       // Poison bites once a second (see @@@creep-trait-numbers), for its biter while it lives.
       if (effect.type === "poison" && effect.remaining % 20 === 0 && unit.hp > 0) {
         const source = effect.sourceId ? findTarget(game, effect.sourceId) : undefined;
-        if (source && source.hp > 0) applyDamage(game, source, unit, POISON_DAMAGE);
-        else unit.hp -= POISON_DAMAGE;
+        const attacker = source && source.hp > 0 ? source : scriptSource({ id: effect.sourceId ?? "poison", owner: effect.sourceOwner ?? "neutral", x: unit.x, y: unit.y });
+        applyDamage(game, attacker, unit, POISON_DAMAGE, undefined, undefined, 0, DAMAGE_PROFILES.POISON);
       }
     }
     unit.effects = unit.effects.filter((effect) => effect.remaining > 0);
@@ -2574,6 +2676,7 @@ function combatVisualHeight(game: Game, entity: {id?:string}) {
 
 function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:string},damage:number,weapon:WeaponDef,range:number,skill:{rootTicks?:number;burnTicks?:number}={},targetId=at.id, mounted?:{item:WorldItem;pose:NonNullable<ReturnType<typeof mountedWeaponPose>>}){
   const origin = mounted?.pose.muzzle ?? weaponOrigin(attacker);
+  const damageProfile = weaponDamageProfile(weapon);
   const target = targetId ? findStrikeTarget(game,targetId) : undefined;
   const point = target ? strikePoint(origin,target) : at;
   const fromHeight=mounted?.pose.height || (isUnit(attacker) && shipWeaponPose(attacker)?.height) || combatVisualHeight(game,attacker);
@@ -2591,14 +2694,13 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
     addEffect(game,"grapeshot",point.x,point.y,seconds(.7),{...visuals,radius:range});return;
   }
   const flight=Math.max(seconds(0.2),Math.ceil(distance(origin,point)/perTick(weapon.delivery==="shell"?240:560)));
-  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,remaining:flight,duration:flight,attackKind,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
+  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,damageProfile:{...damageProfile},remaining:flight,duration:flight,attackKind,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
   game.projectiles.push(projectile);
   addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",point.x,point.y,flight,{...visuals,radius:weapon.radius??0});
 }
-function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number,impact=strikePoint(attacker,target)){
+function hitWeapon(game:Game,attacker:Unit|Building,target:Unit|Building|Obstacle,damage:number,weapon:WeaponDef,share=1,rootTicks?:number,impact=strikePoint(attacker,target),profile:DamageProfile=weaponDamageProfile(weapon)){
   const dealt=weaponDamage(weapon,damage,!isUnit(target),isUnit(target)&&unitMover(target.kind)==="sea",share);
-  const armored=weapon.delivery==="ram"?dealt:heavyArmoredDamage(game,attacker,target,dealt);
-  const taken=applyDamage(game,attacker,target,armored,deckHullDamageShare(game,attacker,weapon),impact,weapon.blastRadius ?? weapon.radius ?? 0);if(taken===undefined)return;
+  const taken=applyDamage(game,attacker,target,dealt,deckHullDamageShare(game,attacker,weapon),impact,weapon.blastRadius ?? weapon.radius ?? 0,profile);if(taken===undefined)return;
   addHitEffect(game,target,taken,attacker,weapon.presentation);
   if(rootTicks&&isUnit(target)&&target.hp>0)setStatus(target,{type:"root",remaining:rootTicks});
 }
@@ -2620,18 +2722,18 @@ function impactWeapon(game:Game,projectile:Projectile){
       const impact=impactAt(hits[0].along!);
       for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(impact,target)<=weapon.blastRadius!))) {
         const share=Math.max(.4,1-bodyGap(impact,target)/weapon.blastRadius*.6);
-        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks,impact);
+        hitWeapon(game,attacker,target,projectile.damage,weapon,share,projectile.rootTicks,impact,projectile.damageProfile);
       }
       addEffect(game,"siegeImpact",impact.x,impact.y,seconds(.65),{radius:weapon.blastRadius,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
       return;
     }
-    hits.forEach(({target,along},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks,impactAt(along!)));
+    hits.forEach(({target,along},i)=>hitWeapon(game,attacker,target,projectile.damage,weapon,(weapon.pierceShare??1)**i,projectile.rootTicks,impactAt(along!),projectile.damageProfile));
   }else{
     for(const target of crewBeforeHulls(foes.filter(target=>bodyGap(to,target)<=(weapon.radius??0)))){const gap=bodyGap(to,target);
-      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks,to);
+      const falloff=Math.max(.35,1-gap/Math.max(1,weapon.radius??1)*.65);hitWeapon(game,attacker,target,projectile.damage,weapon,falloff,projectile.rootTicks,to,projectile.damageProfile);
     }
     addEffect(game,"siegeImpact",to.x,to.y,24,{radius:weapon.radius??0,owner:projectile.owner,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
-    if(projectile.burnTicks)addEffect(game,"burningGround",to.x,to.y,projectile.burnTicks,{owner:projectile.owner,unitId:projectile.attackerId,damage:3,radius:weapon.radius??0,tickEvery:10,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
+    if(projectile.burnTicks)addEffect(game,"burningGround",to.x,to.y,projectile.burnTicks,{owner:projectile.owner,unitId:projectile.attackerId,damage:3,damageProfile:{...DAMAGE_PROFILES.BURNING},radius:weapon.radius??0,tickEvery:10,...(projectile.sourceKind?{sourceKind:projectile.sourceKind}:{})});
   }
 }
 
@@ -2646,18 +2748,11 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
   }
   const baseRange = isUnit(attacker) ? weaponRules(game, attacker).attackRange : attackRange;
   if (baseRange > RANGED_ATTACK_RANGE_THRESHOLD) {
-    launchProjectile(game, attacker, target, heavyArmoredDamage(game, attacker, target, buildingTargetDamage(attacker, target, damage)));
+    launchProjectile(game, attacker, target, buildingTargetDamage(attacker, target, damage));
     return;
   }
   // Range upgrades extend a melee weapon; they do not turn it into a projectile or change its armor interaction.
   applyAttackDamage(game, attacker, target, damage, baseRange);
-}
-
-// Heavy armor is settled when the shot is fired, so a shot still counts as a shooter's after its shooter has died.
-function heavyArmoredDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
-  if (!isUnit(target) || unitRules(game, target).armor !== "heavy") return damage;
-  const multiplier = isUnit(attacker) ? HEAVY_ARMOR_DAMAGE.rangedUnit : attacker.kind === "defenseTower" ? HEAVY_ARMOR_DAMAGE.tower : 1;
-  return Math.max(1, Math.round(damage * multiplier));
 }
 
 function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
@@ -2666,6 +2761,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   const flight = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / perTick(PROJECTILE_SPEED)));
   const projectile = {
     attackKind: innateMissile(attacker.kind),
+    damageProfile: { ...(isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind)) },
     id: `projectile-${game.nextId}`,
     owner: attacker.owner,
     attackerId: attacker.id,
@@ -2694,12 +2790,13 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   });
 }
 
-function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number) {
-  const dealt = attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
-  const taken = applyDamage(game, attacker, target, dealt);
+function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number, profile?: DamageProfile) {
+  profile ??= isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind);
+  const dealt = profile.origin === "spell" ? damage : attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
+  const taken = applyDamage(game, attacker, target, dealt, undefined, undefined, 0, profile);
   if (taken === undefined) return;
-  applyAttackStatusEffects(game, attacker, target);
-  if (attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
+  if (profile.origin !== "spell") applyAttackStatusEffects(game, attacker, target);
+  if (profile.delivery === "melee" && profile.origin !== "spell" && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
   const kind: WorldEffect["type"] = attackRange > RANGED_ATTACK_RANGE_THRESHOLD ? "projectile" : "melee";
@@ -2755,12 +2852,12 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
     forEachNearbyUnit(game, target, SPLASH_RADIUS, (unit) => {
       if (unit !== target && unit.hp > 0 && distance(unit, target) <= SPLASH_RADIUS && areEnemyOwners(game, attacker.owner, unit.owner)) burned.push(unit);
     });
-    for (const unit of burned) applyDamage(game, attacker, unit, share);
+    for (const unit of burned) applyDamage(game, attacker, unit, share, undefined, undefined, 0, unitAttackDamageProfile(game, attacker));
     addEffect(game, "flameBurn", target.x, target.y, 20);
   }
   if (!isUnit(target)) return;
   if (rules.slowOnHit) setStatus(target, { type: "slow", remaining: SLOW_TICKS });
-  if (rules.poisonOnHit) setStatus(target, { type: "poison", remaining: POISON_TICKS, sourceId: attacker.id });
+  if (rules.poisonOnHit) setStatus(target, { type: "poison", remaining: POISON_TICKS, sourceId: attacker.id, sourceOwner: attacker.owner });
   if (attacker.kind !== "sparkArcher") return;
   target.effects = target.effects.filter((effect) => effect.type !== "scorch");
   target.effects.push({ type: "scorch", remaining: SCORCH_DURATION });
@@ -2768,7 +2865,7 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
 }
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
-function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hullShare?: number,impact?:{x:number;y:number},blastRadius=0): number | undefined {
+function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hullShare?: number,impact?:{x:number;y:number},blastRadius=0, profile: DamageProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind), armorAlreadyApplied = false): number | undefined {
   if ('invulnerable' in target && target.invulnerable) return undefined;
   if (isObstacle(target)) {
     // A rock pile or gate wakes nobody and pays nothing when it falls (see @@@obstacle).
@@ -2777,17 +2874,17 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
     game.observer?.hit(attacker, target, damage, hpBefore);
     return damage;
   }
-  if (isUnit(target) && target.effects.some((effect) => effect.type === "guardian")) return undefined;
-  const impactDamage=damage;
-  if(isUnit(target))damage*=1-equipmentProtection(game,target);
-  const taken = isUnit(target) && target.stance === "shock" ? Math.max(1, Math.round(damage * SHOCK_DAMAGE_TAKEN)) : damage;
+  const impactDamage = damage;
+  const resolved = isUnit(target) ? resolveUnitDamage(game, target, damage, profile, game.veteranFrame?.get(target.id)?.reductions, { armorAlreadyApplied }) : undefined;
+  if (resolved?.blocked) return undefined;
+  const taken = resolved?.damage ?? damage;
   const hpBefore = target.hp;
   target.hp -= taken;
   if(isUnit(target) && shipProfile(target)){damageShipParts(game,target,impact ?? strikePoint(attacker,target),taken,blastRadius);if(target.hp>0)applyDerivedUnitStats(game,target);}
   if (hpBefore > 0 && isUnit(target)) {
     if (shipProfile(target) && game.deckDamageBatch) {
       const entry = game.deckDamageBatch.get(target.id) ?? { ship: target, direct: 0, collateral: 0 };
-      entry.direct += taken;
+      entry.direct += impactDamage;
       game.deckDamageBatch.set(target.id, entry);
     }
     const hull = target.deck && game.units.find(ship => ship.id === target.deck!.shipId && ship.hp > 0);
@@ -2795,9 +2892,9 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
       const collateral = impactDamage * (hullShare ?? deckHullDamageShare(game,attacker));
       if (game.deckDamageBatch) {
         const entry = game.deckDamageBatch.get(hull.id) ?? { ship: hull, direct: 0, collateral: 0, source: attacker };
-        if (collateral > entry.collateral) { entry.collateral = collateral; entry.source = attacker; }
+        if (collateral > entry.collateral) { entry.collateral = collateral; entry.source = attacker; entry.profile = profile; }
         game.deckDamageBatch.set(hull.id,{...entry,impact:{x:target.x,y:target.y},blastRadius});
-      } else applyDamage(game, attacker, hull, collateral, 0,target);
+      } else applyDamage(game, attacker, hull, collateral, 0,target,0,profile);
     }
   }
   game.observer?.hit(attacker, target, taken, hpBefore);
@@ -2818,8 +2915,8 @@ function withDeckDamageBatch(game: Game, body: () => void) {
   const batch: NonNullable<Game["deckDamageBatch"]> = new Map();
   game.deckDamageBatch = batch;
   try { body(); } finally { delete game.deckDamageBatch; }
-  for (const { ship, direct, collateral, source,impact,blastRadius } of batch.values()) {
-    if (source && ship.hp > 0 && collateral > direct) applyDamage(game, source, ship, collateral - direct, 0,impact,blastRadius);
+  for (const { ship, direct, collateral, source,impact,blastRadius,profile } of batch.values()) {
+    if (source && ship.hp > 0 && collateral > direct) applyDamage(game, source, ship, collateral - direct, 0,impact,blastRadius,profile);
   }
 }
 
@@ -2950,7 +3047,7 @@ function addEffect(
   x: number,
   y: number,
   remaining: number,
-  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount" | "attackKind">>,
+  vectors?: Partial<Pick<WorldEffect, "fromX" | "fromY" | "fromHeight" | "toX" | "toY" | "toHeight" | "owner" | "damage" | "damageProfile" | "radius" | "tickEvery" | "sourceKind" | "unitId" | "itemId" | "amount" | "attackKind">>,
 ) {
   game.effects.push({ id: `effect-${game.nextId}`, type, x, y, remaining, duration: remaining, ...vectors });
   game.nextId += 1;
@@ -2982,6 +3079,9 @@ function applyXpLevel(game: Game, unit: Unit) {
   const nextLevel = xpStarThresholds(unitRules(game, unit)).filter(threshold => unit.xp >= threshold).length;
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
+  if (unit.level === 3 && unit.owner !== "neutral" && unit.expiresTick === undefined && !unit.veteranSkillChoices) {
+    unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game));
+  }
   applyDerivedUnitStats(game, unit);
 }
 
@@ -2991,10 +3091,11 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_GAIN_PER_STAR;
   const heavy=itemsFor(game,unit).some(item=>ITEM_DEFS[item.kind].span===4);
   unit.bodyRadius=unitRules(game,unit).radius;unit.radius=unit.bodyRadius;
-  unit.attackDamage = Math.round(base.attackDamage * multiplier);
+  const veterans = game.veteranFrame?.get(unit.id);
+  unit.attackDamage = Math.round(base.attackDamage);
   unit.maxHp = Math.round(base.maxHp * multiplier);
-  unit.speed = base.speed*(heavy?.45:1);
-  unit.attackRange = base.attackRange;
+  unit.speed = base.speed * (heavy ? .45 : 1) * (veterans?.moveSpeedMultiplier ?? 1);
+  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1);
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 
@@ -3357,11 +3458,12 @@ export function strikeUnit(game: Game, source: Unit | Building | { id: string; o
   const attacker = "hp" in source ? source : (findTarget(game, source.id) ?? scriptSource(source));
   const dealt = Math.max(1, Math.round(damage));
   if (style === "spell") {
-    const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, dealt));
+    const taken = applyDamage(game, attacker, target, dealt, undefined, undefined, 0, DAMAGE_PROFILES.ARCANE);
     if (taken !== undefined) addHitEffect(game, target, taken);
     return;
   }
-  applyAttackDamage(game, attacker, target, style === "ranged" ? heavyArmoredDamage(game, attacker, target, dealt) : dealt, style === "ranged" ? RANGED_ATTACK_RANGE_THRESHOLD + 1 : 0);
+  const baseProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind);
+  applyAttackDamage(game, attacker, target, dealt, style === "ranged" ? RANGED_ATTACK_RANGE_THRESHOLD + 1 : 0, { ...baseProfile, delivery: style });
 }
 
 // A source no longer on the field (a caster dead before its fire fell) strikes as its side, from where it stood: an
@@ -3382,6 +3484,10 @@ export function removeUnit(game: Game, unitId: string) {
   dropItemsFromDeadUnits(game, [unit]);
   game.units = game.units.filter((candidate) => candidate.id !== unitId);
   game.entityById?.delete(unitId);
+  if (unit.veteranSkill) {
+    game.unitSpatial = createSpatialIndex(game.units, 320);
+    refreshVeteranFrame(game);
+  }
   updateSupplyState(game);
 }
 

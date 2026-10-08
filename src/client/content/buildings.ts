@@ -125,7 +125,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   moonWell: {
     name: { en: "Moon Well", zh: "月井" },
-    description: { en: "Support building that periodically heals wounded friendly soldiers nearby.", zh: "支援建筑，会周期性治疗附近受伤友方士兵。" },
+    description: { en: "Support building that periodically heals nearby wounded non-mechanical allies. Has no effect on mechanical units.", zh: "支援建筑，会周期性治疗附近受伤的非机械友军；对机械单位无效。" },
     command: { icon: "◐", hotkey: "m" },
     glyph: { frame: "moon-well", marks: ["moonRune", "sparkRune", "door"] },
     paint(b, team) {
@@ -155,7 +155,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
   },
   emberShrine: {
     name: { en: "Ember Shrine", zh: "余烬神龛" },
-    description: { en: "Ember support building that periodically heals wounded friendly soldiers nearby.", zh: "余烬支援建筑，会周期性治疗附近受伤友方士兵。" },
+    description: { en: "Ember support building that periodically heals nearby wounded non-mechanical allies. Has no effect on mechanical units.", zh: "余烬支援建筑，会周期性治疗附近受伤的非机械友军；对机械单位无效。" },
     command: { icon: "◒", hotkey: "m" },
     glyph: { frame: "ember-shrine", marks: ["sparkRune", "moonRune", "door"] },
     paint(b, team) {

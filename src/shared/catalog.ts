@@ -4,6 +4,9 @@ import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";
 import { creepGoldBounty, unitValue } from "./unit-value";
 import { seconds } from "./time";
+import { VETERAN_ACTIVE_SKILL_IDS, VETERAN_SKILLS, type VeteranActiveSkillId } from "./veteran-skills";
+import type { DamageProfile } from "./damage-types";
+import type { UnitClass, UnitTargetFilter } from "./unit-targeting";
 
 export const MERCENARY_HIRE_RANGE = 220;
 export const SUPPORT_BUILDING_HEAL = 5;
@@ -11,6 +14,7 @@ export const DOCK_REPAIR = { range: 240, hpPerSecond: 3, goldPerSecond: 1 };
 
 /** Weapon rules belong to the simulation, independent of maps and AI versions. */
 export type WeaponDef = {
+  damageProfile?: DamageProfile;
   presentation?: AttackKind;
   delivery: "ram" | "bolt" | "shell" | "cone";
   buildingMultiplier?: number;
@@ -31,6 +35,7 @@ export type WeaponDef = {
 // validation checks against are all derived from these rows, so a new unit or building is one row here (plus its card
 // in client/content for how it looks); nothing else in shared/ needs to be told.
 export type UnitDef = {
+  unitClass: UnitClass;
   trainedAt?: BuildingKind;
   race?: RaceId;
   hp: number;
@@ -98,13 +103,14 @@ export const HIGH_UPKEEP_SUPPLY = 81;
 
 // Heavy armor (knights, golems, ash chieftains and cinder revenants): a shooter's or caster's attack deals half damage, a defense
 // tower's 70%. Melee blows land in full.
-export const HEAVY_ARMOR_DAMAGE = { rangedUnit: 0.5, tower: 0.7 } as const;
+export { HEAVY_ARMOR_DAMAGE } from "./damage-reduction";
 
 // Whether a unit casts the ability on its own (see autocast): "on" and "off" are the default of an ability the player can
 // switch, "none" one that is only ever cast by hand. As in Warcraft III, nearly every unit ability starts on.
 export type AutocastDefault = "on" | "off" | "none";
 
-export type AbilityDef = { autocast: AutocastDefault } & (
+export type AbilityDef = { autocast: AutocastDefault; targets?: UnitTargetFilter } & (
+  | { behavior: "veteran"; skill: VeteranActiveSkillId; range: number; plannerRange: number; cooldown: number; effectType: "heal" | "guardianField" | "bloodlust" }
   | { behavior: "weapon"; target: "enemy" | "point"; weapon: WeaponDef; range: number; plannerRange: number; cooldown: number; damage: number; rootTicks?: number; burnTicks?: number; effectType: "siegeImpact" | "shellFlight" | "siegeBolt" | "grapeshot" | "burningGround" }
   | { behavior: "heal"; range: number; plannerRange: number; cooldown: number; healAmount: number; effectType: "heal" }
   | { behavior: "summon"; range: number; plannerRange: number; cooldown: number; summonKind: UnitKind; summonDuration: number; effectType: "summon" }
@@ -197,7 +203,7 @@ export const UNIT_RULES = {
   priest: { trainedAt: "sanctum", race: "grove", hp: 90, speed: 60, radius: 16, attackDamage: 7, attackRange: 201.6, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, abilities: ["heal"], tier: 2 },
   summoner: { trainedAt: "sanctum", race: "grove", hp: 95, speed: 56, radius: 17, attackDamage: 8, attackRange: 218.4, aimSpeed: 400, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, abilities: ["summon"], tier: 2 },
   witch: { trainedAt: "sanctum", race: "grove", hp: 92, speed: 62, radius: 16, attackDamage: 8, attackRange: 252, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, abilities: ["curse"], tier: 2 },
-  golem: { trainedAt: "workshop", race: "grove", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
+  golem: { unitClass: "mechanical", trainedAt: "workshop", race: "grove", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
   // Ember's heavies, raised in the ashen hall and heavy-armored like the grove's knight and golem, but built for
   // other jobs. The chieftain hunts casters and what they summon (half again as much damage to both); the revenant is
   // light for an elite and burns its wounds away, back to full health in about twenty seconds.
@@ -215,16 +221,16 @@ export const UNIT_RULES = {
   gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
   // @@@ships - Both races can board every ship. Transport passengers deal half damage;
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
-  transport: { trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
-  warship: { trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
-  bombardShip: { trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
-  fireShip: { trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
-  siegeRam: { trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
-  ballista: { trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
-  catapult: { trainedAt: "workshop", race: "ember", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
-  organGun: { trainedAt: "workshop", race: "ember", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
+  transport: { unitClass: "mechanical", trainedAt: "shipyard", hp: 270, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 160, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, passengerDamageMultiplier: .5 },
+  warship: { unitClass: "mechanical", trainedAt: "shipyard", hp: 320, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  cutter: { unitClass: "mechanical", trainedAt: "shipyard", hp: 110, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
+  bombardShip: { unitClass: "mechanical", trainedAt: "shipyard", hp: 260, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { unitClass: "mechanical", trainedAt: "shipyard", hp: 340, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  carrier: { unitClass: "mechanical", trainedAt: "shipyard", hp: 480, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: 280, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, armor: "heavy", tier: 2 },
+  siegeRam: { unitClass: "mechanical", trainedAt: "workshop", race: "ember", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
+  ballista: { unitClass: "mechanical", trainedAt: "workshop", race: "grove", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
+  catapult: { unitClass: "mechanical", trainedAt: "workshop", race: "ember", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
+  organGun: { unitClass: "mechanical", trainedAt: "workshop", race: "ember", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
   ancientStag: { hp: 360, speed: 88, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [] },
   // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
   // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:
@@ -238,9 +244,9 @@ export const UNIT_RULES = {
   murlocHunter: { hp: 98, speed: 72, radius: 15, attackDamage: 13, attackRange: 120, aimSpeed: 480, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], slowOnHit: true, threat: 1.05 },
   tidePriest: { hp: 100, speed: 64, radius: 17, attackDamage: 10, attackRange: 160, aimSpeed: 440, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["heal"] },
   deepSnapper: { hp: 350, speed: 70, radius: 26, attackDamage: 31, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [], armor: "heavy", threat: 1.25 },
-  rubbleGolem: { hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
-  rockGolem: { hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
-  graniteGolem: { hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  rubbleGolem: { unitClass: "mechanical", hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
+  rockGolem: { unitClass: "mechanical", hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { unitClass: "mechanical", hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
   ogreWarrior: { hp: 178, speed: 68, radius: 22, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
   ogreMage: { hp: 145, speed: 64, radius: 22, attackDamage: 15, attackRange: 160, aimSpeed: 400, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: ["bloodlust"], threat: 1.15 },
   ogreLord: { hp: 380, speed: 68, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: [], threat: 1.35 },
@@ -249,11 +255,11 @@ export const UNIT_RULES = {
   spiderQueen: { hp: 350, speed: 80, radius: 26, attackDamage: 33, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: ["web"] },
   dragonWhelp: { hp: 170, speed: 84, radius: 22, attackDamage: 17, attackRange: 144, aimSpeed: 540, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [] },
   redDragon: { hp: 600, speed: 80, radius: 28, attackDamage: 42, attackRange: 176, aimSpeed: 480, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 8, abilities: [], splash: true, threat: 1.3 },
-} satisfies Record<string, Omit<UnitDef, "xpReward" | "goldBounty">>;
+} satisfies Record<string, Omit<UnitDef, "xpReward" | "goldBounty" | "unitClass"> & { unitClass?: UnitClass }>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
   Object.entries(UNIT_RULES).map(([kind, row]) => {
-    const def: UnitDef = { ...row, xpReward: 0 };
+    const def: UnitDef = { unitClass: "nonMechanical", ...row, xpReward: 0 };
     def.xpReward = kind === "spirit" ? 0 : Math.round(unitValue(def) / 3);
     if (def.creepFoodPower) def.goldBounty = creepGoldBounty(def.creepFoodPower, def.threat);
     return [kind, def];
@@ -266,7 +272,7 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
 // the tooltips) takes it for its base, as any subtype passes for its supertype; the sim, which knows variants, plays it
 // by its own numbers. Its abilities are its base's: a campaign's own powers are scripts (see story/). Variants live in
 // the game that uses them (Game.variants), never in these tables, so no campaign can move the balance of any other game.
-export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "casterSlayer" | "regenPerSecond">>;
+export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "casterSlayer" | "regenPerSecond" | "unitClass">>;
 
 export type UnitVariantDef = UnitVariantStats & {
   base: UnitKind;
@@ -316,23 +322,29 @@ export const TRAINABLE_UNIT_KINDS = UNIT_KINDS.filter((kind) => UNIT_DEFS[kind].
 
 export const MERCENARY_UNIT_KINDS: MercenaryUnitKind[] = ["mercenary", "contractArcher", "fieldMedic"];
 
-export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web", "pinningBolt", "incendiaryFlume"];
+export const ABILITY_KINDS: AbilityKind[] = ["heal", "summon", "curse", "emberMend", "cinderSoul", "ashCurse", "charge", "stomp", "bloodlust", "web", "pinningBolt", "incendiaryFlume", ...VETERAN_ACTIVE_SKILL_IDS];
 
 // What a curse deals at once to a summoned unit (a spirit has 85 hp): both races' curses are the answer to a summoner's
 // free army, so they share the one number.
 const CURSE_SUMMONED_DAMAGE = 100;
 
 export const ABILITY_DEFS: Record<AbilityKind, AbilityDef> = {
+  ...Object.fromEntries(VETERAN_ACTIVE_SKILL_IDS.map(skill => {
+    const effect = VETERAN_SKILLS[skill].effect;
+    if (effect.type !== "active") throw new Error(`Veteran ability ${skill} must be active`);
+    return [skill, { behavior: "veteran", skill, range: effect.radius, plannerRange: effect.radius, cooldown: effect.cooldown,
+      effectType: effect.action === "heal" ? "heal" : effect.modifiers.damageReduction ? "guardianField" : "bloodlust", autocast: "on", ...(effect.targets ? { targets: effect.targets } : {}) }];
+  })) as Record<VeteranActiveSkillId, AbilityDef>,
   pinningBolt: { behavior: "weapon", target: "enemy", weapon: { presentation: "bolt", delivery: "bolt", radius: 20, maxHits: 3, pierceShare: 0.7 }, range: 472, plannerRange: 472, cooldown: seconds(14), damage: 36, rootTicks: seconds(2), effectType: "siegeBolt", autocast: "none" },
   incendiaryFlume: { behavior: "weapon", target: "point", weapon: { presentation: "fire", delivery: "shell", radius: 85, buildingMultiplier: 0.7 }, range: 224, plannerRange: 224, cooldown: seconds(18), damage: 14, burnTicks: seconds(4), effectType: "burningGround", autocast: "none" },
 
   // With spells on their own cooldowns (see ability-cooldowns) a healer heals through every fight. At one heal every 6s,
   // 9 health a second, two mirrored default AIs fought for 41 minutes on verdantCrossroads (12.7 before) and never ended on
   // wildMarches. Every 12s is Warcraft III's measure: a priest's mana holds it to about a third of a footman's damage.
-  heal: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
+  heal: { behavior: "heal", targets: { unitClasses: ["nonMechanical"] }, range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   summon: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
   curse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.4, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "curse", autocast: "on" },
-  emberMend: { behavior: "heal", range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
+  emberMend: { behavior: "heal", targets: { unitClasses: ["nonMechanical"] }, range: 240, plannerRange: 220, cooldown: seconds(12), healAmount: 55, effectType: "heal", autocast: "on" },
   cinderSoul: { behavior: "summon", range: 260, plannerRange: 240, cooldown: seconds(40), summonKind: "spirit", summonDuration: seconds(60), effectType: "summon", autocast: "on" },
   ashCurse: { behavior: "curse", range: 280, plannerRange: 260, cooldown: seconds(7.5), effectDuration: seconds(18), damageMultiplier: 0.45, scorchedDamageMultiplier: 0.3, summonedDamage: CURSE_SUMMONED_DAMAGE, statusType: "curse", effectType: "scorch", autocast: "on" },
   // The cavalry's charge: from 180 to 300 away, a slide that would carry the rider `drive` past the unit it meets (see

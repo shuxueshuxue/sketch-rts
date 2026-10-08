@@ -42,11 +42,13 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Fresh units have innate attacks and empty equipment positions.
-    // Map geometry still uses det-math; key/id ordering is independent of locale.
-    expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("b3a1487c");
-    const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
-    // The seeded map now carries an environment recipe and habitat-scored scenery.
-    expect(checksumGame(ladder)).toBe("0200194d");
+    // Shared hauling rules place initial mines 288 away from the town hall.
+    // Repeat creation to catch accidental dependence on a process-global random stream.
+    for (let repeat = 0; repeat < 2; repeat += 1) {
+      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("1c96b306");
+      const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
+      // The seeded map carries an environment recipe and habitat-scored scenery.
+      expect(checksumGame(ladder)).toBe("f490f7c9");
+    }
   });
 });

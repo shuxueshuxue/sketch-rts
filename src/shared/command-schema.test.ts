@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { isCommandEnvelope, isGameCommand } from "./command-schema";
 
 describe("shared command payload schema", () => {
+  it("accepts veteran choices and rejects unknown or malformed skill identifiers", () => {
+    expect(isGameCommand({ type: "learnVeteranSkill", unitId: "veteran", skill: "veteranResilience" })).toBe(true);
+    for (const skill of ["unknown", "toString", "__proto__", 1, undefined]) {
+      expect(isGameCommand({ type: "learnVeteranSkill", unitId: "veteran", skill })).toBe(false);
+    }
+    expect(isGameCommand({ type: "learnVeteranSkill", skill: "veteranResilience" })).toBe(false);
+  });
   it('accepts an explicit withdrawal and rejects malformed reaction flags',()=>{
     for(const type of ['move','unload']){
       expect(isGameCommand({type,unitIds:['ship'],x:10,y:20,avoidCombat:true})).toBe(true);

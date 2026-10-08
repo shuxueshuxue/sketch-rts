@@ -1,7 +1,7 @@
-import { isShipKind } from './ship-geometry';
-import type { Unit } from './types';
+import { matchesUnitTarget, NON_MECHANICAL_TARGETS } from './unit-targeting';
+import type { GameSnapshot, Unit } from './types';
 
-/** Hulls and fittings recover through repairs, never medical healing. */
-export function canReceiveHealing(unit: Pick<Unit, 'kind'>) {
-  return !isShipKind(unit.kind);
+/** All mechanical bodies recover through repairs, never medical healing. */
+export function canReceiveHealing(unit: Pick<Unit, 'kind' | 'variant'>, snapshot?: Pick<GameSnapshot, 'variants'>) {
+  return matchesUnitTarget(unit, NON_MECHANICAL_TARGETS, snapshot);
 }

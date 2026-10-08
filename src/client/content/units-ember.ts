@@ -108,7 +108,7 @@ export const EMBER_UNITS = {
   },
   emberAcolyte: {
     name: { en: "Ember Acolyte", zh: "余烬侍僧" },
-    description: { en: "Ember support caster with a targeted heal for wounded allies.", zh: "余烬支援施法者，可以对受伤友军进行定点治疗。" },
+    description: { en: "Ember support caster with a targeted heal for wounded non-mechanical allies.", zh: "余烬支援施法者，可以对受伤的非机械友军进行定点治疗。" },
     command: { icon: "+", hotkey: "p" },
     glyph: { silhouette: "priest-medallion", marks: ["halo", "spark", "cross"] },
     art: { tier: "advanced", bearing: "foot", faction: "ember" },

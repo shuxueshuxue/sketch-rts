@@ -6,6 +6,7 @@ import { localToWorld, shipProfile, shipWeaponPose } from './ship-geometry';
 import { UNIT_DEFS } from './catalog';
 import { nearestShipPose } from './ship-navigation';
 import { DECK_HULL_DAMAGE } from './deck-combat';
+import { HEAVY_ARMOR_DAMAGE } from './damage-reduction';
 import { checksumGame } from './sim/checksum';
 import type { Unit } from './types';
 function match(terrain?: 'water' | 'coast') {
@@ -77,7 +78,10 @@ describe('live naval combat', () => {
         run(game, shot.remaining);
         expect(a.hp).toBeLessThan(a.maxHp);
         expect(b.hp).toBeLessThan(b.maxHp);
-        expect(ship.hp).toBeCloseTo(hull - shot.damage * DECK_HULL_DAMAGE.shell);
+        // One shared blast reaches the hull, where the carrier's own heavy armor
+        // reduces the physical ranged hit once, independently of its passengers.
+        const hullDamage = Math.max(1, Math.round(shot.damage * DECK_HULL_DAMAGE.shell * HEAVY_ARMOR_DAMAGE.rangedUnit));
+        expect(ship.hp).toBeCloseTo(hull - hullDamage);
         expect(game.deckDamageBatch).toBeUndefined();
     });
     it('halves transport passenger attacks and removes the modifier after leaving', () => {

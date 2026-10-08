@@ -9,9 +9,9 @@ describe('medical healing and hull repairs',()=>{
   for(const [kind,ability] of [['priest','heal'],['emberAcolyte','emberMend']] as const)it(`rejects manual ${ability} on a hull at both selection and simulation admission`,()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',900,800),healer=game.spawnUnit('player',kind,900,740);ship.hp-=100;
     const command={type:'cast' as const,unitId:healer.id,ability,targetId:ship.id};
-    expect(commandValidationError(snapshotGame(game),'player',command)).toBe('Healing cannot repair ships');
+    expect(commandValidationError(snapshotGame(game),'player',command)).toBe('Healing cannot restore mechanical units');
     expect(castCommandForSelection(snapshotGame(game),'player',[healer],ability,{targetId:ship.id})).toBeUndefined();
-    expect(()=>issuePlayerCommand(game,'player',command)).toThrow('Healing cannot repair ships');
+    expect(()=>issuePlayerCommand(game,'player',command)).toThrow('Healing cannot restore mechanical units');
   });
   it('heals wounded deck crew automatically and leaves their hull untouched',()=>{
     const game=scene(),ship=game.spawnUnit('player','transport',900,800),crew=game.spawnUnit('player','footman',900,800),healer=game.spawnUnit('player','priest',900,740);

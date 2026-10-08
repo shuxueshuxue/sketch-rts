@@ -32,7 +32,7 @@ export function attackTargetId(order: UnitOrder) {
 
 /** Construction and repair face their physical target just like an attack. */
 export function interactionTargetId(order: UnitOrder) {
-  return order.type === 'repair' ? order.buildingId : order.type === 'repairShip' ? order.targetId : attackTargetId(order);
+  return order.type === 'repair' ? order.buildingId : order.type === 'repairUnit' || order.type === 'repairShip' ? order.targetId : attackTargetId(order);
 }
 
 /** Remembers each unit's facing between frames; units that are gone are forgotten. */

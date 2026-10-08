@@ -18,7 +18,8 @@ describe("build placement controls", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = workerOf(game, "enemy");
     const hall = hallOf(game, "enemy");
-    const point = { x: hall.x - 300, y: hall.y };
+    // The second seat's main mine is west of its hall; place the ownership-check fixture to the north.
+    const point = { x: hall.x, y: hall.y - 300 };
     expect(buildPlacementCommand(snapshotGame(game), { workerId: worker.id, buildingKind: "farm" }, point, "enemy")).toEqual({
       command: { type: "build", unitId: worker.id, buildingKind: "farm", ...point },
     });

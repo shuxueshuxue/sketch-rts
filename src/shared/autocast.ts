@@ -1,4 +1,5 @@
-import { ABILITY_DEFS, UNIT_DEFS } from "./catalog";
+import { ABILITY_DEFS } from "./catalog";
+import { unitAbilities } from "./unit-abilities";
 import type { AbilityKind, Unit } from "./types";
 
 // @@@autocast - As in Warcraft III, a unit casts its abilities on its own: the engine, not the player's AI, looks for a
@@ -10,8 +11,8 @@ export function canAutocast(ability: AbilityKind) {
   return ABILITY_DEFS[ability].autocast !== "none";
 }
 
-export function autocastEnabled(unit: Pick<Unit, "kind" | "autocast">, ability: AbilityKind) {
-  if (!canAutocast(ability) || !UNIT_DEFS[unit.kind].abilities.includes(ability)) return false;
+export function autocastEnabled(unit: Pick<Unit, "kind" | "autocast" | "veteranSkill">, ability: AbilityKind) {
+  if (!canAutocast(ability) || !unitAbilities(unit).includes(ability)) return false;
   return unit.autocast?.[ability] ?? ABILITY_DEFS[ability].autocast === "on";
 }
 

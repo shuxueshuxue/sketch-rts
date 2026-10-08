@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest";
 import { AI_PLAYTEST_COMMAND_MANIFEST, commandFromPlaytestArgs } from "./playtest-command-manifest";
 
 describe("AI playtest command manifest", () => {
+  it("builds worker repair commands for mechanical units", () => {
+    expect(commandFromPlaytestArgs("repair-unit", ["--target", "golem", "--units", "worker"])).toEqual({ type: "repairUnit", unitIds: ["worker"], targetId: "golem" });
+  });
+  it("builds veteran skill selections and rejects unknown skills", () => {
+    expect(commandFromPlaytestArgs("learn-veteran-skill", ["--unit", "veteran", "--skill", "veteranResilience"])).toEqual({ type: "learnVeteranSkill", unitId: "veteran", skill: "veteranResilience" });
+    expect(() => commandFromPlaytestArgs("learn-veteran-skill", ["--unit", "veteran", "--skill", "toString"])).toThrow(/Unknown veteran skill/);
+  });
   it("is importable as the same command contract printed by the CLI", () => {
     const cliManifest = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "scripts/ai-playtest.ts", "commands"], { encoding: "utf8" }));
     const importableManifest = AI_PLAYTEST_COMMAND_MANIFEST.map(({ buildCommand: _buildCommand, ...command }) => command);

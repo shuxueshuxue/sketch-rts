@@ -2,6 +2,8 @@ import { miningHallSite } from "../../shared/mining-site";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UpgradeKind } from "../../shared/types";
 import { ownUnitLookup } from "../../shared/unit-lookup";
+import { unitAbilities } from "../../shared/unit-abilities";
+import type { VeteranSkillId } from "../../shared/veteran-skills";
 import { createSnapshotQuery, type SnapshotQueryOptions } from "../snapshot/query";
 
 export type SdkUnitSelector = "all" | "combat" | "workers" | string[];
@@ -17,17 +19,20 @@ export type SdkCommandIntent =
   | { type: "mine"; unitIds?: SdkUnitSelector; resourceId?: string }
   | { type: "repair"; unitIds?: SdkUnitSelector; buildingId: string }
   | { type: "repairShip"; unitIds?: SdkUnitSelector; targetId: string }
+  | { type: "repairUnit"; unitIds?: SdkUnitSelector; targetId: string }
   | { type: "expand"; resourceId?: string; unitId?: string }
   | { type: "creepCamp"; campId?: string; unitIds?: SdkUnitSelector }
   | { type: "build"; unitId?: string; buildingKind: BuildingKind; x: number; y: number }
   | { type: "train"; buildingId?: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId?: string; upgradeKind: UpgradeKind }
   | { type: "hire"; campId: string }
+  | { type: "learnVeteranSkill"; unitId: string; skill: VeteranSkillId }
   | { type: "cast"; unitId?: string; ability: AbilityKind; targetId?: string; x?: number; y?: number }
   | { type: "pickupItem"; unitId?: string; itemId: string }
   | { type: "useItem"; unitId?: string; itemId: string; targetId?: string; x?: number; y?: number };
 
 export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId, intent: SdkCommandIntent, options: SnapshotQueryOptions = {}): GameCommand {
+  if (intent.type === "learnVeteranSkill") return { ...intent };
   if (intent.type === "move" || intent.type === "gatherArmy") return { type: "move", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: intent.x, y: intent.y };
   if (intent.type === "attackMove") return { type: "attackMove", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), x: intent.x, y: intent.y };
   if (intent.type === "focusFire") return { type: "attack", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "combat"), targetId: intent.targetId };
@@ -42,7 +47,7 @@ export function resolveSdkCommandIntent(snapshot: GameSnapshot, owner: PlayerId,
   }
   if (intent.type === "mine") return { type: "mine", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), resourceId: intent.resourceId ?? nearestResourceId(snapshot, owner) };
   if (intent.type === "repair") return { type: "repair", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), buildingId: intent.buildingId };
-  if (intent.type === "repairShip") return { type: "repairShip", unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), targetId: intent.targetId };
+  if (intent.type === "repairShip" || intent.type === "repairUnit") return { type: intent.type, unitIds: selectedUnitIds(snapshot, owner, intent.unitIds ?? "workers"), targetId: intent.targetId };
   if (intent.type === "expand") {
     const resource = expansionResource(snapshot, owner, intent.resourceId);
     const site=miningHallSite(snapshot,resource);
@@ -180,7 +185,7 @@ function carrierForItem(snapshot: GameSnapshot, owner: PlayerId, itemId: string)
 }
 
 function casterForAbility(snapshot: GameSnapshot, owner: PlayerId, ability: AbilityKind): string {
-  const unit = snapshot.units.find((candidate) => candidate.owner === owner && UNIT_DEFS[candidate.kind].abilities.includes(ability));
+  const unit = snapshot.units.find((candidate) => candidate.owner === owner && candidate.hp > 0 && unitAbilities(candidate).includes(ability));
   if (!unit) throw new Error(`No ${owner} unit can cast ${ability}`);
   return unit.id;
 }

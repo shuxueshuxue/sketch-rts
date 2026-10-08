@@ -28,7 +28,7 @@ export function invalidateMovedAim(unit: Unit, rules: UnitDef) {
 }
 
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
-export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number) {
+export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, speedMultiplier = 1) {
   const profile = aimingProfile(rules);
   if (!profile) { unit.aim = undefined; return true; }
   invalidateMovedAim(unit, rules);
@@ -45,7 +45,7 @@ export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number) {
     }
     const dx = target.x - aim.x, dy = target.y - aim.y;
     const gap = Math.hypot(dx, dy);
-    const step = perTick(profile.speed);
+    const step = perTick(profile.speed * speedMultiplier);
     if (gap <= step) { aim.x = target.x; aim.y = target.y; }
     else { aim.x += dx / gap * step; aim.y += dy / gap * step; }
     aim.updatedTick = tick;

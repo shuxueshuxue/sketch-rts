@@ -1,5 +1,6 @@
 import type { InteractivePlaytestCommand, InteractiveUnitSelector } from "../sdk/playtest";
 import type { BuildingKind, GameCommand, TrainableUnitKind, UpgradeKind } from "../shared/types";
+import { VETERAN_SKILLS, type VeteranSkillId } from "../shared/veteran-skills";
 
 export type AiPlaytestCommandCategory = "session" | "inspection" | "planning" | "stepping" | "tactical";
 
@@ -169,6 +170,15 @@ export const AI_PLAYTEST_COMMAND_MANIFEST: AiPlaytestCommandSpec[] = [
     buildCommand: (args) => ({ type: "repair", ...optionalUnitIds(args), buildingId: requiredFlag(args, "building") }),
   },
   {
+    name: "repair-unit",
+    category: "tactical",
+    summary: "Send workers to repair an owned mechanical unit.",
+    requiredFlags: ["file", "target"],
+    optionalFlags: ["units"],
+    example: "npm run play:ai -- repair-unit --file .playtests/duel.json --target unit-v2-golem",
+    buildCommand: (args) => ({ type: "repairUnit", ...optionalUnitIds(args), targetId: requiredFlag(args, "target") }),
+  },
+  {
     name: "expand",
     category: "tactical",
     summary: "Ask the AI to expand at a chosen or inferred resource node.",
@@ -230,6 +240,19 @@ export const AI_PLAYTEST_COMMAND_MANIFEST: AiPlaytestCommandSpec[] = [
     optionalFlags: ["unit"],
     example: "npm run play:ai -- pickup-item --file .playtests/duel.json --item treasure-center-lightning",
     buildCommand: (args) => ({ type: "pickupItem", ...optional("unitId", flag(args, "unit")), itemId: requiredFlag(args, "item") }),
+  },
+  {
+    name: "learn-veteran-skill",
+    category: "tactical",
+    summary: "Choose one of a three-star unit's fixed veteran skill offers.",
+    requiredFlags: ["file", "unit", "skill"],
+    optionalFlags: [],
+    example: "npm run play:ai -- learn-veteran-skill --file .playtests/duel.json --unit unit-v2-footman-1 --skill veteranResilience",
+    buildCommand: (args) => {
+      const skill = requiredFlag(args, "skill");
+      if (!Object.hasOwn(VETERAN_SKILLS, skill)) throw new Error(`Unknown veteran skill ${skill}`);
+      return { type: "learnVeteranSkill", unitId: requiredFlag(args, "unit"), skill: skill as VeteranSkillId };
+    },
   },
   {
     name: "use-item",

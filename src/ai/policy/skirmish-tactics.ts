@@ -1,4 +1,5 @@
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
+import { canReceiveHealing } from "../../shared/healing";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { aimingProfile } from "../../shared/aiming";
 import { UNIT_DEFS } from "../../shared/catalog";
@@ -127,6 +128,7 @@ function shouldLetTowerMercCloseoutContinue(snapshot: GameSnapshot, owner: Playe
 function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCombat: Unit[], enemies: Unit[], retreatPoint: Point, options: PresetAiPolicyOptions): GameCommand[] {
   if (options.version !== "v2") return [];
   return ownCombat
+    .filter((unit) => canReceiveHealing(unit, snapshot))
     .filter((unit) => unit.hp < unit.maxHp * 0.36)
     .filter((unit) => unit.order.type === "idle" || unit.order.type === "attackMove")
     .filter((unit) => enemies.every((enemy) => distance(enemy, unit) > 420))
@@ -138,6 +140,7 @@ function woundedRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId, ownCom
 }
 
 function woundedRecoveryPoint(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, retreatPoint: Point): Point {
+  if (!canReceiveHealing(unit, snapshot)) return retreatPoint;
   const healingKind = healingBuildingKindForRace(playerState(snapshot, owner).race);
   const healingRange = BUILDING_DEFS[healingKind].attackRange;
   const well = nearestEntity(buildings(snapshot, owner).filter((building) => isHealingBuildingKind(building.kind) && building.complete && building.hp > 0), unit);

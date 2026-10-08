@@ -1,9 +1,26 @@
 import { isBuildPlacementClear } from "../../shared/build-placement";
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../../shared/sim";
 import { resolveSdkCommandIntent } from "./intent";
 
 describe("SDK command intents", () => {
+  it("resolves general mechanical repairs and preserves older ship repair commands", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const workers = game.units.filter(unit => unit.owner === "player" && unit.kind === "worker").map(unit => unit.id);
+    for (const type of ["repairUnit", "repairShip"] as const) {
+      expect(resolveSdkCommandIntent(snapshotGame(game), "player", { type, targetId: "machine" })).toEqual({ type, unitIds: workers, targetId: "machine" });
+    }
+  });
+  it("resolves veteran learning and discovers a caster by its learned ability", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const priest = game.spawnUnit("player", "priest", 900, 900);
+    const learn = { type: "learnVeteranSkill" as const, unitId: priest.id, skill: "veteranHealingWave" as const };
+    expect(resolveSdkCommandIntent(snapshotGame(game), "player", learn)).toEqual(learn);
+    expect(() => resolveSdkCommandIntent(snapshotGame(game), "player", { type: "cast", ability: "veteranHealingWave" })).toThrow(/No player unit can cast/);
+    priest.veteranSkill = "veteranHealingWave";
+    expect(resolveSdkCommandIntent(snapshotGame(game), "player", { type: "cast", ability: "veteranHealingWave" })).toEqual({ type: "cast", unitId: priest.id, ability: "veteranHealingWave" });
+  });
   it("builds expansion and creep commands from snapshot-level intent", () => {
     const game = createGame("combatArena", {
       players: ["v2", "v1a"],
@@ -31,7 +48,9 @@ describe("SDK command intents", () => {
     expect(expansion).toMatchObject({type:"build",unitId:"v2-worker",buildingKind:"townHall"});
     if(expansion.type!=="build")throw new Error("missing expansion");
     expect(isBuildPlacementClear(snapshotGame(game),"townHall",expansion)).toBe(true);
-    expect(Math.hypot(expansion.x-760,expansion.y-760)).toBeLessThan(260);
+    const mineDistance = Math.hypot(expansion.x - 760, expansion.y - 760);
+    expect(mineDistance).toBeGreaterThanOrEqual(GOLD_MINE_RULES.townHallDistance);
+    expect(mineDistance).toBeLessThanOrEqual(GOLD_MINE_RULES.baseRange);
     expect(resolveSdkCommandIntent(snapshotGame(game), "v2", { type: "creepCamp", campId: "camp-natural", unitIds: "combat" })).toEqual({
       type: "attackMove",
       unitIds: ["v2-footman"],

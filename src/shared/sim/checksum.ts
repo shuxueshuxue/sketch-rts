@@ -10,7 +10,9 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 5: live deck crew, local deck orders and continuous hull poses.
 // 6: serialized hull routes and swept coast collision.
 // 7: equipment positions, live mounted weapons and damaged ship parts.
-export const CHECKSUM_VERSION = 7;
+// 8: fixed veteran skill offers, learned skills and shared damage-reduction effects.
+// 9: unit classes, skill target filters and general mechanical repair orders.
+export const CHECKSUM_VERSION = 9;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));

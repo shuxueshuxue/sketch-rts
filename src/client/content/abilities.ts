@@ -1,14 +1,20 @@
 import type { AbilityKind } from "../../shared/types";
 import type { AbilityCard } from "./cards";
+import { VETERAN_ACTIVE_SKILL_IDS, VETERAN_SKILLS } from "../../shared/veteran-skills";
 
 // The command card's spell buttons, in catalog order (see ABILITY_KINDS). Two abilities one race's units carry never
 // share a hotkey: a selection can show all of them at once.
 export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
+  ...Object.fromEntries(VETERAN_ACTIVE_SKILL_IDS.map(id => [id, {
+    name: VETERAN_SKILLS[id].name,
+    description: VETERAN_SKILLS[id].description,
+    command: { icon: VETERAN_SKILLS[id].icon, hotkey: "v" },
+  }])) as Record<typeof VETERAN_ACTIVE_SKILL_IDS[number], AbilityCard>,
   pinningBolt: { name:{en:"Pinning Bolt",zh:"钉射"},description:{en:"A piercing bolt that briefly roots units it hits.",zh:"沿直线射出穿透弩矢，命中的单位短暂定身；侧向移动可以躲避。"},command:{icon:"⤳",hotkey:"b"}},
   incendiaryFlume: { name:{en:"Burning Oil",zh:"燃油弹"},description:{en:"Lob oil that burns its fixed impact area over time.",zh:"抛射燃油弹，落点持续燃烧，影响区域内敌军。"},command:{icon:"♨",hotkey:"f"}},
   heal: {
     name: { en: "Heal", zh: "治疗" },
-    description: { en: "Restores health to an allied unit in range.", zh: "为射程内的友方单位恢复生命。" },
+    description: { en: "Restores health to a non-mechanical allied unit in range.", zh: "为射程内的非机械友方单位恢复生命。" },
     command: { icon: "+", hotkey: "h" },
   },
   summon: {
@@ -26,7 +32,7 @@ export const ABILITY_CARDS: Record<AbilityKind, AbilityCard> = {
   },
   emberMend: {
     name: { en: "Ember Mend", zh: "余烬疗愈" },
-    description: { en: "Restores health to a wounded allied unit.", zh: "为受伤友方单位恢复生命。" },
+    description: { en: "Restores health to a wounded non-mechanical allied unit.", zh: "为受伤的非机械友方单位恢复生命。" },
     command: { icon: "+", hotkey: "m" },
   },
   cinderSoul: {
