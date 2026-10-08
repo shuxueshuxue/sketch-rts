@@ -1,4 +1,5 @@
 import { cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
+import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
 import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
 import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
@@ -901,7 +902,7 @@ function updateConstruction(game: Game) {
     // it, and a worker sent to help repairs it too, as a peasant does in Warcraft III. Counted by who stood near it, one
     // worker among three sites raised all three at once, and a miner passing a site was set idle when it was done (the
     // owner, 10-02).
-    const builders = game.units.filter((unit) => unit.order.type === "repair" && unit.order.buildingId === building.id && workGap(unit, building) <= WORK_REACH);
+    const builders = constructionWorkers(game, building);
     if (builders.length === 0) continue;
     for (const builder of builders) emitWorkerWork(game, builder, building);
     // The site gains health with the work done (see construction-hp): each builder's share of the build time brings the
@@ -1606,7 +1607,7 @@ function updateBuildOrder(game: Game, unit: Unit) {
   const def = BUILDING_DEFS[order.buildingKind];
   const half = footprintHalf(def.radius, TERRAIN_CELL);
   const gap = Math.hypot(Math.max(0, Math.abs(unit.x-order.x)-half), Math.max(0, Math.abs(unit.y-order.y)-half));
-  if (gap > WORK_REACH) {
+  if (gap > BUILDING_WORK_REACH) {
     // Track movement rather than a fixed journey limit: long walks are valid, blocked plans must release their worker.
     if (order.progressTick === undefined || Math.hypot(unit.x - (order.progressX ?? unit.x), unit.y - (order.progressY ?? unit.y)) > 24) {
       order.progressTick = game.tick; order.progressX = unit.x; order.progressY = unit.y;
@@ -1638,7 +1639,7 @@ function updateRepairOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
-  if (workGap(unit, building) > WORK_REACH) {
+  if (buildingWorkGap(unit, building) > BUILDING_WORK_REACH) {
     moveToward(unit, building.x, building.y, game.map, game.units);
     return;
   }
@@ -1651,7 +1652,7 @@ function updateAutoRepair(game: Game, unit: Unit) {
   if (unit.order.type !== "idle" || !isPlayerId(unit.owner)) return false;
   if (unit.cooldown > 0) return false;
   const building = game.buildings.find(
-    (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && workGap(unit, candidate) <= WORK_REACH,
+    (candidate) => candidate.owner === unit.owner && candidate.complete && candidate.hp > 0 && candidate.hp < candidate.maxHp && buildingWorkGap(unit, candidate) <= BUILDING_WORK_REACH,
   );
   if (!building) return false;
   return repairBuildingTick(game, unit, building);
@@ -1666,7 +1667,7 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   if (!target || !unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
   const ship = Boolean(shipProfile(target));
   const sameWorkSurface = ship ? worker.deck?.shipId === target.id : worker.deck?.shipId === target.deck?.shipId;
-  const withinReach = distance(worker, target) <= worker.radius + target.radius + WORK_REACH;
+  const withinReach = distance(worker, target) <= worker.radius + target.radius + BUILDING_WORK_REACH;
   // Crew can work anywhere on their own hull; separate ground/deck units must
   // share a surface and stand within working reach.
   const canWorkHere = ship ? sameWorkSurface || !worker.deck && withinReach : sameWorkSurface && withinReach;
@@ -3250,15 +3251,6 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 function nearestEnemyTarget(game: Game, unit: Unit, range: number): Unit | Building | undefined {
   if (unit.attackDamage <= 0) return undefined;
   return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit);
-}
-
-// @@@building-work - A worker builds or repairs a building from beside its walls: within WORK_REACH of its footprint's
-// square (see @@@building-footprint), from the cell next to it, whatever the building's size.
-const WORK_REACH = TERRAIN_CELL;
-
-function workGap(unit: Unit, building: Building) {
-  const half = footprintHalf(building.radius, TERRAIN_CELL);
-  return Math.hypot(Math.max(0, Math.abs(unit.x - building.x) - half), Math.max(0, Math.abs(unit.y - building.y) - half));
 }
 
 // @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a

@@ -1,6 +1,8 @@
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import { canCast } from "../../../shared/ability-cooldowns";
-import { HIGH_UPKEEP_SUPPLY } from "../../../shared/catalog";
+import { HIGH_UPKEEP_SUPPLY, constructionStartHp, unitMover } from "../../../shared/catalog";
+import { constructionWorkers } from "../../../shared/construction";
+import { walkingDistance } from "../../../shared/terrain";
 import type { V6PolicyMemory } from "../../memory";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { resolveAiCommandIntent } from "../commands";
@@ -178,7 +180,7 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (current?.mode === "attack" && current.quick) {
     const target = findBase(intel, current.targetHallId);
     const strikers = front.filter((unit) => (current.group ?? []).includes(unit.id));
-    if (target && !target.hall.complete && strikers.length > 0 && quickStrikeHolds(intel, strikers, target, profile.aggression)) return quickStrike(snapshot, owner, memory, strikers, available, target, rally, options);
+    if (target && !target.hall.complete && strikers.length > 0 && quickStrikeHolds(snapshot, intel, strikers, target, profile.aggression)) return quickStrike(snapshot, owner, memory, strikers, available, target, rally, options);
     recordPlay(memory, !target || target.hall.complete ? "general:quick:done" : "general:retreat:quick");
     memory.retreatedAt = snapshot.tick;
   } else if (current?.mode === "attack") {
@@ -424,7 +426,7 @@ function risingHallAttack(snapshot: GameSnapshot, owner: PlayerId, memory: V6Pol
   const center = averagePoint(front);
   const target = intel.enemies
     .flatMap((enemy) => enemy.bases)
-    .filter((base) => !base.hall.complete && !isMain(intel, base) && quickStrikeHolds(intel, front, base, aggression))
+    .filter((base) => !base.hall.complete && !isMain(intel, base) && quickStrikeHolds(snapshot, intel, front, base, aggression))
     .sort((a, b) => distance(center, a.hall) - distance(center, b.hall))[0];
   if (!target) return undefined;
   recordPlay(memory, "general:attack:rising");
@@ -437,11 +439,23 @@ const QUICK_STRIKE_RANGE = 300;
 
 // Whether the strikers outweigh (by V8's attack margin) the towers at the hall and every enemy fighter that can walk to it
 // before the strikers bring it down.
-function quickStrikeHolds(intel: V6Intel, strikers: Unit[], target: V6BaseIntel, aggression: number) {
+function quickStrikeHolds(snapshot: GameSnapshot, intel: V6Intel, strikers: Unit[], target: V6BaseIntel, aggression: number) {
   const hall = target.hall;
-  const damagePerSecond = strikers.reduce((total, unit) => total + unit.attackDamage / Math.max(1 / SIM_TICKS_PER_SECOND, unit.attackCooldown / SIM_TICKS_PER_SECOND), 0);
-  const window = hall.hp / Math.max(damagePerSecond, 0.2);
-  const inTime = intel.enemies.flatMap((enemy) => enemy.army).filter((unit) => Math.max(0, distance(unit, hall) - unit.attackRange) / Math.max(unit.speed, 2) <= window);
+  let arrival = 0;
+  for (const unit of strikers) {
+    const path = walkingDistance(snapshot.map, unit, hall, unitMover(unit.kind));
+    if (path === undefined) return false;
+    arrival = Math.max(arrival, Math.max(0, path - unit.attackRange - hall.radius) / unit.speed);
+  }
+  const builders = constructionWorkers(snapshot, hall).length;
+  const growth = builders * SIM_TICKS_PER_SECOND * (hall.maxHp - constructionStartHp(hall.maxHp)) / hall.buildTime;
+  const damagePerSecond = strikers.reduce((total, unit) => total + unit.attackDamage * SIM_TICKS_PER_SECOND / unit.attackCooldown, 0);
+  if (damagePerSecond <= growth) return false;
+  // The hall keeps gaining health while the army travels and fights. A quick strike
+  // must finish before construction, and defenders have this whole window to respond.
+  const window = arrival + (hall.hp + growth * arrival) / (damagePerSecond - growth);
+  if (builders > 0 && window * SIM_TICKS_PER_SECOND * builders >= hall.buildTime - hall.buildProgress) return false;
+  const inTime = intel.enemies.flatMap((enemy) => enemy.army).filter((unit) => Math.max(0, distance(unit, hall) - unit.attackRange) / unit.speed <= window);
   return marchStrength(strikers) * (1 + aggression) >= (strengthOf(inTime) + target.towers.length * TOWER_STRENGTH) * V8_ATTACK_MARGIN;
 }
 
