@@ -11,6 +11,7 @@ import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
+import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -51,6 +52,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   return family.flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
+    if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.abilities) return [towerRushAbilities, summonerTowerRush];
     // Ferry and rescue assignments keep priority over local repair work.
     return script === AI_SCRIPT_LIBRARY.naval ? [script, battleRepair, shellEvasion] : [script];
   });

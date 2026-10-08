@@ -7,6 +7,8 @@ import { rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { projectedSupplyUsed } from '../policy/world-model';
+import { towerRushEngaged, towerRushGoal, towerRushConstructionCrew } from './tower-rush';
+import { isOpponentOwner } from '../policy/ownership';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -36,7 +38,7 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
     && Math.hypot(hall.x - mine.x, hall.y - mine.y) <= GOLD_MINE_RULES.baseRange));
   const workers = army.filter(unit => unit.kind === 'worker' && !unit.deck).length
     + halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
-  if (workers < Math.min(36, miningHalls.length * GOLD_MINE_RULES.workstations + 1)) wanted.add('worker');
+  if (workers < Math.min(36, miningHalls.length * GOLD_MINE_RULES.workstations + towerRushConstructionCrew(snapshot, owner, options))) wanted.add('worker');
   return own.filter(building => building.complete).reduce((total, building) => {
     const kinds = [...BUILDING_DEFS[building.kind].trains.filter(kind => wanted.has(kind)), ...building.queue.map(job => job.unitKind)];
     return total + Math.max(0, ...kinds.map(kind => UNIT_DEFS[kind].supplyUsed));
@@ -45,10 +47,18 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const ranked = rankV6Goals(snapshot, owner, options);
+  const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
+  if (siege) { ranked.push(siege); ranked.sort((a, b) => b.priority - a.priority); }
   const player = snapshot.players[owner]!;
   const wave = productionWaveSupply(snapshot, owner, options, ranked);
+  const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
+  const rushing = towerRushEngaged(options);
+  const threatenedHome = rushing && snapshot.units.some(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options)
+    && halls.some(hall => Math.hypot(hall.x - unit.x, hall.y - unit.y) <= 650));
   const purchases = new Set<string>();
   return ranked.filter(goal => {
+    // Fighting at a forward tower does not require another tower at an unthreatened mining hall.
+    if (goal.id === 'tower:ahead' && rushing && !threatenedHome) return false;
     if (goal.id === 'farm' && player.supplyCap - projectedSupplyUsed(snapshot, owner) > wave) return false;
     if (goal.id.startsWith('unit:')) return true;
     // Every base target requests the same next hall; reserve its gold only once.
