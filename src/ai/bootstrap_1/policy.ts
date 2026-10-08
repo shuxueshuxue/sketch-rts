@@ -9,6 +9,7 @@ import { ARCHER_DOCTRINES } from './archer-doctrine';
 import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
+import { miningAssignments } from './mining-assignments';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
@@ -62,7 +63,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.abilities) return [towerRushAbilities, summonerTowerRush];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [script, battleRepair, shellEvasion] : [script];
+    return script === AI_SCRIPT_LIBRARY.naval ? [script, miningAssignments, battleRepair, shellEvasion] : [script];
   });
 }
 
