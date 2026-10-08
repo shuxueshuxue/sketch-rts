@@ -1,4 +1,4 @@
-import { canCast } from "../../shared/ability-cooldowns";
+import { abilityCooldown, canCast } from "../../shared/ability-cooldowns";
 import { canReceiveHealing } from "../../shared/healing";
 import { matchesUnitTarget } from "../../shared/unit-targeting";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
@@ -14,7 +14,8 @@ import type { PresetAiPolicyOptions } from "./types";
 export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
   const commands: GameCommand[] = [];
   for (const caster of units(snapshot, owner).filter(canCast)) {
-    const abilities = UNIT_DEFS[caster.kind].abilities;
+    // A ready veteran skill does not make an innate spell's cooldown ready.
+    const abilities = UNIT_DEFS[caster.kind].abilities.filter(ability => abilityCooldown(caster, ability) <= 0);
     if (abilities.includes("heal")) {
       const target = units(snapshot, owner).find((unit) => canReceiveHealing(unit, snapshot) && matchesUnitTarget(unit, ABILITY_DEFS.heal.targets, snapshot) && unit.hp < unit.maxHp * 0.7 && distance(unit, caster) <= 220);
       if (target) {

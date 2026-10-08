@@ -25,7 +25,8 @@ export function planAbilityCommands(snapshot: GameSnapshot, owner: PlayerId, opt
   const regroupPointHasEnemy = (point: Point) => (enemyWithin620 ??= anyWithinRangeOf(enemyCombatUnits(snapshot, owner, options.teams), 620))(point);
   for (const caster of units(snapshot, owner).filter(canCast)) {
     if (caster.order.type === "board") continue;
-    const abilities = UNIT_DEFS[caster.kind].abilities;
+    // A ready veteran skill does not make an innate spell's cooldown ready.
+    const abilities = UNIT_DEFS[caster.kind].abilities.filter(ability => abilityCooldown(caster, ability) <= 0);
     for (const ability of abilities) {
       const def=ABILITY_DEFS[ability];
       if(def.behavior!=="weapon" || abilityCooldown(caster,ability)>0)continue;

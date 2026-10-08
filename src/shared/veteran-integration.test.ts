@@ -12,6 +12,7 @@ import { seconds } from "./time";
 import { xpStarThresholds } from "./unit-value";
 import type { Unit } from "./types";
 import type { VeteranSkillId } from "./veteran-skills";
+import { applyInteractivePlaytestCommand, createInteractivePlaytestSession, restoreInteractivePlaytestSession, serializeInteractivePlaytestSession } from "../sdk/playtest";
 
 function scene() {
   const game = createGame("bareDuel", { aiPlayers: [] });
@@ -81,6 +82,58 @@ describe("veteran progression in the shared simulation", () => {
     leader.hp = 0;
     stepGame(game);
     expect(follower.speed).toBe(UNIT_DEFS.footman.speed);
+  });
+
+  it("preserves fractional health when an aura is learned, refreshed, restored and removed", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.units = []; game.items = [];
+    const leader = game.spawnUnit("player", "raider", 2000, 2000);
+    const follower = game.spawnUnit("player", "footman", 2060, 2000);
+    follower.hp = .2;
+    learn(game, leader, "veteranMarch");
+    expect(follower.hp).toBe(.2);
+    stepGame(game);
+    expect(follower.hp).toBe(.2);
+    expect(follower.speed).toBeCloseTo(UNIT_DEFS.footman.speed * 1.1);
+
+    const restored = restoreGameFromSave(createSaveGameRecord(game, room, { id: "fractional-aura-health" }));
+    const restoredFollower = restored.units.find(unit => unit.id === follower.id)!;
+    expect(restoredFollower.hp).toBe(.2);
+    expect(checksumGame(restored)).toBe(checksumGame(game));
+    removeUnit(game, leader.id);
+    removeUnit(restored, leader.id);
+    expect(follower.hp).toBe(.2);
+    expect(restoredFollower.hp).toBe(.2);
+    expect(follower.speed).toBe(UNIT_DEFS.footman.speed);
+    expect(checksumGame(restored)).toBe(checksumGame(game));
+  });
+
+  it.each(["summon", "hire"] as const)("preserves an SDK %s inside an aura when saved before the next tick", action => {
+    const session = createInteractivePlaytestSession({
+      mapId: "bareDuel", controlledPlayer: "player", scriptedPlayers: [],
+      options: { players: ["player", "enemy"] },
+    });
+    const game = session.game;
+    game.units = []; game.items = [];
+    const leader = game.spawnUnit("player", "raider", 2000, 2000);
+    const caster = game.spawnUnit("player", "summoner", 2040, 2000);
+    learn(game, leader, "veteranMarch");
+    game.mercenaryCamps = [{ id: "aura-camp", x: 2080, y: 2000, radius: 30, hireKind: "mercenary", cost: 160, stock: 1, cooldown: 90, cooldownRemaining: 0 }];
+    game.players.player!.gold = 1000;
+    stepGame(game);
+    const tick = game.tick;
+    applyInteractivePlaytestCommand(session, { type: "raw", command: action === "summon"
+      ? { type: "cast", unitId: caster.id, ability: "summon", x: 2080, y: 2000 }
+      : { type: "hire", campId: "aura-camp" } });
+    expect(game.tick).toBe(tick);
+    const spawned = game.units.find(unit => unit.kind === (action === "summon" ? "spirit" : "mercenary"))!;
+    const restored = restoreInteractivePlaytestSession(serializeInteractivePlaytestSession(session));
+    expect(checksumGame(restored.game)).toBe(checksumGame(game));
+    expect(spawned.speed).toBeCloseTo(UNIT_DEFS[spawned.kind].speed * 1.1);
+    for (let tick = 0; tick < 10; tick += 1) {
+      stepGame(game); stepGame(restored.game);
+      expect(checksumGame(restored.game)).toBe(checksumGame(game));
+    }
   });
 
   it.each([1, 3, 6])("restores 1.2 health per second to each of %i nearby wounded allies", count => {

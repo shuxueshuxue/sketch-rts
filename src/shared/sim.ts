@@ -530,7 +530,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "cast") {
+    const unitCount = game.units.length;
     castAbility(game, owner, command.unitId, command.ability, command.targetId, command.x, command.y, command.queued);
+    if (game.units.length !== unitCount) refreshVeteranFrameAfterCommandSpawn(game);
     return;
   }
 
@@ -554,6 +556,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   if (command.type === "hire") {
     hireMercenary(game, owner, command.campId);
+    refreshVeteranFrameAfterCommandSpawn(game);
     return;
   }
 
@@ -1003,11 +1006,21 @@ function veteranNearby(game: Game) {
     return units;
   };
 }
+function refreshVeteranFrameAfterCommandSpawn(game: Game) {
+  // SDK commands may be saved before the next tick. Include new units at their final spawn positions.
+  game.unitSpatial = createSpatialIndex(game.units, 320);
+  refreshVeteranFrame(game);
+}
 function refreshVeteranFrame(game: Game) {
   const previous = game.veteranFrame;
   game.veteranFrame = buildVeteranFrame(game, veteranNearby(game));
   for (const unit of game.units) {
-    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) applyDerivedUnitStats(game, unit);
+    if (unit.hp > 0 && (previous?.has(unit.id) || game.veteranFrame.has(unit.id))) {
+      const hp = unit.hp;
+      applyDerivedUnitStats(game, unit);
+      // Aura projection changes derived combat stats, never health (including fractions below one).
+      unit.hp = Math.min(hp, unit.maxHp);
+    }
   }
 }
 function veteranAimSpeed(game: Game, unit: Unit) {
