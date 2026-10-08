@@ -115,6 +115,8 @@ describe('bootstrap_1 summoner tower rush', () => {
   });
   it.each([1, 3])('compares %i real mining attackers with local defenders before releasing the assault', attackers => {
     const { game, context, memory } = battlefield(attackers);
+    // The advance starts before the raiders walk into the mine's defense region.
+    for (const unit of game.units.filter(unit => unit.id.startsWith('mining-raid-'))) unit.y = 2800;
     for (const command of planAbilityCommands(snapshotGame(game), 'us', context())) issuePlayerCommand(game, 'us', command);
     issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: game.units.filter(unit => unit.owner === 'us' && unit.kind === 'spirit').map(unit => unit.id) });
     for (let tick = 0; tick < 800; tick++) stepGame(game);

@@ -11,7 +11,7 @@ import type { rankV6Goals } from '../policy/v6/economy';
 import { combatRating, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planAbilityCommands } from '../policy/spell-tactics';
 import { isBacklineKind } from '../policy/v6/backline';
-import { mineGuardUnitIds } from './mine-defense';
+import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
 
 const JOB = 'summonerTowerRush';
 const HELPER = 'summonerTowerRushHelper';
@@ -58,17 +58,8 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   const job = options.memory.jobs.find(job => job.id === JOB);
   if (casters.length < 4) { endRush(options); return undefined; }
   const foes = snapshot.units.filter(unit => unit.kind !== 'worker' && isOpponentOwner(snapshot, owner, unit.owner, options));
-  const miningHalls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall'
-    && snapshot.resources.some(mine => mine.amount > 0 && distance(mine, building) <= GOLD_MINE_RULES.baseRange));
-  const exposedMine = miningHalls.some(hall => {
-    const attackers = foes.filter(unit => distance(unit, hall) <= GOLD_MINE_RULES.baseRange + unit.attackRange);
-    const defenders = own.filter(unit => distance(unit, hall) <= GOLD_MINE_RULES.baseRange + unit.attackRange);
-    const cover = snapshot.buildings.filter(building => building.owner === owner && building.complete && building.attackDamage > 0
-      && attackers.some(attacker => distance(attacker, building) <= building.attackRange)).length * TOWER_STRENGTH;
-    return combatPower(attackers) > combatPower(defenders) + cover;
-  });
-  // A construction assault yields its army when the mine's actual defenders are outmatched.
-  if (exposedMine) { endRush(options); return undefined; }
+  // The assault and the main commander yield to the same uncovered mining raid.
+  if (uncoveredMiningRaid(snapshot, owner, options)) { endRush(options); return undefined; }
   const enemyHalls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options));
   const current = enemyHalls.find(hall => job?.kind === hall.id);
   const anchor = [...casters].sort((a, b) => current ? distance(a, current) - distance(b, current)

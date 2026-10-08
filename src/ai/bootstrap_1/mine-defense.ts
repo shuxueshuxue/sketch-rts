@@ -2,10 +2,11 @@ import { UNIT_DEFS } from '../../shared/catalog';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround, walkingDistance } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { isBacklineKind } from '../policy/v6/backline';
-import { readV6Intel, type V6Intel } from '../policy/v6/intel';
+import { readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { planV6Army } from '../policy/v6/general';
 import { planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
@@ -14,17 +15,39 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 
 type Detachment = { hall: Building; attackers: Unit[]; crew: Unit[] };
 
-function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Detachment | undefined {
-  const intel = readV6Intel(snapshot, owner, options);
+function miningRaids(snapshot: GameSnapshot, intel: V6Intel) {
   const foes = intel.enemies.flatMap(enemy => enemy.army);
   const aimedAt = (unit: Unit, hall: Building) => unit.order.type === 'attack' && unit.order.targetId === hall.id
     || unit.order.type === 'attackMove' && distance(unit.order, hall) <= hall.radius + 80;
-  const raids = intel.ownHalls.map(hall => ({ hall,
+  return intel.ownHalls.map(hall => ({ hall,
     attackers: foes.filter(unit => sameGround(snapshot.map, unit, hall)
       && (distance(unit, hall) < 650 || aimedAt(unit, hall) && distance(unit, hall) < 1800)),
   })).filter(raid => raid.attackers.length > 0)
     .sort((a, b) => Number(b.attackers.some(unit => aimedAt(unit, b.hall))) - Number(a.attackers.some(unit => aimedAt(unit, a.hall)))
       || strengthOf(b.attackers) - strengthOf(a.attackers));
+}
+
+/** A mine raid beyond its local defense takes priority over an outpost's battle. */
+export function uncoveredMiningRaid(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Intrusion | undefined {
+  const intel = readV6Intel(snapshot, owner, options), guard = detachment(snapshot, owner, options);
+  return uncoveredRaid(snapshot, intel, guard);
+}
+
+function uncoveredRaid(snapshot: GameSnapshot, intel: V6Intel, guard: Detachment | undefined): V6Intrusion | undefined {
+  for (const { hall, attackers } of miningRaids(snapshot, intel)) {
+    if (!snapshot.resources.some(mine => mine.amount > 0 && distance(mine, hall) <= GOLD_MINE_RULES.baseRange)
+      || guard && attackers.every(unit => guard.attackers.includes(unit))) continue;
+    const cover = intel.ownTowers.filter(tower => distance(tower, hall) <= tower.attackRange)
+      .reduce((power, tower) => power + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
+    const threat = strengthOf(attackers);
+    if (threat > cover) return { building: hall, attackers, threat };
+  }
+  return undefined;
+}
+
+function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Detachment | undefined {
+  const intel = readV6Intel(snapshot, owner, options);
+  const raids = miningRaids(snapshot, intel);
   const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
@@ -96,6 +119,8 @@ function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
   const { armyCenter, intrusion, ...world } = intel;
   const main: V6Intel = { ...world, army, power: strengthOf(army) };
   if (army.length) main.armyCenter = averagePoint(army);
-  if (intrusion && !covered) main.intrusion = intrusion;
+  const raid = uncoveredRaid(snapshot, intel, guard);
+  if (raid) main.intrusion = raid;
+  else if (intrusion && !covered) main.intrusion = intrusion;
   return main;
 }

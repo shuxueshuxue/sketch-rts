@@ -30,6 +30,34 @@ function twoFronts(raiders = 4, guard: 'lancer' | 'knight' = 'lancer') {
 }
 
 describe('bootstrap_1 independent mine defense', () => {
+  it('protects the working mine before fighting a larger group at a forward outpost', () => {
+    function fight(prioritizeMine: boolean) {
+      const { game, context } = twoFronts(8, 'knight');
+      for (const unit of game.units.filter(unit => unit.id.startsWith('raider-'))) unit.y -= 520;
+      const outpost = sketchScene('outpost-battle').replaceDefaults().player('us').player('fa')
+        .tower('us', 3000, 2600, { id: 'outpost' });
+      let scene = outpost;
+      for (let i = 0; i < 11; i++) scene = scene.unit('fa', 'footman', 3100 + i % 4 * 35, 2200 + Math.floor(i / 4) * 35,
+        { id: `outpost-foe-${i}` });
+      const battle = scene.build().createGame();
+      game.buildings.push(...battle.buildings);
+      game.units.push(...battle.units);
+      issuePlayerCommand(game, 'fa', { type: 'holdPosition', unitIds: battle.units.map(unit => unit.id) });
+      const general = prioritizeMine ? { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral } : AI_SCRIPT_LIBRARY.v6General;
+      for (let tick = 0; tick < 1400; tick++) {
+        if (tick % 15 === 0) for (const { command } of runAiCommandEntriesFromScripts(snapshotGame(game), 'us', [mineDefense, general], context())) {
+          issuePlayerCommand(game, 'us', command);
+        }
+        stepGame(game);
+      }
+      return game;
+    }
+    const control = fight(false), candidate = fight(true);
+    expect(control.units.filter(unit => unit.id.startsWith('miner-'))).toHaveLength(0);
+    expect(candidate.buildings.find(building => building.id === 'mine-hall')!.hp).toBe(900);
+    expect(candidate.units.filter(unit => unit.id.startsWith('miner-'))).toHaveLength(5);
+    expect(candidate.players.us!.gold).toBeGreaterThan(control.players.us!.gold);
+  });
   it.each(['grove', 'ember'] as const)('lets the %s host use real summons for the near raid without recalling the distant attack', race => {
     const kind = race === 'grove' ? 'summoner' : 'pyreCaller', ability = race === 'grove' ? 'summon' : 'cinderSoul';
     let scene = sketchScene('summoned-mine-guard').replaceDefaults()
