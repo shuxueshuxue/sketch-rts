@@ -123,7 +123,6 @@ const MAIN_APPROACH_THREAT_RANGE = 1_550;
 const NEUTRAL_ASSIST_PLANNING_RANGE = 360;
 const SUPPLY_BUILDING_LIMIT = 15;
 const EXPANSION_CLAIM_MEMORY_TICKS = 3600;
-const BASE_LOCAL_MINE_RANGE = 280;
 const TOWER_MERC_SIEGE_CLEANUP_TICK = 16_000;
 const TOWER_MERC_WORKER_CLEANUP_TICK = 12_000;
 const TOWER_MERC_ROUTE_NEUTRAL_POWER_RATIO = 1.7;
@@ -391,14 +390,20 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     if (seen.has(key)) duplicates.push(worker); else seen.add(key);
   }
   if (duplicates.length) {
-    const mine = activeResources(snapshot).find(resource => sameGroundAs(snapshot, duplicates[0]!, resource) && completeBuildings(snapshot, owner, "townHall").some(base => distance(base, resource) < BASE_LOCAL_MINE_RANGE));
+    const mine = activeResources(snapshot).find(resource => sameGroundAs(snapshot, duplicates[0]!, resource) && completeBuildings(snapshot, owner, "townHall").some(base => distance(base, resource) < GOLD_MINE_RULES.baseRange));
     if (mine) return { type: "mine", unitIds: duplicates.filter(worker => sameGroundAs(snapshot, worker, mine)).map(worker => worker.id), resourceId: mine.id };
   }
   const workers = units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
   const assignmentCounts = mineAssignmentCounts(workers);
   const idleWorkers = workers.filter((unit) => unit.order.type === "idle");
-  const oversaturatedWorkers = workers.filter((unit) => unit.order.type === "mine" && !unit.mineSlot && (assignmentCounts.get(unit.order.resourceId) ?? 0) > GOLD_MINE_RULES.workstations);
+  const remaining = new Map(assignmentCounts);
+  const oversaturatedWorkers = workers.filter((unit) => {
+    if (unit.order.type !== "mine") return false;
+    const count = remaining.get(unit.order.resourceId)!;
+    remaining.set(unit.order.resourceId, count - 1);
+    return count > GOLD_MINE_RULES.workstations;
+  });
   const bases = completeBuildings(snapshot, owner, "townHall");
   const assignableWorkers = [...idleWorkers, ...oversaturatedWorkers];
   // @@@v9-no-feed - V9 sends no workers to the hall nearest its intrusion: with eight workers on the main mine and four on
@@ -459,7 +464,7 @@ function depletedEconomyRemoteMine(snapshot: GameSnapshot, owner: PlayerId, base
 function localActiveMineForBase(snapshot: GameSnapshot, base: Point) {
   const mine = nearestResource(activeResources(snapshot), base);
   // @@@base-local-mining - Depleted bases must not convert idle workers into long-distance miners through uncleared neutral pockets.
-  return mine && distance(mine, base) <= BASE_LOCAL_MINE_RANGE ? mine : undefined;
+  return mine && distance(mine, base) <= GOLD_MINE_RULES.baseRange ? mine : undefined;
 }
 
 function towerMercWorkerHoldingPurchasableCamp(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
@@ -871,7 +876,7 @@ function v5FreshNaturalEmergencyTowerBase(snapshot: GameSnapshot, owner: PlayerI
   if (!natural) return undefined;
   if (buildings(snapshot, owner).some((building) => building.kind === "defenseTower" && distance(building, natural) < 430)) return undefined;
   const mine = nearestResource(activeResources(snapshot), natural);
-  if (!mine || distance(mine, natural) > 280) return undefined;
+  if (!mine || distance(mine, natural) > GOLD_MINE_RULES.baseRange) return undefined;
   const enemies = enemyCombatUnitsNear(snapshot, owner, natural, 1_650, options.teams);
   if (enemies.length < 3) return undefined;
   const closeNaturalEnemies = enemies.filter((enemy) => distance(enemy, natural) <= 1_000);
@@ -3264,7 +3269,7 @@ function saturatedMineWorkerIds(snapshot: GameSnapshot, owner: PlayerId, options
   const ownedMiningResourceIds = new Set(
     completeBuildings(snapshot, owner, "townHall")
       .map((townHall) => nearestResource(activeResources(snapshot), townHall))
-      .filter((mine): mine is ResourceNode => Boolean(mine && completeBuildings(snapshot, owner, "townHall").some((townHall) => distance(townHall, mine) < 260)))
+      .filter((mine): mine is ResourceNode => Boolean(mine && completeBuildings(snapshot, owner, "townHall").some((townHall) => distance(townHall, mine) < GOLD_MINE_RULES.baseRange)))
       .map((mine) => mine.id),
   );
   const minersByResource = new Map<string, Unit[]>();

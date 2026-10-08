@@ -42,6 +42,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Test mining throughput, placement and map contracts
+        run: npx vitest run src/shared/mining.test.ts src/shared/map-pool.test.ts src/ai/policy/mining.test.ts src/ai/policy/naval.test.ts
+
       - name: Test release contracts and visual state
         run: npx vitest run scripts/production-deploy.test.ts scripts/production-revision.test.ts scripts/production-install.test.ts scripts/painted-sprite-bounds.test.ts scripts/hud-portrait-bounds.test.ts src/client/unit-animation.test.ts src/shared/corpses.test.ts src/shared/sim/restore.test.ts src/shared/construction-intent.test.ts src/shared/warfare.test.ts src/client/training-queue.test.ts src/client/menu-scenes.test.ts src/client/resources.test.ts src/client/resource-panel.test.ts src/client/world-presentation.test.ts src/client/portrait-cache.test.ts src/client/world3d src/client/selection-controls.test.ts src/client/sound-loading.test.ts
 

@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import { miningHallSite } from "../../shared/mining-site";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
 import { isBuildPlacementClear } from "../../shared/build-placement";
@@ -231,7 +232,7 @@ export function defensiveRallyPoint(snapshot: GameSnapshot, owner: PlayerId): Po
 export function legalBuildPointNear(snapshot: GameSnapshot, kind: BuildingKind, preferred: Point): Point {
   if (kind === "townHall") {
     const mine = nearestEntity(snapshot.resources.filter(resource => resource.amount > 0), preferred);
-    if (mine && distance(mine, preferred) <= 320) {
+    if (mine && distance(mine, preferred) <= GOLD_MINE_RULES.baseRange) {
       const site = miningHallSite(snapshot, mine, preferred);
       if (site) return site;
     }

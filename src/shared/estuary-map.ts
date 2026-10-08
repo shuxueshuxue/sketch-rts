@@ -3,6 +3,7 @@ import { fractalNoise, seedHash, coordinateRandom } from "./environment/noise";
 import { campRoster, campMembers } from "./camps";
 import { detSin, detCos } from "./det-math";
 import { ecologicalDressing, prepareEcology } from "./map-dressing";
+import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
 import type { GeneratedMap } from "./generated-map";
 import type { GeneratedLayoutOptions, PlayerId } from "./types";
 /** A large, mirrored river layout: three broad fords connect both banks while
@@ -31,7 +32,7 @@ export function estuaryMap(
   const fords = [size * 0.18, middle, size * 0.82];
   const anchors = homes.flatMap((home) => [
     project(home.x, home.y),
-    project(home.x - home.side * 165, home.y),
+    project(home.x - home.side * GOLD_MINE_RULES.mainDistance, home.y),
     project(home.x + home.side * 760, home.y + 110),
     project(home.x + home.side * 1720, home.y - 100),
   ]);
@@ -109,7 +110,7 @@ export function estuaryMap(
   };
   homes.forEach((home, index) => {
     const at = project(home.x, home.y),
-      mine = project(home.x - home.side * 165, home.y);
+      mine = initialMiningPoint({terrain: result.terrain}, at, project(home.x - home.side * GOLD_MINE_RULES.mainDistance, home.y));
     result.starts[home.owner] = {
       baseX: at.x,
       baseY: at.y,

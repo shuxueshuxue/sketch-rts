@@ -7,7 +7,7 @@ function setup() {
   const game=createGame('bareDuel'); game.scriptedVictory=true;
   const worker=game.units.find(u=>u.owner==='player' && u.kind==='worker')!;
   game.units=[worker]; game.players.player.gold=1000;
-  const order={type:'build',unitId:worker.id,buildingKind:'farm',x:worker.x+350,y:worker.y} as const;
+  const order={type:'build',unitId:worker.id,buildingKind:'farm',x:worker.x+350,y:worker.y+200} as const;
   return {game,worker,order};
 }
 const advance=(game:ReturnType<typeof createGame>,n=400)=>{for(let i=0;i<n;i++)stepGame(game);};

@@ -91,12 +91,12 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
     if (snapshot.units.some(unit => unit.kind !== "worker" && combatCapability(snapshot,unit).armed && isOpponentOwner(snapshot, owner, unit.owner, options)
         && halls.some(hall => sameGround(snapshot.map, hall, unit) && distance(hall, unit) < 700))) return 0;
     const remote = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
-        && !halls.some(hall => distance(hall, mine) < 320));
+        && !halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange));
     if (!remote.length)
         return 0;
     const settling = Object.values(options.memory?.naval?.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return"
         && remote.some(mine => mine.id === mission.targetId));
-    const remaining = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < 320)).reduce((sum, mine) => sum + mine.amount, 0);
+    const remaining = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((sum, mine) => sum + mine.amount, 0);
     const pendingHall = units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "townHall");
     const approachingDepletion = remaining < 2500 && !localExpansionAvailable(snapshot, owner, options);
     return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
@@ -241,7 +241,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const moreLift = assault && (!plan || committedAssault) && transported && crossing.reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0) >= defense * 1.4
         && !convoyCanCarry(snapshot, convoy, crossing);
     const guardedIsland = plan && snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 600).reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0) > 3;
-    const activeBases=halls.filter(hall=>snapshot.resources.some(mine=>mine.amount>0&&distance(mine,hall)<320)).length;
+    const activeBases=halls.filter(hall=>snapshot.resources.some(mine=>mine.amount>0&&distance(mine,hall)<GOLD_MINE_RULES.baseRange)).length;
     const fleetTarget=Math.min(8,Math.max(WARSHIPS,activeBases>2?activeBases+1:WARSHIPS,enemyFleet.length+1));
     const ship: TrainableUnitKind | undefined = held
         ? (warships < Math.max(6,fleetTarget) ? "warship" : undefined)
@@ -416,7 +416,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
             return power >= defense * 1.35;
         };
         const mine = snapshot.resources.filter(mine => mine.amount>0 && sameGround(snapshot.map,anchor,mine)
-            && !buildings(snapshot,owner).some(hall=>hall.kind==="townHall" && distance(hall,mine)<320)
+            && !buildings(snapshot,owner).some(hall=>hall.kind==="townHall" && distance(hall,mine)<GOLD_MINE_RULES.baseRange)
             && localFoes.some(target=>distance(target,mine)<400) && canFight(mine)).sort((a,b)=>distance(center,a)-distance(center,b))[0];
         const target = mine ?? localFoes.filter(target => canFight(target)).sort((a,b)=>distance(center,a)-distance(center,b))[0];
         if (!target) continue;
@@ -462,7 +462,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if ((memory.ferryRetryUntil?.[boat.id] ?? 0) > snapshot.tick) return [];
     if (!mission) {
         const evacuation = evacuationRoute(snapshot, owner, options, boat, halls);
-        const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < 320)
+        const rich = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
             && own.filter(unit => !unit.deck && unit.order.type === 'mine' && unit.order.resourceId === mine.id).length < GOLD_MINE_RULES.workstations);
         // Deck engineers already have a job. Treating them as stranded miners
         // created empty ferry trips to a warship that could never be loaded.
@@ -515,7 +515,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     }
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
-        if (!mine || mine.amount <= 0 || !island || buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) < 320)) {
+        if (!mine || mine.amount <= 0 || !island || buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) < GOLD_MINE_RULES.baseRange)) {
             return cancelFerry(snapshot, boat, mission, options);
         }
     }
@@ -553,7 +553,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const workers = own.filter(unit => !unit.deck && !attached.has(unit.id) && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle"));
     const crew: Unit[] = [];
     const workerCount = [...cargo, ...boarding].filter(unit => unit.kind === "worker").length;
-    const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, mine, loadGround) && halls.some(hall => distance(hall, mine) < 320)) ? 3 : 0;
+    const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, mine, loadGround) && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;
     if (mission.purpose === "evacuate")
         crew.push(...own.filter(unit => !unit.deck && unit.kind === "worker" && sameGround(map, unit, loadGround) && !attached.has(unit.id) && unit.order.type !== "board").slice(0, Math.min(2, Math.floor(room / 75))));
     else if (mission.purpose === "rebase")
@@ -673,7 +673,7 @@ function landingDefense(snapshot: GameSnapshot, owner: PlayerId, options: AiPoli
 function localExpansionAvailable(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
     const halls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
     return snapshot.resources.some(mine => mine.amount > 0 && halls.some(hall => sameGround(snapshot.map, hall, mine))
-        && !halls.some(hall => distance(hall, mine) < 320)
+        && !halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
         && !snapshot.buildings.some(hall => hall.kind === "townHall" && distance(hall, mine) < 400 && isOpponentOwner(snapshot, owner, hall.owner, options))
         && !snapshot.units.some(unit => combatCapability(snapshot,unit).armed && distance(unit, mine) < 400 && isOpponentOwner(snapshot, owner, unit.owner, options))
         && !snapshot.units.some(unit => unit.owner === "neutral" && sameGround(snapshot.map, unit, mine) && distance(unit, mine) < 400));
@@ -683,7 +683,7 @@ function localExpansionWant(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const halls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall");
     if (halls.some(hall => !hall.complete) || units(snapshot, owner).some(unit => unit.order.type === "build")) return undefined;
     const mines = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => hall.complete && sameGround(snapshot.map, hall, mine))
-        && !halls.some(hall => distance(hall, mine) < 320)
+        && !halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
         && !snapshot.units.some(unit => combatCapability(snapshot,unit).armed && distance(unit, mine) < 400 && isEnemyOwner(snapshot, owner, unit.owner, options))
         && !snapshot.buildings.some(building => distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
         .sort((a,b)=>Math.min(...halls.map(hall=>distance(hall,a)))-Math.min(...halls.map(hall=>distance(hall,b))));
@@ -767,7 +767,7 @@ function towerSite(snapshot: GameSnapshot, ground: Point, ship: Point): Point | 
     return sameGround(snapshot.map, at, ground) && isBuildPlacementClear(snapshot, "defenseTower", at) && reach > beyond && reach <= TOWER_COVER ? at : undefined;
 }
 function islandHallOf(snapshot: GameSnapshot, owner: PlayerId, plan: IslandPlan): Building | undefined {
-    return buildings(snapshot, owner).find((building) => building.kind === "townHall" && distance(building, plan.mine) <= 320);
+    return buildings(snapshot, owner).find((building) => building.kind === "townHall" && distance(building, plan.mine) <= GOLD_MINE_RULES.baseRange);
 }
 function hallSite(snapshot: GameSnapshot, mine: Point): Point | undefined {
     return miningHallSite(snapshot,mine);
@@ -866,14 +866,14 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         return undefined;
     if (localExpansionAvailable(snapshot, owner, options)) return undefined;
     const ownedHalls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
-    const localGold = snapshot.resources.filter(mine => mine.amount > 0 && ownedHalls.some(hall => sameGround(map, hall, mine) && distance(hall, mine) < 320)).reduce((n, mine) => n + mine.amount, 0);
+    const localGold = snapshot.resources.filter(mine => mine.amount > 0 && ownedHalls.some(hall => sameGround(map, hall, mine) && distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((n, mine) => n + mine.amount, 0);
     if (ownedHalls.length < 2 && localGold > 1800 && playerState(snapshot, owner).supplyUsed < 20) return undefined;
-    const income = units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < 320)));
+    const income = units(snapshot, owner).some(unit => unit.kind === "worker" && snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, unit, mine) && buildings(snapshot, owner).some(hall => hall.kind === "townHall" && hall.complete && distance(hall, mine) < GOLD_MINE_RULES.baseRange)));
     if (!income && playerState(snapshot, owner).gold < BUILDING_DEFS.townHall.cost)
         return undefined;
     const memory = navalMemory(options);
     let known = memory.island;
-    const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= 320);
+    const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (known?.plan) {
         const mine = snapshot.resources.find(mine => mine.id === known!.plan!.mineId);
         if (!mine || mine.amount <= 0 || heldByUs(mine) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))

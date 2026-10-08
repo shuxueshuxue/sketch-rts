@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../../shared/mining";
 import { BUILDING_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId } from "../../shared/types";
 import { armyPower } from "./combat-math";
@@ -24,7 +25,7 @@ export function shouldGuardFreshMiningExpansion(snapshot: GameSnapshot, owner: P
   if (options.version !== "v2" || opponentPlayerIds(snapshot, owner, options).length < 2) return false;
   if (distance(base, mainBase(snapshot, owner)) <= 500) return false;
   const mine = nearestResource(activeResources(snapshot), base);
-  if (!mine || distance(mine, base) > 260) return false;
+  if (!mine || distance(mine, base) > GOLD_MINE_RULES.baseRange) return false;
   return units(snapshot, owner).some((unit) => unit.kind === "worker" && unit.order.type === "mine" && unit.order.resourceId === mine.id);
 }
 
