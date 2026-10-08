@@ -12,9 +12,9 @@
 
 ## 冻结
 
-初始基线为 `1518a8529cd85c31e46864e18dc8f26dbd1693ed`；修正唯一获批旧版错误后，重新冻结在 `160114c22cc99efb0b34ff92396895aea4fe33a0`（PR #193，已部署）。`frozen-policy.json` 保存共享策略依赖的 SHA-256；`frozen-traces.json` 保存旧三版在两种族下的完整命令流摘要和模拟状态摘要。
+初始基线为 `1518a8529cd85c31e46864e18dc8f26dbd1693ed`；修正唯一获批旧版错误后，重新冻结在 `983fbb376101e98633432dabdbffca9680f68b38`（PR #193、#194）。`frozen-policy.json` 保存共享策略依赖的 SHA-256；`frozen-traces.json` 保存旧三版在两种族下的完整命令流摘要和模拟状态摘要。
 
-用户已批准仅修正 `training-choice.ts` 中 Ember workshop 将 `golem` 改为 `catapult` 的兵种选择错误，并重新冻结；修正前后 SHA-256 见 `approvedCorrections`。除这一点之外，旧版不改经济、部队和战术算法。四个集成文件只加入新的策略表、支援目标注入或版本注册；旧版本不传入新策略表。每次验证必须保持六组旧版轨迹和最终状态完全一致。
+用户已批准仅修正 `training-choice.ts` 中 workshop 的种族选择错误：Ember 选择 `catapult`，Grove 在第二阶选择 `ballista`，第三阶解锁后选择 `golem`，并重新冻结；修正前后 SHA-256 见 `approvedCorrections`。除这一点之外，旧版不改经济、部队和战术算法。四个集成文件只加入新的策略表、支援目标注入或版本注册；旧版本不传入新策略表。每次验证必须保持六组旧版轨迹和最终状态完全一致。
 
 ## 运行
 
@@ -33,4 +33,4 @@ node --import tsx scripts/bootstrap_1.ts --unseen --seed <held-out-seed> --out .
 
 ## 当前状态
 
-工作进行中。类型检查与 66 项相关测试已通过，兵种选择修正后的六组冻结命令轨迹及最终状态保持一致。新策略尚未达标；完整测量和已否决方案见 `development.zh.md`。未达标前保持草稿 PR，不合并或部署为完成版本。
+工作进行中。类型检查与 33 项相关测试已通过，兵种选择修正后的六组冻结命令轨迹及最终状态保持一致。新策略尚未达标；完整测量和已否决方案见 `development.zh.md`。未达标前保持草稿 PR，不合并或部署为完成版本。

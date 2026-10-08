@@ -1,6 +1,6 @@
 {
   "name": "bootstrap_1",
-  "revision": "160114c22cc99efb0b34ff92396895aea4fe33a0",
+  "revision": "983fbb376101e98633432dabdbffca9680f68b38",
   "versions": [
     "v5",
     "v7",
@@ -37,7 +37,7 @@
     "src/ai/policy/spell-tactics.ts": "f1f45e0ec1eef59efbebfc52dcd76e6b4ee0e55d0cebd77246802a29ec54650e",
     "src/ai/policy/telemetry.ts": "13a468f34e714e07f34e5e2ddb31669682676a539beb3d18083d5ebd791bb2e6",
     "src/ai/policy/threats.ts": "949650b5751f828f45732ec582c4e3bfd687f8b7fe8c282bf30aaf66a8158122",
-    "src/ai/policy/training-choice.ts": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
+    "src/ai/policy/training-choice.ts": "d261a5ae40ec5fc886f4499421b90bdd947df2d309ba0b4dc7ec9a0c62dbb5b4",
     "src/ai/policy/transfer-lanes.ts": "eaab810a5a8166a9b98a75ad5a959899a003c169136f1f35ffedcbcb5f299700",
     "src/ai/policy/v6/backline.ts": "f5145498df749370d13c9bd64caf9a30f4767069ac9c5a96321a0fa618d382be",
     "src/ai/policy/v6/closeout.ts": "0937ce8a696c4cc5882667996e7f79598edd221b31c73f3d69411b3f97e08589",
@@ -74,6 +74,12 @@
       "before": "893bc31bb7d638b514b3dda4c86a12cdb1fba07861422470a6abe3ac23050168",
       "after": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
       "reason": "User approved correcting Ember workshop golem selection to catapult, then refreezing; all other historical choices remain unchanged."
+    },
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "before": "35a50b97f2f87800d177fd8ce4aaad9a59eef8b58fc5eedea5e777f6ca9b7ab4",
+      "after": "d261a5ae40ec5fc886f4499421b90bdd947df2d309ba0b4dc7ec9a0c62dbb5b4",
+      "reason": "Completes the user-authorized workshop faction correction: Grove chooses its tier-two ballista before tier-three golem unlocks; the shared catalog previously chose an Ember siege ram."
     }
   ],
   "initialRevision": "1518a8529cd85c31e46864e18dc8f26dbd1693ed"
