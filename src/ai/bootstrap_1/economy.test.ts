@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from '../../shared/catalog';
+import type { TrainableUnitKind } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planV6Economy } from '../policy/v6/economy';
@@ -30,6 +31,37 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each(['grove', 'ember'] as const)('keeps the explicit %s opening squad while tech is locked instead of substituting extra basic soldiers', race => {
+    const basic: TrainableUnitKind = race === 'grove' ? 'footman' : 'emberRavager';
+    const caster: TrainableUnitKind = race === 'grove' ? 'summoner' : 'pyreCaller';
+    let scene = sketchScene('explicit-opening-before-caster-tier').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .playerState('us', { gold: BUILDING_DEFS.farm.cost + UNIT_DEFS[basic].cost })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 4000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 4000).townHall('foe', 3500, 3000)
+      .building('us', UNIT_DEFS[basic].trainedAt!, 700, 850).farms('us', 3, 400, 1500);
+    for (let i = 0; i < 11; i++) scene = scene.worker('us', 400 + i * 35, 800);
+    for (let i = 0; i < 4; i++) scene = scene.unit('us', basic, 1400 + i * 35, 1000);
+    const options = () => ({ version: 'v2' as const, requestedVersion: 'v7' as const, memory: createAiPolicyMemory(), armyWants: [],
+      doctrines: [{ id: 'explicit-opening-and-tech', race, weight: 1, standIn: basic, raids: [], phases: [{
+        advanceShare: 1, advanceSupply: 1000, wants: [
+          { unit: basic, count: 4, priority: 66 }, { unit: caster, count: 8, priority: 65 },
+        ],
+      }] }],
+    });
+    const control = scene.build().createGame(), candidate = scene.build().createGame();
+    for (const [index, game] of [control, candidate].entries()) {
+      for (const command of (index === 0 ? planV6Economy : planBootstrapEconomy)(snapshotGame(game), 'us', options())) issuePlayerCommand(game, 'us', command);
+      for (let tick = 0; tick < 250; tick++) stepGame(game);
+    }
+    expect(candidate.units.filter(unit => unit.kind === basic)).toHaveLength(4);
+    expect(control.units.filter(unit => unit.kind === basic)).toHaveLength(5);
+    expect(candidate.units.some(unit => unit.kind === caster)).toBe(false);
+    expect(candidate.buildings.filter(building => building.kind === 'farm' && building.complete)).toHaveLength(4);
+    expect(candidate.match.stats.goldSpent.us).toBe(BUILDING_DEFS.farm.cost);
+    expect(candidate.players.us!.gold).toBe(UNIT_DEFS[basic].cost);
+  });
+
   it.each(['grove', 'ember'] as const)('adds the %s heavy unit factory and trains through both real queues', race => {
     const grove = race === 'grove';
     const heavy = grove ? 'knight' : 'ashChieftain';

@@ -81,7 +81,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
     if (goal.id === 'farm' && player.supplyCap - projectedSupplyUsed(snapshot, owner) > wave) return false;
-    if (goal.id.startsWith('unit:')) return true;
+    if (goal.id.startsWith('unit:')) return wanted.has(goal.id.slice(5) as TrainableUnitKind);
     // Every base target requests the same next hall; reserve its gold only once.
     const purchase = goal.id.startsWith('bases:') ? 'townHall' : goal.id;
     if (purchases.has(purchase)) return false;
