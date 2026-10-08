@@ -46,13 +46,16 @@ export function v6ScreenedCasterIds(snapshot: GameSnapshot, owner: PlayerId, opt
 
 export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
+  const home = mainBase(snapshot, owner);
+  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home));
+}
+
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point): GameCommand[] {
   const casters = units(snapshot, owner).filter(isBacklineKind);
   if (casters.length === 0) return [];
   const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
-  const home = mainBase(snapshot, owner);
-  const post = generalPost(v6Memory(options).general, home);
   const frontNear = withinRangeOf(front, FRONT_GROUP_RANGE);
   const threatsNear = withinRangeOf(enemies, THREAT_RANGE);
   const commands: GameCommand[] = [];
@@ -108,7 +111,7 @@ function screenAnchor(caster: Unit, frontNear: (point: Point) => Unit[], threats
 
 // With no real front to stand behind, casters wait where the general holds or guards, a step short of a camp it creeps, and at home
 // while it defends (the defense point is the attackers themselves) or attacks with too few bodies near them.
-function generalPost(general: V6PolicyMemory["general"], home: Point): Point {
+export function v6CasterPost(general: V6PolicyMemory["general"], home: Point): Point {
   if (!general?.target) return home;
   if (general.mode === "hold" || general.mode === "guard") return general.target;
   if (general.mode === "creep") return step(general.target, home, SCREEN_DEPTH + FOLLOW_DEPTH);

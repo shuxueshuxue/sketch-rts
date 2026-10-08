@@ -14,6 +14,7 @@ import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
+import { planSummonerScreen } from './summoner-screen';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -61,6 +62,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.v6General) return [{ ...script, run: planBootstrapGeneral }];
+    if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [{ ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.abilities) return [towerRushAbilities, summonerTowerRush];
