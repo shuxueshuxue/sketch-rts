@@ -17,13 +17,21 @@ export function mountedTargetOrder(a: Unit, b: Unit) {
   return Number(heals(b)) - Number(heals(a)) || a.hp - b.hp;
 }
 
+function chargeMinimum(foe: Unit, rider: Unit) {
+  return unitAbilities(foe).flatMap(ability => {
+    const rules = ABILITY_DEFS[ability];
+    return rules.behavior === 'charge' && distance(rider, foe) < rules.minRange ? [rules.minRange] : [];
+  });
+}
+
 function reach(foe: Threat, rider: Unit, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
-  const weaponReach = foe.attackRange <= 80 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
+  const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
   return Math.max(weaponReach, ...unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
     return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
-      && abilityCooldown(foe, ability) <= horizon ? [rules.range] : [];
+      && abilityCooldown(foe, ability) <= horizon
+      && !(rules.behavior === 'charge' && distance(rider, foe) < rules.minRange) ? [rules.range] : [];
   }));
 }
 
@@ -34,7 +42,10 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   const shot = rider.cooldown > THINK_TICKS ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
   const horizon = THINK_TICKS + rider.cooldown;
   const margin = (point: Point, foe: Threat) => distance(point, foe) - reach(foe, rider, horizon);
-  const safeShot = foes.every(foe => margin(rider, foe) > ('order' in foe ? foe.speed : 0) * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot));
+  // Inside a charge minimum, the shot and next think share the same narrow firing window.
+  const firingWindow = foes.some(foe => 'order' in foe && chargeMinimum(foe, rider).length > 0)
+    ? Math.max(THINK_TICKS / SIM_TICKS_PER_SECOND, shot) : THINK_TICKS / SIM_TICKS_PER_SECOND + shot;
+  const safeShot = foes.every(foe => margin(rider, foe) > ('order' in foe ? foe.speed : 0) * firingWindow);
   if (safeShot) {
     if (distance(rider, target) <= rider.attackRange) {
       // A fleeing worker or leashing creep must not pull an attack order back under cover.
@@ -61,12 +72,14 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
   const angle = destination ? Math.atan2(destination.y - rider.y, destination.x - rider.x) : Math.atan2(rider.y - danger.foe.y, rider.x - danger.foe.x);
   const step = rider.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
+  const innerWindow = foes.flatMap(foe => 'order' in foe ? chargeMinimum(foe, rider).map(limit => ({ foe, limit })) : []);
   const choices = [rider, ...Array.from({ length: 16 }, (_, index) => ({
     x: rider.x + detCos(angle + index * Math.PI / 8) * step,
     y: rider.y + detSin(angle + index * Math.PI / 8) * step,
   })).filter(point => point.x >= 0 && point.y >= 0 && point.x < snapshot.map.width && point.y < snapshot.map.height
     && isWalkable(snapshot.map, point.x, point.y)
-    && segmentWalkable(snapshot.map, rider, point))];
+    && segmentWalkable(snapshot.map, rider, point)
+    && innerWindow.every(({ foe, limit }) => distance(point, foe) < limit))];
   // Leave room for the following turn rather than maximizing distance into a cliff corner.
   const exit = (point: Point) => point !== rider && segmentWalkable(snapshot.map, point,
     { x: point.x + (point.x - rider.x), y: point.y + (point.y - rider.y) });
@@ -79,5 +92,6 @@ export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonl
   const chosen = scored.sort((a, b) => Number(b.room > 0) - Number(a.room > 0)
     || (a.room > 0 ? destination ? a.distance - b.distance
       : Number(b.exit) - Number(a.exit) || b.margin - a.margin : b.room - a.room))[0]!;
-  return { type: 'move', unitIds: [rider.id], x: chosen.point.x, y: chosen.point.y };
+  return innerWindow.length > 0 && chosen.point === rider ? { type: 'holdPosition', unitIds: [rider.id] }
+    : { type: 'move', unitIds: [rider.id], x: chosen.point.x, y: chosen.point.y };
 }
