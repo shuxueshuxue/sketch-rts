@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
 import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement } from "./tooltips";
 import { ABILITY_DEFS, resolveVariant } from "../shared/catalog";
+import { TRANSPORT_COMBAT } from "../shared/transport-role";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
 
@@ -12,6 +13,35 @@ if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
 const CHARGE_COOLDOWN_SECONDS = (CHARGE.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
+  it('describes both troop ferries with one shared protection rule and no heavy armor', () => {
+    for (const kind of ['transport', 'carrier'] as const) for (const locale of ['zh', 'en'] as const) {
+      const tooltip = unitTooltip(kind, undefined, createI18n(locale));
+      const protection = tooltip.stats.filter(line => line.includes(locale === 'zh' ? '船体远程' : 'Hull ranged'));
+      expect(protection).toHaveLength(1);
+      expect(protection[0]).toContain(`${TRANSPORT_COMBAT.rangedDamageTaken * 100}%`);
+      expect(protection[0]).toContain(locale === 'zh' ? `乘员输出 ${TRANSPORT_COMBAT.passengerDamageMultiplier * 100}%` : `passenger damage ${TRANSPORT_COMBAT.passengerDamageMultiplier * 100}%`);
+      expect(tooltipText(tooltip)).not.toContain(locale === 'zh' ? '重甲' : 'Heavy armor');
+      expect(tooltip.body).not.toContain('Armored');
+    }
+  });
+
+  it('shows preserved campaign armor at its strongest single factor and the selected ship cooldown', () => {
+    const snapshot = snapshotWithPlayerUpgrades({}), rules = resolveVariant({ base: 'carrier', armor: 'heavy' });
+    delete rules.rangedDamageTaken; delete rules.passengerDamageMultiplier;
+    snapshot.variants = { ferryUpgrade: rules }; snapshot.tick = 60;
+    const ship = unit('carrier', { variant: 'ferryUpgrade', sailing: { heading: 0, speed: 0, load: 0, balance: 0, gangwayCooldownUntilTick: 80 } });
+    snapshot.units = [ship];
+    let tooltip = unitSelectionTooltip('carrier', [ship], snapshot);
+    expect(tooltip.stats).toContain('Passenger attack damage 50%');
+    expect(tooltip.stats).toContain('Bridge cooldown 1s');
+    expect(tooltipText(tooltip)).toContain('ranged/siege attacks ×50%');
+    expect(tooltipText(tooltip)).not.toContain('Hull ranged/siege/tower attack damage 70%');
+    rules.rangedDamageTaken = .4;
+    tooltip = unitSelectionTooltip('carrier', [ship], snapshot);
+    expect(tooltipText(tooltip)).toContain('ranged/siege attacks ×40%');
+    expect(tooltipText(tooltip)).toContain('towers ×40%');
+  });
+
   it("labels mechanical units and passengers independently and excludes mechanical regeneration claims", () => {
     const snapshot = snapshotWithPlayerUpgrades({ leadership: 3 });
     const golem = unit("golem", { level: 3, deck: { shipId: "transport", x: 0, y: 0 } });

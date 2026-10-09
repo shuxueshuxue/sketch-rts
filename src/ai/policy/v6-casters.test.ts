@@ -30,6 +30,10 @@ describe("v6 casters", () => {
       .townHall('v6', 1392, 1264).townHall('foe', 3184, 1264)
       .unit('v6', kind, 1461, 1498, { id: 'caster' }).unit('foe', 'ashWarden', 1814, 1737)
       .build().createGame();
+    // A controlled river keeps this ability test independent of authored
+    // shoreline edits while retaining two reachable shores and a water aim.
+    const cell=32,cols=game.map.width/cell,rows=game.map.height/cell;
+    game.map.terrain={cell,cols,rows,cells:Array.from({length:cols*rows},(_,i)=>i%cols>=50 && i%cols<56?'~':'.').join('')};
     const snapshot = snapshotGame(game), caster = snapshot.units.find(unit => unit.id === 'caster')!;
     const direction = { x: caster.x + 240 * 353 / Math.hypot(353, 239), y: caster.y + 240 * 239 / Math.hypot(353, 239) };
     expect(isWalkable(snapshot.map, direction.x, direction.y)).toBe(false);

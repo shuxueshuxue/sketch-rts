@@ -1,16 +1,64 @@
 import geometry from "./generated/ship-geometry.json";
 import { detCos, detSin } from "./det-math";
-import type { Unit, UnitKind } from "./types";
+import type { Unit, UnitKind, UnitOrder } from "./types";
 
 export type ShipKind = keyof typeof geometry.ships;
 export type Point = { x: number; y: number };
 export const SHIP_CAMERA = geometry.camera;
 export const SHIP_KINDS = Object.keys(geometry.ships) as ShipKind[];
-export const DEFAULT_SHIP_SCALE = 1.1;
+/** Stored campaign scales retain their authored units; the fleet-wide size change is applied once here. */
+export const SHIP_SIZE_MULTIPLIER = 1.2;
+export const AUTHORED_DEFAULT_SHIP_SCALE = 1.1;
+export const DEFAULT_SHIP_SCALE = AUTHORED_DEFAULT_SHIP_SCALE * SHIP_SIZE_MULTIPLIER;
+export const SHIP_SIZE_VERSION = 1;
 
 export function isShipKind(kind: UnitKind): kind is ShipKind { return kind in geometry.ships; }
-export function shipScale(ship: Unit) {
-  return ship.deckScale ?? (ship.cargoCapacity === undefined ? DEFAULT_SHIP_SCALE : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
+export function authoredShipScale(ship: Unit) {
+  return ship.deckScale ?? (ship.cargoCapacity === undefined ? AUTHORED_DEFAULT_SHIP_SCALE : Math.sqrt(ship.cargoCapacity / (ship.kind === "carrier" ? 24 : 8)));
+}
+export function shipScale(ship: Unit) { return authoredShipScale(ship) * SHIP_SIZE_MULTIPLIER; }
+
+/** Upgrade saved physical coordinates once, before restoring cargo or checking enlarged hull berths. */
+export function migrateShipSizes(units: readonly Unit[]) {
+  const allUnits = [...units], seen = new Set(allUnits), enlarged = new Set<string>();
+  for (const unit of allUnits) for (const passenger of unit.cargo ?? []) if (!seen.has(passenger)) {
+    seen.add(passenger); allUnits.push(passenger);
+  }
+  for (const ship of allUnits) {
+    if (!isShipKind(ship.kind) || ship.shipSizeVersion === SHIP_SIZE_VERSION) continue;
+    ship.radius *= SHIP_SIZE_MULTIPLIER;
+    if (ship.bodyRadius !== undefined) ship.bodyRadius *= SHIP_SIZE_MULTIPLIER;
+    if (ship.fittings) ship.fittings = ship.fittings.map(fitting => ({ ...fitting,
+      x: fitting.x * SHIP_SIZE_MULTIPLIER, y: fitting.y * SHIP_SIZE_MULTIPLIER, radius: fitting.radius * SHIP_SIZE_MULTIPLIER }));
+    if (ship.sailing) ship.sailing.route = undefined;
+    ship.shipSizeVersion = SHIP_SIZE_VERSION;
+    enlarged.add(ship.id);
+  }
+  if (!enlarged.size) return;
+  const scaled = new Set<Point>();
+  const scalePoint = (point: Point) => {
+    if (scaled.has(point)) return;
+    point.x *= SHIP_SIZE_MULTIPLIER; point.y *= SHIP_SIZE_MULTIPLIER; scaled.add(point);
+  };
+  const migrateOrder = (order: UnitOrder, parentId?: string) => {
+    if (order.type === 'charge') { migrateOrder(order.resume, parentId); return; }
+    if (order.type === 'board') {
+      if (enlarged.has(order.transportId) && order.deckPoint) scalePoint(order.deckPoint);
+      if (enlarged.has(order.transportId) || parentId && enlarged.has(parentId) || order.rendezvous && enlarged.has(order.rendezvous.sourceId)) {
+        delete order.berth; delete order.rendezvous;
+      }
+    } else if ((order.type === 'move' || order.type === 'attackMove') && order.deckPoint
+      && enlarged.has(order.deckShipId ?? parentId ?? '')) scalePoint(order.deckPoint);
+  };
+  for (const unit of allUnits) {
+    if (unit.deck && enlarged.has(unit.deck.shipId)) {
+      scalePoint(unit.deck);
+      if (unit.aim?.anchorDeckX !== undefined) unit.aim.anchorDeckX *= SHIP_SIZE_MULTIPLIER;
+      if (unit.aim?.anchorDeckY !== undefined) unit.aim.anchorDeckY *= SHIP_SIZE_MULTIPLIER;
+    }
+    migrateOrder(unit.order, unit.deck?.shipId);
+    for (const order of unit.orderQueue ?? []) migrateOrder(order, unit.deck?.shipId);
+  }
 }
 type ShipProfile = ReturnType<typeof computeShipProfile>;
 const profiles=new WeakMap<Unit,{kind:ShipKind;scale:number;fittings:Unit['fittings'];profile:ShipProfile}>();
@@ -21,6 +69,12 @@ export function shipProfile(ship: Unit) {
   if(cached && cached.kind===ship.kind && cached.scale===scale && cached.fittings===ship.fittings)return cached.profile;
   const profile=computeShipProfile(ship,ship.kind,scale);
   profiles.set(ship,{kind:ship.kind,scale,fittings:ship.fittings,profile});return profile;
+}
+/** Predicted poses retain identical local geometry. Reuse that immutable
+ * profile without retaining either temporary pose or its original hull. */
+export function shareShipProfile(source:Unit,pose:Unit) {
+  if(source.kind!==pose.kind || source.fittings!==pose.fittings || shipScale(source)!==shipScale(pose))return;
+  if(shipProfile(source))profiles.set(pose,profiles.get(source)!);
 }
 function computeShipProfile(ship:Unit,kind:ShipKind,scale:number){
   const raw = geometry.ships[kind];

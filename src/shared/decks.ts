@@ -1,10 +1,11 @@
 import { detCos, detSin } from "./det-math";
 import { bodyMass } from "./physical-body";
-import { shipsIn, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
+import { shipsIn, authoredShipScale, circleInPolygon, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { perTick } from "./time";
 import type { Unit } from "./types";
 import { capsuleClearsBodies, capsuleClearsCircles, diskInConvex, expandConvex } from './navigation-math';
 import { isInCabin } from './ship-cabin';
+import { gangwayBetween, gangwayCrossingPosition } from './ship-gangway';
 
 export function deckLoad(units: readonly Unit[], ship: Unit) {
   return (ship.holdMass ?? 0)+shipPassengers(units,ship).reduce((sum,unit)=>sum+bodyMass(unit),0);
@@ -12,8 +13,8 @@ export function deckLoad(units: readonly Unit[], ship: Unit) {
 export function deckPointFits(ship: Unit, passenger: Unit, point: Point, units: readonly Unit[], occupied=true) {
   const profile=shipProfile(ship);
   if(!profile || !diskInConvex(point,passenger.radius+1,profile.deck))return false;
-  if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1))return false;
-  return !occupied || !shipPassengers(units,ship).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1);
+  if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6))return false;
+  return !occupied || !shipPassengers(units,ship).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
 }
 /** Find actual free ground on a deck; neither supply nor a fixed slot count is consulted. */
 export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true, spacing=4) {
@@ -51,7 +52,7 @@ export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   if(!profile || shipProfile(passenger) || isInCabin(passenger))return false;
   if(passenger.deck){
     const source=units.find(unit=>unit.id===passenger.deck!.shipId),sourceProfile=source && shipProfile(source);
-    if(!sourceProfile || source!.id===ship.id || Math.abs(profile.deckHeight-sourceProfile.deckHeight)>passenger.radius*2)return false;
+    if(!sourceProfile || source!.id===ship.id || Math.abs(profile.deckHeight-sourceProfile.deckHeight)>passenger.radius*2 && !gangwayBetween(source!,ship,passenger))return false;
   } else if(ship.owner!==passenger.owner)return false;
   return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && !!deckPlacement(ship,passenger,units);
 }
@@ -80,7 +81,30 @@ export function syncDecks(units: readonly Unit[]) {
   }
   for(const unit of units) if(unit.deck) {
     const ship=ships.get(unit.deck.shipId);
-    if(ship)Object.assign(unit,localToWorld(ship,unit.deck));
+    const crossing=unit.gangway&&gangwayCrossingPosition(unit.gangway,units);
+    if(ship) {
+      if(crossing){Object.assign(unit,crossing);Object.assign(unit.deck,worldToLocal(ship,crossing));}
+      else Object.assign(unit,localToWorld(ship,unit.deck));
+    }
+  }
+}
+/** A broken passage retreats only its live walkers to a surviving deck. A
+ * passenger whose parent hull sank remains under normal shipwreck authority. */
+export function settleGangwayCrossings(units:readonly Unit[]) {
+  for(const passenger of units) {
+    const crossing=passenger.gangway;
+    if(!crossing || passenger.hp<=0 || gangwayCrossingPosition(crossing,units))continue;
+    const parent=units.find(ship=>ship.id===passenger.deck?.shipId);
+    if(!parent || parent.hp<=0)continue;
+    const endpoints=[crossing.sourceId,crossing.targetId].map(id=>units.find(ship=>ship.id===id && ship.hp>0)).filter((ship):ship is Unit=>!!ship);
+    endpoints.sort((a,b)=>Math.hypot(passenger.x-a.x,passenger.y-a.y)-Math.hypot(passenger.x-b.x,passenger.y-b.y));
+    for(const ship of endpoints) {
+      if(ship!==parent && deckLoad(units,ship)+bodyMass(passenger)>shipProfile(ship)!.loadCapacity)continue;
+      const point=deckPlacement(ship,passenger,units,worldToLocal(ship,passenger));
+      if(!point)continue;
+      passenger.deck={shipId:ship.id,...point};delete passenger.gangway;
+      Object.assign(passenger,localToWorld(ship,point));break;
+    }
   }
 }
 
@@ -95,6 +119,10 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],
   const start=passenger.deck!, profile=shipProfile(ship)!;
   if(clearPath(ship,passenger,start,goal,units,avoidCrew))return goal;
   const nodes:Point[]=[start,goal];
+  // Deck corners connect narrow passages between the cabin and the railing.
+  // Fitting-ring nodes alone can leave these routes disconnected on large hulls.
+  for(const point of expandConvex(profile.deck,-passenger.radius-1-1e-4))
+    if(deckPointFits(ship,passenger,point,units,false))nodes.push(point);
   const obstacles=[...profile.obstacles,...(avoidCrew?shipPassengers(units,ship).filter(other=>other.id!==passenger.id&&other.hp>0&&!isInCabin(other)).map(other=>({...other.deck!,radius:other.radius})):[])];
   for(const o of obstacles)for(let i=0;i<12;i++) {
     const angle=i*Math.PI/6,r=(o.radius+passenger.radius+3)/detCos(Math.PI/12);
@@ -116,9 +144,18 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],
   }
   return start;
 }
-export function moveOnDeck(passenger:Unit,ship:Unit,world:Point,units:readonly Unit[],pace=1,avoidCrew=false) {
+/** Admission checks use the same fixed deck routes as walking. Temporary crew
+ * congestion can yield; a railing or fitting that seals the route cannot. */
+export function deckStaticPathExists(ship:Unit,passenger:Unit,goal:Point) {
+  const start=passenger.deck;
+  if(start?.shipId!==ship.id || !deckPointFits(ship,passenger,goal,[],false))return false;
+  if(Math.hypot(goal.x-start.x,goal.y-start.y)<1e-7)return true;
+  const next=deckWaypoint(ship,passenger,goal,[],false);
+  return Math.hypot(next.x-start.x,next.y-start.y)>1e-7;
+}
+export function moveOnDeck(passenger:Unit,ship:Unit,world:Point,units:readonly Unit[],pace=1,avoidCrew=true) {
   if(!passenger.deck)return;
-  const goal=deckPlacement(ship,passenger,units,worldToLocal(ship,world),false);
+  const goal=deckPlacement(ship,passenger,units,worldToLocal(ship,world),avoidCrew);
   if(!goal)return;
   const target=deckWaypoint(ship,passenger,goal,units,avoidCrew), start=passenger.deck;
   const gap=Math.hypot(target.x-start.x,target.y-start.y), step=Math.min(gap,perTick(passenger.speed)*pace);
@@ -138,7 +175,7 @@ export function restoreCargoDecks(units:Unit[]) {
       // Saved transports can be overfull under newer geometry. Expand that old-format
       // hull deterministically until its existing crew fits, without losing units.
       let placed=boardUnit(ship,passenger,units);
-      for(let attempt=0;!placed && attempt<40;attempt++) {ship.deckScale=(ship.deckScale??1)*1.1;placed=boardUnit(ship,passenger,units);}
+      for(let attempt=0;!placed && attempt<40;attempt++) {ship.deckScale=authoredShipScale(ship)*1.1;placed=boardUnit(ship,passenger,units);}
       if(!placed)throw new Error(`Cannot restore passenger ${passenger.id} aboard ${ship.id}`);
       passenger.order={type:"idle"};passenger.orderQueue=[];
       units.push(passenger);existing.add(passenger.id);

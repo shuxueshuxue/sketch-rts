@@ -4,6 +4,21 @@ import { SketchRtsSdk } from "./client";
 import { SketchRtsBrowserDebug } from "./browser";
 
 describe("SketchRtsSdk", () => {
+  it('transmits typed boarding and cancellation commands through the shared room API', async () => {
+    const bodies: unknown[] = [];
+    const fetcher: typeof fetch = async (_input, init) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return json(makeSnapshot());
+    };
+    const sdk = new SketchRtsSdk('http://game.test', fetcher);
+    await sdk.roomCommand('room-1', 'player', { type: 'boardShip', unitIds: ['source'], targetId: 'target', queued: true });
+    await sdk.roomCommand('room-1', 'player', { type: 'cancelBoardShip', unitIds: ['source'] });
+    expect(bodies).toEqual([
+      { playerId: 'player', command: { type: 'boardShip', unitIds: ['source'], targetId: 'target', queued: true } },
+      { playerId: 'player', command: { type: 'cancelBoardShip', unitIds: ['source'] } },
+    ]);
+  });
+
   it("dogfoods typed helpers for catalog and room-scoped gameplay calls", async () => {
     const calls: { path: string; method: string; body?: unknown }[] = [];
     const room = makeRoom("room-1");

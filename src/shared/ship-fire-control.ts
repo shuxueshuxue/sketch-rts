@@ -1,7 +1,7 @@
 import { strikePoint, type StrikeTarget } from './combat-geometry';
 import type { WeaponDef } from './catalog';
 import { detCos, detSin } from './det-math';
-import { localToWorld, shipProfile, type Point } from './ship-geometry';
+import { localToWorld, shipProfile, shareShipProfile, type Point } from './ship-geometry';
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from './time';
 import type { Unit } from './types';
 
@@ -21,7 +21,9 @@ export function ballisticTarget(pivot: Point, target: StrikeTarget, velocity: Po
   const step = perTick(weapon.delivery === 'shell' ? 240 : 560);
   const at = (ticks: number): StrikeTarget => {
     const time = (ticks - 1) / SIM_TICKS_PER_SECOND;
-    return { ...target, x: target.x + velocity.x * time, y: target.y + velocity.y * time };
+    const pose={ ...target, x: target.x + velocity.x * time, y: target.y + velocity.y * time };
+    if('order' in target && 'order' in pose)shareShipProfile(target,pose);
+    return pose;
   };
   const reaches = (ticks: number) => {
     const time = (ticks - 1) / SIM_TICKS_PER_SECOND;

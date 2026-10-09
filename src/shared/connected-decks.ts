@@ -1,11 +1,13 @@
 import { deckLoad, deckPlacement, deckPointFits } from "./decks";
-import { capsuleClearsBodies, capsuleClearsCircles, expandConvex } from './navigation-math';
+import { capsuleClearsBodies, capsuleClearsCircles, clipToConvex, expandConvex } from './navigation-math';
 import { supportSurface } from './support-surface';
 import { bodyMass } from "./physical-body";
 import { shipsIn, circleInPolygon, hullGap, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { detCos, detSin } from "./det-math";
 import { perTick } from "./time";
 import { groundRevision, isOpenGround } from "./terrain";
+import { SHIP_IMPACT_SAFE_SPEED, shipPointVelocity } from './ship-collisions';
+import { gangwayBetween, gangwayCrossingAt, gangwaySurface, type GangwaySurface } from './ship-gangway';
 import type { GameMap, Unit } from "./types";
 // Sub-pixel contact tolerance accommodates hull separation's numerical clearance.
 const CONTACT_CLEARANCE = .5;
@@ -22,6 +24,7 @@ type CrossingGeometry = {
   })[];
   nodes: Point[];
   links: Int8Array;
+  bridges: GangwaySurface[];
 };
 const crossings = new WeakMap<GameMap, {
   terrain: GameMap['terrain'];
@@ -30,7 +33,25 @@ const crossings = new WeakMap<GameMap, {
 }>();
 const profileIds = new WeakMap<object, number>();
 let nextProfileId = 1;
+function seamPoints(a:readonly Point[],b:readonly Point[]) {
+  const points:Point[]=[];
+  for(const [hull,other] of [[a,b],[b,a]] as const)for(let i=0;i<hull.length;i++) {
+    const from=hull[i]!,to=hull[(i+1)%hull.length]!,interval=clipToConvex(from,to,other);
+    if(!interval)continue;
+    for(const fraction of [.25,.5,.75]) {
+      const t=interval[0]+(interval[1]-interval[0])*fraction;
+      points.push({x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t});
+    }
+  }
+  return points;
+}
 function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: boolean): CrossingGeometry {
+  const gangways: {source:Unit;target:Unit;surface:GangwaySurface}[]=[];
+  for(const source of ships) {
+    const target=ships.find(ship=>ship.id===source.sailing?.gangway?.targetId);
+    const connection=target && gangwayBetween(source,target,passenger);
+    if(connection?.source===source)gangways.push(connection);
+  }
   const terrain = map.terrain, cell = terrain?.cell ?? 32, radius = passenger.radius + 1, padding = passenger.radius * 4 + cell * 3;
   const poses = ships.map(ship => {
     const profile = shipProfile(ship)!;
@@ -46,7 +67,8 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
   const right = Math.ceil((Math.max(passenger.x, ...ships.map(s => s.x + shipProfile(s)!.length)) + padding) / cell) * cell;
   const top = Math.floor((Math.min(passenger.y, ...ships.map(s => s.y - shipProfile(s)!.length)) - padding) / cell) * cell;
   const bottom = Math.ceil((Math.max(passenger.y, ...ships.map(s => s.y + shipProfile(s)!.length)) + padding) / cell) * cell;
-  const key = `${poses.join(';')}/${radius}/${land}/${groundRevision(map)}/${left},${top},${right},${bottom}`;
+  const bridgeKey=gangways.map(({source,target,surface})=>`${source.id}:${target.id}:${surface.width}:${surface.source.x},${surface.source.y}:${surface.target.x},${surface.target.y}`).join(';');
+  const key = `${poses.join(';')}/${bridgeKey}/${radius}/${land}/${groundRevision(map)}/${left},${top},${right},${bottom}`;
   let cache = crossings.get(map);
   if (!cache || cache.terrain !== terrain || cache.cells !== terrain?.cells) {
     cache = { terrain, cells: terrain?.cells, entries: new Map() };
@@ -56,10 +78,19 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
   if (known)
     return known;
   const surface = ships.map(ship => ({ ship, profile: shipProfile(ship)!, hull: shipProfile(ship)!.hull.map(p => localToWorld(ship, p)) }));
-  const floor = supportSurface(surface.map(s => expandConvex(s.hull, CONTACT_CLEARANCE / 2)), land && terrain ? { cell: terrain.cell, cols: terrain.cols, rows: terrain.rows, open: (col, row) => col >= 0 && row >= 0 && col < terrain.cols && row < terrain.rows && isOpenGround(map, (col + .5) * terrain.cell, (row + .5) * terrain.cell, 'land') } : undefined, { left, top, right, bottom });
+  const hulls=surface.map(s => expandConvex(s.hull, CONTACT_CLEARANCE / 2));
+  const floor = supportSurface([...hulls,...gangways.map(connection=>connection.surface.polygon)], land && terrain ? { cell: terrain.cell, cols: terrain.cols, rows: terrain.rows, open: (col, row) => col >= 0 && row >= 0 && col < terrain.cols && row < terrain.rows && isOpenGround(map, (col + .5) * terrain.cell, (row + .5) * terrain.cell, 'land') } : undefined, { left, top, right, bottom });
   const obstacles = surface.flatMap(({ ship, profile }) => profile.obstacles.map(o => ({ ...localToWorld(ship, o), radius: o.radius })));
   const nodes: Point[] = [];
   const fits = (p: Point) => floor.diskFits(p, radius) && capsuleClearsCircles(p, p, radius, obstacles);
+  for(const {surface:bridge} of gangways)for(const t of [0,.25,.5,.75,1]) {
+    const point={x:bridge.source.x+(bridge.target.x-bridge.source.x)*t,y:bridge.source.y+(bridge.target.y-bridge.source.y)*t};
+    if(fits(point))nodes.push(point);
+  }
+  // A slight berth yaw can leave a usable seam between the fixed quarter-edge
+  // samples. Include the actual overlapping seam used by the contact proof.
+  for(let i=0;i<hulls.length;i++)for(let j=i+1;j<hulls.length;j++)
+    for(const point of seamPoints(hulls[i]!,hulls[j]!))if(fits(point))nodes.push(point);
   for (const { hull } of surface)
     for (let i = 0; i < hull.length; i++) {
       const a = hull[i]!, b = hull[(i + 1) % hull.length]!;
@@ -81,7 +112,7 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
       if (fits(point))
         nodes.push(point);
     }
-  const result = { surface, floor, obstacles, nodes, links: new Int8Array(nodes.length ** 2) };
+  const result = { surface, floor, obstacles, nodes, links: new Int8Array(nodes.length ** 2), bridges:gangways.map(connection=>connection.surface) };
   if (cache.entries.size >= 32)
     cache.entries.delete(cache.entries.keys().next().value!);
   cache.entries.set(key, result);
@@ -107,12 +138,47 @@ export function decksTouch(a: Unit, b: Unit, passenger: Unit) {
   return Boolean(a.hp > 0 && b.hp > 0 && aa && bb && Math.abs(aa.deckHeight - bb.deckHeight) <= passenger.radius * 2
     && Math.hypot(a.x - b.x, a.y - b.y) < (aa.length + bb.length) / 2 && hullGap(a, b) <= CONTACT_CLEARANCE);
 }
+function supportedSeamPoints(a:Unit,b:Unit,passenger:Unit) {
+  if (!decksTouch(a, b, passenger)) return [];
+  const hulls = [a,b].map(ship => expandConvex(shipProfile(ship)!.hull.map(point => localToWorld(ship,point)), CONTACT_CLEARANCE / 2));
+  const floor = supportSurface(hulls, undefined, {left:0,top:0,right:0,bottom:0});
+  const obstacles = [a,b].flatMap(ship => shipProfile(ship)!.obstacles.map(obstacle => ({...localToWorld(ship,obstacle),radius:obstacle.radius})));
+  return seamPoints(hulls[0]!,hulls[1]!).filter(point=>floor.diskFits(point,passenger.radius+1) && capsuleClearsCircles(point,point,passenger.radius+1,obstacles));
+}
+/** A hypothetical terminal berth checks support without carrying the current
+ * approach's velocity into the plan. Point contact at a bow is insufficient. */
+export function decksSupportCrossing(a:Unit,b:Unit,passenger:Unit) {
+  return supportedSeamPoints(a,b,passenger).length>0;
+}
+function seamVelocity(ship:Unit,point:Point) {
+  const motion=ship.sailing,heading=motion?.heading??0,speed=motion?.speed??0;
+  // Last tick's actual signed travel is authoritative at the tick boundary.
+  // A newly stopped speed field must not erase that displacement immediately.
+  // Recorded travel already includes shove; add it only to the speed fallback.
+  return shipPointVelocity(ship,point,{x:motion?.velocityX??speed*detCos(heading)+(ship.pushX??0),
+    y:motion?.velocityY??speed*detSin(heading)+(ship.pushY??0)});
+}
+/** A supported seam permits walking only at mooring-scale relative velocity.
+ * Check the usable seam, including yaw's point velocity, so another route
+ * sample cannot turn a fast passing contact into a stationary gangway. */
+export function decksAllowCrossing(a: Unit, b: Unit, passenger: Unit) {
+  const points=supportedSeamPoints(a,b,passenger);
+  return points.length>0 && points.every(point=>{
+    const av=seamVelocity(a,point),bv=seamVelocity(b,point);
+    return Math.hypot(av.x-bv.x,av.y-bv.y)<=SHIP_IMPACT_SAFE_SPEED+1e-6;
+  });
+}
+/** Physical hull contact remains sufficient. Across a water gap only a ready,
+ * intact infantry gangway contributes the missing walking surface. */
+export function decksCanTransfer(a:Unit,b:Unit,passenger:Unit) {
+  return decksAllowCrossing(a,b,passenger) || !!gangwayBetween(a,b,passenger);
+}
 function connectedShips(start: Unit, passenger: Unit, units: readonly Unit[]) {
   const found = [start], seen = new Set([start.id]);
   const vessels = shipsIn(units);
   for (let i = 0; i < found.length; i++)
     for (const ship of vessels)
-      if (!seen.has(ship.id) && decksTouch(found[i]!, ship, passenger)) {
+      if (!seen.has(ship.id) && decksCanTransfer(found[i]!, ship, passenger)) {
         seen.add(ship.id);
         found.push(ship);
       }
@@ -180,14 +246,14 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     && (!other.deck || ships.some(ship => ship.id === other.deck?.shipId))
     && other.x + other.radius >= left && other.x - other.radius <= right && other.y + other.radius >= top && other.y - other.radius <= bottom);
   const fits = (point: Point, occupied = false) => {
-    if (obstacles.some(o => Math.hypot(point.x - o.x, point.y - o.y) < o.radius + passenger.radius + 1))
+    if (obstacles.some(o => Math.hypot(point.x - o.x, point.y - o.y) < o.radius + passenger.radius + 1 - 1e-6))
       return false;
     if (!floor.diskFits(point, passenger.radius + 1))
       return false;
     return !occupied || capsuleClearsBodies(passenger, point, passenger.radius + 1, bodies);
   };
   const staticClear = (a: Point, b: Point) => floor.capsuleFits(a, b, passenger.radius + 1) && capsuleClearsCircles(a, b, passenger.radius + 1, obstacles);
-  const clear = (a: Point, b: Point, ai = -1, bi = -1) => {
+  const clear = (a: Point, b: Point, ai = -1, bi = -1, occupied=true) => {
     const count = geometry.nodes.length, cacheable = ai >= 2 && bi >= 2 && ai < count + 2 && bi < count + 2;
     let valid: boolean;
     if (cacheable) {
@@ -198,7 +264,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     }
     else
       valid = staticClear(a, b);
-    return valid && capsuleClearsBodies(a, b, passenger.radius + 1, bodies);
+    return valid && (!occupied || capsuleClearsBodies(a, b, passenger.radius + 1, bodies));
   };
   const nodes: Point[] = [passenger, destination];
   if (!clear(passenger, destination)) {
@@ -210,17 +276,53 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
         if (fits(point, true))
           nodes.push(point);
       }
+      // A one-person bridge has too little side room for the usual circular
+      // detour nodes. Sample the safe front of a body on its actual centerline.
+      for(const bridge of geometry.bridges) {
+        const a=bridge.source,b=bridge.target,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),radius=other.radius+passenger.radius+2;
+        const along=((other.x-a.x)*dx+(other.y-a.y)*dy)/len,across=((other.y-a.y)*dx-(other.x-a.x)*dy)/len;
+        if(Math.abs(across)>=radius)continue;
+        const offset=Math.sqrt(radius*radius-across*across);
+        for(const distance of [along-offset,along+offset])if(distance>=0 && distance<=len) {
+          const point={x:a.x+dx/len*distance,y:a.y+dy/len*distance};
+          if(fits(point,true))nodes.push(point);
+        }
+      }
     }
   }
   const costs = nodes.map(() => Infinity), parents = nodes.map(() => -1), seen = new Set<number>();
   costs[0] = 0;
+  let destinationNode=1;
   while (seen.size < nodes.length) {
     let current = -1;
     for (let i = 0; i < nodes.length; i++)
       if (!seen.has(i) && (current < 0 || costs[i]! < costs[current]!))
         current = i;
-    if (current < 0 || !Number.isFinite(costs[current]!))
-      return true;
+    if (current < 0 || !Number.isFinite(costs[current]!)) {
+      // A defender may seal the far end of a one-person bridge. Walk to the
+      // closest reachable floor first, so melee can meet it at the entrance.
+      // Every candidate still has a proven, body-clear path from the start.
+      const remaining=nodes.map(()=>Infinity),visited=new Set<number>();remaining[1]=0;
+      for(let pass=0;pass<nodes.length;pass++) {
+        let closest=-1;
+        for(let i=0;i<nodes.length;i++)if(!visited.has(i)&&(closest<0||remaining[i]!<remaining[closest]!))closest=i;
+        if(closest<0||!Number.isFinite(remaining[closest]!))break;
+        visited.add(closest);
+        for(let i=0;i<nodes.length;i++)if(!visited.has(i)) {
+          const distance=remaining[closest]!+Math.hypot(nodes[i]!.x-nodes[closest]!.x,nodes[i]!.y-nodes[closest]!.y);
+          if(distance<remaining[i]!&&clear(nodes[closest]!,nodes[i]!,closest,i,false))remaining[i]=distance;
+        }
+      }
+      const estimate=(i:number)=>Number.isFinite(remaining[0]!)?remaining[i]!:Math.hypot(nodes[i]!.x-destination.x,nodes[i]!.y-destination.y);
+      let best=estimate(0);
+      destinationNode=0;
+      for(let i=2;i<nodes.length;i++)if(Number.isFinite(costs[i]!)) {
+        const distance=estimate(i);
+        if(distance<best-1e-6){best=distance;destinationNode=i;}
+      }
+      if(destinationNode===0)return true;
+      break;
+    }
     if (current === 1)
       break;
     seen.add(current);
@@ -234,7 +336,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       }
     }
   }
-  let next = 1;
+  let next = destinationNode;
   while (parents[next]! > 0)
     next = parents[next]!;
   const waypoint = nodes[next]!, gap = Math.hypot(waypoint.x - passenger.x, waypoint.y - passenger.y);
@@ -254,6 +356,15 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     delete passenger.deck;
   else if (source)
     passenger.deck = { shipId: source.id, ...worldToLocal(source, at) };
+  if(parent || floor.diskOnLand(at,passenger.radius+1))delete passenger.gangway;
+  else {
+    const connection=ships.flatMap(ship=>{
+      const receiver=ships.find(other=>other.id===ship.sailing?.gangway?.targetId);
+      const bridge=receiver&&gangwayBetween(ship,receiver,passenger);
+      return bridge?.source===ship && circleInPolygon(at,0,bridge.surface.polygon)?[bridge]:[];
+    })[0];
+    if(connection)passenger.gangway=gangwayCrossingAt(connection,at);
+  }
   Object.assign(passenger, at);
   return true;
 }
@@ -267,7 +378,12 @@ export function settleDeckSupport(units: readonly Unit[], map: GameMap) {
     const ship = units.find(ship => ship.id === passenger.deck!.shipId && ship.hp > 0), profile = ship && shipProfile(ship);
     if (!ship || !profile || circleInPolygon(passenger.deck, passenger.radius + 1, profile.deck))
       continue;
-    if (units.some(other => other.id !== ship.id && decksTouch(ship, other, passenger)))
+    if (passenger.gangway) {
+      const source=units.find(unit=>unit.id===passenger.gangway!.sourceId),target=units.find(unit=>unit.id===passenger.gangway!.targetId);
+      if(source&&target&&gangwaySurface(source,target)?.phase==='ready')continue;
+      delete passenger.gangway;
+    }
+    if (units.some(other => other.id !== ship.id && decksCanTransfer(ship, other, passenger)))
       continue;
     // A body can straddle a shore edge while every part remains supported.
     let supported = true;

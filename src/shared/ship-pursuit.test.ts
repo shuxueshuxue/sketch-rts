@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
 import { strikeGap } from './combat-geometry';
-import { hullContact, shipProfile } from './ship-geometry';
+import { hullContact, hullGap, shipProfile } from './ship-geometry';
 import { polygonRadius } from './navigation-math';
 import { boardUnit, deckPlacement, syncDecks } from './decks';
 import { interceptTime, shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
@@ -28,6 +28,21 @@ function scene() {
 }
 
 describe('ship tactical pursuit', () => {
+  it('closes on a crossing hull with a short-range weapon while reserving both complete outlines', () => {
+    const ship = createUnit('flame', 'player', 'fireShip', 2000, 2000), target = createUnit('crossing', 'enemy', 'transport', 2245, 2000);
+    ship.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
+    target.sailing = { heading: Math.PI / 2, speed: 0, load: 0, balance: 0 };
+    target.order = { type: 'move', x: target.x, y: target.y + 2000 };
+    const goal = shipPursuitGoal(ship, target, [ship, target], 144, 0, false, () => false)!;
+    expect(goal.x).toBeGreaterThan(ship.x); expect(goal.x).toBeLessThan(target.x);
+    const station = { ...ship, x: goal.x, y: goal.y };
+    expect(hullContact(station, target)).toBeUndefined(); expect(hullGap(station, target)).toBeGreaterThanOrEqual(12 - 1e-6);
+    target.sailing.heading = 0;
+    const aligned = shipPursuitGoal(ship, target, [ship, target], 144, 0, false, () => false)!;
+    expect(aligned.x).toBeLessThan(goal.x);
+    const alignedStation = { ...ship, x: aligned.x, y: aligned.y };
+    expect(hullContact(alignedStation, target)).toBeUndefined(); expect(hullGap(alignedStation, target)).toBeGreaterThanOrEqual(12 - 1e-6);
+  });
   it('keeps a useful stationary firing station while the approaching hull changes bearing', () => {
     const { ship, target, units } = pair();
     const first = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
@@ -36,6 +51,9 @@ describe('ship tactical pursuit', () => {
     ship.x -= 120; ship.y += 140;
     const next = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
     expect(next.x).toBe(first.x); expect(next.y).toBe(first.y);
+    target.x += 3; target.y -= 2;
+    const shifted = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(shifted.x).toBe(first.x); expect(shifted.y).toBe(first.y);
     const blocker = createUnit('blocker', 'player', 'warship', first.x, first.y);
     units.push(blocker);
     const clear = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
@@ -65,6 +83,27 @@ describe('ship tactical pursuit', () => {
     // The nearest station on the center pursuer's bearing becomes available.
     expect(next.y).toBe(target.y);
     expect(next.x).toBeLessThan(target.x);
+  });
+
+  it('uses a stopped firing peer’s actual hull without reserving its abandoned approach goal', () => {
+    const { ship, target, units } = pair();
+    const nearest = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    const peer = createUnit('parked', 'player', 'warship', target.x, target.y + 600);
+    peer.order = { type: 'attack', targetId: target.id };
+    peer.sailing = { heading: 0, speed: 0, load: 0, balance: 0,
+      pursuit: { targetId: target.id, phase: 'approach', moving: false },
+      route: { goalX: nearest.x, goalY: nearest.y, targetId: target.id, intent: 'pursuit',
+        points: [{ ...nearest, heading: 0 }], end: nearest } };
+    units.push(peer);
+    const reserved = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(reserved.x - nearest.x, reserved.y - nearest.y)).toBeGreaterThan(200);
+    peer.sailing.pursuit!.phase = 'engage';
+    const available = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(available.x).toBe(nearest.x); expect(available.y).toBe(nearest.y);
+    // The same peer still blocks a real station occupied by its hull.
+    peer.x = nearest.x; peer.y = nearest.y;
+    const occupied = shipPursuitGoal(ship, target, units, 312, 0, false, () => false)!;
+    expect(Math.hypot(occupied.x - peer.x, occupied.y - peer.y)).toBeGreaterThan(200);
   });
 
   it('leads a crossing target and bounds predictions for an escaping faster ship', () => {

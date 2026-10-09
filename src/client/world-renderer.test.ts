@@ -6,7 +6,11 @@ import { RELATION_INK } from "./relations";
 import { drawWorld, ownerInk, trackUnitFacing, type WorldFrame } from "./world-renderer";
 import { sketchScene } from "../sdk/scene";
 import { ABILITY_DEFS } from "../shared/catalog";
-import { snapshotGame, stepGame } from "../shared/sim";
+import { createGame, snapshotGame, stepGame } from "../shared/sim";
+import { boardUnit } from '../shared/decks';
+import { beginShipBoarding, gangwaySurface, updateShipGangways } from '../shared/ship-gangway';
+import { shipProfile } from '../shared/ship-geometry';
+import { createUnit } from '../shared/map';
 import type { GameSnapshot } from "../shared/types";
 
 type Call = { name: string; args: unknown[]; at?: Transform; ink?: unknown };
@@ -36,7 +40,7 @@ function recordingContext() {
       if (key in target) return target[key];
       const method = methods[key];
       return (...args: unknown[]) => {
-        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : key === "stroke" ? { name: key, args, ink: target.strokeStyle } : { name: key, args });
+        calls.push(key === "drawImage" ? { name: key, args, at: { ...transform } } : key === "stroke" || key === "fill" ? { name: key, args, ink: key === 'fill' ? target.fillStyle : target.strokeStyle } : { name: key, args });
         return method?.(...(args as never[]));
       };
     },
@@ -85,8 +89,50 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
 }
 
 describe("world renderer", () => {
+  it('paints Canvas ship flags in assigned owner colors while relation rings stay separate', () => {
+    const snapshot = duelSnapshot();
+    snapshot.units = [createUnit('north-ship', 'north', 'warship', 260, 400), createUnit('south-ship', 'south', 'warship', 620, 400)];
+    snapshot.players.north!.color = '#123456'; snapshot.players.south!.color = '#b95632';
+    const rendered = frame(snapshot, { viewer: 'north', selectedIds: new Set(['north-ship']), hoveredId: 'south-ship' });
+    drawWorld(rendered);
+    const fills = rendered.calls.filter(call => call.name === 'fill').map(call => call.ink);
+    expect(fills).toEqual(expect.arrayContaining(['#123456', '#b95632']));
+    const strokes = rendered.calls.filter(call => call.name === 'stroke').map(call => call.ink);
+    expect(strokes).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.enemy]));
+  });
   beforeEach(() => setScratchCanvasFactory(fakeCanvas));
   afterEach(() => setScratchCanvasFactory(undefined));
+
+  it('draws the physical gangway polygon in the Canvas fallback and removes it when the hulls separate', () => {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    game.units = []; game.buildings = []; game.items = []; game.resources = []; game.obstacles = [];
+    game.map.width = game.map.height = 2000; delete game.map.terrain;
+    const source = game.spawnUnit('player', 'transport', 300, 300), target = game.spawnUnit('player', 'carrier', 300, 600), crew = game.spawnUnit('player', 'footman', 300, 300);
+    target.y = source.y + (shipProfile(source)!.beam + shipProfile(target)!.beam) / 2 + 12;
+    expect(boardUnit(source, crew, game.units)).toBe(true);
+    source.order = { type: 'boardShip', targetId: target.id };
+    expect(beginShipBoarding(game.map, game.units, source, target, game.tick, game)).toBe(true);
+    const approaching = frame(snapshotGame(game)); drawWorld(approaching);
+    expect(approaching.calls.filter(call => call.name === 'fill' && call.ink === '#9b7550')).toHaveLength(0);
+    updateShipGangways(game.map, game.units, game.tick, game);
+    const surface = gangwaySurface(source, target)!;
+    const drawn = frame(snapshotGame(game)), original = JSON.stringify(drawn.snapshot); drawWorld(drawn);
+    const bridgePaths = (calls: Call[]) => {
+      const fill = calls.findIndex(call => call.name === 'fill' && call.ink === '#9b7550');
+      let start = fill - 1;
+      while (start >= 0 && calls[start]!.name !== 'beginPath') start--;
+      return calls.slice(start, fill).filter(call => call.name === 'moveTo' || call.name === 'lineTo');
+    };
+    expect(drawn.calls.filter(call => call.name === 'fill' && call.ink === '#9b7550')).toHaveLength(1);
+    expect(bridgePaths(drawn.calls).map(call => Number(call.args[0])).sort((a, b) => a - b)).toEqual(surface.polygon.map(point => point.x).sort((a, b) => a - b));
+    expect(JSON.stringify(drawn.snapshot)).toBe(original);
+    source.x += 50; target.x += 50;
+    const moved = frame(snapshotGame(game)); drawWorld(moved);
+    expect(bridgePaths(moved.calls).map(call => Number(call.args[0])).sort((a, b) => a - b)).toEqual(surface.polygon.map(point => point.x + 50).sort((a, b) => a - b));
+    target.y += 40;
+    const separated = frame(snapshotGame(game)); drawWorld(separated);
+    expect(separated.calls.filter(call => call.name === 'fill' && call.ink === '#9b7550')).toHaveLength(0);
+  });
 
   it('draws no body, health, selection ring or reticle for a sheltered person in either canvas pass',()=>{
     const original=duelSnapshot(),unit=original.units.find(unit=>unit.owner==='north')!;
@@ -266,15 +312,18 @@ describe("world renderer", () => {
     const looking = rings({ viewer: "north", selectedIds: new Set(["own", "friend"]), hoveredId: "foe" });
     expect(looking).toEqual(expect.arrayContaining([RELATION_INK.own, RELATION_INK.ally, RELATION_INK.enemy]));
     const nobody = rings({ selectedIds: new Set(["own", "friend"]), hoveredId: "foe" });
-    expect(nobody).toEqual(expect.arrayContaining([ownerInk("north"), ownerInk("ally"), ownerInk("south")]));
+    expect(nobody).toEqual(expect.arrayContaining([ownerInk("north", snapshot), ownerInk("ally", snapshot), ownerInk("south", snapshot)]));
     expect(nobody).not.toContain(RELATION_INK.ally);
   });
 
-  it("inks the two default seats and neutrals in fixed colours and any other owner from one palette", () => {
+  it("inks the default seats and neutrals conventionally and reads each match's assigned table", () => {
     expect(ownerInk("player")).toBe("#477b91");
     expect(ownerInk("enemy")).toBe("#a85644");
     expect(ownerInk("neutral")).toBe("#704a33");
     expect(ownerInk("north")).toBe(ownerInk("north"));
     expect(ownerInk("north")).toMatch(/^#[0-9a-f]{6}$/);
+    const game = createGame('bareDuel', { players: ['north', 'south'], aiPlayers: [] });
+    expect(ownerInk('north', game)).toBe(game.players.north!.color);
+    expect(ownerInk('south', game)).not.toBe(ownerInk('north', game));
   });
 });

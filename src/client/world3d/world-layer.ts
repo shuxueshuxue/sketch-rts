@@ -16,8 +16,10 @@ import { footprintSquare } from '../footprint-view';
 import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
 import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
-import { shipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
+import { shipProfile,shareShipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
 import { isInCabin } from '../../shared/ship-cabin';
+import { gangwaySurface, type GangwaySurface } from '../../shared/ship-gangway';
+import { gangwayCrewVisualPose } from '../ship-gangway-visual';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Unit } from '../../shared/types';
@@ -45,6 +47,8 @@ export class World3DLayer {
   private transformScale=new THREE.Vector3();
   private entities=new Map<string,GameSnapshot['units'][number]|GameSnapshot['buildings'][number]>();
   private ships=new Map<string,Unit>();
+  private shipPoses=new Map<string,Unit>();
+  private gangwaySurfaces=new Map<string,GangwaySurface>();
   private recoil=new Map<string,GameSnapshot['effects'][number]>();
   private indexedUnits:GameSnapshot['units']|undefined;
   private indexedBuildings:GameSnapshot['buildings']|undefined;
@@ -68,10 +72,15 @@ export class World3DLayer {
   private bolt=new THREE.Mesh(new THREE.ConeGeometry(1.5,24,4).rotateZ(-Math.PI/2).translate(-9,0,0),new THREE.MeshStandardMaterial({color:'#c0b391',roughness:1}));
   private magic=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshBasicMaterial({color:'#86c3dc',toneMapped:false}));
   private fire=new THREE.Mesh(new THREE.SphereGeometry(4,8,6),new THREE.MeshBasicMaterial({color:'#e5ad55',toneMapped:false}));
-  private flag=new THREE.Mesh(new THREE.PlaneGeometry(10,7).translate(5,-3.5,0),new THREE.MeshBasicMaterial({color:'#88977c',side:THREE.DoubleSide,toneMapped:false}));
+  private flag=new THREE.Mesh(new THREE.PlaneGeometry(20,13).translate(10,-6.5,0),new THREE.MeshBasicMaterial({color:'#88977c',side:THREE.DoubleSide,toneMapped:false}));
   private flash=new THREE.Mesh(new THREE.SphereGeometry(1,8,6),new THREE.MeshBasicMaterial({color:'#ffcf74',toneMapped:false}));
+  private gangway=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#9b7550',roughness:1}));
+  private bridgeAlong=new THREE.Vector3();
+  private bridgeAcross=new THREE.Vector3();
+  private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined){
     this.flag.material.name='TeamColor';
+    this.gangway.name='ShipGangway';
     this.scene.add(new THREE.HemisphereLight('#ddd7c5','#263c3a',1.25));
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.bias=-.0004;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun,this.sun.target);this.shadow.rotation.x=-Math.PI/2;this.shadow.receiveShadow=true;this.scene.add(this.shadow);
@@ -84,7 +93,7 @@ export class World3DLayer {
   }
   async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.positions.clear();this.entities.clear();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.water.prepare(undefined);}
   private pose(x:number,y:number,height:number,heading=0,scale=1,rotation?:THREE.Quaternion){
     let matrix=this.transforms[this.transformCount];
     if(!matrix){matrix=new THREE.Matrix4();this.transforms[this.transformCount]=matrix;}
@@ -136,7 +145,7 @@ export class World3DLayer {
     const {entities,ships}=this;
     const right=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),rotation=uprightCrewRotation(this.camera);
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
-    this.positions.clear();this.batches.begin();
+    this.positions.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*site.scale});
@@ -150,12 +159,15 @@ export class World3DLayer {
       const scale=extent/Math.max(size.x,size.z),height=size.y*scale;
       this.positions.set(building.id,{x:building.x,y:building.y,bodyY:building.y,topY:building.y-height*TILT});
       if(!visible(building.x,building.y,height*TILT+180))continue;
-      this.batches.add(`building:${modelKey}:${building.owner}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner),!building.complete);
+      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner, snapshot),!building.complete);
     }
     const revealedShips=new Set<string>();
     for(const unit of snapshot.units)if(frame.selectedIds?.has(unit.id)){if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
     for(const ship of ships.values()){
       const at=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0,scale=shipScale(ship),profile=shipProfile(ship)!;
+      const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
+      shareShipProfile(ship,displayed);
+      this.shipPoses.set(ship.id,displayed);
       this.positions.set(ship.id,{x:at.x,y:at.y,bodyY:at.y,topY:at.y-(profile.deckHeight+profile.mastHeight)*TILT});
       if(!visible(at.x,at.y,profile.length*scale+profile.mastHeight))continue;
       const reveal=revealedShips.has(ship.id);
@@ -168,6 +180,8 @@ export class World3DLayer {
         if(rig&&display?.model!==rig){display={model:rig,pose:rig.createPose(),worldRopes:rig.ropes.map(()=>new THREE.Matrix4())};this.rigPoses.set(ship.id,display);}
         const animation=display?.pose.update(this.sailMotion.pose(ship,now));
         this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,transform,ship.id,undefined,false,reveal,animation);
+        const ensign=this.template(`ships/${ship.kind}`,'OwnerFlag');
+        if(ensign)this.batches.add(`ship-ensign:${ship.kind}:${ownerInk(ship.owner, snapshot)}`,ensign,transform,ship.id,ownerInk(ship.owner, snapshot));
         if(display)for(let i=0;i<display.pose.ropes.length;i++){
           const rope=display.pose.ropes[i]!;if(!rope.visible)continue;
           const matrix=display.worldRopes[i]!.multiplyMatrices(transform,rope.matrix);
@@ -175,8 +189,7 @@ export class World3DLayer {
         }
       }
       const masts=profile.obstacles.filter(obstacle=>obstacle.type==='mast'),mast=masts[ship.kind==='shipOfTheLine'?1:0];
-      if(mast){const mastAt=localToWorld({...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}},mast);this.batches.add(`flag:${ship.owner}`,this.flag,this.pose(mastAt.x,mastAt.y,profile.deckHeight+profile.mastHeight,0,scale,rotation),ship.id,ownerInk(ship.owner));}
-      const displayed={...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}};
+      if(mast){const mastAt=localToWorld({...ship,x:at.x,y:at.y,sailing:{...ship.sailing!,heading}},mast);this.batches.add(`flag:${ownerInk(ship.owner, snapshot)}`,this.flag,this.pose(mastAt.x,mastAt.y,profile.deckHeight+profile.mastHeight,0,scale,rotation),ship.id,ownerInk(ship.owner, snapshot));}
       for(const item of installedWeapons(snapshot,ship)){
         const weapon=mountedWeaponPose(displayed,item),gun=weapon&&this.template(`ships/${weapon.art}`,'Gun');if(!weapon||!gun)continue;
         const recoil=this.recoil.get(item.id);
@@ -184,6 +197,20 @@ export class World3DLayer {
         const back=weapon.art==='fireShip'?0:4*scale*Math.max(0,age<.08?age/.08:1-(age-.08)/.38);
         this.batches.add(`gun:${weapon.art}:${item.durability===0}`,gun,this.pose(weapon.pivot.x-Math.cos(weapon.heading)*back,weapon.pivot.y-Math.sin(weapon.heading)*back,weapon.pivotHeight,weapon.heading,scale),ship.id,undefined,item.durability===0);
       }
+    }
+    for(const source of this.shipPoses.values()){
+      const target=source.sailing?.gangway && this.shipPoses.get(source.sailing.gangway.targetId);
+      const surface=target && gangwaySurface(source,target);if(!surface)continue;
+      this.gangwaySurfaces.set(source.id,surface);
+      const x=(surface.source.x+surface.target.x)/2,y=(surface.source.y+surface.target.y)/2;
+      if(!visible(x,y,100))continue;
+      const a=shipProfile(source)!.deckHeight,b=shipProfile(target)!.deckHeight;
+      const dx=surface.target.x-surface.source.x,dy=surface.target.y-surface.source.y;
+      this.bridgeAlong.set(dx,b-a,dy);const span=this.bridgeAlong.length();this.bridgeAlong.normalize();
+      this.bridgeAcross.set(-dy,0,dx).normalize();this.bridgeUp.crossVectors(this.bridgeAcross,this.bridgeAlong).normalize();
+      const matrix=this.pose(0,0,0).makeBasis(this.bridgeAlong,this.bridgeUp,this.bridgeAcross).setPosition(x,(a+b)/2-1,y)
+        .scale(this.transformScale.set(span,2,surface.width));
+      this.batches.add(`ship-gangway:${surface.phase}`,this.gangway,matrix,source.id,undefined,surface.phase==='deploying');
     }
     for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
@@ -193,7 +220,9 @@ export class World3DLayer {
       const ship=unit.deck&&ships.get(unit.deck.shipId);
       if(ship){
         liveCrew.add(unit.id);const parent=frame.motion?.position(ship,now)??ship,heading=frame.motion?.heading(ship,now)??ship.sailing?.heading??0;
-        const deck=this.deckPosition(unit,now),c=Math.cos(heading),s=Math.sin(heading);at={x:parent.x+deck.x*c-deck.y*s,y:parent.y+deck.x*s+deck.y*c};height=shipProfile(ship)!.deckHeight;
+        const bridge=gangwayCrewVisualPose(unit,this.shipPoses,this.gangwaySurfaces);
+        if(bridge){at=bridge;height=bridge.height;}
+        else{const deck=this.deckPosition(unit,now),c=Math.cos(heading),s=Math.sin(heading);at={x:parent.x+deck.x*c-deck.y*s,y:parent.y+deck.x*s+deck.y*c};height=shipProfile(ship)!.deckHeight;}
         const id=interactionTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
       }
@@ -201,12 +230,12 @@ export class World3DLayer {
       this.positions.set(unit.id,{x:at.x,y:at.y,bodyY,topY:bodyY-64*scale});
       if(!visible(at.x,bodyY))continue;
       const animation=frame.reducedMotion?{mode:'idle' as const,frame:0}:frame.animation?.frame(unit,now)??{mode:'idle' as const,frame:0};
-      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner)}:${animation.mode}:${animation.frame}:${facing}:${density}`;
+      const density=zoom<.65?2:4,key=`${unit.kind}:${ownerInk(unit.owner, snapshot)}:${animation.mode}:${animation.frame}:${facing}:${density}`;
       let card=this.cards.get(key);
       if(!card){
         const canvas=document.createElement('canvas');canvas.width=canvas.height=128*density;const ctx=canvas.getContext('2d')!;
         ctx.scale(density,density);ctx.translate(64,64);ctx.scale(facing,1);
-        if(!paintFigure(ctx,unit.kind,ownerInk(unit.owner),animation,facing))UNIT_CARDS[unit.kind].paint(ctx,ownerInk(unit.owner));
+        if(!paintFigure(ctx,unit.kind,ownerInk(unit.owner, snapshot),animation,facing))UNIT_CARDS[unit.kind].paint(ctx,ownerInk(unit.owner, snapshot));
         const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
         const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data,alpha=new Uint8Array(canvas.width*canvas.height);for(let i=0;i<alpha.length;i++)alpha[i]=rgba[i*4+3]!;
         texture.userData.alpha={width:canvas.width,height:canvas.height,pixels:alpha};
@@ -251,7 +280,7 @@ export class World3DLayer {
     this.templates.clear();this.bounds.clear();
     for(const card of this.cards.values()){card.texture.dispose();(card.mesh.material as THREE.Material).dispose();}this.cards.clear();this.cardPixels=0;
     for(const geometry of this.cardGeometry.values())geometry.dispose();this.cardGeometry.clear();
-    for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}
+    for(const mesh of [this.shadow,this.ball,this.bolt,this.magic,this.fire,this.flag,this.flash,this.gangway]){mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}
     this.sun.shadow.dispose();this.sun.shadow.map=this.sun.shadow.mapPass=null;this.scene.clear();
     const renderer=this.renderer;this.renderer=undefined;
     renderer?.dispose();renderer?.forceContextLoss();

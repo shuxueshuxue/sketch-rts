@@ -1,11 +1,12 @@
 import { describe,expect,it } from "vitest";
 import { aimAt,invalidateMovedAim,markAimShot } from "./aiming";
 import { UNIT_DEFS } from "./catalog";
-import { boardUnit,canBoard,deckLoad,deckPointFits,deckPlacement,moveOnDeck,restoreCargoDecks,syncDecks } from "./decks";
+import { boardUnit,canBoard,deckLoad,deckPointFits,deckPlacement,deckStaticPathExists,moveOnDeck,restoreCargoDecks,syncDecks } from "./decks";
 import { bodyMass } from "./physical-body";
 import { localToWorld,shipPassengers,shipProfile } from "./ship-geometry";
 import { createGame,issuePlayerCommand,snapshotGame,stepGame,restoreSnapshotIntoGame } from "./sim";
 import { checksumGame } from "./sim/checksum";
+import { cabinDoor } from './ship-cabin';
 
 function battle() {
   const game=createGame("bareDuel");game.units=[];
@@ -33,7 +34,7 @@ describe("physical decks",()=>{
     expect(crew.length).toBeGreaterThan(1);expect(crew.length).toBeLessThan(20);
     expect(deckLoad(game.units,ship)).toBeLessThanOrEqual(shipProfile(ship)!.loadCapacity);
     for(const unit of crew)expect(deckPointFits(ship,unit,unit.deck!,game.units)).toBe(true);
-    const golem=game.spawnUnit("player","golem",900,900);
+    const golem=game.spawnUnit("player","graniteGolem",900,900);
     expect(bodyMass(golem)).toBeGreaterThan(shipProfile(ship)!.loadCapacity);
     expect(canBoard(ship,golem,game.units)).toBe(false);
   });
@@ -53,6 +54,17 @@ describe("physical decks",()=>{
     expect(archer.order.type).toBe("hold");
     for(let i=0;i<100;i++)moveOnDeck(archer,ship,{x:5000,y:5000},game.units);
     expect(deckPointFits(ship,archer,archer.deck!,game.units)).toBe(true);
+  });
+  it('rejects a permanently sealed deck route even when its endpoint fits',()=>{
+    const {game}=battle();game.units=[];
+    const ship=game.spawnUnit('player','shipOfTheLine',900,900),large=game.spawnUnit('player','ogreLord',900,900),small=game.spawnUnit('player','footman',900,900);
+    expect(boardUnit(ship,large,game.units)).toBe(true);expect(boardUnit(ship,small,game.units)).toBe(true);
+    const largeGoal=deckPlacement(ship,large,game.units,cabinDoor(ship),false,2)!;
+    const smallGoal=deckPlacement(ship,small,game.units,cabinDoor(ship),false,2)!;
+    expect(deckPointFits(ship,large,largeGoal,game.units,false)).toBe(true);
+    expect(deckStaticPathExists(ship,large,largeGoal)).toBe(false);
+    expect(deckStaticPathExists(ship,small,smallGoal)).toBe(true);
+    expect(deckStaticPathExists(ship,small,small.deck!)).toBe(true);
   });
   it("keeps an issued deck destination attached while its hull sails and turns",()=>{
     const {game,ship,archer}=battle();boardUnit(ship,archer,game.units);syncDecks(game.units);

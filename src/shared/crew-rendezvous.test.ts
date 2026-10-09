@@ -18,7 +18,7 @@ describe('right-click crew rendezvous',()=>{
     expect(command.type).toBe('board');expect(commandValidationError(snapshotGame(game),'player',command)).toBeUndefined();
     expect(narrowFrameCommandToLiveOperands(game,'player',command)).toEqual(command);
     issuePlayerCommand(game,'player',command);
-    const before={x:target.x,y:target.y};let transferred=0;
+    const before={x:target.x,y:target.y},health=[source.hp,target.hp];let transferred=0;
     // The friendly receiver also has to turn and berth using low-speed maneuver assistance.
     for(let i=0;i<seconds(owner==='player'?100:60)&&transferred<crew.length;i++){
       stepGame(game);for(const ship of [source,target])expect(hullFits(game.map,ship)).toBe(true);
@@ -27,6 +27,7 @@ describe('right-click crew rendezvous',()=>{
       transferred=crew.filter(unit=>unit.deck?.shipId===target.id && unit.order.type==='idle' && deckPointFits(target,unit,unit.deck,game.units)).length;
     }
     expect(transferred).toBe(crew.length);expect(target.owner).toBe('player');
+    expect([source.hp,target.hp]).toEqual(health);
     if(owner==='player')expect(Math.hypot(target.x-before.x,target.y-before.y)).toBeGreaterThan(20);
     else expect({x:target.x,y:target.y}).toEqual(before);
   });

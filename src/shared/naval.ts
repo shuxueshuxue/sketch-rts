@@ -5,7 +5,7 @@ import type { Building, GameMap, Obstacle, Unit } from "./types";
 import { deckPlacement } from "./decks";
 import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
 import { nearestShipPose } from "./ship-navigation";
-import { decksTouch, shipShorePoints } from "./connected-decks";
+import { decksCanTransfer, shipShorePoints } from "./connected-decks";
 import { isInCabin } from './ship-cabin';
 
 // @@@reach - A unit fights only what it can come within its reach of from its own ground (see @@@terrain-movers): a
@@ -22,7 +22,7 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
   if (attacker.deck) {
     if ("deck" in target && target.deck?.shipId === attacker.deck.shipId) return true;
     const ship = units.find(unit => unit.id === attacker.deck!.shipId);
-    if(ship && targetDeck && decksTouch(ship,targetDeck,attacker))return true;
+    if(ship && targetDeck && decksCanTransfer(ship,targetDeck,attacker))return true;
     if(ship && !targetDeck && shipShorePoints(ship,map).some(point=>sameGround(map,point,target,"land")))return true;
     const stand = ship && deckPlacement(ship, attacker, units, worldToLocal(ship,target), false);
     const at = ship && stand ? localToWorld(ship,stand) : attacker;

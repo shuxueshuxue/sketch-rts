@@ -4,6 +4,10 @@ import { localToWorld, shipPassengers, shipProfile } from "../../shared/ship-geo
 import {combatCapability} from '../../shared/combat-capabilities';
 import {navalServices} from './naval-services';
 import {fleetStations} from './fleet-formation';
+import { fleetAttackCommand, fleetTarget } from './fleet-engagement';
+import { combatHull } from '../../shared/ship-defense';
+import { isInCabin } from '../../shared/ship-cabin';
+import { isTransportKind } from '../../shared/transport-role';
 import { clearTransferLanes } from './transfer-lanes';
 import { convoyCanCarry } from './convoy-load';
 import { headingDifference, nearestShipPose } from "../../shared/ship-navigation";
@@ -31,7 +35,7 @@ import { engagementTargets } from "./engagements";
 import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
-function ferryCapacity(unit:Unit){return unit.kind==="transport" || unit.kind==="carrier" ? carries(unit) : 0;}
+function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
 
 type Point = {
     x: number;
@@ -217,7 +221,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
         };
     }
     const fleet = units(snapshot, owner);
-    const armed = fleet.filter(unit => unitMover(unit.kind) === "sea" && combatCapability(snapshot,unit).armed && sameGround(snapshot.map, unit, water, "sea"));
+    const armed = fleet.filter(unit => combatHull(unit) && combatCapability(snapshot,unit).armed && sameGround(snapshot.map, unit, water, "sea"));
     const warships = armed.length;
     // A transport on other water serves nothing here (one from an island's ferry sat on its own lake through an assault).
     const transported = fleet.some((unit) => ferryCapacity(unit) > 0 && sameGround(snapshot.map, unit, water, "sea"));
@@ -303,10 +307,12 @@ function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const theirs = snapshot.units.filter((unit) => afloat(unit) && distance(unit, water) < HOME_WATERS && isEnemyOwner(snapshot, owner, unit.owner, options));
     if (theirs.length === 0)
         return false;
-    const ours = fleet.filter(afloat);
+    const ours = fleet.filter(unit => combatHull(unit) && afloat(unit));
     // The escort must exist before a ferry crosses. Future purchases cannot
     // contribute fighting power to the current blockade decision.
-    return navalStrength(snapshot,theirs) * attackMargin(options) > navalStrength(snapshot,ours) + strengthOf(ours.flatMap(ship => shipPassengers(snapshot.units, ship)));
+    const crew=ours.flatMap(ship => shipPassengers(snapshot.units,ship))
+        .filter(unit=>unit.hp>0 && !isInCabin(unit) && !isEnemyOwner(snapshot,owner,unit.owner,options));
+    return navalStrength(snapshot,theirs) * attackMargin(options) > navalStrength(snapshot,ours) + strengthOf(crew);
 }
 // The shared library's economy script: the water's next want, when the gold is there.
 export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand | undefined {
@@ -326,7 +332,8 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     const harbor = buildings(snapshot, owner).find(building => building.kind === "shipyard");
     const foes = [...snapshot.units, ...snapshot.buildings].filter(target => isEnemyOwner(snapshot, owner, target.owner, options));
     const convoy = own.filter(unit => ferryCapacity(unit) > 0 && shipPassengers(snapshot.units,unit).length);
-    const fighters=own.filter(unit=>shipProfile(unit)&&combatCapability(snapshot,unit).armed&&!services.reserved.has(unit.id)&&unit.id!==outfit?.shipId);
+    const fighters=own.filter(unit=>combatHull(unit)&&combatCapability(snapshot,unit).armed&&!services.reserved.has(unit.id)&&unit.id!==outfit?.shipId&&!navalMemory(options).ferries?.[unit.id]);
+    for (const id of Object.keys(navalMemory(options).combat ?? {})) if (!fighters.some(ship => ship.id === id)) delete navalMemory(options).combat![id];
     const escortShips = fighters.filter(unit => unit.kind !== "bombardShip");
     const escorts = new Map<string, Unit>();
     // Assign each gun to the least protected nearby loaded ferry instead of sending the whole fleet after a coastal farm.
@@ -345,7 +352,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
         // Recruit only near home in safe water, retaining a land guard. Healing
         // and ranged fire on deck use the same orders/autocast as on land.
         if (harbor && safe && distance(ship, harbor) < 650 && aboard.length + waiting.length < 2) {
-            const candidates = own.filter(unit => !unit.deck && !assigned.has(unit.id) && unit.order.type !== "board"
+            const candidates = own.filter(unit => !unit.deck && !isInCabin(unit) && !assigned.has(unit.id) && unit.order.type !== "board"
                 && (unit.order.type === "idle" || unit.order.type === "hold") && unitMover(unit.kind) === "land"
                 && unit.kind !== "worker" && !unit.expiresTick && distance(unit, harbor) < 600);
             const reserve = own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && unit.order.type !== "board").length - 2;
@@ -377,12 +384,16 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
             : stations.get(ship.id) ?? fleetGoal ?? home;
         const attackers = boat ? danger.filter(target => "order" in target && (distance(target, boat) < combatCapability(snapshot,target).range + 160 || target.order.type === "attack" && target.order.targetId === boat.id)) : [];
         const gathering=stations.has(ship.id)&&!navalMemory(options).muster?.launched;
-        const target = nearestOf(attackers, boat ?? ship) ?? nearestOf(danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700)), ship) ?? (!gathering && (!boat || station && distance(ship,station)<250) ? targets.filter(target=>!boat || station && distance(target,station)<450)[0] : undefined);
+        const threats = danger.filter(target => "order" in target && unitMover(target.kind) === "sea" && (!gathering || distance(ship,target)<combatCapability(snapshot,ship).range+100) && (!boat || distance(target,boat)<700 || station && distance(target,station)<700));
+        const candidates = attackers.length ? attackers : threats.length ? threats : !gathering && (!boat || station && distance(ship,station)<250) ? targets.filter(target=>!boat || station && distance(target,station)<450) : [];
+        const target = fleetTarget(ship, candidates, navalMemory(options));
         // The planner chooses the engagement area; mechanical attack-move
         // chooses and revises threats between planning frames. A player's
         // explicit attack command continues to retain its chosen target.
-        if (target && (ship.order.type !== "attackMove" || distance(ship.order,target)>80))
-            commands.push({ type: "attackMove", unitIds: [ship.id], x:target.x, y:target.y });
+        if (target) {
+            const command = fleetAttackCommand(ship, target, navalMemory(options));
+            if (command) commands.push(command);
+        }
         else if (!target) {
             // A convoy follows a formation beside the ferry, never its center.
             // Continuing an old move to the ferry's center jammed the decks
@@ -428,7 +439,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
         commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault));
-    for (const worker of own.filter(unit => unit.deck && unit.kind === "worker" && unit.order.type === "idle")) {
+    for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
             commands.push({ type: "repairShip", unitIds: [worker.id], targetId: hull.id });

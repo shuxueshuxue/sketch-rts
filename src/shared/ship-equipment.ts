@@ -10,7 +10,12 @@ import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
 import { ballisticTarget, firingBoundaryHeadings, targetSailingVelocity } from './ship-fire-control';
-export const SHIP_HULL_COST = { cutter: 120, transport: 160, warship: 170, bombardShip: 240, fireShip: 190, carrier: 280, shipOfTheLine: 520 } as const;
+import geometry from './generated/ship-geometry.json';
+// Complete trained ships cost about 40% more, rounded to 20 gold; troop hulls
+// cost 50% more for their larger compartment. Included guns retain item prices.
+export const SHIP_HULL_COST = { cutter: 160, transport: 240, warship: 320, bombardShip: 470, fireShip: 340, carrier: 420, shipOfTheLine: 1080 } as const;
+/** Prices paid by unfinished jobs in saves written before paidGold was recorded. */
+export const PREVIOUS_SHIP_TRAIN_COST = { cutter:120, transport:160, warship:390, bombardShip:570, fireShip:370, carrier:280, shipOfTheLine:1400 } as const;
 export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     cost: number;
     mass: number;
@@ -121,7 +126,11 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
             // Rotating a bow pivot changes the exact flight duration. Refine
             // its firing boundary against that mount's own predicted target.
             if(moving && !canFire(at,item))for(let step=0;step<6;step++){
-                const next=boundaries(at).sort((a,b)=>Math.abs(headingDifference(at,a))-Math.abs(headingDifference(at,b)))[0];
+                let next:number|undefined,nearest=Infinity;
+                for(const boundary of boundaries(at)){
+                    const turn=Math.abs(headingDifference(at,boundary));
+                    if(turn<nearest){nearest=turn;next=boundary;}
+                }
                 if(next===undefined)break;
                 const difference=headingDifference(at,next);at+=difference;
                 if(Math.abs(difference)<1e-10)break;
@@ -172,11 +181,12 @@ export function mountedWeaponPose(ship: Unit, item: WorldItem) {
     const mount = shipMounts(ship).find(mount => mount.id === item.mountId);
     if (!mount || !isShipEquipment(item.kind))
         return undefined;
-    const def = SHIP_WEAPONS[item.kind], p = shipProfile(ship)!, pivot = localToWorld(ship, mount), axis = (ship.sailing?.heading ?? 0) + mount.bearing, heading = axis + Math.max(-mount.halfArc, Math.min(mount.halfArc, headingDifference(axis, item.facing ?? axis)));
+    const def = SHIP_WEAPONS[item.kind], p = shipProfile(ship)!, scale = shipScale(ship), pivot = localToWorld(ship, mount), axis = (ship.sailing?.heading ?? 0) + mount.bearing, heading = axis + Math.max(-mount.halfArc, Math.min(mount.halfArc, headingDifference(axis, item.facing ?? axis)));
     const native = item.mountId === 'bow' && def.art === ship.kind && p.weaponPivot && p.weaponMount;
-    const height = native ? p.weaponMount![2]! : p.deckHeight + 9;
-    const reach = native ? p.weaponMount![0]! - p.weaponPivot![0]! : item.kind === 'shipMortar' ? 8 : 26;
-    return { pivot, pivotHeight: native ? p.weaponPivot![2]! : p.deckHeight + 2, heading, muzzle: { x: pivot.x + detCos(heading) * reach, y: pivot.y + detSin(heading) * reach }, height, art: def.art };
+    const model = geometry.ships[def.art], pivotHeight = native ? p.weaponPivot![2]! : p.deckHeight + 2 * scale;
+    const height = native ? p.weaponMount![2]! : pivotHeight + (model.weaponMount[2]! - model.weaponPivot[2]!) * scale;
+    const reach = native ? p.weaponMount![0]! - p.weaponPivot![0]! : (model.weaponMount[0]! - model.weaponPivot[0]!) * scale;
+    return { pivot, pivotHeight, heading, muzzle: { x: pivot.x + detCos(heading) * reach, y: pivot.y + detSin(heading) * reach }, height, art: def.art };
 }
 /** Heading selection, aiming and launch share one predicted physical body. */
 export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, item: WorldItem, target: StrikeTarget, pose=mountedWeaponPose(ship,item)!) {

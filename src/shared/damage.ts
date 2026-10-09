@@ -4,6 +4,7 @@ import { attackDamageProfile, type DamageFilter, type DamageProfile } from "./da
 import { unitRules } from "./catalog";
 import { SHOCK_DAMAGE_TAKEN } from "./push";
 import type { GameSnapshot, Unit } from "./types";
+import { isTransportKind, TRANSPORT_COMBAT } from './transport-role';
 
 export { resolveDamage, reductionForGroup, DAMAGE_REDUCTION_RULES, HEAVY_ARMOR_DAMAGE } from "./damage-reduction";
 export type { DamageReductionGroup, DamageReductionSource, DamageResolution } from "./damage-reduction";
@@ -28,6 +29,12 @@ export function armorDamageProtection(armor: "heavy" | undefined): DamageReducti
     { group: "armor", amount: 1 - HEAVY_ARMOR_DAMAGE.rangedUnit, filter: { delivery: "ranged", origin: "unit" } },
     { group: "armor", amount: 1 - HEAVY_ARMOR_DAMAGE.tower, filter: { delivery: "ranged", origin: "tower" } },
   ] : [];
+}
+
+/** Hull ranged protection and authored heavy armor share one strongest-value
+ * group. A campaign armor upgrade remains effective without multiplying both. */
+export function rangedDamageProtection(damageTaken: number | undefined): DamageReductionSource[] {
+  return damageTaken === undefined ? [] : [{ group: 'armor', amount: 1 - damageTaken, filter: { delivery: 'ranged', origin: ['unit', 'tower'] } }];
 }
 
 /** Actual wielded gear determines damage type even when another troop carries it. */
@@ -57,10 +64,11 @@ export function statusDamageProtection(effects: readonly ProtectionEffect[]): {
 /** Common protection for weapon, spell, damage-over-time and scripted hits. */
 export function resolveUnitDamage(snapshot: Pick<GameSnapshot, "items" | "variants">, target: Unit, damage: number, profile: DamageProfile, extraSources: readonly DamageReductionSource[] = [], context: DamageResolutionContext = {}) {
   const status = statusDamageProtection(target.effects);
+  const rules = unitRules(snapshot, target);
   return resolveDamage(damage, {
     profile,
     reductions: [
-      ...(context.armorAlreadyApplied ? [] : armorDamageProtection(unitRules(snapshot, target).armor)),
+      ...(context.armorAlreadyApplied ? [] : [...armorDamageProtection(rules.armor), ...rangedDamageProtection(rules.rangedDamageTaken ?? (isTransportKind(target.kind) ? TRANSPORT_COMBAT.rangedDamageTaken : undefined))]),
       { group: "equipment", amount: equipmentProtection(snapshot, target), filter: { school: "physical" } },
       ...status.reductions,
       ...extraSources,

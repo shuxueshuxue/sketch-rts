@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { boardUnit, deckLoad, deckPlacement, deckPointFits, syncDecks } from './decks';
+import { boardUnit, deckLoad, deckPlacement, deckPointFits, deckStaticPathExists, syncDecks } from './decks';
 import { createUnit } from './map';
 import { createRoom } from './rooms';
 import { createSaveGameRecord, restoreGameFromSave } from './savegame';
-import { cabinDoor, cabinExitPoint, canEnterCabin, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, shipCabinCapacity, updateCabinPassengers } from './ship-cabin';
+import { cabinDoor, cabinEntryRefusal, cabinExitPoint, canEnterCabin, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, shipCabinCapacity, updateCabinPassengers } from './ship-cabin';
 import { localToWorld, shipPassengers, shipProfile } from './ship-geometry';
 import { installedWeapons, rebuildShipFittings, shipMounts, SHIP_WEAPONS } from './ship-equipment';
 import { perTick } from './time';
@@ -46,6 +46,60 @@ function fullBattery(game:ReturnType<typeof sea>,ship:Unit) {
 }
 
 describe('real cabin shelter and evacuation',()=>{
+  it('rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back',()=>{
+    const game=sea(),ship=game.spawnUnit('player','transport',1500,1500),target=game.spawnUnit('player','transport',1500,1900);
+    ship.sailing!.heading=target.sailing!.heading=0;
+    target.y=ship.y+(shipProfile(ship)!.beam+shipProfile(target)!.beam)/2+12;
+    for(const hull of [ship,target])hull.order={type:'hold',x:hull.x,y:hull.y};
+    const unit=crew(game,ship,'footman');expect(canEnterCabin(game,unit)).toBe(true);
+    issuePlayerCommand(game,'player',{type:'boardShip',unitIds:[ship.id],targetId:target.id});
+    for(let tick=0;tick<100&&ship.sailing?.gangway?.phase!=='ready';tick++)stepGame(game);
+    expect(ship.sailing?.gangway?.phase).toBe('ready');
+    issuePlayerCommand(game,'player',{type:'board',unitIds:[unit.id],transportId:target.id});
+    for(let tick=0;tick<400&&(!unit.gangway||unit.gangway.t<.25);tick++)stepGame(game);
+    expect(unit.gangway).toBeDefined();expect(deckPointFits(ship,unit,unit.deck!,[],false)).toBe(false);
+    const room={...createRoom({id:'cabin-crossing',host:{id:'host',name:'Host'},mapId:'bareDuel'}),status:'inMatch' as const};
+    const saved=JSON.parse(JSON.stringify(createSaveGameRecord(game,room,{id:'cabin-crossing'}))), original=JSON.stringify(saved);
+    const restored=restoreGameFromSave(saved), copy=restored.units.find(other=>other.id===unit.id)!, copyShip=restored.units.find(other=>other.id===ship.id)!;
+    restored.scriptedVictory=true;
+    expect(checksumGame(restored)).toBe(checksumGame(game));
+    const enter:GameCommand={type:'enterCabin',unitIds:[unit.id]};
+    for(const [world,passenger,hull]of [[game,unit,ship],[restored,copy,copyShip]]as const) {
+      expect(cabinEntryRefusal(world,passenger)).toBe('crossing');expect(canEnterCabin(world,passenger)).toBe(false);
+      expect(commandValidationError(world,'player',enter)).toMatch(/cabin/i);
+      expect(()=>issuePlayerCommand(world,'player',enter)).toThrow(/cabin/i);
+      const position={x:passenger.x,y:passenger.y};
+      // An already saved entry order must also stop instead of waiting forever in the water gap.
+      passenger.order={type:'enterCabin',shipId:hull.id};enterCabinStep(world,passenger);
+      expect(passenger.order.type).toBe('idle');expect(passenger).toMatchObject(position);expect(passenger.gangway).toBeDefined();
+    }
+    const goal=localToWorld(ship,cabinExitPoint(game,ship,unit)!);
+    for(const world of [game,restored])issuePlayerCommand(world,'player',{type:'move',unitIds:[unit.id],...goal,avoidCombat:true});
+    for(let tick=0;tick<300&&(unit.gangway||!deckPointFits(ship,unit,unit.deck!,[],false));tick++) {
+      const before={x:unit.x,y:unit.y};stepGame(game);stepGame(restored);
+      expect(Math.hypot(unit.x-before.x,unit.y-before.y)).toBeLessThanOrEqual(perTick(unit.speed)+1e-6);
+      expect(checksumGame(restored)).toBe(checksumGame(game));
+    }
+    expect(unit.gangway).toBeUndefined();expect(unit.deck?.shipId).toBe(ship.id);expect(deckPointFits(ship,unit,unit.deck!,[],false)).toBe(true);
+    expect(canEnterCabin(game,unit)).toBe(true);expect(canEnterCabin(restored,copy)).toBe(true);
+    for(const world of [game,restored])issuePlayerCommand(world,'player',enter);
+    for(let tick=0;tick<300&&!isInCabin(unit);tick++){stepGame(game);stepGame(restored);expect(checksumGame(restored)).toBe(checksumGame(game));}
+    expect(isInCabin(unit)&&isInCabin(copy)).toBe(true);expect(JSON.stringify(saved)).toBe(original);
+  });
+
+  it('rechecks a positive cabin cache when the same hull receives crew in a disconnected deck region',()=>{
+    const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1500,1500),unit=crew(game,ship,'ogreLord');
+    const aft={...unit.deck!}, profile=shipProfile(ship)!, door=cabinExitPoint(game,ship,unit)!;
+    expect(door).toBeDefined();expect(deckPointFits(ship,unit,aft,[],false)).toBe(true);
+    expect(deckStaticPathExists(ship,unit,door)).toBe(false);
+    unit.deck={shipId:ship.id,...door};Object.assign(unit,localToWorld(ship,door));
+    expect(canEnterCabin(game,unit)).toBe(true);
+    // Connected-surface transfer can reattach a body to a different region of the same unchanged hull.
+    unit.deck=aft;Object.assign(unit,localToWorld(ship,aft));
+    expect(shipProfile(ship)).toBe(profile);expect(deckPointFits(ship,unit,aft,[],false)).toBe(true);
+    expect(cabinEntryRefusal(game,unit)).toBe('door');expect(canEnterCabin(game,unit)).toBe(false);
+  });
+
   it('lets an idle default-boarded companion walk aside while a priest reaches the cabin on a moving eight-gun ship',()=>{
     const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1600,1600);fullBattery(game,ship);
     const priest=game.spawnUnit('player','priest',ship.x,ship.y),footman=game.spawnUnit('player','footman',ship.x,ship.y);
@@ -66,10 +120,10 @@ describe('real cabin shelter and evacuation',()=>{
     expect(footman.order).toEqual({type:'idle'});expect(footman.deck).not.toEqual(initialFootman);
     expect(Math.hypot(ship.x-shipStart.x,ship.y-shipStart.y)).toBeGreaterThan(1);
   });
-  it.each(['default landing','foredeck'] as const)('queues all six crew from $0 under one command without clipping their bodies or spending twice their movement allowance',location=>{
+  it.each(['default landing','foredeck'] as const)('queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance',location=>{
     const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1600,1600);fullBattery(game,ship);
     const people:Unit[]=[];
-    for(const kind of ['footman','priest','footman','priest','footman','priest'] as const){
+    for(const kind of ['footman','priest','footman','priest'] as const){
       const unit=game.spawnUnit('player',kind,ship.x,ship.y);expect(boardUnit(ship,unit,game.units)).toBe(true);
       if(location==='foredeck'){
         const point=deckPlacement(ship,unit,game.units,{x:shipProfile(ship)!.length*.3,y:0},true,2)!;
@@ -113,7 +167,7 @@ describe('real cabin shelter and evacuation',()=>{
     issuePlayerCommand(game,'player',{type:'leaveCabin',unitIds:[unit.id]});
     expect(deckPointFits(ship,unit,unit.deck!,game.units)).toBe(true);
   });
-  it('walks six crew from the foredeck through a fully fitted eight-gun battery to its real cabin door',()=>{
+  it('walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door',()=>{
     const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1600,1600);
     const before=shipProfile(ship)!;
     for(const mount of shipMounts(ship)) if(!installedWeapons(game,ship).some(item=>item.mountId===mount.id)) game.items.push({
@@ -124,7 +178,7 @@ describe('real cabin shelter and evacuation',()=>{
     expect(shipProfile(ship)).not.toBe(before);
     expect(shipProfile(ship)!.obstacles.filter(obstacle=>obstacle.type==='weapon')).toHaveLength(8);
     const occupants:Unit[]=[];
-    for(const kind of ['footman','priest','footman','priest','footman','priest'] as const){
+    for(const kind of ['footman','priest','footman','priest'] as const){
       const unit=crew(game,ship,kind),point=deckPlacement(ship,unit,game.units,{x:shipProfile(ship)!.length*.3,y:0},true,2)!;
       expect(point).toBeDefined();expect(point.x).toBeGreaterThan(shipProfile(ship)!.length*.15);
       unit.deck={shipId:ship.id,...point};Object.assign(unit,localToWorld(ship,point));
@@ -139,7 +193,7 @@ describe('real cabin shelter and evacuation',()=>{
       const door=cabinDoor(ship)!;expect(Math.hypot(unit.deck!.x-door.x,unit.deck!.y-door.y)).toBeLessThanOrEqual(unit.radius*2+6);
       occupants.push(unit);
     }
-    expect(occupants).toHaveLength(6);
+    expect(occupants).toHaveLength(4);
     for(const unit of occupants){
       issuePlayerCommand(game,'player',{type:'leaveCabin',unitIds:[unit.id]});
       expect(isInCabin(unit)).toBe(false);expect(deckPointFits(ship,unit,unit.deck!,game.units)).toBe(true);
@@ -148,11 +202,11 @@ describe('real cabin shelter and evacuation',()=>{
     }
     expect(installedWeapons(game,ship)).toHaveLength(8);
   });
-  it('gives the heavy broadside hull six usable sheltered crew places without changing its batteries',()=>{
+  it('gives the heavy broadside hull four usable sheltered infantry places without changing its batteries',()=>{
     const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1600,1600),guns=installedWeapons(game,ship).map(item=>item.id);
-    expect(shipCabinCapacity(ship)).toBe(6);
+    expect(shipCabinCapacity(ship)).toBe(8);
     const occupants:Unit[]=[];
-    for(let i=0;i<6;i++){const unit=crew(game,ship,'footman');shelter(game,ship,unit);occupants.push(unit);}
+    for(let i=0;i<4;i++){const unit=crew(game,ship,'footman');shelter(game,ship,unit);occupants.push(unit);}
     const waiting=crew(game,ship,'priest');expect(canEnterCabin(game,waiting)).toBe(false);
     expect(occupants.every(unit=>isCabinProtected(game,unit))).toBe(true);
     expect(installedWeapons(game,ship).map(item=>item.id)).toEqual(guns);
@@ -175,10 +229,10 @@ describe('real cabin shelter and evacuation',()=>{
     expect(deckLoad(game.units,ship)).toBe(load);
   });
   it('rejects full, absent, hostile, mounted and oversized cabin access without spending or teleporting',()=>{
-    const game=sea(),ship=game.spawnUnit('player','transport',1600,1600),a=crew(game,ship),b=crew(game,ship),c=crew(game,ship);
-    shelter(game,ship,a);shelter(game,ship,b);
+    const game=sea(),ship=game.spawnUnit('player','fireShip',1600,1600),a=crew(game,ship);shelter(game,ship,a);
+    const b=crew(game,ship,'worker');shelter(game,ship,b);const c=crew(game,ship);
     const gold=game.players.player!.gold,point={...c.deck!};
-    expect(shipCabinCapacity(ship)).toBe(2);expect(canEnterCabin(game,c)).toBe(false);
+    expect(shipCabinCapacity(ship)).toBe(3);expect(canEnterCabin(game,c)).toBe(false);
     expect(()=>issuePlayerCommand(game,'player',{type:'enterCabin',unitIds:[c.id]})).toThrow(/available cabin/);
     expect(c.deck).toEqual(point);expect(game.players.player!.gold).toBe(gold);
     const cutter=game.spawnUnit('player','cutter',2100,1600),small=crew(game,cutter,'worker');

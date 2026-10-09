@@ -1,5 +1,6 @@
 import type { Building, BuildingKind, GameSnapshot, MercenaryCamp, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../../shared/types";
 import { createRangeIndex } from "./range-index";
+import { bindGangwayCrewRules } from '../../shared/ship-gangway';
 
 export type SnapshotQueryOptions = {
   /** Preset policies treat service weapons as equipment rather than treasure. */
@@ -80,6 +81,7 @@ export type SnapshotQuery = {
 // neutral units alone, and opponents or hostiles near a point from a range index of that owner's opponents or hostiles
 // (@@@range-index). Each answers what the scan answered, in the same order.
 export function createSnapshotQuery(snapshot: GameSnapshot, options: SnapshotQueryOptions = {}): SnapshotQuery {
+  bindGangwayCrewRules(snapshot.units,snapshot);
   const teamFor = (owner: Owner) => (owner === "neutral" ? "neutral" : options.teams?.[owner] ?? owner);
   const isOpponent = (owner: PlayerId, other: Owner) => other !== "neutral" && teamFor(owner) !== teamFor(other);
   const visibleItems=options.excludeIssuedWeapons ? snapshot.items.filter(item=>item.kind!=="issuedWeapon") : snapshot.items;
