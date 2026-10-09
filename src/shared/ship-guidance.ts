@@ -93,7 +93,10 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     const start={x:ship.x,y:ship.y,heading:motion.heading},turned={...start,heading:direct};
     if(hullPassageClear(map,ship,start,turned) && hullPassageClear(map,ship,turned,{...first,heading:direct})){
       route.legX=ship.x;route.legY=ship.y;
-      if(first.curvature===0)first.heading=direct;
+      // Route endpoints may share the last waypoint until a JSON save copies
+      // them. Replace the tangent without mutating that shared endpoint so
+      // continuing a saved voyage uses the same state as uninterrupted play.
+      if(first.curvature===0)points[0]={...first,heading:direct};
       distance=Math.min(lookahead,Math.hypot(first.x-ship.x,first.y-ship.y));
       cx=distance*detCos(direct);cy=distance*detSin(direct);avoidance.heading=direct;
     }
@@ -188,12 +191,17 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
     // A brief slow-down can let a crossing vessel pass without throwing away
     // the strategic route. Replanning, if needed, is scheduled by the navigator.
     let found=false;
+    // Headway can only brake at the hull's actual deceleration. A sudden
+    // obstruction inside that distance must reach the physical contact sweep.
+    const minimumSpeed=Math.max(0,motion.speed-acceleration);
     for(const factor of [.6,.25,0]){
+      if(speed*factor<minimumSpeed-1e-7)continue;
       const step=surge*factor,turn=yaw*factor;
       if(!safe(step,turn))continue;
       surge=step;yaw=turn;speed*=factor;yawRate*=factor;found=true;break;
     }
-    if(!found || Math.abs(surge)<1e-5 && Math.abs(yaw)<1e-7){motion.speed=0;motion.yawRate=0;return false;}
+    if(!found){speed=minimumSpeed;surge=perTick(speed)*direction;}
+    if(Math.abs(surge)<1e-5 && Math.abs(yaw)<1e-7){motion.speed=0;motion.yawRate=0;return false;}
   }
   if(!advanceShip(ship,map,units,{surge,yaw})){motion.speed=0;motion.yawRate=0;return false;}
   motion.speed=speed;motion.yawRate=yawRate;

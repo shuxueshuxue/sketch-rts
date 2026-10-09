@@ -118,6 +118,24 @@ describe('forward voyage planning',()=>{
     expectSwept(map,ship,route.points);
   });
 
+  it('chooses the same westward bend for physically equivalent wrapped headings',()=>{
+    const map=water(),ship=vessel('warship',Math.atan2(200,-1000));
+    ship.sailing!.speed=45;
+    const corner={x:3000,y:5200},next={x:1800,y:4900};
+    const ordinary=roundVoyageCorner(map,ship,pose(ship),corner,next);
+    ship.sailing!.heading+=2*Math.PI;
+    const wrapped=roundVoyageCorner(map,ship,pose(ship),corner,next);
+    expect(ordinary).toBeDefined();expect(wrapped).toHaveLength(ordinary!.length);
+    ordinary!.forEach((point,index)=>{
+      const equivalent=wrapped![index]!;
+      expect(equivalent.x).toBeCloseTo(point.x,6);expect(equivalent.y).toBeCloseTo(point.y,6);
+      expect(headingDifference(point.heading,equivalent.heading)).toBeCloseTo(0,7);
+      if(point.speedLimit===undefined)expect(equivalent.speedLimit).toBeUndefined();
+      else expect(equivalent.speedLimit).toBeCloseTo(point.speedLimit,6);
+    });
+    expectSwept(map,ship,wrapped!);
+  });
+
   it('keeps damaged-rudder radius finite and never emits invalid coordinates',()=>{
     const map=water(),ship=vessel();ship.shipParts={...shipPartMax(ship),rudder:0};
     expect(Number.isFinite(voyageTurnRadius(ship))).toBe(true);

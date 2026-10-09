@@ -1,6 +1,9 @@
 import { unitMover } from './catalog';
-import { deckPlacement, moveOnDeck } from './decks';
-import { bodyMass } from './physical-body';
+import { deckPlacement, deckPointFits, deckStaticPathExists, moveOnDeck } from './decks';
+import { capsuleClearsCircles, diskInConvex } from './navigation-math';
+import { GANGWAY_MAX_RADIUS } from './ship-gangway';
+import { cabinSpaceRequired, shipCabinCapacity, shipCabinUsage } from './ship-cabin-quota';
+export { cabinSpaceRequired, shipCabinCapacity, shipCabinUsage } from './ship-cabin-quota';
 import { localToWorld, shipPassengers, shipProfile, type Point } from './ship-geometry';
 import { unitClassOf } from './unit-targeting';
 import type { GameSnapshot, Unit } from './types';
@@ -15,14 +18,13 @@ function cabinFrame(snapshot:CabinSnapshot) {
 }
 /** Courtesy walking consumes the same movement allowance as the crew member's own order. */
 export function cabinCrewMovedThisTick(snapshot:CabinSnapshot,unit:Unit):boolean { return cabinFrame(snapshot)?.moved.has(unit.id) ?? false; }
-const CAPACITY: Partial<Record<Unit['kind'], number>> = { transport:2, warship:2, bombardShip:2, fireShip:1, carrier:4, shipOfTheLine:6 };
 const NON_WALKING_CREW = new Set<Unit['kind']>(['knight','raider','horseArcher','spirit','ancientStag','dragonWhelp','redDragon','mossGnawer','stonebackBrute','deepSnapper','spiderling','venomSpider','spiderQueen']);
 const compareIds=(a:Unit,b:Unit)=>a.id<b.id?-1:a.id>b.id?1:0;
+const cabinRoutes = new WeakMap<Unit, { profile:NonNullable<ReturnType<typeof shipProfile>>; radius:number; shipId:string; x:number; y:number; reachable:boolean }>();
 
 export function isInCabin(unit: Pick<Unit, 'deck' | 'cabin'>): boolean {
   return !!unit.cabin && unit.cabin.shipId === unit.deck?.shipId;
 }
-export function shipCabinCapacity(ship: Unit): number { return CAPACITY[ship.kind] ?? 0; }
 function enemies(snapshot: CabinSnapshot, a: Unit['owner'], b: Unit['owner']) {
   return a !== b && (a === 'neutral' || b === 'neutral' || (snapshot.teams?.[a] ?? a) !== (snapshot.teams?.[b] ?? b));
 }
@@ -50,20 +52,70 @@ export function cabinExitPoint(snapshot: CabinSnapshot, ship: Unit, unit: Unit):
   return point && Math.hypot(point.x-door.x,point.y-door.y) <= unit.radius*2+6 ? point : undefined;
 }
 export function isCabinCrew(snapshot: Partial<Pick<GameSnapshot,'variants'>>, unit: Unit): boolean {
-  return unitMover(unit.kind) === 'land' && unitClassOf(unit,snapshot) === 'nonMechanical' && bodyMass({...unit,gearMass:0}) <= 180
-    && (unit.bodyRadius ?? unit.radius) <= 20 && !NON_WALKING_CREW.has(unit.kind);
+  return unitMover(unit.kind) === 'land' && unitClassOf(unit,snapshot) === 'nonMechanical' && !NON_WALKING_CREW.has(unit.kind);
+}
+/** A valid hatch endpoint alone does not connect the aft and foredeck. Fixed
+ * batteries may separate them for a larger body. Crew can yield, so this test
+ * ignores their temporary positions and uses only the current scaled fittings.
+ * Reuse a successful route only while the current body fits this hull's deck
+ * and a static-clear segment connects it to the previously proven start.
+ * Connected surface walking may otherwise enter a different floor component.
+ */
+function cabinRouteExists(snapshot:CabinSnapshot,ship:Unit,unit:Unit):boolean {
+  const profile=shipProfile(ship), start=unit.deck;
+  if(!profile || !start || start.shipId!==ship.id || unit.gangway || !deckPointFits(ship,unit,start,snapshot.units,false))return false;
+  const cached=cabinRoutes.get(unit);
+  if(cached?.profile===profile && cached.radius===unit.radius && cached.shipId===ship.id) {
+    if(cached.x===start.x && cached.y===start.y)return cached.reachable;
+    if(cached.reachable && capsuleClearsCircles(start,cached,unit.radius+1,profile.obstacles))return true;
+  }
+  const point=cabinExitPoint({...snapshot,units:[ship,unit]},ship,unit);
+  const reachable=!!point && deckStaticPathExists(ship,unit,point);
+  cabinRoutes.set(unit,{profile,radius:unit.radius,shipId:ship.id,x:start.x,y:start.y,reachable});
+  return reachable;
 }
 export function canEnterCabin(snapshot: CabinSnapshot, unit: Unit, ship = snapshot.units.find(ship => ship.id === unit.deck?.shipId)): boolean {
-  if (!cabinEntryAllowed(snapshot,unit,ship)) return false;
-  if (cabinExitPoint(snapshot,ship!,unit)) return true;
+  return cabinEntryRefusal(snapshot,unit,ship) === undefined;
+}
+export type CabinEntryRefusal = 'unavailable' | 'unsupported' | 'capacity' | 'door' | 'crossing';
+export function cabinEntryRefusal(snapshot: CabinSnapshot, unit: Unit, ship = snapshot.units.find(ship => ship.id === unit.deck?.shipId)): CabinEntryRefusal | undefined {
+  if(unit.gangway)return 'crossing';
+  const profile=ship && shipProfile(ship);
+  if(profile && unit.radius<=GANGWAY_MAX_RADIUS && unit.deck?.shipId===ship!.id && !isInCabin(unit)
+    && !diskInConvex(unit.deck,unit.radius+1,profile.deck)) {
+    const connectedPassage=ship?.sailing?.gangway?.phase==='ready' || snapshot.units.some(source=>source.sailing?.gangway?.phase==='ready' && source.sailing.gangway.targetId===ship!.id);
+    if(connectedPassage)return 'crossing';
+  }
+  if (!ship || unit.hp <= 0 || isInCabin(unit) || unit.deck?.shipId !== ship.id || enemies(snapshot,ship.owner,unit.owner) || !isCabinCrew(snapshot,unit)) return 'unsupported';
+  if (!cabinAvailable(snapshot,ship) || !cabinDoor(ship)) return 'unavailable';
+  if (shipCabinUsage(snapshot,ship).used + cabinSpaceRequired(snapshot,unit) > shipCabinCapacity(ship)) return 'capacity';
+  if (!cabinRouteExists(snapshot,ship,unit)) return 'door';
+  if (cabinExitPoint(snapshot,ship,unit)) return undefined;
   // Idle companions and crew already waiting for this hatch can walk aside. Their
   // temporary presence must not discard a later member of the same group order.
-  return !!cabinExitPoint({...snapshot,units:snapshot.units.filter(other=>!canYieldCabinApproach(snapshot,unit,other))},ship!,unit);
+  return cabinExitPoint({...snapshot,units:snapshot.units.filter(other=>!canYieldCabinApproach(snapshot,unit,other))},ship,unit) ? undefined : 'door';
+}
+/** A group shares its hull's remaining budget in command order. Different
+ * hulls reserve independently, and an oversized first choice cannot block a
+ * later smaller companion that actually fits. */
+export function cabinGroupSelection(snapshot: CabinSnapshot, units: readonly Unit[]): string[] {
+  const free = new Map<string, number>(), selected: string[] = [], seen = new Set<string>();
+  for (const unit of units) {
+    if (seen.has(unit.id)) continue;
+    seen.add(unit.id);
+    const ship = snapshot.units.find(ship => ship.id === unit.deck?.shipId);
+    if (!ship || !canEnterCabin(snapshot,unit,ship)) continue;
+    const available = free.get(ship.id) ?? shipCabinUsage(snapshot,ship).free, required = cabinSpaceRequired(snapshot,unit);
+    if (required > available) continue;
+    free.set(ship.id,available-required); selected.push(unit.id);
+  }
+  return selected;
 }
 function cabinEntryAllowed(snapshot: CabinSnapshot, unit: Unit, ship:Unit|undefined): boolean {
   return !!ship && unit.hp > 0 && !isInCabin(unit) && unit.deck?.shipId === ship.id && !enemies(snapshot, ship.owner, unit.owner)
     && isCabinCrew(snapshot,unit) && cabinAvailable(snapshot, ship) && !!cabinDoor(ship)
-    && shipPassengers(snapshot.units, ship).filter(passenger => passenger.hp > 0 && isInCabin(passenger)).length < shipCabinCapacity(ship);
+    && shipCabinUsage(snapshot,ship).used + cabinSpaceRequired(snapshot,unit) <= shipCabinCapacity(ship)
+    && cabinRouteExists(snapshot,ship,unit);
 }
 export function leaveCabin(snapshot: CabinSnapshot, unit: Unit): boolean {
   if (!isInCabin(unit)) return false;

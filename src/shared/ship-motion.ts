@@ -2,17 +2,18 @@ import { detCos, detSin } from './det-math';
 import { shipMotionLimits } from './ship-handling';
 export { shipMotionLimits } from './ship-handling';
 import { localToWorld, shipPassengers, shipProfile } from './ship-geometry';
-import { hullPassageClear } from './ship-navigation';
-import { shipTraffic } from './ship-avoidance';
+import { shipPoseAt } from './ship-navigation';
+import { beginShipCollisionFrame, recordShipCollision, sweepShipCollision, updateShipCollisionPosition } from './ship-collisions';
 import { perTick } from './time';
-import type { GameMap, Unit } from './types';
+import type { Building, GameMap, Obstacle, Unit } from './types';
 type MotionBudget = { yaw: number; distance: number; astern: number };
 type ShipControls = { surge?: number; yaw?: number; pivotLever?: number; spentYaw?: number };
 const budgets = new WeakMap<Unit, MotionBudget>();
 
 /** One budget for propulsion, aiming turns and impulses in the whole step. */
-export function beginShipMotionFrame(units: readonly Unit[]) {
+export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids: readonly (Building | Obstacle)[] = []) {
   for (const unit of units) if (shipProfile(unit)) budgets.set(unit, { yaw: 0, distance: 0, astern: 0 });
+  beginShipCollisionFrame(units, map, solids);
 }
 
 /** Navigation supplies controls, never a world-space displacement. The keel
@@ -46,18 +47,25 @@ export function advanceShip(ship: Unit, map: GameMap, units: readonly Unit[], co
     ...(pivot ? { pivot } : {}),
   };
   const to = { x: turned.x + surge * c, y: turned.y + surge * s, heading };
-  const traffic = shipTraffic(ship, units);
-  if (!hullPassageClear(map, ship, from, turned) || !traffic(from, turned)
-    || !hullPassageClear(map, ship, turned, to) || !traffic(turned, to)) return false;
-
-  ship.x = to.x;
-  ship.y = to.y;
-  motion.heading = heading;
+  const turnContact = sweepShipCollision(map, ship, units, from, turned);
+  const contact = turnContact ?? sweepShipCollision(map, ship, units, turned, to);
+  const segmentStart = turnContact ? from : turned, segmentEnd = turnContact ? turned : to;
+  // Reach the first surface continuously instead of rejecting the whole tick;
+  // a thin body crossed between otherwise clear poses still stops the hull.
+  const fraction = contact ? Math.max(0, contact.fraction - 1e-5 / Math.max(1, Math.hypot(segmentEnd.x - segmentStart.x, segmentEnd.y - segmentStart.y))) : 1;
+  const end = contact ? shipPoseAt(segmentStart, segmentEnd, fraction) : to;
+  if (contact) recordShipCollision(map, ship, units, segmentStart, segmentEnd, contact);
+  ship.x = end.x;
+  ship.y = end.y;
+  motion.heading = end.heading;
   if (budget) {
-    budget.yaw += Math.abs(yaw);
-    budget.distance += Math.abs(surge) + Math.abs(lever * yaw);
-    if(surge<0)budget.astern-=surge;
+    const usedYaw = turnContact ? Math.abs(yaw) * fraction : Math.abs(yaw);
+    const usedSurge = turnContact ? 0 : surge * fraction;
+    budget.yaw += usedYaw;
+    budget.distance += Math.abs(usedSurge) + Math.abs(lever * usedYaw);
+    if(usedSurge<0)budget.astern-=usedSurge;
   }
+  updateShipCollisionPosition(units, ship);
   for (const passenger of shipPassengers(units, ship)) Object.assign(passenger, localToWorld(ship, passenger.deck!));
-  return true;
+  return !contact;
 }

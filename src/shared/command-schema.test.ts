@@ -34,4 +34,22 @@ describe("shared command payload schema", () => {
     expect(isGameCommand({ type: "cast", unitId: "priest", ability: "blink", targetId: "enemy" })).toBe(false);
     expect(isCommandEnvelope({ playerId: "player with spaces", command: { type: "move", unitIds: ["worker"], x: 10, y: 20 } })).toBe(false);
   });
+
+  it('admits boarding approaches and immediate cancellations at both command ingress surfaces', () => {
+    for (const command of [
+      { type: 'boardShip', unitIds: ['source'], targetId: 'target' },
+      { type: 'boardShip', unitIds: ['source'], targetId: 'target', queued: true },
+      { type: 'cancelBoardShip', unitIds: ['source'] },
+    ]) {
+      expect(isGameCommand(command)).toBe(true);
+      expect(isCommandEnvelope({ playerId: 'player', clientSeq: 12, command })).toBe(true);
+    }
+    for (const command of [
+      { type: 'boardShip', unitIds: ['source'] },
+      { type: 'boardShip', unitIds: ['source'], targetId: 1 },
+      { type: 'boardShip', unitIds: [1], targetId: 'target' },
+      { type: 'boardShip', unitIds: ['source'], targetId: 'target', queued: 'true' },
+      { type: 'cancelBoardShip', unitIds: ['source'], queued: true },
+    ]) expect(isGameCommand(command)).toBe(false);
+  });
 });

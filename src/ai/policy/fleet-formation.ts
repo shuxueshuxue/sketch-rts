@@ -26,20 +26,21 @@ export function fleetStations(
   };
   const leader = [...fleet].sort(
     (a, b) =>
-      distance(a, center) - distance(b, center) || a.id.localeCompare(b.id),
+      b.maxHp - a.maxHp || distance(a, center) - distance(b, center) || a.id.localeCompare(b.id),
   )[0]!;
   if (
     !memory.muster ||
     distance(memory.muster.goal, goal) > 300 ||
     !fleet.some((ship) => ship.id === memory.muster!.leader)
   ) {
-    const at = nearestShipPose(snapshot.map, leader, center) ?? leader;
+    const at = nearestShipPose(snapshot.map, leader, leader) ?? leader;
     memory.muster = {
       at: { x: at.x, y: at.y },
       goal: { x: goal.x, y: goal.y },
       leader: leader.id,
       sinceTick: snapshot.tick,
       launched: false,
+      heading: Math.atan2(goal.y - at.y, goal.x - at.x),
     };
   }
   const muster = memory.muster;
@@ -51,11 +52,14 @@ export function fleetStations(
   )
     muster.launched = true;
   const anchor = muster.launched ? goal : muster.at,
-    heading = Math.atan2(goal.y - center.y, goal.x - center.x);
+    heading = muster.heading ??= Math.atan2(goal.y - muster.at.y, goal.x - muster.at.x);
   const beam = Math.max(...fleet.map((ship) => shipProfile(ship)!.beam)) + 70,
     length = Math.max(...fleet.map((ship) => shipProfile(ship)!.length)) + 70;
-  fleet.forEach((ship, i) => {
-    const side = ((i % 3) - 1) * beam,
+  // The flagship leads down the middle. Stable slots survive snapshot list
+  // reordering and retain their course as the center of the fleet advances.
+  const ordered = [...fleet].sort((a, b) => Number(b.id === muster.leader) - Number(a.id === muster.leader) || a.id.localeCompare(b.id));
+  ordered.forEach((ship, i) => {
+    const side = [0, -1, 1][i % 3]! * beam,
       back = Math.floor(i / 3) * length;
     const at = nearestShipPose(snapshot.map, ship, {
       x: anchor.x - Math.sin(heading) * side - Math.cos(heading) * back,

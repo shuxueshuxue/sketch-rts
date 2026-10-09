@@ -3,6 +3,9 @@ import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../../sh
 import { clearTransferLanes } from './transfer-lanes';
 import { navalUnitIds } from './naval';
 import { createAiPolicyMemory } from '../memory';
+import { BOARDING_GAP } from '../../shared/naval';
+import { distanceToHull, localToWorld, shipProfile } from '../../shared/ship-geometry';
+import { hullFits } from '../../shared/ship-navigation';
 
 // Reduced from an ordinary Sapphire Archipelago match: an idle shore army
 // blocked two settlers at the crossing indefinitely despite an empty ferry.
@@ -42,7 +45,9 @@ function quay() {
   const game = createGame('bareDuel', { aiPlayers: [] });
   game.scriptedVictory = true; game.units = []; game.buildings = []; game.resources = [];
   game.map = { ...game.map, width: 43 * 32, height: rows.length * 32, terrain: { cell: 32, cols: 43, rows: rows.length, cells: rows.join('') } };
-  const boat = game.spawnUnit('player', 'transport', 304, 432);
+  // Moor the enlarged ferry inside the recorded rank. At the original
+  // (304,432) berth its longer stern opens a crossing beyond the last soldier.
+  const boat = game.spawnUnit('player', 'transport', 272, 368);
   boat.sailing!.heading = 3 * Math.PI / 2;
   const passengers = [game.spawnUnit('player', 'worker', 830.53, 397.03), game.spawnUnit('player', 'worker', 887, 393)];
   issuePlayerCommand(game, 'player', { type: 'board', unitIds: passengers.map(unit => unit.id), transportId: boat.id });
@@ -53,6 +58,13 @@ function quay() {
 describe('AI crowded shore transfers', () => {
   it('clears a real blocked crossing using movement and completes boarding', () => {
     const blocked = quay(), cleared = quay();
+    const passenger = blocked.passengers[0]!, profile = shipProfile(blocked.boat)!;
+    const entrance = localToWorld(blocked.boat, { x: 0, y: profile.beam / 2 + passenger.radius + BOARDING_GAP });
+    // A walker reaches boarding range only after entering this guard's body.
+    expect(distanceToHull(blocked.boat, entrance)).toBeCloseTo(passenger.radius + BOARDING_GAP, 6);
+    const guard = blocked.game.units.filter(unit => unit.kind === 'archer')
+      .reduce((nearest, unit) => Math.hypot(unit.x - entrance.x, unit.y - entrance.y) < Math.hypot(nearest.x - entrance.x, nearest.y - entrance.y) ? unit : nearest);
+    expect(Math.hypot(guard.x - entrance.x, guard.y - entrance.y)).toBeLessThan(passenger.radius + guard.radius);
     const memory = createAiPolicyMemory();
     for (let tick = 0; tick < 800; tick++) {
       if (tick % 15 === 0) {
@@ -66,6 +78,12 @@ describe('AI crowded shore transfers', () => {
         }
       }
       stepGame(blocked.game); stepGame(cleared.game);
+      // Both branches use the same legal, stationary hull throughout: clearing
+      // the actual shore bodies is what makes the crossing possible.
+      for (const { game, boat } of [blocked, cleared]) {
+        expect(hullFits(game.map, boat)).toBe(true);
+        expect([boat.x, boat.y, boat.sailing!.heading]).toEqual([272, 368, 3 * Math.PI / 2]);
+      }
     }
     expect(blocked.passengers.every(unit => !unit.deck)).toBe(true);
     expect(cleared.passengers.every(unit => unit.deck?.shipId === cleared.boat.id)).toBe(true);

@@ -15,6 +15,10 @@ import { CommandFrameRuntime } from '../../shared/sim/command-frame-runtime';
 import { seconds } from '../../shared/time';
 import { runAiCommandEntriesFromScripts } from './script-runner';
 import { planNavalEconomy } from './naval';
+import { hullFits } from '../../shared/ship-navigation';
+import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
+import { LANDING_REACH, passengerLandingSpot } from '../../shared/naval';
+import { shipProfile } from '../../shared/ship-geometry';
 
 // Tests that model old cargo saves observe the same restored live crew as the runtime.
 function snapshotGame(game: ReturnType<typeof createGame>) {
@@ -81,6 +85,11 @@ describe('shared dock outfitting', () => {
     const passenger = game.spawnUnit('player', 'footman', boat.x, boat.y);
     expect(boardUnit(boat, passenger, game.units)).toBe(true);
     boat.sailing!.heading = Math.PI;
+    // A stalled helm must still have a passenger to carry. Keep the enlarged
+    // hull beyond real landing reach so unloading cannot finish at this turn.
+    boat.x = 10 * terrain.cell + shipProfile(boat)!.length / 2 + LANDING_REACH + passenger.radius + terrain.cell;
+    expect(hullFits(game.map,boat)).toBe(true);
+    expect(passengerLandingSpot(game.map,boat,passenger.id,game.units)).toBeUndefined();
     // Preserve a real precise turn planned before the rudder damage. The
     // passenger cannot repair the helm; the simulation must execute the turn.
     const berth = { x: boat.x, y: boat.y };
@@ -119,6 +128,9 @@ describe('shared dock outfitting', () => {
     game.resources = game.resources.filter(mine => mine.id !== 'natural');
     game.buildings.push({ ...game.buildings[0]!, id: 'foe-hall', owner: 'enemy', ...at(5, 12) });
     const boat = game.spawnUnit('player', 'transport', at(12, 9).x, at(12, 9).y);
+    // The enlarged hull lies along the narrow channel before beginning its clearance turn.
+    boat.sailing!.heading = Math.PI / 2;
+    expect(hullFits(game.map, boat)).toBe(true);
     expect(boardUnit(boat, game.units[0]!, game.units)).toBe(true);
     stepGame(game);
     const memory = createAiPolicyMemory();
@@ -134,7 +146,10 @@ describe('shared dock outfitting', () => {
     expect(commands).toContainEqual({ type: 'unload', unitIds: [boat.id], ...at(19, 9) });
     for (const command of commands) issuePlayerCommand(game, 'player', command);
     const before = boat.x;
-    for (let tick = 0; tick < 40; tick++) stepGame(game);
+    for (let tick = 0; tick < seconds(10) && boat.x <= before; tick++) {
+      stepGame(game);
+      expect(hullFits(game.map, boat)).toBe(true);
+    }
     expect(boat.x).toBeGreaterThan(before);
   }, 15000);
 
@@ -590,9 +605,9 @@ describe("the AI on the water", () => {
     const game = islandGame();
     const memory = createAiPolicyMemory();
     memory.naval = { ferries: { ferry: { purpose: "settle", targetId: "island", from: at(9,9), to: at(20,9), phase: "sailing", crewIds: [], sinceTick: 0 } } };
-    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(400);
+    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(BUILDING_DEFS.townHall.cost);
     for (const mine of game.resources) if (mine.id !== "island") mine.amount = 0;
-    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(560);
+    expect(navalBudgetReserve(snapshotGame(game), "player", { memory })).toBe(BUILDING_DEFS.townHall.cost + UNIT_DEFS.transport.cost);
   });
 
   it('leaves deck repair engineers on their warships instead of dispatching empty miner ferries', () => {

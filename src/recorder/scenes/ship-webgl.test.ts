@@ -12,8 +12,11 @@ it('keeps the authored gun pivot and declares every dynamic rig component in the
   const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
   const rig=gltf.nodes.find((node:{name:string})=>node.name==='Hull').extras.shipRig;
   expect(rig.version).toBe(1);expect(rig.sails).toHaveLength(2);
-  const components=['Gun','Hull',...rig.sails.map((sail:{node:string})=>sail.node),...rig.rigidParts.map((part:{node:string})=>part.node)];
+  const components=['Gun','Hull','OwnerFlag',...rig.sails.map((sail:{node:string})=>sail.node),...rig.rigidParts.map((part:{node:string})=>part.node)];
   expect(gltf.nodes.map((node:{name:string})=>node.name).sort()).toEqual(components.sort());
+  const flag=gltf.nodes.find((node:{name:string})=>node.name==='OwnerFlag'),flagMesh=gltf.meshes[flag.mesh];
+  expect(flagMesh.primitives.length).toBeGreaterThan(0);
+  for(const primitive of flagMesh.primitives)expect(gltf.materials[primitive.material]).toMatchObject({name:'TeamColor'});
   for(const sail of rig.sails){
     const node=gltf.nodes.find((node:{name:string})=>node.name===sail.node),mesh=gltf.meshes[node.mesh];
     expect(mesh.extras.targetNames).toEqual(expect.arrayContaining(Object.values(sail.morphTargets)));

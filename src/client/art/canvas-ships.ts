@@ -22,5 +22,5 @@ export function drawShipFlag(ctx:Brush,ship:Unit,at:Point,color:string) {
   const mast=profile.obstacles.filter(o=>o.type==="mast")[ship.kind==='shipOfTheLine'?1:0];if(!mast)return;
   const world=localToWorld(ship,mast),x=at.x+world.x-ship.x,y=at.y+world.y-ship.y-(profile.deckHeight+profile.mastHeight)*Math.tan(SHIP_CAMERA.tilt);
   ctx.save();ctx.fillStyle=color;ctx.strokeStyle="#303536";ctx.lineWidth=.6;
-  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+10,y+2);ctx.lineTo(x+8,y+8);ctx.lineTo(x,y+6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+20,y+3);ctx.lineTo(x+17,y+14);ctx.lineTo(x,y+11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
 }

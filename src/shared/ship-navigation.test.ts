@@ -19,7 +19,18 @@ function map(cell: (col: number, row: number) => string): GameMap {
   for (let row = 0; row < 24; row++) for (let col = 0; col < 30; col++) cells += cell(col, row);
   return { ...base, width: 960, height: 768, terrain: { cols: 30, rows: 24, cell: 32, cells } };
 }
-const channel = () => map((x, y) => ((x >= 3 && x <= 10 || x >= 19 && x <= 27) && y >= 4 && y <= 20) || (x >= 11 && x <= 18 && y >= 11 && y <= 13) ? "~" : ".");
+const channel = () => {
+  // A 128-wide passage fits the enlarged transport, but not a 139.92-wide
+  // carrier. Half-size cells give the lattice an aligned center in that gap.
+  const water = map(() => '.'), cell = 16, cols = 60, rows = 48;
+  let cells = '';
+  for (let row = 0; row < rows; row++) for (let col = 0; col < cols; col++) {
+    const x = (col + .5) * cell, y = (row + .5) * cell;
+    cells += ((x >= 64 && x < 352 || x >= 608 && x < 896) && y >= 128 && y < 672)
+      || x >= 352 && x < 608 && y >= 336 && y < 464 ? '~' : '.';
+  }
+  water.terrain = { cell, cols, rows, cells }; return water;
+};
 const island = () => map((x, y) => x === 0 || y === 0 || x === 29 || y === 23 || (x >= 12 && x <= 15 && y >= 5 && y <= 13) ? "." : "~");
 function game(water: GameMap) {
   const g = createGame("bareDuel");
@@ -113,10 +124,11 @@ describe("full hull water navigation", () => {
     expect(Math.hypot(vessel.x - at(24, 10).x, vessel.y - at(24, 10).y)).toBeLessThan(1);
   });
   it("stops a shove at the coast without moving any of the hull onto land", () => {
-    const water = map((x) => x < 8 ? "." : "~"), boat = ship("transport", 11, 10);
+    const water = map((x) => x < 8 ? "." : "~"), boat = ship("transport", 12, 10);
+    expect(hullFits(water, boat)).toBe(true);
     shove(boat, -1, 0, 300);
     for (let i = 0; i < seconds(2); i++) { slide(boat, water); expect(hullFits(water, boat)).toBe(true); }
-    expect(boat.x).toBeGreaterThanOrEqual(8 * 32 + 80 - .01);
+    expect(boat.x).toBeGreaterThanOrEqual(8 * 32 + shipProfile(boat)!.length / 2 - .01);
   });
   it("can maneuver away from a parallel berth before turning seaward", () => {
     const g = game(map(x => x < 10 ? "." : "~")), vessel = g.spawnUnit("player", "transport", at(11, 10).x, at(11, 10).y);
@@ -136,7 +148,8 @@ describe("full hull water navigation", () => {
   it("invalidates the geometry cache when a channel's terrain changes", () => {
     const water = channel(), boat = ship("transport", 6, 12), goal = at(23, 12);
     expect(shipRoute(water, boat, goal).at(-1)).toMatchObject(goal);
-    water.terrain!.cells = water.terrain!.cells.split("").map((c, i) => i % 30 === 14 ? "." : c).join("");
+    const terrain = water.terrain!;
+    terrain.cells = terrain.cells.split("").map((c, i) => Math.floor(i % terrain.cols * terrain.cell / 32) === 14 ? "." : c).join("");
     expect(shipRoute(water, boat, goal).at(-1)!.x).toBeLessThan(14 * 32);
   });
   it('does not reuse lattice traffic fits after a blocking hull moves away and returns',()=>{

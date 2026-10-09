@@ -124,7 +124,7 @@ for kind, spec in config["ships"].items():
             continue
         if "sailRope" in obj or "rigLine" in obj:
             continue
-        group = obj.get("rigPart") or ("Gun" if obj.parent and obj.parent.name == "traversing weapon" else "Hull")
+        group = "OwnerFlag" if obj.name == "OwnerFlag" else obj.get("rigPart") or ("Gun" if obj.parent and obj.parent.name == "traversing weapon" else "Hull")
         world = obj.matrix_world.copy()
         if "sailSurface" not in obj:
             obj.data = bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph), depsgraph=depsgraph)
