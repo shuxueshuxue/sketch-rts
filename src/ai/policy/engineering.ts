@@ -11,7 +11,7 @@ export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options
     const player = snapshot.players[owner]!;
     if (player.supplyCap < requiredSupplyCap("siegeRam"))
         return undefined;
-    const own = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== "worker" && !UNIT_DEFS[unit.kind].naval);
+    const own = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== "worker" && !UNIT_DEFS[unit.kind].naval && unit.expiresTick === undefined);
     if (own.length < 8)
         return undefined;
     const engines = own.filter(unit => UNIT_DEFS[unit.kind].weapon);
