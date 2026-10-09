@@ -18,7 +18,7 @@ describe('shared in-flight model preparation',()=>{
     const data=new Promise<ArrayBuffer>(resolve=>{release=resolve;});
     const request=vi.spyOn(resources,'bytes').mockReturnValue(data),reuse=vi.spyOn(resources,'recordUse'),library=new ModelLibrary();
     const home=library.prepare(['ships/warship'],'home'),match=library.prepare(['ships/warship'],'match');
-    expect(request.mock.calls.map(call=>call[2])).toEqual(['home']);expect(reuse).toHaveBeenCalledWith('/art/world3d/ships/warship.glb','match');
+    expect(request.mock.calls.map(call=>call[2])).toEqual(['home']);expect(reuse).toHaveBeenCalledWith(resources.url('art/world3d/ships/warship.glb'),'match');
     const bytes=readFileSync('public/art/world3d/ships/warship.glb');
     release(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength) as ArrayBuffer);
     await Promise.all([home,match]);expect(library.component('ships/warship','Hull')).toBeTruthy();expect(library.cacheStats()).toEqual({models:1,pending:0});
