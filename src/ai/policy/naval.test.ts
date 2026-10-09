@@ -307,6 +307,27 @@ function lakeGame(pond = false, tower = false) {
 }
 
 describe("the AI on the water", () => {
+  it.each(['grove', 'ember'] as const)('uses the %s settler already beside the colony site instead of restarting the walk from its shore', race => {
+    const terrain = coast(); terrain.cols = 80; terrain.rows = 40;
+    terrain.cells = Array.from({ length: terrain.rows }, (_, row) => Array.from({ length: terrain.cols }, (_, col) =>
+      col <= 8 || col >= 20 && col <= 75 && row >= 5 && row <= 34 ? '.'
+        : col === 9 || col >= 19 && col <= 76 && row >= 4 && row <= 35 ? ',' : '~').join('')).join('');
+    const game = islandGame(terrain); game.scriptedVictory = true;
+    game.players.player!.race = race; game.players.player!.gold = BUILDING_DEFS.townHall.cost;
+    for (const mine of game.resources) if (mine.id !== 'island') mine.amount = 0;
+    Object.assign(game.resources.find(mine => mine.id === 'island')!, at(70, 25));
+    game.units.push(createUnit('shore-settler', 'player', 'worker', at(21, 10).x, at(21, 10).y),
+      createUnit('mine-settler', 'player', 'worker', at(62, 25).x, at(62, 25).y));
+    const want = navalWant(snapshotGame(game), 'player', { version: 'v8', memory: createAiPolicyMemory() })!;
+    expect(want.id).toBe('naval:islandHall');
+    issuePlayerCommand(game, 'player', want.issue(new Set())!);
+    for (let tick = 0; tick < seconds(36); tick++) stepGame(game);
+    expect(game.buildings.some(building => building.owner === 'player' && building.kind === 'townHall'
+      && building.complete && sameGround(game.map, building, game.resources.find(mine => mine.id === 'island')!))).toBe(true);
+    expect(game.units.find(unit => unit.id === 'shore-settler')!.x).toBe(at(21, 10).x);
+    expect(game.match.stats.goldSpent.player).toBe(BUILDING_DEFS.townHall.cost);
+  });
+
   it("has an escort protect a loaded ferry instead of chasing a coastal economic target", () => {
     const game = islandGame();
     const boat = createUnit("ferry", "player", "transport", at(13, 9).x, at(13, 9).y);
