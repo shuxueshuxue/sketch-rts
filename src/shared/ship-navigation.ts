@@ -215,12 +215,17 @@ type NavGrid = {
 const grids = new WeakMap<object, Map<string, NavGrid>>();
 // Searches are synchronous. A generation stamp gives untouched states an
 // infinite cost without allocating and clearing a map-sized array per order.
-let search = { costs: new Float64Array(0), parents: new Int32Array(0), stamps: new Uint32Array(0), trafficFits: new Int32Array(0),
-  basePotentials:new Float64Array(0),baseStamps:new Uint32Array(0),generation: 0 };
-function searchWorkspace(size: number) {
+function createSearchWorkspace(size: number) {
+  return { costs: new Float64Array(size), parents: new Int32Array(size), stamps: new Uint32Array(size), trafficFits: new Int32Array(size),
+    basePotentials:new Float64Array(size/DIRECTIONS),baseStamps:new Uint32Array(size/DIRECTIONS),generation: 0 };
+}
+let search = createSearchWorkspace(0);
+function searchWorkspace(size: number, nested = false) {
+  // Public traffic callbacks may synchronously ask for another route. That
+  // search must not stamp over the active caller's costs or parent chain.
+  if (nested) { const workspace = createSearchWorkspace(size); workspace.generation = 1; return workspace; }
   if (search.costs.length < size)
-    search = { costs: new Float64Array(size), parents: new Int32Array(size), stamps: new Uint32Array(size), trafficFits: new Int32Array(size),
-      basePotentials:new Float64Array(size/DIRECTIONS),baseStamps:new Uint32Array(size/DIRECTIONS),generation: 0 };
+    search = createSearchWorkspace(size);
   if (++search.generation === 0x7fffffff) {
     search.stamps.fill(0);
     search.trafficFits.fill(0);
@@ -776,7 +781,13 @@ export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:numb
 }
 /** A deterministic expansion budget bounds temporary traffic searches. Partial
  * routes remain journeys, never arrivals at the requested destination. */
+let routeSearchDepth = 0;
 export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = emptyTraffic, budget=Infinity, voyage=false): {points:ShipPose[];partial:boolean} {
+  routeSearchDepth++;
+  try { return planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1); }
+  finally { routeSearchDepth--; }
+}
+function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean): {points:ShipPose[];partial:boolean} {
   // The real traffic provider declares an empty frozen obstacle set. Custom
   // callbacks without that declaration still receive every original check.
   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
@@ -830,8 +841,8 @@ export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:n
     const departure=departureRoute(map,ship,target,trafficClear);
     if(departure)return {points:departure,partial:true};
   }
-  const workspace = searchWorkspace(size), { costs, parents: previous, stamps, trafficFits,
-    basePotentials,baseStamps,generation } = workspace, frontier = routeFrontier.reset();
+  const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
+    basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
   // A local traffic budget and a short berth search should stay local. The
   // reusable map field pays for itself on long, unbounded coastal voyages;
   // cap its map size as well as its retained destination count.
