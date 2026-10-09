@@ -51,6 +51,7 @@ import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
 import { beginShipMotionFrame } from './ship-motion';
 import { beginShipPlanningFrame, tryAdmitShipPlan } from './ship-planning-budget';
+import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
@@ -1432,7 +1433,7 @@ function updateShipOwnership(game:Game) {
     const owner=occupants[0]?.owner;
     if(!owner || occupants.some(unit=>areEnemyOwners(game,owner,unit.owner)))continue;
     ship.owner=owner;ship.order={type:"idle"};ship.orderQueue=[];ship.aim=undefined;
-    if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;}
+    if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;cancelShipPlanningJob(ship);}
     refreshUnitStats(game,ship);changed=true;
   }
   if(changed)updateSupplyState(game);
@@ -1453,6 +1454,7 @@ function assignUnitOrder(unit: Unit, order: UnitOrder, queued = false) {
   unit.orderQueue = [];
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
   if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    cancelShipPlanningJob(unit);
     delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 
@@ -1466,6 +1468,7 @@ function activateQueuedOrder(game:Game,unit: Unit) {
   unit.order = next;
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
   if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
+    cancelShipPlanningJob(unit);
     delete unit.sailing.planningRequestedAtTick; delete unit.sailing.planningLastRequestedAtTick; }
 }
 

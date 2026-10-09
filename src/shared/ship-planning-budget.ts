@@ -1,7 +1,14 @@
 import { isShipKind } from './ship-geometry';
 import type { Unit } from './types';
+import { cancelShipPlanningJob } from './ship-planning-job';
 
-type PlanningFrame = { units: readonly Unit[]; tick: number; granted?: Unit };
+type PlanningFrame = {
+  units: readonly Unit[];
+  tick: number;
+  granted?: Unit;
+  consumed?: boolean;
+  slices?: number;
+};
 // This only binds the current tick's allowance. Queue age lives in the saved
 // sailing fields, so a restored game rebuilds exactly the same ordering.
 const frames = new WeakMap<Unit, PlanningFrame>();
@@ -44,6 +51,11 @@ function validTick(value: number | undefined, tick: number): value is number {
 function pruneRequest(ship: Unit, frame: PlanningFrame): boolean {
   const motion = ship.sailing;
   if (!motion) return false;
+  if (motion.planningJob && (!hasShipPlanningWork(ship, frame.units)
+    || !validTick(motion.planningJobLastRequestedAtTick, frame.tick)
+    || motion.planningJobLastRequestedAtTick < frame.tick - 1)) {
+    cancelShipPlanningJob(ship);
+  }
   const requested = motion.planningRequestedAtTick;
   if (requested === undefined && motion.planningLastRequestedAtTick === undefined) return false;
   const last = motion.planningLastRequestedAtTick ?? requested;
@@ -72,6 +84,7 @@ export function tryAdmitShipPlan(ship: Unit): boolean {
   // Pure navigation callers do not run a simulation frame and keep their
   // synchronous contract. Simulation callers bind the frame before steering.
   if (!frame) return true;
+  if (ship.sailing?.planningJob) ship.sailing.planningJobLastRequestedAtTick = frame.tick;
   if (!ship.sailing || !hasShipPlanningWork(ship, frame.units)) {
     clearRequest(ship);
     return false;
@@ -96,4 +109,43 @@ export function tryAdmitShipPlan(ship: Unit): boolean {
   frame.granted = ship;
   clearRequest(ship);
   return true;
+}
+
+/** A full search spends the whole frame; fixed-size continuation slices share
+ * eight work units. FIFO age stays saved on the hull, and installing a new
+ * route still uses the original single-hull admission above. */
+export function tryConsumeShipPlan(ship: Unit, slices = 8): boolean {
+  const frame = frames.get(ship);
+  if (!frame) return true;
+  if (!Number.isSafeInteger(slices) || slices < 1 || slices > 8) return false;
+  const motion = ship.sailing;
+  if (motion?.planningJob) motion.planningJobLastRequestedAtTick = frame.tick;
+  if (!motion || !hasShipPlanningWork(ship, frame.units)) {
+    clearRequest(ship);
+    return false;
+  }
+  pruneRequest(ship, frame);
+  motion.planningRequestedAtTick ??= frame.tick;
+  motion.planningLastRequestedAtTick = frame.tick;
+  if (frame.consumed || (frame.slices ?? 0) + slices > 8) return false;
+  if (slices === 8) {
+    if (!tryAdmitShipPlan(ship)) return false;
+    frame.consumed = true;
+  } else {
+    let first: Unit | undefined;
+    for (const waiting of frame.units) {
+      if (!isShipKind(waiting.kind) || !pruneRequest(waiting, frame)) continue;
+      const requested = waiting.sailing!.planningRequestedAtTick!;
+      const previous = first?.sailing?.planningRequestedAtTick;
+      if (!first || requested < previous! || requested === previous && waiting.id < first.id) first = waiting;
+    }
+    if (first !== ship) return false;
+    clearRequest(ship);
+  }
+  frame.slices = (frame.slices ?? 0) + slices;
+  return true;
+}
+
+export function hasShipPlanningFrame(ship: Unit): boolean {
+  return frames.has(ship);
 }

@@ -54,6 +54,9 @@ export class RoomNetHub {
   tickRoom(roomId: string): CommandFrame | undefined {
     if (this.options.roomHost.getRoom(roomId).status !== "inMatch") return undefined;
     const state = this.stateFor(roomId);
+    // Keep delayed commands in the coordinator until restored derived work is
+    // ready; building a frame earlier would consume its queue and sequence.
+    if (!this.options.roomHost.prepareRoomTick(roomId, 1)) return undefined;
     const snapshot = this.options.roomHost.snapshot(roomId);
     const frame = state.coordinator.buildFrame(snapshot.tick);
     const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");

@@ -9,8 +9,37 @@ import { advanceShip, shipMotionLimits } from './ship-motion';
 import { followShipRoute } from './ship-guidance';
 import { coursePerformance } from './ship-wind';
 import { windAt } from './wind-field';
-import { tryAdmitShipPlan } from './ship-planning-budget';
+import { hasShipPlanningFrame, tryAdmitShipPlan, tryConsumeShipPlan } from './ship-planning-budget';
 import { isStaggered } from './push';
+import { advanceShipPlanningJob, beginShipPlanningJob, cancelShipPlanningJob, holdsShipPlanningOrigin, shipPlanningSliceCost, validShipPlanningJob } from './ship-planning-job';
+
+/** Split a point on the already committed route, preserving its geometry.
+ * The future planner can replace only the suffix beyond this live prefix. */
+function futurePlanningAnchor(ship:Unit,units:readonly Unit[],goal:ShipCourseGoal) {
+  const route=ship.sailing?.route,profile=shipProfile(ship)!;
+  if(!route?.points.length || route.cruise!==true || route.fireHeading!==undefined || route.points.some(point=>point.exact||point.pivot||point.tack))return;
+  const first=route.points[0]!,origin={x:route.legX??route.startX??ship.x,y:route.legY??route.startY??ship.y};
+  const chord=Math.hypot(first.x-origin.x,first.y-origin.y);
+  let from={...origin,heading:first.heading-(first.curvature?2*Math.asin(Math.max(-1,Math.min(1,chord*first.curvature/2))):0)};
+  const horizon=profile.length*.75+ship.sailing!.speed*(1+Math.min(4,shipsIn(units).length*.2));
+  // A moved firing station can lie inside the retained departure. Keeping a
+  // future anchor beyond that station would require a reversal on adoption.
+  if(goal.intent==='pursuit' && Math.hypot(goal.x-ship.x,goal.y-ship.y)<horizon+profile.length*2)return;
+  const projection=chord?Math.max(0,Math.min(1,((ship.x-origin.x)*(first.x-origin.x)+(ship.y-origin.y)*(first.y-origin.y))/(chord*chord))):0;
+  let distance=-projection*chord;
+  for(let index=0;index<route.points.length;index++){
+    const point=route.points[index]!,gap=Math.hypot(point.x-from.x,point.y-from.y);
+    if(distance+gap>=horizon && gap>1e-7){
+      const fraction=Math.max(0,Math.min(1,(horizon-distance)/gap));
+      if(fraction>.999999)return point;
+      const {queuedTurn:_,...metadata}=point;
+      const anchor={...metadata,...shipPoseAt(from,point,fraction)};
+      route.points.splice(index,0,anchor);return anchor;
+    }
+    distance+=gap;from=point;
+  }
+  return Math.hypot(ship.x-route.points.at(-1)!.x,ship.y-route.points.at(-1)!.y)>profile.length*.5?route.points.at(-1):undefined;
+}
 
 // Authored scenes without a terrain grid use the same swept water routes as
 // generated maps. A direct steering shortcut could wedge two touching hulls
@@ -81,7 +110,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // replacement for the player's destination.
     return shipContactGoal(ship,point,units.filter(other=>!voyageCompanion(other,bearing)));
   };
-  const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>)=>{
+  const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>,recoveryOnly=false)=>{
     const previous=motion.route;
     const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
     const contact=point.intent!=='pursuit' && point.heading===undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2
@@ -98,7 +127,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       && ship.order.rendezvousFor===undefined;
     const alignedDeparture=companions && !previous && !ship.orderQueue?.length
       && Math.abs(headingDifference(start.heading,bearing))<1e-7;
-    const strategicUnits=companions ? units.filter(other=>{
+    const strategicUnits=recoveryOnly ? units : companions ? units.filter(other=>{
       if(other===ship || other.owner!==ship.owner || other.order.type!=='move'
         || other.order.heading!==undefined || other.order.rendezvousFor!==undefined || !other.sailing)return true;
       if((other.shipParts?.rigging ?? shipPartMax(other).rigging)<=0)return true;
@@ -136,16 +165,82 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     const fireCourse=allowCruise && point.fireHeading!==undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*3
       && hullPassageClear(map,ship,start,{...point,heading:point.fireHeading});
     const course=coursePerformance(ship,map,bearing,{assumeTrimmed:true});
-    const aligned=point.heading===undefined && !precision && !ship.orderQueue?.length
-      && Math.abs(headingDifference(start.heading,bearing))<1e-7 && !course.noGo
-      && course.targetSpeed>=course.auxiliarySpeed
+    const straight=point.heading===undefined && !precision
+      && Math.abs(headingDifference(start.heading,bearing))<1e-7
       && hullPassageClear(map,ship,start,{...point,heading:start.heading}) && traffic(start,{...point,heading:start.heading});
-    if(!planned && !fireCourse && !aligned && !tryAdmitShipPlan(ship))return false;
+    const aligned=straight && !ship.orderQueue?.length && !course.noGo && course.targetSpeed>=course.auxiliarySpeed;
+    let retainedOrigin:Point|undefined;
+    if(motion.planningJob && (!allowCruise || precision || fireCourse || aligned || straight || !validShipPlanningJob(ship,point,map)))cancelShipPlanningJob(ship);
+    if(!planned && hasShipPlanningFrame(ship) && allowCruise && !precision && !fireCourse && !aligned && !straight && (ship.order.type!=='move' || ship.order.rendezvousFor===undefined)){
+      if(!motion.planningJob){
+        const stopped=Math.abs(motion.speed)<=1;
+        const anchor=!stopped && previous?.points.length?futurePlanningAnchor(ship,units,point):undefined;
+        // A changed or obstructed voyage must not escape into a complete
+        // synchronous search just because its previous course was exact.
+        // Keep a certified smooth prefix when available; otherwise hold the
+        // actual starting pose while the bounded replacement is prepared.
+        beginShipPlanningJob(ship,point,map,strategicUnits,anchor,recoveryOnly);
+      }
+      if(motion.planningJob){
+        let completed:ReturnType<typeof advanceShipPlanningJob>;
+        for(let stage=0;stage<8 && !completed;stage++){
+          const slices=shipPlanningSliceCost(ship);
+          if(!(slices===0?tryAdmitShipPlan(ship):tryConsumeShipPlan(ship,slices)))return false;
+          completed=advanceShipPlanningJob(ship,map);
+        }
+        if(!completed)return false;
+        if(!tryAdmitShipPlan(ship))return false;
+        cancelShipPlanningJob(ship);
+        const forward=completed.points[0]!;
+        const singleForwardExact=completed.recovery && !completed.anchor && !completed.partial && completed.points.length===1
+          && !!forward.exact && !forward.pivot && Math.hypot(forward.x-point.x,forward.y-point.y)<=1e-7
+          && Math.abs(headingDifference(forward.heading,Math.atan2(point.y-ship.y,point.x-ship.x)))<=1e-7;
+        if(completed.recovery && (completed.partial || !completed.points.length || completed.points.some(candidate=>candidate.pivot)
+          || completed.points.some(candidate=>candidate.exact) && !singleForwardExact))return false;
+        if(singleForwardExact){
+          // A clear forward corridor can need a finite turn on the spot
+          // before there is room for a sailing circle. Certify that turn
+          // against every live hull, then return the ahead leg to cruise.
+          // Partial, astern and multi-maneuver recoveries remain rejected.
+          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units);
+          if(!hullPassageClear(map,ship,start,turned) || !hullPassageClear(map,ship,turned,forward)
+            || !liveTraffic(start,turned) || !liveTraffic(turned,forward))return false;
+          const {exact:_,...onward}=forward;
+          completed.points=[{...turned,exact:true},{...onward,curvature:0}];
+        }
+        // An underway continuous prefix cannot lead into a new hard berth
+        // turn. Keep its current course until a live-origin replacement fits.
+        if(completed.anchor && completed.points.some(point=>point.exact||point.pivot))return false;
+        const first=completed.points[0];
+        if(first){
+          const origin=completed.anchor??start;
+          const probe={...ship,x:origin.x,y:origin.y,sailing:{...motion,heading:origin.heading}};
+          // Followers can leave a forward corridor before we arrive there,
+          // but still occupy the space needed for an immediate astern leg
+          // or berth turn. The exact executor checks those hulls too.
+          const maneuver=first.exact || first.pivot
+            || (first.x-origin.x)*detCos(first.heading)+(first.y-origin.y)*detSin(first.heading)<-1e-7;
+          const liveUnits=maneuver?units:strategicUnits;
+          if(!hullPassageClear(map,ship,origin,first) || !reservationTraffic(probe,liveUnits.filter(unit=>unit!==ship))(origin,first))return false;
+        }
+        planned={points:completed.points,partial:completed.partial};
+        if(completed.anchor && previous){
+          const index=previous.points.findIndex(candidate=>candidate.x===completed.anchor!.x&&candidate.y===completed.anchor!.y&&candidate.heading===completed.anchor!.heading);
+          if(index<0)return false;
+          planned.points=[...previous.points.slice(0,index+1),...completed.points];
+          retainedOrigin={x:previous.legX??previous.startX??ship.x,y:previous.legY??previous.startY??ship.y};
+        }
+      }
+    }
+    // A clear ahead reference is cheap even when its sailing course needs a
+    // tack. Leave the actual wind planner its stage on this same tick.
+    if(!planned && !fireCourse && !aligned && !(straight ? tryAdmitShipPlan(ship) : tryConsumeShipPlan(ship)))return false;
     const {points,partial}=planned ?? (fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
       : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity));
     if(!allowCruise)for(const point of points)point.exact=true;
     motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,
       startX:ship.x,startY:ship.y,startHeading:motion.heading,windKey:wind.key,age:0,blockedTicks:0,
+      ...(retainedOrigin?{legX:retainedOrigin.x,legY:retainedOrigin.y}:{}),
       ...(tackHeading!==undefined?{tackHeading}:{}),
       ...(previous?.avoidSide!==undefined?{avoidSide:previous.avoidSide,avoidTicks:previous.avoidTicks??0}:{}),
       ...(previous?.avoidHeading!==undefined?{avoidHeading:previous.avoidHeading}:{}),
@@ -179,7 +274,35 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       && moved>length*.8 && !turningTack : moved>map.terrain!.cell/2;
     const enteringBerth=route?.cruise && point.intent!=='pursuit' && point.heading===undefined
       && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2 && !!contactGoal();
-    if(!route || windChange || enteringBerth || (route.fireHeading===undefined)!==(point.fireHeading===undefined) || !!route.retreat!==!!point.retreat || route.intent!==point.intent || route.targetId!==point.targetId || due || !route.points.length && (moved>1 || route.partial && route.intent==='pursuit')){
+    const weatherOnly=!!route && windChange && !due && !enteringBerth && point.heading===undefined
+      && route.cruise===true && route.intent===point.intent && route.targetId===point.targetId && route.points.length>0
+      && !route.points.some(point=>point.exact||point.pivot||point.tack);
+    const weatherManeuver=!!route && windChange && !due && !enteringBerth && point.heading===undefined
+      && route.cruise===false && route.intent===point.intent && route.targetId===point.targetId && route.points.length>0
+      && route.points.every(point=>point.exact||point.pivot);
+    if(weatherOnly){
+      // The certified geometric corridor remains useful. Trim and tack from
+      // the actual current headway now; a deferred coastal search would let
+      // the fresh wind accelerate us on an obsolete departure before turning.
+      cancelShipPlanningJob(ship);
+      route!.windKey=wind.key;route!.age=0;delete route!.windTried;
+      delete route!.windTryX;delete route!.windTryY;delete route!.tackHeading;
+    }
+    if(weatherManeuver){
+      // Wind does not change an exact maneuver's geometry. Reassess its
+      // physical first leg and propulsion now, rather than stopping it for
+      // a new coast search before the waiting hull has any room to turn.
+      const first=route!.points[0]!,turned={...start,heading:first.heading},traffic=reservationTraffic(ship,units);
+      const clear=!first.pivot && hullPassageClear(map,ship,start,turned) && hullPassageClear(map,ship,turned,first)
+        && traffic(start,turned) && traffic(turned,first);
+      const course=coursePerformance(ship,map,first.heading,{assumeTrimmed:true});
+      const ahead=(first.x-ship.x)*detCos(first.heading)+(first.y-ship.y)*detSin(first.heading)>=0;
+      if(motion.sail)motion.sail.mode=course.calm?'calm-assist':ahead && course.targetSpeed>=course.auxiliarySpeed?'sail':'maneuver';
+      if(!clear)motion.speed=0;
+      replan(false,{points:route!.points.map(point=>({...point,...(point.pivot?{pivot:{...point.pivot}}:{})})),partial:route!.partial??false});
+      route=motion.route!;route.blockedTicks=clear?0:1;
+    }
+    if(motion.planningJob || !route || windChange && !weatherOnly && !weatherManeuver || enteringBerth || (route.fireHeading===undefined)!==(point.fireHeading===undefined) || !!route.retreat!==!!point.retreat || route.intent!==point.intent || route.targetId!==point.targetId || due || !route.points.length && (moved>1 || route.partial && route.intent==='pursuit')){
       if(!replan()){
         // A queued replacement does not spend an underway ship's momentum.
         // Keep a live corridor to the same quarry, or its pre-weather route,
@@ -187,12 +310,13 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         // terrain and every hull before each physical movement.
         const sameWindVoyage=!!route && windChange && !due && !enteringBerth && point.heading===undefined
           && route.intent===point.intent && route.targetId===point.targetId;
-        if(!route?.points.length || !dynamic && !sameWindVoyage){
+        if(!route?.points.length || motion.planningJob && holdsShipPlanningOrigin(ship)
+          || !dynamic && !sameWindVoyage && !motion.planningJob){
           motion.speed=0;
           // A new attack can align its bow while its complex corridor waits.
           // Keep any existing corridor untouched; this finite turn uses the
           // same collision sweep and whole-frame yaw allowance as gunnery.
-          if(!route && point.intent==='pursuit' && point.heading===undefined)
+          if(!route && (!motion.planningJob || !holdsShipPlanningOrigin(ship)) && point.intent==='pursuit' && point.heading===undefined)
             turnShipToward(ship,Math.atan2(point.y-ship.y,point.x-ship.x),map,units);
           return;
         }
@@ -213,12 +337,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         route.end={x:point.x,y:point.y};route.goalX=point.x;route.goalY=point.y;
       }
     }
+    let completedExactLeg=false;
     while(route.points.length && Math.hypot(ship.x-route.points[0]!.x,ship.y-route.points[0]!.y)<1e-7
       && Math.abs(headingDifference(motion.heading,route.points[0]!.heading))<1e-7
       && !(route.intent==='pursuit' && motion.pursuit?.moving && !route.partial && route.points.length===1
         && !route.points[0]!.tack && !route.points[0]!.exact && !route.points[0]!.pivot)){
       const passed=route.points.shift()!;route.legX=passed.x;route.legY=passed.y;
       if(route.cruise===false){
+        completedExactLeg=true;
         const next=route.points[0];
         route.cruise=!!next && !next.exact && !next.pivot
           && (next.x-ship.x)*detCos(next.heading)+(next.y-ship.y)*detSin(next.heading)>=-1e-7;
@@ -238,10 +364,25 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     }
     if(route.cruise===false && point.heading===undefined && route.points.length===1
       && !route.points[0]!.pivot && Math.hypot(point.x-ship.x,point.y-ship.y)>length*2
-      && (route.age??0)>=SIM_TICKS_PER_SECOND
-      && ((route.age??0)%SIM_TICKS_PER_SECOND===0 || motion.planningRequestedAtTick!==undefined)){
+      // A short successful maneuver owns its helm until it ends. Freezing
+      // it every second for a usually rejected forward search can block the
+      // convoy behind it. A long voyage must still regain forward sailing
+      // rather than treating the whole destination as an astern berth leg.
+      && (completedExactLeg || (route.blockedTicks??0)>=10
+        || Math.hypot(route.points[0]!.x-ship.x,route.points[0]!.y-ship.y)>length
+          && (route.points[0]!.x-ship.x)*detCos(route.points[0]!.heading)
+            +(route.points[0]!.y-ship.y)*detSin(route.points[0]!.heading)<-1e-7)
+      && (completedExactLeg || (route.age??0)>=SIM_TICKS_PER_SECOND
+        && ((route.age??0)%SIM_TICKS_PER_SECOND===0 || motion.planningRequestedAtTick!==undefined))){
       const traffic=shipTraffic(ship,units);
-      if(tryAdmitShipPlan(ship)){
+      if(hasShipPlanningFrame(ship)){
+        if(replan(true,undefined,true))route=motion.route!;
+        else if(motion.planningJob && holdsShipPlanningOrigin(ship)){
+          // This job begins midway through the exact executor. Preserve its
+          // initial pose now, rather than moving once before next tick's hold.
+          motion.speed=0;return;
+        }
+      }else if(tryConsumeShipPlan(ship)){
         const recovery=planVoyageRoute(map,ship,point,traffic,traffic.hasTraffic?1024:Infinity);
         delete motion.planningRequestedAtTick;delete motion.planningLastRequestedAtTick;
         if(!recovery.partial && recovery.points.length && recovery.points.every(point=>!point.exact && !point.pivot)){
@@ -258,7 +399,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       const legPerformance=windLeg && coursePerformance(ship,map,Math.atan2(windLeg.y-ship.y,windLeg.x-ship.x),{assumeTrimmed:true});
       const needsWindPlanning=!!legPerformance && !legPerformance.calm && legPerformance.trueWindAngle<legPerformance.beatAngle && legPerformance.maxForwardSpeed>0;
       if(route.fireHeading===undefined && (!route.windTried || retryWind) && !route.points.some(point=>point.tack)
-        && (!needsWindPlanning || tryAdmitShipPlan(ship))){
+        && (!needsWindPlanning || tryConsumeShipPlan(ship))){
         route.windTried=true;route.windTryX=ship.x;route.windTryY=ship.y;
         delete motion.planningRequestedAtTick;delete motion.planningLastRequestedAtTick;
         // Wind planning works on a useful voyage leg, not every short arc

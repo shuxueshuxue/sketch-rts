@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { createGame, snapshotGame } from "../../shared/sim";
+import { describe, expect, it, vi } from "vitest";
+import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from "../../shared/sim";
 import { createRoom } from "../../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave } from "../../shared/savegame";
 import { checksumGame } from "../../shared/sim/checksum";
@@ -8,6 +8,7 @@ import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types"
 import type { NetTransport } from "./transport";
 import { LockstepClient } from "./lockstep-client";
 import { castCommandForSelection, type CastCommand } from "../ability-targeting";
+import type { GameSnapshot } from "../../shared/types";
 
 describe("lockstep client", () => {
   it("reserves three different priests before network frames arrive and releases only acknowledged casts", () => {
@@ -411,7 +412,167 @@ describe("lockstep client", () => {
     expect(transport.sent).toContainEqual({ type: "command", roomId: "room-1", playerId: "player", clientSeq: 0, epoch: 1, command: { type: "move", unitIds: [], x: 10, y: 10 } });
     expect(transport.sent).not.toContainEqual(expect.objectContaining({ type: "requestCheckpoint", reason: "server-desync" }));
   });
+
+  it("spreads an actual deep restored search across renders without consuming or changing authoritative frames", () => {
+    const checkpoint = deepIslandCheckpoint();
+    const game = restoredCheckpoint(checkpoint);
+    const reference = new SimulationEngine(restoredCheckpoint(checkpoint));
+    const transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, checksumEveryTicks: 1 });
+    const ship = game.units[0]!;
+    const frames = [
+      { roomId: "room-1", tick: game.tick, sequence: 0, commands: [] },
+      { roomId: "room-1", tick: game.tick + 1, sequence: 1, commands: [{ playerId: "player", command: { type: "stop" as const, unitIds: [ship.id] } }] },
+    ];
+    const before = JSON.stringify(snapshotGame(game)), beforeChecksum = checksumGame(game);
+    for (const frame of frames) {
+      reference.advanceFrame(frame);
+    }
+    client.receiveFrame(frames[0]!);
+    let waitingRenders = 0;
+    for (let render = 0; render < 32 && game.tick < checkpoint.snapshot.tick + 2; render++) {
+      if (render === 3) {
+        // New and duplicate packets remain safe while the render loop yields.
+        transport.emit({ type: "frame", frame: frames[1]!, epoch: 0 });
+        transport.emit({ type: "frame", frame: frames[1]!, epoch: 0 });
+      }
+      const changed = client.updateToRenderTime();
+      if (!changed) {
+        waitingRenders++;
+        expect(JSON.stringify(snapshotGame(game))).toBe(before);
+        expect(checksumGame(game)).toBe(beforeChecksum);
+        expect(transport.sent.some(message => message.type === "checksum")).toBe(false);
+      }
+    }
+    expect(waitingRenders).toBeGreaterThanOrEqual(18);
+    expect(game.tick).toBe(checkpoint.snapshot.tick + 2);
+    expect(JSON.stringify(snapshotGame(game))).toBe(JSON.stringify(reference.snapshot()));
+    expect(checksumGame(game)).toBe(reference.checksum());
+    expect(transport.sent.filter(message => message.type === "checksum").map(message => message.tick))
+      .toEqual([checkpoint.snapshot.tick + 1, checkpoint.snapshot.tick + 2]);
+  });
+
+  it("replaces partly warmed checkpoint jobs and their queued frames without applying old-epoch work", () => {
+    const checkpoint = deepIslandCheckpoint();
+    const game = restoredCheckpoint(checkpoint), transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    client.receiveFrame({ roomId: "room-1", tick: game.tick, sequence: 0, commands: [] });
+    for (let render = 0; render < 3; render++) expect(client.updateToRenderTime()).toBe(false);
+    const oldShip = game.units[0]!, oldJob = oldShip.sailing!.planningJob;
+    const replacement = createGame("campRush", { aiPlayers: [] });
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 0, snapshot: snapshotGame(replacement), nextId: replacement.nextId }, epoch: 2 });
+    transport.emit({ type: "frame", frame: { roomId: "room-1", tick: 0, sequence: 1, commands: [] }, epoch: 0 });
+    expect(client.updateToRenderTime()).toBe(false);
+    transport.emit({ type: "frame", frame: { roomId: "room-1", tick: 0, sequence: 2, commands: [] }, epoch: 2 });
+    expect(client.updateToRenderTime()).toBe(true);
+    expect(game.tick).toBe(1);
+    expect(game.map.id).toBe("campRush");
+    expect(game.units.includes(oldShip)).toBe(false);
+    expect(oldShip.sailing!.planningJob).toBe(oldJob);
+  });
+
+  it("stops preparation and discards incoming frames after closing during a cold restore", () => {
+    const checkpoint = deepIslandCheckpoint();
+    const game = restoredCheckpoint(checkpoint), transport = new FakeTransport();
+    const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport });
+    client.receiveFrame({ roomId: "room-1", tick: game.tick, sequence: 0, commands: [] });
+    expect(client.updateToRenderTime()).toBe(false);
+    const before = JSON.stringify(snapshotGame(game));
+    client.close();
+    transport.emit({ type: "checkpoint", checkpoint: { roomId: "room-1", tick: 0, snapshot: snapshotGame(createGame("campRush", { aiPlayers: [] })), nextId: 1 }, epoch: 2 });
+    for (let render = 0; render < 32; render++) {
+      client.receiveFrame({ roomId: "room-1", tick: game.tick, sequence: render + 1, commands: [] });
+      expect(client.updateToRenderTime()).toBe(false);
+    }
+    expect(JSON.stringify(snapshotGame(game))).toBe(before);
+    expect(transport.closed).toBe(true);
+  });
+
+  it("consumes a large frame backlog in bounded FIFO batches while retaining every checksum", () => {
+    const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+    try {
+      const game = createGame("bareDuel", { aiPlayers: [] });
+      const reference = new SimulationEngine(restoredCheckpoint({ snapshot: snapshotGame(game), nextId: game.nextId }));
+      const transport = new FakeTransport();
+      const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine: new SimulationEngine(game), transport, checksumEveryTicks: 1 });
+      const worker = game.units.find(unit => unit.owner === "player" && unit.kind === "worker")!;
+      for (let tick = 0; tick < 11; tick++) {
+        const frame = { roomId: "room-1", tick, sequence: tick, commands: [{ playerId: "player", command: {
+          type: "move" as const, unitIds: [worker.id], x: worker.x + 100 + tick * 10, y: worker.y,
+        } }] };
+        client.receiveFrame(frame);
+        reference.advanceFrame(frame);
+      }
+      expect(client.updateToRenderTime()).toBe(true);
+      expect(game.tick).toBe(4);
+      expect(client.updateToRenderTime()).toBe(true);
+      expect(game.tick).toBe(8);
+      expect(client.updateToRenderTime()).toBe(true);
+      expect(game.tick).toBe(11);
+      expect(client.updateToRenderTime()).toBe(false);
+      expect(JSON.stringify(snapshotGame(game))).toBe(JSON.stringify(reference.snapshot()));
+      expect(checksumGame(game)).toBe(reference.checksum());
+      expect(transport.sent.filter(message => message.type === "checksum").map(message => message.tick))
+        .toEqual(Array.from({ length: 11 }, (_, index) => index + 1));
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it("yields after a frame exhausts the render budget and leaves the next frame queued", () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, "now").mockImplementation(() => now);
+    try {
+      const game = createGame("bareDuel", { aiPlayers: [] });
+      const engine = new SimulationEngine(game), advance = engine.advanceFrame.bind(engine);
+      engine.advanceFrame = frame => { advance(frame); now += 9; };
+      const transport = new FakeTransport();
+      const client = new LockstepClient({ roomId: "room-1", playerId: "player", engine, transport });
+      for (let tick = 0; tick < 3; tick++) client.receiveFrame({ roomId: "room-1", tick, sequence: tick, commands: [] });
+      for (let tick = 1; tick <= 3; tick++) {
+        expect(client.updateToRenderTime()).toBe(true);
+        expect(game.tick).toBe(tick);
+      }
+      expect(client.updateToRenderTime()).toBe(false);
+    } finally {
+      clock.mockRestore();
+    }
+  });
 });
+
+let cachedIslandCheckpoint: { snapshot: GameSnapshot; nextId: number } | undefined;
+
+function deepIslandCheckpoint() {
+  if (cachedIslandCheckpoint) return cachedIslandCheckpoint;
+  const game = createGame("bareDuel", { aiPlayers: [] });
+  game.units = []; game.items = []; game.buildings = []; game.resources = [];
+  game.mercenaryCamps = []; game.obstacles = []; game.scriptedVictory = true;
+  const cell = 64, cols = 256, rows = 256;
+  game.map = { ...game.map, width: cols * cell, height: rows * cell, wind: { direction: Math.PI, speed: 80 },
+    terrain: { cell, cols, rows, cells: Array.from({ length: cols * rows }, (_, index) => {
+      const x = index % cols, y = Math.floor(index / cols);
+      return x >= 65 && x < 85 && y >= 67 && y < 112 ? "." : "~";
+    }).join("") } };
+  const ship = game.spawnUnit("player", "warship", 1800, 5660);
+  ship.sailing!.heading = 0;
+  issuePlayerCommand(game, "player", { type: "move", unitIds: [ship.id], x: 9000, y: 5660, avoidCombat: true });
+  for (let tick = 0; tick < 80; tick++) {
+    stepGame(game);
+    const job = ship.sailing!.planningJob && JSON.parse(ship.sailing!.planningJob);
+    if (job?.phase === "reference" && job.searchSteps >= 19) {
+      cachedIslandCheckpoint = { snapshot: snapshotGame(game), nextId: game.nextId };
+      return cachedIslandCheckpoint;
+    }
+  }
+  throw new Error("The adverse-wind island did not produce its actual deep reference search");
+}
+
+function restoredCheckpoint(checkpoint: { snapshot: GameSnapshot; nextId: number }) {
+  const game = createGame("bareDuel", { aiPlayers: [] });
+  game.scriptedVictory = true;
+  restoreSnapshotIntoGame(game, JSON.parse(JSON.stringify(checkpoint.snapshot)), checkpoint.nextId);
+  return game;
+}
 
 class FakeTransport implements NetTransport {
   sent: ClientNetMessage[] = [];

@@ -42,9 +42,9 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Version 16 also records deferred ship plans; fresh games have none.
+    // Version 17 also records incremental ship plans; fresh games have none.
     // Fresh-game goldens also include the closer 216-unit initial mine layout.
-    expect(CHECKSUM_VERSION).toBe(16);
+    expect(CHECKSUM_VERSION).toBe(17);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
       expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("7b190f8a");

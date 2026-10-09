@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from './map';
-import { beginShipPlanningFrame, hasShipPlanningWork, tryAdmitShipPlan } from './ship-planning-budget';
+import { beginShipPlanningFrame, hasShipPlanningWork, tryAdmitShipPlan, tryConsumeShipPlan } from './ship-planning-budget';
 import type { Unit } from './types';
 
 function vessel(id: string, kind: 'warship' | 'fireShip' | 'cutter' = 'warship'): Unit {
@@ -20,6 +20,46 @@ function crew(ship: Unit): Unit {
 }
 
 describe('saved ship planning admission', () => {
+  it('separates expensive stages of one admitted hull without starving its peers', () => {
+    const first=vessel('first'),second=vessel('second');
+    expect(tryConsumeShipPlan(first)).toBe(true);
+    expect(tryConsumeShipPlan(first)).toBe(true);
+    beginShipPlanningFrame([first,second],10);
+    expect(tryConsumeShipPlan(first)).toBe(true);
+    expect(tryAdmitShipPlan(first)).toBe(true);
+    expect(tryConsumeShipPlan(first)).toBe(false);
+    expect(tryConsumeShipPlan(second)).toBe(false);
+    expect(first.sailing!.planningRequestedAtTick).toBe(10);
+    expect(second.sailing!.planningRequestedAtTick).toBe(10);
+    beginShipPlanningFrame([first,second],11);
+    expect(tryConsumeShipPlan(first)).toBe(true);
+    expect(tryConsumeShipPlan(first)).toBe(false);
+    expect(tryConsumeShipPlan(second)).toBe(false);
+    beginShipPlanningFrame([first,second],12);
+    expect(tryConsumeShipPlan(first)).toBe(false);
+    expect(tryConsumeShipPlan(second)).toBe(true);
+  });
+
+  it('shares small slices while an older full stage retains FIFO across JSON restores', () => {
+    const original=[vessel('a'),vessel('b'),vessel('c')];
+    ticket(original[0]!,7,9);ticket(original[1]!,6,9);ticket(original[2]!,5,9);
+    const restored=JSON.parse(JSON.stringify(original)) as Unit[];
+    const grants:string[][]=[[],[]];
+    for(let tick=10;tick<16;tick++){
+      const worlds=[original,restored];
+      for(let index=0;index<worlds.length;index++){
+        const units=worlds[index]!;
+        beginShipPlanningFrame(index===0?units:[...units].reverse(),tick);
+        for(const ship of units){
+          if(tryConsumeShipPlan(ship,ship.id==='b'?8:1))grants[index]!.push(ship.id);
+        }
+      }
+      expect(restored).toEqual(JSON.parse(JSON.stringify(original)));
+    }
+    expect(grants[0]).toEqual(['c','b','a','c','b','a','c','b']);
+    expect(grants[1]).toEqual(grants[0]);
+  });
+
   it('keeps standalone navigation synchronous and grants only one hull per simulation tick', () => {
     const first = vessel('first'), second = vessel('second');
     expect(tryAdmitShipPlan(first)).toBe(true);

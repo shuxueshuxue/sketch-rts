@@ -5,7 +5,7 @@ import { shipMotionLimits } from './ship-handling';
 import { headingDifference, hullPassageClear, roundVoyageCorner, type ShipPose } from './ship-navigation';
 import { coursePerformance } from './ship-wind';
 import { windAt } from './wind-field';
-import { tryAdmitShipPlan } from './ship-planning-budget';
+import { tryAdmitShipPlan, tryConsumeShipPlan } from './ship-planning-budget';
 import type { GameMap, Unit, UnitOrder } from './types';
 
 type Move = Extract<UnitOrder, { type: 'move' }>;
@@ -61,7 +61,10 @@ export function followQueuedShipCourse(ship: Unit, map: GameMap, units: readonly
     const traffic = shipTraffic(ship, units, Infinity);
     const straightCourse=Math.abs(headingDifference(from.heading,headings[0]!))<.01
       && Math.abs(headingDifference(headings[0]!,headings[1]!))<.01;
-    if(!straightCourse && !tryAdmitShipPlan(ship))return false;
+    // Without a committed route a failed corner preview must still allow the
+    // coast planner to find the first usable corridor. Once underway, the
+    // existing route carries the hull while this preview spends its stage.
+    if(!straightCourse && !(route ? tryConsumeShipPlan(ship) : tryAdmitShipPlan(ship)))return false;
     let points = roundVoyageCorner(map, ship, from, current, next, traffic);
     let handoffIndex = points ? points.length - 2 : -1;
     // A mark on the same straight course is also a passage, with no reason

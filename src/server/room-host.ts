@@ -6,6 +6,7 @@ import type { AiScript, AiScriptVersion } from "../ai/policy";
 import { createGame, snapshotGame, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { checksumGame } from "../shared/sim/checksum";
+import { prepareShipPlanningJobs } from "../shared/ship-planning-job";
 import { extractReplayFrameSave, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
 import type { GameCommand, GameSetupOptions, GameSnapshot, LocalUserProfile, MapId, PlayerId, RoomState } from "../shared/types";
@@ -348,6 +349,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedRoom(hosted, game, ticks);
     },
 
+    prepareRoomTick(roomId: string, maxSlices = 1): boolean {
+      return prepareShipPlanningJobs(getLiveGame(roomId).game, maxSlices);
+    },
+
     tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
       const { hosted, game } = getLiveGame(roomId);
       if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
@@ -432,6 +437,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
         if (!hosted.room.autoTick) continue;
         const game = hosted.game;
+        // A continued save may need its disposable navigation graph rebuilt.
+        // Reconstruct one prior slice per ticker turn before advancing truth.
+        if (!prepareShipPlanningJobs(game, 1)) continue;
         for (let i = 0; i < ticks; i += 1) {
           advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
           if (game.match.winner) break;

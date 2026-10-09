@@ -33,20 +33,38 @@ export function targetSailingVelocity(target: StrikeTarget, units?: readonly Uni
   return { x: hull?.sailing?.velocityX ?? 0, y: hull?.sailing?.velocityY ?? 0 };
 }
 
+/** A single heading selection fixes the physical target and velocity. Its
+ * discrete flight probes can therefore share the resulting translated body,
+ * while every pivot still performs its complete original flight search. */
+export function ballisticTargetPredictor(target: StrikeTarget, velocity: Point) {
+  const predictions=new Map<number,StrikeTarget>();
+  const at=(ticks:number)=>{
+    const known=predictions.get(ticks);if(known)return known;
+    const pose=translatedBallisticTarget(target,velocity,ticks);
+    // Keep unusually distant or artificial targets bounded without changing
+    // their probe count or calculated body; uncached ticks remain exact.
+    if(predictions.size<128)predictions.set(ticks,pose);
+    return pose;
+  };
+  return (pivot:Point,weapon:WeaponDef,barrelReach=0)=>ballisticTargetImpl(pivot,target,velocity,weapon,barrelReach,at);
+}
+function translatedBallisticTarget(target: StrikeTarget,velocity:Point,ticks:number):StrikeTarget {
+  const time = (ticks - 1) / SIM_TICKS_PER_SECOND;
+  const pose={ ...target, x: target.x + velocity.x * time, y: target.y + velocity.y * time };
+  if('order' in target && 'order' in pose)shareShipProfile(target,pose);
+  return pose;
+}
 /** Constant-velocity lead for the finite, fixed-world-course shot. The barrel
  * starts at its muzzle, but gun arc and range are measured from its pivot.
  * Launch happens after unit movement and impact before movement, so a shot
  * lasting n ticks observes n - 1 further movement steps at impact. */
 export function ballisticTarget(pivot: Point, target: StrikeTarget, velocity: Point, weapon: WeaponDef, barrelReach = 0): StrikeTarget {
+  return ballisticTargetImpl(pivot,target,velocity,weapon,barrelReach);
+}
+function ballisticTargetImpl(pivot: Point, target: StrikeTarget, velocity: Point, weapon: WeaponDef, barrelReach: number, predictedAt?: (ticks:number)=>StrikeTarget): StrikeTarget {
   const speed = Math.hypot(velocity.x, velocity.y);
   if (weapon.delivery !== 'bolt' && weapon.delivery !== 'shell' || speed < 1e-7) return target;
   const step = perTick(weapon.delivery === 'shell' ? 240 : 560);
-  const at = (ticks: number): StrikeTarget => {
-    const time = (ticks - 1) / SIM_TICKS_PER_SECOND;
-    const pose={ ...target, x: target.x + velocity.x * time, y: target.y + velocity.y * time };
-    if('order' in target && 'order' in pose)shareShipProfile(target,pose);
-    return pose;
-  };
   const reaches = (ticks: number) => {
     const time = (ticks - 1) / SIM_TICKS_PER_SECOND;
     const relative = { x: pivot.x - velocity.x * time, y: pivot.y - velocity.y * time };
@@ -62,7 +80,7 @@ export function ballisticTarget(pivot: Point, target: StrikeTarget, velocity: Po
     const middle = Math.floor((low + high) / 2);
     if (reaches(middle)) high = middle; else low = middle + 1;
   }
-  return at(low);
+  return predictedAt ? predictedAt(low) : translatedBallisticTarget(target,velocity,low);
 }
 
 /** Arc and range boundaries partition hull headings into firing intervals.

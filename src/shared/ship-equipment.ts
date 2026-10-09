@@ -9,7 +9,7 @@ import { headingDifference } from "./ship-navigation";
 import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
 import { veteranWeaponRange } from './veteran-stats';
-import { ballisticTarget, firingBoundaryHeadings, shipFireLaneClear, targetSailingVelocity } from './ship-fire-control';
+import { ballisticTarget, ballisticTargetPredictor, firingBoundaryHeadings, shipFireLaneClear, targetSailingVelocity } from './ship-fire-control';
 import geometry from './generated/ship-geometry.json';
 // Complete trained ships cost about 40% more, rounded to 20 gold; troop hulls
 // cost 50% more for their larger compartment. Included guns retain item prices.
@@ -99,13 +99,14 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
     };
     if(!weapons.some(possible))return heading;
     const reaches=new Map(weapons.map(item=>{const pose=mountedWeaponPose(ship,item)!;return[item.id,Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y)];}));
+    const predict=ballisticTargetPredictor(point,velocity);
     const predictions=new Map<string,Map<number,{target:StrikeTarget;point?:Point;eligible?:boolean;clear?:boolean}>>();
     const targetAt=(candidate:number,item:WorldItem)=>{
         let cache=predictions.get(item.id);if(!cache){cache=new Map();predictions.set(item.id,cache);}
         const cached=cache.get(candidate);if(cached)return cached.target;
         const mount=mounts.get(item.mountId!)!,c=detCos(candidate),s=detSin(candidate);
         const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-        const predicted=ballisticTarget(pivot,point,velocity,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,{target:predicted});return predicted;
+        const predicted=predict(pivot,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,reaches.get(item.id)!);cache.set(candidate,{target:predicted});return predicted;
     };
     const canFire=(candidate:number,item:WorldItem,checkLane=true)=>{
         const mount=mounts.get(item.mountId!)!;if(!mount)return false;
