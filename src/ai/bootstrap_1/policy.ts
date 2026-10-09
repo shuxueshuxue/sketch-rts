@@ -1,12 +1,10 @@
 import { RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from '../../shared/catalog';
-import { canReceiveHealing } from '../../shared/healing';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiPolicyContext } from '../policy/types';
 import { V6_STRATEGIES, v7Phases, type V6Strategy, type V6Want } from '../policy/v6/doctrine';
 import { V8_STRATEGIES } from '../policy/v8/doctrine';
-import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { ARCHER_DOCTRINES } from './archer-doctrine';
 import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
@@ -18,7 +16,7 @@ import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 import { planSummonerScreen } from './summoner-screen';
 import { mountedTasks } from './mounted-tasks';
-import { medicalRecovery } from './medical-recovery';
+import { medicalRecovery, recoveryPatients } from './medical-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -48,7 +46,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   const grove = snapshot.players[owner]!.race === 'grove';
   const healer = grove ? 'priest' : 'emberAcolyte';
-  const recovering = army.some(unit => !unit.deck && canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp * V7_WOUNDED_SHARE);
+  const recovering = recoveryPatients(snapshot, owner).length > 0;
   const medical: V6Want[] = (version === 'v9_archer' || recovering) && (army.length >= 10
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
       && snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt))
