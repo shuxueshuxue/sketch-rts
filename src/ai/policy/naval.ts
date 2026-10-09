@@ -310,7 +310,8 @@ function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const ours = fleet.filter(unit => combatHull(unit) && afloat(unit));
     // The escort must exist before a ferry crosses. Future purchases cannot
     // contribute fighting power to the current blockade decision.
-    return navalStrength(snapshot,theirs) * attackMargin(options) > navalStrength(snapshot,ours) + strengthOf(ours.flatMap(ship => shipPassengers(snapshot.units, ship)));
+    const crew=ours.flatMap(ship => shipPassengers(snapshot.units,ship)).filter(unit=>!isInCabin(unit));
+    return navalStrength(snapshot,theirs) * attackMargin(options) > navalStrength(snapshot,ours) + strengthOf(crew);
 }
 // The shared library's economy script: the water's next want, when the gold is there.
 export function planNavalEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand | undefined {

@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { boardUnit } from '../../shared/decks';
+import { boardUnit, deckPlacement } from '../../shared/decks';
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { sameGround } from '../../shared/terrain';
 import { seconds } from '../../shared/time';
+import { cabinDoor, enterCabinStep, isCabinProtected, isInCabin } from '../../shared/ship-cabin';
+import { canReach } from '../../shared/naval';
+import { hullContact, localToWorld, shipPassengers } from '../../shared/ship-geometry';
+import { hullFits } from '../../shared/ship-navigation';
 import type { RaceId } from '../../shared/types';
 import { BOOTSTRAP_VERSIONS, bootstrapPolicyContext } from '../bootstrap_1/policy';
 import { createAiPolicyMemory } from '../memory';
 import { planNavalTactics } from './naval';
+import { effectiveCombatRating, strengthOf } from './v6/strength';
+import { attackMargin } from './v6/general';
 
 function crossing(race: RaceId, phase: 'loading' | 'sailing') {
   const game = createGame('bareDuel', { players: ['player', 'enemy'], races: { player: race }, scenario: {
@@ -68,6 +74,44 @@ describe('actual convoy cover', () => {
     expect(mission.phase).toBe(phase === 'sailing' ? 'return' : 'loading');
     expect(commands).not.toContainEqual({ type: 'unload', unitIds: [boat.id], ...mission.to });
     for (const command of commands) issuePlayerCommand(game, 'player', command);
+  });
+
+  it.each(['loading','sailing'] as const)('counts the same local escort crew only while exposed during %s',phase=>{
+    const {game,boat,enemy,memory,mission}=crossing('grove',phase);
+    const escort=game.spawnUnit('player','warship',1696,944);
+    escort.hp=escort.maxHp*.5;
+    expect(hullFits(game.map,escort)).toBe(true);
+    expect(hullContact(escort,enemy)).toBeUndefined();
+    const archers=[game.spawnUnit('player','archer',escort.x,escort.y),game.spawnUnit('player','archer',escort.x,escort.y)];
+    for(const archer of archers) {
+      expect(boardUnit(escort,archer,game.units)).toBe(true);
+      expect(canReach(game.map,archer,enemy,game.units)).toBe(true);
+    }
+    issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:archers.map(archer=>archer.id)});
+    const exposedSnapshot=snapshotGame(game),context=bootstrapPolicyContext(exposedSnapshot,'player','v9_archer',{memory});
+    const bareGun=effectiveCombatRating(exposedSnapshot,escort),opposition=effectiveCombatRating(exposedSnapshot,enemy)*attackMargin(context);
+    // Establish both sides of the decision with the actual hull and crew stats:
+    // this healthy but damaged gun needs its reachable archers to cover the trip.
+    expect(opposition).toBeGreaterThan(bareGun);
+    expect(opposition).toBeLessThan(bareGun+strengthOf(archers));
+    const exposed=planNavalTactics(exposedSnapshot,'player',context);
+    expect(mission.phase).toBe('sailing');
+    expect(exposed).toContainEqual({type:'unload',unitIds:[boat.id],...mission.to});
+
+    for(const archer of archers) {
+      const door=deckPlacement(escort,archer,game.units,cabinDoor(escort),true,2);
+      expect(door).toBeDefined();
+      archer.deck={shipId:escort.id,...door!};Object.assign(archer,localToWorld(escort,door!));
+      issuePlayerCommand(game,'player',{type:'enterCabin',unitIds:[archer.id]});enterCabinStep(game,archer);
+      expect(isInCabin(archer)).toBe(true);expect(isCabinProtected(game,archer)).toBe(true);
+    }
+    expect(shipPassengers(game.units,escort)).toHaveLength(archers.length);
+    mission.phase=phase;
+    const shelteredSnapshot=snapshotGame(game);
+    const sheltered=planNavalTactics(shelteredSnapshot,'player',bootstrapPolicyContext(shelteredSnapshot,'player','v9_archer',{memory}));
+    expect(mission.phase).toBe(phase==='sailing'?'return':'loading');
+    expect(sheltered).not.toContainEqual({type:'unload',unitIds:[boat.id],...mission.to});
+    if(phase==='sailing')expect(sheltered).toContainEqual({type:'unload',unitIds:[boat.id],...mission.from,avoidCombat:true});
   });
 
   it('lands its living passengers back at the departure coast after losing cover', () => {
