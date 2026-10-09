@@ -227,6 +227,50 @@ describe('boarding balance through real simulation commands',()=>{
     expect(target.order.type).toBe('hold');
   });
 
+  it('replaces stale crew boarding on an immediate bridge command, while a queued bridge waits for its helm',()=>{
+    for(const queued of [false,true]) {
+      const {game,source,target}=pair(), soldier=crew(game,source), reserve=crew(game,source);
+      crew(game,target);
+      const oldTarget=game.spawnUnit('enemy','transport',source.x+500,source.y);
+      oldTarget.sailing!.heading=0;oldTarget.order={type:'hold',x:oldTarget.x,y:oldTarget.y};
+      expect(hullFits(game.map,oldTarget)).toBe(true);
+      expect(hullContact(source,oldTarget)).toBeUndefined();expect(hullContact(target,oldTarget)).toBeUndefined();
+      issuePlayerCommand(game,'player',{type:'board',unitIds:[soldier.id],transportId:oldTarget.id});
+      stepGame(game);
+      expect(soldier.order).toMatchObject({type:'board',transportId:oldTarget.id,rendezvous:{sourceId:source.id}});
+      expect(source.order).toMatchObject({type:'move',rendezvousFor:soldier.id});
+
+      issuePlayerCommand(game,'player',{type:'boardShip',unitIds:[source.id],targetId:target.id,...(queued?{queued:true}:{})});
+      if(queued) {
+        expect(source.orderQueue).toEqual([{type:'boardShip',targetId:target.id}]);
+        for(let tick=0;tick<10;tick++) {
+          stepGame(game);
+          expect(source.order).toMatchObject({type:'move',rendezvousFor:soldier.id});
+          expect(source.orderQueue).toEqual([{type:'boardShip',targetId:target.id}]);
+          expect(soldier.order).toMatchObject({type:'board',transportId:oldTarget.id,rendezvous:{sourceId:source.id}});
+          expect(source.sailing?.gangway).toBeUndefined();
+        }
+        until(game,()=>source.order.type==='boardShip',1800);
+        expect(source.orderQueue).toHaveLength(0);
+      } else {
+        expect(source.order).toMatchObject({type:'boardShip',targetId:target.id});
+        expect(soldier.order).toEqual({type:'idle'});expect(soldier.orderQueue).toHaveLength(0);
+      }
+      until(game,()=>source.sailing?.gangway?.phase==='ready',1800);
+      const redirected=queued?reserve:soldier;
+      expect(redirected.order).toMatchObject({type:'board',transportId:target.id});
+      expect(gangwaySurface(source,target)?.phase).toBe('ready');
+      for(let tick=0;tick<120;tick++) {
+        stepGame(game);
+        expect(source.sailing?.gangway?.targetId).toBe(target.id);
+        expect(gangwaySurface(source,target)?.phase).toBe('ready');
+        expect(source.order.type).toBe('idle');
+        expect(game.units.some(unit=>unit.order.type==='board'&&unit.order.transportId===oldTarget.id)).toBe(false);
+      }
+      expect(source.hp).toBeGreaterThan(0);expect(redirected.hp).toBeGreaterThan(0);
+    }
+  });
+
   it('keeps a cancelled ready passage closed instead of restarting an implicit crew rendezvous',()=>{
     const {game,source,target}=pair('transport','player'), soldier=crew(game,source);
     crossing(game,source,target,soldier);const station={x:source.x,y:source.y}, hp=soldier.hp;

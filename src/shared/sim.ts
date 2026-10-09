@@ -434,7 +434,9 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   if(command.type==='boardShip') {
     const error=checkCommandLegality(game,owner,command);
     if(error)throw new Error(error.message);
-    for(const ship of unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship)))
+    const ships=unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship));
+    if(!command.queued)cancelCrewRendezvous(game.units,new Set(ships.map(ship=>ship.id)));
+    for(const ship of ships)
       assignUnitOrder(ship,{type:'boardShip',targetId:command.targetId},command.queued);
     return;
   }

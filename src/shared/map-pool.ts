@@ -26,7 +26,7 @@ export const MAP_POOL = [
   { id: "loneMarket", name: { en: "Lone Market", zh: "孤市" }, players: 2, layout: { seed: "pool-loneMarket-1", kind: "ring", idea: "oneMarket" } },
   { id: "reedwater", name: { en: "Reedwater", zh: "芦苇泽" }, players: 2, layout: { seed: "pool-reedwater-1", kind: "ring", idea: "floodedValley" } },
   { id: "veiledHill", name: { en: "Veiled Hill", zh: "雾丘" }, players: 2, layout: { seed: "pool-veiledHill-1", kind: "ring", idea: "hiddenHill" } },
-  { id: "greystonePass", name: { en: "Greystone Pass", zh: "灰岩隘口" }, players: 2, layout: { seed: "pool-greystonePass-1", kind: "ring", idea: "bridgeStand", size:4608 } },
+  { id: "greystonePass", name: { en: "Greystone Pass", zh: "灰岩隘口" }, players: 2, layout: { seed: "pool-greystonePass-1", kind: "ring", idea: "bridgeStand" } },
   { id: "pineshade", name: { en: "Pineshade", zh: "松影林" }, players: 2, layout: { seed: "pool-pineshade-1", kind: "ring", idea: "deepJungle" } },
   { id: "gullIsland", name: { en: "Gull Island", zh: "鸥岛" }, players: 2, layout: { seed: "pool-gullIsland-1", kind: "ring", idea: "northIsles", size:6656 } },
   { id: "stillwater", name: { en: "Stillwater", zh: "静水原" }, players: 4, layout: { seed: "pool-stillwater-1", kind: "sides", idea: "riverValley" } },

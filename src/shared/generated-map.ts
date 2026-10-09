@@ -235,6 +235,9 @@ class Field {
   readonly plateaus: Plateau[] = [];
   // Ground that stays open whatever is drawn on it (a start, a mine and its hall, a camp, a post).
   readonly reserved: Disk[] = [];
+  // Optional mineral base clearings. Keep an already usable footprint as drawn;
+  // adding every pad up front changes mass placement even beside roomy mines.
+  readonly mineBasePads: { mine:Point; at:Point; radius:number }[] = [];
   // The idea's water (see @@@generated-water): deep water, the depth of the sea along the map's edge, land raised in it that
   // walks join (a home island, a lake's island crossed to), islands only a ship reaches, and every start's shore.
   readonly waters: Water[] = [];
@@ -371,16 +374,16 @@ class Field {
   // degrees either way where that crowds another camp (every copy turned alike); a guard that fits nowhere is left out.
   addGuardedMines(mines: Point[], color: CampTier, awayFrom: (mine: Point, index: number) => Point, item?: ItemKind) {
     this.mines.push(...mines);
-    // Keep the mineral clearing and a separate base pad, preferably away from
-    // its guard. A local pad leaves the surrounding woods and gate corridors
-    // intact; reserving the whole hauling circle opened unintended shortcuts.
+    // Keep the mineral clearing and prepare a separate base pad, preferably
+    // away from its guard. Carve it only if the finished terrain lacks a complete
+    // hauling foundation and worker perimeter; roomy mines retain their woods.
     for (const [index, at] of mines.entries()) {
       this.reserved.push({ at, radius:230 });
       const away = unit(sub(at,awayFrom(at,index)));
       for (const turn of [0,Math.PI/2,-Math.PI/2,Math.PI,Math.PI/4,-Math.PI/4,3*Math.PI/4,-3*Math.PI/4]) {
         const pad = roundPoint(step(at,rotate(away,turn),GOLD_MINE_RULES.mainDistance));
         if (!this.dry(pad,160) || !this.offPlateaus(pad,160)) continue;
-        this.reserved.push({at:pad,radius:160});
+        this.mineBasePads.push({mine:at,at:pad,radius:160});
         break;
       }
     }
@@ -1164,7 +1167,7 @@ function shoresFrom(field: Field, from: Point): Shore[] {
 // becomes a cliff but for its ramps, stray pockets and specks are filled or cleared, the water's rim becomes shallows, and the
 // map is kept only if every start reaches everything, no island is walked to, and every shore takes a shipyard on open
 // water.
-function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
+function carveTerrain(field: Field, plain: boolean, allowBasePads = true): Terrain | undefined {
   const cells = Math.round(field.size / TERRAIN_CELL);
   const grid = new Grid(cells, field);
   for (const clearing of field.clearings) grid.keep(clearing.at, clearing.radius, clearing.wobble, clearing.plateau === true);
@@ -1199,7 +1202,16 @@ function carveTerrain(field: Field, plain: boolean): Terrain | undefined {
   if (!grid.obstaclesFit(field.bases[0]!)) return undefined;
   if (!field.bases.every((base) => grid.roomAround(base, 450) >= 0.55)) return undefined;
   const terrain = grid.terrain();
-  if (!field.mines.every((mine) => grid.hallFits(mine, terrain))) return undefined;
+  const missingBases = field.mines.filter(mine => !grid.hallFits(mine,terrain));
+  if (missingBases.length) {
+    if (!allowBasePads) return undefined;
+    const pads = missingBases.map(mine => field.mineBasePads.find(pad => pad.mine === mine));
+    if (pads.some(pad => !pad)) return undefined;
+    for (const pad of pads) field.reserved.push({at:pad!.at,radius:pad!.radius});
+    // This is map creation only. Recheck the complete layout, including shortcut
+    // gates and water access, after opening just the deficient mineral bases.
+    return carveTerrain(field,plain,false);
+  }
   if (grid.islandWalked(field.bases[0]!)) return undefined;
   if (!harbours(field, terrain)) return undefined;
   return terrain;
