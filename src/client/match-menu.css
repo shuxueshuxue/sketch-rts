@@ -43,12 +43,12 @@
 .match-dossier .map-info-name { font-size:22px; }
 .room-setup-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; }
 :is(.create-game-form,.room-setup) .room-slot-pane {
-  --seat-tracks:24px minmax(90px,1fr) 84px 96px 104px 92px;
+  --seat-tracks:24px minmax(90px,1fr) 84px 96px 104px 128px;
   display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:14px; min-height:0; min-width:0;
   padding:18px; border:1px solid var(--inset-edge); border-radius:0;
   background:linear-gradient(110deg,#fff8df38,#c1a77c10); box-shadow:inset 0 1px #fff8e480;
 }
-.room-setup .room-slot-pane { --seat-tracks:24px minmax(90px,1fr) 78px 86px 94px 88px 46px; }
+.room-setup .room-slot-pane { --seat-tracks:24px minmax(90px,1fr) 78px 86px 94px 128px 46px; }
 :is(.create-game-form,.room-setup) .room-section-title { color:var(--title); font-size:16px; letter-spacing:1px; }
 .slot-columns,:is(.create-game-form,.room-setup) .slot-row { display:grid; grid-template-columns:var(--seat-tracks); gap:8px; align-items:center; }
 .slot-columns { overflow-y:hidden; scrollbar-gutter:stable; padding:0 0 10px; border-bottom:1px solid var(--rule); font:12px/1.4 var(--font-body); color:var(--ink-soft); }

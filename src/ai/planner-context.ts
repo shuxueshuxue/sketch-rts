@@ -2,7 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
-import { isBootstrapVersion, planBootstrapCommands } from "./bootstrap_1/policy";
+import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
@@ -57,7 +57,19 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
     ];
   };
   if (isBootstrapVersion(version)) {
-    return withVeteranSkills(planBootstrapCommands(snapshot, owner, version, { ...policyOptions, ...(policyMode ? { policyMode } : {}), ...(disabledBehaviors ? { disabledBehaviors } : {}), memory }).map(entry => ({playerId:owner, ...(request.source !== undefined ? {source:request.source} : {}), scriptId:entry.scriptId, command:entry.command})));
+    const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
+    const context = bootstrapPolicyContext(snapshot, owner, version, {
+      ...policyOptions,
+      ...(policyMode ? { policyMode } : {}),
+      ...(disabledBehaviors ? { disabledBehaviors } : {}),
+      memory,
+    });
+    return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
+      playerId: owner,
+      ...(request.source !== undefined ? { source: request.source } : {}),
+      scriptId: entry.scriptId,
+      command: entry.command,
+    })));
   }
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.
   if (version === "v2-prod") {

@@ -629,7 +629,7 @@ export type LocalUserProfile = {
 export type SlotController = "human" | "ai" | "open" | "closed";
 
 // The computer players a room offers, per AI slot.
-export type RoomAiVersion = "v5" | "v7" | "v8";
+export type RoomAiVersion = BootstrapAiVersion;
 // A seat's race or computer player, or one drawn when the match starts (see resolvedRoomSlots).
 export type RaceChoice = RaceId | "random";
 export type RoomAiChoice = RoomAiVersion | "random";
