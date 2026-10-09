@@ -32,7 +32,7 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
       id: effect.id, x: effect.x, y: effect.y, radius: effect.radius!, remaining: effect.remaining, angle: 0,
     })),
   ];
-  const soldiers = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unitMover(unit.kind) === 'land' && !unit.deck
+  const soldiers = snapshot.units.filter(unit => unit.owner === owner && unitMover(unit.kind) === 'land' && !unit.deck
     && unit.order.type !== 'board' && unit.order.type !== 'charge' && !unit.effects.some(effect => effect.type === 'root'));
   const enemies = [...snapshot.units, ...snapshot.buildings].filter(enemy => enemy.attackDamage > 0
     && !('order' in enemy && enemy.deck) && isEnemyOwner(snapshot, owner, enemy.owner, options));
