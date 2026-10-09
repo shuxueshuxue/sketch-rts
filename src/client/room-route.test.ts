@@ -15,7 +15,7 @@ describe("address-bar routes", () => {
     configuration.layoutSeed = "same world";
     configuration.visibility = "public";
     configuration.seatSetup[1] = { controller: "open", race: "ember", team: "team-2" };
-    configuration.seatSetup[2] = { controller: "ai", race: "grove", aiVersion: "v8", team: "team-1" };
+    configuration.seatSetup[2] = { controller: "ai", race: "grove", aiVersion: "v9_knight", team: "team-1" };
     const url = formatRoomRoute({ screen: "create", configuration });
     expect(parseRoomRoute(url)).toEqual({ screen: "create", configuration });
     expect(url).not.toContain("userId");
@@ -27,7 +27,7 @@ describe("address-bar routes", () => {
   });
   it("keeps map selection and setup as distinct history entries with the same configuration", () => {
     const configuration = defaultRoomConfiguration("grandEstuary");
-    configuration.seatSetup[1] = { controller: "ai", race: "ember", team: "team-2", aiVersion: "v7" };
+    configuration.seatSetup[1] = { controller: "ai", race: "ember", team: "team-2", aiVersion: "v9_summoner" };
     const selection = formatRoomRoute({ screen: "maps", configuration });
     const setup = formatRoomRoute({ screen: "create", configuration });
     expect(selection).not.toEqual(setup);
@@ -35,7 +35,7 @@ describe("address-bar routes", () => {
     expect(parseRoomRoute(setup)).toEqual({ screen: "create", configuration });
   });
   it("rejects invalid or oversized setups without a partial configuration", () => {
-    for (const search of ["?map=missing", "?map=stillwater&seats=ai:ffa:grove:v8", "?map=stillwater&seed=", "?map=stillwater&visibility=bad", "?map=stillwater&seats=human:ffa:unknown:"]) {
+    for (const search of ["?map=missing", "?map=stillwater&seats=ai:ffa:grove:v9_knight", "?map=stillwater&seed=", "?map=stillwater&visibility=bad", "?map=stillwater&seats=human:ffa:unknown:"]) {
       expect(parseRoomRoute(search)).toEqual({ screen: "home" });
     }
   });

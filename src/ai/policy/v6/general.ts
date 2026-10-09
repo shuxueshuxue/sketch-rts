@@ -128,11 +128,19 @@ type Mode = NonNullable<V6PolicyMemory["general"]>["mode"];
 
 export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
+  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options));
+}
+
+export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext, intel: V6Intel): Unit[] {
   const memory = v6Memory(options);
-  const intel = readV6Intel(snapshot, owner, options);
-  const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const busy = new Set([...(memory.raid?.unitIds ?? []), ...(memory.closeout?.unitIds ?? []), ...(options.memory.support?.unitIds ?? []), ...Object.values(options.memory.naval?.ferries ?? {}).flatMap((ferry) => ferry.crewIds)]);
-  const available = intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
+  return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
+}
+
+export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
+  const memory = v6Memory(options);
+  const { profile, strategy } = v6Doctrine(snapshot, owner, options);
+  const available = availableV6Army(snapshot, options, intel);
   const front = available.filter((unit) => !isBacklineKind(unit) && unit.attackDamage > 0);
   const strength = strengthOf(available);
   // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
@@ -350,7 +358,7 @@ function defendTarget(intel: V6Intel) {
 // leash walks back: sent back fighting, it took up the chase again on the way (the last of them died 920 out).
 const V7_DEFEND_EDGE = 0.9;
 const V7_DEFEND_STAY = 0.6;
-const V7_WOUNDED_SHARE = 0.35;
+export const V7_WOUNDED_SHARE = 0.35;
 const V7_DEFEND_STEP = 200;
 const V7_DEFEND_LEASH = 450;
 

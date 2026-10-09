@@ -10,7 +10,7 @@ import { isInCabin } from '../../shared/ship-cabin';
 import { isTransportKind } from '../../shared/transport-role';
 import { clearTransferLanes } from './transfer-lanes';
 import { convoyCanCarry } from './convoy-load';
-import { nearestShipPose } from "../../shared/ship-navigation";
+import { headingDifference, nearestShipPose } from "../../shared/ship-navigation";
 import { SHIP_WEAPONS, installedWeapons, isShipEquipment, shipMounts, shipNeedsRepair } from "../../shared/ship-equipment";
 import { canEquip, canExchange, freeItemSlot, itemsFor, transferRefusal } from "../../shared/equipment";
 import { deckPlacement } from "../../shared/decks";
@@ -497,12 +497,15 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
     }
     const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
-    if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32)
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,phase:mission.phase,crew:aboardIds};
+    // A precise berth turn moves the hull while its center stays still. Measure
+    // the bow's angular travel against the same distance gate as translation.
+    if(!progress || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32
+        || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
     else if(snapshot.tick-progress.tick>seconds(40)){
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
         if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
-        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,phase:'return',crew:aboardIds};
+        mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:aboardIds};
         return cancelFerry(snapshot,boat,mission,options);
     }
     // A cancelled trip keeps its passengers and sends them ashore at the departure coast.

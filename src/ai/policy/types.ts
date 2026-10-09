@@ -24,6 +24,8 @@ export type AiTelemetry = {
 };
 
 export type PresetAiPolicyOptions = {
+  doctrines?: readonly import("./v6/doctrine").V6Strategy[];
+  armyWants?: readonly import("./v6/doctrine").V6Want[];
   teams?: Partial<Record<PlayerId, string>>;
   version?: AiScriptVersion;
   requestedVersion?: AiScriptVersion;

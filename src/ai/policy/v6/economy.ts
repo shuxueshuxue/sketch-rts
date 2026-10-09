@@ -239,7 +239,7 @@ function outweighingPush(economy: Economy): { hall: Building; threat: number } |
 function wantGoals(economy: Economy): Goal[] {
   const goals: Goal[] = [];
   const claimed = new Set<string>();
-  const wants = [...economy.phase.wants, ...adaptiveArmyWants(economy.snapshot, economy.owner, economy.options)].sort((a, b) => b.priority - a.priority);
+  const wants = [...economy.phase.wants, ...(economy.options.armyWants === undefined ? adaptiveArmyWants(economy.snapshot, economy.owner, economy.options) : economy.options.armyWants)].sort((a, b) => b.priority - a.priority);
   for (const want of wants) {
     const priority = want.priority + (economy.threatened && "unit" in want ? THREAT_BONUS : 0);
     if ("unit" in want) {
