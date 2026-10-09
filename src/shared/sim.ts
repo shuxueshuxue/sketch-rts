@@ -2,6 +2,7 @@ import { cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
 import { GOLD_MINE_RULES, prepareMiningFrame, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
+import { SPARK_FIRE, sparkIgnites } from './spark-fire';
 import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
@@ -2685,7 +2686,9 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
     const source = effect.unitId ? findTarget(game,effect.unitId) : undefined;
     const attacker = source ?? scriptSource({id:effect.unitId ?? effect.id,owner:effect.owner,x:effect.x,y:effect.y});
     for (const target of [...game.units,...game.buildings]) if (target.hp>0 && areEnemyOwners(game,effect.owner,target.owner) && distance(effect,target)<=effect.radius+target.radius) {
+      if (effect.sourceKind === 'sparkArcher' && isUnit(target) && (target.deck || unitMover(target.kind) !== 'land')) continue;
       const taken=applyDamage(game,attacker,target,effect.damage,undefined,undefined,0,effect.damageProfile ?? DAMAGE_PROFILES.BURNING);if(taken!==undefined)addHitEffect(game,target,taken,source);
+      if (taken !== undefined && effect.sourceKind === 'sparkArcher' && isUnit(target)) setStatus(target, { type: 'scorch', remaining: SCORCH_DURATION });
     }
     return;
   }
@@ -2720,7 +2723,7 @@ function applyProjectileImpact(game: Game, projectile: Projectile) {
   const attacker = shooter ?? projectileAttacker(projectile);
   const taken = applyDamage(game, attacker, target, attackDamageAgainstTarget(game, attacker, target, projectile.damage), projectile.hullDamageShare, undefined, 0, projectile.damageProfile ?? attackDamageProfile(projectile.sourceKind ?? "defenseTower"), projectile.armorAlreadyApplied);
   if (taken === undefined) return;
-  applyAttackStatusEffects(game, attacker, target);
+  applyAttackStatusEffects(game, attacker, target, projectile.sourceKind);
   addHitEffect(game, target, taken, shooter, projectile.attackKind);
   });
 }
@@ -2915,7 +2918,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   const dealt = profile.origin === "spell" ? damage : attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
   const taken = applyDamage(game, attacker, target, dealt, undefined, undefined, 0, profile);
   if (taken === undefined) return;
-  if (profile.origin !== "spell") applyAttackStatusEffects(game, attacker, target);
+  if (profile.origin !== "spell") applyAttackStatusEffects(game, attacker, target, attacker.kind);
   if (profile.delivery === "melee" && profile.origin !== "spell" && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
@@ -2962,7 +2965,14 @@ function isCasterOrSummoned(unit: Unit) {
   return unit.expiresTick !== undefined || hasSpell(unit.kind);
 }
 
-function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle) {
+function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, sourceKind: (Unit | Building)['kind'] | undefined) {
+  if (sourceKind === 'sparkArcher' && isUnit(target) && !target.deck && unitMover(target.kind) === 'land'
+    && sparkIgnites(attacker.id, target.id, game.tick)) {
+    addEffect(game, 'burningGround', target.x, target.y, SPARK_FIRE.duration, {
+      owner: attacker.owner, unitId: attacker.id, sourceKind, damageProfile: DAMAGE_PROFILES.BURNING,
+      damage: SPARK_FIRE.damage, radius: SPARK_FIRE.radius, tickEvery: SPARK_FIRE.tickEvery,
+    });
+  }
   if (!isUnit(attacker)) return;
   const rules = unitRules(game, attacker);
   // A red dragon's fire (see @@@creep-traits) falls on buildings' neighbours too.
@@ -2978,10 +2988,6 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
   if (!isUnit(target)) return;
   if (rules.slowOnHit) setStatus(target, { type: "slow", remaining: SLOW_TICKS });
   if (rules.poisonOnHit) setStatus(target, { type: "poison", remaining: POISON_TICKS, sourceId: attacker.id, sourceOwner: attacker.owner });
-  if (attacker.kind !== "sparkArcher") return;
-  target.effects = target.effects.filter((effect) => effect.type !== "scorch");
-  target.effects.push({ type: "scorch", remaining: SCORCH_DURATION });
-  addEffect(game, "scorch", target.x, target.y, 28);
 }
 
 // The damage the target took, or undefined when a guardian field turned the blow aside.
