@@ -117,7 +117,7 @@ function readEnemy(snapshot: GameSnapshot, enemy: PlayerId, ownBuildings: Buildi
 // not intruding: V8's raiders idling 350 from their hall stood 733 to 757 from V9's outpost tower, in and out of
 // INTRUSION_RANGE, and V9's army of 33 turned between defending against them and its attack every 20 to 60 seconds for
 // twenty minutes (pool-elderwood-3).
-function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[], homeAware: boolean): V6Intrusion | undefined {
+export function readIntrusion(ownBuildings: Building[], enemies: V6EnemyIntel[], homeAware: boolean): V6Intrusion | undefined {
   const nearest = (unit: Unit, points: readonly Point[]) => points.reduce((best, point) => Math.min(best, distance(unit, point)), Infinity);
   const atHome = (unit: Unit, enemy: V6EnemyIntel) => nearest(unit, enemy.bases.map((base) => base.hall)) < nearest(unit, ownBuildings);
   const army = enemies.flatMap((enemy) => (homeAware ? enemy.army.filter((unit) => !atHome(unit, enemy)) : enemy.army));
