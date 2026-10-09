@@ -162,7 +162,7 @@ export const summonerTowerRush: AiScript = {
       const rear = Math.floor(index / columns) * spacing;
       const point = { x: post.x - forward.y * lateral - forward.x * rear,
         y: post.y + forward.x * lateral - forward.y * rear };
-      if (!plan.press) for (const enemy of plan.opponents) if (enemy.attackDamage > 0) {
+      for (const enemy of plan.opponents) if (enemy.attackDamage > 0) {
         const dx = point.x - enemy.x, dy = point.y - enemy.y;
         const across = dx * forward.y - dy * forward.x;
         const reach = enemy.attackRange + enemy.radius + caster.radius + POST_SLACK;
