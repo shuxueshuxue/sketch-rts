@@ -150,6 +150,35 @@ describe('boarding balance through real simulation commands',()=>{
     expect(attackers.some(unit=>unit.hp>0&&unit.deck?.shipId===target.id)).toBe(true);
   });
 
+  it('strikes a reachable entrance blocker while a rear archer fires, preserving the boarders queued orders',()=>{
+    const {game,source,target}=pair(), attackers=[crew(game,source),crew(game,source)], blocker=crew(game,target), rear=crew(game,target,'archer');
+    syncDecks(game.units);
+    const rearGoal=localToWorld(target,deckPlacement(target,rear,game.units,{x:60,y:0},true,2)!);
+    issuePlayerCommand(game,'enemy',{type:'move',unitIds:[rear.id],...rearGoal,avoidCombat:true});
+    until(game,()=>rear.arrivedAt?.x===rearGoal.x&&rear.arrivedAt?.y===rearGoal.y,400);
+    expect(deckPointFits(target,rear,rear.deck!,game.units)).toBe(true);
+    issuePlayerCommand(game,'enemy',{type:'attack',unitIds:[rear.id],targetId:attackers[0]!.id});
+    const rearHp=rear.hp, blockerHp=blocker.hp, hits:{source:string;target:string;damage:number}[]=[];
+    game.observer={hit:(from,to,damage)=>hits.push({source:from.id,target:to.id,damage})};
+    const attackerHit=()=>hits.find(hit=>attackers.some(unit=>unit.id===hit.source)&&[blocker.id,rear.id].includes(hit.target)&&hit.damage>0);
+    begin(game,source,target);let queued=false;
+    for(let tick=0;tick<500&&!attackerHit()&&attackers.some(unit=>unit.hp>0);tick++) {
+      const before=attackers.map(unit=>({x:unit.x,y:unit.y}));stepGame(game);
+      if(!queued&&source.sailing?.gangway?.phase==='ready') {
+        issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:attackers.map(unit=>unit.id),queued:true});queued=true;
+      }
+      for(const [index,unit]of attackers.entries())if(unit.hp>0) {
+        expect(Math.hypot(unit.x-before[index]!.x,unit.y-before[index]!.y)).toBeLessThanOrEqual(perTick(unit.speed)+1e-6);
+        if(queued){expect(unit.order).toMatchObject({type:'board',transportId:target.id});expect(unit.orderQueue).toHaveLength(1);expect(unit.orderQueue![0]!.type).toBe('hold');}
+      }
+      expect(target.owner).toBe('enemy');expect(hullContact(source,target)).toBeUndefined();
+    }
+    expect(queued).toBe(true);expect(attackerHit()?.target).toBe(blocker.id);expect(blocker.hp).toBeLessThan(blockerHp);
+    expect(rear.hp).toBe(rearHp);expect(rear.hp).toBeGreaterThan(0);
+    expect(hits.some(hit=>hit.source===rear.id&&hit.target===attackers[0]!.id&&hit.damage>0)).toBe(true);
+    expect(source.sailing?.gangway?.phase).toBe('ready');
+  });
+
   it.each(['archer','knight','golem','ogreLord','worker','sheltered'] as const)('keeps %s crew out of the automatic infantry assault',kind=>{
     const {game,source,target}=pair('carrier'), infantry=crew(game,source), excluded=crew(game,source,kind==='sheltered'?'footman':kind);
     if(kind==='sheltered') {

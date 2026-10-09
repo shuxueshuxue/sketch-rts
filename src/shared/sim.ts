@@ -1725,7 +1725,10 @@ function updateBoardOrder(game: Game, unit: Unit) {
     // Retain the boarding order so clearing the lane resumes the crossing.
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
       && unitRules(game,unit).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
-      const defender=navalCombatTarget(game,unit,transport);
+      // Answer the reachable front rank before pursuing a higher-priority
+      // shooter whose route is sealed by that defender's body.
+      const nearby=navalCombatTarget(game,unit,transport,unit.attackRange);
+      const defender=nearby!==transport ? nearby : navalCombatTarget(game,unit,transport);
       if(defender!==transport && isUnit(defender)) {
         const boardingOrder=unit.order;
         unit.order={type:'attack',targetId:defender.id};
@@ -3202,7 +3205,7 @@ function withDeckDamageBatch(game: Game, body: () => void) {
 }
 
 /** Ship orders address the fighting deck and remain on the hull after its last passenger dies. */
-function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit | Building): Unit | Building {
+function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit | Building, crewRange=Infinity): Unit | Building {
   if (!isUnit(target) || !shipProfile(target)) return target;
   const home=isUnit(attacker) && attacker.deck && unitRules(game,attacker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD
     ? game.units.find(ship=>ship.id===attacker.deck!.shipId) : undefined;
@@ -3210,7 +3213,7 @@ function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit |
   // A hull-targeted melee order must answer them before striking an empty hull.
   const passengers=home && home.id!==target.id && decksCanTransfer(home,target,attacker as Unit)
     ? [...shipPassengers(game.units,target),...shipPassengers(game.units,home)] : shipPassengers(game.units,target);
-  const crew = passengers.filter(unit => unit.hp > 0 && !isInCabin(unit) && areEnemyOwners(game, attacker.owner, unit.owner)
+  const crew = passengers.filter(unit => unit.hp > 0 && !isInCabin(unit) && areEnemyOwners(game, attacker.owner, unit.owner) && (crewRange===Infinity || distanceSquared(attacker,unit)<=crewRange*crewRange)
     && (isUnit(attacker) ? canReach(game.map, attacker, unit, game.units) : distance(attacker,unit)<=attacker.attackRange));
   let best: Unit | undefined, bestScore = -Infinity;
   for (const unit of crew) {

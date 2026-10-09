@@ -59,7 +59,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const start={x:ship.x,y:ship.y,heading:motion.heading};
   let aim:Point,desired:number;
   const length=shipProfile(ship)!.length;
-  const replan=(allowCruise=true)=>{
+  const replan=(allowCruise=true,planned?:ReturnType<typeof planVoyageRoute>)=>{
     const previous=motion.route;
     const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
     const traffic=reservationTraffic(ship,units);
@@ -72,8 +72,8 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // both terrain and live hulls; obstructed approaches keep their corridor.
     const fireCourse=allowCruise && point.fireHeading!==undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*3
       && hullPassageClear(map,ship,start,{...point,heading:point.fireHeading});
-    const {points,partial}=fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
-      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity);
+    const {points,partial}=planned ?? (fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
+      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity));
     if(!allowCruise)for(const point of points)point.exact=true;
     motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,
       startX:ship.x,startY:ship.y,startHeading:motion.heading,windKey:wind.key,age:0,blockedTicks:0,
@@ -87,6 +87,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       ...(point.targetSpeed!==undefined?{targetSpeed:point.targetSpeed}:{}),
       ...(point.fireHeading!==undefined?{fireHeading:point.fireHeading}:{}),...(point.retreat?{retreat:true}:{}),
       ...(!precision ? {cruise:allowCruise} : {})};
+  };
+  const waitForTraffic=()=>{
+    motion.speed=0;
+    const route=motion.route;if(!route)return;
+    route.blockedTicks=(route.blockedTicks??0)+1;
+    // Contact spends momentum, not the route. A passing hull may release the
+    // next physical step before another strategic search is useful.
+    if(route.blockedTicks>=10 && (route.age??0)>=SIM_TICKS_PER_SECOND)replan(false);
   };
   {
     let route=motion.route;
@@ -127,11 +135,12 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       }
     }
     if(route.cruise===false && point.heading===undefined && route.points.length===1
-      && !route.points[0]!.pivot && Math.hypot(point.x-ship.x,point.y-ship.y)>length*2 && (route.age??0)>=20){
+      && !route.points[0]!.pivot && Math.hypot(point.x-ship.x,point.y-ship.y)>length*2
+      && (route.age??0)>=SIM_TICKS_PER_SECOND && (route.age??0)%SIM_TICKS_PER_SECOND===0){
       const traffic=shipTraffic(ship,units);
       const recovery=planVoyageRoute(map,ship,point,traffic,traffic.hasTraffic?1024:Infinity);
       if(!recovery.partial && recovery.points.length && recovery.points.every(point=>!point.exact && !point.pivot)){
-        replan();route=motion.route!;
+        replan(true,recovery);route=motion.route!;
       }
     }
     if(route.cruise && route.points.length){
@@ -195,7 +204,15 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     const performance=coursePerformance(ship,map);
     if(motion.sail)motion.sail.mode=performance.calm?'calm-assist':'maneuver';
     const next=active.points[0];
-    if(!next){motion.speed=0;if(motion.sail)motion.sail.mode='idle';if(active.trafficKey!==shipTrafficKey(ship,units) || active.partial && (Math.hypot(ship.x-active.startX!,ship.y-active.startY!)>1 || Math.abs(headingDifference(active.startHeading!,motion.heading))>.001))motion.route=undefined;return;}
+    if(!next){
+      motion.speed=0;if(motion.sail)motion.sail.mode='idle';
+      // A moving neighbor changes the traffic key several times a second.
+      // An empty partial search retains its failed corridor for one second;
+      // wind and command changes are still admitted immediately above.
+      if((active.age??0)>=SIM_TICKS_PER_SECOND && (active.age??0)%SIM_TICKS_PER_SECOND===0
+        && (active.trafficKey!==shipTrafficKey(ship,units) || active.partial && (Math.hypot(ship.x-active.startX!,ship.y-active.startY!)>1 || Math.abs(headingDifference(active.startHeading!,motion.heading))>.001)))motion.route=undefined;
+      return;
+    }
     if(next.pivot){
       const difference=headingDifference(start.heading,next.heading),lever=Math.hypot(ship.x-next.pivot.x,ship.y-next.pivot.y);
       const targetSpeed=Math.min(performance.auxiliarySpeed*pace,lever*turn*SIM_TICKS_PER_SECOND);
@@ -203,8 +220,8 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       const angle=Math.min(Math.abs(difference),turn,lever ? perTick(motion.speed)/lever : turn);
       const at=shipPoseAt(start,next,Math.abs(difference)>1e-7?angle/Math.abs(difference):1);
       const leverSigned=(ship.x-next.pivot.x)*detCos(start.heading)+(ship.y-next.pivot.y)*detSin(start.heading);
-      if(!advanceShip(ship,map,units,{yaw:headingDifference(start.heading,at.heading),pivotLever:leverSigned})){motion.speed=0;motion.route=undefined;}
-      else motion.speed=lever*Math.abs(headingDifference(start.heading,motion.heading))*SIM_TICKS_PER_SECOND;
+      if(!advanceShip(ship,map,units,{yaw:headingDifference(start.heading,at.heading),pivotLever:leverSigned}))waitForTraffic();
+      else {motion.speed=lever*Math.abs(headingDifference(start.heading,motion.heading))*SIM_TICKS_PER_SECOND;active.blockedTicks=0;}
       return;
     }
     aim=next;desired=next.heading;
@@ -212,9 +229,9 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const difference=headingDifference(motion.heading,desired);
   const heading=motion.heading+Math.max(-turn,Math.min(turn,difference));
   const turned={...start,heading};
-  if(!advanceShip(ship,map,units,{yaw:heading-start.heading})){motion.speed=0;motion.route=undefined;return;}
+  if(!advanceShip(ship,map,units,{yaw:heading-start.heading})){waitForTraffic();return;}
   // Turns happen in water wide enough for the swept hull; a narrow channel is traversed along its axis.
-  if(Math.abs(difference)>turn+1e-7){motion.speed=0;return;}
+  if(Math.abs(difference)>turn+1e-7){motion.speed=0;if(motion.route)motion.route.blockedTicks=0;return;}
   // Collinear lattice points are not mandatory stops. Skip a clear run before
   // local avoidance so another hull cannot trap us at an obsolete grid point.
   if(motion.route && Math.hypot(aim.x-ship.x,aim.y-ship.y)>1e-7){
@@ -248,8 +265,8 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   motion.speed+=Math.max(-acceleration,Math.min(acceleration,targetSpeed-motion.speed));
   if(direction<0)motion.speed=Math.min(motion.speed,targetSpeed);
   const step=Math.min(gap,perTick(motion.speed));
-  if(!advanceShip(ship,map,units,{surge:step*direction,spentYaw:Math.abs(heading-start.heading)})){motion.speed=0;motion.route=undefined;}
-  else if(direction<0)motion.speed=Math.hypot(ship.x-start.x,ship.y-start.y)*SIM_TICKS_PER_SECOND;
+  if(!advanceShip(ship,map,units,{surge:step*direction,spentYaw:Math.abs(heading-start.heading)}))waitForTraffic();
+  else {if(direction<0)motion.speed=Math.hypot(ship.x-start.x,ship.y-start.y)*SIM_TICKS_PER_SECOND;if(motion.route)motion.route.blockedTicks=0;}
 }
 
 /** Old authored placements may put a larger new hull across a coast. Normal motion stays continuous. */
