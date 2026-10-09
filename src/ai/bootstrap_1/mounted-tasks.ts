@@ -88,7 +88,8 @@ export const mountedTasks: AiScript = {
         const workers = candidates.map(target => ({ target, point: objective.kind === 'camp' ? target : firingPoint(snapshot, rider, target, towers) }))
           .filter((choice): choice is { target: Unit; point: Point } => choice.point !== undefined);
         const local = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.owner !== owner
-          && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options)) && distance(unit, rider) < THREAT_RANGE);
+          && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options))
+          && (distance(unit, rider) < THREAT_RANGE || objective.kind === 'camp' && objective.ids.includes(unit.id)));
         const pursuers = local.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
           && distance(rider, unit) <= rider.attackRange).map(target => ({ target, point: target }));
         const inRange = workers.filter(choice => distance(rider, choice.target) <= rider.attackRange);
