@@ -14,9 +14,12 @@ export const SAIL_RULES = {
   setRate: .8,
   billowRate: 2,
   auxiliaryShare: .2,
-  lateen: { noGoAngle: Math.PI / 4, maxAngle: Math.PI * 65 / 180 },
-  lug: { noGoAngle: Math.PI * 50 / 180, maxAngle: Math.PI * 65 / 180 },
-  square: { noGoAngle: Math.PI / 3, maxAngle: Math.PI * 50 / 180 },
+  // RTS courses deliberately sail closer than historical square-riggers.
+  // Each rig retains its own no-go sector without making an upwind order
+  // spend almost all its travel crossing sideways across the map.
+  lateen: { noGoAngle: Math.PI * 38 / 180, maxAngle: Math.PI * 65 / 180 },
+  lug: { noGoAngle: Math.PI * 43 / 180, maxAngle: Math.PI * 65 / 180 },
+  square: { noGoAngle: Math.PI * 48 / 180, maxAngle: Math.PI * 50 / 180 },
 } as const;
 
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
@@ -33,7 +36,7 @@ export function sailRig(kind: UnitKind): SailRig {
 function polar(rig: SailRig, angle: number): number {
   const noGo = SAIL_RULES[rig].noGoAngle;
   if (angle <= noGo) return 0;
-  const knots = [[noGo, 0], [noGo + Math.PI / 12, .75], [Math.PI / 2, .96],
+  const knots = [[noGo, 0], [noGo + Math.PI / 15, .84], [Math.PI / 2, .96],
     [Math.PI * 2 / 3, 1], [Math.PI, rig === 'lateen' ? .66 : rig === 'lug' ? .78 : .97]];
   for (let i = 1; i < knots.length; i++) {
     const [end, high] = knots[i]!, [start, low] = knots[i - 1]!;
@@ -90,8 +93,12 @@ export function coursePerformance(ship: Unit, map: Pick<GameMap, 'wind'>,
   const maxForwardSpeed = limits.speed;
   // True wind supplies the energy. Boat-generated apparent wind only trims
   // the sail and cannot propel it in a calm, even while moving astern.
+  // Wind strength is a game speed response, not a second drag simulation.
+  // Moderate wind must not halve an already slower upwind VMG; a true calm
+  // still supplies no sail propulsion and relies on the maneuvering assist.
+  const windDrive = Math.sqrt(Math.min(1, wind.speed / DEFAULT_WIND.speed));
   const targetSpeed = calm || noGo || !trimmedMode ? 0
-    : maxForwardSpeed * Math.min(1, wind.speed / DEFAULT_WIND.speed) * polar(rig, trueWindAngle) * trimEfficiency;
+    : maxForwardSpeed * windDrive * polar(rig, trueWindAngle) * trimEfficiency;
   return { targetSpeed, noGo, noGoAngle, beatAngle: BEAT_ANGLES[rig], maxForwardSpeed,
     auxiliarySpeed: maxForwardSpeed * SAIL_RULES.auxiliaryShare,
     trueWindAngle, apparentWindAngle, apparentSpeed, targetSailAngle, trimEfficiency,
@@ -108,7 +115,9 @@ export function updateAutoTrim(ship: Unit, map: Pick<GameMap, 'wind'>, mode?: Sa
   const performance = coursePerformance(ship, map), wind = windAt(map, ship);
   const auxiliary = sail.mode === 'maneuver' || sail.mode === 'calm-assist';
   const furled = sail.mode === 'idle' || performance.maxForwardSpeed <= 0;
-  const targetSet = furled ? 0 : auxiliary ? .15 : performance.noGo ? .35 : 1;
+  // Crossing the wind unloads the cloth; it does not furl the sail. Keep it
+  // hoisted through a tack so the new side can power up without rehoisting.
+  const targetSet = furled ? 0 : auxiliary ? .15 : 1;
   const targetAngle = furled || auxiliary ? 0 : performance.targetSailAngle;
   sail.angle = clamp(toward(sail.angle, targetAngle, perTick(SAIL_RULES.trimRate)),
     -SAIL_RULES[performance.rig].maxAngle, SAIL_RULES[performance.rig].maxAngle);

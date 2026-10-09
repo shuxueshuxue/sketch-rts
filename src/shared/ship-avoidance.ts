@@ -31,6 +31,23 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     delete route!.avoidTicks;delete route!.avoidSide;
     return{heading:desiredHeading,speedScale:1,active:false};
   }
+  // An attack ends at a firing station. Treating the selected enemy as a
+  // through-traffic crossing far beyond that station makes both fleets turn
+  // aside before their guns can engage. Keep collision avoidance nearby and
+  // for every other vessel; only suppress this premature passing commitment.
+  const firingApproach=(other:Unit)=>{
+    if(!route || route.intent!=='pursuit' || route.targetId!==other.id
+      || ship.order.type!=='attack' && ship.order.type!=='attackMove')return false;
+    const otherProfile=shipProfile(other);if(!otherProfile)return false;
+    const clearance=(profile.length+otherProfile.length)*.5+Math.max(profile.beam,otherProfile.beam)*.35;
+    const otherSpeed=Math.hypot(other.sailing?.velocityX??0,other.sailing?.velocityY??0);
+    return Math.hypot(other.x-ship.x,other.y-ship.y)>clearance+brakingDistance+ownSpeed+otherSpeed;
+  };
+  const avoided=route?.avoidTargetId && units.find(other=>other.id===route.avoidTargetId);
+  if(avoided && firingApproach(avoided)){
+    delete route!.avoidHeading;delete route!.avoidBaseHeading;delete route!.avoidTargetId;
+    delete route!.avoidTicks;delete route!.avoidSide;
+  }
   if(route?.avoidHeading!==undefined && route.avoidBaseHeading!==undefined && route.avoidTargetId){
     const other=units.find(unit=>unit.id===route.avoidTargetId && unit.hp>0),otherProfile=other && shipProfile(other);
     const dx=other?other.x-ship.x:0,dy=other?other.y-ship.y:0,base=route.avoidBaseHeading;
@@ -67,7 +84,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
   const ownMotion=Math.hypot(vx,vy),fx=detCos(heading),fy=detSin(heading);
   let threat:{time:number;distance:number;clearance:number;starboard:boolean;headOn:boolean;id:string}|undefined;
   for(const other of units){
-    if(other===ship || other.hp<=0)continue;
+    if(other===ship || other.hp<=0 || firingApproach(other))continue;
     const otherProfile=shipProfile(other);if(!otherProfile)continue;
     const dx=other.x-ship.x,dy=other.y-ship.y,distance=Math.hypot(dx,dy);
     const otherMotion=other.sailing,otherHeading=otherMotion?.heading ?? 0,otherSpeed=otherMotion?.speed ?? 0;
@@ -140,8 +157,8 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   const interior=(point:Point,polygon:readonly Point[])=>polygonPlanes(polygon).every(p=>point.x*p.x+point.y*p.y>p.min+1e-6);
   const clear=(from:ShipPose,to:ShipPose,padding=0):boolean=>{
     if(!bodies.length)return true;
-    if(to.pivot){
-      const turn=headingDifference(from.heading,to.heading),lever=Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y);
+    if(to.pivot || Math.abs(to.curvature??0)>1e-9){
+      const turn=headingDifference(from.heading,to.heading),lever=to.pivot?Math.hypot(from.x-to.pivot.x,from.y-to.pivot.y):1/Math.abs(to.curvature!);
       const steps=Math.max(1,Math.ceil(Math.abs(turn)*Math.sqrt((radius+lever)/(8*.025))));
       const error=lever*(turn/steps)**2/8+1e-7;
       for(let i=0;i<steps;i++)if(!clear(shipPoseAt(from,to,i/steps),shipPoseAt(from,to,(i+1)/steps),error))return false;

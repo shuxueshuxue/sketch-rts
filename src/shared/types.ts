@@ -239,9 +239,11 @@ export type Unit = {
     /** The helm retains its turn rate across ticks and target updates. */
     yawRate?: number;
     pursuit?: { targetId: string; phase: 'approach' | 'engage'; moving: boolean };
-    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
-      intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number;
+    route?: { goalX: number; goalY: number; points: { x: number; y: number; heading: number; pivot?: {x:number;y:number}; tack?: boolean; exact?: boolean; curvature?: number; speedLimit?: number; queuedTurn?: boolean }[]; end: { x: number; y: number }; trafficKey?: string; partial?: boolean; startX?: number; startY?: number; startHeading?: number; cruise?: boolean; legX?: number; legY?: number; windKey?: string; windTried?: boolean; windTryX?: number; windTryY?: number;
+      intent?: 'pursuit'; targetId?: string; age?: number; blockedTicks?: number; arrivalRadius?: number; targetSpeed?: number; fireHeading?: number; retreat?: boolean;
       avoidSide?: number; avoidTicks?: number; avoidHeading?: number; avoidBaseHeading?: number; avoidTargetId?: string; tackHeading?: number;
+      /** The next plain move is previewed until the rounded corner is passed. */
+      queuedX?: number; queuedY?: number; queuedPassed?: boolean;
     } | undefined;
   } | undefined;
   /** Physical scaling for unusually large campaign hulls. */

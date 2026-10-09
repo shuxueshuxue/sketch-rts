@@ -2,7 +2,7 @@ import { shipPartMax } from "./ship-equipment";
 import { reservationTraffic, shipContactGoal, shipTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
-import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, shipPoseAt, shipTackRoute } from "./ship-navigation";
+import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, planBeatDeparture, shipPoseAt, shipTackRoute } from "./ship-navigation";
 import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
 import { advanceShip, shipMotionLimits } from './ship-motion';
@@ -42,6 +42,8 @@ export type ShipCourseGoal = Point & {
   targetId?: string;
   arrivalRadius?: number;
   targetSpeed?: number;
+  fireHeading?: number;
+  retreat?: boolean;
 };
 
 /** A voyage owns its corridor and helm until a meaningful change needs a new
@@ -59,13 +61,19 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
   const length=shipProfile(ship)!.length;
   const replan=(allowCruise=true)=>{
     const previous=motion.route;
-    const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack)?.heading : undefined;
+    const tackHeading=point.intent==='pursuit' && previous?.windKey===wind.key ? previous.points.find(point=>point.tack && !point.curvature)?.heading : undefined;
     const traffic=reservationTraffic(ship,units);
     const contact=point.intent!=='pursuit' && point.heading===undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2
       ? shipContactGoal(ship,point,units) : undefined;
     const precision=point.heading!==undefined || !!contact;
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
-    const {points,partial}=planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity);
+    // A nearby firing station requests a soft hull attitude, not an exact
+    // berth or a full-speed turning circle. Each control step still sweeps
+    // both terrain and live hulls; obstructed approaches keep their corridor.
+    const fireCourse=allowCruise && point.fireHeading!==undefined && Math.hypot(point.x-ship.x,point.y-ship.y)<length*3
+      && hullPassageClear(map,ship,start,{...point,heading:point.fireHeading});
+    const {points,partial}=fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
+      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity);
     if(!allowCruise)for(const point of points)point.exact=true;
     motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,
       startX:ship.x,startY:ship.y,startHeading:motion.heading,windKey:wind.key,age:0,blockedTicks:0,
@@ -77,6 +85,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       ...(point.intent?{intent:point.intent}:{}),...(point.targetId?{targetId:point.targetId}:{}),
       ...(point.arrivalRadius!==undefined?{arrivalRadius:point.arrivalRadius}:{}),
       ...(point.targetSpeed!==undefined?{targetSpeed:point.targetSpeed}:{}),
+      ...(point.fireHeading!==undefined?{fireHeading:point.fireHeading}:{}),...(point.retreat?{retreat:true}:{}),
       ...(!precision ? {cruise:allowCruise} : {})};
   };
   {
@@ -90,12 +99,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       && moved>length*.8 && !turningTack : moved>map.terrain!.cell/2;
     const enteringBerth=route?.cruise && point.intent!=='pursuit' && point.heading===undefined
       && Math.hypot(point.x-ship.x,point.y-ship.y)<length*2 && !!shipContactGoal(ship,point,units);
-    if(!route || windChange || enteringBerth || route.intent!==point.intent || route.targetId!==point.targetId || due || !route.points.length && moved>1){
+    if(!route || windChange || enteringBerth || (route.fireHeading===undefined)!==(point.fireHeading===undefined) || !!route.retreat!==!!point.retreat || route.intent!==point.intent || route.targetId!==point.targetId || due || !route.points.length && (moved>1 || route.partial && route.intent==='pursuit')){
       replan();route=motion.route!;
     }
     route.windKey??=wind.key;
     if(point.arrivalRadius!==undefined)route.arrivalRadius=point.arrivalRadius;
     if(point.targetSpeed!==undefined)route.targetSpeed=point.targetSpeed;else delete route.targetSpeed;
+    if(point.fireHeading!==undefined)route.fireHeading=point.fireHeading;else delete route.fireHeading;
+    if(point.retreat)route.retreat=true;else delete route.retreat;
     // On a clear final pursuit leg update the destination without throwing
     // away the helm, speed, side of turn or the strategic route object.
     if(dynamic && route.cruise && route.points.length===1 && !route.points[0]!.tack && !route.points[0]!.pivot && moved<=length*.8){
@@ -124,8 +135,10 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       }
     }
     if(route.cruise && route.points.length){
-      const retryWind=route.windTried && Math.hypot(ship.x-(route.windTryX??route.startX??ship.x),ship.y-(route.windTryY??route.startY??ship.y))>=length*1.5;
-      if((!route.windTried || retryWind) && !route.points.some(point=>point.tack)){
+      const movingPursuit=route.intent==='pursuit' && motion.pursuit?.moving;
+      const retryWind=route.windTried && (Math.hypot(ship.x-(route.windTryX??route.startX??ship.x),ship.y-(route.windTryY??route.startY??ship.y))>=length*1.5
+        || movingPursuit && (route.age??0)%20===0 && route.points.length===1);
+      if(route.fireHeading===undefined && (!route.windTried || retryWind) && !route.points.some(point=>point.tack)){
         route.windTried=true;route.windTryX=ship.x;route.windTryY=ship.y;
         // Wind planning works on a useful voyage leg, not every short arc
         // sample used to describe the initial turn.
@@ -133,7 +146,16 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         while(index>0 && route.points[index]!.pivot)index--;
         const next=route.points[index];
         if(next && !route.points.slice(0,index+1).some(point=>point.pivot)){
-          const tack=shipTackRoute(map,ship,next,shipTraffic(ship,units,Infinity),route.tackHeading);
+          const traffic=shipTraffic(ship,units,Infinity);
+          const departure=movingPursuit ? planBeatDeparture(map,ship,next,traffic,route.tackHeading) : undefined;
+          const tack=!departure ? shipTackRoute(map,ship,next,traffic,route.tackHeading) : undefined;
+          if(departure){
+            // A moving interception point can lie too close for a full pair
+            // of laylines. Start on a productive beat now and re-evaluate
+            // after this finite leg, instead of crawling at the no-go edge.
+            route.points=departure;route.end=departure.at(-1)!;route.partial=true;
+            route.legX=ship.x;route.legY=ship.y;
+          }
           if(tack){
             const finish=tack.at(-1)!;
             const reaches=Math.hypot(finish.x-next.x,finish.y-next.y)<1;

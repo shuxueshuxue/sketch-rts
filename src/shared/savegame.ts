@@ -98,10 +98,10 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
     }
   }
   if ((save.runtime.checksumVersion ?? 1) < 9) upgradeUnitClassSkillChoices(game);
-  // Earlier cruise references contain unsmoothed coastal turns without the
-  // exact-segment markers required by the new helmsman. Keep the physical
+  // Earlier cruise references lack planned turn curvature and firing attitudes.
+  // Keep the physical
   // pose, momentum and order, and build a fresh route on the next tick.
-  if ((save.runtime.checksumVersion ?? 1) < 12) for (const unit of game.units) if (unit.sailing) {
+  if ((save.runtime.checksumVersion ?? 1) < 13) for (const unit of game.units) if (unit.sailing) {
     delete unit.sailing.route; delete unit.sailing.yawRate; delete unit.sailing.pursuit;
   }
   return game;
