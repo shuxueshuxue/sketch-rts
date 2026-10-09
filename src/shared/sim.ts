@@ -141,6 +141,7 @@ type SpatialEntity = {
 };
 
 type SpatialIndex<T extends SpatialEntity> = {
+  team?: string;
   cellSize: number;
   buckets: Map<number, T[]>;
   left: number;
@@ -3685,8 +3686,8 @@ function findStrikeTarget(game: Game, targetId: string): Unit | Building | Obsta
 }
 
 function removeExpiredUnits(game: Game) {
+  if (!game.units.some(unit => unit.expiresTick !== undefined && unit.expiresTick <= game.tick)) return;
   const expiredUnits = game.units.filter((unit) => unit.expiresTick !== undefined && unit.expiresTick <= game.tick);
-  if (expiredUnits.length === 0) return;
   dropItemsFromDeadUnits(game, expiredUnits);
   const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
   game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
@@ -3694,6 +3695,12 @@ function removeExpiredUnits(game: Game) {
 }
 
 function removeDead(game: Game) {
+  // Empty cleanup frames still check every body. Avoid constructing death
+  // lists and wreck sets until a unit or building actually needs removal.
+  if (!game.units.some(unit => unit.hp <= 0) && !game.buildings.some(building => building.hp <= 0)) {
+    if (game.obstacles?.some(obstacle => obstacle.hp <= 0)) game.obstacles = game.obstacles.filter(obstacle => obstacle.hp > 0);
+    return;
+  }
   const deadUnits = game.units.filter((unit) => unit.hp <= 0);
   const wrecks=new Set(deadUnits.filter(unit=>shipProfile(unit)).map(unit=>unit.id));
   if(wrecks.size)for(const passenger of game.units)if(passenger.deck && wrecks.has(passenger.deck.shipId) && passenger.hp>0){passenger.hp=0;deadUnits.push(passenger);}
@@ -4059,7 +4066,7 @@ function createSpatialIndex<T extends SpatialEntity>(entities: T[], cellSize: nu
     if (bucket) bucket.push(entity);
     else buckets.set(key, [entity]);
   }
-  return { cellSize, buckets, left, right, top, bottom };
+  return { team: undefined, cellSize, buckets, left, right, top, bottom };
 }
 
 function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number) {
@@ -4067,7 +4074,7 @@ function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(ga
   for (const entity of entities) {
     const team = teamKey(game, entity.owner);
     let index = indexes.get(team);
-    if (!index) indexes.set(team, index = { cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
+    if (!index) indexes.set(team, index = { team, cellSize, buckets: new Map(), left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     const x = Math.floor(entity.x / cellSize), y = Math.floor(entity.y / cellSize);
     index.left = Math.min(index.left, x); index.right = Math.max(index.right, x);
     index.top = Math.min(index.top, y); index.bottom = Math.max(index.bottom, y);
@@ -4123,7 +4130,7 @@ function forEachNearbyEnemyUnit(game: Game, owner: Owner, point: { x: number; y:
     return;
   }
   const ownTeam = teamKey(game, owner);
-  for (const [team,index] of indexes) if (team !== ownTeam) forEachNearbyEntity(index, [], point, range, visit);
+  for (const index of indexes.values()) if (index.team !== ownTeam) forEachNearbyEntity(index, game.units, point, range, visit);
 }
 
 function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
@@ -4135,7 +4142,7 @@ function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number
     return;
   }
   const ownTeam = teamKey(game, owner);
-  for (const [team,index] of indexes) if (team !== ownTeam) forEachNearbyEntity(index, [], point, range, visit);
+  for (const index of indexes.values()) if (index.team !== ownTeam) forEachNearbyEntity(index, game.buildings, point, range, visit);
 }
 
 function forEachNearbyEntity<T extends SpatialEntity>(

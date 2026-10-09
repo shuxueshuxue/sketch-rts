@@ -8,6 +8,35 @@ import { distance } from '../policy/spatial';
 import { recordAiMemoryForCommands } from '../policy/claims';
 
 describe('bootstrap_1 mounted raid recruitment', () => {
+  it.each([
+    { label: 'temporarily covered miner with an exposed hauling lane', mineX: 2500, amount: 10000, mining: true, retained: true },
+    { label: 'fully covered hauling lane', mineX: 2300, amount: 10000, mining: true, retained: false },
+    { label: 'depleted exposed mine', mineX: 2500, amount: 0, mining: true, retained: false },
+    { label: 'covered worker no longer mining', mineX: 2500, amount: 10000, mining: false, retained: false },
+  ])('keeps raid ownership only for a $label', ({ mineX, amount, mining, retained }) => {
+    const game = sketchScene('mounted-mining-window').map('openClaims').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .townHall('us', 500, 500).townHall('foe', 2200, 1000, { id: 'raid-hall' })
+      .building('foe', 'defenseTower', 2200, 1160).goldMine('mine', mineX, 1000, amount)
+      .unit('us', 'horseArcher', 2660, 900, { id: 'rider' })
+      .worker('foe', 2350, 1000, { id: 'miner', order: mining
+        ? { type: 'mine', resourceId: 'mine', phase: 'return', timer: 0 } : { type: 'idle' } })
+      .build().createGame();
+    const memory = createAiPolicyMemory();
+    const assignment = { unitIds: ['rider'], objective: { kind: 'raid' as const, hallId: 'raid-hall', owner: 'foe' } };
+    memory.mounted = [assignment];
+    const entries = planAiOwnerCommandEntries(snapshotGame(game),
+      { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams });
+    expect(memory.mounted).toEqual(retained ? [assignment] : []);
+    const mounted = entries.filter(entry => entry.scriptId === 'mountedTasks');
+    if (retained) {
+      expect(mounted).toEqual([{ playerId: 'us', scriptId: 'mountedTasks', command: { type: 'holdPosition', unitIds: ['rider'] } }]);
+      expect(entries.filter(entry => 'unitIds' in entry.command && entry.command.unitIds.includes('rider'))).toEqual(mounted);
+      issueCommandFrame(game, entries);
+      expect(game.units.find(unit => unit.id === 'rider')!.order).toEqual({ type: 'hold', x: 2660, y: 900 });
+    } else expect(mounted).toEqual([]);
+  });
+
   it('keeps an injured raider in its existing squad until a recovery order takes command', () => {
     const game = sketchScene('mounted-injury-command-continuation').map('openClaims').replaceDefaults()
       .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })

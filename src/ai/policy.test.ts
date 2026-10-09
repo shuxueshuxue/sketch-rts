@@ -5523,11 +5523,49 @@ describe("SDK preset AI policy", () => {
       .build();
     const game = scene.createGame();
 
-    const command = planPresetAiCommands(snapshotGame(game), "v2", { version: "v2", teams: game.teams }).find(
+    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const command = entries.map((entry) => entry.command).find(
       (candidate) => candidate.type === "attack" && candidate.unitIds.includes("pulled-worker-a"),
     );
 
     expect(command).toMatchObject({ type: "attack", targetId: "base-invader" });
+    expect(game.buildings.find((building) => building.id === "v2-main")!.hp).toBe(
+      game.buildings.find((building) => building.id === "v2-main")!.maxHp,
+    );
+    expect(entries).toContainEqual(expect.objectContaining({
+      scriptId: "emergencyDefense",
+      command: expect.objectContaining({ type: "build", unitId: "pulled-worker-a" }),
+    }));
+    for (const entry of entries) issuePlayerCommand(game, "v2", entry.command);
+    expect(game.units.find((unit) => unit.id === "pulled-worker-a")!.order).toEqual({ type: "attack", targetId: "base-invader" });
+  });
+
+  it("v2 keeps the planned builder working when a completed main tower covers a close 1v2 fight", () => {
+    let scene = sketchScene("v2-covered-worker-builder")
+      .map("bareDuel").replaceDefaults()
+      .player("v2", { team: "north", race: "grove" })
+      .player("v1a", { team: "south", race: "grove" })
+      .player("v1b", { team: "south", race: "grove" })
+      .townHall("v2", 500, 500)
+      .building("v2", "barracks", 620, 620)
+      .tower("v2", 360, 500)
+      .worker("v2", 520, 540, { id: "covered-builder" })
+      .townHall("v1a", 3300, 3300)
+      .townHall("v1b", 3400, 3800)
+      .unit("v1a", "footman", 690, 610)
+      .unit("v1b", "lancer", 720, 640)
+      .unit("v1a", "footman", 750, 670)
+      .unit("v1b", "lancer", 780, 700);
+    for (let index = 0; index < 7; index++) scene = scene.worker("v2", 570 + index * 20, 560);
+    const game = scene.build().createGame();
+    const entries = planPresetAiCommandEntries(snapshotGame(game), "v2", { version: "v2", teams: game.teams });
+    const build = entries.find((entry) => entry.command.type === "build" && entry.command.unitId === "covered-builder");
+
+    expect(build).toMatchObject({ command: { type: "build", buildingKind: "farm" } });
+    expect(entries.some((entry) => entry.scriptId === "desperateWorkerFight")).toBe(false);
+    expect(entries.some((entry) => "unitIds" in entry.command && entry.command.unitIds.includes("covered-builder"))).toBe(false);
+    for (const entry of entries) issuePlayerCommand(game, "v2", entry.command);
+    expect(game.units.find((unit) => unit.id === "covered-builder")!.order.type).toBe("build");
   });
 
   it("v1 baseline also pulls workers when the main base is being overrun", () => {

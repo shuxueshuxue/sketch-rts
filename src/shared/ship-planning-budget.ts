@@ -57,9 +57,10 @@ function pruneRequest(ship: Unit, frame: PlanningFrame): boolean {
 
 /** Start one replay-stable complex-planner allowance for the live unit set. */
 export function beginShipPlanningFrame(units: readonly Unit[], tick: number): void {
-  const frame: PlanningFrame = { units, tick };
+  let frame: PlanningFrame | undefined;
   for (const ship of units) {
     if (!isShipKind(ship.kind)) continue;
+    frame ??= { units, tick };
     frames.set(ship, frame);
     pruneRequest(ship, frame);
   }

@@ -1,7 +1,7 @@
 import { detCos, detSin } from './det-math';
 import { shipMotionLimits } from './ship-handling';
 export { shipMotionLimits } from './ship-handling';
-import { localToWorld, shipPassengers, shipProfile } from './ship-geometry';
+import { isShipKind, localToWorld, shipPassengers, shipProfile } from './ship-geometry';
 import { shipPoseAt } from './ship-navigation';
 import { beginShipCollisionFrame, recordShipCollision, sweepShipCollision, updateShipCollisionPosition } from './ship-collisions';
 import { perTick } from './time';
@@ -12,7 +12,11 @@ const budgets = new WeakMap<Unit, MotionBudget>();
 
 /** One budget for propulsion, aiming turns and impulses in the whole step. */
 export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids: readonly (Building | Obstacle)[] = []) {
-  for (const unit of units) if (shipProfile(unit)) budgets.set(unit, { yaw: 0, distance: 0, astern: 0 });
+  for (const ship of units) if (isShipKind(ship.kind)) {
+    const budget = budgets.get(ship);
+    if (budget) { budget.yaw = 0; budget.distance = 0; budget.astern = 0; }
+    else budgets.set(ship, { yaw: 0, distance: 0, astern: 0 });
+  }
   beginShipCollisionFrame(units, map, solids);
 }
 

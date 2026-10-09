@@ -10,7 +10,7 @@ import { mountedEscape, mountedMicro, mountedTargetOrder } from './mounted-micro
 
 const THREAT_RANGE = 750;
 
-function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Unit, towers: readonly Building[]): Point | undefined {
+function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
     ...Array.from({ length: 16 }, (_, index) => index * Math.PI / 8)];
@@ -23,6 +23,19 @@ function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Unit, towers: 
 
 function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
   return snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && !unit.deck && distance(unit, hall) <= 650);
+}
+
+function miningFiringWindow(snapshot: GameSnapshot, rider: Unit, worker: Unit, hall: Building, towers: readonly Building[]) {
+  if (worker.order.type !== 'mine') return false;
+  const resourceId = worker.order.resourceId;
+  const mine = snapshot.resources.find(resource => resource.id === resourceId && resource.amount > 0);
+  if (!mine) return false;
+  const gap = distance(hall, mine);
+  if (gap > GOLD_MINE_RULES.baseRange || gap <= GOLD_MINE_RULES.entryRange) return false;
+  const entry = { x: mine.x + (hall.x - mine.x) * GOLD_MINE_RULES.entryRange / gap,
+    y: mine.y + (hall.y - mine.y) * GOLD_MINE_RULES.entryRange / gap };
+  return isWalkable(snapshot.map, entry.x, entry.y) && sameGround(snapshot.map, worker, entry)
+    && firingPoint(snapshot, rider, entry, towers) !== undefined;
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -39,8 +52,10 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
     const hall = snapshot.buildings.find(building => building.id === objective.hallId);
     if (!hall) return false;
     const crew = assignment.unitIds.map(id => byId.get(id)!);
+    // Returning miners can all be under cover for one think; retain the raid if their next mining trip exposes them.
     // A cleared or fully covered mining line ends the raid; nearby pursuers still belong to this fight.
-    return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => firingPoint(snapshot, rider, worker, towers)))
+    return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => firingPoint(snapshot, rider, worker, towers)
+      || miningFiringWindow(snapshot, rider, worker, hall, towers)))
       || snapshot.units.some(unit => unit.attackDamage > 0 && !unit.deck && isOpponentOwner(snapshot, owner, unit.owner, options)
         && crew.some(rider => distance(unit, rider) < THREAT_RANGE && (distance(unit, rider) <= rider.attackRange
           || (unit.order.type === 'attack' || unit.order.type === 'attackMove') && unit.order.targetId === rider.id)));

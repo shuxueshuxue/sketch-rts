@@ -1,9 +1,81 @@
 import { describe, expect, it } from "vitest";
-import { snapshotGame } from "../../shared/sim";
+import { issuePlayerCommand, snapshotGame, stepGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
-import { canClearGuardedExpansion, desiredExpansionMine, desiredForwardExpansionMine, opponentEconomyAhead, shouldReserveForClearedExpansion } from "./expansion-model";
+import { canClearGuardedExpansion, depletedEconomyExpansion, desiredExpansionMine, desiredForwardExpansionMine, opponentEconomyAhead, shouldReserveForClearedExpansion, shouldReserveForExpansion } from "./expansion-model";
+import { AI_SCRIPT_LIBRARY } from "./core";
+import { BUILDING_DEFS } from "../../shared/catalog";
+import { createUnit } from "../../shared/map";
+import { createAiPolicyMemory } from "../memory";
+
+function depletedMiningGame() {
+  const scene = sketchScene("depleted-two-base-economy").map("bareDuel").replaceDefaults()
+    .player("v2", { team: "north", race: "grove" }).player("v1", { team: "south", race: "ember" })
+    .playerState("v2", { gold: BUILDING_DEFS.townHall.cost - 1 })
+    .townHall("v2", 500, 500).townHall("v2", 1400, 500).townHall("v1", 3400, 3400)
+    .building("v2", "barracks", 700, 500)
+    .goldMine("empty-main", 716, 500, 0).goldMine("empty-natural", 1616, 500, 0)
+    .goldMine("remote", 2300, 1000, 6000);
+  for (let i = 0; i < 5; i++) scene.worker("v2", 2240, 980 + i * 10, { id: `hauler-${i}`,
+    order: { type: "mine", resourceId: "remote", phase: "toMine", timer: 0 } });
+  for (let i = 0; i < 4; i++) scene.unit("v2", "footman", 1700 + i * 30, 1400);
+  return scene.build().createGame();
+}
 
 describe("AI expansion model", () => {
+  it("banks a legal replacement mining base after both old mines are exhausted", () => {
+    const game = depletedMiningGame(), options = { version: "v2" as const, teams: game.teams, memory: createAiPolicyMemory() };
+    const snapshot = snapshotGame(game);
+    expect(opponentEconomyAhead(snapshot, "v2", options)).toBe(false);
+    const recovery = depletedEconomyExpansion(snapshot, "v2", options)!;
+    expect(recovery.mine.id).toBe("remote");
+    expect(shouldReserveForExpansion(snapshot, "v2", options)).toBe(true);
+    expect(AI_SCRIPT_LIBRARY.training.run(snapshot, "v2", options)).toEqual([]);
+    expect(AI_SCRIPT_LIBRARY.expansion.run(snapshot, "v2", options)).toBeUndefined();
+    game.players.v2!.gold += 1;
+    const command = AI_SCRIPT_LIBRARY.expansion.run(snapshotGame(game), "v2", options)!;
+    expect(command).toMatchObject({ type: "build", buildingKind: "townHall", unitId: recovery.builder.id, ...recovery.point });
+    if (Array.isArray(command)) throw new Error("expected one foundation");
+    issuePlayerCommand(game, "v2", command);
+    for (let i = 0; i < 1000 && game.buildings.filter(building => building.owner === "v2" && building.kind === "townHall").length < 3; i++) stepGame(game);
+    expect(game.buildings.filter(building => building.owner === "v2" && building.kind === "townHall")).toHaveLength(3);
+    expect(game.match.stats.goldSpent.v2).toBe(BUILDING_DEFS.townHall.cost);
+  });
+
+  it.each(["live-near-mine", "enemy-at-remote", "neutral-at-remote", "no-miner", "insufficient-mine", "blocked-foundation"])("releases the replacement bank for %s", condition => {
+    const game = depletedMiningGame();
+    const remote = game.resources.find(resource => resource.id === "remote")!;
+    if (condition === "live-near-mine") game.resources[0]!.amount = 10;
+    if (condition === "enemy-at-remote") game.units.push(createUnit("raider", "v1", "footman", remote.x, remote.y));
+    if (condition === "neutral-at-remote") game.units.push(createUnit("guard", "neutral", "wildling", remote.x, remote.y));
+    if (condition === "no-miner") game.units = game.units.filter(unit => unit.kind !== "worker");
+    if (condition === "insufficient-mine") { remote.amount = 1; game.players.v2!.gold = 0; }
+    if (condition === "blocked-foundation") {
+      const cell = 64, cols = 64, rows = 64;
+      const cells = Array.from({ length: cols * rows }, (_, at) => {
+        const x = (at % cols + .5) * cell, y = (Math.floor(at / cols) + .5) * cell;
+        return Math.hypot(x - remote.x, y - remote.y) < 400 ? "#" : ".";
+      });
+      cells[Math.floor(remote.y / cell) * cols + Math.floor(remote.x / cell)] = ".";
+      game.map = { ...game.map, terrain: { cell, cols, rows, cells: cells.join("") } };
+    }
+    const snapshot = snapshotGame(game), options = { version: "v2" as const, teams: game.teams };
+    expect(depletedEconomyExpansion(snapshot, "v2", options)).toBeUndefined();
+    expect(shouldReserveForExpansion(snapshot, "v2", options)).toBe(false);
+  });
+
+  it("reuses a frame's legal foundation while releasing a newly claimed builder", () => {
+    const game = depletedMiningGame(), snapshot = snapshotGame(game);
+    const memory = createAiPolicyMemory(), options = { version: "v2" as const, teams: game.teams, memory };
+    const first = depletedEconomyExpansion(snapshot, "v2", options)!;
+    first.point.x = -1;
+    memory.unitClaims[first.builder.id] = { kind: "retreat", targetId: "retreat", x: 500, y: 500, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 900 };
+    const second = depletedEconomyExpansion(snapshot, "v2", options)!;
+    expect(second.builder.id).not.toBe(first.builder.id);
+    expect(second.point.x).toBeGreaterThan(0);
+    for (const worker of snapshot.units.filter(unit => unit.kind === "worker")) memory.unitClaims[worker.id] = { kind: "retreat", targetId: "retreat", x: 500, y: 500, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 900 };
+    expect(depletedEconomyExpansion(snapshot, "v2", options)).toBeUndefined();
+  });
+
   it("chooses an unclaimed natural mine away from existing town halls", () => {
     const game = sketchScene("expansion-model-natural")
       .map("bareDuel")
