@@ -128,7 +128,7 @@ type Mode = NonNullable<V6PolicyMemory["general"]>["mode"];
 
 export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
-  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), "rally");
+  return planV6Army(snapshot, owner, options, readV6Intel(snapshot, owner, options), "rally", "halls");
 }
 
 export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext, intel: V6Intel): Unit[] {
@@ -137,7 +137,7 @@ export function availableV6Army(snapshot: GameSnapshot, options: AiPolicyContext
   return intel.army.filter((unit) => !busy.has(unit.id) && unit.order.type !== "board" && sameGroundAs(snapshot, intel.home, unit));
 }
 
-export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, reinforcements: "rally" | "siege"): GameCommand[] {
+export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, reinforcements: "rally" | "siege", expansionBasis: "halls" | "mines"): GameCommand[] {
   const memory = v6Memory(options);
   const { profile, strategy } = v6Doctrine(snapshot, owner, options);
   const available = availableV6Army(snapshot, options, intel);
@@ -185,26 +185,11 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const fleeing = isV9Policy(options) && current?.mode === "defend" ? v9Fleeing(intel, averagePoint(front)) : [];
   if (fleeing.length > 0 && strength >= strengthOf(fleeing) * FIELD_EDGE) return order(snapshot, owner, memory, "defend", front, averagePoint(fleeing), options);
 
-  if (current?.mode === "attack" && current.quick) {
-    const target = findBase(intel, current.targetHallId);
-    const strikers = front.filter((unit) => (current.group ?? []).includes(unit.id));
-    if (target && !target.hall.complete && strikers.length > 0 && quickStrikeHolds(snapshot, intel, strikers, target, profile.aggression)) return quickStrike(snapshot, owner, memory, strikers, available, target, rally, options);
-    recordPlay(memory, !target || target.hall.complete ? "general:quick:done" : "general:retreat:quick");
-    memory.retreatedAt = snapshot.tick;
-  } else if (current?.mode === "attack") {
-    const target = findBase(intel, current.targetHallId);
-    const group = attackGroup(available, front, current.group ?? []);
-    const marching = group.filter((unit) => front.includes(unit));
-    const center = marching.length > 0 ? averagePoint(marching) : undefined;
-    const facing = center ? enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
-    const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
-    const gaps = center ? enemyGaps(intel, center) : {};
-    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
-    const holds = strengthOf(group) * (1 + profile.aggression) >= facing * RETREAT_LINE;
-    const outrun = strengthOf(group) * (1 + profile.aggression) < (facing + incoming) * RETREAT_LINE;
-    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, isMain(intel, target)));
-    recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
-    memory.retreatedAt = snapshot.tick;
+  // With a single working mine, secure the requested replacement before continuing a distant assault.
+  const miningFirst = expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
+  if (!miningFirst) {
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression);
+    if (continued) return continued;
   }
 
   if (isV8Policy(options) && strategy.risingStrike) {
@@ -217,7 +202,8 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const v7Camps = isV7Policy(options) ? neutralCamps(snapshot).filter((camp) => camp.creeps.some((creep) => sameGroundAs(snapshot, intel.home, { x: creep.homeX ?? creep.x, y: creep.homeY ?? creep.y }))) : [];
   // V9 takes on a camp with enemies about, if they are worth under half its army (see v9-contested-creep).
   const tolerance = isV9Policy(options) ? v9ExpansionTolerance(intel) : 0;
-  const v7Reachable = v7Camps.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH && enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) <= tolerance);
+  const v7Uncontested = v7Camps.filter((camp) => enemyPowerNear(intel, camp.center, CAMP_CLEARANCE) <= tolerance);
+  const v7Reachable = v7Uncontested.filter((camp) => distance(camp.center, intel.home) <= CAMP_REACH);
   const v7NearHome = v7Reachable.filter((camp) => [intel.home, ...intel.ownHalls].some((hall) => distance(hall, camp.center) <= V7_HOME_REACH));
   // V9 creeps nothing while an enemy army worth half its own pushes at its bases (see v9-home-first).
   // Its towers standing (see v9-fortress), V9 leaves home to them and creeps on (see v9-fortress-creep).
@@ -226,13 +212,17 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   if (isV7Policy(options) && !pushed) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
-    const mine = !v7WantsBase(snapshot, owner, options) ? undefined : isV9Policy(options) ? v9ExpansionMine(snapshot, intel) : nextExpansionMine(snapshot, intel);
-    const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, v7Reachable, options, mine) : undefined;
+    const mine = !v7WantsBase(snapshot, owner, options, expansionBasis) ? undefined : isV9Policy(options) ? v9ExpansionMine(snapshot, intel) : nextExpansionMine(snapshot, intel);
+    const guard = mine ? chooseV7Camp(snapshot, front, v7Camps, expansionBasis === "mines" ? v7Uncontested : v7Reachable, options, mine) : undefined;
     if (guard) {
       startV7Creep(snapshot, front, guard, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
       if (started) return creepOrders(memory, started);
     }
+  }
+  if (miningFirst) {
+    const continued = continueArmyAttack(snapshot, owner, options, intel, available, front, rally, reinforcements, profile.aggression);
+    if (continued) return continued;
   }
   const natural = isV7Policy(options) ? undefined : expansionCamp(snapshot, intel, camps, strength);
   if (natural) {
@@ -286,6 +276,33 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   return order(snapshot, owner, memory, "hold", front, rally, options);
 }
 
+function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel, available: Unit[], front: Unit[], rally: Point, reinforcements: "rally" | "siege", aggression: number): GameCommand[] | undefined {
+  const memory = v6Memory(options), current = memory.general;
+  if (current?.mode === "attack" && current.quick) {
+    const target = findBase(intel, current.targetHallId);
+    const strikers = front.filter((unit) => (current.group ?? []).includes(unit.id));
+    if (target && !target.hall.complete && strikers.length > 0 && quickStrikeHolds(snapshot, intel, strikers, target, aggression)) return quickStrike(snapshot, owner, memory, strikers, available, target, rally, options);
+    recordPlay(memory, !target || target.hall.complete ? "general:quick:done" : "general:retreat:quick");
+    memory.retreatedAt = snapshot.tick;
+  } else if (current?.mode === "attack") {
+    const target = findBase(intel, current.targetHallId);
+    const group = attackGroup(available, front, current.group ?? []);
+    const marching = group.filter((unit) => front.includes(unit));
+    const center = marching.length > 0 ? averagePoint(marching) : undefined;
+    const facing = center ? enemyPowerNear(intel, center, LOCAL_RANGE) + enemyTowersNear(intel, center, 520) * TOWER_STRENGTH : 0;
+    const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
+    const gaps = center ? enemyGaps(intel, center) : {};
+    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
+    const holds = strengthOf(group) * (1 + aggression) >= facing * RETREAT_LINE;
+    const outrun = strengthOf(group) * (1 + aggression) < (facing + incoming) * RETREAT_LINE;
+    if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, isMain(intel, target)));
+    recordPlay(memory, worn ? "general:retreat:worn" : holds && outrun ? "general:retreat:incoming" : "general:retreat");
+    memory.retreatedAt = snapshot.tick;
+  }
+
+  return undefined;
+}
+
 // Calling an army all the way home after its hall will already have fallen throws away both sides of a base trade.
 // Finish a weak enemy base only with another safe own hall, a favorable local fight, and a target already within reach.
 function canTradeBases(intel: V6Intel, group: Unit[], target: V6BaseIntel): boolean {
@@ -303,11 +320,13 @@ function canTradeBases(intel: V6Intel, group: Unit[], target: V6BaseIntel): bool
 // @@@v7-wanted-base - The next expansion's guard is cleared only while the phase wants a base V7 has not started. With its
 // natural rising, V7 walked its six footmen 2100 from home to the third mine's camp (duskGrove, 3:45); three ravagers killed
 // the natural's five builders and miners meanwhile, and the footmen, hurrying back, met the second army on the way.
-function v7WantsBase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): boolean {
+function v7WantsBase(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, basis: "halls" | "mines"): boolean {
   const phases = v6Doctrine(snapshot, owner, options).strategy.phases;
   const phase = phases[Math.min(v6Memory(options).phase ?? 0, phases.length - 1)];
   const wanted = Math.max(0, ...(phase?.wants ?? []).map((want) => ("bases" in want ? want.bases : 0)));
-  return wanted > snapshot.buildings.filter((building) => building.owner === owner && building.kind === "townHall").length;
+  const halls = snapshot.buildings.filter((building) => building.owner === owner && building.kind === "townHall");
+  // Expansion purchases count working mines; their camp-clearing request must count the same bases.
+  return wanted > (basis === "mines" ? activeMiningBaseCount(snapshot, owner) + halls.filter((hall) => !hall.complete).length : halls.length);
 }
 
 // @@@v9-escort - While V9 wants another base (its phase wants more than it has halls mining) and the mine it takes next
