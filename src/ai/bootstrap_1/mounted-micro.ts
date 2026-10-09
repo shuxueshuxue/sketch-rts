@@ -83,7 +83,10 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
       }
       return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station));
     }
-    return { type: 'holdPosition', unitIds: [rider.id] };
+    // Aim while a pursuer is outside weapon range, including during the weapon's cooldown.
+    const prepared = (rider.attackRange - rider.radius) / distance(rider, target);
+    return { type: 'aim', unitIds: [rider.id], x: rider.x + (target.x - rider.x) * prepared,
+      y: rider.y + (target.y - rider.y) * prepared };
   }
   const edge = Math.min(rider.x, rider.y, snapshot.map.width - rider.x, snapshot.map.height - rider.y);
   return mountedEscape(snapshot, rider, foes, shot, goal.kind === 'raid' && edge < rider.attackRange
