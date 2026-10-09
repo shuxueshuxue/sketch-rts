@@ -222,7 +222,7 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     // A transport on other water serves nothing here (one from an island's ferry sat on its own lake through an assault).
     const transported = fleet.some((unit) => ferryCapacity(unit) > 0 && sameGround(snapshot.map, unit, water, "sea"));
     const convoy = fleet.filter(unit => ferryCapacity(unit) > 0 && sameGround(snapshot.map, unit, water, "sea"));
-    const held = outgunned(snapshot, owner, options, water);
+    const held = outgunned(snapshot, owner, options, water, armed);
     // @@@blockade - Water the enemy's ships hold is crossed by no transport: in the closeout the fleet grows past its escort
     // until it outweighs them (see outgunned) and strikes together (see planNavalTactics), and in any other assault nothing
     // is bought for it. Crossing all the same, one transport after another went down with the soldiers aboard, and the
@@ -295,12 +295,15 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
 function navalStrength(snapshot:GameSnapshot,ships:Unit[]){
     return ships.reduce((sum,ship)=>sum+effectiveCombatRating(snapshot,ship),0);
 }
-function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, water: Point) {
+function coveringFleet(fleet: Unit[], water: Point) {
+    return fleet.filter(ship => distance(ship, water) < HOME_WATERS && ship.hp >= ship.maxHp * HURT);
+}
+function outgunned(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, water: Point, fleet: Unit[]) {
     const afloat = (unit: Unit) => unitMover(unit.kind) === "sea" && combatCapability(snapshot,unit).armed && sameGround(snapshot.map, unit, water, "sea");
-    const theirs = snapshot.units.filter((unit) => afloat(unit) && distance(unit, water) < 900 && isEnemyOwner(snapshot, owner, unit.owner, options));
+    const theirs = snapshot.units.filter((unit) => afloat(unit) && distance(unit, water) < HOME_WATERS && isEnemyOwner(snapshot, owner, unit.owner, options));
     if (theirs.length === 0)
         return false;
-    const ours = units(snapshot, owner).filter(afloat);
+    const ours = fleet.filter(afloat);
     // The escort must exist before a ferry crosses. Future purchases cannot
     // contribute fighting power to the current blockade decision.
     return navalStrength(snapshot,theirs) * attackMargin(options) > navalStrength(snapshot,ours) + strengthOf(ours.flatMap(ship => shipPassengers(snapshot.units, ship)));
@@ -528,6 +531,10 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     }
     const commands: GameCommand[] = [];
     if (mission.phase === "sailing") {
+        // A distant battery or a damaged escort returning to port cannot cover
+        // this crossing. Reconsider the local battle as the convoy advances.
+        if (outgunned(snapshot, owner, options, boat, coveringFleet(own, boat)))
+            return cancelFerry(snapshot, boat, mission, options);
         if (!shipPassengers(snapshot.units,boat).length) {
             mission.phase = "return";
             mission.crewIds = [];
@@ -597,7 +604,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const hasSoldiers = cargo.some(unit => unit.kind !== "worker");
     const guardsRemain = target && snapshot.units.some(unit => unit.owner === "neutral" && distance(unit, target) < 400);
     // Do not repeatedly drown the economy in a blockade the escort has yet to clear.
-    if (outgunned(snapshot, owner, options, mission.to))
+    if (outgunned(snapshot, owner, options, mission.to, coveringFleet(own, mission.to)))
         return commands;
     if ((mission.purpose === "settle" || mission.purpose === "assault") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) {
         if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission, options);

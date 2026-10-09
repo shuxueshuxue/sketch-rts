@@ -581,6 +581,16 @@ function attack(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
     ...(pulse ? { stage: pulse.stage, stageSince: pulse.since } : {}),
   };
   const goal = pulse?.stage === "gather" ? pulse.point : isV8Policy(options) ? (guardingTower(target) ?? target.hall) : target.hall;
+  const siege = marching.filter(unit => unit.kind === "ballista" || unit.kind === "catapult");
+  if (isV9Policy(options) && siege.length) {
+    // The faster screen advances with the guns instead of fighting an entire
+    // base while its artillery is still crossing the map.
+    const screen = marching.filter(unit => !siege.includes(unit));
+    const screenGoal = toward(averagePoint(siege), goal, GATHERED_RANGE);
+    return [...orderUnits(snapshot, owner, "attack", siege, goal, options),
+      ...orderUnits(snapshot, owner, "hold", screen, screenGoal, options, GATHERED_RANGE),
+      ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
+  }
   return [...orderUnits(snapshot, owner, "attack", marching, goal, options), ...orderUnits(snapshot, owner, "hold", waiting, rally, options)];
 }
 
