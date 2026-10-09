@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import { sketchScene } from '../../sdk/scene';
+import { issueCommandFrame } from '../../sdk/commands/frame';
+import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
+import { createAiPolicyMemory } from '../memory';
+import { planAiOwnerCommandEntries } from '../planner-context';
+import { distance } from '../policy/spatial';
+
+describe('bootstrap_1 mounted raid recruitment', () => {
+  it('starts with one rider and admits normally purchased reinforcements into that same raid', () => {
+    const game = sketchScene('mounted-raid-recruitment').map('openClaims').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 400, 1000).townHall('foe', 3500, 3500, { id: 'raid-hall' })
+      .building('us', 'stables', 500, 1300, { id: 'stables' }).farms('us', 8, 400, 1800)
+      .unit('us', 'horseArcher', 700, 1400, { id: 'lead' })
+      .worker('foe', 3750, 3500, { id: 'miner' }).build().createGame();
+    const memory = createAiPolicyMemory();
+    for (let tick = 0; tick < 660; tick++) {
+      if (tick === 0 || tick === 220) issuePlayerCommand(game, 'us',
+        { type: 'train', buildingId: 'stables', unitKind: 'horseArcher' });
+      if (tick % 15 === 0) {
+        issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+          { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams }));
+        if (tick === 0) expect(memory.mounted).toEqual([{ unitIds: ['lead'],
+          objective: { kind: 'raid', hallId: 'raid-hall', owner: 'foe' } }]);
+      }
+      stepGame(game);
+    }
+    const riders = game.units.filter(unit => unit.kind === 'horseArcher');
+    expect(riders).toHaveLength(3);
+    expect(memory.mounted).toHaveLength(1);
+    expect(new Set(memory.mounted![0]!.unitIds)).toEqual(new Set(riders.map(unit => unit.id)));
+    expect(game.match.stats.goldSpent.us).toBe(300);
+  });
+
+  it('lets a lone rider clear an exposed mining line and its melee pursuers without taking damage', () => {
+    let scene = sketchScene('mounted-tower-pocket').replaceDefaults().player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+      .playerState('us', { gold: 0 }).townHall('us', 500, 500).townHall('foe', 2200, 1000)
+      .building('foe', 'defenseTower', 2200, 1160).goldMine('foe-mine', 2500, 1000, 10000)
+      .unit('us', 'horseArcher', 2800, 900, { id: 'rider' });
+    for (let index = 0; index < 5; index++) scene = scene.unit('foe', 'worker', 2460 + index * 20, 1020 + index * 25,
+      { id: `worker-${index}`, order: { type: 'mine', resourceId: 'foe-mine', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 8; index++) scene = scene.unit('foe', 'footman', 2390, 780 + index * 40, { id: `defender-${index}` });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    let damage = 0;
+    const hits: unknown[] = [];
+    game.observer = { hit(source, target, taken) { if (target.id === 'rider') {
+      damage += taken;
+      hits.push({ tick: game.tick, source: source.id, damage: taken });
+    } } };
+    for (let tick = 0; tick < 12000 && game.units.some(unit => unit.owner === 'foe'); tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), commands = planAiOwnerCommandEntries(snapshot,
+          { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams });
+        expect(commands.filter(entry => 'unitIds' in entry.command && entry.command.unitIds.includes('rider')).every(entry => entry.scriptId === 'mountedTasks')).toBe(true);
+        issueCommandFrame(game, commands);
+        const riders = game.units.filter(unit => unit.owner === 'us');
+        if (!riders.length) break;
+        for (const defender of game.units.filter(unit => unit.kind === 'footman')) {
+          const target = [...riders].sort((a, b) => distance(a, defender) - distance(b, defender))[0]!;
+          issuePlayerCommand(game, 'foe', { type: 'attack', unitIds: [defender.id], targetId: target.id });
+        }
+      }
+      stepGame(game);
+    }
+
+    expect(game.units.filter(unit => unit.owner === 'us')).toHaveLength(1);
+    expect(game.units.filter(unit => unit.owner === 'foe')).toHaveLength(0);
+    expect(damage).toBe(0);
+    expect(hits).toEqual([]);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  }, 30000);
+});
