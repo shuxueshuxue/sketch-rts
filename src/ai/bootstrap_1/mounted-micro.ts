@@ -2,7 +2,7 @@ import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
-import { isWalkable, segmentWalkable, steerPoint } from '../../shared/terrain';
+import { isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { unitAbilities } from '../../shared/unit-abilities';
 import { itemsFor } from '../../shared/equipment';
@@ -46,6 +46,17 @@ function reach(snapshot: GameSnapshot, foe: Threat, rider: Unit, horizon: number
 
 /** One ordinary command per think; ranges and cooldowns come from the live combatants. */
 export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, foes: readonly Threat[], goal: { kind: 'camp' } | { kind: 'raid'; station: Point }): GameCommand {
+  if (goal.kind === 'camp') {
+    const clearingTicks = foes.reduce((ticks, foe) => ticks + ('order' in foe && foe.owner === 'neutral'
+      ? foe.hp * rider.attackCooldown / rider.attackDamage : 0), 0);
+    if (foes.some(foe => 'order' in foe && foe.owner === 'neutral'
+      && reach(snapshot, foe, rider, THINK_TICKS + clearingTicks) >= rider.attackRange)) {
+      const home = snapshot.buildings.filter(building => building.owner === rider.owner && building.kind === 'townHall'
+        && building.complete && sameGround(snapshot.map, rider, building))
+        .sort((a, b) => distance(rider, a) - distance(rider, b))[0];
+      if (home) return { type: 'move', unitIds: [rider.id], x: home.x, y: home.y };
+    }
+  }
   const aim = rider.aim ? rider.aim : rider;
   // While the weapon cannot fire this turn, only commit to waiting until the next think.
   const shot = rider.cooldown > THINK_TICKS ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
@@ -54,7 +65,9 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   // Inside a charge minimum, the shot and next think share the same narrow firing window.
   const firingWindow = foes.some(foe => 'order' in foe && chargeMinimum(foe, rider).length > 0)
     ? Math.max(THINK_TICKS / SIM_TICKS_PER_SECOND, shot) : THINK_TICKS / SIM_TICKS_PER_SECOND + shot;
-  const safeShot = foes.every(foe => margin(rider, foe) > ('order' in foe ? foe.speed : 0) * firingWindow);
+  const safeShot = foes.every(foe => margin(rider, foe) > ('order' in foe ? foe.speed : 0)
+    * ('order' in foe && foe.owner === 'neutral' && foe.order.type === 'idle'
+      ? THINK_TICKS / SIM_TICKS_PER_SECOND : firingWindow));
   if (safeShot) {
     if (distance(rider, target) <= rider.attackRange) {
       // A fleeing worker or leashing creep must not pull an attack order back under cover.
