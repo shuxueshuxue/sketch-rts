@@ -113,7 +113,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   // Reinforcements walk to the existing staging point. Count them in the camp's force only after they arrive.
   const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
-  const commands = planV6Army(snapshot, owner, options, intel);
+  const commands = planV6Army(snapshot, owner, options, intel, 'siege');
   if (creep && options.memory.v6?.creep === creep) {
     const walking = recruits.filter(unit => !arrived.includes(unit)
       && !(unit.order.type === 'move' && distance(unit.order, creep.staging) < V7_GATHERED_RANGE));
