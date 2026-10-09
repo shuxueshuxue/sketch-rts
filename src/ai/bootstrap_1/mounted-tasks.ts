@@ -26,10 +26,10 @@ function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const eligible = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
-    && unit.hp >= unit.maxHp * .8 && !['board', 'cast', 'charge'].includes(unit.order.type)
+  const available = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
+    && !['board', 'cast', 'charge'].includes(unit.order.type)
     && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
-  const byId = new Map(eligible.map(unit => [unit.id, unit]));
+  const byId = new Map(available.map(unit => [unit.id, unit]));
   const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0 && isOpponentOwner(snapshot, owner, building.owner, options));
   const active = options.memory.mounted ? options.memory.mounted.filter(assignment => {
     assignment.unitIds = assignment.unitIds.filter(id => byId.has(id));
@@ -46,7 +46,8 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   }) : [];
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
-  let riders = eligible.filter(unit => !assigned.has(unit.id));
+  // Health gates a new sortie; an injured rider keeps its current fight until recovery takes command.
+  let riders = available.filter(unit => unit.hp >= unit.maxHp * .8 && !assigned.has(unit.id));
   const raid = active.find(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.length < 3);
   if (raid) {
     const lead = byId.get(raid.unitIds[0]!)!;

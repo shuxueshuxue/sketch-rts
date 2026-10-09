@@ -18,44 +18,59 @@ export const shellEvasion: AiScript = {
     command.type === 'move' ? command.unitIds : [])),
 };
 
-/** Leave a visible shell's impact area before it lands, then release the army back to its commander. */
+/** Leave visible enemy blast areas and keep clear until the projectile or ground effect expires. */
 export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const shells = snapshot.projectiles.filter(projectile => projectile.weapon?.delivery === 'shell'
-    && isEnemyOwner(snapshot, owner, projectile.owner, options));
+  const hazards = [
+    ...snapshot.projectiles.filter(projectile => projectile.weapon?.delivery === 'shell'
+      && isEnemyOwner(snapshot, owner, projectile.owner, options)).map(shell => ({
+      id: shell.id, x: shell.toX, y: shell.toY, radius: shell.weapon!.radius!, remaining: shell.remaining,
+      angle: Math.atan2(shell.toY - shell.fromY, shell.toX - shell.fromX),
+    })),
+    ...snapshot.effects.filter(effect => (effect.type === 'storm' || effect.type === 'burningGround')
+      && effect.owner !== undefined && effect.damage! > 0 && effect.radius! > 0 && effect.tickEvery! > 0
+      && isEnemyOwner(snapshot, owner, effect.owner, options)).map(effect => ({
+      id: effect.id, x: effect.x, y: effect.y, radius: effect.radius!, remaining: effect.remaining, angle: 0,
+    })),
+  ];
   const soldiers = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unitMover(unit.kind) === 'land' && !unit.deck
     && unit.order.type !== 'board' && unit.order.type !== 'charge' && !unit.effects.some(effect => effect.type === 'root'));
+  const enemies = [...snapshot.units, ...snapshot.buildings].filter(enemy => enemy.attackDamage > 0
+    && !('order' in enemy && enemy.deck) && isEnemyOwner(snapshot, owner, enemy.owner, options));
   options.memory.jobs = options.memory.jobs.filter(job => !job.kind.startsWith(JOB_PREFIX)
-    || (shells.some(shell => job.kind === JOB_PREFIX + shell.id) && soldiers.some(unit => unit.id === job.id)));
+    || (hazards.some(hazard => job.kind === JOB_PREFIX + hazard.id) && soldiers.some(unit => unit.id === job.id)));
   const commands: Extract<GameCommand, { type: 'move' }>[] = [];
   const destinations: { x: number; y: number; radius: number }[] = [];
   for (const unit of soldiers) {
     const job = options.memory.jobs.find(job => job.id === unit.id && job.kind.startsWith(JOB_PREFIX));
     const order = unit.order;
-    if (job && order.type === 'move' && shells.every(shell =>
-      Math.hypot(order.x - shell.toX, order.y - shell.toY) > shell.weapon!.radius! + unit.radius)) {
+    if (job && order.type === 'move' && hazards.every(hazard =>
+      Math.hypot(order.x - hazard.x, order.y - hazard.y) > hazard.radius + unit.radius)) {
       commands.push({ type: 'move', unitIds: [unit.id], x: order.x, y: order.y });
       destinations.push({ x: order.x, y: order.y, radius: unit.radius });
       continue;
     }
-    const incoming = shells.filter(shell => Math.hypot(unit.x - shell.toX, unit.y - shell.toY) <= shell.weapon!.radius! + unit.radius)
+    const incoming = hazards.filter(hazard => Math.hypot(unit.x - hazard.x, unit.y - hazard.y) <= hazard.radius + unit.radius)
       .sort((a, b) => a.remaining - b.remaining);
-    const shell = incoming[0];
-    if (!shell) {
-      // Keep an escaped soldier outside the blast until impact; another army script must not walk it back in.
+    const hazard = incoming[0];
+    if (!hazard) {
+      // Keep an escaped soldier clear until the hazard ends; another army script must not walk it back in.
       if (job) commands.push({ type: 'move', unitIds: [unit.id], x: unit.order.type === 'move' ? unit.order.x : unit.x,
         y: unit.order.type === 'move' ? unit.order.y : unit.y });
       continue;
     }
-    const angle = Math.atan2(shell.toY - shell.fromY, shell.toX - shell.fromX);
-    const reach = shell.weapon!.radius! + unit.radius + CLEARANCE;
-    const budget = unit.speed * (shell.remaining - 1) / SIM_TICKS_PER_SECOND;
-    const points = DIRECTIONS.map(offset => ({ x: shell.toX + detCos(angle + offset * Math.PI / 8) * reach,
-      y: shell.toY + detSin(angle + offset * Math.PI / 8) * reach }))
+    const reach = hazard.radius + unit.radius + CLEARANCE;
+    const budget = unit.speed * (hazard.remaining - 1) / SIM_TICKS_PER_SECOND;
+    const points = DIRECTIONS.map(offset => ({ x: hazard.x + detCos(hazard.angle + offset * Math.PI / 8) * reach,
+      y: hazard.y + detSin(hazard.angle + offset * Math.PI / 8) * reach }))
       .filter(point => Math.hypot(point.x - unit.x, point.y - unit.y) <= budget && isWalkable(snapshot.map, point.x, point.y))
-      .filter(point => shells.every(other => Math.hypot(point.x - other.toX, point.y - other.toY) > other.weapon!.radius! + unit.radius))
-      .map(point => ({ ...point, score: Math.hypot(point.x - unit.x, point.y - unit.y)
+      .filter(point => hazards.every(other => Math.hypot(point.x - other.x, point.y - other.y) > other.radius + unit.radius))
+      .map(point => ({ ...point,
+        exposure: Math.max(0, ...enemies.map(enemy => enemy.attackRange + enemy.radius + unit.radius
+          + ('order' in enemy ? enemy.speed : 0) * Math.hypot(point.x - unit.x, point.y - unit.y) / unit.speed
+          - Math.hypot(point.x - enemy.x, point.y - enemy.y))),
+        score: Math.hypot(point.x - unit.x, point.y - unit.y)
         + destinations.reduce((total, other) => total + Math.max(0, unit.radius + other.radius + CLEARANCE - Math.hypot(point.x - other.x, point.y - other.y)) * 4, 0) }))
-      .sort((a, b) => a.score - b.score);
+      .sort((a, b) => a.exposure - b.exposure || a.score - b.score);
     const point = points.find(point => {
       const walk = walkingDistance(snapshot.map, unit, point);
       return walk !== undefined && walk <= budget;
@@ -63,8 +78,8 @@ export function planShellEvasion(snapshot: GameSnapshot, owner: PlayerId, option
     if (!point) continue;
     commands.push({ type: 'move', unitIds: [unit.id], x: point.x, y: point.y });
     destinations.push({ ...point, radius: unit.radius });
-    if (job) { job.kind = JOB_PREFIX + shell.id; job.updatedTick = snapshot.tick; }
-    else options.memory.jobs.push({ id: unit.id, kind: JOB_PREFIX + shell.id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
+    if (job) { job.kind = JOB_PREFIX + hazard.id; job.updatedTick = snapshot.tick; }
+    else options.memory.jobs.push({ id: unit.id, kind: JOB_PREFIX + hazard.id, createdTick: snapshot.tick, updatedTick: snapshot.tick });
   }
   return commands;
 }
