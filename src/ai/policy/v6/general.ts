@@ -637,10 +637,10 @@ function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
 function order(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leash?: number): GameCommand[] {
   const holdingSince = mode === "hold" ? (memory.general?.mode === "hold" ? (memory.general.holdingSince ?? snapshot.tick) : snapshot.tick) : undefined;
   memory.general = { mode, target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}), ...(leash !== undefined ? { leash } : {}) };
-  return orderUnits(snapshot, owner, mode, front, point, options, leash);
+  return orderUnits(snapshot, owner, mode, front, point, options, leash, mode === "hold" || mode === "guard");
 }
 
-function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leashOverride?: number): GameCommand[] {
+function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leashOverride?: number, returnToPost = false): GameCommand[] {
   // Holding and guarding keep the army on a short leash: a unit chasing a retreating enemy out past the towers is called
   // back (spirits chased V5's raiders from the rally to 1400 paces from home, and died there to the archers behind them).
   const leash = leashOverride ?? (mode === "guard" || mode === "hold" ? GUARD_LEASH : LOCAL_RANGE);
@@ -654,14 +654,18 @@ function orderUnits(snapshot: GameSnapshot, owner: PlayerId, mode: Mode, front: 
   // V9's units still on the way walk round the camps in it (see v9-march-round-camps); every other unit heads for the point.
   const heading = isV9Policy(options) ? marchHeading(snapshot, front, point) : point;
   const aim = (unit: Unit) => (heading === point || marchArrived(unit, point) ? point : heading);
+  const regrouping = isV9Policy(options) && returnToPost;
   const straying = front.filter((unit) => {
     if ((mode === "hold" || mode === "guard") && distance(unit, point) <= 350 && (unit.order.type === "idle" || unit.order.type === "attack")) return false;
-    const going = unit.order.type === "attackMove" && distance(unit.order, aim(unit)) <= ORDER_SLACK;
+    const going = (unit.order.type === "attackMove" || regrouping && unit.order.type === "move")
+      && distance(unit.order, aim(unit)) <= ORDER_SLACK
+      && !(regrouping && unit.order.type === "attackMove" && distance(unit, point) > leash);
     const fighting = (unit.order.type === "attack" && distance(unit, point) <= leash) || (underFire(unit) && (unit.order.type === "attack" || (unit.order.type === "attackMove" && unit.order.targetId !== undefined)));
     return !going && !fighting;
   });
   // Past an explicit leash a unit breaks off and walks back; inside it, it fights its way back to the point.
-  const breaking = leashOverride === undefined ? [] : straying.filter((unit) => distance(unit, point) > leashOverride && !underFire(unit));
+  const breaking = straying.filter((unit) => (leashOverride !== undefined && distance(unit, point) > leashOverride
+    || regrouping && distance(unit, point) > leash) && !underFire(unit));
   const returning = straying.filter((unit) => !breaking.includes(unit));
   const walking = breaking.filter((unit) => !(unit.order.type === "move" && distance(unit.order, aim(unit)) <= ORDER_SLACK));
   // Units bound for the same point share one order.

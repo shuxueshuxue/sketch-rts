@@ -48,12 +48,13 @@ function clearCamp(game: Game, rider: Unit, ids: ReadonlySet<string>) {
 }
 
 describe('mounted micro through ordinary SDK commands', () => {
-  it('leaves an abandoned raid mine and travels to the remaining live mining line', () => {
-    const scene = sketchScene('mounted-raid-completion').replaceDefaults()
+  it.each([false, true])('leaves an abandoned raid mine and travels to the live mining line with idle soldiers present: %s', idleGuard => {
+    let scene = sketchScene('mounted-raid-completion').replaceDefaults()
       .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 500, 500).townHall('foe', 2600, 1000, { id: 'abandoned' })
       .townHall('foe', 2600, 2300, { id: 'working' }).worker('foe', 2800, 2300)
       .unit('us', 'horseArcher', 3000, 1000, { id: 'rider' }).unit('us', 'horseArcher', 3040, 1000, { id: 'partner' });
+    if (idleGuard) scene = scene.unit('foe', 'footman', 2400, 1000, { order: { type: 'hold', x: 2400, y: 1000 } });
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.mounted = [{ unitIds: ['rider', 'partner'], objective: { kind: 'raid', hallId: 'abandoned', owner: 'foe' } }];
     for (let tick = 0; tick < 120; tick++) {
@@ -61,8 +62,8 @@ describe('mounted micro through ordinary SDK commands', () => {
         { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams }));
       stepGame(game);
     }
-    expect(memory.mounted!.map(assignment => assignment.objective)).toEqual([{ kind: 'raid', hallId: 'working', owner: 'foe' }]);
     expect(game.units.filter(unit => unit.kind === 'horseArcher').every(unit => unit.y > 1200 && unit.hp === unit.maxHp)).toBe(true);
+    expect(memory.mounted!.map(assignment => assignment.objective)).toEqual([{ kind: 'raid', hallId: 'working', owner: 'foe' }]);
     expect(game.match.stats.goldSpent.us).toBe(0);
   });
   it('takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step', () => {
