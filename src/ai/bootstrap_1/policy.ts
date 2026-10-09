@@ -1,10 +1,12 @@
 import { UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { canReceiveHealing } from '../../shared/healing';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiPolicyContext } from '../policy/types';
 import { V6_STRATEGIES, v7Phases, type V6Strategy, type V6Want } from '../policy/v6/doctrine';
 import { V8_STRATEGIES } from '../policy/v8/doctrine';
+import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { ARCHER_DOCTRINES } from './archer-doctrine';
 import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
@@ -16,6 +18,7 @@ import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
 import { planSummonerScreen } from './summoner-screen';
 import { mountedTasks } from './mounted-tasks';
+import { medicalRecovery } from './medical-recovery';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -45,7 +48,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   const grove = snapshot.players[owner]!.race === 'grove';
   const healer = grove ? 'priest' : 'emberAcolyte';
-  const medical: V6Want[] = version === 'v9_archer' && (army.length >= 10
+  const recovering = army.some(unit => !unit.deck && canReceiveHealing(unit, snapshot) && unit.hp < unit.maxHp * V7_WOUNDED_SHARE);
+  const medical: V6Want[] = (version === 'v9_archer' || recovering) && (army.length >= 10
     || snapshot.players[owner]!.supplyCap >= requiredSupplyCap(healer)
       && snapshot.buildings.some(building => building.owner === owner && building.complete && building.kind === UNIT_DEFS[healer].trainedAt))
     ? [{ unit: healer, count: Math.min(2, Math.floor(army.length / 5)), priority: 65 }] : [];
@@ -58,6 +62,9 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
     { building: producer, count: 2, priority: 57 },
   ];
+  if (version === 'v9_knight' && army.filter(unit => unit.kind === main).length >= 4) {
+    wants.push({ unit: grove ? 'ballista' : 'catapult', count: 2, priority: 64 });
+  }
   // The spirit host fights through summons, which these upgrades do not affect.
   if (version !== 'v9_summoner') wants.push(
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
@@ -77,7 +84,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral },
     ];
-    if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [{ ...script, run: planSummonerScreen }];
+    if (version === 'v9_summoner' && script === AI_SCRIPT_LIBRARY.v6Backline) return [medicalRecovery, { ...script, run: planSummonerScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.allySupport) return [mountedTasks, script];

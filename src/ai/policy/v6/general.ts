@@ -353,7 +353,7 @@ function defendTarget(intel: V6Intel) {
 // leash walks back: sent back fighting, it took up the chase again on the way (the last of them died 920 out).
 const V7_DEFEND_EDGE = 0.9;
 const V7_DEFEND_STAY = 0.6;
-const V7_WOUNDED_SHARE = 0.35;
+export const V7_WOUNDED_SHARE = 0.35;
 const V7_DEFEND_STEP = 200;
 const V7_DEFEND_LEASH = 450;
 

@@ -10,6 +10,7 @@ import { planV6Economy } from '../policy/v6/economy';
 import { planAbilityCommands } from '../policy/spell-tactics';
 import { bootstrapPolicyContext } from './policy';
 import { planBootstrapEconomy } from './economy';
+import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 
 function expansionScene(archers: number, farms: number, gold: number) {
   let scene = sketchScene('population-before-third-mine').replaceDefaults()
@@ -34,6 +35,74 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each(['grove', 'ember'] as const)('funds %s artillery behind four heavies before refilling the light cavalry quota', race => {
+    const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
+    const light = race === 'grove' ? 'raider' : 'emberRavager';
+    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    const artillery = race === 'grove' ? 'ballista' : 'catapult';
+    let scene = sketchScene('heavy-line-artillery-support').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
+      .building('us', UNIT_DEFS[heavy].trainedAt!, 700, 850).building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850)
+      .building('us', 'workshop', 1200, 850).farms('us', 9, 400, 1600);
+    if (UNIT_DEFS[light].trainedAt !== UNIT_DEFS[heavy].trainedAt) scene = scene.building('us', UNIT_DEFS[light].trainedAt!, 700, 1050);
+    for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 550 + index % 5 * 20,
+      { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', heavy, 1300 + index * 30, 1100);
+    for (let index = 0; index < 6; index++) scene = scene.unit('us', light, 1300 + index * 30, 1200);
+    for (let index = 0; index < 2; index++) scene = scene.unit('us', healer, 1300 + index * 30, 1000);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 1 };
+    let firstRecruit: TrainableUnitKind | undefined;
+    for (let tick = 0; tick < 3000 && game.units.filter(unit => unit.kind === artillery).length < 2; tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
+        for (const command of planBootstrapEconomy(snapshot, 'us', options)) {
+          if (command.type === 'train' && command.unitKind !== 'worker' && firstRecruit === undefined) firstRecruit = command.unitKind;
+          issuePlayerCommand(game, 'us', command);
+        }
+      }
+      stepGame(game);
+    }
+    expect(firstRecruit).toBe(artillery);
+    expect(game.units.filter(unit => unit.kind === artillery)).toHaveLength(2);
+    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(2 * UNIT_DEFS[artillery].cost);
+    const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
+    const carrying = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
+    expect(game.players.us!.gold + game.match.stats.goldSpent.us!).toBeLessThanOrEqual(500 + mined - carrying);
+  });
+  it.each(['grove', 'ember'] as const)('buys a %s healer and recovers the wounded permanent summon screen through the full command stack', race => {
+    const caster = race === 'grove' ? 'summoner' : 'pyreCaller';
+    const body = race === 'grove' ? 'footman' : 'emberRavager';
+    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    let scene = sketchScene('summon-host-medical-support').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 500, 500).goldMine('main', 788, 500, 10000)
+      .townHall('us', 1400, 500).goldMine('natural', 1688, 500, 10000).townHall('foe', 3500, 3500)
+      .building('us', UNIT_DEFS[caster].trainedAt!, 1800, 1200).farms('us', 7, 400, 1600);
+    for (let index = 0; index < 11; index++) scene = scene.worker('us', index < 5 ? 540 : 1440, 530 + index % 5 * 20,
+      { order: { type: 'mine', resourceId: index < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', caster, 2300 + index * 35, 1100)
+      .unit('us', body, 650 + index * 35, 700, { id: `wounded-${index}`, hpRatio: .25 });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 1 };
+    const startingHp = game.units.filter(unit => unit.id.startsWith('wounded-')).reduce((total, unit) => total + unit.hp, 0);
+    for (let tick = 0; tick < 1600; tick++) {
+      if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version: 'v9_summoner', memory }, { teams: game.teams }));
+      stepGame(game);
+    }
+    const recovered = game.units.filter(unit => unit.id.startsWith('wounded-'));
+    expect(game.units.some(unit => unit.owner === 'us' && unit.kind === healer)).toBe(true);
+    expect(recovered).toHaveLength(4);
+    expect(recovered.reduce((total, unit) => total + unit.hp, 0)).toBeGreaterThan(startingHp + UNIT_DEFS[body].hp);
+    expect(recovered.every(unit => unit.hp >= unit.maxHp * V7_WOUNDED_SHARE)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(UNIT_DEFS[healer].cost);
+    const mined = 20000 - game.resources.reduce((total, mine) => total + mine.amount, 0);
+    const carrying = game.units.filter(unit => unit.owner === 'us').reduce((total, unit) => total + unit.carryingGold, 0);
+    expect(game.players.us!.gold + game.match.stats.goldSpent.us!).toBeLessThanOrEqual(500 + mined - carrying);
+  });
   it.each(['grove', 'ember'] as const)('builds and pays for the mixed %s opening from normal starting gold and mining', race => {
     const screen = race === 'grove' ? 'footman' : 'emberRavager';
     const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
