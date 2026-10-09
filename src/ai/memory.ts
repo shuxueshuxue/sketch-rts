@@ -56,7 +56,7 @@ export type NavalPlanMemory = {
   muster?:{at:{x:number;y:number};goal:{x:number;y:number};leader:string;sinceTick:number;launched:boolean};
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};
   outfitRetryUntil?: number;
-  ferries?: Record<string, {purpose:"settle"|"assault"|"rebase"|"evacuate";targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;progress?:{tick:number;x:number;y:number;phase:string;crew:string}}>;
+  ferries?: Record<string, {purpose:"settle"|"assault"|"rebase"|"evacuate";targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
   ferryRetryUntil?: Record<string,number>;
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
   assault?: { tick: number; plan?: { targetId: string; landing: { x: number; y: number } } };

@@ -8,7 +8,8 @@ import { desiredExpansionMine } from "./expansion-model";
 import { navalUnitIds, navalWant, navalBudgetReserve, planNavalTactics } from "./naval";
 import { nextExpansionMine, readV6Intel } from "./v6/intel";
 import { projectedSupplyUsed } from "./world-model";
-import { installedWeapons } from '../../shared/ship-equipment';
+import { installedWeapons, shipPartMax } from '../../shared/ship-equipment';
+import { headingDifference, planShipRoute } from '../../shared/ship-navigation';
 import { createAiRuntime, createPresetAiRuntimeFramePlanner } from '../runtime';
 import { CommandFrameRuntime } from '../../shared/sim/command-frame-runtime';
 import { seconds } from '../../shared/time';
@@ -70,6 +71,48 @@ function islandGame(terrain = coast(), players = ["player", "enemy"]) {
 }
 
 describe('shared dock outfitting', () => {
+  it.each([10, 0])('distinguishes a turning ferry from a stalled ferry with rudder=%s', rudder => {
+    const terrain = coast();
+    terrain.rows += 40;
+    terrain.cells += ('.........,' + '~'.repeat(20)).repeat(40);
+    const game = islandGame(terrain);
+    game.buildings.push({ ...game.buildings[0]!, id: 'foe-hall', owner: 'enemy', ...at(4, 12) });
+    const boat = game.spawnUnit('player', 'transport', at(15, 35).x, at(15, 35).y);
+    const passenger = game.spawnUnit('player', 'footman', boat.x, boat.y);
+    expect(boardUnit(boat, passenger, game.units)).toBe(true);
+    boat.sailing!.heading = Math.PI;
+    // Preserve a real precise turn planned before the rudder damage. The
+    // passenger cannot repair the helm; the simulation must execute the turn.
+    const berth = { x: boat.x, y: boat.y };
+    const planned = planShipRoute(game.map, boat, { ...berth, heading: 0 });
+    expect(planned.points.length).toBeGreaterThan(0);
+    boat.shipParts = { ...shipPartMax(boat), rudder };
+    issuePlayerCommand(game, 'player', { type: 'unload', unitIds: [boat.id], ...berth });
+    boat.sailing!.route = { ...planned, goalX: berth.x, goalY: berth.y, end: planned.points.at(-1)!,
+      startX: boat.x, startY: boat.y, startHeading: Math.PI, cruise: false };
+    const memory = createAiPolicyMemory();
+    memory.naval = { ferries: { [boat.id]: { purpose: 'rebase', targetId: 'island', from: at(9, 35), to: berth,
+      phase: 'sailing', crewIds: [], sinceTick: game.tick } } };
+    let returned = false;
+    for (let tick = 0; tick < seconds(45); tick++) {
+      if (tick % 15 === 0) {
+        for (const command of planNavalTactics(snapshotGame(game), 'player', { version: 'v8', memory })) issuePlayerCommand(game, 'player', command);
+        if (memory.naval.ferries![boat.id]!.phase === 'return') { returned = true; break; }
+      }
+      stepGame(game);
+    }
+    if (rudder === 0) {
+      expect(returned).toBe(true);
+      expect(game.tick).toBeGreaterThan(seconds(40));
+      expect(boat.sailing!.heading).toBe(Math.PI);
+    } else {
+      expect(returned).toBe(false);
+      expect(Math.hypot(boat.x - berth.x, boat.y - berth.y)).toBeLessThan(.1);
+      expect(Math.abs(headingDifference(Math.PI, boat.sailing!.heading))).toBeGreaterThan(1.5);
+      expect(memory.naval.ferries![boat.id]!.phase).toBe('sailing');
+    }
+  });
+
   it('keeps an embarked colony sailing when casualties have lowered population below the opening gate', () => {
     const game = islandGame();
     game.buildings = game.buildings.filter(building => building.id !== 'hall-b');
@@ -104,7 +147,7 @@ describe('shared dock outfitting', () => {
     memory.naval = {
       island: { tick: 0, plan: { mineId: 'island', landing: at(19, 9) } },
       ferries: { [boat.id]: { purpose: 'settle', targetId: 'island', from: at(9, 9), to: at(19, 9), phase: 'loading', crewIds: [], sinceTick: 0,
-        progress: { tick: 0, x: boat.x, y: boat.y, phase: 'loading', crew: worker.id } } }
+        progress: { tick: 0, x: boat.x, y: boat.y, heading: boat.sailing!.heading, phase: 'loading', crew: worker.id } } }
     };
     game.tick = seconds(41);
     const commands = planNavalTactics(snapshotGame(game), 'player', { version: 'v8', memory });
@@ -587,7 +630,7 @@ describe("the AI on the water", () => {
     waiting.order={type:'board',transportId:boat.id};
     const memory=createAiPolicyMemory();
     memory.naval={ferries:{[boat.id]:{purpose:'settle',targetId:'island',from:{x:boat.x,y:boat.y},to:at(19,9),phase:'loading',crewIds:[worker.id,waiting.id],sinceTick:0,
-      progress:{tick:0,x:boat.x,y:boat.y,phase:'loading',crew:worker.id}}}};
+      progress:{tick:0,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'loading',crew:worker.id}}}};
     const commands=planNavalTactics(snapshotGame(game),'player',{version:'v5',memory});
     expect(commands).toContainEqual({type:'stop',unitIds:[waiting.id]});
     expect(commands).toContainEqual({type:'unload',unitIds:[boat.id],...at(19,9)});
