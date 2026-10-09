@@ -5,6 +5,8 @@ import { detCos, detSin } from '../../shared/det-math';
 import { isWalkable, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { unitAbilities } from '../../shared/unit-abilities';
+import { itemsFor } from '../../shared/equipment';
+import { LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from '../../shared/item-rules';
 import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 
@@ -24,10 +26,17 @@ function chargeMinimum(foe: Unit, rider: Unit) {
   });
 }
 
-function reach(foe: Threat, rider: Unit, horizon: number) {
+function itemReach(snapshot: GameSnapshot, foe: Unit, horizon: number) {
+  return itemsFor(snapshot, foe).flatMap(item => item.cooldownRemaining <= horizon
+    && (item.kind === 'stormStaff' || item.kind === 'lightningRod')
+    ? [foe.owner === 'neutral' ? item.kind === 'stormStaff' ? NEUTRAL_STORM_TARGET_RANGE : NEUTRAL_ITEM_TARGET_RANGE
+      : item.kind === 'stormStaff' ? STORM_STAFF.range : LIGHTNING_ROD.range] : []);
+}
+
+function reach(snapshot: GameSnapshot, foe: Threat, rider: Unit, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
   const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
-  return Math.max(weaponReach, ...unitAbilities(foe).flatMap(ability => {
+  return Math.max(weaponReach, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];
     return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
       && abilityCooldown(foe, ability) <= horizon
@@ -41,7 +50,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
   // While the weapon cannot fire this turn, only commit to waiting until the next think.
   const shot = rider.cooldown > THINK_TICKS ? 0 : rider.cooldown / SIM_TICKS_PER_SECOND + distance(aim, target) / aimingProfile(UNIT_DEFS.horseArcher)!.speed;
   const horizon = THINK_TICKS + rider.cooldown;
-  const margin = (point: Point, foe: Threat) => distance(point, foe) - reach(foe, rider, horizon);
+  const margin = (point: Point, foe: Threat) => distance(point, foe) - reach(snapshot, foe, rider, horizon);
   // Inside a charge minimum, the shot and next think share the same narrow firing window.
   const firingWindow = foes.some(foe => 'order' in foe && chargeMinimum(foe, rider).length > 0)
     ? Math.max(THINK_TICKS / SIM_TICKS_PER_SECOND, shot) : THINK_TICKS / SIM_TICKS_PER_SECOND + shot;
@@ -54,8 +63,12 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
         : { type: 'aim', unitIds: [rider.id], x: target.x, y: target.y };
     }
     if (!foes.some(foe => 'order' in foe && foe.order.type === 'attack' && foe.order.targetId === rider.id)) {
-      return goal.kind === 'camp' ? { type: 'attack', unitIds: [rider.id], targetId: target.id }
-        : mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.station));
+      const approach = 1 - rider.attackRange / distance(rider, target);
+      const entry = { x: rider.x + (target.x - rider.x) * approach, y: rider.y + (target.y - rider.y) * approach };
+      if (goal.kind === 'camp' && foes.every(foe => distance(entry, foe) > reach(snapshot, foe, rider, horizon))) {
+        return { type: 'attack', unitIds: [rider.id], targetId: target.id };
+      }
+      return mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.kind === 'camp' ? target : goal.station));
     }
     return { type: 'holdPosition', unitIds: [rider.id] };
   }
@@ -66,7 +79,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
 
 export function mountedEscape(snapshot: GameSnapshot, rider: Unit, foes: readonly Threat[], shot: number, destination: Point | undefined): GameCommand {
   const horizon = THINK_TICKS + rider.cooldown;
-  const threats = foes.map(foe => ({ foe, range: reach(foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
+  const threats = foes.map(foe => ({ foe, range: reach(snapshot, foe, rider, horizon), speed: 'order' in foe ? foe.speed : 0 }));
   const margin = (point: Point, threat: typeof threats[number]) => distance(point, threat.foe) - threat.range;
   const danger = [...threats].sort((a, b) => margin(rider, a) - a.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)
     - (margin(rider, b) - b.speed * (THINK_TICKS / SIM_TICKS_PER_SECOND + shot)))[0]!;
