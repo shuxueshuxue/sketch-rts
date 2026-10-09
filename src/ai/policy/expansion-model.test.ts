@@ -4,8 +4,10 @@ import { sketchScene } from "../../sdk/scene";
 import { canClearGuardedExpansion, depletedEconomyExpansion, desiredExpansionMine, desiredForwardExpansionMine, opponentEconomyAhead, shouldReserveForClearedExpansion, shouldReserveForExpansion } from "./expansion-model";
 import { AI_SCRIPT_LIBRARY } from "./core";
 import { BUILDING_DEFS } from "../../shared/catalog";
-import { createUnit } from "../../shared/map";
+import { createBuilding, createUnit } from "../../shared/map";
 import { createAiPolicyMemory } from "../memory";
+import { strikeGap } from "../../shared/combat-geometry";
+import { distance, pointToSegmentDistance } from "./spatial";
 
 function depletedMiningGame() {
   const scene = sketchScene("depleted-two-base-economy").map("bareDuel").replaceDefaults()
@@ -21,7 +23,84 @@ function depletedMiningGame() {
   return scene.build().createGame();
 }
 
+function replacementWithOuterTower(towardFoundation: boolean) {
+  const game = depletedMiningGame(), options = { version: "v2" as const, teams: game.teams, memory: createAiPolicyMemory() };
+  const mine = game.resources.find(resource => resource.id === "remote")!;
+  mine.x = 2700; mine.y = 2300;
+  game.units.filter(unit => unit.kind === "worker").forEach((worker, index) => { worker.x = mine.x - 60; worker.y = mine.y - 20 + index * 10; });
+  const original = depletedEconomyExpansion(snapshotGame(game), "v2", options)!;
+  const gap = distance(mine, original.point), side = towardFoundation ? 1 : -1;
+  const direction = { x: side * (original.point.x - mine.x) / gap, y: side * (original.point.y - mine.y) / gap };
+  const tower = createBuilding("outer-tower", "v1", "defenseTower", mine.x + direction.x * 721, mine.y + direction.y * 721, true);
+  game.buildings.push(tower);
+  return { game, options, mine, original, tower, direction };
+}
+
 describe("AI expansion model", () => {
+  it("releases a replacement bank when a tower outside the mine exclusion can shoot the actual new hall", () => {
+    const { game, options, mine, original, tower } = replacementWithOuterTower(true);
+    expect(distance(mine, tower)).toBeCloseTo(721, 10);
+    expect(strikeGap(tower, { ...original.point, radius: BUILDING_DEFS.townHall.radius })).toBeLessThan(tower.attackRange);
+    const snapshot = snapshotGame(game);
+    expect(depletedEconomyExpansion(snapshot, "v2", options)).toBeUndefined();
+    expect(shouldReserveForExpansion(snapshot, "v2", options)).toBe(false);
+
+    // The formerly accepted foundation is legal to place but takes real tower
+    // fire. Force that old order through the normal simulation to prove it.
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost;
+    const oldHalls = new Set(game.buildings.filter(building => building.kind === "townHall").map(building => building.id));
+    const newHallHits: number[] = [];
+    game.observer = { hit(source, target, taken) {
+      if (source.id === tower.id && !("order" in target) && target.kind === "townHall" && !oldHalls.has(target.id)) newHallHits.push(taken);
+    } };
+    issuePlayerCommand(game, "v2", { type: "build", buildingKind: "townHall", unitId: original.builder.id, ...original.point });
+    for (let tick = 0; tick < 400 && newHallHits.length === 0; tick++) stepGame(game);
+    expect(game.match.stats.goldSpent.v2).toBe(BUILDING_DEFS.townHall.cost);
+    expect(newHallHits.some(damage => damage > 0)).toBe(true);
+  });
+
+  it("keeps a safe outer-tower replacement bank and completes the new hall without tower damage", () => {
+    const { game, options, mine, original, tower } = replacementWithOuterTower(false);
+    expect(distance(mine, tower)).toBeCloseTo(721, 10);
+    expect(strikeGap(tower, { ...original.point, radius: BUILDING_DEFS.townHall.radius })).toBeGreaterThan(tower.attackRange);
+    const snapshot = snapshotGame(game), recovery = depletedEconomyExpansion(snapshot, "v2", options)!;
+    expect(recovery.point).toEqual(original.point);
+    expect(shouldReserveForExpansion(snapshot, "v2", options)).toBe(true);
+    game.players.v2!.gold = BUILDING_DEFS.townHall.cost;
+    const oldHalls = new Set(game.buildings.filter(building => building.kind === "townHall").map(building => building.id));
+    const newHallHits: number[] = [];
+    game.observer = { hit(source, target, taken) {
+      if (source.id === tower.id && !("order" in target) && target.kind === "townHall" && !oldHalls.has(target.id)) newHallHits.push(taken);
+    } };
+    const command = AI_SCRIPT_LIBRARY.expansion.run(snapshotGame(game), "v2", options)!;
+    if (Array.isArray(command)) throw new Error("expected one foundation");
+    issuePlayerCommand(game, "v2", command);
+    for (let tick = 0; tick < 1000 && !game.buildings.some(building => building.kind === "townHall" && !oldHalls.has(building.id) && building.complete); tick++) stepGame(game);
+    const hall = game.buildings.find(building => building.kind === "townHall" && !oldHalls.has(building.id))!;
+    expect(hall.complete).toBe(true);
+    expect(hall.hp).toBeCloseTo(hall.maxHp, 8);
+    expect(newHallHits).toEqual([]);
+  });
+
+  it.each(["current-position", "approach-route"])("releases the replacement bank for an exposed builder %s", condition => {
+    const { game, options, mine, original, tower, direction } = replacementWithOuterTower(false);
+    const builder = game.units.find(unit => unit.id === original.builder.id)!;
+    const reach = condition === "current-position" ? 721 - tower.attackRange + 10 : 721 + tower.attackRange + 120;
+    builder.x = mine.x + direction.x * reach; builder.y = mine.y + direction.y * reach;
+    for (const worker of game.units.filter(unit => unit.kind === "worker" && unit !== builder)) {
+      options.memory.unitClaims[worker.id] = { kind: "retreat", targetId: "retreat", x: 500, y: 500, sinceTick: game.tick, expiresTick: game.tick + 900 };
+    }
+    expect(strikeGap(tower, { ...original.point, radius: BUILDING_DEFS.townHall.radius })).toBeGreaterThan(tower.attackRange);
+    if (condition === "current-position") expect(distance(builder, tower)).toBeLessThan(tower.attackRange);
+    else {
+      expect(distance(builder, tower)).toBeGreaterThan(tower.attackRange);
+      expect(pointToSegmentDistance(tower, builder, original.point)).toBeLessThan(tower.attackRange);
+    }
+    const snapshot = snapshotGame(game);
+    expect(depletedEconomyExpansion(snapshot, "v2", options)).toBeUndefined();
+    expect(shouldReserveForExpansion(snapshot, "v2", options)).toBe(false);
+  });
+
   it("banks a legal replacement mining base after both old mines are exhausted", () => {
     const game = depletedMiningGame(), options = { version: "v2" as const, teams: game.teams, memory: createAiPolicyMemory() };
     const snapshot = snapshotGame(game);

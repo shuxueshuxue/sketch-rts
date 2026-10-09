@@ -1,13 +1,14 @@
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import { miningHallSite } from "../../shared/mining-site";
-import { walkDestination } from "../../shared/terrain";
+import { strikeGap } from "../../shared/combat-geometry";
+import { segmentWalkable, walkDestination, walkRoute } from "../../shared/terrain";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameSnapshot, PlayerId, ResourceNode, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
-import { opponentPlayerIds } from "./ownership";
+import { isEnemyOwner, opponentPlayerIds } from "./ownership";
 import { missingCombatProductionKind } from "./production-model";
 import { activePlayerIds, activeResources, allBuildings, buildings, combatUnits, completeBuildings, enemyBuildingsNear, neutralUnitsNear, resources, units } from "./snapshot";
-import { averagePoint, distance } from "./spatial";
+import { averagePoint, distance, pointToSegmentDistance, type Point } from "./spatial";
 import { enemyPressure } from "./threats";
 import { availableBuilder, expansionOffset, hasCoreProduction, isCoreProductionBuilding, mainBase, nearestResource, playerState } from "./world-model";
 import type { PresetAiPolicyOptions } from "./types";
@@ -60,7 +61,7 @@ export function expansionBaseTarget(options: PresetAiPolicyOptions) {
   return options.version === "v2" ? 5 : 2;
 }
 
-type ReplacementSite = { point: { x: number; y: number } | undefined; reachable: WeakMap<Unit, boolean> };
+type ReplacementSite = { point: Point | undefined; reachable: WeakMap<Unit, boolean>; routes: WeakMap<Unit, Point[]> };
 const replacementSites = new WeakMap<GameSnapshot, Map<string, ReplacementSite>>();
 
 /** Replace exhausted mining bases rather than spending every remote haul on
@@ -93,7 +94,7 @@ export function depletedEconomyExpansion(snapshot: GameSnapshot, owner: PlayerId
   const key = `${mine.id}:${offset.x}:${offset.y}`;
   let site = sites.get(key);
   if (!site) {
-    site = { point: miningHallSite(snapshot, mine, { x: mine.x + offset.x, y: mine.y + offset.y }), reachable: new WeakMap() };
+    site = { point: miningHallSite(snapshot, mine, { x: mine.x + offset.x, y: mine.y + offset.y }), reachable: new WeakMap(), routes: new WeakMap() };
     sites.set(key, site);
   }
   const point = site.point;
@@ -103,7 +104,27 @@ export function depletedEconomyExpansion(snapshot: GameSnapshot, owner: PlayerId
     reachable = distance(walkDestination(snapshot.map, builder, point), point) <= 1e-6;
     site.reachable.set(builder, reachable);
   }
-  return reachable ? { mine, builder, point: { ...point } } : undefined;
+  if (!reachable) return undefined;
+  const towers = allBuildings(snapshot).filter(building => building.hp > 0 && building.complete && building.attackDamage > 0
+    && isEnemyOwner(snapshot, owner, building.owner, options));
+  if (towers.length) {
+    const foundation = { ...point, radius: BUILDING_DEFS.townHall.radius };
+    if (towers.some(tower => strikeGap(tower, foundation) <= tower.attackRange)) return undefined;
+    let route = site.routes.get(builder);
+    if (!route) {
+      route = segmentWalkable(snapshot.map, builder, point) ? [point] : walkRoute(snapshot.map, builder, point, 1);
+      if (!route) return undefined;
+      site.routes.set(builder, route);
+    }
+    // The mine's exclusion radius does not cover an offset foundation or a
+    // builder approaching it from the far side of a hostile tower.
+    let from: Point = builder;
+    for (const to of route) {
+      if (towers.some(tower => pointToSegmentDistance(tower, from, to) <= tower.attackRange + builder.radius)) return undefined;
+      from = to;
+    }
+  }
+  return { mine, builder, point: { ...point } };
 }
 
 export function canExpandBeforeFullProductionChain(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions) {
