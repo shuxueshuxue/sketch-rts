@@ -42,7 +42,8 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
     // A cleared or fully covered mining line ends the raid; nearby pursuers still belong to this fight.
     return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => firingPoint(snapshot, rider, worker, towers)))
       || snapshot.units.some(unit => unit.attackDamage > 0 && !unit.deck && isOpponentOwner(snapshot, owner, unit.owner, options)
-        && crew.some(rider => distance(unit, rider) < THREAT_RANGE));
+        && crew.some(rider => distance(unit, rider) < THREAT_RANGE && (distance(unit, rider) <= rider.attackRange
+          || (unit.order.type === 'attack' || unit.order.type === 'attackMove') && unit.order.targetId === rider.id)));
   }) : [];
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
