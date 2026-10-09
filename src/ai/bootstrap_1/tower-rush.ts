@@ -12,6 +12,8 @@ import { combatRating, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planAbilityCommands } from '../policy/spell-tactics';
 import { isBacklineKind } from '../policy/v6/backline';
 import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
+import { summonHost } from './summon-host';
+import { SUMMONING_UNIT_KINDS } from '../policy/versions';
 
 const JOB = 'summonerTowerRush';
 const HELPER = 'summonerTowerRushHelper';
@@ -62,9 +64,7 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
   if (uncoveredMiningRaid(snapshot, owner, options)) { endRush(options); return undefined; }
   const enemyHalls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options));
   const current = enemyHalls.find(hall => job?.kind === hall.id);
-  const anchor = [...casters].sort((a, b) => current ? distance(a, current) - distance(b, current)
-    : casters.filter(caster => distance(caster, b) <= 350).length - casters.filter(caster => distance(caster, a) <= 350).length)[0]!;
-  const host = casters.filter(caster => distance(caster, anchor) <= 350);
+  const host = summonHost(casters, current);
   if (host.length < 4) { endRush(options); return undefined; }
   // Fresh recruits travel to the host; they must not pull its center back to the production buildings.
   const center = averagePoint(host);
@@ -177,6 +177,10 @@ export const towerRushAbilities: AiScript = {
 };
 
 export function towerRushConstructionCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const casters = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && SUMMONING_UNIT_KINDS.has(unit.kind));
+  // Prepare the traveling builder before its first construction window, alongside the builder keeping home running.
+  if (options.memory.v6?.general?.mode === 'attack' && !options.memory.v6.general.quick
+    && casters.length >= 4 && summonHost(casters, undefined).length >= 4) return 2;
   const plan = towerRushEngaged(options) ? rush(snapshot, owner, options) : undefined;
   return plan && (plan.pending || plan.rising) ? 2 : 1;
 }

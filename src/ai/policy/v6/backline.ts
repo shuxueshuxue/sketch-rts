@@ -47,13 +47,13 @@ export function v6ScreenedCasterIds(snapshot: GameSnapshot, owner: PlayerId, opt
 export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   if (!isV6Policy(options)) return [];
   const home = mainBase(snapshot, owner);
-  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home));
+  const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
+  return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front);
 }
 
-export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point): GameCommand[] {
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[]): GameCommand[] {
   const casters = units(snapshot, owner).filter(isBacklineKind);
   if (casters.length === 0) return [];
-  const front = units(snapshot, owner).filter((unit) => unit.kind !== "worker" && !isBacklineKind(unit));
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
   const frontNear = withinRangeOf(front, FRONT_GROUP_RANGE);

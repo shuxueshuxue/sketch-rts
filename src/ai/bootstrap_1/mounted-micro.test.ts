@@ -4,7 +4,7 @@ import { issueCommandFrame } from '../../sdk/commands/frame';
 import { issuePlayerCommand, snapshotGame, stepGame, type Game } from '../../shared/sim';
 import { CAMP_TEMPLATES } from '../../shared/camps';
 import { UPGRADE_DEFS } from '../../shared/catalog';
-import { isWalkable, sameGround } from '../../shared/terrain';
+import { isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import type { Unit } from '../../shared/types';
 import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
@@ -49,6 +49,43 @@ function clearCamp(game: Game, rider: Unit, ids: ReadonlySet<string>) {
 }
 
 describe('mounted micro through ordinary SDK commands', () => {
+  it('leaves an abandoned raid mine and travels to the remaining live mining line', () => {
+    const scene = sketchScene('mounted-raid-completion').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 500, 500).townHall('foe', 2600, 1000, { id: 'abandoned' })
+      .townHall('foe', 2600, 2300, { id: 'working' }).worker('foe', 2800, 2300)
+      .unit('us', 'horseArcher', 3000, 1000, { id: 'rider' }).unit('us', 'horseArcher', 3040, 1000, { id: 'partner' });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.mounted = [{ unitIds: ['rider', 'partner'], objective: { kind: 'raid', hallId: 'abandoned', owner: 'foe' } }];
+    for (let tick = 0; tick < 120; tick++) {
+      if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams }));
+      stepGame(game);
+    }
+    expect(memory.mounted!.map(assignment => assignment.objective)).toEqual([{ kind: 'raid', hallId: 'working', owner: 'foe' }]);
+    expect(game.units.filter(unit => unit.kind === 'horseArcher').every(unit => unit.y > 1200 && unit.hp === unit.maxHp)).toBe(true);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
+  it('takes the real Pineshade forest detour toward its raid instead of waiting at the nearest short step', () => {
+    const scene = sketchScene('mounted-forest-detour').map('pineshade').replaceDefaults()
+      .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 3984, 944).townHall('foe', 1456, 3120)
+      .worker('foe', 1570, 3258, { id: 'quarry' })
+      .unit('us', 'horseArcher', 3715.912, 1255.124, { id: 'rider' })
+      .unit('us', 'horseArcher', 3750, 1255, { id: 'partner' });
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    const rider = game.units.find(unit => unit.id === 'rider')!, quarry = game.units.find(unit => unit.id === 'quarry')!;
+    const initial = walkingDistance(game.map, rider, quarry)!;
+    for (let tick = 0; tick < 120; tick++) {
+      if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version: 'v9_archer', memory, policyMode: 'combat' }, { teams: game.teams }));
+      stepGame(game);
+    }
+    expect(memory.mounted!.some(assignment => assignment.objective.kind === 'raid' && assignment.unitIds.includes(rider.id))).toBe(true);
+    expect(walkingDistance(game.map, rider, quarry)).toBeLessThan(initial - 100);
+    expect(rider.hp).toBe(rider.maxHp);
+    expect(game.match.stats.goldSpent.us).toBe(0);
+  });
   it('keeps a camp scout working while two normally purchased reinforcements begin their own raid', () => {
     const scene = sketchScene('mounted-parallel-objectives').replaceDefaults().player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
       .townHall('us', 500, 500).townHall('foe', 3000, 2000).worker('foe', 3300, 2000)

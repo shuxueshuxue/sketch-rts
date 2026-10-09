@@ -2,7 +2,7 @@ import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
-import { isWalkable, segmentWalkable } from '../../shared/terrain';
+import { isWalkable, segmentWalkable, steerPoint } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { unitAbilities } from '../../shared/unit-abilities';
 import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
@@ -44,7 +44,7 @@ export function mountedMicro(snapshot: GameSnapshot, rider: Unit, target: Unit, 
     }
     if (!foes.some(foe => 'order' in foe && foe.order.type === 'attack' && foe.order.targetId === rider.id)) {
       return goal.kind === 'camp' ? { type: 'attack', unitIds: [rider.id], targetId: target.id }
-        : mountedEscape(snapshot, rider, foes, 0, goal.station);
+        : mountedEscape(snapshot, rider, foes, 0, steerPoint(snapshot.map, rider, goal.station));
     }
     return { type: 'holdPosition', unitIds: [rider.id] };
   }

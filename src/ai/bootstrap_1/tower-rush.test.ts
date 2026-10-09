@@ -12,6 +12,8 @@ import { bootstrapPolicyContext } from './policy';
 import { summonerTowerRush, towerRushAbilities, towerRushGoal } from './tower-rush';
 import { createBootstrapCommandPlanner } from '../../../scripts/bootstrap_1-planner';
 import { mineGuardUnitIds } from './mine-defense';
+import { miningWorkforce } from './workforce';
+import { UNIT_DEFS } from '../../shared/catalog';
 
 function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
@@ -47,6 +49,26 @@ function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
 }
 
 describe('bootstrap_1 summoner tower rush', () => {
+  it('recruits the convoy worker while the ordinary builder is busy, before a forward tower job can start', () => {
+    let scene = sketchScene('summoner-convoy-recruitment').replaceDefaults()
+      .player('us', { race: 'ember', team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 400, 600).goldMine('main', 688, 600, 10000).townHall('foe', 3500, 1000).farms('us', 6, 400, 2000)
+      .worker('us', 800, 700, { id: 'builder', order: { type: 'build', buildingKind: 'farm', x: 3400, y: 1600 } });
+    for (let index = 0; index < 5; index++) scene = scene.worker('us', 440, 560 + index * 20,
+      { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', 'pyreCaller', 1500, 900 + index * 40);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 2, general: { mode: 'attack', target: { x: 3500, y: 1000 } } };
+    const context = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+    expect(towerRushGoal(snapshotGame(game), 'us', context)).toBeUndefined();
+    expect(memory.jobs).toHaveLength(0);
+    for (const command of miningWorkforce.run(snapshotGame(game), 'us', context) as GameCommand[]) issuePlayerCommand(game, 'us', command);
+    for (let tick = 0; tick < 250; tick++) stepGame(game);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'worker')).toHaveLength(7);
+    expect(game.units.filter(unit => unit.order.type === 'mine' && unit.order.resourceId === 'main')).toHaveLength(5);
+    expect(game.units.find(unit => unit.id === 'builder')!.order.type).toBe('build');
+    expect(game.match.stats.goldSpent.us).toBe(UNIT_DEFS.worker.cost);
+  });
   it.each(['grove', 'ember'] as const)('spreads the %s host under real catapult fire instead of packing every caster at one post', race => {
     function underFire(spread: boolean) {
       let scene = sketchScene('tower-host-shell-spacing').replaceDefaults()

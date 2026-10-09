@@ -8,6 +8,8 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import { neutralCamps } from '../policy/v7/creep';
 import { mountedEscape, mountedMicro, mountedTargetOrder } from './mounted-micro';
 
+const THREAT_RANGE = 750;
+
 function firingPoint(snapshot: GameSnapshot, rider: Unit, worker: Unit, towers: readonly Building[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
@@ -24,24 +26,29 @@ function raidWorkers(snapshot: GameSnapshot, owner: PlayerId, hall: Building) {
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const eligible = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !unit.deck
+    && unit.hp >= unit.maxHp * .8 && !['board', 'cast', 'charge'].includes(unit.order.type)
+    && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
+  const byId = new Map(eligible.map(unit => [unit.id, unit]));
+  const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0 && isOpponentOwner(snapshot, owner, building.owner, options));
   const active = options.memory.mounted ? options.memory.mounted.filter(assignment => {
-    assignment.unitIds = assignment.unitIds.filter(id => snapshot.units.some(unit => unit.id === id && unit.owner === owner && !unit.deck
-      && unit.hp >= unit.maxHp * .8 && !['board', 'cast', 'charge'].includes(unit.order.type)
-      && options.memory.unitClaims[unit.id]?.kind !== 'retreat'));
+    assignment.unitIds = assignment.unitIds.filter(id => byId.has(id));
+    if (assignment.unitIds.length === 0) return false;
     const objective = assignment.objective;
-    return assignment.unitIds.length > 0 && (objective.kind === 'camp'
-      ? snapshot.units.some(unit => objective.ids.includes(unit.id))
-      : snapshot.buildings.some(building => building.id === objective.hallId)
-        && snapshot.units.some(unit => unit.owner === objective.owner && !unit.deck));
+    if (objective.kind === 'camp') return snapshot.units.some(unit => objective.ids.includes(unit.id));
+    const hall = snapshot.buildings.find(building => building.id === objective.hallId);
+    if (!hall) return false;
+    const crew = assignment.unitIds.map(id => byId.get(id)!);
+    // A cleared or fully covered mining line ends the raid; nearby pursuers still belong to this fight.
+    return raidWorkers(snapshot, objective.owner, hall).some(worker => crew.some(rider => firingPoint(snapshot, rider, worker, towers)))
+      || snapshot.units.some(unit => unit.attackDamage > 0 && !unit.deck && isOpponentOwner(snapshot, owner, unit.owner, options)
+        && crew.some(rider => distance(unit, rider) < THREAT_RANGE));
   }) : [];
   options.memory.mounted = active;
   const assigned = new Set(active.flatMap(assignment => assignment.unitIds));
-  const riders = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'horseArcher' && !assigned.has(unit.id) && !unit.deck
-    && unit.hp >= unit.maxHp * .8 && !['board', 'cast', 'charge'].includes(unit.order.type)
-    && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
+  const riders = eligible.filter(unit => !assigned.has(unit.id));
   if (!riders.length) return active;
   const lead = riders[0]!;
-  const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0 && isOpponentOwner(snapshot, owner, building.owner, options));
   const halls = snapshot.buildings.filter(building => building.kind === 'townHall' && isOpponentOwner(snapshot, owner, building.owner, options))
     .filter(hall => raidWorkers(snapshot, hall.owner, hall).some(worker => sameGround(snapshot.map, lead, worker) && firingPoint(snapshot, lead, worker, towers)))
     .sort((a, b) => distance(lead, a) - distance(lead, b));
@@ -72,7 +79,7 @@ export const mountedTasks: AiScript = {
         const workers = candidates.map(target => ({ target, point: objective.kind === 'camp' ? target : firingPoint(snapshot, rider, target, towers) }))
           .filter((choice): choice is { target: Unit; point: Point } => choice.point !== undefined);
         const local = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck && unit.owner !== owner
-          && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options)) && distance(unit, rider) < 750);
+          && (unit.owner === 'neutral' || isOpponentOwner(snapshot, owner, unit.owner, options)) && distance(unit, rider) < THREAT_RANGE);
         const pursuers = local.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
           && distance(rider, unit) <= rider.attackRange).map(target => ({ target, point: target }));
         const inRange = workers.filter(choice => distance(rider, choice.target) <= rider.attackRange);
