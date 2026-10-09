@@ -110,6 +110,13 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
 // funds; unrelated purchases preserve the colony budget.
 export const navalReservePurchase = (id: string) => ["naval:islandHall", "naval:transport", "naval:shipyard", "naval:population"].includes(id);
 export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
+    return planNavalWant(snapshot, owner, options, "all");
+}
+/** Land expansion belongs to the land economy; the fleet expands its established overseas colonies. */
+export function colonyNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
+    return planNavalWant(snapshot, owner, options, "colonies");
+}
+function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies"): NavalWant | undefined {
     const outfit = outfitting(snapshot, owner, options);
     if (outfit && !outfit.itemId && playerState(snapshot, owner).gold >= SHIP_WEAPONS[outfit.kind].cost + navalBudgetReserve(snapshot, owner, options) + OUTFIT_RESERVE) {
         const dock = buildings(snapshot,owner).find(building => building.kind === 'shipyard' && building.complete);
@@ -119,7 +126,7 @@ export function navalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPo
     if (foothold)
         return { ...foothold, closeout: true };
     const threat = enemyShipsNear(snapshot, owner, options);
-    if (!threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options);
+    if (!threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options, land);
     const assault = assaultPlan(snapshot, owner, options);
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
@@ -683,10 +690,11 @@ function localExpansionAvailable(snapshot: GameSnapshot, owner: PlayerId, option
         && !snapshot.units.some(unit => unit.owner === "neutral" && sameGround(snapshot.map, unit, mine) && distance(unit, mine) < 400));
 }
 /** Let an established colony expand on its own land even when the opening doctrine's base target is already met. */
-function localExpansionWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
+function localExpansionWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, land: "all" | "colonies"): NavalWant | undefined {
     const halls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall");
     if (halls.some(hall => !hall.complete) || units(snapshot, owner).some(unit => unit.order.type === "build")) return undefined;
-    const mines = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => hall.complete && sameGround(snapshot.map, hall, mine))
+    const mines = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => hall.complete && sameGround(snapshot.map, hall, mine)
+        && (land === "all" || !sameGround(snapshot.map, hall, halls[0]!)))
         && !halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)
         && !snapshot.units.some(unit => combatCapability(snapshot,unit).armed && distance(unit, mine) < 400 && isEnemyOwner(snapshot, owner, unit.owner, options))
         && !snapshot.buildings.some(building => distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
