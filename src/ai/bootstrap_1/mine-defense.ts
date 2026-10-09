@@ -7,7 +7,8 @@ import { resolveAiCommandIntent } from '../policy/commands';
 import { averagePoint, distance } from '../policy/spatial';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
-import { planV6Army } from '../policy/v6/general';
+import { availableV6Army, planV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
+import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { planV6CloseoutArmy } from '../policy/v6/closeout';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { planV8Charge } from '../policy/v8/charge';
@@ -105,7 +106,21 @@ export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  return planV6Army(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
+  const intel = mainArmyIntel(snapshot, owner, options), creep = options.memory.v6?.creep;
+  const recruits = creep ? availableV6Army(snapshot, options, intel).filter(unit => !unit.deck && !isBacklineKind(unit)
+    && unit.attackDamage > 0 && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE
+    && !creep.group.includes(unit.id) && !['cast', 'charge'].includes(unit.order.type)) : [];
+  // Reinforcements walk to the existing staging point. Count them in the camp's force only after they arrive.
+  const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
+  if (creep) creep.group.push(...arrived.map(unit => unit.id));
+  const commands = planV6Army(snapshot, owner, options, intel);
+  if (creep && options.memory.v6?.creep === creep) {
+    const walking = recruits.filter(unit => !arrived.includes(unit)
+      && !(unit.order.type === 'move' && distance(unit.order, creep.staging) < V7_GATHERED_RANGE));
+    if (walking.length) commands.push(resolveAiCommandIntent(snapshot, owner,
+      { type: 'move', unitIds: walking.map(unit => unit.id), ...creep.staging }, options));
+  }
+  return commands;
 }
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {

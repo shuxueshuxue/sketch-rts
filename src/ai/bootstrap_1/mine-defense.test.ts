@@ -5,9 +5,10 @@ import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
-import { bootstrapPolicyContext } from './policy';
+import { bootstrapPolicyContext, bootstrapScripts } from './policy';
 import { mineDefense, planBootstrapGeneral } from './mine-defense';
 import { readV6Intel } from '../policy/v6/intel';
+import { planAiOwnerCommandEntries } from '../planner-context';
 
 function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lancer', race: 'grove' | 'ember' = 'grove') {
   const shooter = race === 'grove' ? 'horseArcher' : 'sparkArcher';
@@ -32,6 +33,72 @@ function twoFronts(raiders = 4, guard: 'lancer' | 'knight' | 'ashWarden' = 'lanc
 }
 
 describe('bootstrap_1 independent mine defense', () => {
+  for (const version of ['v9_archer', 'v9_summoner', 'v9_knight'] as const) {
+    it.each(['grove', 'ember'] as const)(`moves new %s artillery toward an active camp through the full ${version} stack`, race => {
+      const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
+      const artillery = race === 'grove' ? 'ballista' : 'catapult';
+      let scene = sketchScene('late-camp-reinforcement').map('openClaims').replaceDefaults()
+        .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+        .townHall('us', 400, 1000).townHall('foe', 3500, 3500)
+        .unit('foe', 'knight', 3300, 3300).unit('foe', 'knight', 3370, 3300)
+        .unit('us', artillery, 650, 1300, { id: 'late-gun' })
+        .unit('neutral', 'stonebackBrute', 1800, 1000, { id: 'camp-guard' });
+      for (let index = 0; index < 4; index++) scene = scene.unit('us', heavy, 1050 + index * 35, 1000);
+      const fixture = scene.build(), game = fixture.createGame(), memory = createAiPolicyMemory();
+      memory.v6 = { creep: { center: { x: 1800, y: 1000 }, reach: 0, staging: { x: 1400, y: 1000 },
+        stage: 'gather', since: 0, group: game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).map(unit => unit.id) } };
+      for (let tick = 0; tick < 75; tick++) {
+        if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+          { playerId: 'us', version, memory }, { teams: game.teams, policyMode: 'combat' }));
+        if (tick === 0) {
+          expect(memory.v6!.creep!.group).not.toContain('late-gun');
+          expect(game.units.find(unit => unit.id === 'late-gun')!.order).toMatchObject({ type: 'move', x: 1400, y: 1000 });
+        }
+        stepGame(game);
+      }
+      const gun = game.units.find(unit => unit.id === 'late-gun')!;
+      expect(Math.hypot(gun.x - 1400, gun.y - 1000)).toBeLessThan(Math.hypot(650 - 1400, 1300 - 1000) - 100);
+      expect(gun.hp).toBe(gun.maxHp);
+      expect(game.match.stats.goldSpent.us).toBe(0);
+      const before = fixture.createGame(), priorMemory = createAiPolicyMemory();
+      priorMemory.v6 = { creep: { center: { x: 1800, y: 1000 }, reach: 0, staging: { x: 1400, y: 1000 },
+        stage: 'gather', since: 0, group: before.units.filter(unit => unit.kind === heavy && unit.owner === 'us').map(unit => unit.id) } };
+      const priorScripts = bootstrapScripts(version).map(script => script.id === 'v6General' ? AI_SCRIPT_LIBRARY.v6General : script);
+      for (let tick = 0; tick < 75; tick++) {
+        if (tick % 15 === 0) {
+          const snapshot = snapshotGame(before), options = bootstrapPolicyContext(snapshot, 'us', version,
+            { memory: priorMemory, teams: before.teams, policyMode: 'combat' });
+          for (const { command } of runAiCommandEntriesFromScripts(snapshot, 'us', priorScripts, options)) issuePlayerCommand(before, 'us', command);
+        }
+        stepGame(before);
+      }
+      const idle = before.units.find(unit => unit.id === 'late-gun')!;
+      expect(Math.hypot(idle.x - 650, idle.y - 1300)).toBe(0);
+    });
+  }
+
+  it.each(['grove', 'ember'] as const)('enrolls %s artillery that actually reaches the camp staging point', race => {
+    const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
+    const artillery = race === 'grove' ? 'ballista' : 'catapult';
+    let scene = sketchScene('arriving-camp-reinforcement').map('openClaims').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' })
+      .townHall('us', 400, 1000).townHall('foe', 3500, 3500)
+      .unit('foe', 'knight', 3300, 3300).unit('foe', 'knight', 3370, 3300)
+      .unit('us', artillery, 1150, 1250, { id: 'late-gun' })
+      .unit('neutral', 'stonebackBrute', 2300, 1000, { id: 'camp-guard' });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', heavy, 1050 + index * 35, 1000);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { creep: { center: { x: 2300, y: 1000 }, reach: 0, staging: { x: 1400, y: 1000 },
+      stage: 'gather', since: 0, group: game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).map(unit => unit.id) } };
+    for (let tick = 0; tick < 150; tick++) {
+      if (tick % 15 === 0) issueCommandFrame(game, planAiOwnerCommandEntries(snapshotGame(game),
+        { playerId: 'us', version: 'v9_knight', memory }, { teams: game.teams, policyMode: 'combat' }));
+      stepGame(game);
+    }
+    expect(memory.v6!.creep!.group).toContain('late-gun');
+    expect(game.units.find(unit => unit.id === 'late-gun')!.order.type).toBe('attackMove');
+  });
+
   it.each(['grove', 'ember'] as const)('assigns a %s detachment to a mining perimeter tower without recalling the distant attack', race => {
     const { game, context, memory } = twoFronts(4, race === 'grove' ? 'lancer' : 'ashWarden', race);
     game.buildings.push(...sketchScene('mining-perimeter').replaceDefaults().player('us', { race })
