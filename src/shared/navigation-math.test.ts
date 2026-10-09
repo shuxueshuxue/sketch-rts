@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonRadius, capsuleClearsBodies, capsuleClearsCircles, diskInConvex, segmentDistanceSquared, type Point } from './navigation-math';
+import { convexHull, expandConvex, minkowskiSum, polygonPlanes, polygonSupportingPlanes, clipToConvex, polygonRadius, capsuleClearsBodies, capsuleClearsCircles, diskInConvex, segmentDistanceSquared, type Point } from './navigation-math';
 import { createUnit } from './map';
 import { SHIP_KINDS, shipProfile } from './ship-geometry';
 import { detCos,detSin } from './det-math';
@@ -26,6 +26,54 @@ function expectExactPlanes(polygon: readonly Point[]) {
   expect(polygonPlanes(polygon)).toBe(actual);
 }
 describe('configuration-space geometry', () => {
+  it('keeps exact complete supporting lines after clipping rejects an earlier partial query', () => {
+    const clipReference = (from: Point, to: Point, polygon: readonly Point[]) => {
+      let low = 0, high = 1;
+      const dx = to.x - from.x, dy = to.y - from.y;
+      for (let i = 0; i < polygon.length; i++) {
+        const a = polygon[i]!, b = polygon[(i + 1) % polygon.length]!, x = a.y - b.y, y = b.x - a.x;
+        let min = Infinity;
+        for (const p of polygon) min = Math.min(min, p.x * x + p.y * y);
+        const d = dx * x + dy * y, need = min - from.x * x - from.y * y;
+        if (Math.abs(d) < 1e-10) {
+          if (need > 1e-7) return;
+          continue;
+        }
+        if (d > 0) low = Math.max(low, need / d);
+        else high = Math.min(high, need / d);
+        if (low > high + 1e-9) return;
+      }
+      return [low, high];
+    };
+    for (const kind of SHIP_KINDS) for (const heading of [0, .31, Math.PI / 2]) for (const side of [-1, 1]) {
+      const hull = shipProfile(createUnit(kind, 'player', kind, 0, 0))!.hull;
+      const points = [heading, heading + .17].flatMap(angle => hull.map(p =>
+        ({x: p.x * detCos(angle) - p.y * detSin(angle), y: p.x * detSin(angle) + p.y * detCos(angle)})));
+      const polygon = expandConvex(convexHull(points), .025);
+      const far = polygonRadius(polygon) * 10;
+      const queries = [
+        [{x: far * side, y: -far}, {x: far * side, y: -far * 2}],
+        [{x: -far, y: 0}, {x: far, y: 0}],
+        [polygon[0]!, polygon[1]!],
+        [{x: -0, y: 0}, {x: 0, y: -0}],
+      ] as const;
+      // The first rejected query may leave only a prefix of the supporting
+      // lines. A later complete consumer still needs every exact min and max.
+      const first = clipToConvex(queries[0][0], queries[0][1], polygon);
+      expect(first).toEqual(clipReference(queries[0][0], queries[0][1], polygon));
+      expect(first).toBeUndefined();
+      const supporting = polygonSupportingPlanes(polygon);
+      for (const plane of supporting) expect(Number.isFinite(plane.min)).toBe(true);
+      expectExactPlanes(polygon);
+      expect(polygonPlanes(polygon)).toBe(supporting);
+      for (const [from, to] of queries) {
+        const actual = clipToConvex(from, to, polygon), reference = clipReference(from, to, polygon);
+        expect(actual === undefined).toBe(reference === undefined);
+        if (actual && reference) for (let i = 0; i < 2; i++) expect(Object.is(actual[i], reference[i])).toBe(true);
+      }
+    }
+  });
+
   it('preserves every exact projection over the actual rotated, swept and padded fleet hulls', () => {
     const hulls = SHIP_KINDS.map(kind => shipProfile(createUnit(kind, 'player', kind, 0, 0))!.hull);
     const rotate = (hull: readonly Point[], angle: number) => {

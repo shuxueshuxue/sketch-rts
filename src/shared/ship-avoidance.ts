@@ -1,4 +1,4 @@
-import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonPlanes, polygonRadius } from "./navigation-math";
+import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonSupportingPlanes, polygonRadius } from "./navigation-math";
 import { circleInPolygon, hullGap, localToWorld, shipProfile, shipsIn, worldToLocal, type Point } from "./ship-geometry";
 import { hullPassageClear } from "./ship-navigation";
 import type { GameMap, Unit } from "./types";
@@ -117,7 +117,7 @@ function encounterWindow(ship:Unit,other:Unit,heading:number,dx:number,dy:number
   const from={x:-dx,y:-dy},to={x:-dx-rx*horizon,y:-dy-ry*horizon},clip=clipToConvex(from,to,polygon);
   if(!clip || clip[1]-clip[0]<1e-7)return;
   const middle=(clip[0]+clip[1])/2,at={x:from.x+(to.x-from.x)*middle,y:from.y+(to.y-from.y)*middle};
-  if(polygonPlanes(polygon).some(p=>at.x*p.x+at.y*p.y<=p.min+1e-6))return;
+  if(polygonSupportingPlanes(polygon).some(p=>at.x*p.x+at.y*p.y<=p.min+1e-6))return;
   return{enters:clip[0]*horizon,leaves:clip[1]*horizon};
 }
 
@@ -315,7 +315,7 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
     configurations.set(key,polygon);return polygon;
   };
   const interior=(x:number,y:number,polygon:readonly Point[])=>{
-    for(const p of polygonPlanes(polygon))if(!(x*p.x+y*p.y>p.min+1e-6))return false;
+    for(const p of polygonSupportingPlanes(polygon))if(!(x*p.x+y*p.y>p.min+1e-6))return false;
     return true;
   };
   // Clipping reads these points synchronously and returns only fractions.
@@ -413,7 +413,7 @@ export function avoidShipHulls(map:GameMap,ship:Unit,goal:Point,units:readonly U
     const middle=(clip[0]+clip[1])/2,at={x:a.x+(b.x-a.x)*middle,y:a.y+(b.y-a.y)*middle};
     // Visibility edges can lie on a supporting line. Only interior
     // penetration blocks them; rejecting tangencies disconnects the graph.
-    if(polygonPlanes(polygon).some(plane=>at.x*plane.x+at.y*plane.y<=plane.min+1e-6))return false;
+    if(polygonSupportingPlanes(polygon).some(plane=>at.x*plane.x+at.y*plane.y<=plane.min+1e-6))return false;
     // Contact resolution may leave a tiny initial overlap. A separating
     // maneuver is allowed, but another inward movement is not.
     return !(clip[0]<=1e-7 && (b.x-a.x)*(a.x-center.x)+(b.y-a.y)*(a.y-center.y)>0);

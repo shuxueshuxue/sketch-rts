@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "baseCommit": "5b63585",
+  "environment": {
+    "node": "v20.20.2",
+    "arch": "x64",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "change": "One weak projection state per immutable polygon: supporting-line consumers compute only required minima; the public full-plane API completes exact maxima. Hull construction retains point order while reusing the lower array and indexing the upper half backwards.",
+  "preserved": "Every original polygon, hull sample, chord error, plane order, clipping tolerance, support guard, 8-heading candidate and 1024-node search bound remains unchanged.",
+  "exactProof": {
+    "polygons": 2976,
+    "planeComponents": 763248,
+    "clips": 108276,
+    "hullPoints": 763248,
+    "sha256": "fc9ef918940a9af4bad0eacfdf3c8622c731ea86e90780924e93bbebc8e62c51",
+    "all": "Object.is exact final runtime math versus frozen5b63585; early clip then min-only consumers then complete cached planes",
+    "inputMathSha256": "6135c776f5407d3091630922584b36846b430fa45e0aa183a28ae00e2a6a84f3",
+    "inputAvoidanceSha256": "3d81acbd15d84de048e34987caa3c50a36f492c3025f27346b85fcb14f57d924",
+    "minOnlyChecks": "Every exposed x/y/min compared with the frozen full-plane reference before requesting full planes; clipped polygons are then offset and every public x/y/min/max checked with Object.is. Public min-first/full array identity is retained.",
+    "coverage": "Actual fleet rotated/swept/padded hulls; tiny/huge and thin shapes; signed zero, empty rings, concave/winding/repeated/invalid candidates and near-coincident rotations."
+  },
+  "focusedTests": {
+    "file": "src/shared/navigation-math.test.ts",
+    "passed": 10,
+    "testSourceSha256": "84ffcb41370829a44a9cf67fb318a356a38011d085b7ede5c77e6e66eb66c10a"
+  },
+  "currentSourceSha256": {
+    "src/shared/navigation-math.ts": "b5cb56b95daf9a7d74d3b92577e28892ae112d13d15d1e9e1998b415d28ead2b",
+    "src/shared/ship-avoidance.ts": "3d81acbd15d84de048e34987caa3c50a36f492c3025f27346b85fcb14f57d924"
+  },
+  "sourceNote": "After proof and production capture, two comments were corrected without changing any expressions; equality to the validated math source after exactly those comment replacements was checked. Moving runs deliberately identify the core predecessor rather than the final avoidance-consumer migration.",
+  "completeQualityComparison": {
+    "fieldsCompared": [
+      "id",
+      "label",
+      "duration",
+      "initial",
+      "windEvents",
+      "quality",
+      "checksum"
+    ],
+    "crossFinalEqualsFrozenBefore": true,
+    "movingCoreEqualsFrozenBefore": true,
+    "comparison": "Entire parsed quality payloads compared before recording the deterministic SHA256; no fields ignored."
+  },
+  "productionRuns": [
+    {
+      "id": "cross-before",
+      "variant": "frozen production before",
+      "scene": "convoy-crossing-12",
+      "durationSeconds": 240,
+      "actualTicks": 4800,
+      "checksum": "acf70d15",
+      "completeQualitySha256": "80484f86aa8901f02126e738de1c7d8b2ae7eb8189b508c084ea062b988da8d6",
+      "step": {
+        "count": 4800,
+        "coldTicksMs": [
+          23.000005,
+          4.350103000000004
+        ],
+        "meanMs": 1.7645898464583358,
+        "p50Ms": 0.8585459999994782,
+        "p95Ms": 4.101137999999992,
+        "p99Ms": 17.177628999999797,
+        "maxMs": 134.40012500000012,
+        "over16Ms": 50,
+        "over33Ms": 25,
+        "over50Ms": 9
+      },
+      "memory": {
+        "peakRssBytes": 234774528,
+        "heapUsedBytes": 78229224
+      },
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "bundleSha256": "1486dd323ef6cd0ded8a58ae8b406df35524674f71ffaa758bdf089004dfed7b",
+      "rawManifestSha256": "e3693f68a98dfb1beb93277d0dbac250d762deb7034e75996666f3b5d5f5253e",
+      "sourceOverrides": {}
+    },
+    {
+      "id": "cross-final",
+      "variant": "final math plus all avoidance minimum-only consumers",
+      "scene": "convoy-crossing-12",
+      "durationSeconds": 240,
+      "actualTicks": 4800,
+      "checksum": "acf70d15",
+      "completeQualitySha256": "80484f86aa8901f02126e738de1c7d8b2ae7eb8189b508c084ea062b988da8d6",
+      "step": {
+        "count": 4800,
+        "coldTicksMs": [
+          22.495613000000006,
+          3.8593830000000082
+        ],
+        "meanMs": 1.6869974443750049,
+        "p50Ms": 0.810842999999295,
+        "p95Ms": 3.932104000000436,
+        "p99Ms": 16.61663200000021,
+        "maxMs": 111.53972200000044,
+        "over16Ms": 48,
+        "over33Ms": 24,
+        "over50Ms": 10
+      },
+      "memory": {
+        "peakRssBytes": 219901952,
+        "heapUsedBytes": 47554520
+      },
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "bundleSha256": "5e083e58a8905af9ae3ae477910240774a0389d8e6c22a4c8e71013c7a8ef19d",
+      "rawManifestSha256": "d171cf125227504f36fadc8a0780c3bb47c5d9a5fffd61cc0c77b6ba67c5f267",
+      "sourceOverrides": {
+        "src/shared/navigation-math.ts": "6135c776f5407d3091630922584b36846b430fa45e0aa183a28ae00e2a6a84f3",
+        "src/shared/ship-avoidance.ts": "3d81acbd15d84de048e34987caa3c50a36f492c3025f27346b85fcb14f57d924"
+      }
+    },
+    {
+      "id": "moving-before",
+      "variant": "frozen production before",
+      "scene": "fleet-moving-6v6",
+      "durationSeconds": 150,
+      "actualTicks": 3000,
+      "checksum": "cb7af191",
+      "completeQualitySha256": "336964516315ef7bb5c2c18bfd315122e792ae13a529989a72297fdf1e778b6b",
+      "step": {
+        "count": 3000,
+        "coldTicksMs": [
+          33.855935,
+          15.642482999999984
+        ],
+        "meanMs": 4.2612984586666665,
+        "p50Ms": 3.115060000000085,
+        "p95Ms": 10.168963000000076,
+        "p99Ms": 20.74431100000038,
+        "maxMs": 122.89641699999999,
+        "over16Ms": 40,
+        "over33Ms": 14,
+        "over50Ms": 6
+      },
+      "memory": {
+        "peakRssBytes": 193884160,
+        "heapUsedBytes": 49547608
+      },
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "bundleSha256": "1486dd323ef6cd0ded8a58ae8b406df35524674f71ffaa758bdf089004dfed7b",
+      "rawManifestSha256": "e3693f68a98dfb1beb93277d0dbac250d762deb7034e75996666f3b5d5f5253e",
+      "sourceOverrides": {}
+    },
+    {
+      "id": "moving-core",
+      "variant": "shared minimum/lazy core and hull array reuse; before avoidance consumers switched to minimum-only",
+      "scene": "fleet-moving-6v6",
+      "durationSeconds": 150,
+      "actualTicks": 3000,
+      "checksum": "cb7af191",
+      "completeQualitySha256": "336964516315ef7bb5c2c18bfd315122e792ae13a529989a72297fdf1e778b6b",
+      "step": {
+        "count": 3000,
+        "coldTicksMs": [
+          39.520373000000006,
+          20.372791000000007
+        ],
+        "meanMs": 4.029467057000006,
+        "p50Ms": 2.90673599999991,
+        "p95Ms": 9.60910899999999,
+        "p99Ms": 19.808138999999755,
+        "maxMs": 143.69634899999997,
+        "over16Ms": 35,
+        "over33Ms": 11,
+        "over50Ms": 6
+      },
+      "memory": {
+        "peakRssBytes": 188633088,
+        "heapUsedBytes": 85015088
+      },
+      "coastViolations": 0,
+      "maxHullOverlap": 0,
+      "bundleSha256": "41b4f416c78f360c437992cac802bb96c1b5fbecbcbc2d268d311ec1aab0ac85",
+      "rawManifestSha256": "8e1fe7005863360283fdb3a3645297a1cb765a1f690b47856d954999f5e2a964",
+      "sourceOverrides": {
+        "src/shared/navigation-math.ts": "e8ce1ea4d626033f15deaf3007263fb86b1bb1a6dfb7ef9affddf81057922811"
+      }
+    }
+  ],
+  "diagnosticCounter": {
+    "diagnosticOnly": true,
+    "variant": "Core min/lazy predecessor with old avoidance full-plane consumers; instrumented timings are excluded from productionRuns.",
+    "actualTicks": 4800,
+    "checksum": "acf70d15",
+    "sourceOverrides": {
+      "scripts/naval-runtime-stress.ts": "178543930cb75c6013c8e7c6ab07b86ee35fe67bd8e536d4fc29c6e949ba6663",
+      "src/shared/navigation-math.ts": "015129e250384761e5c9f2ee71e46aaeea9929d083e8b42fc52e6e95b501b61c"
+    },
+    "polygons": 384381,
+    "maximumPlaneCount": 420,
+    "potentialPlanes": 10614905,
+    "constructedMinima": 6341129,
+    "constructedMaxima": 1105218,
+    "clipCalls": 335024,
+    "rejectedClips": 321942,
+    "firstPlaneRejections": 75008
+  },
+  "timingNote": "Production timings measure original stepGame in isolated uninstrumented Node20 processes and are machine observations. The separate counter and V8 stack profile are diagnostic only. These changes reduce projection work; they do not eliminate long frames. Final cross still reaches 111.540ms and the core moving run reaches 143.696ms. Route-planning workload optimization continues separately.",
+  "frozenRawManifest": {
+    "head": "5b635856f68d6c48b2ae1b425ec157caa75f5a83",
+    "bundleSha256": "1486dd323ef6cd0ded8a58ae8b406df35524674f71ffaa758bdf089004dfed7b",
+    "sources": {
+      "scripts/naval-runtime-stress.ts": "3bc3ea3b8b55f0a479d541af258c0b13de0b61671e2995a3b8426fa99fc285f1",
+      "src/shared/time.ts": "7150dfb2086facf0f7447bc7b843556ea27c4039b59d5228351b1905ace0ef0c",
+      "src/shared/ship-equipment.ts": "ccf57fbcf24cc812774b7227c6f502afbd050364e6e8ca0b75bb4cfa9ad48c76",
+      "src/shared/ship-navigation.ts": "b24fb48678f76ffc6e6c8b9a730b89a5ad51f0b275fe2d604e362d367f15210c",
+      "src/shared/sim/checksum.ts": "64cdb364dcb5cf124d4007d2758dc8530a633bf0bdc8c265580273018c005175",
+      "src/shared/ship-geometry.ts": "839d3ba7f2b3d6405c61f87804155f539c5bb8af85695136ccf91098e80452f3",
+      "src/shared/sim.ts": "96be060b008c80fe1a372016ddd60cf4045777abca1d586116a82ffb0b4be83c",
+      "src/shared/sim/canonical.ts": "73211341a33aa5d901a62083434f0e2e0f582db41f16ceea26e65945c5cbb9ca",
+      "src/shared/det-math.ts": "b76483ef1ed4aa24496c7f28be9a46afe5cded4fbdda5c9484f3995947e34b38",
+      "src/shared/ship-fire-control.ts": "c9832b3b0159685608583938330c62251d0bbf806793e44ba3cdaba09094c10d",
+      "src/shared/veteran-stats.ts": "790d667b3d61c8a5ce86ccafedbf499fff92d52d49c28b3af85f9288481c7302",
+      "src/shared/ship-handling.ts": "55553c081c63e1e3676a2623fd6d1391c2cc358b848e0710def658cbe798832a",
+      "src/shared/item-index.ts": "c1c0c20c5f2c74b663271e2b256fddd4f58c56bfc20feab567318dd0b9d512aa",
+      "src/shared/ship-navigation-potential.ts": "dd4f5a366637ce25657acc8a225639c6e23742d6fd81c229371e121230315fef",
+      "src/shared/ship-wind.ts": "d2ef123c127e395c696a3620e43b5f1b2cf314ca7ce142949d520adf513b371b",
+      "src/shared/wind-field.ts": "40cefbd24c9ca04c8dcafb2dab173a507aea9e2e343e38e48a142b7ddf95932c",
+      "src/shared/terrain.ts": "d07b4773f1379c51117875dd74f321197158219292ffa65a4345f6ca6bee6e3c",
+      "src/shared/veteran-skills.ts": "46e032713592a3d87358d09214cb15b64e210b2581a2b0b3a1f8eece9ecb4e2f",
+      "src/shared/combat-geometry.ts": "07444795a9fa120c74a056f1ccf2b1de22789739b0750de42eaf79f4b098a8b4",
+      "src/shared/environment/noise.ts": "af4dcd26f4183165005b5e345f84ffadd2c01a1a25ddf1bb2f80cb216c3fcab6",
+      "src/shared/navigation-masks.ts": "7b59b7137a93a66a33c8cc1fe7db9b15451143e8854f7629712f223cec6d01a3",
+      "src/shared/navigation-math.ts": "73a9af589134542d602cb92e6aba99891ebe64daea8845c8140904b32ce15643",
+      "src/shared/weapons.ts": "2c15ad1dbbb641cebec3ae78a4acaeb06cabbc4bbbc4857a4b8970b094fd564c",
+      "src/shared/production-spawn.ts": "3b84e7c9fd18494180361d298d180fc62666198236d9200379d1c4d915fadb49",
+      "src/shared/ship-collisions.ts": "42043b515960aa8b889905931f24014f003af672ad3fb68c43b505268fc55dbe",
+      "src/shared/ship-defense.ts": "21f12a7db3f66c930e507f201f0b2b29141e40a7fd41b80f0c16b07efa89a762",
+      "src/shared/ship-launch.ts": "91e3dab0d4f51136cdb0689f79ad84215a59e48c332b7c25a82902f78391bc47",
+      "src/shared/damage-types.ts": "bfa6343a0eea33c669a718c1c522e34cc7ffbacb416a9b3c3536dad79c3608bc",
+      "src/shared/spark-fire.ts": "6637f2e2445b133749b8a913ef39681bbcc133343e1a95cc9ef354d92387b666",
+      "src/shared/ship-gangway.ts": "b04ed0e580251fe37039d7c6d5c3fcd7302b5791a1822d3a7453f73d07ae2246",
+      "src/shared/player-colors.ts": "7f1d632b9597aea0d3d0f01e6c92d66f1d6691978b78450865a294a402a6492d",
+      "src/shared/construction.ts": "3cd9694dac20cae50982286a7d2bcfdb498dcd901dbdc53fb4d9f27b9cd2eef0",
+      "src/shared/mining.ts": "a8c48726fda4a6030e8f183264d5f6b7f1a91296b339d01b1284b17d7eb84be7",
+      "src/shared/combat-target.ts": "36684abb8b3d26fca6e6824e00a6bc20911447c23eac539c8984e97d1a034fca",
+      "src/shared/healing.ts": "5e6b62b6eee7dbf906b23d3e57c2c90e150cc318abe45e4c13c9226bd46e0940",
+      "src/shared/unit-value.ts": "39557fb7349107fb7b41ea60da9205d33fdf369dc4a6cf9db8fd3b9c2020e9b5",
+      "src/shared/unit-repair.ts": "da3f6cbe5aa0a10ffdfef40f14ca641d3f534e30acf7c588890a4859ed4380ab",
+      "src/shared/aiming.ts": "3285e7a05850cee040dddc3e0b1b733927f1b19ed6fae01bab2758cc22863fa4",
+      "src/shared/catalog.ts": "2dd742e037286a9a92b55ceff975bacbb0ffd613d64da75c459ee48d64bd8829",
+      "src/shared/ship-queued-course.ts": "55d8a63cc9232dfb7c13ce28b546d80f3b62fc07ce900a3f716ad848c18b25c8",
+      "src/shared/attack-presentation.ts": "bb6bd8f1849b3a9f2a8f4d96c9740a890e576db0f4deb15a093440bdbc565848",
+      "src/shared/ability-cooldowns.ts": "bc9f3a7359d624d14e31555ebb6fa435bd98a4a6b638527e491f7f5784413d63",
+      "src/shared/item-surfaces.ts": "007374f68912e6a18ef90677ac508b78a2bacfafefb5d29669a9dd1fc61c0db2",
+      "src/shared/autocast.ts": "657a483f5d8c825376e2ca0b70d3fca02399e6ce778bf51e2b82e6d07ee9311c",
+      "src/shared/unit-abilities.ts": "e63e29e08a771fc3962bde6de5102f39b50979611d65c89daacb203df0e002b8",
+      "src/shared/purchase.ts": "ea83cc60a368de54d24f3455ecfbdce5c3d61b6f577e65d50f702080084bd170",
+      "src/shared/ship-pursuit.ts": "611157bbfcadb5e3c7b5c15eb1785f237730e91dde0678d6a3466e2fab1bcc0e",
+      "src/shared/build-placement.ts": "18fa91546c2b95c845a2ce2030ab277ec6f3750664238d5e11e06a471bcea677",
+      "src/shared/unit-targeting.ts": "36b5c09deeb2b2cc8ce8e9987645630c9069bdfb7b6100252afaa743c2ab330c",
+      "src/shared/naval.ts": "0c06ff4fdbc965f7a149f0a3cf3524bc1f3dc533cd874d555f31680285f4082a",
+      "src/shared/veteran-runtime.ts": "0c229511c77e346e9178b74e7eb2933bf282818de227b582c18617731706ed44",
+      "src/shared/ship-motion.ts": "f7d632213276dc00f97b0f0c67f4fa22a127fa75080ca84c3c57b914fb377cb1",
+      "src/shared/equipment.ts": "3aae45fe1724de7e6cb003cbc1df11ca254a918bf002c71fd7474599f83d8f75",
+      "src/shared/ship-planning-budget.ts": "697f49f212856f8fdda2fafd549999adb1afcaa9c3e34e5eccf5a06845c88f25",
+      "src/shared/decks.ts": "f5ce2aed3680526e05fb0999bb2112d096ef91c2d1352b316c5cd163a044c718",
+      "src/shared/sim/command-validation.ts": "dc020acef9badb8b5afdc00976620c6713041df0418c27bb67a7dcba932dc27a",
+      "src/shared/item-rules.ts": "9001bf81856b5d5c6f2deaadfe65bf878352ee18af1abad42e6ae891f30b627e",
+      "src/shared/physical-body.ts": "4ab9b4a46305776f9e7ace45e6487a47e59bf9558daef30f707e121d22813c3e",
+      "src/shared/damage.ts": "f816619158ad1f36be1ad7e6faba7ceb3cfafb0deb0d7cb6773568ee5f96542d",
+      "src/shared/ship-cabin.ts": "46aa77894309812c4678f46498a39cf2d70c51b96994728f89eb3e835aa4ff88",
+      "src/shared/sailing.ts": "28b3bdc5de360e66fdc4b2f197e18e20c86e0f4c03bf96f0c148ba257946be2c",
+      "src/shared/deck-combat.ts": "8e8066250b386c3644a0b824ba308bb90f1a9f44eb037ad43257df7c5045f128",
+      "src/shared/shop.ts": "253614e147aad4e92da58ed86581d3a171e14cfd8ee5386d8169f02a8fdf9803",
+      "src/shared/map.ts": "6114628e053ae8e76ea2d1921540afea9aa6b16d8a9357d91405c18439b6fef9",
+      "src/shared/ship-avoidance.ts": "881e935cd85ce865eac8f73444c5a60ca8ed34c32b06c2dacf4dc288c494c8e2",
+      "src/shared/connected-decks.ts": "d4b44531960d043f453a0063bdfb1e456f5359989b378f108151f06ee2f450fb",
+      "src/shared/crew-rendezvous.ts": "30f54aac26dc5501b2f99057d43d42f7a560218c950a7c370936b93e2fec0b9d",
+      "src/shared/push.ts": "a1178dc25378bdd7508a263f4d65dd947a2398e5dbc0db9796fb984a8e8232f4",
+      "src/shared/map-pool.ts": "47bdfa6866cf251f54968a381bf9f4e1fc35e69e24d4b013328618ef68241862",
+      "src/shared/generated-map.ts": "a3cd038045af37f6e6291e43a2195d1b1dcea724a038642a1c026bb50a828b30",
+      "src/shared/unit-lookup.ts": "0e7513849205b765d0c86b3692ac4997554e2c1725f5df20ccf38c8f9b0fb249",
+      "src/shared/transport-role.ts": "9b517b0664f05bf8f9c61e3b4ca6d758366f4ec7756138964e04bbe87b0cb664",
+      "src/shared/combat-capabilities.ts": "94d30fb982d360254162fecda338a741bf0ae08c10b797e4f63f4fd40b266fd4",
+      "src/shared/support-surface.ts": "b2271db40880cced8091f50f4ba681e5e8c6f572fbd225984e19cbc58593eb9d",
+      "src/shared/ship-guidance.ts": "71d40ddd050af1c4f491cd1ff1b713bc2ac7e25a25400acc9e60ab31b91f25ad",
+      "src/shared/ship-cabin-quota.ts": "7f8b1c99fd255969a022538278794c23082bad6d2c8e8a38799ca1bdeee4e1ed",
+      "src/shared/damage-reduction.ts": "2e553da5235f9ac9098bef44cf739c30a6df4db0e3560f1d1841a7216c8247b7",
+      "src/shared/map-ids.ts": "0cb61425242083c0c280683ad23b25c4eba7fb7717d740fcb7e6815cf6f50295",
+      "src/shared/grid-flood.ts": "5c6043d3dc1744007b97799c85f3eac08e0b664750d213411e9feffd924c7715",
+      "src/shared/archipelago-map.ts": "c6f6908c32bb30a7fdf12e6c785e88b8ee563406f4cfb6bf4d69189b301717b6",
+      "src/shared/environment/ecology.ts": "d1449ce357059363a7c1448205d14fe1ee0c56b687e86966681b36f93b936262",
+      "src/shared/estuary-map.ts": "34607b412ff4580dfbdea5532c81222f1ef2ec7ce816b798531fe65af85e902d",
+      "src/shared/camps.ts": "3da62354b4e61280a456a959c782342b1b7770ec2a70f3b93c18a4c1010c9acc",
+      "src/shared/obstacle.ts": "0bca9ed1712aeeebc0cd841d5825de3ad10cf7da6b50eee37958a26e42367430",
+      "src/shared/map-dressing.ts": "8f6d5c2fa141fc303c246a40372de06895fc857e7678cdcdc87ca6c84e06ef48",
+      "src/shared/environment/fields.ts": "9b87279a31833b1ccf10961bac5d0df2b9f2e5ee863dddc87a13cf9d7981d644"
+    }
+  }
+}
