@@ -21,16 +21,33 @@ describe("AI script runner", () => {
     for (const entry of entries) expect(() => issuePlayerCommand(game, "v2", entry.command)).not.toThrow();
   });
 
-  it("preserves an earlier transport assignment when a later army module claims the same passenger", () => {
+  it.each(['attackMove', 'holdPosition'] as const)("preserves an earlier transport assignment against a later %s order", type => {
     const game = sketchScene("claim-priority").map("bareDuel").replaceDefaults()
       .player("v2", { race: "grove" }).player("v1", { race: "ember" })
       .townHall("v2", 500, 500).townHall("v1", 3400, 3400)
       .unit("v2", "footman", 620, 520, { id: "passenger" }).build().createGame();
     const scripts: AiScript[] = [
       { id: "ferry", phase: "tactics", claimsUnits: () => new Set(["passenger"]), run: () => ({ type: "move", unitIds: ["passenger"], x: 1000, y: 500 }) },
-      { id: "army", phase: "tactics", claimsUnits: () => new Set(["passenger"]), run: () => ({ type: "attackMove", unitIds: ["passenger"], x: 3400, y: 3400 }) },
+      { id: "army", phase: "tactics", claimsUnits: () => new Set(["passenger"]), run: () => type === 'holdPosition'
+        ? { type, unitIds: ['passenger'] } : { type, unitIds: ['passenger'], x: 3400, y: 3400 } },
     ];
     expect(runAiCommandEntriesFromScripts(snapshotGame(game), "v2", scripts).map(entry => entry.scriptId)).toEqual(["ferry"]);
+  });
+  it('keeps a dodge ahead of a later hold, and the hold ahead of a still later march', () => {
+    const game = sketchScene('hold-order-priority').replaceDefaults()
+      .player('us', { race: 'grove' }).player('foe', { race: 'ember' })
+      .townHall('us', 400, 400).townHall('foe', 3400, 3400)
+      .unit('us', 'summoner', 600, 600, { id: 'dodging' }).unit('us', 'summoner', 800, 600, { id: 'holding' }).build().createGame();
+    const scripts: AiScript[] = [
+      { id: 'dodge', phase: 'tactics', run: () => ({ type: 'move', unitIds: ['dodging'], x: 500, y: 700 }) },
+      { id: 'formation', phase: 'tactics', run: () => ({ type: 'holdPosition', unitIds: ['dodging', 'holding'] }) },
+      { id: 'march', phase: 'tactics', run: () => ({ type: 'attackMove', unitIds: ['dodging', 'holding'], x: 2000, y: 2000 }) },
+    ];
+    const entries = runAiCommandEntriesFromScripts(snapshotGame(game), 'us', scripts);
+    for (const entry of entries) issuePlayerCommand(game, 'us', entry.command);
+    expect(game.units.find(unit => unit.id === 'dodging')!.order).toEqual({ type: 'move', x: 500, y: 700 });
+    expect(game.units.find(unit => unit.id === 'holding')!.order.type).toBe('hold');
+    expect(entries.map(entry => entry.scriptId)).toEqual(['dodge', 'formation']);
   });
   it("lets a boarding healer reach its ferry instead of restarting land spells every think", () => {
     const game = sketchScene("boarding-caster-reservation").map("bareDuel").replaceDefaults()

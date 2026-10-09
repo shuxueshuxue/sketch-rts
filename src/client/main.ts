@@ -1205,7 +1205,7 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase()}` : labelKind(slot.controller))}</span>
+        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase().replace("_", " ")}` : labelKind(slot.controller))}</span>
         <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
@@ -1318,7 +1318,7 @@ function slotRow(slot: RoomState["slots"][number], index: number, local: boolean
   // @@@room-ai-races), random by default; a seat on a random race has its computer player drawn too, so that one is locked.
   const aiChoice = slot.race === "random" ? "random" : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
   const aiChoices: RoomAiChoice[] = slot.race === "random" ? ["random"] : ["random", ...roomAiVersionsFor(slot.race)];
-  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase()}</option>`).join("");
+  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase().replace("_", " ")}</option>`).join("");
   const raceOptions = [...RACE_IDS, "random" as const].map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
