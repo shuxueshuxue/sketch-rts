@@ -43,6 +43,7 @@ type Economy = {
   own: Building[];
   workers: Unit[];
   construct: typeof issueV6Construction;
+  naval: typeof navalWant;
   bases: Building[];
   threatened?: { hall: Building; threat: number };
 };
@@ -104,18 +105,18 @@ export function planV6Economy(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // Everything V6 wants to spend on right now, best first (exported so a watched game can show what the gold waits for).
 export function rankV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Goal[] {
-  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build));
+  return ageV6Goals(snapshot, options, collectV6Goals(snapshot, owner, options, build, navalWant));
 }
 
-export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"]): Goal[] {
-  const economy = readEconomy(snapshot, owner, options, construct);
+export function collectV6Goals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"]): Goal[] {
+  const economy = readEconomy(snapshot, owner, options, construct, naval);
   const ambitious=Math.min(5,1+Math.floor(economy.intel.army.length/6));
   const expansion=ambitious>=2 ? baseGoal(economy,ambitious,63) : [];
   const outpost=economy.intel.army.length>=6 ? towerWantGoals(economy,'outposts',1,62) : [];
   return [...supplyGoals(economy), ...workerGoals(economy), ...threatGoals(economy), ...wellGoals(economy), ...wantGoals(economy), ...expansion,...outpost,...navalGoals(economy), ...engineeringGoals(economy), ...shopGoals(economy), ...capacityGoals(economy)];
 }
 
-function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"]): Economy {
+function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, construct: Economy["construct"], naval: Economy["naval"]): Economy {
   const { strategy } = v6Doctrine(snapshot, owner, options);
   const intel = readV6Intel(snapshot, owner, options);
   const own = buildings(snapshot, owner);
@@ -130,6 +131,7 @@ function readEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
     own,
     workers: units(snapshot, owner).filter((unit) => unit.kind === "worker" && !unit.deck),
     construct,
+    naval,
     bases,
     ...(threatened ? { threatened } : {}),
   };
@@ -399,7 +401,7 @@ function engineeringGoals(economy:Economy):Goal[]{
 }
 
 function navalGoals(economy: Economy): Goal[] {
-  const want = navalWant(economy.snapshot, economy.owner, economy.options);
+  const want = economy.naval(economy.snapshot, economy.owner, economy.options);
   return want ? [goal(want.id, want.closeout ? CLOSEOUT_PRIORITY : NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
 }
 
