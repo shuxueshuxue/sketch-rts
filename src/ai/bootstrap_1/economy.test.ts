@@ -5,6 +5,7 @@ import type { TrainableUnitKind } from '../../shared/types';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planV6Economy } from '../policy/v6/economy';
+import { planAbilityCommands } from '../policy/spell-tactics';
 import { bootstrapPolicyContext } from './policy';
 import { planBootstrapEconomy } from './economy';
 
@@ -31,6 +32,31 @@ function context(game: ReturnType<typeof expansionScene>) {
 }
 
 describe('bootstrap_1 production budget', () => {
+  it.each(['grove', 'ember'] as const)('recruits %s medical support and heals its damaged shooting line with ordinary commands', race => {
+    const shooter = race === 'grove' ? 'archer' : 'sparkArcher';
+    const screen = race === 'grove' ? 'lancer' : 'ashWarden';
+    const healer = race === 'grove' ? 'priest' : 'emberAcolyte';
+    let scene = sketchScene('shooting-line-medical-support').replaceDefaults()
+      .player('us', { race, team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold: 500 })
+      .townHall('us', 500, 500).townHall('foe', 3000, 3000).farms('us', 8, 400, 1500)
+      .building('us', UNIT_DEFS[shooter].trainedAt!, 800, 850);
+    if (UNIT_DEFS[healer].trainedAt !== UNIT_DEFS[shooter].trainedAt) scene = scene.building('us', UNIT_DEFS[healer].trainedAt!, 1000, 850);
+    for (let index = 0; index < 6; index++) scene = scene.unit('us', shooter, 850 + index * 35, 900, { id: `shooter-${index}`, hp: 20 });
+    for (let index = 0; index < 4; index++) scene = scene.unit('us', screen, 850 + index * 35, 1020);
+    const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    memory.v6 = { phase: 1 };
+    for (let tick = 0; tick < 600; tick++) {
+      if (tick % 15 === 0) {
+        const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_archer', { memory, teams: game.teams });
+        for (const command of [...planBootstrapEconomy(snapshot, 'us', options), ...planAbilityCommands(snapshot, 'us', options)]) issuePlayerCommand(game, 'us', command);
+      }
+      stepGame(game);
+    }
+    expect(game.units.some(unit => unit.owner === 'us' && unit.kind === healer)).toBe(true);
+    expect(game.units.filter(unit => unit.id.startsWith('shooter-')).some(unit => unit.hp > 20)).toBe(true);
+    expect(game.players.us!.gold).toBe(500 - game.match.stats.goldSpent.us!);
+  });
+
   it.each(['grove', 'ember'] as const)('keeps the explicit %s opening squad while tech is locked instead of substituting extra basic soldiers', race => {
     const basic: TrainableUnitKind = race === 'grove' ? 'footman' : 'emberRavager';
     const caster: TrainableUnitKind = race === 'grove' ? 'summoner' : 'pyreCaller';

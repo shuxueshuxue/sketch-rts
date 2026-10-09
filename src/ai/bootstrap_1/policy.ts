@@ -48,6 +48,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { bases: Math.min(5, 1 + Math.floor(army.length / 5)), priority: 76 },
     { building: producer, count: 2, priority: 57 },
   ];
+  if (version === 'v9_archer') wants.push({ unit: grove ? 'priest' : 'emberAcolyte', count: 2, priority: 65 });
   // The spirit host fights through summons, which these upgrades do not affect.
   if (version !== 'v9_summoner') wants.push(
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
