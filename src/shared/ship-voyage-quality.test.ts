@@ -97,7 +97,7 @@ describe('observable ship voyage quality', () => {
     move(game, ship, goal);
     const metrics = observe(game, ship, 260, goal);
     expect(ship.order.type).toBe('idle'); expect(Math.hypot(ship.x - goal.x, ship.y - goal.y)).toBeLessThan(1);
-    // Square sails beat at 73°: a 3.42× path is physically expected here.
+    // Each RTS rig has its own productive beating angle and layline distance.
     expect(metrics.travel / 1700).toBeLessThan(1 / Math.cos(polar.beatAngle) + .4);
     expect(metrics.activeTackChanges).toBeGreaterThanOrEqual(1);
     expect(metrics.activeTackChanges).toBeLessThanOrEqual(2);

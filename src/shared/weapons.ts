@@ -1,5 +1,5 @@
 import type { WeaponDef } from "./catalog";
-import { shipProfile, worldToLocal } from "./ship-geometry";
+import { localToWorld, shipProfile, worldToLocal } from "./ship-geometry";
 import { polygonPlanes } from "./navigation-math";
 import type { Unit } from "./types";
 export type WeaponPoint = {
@@ -40,6 +40,28 @@ export function inWeaponCone(from: WeaponPoint, toward: WeaponPoint, target: Wea
     const dx = toward.x - from.x, dy = toward.y - from.y;
     const tx = target.x - from.x, ty = target.y - from.y;
     const aim = Math.hypot(dx, dy), gap = Math.hypot(tx, ty);
+    if (aim > 0 && "order" in target && angle > 0 && angle < Math.PI) {
+        const ship=target as Unit,profile=shipProfile(ship);
+        if(profile){
+            // Clip the actual hull to the cone's two angular half-planes,
+            // then test its nearest remaining edge against the range circle.
+            // A long bow or stern can be in the flame even when its center is not.
+            let polygon=profile.hull.map(p=>{const world=localToWorld(ship,p),x=world.x-from.x,y=world.y-from.y;return{x:(x*dx+y*dy)/aim,y:(y*dx-x*dy)/aim};});
+            const slope=Math.tan(angle/2);
+            for(const side of [-1,1]){
+                const clipped:typeof polygon=[];
+                for(let i=0;i<polygon.length;i++){
+                    const a=polygon[i]!,b=polygon[(i+1)%polygon.length]!,da=a.x*slope+side*a.y,db=b.x*slope+side*b.y;
+                    if(da>=-1e-7)clipped.push(a);
+                    if((da<0)!==(db<0)){const t=da/(da-db);clipped.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});}
+                }
+                polygon=clipped;
+            }
+            return polygon.some((a,i)=>{const b=polygon[(i+1)%polygon.length]!,x=b.x-a.x,y=b.y-a.y,length=x*x+y*y;
+                const t=length?Math.max(0,Math.min(1,-(a.x*x+a.y*y)/length)):0;
+                return Math.hypot(a.x+x*t,a.y+y*t)<=range+1e-7;});
+        }
+    }
     return aim > 0 && gap <= range + (target.radius ?? 0) && (gap === 0 || (tx * dx + ty * dy) / (gap * aim) >= Math.cos(angle / 2));
 }
 export function weaponDamage(weapon: WeaponDef, damage: number, building: boolean, naval: boolean, share = 1) {
