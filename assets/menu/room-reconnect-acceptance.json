@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "scope": "Actual server room reset, reload, original room WebSocket and native minimap / game-canvas input; 2D functional evidence only, no FPS claim.",
+  "cases": [
+    {
+      "case": "beforeFix",
+      "states": [
+        {"phase":"before","clientTick":0,"clientBuildings":["building-player-townhall","building-enemy-townhall"],"selectedIds":[],"focusedSelectionId":null,"serverTick":59,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]},
+        {"phase":"middle","clientTick":0,"clientBuildings":["building-player-townhall","building-enemy-townhall"],"selectedIds":[],"focusedSelectionId":null,"serverTick":68,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]},
+        {"phase":"after","clientTick":0,"clientBuildings":["building-player-townhall","building-enemy-townhall"],"selectedIds":[],"focusedSelectionId":null,"serverTick":83,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]}
+      ],
+      "handshake": [
+        {"direction":"sent","message":{"type":"join","roomId":"room-83cb8f7f-26ba-4b31-8a41-059b109ea75c"}},
+        {"direction":"sent","message":{"type":"requestCheckpoint","epoch":0,"reason":"initial-sync","roomId":"room-83cb8f7f-26ba-4b31-8a41-059b109ea75c"}},
+        {"direction":"received","message":{"type":"hello","epoch":1,"tick":59,"roomId":"room-83cb8f7f-26ba-4b31-8a41-059b109ea75c"}}
+      ],
+      "syncSummary": {"total":5,"byKind":{"frame-apply-error":0,"server-desync":0,"message-error":0,"checkpoint-restore":3,"checkpoint-request":2,"checksum-mismatch":0},"checkpointRequests":{"initial":2,"catchup":0,"manual":0,"recovery":0}}
+    },
+    {
+      "case": "afterFix",
+      "states": [
+        {"phase":"before","clientTick":0,"clientBuildings":["building-player-townhall","building-enemy-townhall"],"selectedIds":[],"focusedSelectionId":null,"serverTick":42,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]},
+        {"phase":"middle","clientTick":55,"clientBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"],"selectedIds":[],"focusedSelectionId":null,"serverTick":56,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]},
+        {"phase":"after","clientTick":69,"clientBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"],"selectedIds":["ui-research-barracks"],"focusedSelectionId":"ui-research-barracks","serverTick":70,"serverMap":"bareDuel","serverBuildings":["building-player-townhall","building-enemy-townhall","ui-research-barracks","building-enemy-barracks-1003"]}
+      ],
+      "handshake": [
+        {"direction":"sent","message":{"type":"join","roomId":"room-f5ead95c-aff5-4bf2-bb35-4110893958cf"}},
+        {"direction":"received","message":{"type":"hello","epoch":1,"tick":42,"roomId":"room-f5ead95c-aff5-4bf2-bb35-4110893958cf"}},
+        {"direction":"sent","message":{"type":"requestCheckpoint","epoch":1,"reason":"initial-sync","roomId":"room-f5ead95c-aff5-4bf2-bb35-4110893958cf"}},
+        {"direction":"received","message":{"type":"checkpoint","epoch":1,"checkpoint":{"tick":42,"map":"bareDuel","containsBarracks":true}}},
+        {"direction":"sent","message":{"type":"syncEvent","epoch":1,"roomId":"room-f5ead95c-aff5-4bf2-bb35-4110893958cf"}}
+      ],
+      "syncSummary": {"total":6,"byKind":{"frame-apply-error":0,"server-desync":0,"message-error":0,"checkpoint-restore":3,"checkpoint-request":3,"checksum-mismatch":0},"checkpointRequests":{"initial":3,"catchup":0,"manual":0,"recovery":0}}
+    }
+  ]
+}
