@@ -1786,7 +1786,7 @@ function planTraining(snapshot: GameSnapshot, owner: PlayerId, options: PresetAi
   // Below every trained unit's cost, strategic reservations cannot change
   // the empty result. Keep those scans for a budget that can buy a unit.
   if (player.gold < MIN_TRAINING_COST) return [];
-  if (!snapshot.buildings.some(building => building.owner === owner && building.complete && building.queue.length === 0
+  if (!buildings(snapshot, owner).some(building => building.complete && building.queue.length === 0
     && BUILDING_DEFS[building.kind].trains.some(kind => UNIT_DEFS[kind].cost <= player.gold))) return [];
   const initialSupply = projectedSupplyUsed(snapshot, owner);
   if (initialSupply + MIN_TRAINING_SUPPLY > player.supplyCap) return [];
