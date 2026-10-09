@@ -13,7 +13,7 @@ export function v6Doctrine(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const memory = v6Memory(options);
   const known = memory.doctrine;
   const profile = known && V6_PROFILES.find((candidate) => candidate.id === known.profileId);
-  const table = isV9Policy(options) ? V9_STRATEGIES : isV8Policy(options) ? V8_STRATEGIES : V6_STRATEGIES;
+  const table = options.doctrines ? options.doctrines : isV9Policy(options) ? V9_STRATEGIES : isV8Policy(options) ? V8_STRATEGIES : V6_STRATEGIES;
   const strategy = known && table.find((candidate) => candidate.id === known.strategyId);
   if (profile && strategy) return { profile, strategy: forVersion(strategy, options) };
   const race = playerState(snapshot, owner).race;
@@ -28,5 +28,6 @@ export function v6Doctrine(snapshot: GameSnapshot, owner: PlayerId, options: AiP
 
 // V7 plays V6's strategies behind its own opening (see v7Phases); V8 and V9 their own (see v8-doctrine, v9-doctrine) behind the same.
 function forVersion(strategy: V6Strategy, options: AiPolicyContext): V6Strategy {
+  if (options.doctrines) return strategy;
   return isV7Policy(options) ? { ...strategy, phases: v7Phases(strategy) } : strategy;
 }

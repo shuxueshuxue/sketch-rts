@@ -40,7 +40,7 @@ const VOLUNTARY_MARGIN = 3.5;
 // group again acquires within 230, so the point stands that far out from the camp's edge and a margin more.
 const STAGING_GAP = 300;
 const ROUTE_CLEARANCE = 260;
-const GATHERED_RANGE = 180;
+export const V7_GATHERED_RANGE = 180;
 const GATHERED_SHARE = 0.8;
 const GATHER_TICKS = 25 * 20;
 const ABORT_SHARE = 0.5;
@@ -166,7 +166,7 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
   if (state.stage === "engage" && force < camp.strength * ABORT_SHARE) return giveUp("abort");
   const staging = state.staging;
   if (state.stage === "gather") {
-    const gathered = group.filter((unit) => distance(unit, staging) <= GATHERED_RANGE).length;
+    const gathered = group.filter((unit) => distance(unit, staging) <= V7_GATHERED_RANGE).length;
     if (gathered >= group.length * GATHERED_SHARE || snapshot.tick - state.since >= GATHER_TICKS) {
       // Worn on the way (a camp or an enemy met en route): the group does not go in short of the force the camp calls for.
       if (force < forceFor(camp) * ARRIVAL_SHARE) return giveUp("worn");
@@ -176,14 +176,14 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
   }
   const commands: GameCommand[] = [];
   if (state.stage === "gather") {
-    const walking = group.filter((unit) => distance(unit, staging) > GATHERED_RANGE && !heading(unit, staging, "move"));
+    const walking = group.filter((unit) => distance(unit, staging) > V7_GATHERED_RANGE && !heading(unit, staging, "move"));
     if (walking.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
     return { commands, point: staging };
   }
   // In the camp: the badly wounded step back to the staging point (the creeps leash home), the rest fight on.
   const wounded = group.filter((unit) => unit.hp < unit.maxHp * WOUNDED_SHARE && unit.expiresTick === undefined);
   const fighting = group.filter((unit) => !wounded.includes(unit));
-  const stepping = wounded.filter((unit) => distance(unit, staging) > GATHERED_RANGE && !heading(unit, staging, "move"));
+  const stepping = wounded.filter((unit) => distance(unit, staging) > V7_GATHERED_RANGE && !heading(unit, staging, "move"));
   if (stepping.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stepping.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
   // A rider in the middle of a charge is fighting already: an order now would only wait for the dash and then undo it.
   const joining = fighting.filter((unit) => unit.order.type !== "attack" && unit.order.type !== "charge" && !heading(unit, camp.center, "attackMove"));
